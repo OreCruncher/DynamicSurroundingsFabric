@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "org.orecruncher.dsurround.mixins",
+  "compatibilityLevel": "JAVA_16",
+  "mixins": [],
+  "client": [
+    "MixinSoundEngine",
+    "MixinSoundSystem"
+  ],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

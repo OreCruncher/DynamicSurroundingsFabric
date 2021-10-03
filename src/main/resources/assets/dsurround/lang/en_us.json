@@ -1,0 +1,23 @@
+{
+  "dsurround.modname": "§3Dynamic Surroundings",
+  "text.autoconfig.dsurround.title": "§3Dynamic Surroundings§r Configuration Options",
+  "text.autoconfig.dsurround.option.soundSystem": "Sound System",
+  "text.autoconfig.dsurround.option.soundSystem.@Tooltip": "Configuration options for modifying Minecraft's Sound System behavior",
+  "text.autoconfig.dsurround.option.soundSystem.streamingChannels": "Number of Streaming Sound Channels",
+  "text.autoconfig.dsurround.option.soundSystem.streamingChannels.@Tooltip": "The number of sound channels to reserve for streaming sounds (music, biome sounds, records, etc.)",
+  "text.autoconfig.dsurround.option.soundSystem.cullInterval": "Sound Culling Interval",
+  "text.autoconfig.dsurround.option.soundSystem.cullInterval.@Tooltip": "Ticks between culled sound events (0 to disable culling)",
+  "dsurround.text.soundconfig.vanilla": "Built in Vanilla Sound",
+  "dsurround.text.soundconfig.cull": "§aCULL",
+  "dsurround.text.soundconfig.nocull": "No Cull",
+  "dsurround.text.soundconfig.block": "§aBLOCK",
+  "dsurround.text.soundconfig.noblock": "No Block",
+  "dsurround.text.soundconfig.play": "Play",
+  "dsurround.text.soundconfig.stop": "§cSTOP",
+  "dsurround.text.soundconfig.cull.help": "Marking a sound as CULL will limit the play to a single instance over a short period of time, reducing the overall load of the sound engine as well as ears.  Will only apply to sounds played through the Minecraft sound engine.",
+  "dsurround.text.soundconfig.block.help": "A sound marked as BLOCK will be prevented from playing.  Will only apply to sounds played through the Minecraft sound engine.",
+  "dsurround.text.soundconfig.play.help": "Plays the sound with the volume scaled by the volume scaling factor.  Does not apply any sound category volume modifiers.",
+  "dsurround.text.soundconfig.volume.help": "Set a volume scaling factor that gets applied when calculating the volume of a sound.  Increase to make quiet sounds louder; reduce to make loud sounds quieter.",
+  "dsurround.text.keybind.section": "Dynamic Surroundings",
+  "dsurround.text.keybind.individualSoundConfig": "Individual Sound Configuration"
+}

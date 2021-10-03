@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "dsurround",
+  "version": "${version}",
+  "name": "§3Dynamic Surroundings",
+  "description": "Adds a variety of §6sound§r and §6visual§r effects to improve your Minecraft experience",
+  "authors": [
+    "§6OreCruncher§r"
+  ],
+  "contact": {
+    "homepage": "https://github.com/OreCruncher/DynamicSurroundingsFabric",
+    "sources": "https://github.com/OreCruncher/DynamicSurroundingsFabric",
+    "issues": "https://github.com/OreCruncher/DynamicSurroundingsFabric/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/dsurround/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "org.orecruncher.dsurround.Client"
+    ],
+    "modmenu": [
+      "org.orecruncher.dsurround.config.ModConfigMenu"
+    ]
+  },
+  "mixins": [
+    "dsurround.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.11.7",
+    "fabric": "*",
+    "minecraft": "1.17.1",
+    "java": ">=16"
+  }
+}
