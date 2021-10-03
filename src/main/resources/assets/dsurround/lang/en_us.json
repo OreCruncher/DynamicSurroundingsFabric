@@ -17,7 +17,7 @@
   "dsurround.text.soundconfig.cull.help": "Marking a sound as CULL will limit the play to a single instance over a short period of time, reducing the overall load of the sound engine as well as ears.  Will only apply to sounds played through the Minecraft sound engine.",
   "dsurround.text.soundconfig.block.help": "A sound marked as BLOCK will be prevented from playing.  Will only apply to sounds played through the Minecraft sound engine.",
   "dsurround.text.soundconfig.play.help": "Plays the sound with the volume scaled by the volume scaling factor.  Does not apply any sound category volume modifiers.",
-  "dsurround.text.soundconfig.volume.help": "Set a volume scaling factor that gets applied when calculating the volume of a sound.  Increase to make quiet sounds louder; reduce to make loud sounds quieter.",
+  "dsurround.text.soundconfig.volume.help": "Set a volume scaling factor that gets applied when calculating the volume of a sound.  Increase to make quiet sounds louder; reduce to make loud sounds quieter.  x1.00 is normal volume.",
   "dsurround.text.keybind.section": "Dynamic Surroundings",
   "dsurround.text.keybind.individualSoundConfig": "Individual Sound Configuration"
 }

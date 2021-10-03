@@ -9,6 +9,8 @@ import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import org.orecruncher.dsurround.lib.gui.SliderControl;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.List;
 
 @Environment(EnvType.CLIENT)
@@ -16,6 +18,14 @@ public class VolumeSliderControl extends SliderControl {
 
     private static final int SLIDER_WIDTH = 100;
     private static final int SLIDER_HEIGHT = 20;
+
+    private static final DecimalFormat FORMAT;
+
+    static {
+        FORMAT = new DecimalFormat("0.00");
+        FORMAT.setRoundingMode(RoundingMode.HALF_UP);
+        FORMAT.setDecimalSeparatorAlwaysShown(true);
+    }
 
     private final IndividualSoundControlListEntry entry;
 
@@ -30,7 +40,7 @@ public class VolumeSliderControl extends SliderControl {
     }
 
     protected void updateMessage() {
-        Text text = (float) this.value == (float) this.getYImage(false) ? ScreenTexts.OFF : new LiteralText((int) (this.value * 100.0D) + "%");
+        Text text = (float) this.value == (float) this.getYImage(false) ? ScreenTexts.OFF : new LiteralText("x" + FORMAT.format(this.value * 4.0D));
         this.setMessage(text);
     }
 
