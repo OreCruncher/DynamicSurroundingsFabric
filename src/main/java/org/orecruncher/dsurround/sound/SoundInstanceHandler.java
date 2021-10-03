@@ -6,6 +6,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.util.Identifier;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.gui.sound.ConfigSoundInstance;
 import org.orecruncher.dsurround.lib.TickCounter;
 
 import java.util.Objects;
@@ -18,9 +19,6 @@ public final class SoundInstanceHandler {
 
     private static final Object2LongOpenHashMap<Identifier> soundCull = new Object2LongOpenHashMap<>(32);
 
-    private SoundInstanceHandler() {
-    }
-
     private static boolean isSoundBlocked( final Identifier id) {
         return Client.SoundConfig.isBlocked(id);
     }
@@ -32,9 +30,9 @@ public final class SoundInstanceHandler {
     private static boolean isSoundCulledLogical( final Identifier sound) {
         int cullInterval = Client.Config.soundSystem.cullInterval;
         if (cullInterval > 0 && isSoundCulled(sound)) {
-            final long lastOccurance = soundCull.getLong(Objects.requireNonNull(sound));
+            final long lastOccurrence = soundCull.getLong(Objects.requireNonNull(sound));
             final long currentTick = TickCounter.getTickCount();
-            if ((currentTick - lastOccurance) < cullInterval) {
+            if ((currentTick - lastOccurrence) < cullInterval) {
                 return true;
             } else {
                 // Set when it happened and fall through for remapping and stuff
@@ -52,6 +50,11 @@ public final class SoundInstanceHandler {
      * @return True if the sound play is to be blocked, false otherwise
      */
     public static boolean shouldBlockSoundPlay(final SoundInstance theSound) {
+        // Don't block ConfigSoundInstances.  They are triggered from the individual sound config
+        // options and though it may be blocked the player may wish to hear.
+        if (theSound instanceof ConfigSoundInstance)
+            return false;
+
         final Identifier id = theSound.getId();
         return isSoundBlocked(id) || isSoundCulledLogical(id);
     }

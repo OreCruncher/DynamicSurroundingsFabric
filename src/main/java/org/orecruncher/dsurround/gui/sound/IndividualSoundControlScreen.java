@@ -29,7 +29,7 @@ public class IndividualSoundControlScreen extends Screen {
 
     private static final int SELECTION_HEIGHT_OFFSET = 5;
     private static final int SELECTION_WIDTH = 600;
-    private static final int SELECTION_HEIGHT = 20;
+    private static final int SELECTION_HEIGHT = 24;
 
     private static final int BUTTON_WIDTH = 60;
     private static final int BUTTON_HEIGHT = 20;
@@ -49,7 +49,7 @@ public class IndividualSoundControlScreen extends Screen {
     protected ButtonWidget cancel;
 
     public IndividualSoundControlScreen(final Screen parent, final boolean enablePlay) {
-        super(new TranslatableText("sndctrl.text.soundconfig.title"));
+        super(new TranslatableText("dsurround.text.keybind.individualSoundConfig"));
         this.parent = parent;
         this.enablePlay = enablePlay;
     }
@@ -71,8 +71,7 @@ public class IndividualSoundControlScreen extends Screen {
                 LiteralText.EMPTY);
 
         this.searchField.setChangedListener((filter) -> this.soundConfigList.setSearchFilter(() -> filter, false));
-
-        this.addDrawableChild(this.searchField);
+        this.addSelectableChild(this.searchField);
 
         // Setup the list control
         final int topY = TOP_OFFSET + HEADER_HEIGHT + SELECTION_HEIGHT_OFFSET;
@@ -90,7 +89,7 @@ public class IndividualSoundControlScreen extends Screen {
                 () -> this.searchField.getText(),
                 this.soundConfigList);
 
-        this.addDrawableChild(this.soundConfigList);
+        this.addSelectableChild(this.soundConfigList);
 
         // Set the control buttons at the bottom
         final int controlMargin = (this.width - CONTROL_WIDTH) / 2;
@@ -119,6 +118,10 @@ public class IndividualSoundControlScreen extends Screen {
     public void tick() {
         this.searchField.tick();
         this.soundConfigList.tick();
+
+        // Need to tick the Sound Manager because when the game is paused sounds are not
+        // processed.  We do this to enable handling of the "play" button.
+        GameUtils.getSoundHander().tick(false);
     }
 
     public boolean isPauseScreen() {

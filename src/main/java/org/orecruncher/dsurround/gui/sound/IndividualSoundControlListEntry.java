@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.gui.sound;
 
-import com.google.common.collect.Lists;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.font.TextRenderer;
@@ -28,7 +27,6 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
 
     private static final int BUTTON_WIDTH = 60;
     private static final int TOOLTIP_WIDTH = 300;
-    private static final ButtonWidget.PressAction NULL_PRESSABLE = (b) -> {};
     private static final Text CULL_ON = new TranslatableText("dsurround.text.soundconfig.cull");
     private static final Text CULL_OFF = new TranslatableText("dsurround.text.soundconfig.nocull");
     private static final Text BLOCK_ON = new TranslatableText("dsurround.text.soundconfig.block");
@@ -101,6 +99,51 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
         this.children.add(this.playButton);
     }
 
+    public void mouseMoved(double mouseX, double mouseY) {
+        ClickableWidget child = this.findChild(mouseX, mouseY);
+        if (child != null)
+            child.mouseMoved(mouseX, mouseY);
+    }
+
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        ClickableWidget child = this.findChild(mouseX, mouseY);
+        if (child != null)
+            return child.mouseClicked(mouseX, mouseY, button);
+        return false;
+    }
+
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        ClickableWidget child = this.findChild(mouseX, mouseY);
+        if (child != null)
+            return child.mouseReleased(mouseX, mouseY, button);
+        return false;
+    }
+
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        ClickableWidget child = this.findChild(mouseX, mouseY);
+        if (child != null)
+            return child.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        return false;
+    }
+
+    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+        ClickableWidget child = this.findChild(mouseX, mouseY);
+        if (child != null)
+            return child.mouseScrolled(mouseX, mouseY, amount);
+        return false;
+    }
+
+    private ClickableWidget findChild(double mouseX, double mouseY) {
+        if (this.isMouseOver(mouseX, mouseY)) {
+            for (ClickableWidget e : this.children) {
+                if (e.isMouseOver(mouseX, mouseY)) {
+                    return e;
+                }
+            }
+        }
+        return null;
+    }
+
     @Override
     public void render(final MatrixStack matrixStack, int index, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTick_) {
         final TextRenderer font = GameUtils.getTextRenderer();
@@ -146,11 +189,11 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
     protected void play(final ButtonWidget button) {
         if (this.soundPlay == null) {
             this.soundPlay = SoundLibraryHelpers.playSound(this.config);
-            this.playButton.setMessage(STOP);
+            button.setMessage(STOP);
         } else {
             SoundLibraryHelpers.stopSound(this.soundPlay);
             this.soundPlay = null;
-            this.playButton.setMessage(PLAY);
+            button.setMessage(PLAY);
         }
     }
 
@@ -164,7 +207,7 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
 
     public void tick() {
         if (this.soundPlay != null) {
-            if (SoundLibraryHelpers.isPlaying(this.soundPlay)) {
+            if (!SoundLibraryHelpers.isPlaying(this.soundPlay)) {
                 this.soundPlay = null;
                 this.playButton.setMessage(PLAY);
             }

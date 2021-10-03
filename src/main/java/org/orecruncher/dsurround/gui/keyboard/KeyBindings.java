@@ -30,7 +30,7 @@ public class KeyBindings {
                     final boolean singlePlayer = GameUtils.getMC().isInSingleplayer();
                     GameUtils.getMC().setScreen(new IndividualSoundControlScreen(null, singlePlayer));
                     if (singlePlayer)
-                        GameUtils.getMC().getSoundManager().pauseAll();
+                        GameUtils.getMC().getSoundManager().stopAll();
                 }
             }
         });
