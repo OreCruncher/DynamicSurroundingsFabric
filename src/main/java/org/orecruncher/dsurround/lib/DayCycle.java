@@ -71,7 +71,7 @@ public enum DayCycle {
     }
 
     public String getFormattedName() {
-        return I18n.translate(this.localizeString);
+        return Localization.load(this.localizeString);
     }
 
 }

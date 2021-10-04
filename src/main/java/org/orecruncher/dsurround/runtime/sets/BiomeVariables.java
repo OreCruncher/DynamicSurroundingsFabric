@@ -17,7 +17,7 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
     private final Lazy<String> modid = new Lazy<>(() -> BiomeUtils.getBiomeId(this.biome).getNamespace());
     private final Lazy<String> id = new Lazy<>(() -> BiomeUtils.getBiomeId(this.biome).toString());
     private final Lazy<String> category = new Lazy<>(() -> this.biome.getCategory().getName());
-    private final Lazy<String> rainType = new Lazy<>(() -> this.biome.getPrecipitation().getName());
+    private final Lazy<String> precipitationType = new Lazy<>(() -> this.biome.getPrecipitation().getName());
 
     public BiomeVariables() {
         super("biome");
@@ -51,7 +51,7 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
             this.modid.reset();
             this.id.reset();
             this.category.reset();
-            this.rainType.reset();
+            this.precipitationType.reset();
         }
     }
 
@@ -86,7 +86,7 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
     }
 
     @Override
-    public String getRainType() {
-        return this.rainType.get();
+    public String getPrecipitationType() {
+        return this.precipitationType.get();
     }
 }

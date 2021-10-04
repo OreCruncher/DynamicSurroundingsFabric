@@ -2,15 +2,18 @@ package org.orecruncher.dsurround.lib;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.resource.language.I18n;
 import net.minecraft.world.World;
+
+import java.text.DecimalFormat;
 
 @Environment(EnvType.CLIENT)
 public class MinecraftClock {
 
-    private static final String AM = I18n.translate("dsurround.format.AM");
-    private static final String PM = I18n.translate("dsurround.format.PM");
-    private static final String TIME_FORMAT = I18n.translate("dsurround.format.TimeOfDay");
+    private static final String AM = "dsurround.format.AM";
+    private static final String PM = "dsurround.format.PM";
+    private static final String TIME_FORMAT = "dsurround.format.TimeOfDay";
+
+    private static final DecimalFormat minuteFormat = new DecimalFormat("00");
 
     protected int day;
     protected int hour;
@@ -74,7 +77,9 @@ public class MinecraftClock {
         if (h == 0)
             h = 12;
 
-        return String.format(TIME_FORMAT, this.day, h, this.minute, this.isAM ? AM : PM, this.cycle.getFormattedName());
+        String format = Localization.load(TIME_FORMAT);
+        String amPm = Localization.load(this.isAM ? AM : PM);
+        return String.format(format, this.day, h, minuteFormat.format(this.minute), amPm, this.cycle.getFormattedName());
     }
 
     @Override

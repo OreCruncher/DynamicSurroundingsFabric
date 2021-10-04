@@ -18,5 +18,5 @@ public interface IBiomeVariables {
 
     String getCategory();
 
-    String getRainType();
+    String getPrecipitationType();
 }

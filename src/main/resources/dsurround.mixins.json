@@ -7,8 +7,11 @@
   ],
   "client": [
     "MixinClientWorldProperties",
+    "MixinIngameHud",
     "MixinSoundEngine",
-    "MixinSoundSystem"
+    "MixinSoundSystem",
+    "MixinSoundSystemAccessors",
+    "MixinSoundManagerAccessor"
   ],
   "server": [],
   "injectors": {

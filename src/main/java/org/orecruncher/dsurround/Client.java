@@ -6,8 +6,12 @@ import net.fabricmc.api.Environment;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.SoundConfiguration;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
+import org.orecruncher.dsurround.lib.FrameworkUtils;
 import org.orecruncher.dsurround.lib.TickCounter;
 import org.orecruncher.dsurround.lib.logging.ModLog;
+import org.orecruncher.dsurround.runtime.diagnostics.ClientProfiler;
+import org.orecruncher.dsurround.runtime.diagnostics.RuntimeDiagnostics;
+import org.orecruncher.dsurround.runtime.diagnostics.SoundEngineDiagnostics;
 import org.orecruncher.dsurround.sound.StartupSoundHandler;
 
 @Environment(EnvType.CLIENT)
@@ -17,6 +21,7 @@ public class Client implements ClientModInitializer {
     public static final ModLog LOGGER = new ModLog(ModId);
     public static final Configuration Config = Configuration.getConfig();
     public static final SoundConfiguration SoundConfig = SoundConfiguration.getConfig();
+    public static final String Branding = FrameworkUtils.getModBranding(ModId);
 
     @Override
     public void onInitializeClient() {
@@ -25,6 +30,12 @@ public class Client implements ClientModInitializer {
         TickCounter.register();
         StartupSoundHandler.register();
         KeyBindings.register();
+
+        // Register diagnostic handlers.  Ordering is semi important for
+        // debug display layout.
+        RuntimeDiagnostics.register();
+        ClientProfiler.register();
+        SoundEngineDiagnostics.register();
 
         LOGGER.info("Initialization complete");
     }

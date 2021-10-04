@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.lib.scripting;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -13,8 +14,6 @@ import java.util.Optional;
 public final class ExecutionContext {
 
     private static final IModLog LOGGER = Client.LOGGER.createChild(ExecutionContext.class);
-
-    private static final String FUNCTION_SHELL = "%s;";
 
     private final String contextName;
     private final ScriptEngine engine;
@@ -71,20 +70,24 @@ public final class ExecutionContext {
             return Optional.ofNullable(result);
         } catch (final Throwable t) {
             LOGGER.error(t, "Error execution script: %s", script);
-            compiled.put(script, this.error);
+            compiled.put(script, makeErrorFunction(t));
         }
 
         return Optional.of("ERROR?");
     }
 
     private CompiledScript makeFunction(final String script) {
-        final String source = String.format(FUNCTION_SHELL, script);
+        final String source = script + ";";
         try {
             return ((Compilable) this.engine).compile(source);
         } catch (final Throwable t) {
             LOGGER.error(t, "Error compiling script: %s", source);
+            return makeErrorFunction(t);
         }
-        return this.error;
     }
 
+    private CompiledScript makeErrorFunction(Throwable t) {
+        String s = String.format("\"%s\"", StringEscapeUtils.escapeJava(t.getMessage()));
+        return makeFunction(s);
+    }
 }
