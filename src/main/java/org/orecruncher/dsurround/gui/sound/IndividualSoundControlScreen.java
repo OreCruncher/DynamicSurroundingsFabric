@@ -120,8 +120,11 @@ public class IndividualSoundControlScreen extends Screen {
         this.soundConfigList.tick();
 
         // Need to tick the Sound Manager because when the game is paused sounds are not
-        // processed.  We do this to enable handling of the "play" button.
-        GameUtils.getSoundHander().tick(false);
+        // processed.  We do this to enable handling of the "play" button.  (If the game
+        // were not paused mobs and things will still wander around and can cause a
+        // problem for the player while their head is buried in the menu.)
+        if (this.enablePlay)
+            GameUtils.getSoundHander().tick(false);
     }
 
     public boolean isPauseScreen() {

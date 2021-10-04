@@ -7,6 +7,10 @@ import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Identifier;
 
+/**
+ * Special sound instance created by the sound configuration option menu.  The type is detected through the pipeline
+ * to avoid applying behaviors like blocking and volume scaling.
+ */
 @Environment(EnvType.CLIENT)
 public class ConfigSoundInstance extends PositionedSoundInstance {
     public ConfigSoundInstance(Identifier id, int volumeScale) {
