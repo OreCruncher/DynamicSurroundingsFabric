@@ -17,6 +17,8 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.gui.ButtonControl;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.gui.GuiHelpers;
+import org.orecruncher.dsurround.sound.SoundLibrary;
+import org.orecruncher.dsurround.sound.SoundMetadata;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,9 +36,8 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
     private static final Text PLAY = new TranslatableText("dsurround.text.soundconfig.play");
     private static final Text STOP = new TranslatableText("dsurround.text.soundconfig.stop");
     private static final OrderedText VANILLA_CREDIT = new TranslatableText("dsurround.text.soundconfig.vanilla").asOrderedText();
-    private static final OrderedText BLANK_LINE = OrderedText.EMPTY;
 
-    private static final Formatting[] CODING = new Formatting[] {Formatting.ITALIC, Formatting.AQUA};
+    private static final Formatting[] CODING = new Formatting[]{Formatting.ITALIC, Formatting.AQUA};
     private static final Collection<OrderedText> VOLUME_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.volume.help", TOOLTIP_WIDTH, CODING);
     private static final Collection<OrderedText> PLAY_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.play.help", TOOLTIP_WIDTH, CODING);
     private static final Collection<OrderedText> CULL_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.cull.help", TOOLTIP_WIDTH, CODING);
@@ -54,12 +55,12 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
     private final ButtonControl playButton;
 
     private final List<ClickableWidget> children = new ArrayList<>();
+    private final List<OrderedText> cachedToolTip = new ArrayList<>();
 
     private ConfigSoundInstance soundPlay;
 
     public IndividualSoundControlListEntry(final IndividualSoundConfigEntry data, final boolean enablePlay) {
         this.config = data;
-
         this.volume = new VolumeSliderControl(this, 0, 0);
         this.children.add(this.volume);
 
@@ -215,28 +216,51 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
     }
 
     protected List<OrderedText> getToolTip(final int mouseX, final int mouseY) {
-        List<OrderedText> generatedTip = new ArrayList<>();
 
-        final Identifier loc = new Identifier(this.config.id);
+        // Cache the static part of the tooltip if needed
+        if (this.cachedToolTip.size() == 0) {
 
-        final String modName = FrameworkUtils.getModDisplayName(loc.getNamespace());
-        assert modName != null;
-        generatedTip.add(OrderedText.styledForwardsVisitedString(modName, modNameStyle));
-        generatedTip.add(OrderedText.styledForwardsVisitedString(this.config.id, idStyle));
+            Identifier id = new Identifier(this.config.id);
+            final String mod = FrameworkUtils.getModDisplayName(id.getNamespace());
+            assert mod != null;
+            OrderedText modName = OrderedText.styledForwardsVisitedString(mod, modNameStyle);
+            OrderedText soundLocationId = OrderedText.styledForwardsVisitedString(this.config.id, idStyle);
 
-        if (modName.equals("Minecraft"))
-            generatedTip.add(VANILLA_CREDIT);
+            this.cachedToolTip.add(modName);
+            this.cachedToolTip.add(soundLocationId);
 
-        generatedTip.add(BLANK_LINE);
+            SoundMetadata metadata = SoundLibrary.getSoundMetadata(id);
+            if (metadata != null) {
+                if (metadata.getTitle() != LiteralText.EMPTY)
+                    this.cachedToolTip.add(metadata.getTitle().asOrderedText());
+                if (metadata.getCaption() != LiteralText.EMPTY)
+                    this.cachedToolTip.add(new TranslatableText("dsurround.text.soundconfig.caption", metadata.getCaption()).asOrderedText());
 
+                for (Text t : metadata.getCredits())
+                    this.cachedToolTip.add(t.asOrderedText());
+            }
+
+            if (id.getNamespace().equals("minecraft")) {
+                this.cachedToolTip.add(VANILLA_CREDIT);
+            }
+        }
+
+        List<OrderedText> generatedTip = new ArrayList<>(this.cachedToolTip);
+
+        Collection<OrderedText> toAppend = null;
         if (this.volume.isMouseOver(mouseX, mouseY)) {
-            generatedTip.addAll(VOLUME_HELP);
+            toAppend = VOLUME_HELP;
         } else if (this.blockButton.isMouseOver(mouseX, mouseY)) {
-            generatedTip.addAll(BLOCK_HELP);
+            toAppend = BLOCK_HELP;
         } else if (this.cullButton.isMouseOver(mouseX, mouseY)) {
-            generatedTip.addAll(CULL_HELP);
+            toAppend = CULL_HELP;
         } else if (this.playButton.isMouseOver(mouseX, mouseY)) {
-            generatedTip.addAll(PLAY_HELP);
+            toAppend = PLAY_HELP;
+        }
+
+        if (toAppend != null) {
+            generatedTip.add(OrderedText.EMPTY);
+            generatedTip.addAll(toAppend);
         }
 
         return generatedTip;
@@ -244,6 +268,7 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
 
     /**
      * Retrieves the updated data from the entry
+     *
      * @return Updated IndividualSoundControl data
      */
     public IndividualSoundConfigEntry getData() {

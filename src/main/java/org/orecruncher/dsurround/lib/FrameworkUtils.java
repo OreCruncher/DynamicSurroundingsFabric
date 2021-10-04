@@ -4,9 +4,13 @@ import joptsimple.internal.Strings;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
+import net.minecraft.resource.ResourcePackManager;
+import net.minecraft.resource.ResourcePackProfile;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class FrameworkUtils {
 
@@ -27,5 +31,17 @@ public class FrameworkUtils {
             return String.format("%s v%s", data.getName(), data.getVersion());
         }
         return Strings.EMPTY;
+    }
+
+    public static Collection<String> getModIdList() {
+        // TODO: Revisit - containing multiple namespaces
+        return FabricLoader.getInstance().getAllMods().stream()
+                .map(container -> container.getMetadata().getId())
+                .collect(Collectors.toList());
+    }
+
+    public static Collection<ResourcePackProfile> getEnabledResourcePacks() {
+        ResourcePackManager rpm = GameUtils.getResourcePackManager();
+        return rpm.getEnabledProfiles();
     }
 }

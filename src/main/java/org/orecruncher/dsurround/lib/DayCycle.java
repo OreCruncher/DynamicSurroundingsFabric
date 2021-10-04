@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.lib;
 
-import net.minecraft.client.resource.language.I18n;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.Client;
 

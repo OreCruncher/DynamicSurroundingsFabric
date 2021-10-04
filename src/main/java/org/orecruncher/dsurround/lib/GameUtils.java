@@ -10,6 +10,7 @@ import net.minecraft.client.option.Perspective;
 import net.minecraft.client.sound.SoundManager;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.resource.ResourcePackManager;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import org.jetbrains.annotations.Nullable;
 
@@ -56,6 +57,10 @@ public final class GameUtils {
 
     public static SoundManager getSoundHander() {
         return getMC().getSoundManager();
+    }
+
+    public static ResourcePackManager getResourcePackManager() {
+        return getMC().getResourcePackManager();
     }
 
     public static boolean isInGame() {

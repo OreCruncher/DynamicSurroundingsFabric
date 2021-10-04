@@ -1,5 +1,6 @@
 {
 	"ice": {
+		"subtitle": "dsurround.sound.caption.ice",
 		"sounds": [
 			{
 				"name": "dsurround:ambient/ice/crack1",
@@ -16,6 +17,7 @@
 		]
 	},
 	"frog": {
+		"subtitle": "dsurround.sound.caption.frog",
 		"sounds": [
 			{
 				"name": "dsurround:ambient/frog/croak1",
@@ -32,6 +34,7 @@
 		]
 	},
 	"bullfrog": {
+		"subtitle": "dsurround.sound.caption.frog",
 		"credits": [
 			"§aNight Crickets & Bullfrogs.wav",
 			"sunsinger",
@@ -53,6 +56,7 @@
 		]
 	},
 	"wind": {
+		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [
 			"§aWind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
 			"felix.blume",
@@ -66,6 +70,7 @@
 		]
 	},
 	"desert.wind": {
+		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [
 			"§adesertwind1FINAL.wav",
 			"nageor",
@@ -78,6 +83,7 @@
 		]
 	},
 	"arctic.wind": {
+		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [
 			"§aHowling Wind Ambience",
 			"DBlover",
@@ -234,6 +240,7 @@
 		]
 	},
 	"soulsand": {
+		"subtitle": "dsurround.sound.caption.soulsand",
 		"sounds": [
 			{
 				"name": "dsurround:ambient/soulsand/soulsand1",
@@ -259,6 +266,7 @@
 		]
 	},
 	"bird": {
+		"subtitle": "dsurround.sound.caption.bird",
 		"sounds": [
 			"dsurround:ambient/birds/bird1",
 			"dsurround:ambient/birds/bird2",
@@ -273,6 +281,7 @@
 		]
 	},
 	"woodpecker": {
+		"subtitle": "dsurround.sound.caption.woodpecker",
 		"sounds": [
 			"dsurround:ambient/birds/woodpecker1",
 			"dsurround:ambient/birds/woodpecker2",
@@ -282,6 +291,7 @@
 		]
 	},
 	"raptor": {
+		"subtitle": "dsurround.sound.caption.raptor",
 		"sounds": [
 			{
 				"name": "dsurround:ambient/birds/bald_eagle_chirp",
@@ -298,6 +308,7 @@
 		]
 	},
 	"crow": {
+		"subtitle": "dsurround.sound.caption.crow",
 		"credits": [
 			"§aANML_M_Ext_Crow_Calls_Single1.wav",
 			"conleec",
@@ -317,6 +328,7 @@
 		]
 	},
 	"owl": {
+		"subtitle": "dsurround.sound.caption.owl",
 		"sounds": [
 			{
 				"name": "dsurround:ambient/owl/owl1",
@@ -333,6 +345,7 @@
 		]
 	},
 	"loon": {
+		"subtitle": "dsurround.sound.caption.loon",
 		"sounds": [
 			{
 				"name": "dsurround:ambient/birds/loon1"
@@ -343,6 +356,7 @@
 		]
 	},
 	"nightingale": {
+		"subtitle": "dsurround.sound.caption.nightingale",
 		"sounds": [
 			{
 				"name": "dsurround:ambient/birds/nightingale1"
@@ -368,6 +382,7 @@
 		]
 	},
 	"rockfall": {
+		"subtitle": "dsurround.sound.caption.rockfall",
 		"credits": [
 			"§aRocks falling over rocks, over a steep hill, like a cliff.flac",
 			"gfrog",
@@ -384,6 +399,7 @@
 		]
 	},
 	"bigrockfall": {
+		"subtitle": "dsurround.sound.caption.rockfall",
 		"credits": [
 			"§aRockfall in mine.wav",
 			"Benboncan",
@@ -405,6 +421,7 @@
 		]
 	},
 	"monstergrowl": {
+		"subtitle": "dsurround.sound.caption.monstergrowl",
 		"sounds": [
 			{
 				"name": "dsurround:ambient/underground/monster_growl1",
@@ -413,6 +430,7 @@
 		]
 	},
 	"waterdrops": {
+		"subtitle": "dsurround.sound.caption.waterdrop",
 		"sounds": [
 			"dsurround:ambient/droplets/water1",
 			"dsurround:ambient/droplets/water2",
@@ -420,6 +438,7 @@
 		]
 	},
 	"waterdrips": {
+		"subtitle": "dsurround.sound.caption.waterdrop",
 		"credits": [
 			"§aDripping, Very Fast, A.wav",
 			"InspectorJ",
@@ -433,6 +452,7 @@
 		]
 	},
 	"seagulls": {
+		"subtitle": "dsurround.sound.caption.seagulls",
 		"sounds": [
 			{
 				"name": "dsurround:ambient/seagulls/seagulls1",
@@ -445,6 +465,7 @@
 		]
 	},
 	"coyote": {
+		"subtitle": "dsurround.sound.caption.howling",
 		"credits": [
 			"§acoyote barks and howls",
 			"dkaufman",
@@ -460,6 +481,7 @@
 		]
 	},
 	"wolf": {
+		"subtitle": "dsurround.sound.caption.howling",
 		"sounds": [
 			{
 				"name": "dsurround:ambient/wolf/wolf1",
@@ -556,6 +578,7 @@
 		]
 	},
 	"tummy": {
+		"subtitle": "dsurround.sound.caption.tummy",
 		"sounds": [
 			"dsurround:ambient/steve/tummy1",
 			"dsurround:ambient/steve/tummy2",
@@ -563,6 +586,7 @@
 		]
 	},
 	"breathing": {
+		"subtitle": "dsurround.sound.caption.breathing",
 		"sounds": [
 			{
 				"name": "dsurround:ambient/miscblocks/breathing1",
@@ -583,6 +607,7 @@
 		]
 	},
 	"bees": {
+		"subtitle": "dsurround.sound.caption.bees",
 		"sounds": [
 			{
 				"name": "dsurround:ambient/insects/bee1",
@@ -591,6 +616,7 @@
 		]
 	},
 	"insectcrawl": {
+		"subtitle": "dsurround.sound.caption.insects",
 		"sounds": [
 			"dsurround:ambient/insects/crawl1",
 			"dsurround:ambient/insects/crawl2",
@@ -598,12 +624,14 @@
 		]
 	},
 	"newsprint": {
+		"subtitle": "dsurround.sound.caption.pageflip",
 		"sounds": [
 			"dsurround:ambient/book/newsprint1",
 			"dsurround:ambient/book/newsprint2"
 		]
 	},
 	"pageflip": {
+		"subtitle": "dsurround.sound.caption.pageflip",
 		"sounds": [
 			"dsurround:ambient/book/pageflip1",
 			"dsurround:ambient/book/pageflip2",
@@ -611,6 +639,7 @@
 		]
 	},
 	"pageflipheavy": {
+		"subtitle": "dsurround.sound.caption.pageflip",
 		"sounds": [
 			"dsurround:ambient/book/pageflipheavy1",
 			"dsurround:ambient/book/pageflipheavy2",
@@ -618,6 +647,7 @@
 		]
 	},
 	"bookshelf": {
+		"subtitle": "dsurround.sound.caption.pageflip",
 		"sounds": [
 			{
 				"name": "dsurround:ambient/book/newsprint1",
@@ -738,6 +768,7 @@
 		]
 	},
 	"village.rooster": {
+		"subtitle": "dsurround.sound.caption.rooster",
 		"credits": [
 			"§aVillage ambience rooster and light birds with wind .wav",
 			"Ramston",
@@ -750,6 +781,7 @@
 		]
 	},
 	"village.anvil": {
+		"subtitle": "dsurround.sound.caption.anvil",
 		"credits": [
 			"§aAnvil",
 			"MrAuralization",
@@ -765,6 +797,7 @@
 		]
 	},
 	"village.dogbark": {
+		"subtitle": "dsurround.sound.caption.dog",
 		"credits": [
 			"§aDogs Barking",
 			"darranambler",

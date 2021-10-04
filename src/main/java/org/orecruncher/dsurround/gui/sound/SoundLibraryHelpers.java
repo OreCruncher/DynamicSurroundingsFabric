@@ -8,6 +8,7 @@ import net.minecraft.util.registry.Registry;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.sound.SoundLibrary;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -19,9 +20,9 @@ final class SoundLibraryHelpers {
 
         final SortedMap<String, IndividualSoundConfigEntry> map = new TreeMap<>();
 
-        // Get a list of all the sounds and set to default.  Each gets its own state in case caller
-        // wants to manipulate.
-        for (final SoundEvent event : Registry.SOUND_EVENT) {
+        // Get a list of all registered sounds.  We don't use the vanilla registries since
+        // we will have more sounds than are registered.
+        for (final SoundEvent event : SoundLibrary.getRegisteredSoundEvents()) {
             IndividualSoundConfigEntry entry = IndividualSoundConfigEntry.createDefault(event);
             map.put(entry.id, entry);
         }
