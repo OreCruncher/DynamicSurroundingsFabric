@@ -13,4 +13,8 @@ public class FrameworkUtils {
         Optional<ModContainer> container = FabricLoader.getInstance().getModContainer(namespace);
         return container.map(modContainer -> modContainer.getMetadata().getName()).orElse(null);
     }
+
+    public static boolean isModLoaded(String namespace) {
+        return FabricLoader.getInstance().isModLoaded(namespace);
+    }
 }

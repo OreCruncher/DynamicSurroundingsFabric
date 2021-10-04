@@ -10,6 +10,7 @@ import net.minecraft.client.option.Perspective;
 import net.minecraft.client.sound.SoundManager;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.registry.DynamicRegistryManager;
 import org.jetbrains.annotations.Nullable;
 
 @Environment(EnvType.CLIENT)
@@ -27,6 +28,10 @@ public final class GameUtils {
     @Nullable
     public static ClientWorld getWorld() {
         return getMC().world;
+    }
+
+    public static DynamicRegistryManager getRegistryManager() {
+        return getWorld().getRegistryManager();
     }
 
     public static MinecraftClient getMC() {

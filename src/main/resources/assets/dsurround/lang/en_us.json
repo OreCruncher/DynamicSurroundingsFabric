@@ -1,5 +1,13 @@
 {
   "dsurround.modname": "§3Dynamic Surroundings",
+  "dsurround.format.TimeOfDay" :"Day %1$d, %2$d:%3$02d %4$s (%5$s)",
+  "dsurround.format.AM": "AM",
+  "dsurround.format.PM": "PM",
+  "dsurround.format.NoSky": "No Sky",
+  "dsurround.format.Sunrise": "Sunrise",
+  "dsurround.format.Sunset": "Sunset",
+  "dsurround.format.Daytime": "Daytime",
+  "dsurround.format.Nighttime": "Nighttime",
   "text.autoconfig.dsurround.title": "§3Dynamic Surroundings§r Configuration Options",
   "text.autoconfig.dsurround.option.soundSystem": "Sound System",
   "text.autoconfig.dsurround.option.soundSystem.@Tooltip": "Configuration options for modifying Minecraft's Sound System behavior",
