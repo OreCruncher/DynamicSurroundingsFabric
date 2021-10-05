@@ -4,11 +4,10 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.sound.SoundLibrary;
+import org.orecruncher.dsurround.config.SoundLibrary;
 
 import java.util.*;
 import java.util.stream.Collectors;

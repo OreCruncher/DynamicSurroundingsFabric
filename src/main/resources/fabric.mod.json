@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "id": "dsurround",
   "version": "${version}",
-  "name": "§3Dynamic Surroundings",
-  "description": "§e[WIP]§r Adds a variety of §6sound§r and §6visual§r effects to improve your Minecraft experience",
+  "name": "§3Dynamic Surroundings: Fabric Edition",
+  "description": "§e[WIP]§r Weaving a tapestry of §6sound§r and §6visual§r effects; altering fabric of Minecraft experience",
   "authors": [
     "§6OreCruncher§r"
   ],

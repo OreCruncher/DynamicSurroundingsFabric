@@ -1,5 +1,6 @@
-package org.orecruncher.dsurround.sound;
+package org.orecruncher.dsurround.config;
 
+import com.google.common.base.Preconditions;
 import com.google.gson.reflect.TypeToken;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.fabricmc.api.EnvType;
@@ -14,6 +15,7 @@ import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.lib.validation.MapValidator;
 import org.orecruncher.dsurround.lib.validation.Validators;
+import org.orecruncher.dsurround.sound.SoundMetadata;
 
 import java.lang.reflect.Type;
 import java.util.*;
@@ -39,7 +41,11 @@ public final class SoundLibrary {
         Validators.registerValidator(SOUND_FILE_TYPE, new MapValidator<String, SoundMetadataConfig>());
     }
 
-    public static void initialize() {
+    public static void load() {
+
+        // Clear our registries in case this is a re-load
+        myRegistry.clear();
+        soundMetadata.clear();
 
         // Initializes the internal sound registry once all the other mods have
         // registered their sounds.
@@ -78,13 +84,13 @@ public final class SoundLibrary {
         }
     }
 
-    public static Optional<SoundEvent> getSound(final Identifier sound) {
+    public static SoundEvent getSound(final Identifier sound) {
         Objects.requireNonNull(sound);
         final SoundEvent se = myRegistry.get(sound);
         if (se == MISSING) {
             LOGGER.warn("Unable to locate sound '%s'", sound.toString());
         }
-        return Optional.of(se);
+        return se;
     }
 
     public static Collection<SoundEvent> getRegisteredSoundEvents() {
@@ -96,4 +102,21 @@ public final class SoundLibrary {
         return soundMetadata.get(Objects.requireNonNull(sound));
     }
 
+    public static Identifier resolveIdentifier(final String defaultDomain, final String name) {
+        Preconditions.checkNotNull(defaultDomain);
+        Preconditions.checkNotNull(name);
+
+        Identifier res;
+        if (name.charAt(0) == '@') {
+            // Sound is in the Minecraft namespace
+            res = new Identifier("minecraft", name.substring(1));
+        } else if (!name.contains(":")) {
+            // It's just a path so assume the specified namespace
+            res = new Identifier(defaultDomain, name);
+        } else {
+            // It's a fully qualified location
+            res = new Identifier(name);
+        }
+        return res;
+    }
 }

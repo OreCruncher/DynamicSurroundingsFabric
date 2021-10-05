@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.config;
 
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.ConfigData;
+import me.shedaniel.autoconfig.ConfigHolder;
 import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -92,11 +93,14 @@ public class SoundConfiguration implements ConfigData {
     }
 
     public void saveIndividualSoundConfigs(Collection<IndividualSoundConfigEntry> configs) {
-
+        this.soundConfiguration = new ArrayList<>(configs);
+        ConfigHolder<SoundConfiguration> holder = AutoConfig.getConfigHolder(SoundConfiguration.class);
+        holder.save();
+        this.validatePostLoad();
     }
 
     public void validatePostLoad() {
-        this.individualSoundConfiguration.entrySet().removeIf(entry -> entry.getValue().isDefault());
+        this.individualSoundConfiguration.clear();
 
         this.soundConfiguration.forEach(entry -> {
             if (!entry.isDefault()) {
@@ -107,5 +111,4 @@ public class SoundConfiguration implements ConfigData {
             }
         });
     }
-
 }

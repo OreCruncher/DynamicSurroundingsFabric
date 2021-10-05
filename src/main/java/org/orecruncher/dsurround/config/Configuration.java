@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.config;
 
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.ConfigData;
+import me.shedaniel.autoconfig.annotation.Config;
 import me.shedaniel.autoconfig.annotation.ConfigEntry;
 import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.Comment;
@@ -19,14 +20,36 @@ public class Configuration implements ConfigData {
         AutoConfig.register(Configuration.class, GsonConfigSerializer::new);
     }
 
+    public static class Flags {
+        public static final int SOUND_PLAY = 0x1;
+        public static final int BASIC_SOUND_PLAY = 0x2;
+    }
+
     public static Configuration getConfig() {
         return AutoConfig.getConfigHolder(Configuration.class).getConfig();
     }
 
     @ConfigEntry.Gui.CollapsibleObject
     @ConfigEntry.Gui.Tooltip
+    @Comment("Configuration options for modifying logging behavior")
+    public final Logging logging = new Logging();
+
+    @ConfigEntry.Gui.CollapsibleObject
+    @ConfigEntry.Gui.Tooltip
     @Comment("Configuration options for modifying Minecraft's Sound System behavior")
     public final SoundSystem soundSystem = new SoundSystem();
+
+    public static class Logging {
+
+        @ConfigEntry.Gui.Tooltip
+        @Comment("Enables/disables debug logging of the mod")
+        public boolean enableDebugLogging = false;
+
+        @ConfigEntry.Gui.Tooltip
+        @Comment("Bitmask for toggling various debug traces")
+        public int traceMask = 0;
+
+    }
 
     public static class SoundSystem {
 
@@ -40,5 +63,10 @@ public class Configuration implements ConfigData {
         @ConfigEntry.Gui.Tooltip
         @Comment("Ticks between culled sound events (0 to disable culling)")
         public int cullInterval = 20;
+    }
+
+    public void validatePostLoad() {
+        Client.LOGGER.setDebug(this.logging.enableDebugLogging);
+        Client.LOGGER.setTraceMask(this.logging.traceMask);
     }
 }

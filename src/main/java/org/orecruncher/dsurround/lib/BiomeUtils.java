@@ -3,8 +3,10 @@ package org.orecruncher.dsurround.lib;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.resource.language.I18n;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 
 public final class BiomeUtils {
@@ -25,5 +27,10 @@ public final class BiomeUtils {
         Identifier id = getBiomeId(biome);
         final String fmt = String.format("biome.%s.%s", id.getNamespace(), id.getPath());
         return I18n.translate(fmt);
+    }
+
+    public static Biome getPlayerBiome(PlayerEntity player) {
+        World world = player.getEntityWorld();
+        return world.getBiomeAccess().getBiome(player.getBlockPos());
     }
 }

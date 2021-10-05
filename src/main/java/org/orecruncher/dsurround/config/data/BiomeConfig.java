@@ -18,6 +18,8 @@ public final class BiomeConfig implements IValidator<BiomeConfig> {
     public String biomeSelector = StringUtils.EMPTY;
     @SerializedName("_comment")
     public String comment = null;
+    @SerializedName("clearSounds")
+    public Boolean clearSounds = null;
     @SerializedName("fogColor")
     public String fogColor = null;
     @SerializedName("visibility")
