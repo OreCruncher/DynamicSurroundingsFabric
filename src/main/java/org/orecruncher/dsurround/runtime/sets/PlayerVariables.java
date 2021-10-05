@@ -8,7 +8,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
-import org.orecruncher.dsurround.lib.WorldUtils;
+import org.orecruncher.dsurround.lib.world.WorldUtils;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 
 @Environment(EnvType.CLIENT)

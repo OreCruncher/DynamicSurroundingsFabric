@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "dsurround",
   "version": "${version}",
-  "name": "§3Dynamic Surroundings: Fabric Edition",
-  "description": "§e[WIP]§r Weaving a tapestry of §6sound§r and §6visual§r effects; altering fabric of Minecraft experience",
+  "name": "§6Dynamic Surroundings§r: §eFabric Edition",
+  "description": "§a[WIP]§r Alters the §ffabric§r of Minecraft experience by §fweaving§r a §ftapestry§r of §3sound§r and §3visual§r effects",
   "authors": [
-    "§6OreCruncher§r"
+    "§aOreCruncher§r"
   ],
   "contact": {
     "homepage": "https://github.com/OreCruncher/DynamicSurroundingsFabric",

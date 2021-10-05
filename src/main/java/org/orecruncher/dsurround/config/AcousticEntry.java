@@ -1,11 +1,14 @@
 package org.orecruncher.dsurround.config;
 
 import com.google.common.base.MoreObjects;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 
+@Environment(EnvType.CLIENT)
 public class AcousticEntry {
 
     private final SoundEvent acoustic;

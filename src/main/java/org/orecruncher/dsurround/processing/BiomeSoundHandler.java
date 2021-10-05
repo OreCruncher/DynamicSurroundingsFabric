@@ -10,7 +10,7 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.BiomeLibrary;
-import org.orecruncher.dsurround.lib.BiomeUtils;
+import org.orecruncher.dsurround.lib.biome.BiomeUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.TickCounter;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -124,7 +124,7 @@ public final class BiomeSoundHandler extends ClientHandler {
         // Iterate through the existing emitters:
         // * If done, remove
         // * If not in the incoming list, fade
-        // * If it does exist, update volume throttle and unfade if needed
+        // * If it does exist, update volume throttle and un-fade if needed
         this.emitters.removeIf(entry -> {
             if (entry.isDonePlaying()) {
                 return true;
@@ -156,7 +156,8 @@ public final class BiomeSoundHandler extends ClientHandler {
         GameUtils.getSoundHander().stopAll();
     }
 
-    public void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
+    @Override
+    protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
         if (Client.Config.logging.enableDebugLogging)
             this.emitters.forEach(backgroundAcousticEmitter -> left.add("EMITTER: " + backgroundAcousticEmitter.toString()));
     }

@@ -23,7 +23,7 @@ public class AcousticConfig implements IValidator<AcousticConfig> {
 
     @Override
     public void validate(final AcousticConfig obj) throws ValidationException {
-        ValidationHelpers.isProperResourceLocation("soundEventId", this.soundEventId, Client.LOGGER::warn);
-        ValidationHelpers.inRange("weight", this.weight, 1, Integer.MAX_VALUE, Client.LOGGER::warn);
+        ValidationHelpers.isProperResourceLocation("soundEventId", this.soundEventId, Client.LOGGER);
+        ValidationHelpers.inRange("weight", this.weight, 1, Integer.MAX_VALUE, Client.LOGGER);
     }
 }

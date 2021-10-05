@@ -19,4 +19,8 @@ public interface IBiomeVariables {
     String getCategory();
 
     String getPrecipitationType();
+
+    String getTraits();
+
+    boolean hasTrait(String trait);
 }

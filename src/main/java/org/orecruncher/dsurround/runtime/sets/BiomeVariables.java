@@ -4,20 +4,23 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BuiltinBiomes;
-import org.orecruncher.dsurround.lib.BiomeUtils;
+import org.orecruncher.dsurround.config.BiomeLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
+
+import java.util.Collection;
 
 @Environment(EnvType.CLIENT)
 public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBiomeVariables {
 
     private Biome biome;
-    private final Lazy<String> name = new Lazy<>(() -> BiomeUtils.getBiomeName(this.biome));
-    private final Lazy<String> modid = new Lazy<>(() -> BiomeUtils.getBiomeId(this.biome).getNamespace());
-    private final Lazy<String> id = new Lazy<>(() -> BiomeUtils.getBiomeId(this.biome).toString());
+    private final Lazy<String> name = new Lazy<>(() -> BiomeLibrary.getBiomeName(this.biome));
+    private final Lazy<String> modid = new Lazy<>(() -> BiomeLibrary.getBiomeId(this.biome).getNamespace());
+    private final Lazy<String> id = new Lazy<>(() -> BiomeLibrary.getBiomeId(this.biome).toString());
     private final Lazy<String> category = new Lazy<>(() -> this.biome.getCategory().getName());
     private final Lazy<String> precipitationType = new Lazy<>(() -> this.biome.getPrecipitation().getName());
+    private final Lazy<Collection<String>> traits = new Lazy<>(() -> BiomeLibrary.getBiomeTraits(this.biome));
 
     public BiomeVariables() {
         super("biome");
@@ -52,6 +55,7 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
             this.id.reset();
             this.category.reset();
             this.precipitationType.reset();
+            this.traits.reset();
         }
     }
 
@@ -88,5 +92,15 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
     @Override
     public String getPrecipitationType() {
         return this.precipitationType.get();
+    }
+
+    @Override
+    public String getTraits() {
+        return String.join(" ", this.traits.get());
+    }
+
+    @Override
+    public boolean hasTrait(String trait) {
+        return this.traits.get().contains(trait.toLowerCase());
     }
 }

@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib;
+package org.orecruncher.dsurround.lib.world;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

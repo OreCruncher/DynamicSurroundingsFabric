@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.Random;
 
 @Environment(EnvType.CLIENT)
-class ClientHandler {
+abstract class ClientHandler {
 
     protected static final Random RANDOM = XorShiftRandom.current();
 
@@ -73,7 +73,7 @@ class ClientHandler {
     /**
      * Called when gather diagnostic information for the debug hud
      */
-    public void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
+    protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
 
     }
 

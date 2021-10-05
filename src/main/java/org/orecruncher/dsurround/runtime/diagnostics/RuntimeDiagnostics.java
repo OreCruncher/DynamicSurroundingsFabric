@@ -19,9 +19,10 @@ public final class RuntimeDiagnostics {
 
     private static final MinecraftClock clock = new MinecraftClock();
 
-    private static List<String> scripts = ImmutableList.of(
+    private static final List<String> scripts = ImmutableList.of(
             "'Dim: ' + dim.getId() + '/' + dim.getDimName() + '; isSuperFlat: ' + dim.isSuperFlat()",
             "'Biome: ' + biome.getName() + '; Temp ' + biome.getTemperature() + '; rainfall: ' + biome.getRainfall() + '; category: ' + biome.getCategory()",
+            "'Biome Traits: ' + biome.getTraits()",
             "'Weather: ' + lib.iif(weather.isRaining(),'rain: ' + weather.getRainIntensity(),'not raining') + lib.iif(weather.isThundering(),' thundering','') + '; Temp: ' + weather.getTemperature() + '; ice: ' + lib.iif(weather.getTemperature() < 0.15, 'true', 'false') + ' ' + lib.iif(weather.getTemperature() < 0.2, '(breath)', '')",
             "'Diurnal: ' + lib.iif(diurnal.isNight(),' night,',' day,') + '; celestial angle: ' + diurnal.getCelestialAngle()",
             "'Player: health ' + player.getHealth() + '/' + player.getMaxHealth() + '; food ' + player.getFoodLevel() + '/' + player.getFoodSaturationLevel() + '; pos (' + player.getX() + ', ' + player.getY() + ', ' + player.getZ() + ')'"
@@ -33,6 +34,7 @@ public final class RuntimeDiagnostics {
 
     private static void onCollect(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
         if (GameUtils.isInGame()) {
+            assert GameUtils.getWorld() != null;
             clock.update(GameUtils.getWorld());
             left.add(Formatting.GREEN + clock.getFormattedTime());
             left.add(Strings.EMPTY);

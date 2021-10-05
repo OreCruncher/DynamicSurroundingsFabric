@@ -2,12 +2,15 @@ package org.orecruncher.dsurround.config.data;
 
 import com.google.common.collect.ImmutableList;
 import com.google.gson.annotations.SerializedName;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.lib.validation.IValidator;
 import org.orecruncher.dsurround.lib.validation.ValidationException;
 
 import java.util.List;
 
+@Environment(EnvType.CLIENT)
 public class SoundMetadataConfig implements IValidator<SoundMetadataConfig> {
     @SerializedName("title")
     public String title = null;

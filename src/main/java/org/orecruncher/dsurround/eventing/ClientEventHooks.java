@@ -5,6 +5,7 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.util.math.BlockPos;
+import org.orecruncher.dsurround.lib.Guard;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
 
 import java.util.Collection;
@@ -18,10 +19,9 @@ public final class ClientEventHooks {
     public static Event<CollectDiagnosticsEvent> COLLECT_DIAGNOSTICS = EventFactory.createArrayBacked(
             CollectDiagnosticsEvent.class,
             callbacks -> (left, right, timers) -> {
-                for (CollectDiagnosticsEvent callback : callbacks) {
-                    callback.onCollect(left, right, timers);
-                }
-            });
+                for (CollectDiagnosticsEvent callback : callbacks)
+                    Guard.execute(() -> callback.onCollect(left, right, timers));
+                });
 
     /**
      * Fired when block state updates are received clientside.  Results are coalesced for efficiency.
@@ -29,9 +29,8 @@ public final class ClientEventHooks {
     public static Event<BlockUpdateEvent> BLOCK_UPDATE = EventFactory.createArrayBacked(
             BlockUpdateEvent.class,
             callbacks -> (positions) -> {
-                for (BlockUpdateEvent callback : callbacks) {
-                    callback.onUpdate(positions);
-                }
+                for (BlockUpdateEvent callback : callbacks)
+                    Guard.execute(() -> callback.onUpdate(positions));
             });
 
     @FunctionalInterface

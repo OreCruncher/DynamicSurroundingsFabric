@@ -1,5 +1,5 @@
 {
-  "dsurround.modname": "§3Dynamic Surroundings",
+  "dsurround.modname": "§6Dynamic Surroundings",
   "dsurround.sound.caption.ice": "Ice cracks",
   "dsurround.sound.caption.frog": "Frog croaks",
   "dsurround.sound.caption.wind": "Wind blows",
@@ -32,7 +32,7 @@
   "dsurround.format.Sunset": "Sunset",
   "dsurround.format.Daytime": "Daytime",
   "dsurround.format.Nighttime": "Nighttime",
-  "text.autoconfig.dsurround.title": "§3Dynamic Surroundings§r Configuration Options",
+  "text.autoconfig.dsurround.title": "§6Dynamic Surroundings§r Configuration Options",
   "text.autoconfig.dsurround.option.soundSystem": "Sound System",
   "text.autoconfig.dsurround.option.soundSystem.@Tooltip": "Configuration options for modifying Minecraft's Sound System behavior",
   "text.autoconfig.dsurround.option.soundSystem.streamingChannels": "Number of Streaming Sound Channels",

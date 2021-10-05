@@ -12,7 +12,8 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.dimension.DimensionType;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.lib.BiomeUtils;
+import org.orecruncher.dsurround.config.BiomeLibrary;
+import org.orecruncher.dsurround.lib.biome.BiomeUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
 
 import java.util.HashSet;
@@ -71,7 +72,7 @@ public final class BiomeScanner {
             // Validate there are no duplicates in the list.
             final Set<Identifier> seen = new HashSet<>();
             for (final Reference2IntMap.Entry<Biome> kvp : this.weights.reference2IntEntrySet()) {
-                final Identifier location = BiomeUtils.getBiomeId(kvp.getKey());
+                final Identifier location = BiomeLibrary.getBiomeId(kvp.getKey());
                 if (seen.contains(location)) {
                     Client.LOGGER.debug("Duplicate entry detected: %s", location.toString());
                 } else {

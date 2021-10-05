@@ -11,8 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
-import org.orecruncher.dsurround.config.data.BiomeConfig;
-import org.orecruncher.dsurround.lib.BiomeUtils;
+import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.gui.Color;
@@ -22,6 +21,7 @@ import java.util.Collection;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 @Environment(EnvType.CLIENT)
 public final class BiomeInfo implements Comparable<BiomeInfo> {
 
@@ -29,7 +29,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo> {
 
     private final static float DEFAULT_VISIBILITY = 1F;
 
-    public final static int DEFAULT_SPOT_CHANCE = 1000 / 4;
+    public final static int DEFAULT_ADDITIONAL_SOUND_CHANCE = 1000 / 4;
 
     private final Biome biome;
     private final Identifier biomeId;
@@ -38,11 +38,12 @@ public final class BiomeInfo implements Comparable<BiomeInfo> {
     private Color fogColor;
     private float visibility = DEFAULT_VISIBILITY;
 
-    private int additionalSoundChance = DEFAULT_SPOT_CHANCE;
+    private int additionalSoundChance = DEFAULT_ADDITIONAL_SOUND_CHANCE;
 
     private final ObjectArray<AcousticEntry> biomeSounds = new ObjectArray<>();
     private final ObjectArray<WeightedAcousticEntry> additionalSounds = new ObjectArray<>();
     private final ObjectArray<WeightedAcousticEntry> moodSounds = new ObjectArray<>();
+    private final ObjectArray<String> traits = new ObjectArray<>();
 
     private ObjectArray<String> comments;
 
@@ -52,12 +53,13 @@ public final class BiomeInfo implements Comparable<BiomeInfo> {
 
     public BiomeInfo(final Biome biome) {
         this.biome = biome;
-        this.biomeId = BiomeUtils.getBiomeId(biome);
-        this.biomeName = BiomeUtils.getBiomeName(biome);
+        this.biomeId = BiomeLibrary.getBiomeId(biome);
+        this.biomeName = BiomeLibrary.getBiomeName(biome);
 
+        this.traits.addAll(BiomeLibrary.getBiomeTraits(biome));
         this.isRiver = this.biome.getCategory() == Biome.Category.RIVER;
         this.isOcean = this.biome.getCategory() == Biome.Category.OCEAN;
-        this.isDeepOcean = this.isOcean && getBiomeName().matches("(?i).*deep.*ocean.*|.*abyss.*");
+        this.isDeepOcean = this.isOcean && this.traits.contains("deep");
     }
 
     public boolean isRiver() {
@@ -136,6 +138,9 @@ public final class BiomeInfo implements Comparable<BiomeInfo> {
         return this.biome.getDownfall();
     }
 
+    public Collection<String> getTraits() {
+        return this.traits;
+    }
 
     public Collection<SoundEvent> findBiomeSoundMatches() {
         return findBiomeSoundMatches(new ObjectArray<>());
@@ -160,10 +165,10 @@ public final class BiomeInfo implements Comparable<BiomeInfo> {
     void clearSounds() {
         this.biomeSounds.clear();
         this.additionalSounds.clear();
-        this.additionalSoundChance = DEFAULT_SPOT_CHANCE;
+        this.additionalSoundChance = DEFAULT_ADDITIONAL_SOUND_CHANCE;
     }
 
-    public void update(final BiomeConfig entry) {
+    public void update(final BiomeConfigRule entry) {
         addComment(entry.comment);
 
         if (entry.visibility != null)
@@ -173,13 +178,13 @@ public final class BiomeInfo implements Comparable<BiomeInfo> {
             setFogColor(Color.parse(entry.fogColor));
         }
 
-        if (entry.clearSounds != null && entry.clearSounds) {
+        if (entry.clearSounds) {
             addComment("> Sound Clear");
             clearSounds();
         }
 
-        if (entry.soundChance != null)
-            setAdditionalSoundChance(entry.soundChance);
+        if (entry.additionalSoundChance != null)
+            setAdditionalSoundChance(entry.additionalSoundChance);
 
         for (final AcousticConfig sr : entry.acoustics) {
             final Identifier res = SoundLibrary.resolveIdentifier(Client.ModId, sr.soundEventId);
@@ -229,7 +234,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo> {
         builder.append(" rain: ").append(getRainfall());
 
         if (this.fogColor != null) {
-            builder.append(" fogColor:").append(this.fogColor.toString());
+            builder.append(" fogColor:").append(this.fogColor);
         }
 
         builder.append(" visibility:").append(this.visibility);

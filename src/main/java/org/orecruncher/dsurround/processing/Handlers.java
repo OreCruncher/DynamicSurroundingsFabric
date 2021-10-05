@@ -11,6 +11,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.Singleton;
 import org.orecruncher.dsurround.lib.TickCounter;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -22,14 +23,13 @@ import java.util.Collection;
 public class Handlers {
 
     private static final IModLog LOGGER = Client.LOGGER.createChild(Handlers.class);
-
-    private static Handlers INSTANCE;
+    private static final Singleton<Handlers> INSTANCE = new Singleton<>(Handlers::new);
 
     private final ObjectArray<ClientHandler> effectHandlers = new ObjectArray<>();
     private boolean isConnected = false;
 
     public static void initialize() {
-        INSTANCE = new Handlers();
+        INSTANCE.get();
     }
 
     private Handlers() {
