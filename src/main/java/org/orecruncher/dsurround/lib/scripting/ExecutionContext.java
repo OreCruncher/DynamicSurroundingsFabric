@@ -18,11 +18,17 @@ public final class ExecutionContext {
     private final String contextName;
     private final ScriptEngine engine;
     private final ObjectArray<VariableSet<?>> variables = new ObjectArray<>(8);
+    private final boolean cacheResults;
     private final Map<String, CompiledScript> compiled = new HashMap<>();
     private final CompiledScript error;
 
     public ExecutionContext(final String contextName) {
+        this(contextName, true);
+    }
+
+    public ExecutionContext(final String contextName, boolean cacheMethods) {
         this.contextName = contextName;
+        this.cacheResults = cacheMethods;
         this.engine = new ScriptEngineManager().getEngineByName("JavaScript");
         this.error = makeFunction("'<ERROR>'");
         this.put("lib", new LibraryFunctions());
@@ -59,10 +65,11 @@ public final class ExecutionContext {
     }
 
     public Optional<Object> eval(final String script) {
-        CompiledScript func = compiled.get(script);
+        CompiledScript func = this.compiled.get(script);
         if (func == null) {
             func = makeFunction(script);
-            compiled.put(script, func);
+            if (this.cacheResults)
+                this.compiled.put(script, func);
         }
 
         try {
@@ -70,7 +77,8 @@ public final class ExecutionContext {
             return Optional.ofNullable(result);
         } catch (final Throwable t) {
             LOGGER.error(t, "Error execution script: %s", script);
-            compiled.put(script, makeErrorFunction(t));
+            if (this.cacheResults)
+                this.compiled.put(script, makeErrorFunction(t));
         }
 
         return Optional.of("ERROR?");

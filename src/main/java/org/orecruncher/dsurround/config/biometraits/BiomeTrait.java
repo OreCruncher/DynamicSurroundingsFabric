@@ -74,6 +74,11 @@ public final class BiomeTrait {
     }
 
     @Override
+    public String toString() {
+        return this.name;
+    }
+
+    @Override
     public int hashCode() {
         return this.name.hashCode();
     }

@@ -24,7 +24,7 @@ public interface IBiomeVariables {
 
     boolean is(String trait);
 
-    boolean isAll(String... trait);
+    boolean isAllOf(String... trait);
 
     boolean isOneOf(String... trait);
 }

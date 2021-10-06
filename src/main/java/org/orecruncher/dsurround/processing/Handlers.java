@@ -91,6 +91,9 @@ public class Handlers {
 
     public void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
         if (Client.Config.logging.enableDebugLogging)
-            this.effectHandlers.forEach(h -> timers.add(h.getTimer()));
+            this.effectHandlers.forEach(h -> {
+                h.gatherDiagnostics(left, right, timers);
+                timers.add(h.getTimer());
+            });
     }
 }

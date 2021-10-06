@@ -27,7 +27,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.isAll('Cold', 'Wasteland')",
+    "biomeSelector": "biome.isAllOf('Cold', 'Wasteland')",
     "_comment": "Arctic Wind",
     "acoustics": [
       {
@@ -90,7 +90,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.isForest && biome.isDense && !(biome.isDead || biome.isWasteland || biome.isSwamp || biome.isJungle) && lib.isBetween(biome.temperature, 0.2, 1.0)",
+    "biomeSelector": "biome.isAllOf('Forest','Dense') && !biome.isOneOf('Dead','Wasteland','Swamp','Jungle') && lib.isBetween(biome.temperature, 0.2, 1.0)",
     "_comment": "Deep Forest w/Crickets",
     "acoustics": [
       {
@@ -104,7 +104,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.isForest && biome.isCold && !(biome.isSwamp || biome.isSnowy || biome.isDead || biome.isDense)",
+    "biomeSelector": "biome.isAllOf('Forest','Cold') && !biome.isOneOf('Swamp','Snowy','Dead','Dense')",
     "_comment": "Simple Forest",
     "acoustics": [
       {
@@ -114,18 +114,18 @@
     ]
   },
   {
-    "biomeSelector": "biome.isForest && !biome.isSwamp && (biome.isCold || biome.isSnowy || biome.isDead)",
+    "biomeSelector": "biome.is('Forest') && !biome.is('Swamp') && biome.isOneOf('Cold','Snowy','Dead')",
     "_comment": "Wolf",
     "acoustics": [
       {
         "soundEventId": "wolf",
         "conditions": "weather.isNotRaining() && diurnal.isNight()",
-        "type": "addition"
+        "type": "mood"
       }
     ]
   },
   {
-    "biomeSelector": "biome.isBeach && !biome.isSnowy",
+    "biomeSelector": "biome.is('Beach') && !biome.is('Snowy')",
     "_comment": "Beach",
     "acoustics": [
       {
@@ -134,7 +134,7 @@
       {
         "soundEventId": "seagulls",
         "conditions": "diurnal.isDay()",
-        "type": "addition"
+        "type": "mood"
       }
     ]
   },
@@ -145,7 +145,7 @@
     "visibility": 0.4
   },
   {
-    "biomeSelector": "biome.isRiver && !(biome.isSnowy || biome.isDry || biome.isOcean)",
+    "biomeSelector": "biome.is('River') && !biome.isOneOf('Snowy','Dry','Ocean')",
     "_comment": "River",
     "acoustics": [
       {
@@ -154,7 +154,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.isOcean",
+    "biomeSelector": "biome.is('Ocean')",
     "_comment": "Ocean background",
     "acoustics": [
       {
@@ -178,13 +178,13 @@
     "clearSounds": true
   },
   {
-    "biomeSelector": "biome.isSwamp && !biome.isForest",
+    "biomeSelector": "biome.is('Swamp') && !biome.is('Forest')",
     "_comment": "Basic Swamp Fog",
     "fogColor": "64,96,64",
     "visibility": 0.4
   },
   {
-    "biomeSelector": "biome.isSwamp && !(biome.isForest || biome.isDead || biome.isCold)",
+    "biomeSelector": "biome.is('Swamp') && !biome.isOneOf('Forest','Dead','Cold')",
     "_comment": "Basic Swamp Sounds",
     "acoustics": [
       {
@@ -193,7 +193,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.isSwamp && (biome.isCold || biome.isForest)",
+    "biomeSelector": "biome.is('Swamp') && biome.isOneOf('Cold','Forest')",
     "_comment": "Special Swamps such as Fen, Bog, Marsh, etc.",
     "acoustics": [
       {
@@ -209,105 +209,100 @@
     "visibility": 0.4
   },
   {
-    "biomeSelector": "biome.rainfall < 0.1 && (biome.isSandy || biome.isMesa || (biome.isWasteland && !(biome.isCold || biome.isSnowy || biome.isSwamp)))",
+    "biomeSelector": "biome.getRainfall() < 0.1 && (biome.isOneOf('Sandy','Mesa') || (biome.is('Wasteland') && !biome.isOneOf('Cold','Snowy','Swamp')))",
     "_comment": "Dust for desert like biomes",
     "fogColor": "255,234,151"
   },
   {
-    "biomeSelector": "!(biome.isOcean || biome.isRiver || biome.isNether || biome.isEnd || biome.isMushroom) && !(biome.isFake || biome.isSnowy || biome.isSwamp || biome.isJungle || biome.isBeach || biome.isWasteland || biome.isWet)",
+    "biomeSelector": "!biome.isOneOf('Ocean','River','Nether','TheEnd','Mushroom') && !biome.isOneOf('Snowy','Swamp','Jungle','Beach','Wasteland','Wet')",
     "_comment": "Coyote",
     "acoustics": [
       {
         "soundEventId": "coyote",
         "conditions": "weather.isNotRaining() && diurnal.isNight()",
-        "type": "addition"
+        "type": "mood"
       }
     ]
   },
   {
-    "biomeSelector": "!(biome.isOcean || biome.isRiver || biome.isNether || biome.isEnd) && !(biome.isFake || biome.isSnowy || biome.isJungle || biome.isHot || biome.isBeach)",
+    "biomeSelector": "!biome.isOneOf('Ocean','River','Nether','TheEnd','Snowy','Jungle','Hot','Beach')",
     "_comment": "Crow",
     "acoustics": [
       {
         "soundEventId": "crow",
         "conditions": "weather.isNotRaining() && diurnal.isDay()",
-        "type": "addition"
+        "type": "mood"
       }
     ]
   },
   {
-    "biomeSelector": "!(biome.isOcean || biome.isRiver || biome.isNether || biome.isEnd) && !(biome.isFake || biome.isDry || biome.isJungle || biome.isHot || biome.isBeach || biome.isSwamp || biome.isWasteland)",
+    "biomeSelector": "!biome.isOneOf('Ocean','River','Nether','TheEnd','Dry','Jungle','Hot','Beach','Swamp','Wasteland')",
     "_comment": "Owl",
     "acoustics": [
       {
         "soundEventId": "owl",
         "conditions": "weather.isNotRaining() && diurnal.isNight()",
-        "type": "addition"
+        "type": "mood"
       }
     ]
   },
   {
-    "biomeSelector": "biome.isForest && !(biome.isHot || biome.isSwamp || biome.isDead || biome.isCold || biome.isOcean || biome.isWasteland || biome.isJungle)",
+    "biomeSelector": "biome.is('Forest') && !biome.isOneOf('Hot','Swamp','Dead','Cold','Ocean','Wasteland','Jungle')",
     "_comment": "Birds",
     "acoustics": [
       {
         "soundEventId": "bird",
         "conditions": "weather.isNotRaining() && diurnal.isDay()",
-        "type": "addition"
+        "type": "mood"
       },
       {
         "soundEventId": "nightingale",
         "conditions": "weather.isNotRaining() && diurnal.isDay()",
-        "type": "addition"
+        "type": "mood"
       }
     ]
   },
   {
-    "biomeSelector": "biome.isForest && !(biome.isEnd || biome.isNether || biome.isOcean || biome.isRiver)",
+    "biomeSelector": "biome.is('Forest') && !biome.isOneOf('TheEnd','Nether','Ocean','River')",
     "_comment": "Woodpecker",
     "acoustics": [
       {
         "soundEventId": "woodpecker",
         "conditions": "weather.isNotRaining() && diurnal.isDay()",
-        "type": "addition"
+        "type": "mood"
       }
     ]
   },
   {
-    "biomeSelector": "!(biome.isMushroom || biome.isDead || biome.isSwamp || biome.isJungle || biome.isWasteland || biome.isOcean || biome.isSnowy || biome.isNether || biome.isEnd || biome.isFake)",
+    "biomeSelector": "!biome.isOneOf('Mushroom','Dead','Swamp','Jungle','Wasteland','Ocean','Snowy','Nether','TheEnd')",
     "_comment": "Raptors",
     "acoustics": [
       {
         "soundEventId": "raptor",
         "conditions": "weather.isNotRaining() && diurnal.isDay()",
-        "type": "addition"
+        "type": "mood"
       }
     ]
   },
   {
-    "biomeSelector": "biome.isConiferous && !biome.isMountain",
+    "biomeSelector": "biome.isOneOf('Coniferous','Taiga') && !biome.is('Mountain')",
     "_comment": "Loon",
     "acoustics": [
       {
         "soundEventId": "loon",
         "conditions": "weather.isNotRaining() && !diurnal.isNight()",
-        "type": "addition"
+        "type": "mood"
       }
     ]
   },
   {
-    "biomeSelector": "(biome.isCold || biome.isSnowy) && !(biome.isDead || biome.isSwamp || biome.isEnd)",
-    "_comment": "Display aurora",
-    "aurora": true
-  },
-  {
-    "biomeSelector": "biome.isNether",
+    "biomeSelector": "biome.is('Nether')",
     "_comment": "Regular Nether",
     "dust": true,
     "dustColor": "255,0,0"
   },
   {
-    "biomeSelector": "biome.isEnd || biome.name == 'The Void'",
+    "biomeSelector": "biome.is('TheEnd') || biome.name == 'The Void'",
     "_comment": "It's The End!",
     "clearSounds": true,
     "aurora": false
@@ -322,18 +317,18 @@
       },
       {
         "soundEventId": "rockfall",
-        "type": "addition",
+        "type": "mood",
         "weight": 30
       },
       {
         "soundEventId": "bigrockfall",
-        "type": "addition",
+        "type": "mood",
         "weight": 15
       },
       {
         "soundEventId": "monstergrowl",
         "conditions": "diurnal.isNight()",
-        "type": "addition",
+        "type": "mood",
         "weight": 10
       }
     ]
@@ -356,7 +351,7 @@
       },
       {
         "soundEventId": "whale",
-        "type": "addition"
+        "type": "mood"
       }
     ]
   },

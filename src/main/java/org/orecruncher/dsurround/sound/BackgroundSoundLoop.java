@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.sound;
 
+import com.google.common.base.MoreObjects;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.MovingSoundInstance;
@@ -10,42 +11,67 @@ import net.minecraft.util.math.MathHelper;
 @Environment(EnvType.CLIENT)
 public class BackgroundSoundLoop extends MovingSoundInstance {
 
+    private static final float INITIAL_SCALE = 0.00002F;
+    private static final float SCALE_AMOUNT = 0.02F;
+
     private float scale;
-    private int delta;
-    private int strength;
+    private float target;
+    private boolean isFading;
 
     public BackgroundSoundLoop(SoundEvent soundEvent) {
         super(soundEvent, SoundCategory.AMBIENT);
-        this.scale = 1F;
-        this.fadeIn();
+        this.scale = INITIAL_SCALE;
+        this.target = 1F;
+        this.isFading = false;
+        this.repeat = true;
+        this.repeatDelay = 0;
+        this.attenuationType = AttenuationType.NONE;
+        this.relative = true; // What is this guy really supposed to do?
     }
 
     public void tick() {
-        this.strength += this.delta;
-        float volume = (float) this.strength / 40.0F * this.scale;
+        if (this.scale < this.target && !this.isFading)
+            this.scale += SCALE_AMOUNT;
+        else if (this.isFading || this.scale > this.target)
+            this.scale -= SCALE_AMOUNT;
 
-        if (volume <= 0) {
+        this.scale = MathHelper.clamp(this.scale, 0F, this.target);
+
+        if (Float.compare(this.getVolume(), 0F) == 0)
             this.setDone();
-        }
-
-        this.volume = MathHelper.clamp(volume, 0.0F, 1.0F);
     }
 
-    public void setScaling(float scale) {
-        this.scale = scale;
+    @Override
+    public float getVolume() {
+        return super.getVolume() * this.scale;
+    }
+
+    public void setScaleTarget(float target) {
+        this.target = target;
     }
 
     public boolean isFading() {
-        return this.delta < 0;
+        return this.isFading;
     }
 
     public void fadeOut() {
-        this.strength = Math.min(this.strength, 40);
-        this.delta = -1;
+        this.isFading = true;
     }
 
     public void fadeIn() {
-        this.strength = Math.max(0, this.strength);
-        this.delta = 1;
+        this.isFading = false;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .addValue(this.getSound().getIdentifier().toString())
+                .addValue(this.getCategory().getName())
+                .add("v", getVolume())
+                .add("ev", SoundVolumeEvaluator.getAdjustedVolume(this))
+                .add("p", getPitch())
+                .add("f", this.scale)
+                .add("fading", isFading())
+                .toString();
     }
 }

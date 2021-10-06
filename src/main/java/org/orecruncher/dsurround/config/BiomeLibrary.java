@@ -20,7 +20,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.lib.validation.ListValidator;
 import org.orecruncher.dsurround.lib.validation.Validators;
-import org.orecruncher.dsurround.runtime.ConditionEvaluator;
+import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
 import org.orecruncher.dsurround.xface.IBiomeExtended;
 
 import java.lang.reflect.Type;
@@ -91,26 +91,34 @@ public final class BiomeLibrary {
         // which could ripple into traits.
         BiomeTraits traits = BiomeTraits.createFrom(id, biome);
 
-        // Build out the info object and apply rules
+        // Build out the info object and store into the biome.  We need to do that
+        // so that when applying configs the script engine can find it.
         final var result = new BiomeInfo(version, id, name, traits);
-        Guard.execute(() -> applyRuleConfigs(result));
-
-        // Store the info object in the Biome object and return
         ((IBiomeExtended) (Object) biome).setInfo(result);
+
+        // Apply rule configs
+        Guard.execute(() -> applyRuleConfigs(biome, result));
         return result;
     }
 
-    private static void applyRuleConfigs(BiomeInfo info) {
+    private static void applyRuleConfigs(Biome biome, BiomeInfo info) {
         for (var c : biomeConfigs) {
-            var applies = ConditionEvaluator.INSTANCE.check(c.biomeSelector);
-            if (applies) {
-                try {
-                    info.update(c);
-                } catch (final Throwable t) {
-                    LOGGER.warn("Unable to process biome sound configuration [%s]", c.toString());
+            try {
+                var applies = BiomeConditionEvaluator.INSTANCE.check(biome, c.biomeSelector);
+                if (applies) {
+                    try {
+                        info.update(c);
+                    } catch (final Throwable t) {
+                        LOGGER.warn("Unable to process biome sound configuration [%s]", c.toString());
+                    }
                 }
+            } catch(Exception ignore) {
+                int x = 0;
             }
         }
+
+        // Reduce memory consumption as much as possible
+        info.trim();
     }
 
     static Identifier getBiomeId(Biome biome) {
@@ -126,13 +134,13 @@ public final class BiomeLibrary {
         return I18n.translate(fmt);
     }
 
-    public static Collection<SoundEvent> findSoundMatches(Biome biome) {
+    public static Collection<SoundEvent> findBiomeSoundMatches(Biome biome) {
         var info = getBiomeInfo(biome);
         return info.findBiomeSoundMatches();
     }
 
-    public static SoundEvent getRandomSoundAddition(Biome biome, Random rand) {
+    public static SoundEvent getExtraSound(Biome biome, SoundEventType type, Random rand) {
         var info = getBiomeInfo(biome);
-        return info.getAdditionalSound(rand);
+        return info.getExtraSound(type, rand);
     }
 }

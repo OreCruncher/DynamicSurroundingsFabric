@@ -69,7 +69,37 @@
 			}
 		]
 	},
-	"biome.desert.wind": {
+	"biome.wind.hills": {
+		"subtitle": "dsurround.sound.caption.wind",
+		"credits": [
+			"§aWind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
+			"felix.blume",
+			"Creative Commons 0"
+		],
+		"sounds": [
+			{
+				"type": "event",
+				"name": "dsurround:biome.wind",
+				"volume": 0.2,
+				"pitch": 1.5
+			}
+		]
+	},
+	"biome.wind.mountains": {
+		"subtitle": "dsurround.sound.caption.wind",
+		"credits": [
+			"§aWind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
+			"felix.blume",
+			"Creative Commons 0"
+		],
+		"sounds": [
+			{
+				"type": "event",
+				"name": "dsurround:biome.wind"
+			}
+		]
+	},
+	"biome.wind.desert": {
 		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [
 			"§adesertwind1FINAL.wav",
@@ -82,7 +112,7 @@
 			}
 		]
 	},
-	"arctic.wind": {
+	"biome.wind.arctic": {
 		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [
 			"§aHowling Wind Ambience",
@@ -168,7 +198,7 @@
 			}
 		]
 	},
-	"biome.deep_forest": {
+	"biome.forest.deep": {
 		"sounds": [
 			{
 				"name": "dsurround:ambient/outside/deep_forest",
@@ -200,6 +230,20 @@
 				"name": "dsurround:ambient/outside/ocean",
 				"volume": 0.4,
 				"stream": true
+			}
+		]
+	},
+	"biome.ocean.deep": {
+		"credits": [
+			"§aocean waves surround me.wav",
+			"bohitomi",
+			"Attribution"
+		],
+		"sounds": [
+			{
+				"type": "event",
+				"name": "dsurround:biome.ocean",
+				"pitch": 0.7
 			}
 		]
 	},
@@ -501,7 +545,7 @@
 			}
 		]
 	},
-	"biome.underdeepocean": {
+	"biome.ocean.deep.under": {
 		"credits": [
 			"§aunderwater ambience.wav",
 			"AlienXXX",
@@ -514,7 +558,7 @@
 			}
 		]
 	},
-	"biome.underocean": {
+	"biome.ocean.under": {
 		"credits": [
 			"§aunderwater ambience.wav",
 			"AlienXXX",
@@ -527,7 +571,7 @@
 			}
 		]
 	},
-	"biome.underriver": {
+	"biome.river.under": {
 		"sounds": [
 			{
 				"name": "dsurround:ambient/underwater/river",
@@ -535,7 +579,7 @@
 			}
 		]
 	},
-	"biome.underwater": {
+	"biome.water.under": {
 		"credits": [
 			"§aUnderwaterDrowning01.wav",
 			"Abolla",
@@ -572,12 +616,12 @@
 			}
 		]
 	},
-	"heartbeat": {
+	"player.heartbeat": {
 		"sounds": [
 			"dsurround:ambient/steve/heartbeat"
 		]
 	},
-	"tummy": {
+	"player.tummy": {
 		"subtitle": "dsurround.sound.caption.tummy",
 		"sounds": [
 			"dsurround:ambient/steve/tummy1",
@@ -598,7 +642,7 @@
 			}
 		]
 	},
-	"jump": {
+	"player.jump": {
 		"sounds": [
 			{
 				"name": "dsurround:ambient/steve/jump",

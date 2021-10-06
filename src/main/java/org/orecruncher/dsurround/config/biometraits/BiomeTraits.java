@@ -36,10 +36,12 @@ public final class BiomeTraits {
     }
 
     public String toString() {
-        return this.traits
+        var temp = this.traits
                 .stream()
                 .map(BiomeTrait::getName)
                 .collect(Collectors.joining(","));
+
+        return String.format("Traits [%s]", temp);
     }
 
     public static BiomeTraits createFrom(Identifier id, Biome biome) {

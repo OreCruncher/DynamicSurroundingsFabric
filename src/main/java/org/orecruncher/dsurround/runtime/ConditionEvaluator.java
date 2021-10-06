@@ -12,25 +12,39 @@ import java.util.Optional;
 @Environment(EnvType.CLIENT)
 public final class ConditionEvaluator {
 
-    public static final ConditionEvaluator INSTANCE = new ConditionEvaluator();
+    public static ConditionEvaluator INSTANCE = new ConditionEvaluator();
 
     static {
-        // Setup ticker for the variables.  Only want to tick while in game and
-        // the GUI is not paused.
-        ClientTickEvents.START_CLIENT_TICK.register(client -> {
-           if (GameUtils.isInGame() && !client.isPaused())
-               INSTANCE.tick();
-        });
+            // Setup ticker for the variables.  Only want to tick while in game and
+            // the GUI is not paused.
+            ClientTickEvents.START_CLIENT_TICK.register(client -> {
+                if (GameUtils.isInGame() && !client.isPaused())
+                    INSTANCE.tick();
+            });
     }
 
-    private final ExecutionContext context = new ExecutionContext("Conditions");
+    private final ExecutionContext context;
 
-    private ConditionEvaluator() {
-        this.context.add(new BiomeVariables());
-        this.context.add(new DimensionVariables());
-        this.context.add(new DiurnalVariables());
-        this.context.add(new PlayerVariables());
-        this.context.add(new WeatherVariables());
+    // Internal visibility for diagnostics
+    final BiomeVariables biomeVariables;
+    final DimensionVariables dimensionVariables;
+    final DiurnalVariables diurnalVariables;
+    final PlayerVariables playerVariables;
+    final WeatherVariables weatherVariables;
+    final EnvironmentState environmentState;
+
+    public ConditionEvaluator() {
+        this(true);
+    }
+
+    public ConditionEvaluator(boolean cacheMethods) {
+        this.context = new ExecutionContext("Conditions", cacheMethods);
+        this.context.add(this.biomeVariables = new BiomeVariables());
+        this.context.add(this.dimensionVariables = new DimensionVariables());
+        this.context.add(this.diurnalVariables = new DiurnalVariables());
+        this.context.add(this.playerVariables = new PlayerVariables());
+        this.context.add(this.weatherVariables = new WeatherVariables());
+        this.context.add(this.environmentState = new EnvironmentState());
     }
 
     public void tick() {

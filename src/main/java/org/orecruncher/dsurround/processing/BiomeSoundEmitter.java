@@ -46,7 +46,7 @@ public final class BiomeSoundEmitter {
     }
 
     public void setVolumeScale(final float scale) {
-        this.acousticSource.setScaling(scale);
+        this.acousticSource.setScaleTarget(scale);
     }
 
     public void fade() {

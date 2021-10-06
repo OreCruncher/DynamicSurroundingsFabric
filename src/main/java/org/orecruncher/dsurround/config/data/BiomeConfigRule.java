@@ -6,6 +6,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.BiomeInfo;
 import org.orecruncher.dsurround.lib.validation.IValidator;
 import org.orecruncher.dsurround.lib.validation.ValidationException;
 import org.orecruncher.dsurround.lib.validation.ValidationHelpers;
@@ -25,7 +26,9 @@ public final class BiomeConfigRule implements IValidator<BiomeConfigRule> {
     @SerializedName("visibility")
     public Float visibility = null;
     @SerializedName("additionalSoundChance")
-    public Integer additionalSoundChance;
+    public String additionalSoundChance;
+    @SerializedName("moodSoundChance")
+    public String moodSoundChance;
     @SerializedName("acoustics")
     public List<AcousticConfig> acoustics = ImmutableList.of();
 
@@ -37,7 +40,10 @@ public final class BiomeConfigRule implements IValidator<BiomeConfigRule> {
             ValidationHelpers.inRange("visibility", this.visibility, 0F, 1F, Client.LOGGER);
 
         if (this.additionalSoundChance != null)
-            ValidationHelpers.inRange("additionalSoundChance", this.additionalSoundChance, 1, Integer.MAX_VALUE, Client.LOGGER);
+            ValidationHelpers.notNullOrWhitespace("additionalSoundChance", this.additionalSoundChance, Client.LOGGER);
+
+        if (this.moodSoundChance != null)
+            ValidationHelpers.notNullOrWhitespace("moodSoundChance", this.moodSoundChance, Client.LOGGER);
 
         for (final AcousticConfig ac : this.acoustics)
             ac.validate(ac);

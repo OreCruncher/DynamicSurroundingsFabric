@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.runtime.sets;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BuiltinBiomes;
 import org.orecruncher.dsurround.config.BiomeInfo;
 import org.orecruncher.dsurround.config.BiomeLibrary;
 import org.orecruncher.dsurround.config.biometraits.BiomeTraits;
@@ -27,15 +26,6 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
 
     public BiomeVariables() {
         super("biome");
-        setBiome(BuiltinBiomes.PLAINS);
-    }
-
-    public void setBiome(final Biome biome) {
-        if (this.biome != biome) {
-            update();
-            this.biome = biome;
-            this.info = BiomeLibrary.getBiomeInfo(this.biome);
-        }
     }
 
     @Override
@@ -45,15 +35,16 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
 
     @Override
     public void update() {
-        Biome newBiome;
+        Biome newBiome = BiomeUtils.DEFAULT_BIOME;
         if (GameUtils.isInGame()) {
             newBiome = GameUtils.getPlayer().getEntityWorld().getBiome(GameUtils.getPlayer().getBlockPos());
-        } else {
-            newBiome = BiomeUtils.DEFAULT_BIOME;
         }
+        setBiome(newBiome);
+    }
 
-        if (newBiome != this.biome) {
-            this.biome = newBiome;
+    public void setBiome(final Biome biome) {
+        if (this.biome != biome) {
+            this.biome = biome;
             this.info = BiomeLibrary.getBiomeInfo(this.biome);
             this.name.reset();
             this.modid.reset();
@@ -110,7 +101,7 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
     }
 
     @Override
-    public boolean isAll(String... trait) {
+    public boolean isAllOf(String... trait) {
         if (trait == null || trait.length == 0)
             return false;
         var traits = this.traits.get();

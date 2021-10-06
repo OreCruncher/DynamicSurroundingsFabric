@@ -15,12 +15,16 @@ public final class SoundFactory {
         return new BackgroundSoundLoop(event);
     }
 
-    public static PositionedSoundInstance createNear(SoundEvent event, Entity entity, int minRange, int maxRange) {
+    public static PositionedSoundInstance createAsMood(SoundEvent event, Entity entity, int minRange, int maxRange) {
         final Vector3d offset = MathStuff.randomPoint(minRange, maxRange);
         final float posX = (float) (entity.getX() + offset.x);
         final float posY = (float) (entity.getEyeY() + offset.y);
         final float posZ = (float) (entity.getZ() + offset.z);
         return PositionedSoundInstance.ambient(event, posX, posY, posZ);
+    }
+
+    public static PositionedSoundInstance createAsAdditional(SoundEvent event) {
+        return PositionedSoundInstance.ambient(event);
     }
 
 }

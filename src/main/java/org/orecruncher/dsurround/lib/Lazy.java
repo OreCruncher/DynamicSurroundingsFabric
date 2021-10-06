@@ -21,4 +21,9 @@ public final class Lazy<T> {
             this.value = this.supplier.get();
         return this.value;
     }
+
+    @Override
+    public String toString() {
+        return String.format("Lazy [%s]", value != null ? value.toString() : "null");
+    }
 }

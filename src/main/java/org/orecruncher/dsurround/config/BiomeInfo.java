@@ -15,6 +15,7 @@ import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.gui.Color;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 
 import java.util.Collection;
 import java.util.Random;
@@ -22,11 +23,12 @@ import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 @Environment(EnvType.CLIENT)
-public final class BiomeInfo implements Comparable<BiomeInfo> {
+public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvider {
 
     private static final IModLog LOGGER = Client.LOGGER.createChild(BiomeInfo.class);
     private static final float DEFAULT_VISIBILITY = 1F;
     public static final int DEFAULT_ADDITIONAL_SOUND_CHANCE = 1000 / 4;
+    public static final String DEFAULT_SOUND_CHANCE = String.valueOf(1D / DEFAULT_ADDITIONAL_SOUND_CHANCE);
 
     private final int version;
     private final Identifier biomeId;
@@ -34,11 +36,14 @@ public final class BiomeInfo implements Comparable<BiomeInfo> {
 
     private Color fogColor;
     private float visibility = DEFAULT_VISIBILITY;
-    private int additionalSoundChance = DEFAULT_ADDITIONAL_SOUND_CHANCE;
+    private String additionalSoundChance = DEFAULT_SOUND_CHANCE;
+    private String moodSoundChance = DEFAULT_SOUND_CHANCE;
 
-    private final ObjectArray<AcousticEntry> biomeSounds = new ObjectArray<>();
-    private final ObjectArray<WeightedAcousticEntry> additionalSounds = new ObjectArray<>();
-    private final ObjectArray<WeightedAcousticEntry> moodSounds = new ObjectArray<>();
+    private final ObjectArray<AcousticEntry> loopSounds = new ObjectArray<>();
+    private final ObjectArray<AcousticEntry> moodSounds = new ObjectArray<>();
+    private final ObjectArray<AcousticEntry> additionalSounds = new ObjectArray<>();
+    private final ObjectArray<AcousticEntry> musicSounds = new ObjectArray<>();
+
     private final BiomeTraits traits;
 
     private ObjectArray<String> comments;
@@ -110,38 +115,63 @@ public final class BiomeInfo implements Comparable<BiomeInfo> {
         this.visibility = MathHelper.clamp(density, 0, 1F);
     }
 
-    void setAdditionalSoundChance(final int chance) {
+    void setAdditionalSoundChance(final String chance) {
         this.additionalSoundChance = chance;
+    }
+
+    void setMoodSoundChance(final String chance) {
+        this.moodSoundChance = chance;
     }
 
     public BiomeTraits getTraits() {
         return this.traits;
     }
 
+    @Override
     public Collection<SoundEvent> findBiomeSoundMatches() {
-        return findBiomeSoundMatches(new ObjectArray<>());
-    }
-
-    public Collection<SoundEvent> findBiomeSoundMatches(final Collection<SoundEvent> results) {
-        for (final AcousticEntry sound : this.biomeSounds) {
+        ObjectArray<SoundEvent> results = new ObjectArray<>();
+        for (final AcousticEntry sound : this.loopSounds) {
             if (sound.matches())
                 results.add(sound.getAcoustic());
         }
         return results;
     }
 
-    @Nullable
-    public SoundEvent getAdditionalSound(final Random random) {
-        if (this.additionalSounds.size() == 0 || random.nextInt(this.additionalSoundChance) != 0)
+    @Override
+    public @Nullable SoundEvent getExtraSound(final SoundEventType type, final Random random) {
+
+        ObjectArray<AcousticEntry> sourceList = null;
+
+        switch (type) {
+            case ADDITION -> {
+                var chance = ConditionEvaluator.INSTANCE.eval(this.additionalSoundChance);
+                if (chance instanceof Double) {
+                    sourceList = random.nextDouble() < (double) chance ? this.additionalSounds : null;
+                }
+            }
+            case MOOD -> {
+                var chance = ConditionEvaluator.INSTANCE.eval(this.moodSoundChance);
+                if (chance instanceof Double) {
+                    sourceList = random.nextDouble() < (double) chance ? this.moodSounds : null;
+                }
+            }
+            case MUSIC -> sourceList = this.musicSounds;
+        }
+
+        if (sourceList == null || sourceList.size() == 0)
             return null;
-        var candidates = this.additionalSounds.stream().filter(AcousticEntry::matches).collect(Collectors.toList());
+
+        var candidates = sourceList.stream().filter(AcousticEntry::matches).collect(Collectors.toList());
         return new WeightTable<>(candidates).next();
     }
 
     void clearSounds() {
-        this.biomeSounds.clear();
+        this.loopSounds.clear();
         this.additionalSounds.clear();
-        this.additionalSoundChance = DEFAULT_ADDITIONAL_SOUND_CHANCE;
+        this.musicSounds.clear();
+        this.moodSounds.clear();
+        this.moodSoundChance = DEFAULT_SOUND_CHANCE;
+        this.additionalSoundChance = DEFAULT_SOUND_CHANCE;
     }
 
     public void update(final BiomeConfigRule entry) {
@@ -162,39 +192,39 @@ public final class BiomeInfo implements Comparable<BiomeInfo> {
         if (entry.additionalSoundChance != null)
             setAdditionalSoundChance(entry.additionalSoundChance);
 
+        if (entry.moodSoundChance != null)
+            setMoodSoundChance(entry.moodSoundChance);
+
         for (final AcousticConfig sr : entry.acoustics) {
             final Identifier res = SoundLibrary.resolveIdentifier(Client.ModId, sr.soundEventId);
             final SoundEvent acoustic = SoundLibrary.getSound(res);
 
             switch (sr.type) {
-                case LOOP: {
+                case LOOP -> {
                     final AcousticEntry acousticEntry = new AcousticEntry(acoustic, sr.conditions);
-                    this.biomeSounds.add(acousticEntry);
+                    this.loopSounds.add(acousticEntry);
                 }
-                break;
-                case MOOD:
-                case ADDITION: {
+                case MUSIC, MOOD, ADDITION -> {
                     final int weight = sr.weight;
-                    final WeightedAcousticEntry acousticEntry = new WeightedAcousticEntry(acoustic, sr.conditions, weight);
+                    final AcousticEntry acousticEntry = new AcousticEntry(acoustic, sr.conditions, weight);
+
                     if (sr.type == SoundEventType.ADDITION)
                         this.additionalSounds.add(acousticEntry);
-                    else
+                    else if (sr.type == SoundEventType.MOOD)
                         this.moodSounds.add(acousticEntry);
+                    else
+                        this.musicSounds.add(acousticEntry);
                 }
-                break;
-                case MUSIC:
-                    break;
-
-                default:
-                    LOGGER.warn("Unknown SoundEventType %s", sr.type);
+                default -> LOGGER.warn("Unknown SoundEventType %s", sr.type);
             }
         }
     }
 
     public void trim() {
-        this.biomeSounds.trim();
+        this.loopSounds.trim();
         this.additionalSounds.trim();
         this.moodSounds.trim();
+        this.musicSounds.trim();
         this.comments = null;
     }
 
@@ -212,21 +242,28 @@ public final class BiomeInfo implements Comparable<BiomeInfo> {
 
         builder.append(" visibility:").append(this.visibility);
 
-        if (this.biomeSounds.size() > 0) {
-            builder.append("\n+ biome sounds [\n");
-            builder.append(this.biomeSounds.stream().map(c -> "+   " + c.toString()).collect(Collectors.joining("\n")));
+        if (this.loopSounds.size() > 0) {
+            builder.append("\n+ LOOP sounds [\n");
+            builder.append(this.loopSounds.stream().map(c -> "+   " + c.toString()).collect(Collectors.joining("\n")));
+            builder.append("\n+ ]");
+        }
+
+        if (this.musicSounds.size() > 0) {
+            builder.append("\n+ MUSIC sounds [\n");
+            builder.append(this.musicSounds.stream().map(c -> "+   " + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n+ ]");
         }
 
         if (this.additionalSounds.size() > 0) {
-            builder.append("\n+ additional sound chance:").append(this.additionalSoundChance);
-            builder.append("\n+ additional sounds [\n");
+            builder.append("\n+ ADDITIONAL chance:").append(this.additionalSoundChance);
+            builder.append("\n+ ADDITIONAL sounds [\n");
             builder.append(this.additionalSounds.stream().map(c -> "+   " + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n+ ]");
         }
 
         if (this.moodSounds.size() > 0) {
-            builder.append("\n+ mood sounds [\n");
+            builder.append("\n+ MOOD chance:").append(this.additionalSoundChance);
+            builder.append("\n+ MOOD sounds [\n");
             builder.append(this.moodSounds.stream().map(c -> "+   " + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n+ ]");
         }

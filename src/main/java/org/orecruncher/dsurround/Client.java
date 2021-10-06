@@ -5,6 +5,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.minecraft.client.MinecraftClient;
+import org.orecruncher.dsurround.commands.Commands;
 import org.orecruncher.dsurround.config.BiomeLibrary;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.SoundConfiguration;
@@ -64,6 +65,7 @@ public class Client implements ClientModInitializer {
         TickCounter.register();
         StartupSoundHandler.register();
         KeyBindings.register();
+        Commands.register();
 
         // Register diagnostic handlers.  Ordering is semi important for
         // debug display layout.
