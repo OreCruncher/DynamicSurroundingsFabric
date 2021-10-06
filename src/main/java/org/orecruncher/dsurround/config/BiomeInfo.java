@@ -4,12 +4,11 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.lib.WeightTable;
@@ -26,24 +25,21 @@ import java.util.stream.Collectors;
 public final class BiomeInfo implements Comparable<BiomeInfo> {
 
     private static final IModLog LOGGER = Client.LOGGER.createChild(BiomeInfo.class);
+    private static final float DEFAULT_VISIBILITY = 1F;
+    public static final int DEFAULT_ADDITIONAL_SOUND_CHANCE = 1000 / 4;
 
-    private final static float DEFAULT_VISIBILITY = 1F;
-
-    public final static int DEFAULT_ADDITIONAL_SOUND_CHANCE = 1000 / 4;
-
-    private final Biome biome;
+    private final int version;
     private final Identifier biomeId;
     private final String biomeName;
 
     private Color fogColor;
     private float visibility = DEFAULT_VISIBILITY;
-
     private int additionalSoundChance = DEFAULT_ADDITIONAL_SOUND_CHANCE;
 
     private final ObjectArray<AcousticEntry> biomeSounds = new ObjectArray<>();
     private final ObjectArray<WeightedAcousticEntry> additionalSounds = new ObjectArray<>();
     private final ObjectArray<WeightedAcousticEntry> moodSounds = new ObjectArray<>();
-    private final ObjectArray<String> traits = new ObjectArray<>();
+    private final BiomeTraits traits;
 
     private ObjectArray<String> comments;
 
@@ -51,15 +47,19 @@ public final class BiomeInfo implements Comparable<BiomeInfo> {
     private final boolean isOcean;
     private final boolean isDeepOcean;
 
-    public BiomeInfo(final Biome biome) {
-        this.biome = biome;
-        this.biomeId = BiomeLibrary.getBiomeId(biome);
-        this.biomeName = BiomeLibrary.getBiomeName(biome);
+    public BiomeInfo(final int version, final Identifier id, final String name, final BiomeTraits traits) {
+        this.version = version;
+        this.biomeId = id;
+        this.biomeName = name;
 
-        this.traits.addAll(BiomeLibrary.getBiomeTraits(biome));
-        this.isRiver = this.biome.getCategory() == Biome.Category.RIVER;
-        this.isOcean = this.biome.getCategory() == Biome.Category.OCEAN;
-        this.isDeepOcean = this.isOcean && this.traits.contains("deep");
+        this.traits = traits;
+        this.isRiver = this.traits.contains("RIVER");
+        this.isOcean = this.traits.contains("OCEAN");
+        this.isDeepOcean = this.isOcean && this.traits.contains("DEEP");
+    }
+
+    public int getVersion() {
+        return this.version;
     }
 
     public boolean isRiver() {
@@ -74,12 +74,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo> {
         return this.isDeepOcean;
     }
 
-    public Identifier getKey() {
+    public Identifier getBiomeId() {
         return this.biomeId;
-    }
-
-    public Biome getBiome() {
-        return this.biome;
     }
 
     void addComment(final String comment) {
@@ -92,10 +88,6 @@ public final class BiomeInfo implements Comparable<BiomeInfo> {
 
     public String getBiomeName() {
         return this.biomeName;
-    }
-
-    public Biome.Precipitation getPrecipitationType() {
-        return this.biome.getPrecipitation();
     }
 
     public Color getFogColor() {
@@ -122,23 +114,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo> {
         this.additionalSoundChance = chance;
     }
 
-    public float getFloatTemperature(final BlockPos pos) {
-        return this.biome.getTemperature(pos);
-    }
-
-    public float getTemperature() {
-        return this.biome.getTemperature();
-    }
-
-    public boolean isHighHumidity() {
-        return this.biome.hasHighHumidity();
-    }
-
-    public float getRainfall() {
-        return this.biome.getDownfall();
-    }
-
-    public Collection<String> getTraits() {
+    public BiomeTraits getTraits() {
         return this.traits;
     }
 
@@ -223,15 +199,12 @@ public final class BiomeInfo implements Comparable<BiomeInfo> {
     }
 
     @Override
-
     public String toString() {
         final Identifier rl = this.biomeId;
         final String registryName = rl == null ? ("UNKNOWN") : rl.toString();
 
         final StringBuilder builder = new StringBuilder();
         builder.append("Biome [").append(getBiomeName()).append('/').append(registryName).append("]");
-        builder.append("+ temp: ").append(getTemperature());
-        builder.append(" rain: ").append(getRainfall());
 
         if (this.fogColor != null) {
             builder.append(" fogColor:").append(this.fogColor);

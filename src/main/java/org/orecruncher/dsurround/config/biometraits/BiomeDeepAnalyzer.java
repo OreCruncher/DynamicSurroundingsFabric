@@ -1,15 +1,18 @@
 package org.orecruncher.dsurround.config.biometraits;
 
+import com.google.common.collect.ImmutableList;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
+
 public class BiomeDeepAnalyzer implements IBiomeTraitAnalyzer {
 
-    private static final String DEEP = "deep";
+    private static final Collection<BiomeTrait> result = ImmutableList.of(BiomeTrait.DEEP);
 
     @Override
-    public @Nullable String evaluate(Identifier id, Biome biome) {
-        return biome.getDepth() < -1.7 ? DEEP : null;
+    public Collection<BiomeTrait> evaluate(Identifier id, Biome biome) {
+        return biome.getDepth() < -1.7 ? result : ImmutableList.of();
     }
 }

@@ -11,7 +11,8 @@
     "MixinSoundEngine",
     "MixinSoundManagerAccessor",
     "MixinSoundSystem",
-    "MixinSoundSystemAccessors"
+    "MixinSoundSystemAccessors",
+    "MixinBiome"
   ],
   "server": [],
   "injectors": {

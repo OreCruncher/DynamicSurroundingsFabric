@@ -19,14 +19,41 @@ import org.orecruncher.dsurround.runtime.diagnostics.SoundEngineDiagnostics;
 import org.orecruncher.dsurround.config.SoundLibrary;
 import org.orecruncher.dsurround.sound.StartupSoundHandler;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 @Environment(EnvType.CLIENT)
 public class Client implements ClientModInitializer {
 
     public static final String ModId = "dsurround";
     public static final ModLog LOGGER = new ModLog(ModId);
-    public static final Configuration Config = Configuration.getConfig();
-    public static final SoundConfiguration SoundConfig = SoundConfiguration.getConfig();
     public static final String Branding = FrameworkUtils.getModBranding(ModId);
+
+    /**
+     * Basic configuration settings
+     */
+    public static final Configuration Config = Configuration.getConfig();
+
+    /**
+     * Settings for individual sound configuration
+     */
+    public static final SoundConfiguration SoundConfig = SoundConfiguration.getConfig();
+
+    /**
+     * Path to the mod's configuration directory
+     */
+    public static final Path CONFIG_PATH = FrameworkUtils.getConfigPath(ModId);
+
+    /**
+     * Path to the external config data cache for user customization
+     */
+    public static final File DATA_PATH = Paths.get(CONFIG_PATH.toString(), "configs").toFile();
+
+    /**
+     * Path to the external folder for dumping data
+     */
+    public static final File DUMP_PATH = Paths.get(CONFIG_PATH.toString(), "dumps").toFile();
 
     @Override
     public void onInitializeClient() {

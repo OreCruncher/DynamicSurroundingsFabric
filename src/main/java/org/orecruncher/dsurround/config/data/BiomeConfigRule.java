@@ -32,10 +32,9 @@ public final class BiomeConfigRule implements IValidator<BiomeConfigRule> {
     @Override
     public void validate(final BiomeConfigRule obj) throws ValidationException {
         ValidationHelpers.notNull("biomeSelector", this.biomeSelector, Client.LOGGER);
-        ValidationHelpers.inRange("visibility", this.visibility, 0F, 1F, Client.LOGGER);
 
         if (this.visibility != null)
-            ValidationHelpers.inRange("visibility", this.visibility, 1, 1F, Client.LOGGER);
+            ValidationHelpers.inRange("visibility", this.visibility, 0F, 1F, Client.LOGGER);
 
         if (this.additionalSoundChance != null)
             ValidationHelpers.inRange("additionalSoundChance", this.additionalSoundChance, 1, Integer.MAX_VALUE, Client.LOGGER);

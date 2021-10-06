@@ -4,23 +4,26 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BuiltinBiomes;
+import org.orecruncher.dsurround.config.BiomeInfo;
 import org.orecruncher.dsurround.config.BiomeLibrary;
+import org.orecruncher.dsurround.config.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
+import org.orecruncher.dsurround.lib.biome.BiomeUtils;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
-
-import java.util.Collection;
 
 @Environment(EnvType.CLIENT)
 public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBiomeVariables {
 
     private Biome biome;
-    private final Lazy<String> name = new Lazy<>(() -> BiomeLibrary.getBiomeName(this.biome));
-    private final Lazy<String> modid = new Lazy<>(() -> BiomeLibrary.getBiomeId(this.biome).getNamespace());
-    private final Lazy<String> id = new Lazy<>(() -> BiomeLibrary.getBiomeId(this.biome).toString());
+    private BiomeInfo info;
+
+    private final Lazy<String> name = new Lazy<>(() -> this.info.getBiomeName());
+    private final Lazy<String> modid = new Lazy<>(() -> this.info.getBiomeId().getNamespace());
+    private final Lazy<String> id = new Lazy<>(() -> this.info.getBiomeId().toString());
     private final Lazy<String> category = new Lazy<>(() -> this.biome.getCategory().getName());
     private final Lazy<String> precipitationType = new Lazy<>(() -> this.biome.getPrecipitation().getName());
-    private final Lazy<Collection<String>> traits = new Lazy<>(() -> BiomeLibrary.getBiomeTraits(this.biome));
+    private final Lazy<BiomeTraits> traits = new Lazy<>(() -> this.info.getTraits());
 
     public BiomeVariables() {
         super("biome");
@@ -31,6 +34,7 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
         if (this.biome != biome) {
             update();
             this.biome = biome;
+            this.info = BiomeLibrary.getBiomeInfo(this.biome);
         }
     }
 
@@ -41,15 +45,16 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
 
     @Override
     public void update() {
-        Biome newBiome = null;
+        Biome newBiome;
         if (GameUtils.isInGame()) {
             newBiome = GameUtils.getPlayer().getEntityWorld().getBiome(GameUtils.getPlayer().getBlockPos());
         } else {
-            newBiome = BuiltinBiomes.PLAINS;
+            newBiome = BiomeUtils.DEFAULT_BIOME;
         }
 
         if (newBiome != this.biome) {
             this.biome = newBiome;
+            this.info = BiomeLibrary.getBiomeInfo(this.biome);
             this.name.reset();
             this.modid.reset();
             this.id.reset();
@@ -96,11 +101,33 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
 
     @Override
     public String getTraits() {
-        return String.join(" ", this.traits.get());
+        return this.traits.get().toString();
     }
 
     @Override
-    public boolean hasTrait(String trait) {
-        return this.traits.get().contains(trait.toLowerCase());
+    public boolean is(String trait) {
+        return this.traits.get().contains(trait);
+    }
+
+    @Override
+    public boolean isAll(String... trait) {
+        if (trait == null || trait.length == 0)
+            return false;
+        var traits = this.traits.get();
+        for (var t : trait)
+            if (!traits.contains(t))
+                return false;
+        return true;
+    }
+
+    @Override
+    public boolean isOneOf(String... trait) {
+        if (trait == null || trait.length == 0)
+            return false;
+        var traits = this.traits.get();
+        for (var t : trait)
+            if (traits.contains(t))
+                return true;
+        return false;
     }
 }

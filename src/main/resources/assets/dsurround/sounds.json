@@ -55,7 +55,7 @@
 			}
 		]
 	},
-	"wind": {
+	"biome.wind": {
 		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [
 			"§aWind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
@@ -69,7 +69,7 @@
 			}
 		]
 	},
-	"desert.wind": {
+	"biome.desert.wind": {
 		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [
 			"§adesertwind1FINAL.wav",
@@ -95,7 +95,7 @@
 			}
 		]
 	},
-	"savanna.day": {
+	"biome.savanna.day": {
 		"credits": [
 			"§aMerlothPark_morning_ambiance.wav",
 			"reinsamba",
@@ -108,7 +108,7 @@
 			}
 		]
 	},
-	"savanna.night": {
+	"biome.savanna.night": {
 		"credits": [
 			"§aMerlothPark_crickets2.WAV",
 			"reinsamba",
@@ -121,7 +121,7 @@
 			}
 		]
 	},
-	"crickets": {
+	"biome.crickets": {
 		"credits": [
 			"§aSoft, Chilled Crickets Field Recording",
 			"rayjensen",
@@ -134,7 +134,7 @@
 			}
 		]
 	},
-	"deep_crickets": {
+	"biome.deep_crickets": {
 		"sounds": [
 			{
 				"name": "dsurround:ambient/outside/deep_crickets",
@@ -142,7 +142,7 @@
 			}
 		]
 	},
-	"plains": {
+	"biome.plains": {
 		"credits": [
 			"§aCalm Morning Outdoor Ambiance",
 			"blouhond",
@@ -155,7 +155,7 @@
 			}
 		]
 	},
-	"forest": {
+	"biome.forest": {
 		"credits": [
 			"§a001_forrest.wav",
 			"joepsporck",
@@ -168,7 +168,7 @@
 			}
 		]
 	},
-	"deep_forest": {
+	"biome.deep_forest": {
 		"sounds": [
 			{
 				"name": "dsurround:ambient/outside/deep_forest",
@@ -176,7 +176,7 @@
 			}
 		]
 	},
-	"beach": {
+	"biome.beach": {
 		"credits": [
 			"§aFiji Beach (Stereo)128kbps.mp3",
 			"c97059890",
@@ -189,7 +189,7 @@
 			}
 		]
 	},
-	"ocean": {
+	"biome.ocean": {
 		"credits": [
 			"§aocean waves surround me.wav",
 			"bohitomi",
@@ -203,7 +203,7 @@
 			}
 		]
 	},
-	"river": {
+	"biome.river": {
 		"credits": [
 			"§aunderwater ambience.wav",
 			"AlienXXX",
@@ -216,7 +216,7 @@
 			}
 		]
 	},
-	"bog": {
+	"biome.bog": {
 		"credits": [
 			"§arbh Mpls Bog birds.wav",
 			"RHumphries",
@@ -229,7 +229,7 @@
 			}
 		]
 	},
-	"jungle": {
+	"biome.jungle": {
 		"sounds": [
 			{
 				"name": "dsurround:ambient/outside/jungle",
@@ -256,7 +256,7 @@
 			}
 		]
 	},
-	"theend": {
+	"dimension.theend": {
 		"sounds": [
 			{
 				"name": "dsurround:ambient/end/end",
@@ -372,7 +372,7 @@
 			}
 		]
 	},
-	"underground": {
+	"biome.underground": {
 		"sounds": [
 			{
 				"name": "dsurround:ambient/underground/ambient",
@@ -501,7 +501,7 @@
 			}
 		]
 	},
-	"underdeepocean": {
+	"biome.underdeepocean": {
 		"credits": [
 			"§aunderwater ambience.wav",
 			"AlienXXX",
@@ -514,7 +514,7 @@
 			}
 		]
 	},
-	"underocean": {
+	"biome.underocean": {
 		"credits": [
 			"§aunderwater ambience.wav",
 			"AlienXXX",
@@ -527,7 +527,7 @@
 			}
 		]
 	},
-	"underriver": {
+	"biome.underriver": {
 		"sounds": [
 			{
 				"name": "dsurround:ambient/underwater/river",
@@ -535,7 +535,7 @@
 			}
 		]
 	},
-	"underwater": {
+	"biome.underwater": {
 		"credits": [
 			"§aUnderwaterDrowning01.wav",
 			"Abolla",
@@ -767,7 +767,7 @@
 			}
 		]
 	},
-	"village.rooster": {
+	"biome.village.rooster": {
 		"subtitle": "dsurround.sound.caption.rooster",
 		"credits": [
 			"§aVillage ambience rooster and light birds with wind .wav",
@@ -780,7 +780,7 @@
 			"dsurround:ambient/village/rooster3"
 		]
 	},
-	"village.anvil": {
+	"biome.village.anvil": {
 		"subtitle": "dsurround.sound.caption.anvil",
 		"credits": [
 			"§aAnvil",
@@ -796,7 +796,7 @@
 			}
 		]
 	},
-	"village.dogbark": {
+	"biome.village.dogbark": {
 		"subtitle": "dsurround.sound.caption.dog",
 		"credits": [
 			"§aDogs Barking",

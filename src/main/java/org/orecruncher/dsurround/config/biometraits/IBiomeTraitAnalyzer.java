@@ -2,9 +2,9 @@ package org.orecruncher.dsurround.config.biometraits;
 
 import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
-import org.jetbrains.annotations.Nullable;
+
+import java.util.Collection;
 
 public interface IBiomeTraitAnalyzer {
-    @Nullable
-    String evaluate(Identifier id, Biome biome);
+    Collection<BiomeTrait> evaluate(Identifier id, Biome biome);
 }

@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.config;
 
-import com.google.common.collect.ImmutableList;
-import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
+import com.google.gson.reflect.TypeToken;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistrySetupCallback;
@@ -10,98 +9,130 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
-import org.orecruncher.dsurround.config.biometraits.*;
+import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.biometraits.BiomeTraits;
+import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.Guard;
 import org.orecruncher.dsurround.lib.biome.BiomeUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.resources.ResourceUtils;
+import org.orecruncher.dsurround.lib.validation.ListValidator;
+import org.orecruncher.dsurround.lib.validation.Validators;
+import org.orecruncher.dsurround.runtime.ConditionEvaluator;
+import org.orecruncher.dsurround.xface.IBiomeExtended;
 
-import java.lang.ref.WeakReference;
+import java.lang.reflect.Type;
 import java.util.*;
 
 @Environment(EnvType.CLIENT)
 public final class BiomeLibrary {
 
-    private static final Map<Biome, BiomeInfo> biomeInfo = new Reference2ObjectOpenHashMap<>();
-    private static WeakReference<Registry<Biome>> biomeRegistry;
+    private static final IModLog LOGGER = Client.LOGGER.createChild(BiomeLibrary.class);
+    private static final Type biomeType = TypeToken.getParameterized(List.class, BiomeConfigRule.class).getType();
 
-    private static final ObjectArray<IBiomeTraitAnalyzer> traitAnalyzer = new ObjectArray<>(16);
+    // Cached list of biome config rules.  Need to hold onto them
+    // because they may be needed to handle dynamic biome load.
+    private static Collection<BiomeConfigRule> biomeConfigs;
+
+    // Current version of the configs that are loaded.  Used to detect when
+    // configs changed and cached biome info needs a refresh.
+    private static int version = 0;
 
     static {
-        traitAnalyzer.add(new BiomeCategoryAnalyzer());
-        traitAnalyzer.add(new BiomeDeepAnalyzer());
-        traitAnalyzer.add(new BiomeExtremeAnalyzer());
-        traitAnalyzer.add(new BiomeHillsMountainsAnalyzer());
-        traitAnalyzer.add(new BiomePrecipitationAnalyzer());
-        traitAnalyzer.add(new BiomeRainfallAnalyzer());
-        traitAnalyzer.add(new BiomeSpookyAnalyzer());
-        traitAnalyzer.add(new BiomeTempAnalyzer());
-        traitAnalyzer.add(new BiomeWasteAnalyzer());
+        // Validator for the json
+        Validators.registerValidator(biomeType, new ListValidator<BiomeConfigRule>());
 
-        // Need to know when the biome registry changes.  The actual data for a
-        // biome will be lazily generated.
-        DynamicRegistrySetupCallback.EVENT.register(registryManager -> {
-            // Clear out any data cached prior
-            biomeInfo.clear();
-            biomeRegistry = new WeakReference<>(registryManager.get(Registry.BIOME_KEY));
-            //RegistryEntryAddedCallback.event(biomeRegistry).register(BiomeLibrary::biomeAdded);
-        });
+        // Log when the registry changes as to understand the log context better
+        DynamicRegistrySetupCallback.EVENT.register(registryManager -> LOGGER.info("Biome registry reload detected"));
     }
 
     public static void load() {
-        biomeInfo.clear();
+        ObjectArray<BiomeConfigRule> configs = new ObjectArray<>(64);
+        var accessors = ResourceUtils.findConfigs(Client.ModId, Client.DATA_PATH, "biomes.json");
+
+        for (var accessor : accessors) {
+            var config = accessor.<List<BiomeConfigRule>>as(biomeType);
+            configs.addAll(config);
+        }
+
+        biomeConfigs = configs;
+        version++;
+
+        LOGGER.info("%d biome configs loaded; version is now %d", biomeConfigs.size(), version);
     }
 
-    public static Registry<Biome> getActiveRegistry() {
-        var result = biomeRegistry != null ? biomeRegistry.get() : null;
-        return result != null ? result : GameUtils.getRegistryManager().get(Registry.BIOME_KEY);
+    private static Registry<Biome> getActiveRegistry() {
+        return GameUtils.getRegistryManager().get(Registry.BIOME_KEY);
     }
 
-    @Environment(EnvType.CLIENT)
-    public static Identifier getBiomeId(Biome biome) {
+    public static BiomeInfo getBiomeInfo(Biome biome) {
+        // check the cached property on the biome and return the info
+        // that is there.
+        var info = ((IBiomeExtended) (Object) biome).getInfo();
+        if (info != null && info.getVersion() == version)
+            return info;
+
+        // Not set or something changed.  Need a refresh.
+        Identifier id;
+        String name;
+
+        // Pull from cached data if we have it, otherwise lookup
+        if (info != null) {
+            id = info.getBiomeId();
+            name = info.getBiomeName();
+        } else {
+            id = getBiomeId(biome);
+            name = getBiomeName(id);
+        }
+
+        // Regenerate the traits.  Something about the biome may have changed
+        // which could ripple into traits.
+        BiomeTraits traits = BiomeTraits.createFrom(id, biome);
+
+        // Build out the info object and apply rules
+        final var result = new BiomeInfo(version, id, name, traits);
+        Guard.execute(() -> applyRuleConfigs(result));
+
+        // Store the info object in the Biome object and return
+        ((IBiomeExtended) (Object) biome).setInfo(result);
+        return result;
+    }
+
+    private static void applyRuleConfigs(BiomeInfo info) {
+        for (var c : biomeConfigs) {
+            var applies = ConditionEvaluator.INSTANCE.check(c.biomeSelector);
+            if (applies) {
+                try {
+                    info.update(c);
+                } catch (final Throwable t) {
+                    LOGGER.warn("Unable to process biome sound configuration [%s]", c.toString());
+                }
+            }
+        }
+    }
+
+    static Identifier getBiomeId(Biome biome) {
         Registry<Biome> biomeRegistry = getActiveRegistry();
         Identifier id = biomeRegistry.getId(biome);
         if (id == null)
-            id = BiomeUtils.PLAINS_ID;
+            id = BiomeUtils.DEFAULT_ID;
         return id;
     }
 
-    @Environment(EnvType.CLIENT)
-    public static String getBiomeName(Biome biome) {
-        Identifier id = getBiomeId(biome);
+    public static String getBiomeName(Identifier id) {
         final String fmt = String.format("biome.%s.%s", id.getNamespace(), id.getPath());
         return I18n.translate(fmt);
     }
 
-    public static Collection<String> getBiomeTraits(Biome biome) {
-        Identifier id = getBiomeId(biome);
-        Set<String> traits = new HashSet<>();
-
-        for (var trait : traitAnalyzer) {
-            String result = trait.evaluate(id, biome);
-            if (result != null)
-                traits.add(result.toUpperCase());
-        }
-
-        return traits;
-    }
-
     public static Collection<SoundEvent> findSoundMatches(Biome biome) {
-        var info = biomeInfo.get(biome);
-        return info != null ? info.findBiomeSoundMatches() : ImmutableList.of();
+        var info = getBiomeInfo(biome);
+        return info.findBiomeSoundMatches();
     }
 
     public static SoundEvent getRandomSoundAddition(Biome biome, Random rand) {
-        var info = biomeInfo.get(biome);
-        return info != null ? info.getAdditionalSound(rand) : null;
+        var info = getBiomeInfo(biome);
+        return info.getAdditionalSound(rand);
     }
-
-    /*
-    private static void biomeAdded(int i, Identifier identifier, Biome biome) {
-        try {
-            biomeInfo.put(biome, new BiomeInfo(biome));
-        } catch (Exception ex) {
-            Client.LOGGER.error(ex, "Unexpected error adding biome %s to map", identifier);
-        }
-    }
-*/
 }

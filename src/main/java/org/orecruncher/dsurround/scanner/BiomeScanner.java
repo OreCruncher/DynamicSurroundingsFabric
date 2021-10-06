@@ -1,23 +1,15 @@
 package org.orecruncher.dsurround.scanner;
 
-import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.dimension.DimensionType;
-import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.config.BiomeLibrary;
-import org.orecruncher.dsurround.lib.biome.BiomeUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Environment(EnvType.CLIENT)
 public final class BiomeScanner {
@@ -68,17 +60,6 @@ public final class BiomeScanner {
                 }
             }
             this.biomeArea = MAX_BIOME_AREA;
-
-            // Validate there are no duplicates in the list.
-            final Set<Identifier> seen = new HashSet<>();
-            for (final Reference2IntMap.Entry<Biome> kvp : this.weights.reference2IntEntrySet()) {
-                final Identifier location = BiomeLibrary.getBiomeId(kvp.getKey());
-                if (seen.contains(location)) {
-                    Client.LOGGER.debug("Duplicate entry detected: %s", location.toString());
-                } else {
-                    seen.add(location);
-                }
-            }
         }
     }
 
