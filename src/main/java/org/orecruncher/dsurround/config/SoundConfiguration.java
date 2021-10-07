@@ -3,29 +3,25 @@ package org.orecruncher.dsurround.config;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.ConfigData;
 import me.shedaniel.autoconfig.ConfigHolder;
-import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 
 import java.util.*;
 
-@me.shedaniel.autoconfig.annotation.Config(name = SoundConfiguration.ConfigPath)
+@me.shedaniel.autoconfig.annotation.Config(name = "soundconfig")
 @Environment(EnvType.CLIENT)
 public class SoundConfiguration implements ConfigData {
-
-    public static final String ConfigPath = Client.ModId + "/soundconfig";
 
     private static final float MIN_SOUNDFACTOR = 0F;
     private static final float MAX_SOUNDFACTOR = 4F;
     private static final float DEFAULT_SOUNDFACTOR = 1F;
 
     static {
-        AutoConfig.register(SoundConfiguration.class, GsonConfigSerializer::new);
+        AutoConfig.register(SoundConfiguration.class, MyGsonConfigSerializer::new);
     }
 
     public static SoundConfiguration getConfig() {

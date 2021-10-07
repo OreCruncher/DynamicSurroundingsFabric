@@ -2,22 +2,18 @@ package org.orecruncher.dsurround.config;
 
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.ConfigData;
-import me.shedaniel.autoconfig.annotation.Config;
 import me.shedaniel.autoconfig.annotation.ConfigEntry;
-import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.Comment;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.orecruncher.dsurround.Client;
 
-@me.shedaniel.autoconfig.annotation.Config(name = Configuration.ConfigPath)
+@me.shedaniel.autoconfig.annotation.Config(name = Client.ModId)
 @Environment(EnvType.CLIENT)
 public class Configuration implements ConfigData {
 
-    public static final String ConfigPath = Client.ModId + "/" + Client.ModId;
-
     static {
-        AutoConfig.register(Configuration.class, GsonConfigSerializer::new);
+        AutoConfig.register(Configuration.class, MyGsonConfigSerializer::new);
     }
 
     public static class Flags {
