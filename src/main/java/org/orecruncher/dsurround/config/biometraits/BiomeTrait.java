@@ -12,6 +12,7 @@ public final class BiomeTrait {
     public static final BiomeTrait UNKNOWN = new BiomeTrait("unknown");
 
     /* From Biome categories */
+    public static final BiomeTrait NONE = new BiomeTrait(Biome.Category.NONE.getName());
     public static final BiomeTrait TAIGA = new BiomeTrait(Biome.Category.TAIGA.getName());
     public static final BiomeTrait EXTREME_HILLS = new BiomeTrait(Biome.Category.EXTREME_HILLS.getName());
     public static final BiomeTrait JUNGLE = new BiomeTrait(Biome.Category.JUNGLE.getName());
@@ -103,6 +104,7 @@ public final class BiomeTrait {
     }
 
     static {
+        register(BiomeTrait.NONE);  // stone_shore why?
         register(BiomeTrait.TAIGA);
         register(BiomeTrait.EXTREME_HILLS);
         register(BiomeTrait.JUNGLE);

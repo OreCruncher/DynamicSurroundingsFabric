@@ -36,6 +36,10 @@ public class BiomeGeographyAnalyzer implements IBiomeTraitAnalyzer {
         if (path.contains("gravelly") || path.contains("wooded"))
             results.add(BiomeTrait.SPARSE);
 
+        // Curious as to the why's.
+        if (path.equals("stone_shore"))
+            results.add(BiomeTrait.BEACH);
+
         return results;
     }
 }

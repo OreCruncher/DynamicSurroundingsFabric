@@ -25,6 +25,7 @@ import org.orecruncher.dsurround.xface.IBiomeExtended;
 
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Environment(EnvType.CLIENT)
 public final class BiomeLibrary {
@@ -50,7 +51,7 @@ public final class BiomeLibrary {
 
     public static void load() {
         ObjectArray<BiomeConfigRule> configs = new ObjectArray<>(64);
-        var accessors = ResourceUtils.findConfigs(Client.ModId, Client.DATA_PATH, "biomes.json");
+        var accessors = ResourceUtils.findConfigs(Client.ModId, Client.DATA_PATH.toFile(), "biomes.json");
 
         for (var accessor : accessors) {
             var config = accessor.<List<BiomeConfigRule>>as(biomeType);
@@ -142,5 +143,13 @@ public final class BiomeLibrary {
     public static SoundEvent getExtraSound(Biome biome, SoundEventType type, Random rand) {
         var info = getBiomeInfo(biome);
         return info.getExtraSound(type, rand);
+    }
+
+    public static Stream<String> dumpBiomes() {
+        return getActiveRegistry()
+                .stream()
+                .map(BiomeLibrary::getBiomeInfo)
+                .map(BiomeInfo::toString)
+                .sorted();
     }
 }

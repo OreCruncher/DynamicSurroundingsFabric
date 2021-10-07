@@ -35,7 +35,7 @@ public final class ScriptCommand {
                             var script = ctx.getArgument("script", MessageArgumentType.MessageFormat.class);
                             var result = INSTANCE.eval(script.getContents());
                             ctx.getSource().sendFeedback(new LiteralText(result.toString()));
-                            return 1;
+                            return 0;
                         })));
     }
 }

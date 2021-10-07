@@ -32,6 +32,8 @@
   "dsurround.format.Sunset": "Sunset",
   "dsurround.format.Daytime": "Daytime",
   "dsurround.format.Nighttime": "Nighttime",
+  "dsurround.command.dump.success": "Successfully dumped %1$s to %2$s",
+  "dsurround.command.dump.failure": "Dump was not completed successfully",
   "text.autoconfig.dsurround.title": "§6Dynamic Surroundings§r Configuration Options",
   "text.autoconfig.dsurround.option.soundSystem": "Sound System",
   "text.autoconfig.dsurround.option.soundSystem.@Tooltip": "Configuration options for modifying Minecraft's Sound System behavior",

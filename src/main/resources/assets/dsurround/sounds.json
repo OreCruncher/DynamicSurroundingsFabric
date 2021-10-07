@@ -164,7 +164,7 @@
 			}
 		]
 	},
-	"biome.deep_crickets": {
+	"biome.crickets.deep": {
 		"sounds": [
 			{
 				"name": "dsurround:ambient/outside/deep_crickets",

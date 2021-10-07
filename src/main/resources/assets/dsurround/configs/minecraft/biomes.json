@@ -27,7 +27,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.isAllOf('Cold', 'Wasteland')",
+    "biomeSelector": "biome.isAllOf('Cold', 'Icy')",
     "_comment": "Arctic Wind",
     "acoustics": [
       {
@@ -125,12 +125,18 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('Beach') && !biome.is('Snowy')",
+    "biomeSelector": "biome.is('Beach') && !biome.is('Icy')",
     "_comment": "Beach",
     "acoustics": [
       {
         "soundEventId": "biome.beach"
-      },
+      }
+    ]
+  },
+  {
+    "biomeSelector": "biome.is('Beach') && !biome.is('Snowy')",
+    "_comment": "Seagulls",
+    "acoustics": [
       {
         "soundEventId": "seagulls",
         "conditions": "diurnal.isDay()",
@@ -163,7 +169,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.id == 'minecraft:deep_ocean'",
+    "biomeSelector": "biome.isAllOf('Ocean','Deep') && !biome.is('Icy')",
     "_comment": "Deep Ocean explicit set",
     "clearSounds": true,
     "acoustics": [
@@ -214,7 +220,7 @@
     "fogColor": "255,234,151"
   },
   {
-    "biomeSelector": "!biome.isOneOf('Ocean','River','Nether','TheEnd','Mushroom') && !biome.isOneOf('Snowy','Swamp','Jungle','Beach','Wasteland','Wet')",
+    "biomeSelector": "!biome.isOneOf('Ocean','River','Nether','The_End','Mushroom') && !biome.isOneOf('Snowy','Swamp','Jungle','Beach','Wasteland','Wet')",
     "_comment": "Coyote",
     "acoustics": [
       {
@@ -225,7 +231,7 @@
     ]
   },
   {
-    "biomeSelector": "!biome.isOneOf('Ocean','River','Nether','TheEnd','Snowy','Jungle','Hot','Beach')",
+    "biomeSelector": "!biome.isOneOf('Ocean','River','Nether','The_End','Snowy','Jungle','Hot','Beach')",
     "_comment": "Crow",
     "acoustics": [
       {
@@ -236,7 +242,7 @@
     ]
   },
   {
-    "biomeSelector": "!biome.isOneOf('Ocean','River','Nether','TheEnd','Dry','Jungle','Hot','Beach','Swamp','Wasteland')",
+    "biomeSelector": "!biome.isOneOf('Ocean','River','Nether','The_End','Dry','Jungle','Hot','Beach','Swamp','Wasteland')",
     "_comment": "Owl",
     "acoustics": [
       {
@@ -263,7 +269,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('Forest') && !biome.isOneOf('TheEnd','Nether','Ocean','River')",
+    "biomeSelector": "biome.is('Forest') && !biome.isOneOf('The_End','Nether','Ocean','River')",
     "_comment": "Woodpecker",
     "acoustics": [
       {
@@ -274,7 +280,7 @@
     ]
   },
   {
-    "biomeSelector": "!biome.isOneOf('Mushroom','Dead','Swamp','Jungle','Wasteland','Ocean','Snowy','Nether','TheEnd')",
+    "biomeSelector": "!biome.isOneOf('Mushroom','Dead','Swamp','Jungle','Wasteland','Ocean','Snowy','Nether','The_End')",
     "_comment": "Raptors",
     "acoustics": [
       {
@@ -302,7 +308,7 @@
     "dustColor": "255,0,0"
   },
   {
-    "biomeSelector": "biome.is('TheEnd') || biome.name == 'The Void'",
+    "biomeSelector": "biome.is('The_End') || biome.name == 'The Void'",
     "_comment": "It's The End!",
     "clearSounds": true,
     "aurora": false
@@ -405,7 +411,7 @@
     "_comment": "Player explicit set for The End",
     "acoustics": [
       {
-        "soundEventId": "dimension.theend",
+        "soundEventId": "dimension.The_End",
         "conditions": "dim.getId() == 'minecraft:the_end'"
       }
     ]

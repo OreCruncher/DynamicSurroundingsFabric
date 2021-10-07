@@ -21,6 +21,7 @@ import org.orecruncher.dsurround.config.SoundLibrary;
 import org.orecruncher.dsurround.sound.StartupSoundHandler;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -49,16 +50,20 @@ public class Client implements ClientModInitializer {
     /**
      * Path to the external config data cache for user customization
      */
-    public static final File DATA_PATH = Paths.get(CONFIG_PATH.toString(), "configs").toFile();
+    public static final Path DATA_PATH = Path.of(CONFIG_PATH.toString(), "configs");
 
     /**
      * Path to the external folder for dumping data
      */
-    public static final File DUMP_PATH = Paths.get(CONFIG_PATH.toString(), "dumps").toFile();
+    public static final Path DUMP_PATH = Path.of(CONFIG_PATH.toString(), "dumps");
 
     @Override
     public void onInitializeClient() {
         LOGGER.info("Initializing...");
+
+        createPath(CONFIG_PATH);
+        createPath(DATA_PATH);
+        createPath(DUMP_PATH);
 
         ClientLifecycleEvents.CLIENT_STARTED.register(this::onComplete);
 
@@ -74,6 +79,14 @@ public class Client implements ClientModInitializer {
         SoundEngineDiagnostics.register();
 
         LOGGER.info("Initialization complete");
+    }
+
+    private static void createPath(final Path path) {
+        try {
+            Files.createDirectories(path);
+        } catch (final Throwable t) {
+            LOGGER.error(t, "Unable to create data path %s", path.toString());
+        }
     }
 
     public void onComplete(MinecraftClient client) {

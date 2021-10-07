@@ -237,10 +237,12 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         builder.append("Biome [").append(getBiomeName()).append('/').append(registryName).append("]");
 
         if (this.fogColor != null) {
-            builder.append(" fogColor:").append(this.fogColor);
+            builder.append(" fogColor: ").append(this.fogColor);
         }
 
-        builder.append(" visibility:").append(this.visibility);
+        builder.append(" visibility: ").append(this.visibility);
+
+        builder.append("\n").append(getTraits().toString());
 
         if (this.loopSounds.size() > 0) {
             builder.append("\n+ LOOP sounds [\n");
@@ -255,14 +257,14 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         }
 
         if (this.additionalSounds.size() > 0) {
-            builder.append("\n+ ADDITIONAL chance:").append(this.additionalSoundChance);
+            builder.append("\n+ ADDITIONAL chance: ").append(this.additionalSoundChance);
             builder.append("\n+ ADDITIONAL sounds [\n");
             builder.append(this.additionalSounds.stream().map(c -> "+   " + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n+ ]");
         }
 
         if (this.moodSounds.size() > 0) {
-            builder.append("\n+ MOOD chance:").append(this.additionalSoundChance);
+            builder.append("\n+ MOOD chance: ").append(this.additionalSoundChance);
             builder.append("\n+ MOOD sounds [\n");
             builder.append(this.moodSounds.stream().map(c -> "+   " + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n+ ]");
@@ -273,6 +275,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
             builder.append(this.comments.stream().map(c -> "+   " + c).collect(Collectors.joining("\n")));
             builder.append('\n');
         }
+
+        builder.append("\n");
 
         return builder.toString();
     }
