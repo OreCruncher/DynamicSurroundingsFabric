@@ -16,7 +16,6 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.TickCounter;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
-import org.orecruncher.dsurround.scanner.BiomeScanner;
 import org.orecruncher.dsurround.sound.SoundFactory;
 
 import java.util.Collection;
@@ -35,7 +34,6 @@ public final class BiomeSoundHandler extends ClientHandler {
         WORK_MAP.defaultReturnValue(0F);
     }
 
-    private final BiomeScanner biomes = new BiomeScanner();
     private final ObjectArray<BiomeSoundEmitter> emitters = new ObjectArray<>(8);
 
     BiomeSoundHandler() {
@@ -43,18 +41,14 @@ public final class BiomeSoundHandler extends ClientHandler {
     }
 
     private boolean doBiomeSounds() {
-        return true;
-        /*
-        return CommonState.isUnderground()
-                || !CommonState.isInside()
-                || CommonState.getDimensionInfo().alwaysOutside();
-
-         */
+        return Scanners.isUnderground()
+                || !Scanners.isInside()
+                || Scanners.getDimInfo().alwaysOutside();
     }
 
     private void generateBiomeSounds() {
-        final float area = this.biomes.getBiomeArea();
-        for (final Reference2IntMap.Entry<Biome> kvp : this.biomes.getBiomes().reference2IntEntrySet()) {
+        final float area = Scanners.getBiomeArea();
+        for (final Reference2IntMap.Entry<Biome> kvp : Scanners.getBiomes().reference2IntEntrySet()) {
             final Collection<SoundEvent> acoustics = BiomeLibrary.findBiomeSoundMatches(kvp.getKey());
             final float volume = 0.05F + 0.95F * (kvp.getIntValue() / area);
             for (final SoundEvent acoustic : acoustics) {
@@ -67,7 +61,6 @@ public final class BiomeSoundHandler extends ClientHandler {
     public void process(final PlayerEntity player) {
         this.emitters.forEach(BiomeSoundEmitter::tick);
         if ((TickCounter.getTickCount() % SCAN_INTERVAL) == 0) {
-            this.biomes.tick();
             handleBiomeSounds(player);
         }
     }
@@ -83,7 +76,6 @@ public final class BiomeSoundHandler extends ClientHandler {
     }
 
     private void handleBiomeSounds(final PlayerEntity player) {
-        this.biomes.tick();
         WORK_MAP.clear();
 
         // Only gather data if the player is alive. If the player is dead the biome sounds will cease playing.

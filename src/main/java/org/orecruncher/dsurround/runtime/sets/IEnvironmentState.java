@@ -9,4 +9,10 @@ public interface IEnvironmentState {
     boolean isInVillage();
 
     boolean isInside();
+
+    boolean isUnderground();
+
+    boolean isInOuterspace();
+
+    boolean isInClouds();
 }

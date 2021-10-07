@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.runtime.sets;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
+import org.orecruncher.dsurround.processing.Scanners;
 
 @Environment(EnvType.CLIENT)
 public class EnvironmentState extends VariableSet<IEnvironmentState> implements IEnvironmentState {
@@ -18,11 +19,26 @@ public class EnvironmentState extends VariableSet<IEnvironmentState> implements 
 
     @Override
     public boolean isInVillage() {
-        return false;
+        return Scanners.isInVillage();
     }
 
     @Override
     public boolean isInside() {
-        return false;
+        return Scanners.isInside();
+    }
+
+    @Override
+    public boolean isUnderground() {
+        return Scanners.isUnderground();
+    }
+
+    @Override
+    public boolean isInOuterspace() {
+        return Scanners.isInOuterspace();
+    }
+
+    @Override
+    public boolean isInClouds() {
+        return Scanners.isInClouds();
     }
 }

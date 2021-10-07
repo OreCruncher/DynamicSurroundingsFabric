@@ -42,7 +42,7 @@ public class Handlers {
     }
 
     private void init() {
-        // This has to be first!
+        register(new Scanners());           // Must be first
         register(new BiomeSoundHandler());
 
         ClientTickEvents.END_CLIENT_TICK.register(this::onTick);

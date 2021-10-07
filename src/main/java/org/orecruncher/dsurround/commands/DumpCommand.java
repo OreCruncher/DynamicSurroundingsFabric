@@ -7,6 +7,7 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.command.v1.FabricClientCommandSource;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.BiomeLibrary;
+import org.orecruncher.dsurround.config.DimensionLibrary;
 
 import java.io.PrintStream;
 import java.util.List;
@@ -22,6 +23,7 @@ class DumpCommand {
         dispatcher.register(literal("dsdump")
             .then(literal("biomes").executes(cmd -> dumpBiomes(cmd.getSource())))
             .then(literal("sounds").executes(cmd -> dumpSounds(cmd.getSource())))
+            .then(literal("dimensions").executes(cmd -> dumpDimensions(cmd.getSource())))
         );
     }
 
@@ -31,6 +33,10 @@ class DumpCommand {
 
     private static int dumpSounds(FabricClientCommandSource src) {
         return handle(src, "dump.sounds", DumpCommand::tbd);
+    }
+
+    private static int dumpDimensions(FabricClientCommandSource src) {
+        return handle(src, "dump.dimensions", DimensionLibrary::dump);
     }
 
     private static int handle(final FabricClientCommandSource source, final String cmdString, final Supplier<Stream<String>> supplier) {
