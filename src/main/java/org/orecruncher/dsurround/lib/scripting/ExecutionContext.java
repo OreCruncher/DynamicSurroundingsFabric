@@ -29,12 +29,12 @@ public final class ExecutionContext {
     public ExecutionContext(final String contextName, boolean cacheMethods) {
         this.contextName = contextName;
         this.cacheResults = cacheMethods;
-        this.engine = new ScriptEngineManager().getEngineByName("JavaScript");
+        this.engine = ScriptEngineLoader.getEngine();
         this.error = makeFunction("'<ERROR>'");
         this.put("lib", new LibraryFunctions());
 
         ScriptEngineFactory factory = this.engine.getFactory();
-        LOGGER.info("JavaScript engine provided: %s (%s)", factory.getEngineName(), factory.getEngineVersion());
+        LOGGER.info("[%s] JavaScript engine: %s (%s)", this.contextName, factory.getEngineName(), factory.getEngineVersion());
     }
 
     public void put(final String name, @Nullable final Object obj) {
