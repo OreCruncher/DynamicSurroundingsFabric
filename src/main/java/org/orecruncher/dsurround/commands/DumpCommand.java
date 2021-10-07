@@ -16,7 +16,7 @@ import java.util.stream.Stream;
 import static net.fabricmc.fabric.api.client.command.v1.ClientCommandManager.literal;
 
 @Environment(EnvType.CLIENT)
-public class DumpCommand {
+class DumpCommand {
 
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
         dispatcher.register(literal("dsdump")
@@ -34,11 +34,12 @@ public class DumpCommand {
     }
 
     private static int handle(final FabricClientCommandSource source, final String cmdString, final Supplier<Stream<String>> supplier) {
-        try {
-            final String operation = cmdString.substring(5);
-            final String fileName = operation + ".txt";
-            var target = Client.DUMP_PATH.resolve(fileName).toFile();
 
+        final String operation = cmdString.substring(5);
+        final String fileName = operation + ".txt";
+        var target = Client.DUMP_PATH.resolve(fileName).toFile();
+
+        try {
             try (PrintStream out = new PrintStream(target)) {
                 final Stream<String> stream = supplier.get();
                 stream.forEach(out::println);
@@ -48,7 +49,7 @@ public class DumpCommand {
             }
             Commands.sendSuccess(source, "dump", operation, target.toString());
         } catch (final Throwable t) {
-            Commands.sendFailure(source, cmdString);
+            Commands.sendFailure(source, cmdString, operation);
         }
         return 0;
     }

@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
@@ -16,7 +17,7 @@ import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
 import static net.fabricmc.fabric.api.client.command.v1.ClientCommandManager.argument;
 
 @Environment(EnvType.CLIENT)
-public final class BiomeCommand {
+final class BiomeCommand {
 
     private static final BiomeConditionEvaluator INSTANCE = new BiomeConditionEvaluator(false);
 
@@ -24,14 +25,15 @@ public final class BiomeCommand {
         dispatcher.register(
             ClientCommandManager.literal("dsbiome")
                 .then(argument("biomeId", IdentifierArgumentType.identifier())
-                    .then(argument("script", MessageArgumentType.message())
-                        .executes(ctx -> {
-                            var biomeId = ctx.getArgument("biomeId", Identifier.class);
-                            var script = ctx.getArgument("script", MessageArgumentType.MessageFormat.class);
-                            var biome = GameUtils.getRegistryManager().get(Registry.BIOME_KEY).get(biomeId);
-                            var result = INSTANCE.eval(biome, script.getContents());
-                            ctx.getSource().sendFeedback(new LiteralText(result.toString()));
-                            return 0;
-                        }))));
+                    .then(argument("script", MessageArgumentType.message()).executes(BiomeCommand::execute))));
+    }
+
+    private static int execute(CommandContext<FabricClientCommandSource> ctx) {
+        var biomeId = ctx.getArgument("biomeId", Identifier.class);
+        var script = ctx.getArgument("script", MessageArgumentType.MessageFormat.class);
+        var biome = GameUtils.getRegistryManager().get(Registry.BIOME_KEY).get(biomeId);
+        var result = INSTANCE.eval(biome, script.getContents());
+        ctx.getSource().sendFeedback(new LiteralText(result.toString()));
+        return 0;
     }
 }

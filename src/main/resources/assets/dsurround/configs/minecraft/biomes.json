@@ -411,7 +411,7 @@
     "_comment": "Player explicit set for The End",
     "acoustics": [
       {
-        "soundEventId": "dimension.The_End",
+        "soundEventId": "dimension.theend",
         "conditions": "dim.getId() == 'minecraft:the_end'"
       }
     ]

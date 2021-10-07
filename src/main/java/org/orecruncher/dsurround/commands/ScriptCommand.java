@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
@@ -14,7 +15,7 @@ import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import static net.fabricmc.fabric.api.client.command.v1.ClientCommandManager.argument;
 
 @Environment(EnvType.CLIENT)
-public final class ScriptCommand {
+final class ScriptCommand {
 
     private static final ConditionEvaluator INSTANCE = new ConditionEvaluator(false);
 
@@ -31,11 +32,14 @@ public final class ScriptCommand {
         dispatcher.register(
             ClientCommandManager.literal("dsscript")
                 .then(argument("script", MessageArgumentType.message())
-                        .executes(ctx -> {
-                            var script = ctx.getArgument("script", MessageArgumentType.MessageFormat.class);
-                            var result = INSTANCE.eval(script.getContents());
-                            ctx.getSource().sendFeedback(new LiteralText(result.toString()));
-                            return 0;
-                        })));
+                    .executes(ScriptCommand::execute)));
     }
+
+    private static int execute(CommandContext<FabricClientCommandSource> ctx) {
+        var script = ctx.getArgument("script", MessageArgumentType.MessageFormat.class);
+        var result = INSTANCE.eval(script.getContents());
+        ctx.getSource().sendFeedback(new LiteralText(result.toString()));
+        return 0;
+    }
+
 }

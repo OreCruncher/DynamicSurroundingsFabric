@@ -20,10 +20,8 @@ import org.orecruncher.dsurround.runtime.diagnostics.SoundEngineDiagnostics;
 import org.orecruncher.dsurround.config.SoundLibrary;
 import org.orecruncher.dsurround.sound.StartupSoundHandler;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 @Environment(EnvType.CLIENT)
 public class Client implements ClientModInitializer {
