@@ -147,8 +147,7 @@
   {
     "biomeSelector": "lib.oneof(biome.id, 'minecraft:frozen_ocean', 'minecraft:deep_frozen_ocean')",
     "_comment": "Frozen Ocean/Deep Frozen Ocean explicit set",
-    "fogColor": "#DCDBDF",
-    "visibility": 0.4
+    "fogColor": "#DCDBDF"
   },
   {
     "biomeSelector": "biome.is('River') && !biome.isOneOf('Snowy','Dry','Ocean')",
@@ -186,8 +185,7 @@
   {
     "biomeSelector": "biome.is('Swamp') && !biome.is('Forest')",
     "_comment": "Basic Swamp Fog",
-    "fogColor": "#406040",
-    "visibility": 0.4
+    "fogColor": "#406040"
   },
   {
     "biomeSelector": "biome.is('Swamp') && !biome.isOneOf('Forest','Dead','Cold')",
@@ -211,8 +209,7 @@
         "conditions": "!weather.canWaterFreeze() && diurnal.isNight()"
       }
     ],
-    "fogColor": "#808080",
-    "visibility": 0.4
+    "fogColor": "#808080"
   },
   {
     "biomeSelector": "biome.getRainfall() < 0.1 && (biome.isOneOf('Sandy','Mesa') || (biome.is('Wasteland') && !biome.isOneOf('Cold','Snowy','Swamp')))",

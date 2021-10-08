@@ -23,8 +23,6 @@ public final class BiomeConfigRule implements IValidator<BiomeConfigRule> {
     public boolean clearSounds = false;
     @SerializedName("fogColor")
     public String fogColor = null;
-    @SerializedName("visibility")
-    public Float visibility = null;
     @SerializedName("additionalSoundChance")
     public String additionalSoundChance;
     @SerializedName("moodSoundChance")
@@ -38,9 +36,6 @@ public final class BiomeConfigRule implements IValidator<BiomeConfigRule> {
 
         if (this.fogColor != null)
             ValidationHelpers.isValidColorCode("fogColor", this.fogColor, Client.LOGGER);
-
-        if (this.visibility != null)
-            ValidationHelpers.inRange("visibility", this.visibility, 0F, 1F, Client.LOGGER);
 
         if (this.additionalSoundChance != null)
             ValidationHelpers.notNullOrWhitespace("additionalSoundChance", this.additionalSoundChance, Client.LOGGER);

@@ -7,14 +7,14 @@
   ],
   "client": [
     "MixinBiome",
+    "MixinBlockState",
     "MixinClientWorldProperties",
     "MixinIngameHud",
     "MixinSoundEngine",
     "MixinSoundEvent",
     "MixinSoundManagerAccessor",
     "MixinSoundSystem",
-    "MixinSoundSystemAccessors",
-    "MixinBlockState"
+    "MixinSoundSystemAccessors"
   ],
   "server": [],
   "injectors": {

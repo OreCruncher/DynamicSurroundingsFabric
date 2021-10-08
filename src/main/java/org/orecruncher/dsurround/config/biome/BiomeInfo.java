@@ -4,7 +4,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
@@ -33,7 +32,6 @@ import java.util.stream.Collectors;
 public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvider {
 
     private static final IModLog LOGGER = Client.LOGGER.createChild(BiomeInfo.class);
-    private static final float DEFAULT_VISIBILITY = 1F;
     public static final int DEFAULT_ADDITIONAL_SOUND_CHANCE = 1000 / 4;
     public static final String DEFAULT_SOUND_CHANCE = String.valueOf(1D / DEFAULT_ADDITIONAL_SOUND_CHANCE);
 
@@ -42,7 +40,6 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private final String biomeName;
 
     private Color fogColor;
-    private float visibility = DEFAULT_VISIBILITY;
     private String additionalSoundChance = DEFAULT_SOUND_CHANCE;
     private String moodSoundChance = DEFAULT_SOUND_CHANCE;
 
@@ -59,7 +56,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private final boolean isOcean;
     private final boolean isDeepOcean;
 
-    public BiomeInfo(final int version, final Identifier id, final String name, final BiomeTraits traits) {
+    public BiomeInfo(final int version, final Identifier id, final String name, BiomeTraits traits) {
         this.version = version;
         this.biomeId = id;
         this.biomeName = name;
@@ -112,14 +109,6 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
     public boolean getHasFog() {
         return this.fogColor != null;
-    }
-
-    public float getVisibility() {
-        return this.visibility;
-    }
-
-    void setVisibility(final float density) {
-        this.visibility = MathHelper.clamp(density, 0, 1F);
     }
 
     void setAdditionalSoundChance(final String chance) {
@@ -182,10 +171,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     }
 
     public void update(final BiomeConfigRule entry) {
-        addComment(entry.comment);
 
-        if (entry.visibility != null)
-            setVisibility(entry.visibility);
+        addComment(entry.comment);
 
         if (entry.fogColor != null) {
             setFogColor(ColorPalette.fromHTMLColorCode(entry.fogColor));
@@ -261,7 +248,6 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
         if (this.fogColor != null) {
             builder.append("\nfogColor: ").append(ColorPalette.toHTMLColorCode(this.fogColor));
-            builder.append(" visibility: ").append(this.visibility);
         }
 
         if (this.loopSounds.size() > 0) {
