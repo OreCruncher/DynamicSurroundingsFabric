@@ -10,6 +10,7 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Singleton;
 import org.orecruncher.dsurround.lib.TickCounter;
@@ -71,12 +72,14 @@ public class Handlers {
         return GameUtils.getPlayer();
     }
 
-    protected boolean checkReady() {
-        return GameUtils.isInGame() && !GameUtils.getMC().isPaused();
+    protected boolean doTick() {
+        return GameUtils.isInGame()
+                && !GameUtils.getMC().isPaused()
+                && !(GameUtils.getMC().currentScreen instanceof IndividualSoundControlScreen);
     }
 
     public void onTick(MinecraftClient client) {
-        if (!checkReady())
+        if (!doTick())
             return;
 
         final long tick = TickCounter.getTickCount();

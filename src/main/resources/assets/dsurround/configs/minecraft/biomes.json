@@ -217,7 +217,7 @@
     "fogColor": "#FFEA97"
   },
   {
-    "biomeSelector": "!biome.isOneOf('Ocean','River','Nether','The_End','Mushroom') && !biome.isOneOf('Snowy','Swamp','Jungle','Beach','Wasteland','Wet')",
+    "biomeSelector": "!biome.isOneOf('Underground','Ocean','River','Nether','The_End','Mushroom') && !biome.isOneOf('Snowy','Swamp','Jungle','Beach','Wasteland','Wet')",
     "_comment": "Coyote",
     "acoustics": [
       {
@@ -228,7 +228,7 @@
     ]
   },
   {
-    "biomeSelector": "!biome.isOneOf('Ocean','River','Nether','The_End','Snowy','Jungle','Hot','Beach')",
+    "biomeSelector": "!biome.isOneOf('Underground','Ocean','River','Nether','The_End','Snowy','Jungle','Hot','Beach')",
     "_comment": "Crow",
     "acoustics": [
       {
@@ -239,7 +239,7 @@
     ]
   },
   {
-    "biomeSelector": "!biome.isOneOf('Ocean','River','Nether','The_End','Dry','Jungle','Hot','Beach','Swamp','Wasteland')",
+    "biomeSelector": "!biome.isOneOf('Underground','Ocean','River','Nether','The_End','Dry','Jungle','Hot','Beach','Swamp','Wasteland')",
     "_comment": "Owl",
     "acoustics": [
       {
@@ -277,7 +277,7 @@
     ]
   },
   {
-    "biomeSelector": "!biome.isOneOf('Mushroom','Dead','Swamp','Jungle','Wasteland','Ocean','Snowy','Nether','The_End')",
+    "biomeSelector": "!biome.isOneOf('Underground','Mushroom','Dead','Swamp','Jungle','Wasteland','Ocean','Snowy','Nether','The_End')",
     "_comment": "Raptors",
     "acoustics": [
       {
