@@ -4,7 +4,10 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import org.orecruncher.dsurround.commands.Commands;
 import org.orecruncher.dsurround.config.*;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
@@ -86,9 +89,9 @@ public class Client implements ClientModInitializer {
 
     public void refreshConfigs() {
         SoundLibrary.load();
-        BlockLibrary.load();
         BiomeLibrary.load();
         DimensionLibrary.load();
+        BlockLibrary.load();
     }
 
     public void onComplete(MinecraftClient client) {

@@ -2,14 +2,15 @@ package org.orecruncher.dsurround.config;
 
 import com.google.common.collect.ImmutableList;
 import com.google.gson.reflect.TypeToken;
-import joptsimple.internal.Strings;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.state.State;
+import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
+import org.lwjgl.system.CallbackI;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.block.BlockInfo;
 import org.orecruncher.dsurround.config.data.BlockConfig;
@@ -26,6 +27,8 @@ import org.orecruncher.dsurround.xface.IBlockStateExtended;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -81,7 +84,7 @@ public class BlockLibrary {
     private static Collection<BlockStateMatcher> expand(final String blockName) {
         if (blockName.startsWith(TAG_SPECIFIER)) {
             final String tagName = blockName.substring(1);
-            if (Identifier.isValid(tagName)) {
+            if (!Identifier.isValid(tagName)) {
                 LOGGER.warn("Block name tag specification is invalid: %s", blockName);
                 return ImmutableList.of();
             }
@@ -145,7 +148,29 @@ public class BlockLibrary {
                 .sorted();
     }
 
-    public static String formatBlockOutput(Identifier id, Block block) {
+    public static Stream<String> dumpBlocksByTag() {
+        var tagGroup = GameUtils.getTagGroup(Registry.BLOCK_KEY);
+        if (tagGroup != null) {
+            return tagGroup.getTags().entrySet()
+                    .stream()
+                    .filter(kvp -> kvp.getValue().values().size() > 0)
+                    .map(BlockLibrary::formatBlockTagOutput)
+                    .sorted();
+        }
+
+        return Stream.empty();
+    }
+
+    private static String formatBlockTagOutput(Map.Entry<Identifier, Tag<Block>> kvp) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Tag: ").append(kvp.getKey());
+        for (var e : kvp.getValue().values())
+            builder.append("\n    ").append(e.toString());
+        builder.append("\n");
+        return builder.toString();
+    }
+
+    private static String formatBlockOutput(Identifier id, Block block) {
         var tags = GameUtils.getWorld().getTagManager()
                 .getOrCreateTagGroup(Registry.BLOCK_KEY)
                 .getTagsFor(block).stream()

@@ -16,6 +16,7 @@ import org.orecruncher.dsurround.lib.Singleton;
 import org.orecruncher.dsurround.lib.TickCounter;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
 
 import java.util.Collection;
@@ -41,6 +42,8 @@ public class Handlers {
         this.effectHandlers.add(handler);
         LOGGER.debug("Registered handler [%s]", handler.getClass().getName());
     }
+
+    private final LoggingTimerEMA handlerTimer = new LoggingTimerEMA("Handlers");
 
     private void init() {
         register(new Scanners());           // Must be first
@@ -82,6 +85,7 @@ public class Handlers {
         if (!doTick())
             return;
 
+        this.handlerTimer.begin();
         final long tick = TickCounter.getTickCount();
 
         for (final ClientHandler handler : this.effectHandlers) {
@@ -90,13 +94,15 @@ public class Handlers {
                 handler.process(getPlayer());
             handler.updateTimer(System.nanoTime() - mark);
         }
+        this.handlerTimer.end();
     }
 
     public void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
-        if (Client.Config.logging.enableDebugLogging)
-            this.effectHandlers.forEach(h -> {
-                h.gatherDiagnostics(left, right, timers);
-                timers.add(h.getTimer());
-            });
+        timers.add(this.handlerTimer);
+
+        this.effectHandlers.forEach(h -> {
+            h.gatherDiagnostics(left, right, timers);
+            timers.add(h.getTimer());
+        });
     }
 }

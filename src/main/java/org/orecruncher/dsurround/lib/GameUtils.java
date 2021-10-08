@@ -11,8 +11,12 @@ import net.minecraft.client.sound.SoundManager;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.resource.ResourcePackManager;
+import net.minecraft.tag.TagGroup;
 import net.minecraft.util.registry.DynamicRegistryManager;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.mixins.MixinTagManager;
 
 @Environment(EnvType.CLIENT)
 public final class GameUtils {
@@ -73,5 +77,11 @@ public final class GameUtils {
 
     public static boolean isFirstPersonView() {
         return getGameSettings().getPerspective() == Perspective.FIRST_PERSON;
+    }
+
+    @Nullable
+    public static <T> TagGroup<T> getTagGroup(RegistryKey<? extends Registry<T>> registryKey) {
+        var groups = ((MixinTagManager)GameUtils.getWorld().getTagManager()).getTagGroups();
+        return groups != null ? (TagGroup<T>)groups.get(registryKey) : null;
     }
 }

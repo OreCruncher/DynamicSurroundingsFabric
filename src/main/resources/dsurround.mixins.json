@@ -14,7 +14,8 @@
     "MixinSoundEvent",
     "MixinSoundManagerAccessor",
     "MixinSoundSystem",
-    "MixinSoundSystemAccessors"
+    "MixinSoundSystemAccessors",
+    "MixinTagManager"
   ],
   "server": [],
   "injectors": {
