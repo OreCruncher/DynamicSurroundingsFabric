@@ -4,26 +4,28 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.util.Formatting;
 
+import java.awt.*;
+
 @SuppressWarnings("unused")
 @Environment(EnvType.CLIENT)
 public final class ColorPalette {
     // Minecraft colors mapped to codes
-    public static final Color MC_BLACK = new Color(Formatting.BLACK);
-    public static final Color MC_DARKBLUE = new Color(Formatting.DARK_BLUE);
-    public static final Color MC_DARKGREEN = new Color(Formatting.DARK_GREEN);
-    public static final Color MC_DARKAQUA = new Color(Formatting.DARK_AQUA);
-    public static final Color MC_DARKRED = new Color(Formatting.DARK_RED);
-    public static final Color MC_DARKPURPLE = new Color(Formatting.DARK_PURPLE);
-    public static final Color MC_GOLD = new Color(Formatting.GOLD);
-    public static final Color MC_GRAY = new Color(Formatting.GRAY);
-    public static final Color MC_DARKGRAY = new Color(Formatting.DARK_GRAY);
-    public static final Color MC_BLUE = new Color(Formatting.BLUE);
-    public static final Color MC_GREEN = new Color(Formatting.GREEN);
-    public static final Color MC_AQUA = new Color(Formatting.AQUA);
-    public static final Color MC_RED = new Color(Formatting.RED);
-    public static final Color MC_LIGHTPURPLE = new Color(Formatting.LIGHT_PURPLE);
-    public static final Color MC_YELLOW = new Color(Formatting.YELLOW);
-    public static final Color MC_WHITE = new Color(Formatting.WHITE);
+    public static final Color MC_BLACK = new Color(Formatting.BLACK.getColorValue());
+    public static final Color MC_DARKBLUE = new Color(Formatting.DARK_BLUE.getColorValue());
+    public static final Color MC_DARKGREEN = new Color(Formatting.DARK_GREEN.getColorValue());
+    public static final Color MC_DARKAQUA = new Color(Formatting.DARK_AQUA.getColorValue());
+    public static final Color MC_DARKRED = new Color(Formatting.DARK_RED.getColorValue());
+    public static final Color MC_DARKPURPLE = new Color(Formatting.DARK_PURPLE.getColorValue());
+    public static final Color MC_GOLD = new Color(Formatting.GOLD.getColorValue());
+    public static final Color MC_GRAY = new Color(Formatting.GRAY.getColorValue());
+    public static final Color MC_DARKGRAY = new Color(Formatting.DARK_GRAY.getColorValue());
+    public static final Color MC_BLUE = new Color(Formatting.BLUE.getColorValue());
+    public static final Color MC_GREEN = new Color(Formatting.GREEN.getColorValue());
+    public static final Color MC_AQUA = new Color(Formatting.AQUA.getColorValue());
+    public static final Color MC_RED = new Color(Formatting.RED.getColorValue());
+    public static final Color MC_LIGHTPURPLE = new Color(Formatting.LIGHT_PURPLE.getColorValue());
+    public static final Color MC_YELLOW = new Color(Formatting.YELLOW.getColorValue());
+    public static final Color MC_WHITE = new Color(Formatting.WHITE.getColorValue());
 
     public static final Color RED = new Color(255, 0, 0);
     public static final Color ORANGE = new Color(255, 127, 0);
@@ -53,8 +55,16 @@ public final class ColorPalette {
     public static final Color AURORA_GREEN = new Color(0.5F, 1.0F, 0.0F);
     public static final Color AURORA_BLUE = new Color(0F, 0.8F, 1.0F);
 
-    private ColorPalette() {
-
+    public static Color fromHTMLColorCode(String code) {
+        return Color.decode(code);
     }
 
+    public static String toHTMLColorCode(Color color) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("#");
+        if (color.getAlpha() != 255)
+            builder.append(String.format("%02X", color.getAlpha()));
+        builder.append(String.format("%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue()));
+        return builder.toString();
+    }
 }

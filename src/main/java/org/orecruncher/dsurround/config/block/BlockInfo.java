@@ -13,6 +13,7 @@ import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 
+import java.awt.*;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -87,11 +88,10 @@ public class BlockInfo {
             return "NO SOUNDS";
 
         final StringBuilder builder = new StringBuilder();
-        builder.append("chance: ").append(this.chance);
-        builder.append("; sounds [");
-        for (var e : this.sounds)
-            builder.append(String.format("\n%s", e.toString()));
-        builder.append("\n]\n");
+        builder.append("selection chance: ").append(this.getChance());
+        builder.append("; sounds [\n");
+        builder.append(this.sounds.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));
+        builder.append("\n]");
 
         return builder.toString();
     }

@@ -25,6 +25,7 @@ class DumpCommand {
             .then(literal("biomes").executes(cmd -> dumpBiomes(cmd.getSource())))
             .then(literal("sounds").executes(cmd -> dumpSounds(cmd.getSource())))
             .then(literal("dimensions").executes(cmd -> dumpDimensions(cmd.getSource())))
+            .then(literal("blocks").executes(cmd -> dumpBlocks(cmd.getSource())))
             .then(literal("blockinfo").executes(cmd -> dumpBlockInfo(cmd.getSource())))
             .then(literal("blockstates").executes(cmd -> dumpBlockState(cmd.getSource())))
         );
@@ -48,6 +49,10 @@ class DumpCommand {
 
     private static int dumpBlockState(FabricClientCommandSource src) {
         return handle(src, "dump.blockstates", BlockLibrary::dumpBlockStates);
+    }
+
+    private static int dumpBlocks(FabricClientCommandSource src) {
+        return handle(src, "dump.blocks", BlockLibrary::dumpBlocks);
     }
 
     private static int handle(final FabricClientCommandSource source, final String cmdString, final Supplier<Stream<String>> supplier) {

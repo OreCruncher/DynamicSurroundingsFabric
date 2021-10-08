@@ -2,9 +2,12 @@ package org.orecruncher.dsurround.config;
 
 import com.google.common.collect.ImmutableList;
 import com.google.gson.reflect.TypeToken;
+import joptsimple.internal.Strings;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.state.State;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import org.orecruncher.dsurround.Client;
@@ -47,6 +50,7 @@ public class BlockLibrary {
         registry.clear();
         final Collection<IResourceAccessor> configs = ResourceUtils.findConfigs(Client.ModId, Client.DATA_PATH.toFile(), "blocks.json");
         IResourceAccessor.process(configs, accessor -> initFromConfig(accessor.as(blockType)));
+        registry.values().forEach(BlockInfo::trim);
         version++;
 
         LOGGER.info("%d block configs loaded; version is now %d", registry.size(), version);
@@ -122,10 +126,45 @@ public class BlockLibrary {
     }
 
     public static Stream<String> dumpBlockStates() {
-        return Stream.ofNullable(null);
+        return GameUtils.getRegistryManager().get(Registry.BLOCK_KEY).stream()
+                .flatMap(block -> block.getStateManager().getStates().stream())
+                .map(State::toString)
+                .sorted();
     }
 
     public static Stream<String> dumpBlockInfo() {
-        return Stream.ofNullable(null);
+        return registry.entrySet().stream()
+                .map(kvp -> kvp.getKey().toString() + "\n" + kvp.getValue().toString() + "\n")
+                .sorted();
     }
+
+    public static Stream<String> dumpBlocks() {
+        var blockRegistry = GameUtils.getRegistryManager().get(Registry.BLOCK_KEY).getEntries();
+        return blockRegistry.stream()
+                .map(kvp -> formatBlockOutput(kvp.getKey().getValue(), kvp.getValue()))
+                .sorted();
+    }
+
+    public static String formatBlockOutput(Identifier id, Block block) {
+        var tags = GameUtils.getWorld().getTagManager()
+                .getOrCreateTagGroup(Registry.BLOCK_KEY)
+                .getTagsFor(block).stream()
+                .map(Identifier::toString)
+                .sorted()
+                .collect(Collectors.joining(","));
+
+        StringBuilder builder = new StringBuilder();
+        builder.append(id.toString());
+        builder.append("\nTags: ").append(tags);
+        builder.append("\nstates [\n");
+        for (var blockState : block.getStateManager().getStates()) {
+            builder.append(blockState.toString()).append("\n");
+            var info = getBlockInfo(blockState);
+            if (info != DEFAULT)
+                builder.append(info.toString());
+        }
+        builder.append("]\n");
+        return builder.toString();
+    }
+
 }

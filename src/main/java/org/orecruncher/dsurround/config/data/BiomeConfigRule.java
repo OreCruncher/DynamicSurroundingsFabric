@@ -36,6 +36,9 @@ public final class BiomeConfigRule implements IValidator<BiomeConfigRule> {
     public void validate(final BiomeConfigRule obj) throws ValidationException {
         ValidationHelpers.notNull("biomeSelector", this.biomeSelector, Client.LOGGER);
 
+        if (this.fogColor != null)
+            ValidationHelpers.isValidColorCode("fogColor", this.fogColor, Client.LOGGER);
+
         if (this.visibility != null)
             ValidationHelpers.inRange("visibility", this.visibility, 0F, 1F, Client.LOGGER);
 

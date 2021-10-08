@@ -150,7 +150,7 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
         final TextRenderer font = GameUtils.getTextRenderer();
         final float labelY = rowTop + (rowHeight - font.fontHeight) / 2F;
         final String text = this.config.id;
-        font.draw(matrixStack, text, (float) rowLeft, labelY, ColorPalette.WHITE.rgb());
+        font.draw(matrixStack, text, (float) rowLeft, labelY, ColorPalette.WHITE.getRGB());
 
         // Need to position the other controls appropriately
         int rightMargin = rowLeft + rowWidth;

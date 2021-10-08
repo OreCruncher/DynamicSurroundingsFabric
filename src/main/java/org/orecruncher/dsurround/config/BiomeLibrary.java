@@ -69,6 +69,10 @@ public final class BiomeLibrary {
         return GameUtils.getRegistryManager().get(Registry.BIOME_KEY);
     }
 
+    public static Biome getBiome(Identifier biomeId) {
+        return getActiveRegistry().get(biomeId);
+    }
+
     public static BiomeInfo getBiomeInfo(Biome biome) {
         // check the cached property on the biome and return the info
         // that is there.

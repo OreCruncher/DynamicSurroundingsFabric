@@ -17,6 +17,8 @@ public final class ValidationHelpers {
 
     private static final IModLog LOGGER = Client.LOGGER.createChild(ValidationHelpers.class);
 
+    private static final Pattern COLOR_PATTERN = Pattern.compile("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
+
     public static void notNull(final String field, @Nullable final Object value, @Nullable final IModLog errorLogger) throws ValidationException {
         if (value != null)
             return;
@@ -116,6 +118,15 @@ public final class ValidationHelpers {
         if (value != null)
             if (!Identifier.isValid(value))
                 handleException(new ValidationException(field, "\"%s\" is not a proper resource location", value), errorLogger);
+    }
+
+    public static void isValidColorCode(final String field, @Nullable final String value, @Nullable final IModLog errorLogger) throws ValidationException {
+        notNull(field, value, errorLogger);
+        if (value != null) {
+            if (COLOR_PATTERN.matcher(value).matches())
+                return;
+            handleException(new ValidationException(field, "\"%s\" is not a valid color code.  Must be a valid HTML hexadecimal color code.", value), errorLogger);
+        }
     }
 
     private static void handleException(final ValidationException ex, @Nullable final IModLog errorLogger) throws ValidationException {

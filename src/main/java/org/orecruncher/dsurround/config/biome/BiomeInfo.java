@@ -5,20 +5,25 @@ import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.world.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.BiomeLibrary;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.SoundLibrary;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.AcousticConfig;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.gui.Color;
+import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 
+import java.awt.*;
 import java.util.Collection;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -183,7 +188,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
             setVisibility(entry.visibility);
 
         if (entry.fogColor != null) {
-            setFogColor(Color.parse(entry.fogColor));
+            setFogColor(ColorPalette.fromHTMLColorCode(entry.fogColor));
         }
 
         if (entry.clearSounds) {
@@ -227,54 +232,67 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         this.additionalSounds.trim();
         this.moodSounds.trim();
         this.musicSounds.trim();
-        this.comments = null;
+        if (this.comments != null)
+            this.comments.trim();
+    }
+
+    private Biome getBiome() {
+        return BiomeLibrary.getBiome(this.biomeId);
     }
 
     @Override
     public String toString() {
+        final String indent = "    ";
+
+        var tags = GameUtils.getWorld().getTagManager()
+                .getOrCreateTagGroup(Registry.BIOME_KEY)
+                .getTagsFor(getBiome()).stream()
+                .map(Identifier::toString)
+                .sorted()
+                .collect(Collectors.joining(","));
+
         final Identifier rl = this.biomeId;
         final String registryName = rl == null ? ("UNKNOWN") : rl.toString();
 
         final StringBuilder builder = new StringBuilder();
         builder.append("Biome [").append(getBiomeName()).append('/').append(registryName).append("]");
-
-        if (this.fogColor != null) {
-            builder.append(" fogColor: ").append(this.fogColor);
-        }
-
-        builder.append(" visibility: ").append(this.visibility);
-
+        builder.append("\nTags: ").append(tags);
         builder.append("\n").append(getTraits().toString());
 
+        if (this.fogColor != null) {
+            builder.append("\nfogColor: ").append(ColorPalette.toHTMLColorCode(this.fogColor));
+            builder.append(" visibility: ").append(this.visibility);
+        }
+
         if (this.loopSounds.size() > 0) {
-            builder.append("\n+ LOOP sounds [\n");
-            builder.append(this.loopSounds.stream().map(c -> "+   " + c.toString()).collect(Collectors.joining("\n")));
-            builder.append("\n+ ]");
+            builder.append("\nLOOP sounds [\n");
+            builder.append(this.loopSounds.stream().map(c -> indent + c.toString()).collect(Collectors.joining("\n")));
+            builder.append("\n]");
         }
 
         if (this.musicSounds.size() > 0) {
-            builder.append("\n+ MUSIC sounds [\n");
-            builder.append(this.musicSounds.stream().map(c -> "+   " + c.toString()).collect(Collectors.joining("\n")));
-            builder.append("\n+ ]");
+            builder.append("\nMUSIC sounds [\n");
+            builder.append(this.musicSounds.stream().map(c -> indent + c.toString()).collect(Collectors.joining("\n")));
+            builder.append("\n]");
         }
 
         if (this.additionalSounds.size() > 0) {
-            builder.append("\n+ ADDITIONAL chance: ").append(this.additionalSoundChance);
-            builder.append("\n+ ADDITIONAL sounds [\n");
-            builder.append(this.additionalSounds.stream().map(c -> "+   " + c.toString()).collect(Collectors.joining("\n")));
-            builder.append("\n+ ]");
+            builder.append("\nADDITIONAL chance: ").append(this.additionalSoundChance);
+            builder.append("\nADDITIONAL sounds [\n");
+            builder.append(this.additionalSounds.stream().map(c -> indent + c.toString()).collect(Collectors.joining("\n")));
+            builder.append("\n]");
         }
 
         if (this.moodSounds.size() > 0) {
-            builder.append("\n+ MOOD chance: ").append(this.additionalSoundChance);
-            builder.append("\n+ MOOD sounds [\n");
-            builder.append(this.moodSounds.stream().map(c -> "+   " + c.toString()).collect(Collectors.joining("\n")));
-            builder.append("\n+ ]");
+            builder.append("\nMOOD chance: ").append(this.additionalSoundChance);
+            builder.append("\nMOOD sounds [\n");
+            builder.append(this.moodSounds.stream().map(c -> indent + c.toString()).collect(Collectors.joining("\n")));
+            builder.append("\n]");
         }
 
         if (this.comments != null && this.comments.size() > 0) {
-            builder.append("\n+ comments:\n");
-            builder.append(this.comments.stream().map(c -> "+   " + c).collect(Collectors.joining("\n")));
+            builder.append("\ncomments:\n");
+            builder.append(this.comments.stream().map(c -> indent + c).collect(Collectors.joining("\n")));
             builder.append('\n');
         }
 

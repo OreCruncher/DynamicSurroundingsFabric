@@ -147,7 +147,7 @@
   {
     "biomeSelector": "lib.oneof(biome.id, 'minecraft:frozen_ocean', 'minecraft:deep_frozen_ocean')",
     "_comment": "Frozen Ocean/Deep Frozen Ocean explicit set",
-    "fogColor": "220,219,223",
+    "fogColor": "#DCDBDF",
     "visibility": 0.4
   },
   {
@@ -186,7 +186,7 @@
   {
     "biomeSelector": "biome.is('Swamp') && !biome.is('Forest')",
     "_comment": "Basic Swamp Fog",
-    "fogColor": "64,96,64",
+    "fogColor": "#406040",
     "visibility": 0.4
   },
   {
@@ -211,13 +211,13 @@
         "conditions": "!weather.canWaterFreeze() && diurnal.isNight()"
       }
     ],
-    "fogColor": "128,128,128",
+    "fogColor": "#808080",
     "visibility": 0.4
   },
   {
     "biomeSelector": "biome.getRainfall() < 0.1 && (biome.isOneOf('Sandy','Mesa') || (biome.is('Wasteland') && !biome.isOneOf('Cold','Snowy','Swamp')))",
     "_comment": "Dust for desert like biomes",
-    "fogColor": "255,234,151"
+    "fogColor": "#FFEA97"
   },
   {
     "biomeSelector": "!biome.isOneOf('Ocean','River','Nether','The_End','Mushroom') && !biome.isOneOf('Snowy','Swamp','Jungle','Beach','Wasteland','Wet')",
@@ -417,8 +417,8 @@
     ]
   },
   {
-    "biomeSelector": "lib.oneof(biome.id, 'minecraft:mesa', 'minecraft:mesa_clear_rock', 'minecraft:mesa_rock')",
+    "biomeSelector": "biome.is('Mesa')",
     "_comment": "Mesa dust color specific override",
-    "fogColor": "215,125,47"
+    "fogColor": "#D77D2F"
   }
 ]
