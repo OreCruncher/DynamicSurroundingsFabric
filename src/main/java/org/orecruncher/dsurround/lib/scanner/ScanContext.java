@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.lib.scanner;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -13,14 +14,14 @@ public class ScanContext {
 
     private final Supplier<World> worldReader;
     private final Supplier<BlockPos> scanCenter;
-    private final Supplier<Integer> worldReference;
+    private final Supplier<Identifier> worldReference;
     private final Supplier<IModLog> logger;
 
     public ScanContext(
         final Supplier<World> worldReader,
         final Supplier<BlockPos> scanCenter,
         final Supplier<IModLog> logger,
-        final Supplier<Integer> worldReference
+        final Supplier<Identifier> worldReference
     ) {
         this.worldReader = worldReader;
         this.scanCenter = scanCenter;
@@ -40,7 +41,7 @@ public class ScanContext {
         return this.logger.get();
     }
 
-    public int getReference() {
+    public Identifier getReference() {
         return this.worldReference.get();
     }
 }

@@ -48,6 +48,7 @@ public class Handlers {
     private void init() {
         register(new Scanners());           // Must be first
         register(new BiomeSoundHandler());
+        register(new AreaBlockEffects());
 
         ClientTickEvents.END_CLIENT_TICK.register(this::onTick);
         ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::gatherDiagnostics);

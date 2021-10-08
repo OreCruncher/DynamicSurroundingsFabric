@@ -68,6 +68,10 @@ public class BlockInfo {
         this.sounds.clear();
     }
 
+    public boolean hasSounds() {
+        return this.sounds.size() > 0;
+    }
+
     public SoundEvent getSoundToPlay(final Random random) {
         if (this.sounds.size() > 0) {
             var chance = ConditionEvaluator.INSTANCE.eval(this.chance);
