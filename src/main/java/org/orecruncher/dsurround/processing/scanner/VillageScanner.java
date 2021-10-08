@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.scanner;
+package org.orecruncher.dsurround.processing.scanner;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

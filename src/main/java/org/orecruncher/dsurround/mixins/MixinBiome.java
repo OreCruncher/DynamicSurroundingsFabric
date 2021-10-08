@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.mixins;
 
 import net.minecraft.world.biome.Biome;
-import org.orecruncher.dsurround.config.BiomeInfo;
+import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.xface.IBiomeExtended;
 import org.spongepowered.asm.mixin.Mixin;
 

@@ -4,7 +4,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.sound.MusicSound;
 import net.minecraft.sound.SoundEvent;
-import org.orecruncher.dsurround.config.BiomeInfo;
+import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.SoundLibrary;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;

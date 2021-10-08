@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.xface;
 
-import org.orecruncher.dsurround.config.BiomeInfo;
+import org.orecruncher.dsurround.config.biome.BiomeInfo;
 
 public interface IBiomeExtended {
 

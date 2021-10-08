@@ -1,11 +1,10 @@
-package org.orecruncher.dsurround.config.data;
+package org.orecruncher.dsurround.config;
 
 import com.google.gson.annotations.SerializedName;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.lib.validation.IValidator;
 import org.orecruncher.dsurround.lib.validation.ValidationException;
 import org.orecruncher.dsurround.lib.validation.ValidationHelpers;

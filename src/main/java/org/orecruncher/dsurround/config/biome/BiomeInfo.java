@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.config;
+package org.orecruncher.dsurround.config.biome;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -8,8 +8,10 @@ import net.minecraft.util.math.MathHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.config.biometraits.BiomeTraits;
-import org.orecruncher.dsurround.config.data.AcousticConfig;
+import org.orecruncher.dsurround.config.SoundEventType;
+import org.orecruncher.dsurround.config.SoundLibrary;
+import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
+import org.orecruncher.dsurround.config.AcousticConfig;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -145,14 +147,14 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         switch (type) {
             case ADDITION -> {
                 var chance = ConditionEvaluator.INSTANCE.eval(this.additionalSoundChance);
-                if (chance instanceof Double) {
-                    sourceList = random.nextDouble() < (double) chance ? this.additionalSounds : null;
+                if (chance instanceof Double c) {
+                    sourceList = random.nextDouble() < c ? this.additionalSounds : null;
                 }
             }
             case MOOD -> {
                 var chance = ConditionEvaluator.INSTANCE.eval(this.moodSoundChance);
-                if (chance instanceof Double) {
-                    sourceList = random.nextDouble() < (double) chance ? this.moodSounds : null;
+                if (chance instanceof Double c) {
+                    sourceList = random.nextDouble() < c ? this.moodSounds : null;
                 }
             }
             case MUSIC -> sourceList = this.musicSounds;

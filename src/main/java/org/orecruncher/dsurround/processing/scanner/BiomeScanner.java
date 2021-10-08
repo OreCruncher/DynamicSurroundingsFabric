@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.scanner;
+package org.orecruncher.dsurround.processing.scanner;
 
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.fabricmc.api.EnvType;

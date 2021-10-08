@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.config.biometraits;
+package org.orecruncher.dsurround.config.biome.biometraits;
 
 import net.minecraft.world.biome.Biome;
 import org.jetbrains.annotations.Nullable;

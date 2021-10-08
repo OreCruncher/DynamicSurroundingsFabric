@@ -22,7 +22,7 @@ import java.nio.file.Path;
  * factory supplier that can be passed into the system to generate the necessary path.
  * @param <T>
  */
-public class MyGsonConfigSerializer<T extends ConfigData> implements ConfigSerializer<T> {
+class MyGsonConfigSerializer<T extends ConfigData> implements ConfigSerializer<T> {
     private final Config definition;
     private final Class<T> configClass;
     private final Gson gson;

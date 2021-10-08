@@ -6,13 +6,12 @@ import net.fabricmc.api.Environment;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-import org.orecruncher.dsurround.config.DimensionInfo;
+import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.config.DimensionLibrary;
-import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.TickCounter;
-import org.orecruncher.dsurround.scanner.BiomeScanner;
-import org.orecruncher.dsurround.scanner.CeilingScanner;
-import org.orecruncher.dsurround.scanner.VillageScanner;
+import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
+import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
+import org.orecruncher.dsurround.processing.scanner.VillageScanner;
 
 @Environment(EnvType.CLIENT)
 public class Scanners extends ClientHandler {

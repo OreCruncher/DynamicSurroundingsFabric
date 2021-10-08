@@ -10,10 +10,11 @@
     "MixinClientWorldProperties",
     "MixinIngameHud",
     "MixinSoundEngine",
+    "MixinSoundEvent",
     "MixinSoundManagerAccessor",
     "MixinSoundSystem",
     "MixinSoundSystemAccessors",
-    "MixinSoundEvent"
+    "MixinBlockState"
   ],
   "server": [],
   "injectors": {

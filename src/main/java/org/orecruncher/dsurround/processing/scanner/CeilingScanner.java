@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.scanner;
+package org.orecruncher.dsurround.processing.scanner;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -9,7 +9,7 @@ import net.minecraft.tag.Tag;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
-import org.orecruncher.dsurround.config.DimensionInfo;
+import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.config.DimensionLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;

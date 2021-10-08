@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.config;
+package org.orecruncher.dsurround.config.biome;
 
 import com.google.common.base.MoreObjects;
 import net.fabricmc.api.EnvType;

@@ -1,9 +1,8 @@
-package org.orecruncher.dsurround.config.biometraits;
+package org.orecruncher.dsurround.config.biome.biometraits;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 

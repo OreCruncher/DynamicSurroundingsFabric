@@ -21,7 +21,7 @@ public class IndividualSoundConfigEntry {
         this.startup = source.startup;
     }
 
-    IndividualSoundConfigEntry(String id) {
+    public IndividualSoundConfigEntry(String id) {
         this.id = id;
     }
 

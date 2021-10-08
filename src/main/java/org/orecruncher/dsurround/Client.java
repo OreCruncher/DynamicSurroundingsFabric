@@ -84,11 +84,16 @@ public class Client implements ClientModInitializer {
         }
     }
 
-    public void onComplete(MinecraftClient client) {
-        // Initialize our sounds
+    public void refreshConfigs() {
         SoundLibrary.load();
+        BlockLibrary.load();
         BiomeLibrary.load();
         DimensionLibrary.load();
+    }
+
+    public void onComplete(MinecraftClient client) {
+        // Initialize our sounds
+        this.refreshConfigs();
         Handlers.initialize();
     }
 }

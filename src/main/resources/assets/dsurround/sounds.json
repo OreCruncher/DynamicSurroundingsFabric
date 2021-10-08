@@ -16,7 +16,7 @@
 			}
 		]
 	},
-	"frog": {
+	"lilypad.frog": {
 		"subtitle": "dsurround.sound.caption.frog",
 		"sounds": [
 			{
@@ -33,7 +33,7 @@
 			}
 		]
 	},
-	"bullfrog": {
+	"lilypad.bullfrog": {
 		"subtitle": "dsurround.sound.caption.frog",
 		"credits": [
 			"§aNight Crickets & Bullfrogs.wav",
@@ -283,7 +283,7 @@
 			}
 		]
 	},
-	"soulsand": {
+	"soulsand.laughter": {
 		"subtitle": "dsurround.sound.caption.soulsand",
 		"sounds": [
 			{
@@ -629,7 +629,7 @@
 			"dsurround:ambient/steve/tummy3"
 		]
 	},
-	"breathing": {
+	"netherbrick.breathing": {
 		"subtitle": "dsurround.sound.caption.breathing",
 		"sounds": [
 			{

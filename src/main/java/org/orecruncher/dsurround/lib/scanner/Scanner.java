@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.scanner;
+package org.orecruncher.dsurround.lib.scanner;
 
 import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
 import net.fabricmc.api.EnvType;

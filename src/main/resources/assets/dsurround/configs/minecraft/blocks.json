@@ -1,0 +1,58 @@
+[
+  {
+    "blocks": [
+      "minecraft:ice",
+      "minecraft:packed_ice"
+    ],
+    "chance": "0.0001",
+    "acoustics": [
+      {
+        "soundEventId": "dsurround:ice"
+      }
+    ]
+  },
+  {
+    "blocks": [
+      "minecraft:lily_pad"
+    ],
+    "chance": "0.04",
+    "acoustics": [
+      {
+        "soundEventId": "dsurround:lilypad.frog",
+        "conditions": "!state.isInside() && !weather.canWaterFreeze()",
+        "weight": 30
+      },
+      {
+        "soundEventId": "dsurround:lilypad.bullfrog",
+        "conditions": "!state.isInside() && !weather.canWaterFreeze()",
+        "weight": 10
+      }
+    ]
+  },
+  {
+    "blocks": [
+      "minecraft:soul_sand"
+    ],
+    "chance": "0.000125",
+    "acoustics": [
+      {
+        "soundEventId": "dsurround:soulsand.laughter",
+        "conditions": "dim.getId() == 'minecraft:the_nether'"
+      }
+    ]
+  },
+  {
+    "blocks": [
+      "minecraft:nether_bricks",
+      "minecraft:nether_brick_fence",
+      "minecraft:nether_brick_stairs"
+    ],
+    "chance": "0.000125",
+    "acoustics": [
+      {
+        "soundEventId": "netherbrick.breathing",
+        "conditions": "dim.getId() == 'minecraft:the_nether'"
+      }
+    ]
+  }
+]

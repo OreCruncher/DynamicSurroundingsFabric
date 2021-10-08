@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.config;
+package org.orecruncher.dsurround.config.dimension;
 
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
