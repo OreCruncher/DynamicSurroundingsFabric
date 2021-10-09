@@ -4,6 +4,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.processing.Scanners;
+import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 
 @Environment(EnvType.CLIENT)
 public class EnvironmentState extends VariableSet<IEnvironmentState> implements IEnvironmentState {
@@ -29,16 +30,21 @@ public class EnvironmentState extends VariableSet<IEnvironmentState> implements 
 
     @Override
     public boolean isUnderground() {
-        return Scanners.isUnderground();
+        return BiomeScanner.isUnderground();
     }
 
     @Override
     public boolean isInOuterspace() {
-        return Scanners.isInOuterspace();
+        return BiomeScanner.isInOuterspace();
     }
 
     @Override
     public boolean isInClouds() {
-        return Scanners.isInClouds();
+        return BiomeScanner.isInClouds();
+    }
+
+    @Override
+    public boolean isUnderWater() {
+        return BiomeScanner.isUnderWater();
     }
 }

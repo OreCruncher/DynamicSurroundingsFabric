@@ -6,8 +6,8 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
-import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.config.SoundLibrary;
+import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,15 +37,15 @@ final class SoundLibraryHelpers {
 
     public static ConfigSoundInstance playSound(IndividualSoundConfigEntry entry) {
         ConfigSoundInstance sound = new ConfigSoundInstance(new Identifier(entry.id), entry.volumeScale);
-        GameUtils.getSoundHander().play(sound);
+        MinecraftAudioPlayer.INSTANCE.play(sound);
         return sound;
     }
 
     public static void stopSound(ConfigSoundInstance sound) {
-        GameUtils.getSoundHander().stop(sound);
+        MinecraftAudioPlayer.INSTANCE.stop(sound);
     }
 
     public static boolean isPlaying(ConfigSoundInstance sound) {
-        return GameUtils.getSoundHander().isPlaying(sound);
+        return MinecraftAudioPlayer.INSTANCE.isPlaying(sound);
     }
 }

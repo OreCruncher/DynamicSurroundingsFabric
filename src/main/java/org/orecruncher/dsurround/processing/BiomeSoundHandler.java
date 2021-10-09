@@ -8,14 +8,15 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.config.BiomeLibrary;
+import org.orecruncher.dsurround.config.InternalBiomes;
 import org.orecruncher.dsurround.config.SoundEventType;
-import org.orecruncher.dsurround.lib.biome.BiomeUtils;
-import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.TickCounter;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
+import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
+import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 import org.orecruncher.dsurround.sound.SoundFactory;
 
 import java.util.Collection;
@@ -24,8 +25,8 @@ import java.util.Collection;
 public final class BiomeSoundHandler extends ClientHandler {
 
     public static final int SCAN_INTERVAL = 4;
-    public static final int SPOT_SOUND_MIN_RANGE = 8;
-    public static final int SPOT_SOUND_MAX_RANGE = 16;
+    public static final int MOOD_SOUND_MIN_RANGE = 8;
+    public static final int MOOD_SOUND_MAX_RANGE = 16;
 
     // Reusable map for biome acoustic work
     private static final Reference2FloatOpenHashMap<SoundEvent> WORK_MAP = new Reference2FloatOpenHashMap<>(8, 1F);
@@ -41,15 +42,15 @@ public final class BiomeSoundHandler extends ClientHandler {
     }
 
     private boolean doBiomeSounds() {
-        return Scanners.isUnderground()
+        return BiomeScanner.isUnderground()
                 || !Scanners.isInside()
-                || Scanners.getDimInfo().alwaysOutside();
+                || BiomeScanner.getDimInfo().alwaysOutside();
     }
 
     private void generateBiomeSounds() {
         final float area = Scanners.getBiomeArea();
-        for (final Reference2IntMap.Entry<Biome> kvp : Scanners.getBiomes().reference2IntEntrySet()) {
-            final Collection<SoundEvent> acoustics = BiomeLibrary.findBiomeSoundMatches(kvp.getKey());
+        for (final Reference2IntMap.Entry<BiomeInfo> kvp : Scanners.getBiomes().reference2IntEntrySet()) {
+            final Collection<SoundEvent> acoustics = kvp.getKey().findBiomeSoundMatches();
             final float volume = 0.05F + 0.95F * (kvp.getIntValue() / area);
             for (final SoundEvent acoustic : acoustics) {
                 WORK_MAP.addTo(acoustic, volume);
@@ -86,37 +87,37 @@ public final class BiomeSoundHandler extends ClientHandler {
             if (biomeSounds)
                 generateBiomeSounds();
 
-            /*
+            final BiomeInfo internalPlayerBiomeInfo = BiomeLibrary.getBiomeInfo(InternalBiomes.PLAYER);
+            final BiomeInfo internalVillageBiomeInfo = BiomeLibrary.getBiomeInfo(InternalBiomes.VILLAGE);
             final ObjectArray<SoundEvent> playerSounds = new ObjectArray<>();
-            BiomeLibrary.PLAYER_INFO.findSoundMatches(playerSounds);
-            BiomeLibrary.VILLAGE_INFO.findSoundMatches(playerSounds);
+
+            playerSounds.addAll(internalPlayerBiomeInfo.findBiomeSoundMatches());
+            playerSounds.addAll(internalVillageBiomeInfo.findBiomeSoundMatches());
             playerSounds.forEach(fx -> WORK_MAP.put(fx, 1.0F));
-            */
 
             if (biomeSounds) {
-                Biome playerBiome = BiomeUtils.getPlayerBiome(player);
-                SoundEvent sound = BiomeLibrary.getExtraSound(playerBiome, SoundEventType.MOOD, RANDOM);
-                if (sound != null) {
-                    SoundInstance instance = SoundFactory.createAsMood(sound, player, SPOT_SOUND_MIN_RANGE, SPOT_SOUND_MAX_RANGE);
-                    GameUtils.getSoundHander().play(instance);
-                }
-
-                sound = BiomeLibrary.getExtraSound(playerBiome, SoundEventType.ADDITION, RANDOM);
-                if (sound != null) {
-                    SoundInstance instance = SoundFactory.createAsAdditional(sound);
-                    GameUtils.getSoundHander().play(instance);
-                }
+                BiomeInfo playerBiome = BiomeScanner.playerLogicBiomeInfo();
+                handleAddOnSounds(player, playerBiome);
+                handleAddOnSounds(player, internalPlayerBiomeInfo);
+                handleAddOnSounds(player, internalVillageBiomeInfo);
             }
-
-            /*
-            final IAcoustic sound = BiomeLibrary.PLAYER_INFO.getSpotSound(RANDOM);
-            if (sound != null)
-                sound.playNear(player, SPOT_SOUND_MIN_RANGE, SPOT_SOUND_MAX_RANGE);
-
-             */
         }
 
         queueAmbientSounds();
+    }
+
+    private void handleAddOnSounds(PlayerEntity player, BiomeInfo info) {
+        SoundEvent sound = info.getExtraSound(SoundEventType.MOOD, RANDOM);
+        if (sound != null) {
+            SoundInstance instance = SoundFactory.createAsMood(sound, player, MOOD_SOUND_MIN_RANGE, MOOD_SOUND_MAX_RANGE);
+            MinecraftAudioPlayer.INSTANCE.play(instance);
+        }
+
+        sound = info.getExtraSound(SoundEventType.ADDITION, RANDOM);
+        if (sound != null) {
+            SoundInstance instance = SoundFactory.createAsAdditional(sound);
+            MinecraftAudioPlayer.INSTANCE.play(instance);
+        }
     }
 
     private void queueAmbientSounds() {
@@ -152,7 +153,7 @@ public final class BiomeSoundHandler extends ClientHandler {
         this.emitters.forEach(BiomeSoundEmitter::stop);
         this.emitters.clear();
         WORK_MAP.clear();
-        GameUtils.getSoundHander().stopAll();
+        MinecraftAudioPlayer.INSTANCE.stopAll();
     }
 
     @Override

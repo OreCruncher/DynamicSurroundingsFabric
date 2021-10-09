@@ -17,7 +17,7 @@ public class Configuration implements ConfigData {
     }
 
     public static class Flags {
-        public static final int SOUND_PLAY = 0x1;
+        public static final int AUDIO_PLAYER = 0x1;
         public static final int BASIC_SOUND_PLAY = 0x2;
     }
 

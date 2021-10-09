@@ -15,4 +15,6 @@ public interface IEnvironmentState {
     boolean isInOuterspace();
 
     boolean isInClouds();
+
+    boolean isUnderWater();
 }

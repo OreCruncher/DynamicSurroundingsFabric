@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.config;
 
+import com.google.common.collect.ImmutableList;
 import com.google.gson.reflect.TypeToken;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -11,6 +12,7 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
+import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -33,6 +35,9 @@ public final class BiomeLibrary {
 
     private static final IModLog LOGGER = Client.LOGGER.createChild(BiomeLibrary.class);
     private static final Type biomeType = TypeToken.getParameterized(List.class, BiomeConfigRule.class).getType();
+    private static final BiomeTraits INTERNAL_TRAITS = BiomeTraits.from(BiomeTrait.FAKE);
+
+    private static final Map<InternalBiomes, BiomeInfo> internalBiomes = new EnumMap<>(InternalBiomes.class);
 
     // Cached list of biome config rules.  Need to hold onto them
     // because they may be needed to handle dynamic biome load.
@@ -51,6 +56,9 @@ public final class BiomeLibrary {
     }
 
     public static void load() {
+        // Wipe out the internal biome cache.  These will be reset.
+        internalBiomes.clear();
+
         ObjectArray<BiomeConfigRule> configs = new ObjectArray<>(64);
         var accessors = ResourceUtils.findConfigs(Client.ModId, Client.DATA_PATH.toFile(), "biomes.json");
 
@@ -62,7 +70,23 @@ public final class BiomeLibrary {
         biomeConfigs = configs;
         version++;
 
+        for (var b : InternalBiomes.values())
+            intializeInternalBiome(b);
+
         LOGGER.info("%d biome configs loaded; version is now %d", biomeConfigs.size(), version);
+    }
+
+    private static void intializeInternalBiome(InternalBiomes biome) {
+        String match = "@" + biome.getName();
+        var info = new BiomeInfo(version, biome.getId(), biome.getName(), INTERNAL_TRAITS);
+
+        for (var c : biomeConfigs) {
+            if (c.biomeSelector.equalsIgnoreCase(match)) {
+                info.update(c);
+            }
+        }
+
+        internalBiomes.put(biome, info);
     }
 
     private static Registry<Biome> getActiveRegistry() {
@@ -107,8 +131,17 @@ public final class BiomeLibrary {
         return result;
     }
 
+    public static BiomeInfo getBiomeInfo(InternalBiomes biome) {
+        return internalBiomes.get(biome);
+    }
+
     private static void applyRuleConfigs(Biome biome, BiomeInfo info) {
         for (var c : biomeConfigs) {
+            // Skip internal definitions - they are handled elsewhere and
+            // do not apply to regular Minecraft biomes
+            if (c.biomeSelector.startsWith("@"))
+                continue;
+
             try {
                 var applies = BiomeConditionEvaluator.INSTANCE.check(biome, c.biomeSelector);
                 if (applies) {
@@ -140,15 +173,25 @@ public final class BiomeLibrary {
         return I18n.translate(fmt);
     }
 
-    public static Collection<SoundEvent> findBiomeSoundMatches(Biome biome) {
-        var info = getBiomeInfo(biome);
-        return info.findBiomeSoundMatches();
-    }
+    //public static Collection<SoundEvent> findBiomeSoundMatches(Biome biome) {
+//        var info = getBiomeInfo(biome);
+//        return info.findBiomeSoundMatches();
+//    }
 
-    public static SoundEvent getExtraSound(Biome biome, SoundEventType type, Random rand) {
-        var info = getBiomeInfo(biome);
-        return info.getExtraSound(type, rand);
-    }
+  //  public static SoundEvent getExtraSound(Biome biome, SoundEventType type, Random rand) {
+    //    var info = getBiomeInfo(biome);
+      //  return info.getExtraSound(type, rand);
+    //}
+
+    //public static Collection<SoundEvent> findBiomeSoundMatches(InternalBiomes biome) {
+      //  var info = getBiomeInfo(biome);
+        //return info != null ? info.findBiomeSoundMatches() : ImmutableList.of();
+    //}
+
+    //public static SoundEvent getExtraSound(InternalBiomes biome, SoundEventType type, Random rand) {
+      //  var info = getBiomeInfo(biome);
+        //return info != null ? info.getExtraSound(type, rand) :null;
+    //}
 
     public static Stream<String> dumpBiomes() {
         return getActiveRegistry()

@@ -4,9 +4,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public final class BiomeTraits {
@@ -51,5 +49,9 @@ public final class BiomeTraits {
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
         return new BiomeTraits(traits);
+    }
+
+    public static BiomeTraits from(BiomeTrait... traits) {
+        return new BiomeTraits(List.of(traits));
     }
 }

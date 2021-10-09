@@ -11,6 +11,9 @@ public final class BiomeTrait {
     // Generic case of WTF
     public static final BiomeTrait UNKNOWN = new BiomeTrait("unknown");
 
+    // Special FAKE for  internal biomes
+    public static final BiomeTrait FAKE = new BiomeTrait("FAKE");
+
     /* From Biome categories */
     public static final BiomeTrait NONE = new BiomeTrait(Biome.Category.NONE.getName());
     public static final BiomeTrait TAIGA = new BiomeTrait(Biome.Category.TAIGA.getName());

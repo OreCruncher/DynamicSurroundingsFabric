@@ -231,18 +231,22 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     public String toString() {
         final String indent = "    ";
 
-        var tags = GameUtils.getWorld().getTagManager()
-                .getOrCreateTagGroup(Registry.BIOME_KEY)
-                .getTagsFor(getBiome()).stream()
-                .map(Identifier::toString)
-                .sorted()
-                .collect(Collectors.joining(","));
+        String tags;
 
-        final Identifier rl = this.biomeId;
-        final String registryName = rl == null ? ("UNKNOWN") : rl.toString();
+        if (this.biomeId.getNamespace().equalsIgnoreCase(Client.ModId)) {
+            // It's fake and has no tags
+            tags = "FAKE BIOME";
+        } else {
+            tags = GameUtils.getWorld().getTagManager()
+                    .getOrCreateTagGroup(Registry.BIOME_KEY)
+                    .getTagsFor(getBiome()).stream()
+                    .map(Identifier::toString)
+                    .sorted()
+                    .collect(Collectors.joining(","));
+        }
 
         final StringBuilder builder = new StringBuilder();
-        builder.append("Biome [").append(getBiomeName()).append('/').append(registryName).append("]");
+        builder.append("Biome [").append(getBiomeName()).append('/').append(this.biomeId).append("]");
         builder.append("\nTags: ").append(tags);
         builder.append("\n").append(getTraits().toString());
 
@@ -289,6 +293,6 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
     @Override
     public int compareTo(final BiomeInfo o) {
-        return getBiomeName().compareTo(o.getBiomeName());
+        return getBiomeId().compareTo(o.getBiomeId());
     }
 }

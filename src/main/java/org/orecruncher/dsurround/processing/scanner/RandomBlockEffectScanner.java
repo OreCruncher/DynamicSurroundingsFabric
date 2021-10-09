@@ -5,9 +5,9 @@ import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import org.orecruncher.dsurround.config.BlockLibrary;
-import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scanner.RandomScanner;
 import org.orecruncher.dsurround.lib.scanner.ScanContext;
+import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 import org.orecruncher.dsurround.sound.SoundFactory;
 
 import java.util.Random;
@@ -36,7 +36,7 @@ public class RandomBlockEffectScanner extends RandomScanner {
 
         if (sound != null) {
             var instance = SoundFactory.createAtLocation(sound, pos);
-            GameUtils.getSoundHander().play(instance);
+            MinecraftAudioPlayer.INSTANCE.play(instance);
         }
     }
 

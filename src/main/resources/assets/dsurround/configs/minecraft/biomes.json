@@ -311,7 +311,7 @@
     "aurora": false
   },
   {
-    "biomeSelector": "biome.name == 'Underground'",
+    "biomeSelector": "@underground",
     "_comment": "Underground explicit set",
     "acoustics": [
       {
@@ -337,7 +337,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.name == 'UnderOCN'",
+    "biomeSelector": "@under_ocean",
     "_comment": "Under Ocean explicit set",
     "acoustics": [
       {
@@ -346,11 +346,11 @@
     ]
   },
   {
-    "biomeSelector": "biome.name == 'UnderDOCN'",
+    "biomeSelector": "@under_deep_ocean",
     "_comment": "Under Deep Ocean explicit set",
     "acoustics": [
       {
-        "soundEventId": "biome.ocean.deep.under"
+        "soundEventId": "biome.ocean.deep"
       },
       {
         "soundEventId": "whale",
@@ -359,7 +359,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.name == 'UnderRVR'",
+    "biomeSelector": "@under_river",
     "_comment": "Under River explicit set",
     "acoustics": [
       {
@@ -368,7 +368,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.name == 'Underwater'",
+    "biomeSelector": "@underwater",
     "_comment": "Underwater explicit set",
     "acoustics": [
       {
@@ -377,7 +377,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.name == 'Clouds'",
+    "biomeSelector": "@clouds",
     "_comment": "Clouds explicit set",
     "acoustics": [
       {
@@ -386,25 +386,29 @@
     ]
   },
   {
-    "biomeSelector": "biome.name == 'Village'",
+    "biomeSelector": "@village",
     "_comment": "Village explicit set",
+    "additionalSoundChance": "0.0034",
     "acoustics": [
       {
-        "soundEventId": "village.rooster",
-        "conditions": "state.isInVillage() && !state.isInside() && diurnal.isSunrise() && weather.isNotRaining()"
+        "soundEventId": "biome.village.rooster",
+        "conditions": "state.isInVillage() && !state.isInside() && diurnal.isSunrise() && weather.isNotRaining()",
+        "type": "addition"
       },
       {
-        "soundEventId": "village.anvil",
-        "conditions": "state.isInVillage() && !state.isInside() && diurnal.isDay() && weather.isNotRaining()"
+        "soundEventId": "biome.village.anvil",
+        "conditions": "state.isInVillage() && !state.isInside() && diurnal.isDay() && weather.isNotRaining()",
+        "type": "addition"
       },
       {
-        "soundEventId": "village.dogbark",
-        "conditions": "state.isInVillage() && !state.isInside() && weather.isNotRaining()"
+        "soundEventId": "biome.village.dogbark",
+        "conditions": "state.isInVillage() && !state.isInside() && weather.isNotRaining()",
+        "type": "addition"
       }
     ]
   },
   {
-    "biomeSelector": "biome.name == 'Player' && !lib.isModLoaded('betterendforge')",
+    "biomeSelector": "@player",
     "_comment": "Player explicit set for The End",
     "acoustics": [
       {

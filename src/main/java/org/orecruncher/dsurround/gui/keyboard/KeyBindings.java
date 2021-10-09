@@ -9,6 +9,7 @@ import net.minecraft.client.util.InputUtil;
 import org.orecruncher.dsurround.eventing.handlers.DiagnosticHandler;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 
 @Environment(EnvType.CLIENT)
 public class KeyBindings {
@@ -39,7 +40,7 @@ public class KeyBindings {
                     final boolean singlePlayer = GameUtils.getMC().isInSingleplayer();
                     GameUtils.getMC().setScreen(new IndividualSoundControlScreen(null, singlePlayer));
                     if (singlePlayer)
-                        GameUtils.getMC().getSoundManager().stopAll();
+                        MinecraftAudioPlayer.INSTANCE.stopAll();
                 }
             }
         });

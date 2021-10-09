@@ -2,17 +2,15 @@ package org.orecruncher.dsurround.processing;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.sound.SoundManager;
 import net.minecraft.sound.SoundEvent;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.sound.BackgroundSoundLoop;
+import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 import org.orecruncher.dsurround.sound.SoundFactory;
 
 @Environment(EnvType.CLIENT)
 public final class BiomeSoundEmitter {
 
-    private final SoundManager manager;
     private final SoundEvent soundEvent;
     private final BackgroundSoundLoop acousticSource;
 
@@ -21,12 +19,11 @@ public final class BiomeSoundEmitter {
     public BiomeSoundEmitter(final SoundEvent event) {
         this.soundEvent = event;
         this.acousticSource = SoundFactory.createBackgroundSoundLoop(event);
-        this.manager = GameUtils.getSoundHander();
     }
 
     public void tick() {
 
-        boolean isPlaying = this.manager.isPlaying(this.acousticSource);
+        boolean isPlaying = MinecraftAudioPlayer.INSTANCE.isPlaying(this.acousticSource);
 
         // If the current sound is playing and the sound is fading just terminate the sound.
         if (isPlaying) {
@@ -42,7 +39,7 @@ public final class BiomeSoundEmitter {
         }
 
         // Play the sound if need be
-        this.manager.play(this.acousticSource);
+        MinecraftAudioPlayer.INSTANCE.play(this.acousticSource);
     }
 
     public void setVolumeScale(final float scale) {
@@ -68,7 +65,7 @@ public final class BiomeSoundEmitter {
     }
 
     public void stop() {
-        this.manager.stop(this.acousticSource);
+        MinecraftAudioPlayer.INSTANCE.stop(this.acousticSource);
         this.done = true;
     }
 

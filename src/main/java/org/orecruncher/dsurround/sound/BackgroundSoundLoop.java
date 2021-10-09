@@ -65,7 +65,7 @@ public class BackgroundSoundLoop extends MovingSoundInstance {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .addValue(this.getSound().getIdentifier().toString())
+                .addValue(this.getId().toString())
                 .addValue(this.getCategory().getName())
                 .add("v", getVolume())
                 .add("ev", SoundVolumeEvaluator.getAdjustedVolume(this))

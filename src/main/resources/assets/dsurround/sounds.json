@@ -833,10 +833,12 @@
 		],
 		"sounds": [
 			{
-				"name": "dsurround:ambient/village/anvil1"
+				"name": "dsurround:ambient/village/anvil1",
+				"volume": 0.25
 			},
 			{
-				"name": "dsurround:ambient/village/anvil2"
+				"name": "dsurround:ambient/village/anvil2",
+				"volume": 0.25
 			}
 		]
 	},
