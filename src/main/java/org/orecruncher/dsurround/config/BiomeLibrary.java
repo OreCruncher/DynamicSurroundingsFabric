@@ -60,7 +60,7 @@ public final class BiomeLibrary {
         internalBiomes.clear();
 
         ObjectArray<BiomeConfigRule> configs = new ObjectArray<>(64);
-        var accessors = ResourceUtils.findConfigs(Client.ModId, Client.DATA_PATH.toFile(), "biomes.json");
+        var accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), "biomes.json");
 
         for (var accessor : accessors) {
             var config = accessor.<List<BiomeConfigRule>>as(biomeType);

@@ -11,6 +11,11 @@ abstract class ResourceAccessorBase implements IResourceAccessor {
     private final Identifier location;
     private final Singleton<byte[]> bytes;
 
+    public ResourceAccessorBase(final Identifier location, byte[] bytes) {
+        this.location = location;
+        this.bytes = new Singleton<>(() -> bytes);
+    }
+
     public ResourceAccessorBase(final Identifier location) {
         this.location = location;
         this.bytes = new Singleton<>(this::getAsset);

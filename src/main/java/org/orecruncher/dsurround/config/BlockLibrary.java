@@ -51,7 +51,7 @@ public class BlockLibrary {
     public static void load() {
 
         registry.clear();
-        final Collection<IResourceAccessor> configs = ResourceUtils.findConfigs(Client.ModId, Client.DATA_PATH.toFile(), "blocks.json");
+        final Collection<IResourceAccessor> configs = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), "blocks.json");
         IResourceAccessor.process(configs, accessor -> initFromConfig(accessor.as(blockType)));
         registry.values().forEach(BlockInfo::trim);
         version++;

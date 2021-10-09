@@ -33,7 +33,7 @@ public final class DimensionLibrary {
     public static void load() {
         configs.clear();
         cache.clear();
-        final Collection<IResourceAccessor> configs = ResourceUtils.findConfigs(Client.ModId, Client.DATA_PATH.toFile(), "dimensions.json");
+        final Collection<IResourceAccessor> configs = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), "dimensions.json");
         IResourceAccessor.process(configs, accessor -> initFromConfig(accessor.as(dimensionType)));
     }
 

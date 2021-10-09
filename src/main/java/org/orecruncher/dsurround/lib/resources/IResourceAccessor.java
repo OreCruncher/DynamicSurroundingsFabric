@@ -2,10 +2,18 @@ package org.orecruncher.dsurround.lib.resources;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.Dynamic;
+import com.mojang.serialization.JsonOps;
+import joptsimple.internal.Strings;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.resource.ResourcePack;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.JsonHelper;
 import org.orecruncher.dsurround.lib.validation.Validators;
 
 import java.io.File;
@@ -13,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -20,90 +29,6 @@ import java.util.function.Consumer;
  */
 @Environment(EnvType.CLIENT)
 public interface IResourceAccessor {
-
-    /**
-     * The resource location for the accessor
-     *
-     * @return Resource location
-     */
-    Identifier location();
-
-    /**
-     * Obtains the content of the resource as a string
-     *
-     * @return The resource data as a string, or null if not found
-     */
-    default String asString() {
-        byte[] bytes = this.asBytes();
-        return bytes != null ? new String(bytes, Charset.defaultCharset()) : null;
-    }
-
-    /**
-     * Obtains the content of the resource as a series of bytes
-     *
-     * @return The resource data as an array of bytes, or null if not found
-     */
-    byte[] asBytes();
-
-    /**
-     * Obtains the content of the resource as a deserialized object
-     *
-     * @param clazz Class of the object to deserialize
-     * @param <T>   The type of object that is being deserialized
-     * @return Reference to the deserialized object, null if not possible
-     */
-    default <T> T as(final Class<T> clazz) {
-        String content = this.asString();
-        if (content != null) {
-            try {
-                final Gson gson = new GsonBuilder().create();
-                final T obj = gson.fromJson(content, clazz);
-                Validators.validate(obj);
-                return obj;
-            } catch (final Throwable t) {
-                ResourceUtils.LOGGER.error(t, "Unable to complete processing of %s", this.toString());
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Determines if the resource exists
-     *
-     * @return true if it exists, false otherwise
-     */
-    default boolean exists() {
-        return asBytes() != null;
-    }
-
-    /**
-     * Obtains the content of the resource as a deserialized object of the type specified.
-     *
-     * @param type Type of object instance to deserialize
-     * @param <T>  The object type for casting
-     * @return Reference to the deserialized object, null if not possible
-     */
-    default <T> T as(final Type type) {
-        String content = this.asString();
-        if (content != null) {
-            try {
-                final Gson gson = new GsonBuilder().create();
-                final T obj = gson.fromJson(content, type);
-                Validators.validate(obj, type);
-                return obj;
-            } catch (final Throwable t) {
-                ResourceUtils.LOGGER.error(t, "Unable to complete processing of %s", this.toString());
-            }
-        }
-        return null;
-    }
-
-    default void logError(final Throwable t) {
-        if (t instanceof FileNotFoundException)
-            ResourceUtils.LOGGER.debug("Asset not found for %s", this.toString());
-        else
-            ResourceUtils.LOGGER.error(t, "Unable to process asset %s", this.toString());
-    }
 
     /**
      * Creates a reference to a resource accessor that can be used to retrieve data embedded in the JAR.
@@ -139,6 +64,18 @@ public interface IResourceAccessor {
     }
 
     /**
+     * Creates a reference to a resource accessor that is backed by a byte array
+     * supplied by the caller.
+     *
+     * @param location Location of the resource
+     * @param bytes    Bytes representing the asset
+     * @return Reference to a resource accessor to obtain the necessary data
+     */
+    static IResourceAccessor createRawBytes(final Identifier location, byte[] bytes) {
+        return new ResourceAccessorBytes(location, bytes);
+    }
+
+    /**
      * Iterates over a collection of accessors invoking an operation.  The operation is logged and encapsulated within
      * an error handling for logging purposes.  Exceptions will be suppressed.
      *
@@ -154,5 +91,107 @@ public interface IResourceAccessor {
                 ResourceUtils.LOGGER.error(t, "Unable to complete processing of %s", accessor);
             }
         }
+    }
+
+    /**
+     * The resource location for the accessor
+     *
+     * @return Resource location
+     */
+    Identifier location();
+
+    /**
+     * Obtains the content of the resource as a string
+     *
+     * @return The resource data as a string, or null if not found
+     */
+    default String asString() {
+        byte[] bytes = this.asBytes();
+        return bytes != null ? new String(bytes, Charset.defaultCharset()) : null;
+    }
+
+    /**
+     * Obtains the content of the resource as a series of bytes
+     *
+     * @return The resource data as an array of bytes, or null if not found
+     */
+    byte[] asBytes();
+
+    /**
+     * Obtains the content of the resource as a deserialized object
+     *
+     * @param clazz Class of the object to deserialize
+     * @param <T>   The type of object that is being deserialized
+     * @return Reference to the deserialized object, null if not possible
+     */
+    default <T> T as(final Class<T> clazz) {
+        String content = this.asString();
+        if (!Strings.isNullOrEmpty(content)) {
+            try {
+                final Gson gson = new GsonBuilder().create();
+                final T obj = gson.fromJson(content, clazz);
+                Validators.validate(obj);
+                return obj;
+            } catch (final Throwable t) {
+                ResourceUtils.LOGGER.error(t, "Unable to complete processing of %s", this.toString());
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Determines if the resource exists
+     *
+     * @return true if it exists, false otherwise
+     */
+    default boolean exists() {
+        return asBytes() != null;
+    }
+
+    /**
+     * Obtains the content of the resource as a deserialized object of the type specified.
+     *
+     * @param type Type of object instance to deserialize
+     * @param <T>  The object type for casting
+     * @return Reference to the deserialized object, null if not possible
+     */
+    default <T> T as(final Type type) {
+        String content = this.asString();
+        if (!Strings.isNullOrEmpty(content)) {
+            try {
+                final Gson gson = new GsonBuilder().create();
+                final T obj = gson.fromJson(content, type);
+                Validators.validate(obj, type);
+                return obj;
+            } catch (final Throwable t) {
+                ResourceUtils.LOGGER.error(t, "Unable to complete processing of %s", this.toString());
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Obtains the content of the resource as a deserialized object using the codec provided.
+     *
+     * @param codec Codec to use when deserializing
+     * @param <T>   The object type for casting
+     * @return Reference to the deserialized object, null if not possible
+     */
+    default <T> Optional<T> as(final Codec<T> codec) {
+        String content = this.asString();
+        if (!Strings.isNullOrEmpty(content)) {
+            JsonObject jsonObject = JsonHelper.deserialize(content);
+            Dynamic<JsonElement> dynamic = new Dynamic<>(JsonOps.INSTANCE, jsonObject);
+            DataResult<T> result = codec.parse(dynamic);
+            return result.resultOrPartial(ResourceUtils.LOGGER::warn);
+        }
+        return Optional.empty();
+    }
+
+    default void logError(final Throwable t) {
+        if (t instanceof FileNotFoundException)
+            ResourceUtils.LOGGER.debug("Asset not found for %s", this.toString());
+        else
+            ResourceUtils.LOGGER.error(t, "Unable to process asset %s", this.toString());
     }
 }
