@@ -35,6 +35,11 @@ public class Configuration implements ConfigData {
     @Comment("Configuration options for modifying Minecraft's Sound System behavior")
     public final SoundSystem soundSystem = new SoundSystem();
 
+    @ConfigEntry.Gui.CollapsibleObject
+    @ConfigEntry.Gui.Tooltip
+    @Comment("Configuration options for thunder storms")
+    public final ThunderStorms thunderStorms = new ThunderStorms();
+
     public static class Logging {
 
         @ConfigEntry.Gui.Tooltip
@@ -59,6 +64,12 @@ public class Configuration implements ConfigData {
         @ConfigEntry.Gui.Tooltip
         @Comment("Ticks between culled sound events (0 to disable culling)")
         public int cullInterval = 20;
+    }
+
+    public static class ThunderStorms {
+        @ConfigEntry.Gui.Tooltip
+        @Comment("Enables replacement of thunder sounds with Dynamic Surroundings' version")
+        public boolean replaceThunderSounds = true;
     }
 
     public void validatePostLoad() {

@@ -3,15 +3,22 @@ package org.orecruncher.dsurround.sound;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.client.util.math.Vector3d;
 import net.minecraft.entity.Entity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import org.lwjgl.system.CallbackI;
+import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.math.MathStuff;
+import org.orecruncher.dsurround.mixins.MixinAbstractSoundInstance;
 
 @Environment(EnvType.CLIENT)
 public final class SoundFactory {
+
+    private static final Identifier THUNDER = new Identifier(Client.ModId, "thunder");
 
     public static BackgroundSoundLoop createBackgroundSoundLoop(SoundEvent event) {
         return new BackgroundSoundLoop(event);
@@ -41,6 +48,23 @@ public final class SoundFactory {
                 x,
                 y,
                 z
+        );
+    }
+
+    public static PositionedSoundInstance cloneThunder(SoundInstance thunder) {
+        MixinAbstractSoundInstance mixin = (MixinAbstractSoundInstance)thunder;
+        return new PositionedSoundInstance(
+                THUNDER,
+                thunder.getCategory(),
+                mixin.getRawVolume(),
+                mixin.getRawPitch(),
+                thunder.isRepeatable(),
+                thunder.getRepeatDelay(),
+                thunder.getAttenuationType(),
+                thunder.getX(),
+                thunder.getY(),
+                thunder.getZ(),
+                thunder.isRelative()
         );
     }
 

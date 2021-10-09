@@ -4,12 +4,16 @@ import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.SoundInstance;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.gui.sound.ConfigSoundInstance;
 import org.orecruncher.dsurround.lib.TickCounter;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Handles sound block and culling.
@@ -18,6 +22,11 @@ import java.util.Objects;
 public final class SoundInstanceHandler {
 
     private static final Object2LongOpenHashMap<Identifier> soundCull = new Object2LongOpenHashMap<>(32);
+    private static final Set<Identifier> thunderSounds = new HashSet<>();
+
+    static {
+        thunderSounds.add(SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER.getId());
+    }
 
     private static boolean isSoundBlocked( final Identifier id) {
         return Client.SoundConfig.isBlocked(id);
@@ -56,6 +65,14 @@ public final class SoundInstanceHandler {
             return false;
 
         final Identifier id = theSound.getId();
+
+        if (Client.Config.thunderStorms.replaceThunderSounds && thunderSounds.contains(id)) {
+            // Yeah - a bit reentrant but it should be good
+            var sound = SoundFactory.cloneThunder(theSound);
+            MinecraftAudioPlayer.INSTANCE.play(sound);
+            return true;
+        }
+
         return isSoundBlocked(id) || isSoundCulledLogical(id);
     }
 }

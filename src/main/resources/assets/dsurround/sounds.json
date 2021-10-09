@@ -1,4 +1,58 @@
 {
+	"thunder": {
+		"subtitle": "dsurround.sound.caption.thunder",
+		"credits": [
+			"§aThunder 1",
+			"Yoyodaman234",
+			"Creative Commons 0",
+			"",
+			"§aDonner1.wav",
+			"swuing",
+			"Attribution",
+			"",
+			"§aThunder - 1",
+			"bone666138",
+			"Attribution",
+			"",
+			"§aThunder - 2",
+			"bone666138",
+			"Attribution",
+			"",
+			"§aDistant Thunder.wav",
+			"sarson",
+			"Creative Commons 0",
+			"",
+			"§aNM-Mejor-Lado-Thunder-01.wav",
+			"aaronstar",
+			"Creative Commons 0"
+		],
+		"sounds": [
+			{
+				"name": "dsurround:ambient/weather/thunder1",
+				"stream": true
+			},
+			{
+				"name": "dsurround:ambient/weather/thunder2",
+				"stream": true
+			},
+			{
+				"name": "dsurround:ambient/weather/thunder3",
+				"stream": true
+			},
+			{
+				"name": "dsurround:ambient/weather/thunder4",
+				"stream": true
+			},
+			{
+				"name": "dsurround:ambient/weather/thunder5",
+				"stream": true
+			},
+			{
+				"name": "dsurround:ambient/weather/thunder6",
+				"stream": true
+			}
+		]
+	},
 	"ice": {
 		"subtitle": "dsurround.sound.caption.ice",
 		"sounds": [
