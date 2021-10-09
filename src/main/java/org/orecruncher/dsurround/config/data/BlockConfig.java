@@ -6,19 +6,17 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.orecruncher.dsurround.config.AcousticConfig;
+import org.orecruncher.dsurround.lib.CodecExtensions;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Environment(EnvType.CLIENT)
 public class BlockConfig {
 
-    private static final String DEFAULT_STRING = "Because CODEC can't handle nulls";
-
     public static Codec<BlockConfig> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
-                Codec.list(Codec.STRING).fieldOf("blocks").forGetter(info -> info.blocks),
+                Codec.list(CodecExtensions.checkBlockStateSpecification()).fieldOf("blocks").forGetter(info -> info.blocks),
                 Codec.BOOL.optionalFieldOf("soundReset", false).forGetter(info -> info.soundReset),
                 Codec.STRING.optionalFieldOf("chance").forGetter(info -> info.chance),
                 Codec.list(AcousticConfig.CODEC).optionalFieldOf("acoustics", ImmutableList.of()).forGetter(info -> info.acoustics)

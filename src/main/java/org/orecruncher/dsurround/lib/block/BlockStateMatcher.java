@@ -59,7 +59,7 @@ public final class BlockStateMatcher {
 
     
     public static BlockStateMatcher create( final String blockId) {
-        return BlockStateParser.parseBlockState(blockId).map(BlockStateMatcher::create).orElse(BlockStateMatcher.AIR);
+        return BlockStateParser.parse(blockId).map(BlockStateMatcher::create).orElse(BlockStateMatcher.AIR);
     }
 
     public static BlockStateMatcher create( final BlockStateParser.ParseResult result) {

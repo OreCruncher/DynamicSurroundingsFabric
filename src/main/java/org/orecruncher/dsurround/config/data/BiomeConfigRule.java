@@ -6,6 +6,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.orecruncher.dsurround.config.AcousticConfig;
+import org.orecruncher.dsurround.lib.CodecExtensions;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +19,7 @@ public final class BiomeConfigRule {
                     Codec.STRING.fieldOf("biomeSelector").forGetter(info -> info.biomeSelector),
                     Codec.STRING.optionalFieldOf("_comment").forGetter(info -> info.comment),
                     Codec.BOOL.optionalFieldOf("clearSounds", false).forGetter(info -> info.clearSounds),
-                    Codec.STRING.optionalFieldOf("fogColor").forGetter(info -> info.fogColor),
+                    CodecExtensions.checkHTMLColor().optionalFieldOf("fogColor").forGetter(info -> info.fogColor),
                     Codec.STRING.optionalFieldOf("additionalSoundChance").forGetter(info -> info.additionalSoundChance),
                     Codec.STRING.optionalFieldOf("moodSoundChance").forGetter(info -> info.moodSoundChance),
                     Codec.list(AcousticConfig.CODEC).optionalFieldOf("acoustics", ImmutableList.of()).forGetter(info -> info.acoustics)

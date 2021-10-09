@@ -33,7 +33,7 @@ public final class BlockStateParser {
      * Parses the block state string passed in and returns the result of that parsing.  If null is returned it means
      * there was some sort of error.
      */
-    public static Optional<ParseResult> parseBlockState(final String blockName) {
+    public static Optional<ParseResult> parse(final String blockName) {
 
         String temp = blockName;
         int idx = temp.indexOf('+');
