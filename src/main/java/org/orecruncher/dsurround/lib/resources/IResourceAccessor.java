@@ -1,23 +1,18 @@
 package org.orecruncher.dsurround.lib.resources;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
-import com.mojang.serialization.Dynamic;
-import com.mojang.serialization.JsonOps;
+import com.google.gson.*;
+import com.mojang.serialization.*;
+import com.mojang.serialization.codecs.ListCodec;
 import joptsimple.internal.Strings;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.resource.ResourcePack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
-import org.orecruncher.dsurround.lib.validation.Validators;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.Collection;
@@ -31,17 +26,6 @@ import java.util.function.Consumer;
 public interface IResourceAccessor {
 
     /**
-     * Creates a reference to a resource accessor that can be used to retrieve data embedded in the JAR.
-     *
-     * @param rootContainer The location within the asset folder where data can be found.  Typically it's the mod ID.
-     * @param location      The resource location of the data that needs to be retrieved.
-     * @return Reference to a resource accessor to obtain the necessary data.
-     */
-    static IResourceAccessor createJarResource(final String rootContainer, final Identifier location) {
-        return new ResourceAccessorJar(rootContainer, location);
-    }
-
-    /**
      * Creates a reference to a resource accessor that can be used to retrieve data on the local disk.
      *
      * @param root     The location on disk where the data can be found.
@@ -50,17 +34,6 @@ public interface IResourceAccessor {
      */
     static IResourceAccessor createExternalResource(final File root, final Identifier location) {
         return new ResourceAccessorExternal(root, location);
-    }
-
-    /**
-     * Creates a reference to a resource accessor that can be used to retrieve data from a resource pack.
-     *
-     * @param pack     Resource pack containing the needed resource data
-     * @param location Location of the resource within the pack
-     * @return Reference to a resource accessor to obtain the necessary data.
-     */
-    static IResourceAccessor createPackResource(final ResourcePack pack, final Identifier location, final Identifier actual) {
-        return new ResourceAccessorPack(location, pack, actual);
     }
 
     /**
@@ -129,9 +102,7 @@ public interface IResourceAccessor {
         if (!Strings.isNullOrEmpty(content)) {
             try {
                 final Gson gson = new GsonBuilder().create();
-                final T obj = gson.fromJson(content, clazz);
-                Validators.validate(obj);
-                return obj;
+                return gson.fromJson(content, clazz);
             } catch (final Throwable t) {
                 ResourceUtils.LOGGER.error(t, "Unable to complete processing of %s", this.toString());
             }
@@ -160,9 +131,7 @@ public interface IResourceAccessor {
         if (!Strings.isNullOrEmpty(content)) {
             try {
                 final Gson gson = new GsonBuilder().create();
-                final T obj = gson.fromJson(content, type);
-                Validators.validate(obj, type);
-                return obj;
+                return gson.fromJson(content, type);
             } catch (final Throwable t) {
                 ResourceUtils.LOGGER.error(t, "Unable to complete processing of %s", this.toString());
             }
@@ -177,15 +146,33 @@ public interface IResourceAccessor {
      * @param <T>   The object type for casting
      * @return Reference to the deserialized object, null if not possible
      */
-    default <T> Optional<T> as(final Codec<T> codec) {
+    default <T> @Nullable T as(final Codec<T> codec) {
         String content = this.asString();
         if (!Strings.isNullOrEmpty(content)) {
-            JsonObject jsonObject = JsonHelper.deserialize(content);
-            Dynamic<JsonElement> dynamic = new Dynamic<>(JsonOps.INSTANCE, jsonObject);
-            DataResult<T> result = codec.parse(dynamic);
-            return result.resultOrPartial(ResourceUtils.LOGGER::warn);
+            var reader = new StringReader(content);
+            Dynamic<JsonElement> dynamic;
+            if (codec instanceof ListCodec) {
+                JsonArray jsonArray = JsonHelper.method_37165(reader);
+                dynamic = new Dynamic<>(JsonOps.INSTANCE, jsonArray);
+            } else if (codec instanceof MapCodec) {
+                // Not sure if there is anything special yet...
+                JsonObject jsonObject = JsonHelper.deserialize(reader);
+                dynamic = new Dynamic<>(JsonOps.INSTANCE, jsonObject);
+            } else {
+                JsonObject jsonObject = JsonHelper.deserialize(reader);
+                dynamic = new Dynamic<>(JsonOps.INSTANCE, jsonObject);
+            }
+            try {
+                DataResult<T> result = codec.parse(dynamic);
+                Optional<T> parsed = result.resultOrPartial(ResourceUtils.LOGGER::warn);
+                if (parsed.isPresent()) {
+                    return parsed.get();
+                }
+            } catch(Throwable t) {
+                ResourceUtils.LOGGER.error(t, "Unable to parse %s", this.location());
+            }
         }
-        return Optional.empty();
+        return null;
     }
 
     default void logError(final Throwable t) {

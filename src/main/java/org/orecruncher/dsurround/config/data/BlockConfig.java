@@ -1,40 +1,38 @@
 package org.orecruncher.dsurround.config.data;
 
 import com.google.common.collect.ImmutableList;
-import com.google.gson.annotations.SerializedName;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.AcousticConfig;
-import org.orecruncher.dsurround.lib.validation.IValidator;
-import org.orecruncher.dsurround.lib.validation.ValidationException;
-import org.orecruncher.dsurround.lib.validation.ValidationHelpers;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Environment(EnvType.CLIENT)
-public class BlockConfig implements IValidator<BlockConfig> {
-    @SerializedName("blocks")
-    public List<String> blocks = ImmutableList.of();
-    @SerializedName("soundReset")
-    public Boolean soundReset = null;
-    @SerializedName("chance")
-    public String chance = null;
-    @SerializedName("acoustics")
-    public List<AcousticConfig> acoustics = ImmutableList.of();
+public class BlockConfig {
 
-    @Override
-    public void validate(final BlockConfig obj) throws ValidationException {
-        ValidationHelpers.hasElements("blocks", this.blocks, Client.LOGGER);
+    private static final String DEFAULT_STRING = "Because CODEC can't handle nulls";
 
-        if (this.chance != null)
-            ValidationHelpers.notNullOrWhitespace("chance", this.chance, Client.LOGGER);
+    public static Codec<BlockConfig> CODEC = RecordCodecBuilder.create((instance) ->
+            instance.group(
+                Codec.list(Codec.STRING).fieldOf("blocks").forGetter(info -> info.blocks),
+                Codec.BOOL.optionalFieldOf("soundReset", false).forGetter(info -> info.soundReset),
+                Codec.STRING.optionalFieldOf("chance").forGetter(info -> info.chance),
+                Codec.list(AcousticConfig.CODEC).optionalFieldOf("acoustics", ImmutableList.of()).forGetter(info -> info.acoustics)
+            ).apply(instance, BlockConfig::new));
 
-        for (final String s : blocks) {
-            ValidationHelpers.notNullOrWhitespace("blocks", s, Client.LOGGER);
-            ValidationHelpers.mustBeLowerCase("blocks", s, Client.LOGGER);
-        }
-        for (final AcousticConfig ac : this.acoustics)
-            ac.validate(ac);
+    public List<String> blocks;
+    public boolean soundReset;
+    public Optional<String> chance;
+    public List<AcousticConfig> acoustics;
+
+    BlockConfig(List<String> blocks, boolean soundReset, Optional<String> chance, List<AcousticConfig> acoustics) {
+        this.blocks = blocks;
+        this.soundReset = soundReset;
+        this.chance = chance;
+        this.acoustics = acoustics;
     }
 }

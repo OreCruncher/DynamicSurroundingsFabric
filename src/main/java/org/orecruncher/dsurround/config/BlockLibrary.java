@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.config;
 
 import com.google.common.collect.ImmutableList;
-import com.google.gson.reflect.TypeToken;
+import com.mojang.serialization.Codec;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.Block;
@@ -10,7 +10,6 @@ import net.minecraft.state.State;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
-import org.lwjgl.system.CallbackI;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.block.BlockInfo;
 import org.orecruncher.dsurround.config.data.BlockConfig;
@@ -20,23 +19,20 @@ import org.orecruncher.dsurround.lib.block.BlockStateMatcherMap;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
-import org.orecruncher.dsurround.lib.validation.ListValidator;
-import org.orecruncher.dsurround.lib.validation.Validators;
 import org.orecruncher.dsurround.xface.IBlockStateExtended;
 
-import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Environment(EnvType.CLIENT)
 public class BlockLibrary {
 
+    private static final Codec<List<BlockConfig>> CODEC = Codec.list(BlockConfig.CODEC);
     private static final IModLog LOGGER = Client.LOGGER.createChild(BlockLibrary.class);
-    private static final Type blockType = TypeToken.getParameterized(List.class, BlockConfig.class).getType();
+
     private static final String TAG_SPECIFIER = "#";
     private static final int INDEFINITE = -1;
     private static final BlockInfo DEFAULT = new BlockInfo(INDEFINITE);
@@ -44,15 +40,11 @@ public class BlockLibrary {
     private static final BlockStateMatcherMap<BlockInfo> registry = new BlockStateMatcherMap<>();
     private static int version = 0;
 
-    static {
-        Validators.registerValidator(blockType, new ListValidator<BlockConfig>());
-    }
-
     public static void load() {
 
         registry.clear();
         final Collection<IResourceAccessor> configs = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), "blocks.json");
-        IResourceAccessor.process(configs, accessor -> initFromConfig(accessor.as(blockType)));
+        IResourceAccessor.process(configs, accessor -> initFromConfig(accessor.as(CODEC)));
         registry.values().forEach(BlockInfo::trim);
         version++;
 

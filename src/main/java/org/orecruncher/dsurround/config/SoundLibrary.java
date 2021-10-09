@@ -2,6 +2,9 @@ package org.orecruncher.dsurround.config;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.reflect.TypeToken;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.UnboundedMapCodec;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -13,11 +16,8 @@ import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
-import org.orecruncher.dsurround.lib.validation.MapValidator;
-import org.orecruncher.dsurround.lib.validation.Validators;
 import org.orecruncher.dsurround.sound.SoundMetadata;
 
-import java.lang.reflect.Type;
 import java.util.*;
 
 /**
@@ -26,19 +26,17 @@ import java.util.*;
 @Environment(EnvType.CLIENT)
 public final class SoundLibrary {
 
+    private static final UnboundedMapCodec<String, SoundMetadataConfig> CODEC = Codec.unboundedMap(Codec.STRING, SoundMetadataConfig.CODEC);
     private static final IModLog LOGGER = Client.LOGGER.createChild(SoundLibrary.class);
     private static final Identifier MISSING_RESOURCE = new Identifier(Client.ModId, "missing_sound");
+    public static final SoundEvent MISSING = new SoundEvent(MISSING_RESOURCE);
+
     private static final Object2ObjectOpenHashMap<Identifier, SoundEvent> myRegistry = new Object2ObjectOpenHashMap<>();
     private static final Object2ObjectOpenHashMap<Identifier, SoundMetadata> soundMetadata = new Object2ObjectOpenHashMap<>();
-    private static final Type SOUND_FILE_TYPE = TypeToken.getParameterized(Map.class, String.class, SoundMetadataConfig.class).getType();
-
-    public static final SoundEvent MISSING = new SoundEvent(MISSING_RESOURCE);
 
     static {
         myRegistry.defaultReturnValue(SoundLibrary.MISSING);
         soundMetadata.defaultReturnValue(new SoundMetadata());
-
-        Validators.registerValidator(SOUND_FILE_TYPE, new MapValidator<String, SoundMetadataConfig>());
     }
 
     public static void load() {
@@ -64,7 +62,7 @@ public final class SoundLibrary {
     }
 
     private static void registerSoundFile(final IResourceAccessor soundFile) {
-        final Map<String, SoundMetadataConfig> result = soundFile.as(SOUND_FILE_TYPE);
+        final Map<String, SoundMetadataConfig> result = soundFile.as(CODEC);
         if (result != null && result.size() > 0) {
             Identifier resource = soundFile.location();
             LOGGER.info("Processing %s", resource);

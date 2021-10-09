@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config;
 
-import com.google.gson.reflect.TypeToken;
+import com.mojang.serialization.Codec;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
@@ -11,30 +11,23 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
-import org.orecruncher.dsurround.lib.validation.ListValidator;
-import org.orecruncher.dsurround.lib.validation.Validators;
 
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Stream;
 
 public final class DimensionLibrary {
 
+    private static final Codec<List<DimensionConfig>> CODEC = Codec.list(DimensionConfig.CODEC);
     private static final IModLog LOGGER = Client.LOGGER.createChild(DimensionLibrary.class);
-    private static final Type dimensionType = TypeToken.getParameterized(List.class, DimensionConfig.class).getType();
 
     private static final ObjectArray<DimensionConfig> cache = new ObjectArray<>();
     private static final Map<RegistryKey<World>, DimensionInfo> configs = new HashMap<>();
-
-    static {
-        Validators.registerValidator(dimensionType, new ListValidator<DimensionConfig>());
-    }
 
     public static void load() {
         configs.clear();
         cache.clear();
         final Collection<IResourceAccessor> configs = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), "dimensions.json");
-        IResourceAccessor.process(configs, accessor -> initFromConfig(accessor.as(dimensionType)));
+        IResourceAccessor.process(configs, accessor -> initFromConfig(accessor.as(CODEC)));
     }
 
     private static void initFromConfig(final List<DimensionConfig> cfg) {
@@ -54,16 +47,16 @@ public final class DimensionLibrary {
             final DimensionConfig data = getData(entry);
             if (data == entry)
                 return;
-            if (data.dimensionId == null)
-                data.dimensionId = entry.dimensionId;
-            if (entry.hasHaze != null)
-                data.hasHaze = entry.hasHaze;
-            if (entry.cloudHeight != null)
+            if (entry.cloudHeight.isPresent())
                 data.cloudHeight = entry.cloudHeight;
-            if (entry.seaLevel != null)
+            if (entry.seaLevel.isPresent())
                 data.seaLevel = entry.seaLevel;
-            if (entry.skyHeight != null)
+            if (entry.skyHeight.isPresent())
                 data.skyHeight = entry.skyHeight;
+            if (entry.alwaysOutside.isPresent())
+                data.alwaysOutside = entry.alwaysOutside;
+            if (entry.playBiomeSounds.isPresent())
+                data.playBiomeSounds = entry.playBiomeSounds;
         }
     }
 

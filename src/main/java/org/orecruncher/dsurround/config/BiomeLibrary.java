@@ -1,12 +1,10 @@
 package org.orecruncher.dsurround.config;
 
-import com.google.common.collect.ImmutableList;
-import com.google.gson.reflect.TypeToken;
+import com.mojang.serialization.Codec;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistrySetupCallback;
 import net.minecraft.client.resource.language.I18n;
-import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
@@ -21,20 +19,17 @@ import org.orecruncher.dsurround.lib.biome.BiomeUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
-import org.orecruncher.dsurround.lib.validation.ListValidator;
-import org.orecruncher.dsurround.lib.validation.Validators;
 import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
 import org.orecruncher.dsurround.xface.IBiomeExtended;
 
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Stream;
 
 @Environment(EnvType.CLIENT)
 public final class BiomeLibrary {
 
+    private static final Codec<List<BiomeConfigRule>> CODEC = Codec.list(BiomeConfigRule.CODEC);
     private static final IModLog LOGGER = Client.LOGGER.createChild(BiomeLibrary.class);
-    private static final Type biomeType = TypeToken.getParameterized(List.class, BiomeConfigRule.class).getType();
     private static final BiomeTraits INTERNAL_TRAITS = BiomeTraits.from(BiomeTrait.FAKE);
 
     private static final Map<InternalBiomes, BiomeInfo> internalBiomes = new EnumMap<>(InternalBiomes.class);
@@ -48,9 +43,6 @@ public final class BiomeLibrary {
     private static int version = 0;
 
     static {
-        // Validator for the json
-        Validators.registerValidator(biomeType, new ListValidator<BiomeConfigRule>());
-
         // Log when the registry changes as to understand the log context better
         DynamicRegistrySetupCallback.EVENT.register(registryManager -> LOGGER.info("Biome registry reload detected"));
     }
@@ -63,8 +55,9 @@ public final class BiomeLibrary {
         var accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), "biomes.json");
 
         for (var accessor : accessors) {
-            var config = accessor.<List<BiomeConfigRule>>as(biomeType);
-            configs.addAll(config);
+            var config = accessor.as(CODEC);
+            if (config != null)
+                configs.addAll(config);
         }
 
         biomeConfigs = configs;
@@ -172,26 +165,6 @@ public final class BiomeLibrary {
         final String fmt = String.format("biome.%s.%s", id.getNamespace(), id.getPath());
         return I18n.translate(fmt);
     }
-
-    //public static Collection<SoundEvent> findBiomeSoundMatches(Biome biome) {
-//        var info = getBiomeInfo(biome);
-//        return info.findBiomeSoundMatches();
-//    }
-
-  //  public static SoundEvent getExtraSound(Biome biome, SoundEventType type, Random rand) {
-    //    var info = getBiomeInfo(biome);
-      //  return info.getExtraSound(type, rand);
-    //}
-
-    //public static Collection<SoundEvent> findBiomeSoundMatches(InternalBiomes biome) {
-      //  var info = getBiomeInfo(biome);
-        //return info != null ? info.findBiomeSoundMatches() : ImmutableList.of();
-    //}
-
-    //public static SoundEvent getExtraSound(InternalBiomes biome, SoundEventType type, Random rand) {
-      //  var info = getBiomeInfo(biome);
-        //return info != null ? info.getExtraSound(type, rand) :null;
-    //}
 
     public static Stream<String> dumpBiomes() {
         return getActiveRegistry()

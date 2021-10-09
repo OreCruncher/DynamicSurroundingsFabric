@@ -1,49 +1,44 @@
 package org.orecruncher.dsurround.config.data;
 
 import com.google.common.collect.ImmutableList;
-import com.google.gson.annotations.SerializedName;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import org.apache.commons.lang3.StringUtils;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.AcousticConfig;
-import org.orecruncher.dsurround.lib.validation.IValidator;
-import org.orecruncher.dsurround.lib.validation.ValidationException;
-import org.orecruncher.dsurround.lib.validation.ValidationHelpers;
 
 import java.util.List;
+import java.util.Optional;
 
 @Environment(EnvType.CLIENT)
-public final class BiomeConfigRule implements IValidator<BiomeConfigRule> {
-    @SerializedName("biomeSelector")
-    public String biomeSelector = StringUtils.EMPTY;
-    @SerializedName("_comment")
-    public String comment = null;
-    @SerializedName("clearSounds")
-    public boolean clearSounds = false;
-    @SerializedName("fogColor")
-    public String fogColor = null;
-    @SerializedName("additionalSoundChance")
-    public String additionalSoundChance;
-    @SerializedName("moodSoundChance")
-    public String moodSoundChance;
-    @SerializedName("acoustics")
-    public List<AcousticConfig> acoustics = ImmutableList.of();
+public final class BiomeConfigRule {
 
-    @Override
-    public void validate(final BiomeConfigRule obj) throws ValidationException {
-        ValidationHelpers.notNull("biomeSelector", this.biomeSelector, Client.LOGGER);
+    public static Codec<BiomeConfigRule> CODEC = RecordCodecBuilder.create((instance) ->
+            instance.group(
+                    Codec.STRING.fieldOf("biomeSelector").forGetter(info -> info.biomeSelector),
+                    Codec.STRING.optionalFieldOf("_comment").forGetter(info -> info.comment),
+                    Codec.BOOL.optionalFieldOf("clearSounds", false).forGetter(info -> info.clearSounds),
+                    Codec.STRING.optionalFieldOf("fogColor").forGetter(info -> info.fogColor),
+                    Codec.STRING.optionalFieldOf("additionalSoundChance").forGetter(info -> info.additionalSoundChance),
+                    Codec.STRING.optionalFieldOf("moodSoundChance").forGetter(info -> info.moodSoundChance),
+                    Codec.list(AcousticConfig.CODEC).optionalFieldOf("acoustics", ImmutableList.of()).forGetter(info -> info.acoustics)
+            ).apply(instance, BiomeConfigRule::new));
 
-        if (this.fogColor != null)
-            ValidationHelpers.isValidColorCode("fogColor", this.fogColor, Client.LOGGER);
+    public String biomeSelector;
+    public Optional<String> comment;
+    public boolean clearSounds;
+    public Optional<String> fogColor;
+    public Optional<String> additionalSoundChance;
+    public Optional<String> moodSoundChance;
+    public List<AcousticConfig> acoustics;
 
-        if (this.additionalSoundChance != null)
-            ValidationHelpers.notNullOrWhitespace("additionalSoundChance", this.additionalSoundChance, Client.LOGGER);
-
-        if (this.moodSoundChance != null)
-            ValidationHelpers.notNullOrWhitespace("moodSoundChance", this.moodSoundChance, Client.LOGGER);
-
-        for (final AcousticConfig ac : this.acoustics)
-            ac.validate(ac);
+    BiomeConfigRule(String biomeSelector, Optional<String> comment, boolean clearSounds, Optional<String> fogColor, Optional<String> additionalSoundChance, Optional<String> moodSoundChance, List<AcousticConfig> acoustics) {
+        this.biomeSelector = biomeSelector;
+        this.comment = comment;
+        this.clearSounds = clearSounds;
+        this.fogColor = fogColor;
+        this.additionalSoundChance = additionalSoundChance;
+        this.moodSoundChance = moodSoundChance;
+        this.acoustics = acoustics;
     }
 }

@@ -31,8 +31,8 @@ public final class SoundMetadata {
     public SoundMetadata(final SoundMetadataConfig cfg) {
         Objects.requireNonNull(cfg);
 
-        this.title = StringUtils.isEmpty(cfg.title) ? NO_STRING : new TranslatableText(cfg.title);
-        this.caption = StringUtils.isEmpty(cfg.caption) ? NO_STRING : new TranslatableText(cfg.caption);
+        this.title = cfg.title.isPresent() ? new TranslatableText(cfg.title.get()) : NO_STRING;
+        this.caption = cfg.caption.isPresent() ? new TranslatableText(cfg.caption.get()) : NO_STRING;
 
         if (cfg.credits == null || cfg.credits.size() == 0) {
             this.credits = ImmutableList.of();

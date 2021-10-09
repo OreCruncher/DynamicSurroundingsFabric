@@ -1,40 +1,51 @@
 package org.orecruncher.dsurround.config.data;
 
-import com.google.gson.annotations.SerializedName;
-import joptsimple.internal.Strings;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.lib.validation.IValidator;
-import org.orecruncher.dsurround.lib.validation.ValidationException;
-import org.orecruncher.dsurround.lib.validation.ValidationHelpers;
+import net.minecraft.util.Identifier;
 
-@SuppressWarnings("unused")
+import java.util.Optional;
+
 @Environment(EnvType.CLIENT)
-public class DimensionConfig implements IValidator<DimensionConfig> {
-    @SerializedName("dimId")
-    public String dimensionId = Strings.EMPTY;
-    @SerializedName("seaLevel")
-    public Integer seaLevel = null;
-    @SerializedName("skyHeight")
-    public Integer skyHeight = null;
-    @SerializedName("cloudHeight")
-    public Integer cloudHeight = null;
-    @SerializedName("haze")
-    public Boolean hasHaze;
-    @SerializedName("alwaysOutside")
-    public Boolean alwaysOutside;
+public class DimensionConfig {
+
+    public static Codec<DimensionConfig> CODEC = RecordCodecBuilder.create((instance) ->
+        instance.group(Identifier.CODEC.fieldOf("dimId").forGetter(info -> info.dimensionId),
+                Codec.INT.optionalFieldOf("seaLevel").forGetter(info -> info.seaLevel),
+                Codec.INT.optionalFieldOf("skyHeight").forGetter(info -> info.skyHeight),
+                Codec.INT.optionalFieldOf("cloudHeight").forGetter(info -> info.cloudHeight),
+                Codec.BOOL.optionalFieldOf("alwaysOutside").forGetter(info -> info.alwaysOutside),
+                Codec.BOOL.optionalFieldOf("playBiomeSounds").forGetter(info -> info.playBiomeSounds)
+        ).apply(instance, DimensionConfig::new)
+    );
+
+    public Identifier dimensionId;
+    public Optional<Integer> seaLevel;
+    public Optional<Integer> skyHeight;
+    public Optional<Integer> cloudHeight;
+    public Optional<Boolean> alwaysOutside;
+    public Optional<Boolean> playBiomeSounds;
+
+    DimensionConfig(Identifier dimensionId, Optional<Integer> seaLevel, Optional<Integer> skyHeight, Optional<Integer> cloudHeight, Optional<Boolean> alwaysOutside, Optional<Boolean> playBiomeSounds) {
+        this.dimensionId = dimensionId;
+        this.seaLevel = seaLevel;
+        this.skyHeight = skyHeight;
+        this.cloudHeight = cloudHeight;
+        this.alwaysOutside = alwaysOutside;
+        this.playBiomeSounds = playBiomeSounds;
+    }
 
     @Override
     public String toString() {
         final StringBuilder builder = new StringBuilder();
         builder.append("dimensionId: ").append(this.dimensionId);
-        if (this.seaLevel != null)
-            builder.append(" seaLevel: ").append(this.seaLevel.intValue());
-        if (this.skyHeight != null)
-            builder.append(" skyHeight: ").append(this.skyHeight.intValue());
-        if (this.cloudHeight != null)
-            builder.append(" cloudHeight: ").append(this.cloudHeight.intValue());
+        this.seaLevel.ifPresent(v -> builder.append(" seaLevel: ").append(v));
+        this.skyHeight.ifPresent(v -> builder.append(" seaLevel: ").append(v));
+        this.cloudHeight.ifPresent(v -> builder.append(" cloudHeight: ").append(v));
+        this.alwaysOutside.ifPresent(v -> builder.append(" alwaysOutside: ").append(v));
+        this.playBiomeSounds.ifPresent(v -> builder.append(" playBiomeSounds: ").append(v));
         return builder.toString();
     }
 
@@ -46,13 +57,8 @@ public class DimensionConfig implements IValidator<DimensionConfig> {
     @Override
     public boolean equals(final Object obj) {
         if (obj instanceof final DimensionConfig dc) {
-            return (this.dimensionId != null && this.dimensionId.equals(dc.dimensionId));
+            return this.dimensionId.equals(dc.dimensionId);
         }
         return false;
-    }
-
-    @Override
-    public void validate(final DimensionConfig obj) throws ValidationException {
-        ValidationHelpers.isProperResourceLocation("dimId", this.dimensionId, Client.LOGGER);
     }
 }

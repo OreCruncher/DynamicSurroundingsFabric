@@ -1,8 +1,6 @@
 [
   {
-    "dimId": "minecraft:overworld",
-    "fog": true,
-    "haze": true
+    "dimId": "minecraft:overworld"
   },
   {
     "dimId": "minecraft:the_nether",

@@ -13,7 +13,6 @@ import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 
-import java.awt.*;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -35,18 +34,16 @@ public class BlockInfo {
 
     public void update(BlockConfig config) {
         // Reset of a block clears all registry
-        if (config.soundReset != null && config.soundReset)
+        if (config.soundReset)
             this.clearSounds();
 
-        if (config.chance != null)
-            this.setChance(config.chance);
+        config.chance.ifPresent(this::setChance);
 
         for (final AcousticConfig sr : config.acoustics) {
             if (sr.soundEventId != null) {
                 final Identifier res = SoundLibrary.resolveIdentifier(Client.ModId, sr.soundEventId);
                 final SoundEvent acoustic = SoundLibrary.getSound(res);
-                final int weight = sr.weight;
-                final AcousticEntry acousticEntry = new AcousticEntry(acoustic, sr.conditions, weight);
+                final AcousticEntry acousticEntry = new AcousticEntry(acoustic, sr.conditions, sr.weight);
                 this.addSound(acousticEntry);
             }
         }

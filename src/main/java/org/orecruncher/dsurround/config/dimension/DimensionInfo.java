@@ -19,9 +19,6 @@ public class DimensionInfo {
     protected int skyHeight;
     protected int cloudHeight;
     protected int spaceHeight;
-    protected boolean hasHaze = false;
-    protected boolean hasAuroras = false;
-    protected boolean hasFog = false;
     protected boolean alwaysOutside = false;
     protected boolean playBiomeSounds = true;
 
@@ -42,29 +39,20 @@ public class DimensionInfo {
         this.spaceHeight = this.skyHeight + SPACE_HEIGHT_OFFSET;
         this.isFlatWorld = WorldUtils.isSuperFlat(world);
 
-        if (dt.isNatural() && dt.hasSkyLight()) {
-            this.hasAuroras = true;
-            this.hasFog = true;
-        }
-
         // Force sea level based on known world types that give heartburn
         if (this.isFlatWorld)
             this.seaLevel = 0;
 
         // Override based on player config settings
         if (dimConfig != null) {
-            if (dimConfig.seaLevel != null)
-                this.seaLevel = dimConfig.seaLevel;
-            if (dimConfig.skyHeight != null)
-                this.skyHeight = dimConfig.skyHeight;
-            if (dimConfig.hasHaze != null)
-                this.hasHaze = dimConfig.hasHaze;
-            if (dimConfig.cloudHeight != null)
-                this.cloudHeight = dimConfig.cloudHeight;
-            else
-                this.cloudHeight = this.hasHaze ? this.skyHeight / 2 : this.skyHeight;
-            if (dimConfig.alwaysOutside != null)
-                this.alwaysOutside = dimConfig.alwaysOutside;
+            dimConfig.seaLevel.ifPresent(v -> this.seaLevel = v);
+            dimConfig.skyHeight.ifPresent(v -> this.skyHeight = v);
+            dimConfig.alwaysOutside.ifPresent(v -> this.alwaysOutside = v);
+            dimConfig.playBiomeSounds.ifPresent(v -> this.playBiomeSounds = v);
+            dimConfig.cloudHeight.ifPresentOrElse(
+                    v -> this.cloudHeight = v,
+                    () -> this.cloudHeight = this.skyHeight / 2
+            );
 
             this.spaceHeight = this.skyHeight + SPACE_HEIGHT_OFFSET;
         }
@@ -88,18 +76,6 @@ public class DimensionInfo {
 
     public int getSpaceHeight() {
         return this.spaceHeight;
-    }
-
-    public boolean hasHaze() {
-        return this.hasHaze;
-    }
-
-    public boolean hasAuroras() {
-        return this.hasAuroras;
-    }
-
-    public boolean hasFog() {
-        return this.hasFog;
     }
 
     public boolean playBiomeSounds() {

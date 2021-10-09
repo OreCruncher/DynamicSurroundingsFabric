@@ -1,28 +1,30 @@
 package org.orecruncher.dsurround.config;
 
-import com.google.gson.annotations.SerializedName;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import org.apache.commons.lang3.StringUtils;
-import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.lib.validation.IValidator;
-import org.orecruncher.dsurround.lib.validation.ValidationException;
-import org.orecruncher.dsurround.lib.validation.ValidationHelpers;
 
 @Environment(EnvType.CLIENT)
-public class AcousticConfig implements IValidator<AcousticConfig> {
-    @SerializedName("soundEventId")
-    public String soundEventId = null;
-    @SerializedName("conditions")
-    public String conditions = StringUtils.EMPTY;
-    @SerializedName("weight")
-    public int weight = 10;
-    @SerializedName("type")
-    public SoundEventType type = SoundEventType.LOOP;
+public class AcousticConfig {
 
-    @Override
-    public void validate(final AcousticConfig obj) throws ValidationException {
-        ValidationHelpers.isProperResourceLocation("soundEventId", this.soundEventId, Client.LOGGER);
-        ValidationHelpers.inRange("weight", this.weight, 1, Integer.MAX_VALUE, Client.LOGGER);
+    public static Codec<AcousticConfig> CODEC = RecordCodecBuilder.create((instance) ->
+            instance.group(
+                    Codec.STRING.fieldOf("soundEventId").forGetter(info -> info.soundEventId),
+                    Codec.STRING.optionalFieldOf("conditions", "").forGetter(info -> info.conditions),
+                    Codec.intRange(0, Integer.MIN_VALUE).optionalFieldOf("weight", 10).forGetter(info -> info.weight),
+                    SoundEventType.CODEC.optionalFieldOf("type", SoundEventType.LOOP).forGetter(info -> info.type)
+            ).apply(instance, AcousticConfig::new));
+
+    public String soundEventId;
+    public String conditions;
+    public int weight;
+    public SoundEventType type;
+
+    AcousticConfig(String soundEventId, String conditions, int weight, SoundEventType type) {
+        this.soundEventId = soundEventId;
+        this.conditions = conditions;
+        this.weight = weight;
+        this.type = type;
     }
 }
