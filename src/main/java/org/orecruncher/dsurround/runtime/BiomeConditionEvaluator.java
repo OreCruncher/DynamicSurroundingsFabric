@@ -5,6 +5,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
+import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.sets.BiomeVariables;
 
 import java.util.Optional;
@@ -27,15 +28,13 @@ public class BiomeConditionEvaluator {
         this.context.add(this.biomeVariables);
     }
 
-    public boolean check(Biome biome, final String conditions) {
+    public boolean check(Biome biome, final Script conditions) {
         final Object result = eval(biome, conditions);
         return result instanceof Boolean && (boolean) result;
     }
 
-    public Object eval(Biome biome, final String conditions) {
+    public Object eval(Biome biome, final Script conditions) {
         try {
-            if (conditions == null || conditions.length() == 0)
-                return true;
             this.biomeVariables.setBiome(biome);
             final Optional<Object> result = this.context.eval(conditions);
             return result.orElse(false);

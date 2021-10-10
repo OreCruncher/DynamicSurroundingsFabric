@@ -20,6 +20,7 @@ import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 
 import java.awt.*;
@@ -32,7 +33,7 @@ import java.util.stream.Collectors;
 public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvider {
 
     public static final int DEFAULT_ADDITIONAL_SOUND_CHANCE = 1000 / 4;
-    public static final String DEFAULT_SOUND_CHANCE = String.valueOf(1D / DEFAULT_ADDITIONAL_SOUND_CHANCE);
+    public static final Script DEFAULT_SOUND_CHANCE = new Script(String.valueOf(1D / DEFAULT_ADDITIONAL_SOUND_CHANCE));
     private static final IModLog LOGGER = Client.LOGGER.createChild(BiomeInfo.class);
     private final int version;
     private final Identifier biomeId;
@@ -46,8 +47,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private final boolean isOcean;
     private final boolean isDeepOcean;
     private Color fogColor;
-    private String additionalSoundChance = DEFAULT_SOUND_CHANCE;
-    private String moodSoundChance = DEFAULT_SOUND_CHANCE;
+    private Script additionalSoundChance = DEFAULT_SOUND_CHANCE;
+    private Script moodSoundChance = DEFAULT_SOUND_CHANCE;
     private ObjectArray<String> comments;
 
     public BiomeInfo(final int version, final Identifier id, final String name, BiomeTraits traits) {
@@ -105,11 +106,11 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         return this.fogColor != null;
     }
 
-    void setAdditionalSoundChance(final String chance) {
+    void setAdditionalSoundChance(final Script chance) {
         this.additionalSoundChance = chance;
     }
 
-    void setMoodSoundChance(final String chance) {
+    void setMoodSoundChance(final Script chance) {
         this.moodSoundChance = chance;
     }
 

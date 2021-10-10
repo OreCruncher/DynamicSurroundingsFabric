@@ -4,9 +4,9 @@ import com.google.common.base.MoreObjects;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.WeightTable;
+import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 
 @Environment(EnvType.CLIENT)
@@ -16,16 +16,16 @@ public class AcousticEntry implements WeightTable.IItem<SoundEvent> {
 
     private final int weight;
     private final SoundEvent acoustic;
-    private final String conditions;
+    private final Script conditions;
 
-    public AcousticEntry(final SoundEvent acoustic, @Nullable final String condition) {
+    public AcousticEntry(final SoundEvent acoustic, @Nullable final Script condition) {
         this(acoustic, condition, DEFAULT_WEIGHT);
     }
 
-    public AcousticEntry(final SoundEvent acoustic, @Nullable final String condition, int weight) {
+    public AcousticEntry(final SoundEvent acoustic, @Nullable final Script condition, int weight) {
         this.acoustic = acoustic;
         this.weight = weight;
-        this.conditions = condition != null ? condition : StringUtils.EMPTY;
+        this.conditions = condition != null ? condition : Script.TRUE;
     }
 
     @Override
@@ -42,7 +42,7 @@ public class AcousticEntry implements WeightTable.IItem<SoundEvent> {
         return this.acoustic;
     }
 
-    public String getConditions() {
+    public Script getConditions() {
         return this.conditions;
     }
 
@@ -50,9 +50,8 @@ public class AcousticEntry implements WeightTable.IItem<SoundEvent> {
         return ConditionEvaluator.INSTANCE.check(this.conditions);
     }
 
-    protected String getConditionsForLogging() {
-        final String cond = getConditions();
-        return cond.length() > 0 ? cond : "No Conditions";
+    protected Script getConditionsForLogging() {
+        return getConditions();
     }
 
     public String toString() {

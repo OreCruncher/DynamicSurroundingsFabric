@@ -6,7 +6,7 @@
       "minecraft:blue_ice",
       "minecraft:frosted_ice"
     ],
-    "chance": "0.0001",
+    "soundChance": "0.0001",
     "acoustics": [
       {
         "soundEventId": "dsurround:ice"
@@ -17,7 +17,7 @@
     "blocks": [
       "minecraft:lily_pad"
     ],
-    "chance": "0.04",
+    "soundChance": "0.04",
     "acoustics": [
       {
         "soundEventId": "dsurround:lilypad.frog",
@@ -35,7 +35,7 @@
     "blocks": [
       "minecraft:soul_sand"
     ],
-    "chance": "0.000125",
+    "soundChance": "0.000125",
     "acoustics": [
       {
         "soundEventId": "dsurround:soulsand.laughter",
@@ -49,7 +49,7 @@
       "minecraft:nether_brick_fence",
       "minecraft:nether_brick_stairs"
     ],
-    "chance": "0.000125",
+    "soundChance": "0.000125",
     "acoustics": [
       {
         "soundEventId": "netherbrick.breathing",

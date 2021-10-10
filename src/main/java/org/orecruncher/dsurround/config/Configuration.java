@@ -20,14 +20,21 @@ public class Configuration implements ConfigData {
     @ConfigEntry.Gui.Tooltip
     @Comment("Configuration options for modifying logging behavior")
     public final Logging logging = new Logging();
+
     @ConfigEntry.Gui.CollapsibleObject
     @ConfigEntry.Gui.Tooltip
     @Comment("Configuration options for modifying Minecraft's Sound System behavior")
     public final SoundSystem soundSystem = new SoundSystem();
+
     @ConfigEntry.Gui.CollapsibleObject
     @ConfigEntry.Gui.Tooltip
     @Comment("Configuration options for thunder storms")
     public final ThunderStorms thunderStorms = new ThunderStorms();
+
+    @ConfigEntry.Gui.CollapsibleObject
+    @ConfigEntry.Gui.Tooltip
+    @Comment("Configuration options for block effects")
+    public final BlockEffects blockEffects = new BlockEffects();
 
     public static Configuration getConfig() {
         return AutoConfig.getConfigHolder(Configuration.class).getConfig();
@@ -73,5 +80,29 @@ public class Configuration implements ConfigData {
         @ConfigEntry.Gui.Tooltip
         @Comment("Enables replacement of thunder sounds with Dynamic Surroundings' version")
         public boolean replaceThunderSounds = true;
+    }
+
+    public static class BlockEffects {
+
+        @ConfigEntry.BoundedDiscrete(min = 16, max = 64)
+        @ConfigEntry.Gui.Tooltip
+        @ConfigEntry.Gui.RequiresRestart
+        @Comment("Distance that will be scanned when generating block effects")
+        public int blockEffectRange = 24;
+
+        @ConfigEntry.Gui.Tooltip
+        @ConfigEntry.Gui.RequiresRestart
+        @Comment("Enable/disable steam column effect when liquids hit hot sources")
+        public boolean steamColumnEnabled = true;
+
+        @ConfigEntry.Gui.Tooltip
+        @ConfigEntry.Gui.RequiresRestart
+        @Comment("Enable/disable flame jets produced over lava, etc.")
+        public boolean flameJetEnabled = true;
+
+        @ConfigEntry.Gui.Tooltip
+        @ConfigEntry.Gui.RequiresRestart
+        @Comment("Enable/disable bubble columns generated underwater")
+        public boolean bubbleColumnEnabled = true;
     }
 }

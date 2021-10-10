@@ -78,7 +78,7 @@ public final class BiomeLibrary {
         var info = new BiomeInfo(version, biome.getId(), biome.getName(), INTERNAL_TRAITS);
 
         for (var c : biomeConfigs) {
-            if (c.biomeSelector.equalsIgnoreCase(match)) {
+            if (c.biomeSelector.getScript().equalsIgnoreCase(match)) {
                 info.update(c);
             }
         }
@@ -136,7 +136,7 @@ public final class BiomeLibrary {
         for (var c : biomeConfigs) {
             // Skip internal definitions - they are handled elsewhere and
             // do not apply to regular Minecraft biomes
-            if (c.biomeSelector.startsWith("@"))
+            if (c.biomeSelector.getScript().startsWith("@"))
                 continue;
 
             try {

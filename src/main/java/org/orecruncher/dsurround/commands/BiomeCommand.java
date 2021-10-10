@@ -12,6 +12,7 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
 
 import static net.fabricmc.fabric.api.client.command.v1.ClientCommandManager.argument;
@@ -32,7 +33,7 @@ final class BiomeCommand {
         var biomeId = ctx.getArgument("biomeId", Identifier.class);
         var script = ctx.getArgument("script", MessageArgumentType.MessageFormat.class);
         var biome = GameUtils.getRegistryManager().get(Registry.BIOME_KEY).get(biomeId);
-        var result = INSTANCE.eval(biome, script.getContents());
+        var result = INSTANCE.eval(biome, new Script(script.getContents()));
         ctx.getSource().sendFeedback(new LiteralText(result.toString()));
         return 0;
     }

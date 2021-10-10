@@ -6,17 +6,19 @@
   "mixins": [
   ],
   "client": [
+    "MixinAbstractSoundInstance",
     "MixinBiome",
     "MixinBlockState",
     "MixinClientWorldProperties",
     "MixinIngameHud",
+    "MixinParticle",
     "MixinSoundEngine",
     "MixinSoundEvent",
     "MixinSoundManagerAccessor",
     "MixinSoundSystem",
     "MixinSoundSystemAccessors",
     "MixinTagManager",
-    "MixinAbstractSoundInstance"
+    "MixinClientWorld"
   ],
   "server": [],
   "injectors": {

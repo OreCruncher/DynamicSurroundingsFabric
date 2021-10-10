@@ -23,17 +23,11 @@ public final class ExecutionContext {
     private final ObjectArray<VariableSet<?>> variables = new ObjectArray<>(8);
     private final boolean cacheResults;
     private final Map<String, CompiledScript> compiled = new HashMap<>();
-    private final CompiledScript error;
-
-    public ExecutionContext(final String contextName) {
-        this(contextName, true);
-    }
 
     public ExecutionContext(final String contextName, boolean cacheMethods) {
         this.contextName = contextName;
         this.cacheResults = cacheMethods;
         this.engine = ScriptEngineLoader.getEngine();
-        this.error = makeFunction("'<ERROR>'");
         this.put("lib", new LibraryFunctions());
 
         ScriptEngineFactory factory = this.engine.getFactory();
@@ -60,28 +54,32 @@ public final class ExecutionContext {
         this.variables.forEach(VariableSet::update);
     }
 
-    public boolean check(final String script) {
+    public boolean check(final Script script) {
         final Optional<Object> result = eval(script);
         if (result.isPresent())
             return "true".equalsIgnoreCase(result.toString());
         return false;
     }
 
-    public Optional<Object> eval(final String script) {
-        CompiledScript func = this.compiled.get(script);
+    public Optional<Object> eval(final Script script) {
+        var program = script.getScript();
+        if (program == null || program.length() == 0)
+            return Optional.of(true);
+
+        CompiledScript func = this.compiled.get(program);
         if (func == null) {
-            func = makeFunction(script);
+            func = makeFunction(program);
             if (this.cacheResults)
-                this.compiled.put(script, func);
+                this.compiled.put(program, func);
         }
 
         try {
             final Object result = func.eval();
             return Optional.ofNullable(result);
         } catch (final Throwable t) {
-            LOGGER.error(t, "Error execution script: %s", script);
+            LOGGER.error(t, "Error execution script: %s", program);
             if (this.cacheResults)
-                this.compiled.put(script, makeErrorFunction(t));
+                this.compiled.put(program, makeErrorFunction(t));
         }
 
         return Optional.of("ERROR?");

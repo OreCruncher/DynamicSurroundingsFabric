@@ -5,6 +5,7 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
+import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.sets.*;
 
 import java.util.Optional;
@@ -50,14 +51,12 @@ public final class ConditionEvaluator {
         this.context.update();
     }
 
-    public boolean check(final String conditions) {
+    public boolean check(final Script conditions) {
         final Object result = eval(conditions);
         return result instanceof Boolean && (boolean) result;
     }
 
-    public Object eval(final String conditions) {
-        if (conditions == null || conditions.length() == 0)
-            return true;
+    public Object eval(final Script conditions) {
         final Optional<Object> result = this.context.eval(conditions);
         return result.orElse(false);
     }

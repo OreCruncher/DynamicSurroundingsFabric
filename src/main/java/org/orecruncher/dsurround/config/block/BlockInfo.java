@@ -9,10 +9,13 @@ import org.orecruncher.dsurround.config.AcousticConfig;
 import org.orecruncher.dsurround.config.SoundLibrary;
 import org.orecruncher.dsurround.config.biome.AcousticEntry;
 import org.orecruncher.dsurround.config.data.BlockConfig;
+import org.orecruncher.dsurround.effects.producers.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 
+import java.util.Collection;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -20,9 +23,11 @@ import java.util.stream.Collectors;
 public class BlockInfo {
 
     protected final ObjectArray<AcousticEntry> sounds = new ObjectArray<>();
+    protected final ObjectArray<IBlockEffectProducer> blockEffects = new ObjectArray<>();
+    protected final ObjectArray<IBlockEffectProducer> alwaysOnEffects = new ObjectArray<>();
 
     protected final int version;
-    protected String chance = "0.01";
+    protected Script chance = new Script("0.01");
 
     public BlockInfo(int version) {
         this.version = version;
@@ -34,10 +39,10 @@ public class BlockInfo {
 
     public void update(BlockConfig config) {
         // Reset of a block clears all registry
-        if (config.soundReset)
+        if (config.clearSounds)
             this.clearSounds();
 
-        config.chance.ifPresent(this::setChance);
+        config.soundChance.ifPresent(this::setChance);
 
         for (final AcousticConfig sr : config.acoustics) {
             if (sr.soundEventId != null) {
@@ -47,26 +52,40 @@ public class BlockInfo {
                 this.addSound(acousticEntry);
             }
         }
+
+        for (var e : config.effects) {
+            var effect = e.effect.getInstance(e.spawnChance, e.conditions);
+            effect.ifPresent(t -> {
+                if (e.alwaysOn)
+                    this.alwaysOnEffects.add(t);
+                else
+                    this.blockEffects.add(t);
+            });
+        }
     }
 
-    public String getChance() {
+    private Script getChance() {
         return this.chance;
     }
 
-    public void setChance(final String chance) {
+    private void setChance(final Script chance) {
         this.chance = chance;
     }
 
-    public void addSound(final AcousticEntry sound) {
+    private void addSound(final AcousticEntry sound) {
         this.sounds.add(sound);
     }
 
-    public void clearSounds() {
+    private void clearSounds() {
         this.sounds.clear();
     }
 
-    public boolean hasSounds() {
-        return this.sounds.size() > 0;
+    public boolean hasSoundsOrEffects() {
+        return this.sounds.size() > 0 || this.blockEffects.size() > 0;
+    }
+
+    public boolean hasAlwaysOnEffects() {
+        return this.alwaysOnEffects.size() > 0;
     }
 
     public SoundEvent getSoundToPlay(final Random random) {
@@ -78,6 +97,14 @@ public class BlockInfo {
             }
         }
         return null;
+    }
+
+    public Collection<IBlockEffectProducer> getEffectProducers() {
+        return this.blockEffects;
+    }
+
+    public Collection<IBlockEffectProducer> getAlwaysOnEffectProducers() {
+        return this.alwaysOnEffects;
     }
 
     public void trim() {

@@ -9,6 +9,7 @@ import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
+import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 
 import java.util.Collection;
@@ -41,7 +42,7 @@ public final class RuntimeDiagnostics {
             left.add(Strings.EMPTY);
 
             for (String script : scripts) {
-                Object result = ConditionEvaluator.INSTANCE.eval(script);
+                Object result = ConditionEvaluator.INSTANCE.eval(new Script(script));
                 left.add(Formatting.YELLOW + result.toString());
             }
         }
