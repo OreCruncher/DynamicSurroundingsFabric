@@ -1,12 +1,48 @@
 [
   {
     "blocks": [
+      "minecraft:nether_wart[age=3]"
+    ],
+    "effects": [
+      {
+        "effect": "fire_jet",
+        "spawnChance": "0.005"
+      }
+    ]
+  },
+  {
+    "blocks": [
+      "minecraft:lava"
+    ],
+    "effects": [
+      {
+        "effect": "fire_jet",
+        "spawnChance": "0.0005"
+      }
+    ]
+  },  {
+    "blocks": [
       "minecraft:water"
     ],
     "effects": [
       {
         "effect": "bubble_column",
         "spawnChance": "0.0005"
+      },
+      {
+        "effect": "steam_column",
+        "alwaysOn": true
+      }
+    ]
+  },
+  {
+    "blocks": [
+      "minecraft:water_cauldron[level=3]"
+    ],
+    "effects": [
+      {
+        "effect": "steam_column",
+        "alwaysOn": true
       }
     ]
   },

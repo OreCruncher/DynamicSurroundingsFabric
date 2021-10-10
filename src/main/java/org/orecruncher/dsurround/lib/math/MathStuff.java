@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.lib.math;
 
 import net.minecraft.client.util.math.Vector3d;
+import net.minecraft.util.math.Vec3d;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 
 import java.util.Random;
@@ -15,18 +16,14 @@ public class MathStuff {
         return new Vector3d(vec.x / len, vec.y / len, vec.z / len);
     }
 
-    public static Vector3d scale(Vector3d vec, double scale) {
-        return new Vector3d(vec.x * scale, vec.y * scale, vec.z * scale);
-    }
-
-    public static Vector3d randomPoint(final int minRange, final int maxRange) {
+    public static Vec3d randomPoint(final int minRange, final int maxRange) {
         Random rand = XorShiftRandom.current();
 
         // Establish a random unit vector
         final double x = rand.nextDouble() - 0.5D;
         final double y = rand.nextDouble() - 0.5D;
         final double z = rand.nextDouble() - 0.5D;
-        final Vector3d vec = normalize(new Vector3d(x, y, z));
+        var vec = new Vec3d(x, y, z).normalize();
 
         // Establish the range and scaling value
         final int range = maxRange - minRange;
@@ -39,6 +36,6 @@ public class MathStuff {
         }
 
         // Generate a vector based on the generated scaling values
-        return scale(vec, magnitude);
+        return vec.multiply(magnitude);
     }
 }

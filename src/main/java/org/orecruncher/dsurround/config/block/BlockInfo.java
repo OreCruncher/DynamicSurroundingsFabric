@@ -27,7 +27,7 @@ public class BlockInfo {
     protected final ObjectArray<IBlockEffectProducer> alwaysOnEffects = new ObjectArray<>();
 
     protected final int version;
-    protected Script chance = new Script("0.01");
+    protected Script soundChance = new Script("0.01");
 
     public BlockInfo(int version) {
         this.version = version;
@@ -42,7 +42,7 @@ public class BlockInfo {
         if (config.clearSounds)
             this.clearSounds();
 
-        config.soundChance.ifPresent(this::setChance);
+        config.soundChance.ifPresent(this::setSoundChance);
 
         for (final AcousticConfig sr : config.acoustics) {
             if (sr.soundEventId != null) {
@@ -64,12 +64,12 @@ public class BlockInfo {
         }
     }
 
-    private Script getChance() {
-        return this.chance;
+    private Script getSoundChance() {
+        return this.soundChance;
     }
 
-    private void setChance(final Script chance) {
-        this.chance = chance;
+    private void setSoundChance(final Script soundChance) {
+        this.soundChance = soundChance;
     }
 
     private void addSound(final AcousticEntry sound) {
@@ -90,7 +90,7 @@ public class BlockInfo {
 
     public SoundEvent getSoundToPlay(final Random random) {
         if (this.sounds.size() > 0) {
-            var chance = ConditionEvaluator.INSTANCE.eval(this.chance);
+            var chance = ConditionEvaluator.INSTANCE.eval(this.soundChance);
             if (chance instanceof Double c && random.nextDouble() < c) {
                 var candidates = this.sounds.stream().filter(AcousticEntry::matches).collect(Collectors.toList());
                 return new WeightTable<>(candidates).next();
@@ -112,14 +112,26 @@ public class BlockInfo {
     }
 
     public String toString() {
-        if (this.sounds.size() == 0)
-            return "NO SOUNDS";
-
         final StringBuilder builder = new StringBuilder();
-        builder.append("selection chance: ").append(this.getChance());
-        builder.append("; sounds [\n");
-        builder.append(this.sounds.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));
-        builder.append("\n]");
+
+        if (this.sounds.size() > 0) {
+            builder.append("sound chance: ").append(this.getSoundChance());
+            builder.append("; sounds [\n");
+            builder.append(this.sounds.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));
+            builder.append("\n]\n");
+        }
+
+        if (this.blockEffects.size() > 0) {
+            builder.append("random effects [\n");
+            builder.append(this.blockEffects.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));
+            builder.append("\n]\n");
+        }
+
+        if (this.alwaysOnEffects.size() > 0) {
+            builder.append("always on effects [\n");
+            builder.append(this.alwaysOnEffects.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));
+            builder.append("\n]");
+        }
 
         return builder.toString();
     }

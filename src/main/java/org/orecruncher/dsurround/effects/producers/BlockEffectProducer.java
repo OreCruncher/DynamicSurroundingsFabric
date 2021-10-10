@@ -93,4 +93,13 @@ public abstract class BlockEffectProducer implements IBlockEffectProducer {
                 }
         return blockCount;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(this.getClass().getSimpleName())
+                .append("{").append("chance: ").append(this.chance)
+                .append("; conditions: ").append(this.conditions).append("}");
+        return builder.toString();
+    }
 }

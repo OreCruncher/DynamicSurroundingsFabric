@@ -6,6 +6,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.World;
+import org.orecruncher.dsurround.effects.FlameJetEffect;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.lib.scripting.Script;
 
@@ -37,15 +38,14 @@ public class FlameJetProducer extends BlockEffectProducer {
             spawnHeight = pos.getY() + state.getFluidState().getHeight() + 0.1F;
             isSolid = false;
         } else {
-            final VoxelShape shape = state.getCollisionShape(world, pos);
+            final VoxelShape shape = state.getOutlineShape(world, pos);
             if (shape.isEmpty()) {
                 return Optional.empty();
             }
             final double blockHeight = shape.getBoundingBox().maxY;
             spawnHeight = (float) (pos.getY() + blockHeight);
             isSolid = true;
-            // TODO: Check this - it's not exactly like the original
-            if (!state.isAir()) {
+            if (state.getMaterial().isSolid()) {
                 blockCount = 2;
             } else {
                 blockCount = 1;
@@ -53,7 +53,8 @@ public class FlameJetProducer extends BlockEffectProducer {
         }
 
         if (blockCount > 0) {
-            // Generate block effect here!
+            var effect = new FlameJetEffect(blockCount, world, pos.getX() + 0.5D, spawnHeight, pos.getZ() + 0.5D, isSolid);
+            return Optional.of(effect);
         }
 
         return Optional.empty();

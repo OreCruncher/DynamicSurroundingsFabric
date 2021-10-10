@@ -4,7 +4,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.client.util.math.Vector3d;
 import net.minecraft.entity.Entity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
@@ -24,7 +23,7 @@ public final class SoundFactory {
     }
 
     public static PositionedSoundInstance createAsMood(SoundEvent event, Entity entity, int minRange, int maxRange) {
-        final Vector3d offset = MathStuff.randomPoint(minRange, maxRange);
+        var offset = MathStuff.randomPoint(minRange, maxRange);
         final float posX = (float) (entity.getX() + offset.x);
         final float posY = (float) (entity.getEyeY() + offset.y);
         final float posZ = (float) (entity.getZ() + offset.z);

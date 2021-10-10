@@ -30,6 +30,7 @@ public class AreaBlockEffects extends ClientHandler {
         this.blockEffects.tick(player);
         this.nearEffects.tick();
         this.farEffects.tick();
+        this.alwaysOn.tick();
     }
 
     @Override

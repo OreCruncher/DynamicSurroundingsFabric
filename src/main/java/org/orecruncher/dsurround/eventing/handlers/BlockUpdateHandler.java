@@ -8,15 +8,15 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
-import org.orecruncher.dsurround.lib.collections.ObjectArray;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 @Environment(EnvType.CLIENT)
 public class BlockUpdateHandler {
 
-    private static final ObjectArray<BlockPos> updatedPositions = new ObjectArray<>(16);
+    private static final Set<BlockPos> updatedPositions = new HashSet<>(16);
 
     static {
         ClientTickEvents.END_CLIENT_TICK.register(BlockUpdateHandler::tick);

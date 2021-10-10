@@ -3,6 +3,8 @@ package org.orecruncher.dsurround.effects;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
+import net.minecraft.particle.ParticleEffect;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.effects.producers.SteamColumnProducer;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -24,9 +26,7 @@ public class SteamJetEffect extends ParticleJetEffect {
 
     @Override
     protected void spawnJetParticle() {
-        //MixinParticleManager manager = (MixinParticleManager) (Object) (GameUtils.getMC().particleManager);
-        //var particle = STEAMCLOUD_FACTORY.createParticle(null, GameUtils.getWorld(), this.posX, this.posY, this.posZ, 0, 0.1D, 0D);
-        //GameUtils.getMC().particleManager.addParticle(particle);
+        this.addParticle(ParticleTypes.CLOUD, this.posX, this.posY, this.posZ, 0, 0.1D, 0D);
     }
 
 }

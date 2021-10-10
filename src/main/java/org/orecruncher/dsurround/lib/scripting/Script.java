@@ -20,4 +20,9 @@ public class Script {
     public String getScript() {
         return this.script;
     }
+
+    @Override
+    public String toString() {
+        return this.script;
+    }
 }

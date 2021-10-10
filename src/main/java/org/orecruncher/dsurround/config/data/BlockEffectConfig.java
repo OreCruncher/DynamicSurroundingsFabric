@@ -11,7 +11,7 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 public class BlockEffectConfig {
 
     private static final Script DEFAULT_SPAWN_CHANCE = new Script("0.01");
-    private static final Script ALWAYS_ON = new Script("1");
+    private static final Script ALWAYS_ON = new Script("1.0");
 
     public static Codec<BlockEffectConfig> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(

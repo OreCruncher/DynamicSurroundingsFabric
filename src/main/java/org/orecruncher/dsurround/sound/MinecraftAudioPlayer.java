@@ -4,6 +4,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.client.sound.SoundManager;
+import net.minecraft.entity.player.PlayerEntity;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -59,6 +60,13 @@ public class MinecraftAudioPlayer implements IAudioPlayer {
         this.TOSTRING_BUILDER.append(", a: ").append(sound.getAttenuationType().toString());
         this.TOSTRING_BUILDER.append(", g: ").append(sound.isRelative());
         this.TOSTRING_BUILDER.append("}");
+
+        if (GameUtils.isInGame() && !sound.isRelative()) {
+            PlayerEntity player = GameUtils.getPlayer();
+            var distance = Math.sqrt(player.getEyePos().squaredDistanceTo(sound.getX(), sound.getY(),sound.getZ()));
+            this.TOSTRING_BUILDER.append(" distance: ").append(distance);
+        }
+
         return this.TOSTRING_BUILDER.toString();
     }
 

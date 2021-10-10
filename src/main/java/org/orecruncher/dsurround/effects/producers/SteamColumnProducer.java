@@ -6,6 +6,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.effects.IBlockEffect;
+import org.orecruncher.dsurround.effects.SteamJetEffect;
 import org.orecruncher.dsurround.lib.scripting.Script;
 
 import java.util.Optional;
@@ -19,7 +20,8 @@ public class SteamColumnProducer extends BlockEffectProducer {
     }
 
     public static boolean isValidSpawnBlock(final World world, final BlockPos pos, final BlockState source) {
-        if (world.getBlockState(pos.up()).isAir())
+        var whatsUp = world.getBlockState(pos.up());
+        if (!whatsUp.isAir())
             return false;
         if (world.getBlockState(pos) != source)
             return false;
@@ -43,8 +45,9 @@ public class SteamColumnProducer extends BlockEffectProducer {
             } else {
                 spawnHeight = pos.getY() + fluidState.getHeight() + 0.1F;
             }
-            // TODO:
-            // Generate effect here!
+
+            var effect = new SteamJetEffect(strength, world, pos.getX() + 0.5D, spawnHeight, pos.getZ() + 0.5D);
+            return Optional.of(effect);
         }
 
         return Optional.empty();
