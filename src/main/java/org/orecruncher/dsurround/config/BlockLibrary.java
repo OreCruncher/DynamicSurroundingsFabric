@@ -43,8 +43,14 @@ public class BlockLibrary {
     public static void load() {
 
         registry.clear();
-        final Collection<IResourceAccessor> configs = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), "blocks.json");
-        IResourceAccessor.process(configs, accessor -> initFromConfig(accessor.as(CODEC)));
+        final Collection<IResourceAccessor> accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), "blocks.json");
+
+        IResourceAccessor.process(accessors, accessor -> {
+            var cfg = accessor.as(CODEC);
+            if (cfg != null)
+                initFromConfig(cfg);
+        });
+
         registry.values().forEach(BlockInfo::trim);
         version++;
 
@@ -95,11 +101,12 @@ public class BlockLibrary {
             }
             LOGGER.debug("Unknown block tag '%s' in Block specification", tagName);
         } else {
-            final BlockStateMatcher matcher = BlockStateMatcher.create(blockName);
-            if (!matcher.isEmpty()) {
+            try {
+                var matcher = BlockStateMatcher.create(blockName);
                 return ImmutableList.of(matcher);
+            } catch (Throwable t) {
+                LOGGER.error(t, "Unknown block name '%s' in Block Specification", blockName);
             }
-            LOGGER.debug("Unknown block name '%s' in Block Specification", blockName);
         }
 
         return ImmutableList.of();

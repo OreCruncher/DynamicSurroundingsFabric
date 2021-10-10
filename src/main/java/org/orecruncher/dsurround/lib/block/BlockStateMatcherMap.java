@@ -6,6 +6,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.Client;
 
 import java.util.Collection;
 import java.util.Map;
@@ -102,9 +103,12 @@ public final class BlockStateMatcherMap<T> implements Map<BlockStateMatcher, T> 
     }
 
     public void put(final String blockName, final T val) {
-        final BlockStateMatcher result = BlockStateMatcher.create(blockName);
-        if (!result.isEmpty())
-            put(result, val);
+        try {
+            var result = BlockStateMatcher.create(blockName);
+            this.put(result, val);
+        } catch (Throwable t) {
+            Client.LOGGER.error(t, "Unable to put item into map");
+        }
     }
 
     public void put(final BlockState state, final T val) {

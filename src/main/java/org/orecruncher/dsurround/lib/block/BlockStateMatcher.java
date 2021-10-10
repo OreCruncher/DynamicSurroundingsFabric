@@ -7,16 +7,12 @@ import net.minecraft.state.StateManager;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
-import org.orecruncher.dsurround.Client;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public final class BlockStateMatcher {
-
-    public static final BlockStateMatcher AIR = new BlockStateMatcher(Blocks.AIR.getDefaultState());
 
     // All instances will have this defined
     private final Block block;
@@ -47,22 +43,19 @@ public final class BlockStateMatcher {
         return new BlockStateMatcher(state.getBlock());
     }
 
-    
-    public static BlockStateMatcher create( final BlockState state) {
+    public static BlockStateMatcher create(final BlockState state) {
         return new BlockStateMatcher(state);
     }
 
-    
-    public static BlockStateMatcher create( final Block block) {
+    public static BlockStateMatcher create(final Block block) {
         return new BlockStateMatcher(block);
     }
 
-    
-    public static BlockStateMatcher create( final String blockId) {
-        return BlockStateParser.parse(blockId).map(BlockStateMatcher::create).orElse(BlockStateMatcher.AIR);
+    public static BlockStateMatcher create(final String blockId) throws BlockStateParseException {
+        return create(BlockStateParser.parse(blockId));
     }
 
-    public static BlockStateMatcher create( final BlockStateParser.ParseResult result) {
+    private static BlockStateMatcher create(final BlockStateParser.ParseResult result) throws BlockStateParseException {
         final Block block = result.getBlock();
         final BlockState defaultState = block.getDefaultState();
         final StateManager<Block, BlockState> container = block.getStateManager();
@@ -88,27 +81,16 @@ public final class BlockStateMatcher {
                 if (optional.isPresent()) {
                     props.put(prop, (Comparable<?>) optional.get());
                 } else {
-                    final String allowed = getAllowedValues(block, s);
-                    Client.LOGGER.warn("Property value '%s' for property '%s' not found for block '%s'",
-                            entry.getValue(), s, result.getBlockName());
-                    Client.LOGGER.warn("Allowed values: %s", allowed);
+                    var msg = String.format("Value '%s' for property '%s' not found for block '%s'", entry.getValue(), s, result.getBlockName());
+                    throw new BlockStateParseException(msg);
                 }
             } else {
-                Client.LOGGER.warn("Property %s not found for block %s", s, result.getBlockName());
+                var msg = String.format("Property %s not found for block %s", s, result.getBlockName());
+                throw new BlockStateParseException(msg);
             }
         }
 
         return new BlockStateMatcher(defaultState.getBlock(), props);
-    }
-
-    
-    private static <T extends Comparable<T>> String getAllowedValues( final Block block,  final String propName) {
-        @SuppressWarnings("unchecked")
-        final Property<T> prop = (Property<T>) block.getStateManager().getProperty(propName);
-        if (prop != null) {
-            return prop.stream().map(e -> e.getValue().toString()).collect(Collectors.joining(","));
-        }
-        return "Invalid property " + propName;
     }
 
     public boolean isEmpty() {
@@ -135,7 +117,6 @@ public final class BlockStateMatcher {
     }
 
     @Override
-    
     public String toString() {
         return this.blockId + this.props.getFormattedProperties();
     }

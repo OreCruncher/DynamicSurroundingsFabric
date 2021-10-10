@@ -8,12 +8,12 @@ import net.minecraft.util.registry.Registry;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.lib.PatternValidation;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * and partially described.
  */
 @SuppressWarnings("unused")
-public final class BlockStateParser {
+final class BlockStateParser {
 
     private static final IModLog LOGGER = Client.LOGGER.createChild(BlockStateParser.class);
 
@@ -30,10 +30,9 @@ public final class BlockStateParser {
     }
 
     /**
-     * Parses the block state string passed in and returns the result of that parsing.  If null is returned it means
-     * there was some sort of error.
+     * Parses the block state string passed in and returns the result of that parsing.
      */
-    public static Optional<ParseResult> parse(final String blockName) {
+    public static ParseResult parse(final String blockName) throws BlockStateParseException {
 
         String temp = blockName;
         int idx = temp.indexOf('+');
@@ -50,31 +49,41 @@ public final class BlockStateParser {
         idx = temp.indexOf('[');
         if (idx > 0) {
             try {
+
                 int end = temp.indexOf(']');
+                if (end < 1) {
+                    throw new BlockStateParseException("Missing ']'");
+                }
+
                 String propString = temp.substring(idx + 1, end);
                 properties = Arrays.stream(propString.split(","))
                         .map(elem -> elem.split("="))
                         .collect(Collectors.toMap(e -> e[0], e -> e[1]));
+
+                // Validate the property names
+                for (var propName : properties.keySet())
+                    if (!PatternValidation.BLOCKSTATE_PROPERTY_NAME.matcher(propName).matches()) {
+                        throw new BlockStateParseException(String.format("Property name %s for block %s is invalid", propName, blockName));
+                    }
+
+                // Trim it down to validate the Identifier
                 temp = temp.substring(0, idx);
-            } catch(final Throwable ignore) {
-                LOGGER.warn("Unable to parse properties of '%s'", blockName);
-                return Optional.empty();
+            } catch (final Throwable ignore) {
+                throw new BlockStateParseException(String.format("Unable to parse properties of '%s'", blockName));
             }
         }
 
         if (!Identifier.isValid(temp)) {
-            LOGGER.warn("Invalid blockname '%s' for entry '%s'", temp, blockName);
-            return Optional.empty();
+            throw new BlockStateParseException(String.format("Invalid block name '%s' for entry '%s'", temp, blockName));
         }
 
         final Identifier resource = new Identifier(temp);
         final Block block = Registry.BLOCK.get(resource);
         if (block == Blocks.AIR && !"mincraft:air".equals(temp)) {
-            LOGGER.warn("Unknown block '%s' for entry '%s'", temp, blockName);
-            return Optional.empty();
+            throw new BlockStateParseException(String.format("Unknown block '%s' for entry '%s'", temp, blockName));
         }
 
-        return Optional.of(new ParseResult(temp, block, properties, extras));
+        return new ParseResult(temp, block, properties, extras);
     }
 
     public final static class ParseResult {

@@ -26,8 +26,13 @@ public final class DimensionLibrary {
     public static void load() {
         configs.clear();
         cache.clear();
-        final Collection<IResourceAccessor> configs = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), "dimensions.json");
-        IResourceAccessor.process(configs, accessor -> initFromConfig(accessor.as(CODEC)));
+        final Collection<IResourceAccessor> accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), "dimensions.json");
+
+        IResourceAccessor.process(accessors, accessor -> {
+            var cfg = accessor.as(CODEC);
+            if (cfg != null)
+                initFromConfig(cfg);
+        });
     }
 
     private static void initFromConfig(final List<DimensionConfig> cfg) {

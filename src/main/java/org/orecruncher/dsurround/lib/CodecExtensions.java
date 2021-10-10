@@ -2,10 +2,10 @@ package org.orecruncher.dsurround.lib;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import org.orecruncher.dsurround.lib.block.BlockStateParser;
+import org.orecruncher.dsurround.lib.block.BlockStateMatcher;
+import org.orecruncher.dsurround.lib.block.BlockStateParseException;
 
 import java.util.function.Function;
-import java.util.regex.Pattern;
 
 /**
  * Extensions to the Codec serialization framework.
@@ -16,7 +16,7 @@ public interface CodecExtensions<A> extends Codec<A> {
      */
     static Codec<String> checkHTMLColor() {
         final Function<String, DataResult<String>> func = value -> {
-            if (Pattern.compile("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$").matcher(value).matches()) {
+            if (PatternValidation.HTML_COLOR_ENCODING.matcher(value).matches()) {
                 return DataResult.success(value);
             }
             return DataResult.error(String.format("%s is not a valid HTML color description", value));
@@ -29,10 +29,14 @@ public interface CodecExtensions<A> extends Codec<A> {
      */
     static Codec<String> checkBlockStateSpecification() {
         final Function<String, DataResult<String>> func = value -> {
-            var result = BlockStateParser.parse(value);
-            if (result.isPresent())
+            try {
+                BlockStateMatcher.create(value);
                 return DataResult.success(value);
-            return DataResult.error(String.format("%s is not a valid block state specification", value));
+            } catch (BlockStateParseException t) {
+                return DataResult.error(t.getMessage());
+            } catch (Throwable t) {
+                return DataResult.error(String.format("%s is not a valid block state specification", value));
+            }
         };
         return Codec.STRING.flatXmap(func, func);
     }

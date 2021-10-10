@@ -18,6 +18,7 @@ import org.orecruncher.dsurround.lib.Guard;
 import org.orecruncher.dsurround.lib.biome.BiomeUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
 import org.orecruncher.dsurround.xface.IBiomeExtended;
@@ -54,11 +55,11 @@ public final class BiomeLibrary {
         ObjectArray<BiomeConfigRule> configs = new ObjectArray<>(64);
         var accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), "biomes.json");
 
-        for (var accessor : accessors) {
-            var config = accessor.as(CODEC);
-            if (config != null)
-                configs.addAll(config);
-        }
+        IResourceAccessor.process(accessors, accessor -> {
+            var cfg = accessor.as(CODEC);
+            if (cfg != null)
+                configs.addAll(cfg);
+        });
 
         biomeConfigs = configs;
         version++;
