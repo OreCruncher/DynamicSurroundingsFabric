@@ -22,17 +22,17 @@ public abstract class CuboidScanner extends Scanner {
     protected BlockPos lastPos;
     protected Identifier lastReference = new Identifier("dsurround:aintnothin");
 
-    protected CuboidScanner( final ScanContext locus,  final String name, final int range,
+    protected CuboidScanner(final ScanContext locus, final String name, final int range,
                             final int blocksPerTick) {
         super(locus, name, range, blocksPerTick);
     }
 
-    protected CuboidScanner( final ScanContext locus,  final String name, final int xRange,
+    protected CuboidScanner(final ScanContext locus, final String name, final int xRange,
                             final int yRange, final int zRange) {
         super(locus, name, xRange, yRange, zRange);
     }
 
-    protected CuboidScanner( final ScanContext locus,  final String name, final int xSize,
+    protected CuboidScanner(final ScanContext locus, final String name, final int xSize,
                             final int ySize, final int zSize, final int blocksPerTick) {
         super(locus, name, xSize, ySize, zSize, blocksPerTick);
     }
@@ -41,14 +41,14 @@ public abstract class CuboidScanner extends Scanner {
         return this.scanFinished;
     }
 
-    protected BlockPos[] getMinMaxPointsForVolume( final BlockPos pos) {
+    protected BlockPos[] getMinMaxPointsForVolume(final BlockPos pos) {
         BlockPos min = pos.add(-this.xRange, -this.yRange, -this.zRange);
         final BlockPos max = pos.add(this.xRange, this.yRange, this.zRange);
 
         if (min.getY() < 0)
             min = new BlockPos(min.getX(), 0, min.getZ());
 
-        return new BlockPos[] { min, max };
+        return new BlockPos[]{min, max};
     }
 
     protected Cuboid getVolumeFor(final BlockPos pos) {
@@ -75,8 +75,7 @@ public abstract class CuboidScanner extends Scanner {
             this.fullRange = null;
         } else {
             // If the full range was reset, or the player dimension changed,
-            // dump
-            // everything and restart.
+            // dump everything and restart.
             if (this.fullRange == null || this.locus.getReference() != this.lastReference) {
                 resetFullScan();
                 super.tick();
@@ -134,8 +133,8 @@ public abstract class CuboidScanner extends Scanner {
 
     }
 
-    protected void updateScan( final Cuboid newVolume,  final Cuboid oldVolume,
-                               final Cuboid intersect) {
+    protected void updateScan(final Cuboid newVolume, final Cuboid oldVolume,
+                              final Cuboid intersect) {
 
         final World provider = this.locus.getWorld();
 
@@ -166,7 +165,7 @@ public abstract class CuboidScanner extends Scanner {
 
     @Override
     @Nullable
-    protected BlockPos nextPos( final BlockPos.Mutable workingPos,  final Random rand) {
+    protected BlockPos nextPos(final BlockPos.Mutable workingPos, final Random rand) {
 
         if (this.scanFinished)
             return null;
@@ -195,7 +194,7 @@ public abstract class CuboidScanner extends Scanner {
         return null;
     }
 
-    protected boolean isInteresting( final BlockPos pos,  final BlockState state) {
+    protected boolean isInteresting(final BlockPos pos, final BlockState state) {
         if (this.activeCuboid == null)
             return false;
 
@@ -205,7 +204,7 @@ public abstract class CuboidScanner extends Scanner {
         return interestingBlock(state);
     }
 
-    public void onBlockUpdate( final BlockPos pos) {
+    public void onBlockUpdate(final BlockPos pos) {
         try {
             if (this.activeCuboid != null && this.activeCuboid.contains(pos)) {
                 final BlockState state = this.locus.getWorld().getBlockState(pos);
