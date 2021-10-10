@@ -15,15 +15,13 @@ public final class ConditionEvaluator {
     public static ConditionEvaluator INSTANCE = new ConditionEvaluator();
 
     static {
-            // Setup ticker for the variables.  Only want to tick while in game and
-            // the GUI is not paused.
-            ClientTickEvents.START_CLIENT_TICK.register(client -> {
-                if (GameUtils.isInGame() && !client.isPaused())
-                    INSTANCE.tick();
-            });
+        // Setup ticker for the variables.  Only want to tick while in game and
+        // the GUI is not paused.
+        ClientTickEvents.START_CLIENT_TICK.register(client -> {
+            if (GameUtils.isInGame() && !client.isPaused())
+                INSTANCE.tick();
+        });
     }
-
-    private final ExecutionContext context;
 
     // Internal visibility for diagnostics
     final BiomeVariables biomeVariables;
@@ -32,6 +30,7 @@ public final class ConditionEvaluator {
     final PlayerVariables playerVariables;
     final WeatherVariables weatherVariables;
     final EnvironmentState environmentState;
+    private final ExecutionContext context;
 
     public ConditionEvaluator() {
         this(true);

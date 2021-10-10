@@ -18,6 +18,7 @@ import java.util.Set;
 public abstract class Scanner {
 
     protected static final Set<BlockState> BLOCKSTATES_TO_IGNORE = new ReferenceArraySet<>(3);
+    private final static int MAX_BLOCKS_TICK = 6000;
 
     static {
         // The implementation searches backwards so order so the most common blocks will be hit first
@@ -25,8 +26,6 @@ public abstract class Scanner {
         BLOCKSTATES_TO_IGNORE.add(Blocks.CAVE_AIR.getDefaultState());
         BLOCKSTATES_TO_IGNORE.add(Blocks.AIR.getDefaultState());
     }
-
-    private final static int MAX_BLOCKS_TICK = 6000;
 
     protected final String name;
 
@@ -45,21 +44,21 @@ public abstract class Scanner {
     protected final Random random = new XorShiftRandom();
     protected final BlockPos.Mutable workingPos = new BlockPos.Mutable();
 
-    public Scanner( final ScanContext locus,  final String name, final int range) {
+    public Scanner(final ScanContext locus, final String name, final int range) {
         this(locus, name, range, 0);
     }
 
-    public Scanner( final ScanContext locus,  final String name, final int range,
+    public Scanner(final ScanContext locus, final String name, final int range,
                    final int blocksPerTick) {
         this(locus, name, range, range, range, blocksPerTick);
     }
 
-    public Scanner( final ScanContext locus,  final String name, final int xRange, final int yRange,
+    public Scanner(final ScanContext locus, final String name, final int xRange, final int yRange,
                    final int zRange) {
         this(locus, name, xRange, yRange, zRange, 0);
     }
 
-    public Scanner( final ScanContext locus,  final String name, final int xRange, final int yRange,
+    public Scanner(final ScanContext locus, final String name, final int xRange, final int yRange,
                    final int zRange, final int blocksPerTick) {
         this.name = name;
         this.xRange = xRange;
@@ -90,8 +89,8 @@ public abstract class Scanner {
      * safe to hold on to beyond the call so if it needs to be kept it needs to be
      * copied.
      */
-    public abstract void blockScan( final BlockState state,  final BlockPos pos,
-                                    final Random rand);
+    public abstract void blockScan(final BlockState state, final BlockPos pos,
+                                   final Random rand);
 
     /**
      * Determines if the block is of interest to the effects. Override to provide
@@ -136,6 +135,6 @@ public abstract class Scanner {
      * returned from the function call.
      */
     @Nullable
-    protected abstract BlockPos nextPos( final BlockPos.Mutable pos,  final Random rand);
+    protected abstract BlockPos nextPos(final BlockPos.Mutable pos, final Random rand);
 
 }

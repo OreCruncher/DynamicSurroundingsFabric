@@ -49,13 +49,13 @@ public class MinecraftAudioPlayer implements IAudioPlayer {
     }
 
     protected String formatSound(SoundInstance sound) {
-        MixinAbstractSoundInstance accessor= (MixinAbstractSoundInstance)sound;
+        MixinAbstractSoundInstance accessor = (MixinAbstractSoundInstance) sound;
         this.TOSTRING_BUILDER.setLength(0);
         this.TOSTRING_BUILDER.append(sound.getClass().getSimpleName()).append("{[");
         this.TOSTRING_BUILDER.append(sound.getId()).append("]");
         this.TOSTRING_BUILDER.append(", ").append(sound.getCategory().getName());
         this.TOSTRING_BUILDER.append(String.format(", v: %.4f, p: %.4f", accessor.getRawVolume(), accessor.getRawVolume()));
-        this.TOSTRING_BUILDER.append(String.format(", l: (%.2f,%.2f,%.2f)", sound.getX(), sound.getY(),sound.getZ()));
+        this.TOSTRING_BUILDER.append(String.format(", l: (%.2f,%.2f,%.2f)", sound.getX(), sound.getY(), sound.getZ()));
         this.TOSTRING_BUILDER.append(", a: ").append(sound.getAttenuationType().toString());
         this.TOSTRING_BUILDER.append(", g: ").append(sound.isRelative());
         this.TOSTRING_BUILDER.append("}");

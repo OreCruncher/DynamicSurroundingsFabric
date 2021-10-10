@@ -14,6 +14,7 @@ public interface IBiomeSoundProvider {
 
     /**
      * Gets a collection of SoundEvents that match the existing conditions within game.
+     *
      * @return Collection of matching SoundEvents.
      */
     Collection<SoundEvent> findBiomeSoundMatches();
@@ -21,7 +22,8 @@ public interface IBiomeSoundProvider {
     /**
      * Gets an add-on SoundEvent based on existing conditions within the game as well
      * as configuration.
-     * @param type Type of SoundEvent to retrieve
+     *
+     * @param type   Type of SoundEvent to retrieve
      * @param random Randomizer to use
      * @return SoundEvent that matches crtieria, if any
      */

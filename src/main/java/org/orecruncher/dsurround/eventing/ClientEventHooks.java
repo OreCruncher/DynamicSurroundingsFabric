@@ -21,7 +21,7 @@ public final class ClientEventHooks {
             callbacks -> (left, right, timers) -> {
                 for (CollectDiagnosticsEvent callback : callbacks)
                     Guard.execute(() -> callback.onCollect(left, right, timers));
-                });
+            });
 
     /**
      * Fired when block state updates are received clientside.  Results are coalesced for efficiency.

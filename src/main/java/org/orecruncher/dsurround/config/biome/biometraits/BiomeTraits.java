@@ -4,7 +4,10 @@ import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class BiomeTraits {
@@ -25,6 +28,19 @@ public final class BiomeTraits {
         this.traits = new HashSet<>(traits);
     }
 
+    public static BiomeTraits createFrom(Identifier id, Biome biome) {
+        var traits = traitAnalyzer
+                .stream()
+                .map(analyzer -> analyzer.evaluate(id, biome))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+        return new BiomeTraits(traits);
+    }
+
+    public static BiomeTraits from(BiomeTrait... traits) {
+        return new BiomeTraits(List.of(traits));
+    }
+
     public boolean contains(String trait) {
         return contains(BiomeTrait.of(trait));
     }
@@ -40,18 +56,5 @@ public final class BiomeTraits {
                 .collect(Collectors.joining(","));
 
         return String.format("Traits [%s]", temp);
-    }
-
-    public static BiomeTraits createFrom(Identifier id, Biome biome) {
-        var traits = traitAnalyzer
-                .stream()
-                .map(analyzer -> analyzer.evaluate(id, biome))
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-        return new BiomeTraits(traits);
-    }
-
-    public static BiomeTraits from(BiomeTrait... traits) {
-        return new BiomeTraits(List.of(traits));
     }
 }

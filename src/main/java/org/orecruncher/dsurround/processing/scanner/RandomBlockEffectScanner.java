@@ -15,17 +15,16 @@ import java.util.Random;
 @Environment(EnvType.CLIENT)
 public class RandomBlockEffectScanner extends RandomScanner {
 
-    private static final int ITERATION_COUNT = 667;
-
     public static final int NEAR_RANGE = 16;
     public static final int FAR_RANGE = 32;
+    private static final int ITERATION_COUNT = 667;
 
     public RandomBlockEffectScanner(final ScanContext locus, final int range) {
         super(locus, "RandomBlockScanner: " + range, range, ITERATION_COUNT);
     }
 
     @Override
-    protected boolean interestingBlock( final BlockState state) {
+    protected boolean interestingBlock(final BlockState state) {
         return BlockLibrary.getBlockInfo(state).hasSounds();
     }
 

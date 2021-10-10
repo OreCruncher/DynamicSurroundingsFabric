@@ -72,6 +72,7 @@ public final class BiomeSoundEmitter {
     public SoundEvent getSoundEvent() {
         return this.soundEvent;
     }
+
     @Override
     public String toString() {
         return this.acousticSource.toString();

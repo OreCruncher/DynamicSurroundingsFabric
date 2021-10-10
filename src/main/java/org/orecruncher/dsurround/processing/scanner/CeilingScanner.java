@@ -9,8 +9,8 @@ import net.minecraft.tag.Tag;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
-import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.config.DimensionLibrary;
+import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
@@ -96,9 +96,9 @@ public final class CeilingScanner {
 
         public float score(final BlockPos playerPos) {
             this.working.set(
-                playerPos.getX() + this.offset.getX(),
-                playerPos.getY() + this.offset.getY(),
-                playerPos.getZ() + this.offset.getZ()
+                    playerPos.getX() + this.offset.getX(),
+                    playerPos.getY() + this.offset.getY(),
+                    playerPos.getZ() + this.offset.getZ()
             );
 
             final World world = GameUtils.getWorld();

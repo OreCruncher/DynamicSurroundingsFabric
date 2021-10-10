@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @Environment(EnvType.CLIENT)
 public class GuiHelpers {
 
-    private final static String ELLIPSES =  "...";
+    private final static String ELLIPSES = "...";
 
     /**
      * Gets the text associated with the given language key that is formatted so that a line is <= the width

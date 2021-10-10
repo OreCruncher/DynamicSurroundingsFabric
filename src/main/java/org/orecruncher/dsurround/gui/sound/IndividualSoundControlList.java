@@ -101,7 +101,7 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
     protected Collection<IndividualSoundConfigEntry> getConfigs() {
         final List<IndividualSoundConfigEntry> configs = new ArrayList<>();
         for (final IndividualSoundConfigEntry cfg : this.source) {
-            if (!cfg.isDefault())
+            if (cfg.isNotDefault())
                 configs.add(cfg);
         }
         return configs;

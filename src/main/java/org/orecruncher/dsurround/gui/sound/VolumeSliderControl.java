@@ -34,7 +34,7 @@ public class VolumeSliderControl extends SliderControl {
     }
 
     public VolumeSliderControl(IndividualSoundControlListEntry entry, int x, int y, List<OrderedText> toolTip) {
-        super(x, y, SLIDER_WIDTH, SLIDER_HEIGHT, 0F, 400F, 1,entry.getData().volumeScale, toolTip);
+        super(x, y, SLIDER_WIDTH, SLIDER_HEIGHT, 0F, 400F, 1, entry.getData().volumeScale, toolTip);
         this.entry = entry;
         this.updateMessage();
     }

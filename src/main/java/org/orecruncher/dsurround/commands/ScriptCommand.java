@@ -30,9 +30,9 @@ final class ScriptCommand {
 
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
         dispatcher.register(
-            ClientCommandManager.literal("dsscript")
-                .then(argument("script", MessageArgumentType.message())
-                    .executes(ScriptCommand::execute)));
+                ClientCommandManager.literal("dsscript")
+                        .then(argument("script", MessageArgumentType.message())
+                                .executes(ScriptCommand::execute)));
     }
 
     private static int execute(CommandContext<FabricClientCommandSource> ctx) {

@@ -54,6 +54,7 @@ public interface IWeatherVariables {
 
     /**
      * Gets the temperature at the current player location
+     *
      * @return
      */
     float getTemperature();

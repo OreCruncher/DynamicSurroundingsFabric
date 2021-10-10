@@ -81,7 +81,7 @@ public final class GameUtils {
 
     @Nullable
     public static <T> TagGroup<T> getTagGroup(RegistryKey<? extends Registry<T>> registryKey) {
-        var groups = ((MixinTagManager)GameUtils.getWorld().getTagManager()).getTagGroups();
-        return groups != null ? (TagGroup<T>)groups.get(registryKey) : null;
+        var groups = ((MixinTagManager) GameUtils.getWorld().getTagManager()).getTagGroups();
+        return groups != null ? (TagGroup<T>) groups.get(registryKey) : null;
     }
 }

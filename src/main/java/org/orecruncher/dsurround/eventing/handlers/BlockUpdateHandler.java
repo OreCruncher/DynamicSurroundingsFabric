@@ -16,11 +16,11 @@ import java.util.Set;
 @Environment(EnvType.CLIENT)
 public class BlockUpdateHandler {
 
+    private static final ObjectArray<BlockPos> updatedPositions = new ObjectArray<>(16);
+
     static {
         ClientTickEvents.END_CLIENT_TICK.register(BlockUpdateHandler::tick);
     }
-
-    private static final ObjectArray<BlockPos> updatedPositions = new ObjectArray<>(16);
 
     /**
      * Called from a mixin to record that a block position was updated.

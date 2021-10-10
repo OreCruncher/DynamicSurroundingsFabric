@@ -23,6 +23,12 @@ public enum InternalBiomes {
 
     private static final Map<String, InternalBiomes> lookup = new HashMap<>();
 
+    static {
+        for (var e : InternalBiomes.values())
+            if (e != NONE)
+                lookup.put(e.getName(), e);
+    }
+
     private final String name;
     private final Identifier id;
 
@@ -31,22 +37,16 @@ public enum InternalBiomes {
         this.id = new Identifier(Client.ModId, String.format("fakebiome/%s", name));
     }
 
+    @Nullable
+    public static InternalBiomes getByName(String name) {
+        return lookup.get(name.toLowerCase());
+    }
+
     public String getName() {
         return this.name;
     }
 
     public Identifier getId() {
         return this.id;
-    }
-
-    @Nullable
-    public static InternalBiomes getByName(String name) {
-        return lookup.get(name.toLowerCase());
-    }
-
-    static {
-        for (var e : InternalBiomes.values())
-            if (e != NONE)
-                lookup.put(e.getName(), e);
     }
 }

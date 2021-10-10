@@ -22,13 +22,13 @@ class DumpCommand {
 
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
         dispatcher.register(literal("dsdump")
-            .then(literal("biomes").executes(cmd -> dumpBiomes(cmd.getSource())))
-            .then(literal("sounds").executes(cmd -> dumpSounds(cmd.getSource())))
-            .then(literal("dimensions").executes(cmd -> dumpDimensions(cmd.getSource())))
-            .then(literal("blocks").executes(cmd -> dumpBlocks(cmd.getSource())))
-            .then(literal("blocksbytag").executes(cmd -> dumpBlocksByTag(cmd.getSource())))
-            .then(literal("blockinfo").executes(cmd -> dumpBlockInfo(cmd.getSource())))
-            .then(literal("blockstates").executes(cmd -> dumpBlockState(cmd.getSource())))
+                .then(literal("biomes").executes(cmd -> dumpBiomes(cmd.getSource())))
+                .then(literal("sounds").executes(cmd -> dumpSounds(cmd.getSource())))
+                .then(literal("dimensions").executes(cmd -> dumpDimensions(cmd.getSource())))
+                .then(literal("blocks").executes(cmd -> dumpBlocks(cmd.getSource())))
+                .then(literal("blocksbytag").executes(cmd -> dumpBlocksByTag(cmd.getSource())))
+                .then(literal("blockinfo").executes(cmd -> dumpBlockInfo(cmd.getSource())))
+                .then(literal("blockstates").executes(cmd -> dumpBlockState(cmd.getSource())))
         );
     }
 

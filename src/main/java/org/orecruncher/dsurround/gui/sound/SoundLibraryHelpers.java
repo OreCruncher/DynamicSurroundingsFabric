@@ -9,7 +9,10 @@ import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.SoundLibrary;
 import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Environment(EnvType.CLIENT)

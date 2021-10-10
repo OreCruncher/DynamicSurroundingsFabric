@@ -5,7 +5,6 @@ import com.terraformersmc.modmenu.api.ModMenuApi;
 import me.shedaniel.autoconfig.AutoConfig;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import org.orecruncher.dsurround.config.Configuration;
 
 @Environment(EnvType.CLIENT)
 public class ModConfigMenu implements ModMenuApi {

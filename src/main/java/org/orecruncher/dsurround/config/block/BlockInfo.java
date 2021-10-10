@@ -49,12 +49,12 @@ public class BlockInfo {
         }
     }
 
-    public void setChance(final String chance) {
-        this.chance = chance;
-    }
-
     public String getChance() {
         return this.chance;
+    }
+
+    public void setChance(final String chance) {
+        this.chance = chance;
     }
 
     public void addSound(final AcousticEntry sound) {

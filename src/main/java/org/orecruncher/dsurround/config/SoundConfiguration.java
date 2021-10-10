@@ -24,16 +24,10 @@ public class SoundConfiguration implements ConfigData {
         AutoConfig.register(SoundConfiguration.class, MyGsonConfigSerializer::new);
     }
 
-    public static SoundConfiguration getConfig() {
-        return AutoConfig.getConfigHolder(SoundConfiguration.class).getConfig();
-    }
-
-    protected List<IndividualSoundConfigEntry> soundConfiguration = new ArrayList<>();
-
     // Don't serialize
     protected final transient Map<String, IndividualSoundConfigEntry> individualSoundConfiguration = new HashMap<>();
     protected final transient List<String> startupSounds = new ArrayList<>();
-
+    protected List<IndividualSoundConfigEntry> soundConfiguration = new ArrayList<>();
     protected SoundConfiguration() {
         this.addSoundConfig("minecraft:entity.sheep.ambient", 100, false, true, false);
         this.addSoundConfig("minecraft:entity.chicken.ambient", 100, false, true, false);
@@ -47,6 +41,10 @@ public class SoundConfiguration implements ConfigData {
         this.addSoundConfig("minecraft:entity.experience_orb.pickup", 100, false, false, true);
         this.addSoundConfig("minecraft:entity.chicken.egg", 100, false, false, true);
         this.addSoundConfig("minecraft:ambient.underwater.exit", 100, false, false, true);
+    }
+
+    public static SoundConfiguration getConfig() {
+        return AutoConfig.getConfigHolder(SoundConfiguration.class).getConfig();
     }
 
     private void addSoundConfig(final String id, int volumeScale, boolean block, boolean cull, boolean startup) {
@@ -99,7 +97,7 @@ public class SoundConfiguration implements ConfigData {
         this.individualSoundConfiguration.clear();
 
         this.soundConfiguration.forEach(entry -> {
-            if (!entry.isDefault()) {
+            if (entry.isNotDefault()) {
                 this.individualSoundConfiguration.put(entry.id, entry);
                 if (entry.startup) {
                     this.startupSounds.add(entry.id);

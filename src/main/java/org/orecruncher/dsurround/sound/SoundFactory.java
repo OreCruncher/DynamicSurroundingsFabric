@@ -10,7 +10,6 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
-import org.lwjgl.system.CallbackI;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.mixins.MixinAbstractSoundInstance;
@@ -52,7 +51,7 @@ public final class SoundFactory {
     }
 
     public static PositionedSoundInstance cloneThunder(SoundInstance thunder) {
-        MixinAbstractSoundInstance mixin = (MixinAbstractSoundInstance)thunder;
+        MixinAbstractSoundInstance mixin = (MixinAbstractSoundInstance) thunder;
         return new PositionedSoundInstance(
                 THUNDER,
                 thunder.getCategory(),

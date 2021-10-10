@@ -23,7 +23,10 @@ import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
 import org.orecruncher.dsurround.xface.IBiomeExtended;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 @Environment(EnvType.CLIENT)
@@ -145,8 +148,8 @@ public final class BiomeLibrary {
                         LOGGER.warn("Unable to process biome sound configuration [%s]", c.toString());
                     }
                 }
-            } catch(Exception ignore) {
-                int x = 0;
+            } catch (Throwable t) {
+                LOGGER.error(t, "Unexpected error processing biome %s", info.getBiomeId());
             }
         }
 

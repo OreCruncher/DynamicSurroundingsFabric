@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.lib.math;
 
 import net.minecraft.client.util.math.Vector3d;
-import org.lwjgl.system.CallbackI;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 
 import java.util.Random;

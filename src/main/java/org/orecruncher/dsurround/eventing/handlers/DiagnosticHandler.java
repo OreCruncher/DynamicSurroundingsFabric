@@ -16,15 +16,13 @@ import org.orecruncher.dsurround.lib.math.TimerEMA;
 public final class DiagnosticHandler {
 
     private static final LoggingTimerEMA diagnostics = new LoggingTimerEMA("Diagnostics");
+    private static final ObjectArray<String> left = new ObjectArray<>(16);
+    private static final ObjectArray<String> right = new ObjectArray<>(16);
+    private static boolean enableCollection = false;
 
     static {
         ClientTickEvents.END_CLIENT_TICK.register(DiagnosticHandler::tick);
     }
-
-    private static final ObjectArray<String> left = new ObjectArray<>(16);
-    private static final ObjectArray<String> right = new ObjectArray<>(16);
-
-    private static boolean enableCollection = false;
 
     public static void toggleCollection() {
         enableCollection = !enableCollection;

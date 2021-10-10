@@ -8,7 +8,6 @@ import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.data.DimensionConfig;
 import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 
@@ -18,8 +17,6 @@ import java.util.stream.Stream;
 public final class DimensionLibrary {
 
     private static final Codec<List<DimensionConfig>> CODEC = Codec.list(DimensionConfig.CODEC);
-    private static final IModLog LOGGER = Client.LOGGER.createChild(DimensionLibrary.class);
-
     private static final ObjectArray<DimensionConfig> cache = new ObjectArray<>();
     private static final Map<RegistryKey<World>, DimensionInfo> configs = new HashMap<>();
 
@@ -73,7 +70,7 @@ public final class DimensionLibrary {
             DimensionConfig config = null;
             Identifier location = key.getValue();
             for (final DimensionConfig e : cache)
-                if (e.dimensionId.equals(location.toString())) {
+                if (e.dimensionId.equals(location)) {
                     config = e;
                     break;
                 }
@@ -83,8 +80,7 @@ public final class DimensionLibrary {
         return dimInfo;
     }
 
-    public static Stream<String> dump()
-    {
+    public static Stream<String> dump() {
         return cache.stream().map(Object::toString).sorted();
     }
 }

@@ -16,29 +16,32 @@ public class Configuration implements ConfigData {
         AutoConfig.register(Configuration.class, MyGsonConfigSerializer::new);
     }
 
-    public static class Flags {
-        public static final int AUDIO_PLAYER = 0x1;
-        public static final int BASIC_SOUND_PLAY = 0x2;
-    }
+    @ConfigEntry.Gui.CollapsibleObject
+    @ConfigEntry.Gui.Tooltip
+    @Comment("Configuration options for modifying logging behavior")
+    public final Logging logging = new Logging();
+    @ConfigEntry.Gui.CollapsibleObject
+    @ConfigEntry.Gui.Tooltip
+    @Comment("Configuration options for modifying Minecraft's Sound System behavior")
+    public final SoundSystem soundSystem = new SoundSystem();
+    @ConfigEntry.Gui.CollapsibleObject
+    @ConfigEntry.Gui.Tooltip
+    @Comment("Configuration options for thunder storms")
+    public final ThunderStorms thunderStorms = new ThunderStorms();
 
     public static Configuration getConfig() {
         return AutoConfig.getConfigHolder(Configuration.class).getConfig();
     }
 
-    @ConfigEntry.Gui.CollapsibleObject
-    @ConfigEntry.Gui.Tooltip
-    @Comment("Configuration options for modifying logging behavior")
-    public final Logging logging = new Logging();
+    public void validatePostLoad() {
+        Client.LOGGER.setDebug(this.logging.enableDebugLogging);
+        Client.LOGGER.setTraceMask(this.logging.traceMask);
+    }
 
-    @ConfigEntry.Gui.CollapsibleObject
-    @ConfigEntry.Gui.Tooltip
-    @Comment("Configuration options for modifying Minecraft's Sound System behavior")
-    public final SoundSystem soundSystem = new SoundSystem();
-
-    @ConfigEntry.Gui.CollapsibleObject
-    @ConfigEntry.Gui.Tooltip
-    @Comment("Configuration options for thunder storms")
-    public final ThunderStorms thunderStorms = new ThunderStorms();
+    public static class Flags {
+        public static final int AUDIO_PLAYER = 0x1;
+        public static final int BASIC_SOUND_PLAY = 0x2;
+    }
 
     public static class Logging {
 
@@ -70,10 +73,5 @@ public class Configuration implements ConfigData {
         @ConfigEntry.Gui.Tooltip
         @Comment("Enables replacement of thunder sounds with Dynamic Surroundings' version")
         public boolean replaceThunderSounds = true;
-    }
-
-    public void validatePostLoad() {
-        Client.LOGGER.setDebug(this.logging.enableDebugLogging);
-        Client.LOGGER.setTraceMask(this.logging.traceMask);
     }
 }

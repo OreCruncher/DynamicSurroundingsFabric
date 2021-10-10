@@ -20,6 +20,7 @@ import java.nio.file.Path;
  * Hack around AutoConfig's assumption about where I want to put a config file and the
  * resource translation ID that it generates.  Would be nice if there was some sort of
  * factory supplier that can be passed into the system to generate the necessary path.
+ *
  * @param <T>
  */
 class MyGsonConfigSerializer<T extends ConfigData> implements ConfigSerializer<T> {

@@ -36,14 +36,14 @@ public class DiagnosticsHud extends DrawableHelper {
     protected void renderLeftText(MatrixStack matrices) {
         ObjectArray<String> list = DiagnosticHandler.getLeft();
 
-        for(int i = 0; i < list.size(); ++i) {
+        for (int i = 0; i < list.size(); ++i) {
             String string = list.get(i);
             if (!Strings.isNullOrEmpty(string)) {
                 int j = 9;
                 int k = this.textRenderer.getWidth(string);
                 int m = 2 + j * i;
                 fill(matrices, 1, m - 1, 2 + k + 1, m + j - 1, backgroundColor);
-                this.textRenderer.draw(matrices, string, 2.0F, (float)m, foregroundColor);
+                this.textRenderer.draw(matrices, string, 2.0F, (float) m, foregroundColor);
             }
         }
     }
@@ -52,7 +52,7 @@ public class DiagnosticsHud extends DrawableHelper {
         ObjectArray<String> list = DiagnosticHandler.getRight();
 
         int scaledWidth = this.client.getWindow().getScaledWidth() - 2;
-        for(int i = 0; i < list.size(); ++i) {
+        for (int i = 0; i < list.size(); ++i) {
             String string = list.get(i);
             if (!Strings.isNullOrEmpty(string)) {
                 int j = 9;
@@ -60,7 +60,7 @@ public class DiagnosticsHud extends DrawableHelper {
                 int l = scaledWidth - k;
                 int m = 2 + j * i;
                 fill(matrices, l - 1, m - 1, l + k + 1, m + j - 1, backgroundColor);
-                this.textRenderer.draw(matrices, string, (float)l, (float)m, foregroundColor);
+                this.textRenderer.draw(matrices, string, (float) l, (float) m, foregroundColor);
             }
         }
     }

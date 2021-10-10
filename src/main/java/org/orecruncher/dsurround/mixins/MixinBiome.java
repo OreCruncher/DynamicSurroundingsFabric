@@ -25,6 +25,7 @@ public class MixinBiome implements IBiomeExtended {
 
     /**
      * Obtain fog color from Dynamic Surroundings' config if available.
+     *
      * @param cir Mixin callback result
      */
     @Inject(method = "getFogColor()I", at = @At("HEAD"), cancellable = true)

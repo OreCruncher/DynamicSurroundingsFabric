@@ -3,8 +3,8 @@ package org.orecruncher.dsurround.runtime.sets;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.world.biome.Biome;
-import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.BiomeLibrary;
+import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
@@ -15,13 +15,12 @@ import org.orecruncher.dsurround.lib.scripting.VariableSet;
 public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBiomeVariables {
 
     private Biome biome;
+    private final Lazy<String> category = new Lazy<>(() -> this.biome.getCategory().getName());
+    private final Lazy<String> precipitationType = new Lazy<>(() -> this.biome.getPrecipitation().getName());
     private BiomeInfo info;
-
     private final Lazy<String> name = new Lazy<>(() -> this.info.getBiomeName());
     private final Lazy<String> modid = new Lazy<>(() -> this.info.getBiomeId().getNamespace());
     private final Lazy<String> id = new Lazy<>(() -> this.info.getBiomeId().toString());
-    private final Lazy<String> category = new Lazy<>(() -> this.biome.getCategory().getName());
-    private final Lazy<String> precipitationType = new Lazy<>(() -> this.biome.getPrecipitation().getName());
     private final Lazy<BiomeTraits> traits = new Lazy<>(() -> this.info.getTraits());
 
     public BiomeVariables() {

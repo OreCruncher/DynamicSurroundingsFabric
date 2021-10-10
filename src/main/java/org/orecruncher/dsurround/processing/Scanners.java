@@ -4,11 +4,7 @@ import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
-import org.orecruncher.dsurround.config.dimension.DimensionInfo;
-import org.orecruncher.dsurround.config.DimensionLibrary;
 import org.orecruncher.dsurround.lib.TickCounter;
 import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
@@ -25,15 +21,6 @@ public class Scanners extends ClientHandler {
         super("Scanners");
     }
 
-    @Override
-    public void process(final PlayerEntity player) {
-
-        long ticks = TickCounter.getTickCount();
-        biomes.tick(ticks);
-        ceilingScanner.tick(ticks);
-        villageScanner.tick(ticks);
-    }
-
     public static boolean isInside() {
         return ceilingScanner.isReallyInside();
     }
@@ -48,5 +35,14 @@ public class Scanners extends ClientHandler {
 
     public static Reference2IntOpenHashMap<BiomeInfo> getBiomes() {
         return biomes.getBiomes();
+    }
+
+    @Override
+    public void process(final PlayerEntity player) {
+
+        long ticks = TickCounter.getTickCount();
+        biomes.tick(ticks);
+        ceilingScanner.tick(ticks);
+        villageScanner.tick(ticks);
     }
 }

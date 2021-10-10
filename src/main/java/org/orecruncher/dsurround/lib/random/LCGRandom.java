@@ -19,8 +19,7 @@ public final class LCGRandom {
     /**
      * Creates and initializes an LCG generator using a seed value.
      *
-     * @param seed
-     *            Seed to initialize the LCG generator with
+     * @param seed Seed to initialize the LCG generator with
      */
     public LCGRandom(final long seed) {
         this.v = seed;
@@ -29,8 +28,7 @@ public final class LCGRandom {
     /**
      * Generates a random number between 0 and the bound specified.
      *
-     * @param bound
-     *            upper bound of the random integer generated
+     * @param bound upper bound of the random integer generated
      * @return Pseudo random integer between 0 and bound
      */
     public int nextInt(final int bound) {

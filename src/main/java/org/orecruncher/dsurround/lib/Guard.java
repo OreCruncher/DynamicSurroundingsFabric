@@ -14,6 +14,7 @@ public final class Guard {
 
     /**
      * Executes the Runnable.  Exceptions are logged to the mod's logger and then suppressed.
+     *
      * @param process Process to execute
      */
     public static void execute(Runnable process) {
@@ -22,6 +23,7 @@ public final class Guard {
 
     /**
      * Executes the Runnable.  Exceptions are logged to the mod's logger and then rethrown.
+     *
      * @param process Process to execute
      */
     public static void executeWithThrow(Runnable process) {
@@ -30,6 +32,7 @@ public final class Guard {
 
     /**
      * Executes the Runnable.  Exceptions are logged to the mod's logger and then suppressed.
+     *
      * @param process Process to execute
      */
     public static void execute(Runnable process, IModLog logger) {
@@ -38,6 +41,7 @@ public final class Guard {
 
     /**
      * Executes the Runnable.  Exceptions are logged to the mod's logger and then rethrown.
+     *
      * @param process Process to execute
      */
     public static void executeWithThrow(Runnable process, IModLog logger) {
@@ -46,8 +50,9 @@ public final class Guard {
 
     /**
      * Executes the Runnable.  Exceptions are logged to the specified logger and then suppressed.
+     *
      * @param process Process to execute
-     * @param logger Logger to emit trace information if needed
+     * @param logger  Logger to emit trace information if needed
      */
     private static void executeImpl(Runnable process, IModLog logger, boolean rethrow) {
         Preconditions.checkNotNull(process);

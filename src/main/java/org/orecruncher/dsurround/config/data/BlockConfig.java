@@ -16,10 +16,10 @@ public class BlockConfig {
 
     public static Codec<BlockConfig> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
-                Codec.list(CodecExtensions.checkBlockStateSpecification()).fieldOf("blocks").forGetter(info -> info.blocks),
-                Codec.BOOL.optionalFieldOf("soundReset", false).forGetter(info -> info.soundReset),
-                Codec.STRING.optionalFieldOf("chance").forGetter(info -> info.chance),
-                Codec.list(AcousticConfig.CODEC).optionalFieldOf("acoustics", ImmutableList.of()).forGetter(info -> info.acoustics)
+                    Codec.list(CodecExtensions.checkBlockStateSpecification()).fieldOf("blocks").forGetter(info -> info.blocks),
+                    Codec.BOOL.optionalFieldOf("soundReset", false).forGetter(info -> info.soundReset),
+                    Codec.STRING.optionalFieldOf("chance").forGetter(info -> info.chance),
+                    Codec.list(AcousticConfig.CODEC).optionalFieldOf("acoustics", ImmutableList.of()).forGetter(info -> info.acoustics)
             ).apply(instance, BlockConfig::new));
 
     public List<String> blocks;

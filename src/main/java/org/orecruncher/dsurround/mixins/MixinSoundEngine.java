@@ -12,6 +12,7 @@ public class MixinSoundEngine {
     /**
      * Modify the number of streaming sounds that can be handled by the underlying sound engine.  The number of
      * channels to set is driven by config settings.
+     *
      * @param v Existing value for the number of streaming sounds (should be 8)
      * @return The quantity of streaming sounds (should be at least 8)
      */

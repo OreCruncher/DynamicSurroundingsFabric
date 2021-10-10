@@ -168,7 +168,7 @@ public interface IResourceAccessor {
                 if (parsed.isPresent()) {
                     return parsed.get();
                 }
-            } catch(Throwable t) {
+            } catch (Throwable t) {
                 ResourceUtils.LOGGER.error(t, "Unable to parse %s", this.location());
             }
         }

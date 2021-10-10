@@ -9,11 +9,11 @@ import net.minecraft.world.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.AcousticConfig;
 import org.orecruncher.dsurround.config.BiomeLibrary;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.SoundLibrary;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
-import org.orecruncher.dsurround.config.AcousticConfig;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.WeightTable;
@@ -31,30 +31,24 @@ import java.util.stream.Collectors;
 @Environment(EnvType.CLIENT)
 public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvider {
 
-    private static final IModLog LOGGER = Client.LOGGER.createChild(BiomeInfo.class);
     public static final int DEFAULT_ADDITIONAL_SOUND_CHANCE = 1000 / 4;
     public static final String DEFAULT_SOUND_CHANCE = String.valueOf(1D / DEFAULT_ADDITIONAL_SOUND_CHANCE);
-
+    private static final IModLog LOGGER = Client.LOGGER.createChild(BiomeInfo.class);
     private final int version;
     private final Identifier biomeId;
     private final String biomeName;
-
-    private Color fogColor;
-    private String additionalSoundChance = DEFAULT_SOUND_CHANCE;
-    private String moodSoundChance = DEFAULT_SOUND_CHANCE;
-
     private final ObjectArray<AcousticEntry> loopSounds = new ObjectArray<>();
     private final ObjectArray<AcousticEntry> moodSounds = new ObjectArray<>();
     private final ObjectArray<AcousticEntry> additionalSounds = new ObjectArray<>();
     private final ObjectArray<AcousticEntry> musicSounds = new ObjectArray<>();
-
     private final BiomeTraits traits;
-
-    private ObjectArray<String> comments;
-
     private final boolean isRiver;
     private final boolean isOcean;
     private final boolean isDeepOcean;
+    private Color fogColor;
+    private String additionalSoundChance = DEFAULT_SOUND_CHANCE;
+    private String moodSoundChance = DEFAULT_SOUND_CHANCE;
+    private ObjectArray<String> comments;
 
     public BiomeInfo(final int version, final Identifier id, final String name, BiomeTraits traits) {
         this.version = version;

@@ -6,7 +6,10 @@ import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
-import javax.script.*;
+import javax.script.Compilable;
+import javax.script.CompiledScript;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;

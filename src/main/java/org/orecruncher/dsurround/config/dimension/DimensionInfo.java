@@ -9,10 +9,9 @@ import org.orecruncher.dsurround.lib.world.WorldUtils;
 
 public class DimensionInfo {
 
+    public static final DimensionInfo NONE = new DimensionInfo();
     private static final int SPACE_HEIGHT_OFFSET = 32;
-
-    public static final  DimensionInfo NONE = new DimensionInfo();
-
+    protected final boolean isFlatWorld;
     // Attributes about the dimension. This is information is loaded from local configs.
     protected Identifier name;
     protected int seaLevel;
@@ -21,8 +20,6 @@ public class DimensionInfo {
     protected int spaceHeight;
     protected boolean alwaysOutside = false;
     protected boolean playBiomeSounds = true;
-
-    protected final boolean isFlatWorld;
 
     DimensionInfo() {
         this.name = new Identifier(Client.ModId, "no_dimension");

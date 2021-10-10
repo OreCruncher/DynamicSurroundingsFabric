@@ -6,7 +6,6 @@ import net.fabricmc.api.Environment;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.tag.FluidTags;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeAccess;
@@ -23,22 +22,42 @@ public final class BiomeScanner {
     public static final int SCAN_INTERVAL = 4;
     private static final int BIOME_SURVEY_RANGE = 18;
     private static final int MAX_BIOME_AREA = (int) Math.pow(BIOME_SURVEY_RANGE * 2 + 1, 2);
-
-    private final BlockPos.Mutable mutable = new BlockPos.Mutable();
-
-    private int biomeArea;
-    private Reference2IntOpenHashMap<BiomeInfo> weights = new Reference2IntOpenHashMap<>(8);
-
-    // "Fingerprint" of the last area survey.
-    private Biome surveyedBiome = null;
-    private BlockPos surveyedPosition = BlockPos.ORIGIN;
-
     private static DimensionInfo surveyedDimension;
     private static boolean isUnderground;
     private static boolean isInOuterspace;
     private static boolean isInClouds;
     private static boolean isUnderWater;
     private static BiomeInfo logicalBiomeInfo;
+    private final BlockPos.Mutable mutable = new BlockPos.Mutable();
+    private int biomeArea;
+    private Reference2IntOpenHashMap<BiomeInfo> weights = new Reference2IntOpenHashMap<>(8);
+    // "Fingerprint" of the last area survey.
+    private Biome surveyedBiome = null;
+    private BlockPos surveyedPosition = BlockPos.ORIGIN;
+
+    public static BiomeInfo playerLogicBiomeInfo() {
+        return logicalBiomeInfo;
+    }
+
+    public static DimensionInfo getDimInfo() {
+        return surveyedDimension;
+    }
+
+    public static boolean isUnderground() {
+        return isUnderground;
+    }
+
+    public static boolean isUnderWater() {
+        return isUnderWater;
+    }
+
+    public static boolean isInOuterspace() {
+        return isInOuterspace;
+    }
+
+    public static boolean isInClouds() {
+        return isInClouds;
+    }
 
     public void tick(long tickCount) {
 
@@ -51,7 +70,7 @@ public final class BiomeScanner {
         final World world = player.getEntityWorld();
         final BlockPos position = player.getBlockPos();
 
-        var dimensionInfo= DimensionLibrary.getData(world);
+        var dimensionInfo = DimensionLibrary.getData(world);
         final BiomeAccess biomes = world.getBiomeAccess();
         final Biome playerBiome = biomes.getBiome(position);
 
@@ -120,32 +139,8 @@ public final class BiomeScanner {
         return this.biomeArea;
     }
 
-    public static BiomeInfo playerLogicBiomeInfo() {
-        return logicalBiomeInfo;
-    }
-
     public Reference2IntOpenHashMap<BiomeInfo> getBiomes() {
         return this.weights;
-    }
-
-    public static DimensionInfo getDimInfo() {
-        return surveyedDimension;
-    }
-
-    public static boolean isUnderground() {
-        return isUnderground;
-    }
-
-    public static boolean isUnderWater() {
-        return isUnderWater;
-    }
-
-    public static boolean isInOuterspace() {
-        return isInOuterspace;
-    }
-
-    public static boolean isInClouds() {
-        return isInClouds;
     }
 
 }

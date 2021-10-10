@@ -13,7 +13,7 @@ public class ClientPlayerContext extends ScanContext {
                 GameUtils::getWorld,
                 () -> GameUtils.getPlayer().getBlockPos(),
                 () -> Client.LOGGER,
-                () ->GameUtils.getWorld().getRegistryKey().getValue()
+                () -> GameUtils.getWorld().getRegistryKey().getValue()
         );
     }
 

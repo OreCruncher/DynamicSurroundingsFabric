@@ -12,13 +12,13 @@ import java.util.Optional;
 public class DimensionConfig {
 
     public static Codec<DimensionConfig> CODEC = RecordCodecBuilder.create((instance) ->
-        instance.group(Identifier.CODEC.fieldOf("dimId").forGetter(info -> info.dimensionId),
-                Codec.INT.optionalFieldOf("seaLevel").forGetter(info -> info.seaLevel),
-                Codec.INT.optionalFieldOf("skyHeight").forGetter(info -> info.skyHeight),
-                Codec.INT.optionalFieldOf("cloudHeight").forGetter(info -> info.cloudHeight),
-                Codec.BOOL.optionalFieldOf("alwaysOutside").forGetter(info -> info.alwaysOutside),
-                Codec.BOOL.optionalFieldOf("playBiomeSounds").forGetter(info -> info.playBiomeSounds)
-        ).apply(instance, DimensionConfig::new)
+            instance.group(Identifier.CODEC.fieldOf("dimId").forGetter(info -> info.dimensionId),
+                    Codec.INT.optionalFieldOf("seaLevel").forGetter(info -> info.seaLevel),
+                    Codec.INT.optionalFieldOf("skyHeight").forGetter(info -> info.skyHeight),
+                    Codec.INT.optionalFieldOf("cloudHeight").forGetter(info -> info.cloudHeight),
+                    Codec.BOOL.optionalFieldOf("alwaysOutside").forGetter(info -> info.alwaysOutside),
+                    Codec.BOOL.optionalFieldOf("playBiomeSounds").forGetter(info -> info.playBiomeSounds)
+            ).apply(instance, DimensionConfig::new)
     );
 
     public Identifier dimensionId;

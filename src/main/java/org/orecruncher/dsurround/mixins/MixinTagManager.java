@@ -11,7 +11,7 @@ import java.util.Map;
 
 @Mixin(TagManager.class)
 public interface MixinTagManager {
-    
+
     @Accessor("tagGroups")
     Map<RegistryKey<? extends Registry<?>>, TagGroup<?>> getTagGroups();
 }

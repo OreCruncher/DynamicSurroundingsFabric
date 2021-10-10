@@ -108,7 +108,7 @@ final class BlockStateParser {
          */
         private final String extras;
 
-        private ParseResult(final String blockName, final Block block,  final Map<String, String> props, @Nullable final String extras) {
+        private ParseResult(final String blockName, final Block block, final Map<String, String> props, @Nullable final String extras) {
             this.blockName = blockName;
             this.block = block;
             this.properties = props;
@@ -141,7 +141,7 @@ final class BlockStateParser {
         }
 
         @Override
-        
+
         public String toString() {
             final StringBuilder builder = new StringBuilder();
             builder.append(getBlockName());

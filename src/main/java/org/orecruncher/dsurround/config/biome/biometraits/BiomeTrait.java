@@ -66,46 +66,6 @@ public final class BiomeTrait {
 
     private static final Map<String, BiomeTrait> mapper = new HashMap<>();
 
-    private final String name;
-
-    BiomeTrait(String name) {
-        this.name = name.toUpperCase();
-        assert !mapper.containsKey(this.name);
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    @Override
-    public String toString() {
-        return this.name;
-    }
-
-    @Override
-    public int hashCode() {
-        return this.name.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return obj instanceof BiomeTrait && this.name.equals(((BiomeTrait) obj).name);
-    }
-
-    public static BiomeTrait of(Biome.Category category) {
-        var result =  mapper.get(category.getName().toUpperCase());
-        return result == null ? UNKNOWN : result;
-    }
-
-    public static @Nullable BiomeTrait of(String name) {
-        var result = mapper.get(name.toUpperCase());
-        return result == null ? UNKNOWN : result;
-    }
-
-    private static void register(BiomeTrait trait) {
-        mapper.put(trait.name, trait);
-    }
-
     static {
         register(BiomeTrait.NONE);  // stone_shore why?
         register(BiomeTrait.TAIGA);
@@ -145,5 +105,45 @@ public final class BiomeTrait {
         register(BiomeTrait.VOID);
         register(BiomeTrait.OVERWORLD);
         register(BiomeTrait.DEEP);
+    }
+
+    private final String name;
+
+    BiomeTrait(String name) {
+        this.name = name.toUpperCase();
+        assert !mapper.containsKey(this.name);
+    }
+
+    public static BiomeTrait of(Biome.Category category) {
+        var result = mapper.get(category.getName().toUpperCase());
+        return result == null ? UNKNOWN : result;
+    }
+
+    public static @Nullable BiomeTrait of(String name) {
+        var result = mapper.get(name.toUpperCase());
+        return result == null ? UNKNOWN : result;
+    }
+
+    private static void register(BiomeTrait trait) {
+        mapper.put(trait.name, trait);
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    @Override
+    public String toString() {
+        return this.name;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.name.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof BiomeTrait && this.name.equals(((BiomeTrait) obj).name);
     }
 }

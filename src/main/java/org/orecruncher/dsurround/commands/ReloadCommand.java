@@ -16,7 +16,7 @@ import org.orecruncher.dsurround.config.SoundLibrary;
 public class ReloadCommand {
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
         dispatcher.register(
-            ClientCommandManager.literal("dsreload").executes(ReloadCommand::execute));
+                ClientCommandManager.literal("dsreload").executes(ReloadCommand::execute));
     }
 
     private static int execute(CommandContext<FabricClientCommandSource> ctx) {
@@ -26,7 +26,7 @@ public class ReloadCommand {
             BiomeLibrary.load();
             DimensionLibrary.load();
             Commands.sendSuccess(ctx.getSource(), "reload");
-        } catch(Throwable t) {
+        } catch (Throwable t) {
             Client.LOGGER.error(t, "Configuration reload failed");
             Commands.sendFailure(ctx.getSource(), "reload");
             return 1;

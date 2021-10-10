@@ -28,22 +28,25 @@ public class Handlers {
     private static final Singleton<Handlers> INSTANCE = new Singleton<>(Handlers::new);
 
     private final ObjectArray<ClientHandler> effectHandlers = new ObjectArray<>();
+    private final LoggingTimerEMA handlerTimer = new LoggingTimerEMA("Handlers");
     private boolean isConnected = false;
+
+    private Handlers() {
+        init();
+    }
 
     public static void initialize() {
         INSTANCE.get();
     }
 
-    private Handlers() {
-        init();
+    protected static PlayerEntity getPlayer() {
+        return GameUtils.getPlayer();
     }
 
     private void register(final ClientHandler handler) {
         this.effectHandlers.add(handler);
         LOGGER.debug("Registered handler [%s]", handler.getClass().getName());
     }
-
-    private final LoggingTimerEMA handlerTimer = new LoggingTimerEMA("Handlers");
 
     private void init() {
         register(new Scanners());           // Must be first
@@ -70,10 +73,6 @@ public class Handlers {
         for (final ClientHandler h : this.effectHandlers)
             h.disconnect0();
         isConnected = false;
-    }
-
-    protected static PlayerEntity getPlayer() {
-        return GameUtils.getPlayer();
     }
 
     protected boolean doTick() {

@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.config;
 
 import com.google.common.base.Preconditions;
-import com.google.gson.reflect.TypeToken;
-import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.UnboundedMapCodec;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -18,7 +16,9 @@ import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.sound.SoundMetadata;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Scans a sounds.json file looking for sounds to register.

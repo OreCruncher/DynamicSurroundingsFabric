@@ -23,9 +23,9 @@ final class BiomeCommand {
 
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
         dispatcher.register(
-            ClientCommandManager.literal("dsbiome")
-                .then(argument("biomeId", IdentifierArgumentType.identifier())
-                    .then(argument("script", MessageArgumentType.message()).executes(BiomeCommand::execute))));
+                ClientCommandManager.literal("dsbiome")
+                        .then(argument("biomeId", IdentifierArgumentType.identifier())
+                                .then(argument("script", MessageArgumentType.message()).executes(BiomeCommand::execute))));
     }
 
     private static int execute(CommandContext<FabricClientCommandSource> ctx) {

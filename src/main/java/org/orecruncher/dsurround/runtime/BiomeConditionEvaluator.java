@@ -5,7 +5,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
-import org.orecruncher.dsurround.runtime.sets.*;
+import org.orecruncher.dsurround.runtime.sets.BiomeVariables;
 
 import java.util.Optional;
 
@@ -13,11 +13,9 @@ import java.util.Optional;
 public class BiomeConditionEvaluator {
 
     public static BiomeConditionEvaluator INSTANCE = new BiomeConditionEvaluator();
-
-    private final ExecutionContext context;
-
     // Internal visibility for diagnostics
     final BiomeVariables biomeVariables;
+    private final ExecutionContext context;
 
     public BiomeConditionEvaluator() {
         this(true);

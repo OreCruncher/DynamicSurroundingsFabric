@@ -18,10 +18,10 @@ public class ScanContext {
     private final Supplier<IModLog> logger;
 
     public ScanContext(
-        final Supplier<World> worldReader,
-        final Supplier<BlockPos> scanCenter,
-        final Supplier<IModLog> logger,
-        final Supplier<Identifier> worldReference
+            final Supplier<World> worldReader,
+            final Supplier<BlockPos> scanCenter,
+            final Supplier<IModLog> logger,
+            final Supplier<Identifier> worldReference
     ) {
         this.worldReader = worldReader;
         this.scanCenter = scanCenter;

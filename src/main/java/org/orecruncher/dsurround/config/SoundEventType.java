@@ -32,10 +32,16 @@ public enum SoundEventType implements StringIdentifiable {
      */
     MUSIC("music");
 
+    private static final Map<String, SoundEventType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(SoundEventType::getName, (category) -> category));
+    public static final Codec<SoundEventType> CODEC = StringIdentifiable.createCodec(SoundEventType::values, SoundEventType::byName);
     private final String name;
 
     SoundEventType(String name) {
         this.name = name;
+    }
+
+    public static SoundEventType byName(String name) {
+        return BY_NAME.get(name);
     }
 
     public String getName() {
@@ -45,12 +51,5 @@ public enum SoundEventType implements StringIdentifiable {
     @Override
     public String asString() {
         return null;
-    }
-
-    private static final Map<String, SoundEventType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(SoundEventType::getName, (category) -> category));
-    public static final Codec<SoundEventType> CODEC = StringIdentifiable.createCodec(SoundEventType::values, SoundEventType::byName);
-
-    public static SoundEventType byName(String name) {
-        return BY_NAME.get(name);
     }
 }

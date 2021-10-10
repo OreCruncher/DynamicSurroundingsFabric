@@ -25,16 +25,16 @@ public class IndividualSoundConfigEntry {
         this.id = id;
     }
 
-    public boolean isDefault() {
-        this.volumeScale = MathHelper.clamp(this.volumeScale, 0, 400);
-        return this.volumeScale == 100 && !this.block && !this.cull && !this.startup;
-    }
-
     public static IndividualSoundConfigEntry createDefault(final SoundEvent event) {
         return new IndividualSoundConfigEntry(event.getId().toString());
     }
 
     public static IndividualSoundConfigEntry from(IndividualSoundConfigEntry source) {
         return new IndividualSoundConfigEntry(source);
+    }
+
+    public boolean isNotDefault() {
+        this.volumeScale = MathHelper.clamp(this.volumeScale, 0, 400);
+        return this.volumeScale != 100 || this.block || this.cull || this.startup;
     }
 }
