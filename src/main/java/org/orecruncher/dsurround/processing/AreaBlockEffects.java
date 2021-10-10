@@ -35,7 +35,7 @@ public class AreaBlockEffects extends ClientHandler {
     @Override
     public void onConnect() {
         this.locus = new ClientPlayerContext();
-        this.blockEffects = new BlockEffectManager(this.locus);
+        this.blockEffects = new BlockEffectManager();
         this.alwaysOn = new AlwaysOnBlockEffectScanner(this.locus, this.blockEffects, Client.Config.blockEffects.blockEffectRange);
         this.nearEffects = new RandomBlockEffectScanner(this.locus, this.blockEffects, RandomBlockEffectScanner.NEAR_RANGE);
         this.farEffects = new RandomBlockEffectScanner(this.locus, this.blockEffects, RandomBlockEffectScanner.FAR_RANGE);

@@ -1,6 +1,17 @@
 [
   {
     "blocks": [
+      "minecraft:water"
+    ],
+    "effects": [
+      {
+        "effect": "bubble_column",
+        "spawnChance": "0.0005"
+      }
+    ]
+  },
+  {
+    "blocks": [
       "minecraft:ice",
       "minecraft:packed_ice",
       "minecraft:blue_ice",

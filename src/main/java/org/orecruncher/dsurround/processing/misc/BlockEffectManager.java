@@ -8,7 +8,6 @@ import net.minecraft.util.math.BlockPos;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.lib.BlockPosUtil;
-import org.orecruncher.dsurround.lib.scanner.ScanContext;
 
 import java.util.function.Predicate;
 
@@ -20,10 +19,7 @@ public class BlockEffectManager        {
         return system.isDone();
     };
 
-    private final ScanContext ctx;
-
-    public BlockEffectManager(ScanContext ctx) {
-        this.ctx = ctx;
+    public BlockEffectManager() {
     }
 
     private final Long2ObjectOpenHashMap<IBlockEffect> systems = new Long2ObjectOpenHashMap<>(512);
