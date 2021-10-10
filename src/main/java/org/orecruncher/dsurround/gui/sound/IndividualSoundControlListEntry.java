@@ -223,7 +223,8 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
             Identifier id = new Identifier(this.config.id);
             final String mod = FrameworkUtils.getModDisplayName(id.getNamespace());
             assert mod != null;
-            OrderedText modName = OrderedText.styledForwardsVisitedString(mod, modNameStyle);
+            @SuppressWarnings("ConstantConditions")
+            OrderedText modName = OrderedText.styledForwardsVisitedString(Formatting.strip(mod), modNameStyle);
             OrderedText soundLocationId = OrderedText.styledForwardsVisitedString(this.config.id, idStyle);
 
             this.cachedToolTip.add(modName);
