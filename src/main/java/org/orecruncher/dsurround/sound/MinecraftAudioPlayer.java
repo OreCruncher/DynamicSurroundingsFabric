@@ -28,13 +28,13 @@ public class MinecraftAudioPlayer implements IAudioPlayer {
 
     @Override
     public void play(SoundInstance sound) {
-        LOGGER.debug(Configuration.Flags.AUDIO_PLAYER, "PLAYING %s", formatSound(sound));
+        LOGGER.debug(Configuration.Flags.AUDIO_PLAYER, () -> String.format("PLAYING %s", formatSound(sound)));
         this.manager.play(sound);
     }
 
     @Override
     public void stop(SoundInstance sound) {
-        LOGGER.debug(Configuration.Flags.AUDIO_PLAYER, "STOPPING %s", formatSound(sound));
+        LOGGER.debug(Configuration.Flags.AUDIO_PLAYER, () -> String.format("STOPPING %s", formatSound(sound)));
         this.manager.stop(sound);
     }
 

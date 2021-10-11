@@ -10,8 +10,6 @@ import javax.script.Compilable;
 import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 public final class ExecutionContext {
@@ -21,12 +19,9 @@ public final class ExecutionContext {
     private final String contextName;
     private final ScriptEngine engine;
     private final ObjectArray<VariableSet<?>> variables = new ObjectArray<>(8);
-    private final boolean cacheResults;
-    private final Map<String, CompiledScript> compiled = new HashMap<>();
 
-    public ExecutionContext(final String contextName, boolean cacheMethods) {
+    public ExecutionContext(final String contextName) {
         this.contextName = contextName;
-        this.cacheResults = cacheMethods;
         this.engine = ScriptEngineLoader.getEngine();
         this.put("lib", new LibraryFunctions());
 
@@ -62,24 +57,18 @@ public final class ExecutionContext {
     }
 
     public Optional<Object> eval(final Script script) {
-        var program = script.getScript();
-        if (program == null || program.length() == 0)
-            return Optional.of(true);
-
-        CompiledScript func = this.compiled.get(program);
-        if (func == null) {
-            func = makeFunction(program);
-            if (this.cacheResults)
-                this.compiled.put(program, func);
-        }
+        var cached = script.getCompiledScript();
+        var func = cached.orElseGet(() -> {
+            var compiled = makeFunction(script.asString());
+            script.setCompiledScript(compiled);
+            return compiled;
+        });
 
         try {
             final Object result = func.eval();
             return Optional.ofNullable(result);
         } catch (final Throwable t) {
-            LOGGER.error(t, "Error execution script: %s", program);
-            if (this.cacheResults)
-                this.compiled.put(program, makeErrorFunction(t));
+            LOGGER.error(t, "Error execution script: %s", script.asString());
         }
 
         return Optional.of("ERROR?");

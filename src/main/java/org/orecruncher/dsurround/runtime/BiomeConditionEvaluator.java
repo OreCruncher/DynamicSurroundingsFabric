@@ -19,11 +19,7 @@ public class BiomeConditionEvaluator {
     private final ExecutionContext context;
 
     public BiomeConditionEvaluator() {
-        this(true);
-    }
-
-    public BiomeConditionEvaluator(boolean cacheMethods) {
-        this.context = new ExecutionContext("BiomeConditions", cacheMethods);
+        this.context = new ExecutionContext("BiomeConditions");
         this.biomeVariables = new BiomeVariables();
         this.context.add(this.biomeVariables);
     }

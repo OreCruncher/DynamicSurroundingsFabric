@@ -34,11 +34,7 @@ public final class ConditionEvaluator {
     private final ExecutionContext context;
 
     public ConditionEvaluator() {
-        this(true);
-    }
-
-    public ConditionEvaluator(boolean cacheMethods) {
-        this.context = new ExecutionContext("Conditions", cacheMethods);
+        this.context = new ExecutionContext("Conditions");
         this.context.add(this.biomeVariables = new BiomeVariables());
         this.context.add(this.dimensionVariables = new DimensionVariables());
         this.context.add(this.diurnalVariables = new DiurnalVariables());

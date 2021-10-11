@@ -20,8 +20,6 @@ import static net.fabricmc.fabric.api.client.command.v1.ClientCommandManager.arg
 @Environment(EnvType.CLIENT)
 final class BiomeCommand {
 
-    private static final BiomeConditionEvaluator INSTANCE = new BiomeConditionEvaluator(false);
-
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
         dispatcher.register(
                 ClientCommandManager.literal("dsbiome")
@@ -33,7 +31,7 @@ final class BiomeCommand {
         var biomeId = ctx.getArgument("biomeId", Identifier.class);
         var script = ctx.getArgument("script", MessageArgumentType.MessageFormat.class);
         var biome = GameUtils.getRegistryManager().get(Registry.BIOME_KEY).get(biomeId);
-        var result = INSTANCE.eval(biome, new Script(script.getContents()));
+        var result = BiomeConditionEvaluator.INSTANCE.eval(biome, new Script(script.getContents()));
         ctx.getSource().sendFeedback(new LiteralText(result.toString()));
         return 0;
     }
