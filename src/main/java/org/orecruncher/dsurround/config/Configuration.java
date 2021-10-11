@@ -36,6 +36,11 @@ public class Configuration implements ConfigData {
     @Comment("Configuration options for block effects")
     public final BlockEffects blockEffects = new BlockEffects();
 
+    @ConfigEntry.Gui.CollapsibleObject
+    @ConfigEntry.Gui.Tooltip
+    @Comment("Configuration options for tweaking particle behavior")
+    public final ParticleTweaks particleTweaks = new ParticleTweaks();
+
     public static Configuration getConfig() {
         return AutoConfig.getConfigHolder(Configuration.class).getConfig();
     }
@@ -104,5 +109,17 @@ public class Configuration implements ConfigData {
         @ConfigEntry.Gui.RequiresRestart
         @Comment("Enable/disable bubble columns generated underwater")
         public boolean bubbleColumnEnabled = true;
+    }
+
+    public static class ParticleTweaks {
+
+        @ConfigEntry.Gui.Tooltip
+        @Comment("Enable/disable suppressing player potion particles in first person")
+        public boolean suppressPlayerParticles = false;
+
+        @ConfigEntry.Gui.Tooltip
+        @Comment("Enable/disable showing of projectile particle trails")
+        public boolean showProjectileTrails = false;
+
     }
 }

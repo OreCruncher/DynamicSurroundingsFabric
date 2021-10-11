@@ -9,7 +9,9 @@
     "MixinAbstractSoundInstance",
     "MixinBiome",
     "MixinBlockState",
+    "MixinClientWorld",
     "MixinClientWorldProperties",
+    "MixinEntityArrow",
     "MixinIngameHud",
     "MixinParticle",
     "MixinSoundEngine",
@@ -17,8 +19,7 @@
     "MixinSoundManagerAccessor",
     "MixinSoundSystem",
     "MixinSoundSystemAccessors",
-    "MixinTagManager",
-    "MixinClientWorld"
+    "MixinTagManager"
   ],
   "server": [],
   "injectors": {

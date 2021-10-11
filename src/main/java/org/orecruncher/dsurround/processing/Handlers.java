@@ -50,6 +50,7 @@ public class Handlers {
 
     private void init() {
         register(new Scanners());           // Must be first
+        register(new PlayerHandler());
         register(new BiomeSoundHandler());
         register(new AreaBlockEffects());
 
