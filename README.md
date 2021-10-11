@@ -1,9 +1,9 @@
 > ### Dynamic Surroundings: Fabric Edition
 A Minecraft Fabric Mod that alters the fabric of Minecraft experience by weaving a tapestry of sound and visual effects.
 
-<a href="https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings-fabric-edition"><img src="http://cf.way2muchnoise.eu/versions/dynamic-surroundings-fabric-edition.svg" alt="CurseForge Project"/></a>
+<a href="https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings-fabric-edition"><img src="http://cf.way2muchnoise.eu/versions/535715.svg" alt="CurseForge Project"/></a>
 </br></br>
-<a href="https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings-fabric-edition"><img src="http://cf.way2muchnoise.eu/full_dynamic-surroundings-fabric-edition_downloads.svg" alt="CurseForge Project"/></a>
+<a href="https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings-fabric-edition"><img src="http://cf.way2muchnoise.eu/full_535715_downloads.svg" alt="CurseForge Project"/></a>
 </br></br>
 
 This mod is a spiritual successor to the Forge based Dynamic Surroundings series.  Though a lot of the functionality is similar the ultimate feature set will be different.  My focus is on extending the Vanilla aspect of gameplay rather than introducing anything radical.  Besides, Microsoft is adding features to Minecraft that fill the gaps that Dynamic Surroundings has historically tried to address.  I expect this trend to continue.
