@@ -1,4 +1,4 @@
-### Dynamic Surroundings: Fabric Edition
+> ### Dynamic Surroundings: Fabric Edition
 A Minecraft Fabric Mod that alters the fabric of Minecraft experience by weaving a tapestry of sound and visual effects.
 
 <a href="https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings-fabric-edition"><img src="http://cf.way2muchnoise.eu/versions/dynamic-surroundings-fabric-edition.svg" alt="CurseForge Project"/></a>
@@ -55,7 +55,7 @@ As I indicated these features are not planned.  Based on time commitments I may 
 * Making the config system publicly available so that pack authors can configure things.  This is possible with this release, but I may change things.  Besides, it has to be documented so that someone would know what to do.
 * Notification of mod updates.  Need to see if there is a mechanism to do that already.
 
-### License
+> ### License
 The MIT License (MIT)
 
 Copyright (c) 2021 OreCruncher
