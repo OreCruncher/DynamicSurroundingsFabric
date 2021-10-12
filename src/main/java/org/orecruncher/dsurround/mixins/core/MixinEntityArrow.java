@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.mixins;
+package org.orecruncher.dsurround.mixins.core;
 
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import org.orecruncher.dsurround.Client;

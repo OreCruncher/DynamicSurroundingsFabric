@@ -16,7 +16,7 @@ import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.mixins.MixinTagManager;
+import org.orecruncher.dsurround.mixins.core.MixinTagManager;
 
 @Environment(EnvType.CLIENT)
 public final class GameUtils {

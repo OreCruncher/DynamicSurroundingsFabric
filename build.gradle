@@ -27,7 +27,7 @@ dependencies {
     include("org.openjdk.nashorn:nashorn-core:15.3")
 
     modImplementation("me.shedaniel.cloth:cloth-config-fabric:5.0.38") {
-        //exclude(group: "net.fabricmc.fabric-api")
+        exclude(group: "net.fabricmc.fabric-api")
     }
     include("me.shedaniel.cloth:cloth-config-fabric:5.0.38")
 

@@ -28,6 +28,11 @@ public class Configuration implements ConfigData {
 
     @ConfigEntry.Gui.CollapsibleObject
     @ConfigEntry.Gui.Tooltip
+    @Comment("Configuration options for enhanced sound processing")
+    public final EnhancedSounds enhancedSounds = new EnhancedSounds();
+
+    @ConfigEntry.Gui.CollapsibleObject
+    @ConfigEntry.Gui.Tooltip
     @Comment("Configuration options for thunder storms")
     public final ThunderStorms thunderStorms = new ThunderStorms();
 
@@ -68,7 +73,6 @@ public class Configuration implements ConfigData {
     }
 
     public static class SoundSystem {
-
         @ConfigEntry.BoundedDiscrete(min = 8, max = 16)
         @ConfigEntry.Gui.Tooltip
         @ConfigEntry.Gui.RequiresRestart
@@ -79,6 +83,20 @@ public class Configuration implements ConfigData {
         @ConfigEntry.Gui.Tooltip
         @Comment("Ticks between culled sound events (0 to disable culling)")
         public int cullInterval = 20;
+    }
+
+    public static class EnhancedSounds {
+        @ConfigEntry.Gui.Tooltip
+        @Comment("Enable/disable enhanced sound processing (reverb, occlusion, etc")
+        public boolean enableEnhancedSounds = true;
+
+        public boolean enableHRTF = true;
+
+        public boolean enableMonoConversion = true;
+
+        public int backgroundThreadWorkers = 0;
+
+        public boolean enableOcculsionProcessing = false;
     }
 
     public static class ThunderStorms {

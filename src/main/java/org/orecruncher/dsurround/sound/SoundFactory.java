@@ -11,7 +11,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.math.MathStuff;
-import org.orecruncher.dsurround.mixins.MixinAbstractSoundInstance;
+import org.orecruncher.dsurround.mixins.core.MixinAbstractSoundInstance;
 
 @Environment(EnvType.CLIENT)
 public final class SoundFactory {

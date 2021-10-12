@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.mixins;
+package org.orecruncher.dsurround.mixins.core;
 
 import net.minecraft.block.BlockState;
 import org.orecruncher.dsurround.config.block.BlockInfo;
