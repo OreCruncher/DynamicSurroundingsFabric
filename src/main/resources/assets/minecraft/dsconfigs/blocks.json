@@ -48,10 +48,7 @@
   },
   {
     "blocks": [
-      "minecraft:ice",
-      "minecraft:packed_ice",
-      "minecraft:blue_ice",
-      "minecraft:frosted_ice"
+      "#minecraft:ice"
     ],
     "soundChance": "0.0001",
     "acoustics": [

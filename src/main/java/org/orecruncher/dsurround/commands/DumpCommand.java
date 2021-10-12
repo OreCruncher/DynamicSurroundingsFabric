@@ -27,7 +27,7 @@ class DumpCommand {
                 .then(literal("dimensions").executes(cmd -> dumpDimensions(cmd.getSource())))
                 .then(literal("blocks").executes(cmd -> dumpBlocks(cmd.getSource())))
                 .then(literal("blocksbytag").executes(cmd -> dumpBlocksByTag(cmd.getSource())))
-                .then(literal("blockinfo").executes(cmd -> dumpBlockInfo(cmd.getSource())))
+                .then(literal("blockconfigrules").executes(cmd -> dumpBlockConfigRules(cmd.getSource())))
                 .then(literal("blockstates").executes(cmd -> dumpBlockState(cmd.getSource())))
         );
     }
@@ -44,8 +44,8 @@ class DumpCommand {
         return handle(src, "dump.dimensions", DimensionLibrary::dump);
     }
 
-    private static int dumpBlockInfo(FabricClientCommandSource src) {
-        return handle(src, "dump.blockinfo", BlockLibrary::dumpBlockInfo);
+    private static int dumpBlockConfigRules(FabricClientCommandSource src) {
+        return handle(src, "dump.blockconfigrules", BlockLibrary::dumpBlockConfigRules);
     }
 
     private static int dumpBlockState(FabricClientCommandSource src) {

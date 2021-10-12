@@ -8,7 +8,7 @@ import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.AcousticConfig;
 import org.orecruncher.dsurround.config.SoundLibrary;
 import org.orecruncher.dsurround.config.biome.AcousticEntry;
-import org.orecruncher.dsurround.config.data.BlockConfig;
+import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.effects.producers.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -33,11 +33,16 @@ public class BlockInfo {
         this.version = version;
     }
 
+    public boolean isDefault() {
+        return this.sounds.size() == 0 && this.blockEffects.size() == 0 && this.alwaysOnEffects.size() == 0;
+    }
+
     public int getVersion() {
         return this.version;
     }
 
-    public void update(BlockConfig config) {
+    // TODO: Eliminate duplicates
+    public void update(BlockConfigRule config) {
         // Reset of a block clears all registry
         if (config.clearSounds)
             this.clearSounds();

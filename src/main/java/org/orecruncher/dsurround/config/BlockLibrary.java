@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.config;
 
-import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.Codec;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -12,10 +11,9 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.block.BlockInfo;
-import org.orecruncher.dsurround.config.data.BlockConfig;
+import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.block.BlockStateMatcher;
-import org.orecruncher.dsurround.lib.block.BlockStateMatcherMap;
+import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
@@ -30,86 +28,29 @@ import java.util.stream.Stream;
 @Environment(EnvType.CLIENT)
 public class BlockLibrary {
 
-    private static final Codec<List<BlockConfig>> CODEC = Codec.list(BlockConfig.CODEC);
+    private static final Codec<List<BlockConfigRule>> CODEC = Codec.list(BlockConfigRule.CODEC);
     private static final IModLog LOGGER = Client.LOGGER.createChild(BlockLibrary.class);
 
-    private static final String TAG_SPECIFIER = "#";
     private static final int INDEFINITE = -1;
     private static final BlockInfo DEFAULT = new BlockInfo(INDEFINITE);
 
-    private static final BlockStateMatcherMap<BlockInfo> registry = new BlockStateMatcherMap<>();
+    private static final Collection<BlockConfigRule> blockConfigs = new ObjectArray<>();
     private static int version = 0;
 
     public static void load() {
 
-        registry.clear();
+        blockConfigs.clear();
         final Collection<IResourceAccessor> accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), "blocks.json");
 
         IResourceAccessor.process(accessors, accessor -> {
             var cfg = accessor.as(CODEC);
             if (cfg != null)
-                initFromConfig(cfg);
+                blockConfigs.addAll(cfg);
         });
 
-        registry.values().forEach(BlockInfo::trim);
         version++;
 
-        LOGGER.info("%d block configs loaded; version is now %d", registry.size(), version);
-    }
-
-    static void initFromConfig(final List<BlockConfig> config) {
-        config.forEach(BlockLibrary::register);
-    }
-
-    private static BlockInfo getOrCreateBlockInfo(final BlockStateMatcher info) {
-        return registry.computeIfAbsent(info, x -> new BlockInfo(version));
-    }
-
-    private static void register(final BlockConfig entry) {
-        if (entry.blocks.isEmpty())
-            return;
-
-        for (final String blockName : entry.blocks) {
-            final Collection<BlockStateMatcher> list = expand(blockName);
-
-            for (final BlockStateMatcher blockInfo : list) {
-                final BlockInfo blockData = getOrCreateBlockInfo(blockInfo);
-                blockData.update(entry);
-            }
-        }
-    }
-
-    private static Collection<BlockStateMatcher> expand(final String blockName) {
-        if (blockName.startsWith(TAG_SPECIFIER)) {
-            final String tagName = blockName.substring(1);
-            if (!Identifier.isValid(tagName)) {
-                LOGGER.warn("Block name tag specification is invalid: %s", blockName);
-                return ImmutableList.of();
-            }
-
-            Identifier tagId = new Identifier(tagName);
-
-            try {
-                assert GameUtils.getWorld() != null;
-                var tag = GameUtils.getWorld().getTagManager()
-                        .getTag(Registry.BLOCK_KEY, tagId, id -> new RuntimeException("Tag not found in registry"));
-                if (tag != null) {
-                    return tag.values().stream().map(BlockStateMatcher::create).filter(m -> !m.isEmpty()).collect(Collectors.toList());
-                }
-            } catch (Throwable t) {
-                LOGGER.error(t, "Tag: %s", tagName);
-            }
-            LOGGER.debug("Unknown block tag '%s' in Block specification", tagName);
-        } else {
-            try {
-                var matcher = BlockStateMatcher.create(blockName);
-                return ImmutableList.of(matcher);
-            } catch (Throwable t) {
-                LOGGER.error(t, "Unknown block name '%s' in Block Specification", blockName);
-            }
-        }
-
-        return ImmutableList.of();
+        LOGGER.info("%d block configs loaded; version is now %d", blockConfigs.size(), version);
     }
 
     public static BlockInfo getBlockInfo(BlockState state) {
@@ -119,9 +60,20 @@ public class BlockLibrary {
                 return info;
         }
 
-        info = registry.get(state);
-        if (info == null)
+        // OK - need to build out an info for the block.
+        info = new BlockInfo(version);
+        for (var cfg : blockConfigs) {
+            if (cfg.match(state))
+                info.update(cfg);
+        }
+
+        // Optimization to reduce memory bloat.  Coalesce blocks that do not have any special
+        // processing to the DEFAULT, and trim the others to release memory that is not needed.
+        if (info.isDefault())
             info = DEFAULT;
+        else
+            info.trim();
+
         ((IBlockStateExtended) state).setBlockInfo(info);
 
         return info;
@@ -134,9 +86,9 @@ public class BlockLibrary {
                 .sorted();
     }
 
-    public static Stream<String> dumpBlockInfo() {
-        return registry.entrySet().stream()
-                .map(kvp -> kvp.getKey().toString() + "\n" + kvp.getValue().toString() + "\n")
+    public static Stream<String> dumpBlockConfigRules() {
+        return blockConfigs.stream()
+                .map(BlockLibrary::formatBlockConfigRuleOutput)
                 .sorted();
     }
 
@@ -158,6 +110,10 @@ public class BlockLibrary {
         }
 
         return Stream.empty();
+    }
+
+    private static String formatBlockConfigRuleOutput(BlockConfigRule rule) {
+        return "";
     }
 
     private static String formatBlockTagOutput(Map.Entry<Identifier, Tag<Block>> kvp) {
@@ -184,8 +140,8 @@ public class BlockLibrary {
         for (var blockState : block.getStateManager().getStates()) {
             builder.append(blockState.toString()).append("\n");
             var info = getBlockInfo(blockState);
-            if (info != DEFAULT)
-                builder.append(info.toString());
+            if (!info.isDefault())
+                builder.append(info);
         }
         builder.append("]\n");
         return builder.toString();

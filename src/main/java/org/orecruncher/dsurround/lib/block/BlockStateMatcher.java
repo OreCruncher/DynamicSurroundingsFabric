@@ -1,72 +1,97 @@
 package org.orecruncher.dsurround.lib.block;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+import net.minecraft.block.Material;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
+import org.orecruncher.dsurround.lib.material.MaterialUtils;
 
+import javax.xml.crypto.Data;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public final class BlockStateMatcher {
+public abstract class BlockStateMatcher {
 
-    // All instances will have this defined
-    private final Block block;
-    private final Identifier blockId;
+    public static final Codec<BlockStateMatcher> CODEC = Codec.STRING
+            .comapFlatMap(
+                    BlockStateMatcher::manifest,
+                    BlockStateMatcher::toString).stable();
 
-    // Sometimes an exact match of state is needed. The state being compared
-    // would have to match all these properties.
-    private final BlockStateProperties props;
+    public static final String TAG_TYPE = "#";
+    public static final String MATERIAL_TYPE = "@";
 
-    BlockStateMatcher(final BlockState state) {
-        this(state.getBlock(), state.getEntries());
-    }
-
-    BlockStateMatcher(final Block block) {
-        this.block = block;
-        this.blockId = Registry.BLOCK.getId(block);
-        this.props = BlockStateProperties.NONE;
-    }
-
-    BlockStateMatcher(final Block block,
-                      final Map<Property<?>, Comparable<?>> props) {
-        this.block = block;
-        this.blockId = Registry.BLOCK.getId(block);
-        this.props = props.size() > 0 ? new BlockStateProperties(props) : BlockStateProperties.NONE;
+    private static DataResult<BlockStateMatcher> manifest(String blockId) {
+        try {
+            return DataResult.success(create(blockId, true, true));
+        } catch (Throwable t) {
+            return DataResult.error(t.getMessage());
+        }
     }
 
     public static BlockStateMatcher asGeneric(final BlockState state) {
-        return new BlockStateMatcher(state.getBlock());
+        return create(state.getBlock());
     }
 
     public static BlockStateMatcher create(final BlockState state) {
-        return new BlockStateMatcher(state);
+        return new MatchOnBlockState(state);
     }
 
     public static BlockStateMatcher create(final Block block) {
-        return new BlockStateMatcher(block);
+        return new MatchOnBlock(block);
+    }
+
+    public static BlockStateMatcher create(final Material material) {
+        return new MatchOnMaterial(material);
     }
 
     public static BlockStateMatcher create(final String blockId) throws BlockStateParseException {
-        return create(BlockStateParser.parse(blockId));
+        return create(blockId, true, true);
     }
 
-    private static BlockStateMatcher create(final BlockStateParser.ParseResult result) throws BlockStateParseException {
+    public static BlockStateMatcher create(final String blockId, boolean allowTags, boolean allowMaterials) throws BlockStateParseException {
+        if (blockId.startsWith(TAG_TYPE))
+            if (allowTags)
+                return createTagMatcher(blockId.substring(1));
+            else
+                throw new BlockStateParseException(String.format("Block id %s is for a tag, and it is not permitted in this context", blockId));
+        if (blockId.startsWith(MATERIAL_TYPE))
+            if (allowMaterials)
+                return createMaterialMatcher(blockId.substring(1));
+            else
+                throw new BlockStateParseException(String.format("Block id %s is for material, and it is not permitted in this context", blockId));
+        return createBlockStateMatcher(BlockStateParser.parse(blockId));
+    }
+
+    private static BlockStateMatcher createTagMatcher(String tagId) throws BlockStateParseException{
+        if (!Identifier.isValid(tagId))
+            throw new BlockStateParseException(String.format("%s is not a valid block tag", tagId));
+        return new MatchOnBlockTag(new Identifier(tagId));
+    }
+
+    private static BlockStateMatcher createMaterialMatcher(String materialName) throws BlockStateParseException {
+        var material = MaterialUtils.getMaterial(materialName);
+        if (material == null)
+            throw new BlockStateParseException(String.format("Material %s is not known", materialName));
+        return new MatchOnMaterial(material);
+    }
+
+    private static BlockStateMatcher createBlockStateMatcher(final BlockStateParser.ParseResult result) throws BlockStateParseException {
         final Block block = result.getBlock();
         final BlockState defaultState = block.getDefaultState();
         final StateManager<Block, BlockState> container = block.getStateManager();
         if (container.getStates().size() == 1) {
             // Easy case - it's always an identical match because there are no other properties
-            return new BlockStateMatcher(defaultState);
+            return new MatchOnBlock(defaultState.getBlock());
         }
 
         if (!result.hasProperties()) {
             // No property specification so this is a generic
-            return new BlockStateMatcher(block);
+            return new MatchOnBlock(block);
         }
 
         final Map<String, String> properties = result.getProperties();
@@ -90,35 +115,11 @@ public final class BlockStateMatcher {
             }
         }
 
-        return new BlockStateMatcher(defaultState.getBlock(), props);
+        return new MatchOnBlockState(defaultState, new BlockStateProperties(props));
     }
 
-    public boolean isEmpty() {
-        return this.block == Blocks.AIR || this.block == Blocks.CAVE_AIR || this.block == Blocks.VOID_AIR;
-    }
+    public abstract boolean isEmpty();
 
-    public Block getBlock() {
-        return this.block;
-    }
-
-    @Override
-    public int hashCode() {
-        // Only do the block hash code.  Reason is that BlockStateMatcher does not honor the equality contract set
-        // forth by Object.  Equals can perform a partial match.
-        return this.block.hashCode();
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (obj instanceof final BlockStateMatcher m) {
-            return this.block == m.block && m.props.matches(this.props);
-        }
-        return false;
-    }
-
-    @Override
-    public String toString() {
-        return this.blockId + this.props.getFormattedProperties();
-    }
+    public abstract boolean match(BlockState state);
 
 }

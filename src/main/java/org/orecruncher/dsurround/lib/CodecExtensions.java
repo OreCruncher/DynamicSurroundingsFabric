@@ -4,6 +4,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import org.orecruncher.dsurround.lib.block.BlockStateMatcher;
 import org.orecruncher.dsurround.lib.block.BlockStateParseException;
+import org.orecruncher.dsurround.lib.block.MatchOnBlockTag;
+import org.orecruncher.dsurround.lib.block.MatchOnMaterial;
 
 import java.util.function.Function;
 
@@ -27,17 +29,14 @@ public interface CodecExtensions<A> extends Codec<A> {
     /**
      * Checks that a string is a valid format specification for BlockState
      */
-    static Codec<String> checkBlockStateSpecification() {
-        final Function<String, DataResult<String>> func = value -> {
-            try {
-                BlockStateMatcher.create(value);
-                return DataResult.success(value);
-            } catch (BlockStateParseException t) {
-                return DataResult.error(t.getMessage());
-            } catch (Throwable t) {
-                return DataResult.error(String.format("%s is not a valid block state specification", value));
-            }
+    static Codec<BlockStateMatcher> checkBlockStateSpecification(boolean allowTags, boolean allowMaterials) {
+        final Function<BlockStateMatcher, DataResult<BlockStateMatcher>> func = value -> {
+            if (!allowTags && value instanceof MatchOnBlockTag)
+                return DataResult.error(String.format("Current context does not allow block matching based on tags (%s)", value));
+            if (!allowMaterials && value instanceof MatchOnMaterial)
+                return DataResult.error(String.format("Current context does not allow block matching based on tags (%s)", value));
+            return DataResult.success(value);
         };
-        return Codec.STRING.flatXmap(func, func);
+        return BlockStateMatcher.CODEC.flatXmap(func, func);
     }
 }

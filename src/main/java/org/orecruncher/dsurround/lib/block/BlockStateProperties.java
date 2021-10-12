@@ -50,7 +50,7 @@ public class BlockStateProperties {
         } catch (final Throwable ignored) {
             // A property in this list does not exist in the target list.  This is highly unsual because it is
             // expected that this list is a subset of what could be found in a blockstate for the same block instance.
-            Client.LOGGER.warn("Property list %s does not correspond the properties in %s", this.toString(), new BlockStateMatcher(state).toString());
+            Client.LOGGER.warn("Property list %s does not correspond the properties in %s", this.toString(), new MatchOnBlockState(state).toString());
         }
         return false;
     }
