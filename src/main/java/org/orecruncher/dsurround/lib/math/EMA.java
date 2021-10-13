@@ -28,7 +28,7 @@ public class EMA {
         if (Double.isNaN(this.ema)) {
             this.ema = newValue;
         } else {
-            this.ema = (newValue - this.ema) * this.factor + this.ema;
+            this.ema = newValue * this.factor + this.ema * (1 - this.factor);
         }
         return this.ema;
     }

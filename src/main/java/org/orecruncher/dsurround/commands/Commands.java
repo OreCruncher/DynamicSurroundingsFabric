@@ -14,6 +14,7 @@ public final class Commands {
         ScriptCommand.register(ClientCommandManager.DISPATCHER);
         DumpCommand.register(ClientCommandManager.DISPATCHER);
         ReloadCommand.register(ClientCommandManager.DISPATCHER);
+        TimeOfDayCommand.register(ClientCommandManager.DISPATCHER);
     }
 
     public static void sendSuccess(final FabricClientCommandSource source, String command) {

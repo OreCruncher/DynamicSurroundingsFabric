@@ -87,7 +87,7 @@ public final class AudioUtilities {
                     final int[] attributes = new int[]{EXTEfx.ALC_MAX_AUXILIARY_SENDS, 4, 0};
                     final long ctx = ALC10.alcCreateContext(device, attributes);
                     ALC10.alcMakeContextCurrent(ctx);
-                    accessor.setDevicePointer(ctx);
+                    accessor.setContextPointer(ctx);
 
                     // Have to re-enable since we reset the context
                     AL10.alEnable(EXTSourceDistanceModel.AL_SOURCE_DISTANCE_MODEL);

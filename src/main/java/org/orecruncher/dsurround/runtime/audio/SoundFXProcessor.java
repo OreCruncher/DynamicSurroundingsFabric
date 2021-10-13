@@ -39,7 +39,7 @@ public final class SoundFXProcessor {
         int threads = Client.Config.enhancedSounds.backgroundThreadWorkers;
         if (threads == 0)
             threads = 2;
-        LOGGER.info("Threads allocated to SoundControl sound processor: %d", threads);
+        LOGGER.info("Threads allocated to enhanced sound processor: %d", threads);
         return Executors.newFixedThreadPool(threads);
     });
 
@@ -70,7 +70,7 @@ public final class SoundFXProcessor {
 
         if (soundProcessor == null) {
             soundProcessor = new Worker(
-                    "SoundControl Sound Processor",
+                    "Enhanced Sound Processor",
                     SoundFXProcessor::processSounds,
                     SOUND_PROCESS_ITERATION,
                     LOGGER
@@ -200,20 +200,21 @@ public final class SoundFXProcessor {
         try {
             final ExecutorService pool = threadPool.get();
             assert pool != null;
-            final ObjectArray<Future<?>> tasks = new ObjectArray<>(256);
-            for (int i = 0; i < AudioUtilities.getMaxSounds(); i++) {
+
+            final ObjectArray<Future<?>> tasks = new ObjectArray<>(sources.length);
+            for (int i = 0; i < sources.length; i++) {
                 final SourceContext ctx = sources[i];
                 if (ctx != null && ctx.shouldExecute()) {
                     tasks.add(pool.submit(ctx));
                 }
             }
 
-            if (tasks.size() > 0)
-                for (int i = 0; i < tasks.size(); i++)
-                    try {
-                        tasks.get(i).get();
-                    } catch (InterruptedException | ExecutionException ignored) {
-                    }
+            for (int i = 0; i < tasks.size(); i++)
+                try {
+                    tasks.get(i).get();
+                } catch (InterruptedException | ExecutionException ignored) {
+                }
+
         } catch (final Throwable t) {
             LOGGER.error(t, "Error in SoundContext ForkJoinPool");
         }

@@ -4,6 +4,7 @@ package org.orecruncher.dsurround.lib.math;
 public class LoggingTimerEMA extends TimerEMA {
 
     private long timeMark;
+    private long lastSample;
 
     public LoggingTimerEMA(final String name) {
         super(name);
@@ -18,6 +19,15 @@ public class LoggingTimerEMA extends TimerEMA {
     }
 
     public void end() {
-        this.update(System.nanoTime() - this.timeMark);
+        this.lastSample = System.nanoTime() - this.timeMark;
+        this.update(this.lastSample);
+    }
+
+    public long getLastSample() {
+        return this.lastSample;
+    }
+
+    public long getLastSampleMSecs() {
+        return this.lastSample / 1000000;
     }
 }
