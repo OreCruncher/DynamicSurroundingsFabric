@@ -11,6 +11,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.BlockLibrary;
 import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.lib.math.ReusableRaycastContext;
 import org.orecruncher.dsurround.lib.math.ReusableRaycastIterator;
@@ -94,11 +95,11 @@ public final class SoundFXUtils {
 
     private final SourceContext source;
 
-    public SoundFXUtils( final SourceContext source) {
+    public SoundFXUtils(final SourceContext source) {
         this.source = source;
     }
 
-    public void calculate( final WorldContext ctx) {
+    public void calculate(final WorldContext ctx) {
 
         assert ctx.player != null;
         assert ctx.world != null;
@@ -164,7 +165,7 @@ public final class SoundFXUtils {
             // Secondary ray bounces
             for (int j = 0; j < REVERB_RAY_BOUNCES; j++) {
 
-                final float blockReflectivity = AudioEffectLibrary.getReflectivity(ctx.world.getBlockState(lastHitBlock));
+                final float blockReflectivity = getReflectivity(ctx.world.getBlockState(lastHitBlock));
                 final float energyTowardsPlayer = blockReflectivity * ENERGY_COEFF + ENERGY_CONST;
 
                 final Vec3d newRayDir = MathStuff.reflection(lastRayDir, lastHitNormal);
@@ -304,7 +305,7 @@ public final class SoundFXUtils {
         }
     }
 
-    private float calculateOcclusion( final WorldContext ctx,  final Vec3d origin,  final Vec3d target) {
+    private float calculateOcclusion(final WorldContext ctx, final Vec3d origin, final Vec3d target) {
 
         // Shortcut if occlusion isn't to happen for this sound
         if (skipOcclusion(this.source.getCategory()))
@@ -322,7 +323,7 @@ public final class SoundFXUtils {
         for (int i = 0; i < OCCLUSION_SEGMENTS; i++) {
             if (itr.hasNext()) {
                 var result = itr.next();
-                final float occlusion = AudioEffectLibrary.getOcclusion(lastState);
+                final float occlusion = getOcclusion(lastState);
                 final double distance = lastHit.distanceTo(result.getPos());
                 // Occlusion is scaled by the distance travelled through the block.
                 factor += occlusion * distance;
@@ -336,7 +337,7 @@ public final class SoundFXUtils {
         return factor;
     }
 
-    private static float calculateWeatherAbsorption( final WorldContext ctx,  final Vec3d pt1,  final Vec3d pt2) {
+    private static float calculateWeatherAbsorption(final WorldContext ctx, final Vec3d pt1, final Vec3d pt2) {
         assert ctx.world != null;
 
         if (!ctx.isPrecipitating)
@@ -360,8 +361,17 @@ public final class SoundFXUtils {
         return factor;
     }
 
-    
-    private static Vec3d surfaceNormal( final Direction d) {
+    private static float getReflectivity(BlockState state) {
+        var info = BlockLibrary.getBlockInfo(state);
+        return info.getSoundReflectivity();
+    }
+
+    private static float getOcclusion(BlockState state) {
+        var info = BlockLibrary.getBlockInfo(state);
+        return info.getSoundOcclusion();
+    }
+
+    private static Vec3d surfaceNormal(final Direction d) {
         return SURFACE_DIRECTION_NORMALS[d.ordinal()];
     }
 
@@ -373,7 +383,7 @@ public final class SoundFXUtils {
         return origin;
     }
 
-    private static float calcFactor( final Biome.Precipitation type, final float base) {
+    private static float calcFactor(final Biome.Precipitation type, final float base) {
         return type == Biome.Precipitation.NONE ? base : base * (type == Biome.Precipitation.SNOW ? Effects.SNOW_AIR_ABSORPTION_FACTOR : Effects.RAIN_AIR_ABSORPTION_FACTOR);
     }
 

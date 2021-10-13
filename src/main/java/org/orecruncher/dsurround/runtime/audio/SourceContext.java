@@ -175,7 +175,7 @@ public final class SourceContext implements Callable<Void> {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .addValue(MinecraftClient.format(this.sound))
+                .addValue(AudioUtilities.debugString(this.sound))
                 .toString();
     }
 

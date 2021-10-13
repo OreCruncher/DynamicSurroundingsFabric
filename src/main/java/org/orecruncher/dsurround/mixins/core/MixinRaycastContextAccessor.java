@@ -11,18 +11,18 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface MixinRaycastContextAccessor {
 
     @Accessor("start")
-    Vec3d getStart();
+    Vec3d getStartPoint();
 
     @Accessor("start")
     @Mutable
-    void setStart(Vec3d point);
+    void getStartPoint(Vec3d point);
 
     @Accessor("end")
-    Vec3d getEnd();
+    Vec3d getEndPoint();
 
     @Accessor("end")
     @Mutable
-    void setEnd(Vec3d point);
+    void setEndPoint(Vec3d point);
 
     @Accessor("entityPosition")
     @Mutable

@@ -1,9 +1,12 @@
 package org.orecruncher.dsurround.config.block;
 
+import com.google.common.collect.ImmutableList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.block.BlockState;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.AcousticConfig;
 import org.orecruncher.dsurround.config.SoundLibrary;
@@ -22,23 +25,66 @@ import java.util.stream.Collectors;
 @Environment(EnvType.CLIENT)
 public class BlockInfo {
 
-    protected final ObjectArray<AcousticEntry> sounds = new ObjectArray<>();
-    protected final ObjectArray<IBlockEffectProducer> blockEffects = new ObjectArray<>();
-    protected final ObjectArray<IBlockEffectProducer> alwaysOnEffects = new ObjectArray<>();
+    private static final float DEFAULT_OPAQUE_OCCLUSION = 0.5F;
+    private static final float DEFAULT_TRANSLUCENT_OCCLUSION = 0.15F;
+    private static final float DEFAULT_REFLECTION = 0.4F;
+
+    // Lazy init on add
+    @Nullable
+    protected ObjectArray<AcousticEntry> sounds;
+    @Nullable
+    protected ObjectArray<IBlockEffectProducer> blockEffects;
+    @Nullable
+    protected ObjectArray<IBlockEffectProducer> alwaysOnEffects;
 
     protected final int version;
+
     protected Script soundChance = new Script("0.01");
+    protected float soundReflectivity = DEFAULT_REFLECTION;
+    protected float soundOcclusion = DEFAULT_OPAQUE_OCCLUSION;
 
     public BlockInfo(int version) {
         this.version = version;
     }
 
+    public BlockInfo(int version, BlockState state) {
+        this.version = version;
+        this.soundOcclusion = state.getMaterial().blocksLight() ? DEFAULT_OPAQUE_OCCLUSION : DEFAULT_TRANSLUCENT_OCCLUSION;
+    }
+
     public boolean isDefault() {
-        return this.sounds.size() == 0 && this.blockEffects.size() == 0 && this.alwaysOnEffects.size() == 0;
+        return this.sounds == null && this.blockEffects == null && this.alwaysOnEffects == null && this.soundReflectivity != DEFAULT_REFLECTION
+                && (this.soundOcclusion == DEFAULT_OPAQUE_OCCLUSION || this.soundOcclusion == DEFAULT_TRANSLUCENT_OCCLUSION);
     }
 
     public int getVersion() {
         return this.version;
+    }
+
+    public float getSoundReflectivity() {
+        return this.soundReflectivity;
+    }
+
+    public float getSoundOcclusion() {
+        return this.soundOcclusion;
+    }
+
+    private void addToSounds(AcousticEntry entry) {
+        if (this.sounds == null)
+            this.sounds = new ObjectArray<>(4);
+        this.sounds.add(entry);
+    }
+
+    private void addToBlockEffects(IBlockEffectProducer effect) {
+        if (this.blockEffects == null)
+            this.blockEffects = new ObjectArray<>(2);
+        this.blockEffects.add(effect);
+    }
+
+    private void addToAlwaysOnEffects(IBlockEffectProducer effect) {
+        if (this.alwaysOnEffects == null)
+            this.alwaysOnEffects = new ObjectArray<>(2);
+        this.alwaysOnEffects.add(effect);
     }
 
     // TODO: Eliminate duplicates
@@ -47,14 +93,16 @@ public class BlockInfo {
         if (config.clearSounds)
             this.clearSounds();
 
-        config.soundChance.ifPresent(this::setSoundChance);
+        config.soundChance.ifPresent(v -> this.soundChance = v);
+        config.soundReflectivity.ifPresent(v ->this.soundReflectivity = v);
+        config.soundOcclusion.ifPresent(v ->this.soundOcclusion = v);
 
         for (final AcousticConfig sr : config.acoustics) {
             if (sr.soundEventId != null) {
                 final Identifier res = SoundLibrary.resolveIdentifier(Client.ModId, sr.soundEventId);
                 final SoundEvent acoustic = SoundLibrary.getSound(res);
                 final AcousticEntry acousticEntry = new AcousticEntry(acoustic, sr.conditions, sr.weight);
-                this.addSound(acousticEntry);
+                this.addToSounds(acousticEntry);
             }
         }
 
@@ -62,39 +110,28 @@ public class BlockInfo {
             var effect = e.effect.getInstance(e.spawnChance, e.conditions);
             effect.ifPresent(t -> {
                 if (e.alwaysOn)
-                    this.alwaysOnEffects.add(t);
+                    this.addToAlwaysOnEffects(t);
                 else
-                    this.blockEffects.add(t);
+                    this.addToBlockEffects(t);
             });
         }
     }
 
-    private Script getSoundChance() {
-        return this.soundChance;
-    }
-
-    private void setSoundChance(final Script soundChance) {
-        this.soundChance = soundChance;
-    }
-
-    private void addSound(final AcousticEntry sound) {
-        this.sounds.add(sound);
-    }
-
     private void clearSounds() {
-        this.sounds.clear();
+        if (this.sounds != null)
+            this.sounds.clear();
     }
 
     public boolean hasSoundsOrEffects() {
-        return this.sounds.size() > 0 || this.blockEffects.size() > 0;
+        return this.sounds != null || this.blockEffects != null;
     }
 
     public boolean hasAlwaysOnEffects() {
-        return this.alwaysOnEffects.size() > 0;
+        return this.alwaysOnEffects != null;
     }
 
     public SoundEvent getSoundToPlay(final Random random) {
-        if (this.sounds.size() > 0) {
+        if (this.sounds != null) {
             var chance = ConditionEvaluator.INSTANCE.eval(this.soundChance);
             if (chance instanceof Double c && random.nextDouble() < c) {
                 var candidates = this.sounds.stream().filter(AcousticEntry::matches).collect(Collectors.toList());
@@ -105,34 +142,51 @@ public class BlockInfo {
     }
 
     public Collection<IBlockEffectProducer> getEffectProducers() {
-        return this.blockEffects;
+        return this.blockEffects == null ? ImmutableList.of() : this.blockEffects;
     }
 
     public Collection<IBlockEffectProducer> getAlwaysOnEffectProducers() {
-        return this.alwaysOnEffects;
+        return this.alwaysOnEffects == null ? ImmutableList.of() : this.alwaysOnEffects;
     }
 
     public void trim() {
-        this.sounds.trim();
+        if (this.sounds != null) {
+            if (sounds.size() == 0)
+                this.sounds = null;
+            else
+                this.sounds.trim();
+        }
+        if (this.alwaysOnEffects != null) {
+            if (alwaysOnEffects.size() == 0)
+                this.alwaysOnEffects = null;
+            else
+                this.alwaysOnEffects.trim();
+        }
+        if (this.blockEffects != null) {
+            if (blockEffects.size() == 0)
+                this.blockEffects = null;
+            else
+                this.blockEffects.trim();
+        }
     }
 
     public String toString() {
         final StringBuilder builder = new StringBuilder();
 
-        if (this.sounds.size() > 0) {
-            builder.append("sound chance: ").append(this.getSoundChance());
+        if (this.sounds != null) {
+            builder.append("sound chance: ").append(this.soundChance);
             builder.append("; sounds [\n");
             builder.append(this.sounds.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n]\n");
         }
 
-        if (this.blockEffects.size() > 0) {
+        if (this.blockEffects != null) {
             builder.append("random effects [\n");
             builder.append(this.blockEffects.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n]\n");
         }
 
-        if (this.alwaysOnEffects.size() > 0) {
+        if (this.alwaysOnEffects != null) {
             builder.append("always on effects [\n");
             builder.append(this.alwaysOnEffects.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n]");

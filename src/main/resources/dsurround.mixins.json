@@ -6,6 +6,10 @@
   "mixins": [
   ],
   "client": [
+    "audio.MixinSoundEngineAccessor",
+    "audio.MixinSource",
+    "audio.MixinSoundSystem",
+    "audio.MixinStaticSoundAccessor",
     "core.MixinAbstractSoundInstance",
     "core.MixinBiome",
     "core.MixinBlockState",
@@ -14,13 +18,13 @@
     "core.MixinEntityArrow",
     "core.MixinIngameHud",
     "core.MixinParticle",
+    "core.MixinRaycastContextAccessor",
     "core.MixinSoundEngine",
     "core.MixinSoundEvent",
     "core.MixinSoundManagerAccessor",
     "core.MixinSoundSystem",
     "core.MixinSoundSystemAccessors",
-    "core.MixinTagManager",
-    "core.MixinRaycastContextAccessor"
+    "core.MixinTagManager"
   ],
   "server": [],
   "injectors": {

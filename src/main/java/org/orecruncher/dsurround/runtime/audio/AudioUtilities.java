@@ -1,21 +1,18 @@
 package org.orecruncher.dsurround.runtime.audio;
 
 import com.google.common.base.MoreObjects;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.client.sound.SoundEngine;
 import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.client.sound.SoundSystem;
 import net.minecraft.sound.SoundCategory;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.*;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.mixins.audio.MixinSoundEngineAccessor;
 
-import java.util.Map;
-
-public final class AudioUtilities
-{
+public final class AudioUtilities {
     private static final IModLog LOGGER = Client.LOGGER.createChild(AudioUtilities.class);
 
     private static final String[] HRTF_STATUS = {
@@ -28,14 +25,6 @@ public final class AudioUtilities
     };
 
     private static int MAX_SOUNDS = 0;
-    private static int SOUND_LIMIT = 255; // 0;
-    private static final Map<String, SoundCategory> categoryMapper;
-
-    static {
-        categoryMapper = new Object2ObjectOpenHashMap<>();
-        for (final SoundCategory sc : SoundCategory.values())
-            categoryMapper.put(sc.getName(), sc);
-    }
 
     public static int getMaxSounds() {
         return MAX_SOUNDS;
@@ -75,13 +64,15 @@ public final class AudioUtilities
      * This method is invoked via the MixinSoundSystem injection.  It will be called when the sound system
      * is initialized, and it gives an opportunity to setup special effects processing.
      *
-     * @param soundSystem The sound system instance being initialized
+     * @param soundEngine The sound system instance being initialized
      */
-    public static void initialize(final SoundSystem soundSystem) {
+    public static void initialize(final SoundEngine soundEngine) {
+
+        MixinSoundEngineAccessor accessor = (MixinSoundEngineAccessor) soundEngine;
 
         try {
 
-            final long device = soundSystem.device;
+            final long device = accessor.getDevicePointer();
 
             boolean hasFX = false;
             if (doEnhancedSounds()) {
@@ -96,6 +87,7 @@ public final class AudioUtilities
                     final int[] attributes = new int[]{EXTEfx.ALC_MAX_AUXILIARY_SENDS, 4, 0};
                     final long ctx = ALC10.alcCreateContext(device, attributes);
                     ALC10.alcMakeContextCurrent(ctx);
+                    accessor.setDevicePointer(ctx);
 
                     // Have to re-enable since we reset the context
                     AL10.alEnable(EXTSourceDistanceModel.AL_SOURCE_DISTANCE_MODEL);
@@ -121,7 +113,6 @@ public final class AudioUtilities
 
             // Calculate the number of source slots available
             MAX_SOUNDS = ALC11.alcGetInteger(device, ALC11.ALC_MONO_SOURCES);
-            SOUND_LIMIT = MAX_SOUNDS - 10;
 
             // Do this last because it is dependent on the sound calculations
             if (hasFX)
@@ -153,8 +144,17 @@ public final class AudioUtilities
         return true;
     }
 
-    public static void deinitialize(final SoundSystem soundSystem) {
+    public static void deinitialize(final SoundEngine soundEngine) {
         SoundFXProcessor.deinitialize();
     }
 
+    /**
+     * Hook that is called when the sound is actually being queued down into the engine.  Use this to determine
+     * what actually got played and to perform logging.  The standard sound listener will not receive callbacks if
+     * the sound is too far away (based on the sound instance distance value).
+     * @param sound Sound that is being queued into the audio engine
+     */
+    public static void onPlaySound(final SoundInstance sound) {
+        LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> String.format("PLAYING: [%s]", debugString(sound)));
+    }
 }

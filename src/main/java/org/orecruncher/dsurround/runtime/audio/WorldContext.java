@@ -2,8 +2,6 @@ package org.orecruncher.dsurround.runtime.audio;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -67,12 +65,7 @@ public final class WorldContext {
             this.playerPos = new BlockPos(this.playerPosition);
             this.playerEyePos = new BlockPos(this.playerEyePosition);
 
-            final Fluid fs = this.player.world.getFluidState(this.playerEyePos).getFluid();
-            final Identifier name = fs.getRegistryName();
-            if (name != null)
-                this.auralDampening = AudioEffectLibrary.getFluidCoeffcient(name);
-            else
-                this.auralDampening = 0;
+            this.auralDampening = 0;
 
             // Get our current rain strength.
             this.precipitationStrength = w.getRainGradient(1F);

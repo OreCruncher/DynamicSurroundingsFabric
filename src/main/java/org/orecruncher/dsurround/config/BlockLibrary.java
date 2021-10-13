@@ -32,7 +32,13 @@ public class BlockLibrary {
     private static final IModLog LOGGER = Client.LOGGER.createChild(BlockLibrary.class);
 
     private static final int INDEFINITE = -1;
-    private static final BlockInfo DEFAULT = new BlockInfo(INDEFINITE);
+
+    private static final BlockInfo DEFAULT = new BlockInfo(INDEFINITE) {
+        @Override
+        public boolean isDefault() {
+            return true;
+        }
+    };
 
     private static final Collection<BlockConfigRule> blockConfigs = new ObjectArray<>();
     private static int version = 0;
@@ -61,7 +67,7 @@ public class BlockLibrary {
         }
 
         // OK - need to build out an info for the block.
-        info = new BlockInfo(version);
+        info = new BlockInfo(version, state);
         for (var cfg : blockConfigs) {
             if (cfg.match(state))
                 info.update(cfg);

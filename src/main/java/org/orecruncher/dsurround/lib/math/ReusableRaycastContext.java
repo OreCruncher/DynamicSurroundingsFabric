@@ -46,18 +46,18 @@ public class ReusableRaycastContext extends RaycastContext {
     }
 
     public Vec3d getStart() {
-        return ((MixinRaycastContextAccessor) this).getStart();
+        return ((MixinRaycastContextAccessor) this).getStartPoint();
     }
 
     void setStart(Vec3d point) {
-        ((MixinRaycastContextAccessor)this).setStart(point);
+        ((MixinRaycastContextAccessor)(Object)this).getStartPoint(point);
     }
 
     public Vec3d getEnd() {
-        return ((MixinRaycastContextAccessor) this).getEnd();
+        return ((MixinRaycastContextAccessor) this).getEndPoint();
     }
 
     void setEnd(Vec3d point) {
-        ((MixinRaycastContextAccessor)this).setEnd(point);
+        ((MixinRaycastContextAccessor)(Object)this).setEndPoint(point);
     }
 }

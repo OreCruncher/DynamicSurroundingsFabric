@@ -1,20 +1,25 @@
 package org.orecruncher.dsurround.runtime.audio;
 
-import net.minecraft.client.sound.AudioStream;
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.client.sound.Source;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.sound.*;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.util.Formatting;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.AL10;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.Singleton;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.math.TimerEMA;
 import org.orecruncher.dsurround.lib.threading.Worker;
 import org.orecruncher.dsurround.runtime.audio.effects.Effects;
 import org.orecruncher.dsurround.xface.ISourceContext;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,10 +49,8 @@ public final class SoundFXProcessor {
     private static WorldContext worldContext = new WorldContext();
 
     static {
-        MinecraftForge.EVENT_BUS.register(SoundFXProcessor.class);
-    }
-
-    private SoundFXProcessor() {
+        ClientEventHooks.COLLECT_DIAGNOSTICS.register(SoundFXProcessor::onGatherText);
+        ClientTickEvents.START_CLIENT_TICK.register(SoundFXProcessor::clientTick);
     }
 
     public static WorldContext getWorldContext() {
@@ -97,7 +100,10 @@ public final class SoundFXProcessor {
     }
 
     private static boolean shouldIgnoreSound(SoundInstance sound) {
-        return false;
+        return sound.isRelative()
+                || sound.getAttenuationType() == SoundInstance.AttenuationType.NONE
+                || sound.getCategory() == SoundCategory.MASTER
+                || sound.getCategory() == SoundCategory.MUSIC;
     }
 
     /**
@@ -107,7 +113,7 @@ public final class SoundFXProcessor {
      * @param sound The sound that is going to play
      * @param entry The ChannelManager.Entry instance for the sound play
      */
-    public static void onSoundPlay(final SoundInstance sound, final ChannelManager.Entry entry) {
+    public static void onSoundPlay(final SoundInstance sound, final Channel.SourceManager entry) {
 
         if (!isAvailable())
             return;
@@ -117,14 +123,15 @@ public final class SoundFXProcessor {
 
         // Double suplex!  Queue the operation on the sound executor to do the config work.  This should queue in
         // behind any attempt at getting a sound source.
-        entry.runOnSoundExecutor(source -> {
-            if (source.id > 0) {
+        entry.run(source -> {
+            var id = ((ISourceContext) source).getId();
+            if (id > 0) {
                 final SourceContext ctx = new SourceContext();
                 ctx.attachSound(sound);
                 ctx.enable();
                 ctx.exec();
-                ((IMixinSoundContext) source).setData(ctx);
-                sources[source.id - 1] = ctx;
+                ((ISourceContext) source).setData(ctx);
+                sources[id - 1] = ctx;
             }
         });
     }
@@ -138,7 +145,7 @@ public final class SoundFXProcessor {
     public static void tick(final Source source) {
         final SourceContext ctx = ((ISourceContext) source).getData();
         if (ctx != null)
-            ctx.tick(source.id);
+            ctx.tick(((ISourceContext) source).getId());
     }
 
     /**
@@ -149,7 +156,7 @@ public final class SoundFXProcessor {
     public static void stopSoundPlay(final Source source) {
         final SourceContext ctx = ((ISourceContext) source).getData();
         if (ctx != null)
-            sources[source.id - 1] = null;
+            sources[((ISourceContext) source).getId() - 1] = null;
     }
 
     /**
@@ -160,11 +167,11 @@ public final class SoundFXProcessor {
      * @param buffer The buffer in question.
      */
 
-    public static AudioStream doMonoConversion(final Source source, final AudioStream buffer) {
+    public static void doMonoConversion(final Source source, final StaticSound buffer) {
 
         // If disabled return
         if (!Client.Config.enhancedSounds.enableMonoConversion)
-            return buffer;
+            return;
 
         final SourceContext ctx = ((ISourceContext) source).getData();
 
@@ -173,19 +180,14 @@ public final class SoundFXProcessor {
         boolean doConversion = ctx == null || (ctx.getSound() != null && ctx.getSound().getAttenuationType() != SoundInstance.AttenuationType.NONE);
 
         if (doConversion)
-            return Conversion.convert(buffer);
-
-        return buffer;
+            Conversion.convert(buffer);
     }
 
     /**
      * Invoked on a client tick. Establishes the current world context for further computation..
-     *
-     * @param event Event trigger in question.
      */
-    @SubscribeEvent(priority = EventPriority.HIGH)
-    public static void onClientTick(final TickEvent.ClientTickEvent event) {
-        if (isAvailable() && event.side == LogicalSide.CLIENT && event.phase == TickEvent.Phase.START) {
+    public static void clientTick(MinecraftClient client) {
+        if (isAvailable()) {
             worldContext = new WorldContext();
         }
     }
@@ -218,12 +220,14 @@ public final class SoundFXProcessor {
         }
     }
 
-    @SubscribeEvent(priority = EventPriority.HIGH)
-    public static void onGatherText(final DiagnosticEvent event) {
+    /**
+     * Gather diagnostics for the display
+     */
+    private static void onGatherText(Collection<String> left, Collection<String> right, Collection<TimerEMA> timerEMAS) {
         if (isAvailable() && soundProcessor != null) {
             final String msg = soundProcessor.getDiagnosticString();
             if (!StringUtils.isEmpty(msg))
-                event.getLeft().add(TextFormatting.GREEN + msg);
+                left.add(Formatting.GREEN + msg);
         }
     }
 
