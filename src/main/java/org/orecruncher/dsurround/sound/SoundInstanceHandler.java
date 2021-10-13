@@ -6,6 +6,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec3d;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.gui.sound.ConfigSoundInstance;
 import org.orecruncher.dsurround.lib.TickCounter;
@@ -75,4 +76,25 @@ public final class SoundInstanceHandler {
 
         return isSoundBlocked(id) || isSoundCulledLogical(id);
     }
+
+    /**
+     * Determines if a sound is in range of a listener based on the sounds attenuation distance.
+     *
+     * @param listener Location of the listener
+     * @param sound    The sound that is to be evaluated
+     * @param pad      Additional distance to add when evaluating
+     * @return true if the sound is within the attenuation distance; false otherwise
+     */
+    public static boolean inRange(final Vec3d listener, final SoundInstance sound, final int pad) {
+        if (sound.isRelative() || sound.getAttenuationType() == SoundInstance.AttenuationType.NONE)
+            return true;
+        int distSq = sound.getSound().getAttenuation() + pad;
+        distSq *= distSq;
+        return listener.squaredDistanceTo(sound.getX(), sound.getY(), sound.getZ()) < distSq;
+    }
+
+    public static boolean inRange(final Vec3d listener, final SoundInstance sound) {
+        return inRange(listener, sound, 0);
+    }
+
 }

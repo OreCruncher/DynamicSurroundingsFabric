@@ -9,7 +9,7 @@ import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.mixins.MixinAbstractSoundInstance;
+import org.orecruncher.dsurround.mixins.core.MixinAbstractSoundInstance;
 
 @Environment(EnvType.CLIENT)
 public class MinecraftAudioPlayer implements IAudioPlayer {
