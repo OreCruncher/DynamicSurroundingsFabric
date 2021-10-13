@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.lib;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import org.orecruncher.dsurround.lib.block.BlockStateMatcher;
-import org.orecruncher.dsurround.lib.block.BlockStateParseException;
 import org.orecruncher.dsurround.lib.block.MatchOnBlockTag;
 import org.orecruncher.dsurround.lib.block.MatchOnMaterial;
 
@@ -34,7 +33,7 @@ public interface CodecExtensions<A> extends Codec<A> {
             if (!allowTags && value instanceof MatchOnBlockTag)
                 return DataResult.error(String.format("Current context does not allow block matching based on tags (%s)", value));
             if (!allowMaterials && value instanceof MatchOnMaterial)
-                return DataResult.error(String.format("Current context does not allow block matching based on tags (%s)", value));
+                return DataResult.error(String.format("Current context does not allow block matching based on materials (%s)", value));
             return DataResult.success(value);
         };
         return BlockStateMatcher.CODEC.flatXmap(func, func);
