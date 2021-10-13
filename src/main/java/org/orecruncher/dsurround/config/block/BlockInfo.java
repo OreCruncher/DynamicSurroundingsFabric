@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Material;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -15,6 +16,7 @@ import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.effects.producers.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.material.MaterialUtils;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 
@@ -38,6 +40,7 @@ public class BlockInfo {
     protected ObjectArray<IBlockEffectProducer> alwaysOnEffects;
 
     protected final int version;
+    protected final Material material;
 
     protected Script soundChance = new Script("0.01");
     protected float soundReflectivity = DEFAULT_REFLECTION;
@@ -45,15 +48,17 @@ public class BlockInfo {
 
     public BlockInfo(int version) {
         this.version = version;
+        this.material = Material.AIR;
     }
 
     public BlockInfo(int version, BlockState state) {
         this.version = version;
         this.soundOcclusion = state.getMaterial().blocksLight() ? DEFAULT_OPAQUE_OCCLUSION : DEFAULT_TRANSLUCENT_OCCLUSION;
+        this.material = state.getMaterial();
     }
 
     public boolean isDefault() {
-        return this.sounds == null && this.blockEffects == null && this.alwaysOnEffects == null && this.soundReflectivity != DEFAULT_REFLECTION
+        return this.sounds == null && this.blockEffects == null && this.alwaysOnEffects == null && this.soundReflectivity == DEFAULT_REFLECTION
                 && (this.soundOcclusion == DEFAULT_OPAQUE_OCCLUSION || this.soundOcclusion == DEFAULT_TRANSLUCENT_OCCLUSION);
     }
 
@@ -172,6 +177,15 @@ public class BlockInfo {
 
     public String toString() {
         final StringBuilder builder = new StringBuilder();
+
+        builder.append("material: ")
+                .append(MaterialUtils.getMaterialName(this.material));
+
+        builder.append("; reflectivity: ")
+                .append(this.soundReflectivity)
+                .append("; occlusion: ")
+                .append(this.soundOcclusion)
+                .append("\n");
 
         if (this.sounds != null) {
             builder.append("sound chance: ").append(this.soundChance);

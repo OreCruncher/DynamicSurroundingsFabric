@@ -103,7 +103,8 @@ public final class SoundFXProcessor {
         return sound.isRelative()
                 || sound.getAttenuationType() == SoundInstance.AttenuationType.NONE
                 || sound.getCategory() == SoundCategory.MASTER
-                || sound.getCategory() == SoundCategory.MUSIC;
+                || sound.getCategory() == SoundCategory.MUSIC
+                || sound.getCategory() == SoundCategory.WEATHER;
     }
 
     /**

@@ -146,8 +146,7 @@ public class BlockLibrary {
         for (var blockState : block.getStateManager().getStates()) {
             builder.append(blockState.toString()).append("\n");
             var info = getBlockInfo(blockState);
-            if (!info.isDefault())
-                builder.append(info);
+            builder.append(info);
         }
         builder.append("]\n");
         return builder.toString();

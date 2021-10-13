@@ -65,7 +65,10 @@ public final class WorldContext {
             this.playerPos = new BlockPos(this.playerPosition);
             this.playerEyePos = new BlockPos(this.playerEyePosition);
 
-            this.auralDampening = 0;
+            if (this.player.isSubmergedInWater())
+                this.auralDampening = 0.6F;
+            else
+                this.auralDampening = 0;
 
             // Get our current rain strength.
             this.precipitationStrength = w.getRainGradient(1F);
