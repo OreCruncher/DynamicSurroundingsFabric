@@ -87,15 +87,26 @@ public class Configuration implements ConfigData {
 
     public static class EnhancedSounds {
         @ConfigEntry.Gui.Tooltip
-        @Comment("Enable/disable enhanced sound processing (reverb, occlusion, etc")
+        @Comment("Enable/disable enhanced sound processing (reverb, occlusion, etc)")
         public boolean enableEnhancedSounds = true;
 
-        public boolean enableHRTF = true;
-
-        public boolean enableMonoConversion = true;
-
+        @ConfigEntry.BoundedDiscrete(min = 0, max = 8)
+        @ConfigEntry.Gui.Tooltip
+        @ConfigEntry.Gui.RequiresRestart
+        @Comment("Number of background threads to use for enhanced sound processing (0 means use internal default)")
         public int backgroundThreadWorkers = 0;
 
+        @ConfigEntry.Gui.Tooltip
+        @ConfigEntry.Gui.RequiresRestart
+        @Comment("Enable/disable HRTF sound processing if OpenAL feature is available")
+        public boolean enableHRTF = true;
+
+        @ConfigEntry.Gui.Tooltip
+        @Comment("Enable/disable on the fly conversion of stereo sounds to mono as needed")
+        public boolean enableMonoConversion = true;
+
+        @ConfigEntry.Gui.Tooltip
+        @Comment("Enable/disable sound occlusion processing (sound muffling behind blocks)")
         public boolean enableOcculsionProcessing = false;
     }
 

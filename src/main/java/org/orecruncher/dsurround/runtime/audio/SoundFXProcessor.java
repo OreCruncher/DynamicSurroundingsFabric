@@ -20,10 +20,7 @@ import org.orecruncher.dsurround.xface.ISourceContext;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 public final class SoundFXProcessor {
@@ -144,9 +141,8 @@ public final class SoundFXProcessor {
      * @param source SoundSource being ticked
      */
     public static void tick(final Source source) {
-        final SourceContext ctx = ((ISourceContext) source).getData();
-        if (ctx != null)
-            ctx.tick(((ISourceContext) source).getId());
+        var ctx = ((ISourceContext) source).getData();
+        ctx.ifPresent(sourceContext -> sourceContext.tick(((ISourceContext) source).getId()));
     }
 
     /**
@@ -155,8 +151,8 @@ public final class SoundFXProcessor {
      * @param source The sound source that is stopping
      */
     public static void stopSoundPlay(final Source source) {
-        final SourceContext ctx = ((ISourceContext) source).getData();
-        if (ctx != null)
+        var ctx = ((ISourceContext) source).getData();
+        if (ctx.isPresent())
             sources[((ISourceContext) source).getId() - 1] = null;
     }
 
@@ -174,14 +170,17 @@ public final class SoundFXProcessor {
         if (!Client.Config.enhancedSounds.enableMonoConversion)
             return;
 
-        final SourceContext ctx = ((ISourceContext) source).getData();
+        var ctx = ((ISourceContext) source).getData();
 
         // If there is no context attached and conversion is enabled do it.  This can happen if enhanced sound
         // processing is turned off.  If there is a context, make sure that the sound is attenuated.
-        boolean doConversion = ctx == null || (ctx.getSound() != null && ctx.getSound().getAttenuationType() != SoundInstance.AttenuationType.NONE);
-
-        if (doConversion)
+        if (ctx.isEmpty()) {
             Conversion.convert(buffer);
+        } else {
+            var s = ctx.get().getSound();
+            if (s != null && s.getAttenuationType() != SoundInstance.AttenuationType.NONE && !s.isRelative())
+                Conversion.convert(buffer);
+        }
     }
 
     /**
@@ -210,12 +209,11 @@ public final class SoundFXProcessor {
             }
 
             if (tasks.size() > 0)
-                tasks.forEach(t -> {
+                for (int i = 0; i < tasks.size(); i++)
                     try {
-                        t.get();
+                        tasks.get(i).get();
                     } catch (InterruptedException | ExecutionException ignored) {
                     }
-                });
         } catch (final Throwable t) {
             LOGGER.error(t, "Error in SoundContext ForkJoinPool");
         }

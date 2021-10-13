@@ -16,6 +16,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Optional;
+
 @Mixin(Source.class)
 public class MixinSource implements ISourceContext {
 
@@ -30,10 +32,9 @@ public class MixinSource implements ISourceContext {
         return this.pointer;
     }
 
-    @Nullable
     @Override
-    public SourceContext getData() {
-        return this.dsurround_data;
+    public Optional<SourceContext> getData() {
+        return Optional.ofNullable(this.dsurround_data);
     }
 
     @Override
