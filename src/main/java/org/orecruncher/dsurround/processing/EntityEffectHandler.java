@@ -52,7 +52,7 @@ public class EntityEffectHandler  extends ClientHandler {
                     info.tick();
                 } else {
                     LOGGER.debug("Clearing effect info for %s (id %d)", entity.getClass().getSimpleName(), entity.getId());
-                    info.deinitialize();
+                    info.deactivate();
                     EntityEffectLibrary.clearEntityEffectInfo(entity);
                 }
             }

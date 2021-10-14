@@ -13,46 +13,11 @@ import java.util.Optional;
 @Environment(EnvType.CLIENT)
 public class EntityEffectInfo {
 
-    public static final EntityEffectInfo DEFAULT = new EntityEffectInfo() {
-        @Override
-        public boolean isDefault() {
-            return true;
-        }
-        @Override
-        public void initialize() {}
-        @Override
-        public void deinitialize() {}
-        @Override
-        public void tick() {}
-        @Override
-        public boolean isAlive()
-        {
-            return true;
-        }
-        @Override
-        public boolean isVisibleTo(PlayerEntity player) {
-            return false;
-        }
-        @Override
-        public boolean isWithinDistance(LivingEntity entity, int distance) {
-            throw new RuntimeException("Should not be invoked on DEFAULT EntityEffectInfo");
-        }
-    };
-
     // Entity can go out of scope for a variety of reasons besides
     // death.  Maintain weak reference to allow it to go out of scope.
     private final WeakReference<LivingEntity> entity;
     private final Collection<IEntityEffect> effects;
     private final int version;
-
-    /**
-     * Intentionally hidden.  Used to create a default instance for entities that have no effects.
-     */
-    EntityEffectInfo() {
-        this.entity = null;
-        this.effects = null;
-        this.version = -1;
-    }
 
     public EntityEffectInfo(int version, LivingEntity entity, Collection<IEntityEffect> effects) {
         this.version = version;
@@ -72,14 +37,14 @@ public class EntityEffectInfo {
         return Optional.ofNullable(this.entity.get());
     }
 
-    public void initialize() {
+    public void activate() {
         for (var e : effects)
-            e.initialize(this);
+            e.activate(this);
     }
 
-    public void deinitialize() {
+    public void deactivate() {
         for (var e : effects)
-            e.deinitialize(this);
+            e.deactivate(this);
     }
 
     public void tick() {

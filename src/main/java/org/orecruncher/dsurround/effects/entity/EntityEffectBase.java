@@ -18,7 +18,7 @@ public abstract class EntityEffectBase implements IEntityEffect {
     /**
      * Override to perform logic for initializing the effect beyond the ctor.
      */
-    public void initialize(EntityEffectInfo manager) {
+    public void activate(EntityEffectInfo manager) {
 
     }
 
@@ -26,7 +26,7 @@ public abstract class EntityEffectBase implements IEntityEffect {
      * Called before the effect is removed from the various maps so that cleanup
      * can be performed.
      */
-    public void deinitialize(EntityEffectInfo manager) {
+    public void deactivate(EntityEffectInfo manager) {
 
     }
 

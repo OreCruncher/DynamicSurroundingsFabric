@@ -6,6 +6,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.StringIdentifiable;
+import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.effects.entity.producers.BowUseEffectProducer;
 
@@ -18,8 +19,8 @@ import java.util.stream.Collectors;
 
 @Environment(EnvType.CLIENT)
 public enum EntityEffectType  implements StringIdentifiable {
-    UNKNOWN("unknown", entity -> null, () -> false),
-    BOW("bow", entity -> new BowUseEffectProducer().produce(entity), () -> true);
+    UNKNOWN("unknown", entity -> ImmutableList.of(), () -> false),
+    BOW_PULL("bow_pull", entity -> new BowUseEffectProducer().produce(entity), () -> Client.Config.entityEffects.enableBowPull);
 
     private static final Map<String, EntityEffectType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(EntityEffectType::getName, (category) -> category));
     public static final Codec<EntityEffectType> CODEC = StringIdentifiable.createCodec(EntityEffectType::values, EntityEffectType::byName);

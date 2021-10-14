@@ -43,6 +43,11 @@ public class Configuration implements ConfigData {
 
     @ConfigEntry.Gui.CollapsibleObject
     @ConfigEntry.Gui.Tooltip
+    @Comment("Configuration options for entity effects")
+    public final EntityEffects entityEffects = new EntityEffects();
+
+    @ConfigEntry.Gui.CollapsibleObject
+    @ConfigEntry.Gui.Tooltip
     @Comment("Configuration options for tweaking particle behavior")
     public final ParticleTweaks particleTweaks = new ParticleTweaks();
 
@@ -138,6 +143,15 @@ public class Configuration implements ConfigData {
         @ConfigEntry.Gui.RequiresRestart
         @Comment("Enable/disable bubble columns generated underwater")
         public boolean bubbleColumnEnabled = true;
+    }
+
+    public static class EntityEffects {
+
+        @ConfigEntry.Gui.Tooltip
+        @ConfigEntry.Gui.RequiresRestart
+        @Comment("Enable/disable bow pull sound effect")
+        public boolean enableBowPull = true;
+
     }
 
     public static class ParticleTweaks {

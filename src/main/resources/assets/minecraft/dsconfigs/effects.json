@@ -5,7 +5,7 @@
       "net.minecraft.entity.mob.AbstractSkeletonEntity"
     ],
     "effects": [
-      "bow"
+      "bow_pull"
     ]
   }
 ]

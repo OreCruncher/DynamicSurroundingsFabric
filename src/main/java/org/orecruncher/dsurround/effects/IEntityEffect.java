@@ -14,7 +14,7 @@ public interface IEntityEffect {
     /**
      * Override to perform logic for initializing the effect beyond the ctor.
      */
-    default void initialize(EntityEffectInfo manager) {
+    default void activate(EntityEffectInfo manager) {
 
     }
 
@@ -22,7 +22,7 @@ public interface IEntityEffect {
      * Called before the effect is removed from the various maps so that cleanup
      * can be performed.
      */
-    default void deinitialize(EntityEffectInfo manager) {
+    default void deactivate(EntityEffectInfo manager) {
 
     }
 

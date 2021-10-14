@@ -7,10 +7,10 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.data.EntityEffectConfigRule;
 import org.orecruncher.dsurround.effects.IEntityEffect;
-import org.orecruncher.dsurround.effects.IEntityEffectProducer;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -31,6 +31,7 @@ public class EntityEffectLibrary {
 
     private static final Reference2ObjectMap<EntityType<?>, Set<EntityEffectType>> entityEffects = new Reference2ObjectOpenHashMap<>();
     private static Collection<EntityEffectConfigRule> entityConfigRules;
+    private static EntityEffectInfo DEFAULT;
     private static int version;
 
     public static void load() {
@@ -47,6 +48,32 @@ public class EntityEffectLibrary {
         });
 
         version++;
+
+        DEFAULT = new EntityEffectInfo(version, null, ImmutableList.of()) {
+            @Override
+            public boolean isDefault() {
+                return true;
+            }
+            @Override
+            public void activate() {}
+            @Override
+            public void deactivate() {}
+            @Override
+            public void tick() {}
+            @Override
+            public boolean isAlive()
+            {
+                return true;
+            }
+            @Override
+            public boolean isVisibleTo(PlayerEntity player) {
+                return false;
+            }
+            @Override
+            public boolean isWithinDistance(LivingEntity entity, int distance) {
+                throw new RuntimeException("Should not be invoked on DEFAULT EntityEffectInfo");
+            }
+        };
 
         LOGGER.info("%d entity effect configs loaded; version is now %d", entityEffects.size(), version);
     }
@@ -68,14 +95,17 @@ public class EntityEffectLibrary {
         if (info != null && info.getVersion() == version)
             return info;
 
-        // Going to initialize a new one
-        info = null;
+        // Going to initialize a new one.  Deactivate the existing manager.
+        if (info != null) {
+            info.deactivate();
+            info = null;
+        }
 
         // Find the entity in our map
         var types = entityEffects.get(entity.getType());
         if (types == null) {
             // Didn't find it.  Gather from the rules and cache
-            types = gatherEffects(entity);
+            types = gatherEffectsFromConfigRules(entity);
             entityEffects.put(entity.getType(), types);
         }
 
@@ -86,25 +116,23 @@ public class EntityEffectLibrary {
             effects.addAll(effectsToApply);
         }
 
-        // If we have effect instances create a new info object
+        // If we have effect instances create a new info object.  Otherwise, set
+        // the default.
         if (effects.size() > 0)
             info = new EntityEffectInfo(version, entity, effects);
-
-        // If there are no effects for the entity type default
-        if (info == null) {
-            info = EntityEffectInfo.DEFAULT;
-        }
+        else
+            info = DEFAULT;
 
         accessor.setEffectInfo(info);
 
         // Initialize the attached effects before returning.  Usually the next step in processing would be
         // to tick the effects.
-        info.initialize();
+        info.activate();
 
         return info;
     }
 
-    private static Set<EntityEffectType> gatherEffects(LivingEntity entity) {
+    private static Set<EntityEffectType> gatherEffectsFromConfigRules(LivingEntity entity) {
         // Gather all the effect types that apply to the entity
         Set<EntityEffectType> effectTypes = new ReferenceOpenHashSet<>();
         for (var rule : entityConfigRules) {
