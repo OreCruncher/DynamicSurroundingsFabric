@@ -3,13 +3,12 @@
   "id": "dsurround",
   "version": "${version}",
   "name": "§6Dynamic Surroundings§r: §eFabric Edition",
-  "description": "§a[WIP]§r Alters the §ffabric§r of Minecraft experience by §fweaving§r a §ftapestry§r of §3sound§r and §3visual§r effects",
+  "description": "Alters the §ffabric§r of Minecraft experience by §fweaving§r a §ftapestry§r of §3sound§r and §3visual§r effects",
   "authors": [
     "§aOreCruncher§r"
   ],
   "contact": {
     "homepage": "https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings-fabric-edition",
-    "sources": "https://github.com/OreCruncher/DynamicSurroundingsFabric",
     "issues": "https://github.com/OreCruncher/DynamicSurroundingsFabric/issues"
   },
   "license": "MIT",
@@ -31,5 +30,15 @@
     "fabric": "*",
     "minecraft": "1.17.1",
     "java": ">=16"
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "dsurround.mod.link.sources": "https://github.com/OreCruncher/DynamicSurroundingsFabric",
+        "dsurround.mod.link.credits": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CREDITS.md",
+        "dsurround.mod.link.clothapi": "https://www.curseforge.com/minecraft/mc-mods/cloth-api",
+        "dsurround.mod.link.nashorn": "https://github.com/openjdk/nashorn"
+      }
+    }
   }
 }

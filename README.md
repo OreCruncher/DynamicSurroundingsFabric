@@ -18,6 +18,7 @@ This mod is a spiritual successor to the Forge based Dynamic Surroundings series
 * Mod Menu to get in-game mod configuration menu.
 
 **Features**
+* Enhanced Sound processing - performs calculations in the background, adding a reverb effect to spacial sounds.
 * Individual Sound Control - Set key bind and activate in-game.  Use this feature to block, cull, and control the volume at which sounds play.  And as a bonus you can play the sound to hear it.
 * Biome sounds - Various atmospheric sounds that play based on biomes in the area.  Seamless blending of sounds as the player moves throughout the world.
     * This does not replace the Minecraft feature of a singular biome background sound.  Currently, the various biomes in the Nether use this capability, and Dynamic Surroundings does not have sound configurations for that dimension.
@@ -42,7 +43,6 @@ This mod is a spiritual successor to the Forge based Dynamic Surroundings series
 **What's Being Dropped**
 * Aurora.  Good at turning a computer into a space heater, and I do not know enough about shaders to improve.
 * Mob Effects in its entirety.  Still thinking about carrying some of this functionality over.  (Mob effects are the things that give enhanced footsteps and other acoustics related to mobs.)
-* Sound processing (reverb, though folks commonly confuse this with echo - they are two different things).
 * Waterfalls.  They are tricky to maintain and can bring a potato CPU to its knees.
 * Specialized fog effects.  Minecraft has made some improvements in this area, and I expect it to continue.  I don't want to be in a position of overriding (or managing the problem) of when Microsoft adds more dynamic content.
 * Weather effects.  Again, there have been improvements to Minecraft.  I may add some additional processing around weather, but I do not expect to make major changes.

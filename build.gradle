@@ -72,6 +72,10 @@ jar {
     from("LICENSE") {
         rename { "${it}_${project.archivesBaseName}" }
     }
+
+    into('/') {
+        from('CREDITS.md')
+    }
 }
 
 // configure the maven publication

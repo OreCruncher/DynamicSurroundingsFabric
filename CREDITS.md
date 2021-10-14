@@ -6,11 +6,11 @@ whether LPs can be monetized on the various streaming services.
 ##### Modifications (if any):
 * Sounds converted to OGG format
 * Would have been converted to mono if needed
-* May have been edited to select certain sounds from the original track
+* May have been sampled to select certain sounds from the original track
 
 ##### Credits
 
-*dsurround:beach*
+*dsurround:biome.beach*
 
 <ul>
      <li>S: <a href="https://www.freesound.org/people/c97059890/sounds/21754/">Fiji Beach (Stereo)128kbps.mp3</a> by <a href="https://www.freesound.org/people/c97059890/">c97059890</a> | License: Creative Commons 0</li> 
@@ -24,7 +24,7 @@ whether LPs can be monetized on the various streaming services.
      <li>S: <a href="https://www.freesound.org/people/adamgryu/sounds/336023/">Rocks.wav</a> by <a href="https://www.freesound.org/people/adamgryu/">adamgryu</a> | License: Creative Commons 0</li>
 </ul>
 
-*dsurround:crickets*
+*dsurround:biome.crickets*
 
 <ul>
      <li>S: <a href="https://www.freesound.org/people/rayjensen/sounds/202749/">Soft, Chilled Crickets Field Recording</a> by <a href="https://www.freesound.org/people/rayjensen/">rayjensen</a> | License: Creative Commons 0</li>
@@ -40,6 +40,13 @@ whether LPs can be monetized on the various streaming services.
      <li>S: <a href="https://www.freesound.org/people/sarson/sounds/195522/">Distant Thunder.wav</a> by <a href="https://www.freesound.org/people/sarson/">sarson</a> | License: Creative Commons 0</li> 
      <li>S: <a href="https://www.freesound.org/people/aaronstar/sounds/194849/">NM-Mejor-Lado-Thunder-01.wav</a> by <a href="https://www.freesound.org/people/aaronstar/">aaronstar</a> | License: Creative Commons 0</li> 
 </ul>
+
+*dsurround:lilypad.bullfrog*
+
+<ul>
+     <li>S: <a href="https://freesound.org/people/sunsinger/sounds/80840/">Night Crickets & Bullfrogs.wav</a> by <a href="https://www.freesound.org/people/rayjensen/">sunsinger</a> | License: Attribution</li>
+</ul>
+
 
 *dsurround:waterfall.0*
 
@@ -77,10 +84,34 @@ whether LPs can be monetized on the various streaming services.
 <li> <a href="http://www.orangefreesounds.com/running-water-sound-mountain-stream/">Running-water-mountain-stream.mp3</a> by Alexander | License Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)</li>
 </ul>
 
-*dsurround:wind*
+*dsurround:biome.wind / dsurround:biome.wind.hills / dsurround:biome.wind.mountains*
 
 <ul>
      <li>S: <a href="https://www.freesound.org/people/felix.blume/sounds/156414/">Wind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).</a> by <a href="https://www.freesound.org/people/felix.blume/">felix.blume</a> | License: Creative Commons 0</li>
+</ul>
+
+*dsurround:biome.wind.arctic*
+
+<ul>
+     <li>S: <a href="https://freesound.org/people/DBlover/sounds/405601/">Howling Wind Ambience</a> by <a href="https://www.freesound.org/people/DBlover/">DBlover</a> | License: Creative Commons 0</li>
+</ul>
+
+*dsurround:biome.ocean / dsurround:biome.ocean.deep / dsurround:biome.ocean.deep.under*
+
+<ul>
+    <li>S: <a href="https://freesound.org/people/bohitomi/sounds/240219/">ocean waves surround me.wav</a> by <a href="https://www.freesound.org/people/DBlover/">bohitomi</a> | License: Attribution</li>
+</ul>
+
+*dsurround:biome.river / dsurround:biome.ocean.under*
+
+<ul>
+     <li>S: <a href="https://freesound.org/people/AlienXXX/sounds/218276/">underwater ambience.wav</a> by <a href="https://freesound.org/people/AlienXXX/">AlienXXX</a> | License: Attribution</li>
+</ul>
+
+*dsurround:biome.bog*
+
+<ul>
+     <li>S: <a href="https://freesound.org/people/RHumphries/sounds/1050/">rbh Mpls Bog birds.wav</a> by <a href="https://freesound.org/people/RHumphries/">RHumphries</a> | License: Attribution</li>
 </ul>
 
 *dsurround:underriver / dsurround:underocean / dsurround:underdeepocean*
@@ -89,13 +120,13 @@ whether LPs can be monetized on the various streaming services.
      <li>S: <a href="https://www.freesound.org/people/AlienXXX/sounds/218276/">underwater ambience.wav</a> by <a href="https://www.freesound.org/people/AlienXXX/">AlienXXX</a> | License: Attribution</li> 
 </ul>
 
-*dsurround:plains*
+*dsurround:biome.plains*
 
 <ul>
      <li>S: <a href="https://www.freesound.org/people/blouhond/sounds/157947/">Calm Morning Outdoor Ambience</a> by <a href="https://www.freesound.org/people/blouhond/">blouhond</a> | License: Attribution</li> 
 </ul>
 
-*dsurround:forest*
+*dsurround:biome.forest*
 
 <ul>
      <li>S: <a href="https://www.freesound.org/people/joepsporck/sounds/262037/">001_forrest.wav</a> by <a href="https://www.freesound.org/people/joepsporck/">joepsporck</a> | License: Creative Commons 0</li> 
@@ -107,13 +138,13 @@ whether LPs can be monetized on the various streaming services.
      <li>S: <a href="https://www.freesound.org/people/dkaufman/sounds/256533/">coyote barks and howls</a> by <a href="https://www.freesound.org/people/dkaufman/">dkaufman</a> | License: Creative Commons 0</li> 
 </ul>
 
-*dsurround:village.rooster*
+*dsurround:biome.village.rooster*
 
 <ul>
      <li>S: <a href="https://www.freesound.org/people/Ramston/sounds/331442/">Village ambience rooster and light birds with wind .wav</a> by <a href="https://www.freesound.org/people/Ramston/">Ramston</a> | License: Creative Commons 0</li> 
 </ul>
 
-*dsurround:village.anvil*
+*dsurround:biome.village.anvil*
 
 <ul>
      <li>S: <a href="https://www.freesound.org/people/MrAuralization/sounds/274846/">Anvil</a> by <a href="https://www.freesound.org/people/MrAuralization/">MrAuralization</a> | License: Attribution</li> 
@@ -125,13 +156,13 @@ whether LPs can be monetized on the various streaming services.
      <li>S: <a href="https://www.freesound.org/people/InspectorJ/sounds/343761/">Dripping, Very Fast, A.wav</a> by <a href="https://www.freesound.org/people/InspectorJ/">InspectorJ</a> | License: Attribution</li> 
 </ul>
 
-*dsurround:village.dogbark*
+*dsurround:biome.village.dogbark*
 
 <ul>
      <li>S: <a href="https://www.freesound.org/people/darranambler/sounds/344955/">Dogs Barking</a> by <a href="https://www.freesound.org/people/darranambler/">darranambler</a> | License: Creative Commons 0</li> 
 </ul>
 
-*dsurround:underwater*
+*dsurround:biome.water.under*
 
 <ul>
      <li>S: <a href="https://www.freesound.org/people/Abolla/sounds/213914/">UnderwaterDrowning01.wav</a> by <a href="https://www.freesound.org/people/Abolla/">Abolla</a> | License: Creative Commons 0</li> 
@@ -156,19 +187,19 @@ whether LPs can be monetized on the various streaming services.
      <li>S: <a href="https://www.freesound.org/people/RHumphries/sounds/1050/">rbh Mpls Bog birds.wav</a> by <a href="https://www.freesound.org/people/RHumphries/">RHumphries</a> | License: Attribution</li> 
 </ul>
 
-*dsurround:desert.wind*
+*dsurround:biome.desert.wind*
 
 <ul>
      <li>S: <a href="https://www.freesound.org/people/nageor/sounds/112296/">desertwind1FINAL.wav</a> by <a href="https://www.freesound.org/people/nageor/">nageor</a> | License: Creative Commons 0</li> 
 </ul>
 
-*dsurround:savanna.night*
+*dsurround:biome.savanna.night*
 
 <ul>
      <li>S: <a href="https://www.freesound.org/people/reinsamba/sounds/58236/">MerlothPark_crickets2.WAV</a> by <a href="https://www.freesound.org/people/reinsamba/">reinsamba</a> | License: Attribution</li>
 </ul>
 
-*dsurround:savanna.day*
+*dsurround:biome.savanna.day*
 
 <ul> 
      <li>S: <a href="https://www.freesound.org/people/reinsamba/sounds/58237/">MerlothPark_morning_ambiance.wav</a> by <a href="https://www.freesound.org/people/reinsamba/">reinsamba</a> | License: Attribution</li> 
