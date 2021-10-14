@@ -5,10 +5,10 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.util.StringIdentifiable;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.effects.producers.FlameJetProducer;
-import org.orecruncher.dsurround.effects.producers.IBlockEffectProducer;
-import org.orecruncher.dsurround.effects.producers.SteamColumnProducer;
-import org.orecruncher.dsurround.effects.producers.UnderwaterBubbleProducer;
+import org.orecruncher.dsurround.effects.blocks.producers.FlameJetProducer;
+import org.orecruncher.dsurround.effects.IBlockEffectProducer;
+import org.orecruncher.dsurround.effects.blocks.producers.SteamColumnProducer;
+import org.orecruncher.dsurround.effects.blocks.producers.UnderwaterBubbleProducer;
 import org.orecruncher.dsurround.lib.scripting.Script;
 
 import java.util.Arrays;

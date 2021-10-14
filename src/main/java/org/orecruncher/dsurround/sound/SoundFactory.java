@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.sound;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.sound.EntityTrackingSoundInstance;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.entity.Entity;
@@ -9,6 +10,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.mixins.core.MixinAbstractSoundInstance;
@@ -46,6 +48,32 @@ public final class SoundFactory {
                 x,
                 y,
                 z
+        );
+    }
+
+    public static EntityTrackingSoundInstance createAtEntity(SoundEvent event, Entity entity) {
+        return new EntityTrackingSoundInstance(
+                event,
+                SoundCategory.AMBIENT,
+                1F,
+                1F,
+                entity
+        );
+    }
+
+    public static PositionedSoundInstance createAtLocation(SoundEvent event, Entity entity) {
+        return createAtLocation(event, entity.getEyePos());
+    }
+
+    public static PositionedSoundInstance createAtLocation(SoundEvent event, Vec3d position) {
+        return new PositionedSoundInstance(
+                event,
+                SoundCategory.AMBIENT,
+                1F,
+                1F,
+                position.x,
+                position.y,
+                position.z
         );
     }
 

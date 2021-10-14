@@ -1,6 +1,8 @@
 package org.orecruncher.dsurround.config;
 
 import com.mojang.serialization.Codec;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
@@ -14,8 +16,10 @@ import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import java.util.*;
 import java.util.stream.Stream;
 
+@Environment(EnvType.CLIENT)
 public final class DimensionLibrary {
 
+    private static final String FILE_NAME = "dimensions.json";
     private static final Codec<List<DimensionConfig>> CODEC = Codec.list(DimensionConfig.CODEC);
     private static final ObjectArray<DimensionConfig> cache = new ObjectArray<>();
     private static final Map<RegistryKey<World>, DimensionInfo> configs = new HashMap<>();
@@ -23,7 +27,7 @@ public final class DimensionLibrary {
     public static void load() {
         configs.clear();
         cache.clear();
-        final Collection<IResourceAccessor> accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), "dimensions.json");
+        final Collection<IResourceAccessor> accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), FILE_NAME);
 
         IResourceAccessor.process(accessors, accessor -> {
             var cfg = accessor.as(CODEC);

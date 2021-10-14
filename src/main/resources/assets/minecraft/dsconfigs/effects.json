@@ -1,0 +1,11 @@
+[
+  {
+    "entityTypes": [
+      "minecraft:player",
+      "net.minecraft.entity.mob.AbstractSkeletonEntity"
+    ],
+    "effects": [
+      "bow"
+    ]
+  }
+]

@@ -1,11 +1,11 @@
-package org.orecruncher.dsurround.effects.producers;
+package org.orecruncher.dsurround.effects.blocks.producers;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import org.orecruncher.dsurround.effects.BubbleJetEffect;
+import org.orecruncher.dsurround.effects.blocks.BubbleJetEffect;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.lib.scripting.Script;
 

@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.effects.producers;
+package org.orecruncher.dsurround.effects.blocks.producers;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -10,6 +10,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.effects.IBlockEffect;
+import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 

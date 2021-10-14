@@ -26,9 +26,11 @@ import java.util.Objects;
 @Environment(EnvType.CLIENT)
 public final class SoundLibrary {
 
+    private static final String FILE_NAME = "sounds.json";
     private static final UnboundedMapCodec<String, SoundMetadataConfig> CODEC = Codec.unboundedMap(Codec.STRING, SoundMetadataConfig.CODEC);
     private static final IModLog LOGGER = Client.LOGGER.createChild(SoundLibrary.class);
     private static final Identifier MISSING_RESOURCE = new Identifier(Client.ModId, "missing_sound");
+
     public static final SoundEvent MISSING = new SoundEvent(MISSING_RESOURCE);
 
     private static final Object2ObjectOpenHashMap<Identifier, SoundEvent> myRegistry = new Object2ObjectOpenHashMap<>();
@@ -52,7 +54,7 @@ public final class SoundLibrary {
         // Gather resource pack sound files and process them to ensure metadata is collected.
         // Resource pack sounds generally replace existing registration, but this allows for new
         // sounds to be added client side.
-        final Collection<IResourceAccessor> soundFiles = ResourceUtils.findSounds();
+        final Collection<IResourceAccessor> soundFiles = ResourceUtils.findSounds(FILE_NAME);
 
         for (final IResourceAccessor file : soundFiles) {
             registerSoundFile(file);

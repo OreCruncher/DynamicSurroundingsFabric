@@ -206,7 +206,9 @@
       "@WOOD",
       "@NETHER_WOOD",
       "#minecraft:logs",
-      "#minecraft:planks"
+      "#minecraft:planks",
+      "#minecraft:wooden_slabs",
+      "#minecraft:wooden_stairs"
     ],
     "soundReflectivity": 0.7
   }

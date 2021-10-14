@@ -13,7 +13,7 @@ import org.orecruncher.dsurround.config.AcousticConfig;
 import org.orecruncher.dsurround.config.SoundLibrary;
 import org.orecruncher.dsurround.config.biome.AcousticEntry;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
-import org.orecruncher.dsurround.effects.producers.IBlockEffectProducer;
+import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.material.MaterialUtils;

@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.effects.producers;
+package org.orecruncher.dsurround.effects;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

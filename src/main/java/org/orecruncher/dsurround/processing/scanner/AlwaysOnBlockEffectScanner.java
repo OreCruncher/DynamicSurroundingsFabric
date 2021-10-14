@@ -6,7 +6,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.config.BlockLibrary;
-import org.orecruncher.dsurround.effects.producers.IBlockEffectProducer;
+import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.scanner.CuboidScanner;
 import org.orecruncher.dsurround.lib.scanner.ScanContext;
 import org.orecruncher.dsurround.processing.misc.BlockEffectManager;

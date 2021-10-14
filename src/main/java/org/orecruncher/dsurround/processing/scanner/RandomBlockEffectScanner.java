@@ -5,7 +5,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import org.orecruncher.dsurround.config.BlockLibrary;
-import org.orecruncher.dsurround.effects.producers.IBlockEffectProducer;
+import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.scanner.RandomScanner;
 import org.orecruncher.dsurround.lib.scanner.ScanContext;
 import org.orecruncher.dsurround.processing.misc.BlockEffectManager;

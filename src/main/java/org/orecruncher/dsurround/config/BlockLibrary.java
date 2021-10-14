@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 @Environment(EnvType.CLIENT)
 public class BlockLibrary {
 
+    private static final String FILE_NAME = "blocks.json";
     private static final Codec<List<BlockConfigRule>> CODEC = Codec.list(BlockConfigRule.CODEC);
     private static final IModLog LOGGER = Client.LOGGER.createChild(BlockLibrary.class);
 
@@ -46,7 +47,7 @@ public class BlockLibrary {
     public static void load() {
 
         blockConfigs.clear();
-        final Collection<IResourceAccessor> accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), "blocks.json");
+        final Collection<IResourceAccessor> accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), FILE_NAME);
 
         IResourceAccessor.process(accessors, accessor -> {
             var cfg = accessor.as(CODEC);

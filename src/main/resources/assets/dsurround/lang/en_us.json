@@ -29,6 +29,7 @@
   "dsurround.sound.caption.anvil": "Anvil rings",
   "dsurround.sound.caption.dog": "Dog barks",
   "dsurround.sound.caption.thunder": "Thunder roars",
+  "dsurround.sound.caption.bow.pull": "Bow drawn",
   "dsurround.format.TimeOfDay": "Day %1$d, %2$d:%3$s %4$s (%5$s)",
   "dsurround.format.AM": "AM",
   "dsurround.format.PM": "PM",

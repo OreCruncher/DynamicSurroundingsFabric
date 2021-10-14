@@ -7,8 +7,8 @@
   ],
   "client": [
     "audio.MixinSoundEngineAccessor",
-    "audio.MixinSource",
     "audio.MixinSoundSystem",
+    "audio.MixinSource",
     "audio.MixinStaticSoundAccessor",
     "core.MixinAbstractSoundInstance",
     "core.MixinBiome",
@@ -24,7 +24,8 @@
     "core.MixinSoundManagerAccessor",
     "core.MixinSoundSystem",
     "core.MixinSoundSystemAccessors",
-    "core.MixinTagManager"
+    "core.MixinTagManager",
+    "core.MixinLivingEntity"
   ],
   "server": [],
   "injectors": {

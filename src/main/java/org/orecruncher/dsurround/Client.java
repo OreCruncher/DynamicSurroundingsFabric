@@ -84,6 +84,7 @@ public class Client implements ClientModInitializer {
         BiomeLibrary.load();
         DimensionLibrary.load();
         BlockLibrary.load();
+        EntityEffectLibrary.load();
     }
 
     public void onComplete(MinecraftClient client) {

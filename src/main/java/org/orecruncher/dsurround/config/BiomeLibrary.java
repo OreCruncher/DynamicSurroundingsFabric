@@ -32,6 +32,7 @@ import java.util.stream.Stream;
 @Environment(EnvType.CLIENT)
 public final class BiomeLibrary {
 
+    private static final String FILE_NAME = "biomes.json";
     private static final Codec<List<BiomeConfigRule>> CODEC = Codec.list(BiomeConfigRule.CODEC);
     private static final IModLog LOGGER = Client.LOGGER.createChild(BiomeLibrary.class);
     private static final BiomeTraits INTERNAL_TRAITS = BiomeTraits.from(BiomeTrait.FAKE);
@@ -56,7 +57,7 @@ public final class BiomeLibrary {
         internalBiomes.clear();
 
         ObjectArray<BiomeConfigRule> configs = new ObjectArray<>(64);
-        var accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), "biomes.json");
+        var accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), FILE_NAME);
 
         IResourceAccessor.process(accessors, accessor -> {
             var cfg = accessor.as(CODEC);

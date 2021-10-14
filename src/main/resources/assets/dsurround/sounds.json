@@ -926,6 +926,32 @@
 			}
 		]
 	},
+	"bow.equip": {
+		"category": "player",
+		"sounds": [
+			"dsurround:items/bow_draw"
+		]
+	},
+	"bow.pull": {
+		"subtitle": "dsurround.sound.caption.bow.pull",
+		"category": "player",
+		"sounds": [
+			"dsurround:items/bow_pull1",
+			"dsurround:items/bow_pull2",
+			"dsurround:items/bow_pull3",
+			"dsurround:items/bow_pull4",
+			"dsurround:items/bow_pull5"
+		]
+	},
+	"bow.loose": {
+		"category": "player",
+		"sounds": [
+			"dsurround:items/bow_loose1",
+			"dsurround:items/bow_loose2",
+			"dsurround:items/bow_loose3",
+			"dsurround:items/bow_loose4"
+		]
+	},
 	"silence": {
 		"sounds": [
 			"dsurround:ambient/silence"

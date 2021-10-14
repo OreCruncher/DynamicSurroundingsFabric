@@ -59,10 +59,10 @@ public final class ResourceUtils {
      *
      * @return Collection of accessors to retrieve sound.json configurations.
      */
-    public static Collection<IResourceAccessor> findSounds() {
+    public static Collection<IResourceAccessor> findSounds(String configId) {
         return findAssets(
                 ns -> true,
-                ns -> new Identifier(ns, "sounds.json"));
+                ns -> new Identifier(ns, configId));
     }
 
     // Modeled after sound list processing in SoundManager

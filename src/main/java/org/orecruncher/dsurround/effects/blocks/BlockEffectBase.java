@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.effects;
+package org.orecruncher.dsurround.effects.blocks;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -6,6 +6,7 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 
