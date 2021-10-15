@@ -75,6 +75,9 @@ public class Configuration implements ConfigData {
         @Comment("Bitmask for toggling various debug traces")
         public int traceMask = 0;
 
+        @ConfigEntry.Gui.Tooltip
+        @Comment("Enable/disable chat window notification of newer updates available")
+        public boolean enableModUpdateChatMessage = true;
     }
 
     public static class SoundSystem {
@@ -112,7 +115,7 @@ public class Configuration implements ConfigData {
 
         @ConfigEntry.Gui.Tooltip
         @Comment("Enable/disable sound occlusion processing (sound muffling behind blocks)")
-        public boolean enableOcculsionProcessing = false;
+        public boolean enableOcclusionProcessing = false;
     }
 
     public static class ThunderStorms {

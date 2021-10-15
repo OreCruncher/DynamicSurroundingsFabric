@@ -29,7 +29,7 @@ public class MixinBiome implements IBiomeExtended {
      * @param cir Mixin callback result
      */
     @Inject(method = "getFogColor()I", at = @At("HEAD"), cancellable = true)
-    public void getFogColor(CallbackInfoReturnable<Integer> cir) {
+    public void dsurround_getFogColor(CallbackInfoReturnable<Integer> cir) {
         if (this.dsurround_info != null) {
             var color = this.dsurround_info.getFogColor();
             if (color != null)

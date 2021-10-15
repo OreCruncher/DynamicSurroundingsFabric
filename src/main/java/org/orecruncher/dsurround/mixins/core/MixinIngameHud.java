@@ -15,12 +15,12 @@ public class MixinIngameHud {
     private DiagnosticsHud hud;
 
     @Inject(method = "<init>(Lnet/minecraft/client/MinecraftClient;)V", at = @At("RETURN"))
-    public void constructor(MinecraftClient minecraftClient, CallbackInfo ci) {
+    public void dsurround_constructor(MinecraftClient minecraftClient, CallbackInfo ci) {
         hud = new DiagnosticsHud(minecraftClient);
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;renderStatusEffectOverlay(Lnet/minecraft/client/util/math/MatrixStack;)V", shift = At.Shift.AFTER))
-    public void render(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
+    public void dsurround_render(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
         hud.render(matrices);
     }
 }

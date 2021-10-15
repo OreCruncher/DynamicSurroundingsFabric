@@ -4,21 +4,31 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.text.Text;
 import org.orecruncher.dsurround.commands.Commands;
 import org.orecruncher.dsurround.config.*;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.FrameworkUtils;
+import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.Localization;
 import org.orecruncher.dsurround.lib.TickCounter;
 import org.orecruncher.dsurround.lib.logging.ModLog;
+import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.processing.Handlers;
 import org.orecruncher.dsurround.runtime.diagnostics.ClientProfiler;
 import org.orecruncher.dsurround.runtime.diagnostics.RuntimeDiagnostics;
 import org.orecruncher.dsurround.runtime.diagnostics.SoundEngineDiagnostics;
 import org.orecruncher.dsurround.sound.StartupSoundHandler;
 
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Environment(EnvType.CLIENT)
 public class Client implements ClientModInitializer {
@@ -55,6 +65,8 @@ public class Client implements ClientModInitializer {
         }
     }
 
+    private CompletableFuture<Optional<VersionChecker.VersionResult>> versionInfo;
+
     @Override
     public void onInitializeClient() {
         LOGGER.info("Initializing...");
@@ -64,6 +76,7 @@ public class Client implements ClientModInitializer {
         createPath(DUMP_PATH);
 
         ClientLifecycleEvents.CLIENT_STARTED.register(this::onComplete);
+        ClientPlayConnectionEvents.JOIN.register(this::onConnect);
 
         TickCounter.register();
         StartupSoundHandler.register();
@@ -91,5 +104,57 @@ public class Client implements ClientModInitializer {
         // Initialize our sounds
         this.refreshConfigs();
         Handlers.initialize();
+
+        // Kick off version checking.  This should run in parallel with initialization.
+        this.versionInfo = CompletableFuture.supplyAsync(this::getVersionText);
+    }
+
+    private Optional<VersionChecker.VersionResult> getVersionText() {
+
+        var modContainer = FrameworkUtils.getModContainer(ModId);
+        if (modContainer.isEmpty())
+            return Optional.empty();
+
+        var metadata = modContainer.get().getMetadata();
+
+        var updateInfo = metadata.getCustomValue("updateurl").getAsString();
+        if (updateInfo == null)
+            return Optional.empty();
+
+        var displayName = metadata.getName();
+        var modVersion = metadata.getVersion();
+        var minecraftVersion = FrameworkUtils.getModVersion("minecraft");
+
+        URL updateURL = null;
+
+        try {
+            updateURL = new URL(updateInfo);
+        } catch (Throwable t) {
+            LOGGER.warn("Unable to parse update URL");
+        }
+
+        if (updateURL == null)
+            return Optional.empty();
+
+        return VersionChecker.getUpdateText(displayName, minecraftVersion, modVersion, updateURL);
+    }
+
+    private void onConnect(ClientPlayNetworkHandler clientPlayNetworkHandler, PacketSender packetSender, MinecraftClient minecraftClient) {
+        // Display version information when joining a game and when a chat window is available.
+        try {
+            if (this.versionInfo != null) {
+                var versionQueryResult = this.versionInfo.get();
+                if (versionQueryResult.isPresent()) {
+                    var result = versionQueryResult.get();
+
+                    LOGGER.info("Update to %s v%s is available", result.displayName, result.version);
+
+                    var player = GameUtils.getPlayer();
+                    player.sendMessage(versionQueryResult.get().getChatText(), false);
+                }
+            }
+        } catch(Throwable t) {
+            LOGGER.error(t, "Unable to process version information");
+        }
     }
 }

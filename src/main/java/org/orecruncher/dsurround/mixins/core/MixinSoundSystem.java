@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinSoundSystem {
 
     @Inject(method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At("HEAD"), cancellable = true)
-    private void play(SoundInstance sound, CallbackInfo ci) {
+    private void dsurround_play(SoundInstance sound, CallbackInfo ci) {
         try {
             if (SoundInstanceHandler.shouldBlockSoundPlay(sound))
                 ci.cancel();
@@ -23,7 +23,7 @@ public abstract class MixinSoundSystem {
     }
 
     @Inject(method = "getAdjustedVolume(Lnet/minecraft/client/sound/SoundInstance;)F", at = @At("HEAD"), cancellable = true)
-    private void getAdjustedVolume(SoundInstance sound, CallbackInfoReturnable<Float> ci) {
+    private void dsurround_getAdjustedVolume(SoundInstance sound, CallbackInfoReturnable<Float> ci) {
         try {
             ci.setReturnValue(SoundVolumeEvaluator.getAdjustedVolume(sound));
         } catch (final Exception ignore) {

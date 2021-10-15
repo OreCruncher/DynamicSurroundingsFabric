@@ -9,6 +9,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.JsonHelper;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.lib.CodecExtensions;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -149,28 +150,9 @@ public interface IResourceAccessor {
     default <T> @Nullable T as(final Codec<T> codec) {
         String content = this.asString();
         if (!Strings.isNullOrEmpty(content)) {
-            var reader = new StringReader(content);
-            Dynamic<JsonElement> dynamic;
-            if (codec instanceof ListCodec) {
-                JsonArray jsonArray = JsonHelper.method_37165(reader);
-                dynamic = new Dynamic<>(JsonOps.INSTANCE, jsonArray);
-            } else if (codec instanceof MapCodec) {
-                // Not sure if there is anything special yet...
-                JsonObject jsonObject = JsonHelper.deserialize(reader);
-                dynamic = new Dynamic<>(JsonOps.INSTANCE, jsonObject);
-            } else {
-                JsonObject jsonObject = JsonHelper.deserialize(reader);
-                dynamic = new Dynamic<>(JsonOps.INSTANCE, jsonObject);
-            }
-            try {
-                DataResult<T> result = codec.parse(dynamic);
-                Optional<T> parsed = result.resultOrPartial(ResourceUtils.LOGGER::warn);
-                if (parsed.isPresent()) {
-                    return parsed.get();
-                }
-            } catch (Throwable t) {
-                ResourceUtils.LOGGER.error(t, "Unable to parse %s", this.location());
-            }
+            var result = CodecExtensions.deserialize(content, codec);
+            if (result.isPresent())
+                return result.get();
         }
         return null;
     }

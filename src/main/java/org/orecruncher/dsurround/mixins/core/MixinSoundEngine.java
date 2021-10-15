@@ -17,7 +17,7 @@ public class MixinSoundEngine {
      * @return The quantity of streaming sounds (should be at least 8)
      */
     @ModifyConstant(method = "init()V", constant = @Constant(intValue = 8))
-    public int initialize(int v) {
+    public int dsurround_initialize(int v) {
         return Client.Config.soundSystem.streamingChannels;
     }
 }

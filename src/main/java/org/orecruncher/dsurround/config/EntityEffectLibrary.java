@@ -75,7 +75,7 @@ public class EntityEffectLibrary {
             }
         };
 
-        LOGGER.info("%d entity effect configs loaded; version is now %d", entityEffects.size(), version);
+        LOGGER.info("%d entity config rules loaded; version is now %d", entityConfigRules.size(), version);
     }
 
     public static boolean doesEntityEffectInfoExist(LivingEntity entity) {

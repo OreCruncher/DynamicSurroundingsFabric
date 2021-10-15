@@ -2,6 +2,8 @@ package org.orecruncher.dsurround.lib;
 
 import joptsimple.internal.Strings;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.resource.ResourcePackProfile;
 import org.jetbrains.annotations.Nullable;
@@ -12,14 +14,28 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class FrameworkUtils {
 
-    @Nullable
-    public static String getModDisplayName(String namespace) {
+    public static Optional<ModContainer> getModContainer(String namespace) {
+        return FabricLoader.getInstance().getModContainer(namespace);
+    }
+
+    public static @Nullable String getModDisplayName(String namespace) {
         var container = FabricLoader.getInstance().getModContainer(namespace);
         return container.map(modContainer -> modContainer.getMetadata().getName()).orElse(null);
+    }
+
+    public static @Nullable Version getModVersion(String namespace) {
+        var container = FabricLoader.getInstance().getModContainer(namespace);
+        return container.map(modContainer -> modContainer.getMetadata().getVersion()).orElse(null);
+    }
+
+    public static @Nullable String getModCustomProperty(String namespace, String propertyName) {
+        var container = FabricLoader.getInstance().getModContainer(namespace);
+        return container.map(modContainer -> modContainer.getMetadata().getCustomValue(propertyName).getAsString()).orElse(null);
     }
 
     public static boolean isModLoaded(String namespace) {

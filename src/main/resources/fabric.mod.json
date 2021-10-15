@@ -39,6 +39,7 @@
         "dsurround.mod.link.clothapi": "https://www.curseforge.com/minecraft/mc-mods/cloth-api",
         "dsurround.mod.link.nashorn": "https://github.com/openjdk/nashorn"
       }
-    }
+    },
+    "updateurl": "https://gist.githubusercontent.com/OreCruncher/d7258ba100b311c00f64c6872970dfad/raw/b639a5b1523ad88e137034b115cb622e37471dc1/versions.json"
   }
 }

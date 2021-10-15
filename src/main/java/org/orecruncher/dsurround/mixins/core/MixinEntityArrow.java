@@ -16,7 +16,7 @@ public abstract class MixinEntityArrow {
     }
 
     @Redirect(method = "tick()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/projectile/PersistentProjectileEntity;isCritical()Z"))
-    private boolean isCriticalCheck(PersistentProjectileEntity instance) {
+    private boolean dsurround_isCriticalCheck(PersistentProjectileEntity instance) {
         return instance.isCritical() && Client.Config.particleTweaks.showProjectileTrails;
     }
 }

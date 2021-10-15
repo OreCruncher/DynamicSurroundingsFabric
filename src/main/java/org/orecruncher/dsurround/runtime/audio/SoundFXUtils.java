@@ -392,7 +392,7 @@ public final class SoundFXUtils {
     }
 
     private static boolean skipOcclusion(SoundCategory category) {
-        return !Client.Config.enhancedSounds.enableOcculsionProcessing
+        return !Client.Config.enhancedSounds.enableOcclusionProcessing
                 || category == SoundCategory.MASTER
                 || category == SoundCategory.MUSIC;
     }
