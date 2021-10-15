@@ -11,7 +11,7 @@ This mod is a spiritual successor to the Forge based Dynamic Surroundings series
 **Requirements**
 * JAVA 16+ (I am using Adoptium https://adoptium.net/)
 * Fabric Loader >=0.12.1
-* Fabric API 0.40.6+1.17
+* Fabric API 0.40.8+1.17
 * 100% client side; no server side deployment needed
 
 **Recommended Additions**
@@ -52,9 +52,7 @@ As I indicated these features are not planned.  Based on time commitments I may 
 
 **Planned Features**
 * Hunger grumble.  This was removed in Forge versions, but I am missing it a bit.  Will need to find some better sounds though.
-* Rustling sounds when walking through plants and the like.  This is a feature of footstep acoustics that I am planning on reusing.  Call it the "walk through grass" sound feature.
 * Making the config system publicly available so that pack authors can configure things.  This is possible with this release, but I may change things.  Besides, it has to be documented so that someone would know what to do.
-* Notification of mod updates.  Need to see if there is a mechanism to do that already.
 
 > ### License
 The MIT License (MIT)
