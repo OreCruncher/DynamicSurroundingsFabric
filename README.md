@@ -10,12 +10,13 @@ This mod is a spiritual successor to the Forge based Dynamic Surroundings series
 
 **Requirements**
 * JAVA 16+ (I am using Adoptium https://adoptium.net/)
-* Fabric Loader >=0.11.7
+* Fabric Loader >=0.12.1
 * Fabric API 0.40.6+1.17
 * 100% client side; no server side deployment needed
 
 **Recommended Additions**
-* Mod Menu to get in-game mod configuration menu.
+* [Mod Menu (CurseForge)](https://www.curseforge.com/minecraft/mc-mods/modmenu) or [ModMenu (Modrinth)](https://modrinth.com/mod/modmenu) to get in-game mod configuration menu.
+* [Presence Footsteps (CurseForge)](https://www.curseforge.com/minecraft/mc-mods/presence-footsteps) or [Presence Foosteps (Modrinth)](https://modrinth.com/mod/presence-footsteps) for footstep acoustics
 
 **Features**
 * Enhanced Sound processing - performs calculations in the background, adding a reverb effect to spacial sounds.

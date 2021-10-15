@@ -26,7 +26,7 @@
     "dsurround.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.11.7",
+    "fabricloader": ">=0.12.1",
     "fabric": "*",
     "minecraft": "1.17.1",
     "java": ">=16"
@@ -40,6 +40,6 @@
         "dsurround.mod.link.nashorn": "https://github.com/openjdk/nashorn"
       }
     },
-    "updateurl": "https://gist.githubusercontent.com/OreCruncher/d7258ba100b311c00f64c6872970dfad/raw/b639a5b1523ad88e137034b115cb622e37471dc1/versions.json"
+    "updateurl": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/versions.json"
   }
 }
