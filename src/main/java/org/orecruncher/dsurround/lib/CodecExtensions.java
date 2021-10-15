@@ -5,12 +5,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.serialization.*;
 import com.mojang.serialization.codecs.ListCodec;
+import net.minecraft.block.BlockState;
 import net.minecraft.util.JsonHelper;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.block.BlockStateMatcher;
 import org.orecruncher.dsurround.lib.block.MatchOnBlockTag;
 import org.orecruncher.dsurround.lib.block.MatchOnMaterial;
-import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 
 import java.io.StringReader;
 import java.util.Optional;
@@ -36,8 +36,8 @@ public interface CodecExtensions<A> extends Codec<A> {
     /**
      * Checks that a string is a valid format specification for BlockState
      */
-    static Codec<BlockStateMatcher> checkBlockStateSpecification(boolean allowTags, boolean allowMaterials) {
-        final Function<BlockStateMatcher, DataResult<BlockStateMatcher>> func = value -> {
+    static Codec<IMatcher<BlockState>> checkBlockStateSpecification(boolean allowTags, boolean allowMaterials) {
+        final Function<IMatcher<BlockState>, DataResult<IMatcher<BlockState>>> func = value -> {
             if (!allowTags && value instanceof MatchOnBlockTag)
                 return DataResult.error(String.format("Current context does not allow block matching based on tags (%s)", value));
             if (!allowMaterials && value instanceof MatchOnMaterial)

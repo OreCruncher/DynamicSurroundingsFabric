@@ -7,6 +7,7 @@ import net.minecraft.block.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.lib.IMatcher;
 
 import java.util.Collection;
 import java.util.Map;
@@ -20,9 +21,9 @@ import java.util.stream.Collectors;
  *
  * @param <T> Value type of the Map
  */
-public final class BlockStateMatcherMap<T> implements Map<BlockStateMatcher, T> {
+public final class BlockStateMatcherMap<T> implements Map<IMatcher<BlockState>, T> {
 
-    private final Map<BlockStateMatcher, T> map = new Object2ObjectOpenHashMap<>();
+    private final Map<IMatcher<BlockState>, T> map = new Object2ObjectOpenHashMap<>();
     private Supplier<T> defaultValue = () -> null;
 
     @Nullable
@@ -67,7 +68,7 @@ public final class BlockStateMatcherMap<T> implements Map<BlockStateMatcher, T> 
 
     @Override
     @Nullable
-    public T put(final BlockStateMatcher matcher, final T val) {
+    public T put(final IMatcher<BlockState> matcher, final T val) {
         return this.map.put(matcher, val);
     }
 
@@ -78,7 +79,7 @@ public final class BlockStateMatcherMap<T> implements Map<BlockStateMatcher, T> 
     }
 
     @Override
-    public void putAll(@NotNull Map<? extends BlockStateMatcher, ? extends T> m) {
+    public void putAll(@NotNull Map<? extends IMatcher<BlockState>, ? extends T> m) {
         this.map.putAll(m);
     }
 
@@ -88,7 +89,7 @@ public final class BlockStateMatcherMap<T> implements Map<BlockStateMatcher, T> 
     }
 
     @Override
-    public @NotNull Set<BlockStateMatcher> keySet() {
+    public @NotNull Set<IMatcher<BlockState>> keySet() {
         return this.map.keySet();
     }
 
@@ -98,7 +99,7 @@ public final class BlockStateMatcherMap<T> implements Map<BlockStateMatcher, T> 
     }
 
     @Override
-    public @NotNull Set<Entry<BlockStateMatcher, T>> entrySet() {
+    public @NotNull Set<Entry<IMatcher<BlockState>, T>> entrySet() {
         return this.map.entrySet();
     }
 
@@ -112,13 +113,13 @@ public final class BlockStateMatcherMap<T> implements Map<BlockStateMatcher, T> 
     }
 
     public void put(final BlockState state, final T val) {
-        final BlockStateMatcher result = BlockStateMatcher.create(state);
+        var result = BlockStateMatcher.create(state);
         if (!result.isEmpty())
             put(result, val);
     }
 
     public void put(final Block block, final T val) {
-        final BlockStateMatcher result = BlockStateMatcher.create(block);
+        var result = BlockStateMatcher.create(block);
         if (!result.isEmpty())
             put(result, val);
     }

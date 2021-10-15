@@ -5,10 +5,12 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import org.orecruncher.dsurround.config.EntityEffectType;
 import org.orecruncher.dsurround.config.EntityTypeMatcher;
+import org.orecruncher.dsurround.lib.IMatcher;
 
 import java.util.List;
 
@@ -31,10 +33,10 @@ public class EntityEffectConfigRule {
         }
     }
 
-    public final List<EntityTypeMatcher> entityTypeMatchers;
+    public final List<IMatcher<Entity>> entityTypeMatchers;
     public final List<EntityEffectType> effects;
 
-    EntityEffectConfigRule(List<EntityTypeMatcher> entityTypeMatchers, List<EntityEffectType> effects) {
+    EntityEffectConfigRule(List<IMatcher<Entity>> entityTypeMatchers, List<EntityEffectType> effects) {
         this.entityTypeMatchers = entityTypeMatchers;
         this.effects = effects;
     }

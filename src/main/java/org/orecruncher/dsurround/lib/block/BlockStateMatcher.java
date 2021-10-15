@@ -8,24 +8,24 @@ import net.minecraft.block.Material;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
+import org.orecruncher.dsurround.lib.IMatcher;
 import org.orecruncher.dsurround.lib.material.MaterialUtils;
 
-import javax.xml.crypto.Data;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public abstract class BlockStateMatcher {
+public abstract class BlockStateMatcher implements IMatcher<BlockState> {
 
-    public static final Codec<BlockStateMatcher> CODEC = Codec.STRING
+    public static final Codec<IMatcher<BlockState>> CODEC = Codec.STRING
             .comapFlatMap(
                     BlockStateMatcher::manifest,
-                    BlockStateMatcher::toString).stable();
+                    IMatcher::toString).stable();
 
     public static final String TAG_TYPE = "#";
     public static final String MATERIAL_TYPE = "@";
 
-    private static DataResult<BlockStateMatcher> manifest(String blockId) {
+    private static DataResult<IMatcher<BlockState>> manifest(String blockId) {
         try {
             return DataResult.success(create(blockId, true, true));
         } catch (Throwable t) {
@@ -33,27 +33,27 @@ public abstract class BlockStateMatcher {
         }
     }
 
-    public static BlockStateMatcher asGeneric(final BlockState state) {
+    public static IMatcher<BlockState> asGeneric(final BlockState state) {
         return create(state.getBlock());
     }
 
-    public static BlockStateMatcher create(final BlockState state) {
+    public static IMatcher<BlockState> create(final BlockState state) {
         return new MatchOnBlockState(state);
     }
 
-    public static BlockStateMatcher create(final Block block) {
+    public static IMatcher<BlockState> create(final Block block) {
         return new MatchOnBlock(block);
     }
 
-    public static BlockStateMatcher create(final Material material) {
+    public static IMatcher<BlockState> create(final Material material) {
         return new MatchOnMaterial(material);
     }
 
-    public static BlockStateMatcher create(final String blockId) throws BlockStateParseException {
+    public static IMatcher<BlockState> create(final String blockId) throws BlockStateParseException {
         return create(blockId, true, true);
     }
 
-    public static BlockStateMatcher create(final String blockId, boolean allowTags, boolean allowMaterials) throws BlockStateParseException {
+    public static IMatcher<BlockState> create(final String blockId, boolean allowTags, boolean allowMaterials) throws BlockStateParseException {
         if (blockId.startsWith(TAG_TYPE))
             if (allowTags)
                 return createTagMatcher(blockId.substring(1));

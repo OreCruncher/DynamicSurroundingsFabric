@@ -8,7 +8,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import org.orecruncher.dsurround.config.AcousticConfig;
 import org.orecruncher.dsurround.lib.CodecExtensions;
-import org.orecruncher.dsurround.lib.block.BlockStateMatcher;
+import org.orecruncher.dsurround.lib.IMatcher;
 import org.orecruncher.dsurround.lib.scripting.Script;
 
 import java.util.List;
@@ -28,7 +28,7 @@ public class BlockConfigRule {
                     Codec.list(BlockEffectConfig.CODEC).optionalFieldOf("effects", ImmutableList.of()).forGetter(info -> info.effects)
             ).apply(instance, BlockConfigRule::new));
 
-    public List<BlockStateMatcher> blocks;
+    public List<IMatcher<BlockState>> blocks;
     public boolean clearSounds;
     public Optional<Script> soundChance;
     public Optional<Float> soundReflectivity;
@@ -36,7 +36,7 @@ public class BlockConfigRule {
     public List<AcousticConfig> acoustics;
     public List<BlockEffectConfig> effects;
 
-    BlockConfigRule(List<BlockStateMatcher> blocks, boolean soundReset, Optional<Script> chance, Optional<Float> soundReflectivity, Optional<Float> soundOcclusion, List<AcousticConfig> acoustics, List<BlockEffectConfig> effects) {
+    BlockConfigRule(List<IMatcher<BlockState>> blocks, boolean soundReset, Optional<Script> chance, Optional<Float> soundReflectivity, Optional<Float> soundOcclusion, List<AcousticConfig> acoustics, List<BlockEffectConfig> effects) {
         this.blocks = blocks;
         this.clearSounds = soundReset;
         this.soundChance = chance;
