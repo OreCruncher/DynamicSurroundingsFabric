@@ -8,13 +8,11 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.text.Text;
 import org.orecruncher.dsurround.commands.Commands;
 import org.orecruncher.dsurround.config.*;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.FrameworkUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.Localization;
 import org.orecruncher.dsurround.lib.TickCounter;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
@@ -57,19 +55,16 @@ public class Client implements ClientModInitializer {
      */
     public static final SoundConfiguration SoundConfig = SoundConfiguration.getConfig();
 
-    private static void createPath(final Path path) {
-        try {
-            Files.createDirectories(path);
-        } catch (final Throwable t) {
-            LOGGER.error(t, "Unable to create data path %s", path.toString());
-        }
-    }
-
+    private FrameworkUtils.ModCustomData modInfo;
     private CompletableFuture<Optional<VersionChecker.VersionResult>> versionInfo;
 
     @Override
     public void onInitializeClient() {
         LOGGER.info("Initializing...");
+
+        // Get the custom metadata from the JAR
+        var info = FrameworkUtils.getModCustomData(ModId, ModId);
+        info.ifPresent(value -> this.modInfo = value);
 
         createPath(CONFIG_PATH);
         createPath(DATA_PATH);
@@ -92,6 +87,14 @@ public class Client implements ClientModInitializer {
         LOGGER.info("Initialization complete");
     }
 
+    private static void createPath(final Path path) {
+        try {
+            Files.createDirectories(path);
+        } catch (final Throwable t) {
+            LOGGER.error(t, "Unable to create data path %s", path.toString());
+        }
+    }
+
     public void refreshConfigs() {
         SoundLibrary.load();
         BiomeLibrary.load();
@@ -111,15 +114,14 @@ public class Client implements ClientModInitializer {
 
     private Optional<VersionChecker.VersionResult> getVersionText() {
 
+        if (this.modInfo == null)
+            return Optional.empty();
+
         var modContainer = FrameworkUtils.getModContainer(ModId);
         if (modContainer.isEmpty())
             return Optional.empty();
 
         var metadata = modContainer.get().getMetadata();
-
-        var updateInfo = metadata.getCustomValue("updateurl").getAsString();
-        if (updateInfo == null)
-            return Optional.empty();
 
         var displayName = metadata.getName();
         var modVersion = metadata.getVersion();
@@ -128,7 +130,7 @@ public class Client implements ClientModInitializer {
         URL updateURL = null;
 
         try {
-            updateURL = new URL(updateInfo);
+            updateURL = new URL(this.modInfo.getString("updateURL"));
         } catch (Throwable t) {
             LOGGER.warn("Unable to parse update URL");
         }
@@ -149,8 +151,10 @@ public class Client implements ClientModInitializer {
 
                     LOGGER.info("Update to %s v%s is available", result.displayName, result.version);
 
-                    var player = GameUtils.getPlayer();
-                    player.sendMessage(versionQueryResult.get().getChatText(), false);
+                    if (Config.logging.enableModUpdateChatMessage) {
+                        var player = GameUtils.getPlayer();
+                        player.sendMessage(versionQueryResult.get().getChatText(), false);
+                    }
                 }
             }
         } catch(Throwable t) {
