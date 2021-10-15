@@ -9,7 +9,19 @@ public class MatchOnClass<T> implements IMatcher<T> {
     }
 
     public boolean match(T object) {
-        return this.clazz.isInstance(object.getClass());
+        return this.clazz.isInstance(object);
     }
 
+    public static <T> MatchOnClass<T> parse(String classPaths) {
+        String[] paths = classPaths.split("\\|");
+
+        for (var p : paths) {
+            try {
+                var clazz = Class.forName(p);
+                return new MatchOnClass<>(clazz);
+            } catch(Throwable ignore) {
+            }
+        }
+        return null;
+    }
 }

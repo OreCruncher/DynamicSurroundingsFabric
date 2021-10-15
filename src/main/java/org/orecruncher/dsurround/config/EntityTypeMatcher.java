@@ -27,12 +27,10 @@ public abstract class EntityTypeMatcher implements IMatcher<Entity> {
             }
 
             // Assume it's a class reference
-            try {
-                var clazz = Class.forName(entityTypeId);
-                return DataResult.success(new MatchOnClass<>(clazz));
-            } catch(Throwable t) {
-                return DataResult.error(String.format("Unknown entity class %s", entityTypeId));
-            }
+            var matcher = MatchOnClass.<Entity>parse(entityTypeId);
+            if (matcher != null)
+                return DataResult.success(matcher);
+            return DataResult.error(String.format("Unknown entity class(s) %s", entityTypeId));
         } catch (Throwable t) {
             return DataResult.error(t.getMessage());
         }

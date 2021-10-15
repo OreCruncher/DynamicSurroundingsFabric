@@ -85,7 +85,7 @@ public class Configuration implements ConfigData {
         @ConfigEntry.Gui.Tooltip
         @ConfigEntry.Gui.RequiresRestart
         @Comment("The number of sound channels to reserve for streaming sounds (music, biome sounds, records, etc.)")
-        public int streamingChannels = 10;
+        public int streamingChannels = 12;
 
         @ConfigEntry.BoundedDiscrete(min = 0, max = 20 * 10)
         @ConfigEntry.Gui.Tooltip

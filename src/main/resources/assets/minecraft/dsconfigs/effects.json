@@ -2,7 +2,7 @@
   {
     "entityTypes": [
       "minecraft:player",
-      "net.minecraft.entity.mob.AbstractSkeletonEntity"
+      "net.minecraft.class_1547|net.minecraft.entity.mob.AbstractSkeletonEntity"
     ],
     "effects": [
       "bow_pull"
