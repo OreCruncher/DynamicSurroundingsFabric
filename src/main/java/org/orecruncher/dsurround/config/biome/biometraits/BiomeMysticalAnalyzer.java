@@ -15,10 +15,10 @@ public class BiomeMysticalAnalyzer implements IBiomeTraitAnalyzer {
 
         var path = id.getPath();
 
-        if (path.contains("dark"))
+        if (path.contains("dark") || path.contains("ominous"))
             results.add(BiomeTrait.SPOOKY);
 
-        if (path.contains("magical") || path.contains("magic"))
+        if (path.contains("magic") || path.contains("magik"))
             results.add(BiomeTrait.MAGICAL);
 
         return results;

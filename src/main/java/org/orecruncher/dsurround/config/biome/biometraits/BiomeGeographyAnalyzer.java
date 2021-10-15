@@ -33,8 +33,11 @@ public class BiomeGeographyAnalyzer implements IBiomeTraitAnalyzer {
         if (path.contains("wasteland"))
             results.add(BiomeTrait.WASTELAND);
 
-        if (path.contains("gravelly") || path.contains("wooded"))
+        if (path.contains("gravel") || path.contains("wooded"))
             results.add(BiomeTrait.SPARSE);
+
+        if (path.contains("coniferous"))
+            results.add(BiomeTrait.CONIFEROUS);
 
         // Curious as to the why's.
         if (path.equals("stone_shore"))
