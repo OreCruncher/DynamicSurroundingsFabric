@@ -1,24 +1,28 @@
 package org.orecruncher.dsurround.lib.config;
 
 import joptsimple.internal.Strings;
-import net.minecraft.text.*;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Localization;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class ConfigOptions {
 
     private String translationRoot = Strings.EMPTY;
-    private Style titleStyle = Style.EMPTY;
-    private Style subtitleStyle = Style.EMPTY;
-    private Style propertyGroupStyle = Style.EMPTY;
-    private Style propertyValueStyle = Style.EMPTY;
-    private Style tooltipStyle = Style.EMPTY;
-    private int toolTipWidth = 200;
+    private String titleStyle = Strings.EMPTY;
+    private String subtitleStyle = Strings.EMPTY;
+    private String propertyGroupStyle = Strings.EMPTY;
+    private String propertyValueStyle = Strings.EMPTY;
+    private String tooltipStyle = Strings.EMPTY;
+    private int toolTipWidth = 300;
     private boolean stripTitle = true;
     private boolean stripPropertyGroups = true;
     private boolean stripPropertyValues = true;
@@ -27,39 +31,38 @@ public class ConfigOptions {
 
     }
 
-    public ConfigOptions setTranslationRoot(String root) {
-        this.translationRoot = root;
+    private static String strip(String txt) {
+        var result = Formatting.strip(txt);
+        return result != null ? result : txt;
+    }
+
+    public ConfigOptions setTitleStyle(Formatting... style) {
+        this.titleStyle = combine(style);
         return this;
     }
 
-    public ConfigOptions setTitleStyle(Style style) {
-        this.titleStyle = style;
+    public ConfigOptions setSubtitleStyle(Formatting... style) {
+        this.subtitleStyle = combine(style);
         return this;
     }
 
-    public ConfigOptions setSubtitleStyle(Style style) {
-        this.subtitleStyle = style;
+    public ConfigOptions setPropertyGroupStyle(Formatting... style) {
+        this.propertyGroupStyle = combine(style);
         return this;
     }
 
-    public ConfigOptions setPropertyGroupStyle(Style style) {
-        this.propertyGroupStyle = style;
+    public ConfigOptions setPropertyValueStyle(Formatting... style) {
+        this.propertyValueStyle  = combine(style);
         return this;
     }
 
-    public ConfigOptions setPropertyValueStyle(Style style) {
-        this.propertyValueStyle = style;
+    public ConfigOptions setTooltipStyle(Formatting... style) {
+        this.tooltipStyle  = combine(style);
         return this;
     }
 
-    public ConfigOptions setTooltipStyle(Style style) {
-        this.tooltipStyle = style;
-        return this;
-    }
-
-    public ConfigOptions setTooltipWidth(int width) {
-        this.toolTipWidth = width;
-        return this;
+    private static String combine(Formatting... style) {
+        return Arrays.stream(style).map(Objects::toString).collect(Collectors.joining(""));
     }
 
     public ConfigOptions setStripTitle(boolean v) {
@@ -81,57 +84,62 @@ public class ConfigOptions {
         return this.translationRoot;
     }
 
+    public ConfigOptions setTranslationRoot(String root) {
+        this.translationRoot = root;
+        return this;
+    }
+
     public int getTooltipWidth() {
         return this.toolTipWidth;
+    }
+
+    public ConfigOptions setTooltipWidth(int width) {
+        this.toolTipWidth = width;
+        return this;
     }
 
     public Text transformTitle() {
         var txt = Localization.load(this.translationRoot + ".title");
         if (this.stripTitle)
             txt = strip(txt);
-        return new TranslatableText(txt).fillStyle(this.titleStyle);
+        return new LiteralText(this.titleStyle + txt);
     }
 
     public Text transformSubtitle() {
         var txt = Localization.load(this.translationRoot + ".subtitle");
         if (this.stripTitle)
             txt = strip(txt);
-        return new TranslatableText(txt).fillStyle(this.subtitleStyle);
+        return new LiteralText(this.subtitleStyle + txt);
     }
 
     public Text transformPropertyGroup(String langKey) {
         var txt = Localization.load(langKey);
         if (this.stripPropertyGroups)
             txt = strip(txt);
-        return new TranslatableText(txt).fillStyle(this.propertyGroupStyle);
+        return new LiteralText(this.propertyGroupStyle + txt);
     }
 
     public Text transformProperty(String langKey) {
         var txt = Localization.load(langKey);
         if (this.stripPropertyValues)
             txt = strip(txt);
-        return new TranslatableText(txt).fillStyle(this.propertyValueStyle);
+        return new LiteralText(this.propertyValueStyle + txt);
     }
 
     public Text[] transformTooltip(List<Text> tooltip) {
         var result = new ArrayList<Text>(tooltip.size());
         for (var e : tooltip) {
-            var wrapped =  GameUtils.getTextHandler()
+            var wrapped = GameUtils.getTextHandler()
                     .wrapLines(
                             e,
                             this.toolTipWidth,
-                            this.tooltipStyle)
+                            Style.EMPTY)
                     .stream()
-                    .map(l -> new LiteralText(l.getString()))
+                    .map(l -> new LiteralText(this.tooltipStyle + l.getString()))
                     .collect(Collectors.toList());
             result.addAll(wrapped);
         }
 
         return result.toArray(new Text[0]);
-    }
-
-    private static String strip(String txt) {
-        var result = Formatting.strip(txt);
-        return result != null ? result : txt;
     }
 }

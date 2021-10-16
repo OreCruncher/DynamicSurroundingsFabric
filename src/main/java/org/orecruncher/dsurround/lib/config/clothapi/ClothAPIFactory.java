@@ -4,24 +4,23 @@ import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
-import me.shedaniel.clothconfig2.impl.builders.*;
+import me.shedaniel.clothconfig2.impl.builders.FieldBuilder;
+import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.config.ConfigElement;
 import org.orecruncher.dsurround.lib.config.ConfigOptions;
+import org.orecruncher.dsurround.lib.config.ConfigurationData;
 
 import java.util.function.BiFunction;
 
 @Environment(EnvType.CLIENT)
-public abstract class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Screen> {
+public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Screen> {
 
     private final Identifier background;
     private final ConfigOptions options;
@@ -54,39 +53,39 @@ public abstract class ClothAPIFactory implements BiFunction<MinecraftClient, Scr
             builder.setDefaultBackgroundTexture(this.background);
         }
 
-        generate(builder);
+        generate(builder, this.configData);
         return builder.build();
     }
 
-    protected void generate(final ConfigBuilder builder) {
+    protected void generate(final ConfigBuilder builder, Object instance) {
         ConfigCategory root = builder.getOrCreateCategory(this.options.transformTitle());
         final ConfigEntryBuilder entryBuilder = builder.entryBuilder();
-        SubCategoryBuilder modRoot = entryBuilder.startSubCategory(new LiteralText("does this show"));
 
         var properties = this.configData.getSpecification();
         for (var prop : properties) {
+            if (prop.isHidden())
+                continue;
+
             if (prop instanceof ConfigElement.PropertyGroup group) {
-                var result = this.generate(entryBuilder, group);
-                modRoot.add(result.build());
+                var result = this.generate(entryBuilder, group, instance);
+                root.addEntry(result.build());
             } else if (prop instanceof ConfigElement.PropertyValue pv) {
-                var result = this.generate(entryBuilder, pv);
+                var result = this.generate(entryBuilder, pv, instance);
                 if (result != null)
-                    modRoot.add(result.build());
+                    root.addEntry(result.build());
             }
         }
-
-        root.addEntry(modRoot.build());
     }
 
-    protected SubCategoryBuilder generate(final ConfigEntryBuilder builder, ConfigElement.PropertyGroup propertyGroup) {
+    protected SubCategoryBuilder generate(final ConfigEntryBuilder builder, ConfigElement.PropertyGroup propertyGroup, Object instance) {
         SubCategoryBuilder categoryBuilder = builder
                 .startSubCategory(this.options.transformPropertyGroup(propertyGroup.getElementNameKey()))
-                .setTooltip(propertyGroup.getTooltip().toArray(new Text[0]));
+                .setTooltip(this.options.transformTooltip(propertyGroup.getTooltip()));
 
         for (var prop : propertyGroup.getChildren()) {
-            // Can't have categories within categories so we ignore the case of where a config is set up that way
+            // Can't have categories within categories, so we ignore the case of where a config is set up that way
             if (prop instanceof ConfigElement.PropertyValue pv) {
-                var result = this.generate(builder, pv);
+                var result = this.generate(builder, pv, propertyGroup.getInstance(instance));
                 if (result != null)
                     categoryBuilder.add(result.build());
             }
@@ -95,7 +94,7 @@ public abstract class ClothAPIFactory implements BiFunction<MinecraftClient, Scr
         return categoryBuilder;
     }
 
-    protected @Nullable FieldBuilder<?, ? extends AbstractConfigListEntry<?>> generate(final ConfigEntryBuilder builder, ConfigElement.PropertyValue<?> pv) {
+    protected @Nullable FieldBuilder<?, ? extends AbstractConfigListEntry<?>> generate(final ConfigEntryBuilder builder, ConfigElement.PropertyValue<?> pv, Object instance) {
         FieldBuilder<?, ? extends AbstractConfigListEntry<?>> fieldBuilder = null;
 
         var name = this.options.transformProperty(pv.getElementNameKey());
@@ -104,39 +103,39 @@ public abstract class ClothAPIFactory implements BiFunction<MinecraftClient, Scr
         if (pv instanceof ConfigElement.IntegerValue v) {
             if (pv.useSlider()) {
                 fieldBuilder = builder
-                        .startIntSlider(name, v.getCurrentValue(), v.getMinValue(), v.getMaxValue())
+                        .startIntSlider(name, v.getCurrentValue(instance), v.getMinValue(), v.getMaxValue())
                         .setTooltip(tooltip)
                         .setDefaultValue(v::getDefaultValue)
-                        .setSaveConsumer(v::setCurrentValue);
+                        .setSaveConsumer(data -> v.setCurrentValue(instance, data));
             } else {
                 fieldBuilder = builder
-                        .startIntField(name, v.getCurrentValue())
+                        .startIntField(name, v.getCurrentValue(instance))
                         .setTooltip(tooltip)
                         .setDefaultValue(v.getDefaultValue())
                         .setMin(v.getMinValue())
                         .setMax(v.getMaxValue())
-                        .setSaveConsumer(v::setCurrentValue);
+                        .setSaveConsumer(data -> v.setCurrentValue(instance, data));
             }
         } else if (pv instanceof ConfigElement.DoubleValue v) {
             fieldBuilder = builder
-                    .startDoubleField(name, v.getCurrentValue())
+                    .startDoubleField(name, v.getCurrentValue(instance))
                     .setTooltip(tooltip)
                     .setDefaultValue(v.getDefaultValue())
                     .setMin(v.getMinValue())
                     .setMax(v.getMaxValue())
-                    .setSaveConsumer(v::setCurrentValue);
+                    .setSaveConsumer(data -> v.setCurrentValue(instance, data));
         } else if (pv instanceof ConfigElement.StringValue v) {
             fieldBuilder = builder
-                    .startStrField(name, v.getCurrentValue())
+                    .startStrField(name, v.getCurrentValue(instance))
                     .setTooltip(tooltip)
                     .setDefaultValue(v.getDefaultValue())
-                    .setSaveConsumer(v::setCurrentValue);
+                    .setSaveConsumer(data -> v.setCurrentValue(instance, data));
         } else if (pv instanceof ConfigElement.BooleanValue v) {
             fieldBuilder = builder
-                    .startBooleanToggle(name, v.getCurrentValue())
+                    .startBooleanToggle(name, v.getCurrentValue(instance))
                     .setTooltip(tooltip)
                     .setDefaultValue(v.getDefaultValue())
-                    .setSaveConsumer(v::setCurrentValue);
+                    .setSaveConsumer(data -> v.setCurrentValue(instance, data));
         }
 
         if (fieldBuilder != null) {

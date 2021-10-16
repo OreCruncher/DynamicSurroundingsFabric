@@ -3,7 +3,10 @@ package org.orecruncher.dsurround.lib.config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
+import org.jetbrains.annotations.NotNull;
+import org.orecruncher.dsurround.Client;
 
+import java.beans.Transient;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.lang.annotation.ElementType;
@@ -20,7 +23,16 @@ public abstract class ConfigurationData {
     private static final Reference2ObjectOpenHashMap<Class<?>, Collection<ConfigElement<?>>> specifications = new Reference2ObjectOpenHashMap<>();
     private static final Reference2ObjectOpenHashMap<Class<?>, ConfigurationData> configs = new Reference2ObjectOpenHashMap<>();
 
-    public static <T extends ConfigurationData> T getConfig(String translationRoot, Path configFilePath, Class<T> clazz) throws ConfigurationException {
+
+    private transient final String translationRoot;
+    private transient final Path configFilePath;
+
+    protected ConfigurationData(String translationRoot, Path configFilePath) {
+        this.translationRoot = translationRoot;
+        this.configFilePath = configFilePath;
+    }
+
+    public static <T extends ConfigurationData> @NotNull T getConfig(Class<T> clazz) {
         try {
             var config = configs.get(clazz);
             if (config != null)
@@ -28,36 +40,39 @@ public abstract class ConfigurationData {
 
             // We need to construct a new instance to capture the specification.  Once that is done we can load
             // from disk if present.
-            var ctor = clazz.getDeclaredConstructor(String.class, Path.class);
-            config = ctor.newInstance(translationRoot, configFilePath);
+            var ctor = clazz.getDeclaredConstructor();
+            ctor.setAccessible(true);
+            config = ctor.newInstance();
+
             var spec = ConfigProcessor.generateAccessors(config);
             specifications.put(clazz, spec);
 
             // Check to see if it exists on disk, and if so, load it up.  Otherwise, save it so the defaults are
             // persisted and the user can edit manually.
-            if (Files.exists(configFilePath)) {
-                try (BufferedReader reader = Files.newBufferedReader(configFilePath)) {
-                    config = GSON.fromJson(reader, clazz);
+            try {
+                if (Files.exists(config.configFilePath)) {
+                    try (BufferedReader reader = Files.newBufferedReader(config.configFilePath)) {
+                        config = GSON.fromJson(reader, clazz);
+                    }
+                } else {
+                    config.save();
                 }
-            } else {
-                config.save();
+            } catch (Throwable t) {
+                Client.LOGGER.error(t, "Unable to handle configuration");
             }
+
+            // Post load processing
+            config.postLoad();
 
             // Now save the config for future queries
             configs.put(clazz, config);
 
             return (T) config;
         } catch (Throwable t) {
-            throw new ConfigurationException("Unable to get configuration: %s", t.getMessage());
+            Client.LOGGER.error(t, "Unable to handle configuration");
         }
-    }
 
-    private final String translationRoot;
-    private final Path configFilePath;
-
-    ConfigurationData(String translationRoot, Path configFilePath) {
-        this.translationRoot = translationRoot;
-        this.configFilePath = configFilePath;
+        return null;
     }
 
     public Collection<ConfigElement<?>> getSpecification() {
@@ -71,21 +86,28 @@ public abstract class ConfigurationData {
     /**
      * Saves the state of the config to disk
      */
-    public void save() throws ConfigurationException {
+    public void save() {
         try {
             Files.createDirectories(this.configFilePath.getParent());
             try (BufferedWriter writer = Files.newBufferedWriter(this.configFilePath)) {
                 GSON.toJson(this, writer);
             }
-        } catch(Throwable t) {
-            throw new ConfigurationException("Unable to save configurationL %s", t.getMessage());
+        } catch (Throwable t) {
+            Client.LOGGER.error(t, "Unable to save configurationL %s", t.getMessage());
         }
+    }
+
+    /**
+     * Hook to provide processing after the configuration is loaded from disk
+     */
+    public void postLoad() {
+
     }
 
     /**
      * Indicates the field is a property
      */
-    @Target({ ElementType.FIELD })
+    @Target({ElementType.FIELD})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Property {
         /**
@@ -97,7 +119,7 @@ public abstract class ConfigurationData {
     /**
      * Value range of an Integer
      */
-    @Target({ ElementType.FIELD })
+    @Target({ElementType.FIELD})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface IntegerRange {
         int min();
@@ -108,7 +130,7 @@ public abstract class ConfigurationData {
     /**
      * Value range of a Double
      */
-    @Target({ ElementType.FIELD })
+    @Target({ElementType.FIELD})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface DoubleRange {
         double min();
@@ -119,7 +141,7 @@ public abstract class ConfigurationData {
     /**
      * Changing the value of this property will require a restart for it to have an effect.
      */
-    @Target({ ElementType.FIELD })
+    @Target({ElementType.FIELD})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface RestartRequired {
         boolean client() default true;
@@ -128,7 +150,7 @@ public abstract class ConfigurationData {
     /**
      * Indicates the default value should be displayed in the tooltip.
      */
-    @Target({ ElementType.FIELD })
+    @Target({ElementType.FIELD})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface DefaultValue {
     }
@@ -137,7 +159,7 @@ public abstract class ConfigurationData {
      * Comment associated with a property, if any.  This is used if a translation is not available.  Depending on
      * config file format the comment may be persisted with the data as well.
      */
-    @Target({ ElementType.FIELD, ElementType.TYPE })
+    @Target({ElementType.FIELD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Comment {
         String value();
@@ -146,9 +168,18 @@ public abstract class ConfigurationData {
     /**
      * Indicates the preference for a slider in GUI when modifying the integer property
      */
-    @Target({ ElementType.FIELD, ElementType.TYPE })
+    @Target({ElementType.FIELD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Slider {
+
+    }
+
+    /**
+     * Indicates the property will not show in the GUI
+     */
+    @Target({ElementType.FIELD, ElementType.TYPE})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Hidden {
 
     }
 }

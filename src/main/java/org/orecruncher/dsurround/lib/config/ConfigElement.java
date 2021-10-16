@@ -39,6 +39,10 @@ public abstract class ConfigElement<T> {
         return result;
     }
 
+    public boolean isHidden() {
+        return false;
+    }
+
     /**
      * Retrieve the comment, if any, associated with the property.
      */
@@ -46,26 +50,25 @@ public abstract class ConfigElement<T> {
         return null;
     }
 
-    /**
-     * Retrieves the value from the config and sets it to current.
-     */
-    public abstract void load();
-
-    /**
-     * Takes the current value and stores it back into the config
-     */
-    public abstract void save();
-
     public static class PropertyGroup extends ConfigElement<String> {
 
-        private final Class<?> clazz;
+        private final ConfigValue<?> wrapper;
         private final Collection<ConfigElement<?>> children;
 
-        PropertyGroup(Class<?> clazz, String translationKey, Collection<ConfigElement<?>> children) {
+        PropertyGroup(ConfigValue<?> wrapper, String translationKey, Collection<ConfigElement<?>> children) {
             super(translationKey);
 
-            this.clazz = clazz;
+            this.wrapper = wrapper;
             this.children = children;
+        }
+
+        public Object getInstance(Object instance) {
+            return this.wrapper.get(instance);
+        }
+
+        @Override
+        public boolean isHidden() {
+            return this.wrapper.getAnnotation(ConfigurationData.Hidden.class) != null;
         }
 
         public Collection<ConfigElement<?>> getChildren() {
@@ -73,20 +76,8 @@ public abstract class ConfigElement<T> {
         }
 
         @Override
-        public void load() {
-            for (var child : this.children)
-                child.load();
-        }
-
-        @Override
-        public void save() {
-            for (var child : this.children)
-                child.save();
-        }
-
-        @Override
         public @Nullable String getComment() {
-            var comment = this.clazz.getAnnotation(ConfigurationData.Comment.class);
+            var comment = this.wrapper.getAnnotation(ConfigurationData.Comment.class);
             return comment != null ? comment.value() : null;
         }
 
@@ -98,21 +89,19 @@ public abstract class ConfigElement<T> {
         private final ConfigValue<T> wrapper;
 
         private final T defaultValue;
-        private T currentValue;
 
-        PropertyValue(String translationKey, ConfigValue<T> wrapper) {
+        PropertyValue(Object instance, String translationKey, ConfigValue<T> wrapper) {
             super(translationKey);
             this.wrapper = wrapper;
-            this.setCurrentValue(wrapper.get());
-            this.defaultValue = this.currentValue;
+            this.defaultValue = wrapper.get(instance);
         }
 
         public T getDefaultValue() {
             return this.defaultValue;
         }
 
-        public T getCurrentValue() {
-            return this.currentValue;
+        public T getCurrentValue(Object instance) {
+            return this.wrapper.get(instance);
         }
 
         public boolean isClientRestartRequired() {
@@ -133,8 +122,13 @@ public abstract class ConfigElement<T> {
             return this.wrapper.getAnnotation(ConfigurationData.Slider.class) != null;
         }
 
-        public void setCurrentValue(T value) {
-            this.currentValue = this.clamp(value);
+        @Override
+        public boolean isHidden() {
+            return this.wrapper.getAnnotation(ConfigurationData.Hidden.class) != null;
+        }
+
+        public void setCurrentValue(Object instance, T value) {
+            this.wrapper.set(instance, this.clamp(value));
         }
 
         protected T clamp(T value) {
@@ -163,29 +157,19 @@ public abstract class ConfigElement<T> {
             return comment != null ? comment.value() : null;
         }
 
-        @Override
-        public void load() {
-            this.setCurrentValue(this.wrapper.get());
-        }
-
-        @Override
-        public void save() {
-            this.wrapper.set(this.currentValue);
-        }
-
     }
 
     public static class BooleanValue extends PropertyValue<Boolean> {
 
-        BooleanValue(String translationKey, ConfigValue<Boolean> wrapper) {
-            super(translationKey, wrapper);
+        BooleanValue(Object instance, String translationKey, ConfigValue<Boolean> wrapper) {
+            super(instance, translationKey, wrapper);
         }
     }
 
     public static class StringValue extends PropertyValue<String> {
 
-        StringValue(String translationKey, ConfigValue<String> wrapper) {
-            super(translationKey, wrapper);
+        StringValue(Object instance, String translationKey, ConfigValue<String> wrapper) {
+            super(instance, translationKey, wrapper);
         }
     }
 
@@ -194,8 +178,8 @@ public abstract class ConfigElement<T> {
         private int minValue = Integer.MIN_VALUE;
         private int maxValue = Integer.MAX_VALUE;
 
-        IntegerValue(String translationKey, ConfigValue<Integer> wrapper) {
-            super(translationKey, wrapper);
+        IntegerValue(Object instance, String translationKey, ConfigValue<Integer> wrapper) {
+            super(instance, translationKey, wrapper);
         }
 
         public void setRange(int min, int max) {
@@ -235,8 +219,8 @@ public abstract class ConfigElement<T> {
         private double minValue = Double.MIN_VALUE;
         private double maxValue = Double.MAX_VALUE;
 
-        DoubleValue(String translationKey, ConfigValue<Double> wrapper) {
-            super(translationKey, wrapper);
+        DoubleValue(Object instance, String translationKey, ConfigValue<Double> wrapper) {
+            super(instance, translationKey, wrapper);
         }
 
         public void setRange(double min, double max) {

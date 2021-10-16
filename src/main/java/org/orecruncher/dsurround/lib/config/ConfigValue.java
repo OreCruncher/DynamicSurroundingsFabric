@@ -5,11 +5,9 @@ import java.lang.reflect.Field;
 
 public class ConfigValue<T> {
 
-    private final Object instanceReference;
     private final Field field;
 
-    ConfigValue(Object instance, Field field) {
-        this.instanceReference = instance;
+    ConfigValue(Field field) {
         this.field = field;
 
         this.field.setAccessible(true);
@@ -24,18 +22,18 @@ public class ConfigValue<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public T get() {
+    public T get(Object instance) {
         try {
-            return (T) this.field.get(this.instanceReference);
-        } catch (Throwable ignore)
-        {}
+            return (T) this.field.get(instance);
+        } catch (Throwable ignore) {
+        }
         return null;
     }
 
-    public void set(T val) {
+    public void set(Object instance, T val) {
         try {
-            this.field.set(this.instanceReference, val);
-        } catch (Throwable ignore)
-        {}
+            this.field.set(instance, val);
+        } catch (Throwable ignore) {
+        }
     }
 }

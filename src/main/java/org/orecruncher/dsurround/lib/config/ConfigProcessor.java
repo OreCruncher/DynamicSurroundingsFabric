@@ -15,7 +15,7 @@ public class ConfigProcessor {
 
     private static class GenerationContext {
 
-        private String translationRoot;
+        private final String translationRoot;
 
         GenerationContext(String translationRoot) {
             this.translationRoot = translationRoot;
@@ -66,25 +66,26 @@ public class ConfigProcessor {
         }
 
         private ConfigElement<?> processClassInstance(ConfigurationData.Property property, Object instance, Field f) {
-            var wrapper = new ConfigValue<>(instance, f);
-            var ctx = this.createChild(calculateLangKey(property, f));
-            var subElements = ctx.generateLevel(wrapper.get());
-            return new ConfigElement.PropertyGroup(instance.getClass(), this.translationRoot, subElements);
+            var wrapper = new ConfigValue<>(f);
+            var key = calculateLangKey(property, f);
+            var ctx = this.createChild(key);
+            var subElements = ctx.generateLevel(wrapper.get(instance));
+            return new ConfigElement.PropertyGroup(wrapper, key, subElements);
         }
 
         private ConfigElement<?> processStringInstance(ConfigurationData.Property property, Object instance, Field f) {
-            var wrapper = new ConfigValue<String>(instance, f);
-            return new ConfigElement.StringValue(calculateLangKey(property, f), wrapper);
+            var wrapper = new ConfigValue<String>(f);
+            return new ConfigElement.StringValue(instance, calculateLangKey(property, f), wrapper);
         }
 
         private ConfigElement<?> processBooleanInstance(ConfigurationData.Property property, Object instance, Field f) {
-            var wrapper = new ConfigValue<Boolean>(instance, f);
-            return new ConfigElement.BooleanValue(calculateLangKey(property, f), wrapper);
+            var wrapper = new ConfigValue<Boolean>(f);
+            return new ConfigElement.BooleanValue(instance, calculateLangKey(property, f), wrapper);
         }
 
         private ConfigElement<?> processIntegerInstance(ConfigurationData.Property property, Object instance, Field f) {
-            var wrapper = new ConfigValue<Integer>(instance, f);
-            var element = new ConfigElement.IntegerValue(calculateLangKey(property, f), wrapper);
+            var wrapper = new ConfigValue<Integer>(f);
+            var element = new ConfigElement.IntegerValue(instance, calculateLangKey(property, f), wrapper);
             var range = f.getAnnotation(ConfigurationData.IntegerRange.class);
             if (range != null) {
                 element.setRange(range.min(), range.max());
@@ -93,8 +94,8 @@ public class ConfigProcessor {
         }
 
         private ConfigElement<?> processDoubleInstance(ConfigurationData.Property property, Object instance, Field f) {
-            var wrapper = new ConfigValue<Double>(instance, f);
-            var element = new ConfigElement.DoubleValue(calculateLangKey(property, f), wrapper);
+            var wrapper = new ConfigValue<Double>(f);
+            var element = new ConfigElement.DoubleValue(instance, calculateLangKey(property, f), wrapper);
             var range = f.getAnnotation(ConfigurationData.DoubleRange.class);
             if (range != null) {
                 element.setRange(range.min(), range.max());
