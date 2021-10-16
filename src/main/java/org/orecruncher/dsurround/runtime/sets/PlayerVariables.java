@@ -2,9 +2,10 @@ package org.orecruncher.dsurround.runtime.sets;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.HungerManager;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
@@ -44,7 +45,6 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
     private boolean isSprintnig;
     private boolean isInLava;
     private boolean isInvisible;
-    private boolean isBlind;
     private boolean isInWater;
     private boolean isWet;
     private boolean isRiding;
@@ -77,7 +77,6 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
             this.isSprintnig = player.isSprinting();
             this.isInLava = player.isInLava();
             this.isInvisible = player.isInvisible();
-            this.isBlind = player.hasStatusEffect(StatusEffects.BLINDNESS);
             this.isInWater = player.isSubmergedInWater();
             this.isWet = player.isWet();
             this.isRiding = player.hasVehicle();
@@ -99,7 +98,6 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
             this.isSprintnig = false;
             this.isInLava = false;
             this.isInvisible = false;
-            this.isBlind = false;
             this.isInWater = false;
             this.isWet = false;
             this.isRiding = false;
@@ -158,11 +156,6 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
     @Override
     public boolean isInvisible() {
         return this.isInvisible;
-    }
-
-    @Override
-    public boolean isBlind() {
-        return this.isBlind;
     }
 
     @Override
@@ -233,5 +226,17 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
     @Override
     public double getZ() {
         return this.z;
+    }
+
+    @Override
+    public boolean hasEffect(String effect) {
+        try {
+            var id = new Identifier(effect);
+            var statusEffect = GameUtils.getRegistryManager().get(Registry.MOB_EFFECT_KEY).get(id);
+            return GameUtils.getPlayer().hasStatusEffect(statusEffect);
+        } catch (Throwable ignore) {
+        }
+
+        return false;
     }
 }

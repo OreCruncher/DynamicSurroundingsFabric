@@ -18,6 +18,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
+import org.orecruncher.dsurround.sound.SoundFactory;
 
 import java.util.Collection;
 
@@ -30,6 +31,7 @@ public class Handlers {
     private final ObjectArray<ClientHandler> effectHandlers = new ObjectArray<>();
     private final LoggingTimerEMA handlerTimer = new LoggingTimerEMA("Handlers");
     private boolean isConnected = false;
+    private boolean startupSoundPlayed = false;
 
     private Handlers() {
         init();
@@ -84,6 +86,9 @@ public class Handlers {
     }
 
     public void onTick(MinecraftClient client) {
+        if (!this.startupSoundPlayed)
+            handleStartupSound();
+
         if (!doTick())
             return;
 
@@ -97,6 +102,17 @@ public class Handlers {
             handler.updateTimer(System.nanoTime() - mark);
         }
         this.handlerTimer.end();
+    }
+
+    private void handleStartupSound() {
+        var client = GameUtils.getMC();
+        if (client.getOverlay() != null)
+            return;
+
+        startupSoundPlayed = true;
+        Client.SoundConfig
+                .getRandomStartupSound()
+                .ifPresent(id -> client.getSoundManager().play(SoundFactory.createAsAdditional(id)));
     }
 
     public void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {

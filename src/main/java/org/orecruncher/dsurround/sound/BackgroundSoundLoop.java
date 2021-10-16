@@ -64,14 +64,19 @@ public class BackgroundSoundLoop extends MovingSoundInstance {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
+        var temp = MoreObjects.toStringHelper(this)
                 .addValue(this.getId().toString())
-                .addValue(this.getCategory().getName())
-                .add("v", getVolume())
+                .addValue(this.getCategory().getName());
+
+        // Possible that the sound was not yet assigned.  Seen issues when exiting worlds.
+        if (this.sound != null) {
+            temp.add("v", getVolume())
                 .add("ev", SoundVolumeEvaluator.getAdjustedVolume(this))
-                .add("p", getPitch())
-                .add("f", this.scale)
-                .add("fading", isFading())
-                .toString();
+                .add("p", getPitch());
+        }
+
+        return temp.add("f", this.scale)
+            .add("fading", isFading())
+            .toString();
     }
 }

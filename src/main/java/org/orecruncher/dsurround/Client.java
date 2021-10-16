@@ -20,7 +20,6 @@ import org.orecruncher.dsurround.processing.Handlers;
 import org.orecruncher.dsurround.runtime.diagnostics.ClientProfiler;
 import org.orecruncher.dsurround.runtime.diagnostics.RuntimeDiagnostics;
 import org.orecruncher.dsurround.runtime.diagnostics.SoundEngineDiagnostics;
-import org.orecruncher.dsurround.sound.StartupSoundHandler;
 
 import java.net.URL;
 import java.nio.file.Files;
@@ -74,7 +73,6 @@ public class Client implements ClientModInitializer {
         ClientPlayConnectionEvents.JOIN.register(this::onConnect);
 
         TickCounter.register();
-        StartupSoundHandler.register();
         KeyBindings.register();
         Commands.register();
 

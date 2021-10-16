@@ -410,10 +410,16 @@
   {
     "biomeSelector": "@player",
     "_comment": "Player explicit set for The End",
+    "additionalSoundChance": "0.007",
     "acoustics": [
       {
         "soundEventId": "dimension.theend",
         "conditions": "dim.getId() == 'minecraft:the_end'"
+      },
+      {
+        "soundEventId": "player.tummy",
+        "conditions": "player.getFoodLevel() <= 4",
+        "type": "addition"
       }
     ]
   },

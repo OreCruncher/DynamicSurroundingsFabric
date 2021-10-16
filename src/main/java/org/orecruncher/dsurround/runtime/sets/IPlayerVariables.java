@@ -20,8 +20,6 @@ public interface IPlayerVariables {
 
     boolean isInvisible();
 
-    boolean isBlind();
-
     boolean isInWater();
 
     boolean isMoving();
@@ -50,12 +48,6 @@ public interface IPlayerVariables {
 
     double getZ();
 
-    default boolean isHurt() {
-        return false;
-    }
-
-    default boolean isHungry() {
-        return false;
-    }
+    boolean hasEffect(String effect);
 
 }
