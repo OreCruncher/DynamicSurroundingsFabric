@@ -136,6 +136,14 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
                     .setTooltip(tooltip)
                     .setDefaultValue(v.getDefaultValue())
                     .setSaveConsumer(data -> v.setCurrentValue(instance, data));
+        } else if (pv instanceof ConfigElement.EnumValue v) {
+            /*
+            fieldBuilder = builder
+                    .startEnumSelector(name, v.getEnumClass(), v.getDefaultValue())
+                    .setTooltip(tooltip)
+                    .setDefaultValue(v.getDefaultValue())
+                    .setSaveConsumer(data -> v.setCurrentValue(instance, data));
+             */
         }
 
         if (fieldBuilder != null) {
@@ -165,7 +173,9 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
 
         return result.build();
     }
+*/
 
+    /*
     public <T extends Enum<T>> EnumListEntry<T> createEnumList(final ConfigBuilder builder, Class<T> clazz, final ForgeConfigSpec.EnumValue<T> value) {
         final ConfigProperty property = ConfigProperty.getPropertyInfo(value);
         final Text name = property.getConfigName();

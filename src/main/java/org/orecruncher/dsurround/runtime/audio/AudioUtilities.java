@@ -3,12 +3,11 @@ package org.orecruncher.dsurround.runtime.audio;
 import com.google.common.base.MoreObjects;
 import net.minecraft.client.sound.SoundEngine;
 import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.sound.SoundCategory;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.*;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.Configuration;
-import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.audio.AlAttributeBuilder;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundEngineAccessor;
 
@@ -28,10 +27,6 @@ public final class AudioUtilities {
 
     public static int getMaxSounds() {
         return MAX_SOUNDS;
-    }
-
-    public static float getMasterGain() {
-        return GameUtils.getGameSettings().getSoundVolume(SoundCategory.MASTER);
     }
 
     /**
@@ -83,8 +78,17 @@ public final class AudioUtilities {
                 if (!hasFX) {
                     LOGGER.warn("EFX audio extensions not available for the current sound device!");
                 } else {
+                    AlAttributeBuilder builder = new AlAttributeBuilder()
+                            .add(EXTEfx.ALC_MAX_AUXILIARY_SENDS, 4);
+
+                    var freq = Client.Config.enhancedSounds.outputFrequency;
+                    if (freq != 0) {
+                        Client.LOGGER.info("Attempting to set output frequency of %d", freq);
+                        builder.add(ALC10.ALC_FREQUENCY, freq);
+                    }
+
                     // Using 4 aux slots instead of the default 2
-                    final int[] attributes = new int[]{EXTEfx.ALC_MAX_AUXILIARY_SENDS, 4, 0};
+                    var attributes = builder.build();
                     final long ctx = ALC10.alcCreateContext(device, attributes);
                     ALC10.alcMakeContextCurrent(ctx);
                     accessor.setContextPointer(ctx);
@@ -123,10 +127,13 @@ public final class AudioUtilities {
             final String renderer = AL10.alGetString(AL10.AL_RENDERER);
             final String extensions = AL10.alGetString(AL10.AL_EXTENSIONS);
 
+            final int frequency = ALC11.alcGetInteger(device, ALC11.ALC_FREQUENCY);
+
             LOGGER.info("Vendor: %s", vendor);
             LOGGER.info("Version: %s", version);
             LOGGER.info("Renderer: %s", renderer);
             LOGGER.info("Extensions: %s", extensions);
+            LOGGER.info("Frequency: %d", frequency);
 
         } catch (final Throwable t) {
             LOGGER.warn(t.getMessage());

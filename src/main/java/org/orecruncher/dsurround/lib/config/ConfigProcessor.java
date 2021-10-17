@@ -38,7 +38,10 @@ public class ConfigProcessor {
                 var fieldType = f.getType();
 
                 if (!fieldType.isPrimitive()) {
-                    elements.add(processClassInstance(property, instance, f));
+                    if (fieldType.isEnum())
+                        elements.add(processEnumInstance(property, instance, f));
+                    else
+                        elements.add(processClassInstance(property, instance, f));
                 } else {
                     ConfigElement<?> element;
                     if (fieldType == Integer.class || fieldType == int.class) {
@@ -63,6 +66,14 @@ public class ConfigProcessor {
 
         GenerationContext createChild(String langKey) {
             return new GenerationContext(langKey);
+        }
+
+        private ConfigElement<?> processEnumInstance(ConfigurationData.Property property, Object instance, Field f) {
+            var enumType = f.getAnnotation(ConfigurationData.EnumType.class);
+            if (enumType == null)
+                throw new RuntimeException("Enum field must have an EnumType annotation");
+            var wrapper = new ConfigValue<Enum<?>>(f);
+            return new ConfigElement.EnumValue(enumType.value(), instance, calculateLangKey(property, f), wrapper);
         }
 
         private ConfigElement<?> processClassInstance(ConfigurationData.Property property, Object instance, Field f) {

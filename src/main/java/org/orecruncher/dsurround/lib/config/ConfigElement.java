@@ -255,4 +255,19 @@ public abstract class ConfigElement<T> {
 
     }
 
+    public static class EnumValue extends PropertyValue<Enum<?>> {
+
+        private final Class<? extends Enum<?>> enumClass;
+
+        EnumValue(Class<? extends Enum<?>> enumClass, Object instance, String translationKey, ConfigValue<Enum<?>> wrapper) {
+            super(instance, translationKey, wrapper);
+
+            this.enumClass = enumClass;
+        }
+
+        public Class<? extends Enum<?>> getEnumClass() {
+            return this.enumClass;
+        }
+    }
+
 }

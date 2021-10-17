@@ -54,8 +54,6 @@ public abstract class ConfigurationData {
                     try (BufferedReader reader = Files.newBufferedReader(config.configFilePath)) {
                         config = GSON.fromJson(reader, clazz);
                     }
-                } else {
-                    config.save();
                 }
             } catch (Throwable t) {
                 Client.LOGGER.error(t, "Unable to handle configuration");
@@ -63,6 +61,9 @@ public abstract class ConfigurationData {
 
             // Post load processing
             config.postLoad();
+
+            // Save it out.  Config parameters may have been added/removed
+            config.save();
 
             // Now save the config for future queries
             configs.put(clazz, config);
@@ -181,5 +182,14 @@ public abstract class ConfigurationData {
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Hidden {
 
+    }
+
+    /**
+     * The class of the Enum in question.  Thanks type erasure.
+     */
+    @Target({ElementType.FIELD, ElementType.TYPE})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface EnumType {
+        Class<? extends Enum<?>> value();
     }
 }

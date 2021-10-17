@@ -116,6 +116,13 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable sound occlusion processing (sound muffling behind blocks)")
         public boolean enableOcclusionProcessing = false;
+
+        @Property
+        @RestartRequired
+        @DefaultValue
+        @Hidden
+        @Comment("Sets the output frequency for sound play.  Adjust only if you know what you are doing.")
+        public int outputFrequency = 0;
     }
 
     public static class ThunderStorms {
