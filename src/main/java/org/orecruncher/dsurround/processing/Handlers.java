@@ -18,6 +18,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
+import org.orecruncher.dsurround.lib.world.WorldUtils;
 import org.orecruncher.dsurround.sound.SoundFactory;
 
 import java.util.Collection;
@@ -82,7 +83,14 @@ public class Handlers {
     protected boolean doTick() {
         return GameUtils.isInGame()
                 && !GameUtils.getMC().isPaused()
-                && !(GameUtils.getMC().currentScreen instanceof IndividualSoundControlScreen);
+                && !(GameUtils.getMC().currentScreen instanceof IndividualSoundControlScreen)
+                && playerChunkLoaded();
+    }
+
+    protected boolean playerChunkLoaded() {
+        var player = GameUtils.getPlayer();
+        var pos = player.getBlockPos();
+        return WorldUtils.isChunkLoaded(player.getEntityWorld(), pos);
     }
 
     public void onTick(MinecraftClient client) {

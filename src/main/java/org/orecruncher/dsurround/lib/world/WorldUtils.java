@@ -5,6 +5,7 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.impl.event.lifecycle.LoadedChunksCache;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProperties;
@@ -91,6 +92,12 @@ public class WorldUtils {
      */
     public static boolean isSnowTemperature(final float temp) {
         return temp < SNOW_THRESHOLD;
+    }
+
+    public static boolean isChunkLoaded(World world, BlockPos pos) {
+        var chunkX = ChunkSectionPos.getSectionCoord(pos.getX());
+        var chunkZ = ChunkSectionPos.getSectionCoord(pos.getZ());
+        return world.getChunkManager().isChunkLoaded(chunkX, chunkZ);
     }
 
 }

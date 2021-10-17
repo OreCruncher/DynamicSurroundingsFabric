@@ -139,8 +139,8 @@ public class BlockInfo {
         if (this.sounds != null) {
             var chance = ConditionEvaluator.INSTANCE.eval(this.soundChance);
             if (chance instanceof Double c && random.nextDouble() < c) {
-                var candidates = this.sounds.stream().filter(AcousticEntry::matches).collect(Collectors.toList());
-                return new WeightTable<>(candidates).next();
+                var candidates = this.sounds.stream().filter(AcousticEntry::matches);
+                return WeightTable.makeSelection(candidates);
             }
         }
         return null;

@@ -152,8 +152,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         if (sourceList == null || sourceList.size() == 0)
             return null;
 
-        var candidates = sourceList.stream().filter(AcousticEntry::matches).collect(Collectors.toList());
-        return new WeightTable<>(candidates).next();
+        var candidates = sourceList.stream().filter(AcousticEntry::matches);
+        return WeightTable.makeSelection(candidates);
     }
 
     void clearSounds() {
