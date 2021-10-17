@@ -1,14 +1,11 @@
 package org.orecruncher.dsurround.runtime.audio;
 
 import com.google.common.base.MoreObjects;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.EXTEfx;
-import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.random.LCGRandom;
 import org.orecruncher.dsurround.runtime.audio.effects.Effects;
 import org.orecruncher.dsurround.runtime.audio.effects.LowPassData;
@@ -18,7 +15,6 @@ import java.util.concurrent.Callable;
 
 public final class SourceContext implements Callable<Void> {
 
-    private static final IModLog LOGGER = Client.LOGGER.createChild(SourceContext.class);
     // Lightweight randomizer used to distribute updates across an interval
     private static final LCGRandom RANDOM = new LCGRandom();
     // Frequency of sound effect updates in thread schedule ticks.  Works out to be 3 times a second.
@@ -91,12 +87,12 @@ public final class SourceContext implements Callable<Void> {
         return this.pos;
     }
 
-    
+
     public SoundCategory getCategory() {
         return this.category;
     }
 
-    public void attachSound( final SoundInstance sound) {
+    public void attachSound(final SoundInstance sound) {
         this.sound = sound;
         this.category = sound.getCategory();
         captureState();
@@ -143,7 +139,7 @@ public final class SourceContext implements Callable<Void> {
     }
 
     @Override
-    public Void call() throws Exception {
+    public Void call() {
         captureState();
         updateImpl();
         return null;
@@ -151,9 +147,8 @@ public final class SourceContext implements Callable<Void> {
 
     /**
      * Called by the thread pool when executing the task
-     *
      */
-    public final void exec() {
+    public void exec() {
         captureState();
         updateImpl();
     }
@@ -161,8 +156,9 @@ public final class SourceContext implements Callable<Void> {
     private void updateImpl() {
         try {
             this.fxProcessor.calculate(SoundFXProcessor.getWorldContext());
-        } catch( final Throwable t) {
-            LOGGER.error(t, "Error processing SoundContext %s", toString());
+        } catch (final Throwable ignore) {
+            // Suppress.  Times that I have seen this fire was due to a world unloading and the background
+            // processing threads tripping over dead objects.
         }
     }
 
