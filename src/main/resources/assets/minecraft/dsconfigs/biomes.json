@@ -410,7 +410,7 @@
   {
     "biomeSelector": "@player",
     "_comment": "Player explicit set for The End",
-    "additionalSoundChance": "0.007",
+    "additionalSoundChance": "0.009",
     "acoustics": [
       {
         "soundEventId": "dimension.theend",
@@ -418,7 +418,7 @@
       },
       {
         "soundEventId": "player.tummy",
-        "conditions": "player.getFoodLevel() <= 4",
+        "conditions": "player.getFoodLevel() <= 4 || player.hasEffect('minecraft:hunger')",
         "type": "addition"
       }
     ]
