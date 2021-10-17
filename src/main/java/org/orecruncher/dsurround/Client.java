@@ -17,6 +17,7 @@ import org.orecruncher.dsurround.lib.TickCounter;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.processing.Handlers;
+import org.orecruncher.dsurround.runtime.diagnostics.BlockViewer;
 import org.orecruncher.dsurround.runtime.diagnostics.ClientProfiler;
 import org.orecruncher.dsurround.runtime.diagnostics.RuntimeDiagnostics;
 import org.orecruncher.dsurround.runtime.diagnostics.SoundEngineDiagnostics;
@@ -81,6 +82,7 @@ public class Client implements ClientModInitializer {
         RuntimeDiagnostics.register();
         ClientProfiler.register();
         SoundEngineDiagnostics.register();
+        BlockViewer.register();
 
         LOGGER.info("Initialization complete");
     }

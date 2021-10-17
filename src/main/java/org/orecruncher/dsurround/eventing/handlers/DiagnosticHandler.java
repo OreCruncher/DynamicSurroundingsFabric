@@ -8,6 +8,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Formatting;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
@@ -49,7 +50,7 @@ public final class DiagnosticHandler {
     }
 
     private static void tick(MinecraftClient client) {
-        if (enableCollection) {
+        if (enableCollection && GameUtils.isInGame()) {
             diagnostics.begin();
 
             left.clear();
