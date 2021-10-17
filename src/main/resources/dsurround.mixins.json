@@ -17,6 +17,7 @@
     "core.MixinClientWorldProperties",
     "core.MixinEntityArrow",
     "core.MixinIngameHud",
+    "core.MixinLivingEntity",
     "core.MixinParticle",
     "core.MixinRaycastContextAccessor",
     "core.MixinSoundEngine",
@@ -25,7 +26,7 @@
     "core.MixinSoundSystem",
     "core.MixinSoundSystemAccessors",
     "core.MixinTagManager",
-    "core.MixinLivingEntity"
+    "core.MixinParticleManager"
   ],
   "server": [],
   "injectors": {

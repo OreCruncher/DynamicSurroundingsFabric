@@ -10,10 +10,11 @@ import org.orecruncher.dsurround.config.EntityEffectLibrary;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
+import java.util.stream.Collectors;
+
 @Environment(EnvType.CLIENT)
 public class EntityEffectHandler  extends ClientHandler {
 
-    private static int STUPID_RANGE = 100000000;
     private static final IModLog LOGGER = Client.LOGGER.createChild(EntityEffectHandler.class);
 
     EntityEffectHandler() {
@@ -23,7 +24,7 @@ public class EntityEffectHandler  extends ClientHandler {
     @Override
     public void process(final PlayerEntity player) {
 
-        var range = Client.Config.blockEffects.blockEffectRange;
+        var range = Client.Config.entityEffects.entityEffectRange;
         var world = player.getEntityWorld();
 
         // Get living entities in the world.  Since the API does some fancy tracking of entities we create a box
@@ -41,6 +42,13 @@ public class EntityEffectHandler  extends ClientHandler {
                 if (inRange && !entity.isSpectator()) {
                     LOGGER.debug("Obtaining effect info for %s (id %d)", entity.getClass().getSimpleName(), entity.getId());
                     info = EntityEffectLibrary.getEntityEffectInfo(entity);
+                    EntityEffectInfo finalInfo = info;
+                    LOGGER.debug(() -> {
+                        var txt = finalInfo.getEffects().stream()
+                                .map(e -> e.getClass().getSimpleName())
+                                .collect(Collectors.joining(","));
+                        return String.format("Effects attached: %s", txt);
+                    });
                 }
             } else if (hasInfo) {
                 // If it does have info just get whatever is currently cached

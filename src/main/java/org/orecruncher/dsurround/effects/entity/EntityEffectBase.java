@@ -4,8 +4,10 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.sound.SoundInstance;
+import net.minecraft.particle.ParticleEffect;
 import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.mixins.core.MixinParticleManager;
 import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 
 @Environment(EnvType.CLIENT)
@@ -51,4 +53,15 @@ public abstract class EntityEffectBase implements IEntityEffect {
         GameUtils.getMC().particleManager.addParticle(particle);
     }
 
+    /**
+     * Creates a particle effect but does not queue.  Allows for the particle to be manipulated prior to handing
+     * it to the particle manager.
+     */
+    public <T extends ParticleEffect> Particle createParticle(T parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
+        return ((MixinParticleManager) GameUtils.getMC().particleManager)
+                .dsurroundCreateParticle(
+                        parameters,
+                        x, y, z,
+                        velocityX, velocityY, velocityZ);
+    }
 }

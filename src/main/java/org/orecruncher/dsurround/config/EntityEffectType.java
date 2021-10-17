@@ -9,6 +9,7 @@ import net.minecraft.util.StringIdentifiable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.effects.entity.producers.BowUseEffectProducer;
+import org.orecruncher.dsurround.effects.entity.producers.BreathEffectProducer;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,7 +21,8 @@ import java.util.stream.Collectors;
 @Environment(EnvType.CLIENT)
 public enum EntityEffectType  implements StringIdentifiable {
     UNKNOWN("unknown", entity -> ImmutableList.of(), () -> false),
-    BOW_PULL("bow_pull", entity -> new BowUseEffectProducer().produce(entity), () -> Client.Config.entityEffects.enableBowPull);
+    BOW_PULL("bow_pull", entity -> new BowUseEffectProducer().produce(entity), () -> Client.Config.entityEffects.enableBowPull),
+    FROST_BREATH("frost_breath", entity -> new BreathEffectProducer().produce(entity), () -> Client.Config.entityEffects.enableBreathEffect);
 
     private static final Map<String, EntityEffectType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(EntityEffectType::getName, (category) -> category));
     public static final Codec<EntityEffectType> CODEC = StringIdentifiable.createCodec(EntityEffectType::values, EntityEffectType::byName);

@@ -135,7 +135,7 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @RestartRequired
-        @Comment("Enable/disable steam column effect when liquids hit hot sources")
+        @Comment("Enable/disable steam column effect when liquids are adjacent to hot sources, like lava and magma")
         public boolean steamColumnEnabled = true;
 
         @Property
@@ -152,9 +152,21 @@ public class Configuration extends ConfigurationData {
     public static class EntityEffects {
 
         @Property
+        @IntegerRange(min = 16, max = 64)
+        @Slider
+        @RestartRequired
+        @Comment("The maximum range at which entity special effects are applied")
+        public int entityEffectRange = 24;
+
+        @Property
         @RestartRequired
         @Comment("Enable/disable bow pull sound effect")
         public boolean enableBowPull = true;
+
+        @Property
+        @RestartRequired
+        @Comment("Enable/disable breath effect in cold biomes and underwater")
+        public boolean enableBreathEffect = true;
 
     }
 

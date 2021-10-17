@@ -53,10 +53,12 @@ public class FlameJetEffect extends ParticleJetEffect {
             }
         }
 
-        final Particle particle = this.addParticle(this.particleType, x, this.posY, z, 0, speedY, 0D);
+        var particle = this.createParticle(this.particleType, x, this.posY, z, 0, speedY, 0D);
 
         if (particle instanceof FlameParticle) {
             particle.scale(scale);
         }
+
+        this.addParticle(particle);
     }
 }

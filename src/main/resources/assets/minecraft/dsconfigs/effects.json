@@ -7,5 +7,15 @@
     "effects": [
       "bow_pull"
     ]
+  },
+  {
+    "entityTypes": [
+      "minecraft:player",
+      "net.minecraft.class_1646|net.minecraft.entity.passive.VillagerEntity",
+      "net.minecraft.class_1543|net.minecraft.entity.mob.IllagerEntity"
+    ],
+    "effects": [
+      "frost_breath"
+    ]
   }
 ]

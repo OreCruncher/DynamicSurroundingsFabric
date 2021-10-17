@@ -52,6 +52,11 @@ public class EntityEffectInfo {
             e.tick(this);
     }
 
+    // Use only for diagnostic purposes
+    public Collection<IEntityEffect> getEffects() {
+        return this.effects;
+    }
+
     public boolean isVisibleTo(PlayerEntity player) {
         return this.entity.get().isInvisibleTo(player);
     }
