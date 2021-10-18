@@ -149,7 +149,7 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
     public void render(final MatrixStack matrixStack, int index, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTick_) {
         final TextRenderer font = GameUtils.getTextRenderer();
         final float labelY = rowTop + (rowHeight - font.fontHeight) / 2F;
-        final String text = this.config.id;
+        final String text = this.config.soundEventId.toString();
         font.draw(matrixStack, text, (float) rowLeft, labelY, ColorPalette.WHITE.getRGB());
 
         // Need to position the other controls appropriately
@@ -220,12 +220,12 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
         // Cache the static part of the tooltip if needed
         if (this.cachedToolTip.size() == 0) {
 
-            Identifier id = new Identifier(this.config.id);
+            Identifier id = this.config.soundEventId;
             final String mod = FrameworkUtils.getModDisplayName(id.getNamespace());
             assert mod != null;
             @SuppressWarnings("ConstantConditions")
             OrderedText modName = OrderedText.styledForwardsVisitedString(Formatting.strip(mod), modNameStyle);
-            OrderedText soundLocationId = OrderedText.styledForwardsVisitedString(this.config.id, idStyle);
+            OrderedText soundLocationId = OrderedText.styledForwardsVisitedString(this.config.soundEventId.toString(), idStyle);
 
             this.cachedToolTip.add(modName);
             this.cachedToolTip.add(soundLocationId);

@@ -20,26 +20,26 @@ final class SoundLibraryHelpers {
 
     public static Collection<IndividualSoundConfigEntry> getSortedSoundConfigurations() {
 
-        final SortedMap<String, IndividualSoundConfigEntry> map = new TreeMap<>();
+        final SortedMap<Identifier, IndividualSoundConfigEntry> map = new TreeMap<>();
 
         // Get a list of all registered sounds.  We don't use the vanilla registries since
         // we will have more sounds than are registered.
         for (final SoundEvent event : SoundLibrary.getRegisteredSoundEvents()) {
             IndividualSoundConfigEntry entry = IndividualSoundConfigEntry.createDefault(event);
-            map.put(entry.id, entry);
+            map.put(entry.soundEventId, entry);
         }
 
         // Override with the defaults from configuration.  Make a copy of the original, so it doesn't change.
         for (IndividualSoundConfigEntry entry : Client.SoundConfig.getIndividualSoundConfigs()) {
-            map.put(entry.id, entry);
+            map.put(entry.soundEventId, entry);
         }
 
-        final Comparator<IndividualSoundConfigEntry> iscComparator = Comparator.comparing(isc -> isc.id);
+        final Comparator<IndividualSoundConfigEntry> iscComparator = Comparator.comparing(isc -> isc.soundEventId);
         return map.values().stream().sorted(iscComparator).collect(Collectors.toList());
     }
 
     public static ConfigSoundInstance playSound(IndividualSoundConfigEntry entry) {
-        ConfigSoundInstance sound = new ConfigSoundInstance(new Identifier(entry.id), entry.volumeScale);
+        ConfigSoundInstance sound = new ConfigSoundInstance(entry.soundEventId, entry.volumeScale);
         MinecraftAudioPlayer.INSTANCE.play(sound);
         return sound;
     }

@@ -63,6 +63,7 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
 
         var properties = this.configData.getSpecification();
         for (var prop : properties) {
+
             if (prop.isHidden())
                 continue;
 
@@ -83,6 +84,10 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
                 .setTooltip(this.options.transformTooltip(propertyGroup.getTooltip()));
 
         for (var prop : propertyGroup.getChildren()) {
+            // Skip entries that are marked as hidden
+            if (prop.isHidden())
+                continue;
+
             // Can't have categories within categories, so we ignore the case of where a config is set up that way
             if (prop instanceof ConfigElement.PropertyValue pv) {
                 var result = this.generate(builder, pv, propertyGroup.getInstance(instance));

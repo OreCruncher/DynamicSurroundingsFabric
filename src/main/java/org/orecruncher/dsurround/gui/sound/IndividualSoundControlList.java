@@ -71,7 +71,7 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
         if (filter == null || filter.length() == 0) {
             process = (isc) -> true;
         } else {
-            process = (isc) -> isc.id.contains(filter);
+            process = (isc) -> isc.soundEventId.toString().contains(filter);
         }
 
         IndividualSoundControlListEntry first = null;
