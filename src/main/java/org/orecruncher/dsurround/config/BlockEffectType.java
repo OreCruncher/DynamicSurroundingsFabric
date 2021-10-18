@@ -9,6 +9,7 @@ import org.orecruncher.dsurround.effects.blocks.producers.FlameJetProducer;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.effects.blocks.producers.SteamColumnProducer;
 import org.orecruncher.dsurround.effects.blocks.producers.UnderwaterBubbleProducer;
+import org.orecruncher.dsurround.effects.blocks.producers.WaterSplashProducer;
 import org.orecruncher.dsurround.lib.scripting.Script;
 
 import java.util.Arrays;
@@ -23,7 +24,8 @@ public enum BlockEffectType implements StringIdentifiable {
     UNKNOWN("unknown", (chance, condition) -> null, () -> false),
     STEAM_COLUMN("steam_column", SteamColumnProducer::new, () -> Client.Config.blockEffects.steamColumnEnabled),
     FLAME_JET("fire_jet", FlameJetProducer::new, () -> Client.Config.blockEffects.flameJetEnabled),
-    BUBBLE_COLUMN("bubble_column", UnderwaterBubbleProducer::new, () -> Client.Config.blockEffects.bubbleColumnEnabled);
+    BUBBLE_COLUMN("bubble_column", UnderwaterBubbleProducer::new, () -> Client.Config.blockEffects.bubbleColumnEnabled),
+    WATERFALL("waterfall", WaterSplashProducer::new, () -> Client.Config.blockEffects.waterfallsEnabled);
 
     private static final Map<String, BlockEffectType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(BlockEffectType::getName, (category) -> category));
     public static final Codec<BlockEffectType> CODEC = StringIdentifiable.createCodec(BlockEffectType::values, BlockEffectType::byName);

@@ -109,13 +109,13 @@ public final class BiomeSoundHandler extends ClientHandler {
     private void handleAddOnSounds(PlayerEntity player, BiomeInfo info) {
         SoundEvent sound = info.getExtraSound(SoundEventType.MOOD, RANDOM);
         if (sound != null) {
-            SoundInstance instance = SoundFactory.createAsMood(sound, player, MOOD_SOUND_MIN_RANGE, MOOD_SOUND_MAX_RANGE);
+            SoundInstance instance = new SoundFactory(sound).createAsMood(player, MOOD_SOUND_MIN_RANGE, MOOD_SOUND_MAX_RANGE);
             MinecraftAudioPlayer.INSTANCE.play(instance);
         }
 
         sound = info.getExtraSound(SoundEventType.ADDITION, RANDOM);
         if (sound != null) {
-            SoundInstance instance = SoundFactory.createAsAdditional(sound);
+            SoundInstance instance = new SoundFactory(sound).createAsAdditional();
             MinecraftAudioPlayer.INSTANCE.play(instance);
         }
     }

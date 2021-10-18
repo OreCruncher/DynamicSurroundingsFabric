@@ -10,6 +10,12 @@ public interface MixinAbstractSoundInstance {
     @Accessor("volume")
     float getRawVolume();
 
+    @Accessor("volume")
+    void setRawVolume(float vol);
+
     @Accessor("pitch")
     float getRawPitch();
+
+    @Accessor("pitch")
+    void setRawPitch(float pitch);
 }

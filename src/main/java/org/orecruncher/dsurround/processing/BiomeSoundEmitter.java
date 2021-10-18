@@ -18,7 +18,7 @@ public final class BiomeSoundEmitter {
 
     public BiomeSoundEmitter(final SoundEvent event) {
         this.soundEvent = event;
-        this.acousticSource = SoundFactory.createBackgroundSoundLoop(event);
+        this.acousticSource = new SoundFactory(event).createBackgroundSoundLoop();
     }
 
     public void tick() {

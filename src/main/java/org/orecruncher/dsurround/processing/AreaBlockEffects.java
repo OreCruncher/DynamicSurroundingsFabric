@@ -1,9 +1,12 @@
 package org.orecruncher.dsurround.processing;
 
+import joptsimple.internal.Strings;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.lib.math.TimerEMA;
 import org.orecruncher.dsurround.lib.scanner.ClientPlayerContext;
 import org.orecruncher.dsurround.processing.misc.BlockEffectManager;
 import org.orecruncher.dsurround.processing.scanner.AlwaysOnBlockEffectScanner;
@@ -55,5 +58,9 @@ public class AreaBlockEffects extends ClientHandler {
         if (this.alwaysOn != null) {
             blockPos.forEach(this.alwaysOn::onBlockUpdate);
         }
+    }
+    @Override
+    protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
+        left.add(Formatting.LIGHT_PURPLE + String.format("Total Effects: %d", this.blockEffects.count()));
     }
 }

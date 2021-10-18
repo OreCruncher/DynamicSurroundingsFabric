@@ -32,6 +32,10 @@
       {
         "effect": "steam_column",
         "alwaysOn": true
+      },
+      {
+        "effect": "waterfall",
+        "alwaysOn": true
       }
     ]
   },

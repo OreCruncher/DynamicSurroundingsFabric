@@ -158,6 +158,19 @@ public class Configuration extends ConfigurationData {
         @RestartRequired
         @Comment("Enable/disable bubble columns generated underwater")
         public boolean bubbleColumnEnabled = true;
+
+        @Property
+        @RestartRequired
+        @Comment("Enable/disable waterfall effect from flowing water")
+        public boolean waterfallsEnabled = true;
+
+        @Property
+        @Comment("Enable/disable sounds from waterfalls")
+        public boolean enableWaterfallSounds = true;
+
+        @Property
+        @Comment("Enable/disable particles from waterfalls")
+        public boolean enableWaterfallParticles = true;
     }
 
     public static class EntityEffects {

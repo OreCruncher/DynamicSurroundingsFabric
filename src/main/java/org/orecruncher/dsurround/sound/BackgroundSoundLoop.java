@@ -6,6 +6,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.MovingSoundInstance;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 
 @Environment(EnvType.CLIENT)
@@ -26,7 +27,22 @@ public class BackgroundSoundLoop extends MovingSoundInstance {
         this.repeat = true;
         this.repeatDelay = 0;
         this.attenuationType = AttenuationType.NONE;
-        this.relative = true; // What is this guy really supposed to do?
+        this.relative = true;
+    }
+
+    public BackgroundSoundLoop(SoundEvent soundEvent, BlockPos pos) {
+        super(soundEvent, SoundCategory.AMBIENT);
+        this.scale = INITIAL_SCALE;
+        this.target = 1F;
+        this.isFading = false;
+        this.repeat = true;
+        this.repeatDelay = 0;
+        this.attenuationType = AttenuationType.LINEAR;
+        this.relative = false;
+
+        this.x = pos.getX() + 0.5F;
+        this.y = pos.getY() + 0.5F;
+        this.z = pos.getZ() + 0.5F;
     }
 
     public void tick() {
@@ -39,6 +55,16 @@ public class BackgroundSoundLoop extends MovingSoundInstance {
 
         if (Float.compare(this.getVolume(), 0F) == 0)
             this.setDone();
+    }
+
+    public BackgroundSoundLoop setVolume(float volume) {
+        this.volume = volume;
+        return this;
+    }
+
+    public BackgroundSoundLoop setPitch(float pitch) {
+        this.pitch = pitch;
+        return this;
     }
 
     @Override

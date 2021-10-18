@@ -12,7 +12,8 @@ import org.orecruncher.dsurround.sound.SoundFactory;
 @Environment(EnvType.CLIENT)
 public class BowUseEffect extends EntityEffectBase {
 
-    private static final SoundEvent BOW_PULL_SOUND = new SoundEvent(new Identifier(Client.ModId, "bow.pull"));
+    private static final SoundEvent BOW_PULL_SOUNDEVENT = new SoundEvent(new Identifier(Client.ModId, "bow.pull"));
+    private static final SoundFactory BOW_PULL_SOUND = new SoundFactory(BOW_PULL_SOUNDEVENT);
 
     protected ItemStack lastActiveStack = ItemStack.EMPTY;
 
@@ -26,7 +27,7 @@ public class BowUseEffect extends EntityEffectBase {
             if (isApplicable(currentStack)) {
                 if (!ItemStack.areEqual(currentStack, this.lastActiveStack)) {
                     if (isApplicable(currentStack)) {
-                        var sound = SoundFactory.createAtEntity(BOW_PULL_SOUND, entity);
+                        var sound = BOW_PULL_SOUND.createAtEntity(entity);
                         this.playSound(sound);
                     }
 

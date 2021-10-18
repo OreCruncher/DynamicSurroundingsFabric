@@ -120,7 +120,10 @@ public class Handlers {
         startupSoundPlayed = true;
         Client.SoundConfig
                 .getRandomStartupSound()
-                .ifPresent(id -> client.getSoundManager().play(SoundFactory.createAsAdditional(id)));
+                .ifPresent(id -> {
+                    var sound = new SoundFactory(id).createAsAdditional();
+                    client.getSoundManager().play(sound);
+                });
     }
 
     public void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {

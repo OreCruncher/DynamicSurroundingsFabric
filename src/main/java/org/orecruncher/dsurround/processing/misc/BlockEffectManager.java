@@ -61,4 +61,8 @@ public class BlockEffectManager        {
         this.systems.put(system.getPos().asLong(), system);
     }
 
+    public int count() {
+        return this.systems.size();
+    }
+
 }

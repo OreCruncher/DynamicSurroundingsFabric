@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.effects.blocks;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.particle.FlameParticle;
-import net.minecraft.client.particle.Particle;
 import net.minecraft.particle.DefaultParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundEvents;
@@ -13,6 +12,8 @@ import org.orecruncher.dsurround.sound.SoundFactory;
 
 @Environment(EnvType.CLIENT)
 public class FlameJetEffect extends ParticleJetEffect {
+
+    private static final SoundFactory FIRE_AMBIENT = new SoundFactory(SoundEvents.BLOCK_FIRE_AMBIENT);
 
     protected final boolean isLava;
     protected final DefaultParticleType particleType;
@@ -31,7 +32,7 @@ public class FlameJetEffect extends ParticleJetEffect {
         if (!this.soundFired) {
             this.soundFired = true;
             if (this.jetStrength > 1) {
-                var soundInstance = SoundFactory.createAtLocation(SoundEvents.BLOCK_FIRE_AMBIENT, getPos());
+                var soundInstance = FIRE_AMBIENT.createAtLocation(getPos());
                 MinecraftAudioPlayer.INSTANCE.play(soundInstance);
             }
         }

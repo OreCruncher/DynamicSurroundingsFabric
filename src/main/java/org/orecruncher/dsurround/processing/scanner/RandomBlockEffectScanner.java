@@ -54,7 +54,7 @@ public class RandomBlockEffectScanner extends RandomScanner {
 
         var sound = info.getSoundToPlay(rand);
         if (sound != null) {
-            var instance = SoundFactory.createAtLocation(sound, pos);
+            var instance = new SoundFactory(sound).createAtLocation(pos);
             MinecraftAudioPlayer.INSTANCE.play(instance);
         }
     }
