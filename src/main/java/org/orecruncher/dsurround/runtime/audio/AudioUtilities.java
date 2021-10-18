@@ -1,15 +1,19 @@
 package org.orecruncher.dsurround.runtime.audio;
 
-import com.google.common.base.MoreObjects;
 import net.minecraft.client.sound.SoundEngine;
 import net.minecraft.client.sound.SoundInstance;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.client.sound.SoundListener;
+import net.minecraft.client.sound.SoundSystem;
 import org.lwjgl.openal.*;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.audio.AlAttributeBuilder;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundEngineAccessor;
+import org.orecruncher.dsurround.mixins.core.MixinAbstractSoundInstance;
+import org.orecruncher.dsurround.mixins.core.MixinSoundManagerAccessor;
+import org.orecruncher.dsurround.mixins.core.MixinSoundSystemAccessors;
 
 public final class AudioUtilities {
     private static final IModLog LOGGER = Client.LOGGER.createChild(AudioUtilities.class);
@@ -29,30 +33,65 @@ public final class AudioUtilities {
         return MAX_SOUNDS;
     }
 
+    public static SoundSystem getSoundSystem() {
+        MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) GameUtils.getSoundHander();
+        return manager.getSoundSystem();
+    }
+
+    public static SoundListener getSoundListener() {
+        return ((MixinSoundSystemAccessors)getSoundSystem()).getListener();
+    }
+
+    /**
+     * Reuse the builder to help mitigate heap issues during heavy log volume
+     */
+    private static final ThreadLocal<StringBuilder> builder = ThreadLocal.withInitial(() -> new StringBuilder(128));
+
     /**
      * Provides a debug string for the specified sound object.
      *
      * @param sound Sound instance to provide a debug string for
      * @return Debug string
      */
-    public static String debugString(@Nullable final SoundInstance sound) {
+    public static String debugString(final SoundInstance sound) {
 
-        if (sound == null)
-            return "null";
+        try {
+            var sb = builder.get();
+            sb.setLength(0);
 
-        return MoreObjects.toStringHelper(sound)
-                .addValue(sound.getId().toString())
-                .addValue(sound.getCategory().toString())
-                .addValue(sound.getAttenuationType().toString())
-                .add("v", sound.getVolume())
-                .add("p", sound.getPitch())
-                .add("x", sound.getX())
-                .add("y", sound.getY())
-                .add("z", sound.getZ())
-                .add("distance", sound.getSound().getAttenuation())
-                .add("streaming", sound.getSound().isStreamed())
-                .add("global", sound.isRelative())
-                .toString();
+            MixinAbstractSoundInstance accessor = (MixinAbstractSoundInstance) sound;
+            sb.append(sound.getClass().getSimpleName()).append("{");
+            sb.append(sound.getId());
+            sb.append(", ").append(sound.getCategory().getName());
+            sb.append(", ").append(sound.getAttenuationType().toString());
+            sb.append(String.format(", (%.2f,%.2f,%.2f)", sound.getX(), sound.getY(), sound.getZ()));
+
+            // Depending on call context the sound property may be null
+            if (sound.getSound() != null) {
+                sb.append(String.format(", v: %.4f(%.4f)", sound.getVolume(), accessor.getRawVolume()));
+                sb.append(String.format(", p: %.4f(%.4f)", sound.getPitch(), accessor.getRawPitch()));
+                sb.append(", s: ").append(sound.getSound().isStreamed());
+            } else {
+                sb.append(String.format(", vr: %.4f", accessor.getRawVolume()));
+                sb.append(String.format(", pr: %.4f", accessor.getRawPitch()));
+            }
+
+            sb.append(", g: ").append(sound.isRelative());
+            sb.append("}");
+
+            if (!sound.isRelative()) {
+                var listener = getSoundListener();
+                var distance = Math.sqrt(listener.getPos().squaredDistanceTo(sound.getX(), sound.getY(), sound.getZ()));
+                sb.append(String.format(", distance: %.1f", distance));
+                if (sound.getSound() != null)
+                    sb.append(" (").append(sound.getSound().getAttenuation()).append(")");
+            }
+
+            return sb.toString();
+        } catch (Throwable ignore) {
+        }
+
+        return "Unable to format sound!";
     }
 
     /**
@@ -162,6 +201,6 @@ public final class AudioUtilities {
      * @param sound Sound that is being queued into the audio engine
      */
     public static void onPlaySound(final SoundInstance sound) {
-        LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> String.format("PLAYING: [%s]", debugString(sound)));
+        LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> "PLAYING: " + debugString(sound));
     }
 }
