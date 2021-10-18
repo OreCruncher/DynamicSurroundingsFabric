@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.SoundInstance;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
@@ -78,7 +79,7 @@ public final class SoundInstanceHandler {
     }
 
     /**
-     * Determines if a sound is in range of a listener based on the sounds attenuation distance.
+     * Determines if a sound is in range of a listener based on the sound's properties.
      *
      * @param listener Location of the listener
      * @param sound    The sound that is to be evaluated
@@ -86,8 +87,15 @@ public final class SoundInstanceHandler {
      * @return true if the sound is within the attenuation distance; false otherwise
      */
     public static boolean inRange(final Vec3d listener, final SoundInstance sound, final int pad) {
-        if (sound.isRelative() || sound.getAttenuationType() == SoundInstance.AttenuationType.NONE)
+        // Do not cancel if:
+        // - The sound is global.  Distance is not a factor.
+        // - It is repeatable.  Player can move into range.
+        // - Weather related (thunder, lightening strike)
+        if (sound.isRelative() || sound.getAttenuationType() == SoundInstance.AttenuationType.NONE || sound.isRepeatable() || sound.getCategory() == SoundCategory.WEATHER)
             return true;
+
+        // Get the max distance of the sound range.  Pad is added because a player may move into hearing
+        // range before the sound terminates.
         int distSq = sound.getSound().getAttenuation() + pad;
         distSq *= distSq;
         return listener.squaredDistanceTo(sound.getX(), sound.getY(), sound.getZ()) < distSq;

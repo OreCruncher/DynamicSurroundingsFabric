@@ -88,6 +88,10 @@ public class Configuration extends ConfigurationData {
         @Slider
         @Comment("Ticks between culled sound events (0 to disable culling)")
         public int cullInterval = 20;
+
+        @Property
+        @Comment("Enables/disables cancellation of sound that a player will not hear")
+        public boolean enableSoundPruning = true;
     }
 
     public static class EnhancedSounds {

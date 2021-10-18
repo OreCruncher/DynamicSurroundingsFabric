@@ -62,6 +62,8 @@
   "dsurround.config.soundSystem.streamingChannels.tooltip": "The number of sound channels to reserve for streaming sounds (music, biome sounds, records, etc.)",
   "dsurround.config.soundSystem.cullInterval": "Sound Culling Interval",
   "dsurround.config.soundSystem.cullInterval.tooltip": "Ticks between culled sound events (0 to disable culling)",
+  "dsurround.config.soundSystem.enableSoundPruning": "Sound Pruning",
+  "dsurround.config.soundSystem.enableSoundPruning.tooltip": "Enables/disables cancellation of sound that a player will not hear.  Does not apply to global, repeatable, or WEATHER sounds.",
   "dsurround.config.thunderStorms": "Thunderstorm Options",
   "dsurround.config.thunderStorms.tooltip": "Options for defining how Dynamic Surroundings will modify thunder and lightning effects",
   "dsurround.config.thunderStorms.replaceThunderSounds": "Replace Vanilla thunder sounds",
