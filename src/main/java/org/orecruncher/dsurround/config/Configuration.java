@@ -122,6 +122,27 @@ public class Configuration extends ConfigurationData {
         public boolean enableOcclusionProcessing = false;
 
         @Property
+        @IntegerRange(min = 16, max = 64)
+        @RestartRequired
+        @DefaultValue
+        @Comment("The number of rays to project around a sound location to calculate reverb effect")
+        public int reverbRays = 32;
+
+        @Property
+        @IntegerRange(min = 2, max = 8)
+        @RestartRequired
+        @DefaultValue
+        @Comment("The number of reflections the ray calculation will perform before ending a ray calculation")
+        public int reverbBounces = 4;
+
+        @Property
+        @IntegerRange(min = 64, max = 512)
+        @RestartRequired
+        @DefaultValue
+        @Comment("Total distance a reverb ray will traverse before ending calculation")
+        public int reverbRayTraceDistance = 256;
+
+        @Property
         @RestartRequired
         @DefaultValue
         @Hidden

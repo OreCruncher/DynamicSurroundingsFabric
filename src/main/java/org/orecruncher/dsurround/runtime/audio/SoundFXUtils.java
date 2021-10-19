@@ -30,15 +30,15 @@ public final class SoundFXUtils {
     /**
      * Number of rays to project when doing reverb calculations.
      */
-    private static final int REVERB_RAYS = 32;
+    private static final int REVERB_RAYS = Client.Config.enhancedSounds.reverbRays;
     /**
      * Number of bounces a sound wave will make when projecting.
      */
-    private static final int REVERB_RAY_BOUNCES = 4;
+    private static final int REVERB_RAY_BOUNCES = Client.Config.enhancedSounds.reverbBounces;
     /**
      * Maximum distance to trace a reverb ray segment before stopping.
      */
-    private static final float MAX_REVERB_DISTANCE = 256;
+    private static final float MAX_REVERB_DISTANCE = Client.Config.enhancedSounds.reverbRayTraceDistance;
     /**
      * Reciprocal of the total number of rays cast.
      */
