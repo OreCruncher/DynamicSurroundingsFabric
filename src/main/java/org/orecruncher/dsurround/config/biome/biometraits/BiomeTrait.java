@@ -10,6 +10,7 @@ public enum BiomeTrait {
     UNKNOWN("UNKNOWN"),
     // Special internal traits for synthetic biomes
     FAKE("FAKE"),
+    INSIDE("inside"),
     VILLAGE("VILLAGE"),
     PLAYER("PLAYER"),
     SPACE("SPACE"),

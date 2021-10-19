@@ -39,10 +39,7 @@ public final class BiomeSoundHandler extends ClientHandler {
     }
 
     private boolean doBiomeSounds() {
-        return true;
-        //return BiomeScanner.isUnderground()
-          //      || !Scanners.isInside()
-            //    || BiomeScanner.getDimInfo().alwaysOutside();
+        return true; //!Scanners.isInside() || BiomeScanner.getDimInfo().alwaysOutside();
     }
 
     private void generateBiomeSounds() {

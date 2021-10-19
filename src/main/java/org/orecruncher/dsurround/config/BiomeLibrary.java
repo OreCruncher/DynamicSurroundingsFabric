@@ -67,12 +67,12 @@ public final class BiomeLibrary {
         version++;
 
         for (var b : InternalBiomes.values())
-            intializeInternalBiome(b);
+            initializeInternalBiome(b);
 
         LOGGER.info("%d biome configs loaded; version is now %d", biomeConfigs.size(), version);
     }
 
-    private static void intializeInternalBiome(InternalBiomes biome) {
+    private static void initializeInternalBiome(InternalBiomes biome) {
         String match = "@" + biome.getName();
         var info = new BiomeInfo(version, biome.getId(), biome.getName(), biome.getTraits());
 

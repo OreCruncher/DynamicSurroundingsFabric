@@ -13,13 +13,14 @@ import org.orecruncher.dsurround.config.InternalBiomes;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.processing.Scanners;
 
 @Environment(EnvType.CLIENT)
 public final class BiomeScanner {
 
     public static final int SCAN_INTERVAL = 4;
     private static final int UNDERGROUND_THRESHOLD_OFFSET = 4;
-    private static final int SURVEY_HORIZONTAL_DIMENSION = 32;
+    private static final int SURVEY_HORIZONTAL_DIMENSION = 18;
     private static final int SURVEY_HORIZONTAL_OFFSET = SURVEY_HORIZONTAL_DIMENSION / 2 - 1;
     private static final int SURVEY_VERTICAL_DIMENSION = 16;
     private static final int SURVEY_VERTICAL_OFFSET = SURVEY_VERTICAL_DIMENSION / 4 - 1;
@@ -65,19 +66,17 @@ public final class BiomeScanner {
 
         if (this.surveyedBiome != playerBiome
                 || !surveyedDimension.equals(dimensionInfo)
-                || this.surveyedPosition.equals(position)) {
+                || !this.surveyedPosition.equals(position)) {
 
             this.surveyedBiome = playerBiome;
             this.surveyedPosition = position;
             surveyedDimension = dimensionInfo;
 
-            isUnderWater = false;
-            InternalBiomes internalBiome;
-
             // If the player is underwater, underwater effects will rule over everything else
-            if (player.isSubmergedIn(FluidTags.WATER)) {
+            isUnderWater = player.isSubmergedIn(FluidTags.WATER);
+            if (isUnderWater) {
+                InternalBiomes internalBiome;
                 var playerBiomeInfo = BiomeLibrary.getBiomeInfo(playerBiome);
-                isUnderWater = true;
                 if (playerBiomeInfo.isRiver())
                     internalBiome = InternalBiomes.UNDER_RIVER;
                 else if (playerBiomeInfo.isDeepOcean())
@@ -99,14 +98,14 @@ public final class BiomeScanner {
 
             for (int z = 0; z < SURVEY_HORIZONTAL_DIMENSION; z++) {
                 var dZ = z - SURVEY_HORIZONTAL_OFFSET + this.surveyedPosition.getZ();
+                this.mutable.setZ(dZ);
                 for (int x = 0; x < SURVEY_HORIZONTAL_DIMENSION; x++) {
                     var dX = x - SURVEY_HORIZONTAL_OFFSET + this.surveyedPosition.getX();
+                    this.mutable.setX(dX);
                     for (int y = 0; y < SURVEY_VERTICAL_DIMENSION; y++) {
                         var dY = y - SURVEY_VERTICAL_OFFSET + this.surveyedPosition.getY();
-                        this.mutable.set(dX, dY, dZ);
+                        this.mutable.setY(dY);
                         var info = this.resolveBiome(dimensionInfo, biomes, this.mutable);
-                        if (info == null)
-                            continue;
                         this.weights.addTo(info, 1);
                     }
                 }
@@ -123,6 +122,9 @@ public final class BiomeScanner {
             var y = pos.getY();
             if (y < (dimInfo.getSeaLevel() - UNDERGROUND_THRESHOLD_OFFSET)) {
                 return BiomeLibrary.getBiomeInfo(InternalBiomes.UNDERGROUND);
+            } else if (Scanners.isInside()) {
+                // If it's not underground, and we are inside, return INSIDE
+                return BiomeLibrary.getBiomeInfo(InternalBiomes.INSIDE);
             } else if (y >= dimInfo.getSpaceHeight()) {
                 return BiomeLibrary.getBiomeInfo(InternalBiomes.SPACE);
             } else if (y >= dimInfo.getCloudHeight()) {

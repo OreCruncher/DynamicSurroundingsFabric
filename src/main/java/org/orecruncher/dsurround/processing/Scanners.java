@@ -46,9 +46,9 @@ public class Scanners extends ClientHandler {
     public void process(final PlayerEntity player) {
 
         long ticks = TickCounter.getTickCount();
-        biomes.tick(ticks);
         ceilingScanner.tick(ticks);
         villageScanner.tick(ticks);
+        biomes.tick(ticks);
     }
 
     @Override

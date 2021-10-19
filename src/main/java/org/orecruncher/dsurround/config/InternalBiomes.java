@@ -14,6 +14,7 @@ public enum InternalBiomes {
     // Used to represent a value that is not the others.  Will not show up in
     // the lookup map.
     NONE("none"),
+    INSIDE("inside", BiomeTrait.INSIDE),
     UNDERGROUND("underground", BiomeTrait.UNDERGROUND),
     PLAYER("player", BiomeTrait.PLAYER),
     VILLAGE("village", BiomeTrait.VILLAGE),
