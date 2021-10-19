@@ -45,8 +45,8 @@ public abstract class CuboidScanner extends Scanner {
         BlockPos min = pos.add(-this.xRange, -this.yRange, -this.zRange);
         final BlockPos max = pos.add(this.xRange, this.yRange, this.zRange);
 
-        if (min.getY() < 0)
-            min = new BlockPos(min.getX(), 0, min.getZ());
+        if (this.locus.isOutOfHeightLimit(min.getY()))
+            min = new BlockPos(min.getX(), this.locus.clampHeight(min.getY()), min.getZ());
 
         return new BlockPos[]{min, max};
     }
@@ -71,7 +71,7 @@ public abstract class CuboidScanner extends Scanner {
 
         // If there is no player position or it's bogus just return
         final BlockPos playerPos = this.locus.getCenter();
-        if (playerPos.getY() < 0) {
+        if (this.locus.isOutOfHeightLimit(playerPos.getY())) {
             this.fullRange = null;
         } else {
             // If the full range was reset, or the player dimension changed,
@@ -106,9 +106,9 @@ public abstract class CuboidScanner extends Scanner {
                         this.activeCuboid = newVolume;
                         updateScan(newVolume, oldVolume, intersect);
                     } else {
-                        // The existing scan hasn't completed but now we
+                        // The existing scan hasn't completed, but now we
                         // have a delta set. Finish out scanning the
-                        // old volume and once that is locked then an
+                        // old volume and once that is locked then a
                         // subsequent tick will do a delta update to get
                         // the new blocks.
                         super.tick();
@@ -142,7 +142,7 @@ public abstract class CuboidScanner extends Scanner {
             final ComplementsPointIterator newOutOfRange = new ComplementsPointIterator(oldVolume, intersect);
             // Notify on the blocks going out of range
             for (BlockPos point = newOutOfRange.next(); point != null; point = newOutOfRange.next()) {
-                if (point.getY() > 0) {
+                if (!this.locus.isOutOfHeightLimit(point.getY())) {
                     final BlockState state = provider.getBlockState(point);
                     if (interestingBlock(state))
                         blockUnscan(state, point, this.random);
@@ -153,7 +153,7 @@ public abstract class CuboidScanner extends Scanner {
         // Notify on blocks coming into range
         final ComplementsPointIterator newInRange = new ComplementsPointIterator(newVolume, intersect);
         for (BlockPos point = newInRange.next(); point != null; point = newInRange.next()) {
-            if (point.getY() > 0) {
+            if (!this.locus.isOutOfHeightLimit(point.getY())) {
                 final BlockState state = provider.getBlockState(point);
                 if (interestingBlock(state))
                     blockScan(state, point, this.random);
@@ -180,7 +180,7 @@ public abstract class CuboidScanner extends Scanner {
 
             // Has to be in valid space for it to
             // be returned.
-            if (point.getY() > 0) {
+            if (!this.locus.isOutOfHeightLimit(point.getY())) {
                 return point;
             }
 

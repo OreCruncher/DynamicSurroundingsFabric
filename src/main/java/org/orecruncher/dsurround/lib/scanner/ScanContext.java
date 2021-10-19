@@ -4,6 +4,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
@@ -43,5 +44,14 @@ public class ScanContext {
 
     public Identifier getReference() {
         return this.worldReference.get();
+    }
+
+    public boolean isOutOfHeightLimit(int y) {
+        return this.worldReader.get().isOutOfHeightLimit(y);
+    }
+
+    public int clampHeight(int y) {
+        var world = this.worldReader.get();
+        return MathHelper.clamp(y, world.getBottomY(), world.getTopY());
     }
 }

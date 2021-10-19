@@ -14,11 +14,11 @@ public class Cuboid {
     protected final BlockPos minPoint;
     protected final BlockPos maxPoint;
 
-    public Cuboid( final BlockPos[] points) {
+    public Cuboid(final BlockPos[] points) {
         this(points[0], points[1]);
     }
 
-    public Cuboid( final BlockPos vx1,  final BlockPos vx2) {
+    public Cuboid(final BlockPos vx1, final BlockPos vx2) {
 
         this.minPoint = BlockPosUtil.createMinPoint(vx1, vx2);
         this.maxPoint = BlockPosUtil.createMaxPoint(vx1, vx2);
@@ -36,16 +36,16 @@ public class Cuboid {
         this.vertices[7] = new BlockPos(this.maxPoint.getX(), this.maxPoint.getY(), this.minPoint.getZ());
     }
 
-    public boolean contains( final BlockPos p) {
+    public boolean contains(final BlockPos p) {
         return BlockPosUtil.contains(p, this.minPoint, this.maxPoint);
     }
 
-    
+
     public BlockPos maximum() {
         return this.maxPoint;
     }
 
-    
+
     public BlockPos minimum() {
         return this.minPoint;
     }
@@ -55,7 +55,7 @@ public class Cuboid {
     }
 
     @Nullable
-    public Cuboid intersection( final Cuboid o) {
+    public Cuboid intersection(final Cuboid o) {
         BlockPos vx1 = null;
         for (final BlockPos vx : this.vertices) {
             if (o.contains(vx)) {

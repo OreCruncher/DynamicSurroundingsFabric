@@ -13,7 +13,7 @@
     "core.MixinAbstractSoundInstance",
     "core.MixinBiome",
     "core.MixinBlockState",
-    "core.MixinClientWorld",
+    "core.MixinWorld",
     "core.MixinClientWorldProperties",
     "core.MixinEntityArrow",
     "core.MixinIngameHud",

@@ -12,7 +12,7 @@ public class ComplementsPointIterator implements IPointIterator {
     protected int activeSegment = 0;
     protected BlockPos peeked = null;
 
-    public ComplementsPointIterator( final Cuboid volume,  final Cuboid intersect) {
+    public ComplementsPointIterator(final Cuboid volume, final Cuboid intersect) {
         // This function makes some important assumptions about volume and
         // intersect:
         // 1) Intersect is completely contained within volume
