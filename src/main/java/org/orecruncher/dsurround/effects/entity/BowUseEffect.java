@@ -7,13 +7,14 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.sound.SoundFactory;
+import org.orecruncher.dsurround.sound.ISoundFactory;
+import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 @Environment(EnvType.CLIENT)
 public class BowUseEffect extends EntityEffectBase {
 
     private static final SoundEvent BOW_PULL_SOUNDEVENT = new SoundEvent(new Identifier(Client.ModId, "bow.pull"));
-    private static final SoundFactory BOW_PULL_SOUND = new SoundFactory(BOW_PULL_SOUNDEVENT);
+    private static final ISoundFactory BOW_PULL_SOUND = SoundFactoryBuilder.create(BOW_PULL_SOUNDEVENT).build();
 
     protected ItemStack lastActiveStack = ItemStack.EMPTY;
 

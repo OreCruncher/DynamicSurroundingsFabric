@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.effects.blocks;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -12,10 +11,7 @@ import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.effects.blocks.producers.BlockEffectProducer;
 import org.orecruncher.dsurround.effects.blocks.producers.WaterSplashProducer;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.sound.BackgroundSoundLoop;
-import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
-import org.orecruncher.dsurround.sound.SoundFactory;
-import org.orecruncher.dsurround.sound.SoundInstanceHandler;
+import org.orecruncher.dsurround.sound.*;
 
 import java.util.Arrays;
 
@@ -24,31 +20,37 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
 
     // Used to spread sound starts over a range to minimize harmonics
     private static final int THROTTLE_RANGE = 10;
-    private static final SoundFactory[] waterfallAcoustics = new SoundFactory[BlockEffectProducer.MAX_STRENGTH + 1];
+    private static final ISoundFactory[] waterfallAcoustics = new ISoundFactory[BlockEffectProducer.MAX_STRENGTH + 1];
 
     static {
-        var factory = new SoundFactory(new SoundEvent(new Identifier(Client.ModId, "waterfall.0")))
-                .pitchRange(0.8F, 1.2F);
+        var factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.0"))
+                .pitchRange(0.8F, 1.2F)
+                .build();
         Arrays.fill(waterfallAcoustics, factory);
 
-        factory = new SoundFactory(new SoundEvent(new Identifier(Client.ModId, "waterfall.1")))
-                .pitchRange(0.8F, 1.2F);
+        factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.1"))
+                .pitchRange(0.8F, 1.2F)
+                .build();
         waterfallAcoustics[2] = waterfallAcoustics[3] = factory;
 
-        factory = new SoundFactory(new SoundEvent(new Identifier(Client.ModId, "waterfall.2")))
-                .pitchRange(0.8F, 1.2F);
+        factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.2"))
+                .pitchRange(0.8F, 1.2F)
+                .build();
         waterfallAcoustics[4] = factory;
 
-        factory = new SoundFactory(new SoundEvent(new Identifier(Client.ModId, "waterfall.3")))
-                .pitchRange(0.8F, 1.2F);
+        factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.3"))
+                .pitchRange(0.8F, 1.2F)
+                .build();
         waterfallAcoustics[5] = waterfallAcoustics[6] = factory;
 
-        factory = new SoundFactory(new SoundEvent(new Identifier(Client.ModId, "waterfall.4")))
-                .pitchRange(0.8F, 1.2F);
+        factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.4"))
+                .pitchRange(0.8F, 1.2F)
+                .build();
         waterfallAcoustics[7] = waterfallAcoustics[8] = factory;
 
-        factory = new SoundFactory(new SoundEvent(new Identifier(Client.ModId, "waterfall.5")))
-                .pitchRange(0.8F, 1.2F);
+        factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.5"))
+                .pitchRange(0.8F, 1.2F)
+                .build();
         waterfallAcoustics[9] = waterfallAcoustics[10] = factory;
     }
 

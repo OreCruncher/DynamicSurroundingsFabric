@@ -24,9 +24,15 @@ public final class SoundInstanceHandler {
 
     private static final Object2LongOpenHashMap<Identifier> soundCull = new Object2LongOpenHashMap<>(32);
     private static final Set<Identifier> thunderSounds = new HashSet<>();
+    private static final ISoundFactory THUNDER_SOUND;
 
     static {
         thunderSounds.add(SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER.getId());
+
+        THUNDER_SOUND = SoundFactoryBuilder.create(new Identifier(Client.ModId, "thunder"))
+                .category(SoundCategory.WEATHER)
+                .volume(10000)
+                .build();
     }
 
     private static boolean isSoundBlocked(final Identifier id) {
@@ -70,7 +76,8 @@ public final class SoundInstanceHandler {
 
         if (Client.Config.thunderStorms.replaceThunderSounds && thunderSounds.contains(id)) {
             // Yeah - a bit reentrant but it should be good
-            var sound = SoundFactory.cloneThunder(theSound);
+            var sound = THUNDER_SOUND.createAtLocation(
+                    new Vec3d(theSound.getX(), theSound.getY(), theSound.getZ()));
             MinecraftAudioPlayer.INSTANCE.play(sound);
             return true;
         }

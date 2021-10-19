@@ -84,6 +84,10 @@ public final class SoundLibrary {
         }
     }
 
+    public static SoundEvent getSound(final String sound) {
+        return getSound(new Identifier(sound));
+    }
+
     public static SoundEvent getSound(final Identifier sound) {
         Objects.requireNonNull(sound);
         final SoundEvent se = myRegistry.get(sound);

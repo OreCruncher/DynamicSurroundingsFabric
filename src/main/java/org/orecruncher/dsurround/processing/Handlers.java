@@ -19,7 +19,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
-import org.orecruncher.dsurround.sound.SoundFactory;
+import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 import java.util.Collection;
 
@@ -121,7 +121,10 @@ public class Handlers {
         Client.SoundConfig
                 .getRandomStartupSound()
                 .ifPresent(id -> {
-                    var sound = new SoundFactory(id).createAsAdditional();
+                    var sound = SoundFactoryBuilder
+                            .create(id)
+                            .build()
+                            .createAsAdditional();
                     client.getSoundManager().play(sound);
                 });
     }

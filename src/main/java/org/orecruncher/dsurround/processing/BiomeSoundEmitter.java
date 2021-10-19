@@ -6,7 +6,7 @@ import net.minecraft.sound.SoundEvent;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.sound.BackgroundSoundLoop;
 import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
-import org.orecruncher.dsurround.sound.SoundFactory;
+import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 @Environment(EnvType.CLIENT)
 public final class BiomeSoundEmitter {
@@ -18,7 +18,10 @@ public final class BiomeSoundEmitter {
 
     public BiomeSoundEmitter(final SoundEvent event) {
         this.soundEvent = event;
-        this.acousticSource = new SoundFactory(event).createBackgroundSoundLoop();
+        this.acousticSource = SoundFactoryBuilder
+                .create(event)
+                .build()
+                .createBackgroundSoundLoop();
     }
 
     public void tick() {

@@ -17,7 +17,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
 import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
-import org.orecruncher.dsurround.sound.SoundFactory;
+import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 import java.util.Collection;
 
@@ -109,13 +109,19 @@ public final class BiomeSoundHandler extends ClientHandler {
     private void handleAddOnSounds(PlayerEntity player, BiomeInfo info) {
         SoundEvent sound = info.getExtraSound(SoundEventType.MOOD, RANDOM);
         if (sound != null) {
-            SoundInstance instance = new SoundFactory(sound).createAsMood(player, MOOD_SOUND_MIN_RANGE, MOOD_SOUND_MAX_RANGE);
+            SoundInstance instance = SoundFactoryBuilder
+                    .create(sound)
+                    .build()
+                    .createAsMood(player, MOOD_SOUND_MIN_RANGE, MOOD_SOUND_MAX_RANGE);
             MinecraftAudioPlayer.INSTANCE.play(instance);
         }
 
         sound = info.getExtraSound(SoundEventType.ADDITION, RANDOM);
         if (sound != null) {
-            SoundInstance instance = new SoundFactory(sound).createAsAdditional();
+            SoundInstance instance = SoundFactoryBuilder
+                    .create(sound)
+                    .build()
+                    .createAsAdditional();
             MinecraftAudioPlayer.INSTANCE.play(instance);
         }
     }

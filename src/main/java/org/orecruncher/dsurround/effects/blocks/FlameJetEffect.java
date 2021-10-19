@@ -7,13 +7,16 @@ import net.minecraft.particle.DefaultParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.world.World;
+import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
-import org.orecruncher.dsurround.sound.SoundFactory;
+import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 @Environment(EnvType.CLIENT)
 public class FlameJetEffect extends ParticleJetEffect {
 
-    private static final SoundFactory FIRE_AMBIENT = new SoundFactory(SoundEvents.BLOCK_FIRE_AMBIENT);
+    private static final ISoundFactory FIRE_AMBIENT = SoundFactoryBuilder
+            .create(SoundEvents.BLOCK_FIRE_AMBIENT)
+            .build();
 
     protected final boolean isLava;
     protected final DefaultParticleType particleType;
