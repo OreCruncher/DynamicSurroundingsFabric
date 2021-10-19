@@ -13,6 +13,7 @@ import org.orecruncher.dsurround.effects.blocks.producers.WaterSplashProducer;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.sound.*;
 
+import java.awt.*;
 import java.util.Arrays;
 
 @Environment(EnvType.CLIENT)
@@ -58,10 +59,19 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
     protected int particleLimit;
     protected final double deltaY;
 
+    protected final float red;
+    protected final float green;
+    protected final float blue;
+
     public WaterSplashJetEffect(final int strength, final World world, final BlockPos loc, final double dY) {
         super(0, strength, world, loc.getX() + 0.5D, loc.getY() + 0.5D, loc.getZ() + 0.5D, 4);
         this.deltaY = loc.getY() + dY;
         setSpawnCount((int) (strength * 2.5F));
+
+        var color = new Color(this.world.getBiome(this.position).getWaterColor());
+        this.red = color.getRed() / 255F;
+        this.green = color.getGreen() / 255F;
+        this.blue = color.getBlue() / 255F;
     }
 
     public void setSpawnCount(final int limit) {
@@ -129,13 +139,6 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
             final double xOffset = (RANDOM.nextFloat() * 2.0F - 1.0F);
             final double zOffset = (RANDOM.nextFloat() * 2.0F - 1.0F);
 
-            //var tempPos = new BlockPos(this.posX + xOffset, this.deltaY, this.posZ + zOffset);
-            //var isSolid = this.world.getBlockState(tempPos)
-              //      .isSideSolid(this.world, tempPos, Direction.UP, SideShapeType.FULL);
-
-            //if (isSolid)
-//                continue;
-
             final int motionStr = this.jetStrength + 3;
             final double motionX = xOffset * (motionStr / 20.0D);
             final double motionZ = zOffset * (motionStr / 20.0D);
@@ -143,6 +146,7 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
 
             var particle = this.createParticle(ParticleTypes.SPLASH, this.posX + xOffset,
                     this.deltaY, this.posZ + zOffset, motionX, motionY, motionZ);
+            //particle.setColor(this.red, this.green, this.blue);
             this.addParticle(particle);
         }
     }

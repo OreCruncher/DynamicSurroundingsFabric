@@ -99,5 +99,4 @@ public class WorldUtils {
         var chunkZ = ChunkSectionPos.getSectionCoord(pos.getZ());
         return world.getChunkManager().isChunkLoaded(chunkX, chunkZ);
     }
-
 }
