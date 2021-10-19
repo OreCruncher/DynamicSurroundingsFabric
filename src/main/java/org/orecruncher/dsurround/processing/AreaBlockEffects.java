@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.processing;
 
-import joptsimple.internal.Strings;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
@@ -59,6 +58,7 @@ public class AreaBlockEffects extends ClientHandler {
             blockPos.forEach(this.alwaysOn::onBlockUpdate);
         }
     }
+
     @Override
     protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
         left.add(Formatting.LIGHT_PURPLE + String.format("Total Effects: %d", this.blockEffects.count()));

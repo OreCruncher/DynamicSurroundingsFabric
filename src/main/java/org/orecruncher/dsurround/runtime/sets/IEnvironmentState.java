@@ -10,11 +10,5 @@ public interface IEnvironmentState {
 
     boolean isInside();
 
-    boolean isUnderground();
-
-    boolean isInOuterspace();
-
-    boolean isInClouds();
-
     boolean isUnderWater();
 }

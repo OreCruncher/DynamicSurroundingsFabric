@@ -8,9 +8,16 @@ import java.util.Map;
 public enum BiomeTrait {
     // Generic case of WTF
     UNKNOWN("UNKNOWN"),
-    // Special FAKE for  internal biomes
+    // Special internal traits for synthetic biomes
     FAKE("FAKE"),
-    /* From Biome categories */
+    VILLAGE("VILLAGE"),
+    PLAYER("PLAYER"),
+    SPACE("SPACE"),
+    CLOUDS("CLOUDS"),
+    UNDER_RIVER("UNDER_RIVER"),
+    UNDER_WATER("UNDER_WATER"),
+    UNDER_OCEAN("UNDER_OCEAN"),
+    // Biome categories as traits
     NONE(Biome.Category.NONE.getName()),
     TAIGA(Biome.Category.TAIGA.getName()),
     EXTREME_HILLS(Biome.Category.EXTREME_HILLS.getName()),

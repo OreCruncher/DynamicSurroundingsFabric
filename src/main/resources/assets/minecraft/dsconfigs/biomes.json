@@ -299,16 +299,36 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('Nether')",
-    "_comment": "Regular Nether",
-    "dust": true,
-    "dustColor": "255,0,0"
-  },
-  {
     "biomeSelector": "biome.is('The_End') || biome.name == 'The Void'",
     "_comment": "It's The End!",
-    "clearSounds": true,
-    "aurora": false
+    "clearSounds": true
+  },
+  {
+    "biomeSelector": "biome.is('Underground')",
+    "_comment": "Regular underground biomes",
+    "acoustics": [
+      {
+        "soundEventId": "rockfall",
+        "type": "mood",
+        "weight": 30
+      },
+      {
+        "soundEventId": "bigrockfall",
+        "type": "mood",
+        "weight": 15
+      },
+      {
+        "soundEventId": "monstergrowl",
+        "conditions": "diurnal.isNight()",
+        "type": "mood",
+        "weight": 10
+      }
+    ]
+  },
+  {
+    "biomeSelector": "biome.is('Mesa')",
+    "_comment": "Mesa dust color specific override",
+    "fogColor": "#D77D2F"
   },
   {
     "biomeSelector": "@underground",
@@ -422,10 +442,5 @@
         "type": "addition"
       }
     ]
-  },
-  {
-    "biomeSelector": "biome.is('Mesa')",
-    "_comment": "Mesa dust color specific override",
-    "fogColor": "#D77D2F"
   }
 ]

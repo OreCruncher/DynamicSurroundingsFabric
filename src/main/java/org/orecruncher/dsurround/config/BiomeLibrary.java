@@ -10,7 +10,6 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
-import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -35,7 +34,6 @@ public final class BiomeLibrary {
     private static final String FILE_NAME = "biomes.json";
     private static final Codec<List<BiomeConfigRule>> CODEC = Codec.list(BiomeConfigRule.CODEC);
     private static final IModLog LOGGER = Client.LOGGER.createChild(BiomeLibrary.class);
-    private static final BiomeTraits INTERNAL_TRAITS = BiomeTraits.from(BiomeTrait.FAKE);
 
     private static final Map<InternalBiomes, BiomeInfo> internalBiomes = new EnumMap<>(InternalBiomes.class);
 
@@ -76,7 +74,7 @@ public final class BiomeLibrary {
 
     private static void intializeInternalBiome(InternalBiomes biome) {
         String match = "@" + biome.getName();
-        var info = new BiomeInfo(version, biome.getId(), biome.getName(), INTERNAL_TRAITS);
+        var info = new BiomeInfo(version, biome.getId(), biome.getName(), biome.getTraits());
 
         for (var c : biomeConfigs) {
             if (c.biomeSelector.asString().equalsIgnoreCase(match)) {

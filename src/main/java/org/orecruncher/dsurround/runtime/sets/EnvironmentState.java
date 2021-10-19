@@ -29,21 +29,6 @@ public class EnvironmentState extends VariableSet<IEnvironmentState> implements 
     }
 
     @Override
-    public boolean isUnderground() {
-        return BiomeScanner.isUnderground();
-    }
-
-    @Override
-    public boolean isInOuterspace() {
-        return BiomeScanner.isInOuterspace();
-    }
-
-    @Override
-    public boolean isInClouds() {
-        return BiomeScanner.isInClouds();
-    }
-
-    @Override
     public boolean isUnderWater() {
         return BiomeScanner.isUnderWater();
     }

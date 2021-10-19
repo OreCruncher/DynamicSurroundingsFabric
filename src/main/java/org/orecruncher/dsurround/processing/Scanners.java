@@ -1,14 +1,19 @@
 package org.orecruncher.dsurround.processing;
 
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
+import joptsimple.internal.Strings;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.Formatting;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.TickCounter;
+import org.orecruncher.dsurround.lib.math.TimerEMA;
 import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
 import org.orecruncher.dsurround.processing.scanner.VillageScanner;
+
+import java.util.Collection;
 
 @Environment(EnvType.CLIENT)
 public class Scanners extends ClientHandler {
@@ -45,4 +50,14 @@ public class Scanners extends ClientHandler {
         ceilingScanner.tick(ticks);
         villageScanner.tick(ticks);
     }
+
+    @Override
+    protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
+        right.add(Strings.EMPTY);
+        right.add(Formatting.GRAY + "Biome Survey");
+        for (var e : biomes.getBiomes().reference2IntEntrySet()) {
+            right.add(Formatting.GRAY + String.format("%s [%d]", e.getKey().getBiomeId(), e.getIntValue()));
+        }
+    }
+
 }
