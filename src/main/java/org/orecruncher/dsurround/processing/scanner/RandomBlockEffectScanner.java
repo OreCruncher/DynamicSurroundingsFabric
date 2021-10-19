@@ -10,7 +10,6 @@ import org.orecruncher.dsurround.lib.scanner.RandomScanner;
 import org.orecruncher.dsurround.lib.scanner.ScanContext;
 import org.orecruncher.dsurround.processing.misc.BlockEffectManager;
 import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
-import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 import java.util.Collection;
 import java.util.Random;
@@ -54,10 +53,7 @@ public class RandomBlockEffectScanner extends RandomScanner {
 
         var sound = info.getSoundToPlay(rand);
         if (sound != null) {
-            var instance = SoundFactoryBuilder
-                    .create(sound)
-                    .build()
-                    .createAtLocation(pos);
+            var instance = sound.createAtLocation(pos);
             MinecraftAudioPlayer.INSTANCE.play(instance);
         }
     }

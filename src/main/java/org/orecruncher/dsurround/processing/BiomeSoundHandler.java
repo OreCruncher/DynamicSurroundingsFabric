@@ -1,13 +1,10 @@
 package org.orecruncher.dsurround.processing;
 
-import it.unimi.dsi.fastutil.objects.Reference2FloatOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Reference2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import joptsimple.internal.Strings;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.sound.SoundEvent;
 import org.orecruncher.dsurround.config.BiomeLibrary;
 import org.orecruncher.dsurround.config.InternalBiomes;
 import org.orecruncher.dsurround.config.SoundEventType;
@@ -16,8 +13,8 @@ import org.orecruncher.dsurround.lib.TickCounter;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
 import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
+import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
-import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 import java.util.Collection;
 
@@ -29,7 +26,7 @@ public final class BiomeSoundHandler extends ClientHandler {
     public static final int MOOD_SOUND_MAX_RANGE = 16;
 
     // Reusable map for biome acoustic work
-    private static final Reference2FloatOpenHashMap<SoundEvent> WORK_MAP = new Reference2FloatOpenHashMap<>(8, 1F);
+    private static final Object2FloatOpenHashMap<ISoundFactory> WORK_MAP = new Object2FloatOpenHashMap<>(8, 1F);
 
     static {
         WORK_MAP.defaultReturnValue(0F);
@@ -49,10 +46,10 @@ public final class BiomeSoundHandler extends ClientHandler {
 
     private void generateBiomeSounds() {
         final float area = Scanners.getBiomeArea();
-        for (final Reference2IntMap.Entry<BiomeInfo> kvp : Scanners.getBiomes().reference2IntEntrySet()) {
-            final Collection<SoundEvent> acoustics = kvp.getKey().findBiomeSoundMatches();
+        for (var kvp : Scanners.getBiomes().reference2IntEntrySet()) {
+            var acoustics = kvp.getKey().findBiomeSoundMatches();
             final float volume = 0.05F + 0.95F * (kvp.getIntValue() / area);
-            for (final SoundEvent acoustic : acoustics) {
+            for (var acoustic : acoustics) {
                 WORK_MAP.addTo(acoustic, volume);
             }
         }
@@ -89,7 +86,7 @@ public final class BiomeSoundHandler extends ClientHandler {
 
             final BiomeInfo internalPlayerBiomeInfo = BiomeLibrary.getBiomeInfo(InternalBiomes.PLAYER);
             final BiomeInfo internalVillageBiomeInfo = BiomeLibrary.getBiomeInfo(InternalBiomes.VILLAGE);
-            final ObjectArray<SoundEvent> playerSounds = new ObjectArray<>();
+            final ObjectArray<ISoundFactory> playerSounds = new ObjectArray<>();
 
             playerSounds.addAll(internalPlayerBiomeInfo.findBiomeSoundMatches());
             playerSounds.addAll(internalVillageBiomeInfo.findBiomeSoundMatches());
@@ -107,21 +104,15 @@ public final class BiomeSoundHandler extends ClientHandler {
     }
 
     private void handleAddOnSounds(PlayerEntity player, BiomeInfo info) {
-        SoundEvent sound = info.getExtraSound(SoundEventType.MOOD, RANDOM);
+        ISoundFactory sound = info.getExtraSound(SoundEventType.MOOD, RANDOM);
         if (sound != null) {
-            SoundInstance instance = SoundFactoryBuilder
-                    .create(sound)
-                    .build()
-                    .createAsMood(player, MOOD_SOUND_MIN_RANGE, MOOD_SOUND_MAX_RANGE);
+            var instance = sound.createAsMood(player, MOOD_SOUND_MIN_RANGE, MOOD_SOUND_MAX_RANGE);
             MinecraftAudioPlayer.INSTANCE.play(instance);
         }
 
         sound = info.getExtraSound(SoundEventType.ADDITION, RANDOM);
         if (sound != null) {
-            SoundInstance instance = SoundFactoryBuilder
-                    .create(sound)
-                    .build()
-                    .createAsAdditional();
+            var instance = sound.createAsAdditional();
             MinecraftAudioPlayer.INSTANCE.play(instance);
         }
     }

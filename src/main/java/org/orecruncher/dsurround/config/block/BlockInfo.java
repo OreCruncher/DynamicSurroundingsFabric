@@ -19,6 +19,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.material.MaterialUtils;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
+import org.orecruncher.dsurround.sound.ISoundFactory;
 
 import java.util.Collection;
 import java.util.Random;
@@ -135,7 +136,7 @@ public class BlockInfo {
         return this.alwaysOnEffects != null;
     }
 
-    public SoundEvent getSoundToPlay(final Random random) {
+    public ISoundFactory getSoundToPlay(final Random random) {
         if (this.sounds != null) {
             var chance = ConditionEvaluator.INSTANCE.eval(this.soundChance);
             if (chance instanceof Double c && random.nextDouble() < c) {

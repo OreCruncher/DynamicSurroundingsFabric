@@ -5,6 +5,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.SoundEventType;
+import org.orecruncher.dsurround.sound.ISoundFactory;
 
 import java.util.Collection;
 import java.util.Random;
@@ -17,7 +18,7 @@ public interface IBiomeSoundProvider {
      *
      * @return Collection of matching SoundEvents.
      */
-    Collection<SoundEvent> findBiomeSoundMatches();
+    Collection<ISoundFactory> findBiomeSoundMatches();
 
     /**
      * Gets an add-on SoundEvent based on existing conditions within the game as well
@@ -27,6 +28,6 @@ public interface IBiomeSoundProvider {
      * @param random Randomizer to use
      * @return SoundEvent that matches crtieria, if any
      */
-    @Nullable SoundEvent getExtraSound(SoundEventType type, Random random);
+    @Nullable ISoundFactory getExtraSound(SoundEventType type, Random random);
 
 }

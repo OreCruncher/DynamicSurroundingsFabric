@@ -8,14 +8,16 @@ import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
+import org.orecruncher.dsurround.sound.ISoundFactory;
+import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 @Environment(EnvType.CLIENT)
-public class AcousticEntry implements WeightTable.IItem<SoundEvent> {
+public class AcousticEntry implements WeightTable.IItem<ISoundFactory> {
 
     private static final int DEFAULT_WEIGHT = 10;
 
     private final int weight;
-    private final SoundEvent acoustic;
+    private final ISoundFactory acoustic;
     private final Script conditions;
 
     public AcousticEntry(final SoundEvent acoustic, @Nullable final Script condition) {
@@ -23,7 +25,7 @@ public class AcousticEntry implements WeightTable.IItem<SoundEvent> {
     }
 
     public AcousticEntry(final SoundEvent acoustic, @Nullable final Script condition, int weight) {
-        this.acoustic = acoustic;
+        this.acoustic = SoundFactoryBuilder.create(acoustic).build();
         this.weight = weight;
         this.conditions = condition != null ? condition : Script.TRUE;
     }
@@ -34,11 +36,11 @@ public class AcousticEntry implements WeightTable.IItem<SoundEvent> {
     }
 
     @Override
-    public SoundEvent getItem() {
+    public ISoundFactory getItem() {
         return getAcoustic();
     }
 
-    public SoundEvent getAcoustic() {
+    public ISoundFactory getAcoustic() {
         return this.acoustic;
     }
 

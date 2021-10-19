@@ -22,6 +22,7 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
+import org.orecruncher.dsurround.sound.ISoundFactory;
 
 import java.awt.*;
 import java.util.Collection;
@@ -119,8 +120,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     }
 
     @Override
-    public Collection<SoundEvent> findBiomeSoundMatches() {
-        ObjectArray<SoundEvent> results = new ObjectArray<>();
+    public Collection<ISoundFactory> findBiomeSoundMatches() {
+        ObjectArray<ISoundFactory> results = new ObjectArray<>();
         for (final AcousticEntry sound : this.loopSounds) {
             if (sound.matches())
                 results.add(sound.getAcoustic());
@@ -129,7 +130,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     }
 
     @Override
-    public @Nullable SoundEvent getExtraSound(final SoundEventType type, final Random random) {
+    public @Nullable ISoundFactory getExtraSound(final SoundEventType type, final Random random) {
 
         ObjectArray<AcousticEntry> sourceList = null;
 

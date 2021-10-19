@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.sound;
 
+import com.google.common.base.MoreObjects;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.EntityTrackingSoundInstance;
@@ -11,6 +12,7 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.SoundLibrary;
 import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
@@ -164,7 +166,12 @@ public final class SoundFactoryBuilder {
         return new SoundFactoryBuilder(soundEvent);
     }
 
-    private record Factory(SoundFactoryBuilder builder) implements ISoundFactory {
+    private record Factory(SoundFactoryBuilder builder) implements Comparable<ISoundFactory>, ISoundFactory {
+
+        @Override
+        public SoundEvent getSoundEvent() {
+            return this.builder.soundEvent;
+        }
 
         @Override
         public BackgroundSoundLoop createBackgroundSoundLoop() {
@@ -201,6 +208,23 @@ public final class SoundFactoryBuilder {
         @Override
         public PositionedSoundInstance createAtLocation(Vec3d position) {
             return this.builder.createAtLocation(position);
+        }
+
+        @Override
+        public int hashCode() {
+            return this.builder.soundEvent.hashCode();
+        }
+
+        @Override
+        public int compareTo(@NotNull ISoundFactory o) {
+            return this.builder.soundEvent.getId().compareTo(o.getSoundEvent().getId());
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                    .add("SoundEvent", this.builder.soundEvent.getId())
+                    .toString();
         }
     }
 }

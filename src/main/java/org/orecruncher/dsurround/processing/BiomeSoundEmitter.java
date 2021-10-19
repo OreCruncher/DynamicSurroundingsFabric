@@ -2,26 +2,22 @@ package org.orecruncher.dsurround.processing;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.sound.SoundEvent;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.sound.BackgroundSoundLoop;
+import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
-import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 @Environment(EnvType.CLIENT)
 public final class BiomeSoundEmitter {
 
-    private final SoundEvent soundEvent;
+    private final ISoundFactory soundEvent;
     private final BackgroundSoundLoop acousticSource;
 
     private boolean done = false;
 
-    public BiomeSoundEmitter(final SoundEvent event) {
+    public BiomeSoundEmitter(final ISoundFactory event) {
         this.soundEvent = event;
-        this.acousticSource = SoundFactoryBuilder
-                .create(event)
-                .build()
-                .createBackgroundSoundLoop();
+        this.acousticSource = event.createBackgroundSoundLoop();
     }
 
     public void tick() {
@@ -72,7 +68,7 @@ public final class BiomeSoundEmitter {
         this.done = true;
     }
 
-    public SoundEvent getSoundEvent() {
+    public ISoundFactory getSoundEvent() {
         return this.soundEvent;
     }
 
