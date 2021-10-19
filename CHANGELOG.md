@@ -1,3 +1,33 @@
+> ### DynamicSurroundings-Fabric-1.17.1-0.0.3
+**Requirements**
+* JAVA 16+ (I am using Adoptium https://adoptium.net/)
+* Fabric Loader >=0.12.1
+* Fabric API 0.40.8+1.17
+* 100% client side; no server side deployment needed
+
+**What's New**
+* Stomach grumble when a player's food level is < 4 or has the hunger debuff.  You can block the sound "durround:player.tummy" if you don't like.
+* Particle breath effect in cold biomes.  On by default; can be disabled in the config.
+* Sound Pruning - do not play sounds if they are too far away from the player.  Reduces load on Minecraft's sound engine, and in turn will improve enhanced sound processing.  Will not apply to global, repeating, or WEATHER sounds.  On by default; can be disabled in the config.
+* Waterfall block effect
+  * Can occur when water flows downward
+  * On by default.  Can be turned off in the config.
+  * Two other independent controls for modifying behavior:
+    * Disable sounds.  This will permit the particle effects to appear without the audio.  Sound lag could occur with enhanced processing, with larger falls, on systems that do not have a strong CPU.
+    * Disable particles.  This will permit the sounds to play without the visuals.  Render lag could happen on systems that do not have a more recent vintage of video card.
+* Tuning options for enhanced sound processing.  Gives some knobs to twist when the computer has a potato CPU or something much better.  Options can be found in the enhanced sound processing config section.
+
+**Fixes**
+* NRE crashes when processing sound loop logging.  This could show up in different ways, such as quiting a world or teleporting.
+* Don't do client ticking until player chunk is loaded.  This primarily affects area block scanning.
+* Area block scanning and effects for height < 0.
+* Client side block update detection failing for some modpacks.
+
+**Changes**
+* Changed the underpinnings of how the mod config menu is generated.  More colorful and the tooltips are better.
+* Additional biome trait detection rules improving support of modded biomes.
+* 3D biome scanning.  Allows for vertical biomes as well as the classic horizontal biome mix.
+
 > ### DynamicSurroundings-Fabric-1.17.1-0.0.2
 **Requirements**
 * JAVA 16+ (I am using Adoptium https://adoptium.net/)

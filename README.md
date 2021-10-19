@@ -25,6 +25,7 @@ This mod is a spiritual successor to the Forge based Dynamic Surroundings series
     * This does not replace the Minecraft feature of a singular biome background sound.  Currently, the various biomes in the Nether use this capability, and Dynamic Surroundings does not have sound configurations for that dimension.
 * Hot block effects such as flame jets over lava, and steam where water hits a hot block.
     * Hot blocks are things like Lava and Magma.
+* Waterfall sound and visual effect - will trigger when flowing water is detected nearby.
 * Replace Minecraft's thunder sound with improved versions.
 * Various "DS" client side commands for dumping configuration information.  (These are currently used by me while developing.  I do plan on documenting at some point for general use.)
 * Custom debug HUD that can be accessed by key bind.  Moves the Dynamic Surroundings clutter out of the traditional F3 display.
@@ -43,15 +44,13 @@ This mod is a spiritual successor to the Forge based Dynamic Surroundings series
 
 **What's Being Dropped**
 * Aurora.  Good at turning a computer into a space heater, and I do not know enough about shaders to improve.
-* Mob Effects in its entirety.  Still thinking about carrying some of this functionality over.  (Mob effects are the things that give enhanced footsteps and other acoustics related to mobs.)
-* Waterfalls.  They are tricky to maintain and can bring a potato CPU to its knees.
+* Mob/player footstep and toolbar effects.
 * Specialized fog effects.  Minecraft has made some improvements in this area, and I expect it to continue.  I don't want to be in a position of overriding (or managing the problem) of when Microsoft adds more dynamic content.
 * Weather effects.  Again, there have been improvements to Minecraft.  I may add some additional processing around weather, but I do not expect to make major changes.
 
 As I indicated these features are not planned.  Based on time commitments I may change my mind. :) 
 
 **Planned Features**
-* Hunger grumble.  This was removed in Forge versions, but I am missing it a bit.  Will need to find some better sounds though.
 * Making the config system publicly available so that pack authors can configure things.  This is possible with this release, but I may change things.  Besides, it has to be documented so that someone would know what to do.
 
 > ### License
