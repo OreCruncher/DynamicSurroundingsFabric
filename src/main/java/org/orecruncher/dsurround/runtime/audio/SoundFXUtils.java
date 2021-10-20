@@ -72,8 +72,7 @@ public final class SoundFXUtils {
 
         // Would have been cool to have a direction vec as a 3d as well as 3i.
         for (final Direction d : Direction.values()) {
-            Vec3i v = d.getVector();
-            SURFACE_DIRECTION_NORMALS[d.ordinal()] = new Vec3d(v.getX(), v.getY(), v.getZ());
+            SURFACE_DIRECTION_NORMALS[d.ordinal()] = Vec3d.of(d.getVector());
         }
 
         // Pre-calculate the known vectors that will be projected off a sound source when casting about to establish

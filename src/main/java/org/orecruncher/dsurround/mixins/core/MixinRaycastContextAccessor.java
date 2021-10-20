@@ -15,7 +15,7 @@ public interface MixinRaycastContextAccessor {
 
     @Accessor("start")
     @Mutable
-    void getStartPoint(Vec3d point);
+    void setStartPoint(Vec3d point);
 
     @Accessor("end")
     Vec3d getEndPoint();

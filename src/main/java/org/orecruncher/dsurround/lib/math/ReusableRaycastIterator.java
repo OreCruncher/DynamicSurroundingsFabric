@@ -17,7 +17,7 @@ public class ReusableRaycastIterator implements Iterator<BlockHitResult> {
     @Nullable
     private BlockHitResult hitResult;
 
-    public ReusableRaycastIterator( final ReusableRaycastContext traceContext) {
+    public ReusableRaycastIterator(final ReusableRaycastContext traceContext) {
         this.traceContext = traceContext;
         this.targetBlock = new BlockPos(traceContext.getEnd());
         this.normal = traceContext.getStart().relativize(traceContext.getEnd()).normalize();
