@@ -139,13 +139,15 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
             final double xOffset = (RANDOM.nextFloat() * 2.0F - 1.0F);
             final double zOffset = (RANDOM.nextFloat() * 2.0F - 1.0F);
 
-            final int motionStr = this.jetStrength + 3;
+            final int motionStr = this.jetStrength; // + 3;
             final double motionX = xOffset * (motionStr / 20.0D);
             final double motionZ = zOffset * (motionStr / 20.0D);
             final double motionY = 0.1D + RANDOM.nextFloat() * motionStr / 20.0D;
 
             var particle = this.createParticle(ParticleTypes.SPLASH, this.posX + xOffset,
                     this.deltaY, this.posZ + zOffset, motionX, motionY, motionZ);
+            particle.setVelocity(motionX, motionY, motionZ);
+            particle.setMaxAge(particle.getMaxAge() * 2);
             //particle.setColor(this.red, this.green, this.blue);
             this.addParticle(particle);
         }
