@@ -20,6 +20,7 @@ import org.orecruncher.dsurround.lib.material.MaterialUtils;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
+import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 import java.util.Collection;
 import java.util.Random;
@@ -107,7 +108,11 @@ public class BlockInfo {
             if (sr.soundEventId != null) {
                 final Identifier res = SoundLibrary.resolveIdentifier(Client.ModId, sr.soundEventId);
                 final SoundEvent acoustic = SoundLibrary.getSound(res);
-                final AcousticEntry acousticEntry = new AcousticEntry(acoustic, sr.conditions, sr.weight);
+                var factory = SoundFactoryBuilder.create(acoustic)
+                        .volumeRange(sr.minVolume, sr.maxVolume)
+                        .pitchRange(sr.minPitch, sr.maxPitch)
+                        .build();
+                final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions, sr.weight);
                 this.addToSounds(acousticEntry);
             }
         }

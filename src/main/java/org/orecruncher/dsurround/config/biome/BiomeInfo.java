@@ -23,6 +23,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
+import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 import java.awt.*;
 import java.util.Collection;
@@ -181,15 +182,19 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         for (final AcousticConfig sr : entry.acoustics) {
             final Identifier res = SoundLibrary.resolveIdentifier(Client.ModId, sr.soundEventId);
             final SoundEvent acoustic = SoundLibrary.getSound(res);
+            var factory = SoundFactoryBuilder.create(acoustic)
+                    .volumeRange(sr.minVolume, sr.maxVolume)
+                    .pitchRange(sr.minPitch, sr.maxPitch)
+                    .build();
 
             switch (sr.type) {
                 case LOOP -> {
-                    final AcousticEntry acousticEntry = new AcousticEntry(acoustic, sr.conditions);
+                    final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions);
                     this.loopSounds.add(acousticEntry);
                 }
                 case MUSIC, MOOD, ADDITION -> {
                     final int weight = sr.weight;
-                    final AcousticEntry acousticEntry = new AcousticEntry(acoustic, sr.conditions, weight);
+                    final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions, weight);
 
                     if (sr.type == SoundEventType.ADDITION)
                         this.additionalSounds.add(acousticEntry);

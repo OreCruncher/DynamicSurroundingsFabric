@@ -70,7 +70,11 @@
       {
         "soundEventId": "dsurround:lilypad.frog",
         "conditions": "!state.isInside() && !weather.canWaterFreeze()",
-        "weight": 30
+        "weight": 30,
+        "minVolume": 0.6,
+        "maxVolume": 1.0,
+        "minPitch": 0.8,
+        "maxPitch": 1.2
       },
       {
         "soundEventId": "dsurround:lilypad.bullfrog",
@@ -87,7 +91,9 @@
     "acoustics": [
       {
         "soundEventId": "dsurround:soulsand.laughter",
-        "conditions": "dim.getId() == 'minecraft:the_nether'"
+        "conditions": "dim.getId() == 'minecraft:the_nether'",
+        "minPitch": 0.6,
+        "maxPitch": 1.2
       }
     ]
   },
@@ -101,7 +107,9 @@
     "acoustics": [
       {
         "soundEventId": "netherbrick.breathing",
-        "conditions": "dim.getId() == 'minecraft:the_nether'"
+        "conditions": "dim.getId() == 'minecraft:the_nether'",
+        "minPitch": 0.6,
+        "maxPitch": 1.2
       }
     ]
   },

@@ -3,13 +3,11 @@ package org.orecruncher.dsurround.config.biome;
 import com.google.common.base.MoreObjects;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.sound.SoundEvent;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
-import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 @Environment(EnvType.CLIENT)
 public class AcousticEntry implements WeightTable.IItem<ISoundFactory> {
@@ -20,12 +18,12 @@ public class AcousticEntry implements WeightTable.IItem<ISoundFactory> {
     private final ISoundFactory acoustic;
     private final Script conditions;
 
-    public AcousticEntry(final SoundEvent acoustic, @Nullable final Script condition) {
+    public AcousticEntry(final ISoundFactory acoustic, @Nullable final Script condition) {
         this(acoustic, condition, DEFAULT_WEIGHT);
     }
 
-    public AcousticEntry(final SoundEvent acoustic, @Nullable final Script condition, int weight) {
-        this.acoustic = SoundFactoryBuilder.create(acoustic).build();
+    public AcousticEntry(final ISoundFactory acoustic, @Nullable final Script condition, int weight) {
+        this.acoustic = acoustic;
         this.weight = weight;
         this.conditions = condition != null ? condition : Script.TRUE;
     }
