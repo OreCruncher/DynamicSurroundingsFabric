@@ -29,7 +29,7 @@ public class MixinSoundSystem {
         AudioUtilities.initialize(this.soundEngine);
     }
 
-    @Inject(method = "stop()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sound/SoundEngine;close()V", shift = At.Shift.AFTER))
+    @Inject(method = "stop()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sound/SoundLoader;close()V", shift = At.Shift.BEFORE))
     public void dsurround_deinit(CallbackInfo ci) {
         AudioUtilities.deinitialize(this.soundEngine);
     }
