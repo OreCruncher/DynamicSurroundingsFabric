@@ -160,7 +160,7 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
                     .setDefaultValue(v.getDefaultValue())
                     .setSaveConsumer(data -> v.setCurrentValue(instance, data));
         } else if (pv instanceof ConfigElement.EnumValue v) {
-            fieldBuilder = new EnumSelectorBuilder(builder.getResetButtonKey(), name, v.getEnumClass(), v.getDefaultValue())
+            fieldBuilder = new EnumSelectorBuilder(builder.getResetButtonKey(), name, v.getEnumClass(), v.getCurrentValue(instance))
                     .setTooltip(tooltip)
                     .setDefaultValue(v.getDefaultValue())
                     .setSaveConsumer(data -> v.setCurrentValue(instance, data));

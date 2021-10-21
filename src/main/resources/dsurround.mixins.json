@@ -13,12 +13,12 @@
     "core.MixinAbstractSoundInstance",
     "core.MixinBiome",
     "core.MixinBlockState",
-    "core.MixinWorld",
     "core.MixinClientWorldProperties",
     "core.MixinEntityArrow",
     "core.MixinIngameHud",
     "core.MixinLivingEntity",
     "core.MixinParticle",
+    "core.MixinParticleManager",
     "core.MixinRaycastContextAccessor",
     "core.MixinSoundEngine",
     "core.MixinSoundEvent",
@@ -26,7 +26,8 @@
     "core.MixinSoundSystem",
     "core.MixinSoundSystemAccessors",
     "core.MixinTagManager",
-    "core.MixinParticleManager"
+    "core.MixinWorld",
+    "core.MixinRainSplashParticle"
   ],
   "server": [],
   "injectors": {

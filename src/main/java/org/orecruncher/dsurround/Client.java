@@ -10,6 +10,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import org.orecruncher.dsurround.commands.Commands;
 import org.orecruncher.dsurround.config.*;
+import org.orecruncher.dsurround.effects.particles.ParticleSheets;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.FrameworkUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -107,6 +108,9 @@ public class Client implements ClientModInitializer {
         // Initialize our sounds
         this.refreshConfigs();
         Handlers.initialize();
+
+        // Make sure our particle sheets get registered so they can render
+        ParticleSheets.register();
 
         // Kick off version checking.  This should run in parallel with initialization.
         this.versionInfo = CompletableFuture.supplyAsync(this::getVersionText);

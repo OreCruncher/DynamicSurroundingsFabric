@@ -192,6 +192,11 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable particles from waterfalls")
         public boolean enableWaterfallParticles = true;
+
+        @Property
+        @EnumType(WaterRippleStyle.class)
+        @Comment("The style of water ripple to render when a drop hits a fluid")
+        public WaterRippleStyle waterRippleStyle = WaterRippleStyle.PIXELATED_CIRCLE;
     }
 
     public static class EntityEffects {

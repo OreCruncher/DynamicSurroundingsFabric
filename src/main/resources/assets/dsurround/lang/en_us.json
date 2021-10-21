@@ -84,6 +84,8 @@
   "dsurround.config.blockEffects.enableWaterfallSounds.tooltip": "Enable/disable waterfall sound effects.  Particle effects will still happen if enabled.  If you want to turn off waterfalls use the option §eEnable Waterfall Sounds§r.",
   "dsurround.config.blockEffects.enableWaterfallParticles": "Enable Waterfall Particles",
   "dsurround.config.blockEffects.enableWaterfallParticles.tooltip": "Enable/disable particles from waterfalls.  Sound effects will still happen if enabled.  If you want to turn off waterfalls use the option §eEnable Waterfall Sounds§r.",
+  "dsurround.config.blockEffects.waterRippleStyle": "Water Ripple Render Style",
+  "dsurround.config.blockEffects.waterRippleStyle.tooltip": "The style of water ripple to render when a drop hits a fluid.  Commonly happens with rainfall and water splashes.",
   "dsurround.config.entityEffects": "Entity Effect Options",
   "dsurround.config.entityEffects.tooltip": "Configuration options for entity effects",
   "dsurround.config.entityEffects.entityEffectRange": "Entity Effect Range",
