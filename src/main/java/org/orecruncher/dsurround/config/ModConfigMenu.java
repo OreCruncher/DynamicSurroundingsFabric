@@ -24,8 +24,7 @@ public class ModConfigMenu implements ModMenuApi {
                     .setTooltipStyle(Formatting.WHITE)
                     .setStripTitle(false);
 
-            return new ClothAPIFactory(options, Client.Config, new Identifier("minecraft:textures/block/cobblestone.png"))
-                    .apply(GameUtils.getMC(), parent);
+            return new ClothAPIFactory(options, Client.Config).apply(GameUtils.getMC(), parent);
         };
     }
 }

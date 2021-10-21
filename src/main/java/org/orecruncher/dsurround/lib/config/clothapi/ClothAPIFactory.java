@@ -16,11 +16,23 @@ import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.config.ConfigElement;
 import org.orecruncher.dsurround.lib.config.ConfigOptions;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
+import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 
 import java.util.function.BiFunction;
 
 @Environment(EnvType.CLIENT)
 public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Screen> {
+
+    private static final Identifier[] BACKGROUNDS = {
+            new Identifier("minecraft:textures/block/cobblestone.png"),
+            new Identifier("minecraft:textures/block/bedrock.png"),
+            new Identifier("minecraft:textures/block/bricks.png"),
+            new Identifier("minecraft:textures/block/sandstone.png"),
+            new Identifier("minecraft:textures/block/stone.png"),
+            new Identifier("minecraft:textures/block/oak_planks.png"),
+            new Identifier("minecraft:textures/block/gilded_blackstone.png"),
+            new Identifier("minecraft:textures/block/dirt.png")
+    };
 
     private final Identifier background;
     private final ConfigOptions options;
@@ -31,9 +43,15 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
     }
 
     public ClothAPIFactory(ConfigOptions options, final ConfigurationData config, @Nullable final Identifier background) {
-        this.background = background;
         this.options = options;
         this.configData = config;
+
+        if (background == null) {
+            var idx = XorShiftRandom.current().nextInt(BACKGROUNDS.length);
+            this.background = BACKGROUNDS[idx];
+        } else {
+            this.background = background;
+        }
     }
 
     @Override
@@ -142,13 +160,10 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
                     .setDefaultValue(v.getDefaultValue())
                     .setSaveConsumer(data -> v.setCurrentValue(instance, data));
         } else if (pv instanceof ConfigElement.EnumValue v) {
-            /*
-            fieldBuilder = builder
-                    .startEnumSelector(name, v.getEnumClass(), v.getDefaultValue())
+            fieldBuilder = new EnumSelectorBuilder(builder.getResetButtonKey(), name, v.getEnumClass(), v.getDefaultValue())
                     .setTooltip(tooltip)
                     .setDefaultValue(v.getDefaultValue())
                     .setSaveConsumer(data -> v.setCurrentValue(instance, data));
-             */
         }
 
         if (fieldBuilder != null) {
@@ -180,20 +195,4 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
     }
 */
 
-    /*
-    public <T extends Enum<T>> EnumListEntry<T> createEnumList(final ConfigBuilder builder, Class<T> clazz, final ForgeConfigSpec.EnumValue<T> value) {
-        final ConfigProperty property = ConfigProperty.getPropertyInfo(value);
-        final Text name = property.getConfigName();
-        final EnumSelectorBuilder<T> result = builder.entryBuilder()
-                .startEnumSelector(name, clazz, value.get())
-                .setTooltip(property.getTooltip())
-                .setDefaultValue(value.get())
-                .setSaveConsumer(value::set);
-
-        if (property.getNeedsWorldRestart())
-            result.requireRestart();
-
-        return result.build();
-    }
-*/
 }
