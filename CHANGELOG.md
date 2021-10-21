@@ -1,3 +1,20 @@
+> ### DynamicSurroundings-Fabric-1.17.1-0.0.4
+**Requirements**
+* JAVA 16+ (I am using Adoptium https://adoptium.net/)
+* Fabric Loader >=0.11.7 (*<-- Note the change*)
+* Fabric API 0.40.8+1.17
+* 100% client side; no server side deployment needed
+
+**What's New**
+* Volume and pitch ranges for acoustic configurations.  What this means, practically, is that some sounds that play will have variation in pitch and volume, like frog croaks and soul sand laughter.  These variations give a bit more texture especially if there are several instances of a sound playing simultaneously.  It also helps avoid harmonics if there are a large number of similar sounds playing at the same time.
+
+**Fixes**
+* Speculative fix for client crash when exiting world.
+
+**Changes**
+* Reworked a piece of code so that it can be compatible with the 0.11.7 loader
+* Tweaked waterfall splash to be a bit more "splashy"
+
 > ### DynamicSurroundings-Fabric-1.17.1-0.0.3
 **Requirements**
 * JAVA 16+ (I am using Adoptium https://adoptium.net/)
