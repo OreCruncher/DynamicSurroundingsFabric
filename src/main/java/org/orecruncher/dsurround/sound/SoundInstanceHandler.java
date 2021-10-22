@@ -101,6 +101,10 @@ public final class SoundInstanceHandler {
         if (sound.isRelative() || sound.getAttenuationType() == SoundInstance.AttenuationType.NONE || sound.isRepeatable() || sound.getCategory() == SoundCategory.WEATHER)
             return true;
 
+        // If it is a loud sound let it through
+        if (sound.getVolume() > 1F)
+            return true;
+
         // Get the max distance of the sound range.  Pad is added because a player may move into hearing
         // range before the sound terminates.
         int distSq = sound.getSound().getAttenuation() + pad;
