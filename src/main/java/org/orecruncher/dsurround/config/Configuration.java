@@ -222,6 +222,11 @@ public class Configuration extends ConfigurationData {
         @RestartRequired
         @Comment("Enable/disable player toolbar sound effects")
         public boolean enablePlayerToolbarEffect = false;
+
+        @Property
+        @RestartRequired
+        @Comment("Enable/disable item swing sound effects from players and mobs")
+        public boolean enableSwingEffect = false;
     }
 
     public static class ParticleTweaks {

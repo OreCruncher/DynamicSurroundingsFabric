@@ -58,7 +58,7 @@ public class EntityEffectInfo {
         return this.effects;
     }
 
-    public boolean isCurrentPlayer(PlayerEntity player) {
+    public boolean isCurrentPlayer(LivingEntity player) {
         return GameUtils.getPlayer().getId() == player.getId();
     }
 

@@ -6,6 +6,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.data.ItemConfigRule;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -18,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Environment(EnvType.CLIENT)
@@ -28,6 +31,7 @@ public class ItemLibrary {
     private static final IModLog LOGGER = Client.LOGGER.createChild(ItemLibrary.class);
 
     private static final Reference2ObjectOpenHashMap<Item, ISoundFactory> itemEquipFactories = new Reference2ObjectOpenHashMap<>();
+    private static final Reference2ObjectOpenHashMap<Item, ISoundFactory> itemSwingFactories = new Reference2ObjectOpenHashMap<>();
     private static List<ItemConfigRule> itemConfigRules;
     private static List<ItemConfigRule> specificRules;
     private static List<ItemConfigRule> generalRules;
@@ -68,10 +72,17 @@ public class ItemLibrary {
         if (stack.isEmpty())
             return null;
 
-        return itemEquipFactories.computeIfAbsent(stack.getItem(), k -> resolve(stack));
+        return itemEquipFactories.computeIfAbsent(stack.getItem(), k -> resolve(stack, ItemClassType::getToolBarSound, ItemClassType.NONE::getToolBarSound));
     }
 
-    private static ISoundFactory resolve(ItemStack stack) {
+    public static @Nullable ISoundFactory getItemSwingSound(ItemStack stack) {
+        if (stack.isEmpty())
+            return null;
+
+        return itemSwingFactories.computeIfAbsent(stack.getItem(), k -> resolve(stack, ItemClassType::getSwingSound, () -> null));
+    }
+
+    private static ISoundFactory resolve(ItemStack stack, Function<ItemClassType, ISoundFactory> resolveSound, Supplier<ISoundFactory> defaultSoundFactory) {
         var item = stack.getItem();
         var itemSound = item.getEquipSound();
         if (itemSound != null) {
@@ -87,13 +98,13 @@ public class ItemLibrary {
         // before general
         for (var cfg : specificRules)
             if (cfg.match(item))
-                return cfg.itemClassType.getToolBarSound();
+                return resolveSound.apply(cfg.itemClassType);
 
         for (var cfg : generalRules)
             if (cfg.match(item))
-                return cfg.itemClassType.getToolBarSound();
+                return resolveSound.apply(cfg.itemClassType);
 
         // use the default
-        return ItemClassType.NONE.getToolBarSound();
+        return defaultSoundFactory.get();
     }
 }

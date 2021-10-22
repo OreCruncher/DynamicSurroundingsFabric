@@ -25,5 +25,17 @@
     "effects": [
       "player_toolbar"
     ]
+  },
+  {
+    "entityTypes": [
+      "minecraft:player",
+      "net.minecraft.class_1543|net.minecraft.entity.mob.IllagerEntity",
+      "net.minecraft.class_1547|net.minecraft.entity.mob.AbstractSkeletonEntity",
+      "net.minecraft.class_1642|net.minecraft.entity.mob.ZombieEntity",
+      "net.minecraft.class_4836|net.minecraft.entity.mob.PiglinEntity"
+    ],
+    "effects": [
+      "item_swing"
+    ]
   }
 ]
