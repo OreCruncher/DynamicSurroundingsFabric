@@ -54,9 +54,9 @@ public class Scanners extends ClientHandler {
     @Override
     protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
         right.add(Strings.EMPTY);
-        right.add(Formatting.GRAY + "Biome Survey");
+        right.add(Formatting.AQUA.toString() + Formatting.UNDERLINE + "Biome Survey");
         for (var e : biomes.getBiomes().reference2IntEntrySet()) {
-            right.add(Formatting.GRAY + String.format("%s [%d]", e.getKey().getBiomeId(), e.getIntValue()));
+            right.add(String.format("%s [%d]", e.getKey().getBiomeId(), e.getIntValue()));
         }
     }
 

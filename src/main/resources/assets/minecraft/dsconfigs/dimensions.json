@@ -4,11 +4,13 @@
   },
   {
     "dimId": "minecraft:the_nether",
-    "seaLevel": 0
+    "seaLevel": 0,
+    "alwaysOutside": true
   },
   {
     "dimId": "minecraft:the_end",
     "seaLevel": 0,
-    "cloudHeight": 128
+    "cloudHeight": 128,
+    "alwaysOutside": true
   }
 ]

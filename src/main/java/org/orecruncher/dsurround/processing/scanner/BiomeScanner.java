@@ -122,7 +122,7 @@ public final class BiomeScanner {
             var y = pos.getY();
             if (y < (dimInfo.getSeaLevel() - UNDERGROUND_THRESHOLD_OFFSET)) {
                 return BiomeLibrary.getBiomeInfo(InternalBiomes.UNDERGROUND);
-            } else if (Scanners.isInside()) {
+            } else if (!dimInfo.alwaysOutside() && Scanners.isInside()) {
                 // If it's not underground, and we are inside, return INSIDE
                 return BiomeLibrary.getBiomeInfo(InternalBiomes.INSIDE);
             } else if (y >= dimInfo.getSpaceHeight()) {
