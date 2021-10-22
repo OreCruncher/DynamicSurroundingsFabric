@@ -101,8 +101,8 @@ public class ItemSwingEffect extends EntityEffectBase {
     }
 
     protected static double getReach(final LivingEntity entity) {
-        if (entity instanceof PlayerEntity)
-            return 3D;
+        if (entity instanceof PlayerEntity p)
+            return p.isCreative() ? 5D : 3D;
 
         var dist = entity.getWidth();
         dist *= 2;
