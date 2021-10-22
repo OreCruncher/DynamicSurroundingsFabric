@@ -10,7 +10,7 @@ This mod is a spiritual successor to the Forge based Dynamic Surroundings series
 
 **Requirements**
 * JAVA 16+ (I am using Adoptium https://adoptium.net/)
-* Fabric Loader >=0.12.1
+* Fabric Loader >=0.11.7
 * Fabric API 0.40.8+1.17
 * 100% client side; no server side deployment needed
 
