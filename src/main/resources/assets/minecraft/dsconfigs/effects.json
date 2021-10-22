@@ -17,5 +17,13 @@
     "effects": [
       "frost_breath"
     ]
+  },
+  {
+    "entityTypes": [
+      "minecraft:player"
+    ],
+    "effects": [
+      "player_toolbar"
+    ]
   }
 ]

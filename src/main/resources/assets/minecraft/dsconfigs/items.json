@@ -1,0 +1,59 @@
+[
+  {
+    "itemClassType": "tool",
+    "items": [
+      "net.minecraft.class_1794|net.minecraft.item.HoeItem",
+      "net.minecraft.class_1821|net.minecraft.item.ShovelItem",
+      "net.minecraft.class_1787|net.minecraft.item.FishingRodItem"
+    ]
+  },
+  {
+    "itemClassType": "sword",
+    "items": [
+      "net.minecraft.class_1829|net.minecraft.item.SwordItem"
+    ]
+  },
+  {
+    "itemClassType": "shield",
+    "items": [
+      "net.minecraft.class_1819|net.minecraft.item.ShieldItem"
+    ]
+  },
+  {
+    "itemClassType": "axe",
+    "items": [
+      "net.minecraft.class_1743|net.minecraft.item.AxeItem",
+      "net.minecraft.class_1810|net.minecraft.item.PickaxeItem"
+    ]
+  },
+  {
+    "itemClassType": "bow",
+    "items": [
+      "net.minecraft.class_1753|net.minecraft.item.BowItem"
+    ]
+  },
+  {
+    "itemClassType": "crossbow",
+    "items": [
+      "net.minecraft.class_1764|net.minecraft.item.CrossbowItem"
+    ]
+  },
+  {
+    "itemClassType": "potion",
+    "items": [
+      "net.minecraft.class_1812|net.minecraft.item.PotionItem",
+      "net.minecraft.class_1803|net.minecraft.item.LingeringPotionItem",
+      "net.minecraft.class_1828|net.minecraft.item.SplashPotionItem"
+    ]
+  },
+  {
+    "itemClassType": "book",
+    "items": [
+      "net.minecraft.class_1751|net.minecraft.item.BookItem",
+      "net.minecraft.class_1840|net.minecraft.item.WritableBookItem",
+      "net.minecraft.class_1843|net.minecraft.item.WrittenBookItem",
+      "net.minecraft.class_1772|net.minecraft.item.EnchantedBookItem",
+      "net.minecraft.class_1801|net.minecraft.item.KnowledgeBookItem"
+    ]
+  }
+]

@@ -94,6 +94,8 @@
   "dsurround.config.entityEffects.enableBowPull.tooltip": "Enable/disable bow pull sound effect",
   "dsurround.config.entityEffects.enableBreathEffect": "Enable Breath Particle Effect",
   "dsurround.config.entityEffects.enableBreathEffect.tooltip": "Enable/disable breath effect in cold biomes",
+  "dsurround.config.entityEffects.enablePlayerToolbarEffect": "Enable Player Toolbar Effects",
+  "dsurround.config.entityEffects.enablePlayerToolbarEffect.tooltip": "Enable/disable player toolbar sound effects",
   "dsurround.config.particleTweaks": "Particle Tweaks",
   "dsurround.config.particleTweaks.tooltip": "Configuration options for tweaking particle behavior",
   "dsurround.config.particleTweaks.suppressPlayerParticles": "Suppress Player Potion Effects",

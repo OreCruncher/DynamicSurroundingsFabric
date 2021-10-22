@@ -218,6 +218,10 @@ public class Configuration extends ConfigurationData {
         @Comment("Enable/disable breath effect in cold biomes and underwater")
         public boolean enableBreathEffect = true;
 
+        @Property
+        @RestartRequired
+        @Comment("Enable/disable player toolbar sound effects")
+        public boolean enablePlayerToolbarEffect = false;
     }
 
     public static class ParticleTweaks {

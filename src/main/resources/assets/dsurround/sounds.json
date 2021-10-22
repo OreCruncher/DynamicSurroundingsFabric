@@ -926,15 +926,13 @@
 			}
 		]
 	},
-	"bow.equip": {
-		"category": "player",
+	"item.bow.equip": {
 		"sounds": [
 			"dsurround:items/bow_draw"
 		]
 	},
-	"bow.pull": {
+	"item.bow.pull": {
 		"subtitle": "dsurround.sound.caption.bow.pull",
-		"category": "player",
 		"sounds": [
 			"dsurround:items/bow_pull1",
 			"dsurround:items/bow_pull2",
@@ -943,13 +941,83 @@
 			"dsurround:items/bow_pull5"
 		]
 	},
-	"bow.loose": {
-		"category": "player",
+	"item.bow.loose": {
 		"sounds": [
 			"dsurround:items/bow_loose1",
 			"dsurround:items/bow_loose2",
 			"dsurround:items/bow_loose3",
 			"dsurround:items/bow_loose4"
+		]
+	},
+	"item.blunt.equip": {
+		"sounds": [
+			"dsurround:items/blunt_draw"
+		]
+	},
+	"item.blunt.swing": {
+		"sounds": [
+			"dsurround:items/blunt_swing1",
+			"dsurround:items/blunt_swing2",
+			"dsurround:items/blunt_swing3",
+			"dsurround:items/blunt_swing4",
+			"dsurround:items/blunt_swing5"
+		]
+	},
+	"item.sword.equip": {
+		"sounds": [
+			"dsurround:items/sword_draw"
+		]
+	},
+	"item.sword.swing": {
+		"sounds": [
+			"dsurround:items/sword_swing1",
+			"dsurround:items/sword_swing2",
+			"dsurround:items/sword_swing3",
+			"dsurround:items/sword_swing4",
+			"dsurround:items/sword_swing5",
+			"dsurround:items/sword_swing6",
+			"dsurround:items/sword_swing7",
+			"dsurround:items/sword_swing8",
+			"dsurround:items/sword_swing9"
+		]
+	},
+	"item.tool.equip": {
+		"sounds": [
+			"dsurround:items/tool_draw"
+		]
+	},
+	"item.tool.swing": {
+		"sounds": [
+			"dsurround:items/swoosh1",
+			"dsurround:items/swoosh2",
+			"dsurround:items/swoosh3",
+			"dsurround:items/swoosh4",
+			"dsurround:items/swoosh5",
+			"dsurround:items/swoosh6",
+			"dsurround:items/swoosh7"
+		]
+	},
+	"item.utility.equip": {
+		"sounds": [
+			"dsurround:items/utility_draw"
+		]
+	},
+	"item.shield.equip": {
+		"sounds": [
+			"dsurround:items/tool_draw"
+		]
+	},
+	"item.shield.use": {
+		"sounds": [
+			"dsurround:items/tool_draw"
+		]
+	},
+	"item.potion.equip": {
+		"sounds": [
+			"dsurround:items/potion_slosh1",
+			"dsurround:items/potion_slosh2",
+			"dsurround:items/potion_slosh3",
+			"dsurround:items/potion_slosh4"
 		]
 	},
 	"silence": {

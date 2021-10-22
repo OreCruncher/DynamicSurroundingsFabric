@@ -101,6 +101,7 @@ public class Client implements ClientModInitializer {
         BiomeLibrary.load();
         DimensionLibrary.load();
         BlockLibrary.load();
+        ItemLibrary.load();
         EntityEffectLibrary.load();
     }
 

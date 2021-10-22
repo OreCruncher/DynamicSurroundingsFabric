@@ -5,6 +5,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import org.orecruncher.dsurround.effects.IEntityEffect;
+import org.orecruncher.dsurround.lib.GameUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.Collection;
@@ -55,6 +56,10 @@ public class EntityEffectInfo {
     // Use only for diagnostic purposes
     public Collection<IEntityEffect> getEffects() {
         return this.effects;
+    }
+
+    public boolean isCurrentPlayer(PlayerEntity player) {
+        return GameUtils.getPlayer().getId() == player.getId();
     }
 
     public boolean isVisibleTo(PlayerEntity player) {
