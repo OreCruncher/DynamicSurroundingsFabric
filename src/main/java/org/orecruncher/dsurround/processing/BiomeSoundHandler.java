@@ -26,7 +26,7 @@ public final class BiomeSoundHandler extends ClientHandler {
     public static final int MOOD_SOUND_MAX_RANGE = 16;
 
     // Reusable map for biome acoustic work
-    private static final Object2FloatOpenHashMap<ISoundFactory> WORK_MAP = new Object2FloatOpenHashMap<>(8, 1F);
+    private static final Object2FloatOpenHashMap<ISoundFactory> WORK_MAP = new Object2FloatOpenHashMap<>(8, 0.5F);
 
     static {
         WORK_MAP.defaultReturnValue(0F);
