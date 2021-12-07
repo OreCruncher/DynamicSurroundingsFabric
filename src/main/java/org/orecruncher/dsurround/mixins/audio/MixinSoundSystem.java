@@ -24,7 +24,7 @@ public class MixinSoundSystem {
     @Shadow
     private SoundEngine soundEngine;
 
-    @Inject(method = "start()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sound/SoundEngine;init()V", shift = At.Shift.AFTER))
+    @Inject(method = "start()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sound/SoundEngine;init(Ljava/lang/String;)V", shift = At.Shift.AFTER))
     public void dsurround_init(CallbackInfo ci) {
         AudioUtilities.initialize(this.soundEngine);
     }
