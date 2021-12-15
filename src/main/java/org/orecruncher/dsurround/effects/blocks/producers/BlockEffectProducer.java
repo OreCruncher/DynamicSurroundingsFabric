@@ -97,10 +97,8 @@ public abstract class BlockEffectProducer implements IBlockEffectProducer {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(this.getClass().getSimpleName())
-                .append("{").append("chance: ").append(this.chance)
-                .append("; conditions: ").append(this.conditions).append("}");
-        return builder.toString();
+        return this.getClass().getSimpleName()
+                + "{" + "chance: " + this.chance
+                + "; conditions: " + this.conditions + "}";
     }
 }

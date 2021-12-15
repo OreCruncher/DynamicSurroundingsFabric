@@ -2,7 +2,6 @@ package org.orecruncher.dsurround.config.biome;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.sound.SoundEvent;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.sound.ISoundFactory;

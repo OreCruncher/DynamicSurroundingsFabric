@@ -5,7 +5,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.tag.Tag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
-import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.GameUtils;
 
 import java.util.Optional;

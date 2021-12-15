@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.runtime.diagnostics;
 import joptsimple.internal.Strings;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.hit.BlockHitResult;
@@ -41,9 +40,8 @@ public class BlockViewer {
         var info = BlockLibrary.getBlockInfo(state);
         var wallOfText = info.toString();
         var lines = Arrays.stream(wallOfText.split("\n"))
-                .map(l -> l.replace("[","").replace("]", "").strip())
-                .filter(s -> !Strings.isNullOrEmpty(s))
-                .collect(Collectors.toList());
+                .map(l -> l.replace("[", "").replace("]", "").strip())
+                .filter(s -> !Strings.isNullOrEmpty(s)).toList();
 
         data.addAll(lines);
     }

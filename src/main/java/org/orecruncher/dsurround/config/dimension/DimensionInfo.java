@@ -2,7 +2,6 @@ package org.orecruncher.dsurround.config.dimension;
 
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.data.DimensionConfig;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
@@ -28,7 +27,7 @@ public class DimensionInfo {
 
     public DimensionInfo(final World world, final DimensionConfig dimConfig) {
         // Attributes that come from the world object itself. Set now because the config may override.
-        DimensionType dt = world.getDimension();
+        world.getDimension();
         this.name = world.getRegistryKey().getValue();
         this.seaLevel = world.getSeaLevel();
         this.skyHeight = world.getHeight();

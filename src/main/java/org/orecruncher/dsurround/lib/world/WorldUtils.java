@@ -76,7 +76,7 @@ public class WorldUtils {
         }
 
         // Use the temperature of the biome to get whether it is raining or snowing
-        final float temp = getTemperatureAt((World) world, pos);
+        final float temp = getTemperatureAt(world, pos);
         return isSnowTemperature(temp) ? Biome.Precipitation.SNOW : Biome.Precipitation.RAIN;
     }
 

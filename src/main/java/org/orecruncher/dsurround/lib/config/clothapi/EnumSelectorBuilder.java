@@ -73,9 +73,7 @@ public class EnumSelectorBuilder extends FieldBuilder<Enum<?>, EnumListEntry<Enu
     }
 
     public EnumSelectorBuilder setTooltip(Text... tooltip) {
-        this.tooltipSupplier = (e) -> {
-            return Optional.ofNullable(tooltip);
-        };
+        this.tooltipSupplier = (e) -> Optional.ofNullable(tooltip);
         return this;
     }
 
@@ -87,10 +85,10 @@ public class EnumSelectorBuilder extends FieldBuilder<Enum<?>, EnumListEntry<Enu
 
     @NotNull
     public EnumListEntry<Enum<?>> build() {
-        EnumListEntry<Enum<?>> entry = new EnumListEntry(this.getFieldNameKey(), this.clazz, this.value, this.getResetButtonKey(), this.defaultValue, this.saveConsumer, this.enumNameProvider, (Supplier) null, this.isRequireRestart());
-        entry.setTooltipSupplier(() -> (Optional) this.tooltipSupplier.apply((Enum) entry.getValue()));
+        EnumListEntry<Enum<?>> entry = new EnumListEntry(this.getFieldNameKey(), this.clazz, this.value, this.getResetButtonKey(), this.defaultValue, this.saveConsumer, this.enumNameProvider, null, this.isRequireRestart());
+        entry.setTooltipSupplier(() -> this.tooltipSupplier.apply(entry.getValue()));
         if (this.errorSupplier != null) {
-            entry.setErrorSupplier(() -> (Optional) this.errorSupplier.apply((Enum) entry.getValue()));
+            entry.setErrorSupplier(() -> this.errorSupplier.apply(entry.getValue()));
         }
 
         return entry;

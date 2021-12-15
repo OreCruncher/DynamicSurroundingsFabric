@@ -6,7 +6,6 @@ import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Client;
 
-import java.beans.Transient;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.lang.annotation.ElementType;
