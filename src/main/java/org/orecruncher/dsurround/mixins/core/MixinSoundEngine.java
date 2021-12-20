@@ -31,13 +31,14 @@ public class MixinSoundEngine {
         return Client.Config.soundSystem.streamingChannels;
     }
 
-    @Inject(method = "release",
-            at = @At(value = "INVOKE", shift = At.Shift.BEFORE,
-                    target = "Ljava/lang/IllegalStateException;<init>(Ljava/lang/String;)V"),
-            cancellable = true)
-    public void rlsH(Source source, CallbackInfo ci) {
-        LOGGER.info("Source is being released incorrectly: " + source);
-        ci.cancel();
-    }
+// TODO: Delete if really fixed
+//    @Inject(method = "release",
+//            at = @At(value = "INVOKE", shift = At.Shift.BEFORE,
+//                    target = "Ljava/lang/IllegalStateException;<init>(Ljava/lang/String;)V"),
+//            cancellable = true)
+//    public void rlsH(Source source, CallbackInfo ci) {
+//        LOGGER.info("Source is being released incorrectly: " + source);
+//        ci.cancel();
+//    }
 
 }
