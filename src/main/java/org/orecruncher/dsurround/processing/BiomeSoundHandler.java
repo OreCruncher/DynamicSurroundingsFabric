@@ -149,7 +149,6 @@ public final class BiomeSoundHandler extends ClientHandler {
         this.emitters.forEach(BiomeSoundEmitter::stop);
         this.emitters.clear();
         WORK_MAP.clear();
-        MinecraftAudioPlayer.INSTANCE.stopAll();
     }
 
     @Override
