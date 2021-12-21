@@ -38,7 +38,7 @@ public class WorldUtils {
     }
 
     public static float getTemperatureAt(final World world, final BlockPos pos) {
-        return world.getBiomeAccess().getBiome(pos).getTemperature(pos);
+        return world.getBiomeAccess().getBiome(pos).getTemperature();
     }
 
     public static int getPrecipitationHeight(final World world, final BlockPos pos) {
