@@ -98,7 +98,7 @@ public abstract class BlockEffectProducer implements IBlockEffectProducer {
     @Override
     public String toString() {
         return this.getClass().getSimpleName()
-                + "{" + "chance: " + this.chance
+                + "{chance: " + this.chance
                 + "; conditions: " + this.conditions + "}";
     }
 }

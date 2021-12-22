@@ -40,7 +40,7 @@ public class BlockViewer {
         var info = BlockLibrary.getBlockInfo(state);
         var wallOfText = info.toString();
         var lines = Arrays.stream(wallOfText.split("\n"))
-                .map(l -> l.replace("[", "").replace("]", "").strip())
+                .map(l -> l.replaceAll("[\\[\\]]", "").strip())
                 .filter(s -> !Strings.isNullOrEmpty(s)).toList();
 
         data.addAll(lines);

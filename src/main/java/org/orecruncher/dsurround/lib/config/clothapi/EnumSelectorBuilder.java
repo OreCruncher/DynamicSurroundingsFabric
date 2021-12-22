@@ -17,7 +17,7 @@ import java.util.function.Supplier;
  */
 public class EnumSelectorBuilder extends FieldBuilder<Enum<?>, EnumListEntry<Enum<?>>> {
     private Consumer<Enum<?>> saveConsumer = null;
-    private Function<Enum<?>, Optional<Text[]>> tooltipSupplier = (e) -> Optional.empty();
+    private Function<Enum<?>, Optional<Text[]>> tooltipSupplier = e -> Optional.empty();
     private final Enum<?> value;
     private final Class<? extends Enum<?>> clazz;
     private Function<Enum<?>, Text> enumNameProvider;
@@ -63,17 +63,17 @@ public class EnumSelectorBuilder extends FieldBuilder<Enum<?>, EnumListEntry<Enu
     }
 
     public EnumSelectorBuilder setTooltipSupplier(Supplier<Optional<Text[]>> tooltipSupplier) {
-        this.tooltipSupplier = (e) -> (Optional) tooltipSupplier.get();
+        this.tooltipSupplier = e -> tooltipSupplier.get();
         return this;
     }
 
     public EnumSelectorBuilder setTooltip(Optional<Text[]> tooltip) {
-        this.tooltipSupplier = (e) -> tooltip;
+        this.tooltipSupplier = e -> tooltip;
         return this;
     }
 
     public EnumSelectorBuilder setTooltip(Text... tooltip) {
-        this.tooltipSupplier = (e) -> Optional.ofNullable(tooltip);
+        this.tooltipSupplier = e -> Optional.ofNullable(tooltip);
         return this;
     }
 
