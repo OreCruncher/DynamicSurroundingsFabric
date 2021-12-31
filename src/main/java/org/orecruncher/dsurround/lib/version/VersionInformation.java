@@ -4,7 +4,6 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import joptsimple.internal.Strings;
-import net.fabricmc.loader.api.SemanticVersion;
 import net.fabricmc.loader.api.Version;
 
 import java.util.Map;
@@ -45,7 +44,7 @@ public class VersionInformation {
         if (recommendation == null)
             return Optional.empty();
 
-        if (((SemanticVersion)modVersion).compareTo((SemanticVersion)recommendation) < 0) {
+        if (modVersion.compareTo(recommendation) < 0) {
             String notes = null;
             var releases = this.releases.get(minecraftVersion);
             if (releases != null) {

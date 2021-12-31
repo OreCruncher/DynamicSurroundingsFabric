@@ -20,8 +20,7 @@ dependencies {
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    modImplementation "com.terraformersmc:modmenu:3.0.0"
-    //include("com.terraformersmc:modmenu:2.0.13")
+    modImplementation "com.terraformersmc:modmenu:3.0.1"
 
     modImplementation "org.openjdk.nashorn:nashorn-core:15.3"
     include("org.openjdk.nashorn:nashorn-core:15.3")

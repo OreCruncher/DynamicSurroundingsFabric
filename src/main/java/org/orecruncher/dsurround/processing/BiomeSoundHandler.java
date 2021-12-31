@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.processing;
 
+import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import joptsimple.internal.Strings;
 import net.fabricmc.api.EnvType;
@@ -26,7 +27,7 @@ public final class BiomeSoundHandler extends ClientHandler {
     public static final int MOOD_SOUND_MAX_RANGE = 16;
 
     // Reusable map for biome acoustic work
-    private static final Object2FloatOpenHashMap<ISoundFactory> WORK_MAP = new Object2FloatOpenHashMap<>(8, 0.5F);
+    private static final Object2FloatOpenHashMap<ISoundFactory> WORK_MAP = new Object2FloatOpenHashMap<>(8, Hash.DEFAULT_LOAD_FACTOR);
 
     static {
         WORK_MAP.defaultReturnValue(0F);
