@@ -15,7 +15,7 @@ public enum WaterRippleStyle {
 
         @Override
         public float getU1(final int age) {
-            return (age / 2f) * this.DELTA;
+            return (int) (age / 2F) * this.DELTA;
         }
 
         @Override
