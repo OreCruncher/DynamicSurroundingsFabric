@@ -18,11 +18,12 @@ import java.awt.*;
 public class WaterRippleParticle extends SpriteBillboardParticle {
 
     private static final float TEX_SIZE_HALF = 0.5F;
-    private static final int BLOCKS_FROM_FADE = 8; // max 12;
+    private static final int BLOCKS_FROM_FADE = 5;
+    private static final int MAX_BLOCKS_FADE = 12;
 
     private final WaterRippleStyle rippleStyle;
 
-    private float growthRate;
+    private final float growthRate;
     private final float scaledWidth;
     private float texU1;
     private float texU2;
@@ -57,8 +58,12 @@ public class WaterRippleParticle extends SpriteBillboardParticle {
         this.colorGreen = color.getGreen() / 255F;
         this.colorBlue = color.getBlue() / 255F;
 
-        float distance = MathHelper.clamp((float) Math.sqrt(position.getSquaredDistance(cameraPos)) - BLOCKS_FROM_FADE, 0, 12);
-        this.colorAlpha = this.defaultColorAlpha = 0.80F * (12 - distance) / 12;
+        float distance = (float) MathHelper.clamp(
+                Math.sqrt(cameraPos.getSquaredDistance(position)) - BLOCKS_FROM_FADE,
+                0,
+                MAX_BLOCKS_FADE
+        );
+        this.colorAlpha = this.defaultColorAlpha = 0.60F * (MAX_BLOCKS_FADE - distance) / MAX_BLOCKS_FADE;
 
         this.texU1 = rippleStyle.getU1(this.age);
         this.texU2 = rippleStyle.getU2(this.age);
