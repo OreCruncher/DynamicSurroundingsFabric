@@ -15,6 +15,6 @@ public final class BiomeUtils {
 
     public static Biome getPlayerBiome(PlayerEntity player) {
         World world = player.getEntityWorld();
-        return world.getBiomeAccess().getBiome(player.getBlockPos());
+        return world.getBiomeAccess().getBiome(player.getBlockPos()).value();
     }
 }

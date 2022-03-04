@@ -53,17 +53,17 @@ public class WaterRippleParticle extends SpriteBillboardParticle {
         var cameraPos = GameUtils.getPlayer().getCameraBlockPos();
         var position = new BlockPos(this.x, this.y, this.z);
 
-        var color = new Color(this.world.getBiome(position).getWaterColor());
-        this.colorRed = color.getRed() / 255F;
-        this.colorGreen = color.getGreen() / 255F;
-        this.colorBlue = color.getBlue() / 255F;
+        var color = new Color(this.world.getBiome(position).value().getWaterColor());
+        this.red = color.getRed() / 255F;
+        this.green = color.getGreen() / 255F;
+        this.blue = color.getBlue() / 255F;
 
         float distance = (float) MathHelper.clamp(
                 Math.sqrt(cameraPos.getSquaredDistance(position)) - BLOCKS_FROM_FADE,
                 0,
                 MAX_BLOCKS_FADE
         );
-        this.colorAlpha = this.defaultColorAlpha = 0.60F * (MAX_BLOCKS_FADE - distance) / MAX_BLOCKS_FADE;
+        this.alpha = this.defaultColorAlpha = 0.60F * (MAX_BLOCKS_FADE - distance) / MAX_BLOCKS_FADE;
 
         this.texU1 = rippleStyle.getU1(this.age);
         this.texU2 = rippleStyle.getU2(this.age);
@@ -105,24 +105,24 @@ public class WaterRippleParticle extends SpriteBillboardParticle {
 
         vertexConsumer
                 .vertex(-this.scaledWidth + X, Y, this.scaledWidth + Z)
-                .texture(this.texU2, this.texV2).color(this.colorRed, this.colorGreen, this.colorBlue, this.colorAlpha)
+                .texture(this.texU2, this.texV2).color(this.red, this.green, this.blue, this.alpha)
                 .light(p)
                 .next();
         vertexConsumer
                 .vertex(this.scaledWidth + X, Y, this.scaledWidth + Z)
-                .texture( this.texU2, this.texV1).color(this.colorRed, this.colorGreen, this.colorBlue, this.colorAlpha)
+                .texture( this.texU2, this.texV1).color(this.red, this.green, this.blue, this.alpha)
                 .light(p)
                 .next();
         vertexConsumer
                 .vertex(this.scaledWidth + X, Y, -this.scaledWidth + Z)
                 .texture( this.texU1, this.texV1)
-                .color(this.colorRed, this.colorGreen, this.colorBlue, this.colorAlpha)
+                .color(this.red, this.green, this.blue, this.alpha)
                 .light(p)
                 .next();
         vertexConsumer
                 .vertex(-this.scaledWidth + X, Y, -this.scaledWidth + Z)
                 .texture(this.texU1, this.texV2)
-                .color(this.colorRed, this.colorGreen, this.colorBlue, this.colorAlpha)
+                .color(this.red, this.green, this.blue, this.alpha)
                 .light(p)
                 .next();
     }
@@ -140,7 +140,7 @@ public class WaterRippleParticle extends SpriteBillboardParticle {
             }
 
             if (this.rippleStyle.doAlpha()) {
-                this.colorAlpha = this.defaultColorAlpha * (float) (this.maxAge - this.age)/this.maxAge;
+                this.alpha = this.defaultColorAlpha * (float) (this.maxAge - this.age)/this.maxAge;
             }
 
             this.texU1 = this.rippleStyle.getU1(this.age);
