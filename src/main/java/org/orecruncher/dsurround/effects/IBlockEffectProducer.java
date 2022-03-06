@@ -5,7 +5,6 @@ import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import org.orecruncher.dsurround.effects.IBlockEffect;
 
 import java.util.Optional;
 import java.util.Random;

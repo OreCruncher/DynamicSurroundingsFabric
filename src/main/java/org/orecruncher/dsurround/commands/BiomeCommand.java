@@ -33,6 +33,6 @@ final class BiomeCommand {
         var biome = GameUtils.getRegistryManager().get(Registry.BIOME_KEY).get(biomeId);
         var result = BiomeConditionEvaluator.INSTANCE.eval(biome, new Script(script.getContents()));
         ctx.getSource().sendFeedback(new LiteralText(result.toString()));
-        return 0;
+        return 1;
     }
 }

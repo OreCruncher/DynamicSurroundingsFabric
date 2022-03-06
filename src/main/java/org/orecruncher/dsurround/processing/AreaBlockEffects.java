@@ -21,6 +21,8 @@ public class AreaBlockEffects extends ClientHandler {
     protected RandomBlockEffectScanner farEffects;
     protected AlwaysOnBlockEffectScanner alwaysOn;
 
+    private boolean isConnected = false;
+
     AreaBlockEffects() {
         super("Area Block Effects");
 
@@ -29,6 +31,8 @@ public class AreaBlockEffects extends ClientHandler {
 
     @Override
     public void process(final PlayerEntity player) {
+        if (!isConnected) return;
+
         this.blockEffects.tick(player);
         this.nearEffects.tick();
         this.farEffects.tick();
@@ -42,6 +46,8 @@ public class AreaBlockEffects extends ClientHandler {
         this.alwaysOn = new AlwaysOnBlockEffectScanner(this.locus, this.blockEffects, Client.Config.blockEffects.blockEffectRange);
         this.nearEffects = new RandomBlockEffectScanner(this.locus, this.blockEffects, RandomBlockEffectScanner.NEAR_RANGE);
         this.farEffects = new RandomBlockEffectScanner(this.locus, this.blockEffects, RandomBlockEffectScanner.FAR_RANGE);
+
+        this.isConnected = true;
     }
 
     @Override
@@ -51,6 +57,8 @@ public class AreaBlockEffects extends ClientHandler {
         this.alwaysOn = null;
         this.nearEffects = null;
         this.farEffects = null;
+
+        this.isConnected = false;
     }
 
     private void blockUpdates(Collection<BlockPos> blockPos) {

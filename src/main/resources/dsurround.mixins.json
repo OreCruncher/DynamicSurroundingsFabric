@@ -25,9 +25,9 @@
     "core.MixinSoundManagerAccessor",
     "core.MixinSoundSystem",
     "core.MixinSoundSystemAccessors",
-    "core.MixinTagManager",
     "core.MixinWorld",
-    "core.MixinRainSplashParticle"
+    "core.MixinRainSplashParticle",
+    "core.BiomeAccessor"
   ],
   "server": [],
   "injectors": {

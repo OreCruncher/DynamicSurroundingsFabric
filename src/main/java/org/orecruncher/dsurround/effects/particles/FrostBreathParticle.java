@@ -36,11 +36,11 @@ public class FrostBreathParticle extends SpriteBillboardParticle {
         this.velocityY = trajectory.y * 0.01D;
         this.velocityZ = trajectory.z * 0.01D;
 
-        this.setColorAlpha(0.2F);
+        this.setAlpha(0.2F);
         float f1 = 1.0F - (float) (rand.nextDouble() * (double) 0.3F);
-        this.colorRed = f1;
-        this.colorGreen = f1;
-        this.colorBlue = f1;
+        this.red = f1;
+        this.green = f1;
+        this.blue = f1;
         this.scale *= 1.875F * (entity.isBaby() ? 0.125F : 0.25F);
         int i = (int) (8.0D / (rand.nextDouble() * 0.8D + 0.3D));
         this.maxAge = (int) Math.max((float) i * 2.5F, 1.0F);

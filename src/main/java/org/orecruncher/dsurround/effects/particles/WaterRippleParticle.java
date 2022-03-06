@@ -6,9 +6,11 @@ import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.client.particle.SpriteBillboardParticle;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.util.math.Vector2f;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.*;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
+import org.orecruncher.dsurround.lib.GameUtils;
 
 import java.awt.*;
 
@@ -16,15 +18,18 @@ import java.awt.*;
 public class WaterRippleParticle extends SpriteBillboardParticle {
 
     private static final float TEX_SIZE_HALF = 0.5F;
+    private static final int BLOCKS_FROM_FADE = 5;
+    private static final int MAX_BLOCKS_FADE = 12;
 
     private final WaterRippleStyle rippleStyle;
 
-    private float growthRate;
+    private final float growthRate;
     private final float scaledWidth;
     private float texU1;
     private float texU2;
     private float texV1;
     private float texV2;
+    private final float defaultColorAlpha;
 
     public WaterRippleParticle(WaterRippleStyle rippleStyle, ClientWorld world, double x, double y, double z) {
         super(world, x, y, z, 0.0, 0.0, 0.0);
@@ -44,12 +49,21 @@ public class WaterRippleParticle extends SpriteBillboardParticle {
 
         this.y -= 0.2D;
 
+        assert GameUtils.getPlayer() != null;
+        var cameraPos = GameUtils.getPlayer().getCameraBlockPos();
         var position = new BlockPos(this.x, this.y, this.z);
-        var color = new Color(this.world.getBiome(position).getWaterColor());
-        this.colorRed = color.getRed() / 255F;
-        this.colorGreen = color.getGreen() / 255F;
-        this.colorBlue = color.getBlue() / 255F;
-        this.colorAlpha = 0.99F;
+
+        var color = new Color(this.world.getBiome(position).value().getWaterColor());
+        this.red = color.getRed() / 255F;
+        this.green = color.getGreen() / 255F;
+        this.blue = color.getBlue() / 255F;
+
+        float distance = (float) MathHelper.clamp(
+                Math.sqrt(cameraPos.getSquaredDistance(position)) - BLOCKS_FROM_FADE,
+                0,
+                MAX_BLOCKS_FADE
+        );
+        this.alpha = this.defaultColorAlpha = 0.60F * (MAX_BLOCKS_FADE - distance) / MAX_BLOCKS_FADE;
 
         this.texU1 = rippleStyle.getU1(this.age);
         this.texU2 = rippleStyle.getU2(this.age);
@@ -91,24 +105,24 @@ public class WaterRippleParticle extends SpriteBillboardParticle {
 
         vertexConsumer
                 .vertex(-this.scaledWidth + X, Y, this.scaledWidth + Z)
-                .texture(this.texU2, this.texV2).color(this.colorRed, this.colorGreen, this.colorBlue, this.colorAlpha)
+                .texture(this.texU2, this.texV2).color(this.red, this.green, this.blue, this.alpha)
                 .light(p)
                 .next();
         vertexConsumer
                 .vertex(this.scaledWidth + X, Y, this.scaledWidth + Z)
-                .texture( this.texU2, this.texV1).color(this.colorRed, this.colorGreen, this.colorBlue, this.colorAlpha)
+                .texture( this.texU2, this.texV1).color(this.red, this.green, this.blue, this.alpha)
                 .light(p)
                 .next();
         vertexConsumer
                 .vertex(this.scaledWidth + X, Y, -this.scaledWidth + Z)
                 .texture( this.texU1, this.texV1)
-                .color(this.colorRed, this.colorGreen, this.colorBlue, this.colorAlpha)
+                .color(this.red, this.green, this.blue, this.alpha)
                 .light(p)
                 .next();
         vertexConsumer
                 .vertex(-this.scaledWidth + X, Y, -this.scaledWidth + Z)
                 .texture(this.texU1, this.texV2)
-                .color(this.colorRed, this.colorGreen, this.colorBlue, this.colorAlpha)
+                .color(this.red, this.green, this.blue, this.alpha)
                 .light(p)
                 .next();
     }
@@ -126,7 +140,7 @@ public class WaterRippleParticle extends SpriteBillboardParticle {
             }
 
             if (this.rippleStyle.doAlpha()) {
-                this.colorAlpha = (float) (this.maxAge - this.age) / (float) (this.maxAge + 3);
+                this.alpha = this.defaultColorAlpha * (float) (this.maxAge - this.age)/this.maxAge;
             }
 
             this.texU1 = this.rippleStyle.getU1(this.age);

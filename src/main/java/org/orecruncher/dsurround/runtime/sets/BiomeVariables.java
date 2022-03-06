@@ -10,12 +10,13 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.biome.BiomeUtils;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
+import org.orecruncher.dsurround.mixins.core.BiomeAccessor;
 
 @Environment(EnvType.CLIENT)
 public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBiomeVariables {
 
     private Biome biome;
-    private final Lazy<String> category = new Lazy<>(() -> this.biome.getCategory().getName());
+    private final Lazy<String> category = new Lazy<>(() -> ((BiomeAccessor) (Object) this.biome).getCategory().getName());
     private final Lazy<String> precipitationType = new Lazy<>(() -> this.biome.getPrecipitation().getName());
     private BiomeInfo info;
     private final Lazy<String> name = new Lazy<>(() -> this.info.getBiomeName());
@@ -36,7 +37,7 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
     public void update() {
         Biome newBiome = BiomeUtils.DEFAULT_BIOME;
         if (GameUtils.isInGame()) {
-            newBiome = GameUtils.getPlayer().getEntityWorld().getBiome(GameUtils.getPlayer().getBlockPos());
+            newBiome = GameUtils.getPlayer().getEntityWorld().getBiome(GameUtils.getPlayer().getBlockPos()).value();
         }
         setBiome(newBiome);
     }

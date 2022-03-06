@@ -124,7 +124,7 @@ public class IndividualSoundControlScreen extends Screen {
         // were not paused mobs and things will still wander around and can cause a
         // problem for the player while their head is buried in the menu.)
         if (this.enablePlay)
-            GameUtils.getSoundHander().tick(false);
+            GameUtils.getSoundManager().tick(false);
     }
 
     public boolean isPauseScreen() {
@@ -164,13 +164,13 @@ public class IndividualSoundControlScreen extends Screen {
     protected void save(final ButtonWidget button) {
         // Gather the changes and push to underlying routine for parsing and packaging
         this.soundConfigList.saveChanges();
-        this.onClose();
+        this.close();
         this.closeScreen();
     }
 
     protected void cancel(final ButtonWidget button) {
         // Just discard - no processing
-        this.onClose();
+        this.close();
         this.closeScreen();
     }
 }

@@ -51,7 +51,7 @@ public interface CodecExtensions<A> extends Codec<A> {
         var reader = new StringReader(content);
         Dynamic<JsonElement> dynamic;
         if (codec instanceof ListCodec) {
-            JsonArray jsonArray = JsonHelper.method_37165(reader);
+            JsonArray jsonArray = JsonHelper.deserializeArray(reader);
             dynamic = new Dynamic<>(JsonOps.INSTANCE, jsonArray);
         } else if (codec instanceof MapCodec) {
             // Not sure if there is anything special yet...

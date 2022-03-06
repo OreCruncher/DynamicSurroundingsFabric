@@ -68,7 +68,7 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
         this.deltaY = loc.getY() + dY;
         setSpawnCount((int) (strength * 2.5F));
 
-        var color = new Color(this.world.getBiome(this.position).getWaterColor());
+        var color = new Color(this.world.getBiome(this.position).value().getWaterColor());
         this.red = color.getRed() / 255F;
         this.green = color.getGreen() / 255F;
         this.blue = color.getBlue() / 255F;

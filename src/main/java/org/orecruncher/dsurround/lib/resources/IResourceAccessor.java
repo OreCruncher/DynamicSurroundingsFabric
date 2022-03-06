@@ -2,22 +2,18 @@ package org.orecruncher.dsurround.lib.resources;
 
 import com.google.gson.*;
 import com.mojang.serialization.*;
-import com.mojang.serialization.codecs.ListCodec;
 import joptsimple.internal.Strings;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.JsonHelper;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.CodecExtensions;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 /**

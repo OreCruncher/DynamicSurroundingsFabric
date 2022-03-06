@@ -8,7 +8,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.StringIdentifiable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.effects.IEntityEffect;
-import org.orecruncher.dsurround.effects.entity.ItemSwingEffect;
 import org.orecruncher.dsurround.effects.entity.producers.BowUseEffectProducer;
 import org.orecruncher.dsurround.effects.entity.producers.BreathEffectProducer;
 import org.orecruncher.dsurround.effects.entity.producers.ItemSwingEffectProducer;
