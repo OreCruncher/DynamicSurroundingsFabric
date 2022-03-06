@@ -5,7 +5,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.tag.BlockTags;
-import net.minecraft.tag.Tag;
+import net.minecraft.tag.TagKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
@@ -27,7 +27,7 @@ public final class CeilingScanner {
     private static final float INSIDE_THRESHOLD = 1.0F - 65.0F / 176.0F;
     private static final Cell[] cells;
     private static final float TOTAL_POINTS;
-    private static final ObjectArray<Tag.Identified<Block>> NON_CEILING = new ObjectArray<>();
+    private static final ObjectArray<TagKey<Block>> NON_CEILING = new ObjectArray<>();
 
     static {
 
@@ -141,9 +141,8 @@ public final class CeilingScanner {
                 return false;
 
             // Test the block tags in our NON_CEILING set to see if any match
-            final Block block = state.getBlock();
-            for (final Tag.Identified<Block> tag : NON_CEILING) {
-                if (tag.contains(block))
+            for (final TagKey<Block> tag : NON_CEILING) {
+                if (state.isIn(tag))
                     return false;
             }
             return true;
