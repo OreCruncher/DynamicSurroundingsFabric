@@ -50,7 +50,7 @@ public class WaterRippleParticle extends SpriteBillboardParticle {
         this.y -= 0.2D;
 
         assert GameUtils.getPlayer() != null;
-        var cameraPos = GameUtils.getPlayer().getCameraBlockPos();
+        var cameraPos = new BlockPos(GameUtils.getPlayer().getCameraPosVec(1.0f));
         var position = new BlockPos(this.x, this.y, this.z);
 
         var color = new Color(this.world.getBiome(position).value().getWaterColor());

@@ -4,14 +4,11 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import org.orecruncher.dsurround.lib.GameUtils;
 
 import java.util.List;
@@ -38,8 +35,8 @@ public class IndividualSoundControlScreen extends Screen {
 
     private static final int TOOLTIP_Y_OFFSET = 30;
 
-    private static final Text SAVE = ScreenTexts.DONE;
-    private static final Text CANCEL = ScreenTexts.CANCEL;
+    private static final Text SAVE = Text.of("gui.done");
+    private static final Text CANCEL = Text.of("gui.cancel");
 
     protected final Screen parent;
     protected final boolean enablePlay;
@@ -49,7 +46,7 @@ public class IndividualSoundControlScreen extends Screen {
     protected ButtonWidget cancel;
 
     public IndividualSoundControlScreen(final Screen parent, final boolean enablePlay) {
-        super(new TranslatableText("dsurround.text.keybind.individualSoundConfig"));
+        super(Text.translatable("dsurround.text.keybind.individualSoundConfig"));
         this.parent = parent;
         this.enablePlay = enablePlay;
     }
@@ -68,7 +65,7 @@ public class IndividualSoundControlScreen extends Screen {
                 SEARCH_BAR_WIDTH,
                 SEARCH_BAR_HEIGHT,
                 this.searchField,   // Copy existing data over
-                LiteralText.EMPTY);
+                Text.empty());
 
         this.searchField.setChangedListener((filter) -> this.soundConfigList.setSearchFilter(() -> filter, false));
         this.addSelectableChild(this.searchField);

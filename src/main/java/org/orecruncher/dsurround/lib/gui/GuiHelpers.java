@@ -30,10 +30,10 @@ public class GuiHelpers {
         final Style style = prefixHelper(formatting);
         return GameUtils.getTextHandler()
                 .wrapLines(
-                        new TranslatableText(key),
+                        Text.translatable(key),
                         width,
                         style)
-                .stream().map(e -> new LiteralText(e.getString()).asOrderedText())
+                .stream().map(e -> Text.of(e.getString()).asOrderedText())
                 .collect(Collectors.toList());
     }
 
@@ -48,17 +48,17 @@ public class GuiHelpers {
      */
     public static StringVisitable getTrimmedText(final String key, final int width, @Nullable final Formatting... formatting) {
         final Style style = prefixHelper(formatting);
-        final StringVisitable text = new TranslatableText(key);
+        final StringVisitable text = Text.translatable(key);
         final TextRenderer fr = GameUtils.getTextRenderer();
         final TextHandler cm = fr.getTextHandler();
         if (fr.getWidth(text) > width) {
             final int ellipsesWidth = fr.getWidth(ELLIPSES);
             final int trueWidth = width - ellipsesWidth;
             final StringVisitable str = cm.trimToWidth(text, trueWidth, style);
-            return new LiteralText(str.getString() + ELLIPSES);
+            return Text.of(str.getString() + ELLIPSES);
         }
         final StringVisitable str = cm.trimToWidth(text, width, style);
-        return new LiteralText(str.getString());
+        return Text.of(str.getString());
     }
 
     private static Style prefixHelper(@Nullable final Formatting[] formatting) {

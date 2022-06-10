@@ -13,7 +13,6 @@ import org.orecruncher.dsurround.config.InternalBiomes;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.mixins.core.BiomeAccessor;
 import org.orecruncher.dsurround.processing.Scanners;
 
 @Environment(EnvType.CLIENT)
@@ -119,7 +118,7 @@ public final class BiomeScanner {
         var biome = access.getBiome(pos);
 
         // If it is not an underground biome see if we need to simulate one of the other internal biomes
-        if (((BiomeAccessor) (Object) biome.value()).getCategory() != Biome.Category.UNDERGROUND) {
+//        if (((BiomeAccessor) (Object) biome.value()).getCategory() != Biome.Category.UNDERGROUND) {
             var y = pos.getY();
             if (y < (dimInfo.getSeaLevel() - UNDERGROUND_THRESHOLD_OFFSET)) {
                 return BiomeLibrary.getBiomeInfo(InternalBiomes.UNDERGROUND);
@@ -131,7 +130,7 @@ public final class BiomeScanner {
             } else if (y >= dimInfo.getCloudHeight()) {
                 return BiomeLibrary.getBiomeInfo(InternalBiomes.CLOUDS);
             }
-        }
+//        }
 
         return BiomeLibrary.getBiomeInfo(biome.value());
     }

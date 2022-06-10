@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.lib.config;
 
 import joptsimple.internal.Strings;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -102,28 +101,28 @@ public class ConfigOptions {
         var txt = Localization.load(this.translationRoot + ".title");
         if (this.stripTitle)
             txt = strip(txt);
-        return new LiteralText(this.titleStyle + txt);
+        return Text.of(this.titleStyle + txt);
     }
 
     public Text transformSubtitle() {
         var txt = Localization.load(this.translationRoot + ".subtitle");
         if (this.stripTitle)
             txt = strip(txt);
-        return new LiteralText(this.subtitleStyle + txt);
+        return Text.of(this.subtitleStyle + txt);
     }
 
     public Text transformPropertyGroup(String langKey) {
         var txt = Localization.load(langKey);
         if (this.stripPropertyGroups)
             txt = strip(txt);
-        return new LiteralText(this.propertyGroupStyle + txt);
+        return Text.of(this.propertyGroupStyle + txt);
     }
 
     public Text transformProperty(String langKey) {
         var txt = Localization.load(langKey);
         if (this.stripPropertyValues)
             txt = strip(txt);
-        return new LiteralText(this.propertyValueStyle + txt);
+        return Text.of(this.propertyValueStyle + txt);
     }
 
     public Text[] transformTooltip(List<Text> tooltip) {
@@ -135,7 +134,7 @@ public class ConfigOptions {
                             this.toolTipWidth,
                             Style.EMPTY)
                     .stream()
-                    .map(l -> new LiteralText(this.tooltipStyle + l.getString())).toList();
+                    .map(l -> Text.of(this.tooltipStyle + l.getString())).toList();
             result.addAll(wrapped);
         }
 
