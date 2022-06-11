@@ -4,7 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.CommandDispatcher;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.command.v1.FabricClientCommandSource;
+import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.BiomeLibrary;
 import org.orecruncher.dsurround.config.BlockLibrary;
@@ -15,12 +16,15 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static net.fabricmc.fabric.api.client.command.v1.ClientCommandManager.literal;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
 @Environment(EnvType.CLIENT)
 class DumpCommand {
 
-    public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
+    public static void register(@Nullable CommandDispatcher<FabricClientCommandSource> dispatcher) {
+        if (dispatcher == null) {
+            return;
+        }
         dispatcher.register(literal("dsdump")
                 .then(literal("biomes").executes(cmd -> dumpBiomes(cmd.getSource())))
                 .then(literal("sounds").executes(cmd -> dumpSounds(cmd.getSource())))

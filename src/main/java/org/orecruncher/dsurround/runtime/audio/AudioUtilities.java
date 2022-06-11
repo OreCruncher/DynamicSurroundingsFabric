@@ -34,7 +34,7 @@ public final class AudioUtilities {
     }
 
     public static SoundSystem getSoundSystem() {
-        MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) GameUtils.getSoundHander();
+        MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) GameUtils.getSoundManager();
         return manager.getSoundSystem();
     }
 

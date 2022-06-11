@@ -28,7 +28,7 @@ public enum BlockEffectType implements StringIdentifiable {
     WATERFALL("waterfall", WaterSplashProducer::new, () -> Client.Config.blockEffects.waterfallsEnabled);
 
     private static final Map<String, BlockEffectType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(BlockEffectType::getName, (category) -> category));
-    public static final Codec<BlockEffectType> CODEC = StringIdentifiable.createCodec(BlockEffectType::values, BlockEffectType::byName);
+    public static final Codec<BlockEffectType> CODEC = StringIdentifiable.createCodec(BlockEffectType::values);
 
     private final String name;
     private final BiFunction<Script, Script, IBlockEffectProducer> producer;

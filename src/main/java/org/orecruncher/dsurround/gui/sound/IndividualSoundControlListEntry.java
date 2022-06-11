@@ -29,13 +29,13 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
 
     private static final int BUTTON_WIDTH = 60;
     private static final int TOOLTIP_WIDTH = 300;
-    private static final Text CULL_ON = new TranslatableText("dsurround.text.soundconfig.cull");
-    private static final Text CULL_OFF = new TranslatableText("dsurround.text.soundconfig.nocull");
-    private static final Text BLOCK_ON = new TranslatableText("dsurround.text.soundconfig.block");
-    private static final Text BLOCK_OFF = new TranslatableText("dsurround.text.soundconfig.noblock");
-    private static final Text PLAY = new TranslatableText("dsurround.text.soundconfig.play");
-    private static final Text STOP = new TranslatableText("dsurround.text.soundconfig.stop");
-    private static final OrderedText VANILLA_CREDIT = new TranslatableText("dsurround.text.soundconfig.vanilla").asOrderedText();
+    private static final Text CULL_ON = Text.translatable("dsurround.text.soundconfig.cull");
+    private static final Text CULL_OFF = Text.translatable("dsurround.text.soundconfig.nocull");
+    private static final Text BLOCK_ON = Text.translatable("dsurround.text.soundconfig.block");
+    private static final Text BLOCK_OFF = Text.translatable("dsurround.text.soundconfig.noblock");
+    private static final Text PLAY = Text.translatable("dsurround.text.soundconfig.play");
+    private static final Text STOP = Text.translatable("dsurround.text.soundconfig.stop");
+    private static final OrderedText VANILLA_CREDIT = Text.translatable("dsurround.text.soundconfig.vanilla").asOrderedText();
 
     private static final Formatting[] CODING = new Formatting[]{Formatting.ITALIC, Formatting.AQUA};
     private static final Collection<OrderedText> VOLUME_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.volume.help", TOOLTIP_WIDTH, CODING);
@@ -232,10 +232,10 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
 
             SoundMetadata metadata = SoundLibrary.getSoundMetadata(id);
             if (metadata != null) {
-                if (metadata.getTitle() != LiteralText.EMPTY)
+                if (!metadata.getTitle().equals(Text.empty()))
                     this.cachedToolTip.add(metadata.getTitle().asOrderedText());
-                if (metadata.getCaption() != LiteralText.EMPTY)
-                    this.cachedToolTip.add(new TranslatableText("dsurround.text.soundconfig.caption", metadata.getCaption()).asOrderedText());
+                if (!metadata.getCaption().equals(Text.empty()))
+                    this.cachedToolTip.add(Text.translatable("dsurround.text.soundconfig.caption", metadata.getCaption()).asOrderedText());
 
                 for (Text t : metadata.getCredits())
                     this.cachedToolTip.add(t.asOrderedText());

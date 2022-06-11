@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.config;
 
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import net.fabricmc.api.EnvType;

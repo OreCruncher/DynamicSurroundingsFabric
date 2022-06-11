@@ -3,9 +3,7 @@ package org.orecruncher.dsurround.sound;
 import com.google.common.collect.ImmutableList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
 
@@ -16,7 +14,7 @@ import java.util.Objects;
 @Environment(EnvType.CLIENT)
 public final class SoundMetadata {
 
-    private static final Text NO_STRING = LiteralText.EMPTY;
+    private static final Text NO_STRING = Text.empty();
 
     private final Text title;
     private final Text caption;
@@ -31,8 +29,8 @@ public final class SoundMetadata {
     public SoundMetadata(final SoundMetadataConfig cfg) {
         Objects.requireNonNull(cfg);
 
-        this.title = cfg.title.isPresent() ? new TranslatableText(cfg.title.get()) : NO_STRING;
-        this.caption = cfg.caption.isPresent() ? new TranslatableText(cfg.caption.get()) : NO_STRING;
+        this.title = cfg.title.isPresent() ? Text.translatable(cfg.title.get()) : NO_STRING;
+        this.caption = cfg.caption.isPresent() ? Text.translatable(cfg.caption.get()) : NO_STRING;
 
         if (cfg.credits == null || cfg.credits.size() == 0) {
             this.credits = ImmutableList.of();
@@ -42,7 +40,7 @@ public final class SoundMetadata {
                 if (StringUtils.isEmpty(s))
                     this.credits.add(NO_STRING);
                 else
-                    this.credits.add(new LiteralText(s));
+                    this.credits.add(Text.of(s));
             }
         }
     }

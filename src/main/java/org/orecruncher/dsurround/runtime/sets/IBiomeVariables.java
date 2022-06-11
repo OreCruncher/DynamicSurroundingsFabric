@@ -16,8 +16,6 @@ public interface IBiomeVariables {
 
     float getTemperature();
 
-    String getCategory();
-
     String getPrecipitationType();
 
     String getTraits();

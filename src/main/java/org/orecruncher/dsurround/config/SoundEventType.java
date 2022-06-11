@@ -33,7 +33,7 @@ public enum SoundEventType implements StringIdentifiable {
     MUSIC("music");
 
     private static final Map<String, SoundEventType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(SoundEventType::getName, (category) -> category));
-    public static final Codec<SoundEventType> CODEC = StringIdentifiable.createCodec(SoundEventType::values, SoundEventType::byName);
+    public static final Codec<SoundEventType> CODEC = StringIdentifiable.createCodec(SoundEventType::values);
 
     private final String name;
 

@@ -12,6 +12,8 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.random.Random;
+import net.minecraft.util.math.random.RandomSeed;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.SoundLibrary;
 import org.orecruncher.dsurround.lib.math.MathStuff;
@@ -118,6 +120,7 @@ public final class SoundFactoryBuilder {
                 this.category,
                 this.generate(this.minVolume, this.maxVolume),
                 this.generate(this.minPitch, this.maxPitch),
+                Random.create(),
                 this.isRepeatable,
                 this.repeatDelay,
                 this.attenuationType,
@@ -133,7 +136,8 @@ public final class SoundFactoryBuilder {
                 this.category,
                 this.generate(this.minVolume, this.maxVolume),
                 this.generate(this.minPitch, this.maxPitch),
-                entity
+                entity,
+                RandomSeed.getSeed()
         );
     }
 
@@ -143,6 +147,7 @@ public final class SoundFactoryBuilder {
                 this.category,
                 this.generate(this.minVolume, this.maxVolume),
                 this.generate(this.minPitch, this.maxPitch),
+                Random.create(),
                 this.isRepeatable,
                 this.repeatDelay,
                 this.attenuationType,

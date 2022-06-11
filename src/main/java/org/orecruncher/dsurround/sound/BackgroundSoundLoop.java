@@ -8,6 +8,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.random.Random;
 
 @Environment(EnvType.CLIENT)
 public class BackgroundSoundLoop extends MovingSoundInstance {
@@ -20,7 +21,7 @@ public class BackgroundSoundLoop extends MovingSoundInstance {
     private boolean isFading;
 
     public BackgroundSoundLoop(SoundEvent soundEvent) {
-        super(soundEvent, SoundCategory.AMBIENT);
+        super(soundEvent, SoundCategory.AMBIENT, Random.create());
         this.scale = INITIAL_SCALE;
         this.target = 1F;
         this.isFading = false;
@@ -31,7 +32,7 @@ public class BackgroundSoundLoop extends MovingSoundInstance {
     }
 
     public BackgroundSoundLoop(SoundEvent soundEvent, BlockPos pos) {
-        super(soundEvent, SoundCategory.AMBIENT);
+        super(soundEvent, SoundCategory.AMBIENT, Random.create());
         this.scale = INITIAL_SCALE;
         this.target = 1F;
         this.isFading = false;

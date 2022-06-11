@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.lib.config;
 
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,11 +27,11 @@ public abstract class ConfigElement<T> {
     public List<Text> getTooltip() {
         var result = new ArrayList<Text>();
         var key = this.getElementNameTooltipKey();
-        Text txt = new TranslatableText(key);
-        if (txt.asString().equals(key)) {
+        Text txt = Text.translatable(key);
+        if (txt.toString().equals(key)) {
             var comment = this.getComment();
             if (comment != null)
-                txt = new LiteralText(comment);
+                txt = Text.of(comment);
         }
         result.add(txt);
         return result;
@@ -140,13 +138,13 @@ public abstract class ConfigElement<T> {
             var result = super.getTooltip();
 
             if (this.isClientRestartRequired())
-                result.add(new TranslatableText("dsurround.config.tooltip.clientRestartRequired"));
+                result.add(Text.translatable("dsurround.config.tooltip.clientRestartRequired"));
             else if (this.isWorldRestartRequired())
-                result.add(new TranslatableText("dsurround.config.tooltip.worldRestartRequired"));
+                result.add(Text.translatable("dsurround.config.tooltip.worldRestartRequired"));
 
             var dv = this.wrapper.getAnnotation(ConfigurationData.DefaultValue.class);
             if (dv != null)
-                result.add(new TranslatableText("dsurround.config.tooltip.defaultValue", this.defaultValue));
+                result.add(Text.translatable("dsurround.config.tooltip.defaultValue", this.defaultValue));
 
             return result;
         }
@@ -203,7 +201,7 @@ public abstract class ConfigElement<T> {
         public List<Text> getTooltip() {
             var result = super.getTooltip();
             if (this.hasRange())
-                result.add(new TranslatableText("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()));
+                result.add(Text.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()));
             return result;
         }
 
@@ -244,7 +242,7 @@ public abstract class ConfigElement<T> {
         public List<Text> getTooltip() {
             var result = super.getTooltip();
             if (this.hasRange())
-                result.add(new TranslatableText("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()));
+                result.add(Text.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()));
             return result;
         }
 

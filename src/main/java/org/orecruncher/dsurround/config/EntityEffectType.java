@@ -8,7 +8,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.StringIdentifiable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.effects.IEntityEffect;
-import org.orecruncher.dsurround.effects.entity.ItemSwingEffect;
 import org.orecruncher.dsurround.effects.entity.producers.BowUseEffectProducer;
 import org.orecruncher.dsurround.effects.entity.producers.BreathEffectProducer;
 import org.orecruncher.dsurround.effects.entity.producers.ItemSwingEffectProducer;
@@ -30,7 +29,7 @@ public enum EntityEffectType  implements StringIdentifiable {
     ITEM_SWING("item_swing", entity -> new ItemSwingEffectProducer().produce(entity), () -> Client.Config.entityEffects.enableSwingEffect);
 
     private static final Map<String, EntityEffectType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(EntityEffectType::getName, (category) -> category));
-    public static final Codec<EntityEffectType> CODEC = StringIdentifiable.createCodec(EntityEffectType::values, EntityEffectType::byName);
+    public static final Codec<EntityEffectType> CODEC = StringIdentifiable.createCodec(EntityEffectType::values);
 
     private final String name;
     private final Function<LivingEntity, Collection<IEntityEffect>> factory;

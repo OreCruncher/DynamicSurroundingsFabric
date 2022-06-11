@@ -28,11 +28,11 @@ public final class SoundEngineDiagnostics {
 
     private static void onCollect(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
         left.add(Strings.EMPTY);
-        MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) GameUtils.getSoundHander();
+        MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) GameUtils.getSoundManager();
         MixinSoundSystemAccessors accessors = (MixinSoundSystemAccessors) manager.getSoundSystem();
         Map<SoundInstance, Channel.SourceManager> sources = accessors.getSources();
 
-        left.add(Formatting.GOLD + GameUtils.getSoundHander().getDebugString());
+        left.add(Formatting.GOLD + GameUtils.getSoundManager().getDebugString());
 
         if (sources.size() > 0) {
             accessors.getSources().keySet().stream()

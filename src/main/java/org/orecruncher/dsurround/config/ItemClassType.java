@@ -81,7 +81,7 @@ public enum ItemClassType implements StringIdentifiable {
                     .category(SoundCategory.PLAYERS).volume(0.8F).pitchRange(0.8F, 1.2F).build());
 
     private static final Map<String, ItemClassType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(ItemClassType::getName, (category) -> category));
-    public static final Codec<ItemClassType> CODEC = StringIdentifiable.createCodec(ItemClassType::values, ItemClassType::byName);
+    public static final Codec<ItemClassType> CODEC = StringIdentifiable.createCodec(ItemClassType::values);
 
     private final String name;
     private final ISoundFactory toolBarSound;

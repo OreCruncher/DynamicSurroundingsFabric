@@ -202,8 +202,7 @@ public final class SoundFXProcessor {
             assert pool != null;
 
             final ObjectArray<Future<?>> tasks = new ObjectArray<>(sources.length);
-            for (int i = 0; i < sources.length; i++) {
-                final SourceContext ctx = sources[i];
+            for (final SourceContext ctx : sources) {
                 if (ctx != null && ctx.shouldExecute()) {
                     tasks.add(pool.submit(ctx));
                 }

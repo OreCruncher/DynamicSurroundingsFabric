@@ -6,7 +6,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.state.State;
-import net.minecraft.tag.Tag;
+import net.minecraft.tag.TagKey;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import org.orecruncher.dsurround.Client;
@@ -21,7 +21,6 @@ import org.orecruncher.dsurround.xface.IBlockStateExtended;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -51,8 +50,7 @@ public class BlockLibrary {
 
         IResourceAccessor.process(accessors, accessor -> {
             var cfg = accessor.as(CODEC);
-            if (cfg != null)
-                blockConfigs.addAll(cfg);
+            if (cfg != null) blockConfigs.addAll(cfg);
         });
 
         version++;
@@ -63,23 +61,19 @@ public class BlockLibrary {
     public static BlockInfo getBlockInfo(BlockState state) {
         var info = ((IBlockStateExtended) state).getBlockInfo();
         if (info != null) {
-            if (info.getVersion() == version || info == DEFAULT)
-                return info;
+            if (info.getVersion() == version || info == DEFAULT) return info;
         }
 
         // OK - need to build out an info for the block.
         info = new BlockInfo(version, state);
         for (var cfg : blockConfigs) {
-            if (cfg.match(state))
-                info.update(cfg);
+            if (cfg.match(state)) info.update(cfg);
         }
 
         // Optimization to reduce memory bloat.  Coalesce blocks that do not have any special
         // processing to the DEFAULT, and trim the others to release memory that is not needed.
-        if (info.isDefault())
-            info = DEFAULT;
-        else
-            info.trim();
+        if (info.isDefault()) info = DEFAULT;
+        else info.trim();
 
         ((IBlockStateExtended) state).setBlockInfo(info);
 
@@ -87,33 +81,22 @@ public class BlockLibrary {
     }
 
     public static Stream<String> dumpBlockStates() {
-        return GameUtils.getRegistryManager().get(Registry.BLOCK_KEY).stream()
-                .flatMap(block -> block.getStateManager().getStates().stream())
-                .map(State::toString)
-                .sorted();
+        return GameUtils.getRegistryManager().get(Registry.BLOCK_KEY).stream().flatMap(block -> block.getStateManager().getStates().stream()).map(State::toString).sorted();
     }
 
     public static Stream<String> dumpBlockConfigRules() {
-        return blockConfigs.stream()
-                .map(BlockLibrary::formatBlockConfigRuleOutput)
-                .sorted();
+        return blockConfigs.stream().map(BlockLibrary::formatBlockConfigRuleOutput).sorted();
     }
 
     public static Stream<String> dumpBlocks() {
-        var blockRegistry = GameUtils.getRegistryManager().get(Registry.BLOCK_KEY).getEntries();
-        return blockRegistry.stream()
-                .map(kvp -> formatBlockOutput(kvp.getKey().getValue(), kvp.getValue()))
-                .sorted();
+        var blockRegistry = GameUtils.getRegistryManager().get(Registry.BLOCK_KEY).getEntrySet();
+        return blockRegistry.stream().map(kvp -> formatBlockOutput(kvp.getKey().getValue(), kvp.getValue())).sorted();
     }
 
     public static Stream<String> dumpBlocksByTag() {
         var tagGroup = GameUtils.getTagGroup(Registry.BLOCK_KEY);
         if (tagGroup != null) {
-            return tagGroup.getTags().entrySet()
-                    .stream()
-                    .filter(kvp -> kvp.getValue().values().size() > 0)
-                    .map(BlockLibrary::formatBlockTagOutput)
-                    .sorted();
+            return tagGroup.filter(pair -> pair.value().findAny().isPresent()).map(pair -> BlockLibrary.formatBlockTagOutput(pair.key(), pair.value())).sorted();
         }
 
         return Stream.empty();
@@ -123,22 +106,26 @@ public class BlockLibrary {
         return "";
     }
 
-    private static String formatBlockTagOutput(Map.Entry<Identifier, Tag<Block>> kvp) {
+    private static String formatBlockTagOutput(Block block, Stream<TagKey<Block>> tags) {
         StringBuilder builder = new StringBuilder();
-        builder.append("Tag: ").append(kvp.getKey());
-        for (var e : kvp.getValue().values())
-            builder.append("\n    ").append(e.toString());
+        builder.append("Tag: ").append(block);
+        tags.forEach(tag -> builder.append("\n    ").append(tag.toString()));
         builder.append("\n");
         return builder.toString();
     }
 
     private static String formatBlockOutput(Identifier id, Block block) {
-        var tags = GameUtils.getWorld().getTagManager()
-                .getOrCreateTagGroup(Registry.BLOCK_KEY)
-                .getTagsFor(block).stream()
-                .map(Identifier::toString)
-                .sorted()
-                .collect(Collectors.joining(","));
+        var blocks = GameUtils.getWorld().getRegistryManager().get(Registry.BLOCK_KEY);
+
+        var tags = "null";
+        var entry = blocks.getEntry(blocks.getRawId(block));
+        if (entry.isPresent()) {
+            tags = entry.get()
+                    .streamTags()
+                    .map(TagKey::toString)
+                    .sorted()
+                    .collect(Collectors.joining(","));
+        }
 
         StringBuilder builder = new StringBuilder();
         builder.append(id.toString());

@@ -3,8 +3,6 @@ package org.orecruncher.dsurround.gui.sound;
 import com.google.common.collect.ImmutableList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.screen.ScreenTexts;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import org.orecruncher.dsurround.lib.gui.SliderControl;
@@ -40,7 +38,7 @@ public class VolumeSliderControl extends SliderControl {
     }
 
     protected void updateMessage() {
-        Text text = (float) this.value == (float) this.getYImage(false) ? ScreenTexts.OFF : new LiteralText("x" + FORMAT.format(this.value * 4.0D));
+        Text text = (float) this.value == (float) this.getYImage(false) ? Text.translatable("options.off") : Text.of("x" + FORMAT.format(this.value * 4.0D));
         this.setMessage(text);
     }
 
