@@ -51,6 +51,6 @@ public enum SoundEventType implements StringIdentifiable {
 
     @Override
     public String asString() {
-        return null;
+        return this.name;
     }
 }
