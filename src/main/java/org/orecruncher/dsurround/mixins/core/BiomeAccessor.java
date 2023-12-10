@@ -7,7 +7,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(Biome.class)
 public interface BiomeAccessor {
 
+/*
     @Accessor
     Biome.Category getCategory();
-
+*/
 }
