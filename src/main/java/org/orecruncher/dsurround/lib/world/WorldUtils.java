@@ -38,7 +38,7 @@ public class WorldUtils {
     }
 
     public static float getTemperatureAt(final World world, final BlockPos pos) {
-        return world.getBiomeAccess().getBiome(pos).getTemperature(pos);
+        return world.getBiomeAccess().getBiome(pos).value().getTemperature();
     }
 
     public static int getPrecipitationHeight(final World world, final BlockPos pos) {
@@ -63,7 +63,7 @@ public class WorldUtils {
             return Biome.Precipitation.NONE;
         }
 
-        final Biome biome = world.getBiome(pos);
+        final Biome biome = world.getBiome(pos).value();
 
         // If the biome has no rain...
         if (biome.getPrecipitation() == Biome.Precipitation.NONE)
@@ -76,7 +76,7 @@ public class WorldUtils {
         }
 
         // Use the temperature of the biome to get whether it is raining or snowing
-        final float temp = getTemperatureAt((World) world, pos);
+        final float temp = getTemperatureAt(world, pos);
         return isSnowTemperature(temp) ? Biome.Precipitation.SNOW : Biome.Precipitation.RAIN;
     }
 

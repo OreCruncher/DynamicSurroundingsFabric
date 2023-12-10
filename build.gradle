@@ -20,16 +20,15 @@ dependencies {
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    modImplementation "com.terraformersmc:modmenu:2.0.13"
-    //include("com.terraformersmc:modmenu:2.0.13")
+    modImplementation "com.terraformersmc:modmenu:3.0.1"
 
     modImplementation "org.openjdk.nashorn:nashorn-core:15.3"
     include("org.openjdk.nashorn:nashorn-core:15.3")
 
-    modImplementation("me.shedaniel.cloth:cloth-config-fabric:5.0.38") {
+    modImplementation("me.shedaniel.cloth:cloth-config-fabric:6.1.48") {
         exclude(group: "net.fabricmc.fabric-api")
     }
-    include("me.shedaniel.cloth:cloth-config-fabric:5.0.38")
+    include("me.shedaniel.cloth:cloth-config-fabric:6.1.48")
 
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
@@ -44,7 +43,7 @@ processResources {
     }
 }
 
-def targetJavaVersion = 16
+def targetJavaVersion = 17
 tasks.withType(JavaCompile).configureEach {
     // ensure that the encoding is set to UTF-8, no matter what the system default is
     // this fixes some edge cases with special characters not displaying correctly
@@ -83,12 +82,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             // add all the jars that should be included when publishing to maven
-            artifact(remapJar) {
-                builtBy remapJar
-            }
-            artifact(sourcesJar) {
-                builtBy remapSourcesJar
-            }
+            from components.java
         }
     }
 

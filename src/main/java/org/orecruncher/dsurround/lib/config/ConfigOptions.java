@@ -135,8 +135,7 @@ public class ConfigOptions {
                             this.toolTipWidth,
                             Style.EMPTY)
                     .stream()
-                    .map(l -> new LiteralText(this.tooltipStyle + l.getString()))
-                    .collect(Collectors.toList());
+                    .map(l -> new LiteralText(this.tooltipStyle + l.getString())).toList();
             result.addAll(wrapped);
         }
 

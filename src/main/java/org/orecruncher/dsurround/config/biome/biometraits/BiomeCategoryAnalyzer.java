@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.config.biome.biometraits;
 
 import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
+import org.orecruncher.dsurround.mixins.core.BiomeAccessor;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,7 +13,7 @@ public class BiomeCategoryAnalyzer implements IBiomeTraitAnalyzer {
     public Collection<BiomeTrait> evaluate(Identifier id, Biome biome) {
         List<BiomeTrait> results = new ArrayList<>();
 
-        var category = biome.getCategory();
+        var category = ((BiomeAccessor) (Object) biome).getCategory();
         results.add(BiomeTrait.of(category));
 
         if (category == Biome.Category.OCEAN || category == Biome.Category.RIVER)

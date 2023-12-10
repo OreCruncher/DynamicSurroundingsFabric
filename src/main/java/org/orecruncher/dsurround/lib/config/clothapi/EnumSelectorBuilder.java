@@ -17,7 +17,7 @@ import java.util.function.Supplier;
  */
 public class EnumSelectorBuilder extends FieldBuilder<Enum<?>, EnumListEntry<Enum<?>>> {
     private Consumer<Enum<?>> saveConsumer = null;
-    private Function<Enum<?>, Optional<Text[]>> tooltipSupplier = (e) -> Optional.empty();
+    private Function<Enum<?>, Optional<Text[]>> tooltipSupplier = e -> Optional.empty();
     private final Enum<?> value;
     private final Class<? extends Enum<?>> clazz;
     private Function<Enum<?>, Text> enumNameProvider;
@@ -63,19 +63,17 @@ public class EnumSelectorBuilder extends FieldBuilder<Enum<?>, EnumListEntry<Enu
     }
 
     public EnumSelectorBuilder setTooltipSupplier(Supplier<Optional<Text[]>> tooltipSupplier) {
-        this.tooltipSupplier = (e) -> (Optional) tooltipSupplier.get();
+        this.tooltipSupplier = e -> tooltipSupplier.get();
         return this;
     }
 
     public EnumSelectorBuilder setTooltip(Optional<Text[]> tooltip) {
-        this.tooltipSupplier = (e) -> tooltip;
+        this.tooltipSupplier = e -> tooltip;
         return this;
     }
 
     public EnumSelectorBuilder setTooltip(Text... tooltip) {
-        this.tooltipSupplier = (e) -> {
-            return Optional.ofNullable(tooltip);
-        };
+        this.tooltipSupplier = e -> Optional.ofNullable(tooltip);
         return this;
     }
 
@@ -87,10 +85,10 @@ public class EnumSelectorBuilder extends FieldBuilder<Enum<?>, EnumListEntry<Enu
 
     @NotNull
     public EnumListEntry<Enum<?>> build() {
-        EnumListEntry<Enum<?>> entry = new EnumListEntry(this.getFieldNameKey(), this.clazz, this.value, this.getResetButtonKey(), this.defaultValue, this.saveConsumer, this.enumNameProvider, (Supplier) null, this.isRequireRestart());
-        entry.setTooltipSupplier(() -> (Optional) this.tooltipSupplier.apply((Enum) entry.getValue()));
+        EnumListEntry<Enum<?>> entry = new EnumListEntry(this.getFieldNameKey(), this.clazz, this.value, this.getResetButtonKey(), this.defaultValue, this.saveConsumer, this.enumNameProvider, null, this.isRequireRestart());
+        entry.setTooltipSupplier(() -> this.tooltipSupplier.apply(entry.getValue()));
         if (this.errorSupplier != null) {
-            entry.setErrorSupplier(() -> (Optional) this.errorSupplier.apply((Enum) entry.getValue()));
+            entry.setErrorSupplier(() -> this.errorSupplier.apply(entry.getValue()));
         }
 
         return entry;

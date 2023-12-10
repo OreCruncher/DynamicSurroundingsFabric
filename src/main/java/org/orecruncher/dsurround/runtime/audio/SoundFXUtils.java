@@ -5,7 +5,9 @@ import net.minecraft.block.Blocks;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -141,7 +143,7 @@ public final class SoundFXUtils {
 
         float sharedAirspace = 0F;
 
-        final ReusableRaycastContext traceContext = new ReusableRaycastContext(ctx.world, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.SOURCE_ONLY);
+        final ReusableRaycastContext traceContext = new ReusableRaycastContext(ctx.world, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.ANY);
 
         for (int i = 0; i < REVERB_RAYS; i++) {
 
@@ -317,7 +319,7 @@ public final class SoundFXUtils {
 
         Vec3d lastHit = origin;
         BlockState lastState = ctx.world.getBlockState(new BlockPos(lastHit.getX(), lastHit.getY(), lastHit.getZ()));
-        var traceContext = new ReusableRaycastContext(ctx.world, origin, target, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.SOURCE_ONLY);
+        var traceContext = new ReusableRaycastContext(ctx.world, origin, target, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.ANY);
         var itr = new ReusableRaycastIterator(traceContext);
         for (int i = 0; i < OCCLUSION_SEGMENTS; i++) {
             if (itr.hasNext()) {

@@ -28,7 +28,6 @@ public final class Conversion {
      * Converts the AudioStreamBuffer into mono if needed.
      *
      * @param buffer Audio stream buffer to convert
-     * @return Converted audio buffer
      */
     public static void convert(final StaticSound buffer) {
 

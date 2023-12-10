@@ -15,7 +15,7 @@ public class MinecraftAudioPlayer implements IAudioPlayer {
 
     private static final IModLog LOGGER = Client.LOGGER.createChild(MinecraftAudioPlayer.class);
 
-    public static IAudioPlayer INSTANCE = new MinecraftAudioPlayer(GameUtils.getSoundHander());
+    public static IAudioPlayer INSTANCE = new MinecraftAudioPlayer(GameUtils.getSoundManager());
 
     private final SoundManager manager;
 
