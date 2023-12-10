@@ -172,27 +172,4 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
 
         return fieldBuilder;
     }
-
-    /*
-    public StringListListEntry createStringList(final ConfigBuilder builder, final ForgeConfigSpec.ConfigValue<List<? extends String>> value, @Nullable final Function<String, Optional<Text>> validator) {
-        final ConfigProperty property = ConfigProperty.getPropertyInfo(value);
-        final Text name = property.getConfigName();
-        final List<String> list = value.get().stream().map(Object::toString).collect(Collectors.toList());
-        final List<String> defaults = new ArrayList<>(list);
-        final StringListBuilder result = builder.entryBuilder()
-                .startStrList(name, list)
-                .setTooltip(property.getTooltip())
-                .setDefaultValue(defaults)
-                .setSaveConsumer(value::set);
-
-        if (validator != null)
-            result.setCellErrorSupplier(validator);
-
-        if (property.getNeedsWorldRestart())
-            result.requireRestart();
-
-        return result.build();
-    }
-*/
-
 }

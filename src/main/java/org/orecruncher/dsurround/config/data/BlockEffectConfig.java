@@ -15,10 +15,10 @@ public class BlockEffectConfig {
 
     public static Codec<BlockEffectConfig> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
-                    BlockEffectType.CODEC.fieldOf("effect").forGetter(info -> info.effect),
-                    Script.CODEC.optionalFieldOf("conditions", Script.TRUE).forGetter(info -> info.conditions),
-                    Script.CODEC.optionalFieldOf("spawnChance", DEFAULT_SPAWN_CHANCE).forGetter(info -> info.spawnChance),
-                    Codec.BOOL.optionalFieldOf("alwaysOn", false).forGetter(info -> info.alwaysOn)
+                BlockEffectType.CODEC.fieldOf("effect").forGetter(info -> info.effect),
+                Script.CODEC.optionalFieldOf("conditions", Script.TRUE).forGetter(info -> info.conditions),
+                Script.CODEC.optionalFieldOf("spawnChance", DEFAULT_SPAWN_CHANCE).forGetter(info -> info.spawnChance),
+                Codec.BOOL.optionalFieldOf("alwaysOn", false).forGetter(info -> info.alwaysOn)
             ).apply(instance, BlockEffectConfig::new));
 
     public final BlockEffectType effect;
@@ -26,7 +26,7 @@ public class BlockEffectConfig {
     public final Script spawnChance;
     public final boolean alwaysOn;
 
-    BlockEffectConfig(BlockEffectType type, Script conditions, Script chance, boolean alwaysOn) {
+    BlockEffectConfig(BlockEffectType type, Script conditions, Script chance, Boolean alwaysOn) {
         this.effect = type;
         this.conditions = conditions;
         this.spawnChance = alwaysOn ? ALWAYS_ON : chance;

@@ -19,13 +19,13 @@ public class BlockConfigRule {
 
     public static Codec<BlockConfigRule> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
-                    Codec.list(CodecExtensions.checkBlockStateSpecification(true, true)).fieldOf("blocks").forGetter(info -> info.blocks),
-                    Codec.BOOL.optionalFieldOf("clearSounds", false).forGetter(info -> info.clearSounds),
-                    Script.CODEC.optionalFieldOf("soundChance").forGetter(info -> info.soundChance),
-                    Codec.FLOAT.optionalFieldOf("soundReflectivity").forGetter(info -> info.soundReflectivity),
-                    Codec.FLOAT.optionalFieldOf("soundOcclusion").forGetter(info -> info.soundOcclusion),
-                    Codec.list(AcousticConfig.CODEC).optionalFieldOf("acoustics", ImmutableList.of()).forGetter(info -> info.acoustics),
-                    Codec.list(BlockEffectConfig.CODEC).optionalFieldOf("effects", ImmutableList.of()).forGetter(info -> info.effects)
+                Codec.list(CodecExtensions.checkBlockStateSpecification(true, true)).fieldOf("blocks").forGetter(info -> info.blocks),
+                Codec.BOOL.optionalFieldOf("clearSounds", false).forGetter(info -> info.clearSounds),
+                Script.CODEC.optionalFieldOf("soundChance").forGetter(info -> info.soundChance),
+                Codec.FLOAT.optionalFieldOf("soundReflectivity").forGetter(info -> info.soundReflectivity),
+                Codec.FLOAT.optionalFieldOf("soundOcclusion").forGetter(info -> info.soundOcclusion),
+                Codec.list(AcousticConfig.CODEC).optionalFieldOf("acoustics", ImmutableList.of()).forGetter(info -> info.acoustics),
+                Codec.list(BlockEffectConfig.CODEC).optionalFieldOf("effects", ImmutableList.of()).forGetter(info -> info.effects)
             ).apply(instance, BlockConfigRule::new));
 
     public List<IMatcher<BlockState>> blocks;
@@ -36,7 +36,7 @@ public class BlockConfigRule {
     public List<AcousticConfig> acoustics;
     public List<BlockEffectConfig> effects;
 
-    BlockConfigRule(List<IMatcher<BlockState>> blocks, boolean soundReset, Optional<Script> chance, Optional<Float> soundReflectivity, Optional<Float> soundOcclusion, List<AcousticConfig> acoustics, List<BlockEffectConfig> effects) {
+    BlockConfigRule(List<IMatcher<BlockState>> blocks, Boolean soundReset, Optional<Script> chance, Optional<Float> soundReflectivity, Optional<Float> soundOcclusion, List<AcousticConfig> acoustics, List<BlockEffectConfig> effects) {
         this.blocks = blocks;
         this.clearSounds = soundReset;
         this.soundChance = chance;

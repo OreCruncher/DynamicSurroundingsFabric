@@ -1,16 +1,17 @@
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.util.StringIdentifiable;
-
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 
 /**
  * Types of SoundEvent acoustics that can be defined for biome.  The play of these sounds is in
  * addition to what Minecraft may decided to do.  They do not replace (yet?)
  */
-public enum SoundEventType implements StringIdentifiable {
+public enum SoundEventType {
     /**
      * SoundEvent plays without attenuation and loops continually while conditions persist.
      */
@@ -32,7 +33,7 @@ public enum SoundEventType implements StringIdentifiable {
     MUSIC("music");
 
     private static final Map<String, SoundEventType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(SoundEventType::getName, (category) -> category));
-    public static final Codec<SoundEventType> CODEC = StringIdentifiable.createCodec(SoundEventType::values);
+    public static final Codec<SoundEventType> CODEC = Codec.STRING.comapFlatMap(DataResult.partialGet(BY_NAME::get, () -> "unknown sound event type"), d -> d.name);
 
     private final String name;
 
@@ -45,11 +46,6 @@ public enum SoundEventType implements StringIdentifiable {
     }
 
     public String getName() {
-        return this.name;
-    }
-
-    @Override
-    public String asString() {
         return this.name;
     }
 }

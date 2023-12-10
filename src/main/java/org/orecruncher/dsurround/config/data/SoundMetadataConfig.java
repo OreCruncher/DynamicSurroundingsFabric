@@ -14,9 +14,9 @@ public class SoundMetadataConfig {
 
     public static Codec<SoundMetadataConfig> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
-                    Codec.STRING.optionalFieldOf("title").forGetter(info -> info.title),
-                    Codec.STRING.optionalFieldOf("caption").forGetter(info -> info.caption),
-                    Codec.list(Codec.STRING).optionalFieldOf("credits", ImmutableList.of()).forGetter(info -> info.credits)
+                Codec.STRING.optionalFieldOf("title").forGetter(info -> info.title),
+                Codec.STRING.optionalFieldOf("caption").forGetter(info -> info.caption),
+                Codec.list(Codec.STRING).optionalFieldOf("credits", ImmutableList.of()).forGetter(info -> info.credits)
             ).apply(instance, SoundMetadataConfig::new));
 
     public Optional<String> title;

@@ -5,18 +5,20 @@ import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.StringIdentifiable;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Environment(EnvType.CLIENT)
-public enum ItemClassType implements StringIdentifiable {
+public enum ItemClassType {
     NONE("none",
             SoundFactoryBuilder
                 .create(new SoundEvent(new Identifier(Client.ModId, "item.utility.equip")))
@@ -80,7 +82,7 @@ public enum ItemClassType implements StringIdentifiable {
                     .category(SoundCategory.PLAYERS).volume(0.8F).pitchRange(0.8F, 1.2F).build());
 
     private static final Map<String, ItemClassType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(ItemClassType::getName, (category) -> category));
-    public static final Codec<ItemClassType> CODEC = StringIdentifiable.createCodec(ItemClassType::values);
+    public static final Codec<ItemClassType> CODEC = Codec.STRING.comapFlatMap(DataResult.partialGet(BY_NAME::get, () -> "unknown item class type"), d -> d.name);
 
     private final String name;
     private final ISoundFactory toolBarSound;
@@ -106,10 +108,5 @@ public enum ItemClassType implements StringIdentifiable {
 
     public static ItemClassType byName(String name) {
         return BY_NAME.get(name);
-    }
-
-    @Override
-    public String asString() {
-        return this.name;
     }
 }
