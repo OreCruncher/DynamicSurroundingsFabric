@@ -4,8 +4,8 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.util.OrderableTooltip;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.OrderedText;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 
 import java.util.List;
@@ -19,7 +19,7 @@ public abstract class SliderControl extends SliderWidget implements OrderableToo
     protected double max;
 
     public SliderControl(int x, int y, int width, int height, double minValue, double maxValue, float valueStep, double currentValue, List<OrderedText> toolTip) {
-        super(x, y, width, height, LiteralText.EMPTY, getRatio(currentValue, minValue, maxValue, valueStep));
+        super(x, y, width, height, Text.empty(), getRatio(currentValue, minValue, maxValue, valueStep));
         this.min = minValue;
         this.max = maxValue;
         this.step = valueStep;

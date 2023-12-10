@@ -16,7 +16,6 @@ import org.orecruncher.dsurround.mixins.core.BiomeAccessor;
 public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBiomeVariables {
 
     private Biome biome;
-    private final Lazy<String> category = new Lazy<>(() -> ((BiomeAccessor) (Object) this.biome).getCategory().getName());
     private final Lazy<String> precipitationType = new Lazy<>(() -> this.biome.getPrecipitation().getName());
     private BiomeInfo info;
     private final Lazy<String> name = new Lazy<>(() -> this.info.getBiomeName());
@@ -49,7 +48,6 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
             this.name.reset();
             this.modid.reset();
             this.id.reset();
-            this.category.reset();
             this.precipitationType.reset();
             this.traits.reset();
         }
@@ -78,11 +76,6 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
     @Override
     public float getTemperature() {
         return this.biome.getTemperature();
-    }
-
-    @Override
-    public String getCategory() {
-        return this.category.get();
     }
 
     @Override

@@ -19,24 +19,24 @@ public enum BiomeTrait {
     UNDER_WATER("UNDER_WATER"),
     UNDER_OCEAN("UNDER_OCEAN"),
     // Biome categories as traits
-    NONE(Biome.Category.NONE.getName()),
-    TAIGA(Biome.Category.TAIGA.getName()),
-    EXTREME_HILLS(Biome.Category.EXTREME_HILLS.getName()),
-    JUNGLE(Biome.Category.JUNGLE.getName()),
-    MESA(Biome.Category.MESA.getName()),
-    PLAINS(Biome.Category.PLAINS.getName()),
-    SAVANNA(Biome.Category.SAVANNA.getName()),
-    ICY(Biome.Category.ICY.getName()),
-    THEEND(Biome.Category.THEEND.getName()),
-    BEACH(Biome.Category.BEACH.getName()),
-    FOREST(Biome.Category.FOREST.getName()),
-    OCEAN(Biome.Category.OCEAN.getName()),
-    DESERT(Biome.Category.DESERT.getName()),
-    RIVER(Biome.Category.RIVER.getName()),
-    SWAMP(Biome.Category.SWAMP.getName()),
-    MUSHROOM(Biome.Category.MUSHROOM.getName()),
-    NETHER(Biome.Category.NETHER.getName()),
-    UNDERGROUND(Biome.Category.UNDERGROUND.getName()),
+    NONE("none"),
+    TAIGA("taiga"),
+    EXTREME_HILLS("extreme_hills"),
+    JUNGLE("jungle"),
+    MESA("mesa"),
+    PLAINS("plains"),
+    SAVANNA("savanna"),
+    ICY("icy"),
+    THEEND("the_end"),
+    BEACH("beach"),
+    FOREST("forest"),
+    OCEAN("ocean"),
+    DESERT("desert"),
+    RIVER("river"),
+    SWAMP("swamp"),
+    MUSHROOM("mushroom"),
+    NETHER("nether"),
+    UNDERGROUND("underground"),
     /* Extended categories */
     WATER("WATER"),
     WET("WET"),
@@ -108,10 +108,10 @@ public enum BiomeTrait {
         this.name = name.toUpperCase();
     }
 
-    public static BiomeTrait of(Biome.Category category) {
-        var result = mapper.get(category.getName().toUpperCase());
-        return result == null ? UNKNOWN : result;
-    }
+//    public static BiomeTrait of(Biome.Category category) {
+//        var result = mapper.get(category.getName().toUpperCase());
+//        return result == null ? UNKNOWN : result;
+//    }
 
     public static BiomeTrait of(String name) {
         var result = mapper.get(name.toUpperCase());

@@ -31,7 +31,7 @@ public class VillageScanner {
         assert player != null;
 
         // Only for surface worlds.  Other types of worlds are interpreted as not having villages.
-        if (world.getDimension().isNatural()) {
+        if (world.getDimension().natural()) {
             var playerEyes = player.getEyePos();
             Box box = Box.from(playerEyes).expand(VILLAGE_RANGE);
 

@@ -14,10 +14,11 @@ public class BiomeClimateAnalyzer implements IBiomeTraitAnalyzer {
     public Collection<BiomeTrait> evaluate(Identifier id, Biome biome) {
         List<BiomeTrait> results = new ArrayList<>();
 
-        var category = ((BiomeAccessor) (Object) biome).getCategory();
+        var path = id.getPath();
 
         // If it's The End there isn't much going on.
-        if (category == Biome.Category.THEEND) {
+        if (path.contains("the_end") || path.contains("end_")) {
+//        if (category == Biome.Category.THEEND) {
             results.add(BiomeTrait.VOID);
             return results;
         }
@@ -28,7 +29,8 @@ public class BiomeClimateAnalyzer implements IBiomeTraitAnalyzer {
         var biomeTemp = biome.getTemperature();
 
         // Nether is always hot
-        if (category == Biome.Category.NETHER)
+        if (path.contains("nether") || path.contains("soul_sand_valley") || path.contains("basalt_deltas") || path.contains("warped_forest") || path.contains("crimson_forest"))
+//        if (category == Biome.Category.NETHER)
             results.add(BiomeTrait.HOT);
         else if (biomeTemp < 0.15F)
             results.add(BiomeTrait.COLD);
@@ -37,7 +39,8 @@ public class BiomeClimateAnalyzer implements IBiomeTraitAnalyzer {
 
         var rainfall = biome.getDownfall();
 
-        if (category == Biome.Category.JUNGLE || category == Biome.Category.SWAMP)
+        if (path.contains("jungle") || path.contains("swamp"))
+//        if (category == Biome.Category.JUNGLE || category == Biome.Category.SWAMP)
             results.add(BiomeTrait.WET);
         else if (rainfall < 0.15F)
             results.add(BiomeTrait.DRY);

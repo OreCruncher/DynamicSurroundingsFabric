@@ -2,11 +2,13 @@ package org.orecruncher.dsurround.effects.blocks;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.option.SimpleOption;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraft.client.option.ParticlesMode;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.effects.blocks.producers.BlockEffectProducer;
 import org.orecruncher.dsurround.effects.blocks.producers.WaterSplashProducer;
@@ -79,7 +81,7 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
     }
 
     public int getSpawnCount() {
-        var state = GameUtils.getGameSettings().particles;
+        ParticlesMode state = GameUtils.getGameSettings().getParticles().getValue();
         return switch (state) {
             case MINIMAL -> 0;
             case ALL -> this.particleLimit;
