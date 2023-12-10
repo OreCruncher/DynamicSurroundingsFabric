@@ -37,7 +37,7 @@ public class KeyBindings {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (GameUtils.getCurrentScreen() == null && GameUtils.getPlayer() != null) {
                 if (individualSoundConfigBinding.wasPressed()) {
-                    final boolean singlePlayer = GameUtils.isSingleplayer();
+                    final boolean singlePlayer = GameUtils.isSinglePlayer();
                     GameUtils.setScreen(new IndividualSoundControlScreen(null, singlePlayer));
                     if (singlePlayer)
                         MinecraftAudioPlayer.INSTANCE.stopAll();
