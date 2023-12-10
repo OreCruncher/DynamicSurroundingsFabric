@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.config;
 
-import com.mojang.serialization.Codec;
 import net.minecraft.util.StringIdentifiable;
 
 import java.util.Arrays;

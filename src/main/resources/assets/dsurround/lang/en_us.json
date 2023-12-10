@@ -4,7 +4,7 @@
   "dsurround.mod.link.sources": "Source code repository",
   "dsurround.mod.link.credits": "Sound resource CREDIT and ATTRIBUTIONS",
   "dsurround.mod.link.clothapi": "Embedded: Cloth API (Fabric)",
-  "dsurround.mod.link.nashorn": "Embedded: OpenJDK Nashorn JavaScript Engine 15.3",
+  "dsurround.mod.link.nashorn": "Embedded: OpenJDK Nashorn JavaScript Engine 15.4",
   "dsurround.sound.caption.ice": "Ice cracks",
   "dsurround.sound.caption.frog": "Frog croaks",
   "dsurround.sound.caption.wind": "Wind blows",

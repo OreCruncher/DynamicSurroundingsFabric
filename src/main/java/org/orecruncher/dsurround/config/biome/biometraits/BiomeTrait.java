@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
-import net.minecraft.world.biome.Biome;
-
 import java.util.HashMap;
 import java.util.Map;
 

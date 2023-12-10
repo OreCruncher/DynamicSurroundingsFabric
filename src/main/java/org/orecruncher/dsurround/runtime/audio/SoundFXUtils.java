@@ -46,10 +46,6 @@ public final class SoundFXUtils {
      */
     private static final float RECIP_TOTAL_RAYS = 1F / (REVERB_RAYS * REVERB_RAY_BOUNCES);
     /**
-     * Reciprocal of the total primary rays.
-     */
-    private static final float RECIP_PRIMARY_RAYS = 1F / REVERB_RAYS;
-    /**
      * Sound reflection energy coefficient
      */
     private static final float ENERGY_COEFF = 0.75F * 0.25F * RECIP_TOTAL_RAYS;

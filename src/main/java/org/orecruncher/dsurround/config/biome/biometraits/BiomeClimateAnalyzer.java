@@ -2,7 +2,6 @@ package org.orecruncher.dsurround.config.biome.biometraits;
 
 import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
-import org.orecruncher.dsurround.mixins.core.BiomeAccessor;
 
 import java.util.ArrayList;
 import java.util.Collection;

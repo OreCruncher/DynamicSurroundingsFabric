@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.config;
 
-import com.mojang.serialization.Codec;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.util.StringIdentifiable;
