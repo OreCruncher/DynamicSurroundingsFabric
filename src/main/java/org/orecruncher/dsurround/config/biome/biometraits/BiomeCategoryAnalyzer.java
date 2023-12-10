@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.config.biome.biometraits;
 
 import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
+import org.orecruncher.dsurround.mixins.core.BiomeAccessor;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,7 +14,6 @@ public class BiomeCategoryAnalyzer implements IBiomeTraitAnalyzer {
         List<BiomeTrait> results = new ArrayList<>();
 
         var path = id.getPath();
-
 
         // dimension traits
         if (path.contains("nether") || path.contains("soul_sand_valley") || path.contains("basalt_deltas") || path.contains("warped_forest") || path.contains("crimson_forest"))
