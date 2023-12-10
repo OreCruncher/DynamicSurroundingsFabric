@@ -26,7 +26,8 @@ public final class ExecutionContext {
         this.put("lib", new LibraryFunctions());
 
         ScriptEngineFactory factory = this.engine.getFactory();
-        LOGGER.info("[%s] JavaScript engine: %s (%s)", this.contextName, factory.getEngineName(), factory.getEngineVersion());
+        LOGGER.info("[%s] JavaScript engine: %s (%s)", this.contextName, factory.getEngineName(),
+                factory.getEngineVersion());
     }
 
     public void put(final String name, @Nullable final Object obj) {

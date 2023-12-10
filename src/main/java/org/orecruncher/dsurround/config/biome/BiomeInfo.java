@@ -269,7 +269,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         if (this.additionalSounds.size() > 0) {
             builder.append("\nADDITIONAL chance: ").append(this.additionalSoundChance);
             builder.append("\nADDITIONAL sounds [\n");
-            builder.append(this.additionalSounds.stream().map(c -> indent + c.toString()).collect(Collectors.joining("\n")));
+            builder.append(
+                    this.additionalSounds.stream().map(c -> indent + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n]");
         }
 

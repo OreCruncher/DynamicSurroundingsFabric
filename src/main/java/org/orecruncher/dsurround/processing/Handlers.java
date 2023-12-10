@@ -82,8 +82,8 @@ public class Handlers {
 
     protected boolean doTick() {
         return GameUtils.isInGame()
-                && !GameUtils.getMC().isPaused()
-                && !(GameUtils.getMC().currentScreen instanceof IndividualSoundControlScreen)
+                && !GameUtils.isPaused()
+                && !(GameUtils.getCurrentScreen() instanceof IndividualSoundControlScreen)
                 && playerChunkLoaded();
     }
 

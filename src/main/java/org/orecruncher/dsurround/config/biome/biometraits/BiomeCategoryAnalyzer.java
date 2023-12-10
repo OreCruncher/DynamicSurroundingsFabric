@@ -15,7 +15,8 @@ public class BiomeCategoryAnalyzer implements IBiomeTraitAnalyzer {
         var path = id.getPath();
 
         // dimension traits
-        if (path.contains("nether") || path.contains("soul_sand_valley") || path.contains("basalt_deltas") || path.contains("warped_forest") || path.contains("crimson_forest"))
+        if (path.contains("nether") || path.contains("soul_sand_valley") || path.contains("basalt_deltas")
+                || path.contains("warped_forest") || path.contains("crimson_forest"))
             results.add(BiomeTrait.NETHER);
         else if (path.contains("the_end") || path.contains("end_"))
             results.add(BiomeTrait.THEEND);
@@ -29,7 +30,6 @@ public class BiomeCategoryAnalyzer implements IBiomeTraitAnalyzer {
             results.add(BiomeTrait.SANDY);
         if (path.contains("taiga"))
             results.add(BiomeTrait.CONIFEROUS);
-
 
         // normal biome traits by category (VERY UGLY FIX ME)
         if (path.contains("windswept"))
@@ -66,7 +66,6 @@ public class BiomeCategoryAnalyzer implements IBiomeTraitAnalyzer {
             results.add(BiomeTrait.OCEAN);
         if (path.contains("mushroom"))
             results.add(BiomeTrait.MUSHROOM);
-
 
         return results;
     }

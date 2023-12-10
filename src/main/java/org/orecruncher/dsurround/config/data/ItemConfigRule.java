@@ -17,11 +17,10 @@ import java.util.stream.Collectors;
 @Environment(EnvType.CLIENT)
 public class ItemConfigRule {
 
-    public static Codec<ItemConfigRule> CODEC = RecordCodecBuilder.create((instance) ->
-            instance.group(
-                ItemClassType.CODEC.fieldOf("itemClassType").forGetter(info -> info.itemClassType),
-                Codec.list(ItemTypeMatcher.CODEC).fieldOf("items").forGetter(info -> info.items)
-            ).apply(instance, ItemConfigRule::new));
+    public static Codec<ItemConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+            ItemClassType.CODEC.fieldOf("itemClassType").forGetter(info -> info.itemClassType),
+            Codec.list(ItemTypeMatcher.CODEC).fieldOf("items").forGetter(info -> info.items))
+            .apply(instance, ItemConfigRule::new));
 
     public final ItemClassType itemClassType;
     public final List<IMatcher<Item>> items;

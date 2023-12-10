@@ -133,7 +133,7 @@ public class IndividualSoundControlScreen extends Screen {
     }
 
     public void closeScreen() {
-        GameUtils.getMC().setScreen(this.parent);
+        GameUtils.setScreen(this.parent);
     }
 
     public boolean charTyped(char codePoint, int modifiers) {

@@ -12,8 +12,10 @@ import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.sound.SoundManager;
+import net.minecraft.client.texture.TextureManager;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourcePackManager;
 import net.minecraft.tag.TagKey;
 import net.minecraft.util.registry.*;
@@ -46,13 +48,14 @@ public final class GameUtils {
         return getWorld().getRegistryManager();
     }
 
-    public static MinecraftClient getMC() {
-        return MinecraftClient.getInstance();
-    }
-
     public static Screen getCurrentScreen()
     {
         return getMC().currentScreen;
+    }
+
+    public static void setScreen(Screen screen)
+    {
+        getMC().setScreen(screen);
     }
 
     public static ParticleManager getParticleManager()
@@ -89,8 +92,27 @@ public final class GameUtils {
         return getMC().getResourcePackManager();
     }
 
+    public static ResourceManager getResourceManager() {
+        return getMC().getResourceManager();
+    }
+
+    public static TextureManager getTextureManager()
+    {
+        return getMC().getTextureManager();
+    }
+
     public static boolean isInGame() {
         return getWorld() != null && getPlayer() != null;
+    }
+
+    public static boolean isPaused()
+    {
+        return getMC().isPaused();
+    }
+
+    public static boolean isSinglePlayer()
+    {
+        return getMC().isInSingleplayer();
     }
 
     public static boolean isThirdPersonView() {
@@ -104,5 +126,9 @@ public final class GameUtils {
     public static <T> Stream<Pair<T, Stream<TagKey<T>>>> getTagGroup(RegistryKey<? extends Registry<T>> registryKey) {
         return GameUtils.getWorld().getRegistryManager().get(registryKey).streamEntries()
                 .map(reference -> Pair.of(reference.value(), reference.streamTags()));
+    }
+
+    public static MinecraftClient getMC() {
+        return MinecraftClient.getInstance();
     }
 }

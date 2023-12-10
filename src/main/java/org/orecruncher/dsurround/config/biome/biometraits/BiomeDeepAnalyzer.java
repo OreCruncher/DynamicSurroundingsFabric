@@ -13,6 +13,6 @@ public class BiomeDeepAnalyzer implements IBiomeTraitAnalyzer {
     @Override
     public Collection<BiomeTrait> evaluate(Identifier id, Biome biome) {
         // TODO: Hardcode a fix?
-        return /*biome.getDepth() < -1.7 ? result :*/ ImmutableList.of();
+        return /* biome.getDepth() < -1.7 ? result : */ ImmutableList.of();
     }
 }

@@ -55,13 +55,16 @@ public class BlockInfo {
 
     public BlockInfo(int version, BlockState state) {
         this.version = version;
-        this.soundOcclusion = state.getMaterial().blocksLight() ? DEFAULT_OPAQUE_OCCLUSION : DEFAULT_TRANSLUCENT_OCCLUSION;
+        this.soundOcclusion = state.getMaterial().blocksLight() ? DEFAULT_OPAQUE_OCCLUSION
+                : DEFAULT_TRANSLUCENT_OCCLUSION;
         this.material = state.getMaterial();
     }
 
     public boolean isDefault() {
-        return this.sounds == null && this.blockEffects == null && this.alwaysOnEffects == null && this.soundReflectivity == DEFAULT_REFLECTION
-                && (this.soundOcclusion == DEFAULT_OPAQUE_OCCLUSION || this.soundOcclusion == DEFAULT_TRANSLUCENT_OCCLUSION);
+        return this.sounds == null && this.blockEffects == null && this.alwaysOnEffects == null
+                && this.soundReflectivity == DEFAULT_REFLECTION
+                && (this.soundOcclusion == DEFAULT_OPAQUE_OCCLUSION
+                        || this.soundOcclusion == DEFAULT_TRANSLUCENT_OCCLUSION);
     }
 
     public int getVersion() {
@@ -101,8 +104,8 @@ public class BlockInfo {
             this.clearSounds();
 
         config.soundChance.ifPresent(v -> this.soundChance = v);
-        config.soundReflectivity.ifPresent(v ->this.soundReflectivity = v);
-        config.soundOcclusion.ifPresent(v ->this.soundOcclusion = v);
+        config.soundReflectivity.ifPresent(v -> this.soundReflectivity = v);
+        config.soundOcclusion.ifPresent(v -> this.soundOcclusion = v);
 
         for (final AcousticConfig sr : config.acoustics) {
             if (sr.soundEventId != null) {
@@ -203,13 +206,15 @@ public class BlockInfo {
 
         if (this.blockEffects != null) {
             builder.append("random effects [\n");
-            builder.append(this.blockEffects.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));
+            builder.append(
+                    this.blockEffects.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n]\n");
         }
 
         if (this.alwaysOnEffects != null) {
             builder.append("always on effects [\n");
-            builder.append(this.alwaysOnEffects.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));
+            builder.append(
+                    this.alwaysOnEffects.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n]");
         }
 
