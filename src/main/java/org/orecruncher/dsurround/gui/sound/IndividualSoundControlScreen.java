@@ -53,7 +53,7 @@ public class IndividualSoundControlScreen extends Screen {
 
     @Override
     protected void init() {
-        GameUtils.getMC().keyboard.setRepeatEvents(true);
+        GameUtils.getKeyboard().setRepeatEvents(true);
 
         // Setup search bar
         final int searchBarLeftMargin = (this.width - SEARCH_BAR_WIDTH) / 2;

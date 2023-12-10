@@ -3,11 +3,14 @@ package org.orecruncher.dsurround.lib;
 import it.unimi.dsi.fastutil.Pair;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.Keyboard;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.Perspective;
+import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.sound.SoundManager;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
@@ -18,6 +21,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.stream.Stream;
 
+/*
+ * NOTE:  MinecraftClient is an AutoClosable that gives IDEs a bit of a fit with warnings.  The mods usage
+ * context does not require closing so it is safe to ignore.
+ */
 @Environment(EnvType.CLIENT)
 public final class GameUtils {
     private GameUtils() {
@@ -41,6 +48,21 @@ public final class GameUtils {
 
     public static MinecraftClient getMC() {
         return MinecraftClient.getInstance();
+    }
+
+    public static Screen getCurrentScreen()
+    {
+        return getMC().currentScreen;
+    }
+
+    public static ParticleManager getParticleManager()
+    {
+        return getMC().particleManager;
+    }
+
+    public static Keyboard getKeyboard()
+    {
+        return getMC().keyboard;
     }
 
     public static GameOptions getGameSettings() {

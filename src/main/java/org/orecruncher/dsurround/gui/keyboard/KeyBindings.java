@@ -35,7 +35,7 @@ public class KeyBindings {
 
     public static void register() {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (GameUtils.getMC().currentScreen == null && GameUtils.getPlayer() != null) {
+            if (GameUtils.getCurrentScreen() == null && GameUtils.getPlayer() != null) {
                 if (individualSoundConfigBinding.wasPressed()) {
                     final boolean singlePlayer = GameUtils.getMC().isInSingleplayer();
                     GameUtils.getMC().setScreen(new IndividualSoundControlScreen(null, singlePlayer));
@@ -46,7 +46,7 @@ public class KeyBindings {
         });
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (GameUtils.getMC().currentScreen == null && GameUtils.getPlayer() != null) {
+            if (GameUtils.getCurrentScreen() == null && GameUtils.getPlayer() != null) {
                 if (diagnosticHud.wasPressed())
                     DiagnosticHandler.toggleCollection();
             }

@@ -18,6 +18,7 @@ public class MixinWorld {
      */
     @Inject(method = "onBlockChanged(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/block/BlockState;)V", at = @At("HEAD"))
     public void dsurround_onBlockChanged(BlockPos pos, BlockState oldBlock, BlockState newBlock, CallbackInfo ci) {
+        // World is AutoClosable and tooling thinks this is a leak...
         var world = ((World) (Object) this);
         if (world.isClient()) {
             BlockUpdateHandler.blockPositionUpdate(pos);
