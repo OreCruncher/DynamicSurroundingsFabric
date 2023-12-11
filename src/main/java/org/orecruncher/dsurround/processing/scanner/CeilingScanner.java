@@ -137,7 +137,7 @@ public final class CeilingScanner {
 
         private boolean actsAsCeiling(final BlockState state) {
             // If it doesn't block movement it doesn't count as a ceiling.
-            if (!state.getMaterial().blocksMovement())
+            if (!state.blocksMovement())
                 return false;
 
             // Test the block tags in our NON_CEILING set to see if any match

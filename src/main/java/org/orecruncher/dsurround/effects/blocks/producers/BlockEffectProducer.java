@@ -5,7 +5,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.block.AbstractFurnaceBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.tag.FluidTags;
+import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
@@ -58,7 +58,7 @@ public abstract class BlockEffectProducer implements IBlockEffectProducer {
 
     public static final Predicate<BlockState> WATER_PREDICATE = (state) -> state.getFluidState().isIn(FluidTags.WATER);
 
-    public static final Predicate<BlockState> SOLID_PREDICATE = (state) -> state.getMaterial().isSolid();
+    public static final Predicate<BlockState> SOLID_PREDICATE = (state) -> state.isSolid();
 
     public static final Predicate<BlockState> LIT_FURNACE = (state) ->
             state.getBlock() instanceof AbstractFurnaceBlock && state.get(AbstractFurnaceBlock.LIT);

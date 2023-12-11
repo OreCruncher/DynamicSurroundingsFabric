@@ -4,9 +4,8 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.entity.player.HungerManager;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
@@ -233,7 +232,7 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
     public boolean hasEffect(String effect) {
         try {
             var id = new Identifier(effect);
-            var statusEffect = GameUtils.getRegistryManager().get(Registries.MOB_EFFECT_KEY).get(id);
+            var statusEffect = GameUtils.getRegistryManager().get(RegistryKeys.STATUS_EFFECT).get(id);
             return GameUtils.getPlayer().hasStatusEffect(statusEffect);
         } catch (Throwable ignore) {
         }

@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.effects.blocks.producers;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Material;
 import net.minecraft.block.SideShapeType;
 import net.minecraft.fluid.FlowableFluid;
 import net.minecraft.fluid.FluidState;
@@ -36,7 +35,7 @@ public class WaterSplashProducer extends BlockEffectProducer {
         for (final Vec3i cardinal_offset : cardinal_offsets) {
             final BlockPos tp = pos.add(cardinal_offset);
             final BlockState state = provider.getBlockState(tp);
-            if (state.getMaterial() == Material.AIR)
+            if (state.isAir())
                 return true;
             final FluidState fluidState = state.getFluidState();
             final int height = fluidState.getLevel();
@@ -54,7 +53,7 @@ public class WaterSplashProducer extends BlockEffectProducer {
         for (final Vec3i cardinal_offset : cardinal_offsets) {
             final BlockPos tp = pos.add(cardinal_offset);
             final BlockState state = provider.getBlockState(tp);
-            if (state.getMaterial() == Material.AIR)
+            if (state.isAir())
                 return false;
             final FluidState fluidState = state.getFluidState();
             if (fluidState.isEmpty()) {

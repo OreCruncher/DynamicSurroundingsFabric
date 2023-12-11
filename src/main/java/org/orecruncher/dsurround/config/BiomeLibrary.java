@@ -5,8 +5,9 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistrySetupCallback;
 import net.minecraft.client.resource.language.I18n;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
@@ -86,7 +87,7 @@ public final class BiomeLibrary {
     }
 
     private static Registry<Biome> getActiveRegistry() {
-        return GameUtils.getRegistryManager().get(Registry.BIOME_KEY);
+        return GameUtils.getRegistryManager().get(RegistryKeys.BIOME);
     }
 
     public static Biome getBiome(Identifier biomeId) {

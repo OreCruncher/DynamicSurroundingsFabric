@@ -10,7 +10,8 @@ import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.command.argument.MessageArgumentType;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKeys;
+
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scripting.Script;
@@ -34,7 +35,7 @@ final class BiomeCommand {
     private static int execute(CommandContext<FabricClientCommandSource> ctx) {
         var biomeId = ctx.getArgument("biomeId", Identifier.class);
         var script = ctx.getArgument("script", MessageArgumentType.MessageFormat.class);
-        var biome = GameUtils.getRegistryManager().get(Registry.BIOME_KEY).get(biomeId);
+        var biome = GameUtils.getRegistryManager().get(RegistryKeys.BIOME).get(biomeId);
         var result = BiomeConditionEvaluator.INSTANCE.eval(biome, new Script(script.getContents()));
         ctx.getSource().sendFeedback(Text.of(result.toString()));
         return 1;

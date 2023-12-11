@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.material;
 
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
-import net.minecraft.block.Material;
+//import net.minecraft.block.Material;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 public final class MaterialUtils {
-
+/*
     private static final Reference2ObjectOpenHashMap<Material, String> materialMap = new Reference2ObjectOpenHashMap<>();
     private static final Map<String, Material> materialMapInv = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
@@ -82,4 +82,5 @@ public final class MaterialUtils {
     public static String getMaterialName(final Material material) {
         return materialMap.get(material);
     }
+    */
 }

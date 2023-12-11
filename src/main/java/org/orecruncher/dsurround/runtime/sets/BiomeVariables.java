@@ -15,7 +15,10 @@ import org.orecruncher.dsurround.lib.scripting.VariableSet;
 public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBiomeVariables {
 
     private Biome biome;
-    private final Lazy<String> precipitationType = new Lazy<>(() -> this.biome.getPrecipitation().getName());
+    private final Lazy<String> precipitationType = new Lazy<>(() -> {
+        var pos = GameUtils.getPlayer().getBlockPos();
+        return this.biome.getPrecipitation(pos).asString();
+    });
     private BiomeInfo info;
     private final Lazy<String> name = new Lazy<>(() -> this.info.getBiomeName());
     private final Lazy<String> modid = new Lazy<>(() -> this.info.getBiomeId().getNamespace());
@@ -69,7 +72,8 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
 
     @Override
     public float getRainfall() {
-        return this.biome.getDownfall();
+        // TODO: Does this still make sense?
+        return this.biome.hasPrecipitation() ? 1f : 0f;
     }
 
     @Override

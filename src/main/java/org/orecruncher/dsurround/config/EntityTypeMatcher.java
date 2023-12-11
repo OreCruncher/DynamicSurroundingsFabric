@@ -23,16 +23,16 @@ public abstract class EntityTypeMatcher implements IMatcher<Entity> {
             if (entityTypeId.contains(":")) {
                 var type = EntityType.get(entityTypeId);
                 return type.<DataResult<IMatcher<Entity>>>map(entityType -> DataResult.success(new MatchOnEntityType(entityType)))
-                        .orElseGet(() -> DataResult.error(String.format("Unknown entity type id %s", entityTypeId)));
+                        .orElseGet(() -> DataResult.error(() -> String.format("Unknown entity type id %s", entityTypeId)));
             }
 
             // Assume it's a class reference
             var matcher = MatchOnClass.<Entity>parse(entityTypeId);
             if (matcher != null)
                 return DataResult.success(matcher);
-            return DataResult.error(String.format("Unknown entity class(s) %s", entityTypeId));
+            return DataResult.error(() -> String.format("Unknown entity class(s) %s", entityTypeId));
         } catch (Throwable t) {
-            return DataResult.error(t.getMessage());
+            return DataResult.error(t::getMessage);
         }
     }
 

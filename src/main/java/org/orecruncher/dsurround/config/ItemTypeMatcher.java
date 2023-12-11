@@ -5,8 +5,8 @@ import com.mojang.serialization.DataResult;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.item.Item;
+import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 import org.orecruncher.dsurround.lib.IMatcher;
 import org.orecruncher.dsurround.lib.MatchOnClass;
 
@@ -22,7 +22,7 @@ public class ItemTypeMatcher implements IMatcher<Item> {
         try {
             // If it looks like an Identifier then it must be an EntityType
             if (itemId.contains(":")) {
-                var item= Registry.ITEM.get(new Identifier(itemId));
+                var item= Registries.ITEM.get(new Identifier(itemId));
                 return DataResult.success(new ItemTypeMatcher(item));
             }
 
@@ -30,9 +30,9 @@ public class ItemTypeMatcher implements IMatcher<Item> {
             var matcher = MatchOnClass.<Item>parse(itemId);
             if (matcher != null)
                 return DataResult.success(matcher);
-            return DataResult.error(String.format("Unknown item class(s) %s", itemId));
+            return DataResult.error(() -> String.format("Unknown item class(s) %s", itemId));
         } catch (Throwable t) {
-            return DataResult.error(t.getMessage());
+            return DataResult.error(t::getMessage);
         }
     }
 

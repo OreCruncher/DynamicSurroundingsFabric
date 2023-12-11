@@ -15,7 +15,7 @@ public class VersionData {
         try {
             return DataResult.success(Version.parse(blockId));
         } catch (Throwable t) {
-            return DataResult.error(t.getMessage());
+            return DataResult.error(t::getMessage);
         }
     }
 }

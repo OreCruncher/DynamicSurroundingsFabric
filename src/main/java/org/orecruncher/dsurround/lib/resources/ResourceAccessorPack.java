@@ -9,9 +9,9 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;
 
+/*
 @Environment(EnvType.CLIENT)
 final class ResourceAccessorPack extends ResourceAccessorBase {
-
     private final ResourcePack pack;
     private final Identifier actual;
 
@@ -38,3 +38,4 @@ final class ResourceAccessorPack extends ResourceAccessorBase {
         return String.format("%s (%s = %s)", super.toString(), this.pack.getName(), this.actual.toString());
     }
 }
+*/

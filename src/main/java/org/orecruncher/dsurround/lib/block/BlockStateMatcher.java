@@ -4,7 +4,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Material;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
@@ -29,7 +28,7 @@ public abstract class BlockStateMatcher implements IMatcher<BlockState> {
         try {
             return DataResult.success(create(blockId, true, true));
         } catch (Throwable t) {
-            return DataResult.error(t.getMessage());
+            return DataResult.error(t::getMessage);
         }
     }
 

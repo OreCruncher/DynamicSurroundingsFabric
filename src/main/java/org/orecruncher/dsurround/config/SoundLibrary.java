@@ -8,7 +8,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registries;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -31,7 +31,7 @@ public final class SoundLibrary {
     private static final IModLog LOGGER = Client.LOGGER.createChild(SoundLibrary.class);
     private static final Identifier MISSING_RESOURCE = new Identifier(Client.ModId, "missing_sound");
 
-    public static final SoundEvent MISSING = new SoundEvent(MISSING_RESOURCE);
+    public static final SoundEvent MISSING = SoundEvent.of(MISSING_RESOURCE);
 
     private static final Object2ObjectOpenHashMap<Identifier, SoundEvent> myRegistry = new Object2ObjectOpenHashMap<>();
     private static final Object2ObjectOpenHashMap<Identifier, SoundMetadata> soundMetadata = new Object2ObjectOpenHashMap<>();
@@ -49,7 +49,7 @@ public final class SoundLibrary {
 
         // Initializes the internal sound registry once all the other mods have
         // registered their sounds.
-        Registry.SOUND_EVENT.forEach(se -> myRegistry.put(se.getId(), se));
+        Registries.SOUND_EVENT.forEach(se -> myRegistry.put(se.getId(), se));
 
         // Gather resource pack sound files and process them to ensure metadata is collected.
         // Resource pack sounds generally replace existing registration, but this allows for new
@@ -72,7 +72,7 @@ public final class SoundLibrary {
                 // We want to register the sound regardless of having metadata.
                 final Identifier loc = new Identifier(resource.getNamespace(), key);
                 if (!myRegistry.containsKey(loc)) {
-                    myRegistry.put(loc, new SoundEvent(loc));
+                    myRegistry.put(loc, SoundEvent.of(loc));
                 }
                 if (!value.isDefault()) {
                     final SoundMetadata data = new SoundMetadata(value);

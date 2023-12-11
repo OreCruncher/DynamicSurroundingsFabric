@@ -3,9 +3,9 @@ package org.orecruncher.dsurround.config.biome;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.tag.TagKey;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.world.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -233,7 +233,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
             // It's fake and has no tags
             tags = "FAKE BIOME";
         } else {
-            var biomes = GameUtils.getWorld().getRegistryManager().get(Registry.BIOME_KEY);
+            var biomes = GameUtils.getWorld().getRegistryManager().get(RegistryKeys.BIOME);
 
             var entry = biomes.getEntry(biomes.getRawId(getBiome()));
             if (entry.isPresent()) {

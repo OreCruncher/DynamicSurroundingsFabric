@@ -5,7 +5,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.Material;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
@@ -97,7 +96,7 @@ public abstract class Scanner {
      * logic beyond the basics.
      */
     protected boolean interestingBlock(final BlockState state) {
-        return state.getMaterial() != Material.AIR;
+        return !state.isAir();
     }
 
     public void preScan() {

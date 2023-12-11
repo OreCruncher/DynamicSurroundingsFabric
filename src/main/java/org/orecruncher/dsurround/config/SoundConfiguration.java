@@ -108,7 +108,7 @@ public class SoundConfiguration {
         if (this.startupSounds.size() > 1) {
             idx = XorShiftRandom.current().nextInt(this.startupSounds.size());
         }
-        return Optional.of(new SoundEvent(this.startupSounds.get(idx)));
+        return Optional.of(SoundEvent.of(this.startupSounds.get(idx)));
     }
 
     public Collection<IndividualSoundConfigEntry> getIndividualSoundConfigs() {
