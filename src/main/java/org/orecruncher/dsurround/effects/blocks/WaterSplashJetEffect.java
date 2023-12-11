@@ -2,7 +2,6 @@ package org.orecruncher.dsurround.effects.blocks;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.option.SimpleOption;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -21,8 +20,6 @@ import java.util.Arrays;
 @Environment(EnvType.CLIENT)
 public class WaterSplashJetEffect extends ParticleJetEffect {
 
-    // Used to spread sound starts over a range to minimize harmonics
-    private static final int THROTTLE_RANGE = 10;
     private static final ISoundFactory[] waterfallAcoustics = new ISoundFactory[BlockEffectProducer.MAX_STRENGTH + 1];
 
     static {

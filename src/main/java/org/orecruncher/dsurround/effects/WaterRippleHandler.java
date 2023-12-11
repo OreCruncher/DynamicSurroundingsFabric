@@ -36,7 +36,7 @@ public class WaterRippleHandler {
         var ripple = new WaterRippleParticle(
                 Client.Config.blockEffects.waterRippleStyle,
                 world, x, y, z);
-        GameUtils.getMC().particleManager.addParticle(ripple);
+        GameUtils.getParticleManager().addParticle(ripple);
     }
 
     public static boolean createRippleParticle(ClientWorld world, Particle particle, Vec3d position) {

@@ -6,7 +6,6 @@ import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.client.particle.SpriteBillboardParticle;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.util.math.Vector2f;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.*;
 import org.orecruncher.dsurround.config.WaterRippleStyle;

@@ -14,15 +14,15 @@ public class AcousticConfig {
 
     public static Codec<AcousticConfig> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
-                    Codec.STRING.fieldOf("soundEventId").forGetter(info -> info.soundEventId),
-                    Script.CODEC.optionalFieldOf("conditions", Script.TRUE).forGetter(info -> info.conditions),
-                    Codec.intRange(0, Integer.MIN_VALUE).optionalFieldOf("weight", 10).forGetter(info -> info.weight),
-                    SOUND_CATEGORY_CODEC.optionalFieldOf("category", SoundCategory.AMBIENT).forGetter(info -> info.category),
-                    Codec.FLOAT.optionalFieldOf("minVolume", 1F).forGetter(info -> info.minVolume),
-                    Codec.FLOAT.optionalFieldOf("maxVolume", 1F).forGetter(info -> info.maxVolume),
-                    Codec.FLOAT.optionalFieldOf("minPitch", 1F).forGetter(info -> info.minPitch),
-                    Codec.FLOAT.optionalFieldOf("maxPitch", 1F).forGetter(info -> info.maxPitch),
-                    SoundEventType.CODEC.optionalFieldOf("type", SoundEventType.LOOP).forGetter(info -> info.type)
+                Codec.STRING.fieldOf("soundEventId").forGetter(info -> info.soundEventId),
+                Script.CODEC.optionalFieldOf("conditions", Script.TRUE).forGetter(info -> info.conditions),
+                Codec.intRange(0, Integer.MIN_VALUE).optionalFieldOf("weight", 10).forGetter(info -> info.weight),
+                SOUND_CATEGORY_CODEC.optionalFieldOf("category", SoundCategory.AMBIENT).forGetter(info -> info.category),
+                Codec.FLOAT.optionalFieldOf("minVolume", 1F).forGetter(info -> info.minVolume),
+                Codec.FLOAT.optionalFieldOf("maxVolume", 1F).forGetter(info -> info.maxVolume),
+                Codec.FLOAT.optionalFieldOf("minPitch", 1F).forGetter(info -> info.minPitch),
+                Codec.FLOAT.optionalFieldOf("maxPitch", 1F).forGetter(info -> info.maxPitch),
+                SoundEventType.CODEC.optionalFieldOf("type", SoundEventType.LOOP).forGetter(info -> info.type)
             ).apply(instance, AcousticConfig::new));
 
     private static SoundCategory lookup(String string) {
@@ -42,7 +42,7 @@ public class AcousticConfig {
     public float maxPitch;
     public SoundEventType type;
 
-    AcousticConfig(String soundEventId, Script conditions, int weight, SoundCategory category, float minVolume, float maxVolume, float minPitch, float maxPitch, SoundEventType type) {
+    AcousticConfig(String soundEventId, Script conditions, Integer weight, SoundCategory category, Float minVolume, Float maxVolume, Float minPitch, Float maxPitch, SoundEventType type) {
         this.soundEventId = soundEventId;
         this.conditions = conditions;
         this.weight = weight;

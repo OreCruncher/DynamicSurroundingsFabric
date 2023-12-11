@@ -13,11 +13,11 @@ public class IndividualSoundConfigEntry {
 
     public static final Codec<IndividualSoundConfigEntry> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
-                    Identifier.CODEC.fieldOf("soundEventId").forGetter(info -> info.soundEventId),
-                    Codec.intRange(0, 400).optionalFieldOf("volumeScale", 100).forGetter(info -> info.volumeScale),
-                    Codec.BOOL.optionalFieldOf("block", false).forGetter(info -> info.block),
-                    Codec.BOOL.optionalFieldOf("cull", false).forGetter(info -> info.cull),
-                    Codec.BOOL.optionalFieldOf("startup", false).forGetter(info -> info.startup)
+                Identifier.CODEC.fieldOf("soundEventId").forGetter(info -> info.soundEventId),
+                Codec.intRange(0, 400).optionalFieldOf("volumeScale", 100).forGetter(info -> info.volumeScale),
+                Codec.BOOL.optionalFieldOf("block", false).forGetter(info -> info.block),
+                Codec.BOOL.optionalFieldOf("cull", false).forGetter(info -> info.cull),
+                Codec.BOOL.optionalFieldOf("startup", false).forGetter(info -> info.startup)
             ).apply(instance, IndividualSoundConfigEntry::new));
 
     public Identifier soundEventId;
@@ -26,7 +26,7 @@ public class IndividualSoundConfigEntry {
     public boolean cull;
     public boolean startup;
 
-    IndividualSoundConfigEntry(Identifier id, int volumeScale, boolean block, boolean cull, boolean startup) {
+    IndividualSoundConfigEntry(Identifier id, Integer volumeScale, Boolean block, Boolean cull, Boolean startup) {
         this.soundEventId = id;
         this.volumeScale = MathHelper.clamp(volumeScale, 0, 400);
         this.block = block;

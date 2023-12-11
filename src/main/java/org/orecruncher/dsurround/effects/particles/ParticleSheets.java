@@ -26,7 +26,7 @@ public final class ParticleSheets {
 
     public static void register() {
 
-        var manager = GameUtils.getMC().getTextureManager();
+        var manager = GameUtils.getTextureManager();
         manager.registerTexture(TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE, new ResourceTexture(TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE));
 
         var existingSheets = MixinParticleManager.getParticleTextureSheets();

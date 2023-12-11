@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
-import net.minecraft.world.biome.Biome;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -62,7 +60,7 @@ public enum BiomeTrait {
     private static final Map<String, BiomeTrait> mapper = new HashMap<>();
 
     static {
-        register(BiomeTrait.NONE);  // stone_shore why?
+        register(BiomeTrait.NONE); // stone_shore why?
         register(BiomeTrait.TAIGA);
         register(BiomeTrait.EXTREME_HILLS);
         register(BiomeTrait.JUNGLE);
@@ -108,10 +106,10 @@ public enum BiomeTrait {
         this.name = name.toUpperCase();
     }
 
-//    public static BiomeTrait of(Biome.Category category) {
-//        var result = mapper.get(category.getName().toUpperCase());
-//        return result == null ? UNKNOWN : result;
-//    }
+    // public static BiomeTrait of(Biome.Category category) {
+    // var result = mapper.get(category.getName().toUpperCase());
+    // return result == null ? UNKNOWN : result;
+    // }
 
     public static BiomeTrait of(String name) {
         var result = mapper.get(name.toUpperCase());

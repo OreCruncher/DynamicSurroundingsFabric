@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-@SuppressWarnings("unused")
 @Environment(EnvType.CLIENT)
 public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvider {
 
@@ -150,6 +149,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
                 }
             }
             case MUSIC -> sourceList = this.musicSounds;
+            case LOOP -> sourceList = null;
         }
 
         if (sourceList == null || sourceList.size() == 0)
@@ -269,7 +269,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         if (this.additionalSounds.size() > 0) {
             builder.append("\nADDITIONAL chance: ").append(this.additionalSoundChance);
             builder.append("\nADDITIONAL sounds [\n");
-            builder.append(this.additionalSounds.stream().map(c -> indent + c.toString()).collect(Collectors.joining("\n")));
+            builder.append(
+                    this.additionalSounds.stream().map(c -> indent + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n]");
         }
 

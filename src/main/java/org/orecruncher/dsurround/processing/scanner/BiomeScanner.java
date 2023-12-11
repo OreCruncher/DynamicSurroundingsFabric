@@ -13,7 +13,6 @@ import org.orecruncher.dsurround.config.InternalBiomes;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.mixins.core.BiomeAccessor;
 import org.orecruncher.dsurround.processing.Scanners;
 
 @Environment(EnvType.CLIENT)

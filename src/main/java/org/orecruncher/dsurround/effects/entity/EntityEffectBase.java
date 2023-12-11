@@ -50,7 +50,7 @@ public abstract class EntityEffectBase implements IEntityEffect {
      * Helper method to add a particle to the particle system
      */
     public void addParticle(Particle particle) {
-        GameUtils.getMC().particleManager.addParticle(particle);
+        GameUtils.getParticleManager().addParticle(particle);
     }
 
     /**
@@ -58,7 +58,7 @@ public abstract class EntityEffectBase implements IEntityEffect {
      * it to the particle manager.
      */
     public <T extends ParticleEffect> Particle createParticle(T parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
-        return ((MixinParticleManager) GameUtils.getMC().particleManager)
+        return ((MixinParticleManager) GameUtils.getParticleManager())
                 .dsurroundCreateParticle(
                         parameters,
                         x, y, z,

@@ -1,9 +1,8 @@
 package org.orecruncher.dsurround.config;
 
-import com.mojang.serialization.Codec;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.util.StringIdentifiable;
+
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.effects.blocks.producers.FlameJetProducer;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
@@ -11,6 +10,9 @@ import org.orecruncher.dsurround.effects.blocks.producers.SteamColumnProducer;
 import org.orecruncher.dsurround.effects.blocks.producers.UnderwaterBubbleProducer;
 import org.orecruncher.dsurround.effects.blocks.producers.WaterSplashProducer;
 import org.orecruncher.dsurround.lib.scripting.Script;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -20,7 +22,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Environment(EnvType.CLIENT)
-public enum BlockEffectType implements StringIdentifiable {
+public enum BlockEffectType {
     UNKNOWN("unknown", (chance, condition) -> null, () -> false),
     STEAM_COLUMN("steam_column", SteamColumnProducer::new, () -> Client.Config.blockEffects.steamColumnEnabled),
     FLAME_JET("fire_jet", FlameJetProducer::new, () -> Client.Config.blockEffects.flameJetEnabled),
@@ -28,7 +30,7 @@ public enum BlockEffectType implements StringIdentifiable {
     WATERFALL("waterfall", WaterSplashProducer::new, () -> Client.Config.blockEffects.waterfallsEnabled);
 
     private static final Map<String, BlockEffectType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(BlockEffectType::getName, (category) -> category));
-    public static final Codec<BlockEffectType> CODEC = StringIdentifiable.createCodec(BlockEffectType::values);
+    public static final Codec<BlockEffectType> CODEC = Codec.STRING.comapFlatMap(DataResult.partialGet(BY_NAME::get, () -> "unknown block effect type"), d -> d.name);
 
     private final String name;
     private final BiFunction<Script, Script, IBlockEffectProducer> producer;
@@ -41,11 +43,6 @@ public enum BlockEffectType implements StringIdentifiable {
     }
 
     public String getName() {
-        return this.name;
-    }
-
-    @Override
-    public String asString() {
         return this.name;
     }
 

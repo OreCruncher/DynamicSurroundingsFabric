@@ -15,7 +15,6 @@ import org.orecruncher.dsurround.lib.math.TimerEMA;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 @Environment(EnvType.CLIENT)
 public class BlockViewer {

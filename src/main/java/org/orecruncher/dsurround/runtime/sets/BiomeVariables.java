@@ -10,7 +10,6 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.biome.BiomeUtils;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
-import org.orecruncher.dsurround.mixins.core.BiomeAccessor;
 
 @Environment(EnvType.CLIENT)
 public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBiomeVariables {

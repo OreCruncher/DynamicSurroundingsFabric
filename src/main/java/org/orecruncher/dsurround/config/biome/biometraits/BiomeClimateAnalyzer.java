@@ -2,7 +2,6 @@ package org.orecruncher.dsurround.config.biome.biometraits;
 
 import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
-import org.orecruncher.dsurround.mixins.core.BiomeAccessor;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,7 +17,7 @@ public class BiomeClimateAnalyzer implements IBiomeTraitAnalyzer {
 
         // If it's The End there isn't much going on.
         if (path.contains("the_end") || path.contains("end_")) {
-//        if (category == Biome.Category.THEEND) {
+            // if (category == Biome.Category.THEEND) {
             results.add(BiomeTrait.VOID);
             return results;
         }
@@ -29,8 +28,9 @@ public class BiomeClimateAnalyzer implements IBiomeTraitAnalyzer {
         var biomeTemp = biome.getTemperature();
 
         // Nether is always hot
-        if (path.contains("nether") || path.contains("soul_sand_valley") || path.contains("basalt_deltas") || path.contains("warped_forest") || path.contains("crimson_forest"))
-//        if (category == Biome.Category.NETHER)
+        if (path.contains("nether") || path.contains("soul_sand_valley") || path.contains("basalt_deltas")
+                || path.contains("warped_forest") || path.contains("crimson_forest"))
+            // if (category == Biome.Category.NETHER)
             results.add(BiomeTrait.HOT);
         else if (biomeTemp < 0.15F)
             results.add(BiomeTrait.COLD);
@@ -40,7 +40,7 @@ public class BiomeClimateAnalyzer implements IBiomeTraitAnalyzer {
         var rainfall = biome.getDownfall();
 
         if (path.contains("jungle") || path.contains("swamp"))
-//        if (category == Biome.Category.JUNGLE || category == Biome.Category.SWAMP)
+            // if (category == Biome.Category.JUNGLE || category == Biome.Category.SWAMP)
             results.add(BiomeTrait.WET);
         else if (rainfall < 0.15F)
             results.add(BiomeTrait.DRY);
