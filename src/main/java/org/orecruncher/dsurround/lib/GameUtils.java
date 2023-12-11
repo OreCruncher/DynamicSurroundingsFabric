@@ -15,12 +15,13 @@ import net.minecraft.client.sound.SoundManager;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourcePackManager;
-import net.minecraft.tag.TagKey;
-import net.minecraft.util.registry.*;
+import net.minecraft.registry.*;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
 import java.util.stream.Stream;
 
 /*
@@ -39,9 +40,8 @@ public final class GameUtils {
         return getMC().player;
     }
 
-    @Nullable
     public static ClientWorld getWorld() {
-        return getMC().world;
+        return Objects.requireNonNull(getMC().world);
     }
 
     public static DynamicRegistryManager getRegistryManager() {
@@ -78,10 +78,6 @@ public final class GameUtils {
 
     public static TextHandler getTextHandler() {
         return getTextRenderer().getTextHandler();
-    }
-
-    public static boolean displayDebug() {
-        return getGameSettings().debugEnabled;
     }
 
     public static SoundManager getSoundManager() {
@@ -129,6 +125,6 @@ public final class GameUtils {
     }
 
     public static MinecraftClient getMC() {
-        return MinecraftClient.getInstance();
+        return Objects.requireNonNull(MinecraftClient.getInstance());
     }
 }

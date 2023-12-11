@@ -81,7 +81,7 @@ public final class AudioUtilities {
 
             if (!sound.isRelative()) {
                 var listener = getSoundListener();
-                var distance = Math.sqrt(listener.getPos().squaredDistanceTo(sound.getX(), sound.getY(), sound.getZ()));
+                var distance = Math.sqrt(listener.getTransform().position().squaredDistanceTo(sound.getX(), sound.getY(), sound.getZ()));
                 sb.append(String.format(", distance: %.1f", distance));
                 if (sound.getSound() != null)
                     sb.append(" (").append(sound.getSound().getAttenuation()).append(")");

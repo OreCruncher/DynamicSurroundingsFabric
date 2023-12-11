@@ -3,11 +3,11 @@ package org.orecruncher.dsurround.gui.sound;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.EntryListWidget;
 import net.minecraft.client.sound.SoundManager;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -127,10 +127,10 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
         return false;
     }
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double hAmount, double vAmount) {
         ClickableWidget child = this.findChild(mouseX, mouseY);
         if (child != null)
-            return child.mouseScrolled(mouseX, mouseY, amount);
+            return child.mouseScrolled(mouseX, mouseY, hAmount, vAmount);
         return false;
     }
 
@@ -146,32 +146,32 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
     }
 
     @Override
-    public void render(final MatrixStack matrixStack, int index, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTick_) {
+    public void render(final DrawContext matrixStack, int index, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTick_) {
         final TextRenderer font = GameUtils.getTextRenderer();
-        final float labelY = rowTop + (rowHeight - font.fontHeight) / 2F;
+        final int labelY = rowTop + (rowHeight - font.fontHeight) / 2;
         final String text = this.config.soundEventId.toString();
-        font.draw(matrixStack, text, (float) rowLeft, labelY, ColorPalette.WHITE.getRGB());
+        matrixStack.drawText(font, text, rowLeft, labelY, ColorPalette.WHITE.getRGB(), false);
 
         // Need to position the other controls appropriately
         int rightMargin = rowLeft + rowWidth;
-        this.volume.x = rightMargin - this.volume.getWidth();
-        this.volume.y = rowTop;
+        this.volume.setX(rightMargin - this.volume.getWidth());
+        this.volume.setY(rowTop);
         this.volume.setHeight(rowHeight);
         rightMargin -= this.volume.getWidth() + CONTROL_SPACING;
 
-        this.playButton.x = rightMargin - this.playButton.getWidth();
-        this.playButton.y = rowTop;
+        this.playButton.setX(rightMargin - this.playButton.getWidth());
+        this.playButton.setY(rowTop);
         this.playButton.setHeight(rowHeight);
         rightMargin -= this.playButton.getWidth() + CONTROL_SPACING;
 
-        this.blockButton.x = rightMargin - this.blockButton.getWidth();
-        this.blockButton.y = rowTop;
+        this.blockButton.setX(rightMargin - this.blockButton.getWidth());
+        this.blockButton.setY(rowTop);
         this.blockButton.setHeight(rowHeight);
         rightMargin -= this.blockButton.getWidth() + CONTROL_SPACING;
 
-        this.cullButton.x = rightMargin - this.cullButton.getWidth();
+        this.cullButton.setX(rightMargin - this.cullButton.getWidth());
         this.cullButton.setHeight(rowHeight);
-        this.cullButton.y = rowTop;
+        this.cullButton.setY(rowTop);
 
         for (final ClickableWidget w : this.children)
             w.render(matrixStack, mouseX, mouseY, partialTick_);
@@ -218,7 +218,7 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
     protected List<OrderedText> getToolTip(final int mouseX, final int mouseY) {
 
         // Cache the static part of the tooltip if needed
-        if (this.cachedToolTip.size() == 0) {
+        if (this.cachedToolTip.isEmpty()) {
 
             Identifier id = this.config.soundEventId;
             final String mod = FrameworkUtils.getModDisplayName(id.getNamespace());

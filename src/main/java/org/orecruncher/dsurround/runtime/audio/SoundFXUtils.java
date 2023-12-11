@@ -314,7 +314,7 @@ public final class SoundFXUtils {
         float factor = 0F;
 
         Vec3d lastHit = origin;
-        BlockState lastState = ctx.world.getBlockState(new BlockPos(lastHit.getX(), lastHit.getY(), lastHit.getZ()));
+        BlockState lastState = ctx.world.getBlockState(BlockPos.ofFloored(lastHit.getX(), lastHit.getY(), lastHit.getZ()));
         var traceContext = new ReusableRaycastContext(ctx.world, origin, target, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.ANY);
         var itr = new ReusableRaycastIterator(traceContext);
         for (int i = 0; i < OCCLUSION_SEGMENTS; i++) {
@@ -340,9 +340,9 @@ public final class SoundFXUtils {
         if (!ctx.isPrecipitating)
             return 1F;
 
-        final BlockPos low = new BlockPos(pt1);
-        final BlockPos mid = new BlockPos(MathStuff.addScaled(pt1, pt2, 0.5F));
-        final BlockPos high = new BlockPos(pt2);
+        final BlockPos low = BlockPos.ofFloored(pt1);
+        final BlockPos mid = BlockPos.ofFloored(MathStuff.addScaled(pt1, pt2, 0.5F));
+        final BlockPos high = BlockPos.ofFloored(pt2);
 
         // Determine the precipitation type at each point
         final Biome.Precipitation rt1 = WorldUtils.getCurrentPrecipitationAt(ctx.world, low);
@@ -373,7 +373,7 @@ public final class SoundFXUtils {
     }
 
     private static Vec3d offsetPositionIfSolid(final World world, final Vec3d origin, final Vec3d target) {
-        if (world.getBlockState(new BlockPos(origin)) != Blocks.AIR.getDefaultState()) {
+        if (world.getBlockState(BlockPos.ofFloored(origin)) != Blocks.AIR.getDefaultState()) {
             var normal = origin.relativize(target).normalize();
             return MathStuff.addScaled(origin, normal, 0.876F);
         }

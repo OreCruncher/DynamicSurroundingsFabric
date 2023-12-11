@@ -24,7 +24,7 @@ public interface MixinRaycastContextAccessor {
     @Mutable
     void setEndPoint(Vec3d point);
 
-    @Accessor("entityPosition")
+    @Accessor("shapeContext")
     @Mutable
     void setShapeContext(ShapeContext context);
 }

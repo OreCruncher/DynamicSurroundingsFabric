@@ -42,7 +42,7 @@ public abstract class MixinSoundSystem {
     private void dsurround_soundRangeCheck(SoundInstance sound, CallbackInfo ci, WeightedSoundSet weightedSoundSet, Identifier identifier, Sound sound2, float f, float g, SoundCategory soundCategory, float h, float i, SoundInstance.AttenuationType attenuationType, boolean isGlobal) {
         if (Client.Config.soundSystem.enableSoundPruning) {
             // If not in range of the listener cancel.
-            if (!SoundInstanceHandler.inRange(AudioUtilities.getSoundListener().getPos(), sound, 4)) {
+            if (!SoundInstanceHandler.inRange(AudioUtilities.getSoundListener().getTransform().position(), sound, 4)) {
                 Client.LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> "TOO FAR: " + AudioUtilities.debugString(sound));
                 ci.cancel();
             }

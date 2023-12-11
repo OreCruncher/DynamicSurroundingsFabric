@@ -2,11 +2,10 @@ package org.orecruncher.dsurround.gui.sound;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -53,7 +52,7 @@ public class IndividualSoundControlScreen extends Screen {
 
     @Override
     protected void init() {
-        GameUtils.getKeyboard().setRepeatEvents(true);
+        //GameUtils.getKeyboard().setRepeatEvents(true);
 
         // Setup search bar
         final int searchBarLeftMargin = (this.width - SEARCH_BAR_WIDTH) / 2;
@@ -70,7 +69,7 @@ public class IndividualSoundControlScreen extends Screen {
         this.searchField.setChangedListener((filter) -> this.soundConfigList.setSearchFilter(() -> filter, false));
         this.addSelectableChild(this.searchField);
 
-        // Setup the list control
+        // Set up the list control
         final int topY = TOP_OFFSET + HEADER_HEIGHT + SELECTION_HEIGHT_OFFSET;
         final int bottomY = this.height - BOTTOM_OFFSET - FOOTER_HEIGHT - SELECTION_HEIGHT_OFFSET;
         this.soundConfigList = new IndividualSoundControlList(
@@ -91,29 +90,24 @@ public class IndividualSoundControlScreen extends Screen {
         // Set the control buttons at the bottom
         final int controlMargin = (this.width - CONTROL_WIDTH) / 2;
         final int controlHeight = this.height - BOTTOM_OFFSET - BUTTON_HEIGHT;
-        this.save = new ButtonWidget(
-                controlMargin,
-                controlHeight,
-                BUTTON_WIDTH,
-                BUTTON_HEIGHT,
-                SAVE,
-                this::save);
+
+        this.save = ButtonWidget.builder(SAVE, this::save)
+                .size(BUTTON_WIDTH, BUTTON_HEIGHT)
+                .position(controlMargin, controlHeight)
+                .build();
         this.addDrawableChild(this.save);
 
-        this.cancel = new ButtonWidget(
-                controlMargin + BUTTON_WIDTH + BUTTON_SPACING,
-                controlHeight,
-                BUTTON_WIDTH,
-                BUTTON_HEIGHT,
-                CANCEL,
-                this::cancel);
+        this.cancel = ButtonWidget.builder(CANCEL, this::cancel)
+                .size(BUTTON_WIDTH, BUTTON_HEIGHT)
+                .position(controlMargin + BUTTON_WIDTH + BUTTON_SPACING, controlHeight)
+                .build();
         this.addDrawableChild(this.cancel);
 
         this.setFocused(this.searchField);
     }
 
     public void tick() {
-        this.searchField.tick();
+        //this.searchField.tick();
         this.soundConfigList.tick();
 
         // Need to tick the Sound Manager because when the game is paused sounds are not
@@ -140,18 +134,18 @@ public class IndividualSoundControlScreen extends Screen {
         return this.searchField.charTyped(codePoint, modifiers);
     }
 
-    public void render(final MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        this.soundConfigList.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.searchField.render(matrixStack, mouseX, mouseY, partialTicks);
-        DrawableHelper.drawCenteredText(matrixStack, this.textRenderer, this.title, this.width / 2, TOP_OFFSET, 16777215);
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+    public void render(final DrawContext context, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(context, mouseX, mouseY, partialTicks);
+        this.soundConfigList.render(context, mouseX, mouseY, partialTicks);
+        this.searchField.render(context, mouseX, mouseY, partialTicks);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, TOP_OFFSET, 16777215);
+        super.render(context, mouseX, mouseY, partialTicks);
 
         if (this.soundConfigList.isMouseOver(mouseX, mouseY)) {
             final IndividualSoundControlListEntry entry = this.soundConfigList.getEntryAt(mouseX, mouseY);
             if (entry != null) {
                 final List<OrderedText> toolTip = entry.getToolTip(mouseX, mouseY);
-                this.renderOrderedTooltip(matrixStack, toolTip, mouseX, mouseY + TOOLTIP_Y_OFFSET);
+                context.drawOrderedTooltip(this.textRenderer, toolTip, mouseX, mouseY + TOOLTIP_Y_OFFSET);
             }
         }
     }
