@@ -3,6 +3,7 @@ package org.orecruncher.dsurround;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
@@ -74,9 +75,10 @@ public class Client implements ClientModInitializer {
         ClientLifecycleEvents.CLIENT_STARTED.register(this::onComplete);
         ClientPlayConnectionEvents.JOIN.register(this::onConnect);
 
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> Commands.register(dispatcher));
+
         TickCounter.register();
         KeyBindings.register();
-        Commands.register();
 
         // Register diagnostic handlers.  Ordering is semi important for
         // debug display layout.
