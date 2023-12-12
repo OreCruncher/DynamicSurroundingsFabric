@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.lib.random;
 /**
  * @see "http://sites.google.com/site/murmurhash/"
  */
-@SuppressWarnings("unused")
 public final class MurmurHash3 {
     private MurmurHash3() {
     }

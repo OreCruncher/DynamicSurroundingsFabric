@@ -20,7 +20,6 @@ import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 
 @Environment(EnvType.CLIENT)
-@SuppressWarnings("unused")
 public final class SoundFactoryBuilder {
 
     private static final Vec3d BLOCK_CENTER_ADJUST = new Vec3d(0.5D, 0.5D, 0.5D);

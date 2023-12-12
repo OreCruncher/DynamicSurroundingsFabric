@@ -22,7 +22,7 @@ public class BiomeClimateAnalyzer implements IBiomeTraitAnalyzer {
             return results;
         }
 
-        if (biome.getPrecipitation() == Biome.Precipitation.SNOW)
+        if (path.contains("snowy"))
             results.add(BiomeTrait.SNOWY);
 
         var biomeTemp = biome.getTemperature();
@@ -37,7 +37,7 @@ public class BiomeClimateAnalyzer implements IBiomeTraitAnalyzer {
         else if (biomeTemp > 1F)
             results.add(BiomeTrait.HOT);
 
-        var rainfall = biome.getDownfall();
+        var rainfall = biome.weather.downfall();
 
         if (path.contains("jungle") || path.contains("swamp"))
             // if (category == Biome.Category.JUNGLE || category == Biome.Category.SWAMP)

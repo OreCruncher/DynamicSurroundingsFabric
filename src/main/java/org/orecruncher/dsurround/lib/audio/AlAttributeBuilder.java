@@ -6,7 +6,6 @@ import net.fabricmc.api.Environment;
 import java.util.Arrays;
 
 @Environment(EnvType.CLIENT)
-@SuppressWarnings("unused")
 public class AlAttributeBuilder {
 
     private int[] buffer = new int[8];

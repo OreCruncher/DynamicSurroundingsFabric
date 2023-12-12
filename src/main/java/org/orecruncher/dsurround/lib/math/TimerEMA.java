@@ -4,7 +4,6 @@ package org.orecruncher.dsurround.lib.math;
  * Specialization of the EMA based on measuring time. The time unit it expects
  * to deal with is nanoseconds.
  */
-@SuppressWarnings("unused")
 public class TimerEMA extends EMA {
 
     public TimerEMA(final String name) {

@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.lib.math;
 /**
  * Simple EMA calculator.
  */
-@SuppressWarnings("unused")
 public class EMA {
 
     private final String name;

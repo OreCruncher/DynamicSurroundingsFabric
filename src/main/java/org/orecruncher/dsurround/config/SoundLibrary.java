@@ -101,7 +101,6 @@ public final class SoundLibrary {
         return myRegistry.values();
     }
 
-    @SuppressWarnings("unused")
     public static SoundMetadata getSoundMetadata(final Identifier sound) {
         return soundMetadata.get(Objects.requireNonNull(sound));
     }

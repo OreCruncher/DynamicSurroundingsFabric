@@ -4,7 +4,6 @@ import com.google.common.collect.AbstractIterator;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
-@SuppressWarnings("unused")
 public final class BlockPosUtil {
 
     public static BlockPos.Mutable setPos( final BlockPos.Mutable pos,

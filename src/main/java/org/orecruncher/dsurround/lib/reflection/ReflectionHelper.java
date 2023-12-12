@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-@SuppressWarnings("unused")
 public final class ReflectionHelper {
     private ReflectionHelper() {
     }

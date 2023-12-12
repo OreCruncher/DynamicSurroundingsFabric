@@ -10,7 +10,6 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
-@SuppressWarnings("unused")
 public final class ModLog implements IModLog {
 
     private static final Pattern REGEX_SPLIT = Pattern.compile("\\n");

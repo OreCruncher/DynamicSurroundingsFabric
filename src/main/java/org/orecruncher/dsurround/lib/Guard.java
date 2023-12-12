@@ -7,7 +7,6 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 /**
  * Logic that supports guarded operations.  Exceptions encountered will be logged.
  */
-@SuppressWarnings("unused")
 public final class Guard {
 
     private static final IModLog LOGGER = Client.LOGGER.createChild(Guard.class);
