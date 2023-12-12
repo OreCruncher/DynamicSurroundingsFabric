@@ -15,14 +15,14 @@ import java.util.function.Supplier;
  * Special EnumSelectorBuilder that deal with enums anonymously.  Makes for easier gluing between config and
  * menu display.
  */
-public class EnumSelectorBuilder extends FieldBuilder<Enum<?>, EnumListEntry<Enum<?>>> {
+public class EnumSelectorBuilder extends FieldBuilder<Enum<?>, EnumListEntry<Enum<?>>, EnumSelectorBuilder> {
     private Consumer<Enum<?>> saveConsumer = null;
     private Function<Enum<?>, Optional<Text[]>> tooltipSupplier = e -> Optional.empty();
     private final Enum<?> value;
-    private final Class<? extends Enum<?>> clazz;
-    private Function<Enum<?>, Text> enumNameProvider;
+    private final Class<Enum<?>> clazz;
+    private Function<Enum, Text> enumNameProvider;
 
-    public EnumSelectorBuilder(Text resetButtonKey, Text fieldNameKey, Class<? extends Enum<?>> clazz, Enum<?> value) {
+    public EnumSelectorBuilder(Text resetButtonKey, Text fieldNameKey, Class<Enum<?>> clazz, Enum<?> value) {
         super(resetButtonKey, fieldNameKey);
         this.enumNameProvider = e -> Text.of(e.name());
         Objects.requireNonNull(clazz);
@@ -77,7 +77,7 @@ public class EnumSelectorBuilder extends FieldBuilder<Enum<?>, EnumListEntry<Enu
         return this;
     }
 
-    public EnumSelectorBuilder setEnumNameProvider(Function<Enum<?>, Text> enumNameProvider) {
+    public EnumSelectorBuilder setEnumNameProvider(Function<Enum, Text> enumNameProvider) {
         Objects.requireNonNull(enumNameProvider);
         this.enumNameProvider = enumNameProvider;
         return this;
@@ -85,7 +85,7 @@ public class EnumSelectorBuilder extends FieldBuilder<Enum<?>, EnumListEntry<Enu
 
     @NotNull
     public EnumListEntry<Enum<?>> build() {
-        EnumListEntry<Enum<?>> entry = new EnumListEntry(this.getFieldNameKey(), this.clazz, this.value, this.getResetButtonKey(), this.defaultValue, this.saveConsumer, this.enumNameProvider, null, this.isRequireRestart());
+        EnumListEntry<Enum<?>> entry = new EnumListEntry<>(this.getFieldNameKey(), this.clazz, this.value, this.getResetButtonKey(), this.defaultValue, this.saveConsumer, this.enumNameProvider, null, this.isRequireRestart());
         entry.setTooltipSupplier(() -> this.tooltipSupplier.apply(entry.getValue()));
         if (this.errorSupplier != null) {
             entry.setErrorSupplier(() -> this.errorSupplier.apply(entry.getValue()));
