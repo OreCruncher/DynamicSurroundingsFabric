@@ -41,7 +41,7 @@ public final class GameUtils {
     }
 
     public static ClientWorld getWorld() {
-        return Objects.requireNonNull(getMC().world);
+        return getMC().world;
     }
 
     public static DynamicRegistryManager getRegistryManager() {

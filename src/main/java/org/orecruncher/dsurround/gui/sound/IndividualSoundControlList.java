@@ -26,7 +26,7 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
     private String lastSearchText = null;
 
     public IndividualSoundControlList(final Screen parent, final MinecraftClient mcIn, int widthIn, int heightIn, int topIn, int bottomIn, int slotWidth, int slotHeightIn, boolean enablePlay, final Supplier<String> filter, @Nullable final IndividualSoundControlList oldList) {
-        super(mcIn, widthIn, heightIn, /* topIn,*/ bottomIn, slotHeightIn);
+        super(mcIn, widthIn, heightIn, topIn, /* bottomIn ,*/ slotHeightIn);
 
         this.parent = parent;
         this.enablePlay = enablePlay;

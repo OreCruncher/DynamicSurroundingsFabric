@@ -9,6 +9,8 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.Localization;
+import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
 import java.util.List;
 
@@ -17,8 +19,8 @@ public class IndividualSoundControlScreen extends Screen {
 
     private static final int TOP_OFFSET = 10;
     private static final int BOTTOM_OFFSET = 15;
-    private static final int HEADER_HEIGHT = 35;
-    private static final int FOOTER_HEIGHT = 50;
+    private static final int HEADER_HEIGHT = 40;
+    private static final int FOOTER_HEIGHT = 80;
 
     private static final int SEARCH_BAR_WIDTH = 200;
     private static final int SEARCH_BAR_HEIGHT = 20;
@@ -34,8 +36,8 @@ public class IndividualSoundControlScreen extends Screen {
 
     private static final int TOOLTIP_Y_OFFSET = 30;
 
-    private static final Text SAVE = Text.of("gui.done");
-    private static final Text CANCEL = Text.of("gui.cancel");
+    private static final Text SAVE = Text.translatable("gui.done");
+    private static final Text CANCEL = Text.translatable("gui.cancel");
 
     protected final Screen parent;
     protected final boolean enablePlay;
@@ -76,7 +78,7 @@ public class IndividualSoundControlScreen extends Screen {
                 this,
                 GameUtils.getMC(),
                 this.width,
-                this.height,
+                bottomY,
                 topY,
                 bottomY,
                 SELECTION_WIDTH,
@@ -138,7 +140,7 @@ public class IndividualSoundControlScreen extends Screen {
         this.renderBackground(context, mouseX, mouseY, partialTicks);
         this.soundConfigList.render(context, mouseX, mouseY, partialTicks);
         this.searchField.render(context, mouseX, mouseY, partialTicks);
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, TOP_OFFSET, 16777215);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, TOP_OFFSET, ColorPalette.MC_WHITE.getRGB());
         super.render(context, mouseX, mouseY, partialTicks);
 
         if (this.soundConfigList.isMouseOver(mouseX, mouseY)) {

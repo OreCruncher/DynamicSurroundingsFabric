@@ -33,10 +33,10 @@ dependencies {
     modImplementation "org.openjdk.nashorn:nashorn-core:15.4"
     include("org.openjdk.nashorn:nashorn-core:15.4")
 
-    modImplementation("me.shedaniel.cloth:cloth-config-fabric:10.0.95") {
+    modImplementation("me.shedaniel.cloth:cloth-config-fabric:13.0.114") {
         exclude(group: "net.fabricmc.fabric-api")
     }
-    include("me.shedaniel.cloth:cloth-config-fabric:10.0.95")
+    include("me.shedaniel.cloth:cloth-config-fabric:13.0.114")
 }
 
 processResources {
