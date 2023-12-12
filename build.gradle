@@ -17,15 +17,6 @@ repositories {
 
 loom {
 	accessWidenerPath = file("src/main/resources/dsurround.accesswidener")
-
-    splitEnvironmentSourceSets()
-
-	mods {
-		"modid" {
-			sourceSet sourceSets.main
-			sourceSet sourceSets.client
-		}
-	}
 }
 
 dependencies {
