@@ -38,7 +38,7 @@ public class VolumeSliderControl extends SliderControl {
     }
 
     protected void updateMessage() {
-        Text text = (float) this.value == (float) this.getYImage(false) ? Text.translatable("options.off") : Text.of("x" + FORMAT.format(this.value * 4.0D));
+        Text text = this.getValue() == 0 ? Text.translatable("options.off") : Text.of("x" + FORMAT.format(this.getValue() * 4.0D));
         this.setMessage(text);
     }
 

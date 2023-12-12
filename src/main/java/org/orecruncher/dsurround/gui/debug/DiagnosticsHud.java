@@ -5,13 +5,15 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.gui.DrawContext;
 import org.orecruncher.dsurround.eventing.handlers.DiagnosticHandler;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 
+/***
+ * Our debug and diagnostics hud.  Derived from DebugHud.
+ */
 @Environment(EnvType.CLIENT)
-public class DiagnosticsHud extends DrawableHelper {
+public class DiagnosticsHud {
 
     private static final int backgroundColor = -1873784752;
     private static final int foregroundColor = 14737632;
@@ -24,44 +26,52 @@ public class DiagnosticsHud extends DrawableHelper {
         this.textRenderer = client.textRenderer;
     }
 
-    public void render(MatrixStack matrices) {
+    public void render(DrawContext context) {
         // Only want to rendered if configured to do so and when the regular
         // diagnostic menu is not showing
-        if (DiagnosticHandler.isCollecting() && !client.options.debugEnabled) {
-            this.renderLeftText(matrices);
-            this.renderRightText(matrices);
+        if (DiagnosticHandler.isCollecting() && !this.isDebugHudEnabled()) {
+            this.renderLeftText(context);
+            this.renderRightText(context);
         }
     }
 
-    protected void renderLeftText(MatrixStack matrices) {
+    protected void renderLeftText(DrawContext context) {
         ObjectArray<String> list = DiagnosticHandler.getLeft();
-
-        for (int i = 0; i < list.size(); ++i) {
-            String string = list.get(i);
-            if (!Strings.isNullOrEmpty(string)) {
-                int j = 9;
-                int k = this.textRenderer.getWidth(string);
-                int m = 2 + j * i;
-                fill(matrices, 1, m - 1, 2 + k + 1, m + j - 1, backgroundColor);
-                this.textRenderer.draw(matrices, string, 2.0F, (float) m, foregroundColor);
-            }
-        }
+        this.drawText(context, list, true);
     }
 
-    protected void renderRightText(MatrixStack matrices) {
+    protected void renderRightText(DrawContext context) {
         ObjectArray<String> list = DiagnosticHandler.getRight();
+        this.drawText(context, list, false);
+    }
 
-        int scaledWidth = this.client.getWindow().getScaledWidth() - 2;
-        for (int i = 0; i < list.size(); ++i) {
-            String string = list.get(i);
-            if (!Strings.isNullOrEmpty(string)) {
-                int j = 9;
-                int k = this.textRenderer.getWidth(string);
-                int l = scaledWidth - k;
-                int m = 2 + j * i;
-                fill(matrices, l - 1, m - 1, l + k + 1, m + j - 1, backgroundColor);
-                this.textRenderer.draw(matrices, string, (float) l, (float) m, foregroundColor);
-            }
+    private boolean isDebugHudEnabled()
+    {
+        return this.client.getDebugHud().shouldShowDebugHud();
+    }
+
+    private void drawText(DrawContext context, ObjectArray<String> text, boolean left) {
+        int m;
+        int l;
+        int k;
+        String string;
+        int j;
+        int i = this.textRenderer.fontHeight;
+        for (j = 0; j < text.size(); ++j) {
+            string = text.get(j);
+            if (Strings.isNullOrEmpty(string)) continue;
+            k = this.textRenderer.getWidth(string);
+            l = left ? 2 : context.getScaledWindowWidth() - 2 - k;
+            m = 2 + i * j;
+            context.fill(l - 1, m - 1, l + k + 1, m + i - 1, backgroundColor);
+        }
+        for (j = 0; j < text.size(); ++j) {
+            string = text.get(j);
+            if (Strings.isNullOrEmpty(string)) continue;
+            k = this.textRenderer.getWidth(string);
+            l = left ? 2 : context.getScaledWindowWidth() - 2 - k;
+            m = 2 + i * j;
+            context.drawText(this.textRenderer, string, l, m, foregroundColor, false);
         }
     }
 }

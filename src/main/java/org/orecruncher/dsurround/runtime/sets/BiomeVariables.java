@@ -8,7 +8,6 @@ import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
-import org.orecruncher.dsurround.lib.biome.BiomeUtils;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 
 @Environment(EnvType.CLIENT)
@@ -36,7 +35,7 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
 
     @Override
     public void update() {
-        Biome newBiome = BiomeUtils.DEFAULT_BIOME;
+        Biome newBiome = null;
         if (GameUtils.isInGame()) {
             newBiome = GameUtils.getPlayer().getEntityWorld().getBiome(GameUtils.getPlayer().getBlockPos()).value();
         }

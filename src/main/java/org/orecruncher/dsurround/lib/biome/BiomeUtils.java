@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.lib.biome;
 
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.registry.BuiltinRegistries;
-import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -12,7 +10,6 @@ public final class BiomeUtils {
 
     // Default to the VOID because PLAINS has data associated with it
     public static final Identifier DEFAULT_ID = BiomeKeys.THE_VOID.getValue();
-    public static final Biome DEFAULT_BIOME = Registries.BIOME.get(BiomeKeys.THE_VOID);
 
     public static Biome getPlayerBiome(PlayerEntity player) {
         World world = player.getEntityWorld();

@@ -13,7 +13,6 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.sound.ISoundFactory;
-import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -84,15 +83,6 @@ public class ItemLibrary {
 
     private static ISoundFactory resolve(ItemStack stack, Function<ItemClassType, ISoundFactory> resolveSound, Supplier<ISoundFactory> defaultSoundFactory) {
         var item = stack.getItem();
-        var itemSound = item.getEquipSound();
-        if (itemSound != null) {
-            // Normally MC expects to play at volume 1 and pitch 1
-            return SoundFactoryBuilder
-                    .create(itemSound)
-                    .volume(0.5F)
-                    .pitchRange(0.8F, 1.2F)
-                    .build();
-        }
 
         // Crawl through our rules looking for a match.  Check specific rules
         // before general

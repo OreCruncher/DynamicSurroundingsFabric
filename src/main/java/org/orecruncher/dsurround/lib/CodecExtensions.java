@@ -10,7 +10,6 @@ import net.minecraft.util.JsonHelper;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.block.BlockStateMatcher;
 import org.orecruncher.dsurround.lib.block.MatchOnBlockTag;
-import org.orecruncher.dsurround.lib.block.MatchOnMaterial;
 
 import java.io.StringReader;
 import java.util.Optional;
@@ -40,8 +39,6 @@ public interface CodecExtensions<A> extends Codec<A> {
         final Function<IMatcher<BlockState>, DataResult<IMatcher<BlockState>>> func = value -> {
             if (!allowTags && value instanceof MatchOnBlockTag)
                 return DataResult.error(() -> String.format("Current context does not allow block matching based on tags (%s)", value));
-            if (!allowMaterials && value instanceof MatchOnMaterial)
-                return DataResult.error(() -> String.format("Current context does not allow block matching based on materials (%s)", value));
             return DataResult.success(value);
         };
         return BlockStateMatcher.CODEC.flatXmap(func, func);

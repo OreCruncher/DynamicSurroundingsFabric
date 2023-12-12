@@ -13,7 +13,7 @@
   },
   "license": "MIT",
   "icon": "assets/dsurround/icon.png",
-  "accessWidener": "dsurround.accesswidner",
+  "accessWidener": "dsurround.accesswidener",
   "environment": "client",
   "entrypoints": {
     "client": [

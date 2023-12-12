@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.lib.gui;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.widget.SliderWidget;
-import net.minecraft.client.util.OrderableTooltip;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
@@ -11,7 +10,7 @@ import net.minecraft.util.math.MathHelper;
 import java.util.List;
 
 @Environment(EnvType.CLIENT)
-public abstract class SliderControl extends SliderWidget implements OrderableTooltip {
+public abstract class SliderControl extends SliderWidget {
 
     protected final double step;
     protected final double min;
@@ -60,9 +59,4 @@ public abstract class SliderControl extends SliderWidget implements OrderableToo
 
     @Override
     protected abstract void applyValue();
-
-    @Override
-    public List<OrderedText> getOrderedTooltip() {
-        return this.toolTip;
-    }
 }
