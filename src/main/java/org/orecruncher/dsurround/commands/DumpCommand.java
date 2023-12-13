@@ -10,6 +10,7 @@ import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.BiomeLibrary;
 import org.orecruncher.dsurround.config.BlockLibrary;
 import org.orecruncher.dsurround.config.DimensionLibrary;
+import org.orecruncher.dsurround.config.ItemLibrary;
 
 import java.io.PrintStream;
 import java.util.List;
@@ -33,6 +34,7 @@ class DumpCommand {
                 .then(literal("blocksbytag").executes(cmd -> dumpBlocksByTag(cmd.getSource())))
                 .then(literal("blockconfigrules").executes(cmd -> dumpBlockConfigRules(cmd.getSource())))
                 .then(literal("blockstates").executes(cmd -> dumpBlockState(cmd.getSource())))
+                .then(literal("items").executes(cmd -> dumpItems(cmd.getSource())))
         );
     }
 
@@ -62,6 +64,10 @@ class DumpCommand {
 
     private static int dumpBlocksByTag(FabricClientCommandSource src) {
         return handle(src, "dump.blocksbytag", BlockLibrary::dumpBlocksByTag);
+    }
+
+    private static int dumpItems(FabricClientCommandSource src) {
+        return handle(src, "dump.items", ItemLibrary::dumpItems);
     }
 
     private static int handle(final FabricClientCommandSource source, final String cmdString, final Supplier<Stream<String>> supplier) {

@@ -17,6 +17,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
+import org.orecruncher.dsurround.tags.TagHelpers;
 import org.orecruncher.dsurround.xface.IBlockStateExtended;
 
 import java.util.Collection;
@@ -94,7 +95,7 @@ public class BlockLibrary {
     }
 
     public static Stream<String> dumpBlocksByTag() {
-        var tagGroup = GameUtils.getTagGroup(RegistryKeys.BLOCK);
+        var tagGroup = TagHelpers.getTagGroup(RegistryKeys.BLOCK);
         if (tagGroup != null) {
             return tagGroup.filter(pair -> pair.value().findAny().isPresent()).map(pair -> BlockLibrary.formatBlockTagOutput(pair.key(), pair.value())).sorted();
         }

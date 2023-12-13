@@ -6,12 +6,14 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
 import org.orecruncher.dsurround.lib.IMatcher;
-import org.orecruncher.dsurround.lib.MatchOnClass;
+import org.orecruncher.dsurround.tags.TagHelpers;
 
 @Environment(EnvType.CLIENT)
-public class ItemTypeMatcher implements IMatcher<Item> {
+public abstract class ItemTypeMatcher implements IMatcher<Item> {
 
     public static final Codec<IMatcher<Item>> CODEC = Codec.STRING
             .comapFlatMap(
@@ -20,30 +22,47 @@ public class ItemTypeMatcher implements IMatcher<Item> {
 
     private static DataResult<IMatcher<Item>> manifest(String itemId) {
         try {
-            // If it looks like an Identifier then it must be an EntityType
-            if (itemId.contains(":")) {
-                var item= Registries.ITEM.get(new Identifier(itemId));
-                return DataResult.success(new ItemTypeMatcher(item));
+            if (itemId.startsWith("#")) {
+                // Item tag
+                final var id = itemId.substring(1);
+                var tagKey = TagKey.of(RegistryKeys.ITEM, new Identifier(id));
+                return DataResult.success(new ItemTypeMatcher.MatchOnItemTag(tagKey));
+            } else if (itemId.contains(":")) {
+                var item = Registries.ITEM.get(new Identifier(itemId));
+                return DataResult.success(new ItemTypeMatcher.MatchOnItem(item));
             }
 
-            // Assume it's a class reference
-            var matcher = MatchOnClass.<Item>parse(itemId);
-            if (matcher != null)
-                return DataResult.success(matcher);
             return DataResult.error(() -> String.format("Unknown item class(s) %s", itemId));
         } catch (Throwable t) {
             return DataResult.error(t::getMessage);
         }
     }
 
-    private final Item item;
+    public abstract boolean match(Item object);
 
-    ItemTypeMatcher(Item item) {
-        this.item = item;
+    private static class MatchOnItem extends ItemTypeMatcher {
+        private final Item item;
+
+        MatchOnItem(Item item) {
+            this.item = item;
+        }
+
+        @Override
+        public boolean match(Item item) {
+            return this.item == item;
+        }
     }
 
-    @Override
-    public boolean match(Item object) {
-        return this.item == object;
+    private static class MatchOnItemTag extends ItemTypeMatcher {
+
+        private final TagKey<Item> tagKey;
+
+        public MatchOnItemTag(TagKey<Item> tagKey) {
+            this.tagKey = tagKey;
+        }
+
+        public boolean match(Item item) {
+            return TagHelpers.isIn(this.tagKey, item);
+        }
     }
 }

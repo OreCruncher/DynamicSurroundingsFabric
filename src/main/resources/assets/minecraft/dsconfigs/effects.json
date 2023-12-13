@@ -1,8 +1,7 @@
 [
   {
     "entityTypes": [
-      "minecraft:player",
-      "net.minecraft.class_1547|net.minecraft.entity.mob.AbstractSkeletonEntity"
+      "#dsurround:effect/bow_pull"
     ],
     "effects": [
       "bow_pull"
@@ -10,9 +9,7 @@
   },
   {
     "entityTypes": [
-      "minecraft:player",
-      "net.minecraft.class_1646|net.minecraft.entity.passive.VillagerEntity",
-      "net.minecraft.class_1543|net.minecraft.entity.mob.IllagerEntity"
+      "#dsurround:effect/frost_breath"
     ],
     "effects": [
       "frost_breath"
@@ -20,7 +17,7 @@
   },
   {
     "entityTypes": [
-      "minecraft:player"
+      "#dsurround:effect/toolbar"
     ],
     "effects": [
       "player_toolbar"
@@ -28,11 +25,7 @@
   },
   {
     "entityTypes": [
-      "minecraft:player",
-      "net.minecraft.class_1543|net.minecraft.entity.mob.IllagerEntity",
-      "net.minecraft.class_1547|net.minecraft.entity.mob.AbstractSkeletonEntity",
-      "net.minecraft.class_1642|net.minecraft.entity.mob.ZombieEntity",
-      "net.minecraft.class_4836|net.minecraft.entity.mob.PiglinEntity"
+      "#dsurround:effect/item_swing"
     ],
     "effects": [
       "item_swing"

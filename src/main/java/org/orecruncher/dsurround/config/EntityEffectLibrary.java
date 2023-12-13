@@ -118,7 +118,7 @@ public class EntityEffectLibrary {
 
         // If we have effect instances create a new info object.  Otherwise, set
         // the default.
-        if (effects.size() > 0)
+        if (!effects.isEmpty())
             info = new EntityEffectInfo(version, entity, effects);
         else
             info = DEFAULT;

@@ -6,9 +6,13 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.tag.TagKey;
+import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.data.ItemConfigRule;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
@@ -17,10 +21,10 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Environment(EnvType.CLIENT)
 public class ItemLibrary {
@@ -32,9 +36,6 @@ public class ItemLibrary {
     private static final Reference2ObjectOpenHashMap<Item, ISoundFactory> itemEquipFactories = new Reference2ObjectOpenHashMap<>();
     private static final Reference2ObjectOpenHashMap<Item, ISoundFactory> itemSwingFactories = new Reference2ObjectOpenHashMap<>();
     private static List<ItemConfigRule> itemConfigRules;
-    private static List<ItemConfigRule> specificRules;
-    private static List<ItemConfigRule> generalRules;
-
     private static int version;
 
     public static void load() {
@@ -43,6 +44,7 @@ public class ItemLibrary {
         final Collection<IResourceAccessor> accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), FILE_NAME);
 
         itemConfigRules = new ArrayList<>();
+
         // Iterate through the configs gathering the EntityEffectType data that is defined.  The result
         // of this process is each EntityType having deduped set of effects that can be applied.
         IResourceAccessor.process(accessors, accessor -> {
@@ -50,16 +52,6 @@ public class ItemLibrary {
             if (cfg != null)
                 itemConfigRules.addAll(cfg);
         });
-
-        specificRules = itemConfigRules.stream()
-                .map(ItemConfigRule::asSpecificMatchOnly)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        generalRules = itemConfigRules.stream()
-                .map(ItemConfigRule::asGeneralMatchOnly)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
 
         version++;
 
@@ -86,15 +78,36 @@ public class ItemLibrary {
 
         // Crawl through our rules looking for a match.  Check specific rules
         // before general
-        for (var cfg : specificRules)
-            if (cfg.match(item))
-                return resolveSound.apply(cfg.itemClassType);
-
-        for (var cfg : generalRules)
+        for (var cfg : itemConfigRules)
             if (cfg.match(item))
                 return resolveSound.apply(cfg.itemClassType);
 
         // use the default
         return defaultSoundFactory.get();
+    }
+
+    public static Stream<String> dumpItems() {
+        var blockRegistry = GameUtils.getRegistryManager().get(RegistryKeys.ITEM).getEntrySet();
+        return blockRegistry.stream().map(kvp -> formatItemOutput(kvp.getKey().getValue(), kvp.getValue())).sorted();
+    }
+
+    private static String formatItemOutput(Identifier id, Item item) {
+        var items = GameUtils.getWorld().getRegistryManager().get(RegistryKeys.ITEM);
+
+        var tags = "null";
+        var entry = items.getEntry(items.getRawId(item));
+        if (entry.isPresent()) {
+            tags = entry.get()
+                    .streamTags()
+                    .map(TagKey::toString)
+                    .sorted()
+                    .collect(Collectors.joining(","));
+        }
+
+        StringBuilder builder = new StringBuilder();
+        builder.append(id.toString());
+        builder.append("\nTags: ").append(tags);
+        builder.append("\n");
+        return builder.toString();
     }
 }
