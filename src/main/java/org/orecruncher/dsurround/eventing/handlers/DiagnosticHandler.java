@@ -64,7 +64,7 @@ public final class DiagnosticHandler {
 
             right.add(Formatting.LIGHT_PURPLE + diagnostics.toString());
 
-            if (timers.size() > 0) {
+            if (!timers.isEmpty()) {
                 for (TimerEMA timer : timers) {
                     right.add(Formatting.LIGHT_PURPLE + timer.toString());
                 }

@@ -161,19 +161,19 @@ public class BlockInfo {
 
     public void trim() {
         if (this.sounds != null) {
-            if (sounds.size() == 0)
+            if (sounds.isEmpty())
                 this.sounds = null;
             else
                 this.sounds.trim();
         }
         if (this.alwaysOnEffects != null) {
-            if (alwaysOnEffects.size() == 0)
+            if (alwaysOnEffects.isEmpty())
                 this.alwaysOnEffects = null;
             else
                 this.alwaysOnEffects.trim();
         }
         if (this.blockEffects != null) {
-            if (blockEffects.size() == 0)
+            if (blockEffects.isEmpty())
                 this.blockEffects = null;
             else
                 this.blockEffects.trim();
@@ -183,7 +183,7 @@ public class BlockInfo {
     public String toString() {
         final StringBuilder builder = new StringBuilder();
 
-        builder.append("; reflectivity: ")
+        builder.append("reflectivity: ")
                 .append(this.soundReflectivity)
                 .append("; occlusion: ")
                 .append(this.soundOcclusion)

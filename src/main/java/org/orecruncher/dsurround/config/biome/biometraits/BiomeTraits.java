@@ -1,7 +1,12 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeKeys;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 
 import java.util.Collection;
@@ -15,10 +20,7 @@ public final class BiomeTraits {
     private static final ObjectArray<IBiomeTraitAnalyzer> traitAnalyzer = new ObjectArray<>(16);
 
     static {
-        traitAnalyzer.add(new BiomeCategoryAnalyzer());
-        traitAnalyzer.add(new BiomeClimateAnalyzer());
-        traitAnalyzer.add(new BiomeDeepAnalyzer());
-        traitAnalyzer.add(new BiomeGeographyAnalyzer());
+        traitAnalyzer.add(new BiomeTagAnalyzer());
         traitAnalyzer.add(new BiomeMysticalAnalyzer());
     }
 
@@ -29,12 +31,20 @@ public final class BiomeTraits {
     }
 
     public static BiomeTraits createFrom(Identifier id, Biome biome) {
+        var biomeEntry = getBiomeEntry(biome);
         var traits = traitAnalyzer
                 .stream()
-                .map(analyzer -> analyzer.evaluate(id, biome))
+                .map(analyzer -> analyzer.evaluate(id, biome, biomeEntry))
                 .flatMap(Collection::stream)
+                .distinct()
                 .collect(Collectors.toList());
         return new BiomeTraits(traits);
+    }
+
+    private static RegistryEntry.Reference<Biome> getBiomeEntry(Biome biome) {
+        var biomeRegistry = GameUtils.getRegistryManager().get(RegistryKeys.BIOME);
+        RegistryKey<Biome> key = biomeRegistry.getKey(biome).orElse(BiomeKeys.THE_VOID);
+        return biomeRegistry.entryOf(key);
     }
 
     public static BiomeTraits from(BiomeTrait... traits) {
