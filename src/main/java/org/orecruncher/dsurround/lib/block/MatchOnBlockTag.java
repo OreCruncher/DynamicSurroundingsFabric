@@ -5,6 +5,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.RegistryKeys;
+import org.orecruncher.dsurround.tags.TagHelpers;
 
 public class MatchOnBlockTag extends BlockStateMatcher {
 
@@ -17,11 +18,10 @@ public class MatchOnBlockTag extends BlockStateMatcher {
     @Override
     public boolean isEmpty() {
         return false;
-        //return Registry.BLOCK.containsTag(tagId);
     }
 
     @Override
     public boolean match(BlockState state) {
-        return state.isIn(this.tagId);
+        return TagHelpers.isIn(this.tagId, state.getRegistryEntry());
     }
 }

@@ -169,7 +169,6 @@
       "#dsurround:material/organic",
       "#dsurround:material/aggregate",
       "#dsurround:material/sponge",
-      "@BAMBOO",
       "#minecraft:snow",
       "#minecraft:saplings",
       "#minecraft:leaves",
@@ -180,7 +179,7 @@
   },
   {
     "blocks": [
-      "@SOIL",
+      "#dsurround:material/soil",
       "#minecraft:beehives"
     ],
     "soundReflectivity": 0.3
@@ -196,11 +195,6 @@
   {
     "blocks": [
       "#dsurround:material/lava",
-      "@COBWEB",
-      "@DECORATION",
-      "@REDSTONE_LAMP",
-      "@TNT",
-      "@CAKE",
       "#minecraft:fire",
       "#minecraft:shulker_boxes"
     ],
@@ -209,7 +203,6 @@
   {
     "blocks": [
       "#minecraft:wood",
-      "@NETHER_WOOD",
       "#minecraft:logs",
       "#minecraft:planks",
       "#minecraft:wooden_slabs",

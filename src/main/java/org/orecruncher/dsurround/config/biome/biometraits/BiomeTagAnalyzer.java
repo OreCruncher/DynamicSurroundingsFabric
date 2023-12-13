@@ -5,6 +5,7 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
+import org.orecruncher.dsurround.tags.TagHelpers;
 
 import java.util.*;
 
@@ -74,22 +75,22 @@ public class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
         });
 
         // Check for compounds
-        if (biomeEntry.isIn(ConventionalBiomeTags.AQUATIC_ICY)) {
+        if (TagHelpers.isIn(ConventionalBiomeTags.AQUATIC_ICY, biomeEntry)) {
             results.add(BiomeTrait.WATER);
             results.add(BiomeTrait.COLD);
         }
 
-        if (biomeEntry.isIn(ConventionalBiomeTags.DEEP_OCEAN)) {
+        if (TagHelpers.isIn(ConventionalBiomeTags.DEEP_OCEAN, biomeEntry)) {
             results.add(BiomeTrait.OCEAN);
             results.add(BiomeTrait.DEEP);
         }
 
-        if (biomeEntry.isIn(ConventionalBiomeTags.FLOWER_FORESTS)) {
+        if (TagHelpers.isIn(ConventionalBiomeTags.FLOWER_FORESTS, biomeEntry)) {
             results.add(BiomeTrait.FLORAL);
             results.add(BiomeTrait.FOREST);
         }
 
-        if (biomeEntry.isIn(ConventionalBiomeTags.WINDSWEPT)) {
+        if (TagHelpers.isIn(ConventionalBiomeTags.WINDSWEPT, biomeEntry)) {
             results.add(BiomeTrait.EXTREME_HILLS);
         }
 

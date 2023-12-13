@@ -125,7 +125,7 @@ final class BlockStateParser {
         }
 
         public boolean hasProperties() {
-            return this.properties.size() > 0;
+            return !this.properties.isEmpty();
         }
 
         public Map<String, String> getProperties() {

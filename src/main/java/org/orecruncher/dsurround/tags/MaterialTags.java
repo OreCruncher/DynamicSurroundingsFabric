@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib.material;
+package org.orecruncher.dsurround.tags;
 
 import net.minecraft.block.Block;
 import net.minecraft.registry.RegistryKeys;

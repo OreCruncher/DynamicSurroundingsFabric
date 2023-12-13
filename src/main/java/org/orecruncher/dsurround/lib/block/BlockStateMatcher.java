@@ -21,7 +21,6 @@ public abstract class BlockStateMatcher implements IMatcher<BlockState> {
                     IMatcher::toString).stable();
 
     public static final String TAG_TYPE = "#";
-    public static final String MATERIAL_TYPE = "@";
 
     private static DataResult<IMatcher<BlockState>> manifest(String blockId) {
         try {
@@ -53,8 +52,6 @@ public abstract class BlockStateMatcher implements IMatcher<BlockState> {
                 return createTagMatcher(blockId.substring(1));
             else
                 throw new BlockStateParseException(String.format("Block id %s is for a tag, and it is not permitted in this context", blockId));
-        if (blockId.startsWith(MATERIAL_TYPE))
-            throw new BlockStateParseException(String.format("Block id %s is for material, and it is not permitted in this context", blockId));
         return createBlockStateMatcher(BlockStateParser.parse(blockId));
     }
 
