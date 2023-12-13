@@ -2,27 +2,27 @@
 	"thunder": {
 		"subtitle": "dsurround.sound.caption.thunder",
 		"credits": [
-			"§aThunder 1",
+			"\u00a7aThunder 1",
 			"Yoyodaman234",
 			"Creative Commons 0",
 			"",
-			"§aDonner1.wav",
+			"\u00a7aDonner1.wav",
 			"swuing",
 			"Attribution",
 			"",
-			"§aThunder - 1",
+			"\u00a7aThunder - 1",
 			"bone666138",
 			"Attribution",
 			"",
-			"§aThunder - 2",
+			"\u00a7aThunder - 2",
 			"bone666138",
 			"Attribution",
 			"",
-			"§aDistant Thunder.wav",
+			"\u00a7aDistant Thunder.wav",
 			"sarson",
 			"Creative Commons 0",
 			"",
-			"§aNM-Mejor-Lado-Thunder-01.wav",
+			"\u00a7aNM-Mejor-Lado-Thunder-01.wav",
 			"aaronstar",
 			"Creative Commons 0"
 		],
@@ -90,7 +90,7 @@
 	"lilypad.bullfrog": {
 		"subtitle": "dsurround.sound.caption.frog",
 		"credits": [
-			"§aNight Crickets & Bullfrogs.wav",
+			"\u00a7aNight Crickets & Bullfrogs.wav",
 			"sunsinger",
 			"Creative Commons Attributions 3.0 Unported"
 		],
@@ -112,7 +112,7 @@
 	"biome.wind": {
 		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [
-			"§aWind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
+			"\u00a7aWind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
 			"felix.blume",
 			"Creative Commons 0"
 		],
@@ -126,7 +126,7 @@
 	"biome.wind.hills": {
 		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [
-			"§aWind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
+			"\u00a7aWind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
 			"felix.blume",
 			"Creative Commons 0"
 		],
@@ -142,7 +142,7 @@
 	"biome.wind.mountains": {
 		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [
-			"§aWind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
+			"\u00a7aWind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
 			"felix.blume",
 			"Creative Commons 0"
 		],
@@ -156,7 +156,7 @@
 	"biome.wind.desert": {
 		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [
-			"§adesertwind1FINAL.wav",
+			"\u00a7adesertwind1FINAL.wav",
 			"nageor",
 			"Creative Commons 0"
 		],
@@ -169,7 +169,7 @@
 	"biome.wind.arctic": {
 		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [
-			"§aHowling Wind Ambience",
+			"\u00a7aHowling Wind Ambience",
 			"DBlover",
 			"Creative Commons 0"
 		],
@@ -181,7 +181,7 @@
 	},
 	"biome.savanna.day": {
 		"credits": [
-			"§aMerlothPark_morning_ambiance.wav",
+			"\u00a7aMerlothPark_morning_ambiance.wav",
 			"reinsamba",
 			"Attribution"
 		],
@@ -194,7 +194,7 @@
 	},
 	"biome.savanna.night": {
 		"credits": [
-			"§aMerlothPark_crickets2.WAV",
+			"\u00a7aMerlothPark_crickets2.WAV",
 			"reinsamba",
 			"Attribution"
 		],
@@ -207,7 +207,7 @@
 	},
 	"biome.crickets": {
 		"credits": [
-			"§aSoft, Chilled Crickets Field Recording",
+			"\u00a7aSoft, Chilled Crickets Field Recording",
 			"rayjensen",
 			"Creative Commons 0"
 		],
@@ -228,7 +228,7 @@
 	},
 	"biome.plains": {
 		"credits": [
-			"§aCalm Morning Outdoor Ambiance",
+			"\u00a7aCalm Morning Outdoor Ambiance",
 			"blouhond",
 			"Attribution"
 		],
@@ -241,7 +241,7 @@
 	},
 	"biome.forest": {
 		"credits": [
-			"§a001_forrest.wav",
+			"\u00a7a001_forrest.wav",
 			"joepsporck",
 			"Creative Commons 0"
 		],
@@ -262,7 +262,7 @@
 	},
 	"biome.beach": {
 		"credits": [
-			"§aFiji Beach (Stereo)128kbps.mp3",
+			"\u00a7aFiji Beach (Stereo)128kbps.mp3",
 			"c97059890",
 			"Creative Commons 0"
 		],
@@ -275,7 +275,7 @@
 	},
 	"biome.ocean": {
 		"credits": [
-			"§aocean waves surround me.wav",
+			"\u00a7aocean waves surround me.wav",
 			"bohitomi",
 			"Attribution"
 		],
@@ -289,7 +289,7 @@
 	},
 	"biome.ocean.deep": {
 		"credits": [
-			"§aocean waves surround me.wav",
+			"\u00a7aocean waves surround me.wav",
 			"bohitomi",
 			"Attribution"
 		],
@@ -303,7 +303,7 @@
 	},
 	"biome.river": {
 		"credits": [
-			"§aunderwater ambience.wav",
+			"\u00a7aunderwater ambience.wav",
 			"AlienXXX",
 			"Attribution"
 		],
@@ -316,7 +316,7 @@
 	},
 	"biome.bog": {
 		"credits": [
-			"§arbh Mpls Bog birds.wav",
+			"\u00a7arbh Mpls Bog birds.wav",
 			"RHumphries",
 			"Attribution"
 		],
@@ -408,7 +408,7 @@
 	"crow": {
 		"subtitle": "dsurround.sound.caption.crow",
 		"credits": [
-			"§aANML_M_Ext_Crow_Calls_Single1.wav",
+			"\u00a7aANML_M_Ext_Crow_Calls_Single1.wav",
 			"conleec",
 			"Creative Commons 0"
 		],
@@ -482,11 +482,11 @@
 	"rockfall": {
 		"subtitle": "dsurround.sound.caption.rockfall",
 		"credits": [
-			"§aRocks falling over rocks, over a steep hill, like a cliff.flac",
+			"\u00a7aRocks falling over rocks, over a steep hill, like a cliff.flac",
 			"gfrog",
 			"Creative Commons 0",
 			"",
-			"§aRocks.wav",
+			"\u00a7aRocks.wav",
 			"adamgryu",
 			"Creative Commons 0"
 		],
@@ -499,11 +499,11 @@
 	"bigrockfall": {
 		"subtitle": "dsurround.sound.caption.rockfall",
 		"credits": [
-			"§aRockfall in mine.wav",
+			"\u00a7aRockfall in mine.wav",
 			"Benboncan",
 			"Attribution",
 			"",
-			"§aRocks.wav",
+			"\u00a7aRocks.wav",
 			"adamgryu",
 			"Creative Commons 0"
 		],
@@ -538,7 +538,7 @@
 	"waterdrips": {
 		"subtitle": "dsurround.sound.caption.waterdrop",
 		"credits": [
-			"§aDripping, Very Fast, A.wav",
+			"\u00a7aDripping, Very Fast, A.wav",
 			"InspectorJ",
 			"Attribution"
 		],
@@ -565,7 +565,7 @@
 	"coyote": {
 		"subtitle": "dsurround.sound.caption.howling",
 		"credits": [
-			"§acoyote barks and howls",
+			"\u00a7acoyote barks and howls",
 			"dkaufman",
 			"Creative Commons 0"
 		],
@@ -601,7 +601,7 @@
 	},
 	"biome.ocean.deep.under": {
 		"credits": [
-			"§aunderwater ambience.wav",
+			"\u00a7aunderwater ambience.wav",
 			"AlienXXX",
 			"Attribution"
 		],
@@ -614,7 +614,7 @@
 	},
 	"biome.ocean.under": {
 		"credits": [
-			"§aunderwater ambience.wav",
+			"\u00a7aunderwater ambience.wav",
 			"AlienXXX",
 			"Attribution"
 		],
@@ -635,7 +635,7 @@
 	},
 	"biome.water.under": {
 		"credits": [
-			"§aUnderwaterDrowning01.wav",
+			"\u00a7aUnderwaterDrowning01.wav",
 			"Abolla",
 			"Creative Commons 0"
 		],
@@ -783,7 +783,7 @@
 	},
 	"waterfall.0": {
 		"credits": [
-			"§aWaterfall Winspit Dorset.wav",
+			"\u00a7aWaterfall Winspit Dorset.wav",
 			"genghis attenborough",
 			"Attribution Noncommercial"
 		],
@@ -797,7 +797,7 @@
 	},
 	"waterfall.1": {
 		"credits": [
-			"§aRunning-water-mountain-stream.mp3",
+			"\u00a7aRunning-water-mountain-stream.mp3",
 			"Alexander",
 			"Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)"
 		],
@@ -811,7 +811,7 @@
 	},
 	"waterfall.2": {
 		"credits": [
-			"§aWaterfall",
+			"\u00a7aWaterfall",
 			"Orpheuz",
 			"Creative Commons 0"
 		],
@@ -825,7 +825,7 @@
 	},
 	"waterfall.3": {
 		"credits": [
-			"§aSmall Waterfall at the Mill",
+			"\u00a7aSmall Waterfall at the Mill",
 			"willstepp",
 			"Creative Commons 0"
 		],
@@ -839,7 +839,7 @@
 	},
 	"waterfall.4": {
 		"credits": [
-			"§aWaterfall, Large, A.wav",
+			"\u00a7aWaterfall, Large, A.wav",
 			"InspectorJ",
 			"Attribution"
 		],
@@ -853,7 +853,7 @@
 	},
 	"waterfall.5": {
 		"credits": [
-			"§aWaterfall, Small, B.wav",
+			"\u00a7aWaterfall, Small, B.wav",
 			"InspectorJ",
 			"Attribution"
 		],
@@ -868,7 +868,7 @@
 	"biome.village.rooster": {
 		"subtitle": "dsurround.sound.caption.rooster",
 		"credits": [
-			"§aVillage ambience rooster and light birds with wind .wav",
+			"\u00a7aVillage ambience rooster and light birds with wind .wav",
 			"Ramston",
 			"Creative Commons 0"
 		],
@@ -881,7 +881,7 @@
 	"biome.village.anvil": {
 		"subtitle": "dsurround.sound.caption.anvil",
 		"credits": [
-			"§aAnvil",
+			"\u00a7aAnvil",
 			"MrAuralization",
 			"Attribution"
 		],
@@ -899,7 +899,7 @@
 	"biome.village.dogbark": {
 		"subtitle": "dsurround.sound.caption.dog",
 		"credits": [
-			"§aDogs Barking",
+			"\u00a7aDogs Barking",
 			"darranambler",
 			"Creative Commons 0"
 		],
@@ -914,7 +914,7 @@
 	},
 	"dimension.nether": {
 		"credits": [
-			"§aCreepy Dungeon Ambiance",
+			"\u00a7aCreepy Dungeon Ambiance",
 			"DrMinky",
 			"Attribution"
 		],

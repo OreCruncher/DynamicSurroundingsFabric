@@ -150,7 +150,7 @@
   {
     "blocks": [
       "@PORTAL",
-      "@STONE",
+      "#minecraft:base_stone_overworld",
       "@METAL",
       "@REPAIR_STATION",
       "@EGG",
@@ -160,8 +160,8 @@
   },
   {
     "blocks": [
-      "@CARPET",
-      "@WOOL"
+      "#minecraft:wool_carpets",
+      "#minecraft:wool"
     ],
     "soundReflectivity": 0.25
   },
@@ -170,13 +170,14 @@
       "@PLANT",
       "@UNDERWATER_PLANT",
       "@SNOW_LAYER",
-      "@SNOW_BLOCK",
+      "#minecraft:snow",
       "@ORGANIC_PRODUCT",
       "@AGGREGATE",
       "@SPONGE",
       "@BAMBOO",
       "@BAMBOO_SAPLING",
-      "@LEAVES",
+      "#minecraft:saplings",
+      "#minecraft:leaves",
       "@CACTUS",
       "#minecraft:fences",
       "#minecraft:fence_gates"
@@ -194,8 +195,7 @@
     "blocks": [
       "@WATER",
       "@BUBBLE_COLUMN",
-      "@DENSE_ICE",
-      "@ICE",
+      "#minecraft:ice",
       "#minecraft:impermeable"
     ],
     "soundReflectivity": 0.5
@@ -203,11 +203,11 @@
   {
     "blocks": [
       "@LAVA",
-      "@FIRE",
+      "#minecraft:fire",
       "@COBWEB",
       "@DECORATION",
       "@REDSTONE_LAMP",
-      "@SHULKER_BOX",
+      "#minecraft:shulker_boxes",
       "@TNT",
       "@CAKE"
     ],
@@ -215,7 +215,7 @@
   },
   {
     "blocks": [
-      "@WOOD",
+      "#minecraft:wood",
       "@NETHER_WOOD",
       "#minecraft:logs",
       "#minecraft:planks",
