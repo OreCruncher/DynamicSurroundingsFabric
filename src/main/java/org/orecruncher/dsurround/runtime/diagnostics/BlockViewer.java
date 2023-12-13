@@ -8,6 +8,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.world.World;
+import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.BlockLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -15,6 +16,7 @@ import org.orecruncher.dsurround.lib.math.TimerEMA;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Objects;
 
 @Environment(EnvType.CLIENT)
 public class BlockViewer {
@@ -35,6 +37,13 @@ public class BlockViewer {
 
         var state = world.getBlockState(result.getBlockPos());
         data.add(state.getBlock().toString());
+
+        state.streamTags().forEach(tag -> {
+            var formatting = Formatting.YELLOW;
+            if (Objects.equals(tag.id().getNamespace(), Client.ModId))
+                formatting = Formatting.GOLD;
+            data.add(formatting + "#" + tag.id().toString());
+        });
 
         var info = BlockLibrary.getBlockInfo(state);
         var wallOfText = info.toString();

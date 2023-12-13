@@ -115,9 +115,8 @@
   },
   {
     "blocks": [
-      "@ORGANIC_PRODUCT",
-      "@SOLID_ORGANIC",
-      "@PLANT",
+      "#dsurround:material/organic",
+      "#dsurround:material/plant",
       "#minecraft:fences",
       "#minecraft:gates"
     ],
@@ -149,12 +148,8 @@
   },
   {
     "blocks": [
-      "@PORTAL",
-      "#minecraft:base_stone_overworld",
-      "@METAL",
-      "@REPAIR_STATION",
-      "@EGG",
-      "@PISTON"
+      "#dsurround:material/metal",
+      "#dsurround:material/stone"
     ],
     "soundReflectivity": 0.95
   },
@@ -167,18 +162,17 @@
   },
   {
     "blocks": [
-      "@PLANT",
-      "@UNDERWATER_PLANT",
-      "@SNOW_LAYER",
-      "#minecraft:snow",
-      "@ORGANIC_PRODUCT",
-      "@AGGREGATE",
-      "@SPONGE",
+      "#dsurround:material/plant",
+      "#dsurround:material/underwater_plant",
+      "#dsurround:material/cactus",
+      "#dsurround:material/snow_layer",
+      "#dsurround:material/organic",
+      "#dsurround:material/aggregate",
+      "#dsurround:material/sponge",
       "@BAMBOO",
-      "@BAMBOO_SAPLING",
+      "#minecraft:snow",
       "#minecraft:saplings",
       "#minecraft:leaves",
-      "@CACTUS",
       "#minecraft:fences",
       "#minecraft:fence_gates"
     ],
@@ -193,8 +187,7 @@
   },
   {
     "blocks": [
-      "@WATER",
-      "@BUBBLE_COLUMN",
+      "#dsurround:material/water",
       "#minecraft:ice",
       "#minecraft:impermeable"
     ],
@@ -202,14 +195,14 @@
   },
   {
     "blocks": [
-      "@LAVA",
-      "#minecraft:fire",
+      "#dsurround:material/lava",
       "@COBWEB",
       "@DECORATION",
       "@REDSTONE_LAMP",
-      "#minecraft:shulker_boxes",
       "@TNT",
-      "@CAKE"
+      "@CAKE",
+      "#minecraft:fire",
+      "#minecraft:shulker_boxes"
     ],
     "soundReflectivity": 0
   },

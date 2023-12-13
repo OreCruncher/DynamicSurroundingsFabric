@@ -17,6 +17,7 @@ import org.orecruncher.dsurround.lib.FrameworkUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.TickCounter;
 import org.orecruncher.dsurround.lib.logging.ModLog;
+import org.orecruncher.dsurround.lib.material.MaterialTags;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.processing.Handlers;
 import org.orecruncher.dsurround.runtime.diagnostics.BlockViewer;
