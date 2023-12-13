@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.runtime.audio.effects;
 
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.openal.AL11;
+import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
 import org.orecruncher.dsurround.runtime.audio.SoundFXProcessor;
 
 public final class SourcePropertyFloat {
@@ -39,7 +40,7 @@ public final class SourcePropertyFloat {
     public void apply(final int sourceId) {
         if (doProcess()) {
             AL11.alSourcef(sourceId, this.property, getValue());
-            SoundFXProcessor.validate("SourcePropertyFloat apply");
+            AudioUtilities.validate("SourcePropertyFloat apply");
         }
     }
 }

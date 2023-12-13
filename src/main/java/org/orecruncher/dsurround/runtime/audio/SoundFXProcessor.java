@@ -6,8 +6,6 @@ import net.minecraft.client.sound.*;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Formatting;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.openal.AL10;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.Singleton;
@@ -21,7 +19,6 @@ import org.orecruncher.dsurround.xface.ISourceContext;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.*;
-import java.util.function.Supplier;
 
 public final class SoundFXProcessor {
 
@@ -142,7 +139,9 @@ public final class SoundFXProcessor {
      */
     public static void tick(final Source source) {
         var ctx = ((ISourceContext) source).getData();
-        ctx.ifPresent(sourceContext -> sourceContext.tick(((ISourceContext) source).getId()));
+        ctx.ifPresent(sourceContext -> {
+            sourceContext.tick(((ISourceContext) source).getId());
+        });
     }
 
     /**
@@ -227,37 +226,6 @@ public final class SoundFXProcessor {
             final String msg = soundProcessor.getDiagnosticString();
             if (!StringUtils.isEmpty(msg))
                 left.add(Formatting.GREEN + msg);
-        }
-    }
-
-    /**
-     * Validates that the current OpenAL state is not in error.  If in an error state an exception will be thrown.
-     *
-     * @param msg Optional message to be displayed along with error data
-     */
-    public static void validate(final String msg) {
-        validate(() -> msg);
-    }
-
-    /**
-     * Validates that the current OpenAL state is not in error.  If in an error state an exception will be thrown.
-     *
-     * @param err Supplier for the error message to post with exception info
-     */
-    public static void validate(@Nullable final Supplier<String> err) {
-        final int error = AL10.alGetError();
-        if (error != AL10.AL_NO_ERROR) {
-            String errorName = AL10.alGetString(error);
-            if (StringUtils.isEmpty(errorName))
-                errorName = Integer.toString(error);
-
-            String msg = null;
-            if (err != null)
-                msg = err.get();
-            if (msg == null)
-                msg = "NONE";
-
-            throw new IllegalStateException(String.format("OpenAL Error: %s [%s]", errorName, msg));
         }
     }
 }

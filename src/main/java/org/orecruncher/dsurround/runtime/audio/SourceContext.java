@@ -119,7 +119,7 @@ public final class SourceContext implements Callable<Void> {
 
                 this.airAbsorb.apply(sourceId);
 
-                SoundFXProcessor.validate("SourceHandler::tick");
+                AudioUtilities.validate("SourceHandler::tick");
             }
         }
     }
@@ -155,7 +155,8 @@ public final class SourceContext implements Callable<Void> {
 
     private void updateImpl() {
         try {
-            this.fxProcessor.calculate(SoundFXProcessor.getWorldContext());
+            //if (this.sound.getId().getPath().contains("stone"))
+                this.fxProcessor.calculate(SoundFXProcessor.getWorldContext());
         } catch (final Throwable ignore) {
             // Suppress.  Times that I have seen this fire was due to a world unloading and the background
             // processing threads tripping over dead objects.

@@ -11,6 +11,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.BlockLibrary;
@@ -96,7 +97,7 @@ public final class SoundFXUtils {
         this.source = source;
     }
 
-    public void calculate(final WorldContext ctx) {
+    public void calculate(final @NotNull WorldContext ctx) {
 
         assert ctx.player != null;
         assert ctx.world != null;
@@ -323,7 +324,7 @@ public final class SoundFXUtils {
                 final float occlusion = getOcclusion(lastState);
                 final double distance = lastHit.distanceTo(result.getPos());
                 // Occlusion is scaled by the distance travelled through the block.
-                factor += occlusion * distance;
+                factor += (float) (occlusion * distance);
                 lastHit = result.getPos();
                 lastState = ctx.world.getBlockState(result.getBlockPos());
             } else {

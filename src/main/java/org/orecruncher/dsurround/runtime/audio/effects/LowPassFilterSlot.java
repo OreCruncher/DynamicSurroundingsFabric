@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.runtime.audio.effects;
 
 import org.lwjgl.openal.AL11;
 import org.lwjgl.openal.EXTEfx;
+import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
 
 public class LowPassFilterSlot extends Slot {
 
@@ -18,11 +19,11 @@ public class LowPassFilterSlot extends Slot {
         if (isInitialized()) {
             if (data.doProcess()) {
                 data.clamp();
-                execute(() -> EXTEfx.alFilterf(getSlot(), EXTEfx.AL_LOWPASS_GAIN, data.gain), () -> "LowPassFilterSlot EXTEfx.AL_DIRECT_FILTER gain");
-                execute(() -> EXTEfx.alFilterf(getSlot(), EXTEfx.AL_LOWPASS_GAINHF, data.gainHF), () -> "LowPassFilterSlot EXTEfx.AL_DIRECT_FILTER gainHF");
-                execute(() -> AL11.alSourcei(sourceId, EXTEfx.AL_DIRECT_FILTER, getSlot()), () -> "LowPassFilterSlot EXTEfx.AL_DIRECT_FILTER upload");
+                AudioUtilities.execute(() -> EXTEfx.alFilterf(getSlot(), EXTEfx.AL_LOWPASS_GAIN, data.gain), () -> "LowPassFilterSlot EXTEfx.AL_DIRECT_FILTER gain");
+                AudioUtilities.execute(() -> EXTEfx.alFilterf(getSlot(), EXTEfx.AL_LOWPASS_GAINHF, data.gainHF), () -> "LowPassFilterSlot EXTEfx.AL_DIRECT_FILTER gainHF");
+                AudioUtilities.execute(() -> AL11.alSourcei(sourceId, EXTEfx.AL_DIRECT_FILTER, getSlot()), () -> "LowPassFilterSlot EXTEfx.AL_DIRECT_FILTER upload");
             } else {
-                execute(() -> AL11.alSourcei(sourceId, EXTEfx.AL_DIRECT_FILTER, EXTEfx.AL_EFFECTSLOT_NULL), () -> "LowPassFilterSlot EXTEfx.AL_DIRECT_FILTER null");
+                AudioUtilities.execute(() -> AL11.alSourcei(sourceId, EXTEfx.AL_DIRECT_FILTER, EXTEfx.AL_EFFECTSLOT_NULL), () -> "LowPassFilterSlot EXTEfx.AL_DIRECT_FILTER null");
             }
         }
     }
@@ -31,11 +32,11 @@ public class LowPassFilterSlot extends Slot {
         if (isInitialized()) {
             if (data.doProcess()) {
                 data.clamp();
-                execute(() -> EXTEfx.alFilterf(getSlot(), EXTEfx.AL_LOWPASS_GAIN, data.gain), () -> "LowPassFilterSlot EXTEfx.AL_AUXILIARY_SEND_FILTER gain");
-                execute(() -> EXTEfx.alFilterf(getSlot(), EXTEfx.AL_LOWPASS_GAINHF, data.gainHF), () -> "LowPassFilterSlot EXTEfx.AL_AUXILIARY_SEND_FILTER gainHF");
-                execute(() -> AL11.alSource3i(sourceId, EXTEfx.AL_AUXILIARY_SEND_FILTER, aux.getSlot(), auxSend, getSlot()), () -> "LowPassFilterSlot EXTEfx.AL_AUXILIARY_SEND_FILTER upload");
+                AudioUtilities.execute(() -> EXTEfx.alFilterf(getSlot(), EXTEfx.AL_LOWPASS_GAIN, data.gain), () -> "LowPassFilterSlot EXTEfx.AL_AUXILIARY_SEND_FILTER gain");
+                AudioUtilities.execute(() -> EXTEfx.alFilterf(getSlot(), EXTEfx.AL_LOWPASS_GAINHF, data.gainHF), () -> "LowPassFilterSlot EXTEfx.AL_AUXILIARY_SEND_FILTER gainHF");
+                AudioUtilities.execute(() -> AL11.alSource3i(sourceId, EXTEfx.AL_AUXILIARY_SEND_FILTER, aux.getSlot(), auxSend, getSlot()), () -> "LowPassFilterSlot EXTEfx.AL_AUXILIARY_SEND_FILTER upload");
             } else {
-                execute(() -> AL11.alSource3i(sourceId, EXTEfx.AL_AUXILIARY_SEND_FILTER, EXTEfx.AL_EFFECTSLOT_NULL, auxSend, EXTEfx.AL_FILTER_NULL), () -> "LowPassFilterSlot EXTEfx.AL_AUXILIARY_SEND_FILTER null");
+                AudioUtilities.execute(() -> AL11.alSource3i(sourceId, EXTEfx.AL_AUXILIARY_SEND_FILTER, EXTEfx.AL_EFFECTSLOT_NULL, auxSend, EXTEfx.AL_FILTER_NULL), () -> "LowPassFilterSlot EXTEfx.AL_AUXILIARY_SEND_FILTER null");
             }
         }
     }
