@@ -18,7 +18,7 @@ public class ItemEffectTags {
     public static final TagKey<Item> TOOLS = of("tools");
 
     private static TagKey<Item> of(String id) {
-        return TagKey.of(RegistryKeys.ITEM, new Identifier(Client.ModId, id));
+        return TagKey.of(RegistryKeys.ITEM, new Identifier(Client.ModId, "effects/" + id));
     }
 
 }

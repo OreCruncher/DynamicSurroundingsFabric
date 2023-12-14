@@ -111,7 +111,7 @@ public class BlockStateProperties {
     }
 
     public String getFormattedProperties() {
-        if (this.props.size() == 0)
+        if (this.props.isEmpty())
             return Strings.EMPTY;
         final String txt = this.props.entrySet().stream()
                 .map(kvp -> kvp.getKey().getName() + "=" + kvp.getValue().toString())

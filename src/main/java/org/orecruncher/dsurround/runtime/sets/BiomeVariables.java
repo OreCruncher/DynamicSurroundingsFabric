@@ -71,8 +71,7 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
 
     @Override
     public float getRainfall() {
-        // TODO: Does this still make sense?
-        return this.biome.hasPrecipitation() ? 1f : 0f;
+        return this.biome.weather.downfall();
     }
 
     @Override

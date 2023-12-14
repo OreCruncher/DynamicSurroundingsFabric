@@ -1,7 +1,7 @@
 [
   {
     "entityTypes": [
-      "#dsurround:effect/bow_pull"
+      "#dsurround:effects/bow_pull"
     ],
     "effects": [
       "bow_pull"
@@ -9,7 +9,7 @@
   },
   {
     "entityTypes": [
-      "#dsurround:effect/frost_breath"
+      "#dsurround:effects/frost_breath"
     ],
     "effects": [
       "frost_breath"
@@ -17,7 +17,7 @@
   },
   {
     "entityTypes": [
-      "#dsurround:effect/toolbar"
+      "#dsurround:effects/toolbar"
     ],
     "effects": [
       "player_toolbar"
@@ -25,7 +25,7 @@
   },
   {
     "entityTypes": [
-      "#dsurround:effect/item_swing"
+      "#dsurround:effects/item_swing"
     ],
     "effects": [
       "item_swing"

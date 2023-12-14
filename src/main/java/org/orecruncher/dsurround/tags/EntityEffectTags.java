@@ -13,6 +13,6 @@ public class EntityEffectTags {
     public static final TagKey<EntityType<?>> TOOLBAR = of("toolbar");
 
     private static TagKey<EntityType<?>> of(String id) {
-        return TagKey.of(RegistryKeys.ENTITY_TYPE, new Identifier(Client.ModId, "effect/" + id));
+        return TagKey.of(RegistryKeys.ENTITY_TYPE, new Identifier(Client.ModId, "effects/" + id));
     }
 }

@@ -2,49 +2,49 @@
   {
     "itemClassType": "tool",
     "items": [
-      "#dsurround:tools"
+      "#dsurround:effects/tools"
     ]
   },
   {
     "itemClassType": "sword",
     "items": [
-      "#dsurround:swords"
+      "#dsurround:effects/swords"
     ]
   },
   {
     "itemClassType": "shield",
     "items": [
-      "#dsurround:shields"
+      "#dsurround:effects/shields"
     ]
   },
   {
     "itemClassType": "axe",
     "items": [
-      "#dsurround:axes"
+      "#dsurround:effects/axes"
     ]
   },
   {
     "itemClassType": "bow",
     "items": [
-      "#durround:bows"
+      "#durround:effects/bows"
     ]
   },
   {
     "itemClassType": "crossbow",
     "items": [
-      "#dsurround:crossbows"
+      "#dsurround:effects/crossbows"
     ]
   },
   {
     "itemClassType": "potion",
     "items": [
-      "#dsurround:potions"
+      "#dsurround:effects/potions"
     ]
   },
   {
     "itemClassType": "book",
     "items": [
-      "#dsurround:books"
+      "#dsurround:effects/books"
     ]
   }
 ]

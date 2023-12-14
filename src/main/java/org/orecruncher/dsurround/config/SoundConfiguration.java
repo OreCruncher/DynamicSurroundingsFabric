@@ -101,7 +101,7 @@ public class SoundConfiguration {
     }
 
     public Optional<SoundEvent> getRandomStartupSound() {
-        if (this.startupSounds.size() == 0)
+        if (this.startupSounds.isEmpty())
             return Optional.empty();
 
         int idx = 0;
