@@ -6,7 +6,7 @@
   "mixins": [
   ],
   "client": [
-    "audio.MixinSoundEngineAccessor",
+    "audio.MixinSoundEngine",
     "audio.MixinSoundSystem",
     "audio.MixinSource",
     "audio.MixinStaticSoundAccessor",

@@ -10,9 +10,7 @@ import org.lwjgl.openal.*;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.audio.AlAttributeBuilder;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.mixins.audio.MixinSoundEngineAccessor;
 import org.orecruncher.dsurround.mixins.core.MixinAbstractSoundInstance;
 import org.orecruncher.dsurround.mixins.core.MixinSoundManagerAccessor;
 import org.orecruncher.dsurround.mixins.core.MixinSoundSystemAccessors;
@@ -21,15 +19,6 @@ import java.util.function.Supplier;
 
 public final class AudioUtilities {
     private static final IModLog LOGGER = Client.LOGGER.createChild(AudioUtilities.class);
-
-    private static final String[] HRTF_STATUS = {
-            "ALC_HRTF_DISABLED_SOFT",
-            "ALC_HRTF_ENABLED_SOFT",
-            "ALC_HRTF_DENIED_SOFT",
-            "ALC_HRTF_REQUIRED_SOFT",
-            "ALC_HRTF_HEADPHONES_DETECTED_SOFT",
-            "ALC_HRTF_UNSUPPORTED_FORMAT_SOFT"
-    };
 
     private static int MAX_SOUNDS = 0;
 
@@ -100,77 +89,29 @@ public final class AudioUtilities {
 
     /**
      * This method is invoked via the MixinSoundSystem injection.  It will be called when the sound system
-     * is initialized, and it gives an opportunity to setup special effects processing.
+     * is initialized, and it gives an opportunity to set up special effects processing.
      *
      * @param soundEngine The sound system instance being initialized
      */
     public static void initialize(final SoundEngine soundEngine) {
 
-        MixinSoundEngineAccessor accessor = (MixinSoundEngineAccessor) soundEngine;
-
         try {
 
-            final long device = accessor.getDevicePointer();
-
-            boolean hasFX = false;
-            if (doEnhancedSounds()) {
-                LOGGER.info("Enhanced sounds are enabled.  Will perform sound engine reconfiguration.");
-                final ALCCapabilities deviceCaps = ALC.createCapabilities(device);
-                hasFX = deviceCaps.ALC_EXT_EFX;
-
-                if (!hasFX) {
-                    LOGGER.warn("EFX audio extensions not available for the current sound device!");
-                } else {
-                    AlAttributeBuilder builder = new AlAttributeBuilder()
-                            .add(EXTEfx.ALC_MAX_AUXILIARY_SENDS, 4);
-
-                    var freq = Client.Config.enhancedSounds.outputFrequency;
-                    if (freq != 0) {
-                        Client.LOGGER.info("Attempting to set output frequency of %d", freq);
-                        builder.add(ALC10.ALC_FREQUENCY, freq);
-                    }
-
-                    // Using 4 aux slots instead of the default 2
-                    var attributes = builder.build();
-                    final long ctx = ALC10.alcCreateContext(device, attributes);
-                    execute(() -> ALC10.alcMakeContextCurrent(ctx), () -> "Set ALC context");
-                    accessor.setContextPointer(ctx);
-
-                    // Have to re-enable since we reset the context
-                    execute(() -> AL10.alEnable(EXTSourceDistanceModel.AL_SOURCE_DISTANCE_MODEL), () -> "Set distance model");
-
-                    // If HRTF is available enable if configured to do so
-                    if (deviceCaps.ALC_SOFT_HRTF) {
-                        int status = ALC10.alcGetInteger(device, SOFTHRTF.ALC_HRTF_STATUS_SOFT);
-                        LOGGER.info("HRTF status report before configuration: %s", HRTF_STATUS[status]);
-                        if (status == SOFTHRTF.ALC_HRTF_DISABLED_SOFT && Client.Config.enhancedSounds.enableHRTF) {
-                            var result = SOFTHRTF.alcResetDeviceSOFT(device, new int[]{SOFTHRTF.ALC_HRTF_SOFT, ALC10.ALC_TRUE, 0});
-                            if (result) {
-                                status = ALC10.alcGetInteger(device, SOFTHRTF.ALC_HRTF_STATUS_SOFT);
-                                LOGGER.warn("After configuration OpenAL reports HRTF status %s", HRTF_STATUS[status]);
-                            } else {
-                                LOGGER.warn("Unable to set HRTF feature in OpenAL");
-                            }
-                        } else {
-                            LOGGER.info("HRTF is already configured or Dynamic Surroundings is not configured to enable");
-                        }
-                    }
-                }
-            }
-
             // Calculate the number of source slots available
-            MAX_SOUNDS = ALC11.alcGetInteger(device, ALC11.ALC_MONO_SOURCES);
+            MAX_SOUNDS = ALC11.alcGetInteger(soundEngine.devicePointer, ALC11.ALC_MONO_SOURCES);
 
             // Do this last because it is dependent on the sound calculations
-            if (hasFX)
+            if (doEnhancedSounds())
                 SoundFXProcessor.initialize();
+            else
+                LOGGER.warn("Enhanced sounds are not enabled.  No fancy sounds for you!");
 
             final String vendor = AL10.alGetString(AL10.AL_VENDOR);
             final String version = AL10.alGetString(AL10.AL_VERSION);
             final String renderer = AL10.alGetString(AL10.AL_RENDERER);
             final String extensions = AL10.alGetString(AL10.AL_EXTENSIONS);
 
-            final int frequency = ALC11.alcGetInteger(device, ALC11.ALC_FREQUENCY);
+            final int frequency = ALC11.alcGetInteger(soundEngine.devicePointer, ALC11.ALC_FREQUENCY);
 
             LOGGER.info("Vendor: %s", vendor);
             LOGGER.info("Version: %s", version);
@@ -182,12 +123,10 @@ public final class AudioUtilities {
             LOGGER.warn(t.getMessage());
             LOGGER.warn("OpenAL special effects for sounds will not be available");
         }
-
     }
 
-    private static boolean doEnhancedSounds() {
+    public static boolean doEnhancedSounds() {
         if (!Client.Config.enhancedSounds.enableEnhancedSounds) {
-            LOGGER.warn("Enhanced sounds are not enabled.  No fancy sounds for you!");
             return false;
         }
 
@@ -195,7 +134,8 @@ public final class AudioUtilities {
     }
 
     public static void deinitialize(final SoundEngine soundEngine) {
-        SoundFXProcessor.deinitialize();
+        if (doEnhancedSounds())
+            SoundFXProcessor.deinitialize();
     }
 
     /**
