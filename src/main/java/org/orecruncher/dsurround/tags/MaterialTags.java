@@ -18,10 +18,11 @@ public final class MaterialTags {
     public static final TagKey<Block> WATER = of("water");
     public static final TagKey<Block> LAVA = of("lava");
     public static final TagKey<Block> STONE = of("stone");
+    public static final TagKey<Block> COBBLED_STONE = of("cobbled_stone");
     public static final TagKey<Block> AGGREGATE = of("aggregate");
     public static final TagKey<Block> SNOW_LAYER = of("snow_layer");
 
     private static TagKey<Block> of(String id) {
-        return TagKey.of(RegistryKeys.BLOCK, new Identifier(Client.ModId, "material/" + id));
+        return TagKey.of(RegistryKeys.BLOCK, new Identifier(Client.ModId, "materials/" + id));
     }
 }

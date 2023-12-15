@@ -2,6 +2,9 @@
   "values": [
     "#c:ores",
     "minecraft:stone",
+    "minecraft:andesite",
+    "minecraft:diorite",
+    "minecraft:granite",
     "minecraft:deepslate",
     "minecraft:tuff"
   ]

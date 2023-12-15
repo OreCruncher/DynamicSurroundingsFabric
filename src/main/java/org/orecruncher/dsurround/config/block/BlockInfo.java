@@ -29,7 +29,7 @@ public class BlockInfo {
 
     private static final float DEFAULT_OPAQUE_OCCLUSION = 0.5F;
     private static final float DEFAULT_TRANSLUCENT_OCCLUSION = 0.15F;
-    private static final float DEFAULT_REFLECTION = 0.4F;
+    private static final float DEFAULT_REFLECTION = 0.0F; //0.4F;
 
     // Lazy init on add
     @Nullable
