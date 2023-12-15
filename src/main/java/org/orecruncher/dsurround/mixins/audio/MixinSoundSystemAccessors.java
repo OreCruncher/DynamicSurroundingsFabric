@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.mixins.core;
+package org.orecruncher.dsurround.mixins.audio;
 
 import net.minecraft.client.sound.Channel;
 import net.minecraft.client.sound.SoundInstance;

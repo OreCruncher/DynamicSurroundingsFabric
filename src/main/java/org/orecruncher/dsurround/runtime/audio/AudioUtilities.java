@@ -12,8 +12,8 @@ import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.mixins.core.MixinAbstractSoundInstance;
-import org.orecruncher.dsurround.mixins.core.MixinSoundManagerAccessor;
-import org.orecruncher.dsurround.mixins.core.MixinSoundSystemAccessors;
+import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;
+import org.orecruncher.dsurround.mixins.audio.MixinSoundSystemAccessors;
 
 import java.util.function.Supplier;
 
@@ -146,7 +146,7 @@ public final class AudioUtilities {
      * the sound is too far away (based on the sound instance distance value).
      * @param sound Sound that is being queued into the audio engine
      */
-    public static void onPlaySound(final SoundInstance sound) {
+    public static void onSoundPlay(final SoundInstance sound) {
         LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> "PLAYING: " + debugString(sound));
     }
 

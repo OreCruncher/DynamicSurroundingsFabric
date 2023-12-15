@@ -21,7 +21,7 @@ public class MixinSoundEngine {
      * This will resize the capability buffer to accommodate additional settings
      */
     @ModifyConstant(method = "init(Ljava/lang/String;Z)V", constant = @Constant(intValue = 3))
-    private int modifyIntBufferSize(int size) {
+    private int dsurround_modifyIntBufferSize(int size) {
         return AudioUtilities.doEnhancedSounds() ? 5 : 3;
     }
 
@@ -30,7 +30,7 @@ public class MixinSoundEngine {
      * NOTE: The dev plugin for Intellij does not like the method signature - just ignore.
      */
     @ModifyVariable(method = "init(Ljava/lang/String;Z)V", at = @At(value = "STORE"), name = "intBuffer")
-    private IntBuffer buildCapabilities(IntBuffer intBuffer) {
+    private IntBuffer dsurround_buildCapabilities(IntBuffer intBuffer) {
         if (AudioUtilities.doEnhancedSounds()) {
             // Buffer should have been resized by the constant modification above
             intBuffer.clear();

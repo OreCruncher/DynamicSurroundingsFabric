@@ -165,7 +165,9 @@ public final class SoundFXProcessor {
 
     /**
      * Injected into SoundSource and will be invoked when a non-streaming sound data stream is attached to the
-     * SoundSource.  Take the opportunity to convert the audio stream into mono format if needed.
+     * SoundSource.  Take the opportunity to convert the audio stream into mono format if needed.  Note that
+     * conversion will take place only if it is enabled in the configuration and the sound is playing
+     * non-attenuated.
      *
      * @param source SoundSource for which the audio buffer is being generated
      * @param buffer The buffer in question.
@@ -177,17 +179,12 @@ public final class SoundFXProcessor {
         if (!Client.Config.enhancedSounds.enableMonoConversion)
             return;
 
-        var ctx = ((ISourceContext) source).getData();
-
-        // If there is no context attached and conversion is enabled do it.  This can happen if enhanced sound
-        // processing is turned off.  If there is a context, make sure that the sound is attenuated.
-        if (ctx.isEmpty()) {
-            Conversion.convert(buffer);
-        } else {
-            var s = ctx.get().getSound();
+        var data = ((ISourceContext) source).getData();
+        data.ifPresent(ctx ->{
+            var s = ctx.getSound();
             if (s != null && s.getAttenuationType() != SoundInstance.AttenuationType.NONE && !s.isRelative())
                 Conversion.convert(buffer);
-        }
+        });
     }
 
     /**

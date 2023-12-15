@@ -9,8 +9,8 @@ import net.minecraft.util.Formatting;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
-import org.orecruncher.dsurround.mixins.core.MixinSoundManagerAccessor;
-import org.orecruncher.dsurround.mixins.core.MixinSoundSystemAccessors;
+import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;
+import org.orecruncher.dsurround.mixins.audio.MixinSoundSystemAccessors;
 
 import java.util.Collection;
 import java.util.Map;
