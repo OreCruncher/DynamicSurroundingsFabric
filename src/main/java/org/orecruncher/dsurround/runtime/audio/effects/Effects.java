@@ -30,6 +30,7 @@ public final class Effects {
 
     static {
         reverbData0 = new ReverbData();
+        /*
         reverbData0.decayTime = 0.15F;
         reverbData0.density = 0.0F;
         reverbData0.diffusion = 1.0F;
@@ -42,8 +43,9 @@ public final class Effects {
         reverbData0.lateReverbDelay = 0.011F;
         reverbData0.airAbsorptionGainHF = 0.994F;
         reverbData0.roomRolloffFactor = 0.16F * ROLLOFF_FACTOR;
-
+*/
         reverbData1 = new ReverbData();
+        /*
         reverbData1.decayTime = 0.55F;
         reverbData1.density = 0.0F;
         reverbData1.diffusion = 1.0F;
@@ -56,8 +58,9 @@ public final class Effects {
         reverbData1.lateReverbDelay = 0.011F;
         reverbData1.airAbsorptionGainHF = 0.994F;
         reverbData1.roomRolloffFactor = 0.15F * ROLLOFF_FACTOR;
-
+*/
         reverbData2 = new ReverbData();
+        /*
         reverbData2.decayTime = 1.68F;
         reverbData2.density = 0.1F;
         reverbData2.diffusion = 1.0F;
@@ -70,8 +73,9 @@ public final class Effects {
         reverbData2.lateReverbDelay = 0.021F;
         reverbData2.airAbsorptionGainHF = 0.994F;
         reverbData2.roomRolloffFactor = 0.13F * ROLLOFF_FACTOR;
-
+*/
         reverbData3 = new ReverbData();
+        /*
         reverbData3.decayTime = 4.142F;
         reverbData3.density = 0.5F;
         reverbData3.diffusion = 1.0F;
@@ -84,6 +88,7 @@ public final class Effects {
         reverbData3.lateReverbDelay = 0.021F;
         reverbData3.airAbsorptionGainHF = 0.994F;
         reverbData3.roomRolloffFactor = 0.11F * ROLLOFF_FACTOR;
+        */
     }
 
     private Effects() {

@@ -34,8 +34,4 @@ public abstract class Slot {
     public int getSlot() {
         return this.slot;
     }
-
-    protected void execute(final Runnable func) {
-        AudioUtilities.execute(func, null);
-    }
 }
