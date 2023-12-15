@@ -4,10 +4,11 @@ import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.item.*;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
@@ -17,6 +18,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.sound.ISoundFactory;
+import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,7 +48,7 @@ public class ItemLibrary {
         itemConfigRules = new ArrayList<>();
 
         // Iterate through the configs gathering the EntityEffectType data that is defined.  The result
-        // of this process is each EntityType having deduped set of effects that can be applied.
+        // of this process is each EntityType having de-duped set of effects that can be applied.
         IResourceAccessor.process(accessors, accessor -> {
             var cfg = accessor.as(CODEC);
             if (cfg != null)
@@ -81,6 +83,20 @@ public class ItemLibrary {
         for (var cfg : itemConfigRules)
             if (cfg.match(item))
                 return resolveSound.apply(cfg.itemClassType);
+
+        // Look for special Equipment and ArmorItem types since they may have built in equip sounds
+        SoundEvent itemEquipSound = null;
+        if (item instanceof Equipment equipment)
+            itemEquipSound = equipment.getEquipSound();
+        else if (item instanceof ArmorItem armor)
+            itemEquipSound = armor.getEquipSound();
+        else if (item instanceof ElytraItem elytraItem)
+            itemEquipSound = elytraItem.getEquipSound();
+
+        if (itemEquipSound != null)
+            return SoundFactoryBuilder
+                    .create(itemEquipSound)
+                    .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build();
 
         // use the default
         return defaultSoundFactory.get();
