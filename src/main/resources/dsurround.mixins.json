@@ -20,7 +20,6 @@
     "core.MixinParticle",
     "core.MixinParticleManager",
     "core.MixinRaycastContextAccessor",
-    "core.MixinSoundEngine",
     "core.MixinSoundEvent",
     "core.MixinSoundManagerAccessor",
     "core.MixinSoundSystem",

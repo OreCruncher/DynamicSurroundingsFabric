@@ -112,12 +112,14 @@ public final class AudioUtilities {
             final String extensions = AL10.alGetString(AL10.AL_EXTENSIONS);
 
             final int frequency = ALC11.alcGetInteger(soundEngine.devicePointer, ALC11.ALC_FREQUENCY);
+            final int auxSendsConfigured = ALC11.alcGetInteger(soundEngine.devicePointer, EXTEfx.ALC_MAX_AUXILIARY_SENDS);
 
             LOGGER.info("Vendor: %s", vendor);
             LOGGER.info("Version: %s", version);
             LOGGER.info("Renderer: %s", renderer);
-            LOGGER.info("Extensions: %s", extensions);
             LOGGER.info("Frequency: %d", frequency);
+            LOGGER.info("AuxSends: %d", auxSendsConfigured);
+            LOGGER.info("Extensions: %s", extensions);
 
         } catch (final Throwable t) {
             LOGGER.warn(t.getMessage());

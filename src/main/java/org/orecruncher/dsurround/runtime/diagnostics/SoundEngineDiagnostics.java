@@ -34,7 +34,7 @@ public final class SoundEngineDiagnostics {
 
         left.add(Formatting.GOLD + GameUtils.getSoundManager().getDebugString());
 
-        if (sources.size() > 0) {
+        if (!sources.isEmpty()) {
             accessors.getSources().keySet().stream()
                     .map(s -> s.getSound().getIdentifier())
                     .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))

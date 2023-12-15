@@ -171,11 +171,11 @@ public final class SoundFXUtils {
                 target = MathStuff.addScaled(origin, newRayDir, MAX_REVERB_DISTANCE);
 
                 rayHit = traceContext.trace(origin, target);
+                final boolean missed = isMiss(rayHit);
 
-                if (isMiss(rayHit)) {
+                if (missed) {
                     totalRayDistance += lastHitPos.distanceTo(ctx.playerEyePosition);
                 } else {
-
                     bounceRatio[j] += blockReflectivity;
                     totalRayDistance += lastHitPos.distanceTo(rayHit.getPos());
 
@@ -207,7 +207,7 @@ public final class SoundFXUtils {
                 sendGain3 += cross3 * energyTowardsPlayer * 12.8F;
 
                 // Nowhere to bounce off of, stop bouncing!
-                if (isMiss(rayHit)) {
+                if (missed) {
                     break;
                 }
             }

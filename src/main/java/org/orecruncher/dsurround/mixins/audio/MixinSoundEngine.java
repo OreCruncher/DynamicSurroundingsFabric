@@ -1,7 +1,10 @@
 package org.orecruncher.dsurround.mixins.audio;
 
 import net.minecraft.client.sound.SoundEngine;
+import org.lwjgl.openal.ALC10;
 import org.lwjgl.openal.EXTEfx;
+import org.lwjgl.openal.SOFTOutputLimiter;
+import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -31,13 +34,25 @@ public class MixinSoundEngine {
         if (AudioUtilities.doEnhancedSounds()) {
             // Buffer should have been resized by the constant modification above
             intBuffer.clear();
-            // From the original code - not sure what it is setting
-            intBuffer.put(6554).put(1);
+            // From the original code
+            intBuffer.put(SOFTOutputLimiter.ALC_OUTPUT_LIMITER_SOFT).put(ALC10.ALC_TRUE);
             // Increase send channels
             intBuffer.put(EXTEfx.ALC_MAX_AUXILIARY_SENDS).put(4).put(0);
             return intBuffer.flip();
         }
         // Leave the buffer intact
         return intBuffer;
+    }
+
+    /**
+     * Modify the number of streaming sounds that can be handled by the underlying sound engine.  The number of
+     * channels to set is driven by config settings.
+     *
+     * @param v Existing value for the number of streaming sounds (should be 8)
+     * @return The quantity of streaming sounds (should be at least 8)
+     */
+    @ModifyConstant(method = "init(Ljava/lang/String;Z)V", constant = @Constant(intValue = 8))
+    public int dsurround_initialize(int v) {
+        return Client.Config.soundSystem.streamingChannels;
     }
 }

@@ -1,5 +1,8 @@
 {
   "values": [
-    "minecraft:stone"
+    "#c:ores",
+    "minecraft:stone",
+    "minecraft:deepslate",
+    "minecraft:tuff"
   ]
 }

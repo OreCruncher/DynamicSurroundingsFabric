@@ -116,18 +116,27 @@ public final class SoundFXProcessor {
         if (shouldIgnoreSound(sound))
             return;
 
-        // Double suplex!  Queue the operation on the sound executor to do the config work.  This should queue in
-        // behind any attempt at getting a sound source.
-        entry.run(source -> {
-            var id = ((ISourceContext) source).getId();
-            if (id > 0) {
-                final SourceContext ctx = new SourceContext();
-                ctx.attachSound(sound);
-                ctx.enable();
-                ctx.exec();
-                ((ISourceContext) source).setData(ctx);
-                sources[id - 1] = ctx;
-            }
+        ISourceContext source = (ISourceContext) entry.source;
+        var id = source.getId();
+        if (id > 0) {
+            final SourceContext ctx = new SourceContext(id);
+            ctx.attachSound(sound);
+            ctx.enable();
+            source.setData(ctx);
+        }
+    }
+
+    /**
+     * Invoked when the sound source is played.  This will cause the environment to be evaluated
+     * before the sound instance is processed.
+     */
+    public static void onSourcePlay(final Source source) {
+        var context = (ISourceContext) source;
+        var data = context.getData();
+        data.ifPresent(ctx -> {
+            var id = ctx.getId();
+            ctx.exec();
+            sources[id - 1] = ctx;
         });
     }
 
@@ -138,10 +147,9 @@ public final class SoundFXProcessor {
      * @param source SoundSource being ticked
      */
     public static void tick(final Source source) {
-        var ctx = ((ISourceContext) source).getData();
-        ctx.ifPresent(sourceContext -> {
-            sourceContext.tick(((ISourceContext) source).getId());
-        });
+        var src = (ISourceContext) source;
+        var data = src.getData();
+        data.ifPresent(SourceContext::tick);
     }
 
     /**
@@ -150,9 +158,9 @@ public final class SoundFXProcessor {
      * @param source The sound source that is stopping
      */
     public static void stopSoundPlay(final Source source) {
-        var ctx = ((ISourceContext) source).getData();
-        if (ctx.isPresent())
-            sources[((ISourceContext) source).getId() - 1] = null;
+        var sourceContext = (ISourceContext) source;
+        var data = sourceContext.getData();
+        data.ifPresent(sc -> sources[sc.getId()] = null);
     }
 
     /**
