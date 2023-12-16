@@ -115,103 +115,86 @@
   },
   {
     "blocks": [
-      "minecraft:air"
+      "#dsurround:occlusion/none"
     ],
-    "soundOcclusion": 0,
-    "soundReflectivity": 0
+    "soundOcclusion": 0.0
   },
   {
     "blocks": [
-      "#dsurround:materials/organic",
-      "#dsurround:materials/plant",
-      "#minecraft:fences",
-      "#minecraft:gates"
+      "#dsurround:occlusion/very_low"
     ],
-    "soundOcclusion": 0.2
+    "soundOcclusion": 0.15
   },
   {
     "blocks": [
-      "#minecraft:beehives"
+      "#dsurround:occlusion/low"
     ],
-    "soundOcclusion": 0.3
+    "soundOcclusion": 0.35
   },
   {
     "blocks": [
-      "minecraft:chest"
+      "#dsurround:occlusion/medium"
     ],
-    "soundOcclusion": 0.4
+    "soundOcclusion": 0.5
   },
   {
     "blocks": [
-      "minecraft:barrier"
+      "#dsurround:occlusion/high"
     ],
-    "soundOcclusion": 0
+    "soundOcclusion": 0.65
   },
   {
     "blocks": [
-      "#dsurround:materials/metal",
-      "#dsurround:materials/stone"
+      "#dsurround:occlusion/very_high"
+    ],
+    "soundOcclusion": 0.8
+  },
+  {
+    "blocks": [
+      "#dsurround:occlusion/max"
+    ],
+    "soundOcclusion": 0.95
+  },
+  {
+    "blocks": [
+      "#dsurround:reflectance/none"
+    ],
+    "soundReflectivity": 0.0
+  },
+  {
+    "blocks": [
+      "#dsurround:reflectance/very_low"
+    ],
+    "soundReflectivity": 0.15
+  },
+  {
+    "blocks": [
+      "#dsurround:reflectance/low"
+    ],
+    "soundReflectivity": 0.35
+  },
+  {
+    "blocks": [
+      "#dsurround:reflectance/medium"
+    ],
+    "soundReflectivity": 0.5
+  },
+  {
+    "blocks": [
+      "#dsurround:reflectance/high"
+    ],
+    "soundReflectivity": 0.65
+  },
+  {
+    "blocks": [
+      "#dsurround:reflectance/very_high"
+    ],
+    "soundReflectivity": 0.8
+  },
+  {
+    "blocks": [
+      "#dsurround:reflectance/max"
     ],
     "soundReflectivity": 0.95
-  },
-  {
-    "blocks": [
-      "#minecraft:wool_carpets",
-      "#minecraft:wool"
-    ],
-    "soundOcclusion": 1,
-    "soundReflectivity": 0.10
-  },
-  {
-    "blocks": [
-      "#dsurround:materials/plant",
-      "#dsurround:materials/underwater_plant",
-      "#dsurround:materials/cactus",
-      "#dsurround:materials/snow_layer",
-      "#dsurround:materials/organic",
-      "#dsurround:materials/aggregate",
-      "#dsurround:materials/sponge",
-      "#minecraft:snow",
-      "#minecraft:saplings",
-      "#minecraft:leaves",
-      "#minecraft:fences",
-      "#minecraft:fence_gates",
-      "#minecraft:logs"
-    ],
-    "soundReflectivity": 0.0
-  },
-  {
-    "blocks": [
-      "#dsurround:materials/soil",
-      "#dsurround:materials/aggregate",
-      "#dsurround:materials/cobbled_stone",
-      "#minecraft:beehives"
-    ],
-    "soundReflectivity": 0.0
-  },
-  {
-    "blocks": [
-      "#dsurround:materials/water",
-      "#minecraft:ice",
-      "#minecraft:impermeable"
-    ],
-    "soundReflectivity": 0.4
-  },
-  {
-    "blocks": [
-      "#dsurround:materials/lava",
-      "#minecraft:fire",
-      "#minecraft:shulker_boxes"
-    ],
-    "soundReflectivity": 0
-  },
-  {
-    "blocks": [
-      "#minecraft:planks",
-      "#minecraft:wooden_slabs",
-      "#minecraft:wooden_stairs",
-      "#minecraft:wooden_doors"
-    ],
-    "soundReflectivity": 0.4
   }
 ]

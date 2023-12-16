@@ -1,0 +1,12 @@
+{
+  "values": [
+    "#c:glass_panes",
+    "#minecraft:ice",
+    "#minecraft:impermeable",
+    "minecraft:water",
+    "#minecraft:planks",
+    "#minecraft:wooden_slabs",
+    "#minecraft:wooden_stairs",
+    "#minecraft:wooden_doors"
+  ]
+}

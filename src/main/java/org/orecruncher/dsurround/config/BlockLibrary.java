@@ -89,9 +89,9 @@ public class BlockLibrary {
         return blockConfigs.stream().map(BlockLibrary::formatBlockConfigRuleOutput).sorted();
     }
 
-    public static Stream<String> dumpBlocks() {
+    public static Stream<String> dumpBlocks(boolean noStates) {
         var blockRegistry = GameUtils.getRegistryManager().get(RegistryKeys.BLOCK).getEntrySet();
-        return blockRegistry.stream().map(kvp -> formatBlockOutput(kvp.getKey().getValue(), kvp.getValue())).sorted();
+        return blockRegistry.stream().map(kvp -> formatBlockOutput(kvp.getKey().getValue(), kvp.getValue(), noStates)).sorted();
     }
 
     public static Stream<String> dumpBlocksByTag() {
@@ -115,7 +115,7 @@ public class BlockLibrary {
         return builder.toString();
     }
 
-    private static String formatBlockOutput(Identifier id, Block block) {
+    private static String formatBlockOutput(Identifier id, Block block, boolean noStates) {
         var blocks = GameUtils.getWorld().getRegistryManager().get(RegistryKeys.BLOCK);
 
         var tags = "null";
@@ -131,13 +131,23 @@ public class BlockLibrary {
         StringBuilder builder = new StringBuilder();
         builder.append(id.toString());
         builder.append("\nTags: ").append(tags);
-        builder.append("\nstates [\n");
-        for (var blockState : block.getStateManager().getStates()) {
-            builder.append(blockState.toString()).append("\n");
-            var info = getBlockInfo(blockState);
-            builder.append(info);
+
+        var info = getBlockInfo(block.getDefaultState());
+        builder.append("\nreflectance: ").append(info.getSoundReflectivity());
+        builder.append("; occlusion: ").append(info.getSoundOcclusion());
+
+        if (!noStates) {
+            builder.append("\nstates [\n");
+            for (var blockState : block.getStateManager().getStates()) {
+                builder.append(blockState.toString()).append("\n");
+                info = getBlockInfo(blockState);
+                builder.append(info);
+            }
+            builder.append("]");
         }
-        builder.append("]\n");
+
+        builder.append("\n");
+
         return builder.toString();
     }
 
