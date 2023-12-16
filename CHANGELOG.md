@@ -1,3 +1,26 @@
+> ### DynamicSurroundings-Fabric-1.20.4-0.0.6
+**Requirements**
+* JAVA 17+ (I am using Adoptium https://adoptium.net/)
+* Fabric Loader >=0.15.1 (*<-- Note the change*)
+* Fabric API 0.91.2+1.20.4
+* 100% client side; no server side deployment needed
+
+**Special Thanks**
+* Thanks to ThexXTURBOXx, HarvelsX, and jmattingley23 for compatility changes for 1.18 and 1.19 - made my life easier getting to 1.20.x
+
+**What's New**
+* Minecraft 1.20.4 compatibility
+  * Updated Nashorn script engine to 15.4
+  * When will Microsoft stop boiling the ocean? :D
+* Support for client side tags - should ease addition of new blocks and providing Dynamic Surround support via data packs.
+  * Block reflectance and occlusions for sound reverb processing
+  * EntityType tags for entity effects (bow pull, frost breath, etc.)
+  * Item tags for Item sound effects (tool bar and swing)
+  * Support of Biome tags for biome conditions
+
+**Fixes**
+* Bunch of small fixes too numerous to list :)
+
 > ### DynamicSurroundings-Fabric-1.17.1-0.0.4
 **Requirements**
 * JAVA 16+ (I am using Adoptium https://adoptium.net/)
