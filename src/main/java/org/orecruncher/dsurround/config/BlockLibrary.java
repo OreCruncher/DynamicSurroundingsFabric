@@ -121,11 +121,7 @@ public class BlockLibrary {
         var tags = "null";
         var entry = blocks.getEntry(blocks.getRawId(block));
         if (entry.isPresent()) {
-            tags = entry.get()
-                    .streamTags()
-                    .map(TagKey::toString)
-                    .sorted()
-                    .collect(Collectors.joining(","));
+            tags = TagHelpers.asString(entry.get().streamTags());
         }
 
         StringBuilder builder = new StringBuilder();

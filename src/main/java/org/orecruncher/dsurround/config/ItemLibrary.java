@@ -16,6 +16,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
+import org.orecruncher.dsurround.tags.TagHelpers;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -116,11 +117,7 @@ public class ItemLibrary {
         var tags = "null";
         var entry = items.getEntry(items.getRawId(item));
         if (entry.isPresent()) {
-            tags = entry.get()
-                    .streamTags()
-                    .map(TagKey::toString)
-                    .sorted()
-                    .collect(Collectors.joining(","));
+            tags = TagHelpers.asString(entry.get().streamTags());
         }
 
         StringBuilder builder = new StringBuilder();

@@ -8,9 +8,17 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.TagKey;
 import org.orecruncher.dsurround.lib.GameUtils;
 
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TagHelpers {
+
+    public static <T> String asString(Stream<TagKey<T>> tagStream) {
+        return tagStream
+                .map(key -> key.id().toString())
+                .sorted()
+                .collect(Collectors.joining(", "));
+    }
 
     public static <T> boolean isIn(TagKey<T> tagKey, T entry) {
         return ClientTags.isInWithLocalFallback(tagKey, entry);
