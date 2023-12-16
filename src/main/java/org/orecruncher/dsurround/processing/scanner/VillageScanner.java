@@ -37,7 +37,7 @@ public class VillageScanner {
 
             var villagerEntities = world.getNonSpectatingEntities(VillagerEntity.class, box);
 
-            if (villagerEntities.size() > 0) {
+            if (!villagerEntities.isEmpty()) {
                 // We have villagers.  Now find a bell!
                 var bell = WorldUtils.getLoadedBlockEntities(world, blockEntity -> blockEntity instanceof BellBlockEntity && blockEntity.getPos().isWithinDistance(playerEyes, VILLAGE_RANGE));
                 this.isInVillage = !bell.isEmpty();
