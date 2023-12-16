@@ -26,7 +26,7 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
     private String lastSearchText = null;
 
     public IndividualSoundControlList(final Screen parent, final MinecraftClient mcIn, int widthIn, int heightIn, int topIn, int bottomIn, int slotWidth, int slotHeightIn, boolean enablePlay, final Supplier<String> filter, @Nullable final IndividualSoundControlList oldList) {
-        super(mcIn, widthIn, heightIn, topIn, bottomIn, slotHeightIn);
+        super(mcIn, widthIn, heightIn, topIn, /* bottomIn ,*/ slotHeightIn);
 
         this.parent = parent;
         this.enablePlay = enablePlay;
@@ -68,7 +68,7 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
         // Get the filter string.  It's a simple contains check.
         final Function<IndividualSoundConfigEntry, Boolean> process;
 
-        if (filter == null || filter.length() == 0) {
+        if (filter == null || filter.isEmpty()) {
             process = (isc) -> true;
         } else {
             process = (isc) -> isc.soundEventId.toString().contains(filter);
@@ -112,7 +112,7 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
     }
 
     @Override
-    public void appendNarrations(NarrationMessageBuilder builder) {
+    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
         // Narrate my shiny metal...
     }
 }

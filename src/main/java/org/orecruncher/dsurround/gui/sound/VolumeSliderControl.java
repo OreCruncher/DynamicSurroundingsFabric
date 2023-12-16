@@ -19,10 +19,12 @@ public class VolumeSliderControl extends SliderControl {
 
     private static final DecimalFormat FORMAT;
 
+    private static final Text OFF = Text.translatable("options.off");
+
     static {
-        FORMAT = new DecimalFormat("0.00");
+        FORMAT = new DecimalFormat("0");
         FORMAT.setRoundingMode(RoundingMode.HALF_UP);
-        FORMAT.setDecimalSeparatorAlwaysShown(true);
+        FORMAT.setDecimalSeparatorAlwaysShown(false);
     }
 
     private final IndividualSoundControlListEntry entry;
@@ -38,7 +40,7 @@ public class VolumeSliderControl extends SliderControl {
     }
 
     protected void updateMessage() {
-        Text text = (float) this.value == (float) this.getYImage(false) ? Text.translatable("options.off") : Text.of("x" + FORMAT.format(this.value * 4.0D));
+        Text text = this.getValue() == 0 ? OFF : Text.of(FORMAT.format(this.getValue()) + "%");
         this.setMessage(text);
     }
 

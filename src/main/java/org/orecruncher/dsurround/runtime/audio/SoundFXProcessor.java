@@ -6,8 +6,6 @@ import net.minecraft.client.sound.*;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Formatting;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.openal.AL10;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.Singleton;
@@ -21,7 +19,6 @@ import org.orecruncher.dsurround.xface.ISourceContext;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.*;
-import java.util.function.Supplier;
 
 public final class SoundFXProcessor {
 
@@ -119,18 +116,27 @@ public final class SoundFXProcessor {
         if (shouldIgnoreSound(sound))
             return;
 
-        // Double suplex!  Queue the operation on the sound executor to do the config work.  This should queue in
-        // behind any attempt at getting a sound source.
-        entry.run(source -> {
-            var id = ((ISourceContext) source).getId();
-            if (id > 0) {
-                final SourceContext ctx = new SourceContext();
-                ctx.attachSound(sound);
-                ctx.enable();
-                ctx.exec();
-                ((ISourceContext) source).setData(ctx);
-                sources[id - 1] = ctx;
-            }
+        ISourceContext source = (ISourceContext) entry.source;
+        var id = source.getId();
+        if (id > 0) {
+            final SourceContext ctx = new SourceContext(id);
+            ctx.attachSound(sound);
+            ctx.enable();
+            source.setData(ctx);
+        }
+    }
+
+    /**
+     * Invoked when the sound source is played.  This will cause the environment to be evaluated
+     * before the sound instance is processed.
+     */
+    public static void onSourcePlay(final Source source) {
+        var context = (ISourceContext) source;
+        var data = context.getData();
+        data.ifPresent(ctx -> {
+            var id = ctx.getId();
+            ctx.exec();
+            sources[id - 1] = ctx;
         });
     }
 
@@ -141,8 +147,9 @@ public final class SoundFXProcessor {
      * @param source SoundSource being ticked
      */
     public static void tick(final Source source) {
-        var ctx = ((ISourceContext) source).getData();
-        ctx.ifPresent(sourceContext -> sourceContext.tick(((ISourceContext) source).getId()));
+        var src = (ISourceContext) source;
+        var data = src.getData();
+        data.ifPresent(SourceContext::tick);
     }
 
     /**
@@ -151,14 +158,16 @@ public final class SoundFXProcessor {
      * @param source The sound source that is stopping
      */
     public static void stopSoundPlay(final Source source) {
-        var ctx = ((ISourceContext) source).getData();
-        if (ctx.isPresent())
-            sources[((ISourceContext) source).getId() - 1] = null;
+        var sourceContext = (ISourceContext) source;
+        var data = sourceContext.getData();
+        data.ifPresent(sc -> sources[sc.getId()] = null);
     }
 
     /**
      * Injected into SoundSource and will be invoked when a non-streaming sound data stream is attached to the
-     * SoundSource.  Take the opportunity to convert the audio stream into mono format if needed.
+     * SoundSource.  Take the opportunity to convert the audio stream into mono format if needed.  Note that
+     * conversion will take place only if it is enabled in the configuration and the sound is playing
+     * non-attenuated.
      *
      * @param source SoundSource for which the audio buffer is being generated
      * @param buffer The buffer in question.
@@ -170,17 +179,12 @@ public final class SoundFXProcessor {
         if (!Client.Config.enhancedSounds.enableMonoConversion)
             return;
 
-        var ctx = ((ISourceContext) source).getData();
-
-        // If there is no context attached and conversion is enabled do it.  This can happen if enhanced sound
-        // processing is turned off.  If there is a context, make sure that the sound is attenuated.
-        if (ctx.isEmpty()) {
-            Conversion.convert(buffer);
-        } else {
-            var s = ctx.get().getSound();
+        var data = ((ISourceContext) source).getData();
+        data.ifPresent(ctx ->{
+            var s = ctx.getSound();
             if (s != null && s.getAttenuationType() != SoundInstance.AttenuationType.NONE && !s.isRelative())
                 Conversion.convert(buffer);
-        }
+        });
     }
 
     /**
@@ -227,37 +231,6 @@ public final class SoundFXProcessor {
             final String msg = soundProcessor.getDiagnosticString();
             if (!StringUtils.isEmpty(msg))
                 left.add(Formatting.GREEN + msg);
-        }
-    }
-
-    /**
-     * Validates that the current OpenAL state is not in error.  If in an error state an exception will be thrown.
-     *
-     * @param msg Optional message to be displayed along with error data
-     */
-    public static void validate(final String msg) {
-        validate(() -> msg);
-    }
-
-    /**
-     * Validates that the current OpenAL state is not in error.  If in an error state an exception will be thrown.
-     *
-     * @param err Supplier for the error message to post with exception info
-     */
-    public static void validate(@Nullable final Supplier<String> err) {
-        final int error = AL10.alGetError();
-        if (error != AL10.AL_NO_ERROR) {
-            String errorName = AL10.alGetString(error);
-            if (StringUtils.isEmpty(errorName))
-                errorName = Integer.toString(error);
-
-            String msg = null;
-            if (err != null)
-                msg = err.get();
-            if (msg == null)
-                msg = "NONE";
-
-            throw new IllegalStateException(String.format("OpenAL Error: %s [%s]", errorName, msg));
         }
     }
 }

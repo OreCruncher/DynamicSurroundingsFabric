@@ -21,64 +21,64 @@ import java.util.stream.Collectors;
 public enum ItemClassType {
     NONE("none",
             SoundFactoryBuilder
-                .create(new SoundEvent(new Identifier(Client.ModId, "item.utility.equip")))
+                .create(SoundEvent.of(new Identifier(Client.ModId, "item.utility.equip")))
                 .category(SoundCategory.PLAYERS).volume(0.3F).build(),
             null),
     TOOL("tool",
             SoundFactoryBuilder
-                .create(new SoundEvent(new Identifier(Client.ModId, "item.tool.equip")))
+                .create(SoundEvent.of(new Identifier(Client.ModId, "item.tool.equip")))
                 .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
-                    .create(new SoundEvent(new Identifier(Client.ModId, "item.tool.swing")))
+                    .create(SoundEvent.of(new Identifier(Client.ModId, "item.tool.swing")))
                     .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
     SWORD("sword",
             SoundFactoryBuilder
-                .create(new SoundEvent(new Identifier(Client.ModId, "item.sword.equip")))
+                .create(SoundEvent.of(new Identifier(Client.ModId, "item.sword.equip")))
                 .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
-                    .create(new SoundEvent(new Identifier(Client.ModId, "item.sword.swing")))
+                    .create(SoundEvent.of(new Identifier(Client.ModId, "item.sword.swing")))
                     .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
     SHIELD("shield",
             SoundFactoryBuilder
-                .create(new SoundEvent(new Identifier(Client.ModId, "item.shield.equip")))
+                .create(SoundEvent.of(new Identifier(Client.ModId, "item.shield.equip")))
                 .category(SoundCategory.PLAYERS).volume(0.25F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
-                    .create(new SoundEvent(new Identifier(Client.ModId, "item.shield.equip")))
+                    .create(SoundEvent.of(new Identifier(Client.ModId, "item.shield.equip")))
                     .category(SoundCategory.PLAYERS).volume(0.25F).pitchRange(0.4F, 0.6F).build()),
     AXE("axe",
             SoundFactoryBuilder
-                .create(new SoundEvent(new Identifier(Client.ModId, "item.blunt.equip")))
+                .create(SoundEvent.of(new Identifier(Client.ModId, "item.blunt.equip")))
                 .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
-                    .create(new SoundEvent(new Identifier(Client.ModId, "item.blunt.swing")))
+                    .create(SoundEvent.of(new Identifier(Client.ModId, "item.blunt.swing")))
                     .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
     BOW("bow",
             SoundFactoryBuilder
-                .create(new SoundEvent(new Identifier(Client.ModId, "item.bow.equip")))
+                .create(SoundEvent.of(new Identifier(Client.ModId, "item.bow.equip")))
                 .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
-                    .create(new SoundEvent(new Identifier(Client.ModId, "item.blunt.swing")))
+                    .create(SoundEvent.of(new Identifier(Client.ModId, "item.blunt.swing")))
                     .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.4F, 0.6F).build()),
     CROSSBOW("crossbow",
             SoundFactoryBuilder
-                .create(new SoundEvent(new Identifier(Client.ModId, "item.bow.equip")))
+                .create(SoundEvent.of(new Identifier(Client.ModId, "item.bow.equip")))
                 .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
-                    .create(new SoundEvent(new Identifier(Client.ModId, "item.blunt.swing")))
+                    .create(SoundEvent.of(new Identifier(Client.ModId, "item.blunt.swing")))
                     .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.4F, 0.6F).build()),
     POTION("potion",
             SoundFactoryBuilder
-                .create(new SoundEvent(new Identifier(Client.ModId, "item.potion.equip")))
+                .create(SoundEvent.of(new Identifier(Client.ModId, "item.potion.equip")))
                 .category(SoundCategory.PLAYERS).volume(0.8F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
-                    .create(new SoundEvent(new Identifier(Client.ModId, "item.potion.equip")))
+                    .create(SoundEvent.of(new Identifier(Client.ModId, "item.potion.equip")))
                     .category(SoundCategory.PLAYERS).volume(1F).pitchRange(0.8F, 1.2F).build()),
     BOOK("book",
             SoundFactoryBuilder
-                .create(new SoundEvent(new Identifier(Client.ModId, "pageflip")))
+                .create(SoundEvent.of(new Identifier(Client.ModId, "pageflip")))
                 .category(SoundCategory.PLAYERS).volume(0.8F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
-                    .create(new SoundEvent(new Identifier(Client.ModId, "pageflipheavy")))
+                    .create(SoundEvent.of(new Identifier(Client.ModId, "pageflipheavy")))
                     .category(SoundCategory.PLAYERS).volume(0.8F).pitchRange(0.8F, 1.2F).build());
 
     private static final Map<String, ItemClassType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(ItemClassType::getName, (category) -> category));

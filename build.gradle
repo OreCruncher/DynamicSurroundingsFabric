@@ -1,14 +1,22 @@
 plugins {
-    id 'fabric-loom' version '0.12-SNAPSHOT'
+    id 'fabric-loom' version '1.4-SNAPSHOT'
     id 'maven-publish'
 }
 
 version = project.mod_version
 group = project.maven_group
 
+base {
+	archivesName = project.archives_base_name
+}
+
 repositories {
     maven { url "https://maven.shedaniel.me/" }
     maven { url "https://maven.terraformersmc.com/" }
+}
+
+loom {
+	accessWidenerPath = file("src/main/resources/dsurround.accesswidener")
 }
 
 dependencies {
@@ -20,23 +28,20 @@ dependencies {
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    modImplementation "com.terraformersmc:modmenu:4.0.0"
+    modImplementation "com.terraformersmc:modmenu:9.0.0-pre.1"
 
     modImplementation "org.openjdk.nashorn:nashorn-core:15.4"
     include("org.openjdk.nashorn:nashorn-core:15.4")
 
-    modImplementation("me.shedaniel.cloth:cloth-config-fabric:7.0.69") {
+    modImplementation("me.shedaniel.cloth:cloth-config-fabric:13.0.114") {
         exclude(group: "net.fabricmc.fabric-api")
     }
-    include("me.shedaniel.cloth:cloth-config-fabric:7.0.69")
-
-    // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
-    // You may need to force-disable transitiveness on them.
+    include("me.shedaniel.cloth:cloth-config-fabric:13.0.114")
 }
 
 processResources {
     inputs.property "version", project.version
-    filteringCharset "UTF-8"
+//    filteringCharset 'UTF-8'
 
     filesMatching("fabric.mod.json") {
         expand "version": project.version
@@ -49,8 +54,8 @@ tasks.withType(JavaCompile).configureEach {
     // this fixes some edge cases with special characters not displaying correctly
     // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
     // If Javadoc is generated, this must be specified in that task too.
-    it.options.encoding = "UTF-8"
-    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+//    it.options.encoding = 'UTF-8'
+    if (targetJavaVersion >= 10|| JavaVersion.current().isJava10Compatible()) {
         it.options.release = targetJavaVersion
     }
 }

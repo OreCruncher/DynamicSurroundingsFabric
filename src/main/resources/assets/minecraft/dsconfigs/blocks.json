@@ -20,7 +20,8 @@
         "spawnChance": "0.0005"
       }
     ]
-  },  {
+  },
+  {
     "blocks": [
       "minecraft:water"
     ],
@@ -112,116 +113,5 @@
         "maxPitch": 1.2
       }
     ]
-  },
-  {
-    "blocks": [
-      "@ORGANIC_PRODUCT",
-      "@SOLID_ORGANIC",
-      "@PLANT",
-      "#minecraft:fences",
-      "#minecraft:gates"
-    ],
-    "soundOcclusion": 0.2
-  },
-  {
-    "blocks": [
-      "#minecraft:beehives"
-    ],
-    "soundOcclusion": 0.3
-  },
-  {
-    "blocks": [
-      "#minecraft:wool"
-    ],
-    "soundOcclusion": 1
-  },
-  {
-    "blocks": [
-      "minecraft:chest"
-    ],
-    "soundOcclusion": 0.4
-  },
-  {
-    "blocks": [
-      "minecraft:barrier"
-    ],
-    "soundOcclusion": 0
-  },
-  {
-    "blocks": [
-      "@PORTAL",
-      "@STONE",
-      "@METAL",
-      "@REPAIR_STATION",
-      "@EGG",
-      "@PISTON"
-    ],
-    "soundReflectivity": 0.95
-  },
-  {
-    "blocks": [
-      "@CARPET",
-      "@WOOL"
-    ],
-    "soundReflectivity": 0.25
-  },
-  {
-    "blocks": [
-      "@PLANT",
-      "@UNDERWATER_PLANT",
-      "@SNOW_LAYER",
-      "@SNOW_BLOCK",
-      "@ORGANIC_PRODUCT",
-      "@AGGREGATE",
-      "@SPONGE",
-      "@BAMBOO",
-      "@BAMBOO_SAPLING",
-      "@LEAVES",
-      "@CACTUS",
-      "#minecraft:fences",
-      "#minecraft:fence_gates"
-    ],
-    "soundReflectivity": 0.2
-  },
-  {
-    "blocks": [
-      "@SOIL",
-      "#minecraft:beehives"
-    ],
-    "soundReflectivity": 0.3
-  },
-  {
-    "blocks": [
-      "@WATER",
-      "@BUBBLE_COLUMN",
-      "@DENSE_ICE",
-      "@ICE",
-      "#minecraft:impermeable"
-    ],
-    "soundReflectivity": 0.5
-  },
-  {
-    "blocks": [
-      "@LAVA",
-      "@FIRE",
-      "@COBWEB",
-      "@DECORATION",
-      "@REDSTONE_LAMP",
-      "@SHULKER_BOX",
-      "@TNT",
-      "@CAKE"
-    ],
-    "soundReflectivity": 0
-  },
-  {
-    "blocks": [
-      "@WOOD",
-      "@NETHER_WOOD",
-      "#minecraft:logs",
-      "#minecraft:planks",
-      "#minecraft:wooden_slabs",
-      "#minecraft:wooden_stairs"
-    ],
-    "soundReflectivity": 0.7
   }
 ]

@@ -29,6 +29,8 @@ public final class SourceContext implements Callable<Void> {
     private final SourcePropertyFloat airAbsorb;
     private final SoundFXUtils fxProcessor;
 
+    private final int sourceId;
+
     private SoundInstance sound;
     private Vec3d pos;
     private SoundCategory category = SoundCategory.MASTER;
@@ -36,7 +38,8 @@ public final class SourceContext implements Callable<Void> {
     private boolean isEnabled;
     private int updateCount;
 
-    public SourceContext() {
+    public SourceContext(int sourceId) {
+        this.sourceId = sourceId;
         this.lowPass0 = new LowPassData();
         this.lowPass1 = new LowPassData();
         this.lowPass2 = new LowPassData();
@@ -49,6 +52,10 @@ public final class SourceContext implements Callable<Void> {
 
     public Object sync() {
         return this.sync;
+    }
+
+    public int getId() {
+        return this.sourceId;
     }
 
     public boolean isEnabled() {
@@ -107,19 +114,19 @@ public final class SourceContext implements Callable<Void> {
      * Called on the SoundSource update thread when updating status.  Do not call from the client thread or bad things
      * can happen.
      */
-    public void tick(final int sourceId) {
-        if (isEnabled()) {
+    public void tick() {
+        if (this.isEnabled()) {
             synchronized (this.sync()) {
                 // Upload the data
-                Effects.filter0.apply(sourceId, this.lowPass0, 0, Effects.auxSlot0);
-                Effects.filter1.apply(sourceId, this.lowPass1, 1, Effects.auxSlot1);
-                Effects.filter2.apply(sourceId, this.lowPass2, 2, Effects.auxSlot2);
-                Effects.filter3.apply(sourceId, this.lowPass3, 3, Effects.auxSlot3);
-                Effects.direct.apply(sourceId, this.direct);
+                Effects.filter0.apply(this.sourceId, this.lowPass0, 0, Effects.auxSlot0);
+                Effects.filter1.apply(this.sourceId, this.lowPass1, 1, Effects.auxSlot1);
+                Effects.filter2.apply(this.sourceId, this.lowPass2, 2, Effects.auxSlot2);
+                Effects.filter3.apply(this.sourceId, this.lowPass3, 3, Effects.auxSlot3);
+                Effects.direct.apply(this.sourceId, this.direct);
 
                 this.airAbsorb.apply(sourceId);
 
-                SoundFXProcessor.validate("SourceHandler::tick");
+                AudioUtilities.validate("SourceHandler::tick");
             }
         }
     }
@@ -131,17 +138,13 @@ public final class SourceContext implements Callable<Void> {
      * @return true the work item should be scheduled; false otherwise
      */
     public boolean shouldExecute() {
-        // If brand new randomize the start time
-        if (this.updateCount == 0) {
-            this.updateCount = RANDOM.nextInt(UPDATE_FEQUENCY_TICKS);
-        }
         return (this.updateCount++ % UPDATE_FEQUENCY_TICKS) == 0;
     }
 
     @Override
     public Void call() {
-        captureState();
-        updateImpl();
+        this.captureState();
+        this.updateImpl();
         return null;
     }
 
@@ -149,13 +152,16 @@ public final class SourceContext implements Callable<Void> {
      * Called by the thread pool when executing the task
      */
     public void exec() {
-        captureState();
-        updateImpl();
+        this.captureState();
+        this.updateImpl();
+        this.updateCount = RANDOM.nextInt(UPDATE_FEQUENCY_TICKS);
+        this.tick();
     }
 
     private void updateImpl() {
         try {
-            this.fxProcessor.calculate(SoundFXProcessor.getWorldContext());
+            //if (this.sound.getId().getPath().contains("stone"))
+                this.fxProcessor.calculate(SoundFXProcessor.getWorldContext());
         } catch (final Throwable ignore) {
             // Suppress.  Times that I have seen this fire was due to a world unloading and the background
             // processing threads tripping over dead objects.

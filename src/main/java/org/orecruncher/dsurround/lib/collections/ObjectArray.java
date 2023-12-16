@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.lib.collections;
 
 import net.minecraft.util.math.MathHelper;
 import org.apache.commons.lang3.ArrayUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -100,7 +101,7 @@ public class ObjectArray<T> implements Collection<T> {
     }
 
     @Override
-    public Object[] toArray() {
+    public Object @NotNull [] toArray() {
         Object[] result = ArrayUtils.EMPTY_OBJECT_ARRAY;
         if (this.insertionIdx > 0) {
             result = new Object[this.insertionIdx];
@@ -111,7 +112,7 @@ public class ObjectArray<T> implements Collection<T> {
 
     @SuppressWarnings({"unchecked", "hiding"})
     @Override
-    public <T> T[] toArray(final T[] a) {
+    public <T> T @NotNull [] toArray(final T[] a) {
         // From ArrayList impl
         if (a.length < this.insertionIdx)
             // Make a new array of a's runtime type, but my contents:
@@ -189,7 +190,7 @@ public class ObjectArray<T> implements Collection<T> {
     }
 
     @Override
-    public Iterator<T> iterator() {
+    public @NotNull Iterator<T> iterator() {
         return new Iterator<>() {
 
             private int idx = -1;

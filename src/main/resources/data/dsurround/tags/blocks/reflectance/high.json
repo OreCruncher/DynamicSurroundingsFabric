@@ -1,0 +1,25 @@
+{
+  "values": [
+    "#minecraft:beacon_base_blocks",
+    "minecraft:ancient_debris",
+    "minecraft:stone_slab",
+    "minecraft:andesite_slab",
+    "minecraft:diorite_slab",
+    "minecraft:granite_slab",
+    "minecraft:tuff_slab",
+    "minecraft:andesite_stairs",
+    "minecraft:diorite_stairs",
+    "minecraft:granite_stairs",
+    "minecraft:tuff_stairs",
+    "minecraft:andesite_wall",
+    "minecraft:diorite_wall",
+    "minecraft:granite_wall",
+    "minecraft:tuff_wall",
+    "minecraft:deepslate_brick_slab",
+    "minecraft:deepslate_brick_stairs",
+    "minecraft:deepslate_brick_wall",
+    "minecraft:deepslate_tile_slab",
+    "minecraft:deepslate_tile_stairs",
+    "minecraft:deepslate_tile_wall"
+  ]
+}

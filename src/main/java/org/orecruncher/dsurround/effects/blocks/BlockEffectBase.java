@@ -30,7 +30,7 @@ public abstract class BlockEffectBase implements IBlockEffect {
         this.posX = posXIn;
         this.posY = posYIn;
         this.posZ = posZIn;
-        this.position = new BlockPos(posXIn, posYIn, posZIn);
+        this.position = BlockPos.ofFloored(posXIn, posYIn, posZIn);
     }
 
     public BlockPos getPos() {

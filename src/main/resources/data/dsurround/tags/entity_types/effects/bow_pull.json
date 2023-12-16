@@ -1,0 +1,7 @@
+{
+  "values": [
+    "minecraft:player",
+    "#minecraft:skeletons",
+    "#minecraft:raiders"
+  ]
+}

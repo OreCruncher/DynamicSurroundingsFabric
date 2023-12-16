@@ -3,8 +3,8 @@ package org.orecruncher.dsurround.lib.block;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 
 class MatchOnBlock extends BlockStateMatcher {
 
@@ -13,7 +13,7 @@ class MatchOnBlock extends BlockStateMatcher {
 
     MatchOnBlock(Block block) {
         this.block = block;
-        this.blockId = Registry.BLOCK.getId(block);
+        this.blockId = Registries.BLOCK.getId(block);
     }
 
     @Override

@@ -41,9 +41,11 @@ public enum BiomeTrait {
     DRY("DRY"),
     HOT("HOT"),
     COLD("COLD"),
+    TEMPERATE("TEMPERATE"),
     SPARSE("SPARSE"),
     DENSE("DENSE"),
     CONIFEROUS("CONIFEROUS"),
+    DECIDUOUS("DECIDUOUS"),
     SPOOKY("SPOOKY"),
     DEAD("DEAD"),
     MAGICAL("MAGICAL"),
@@ -55,7 +57,11 @@ public enum BiomeTrait {
     WASTELAND("WASTELAND"),
     VOID("VOID"),
     OVERWORLD("OVERWORLD"),
-    DEEP("DEEP");
+    DEEP("DEEP"),
+    WINDSWEPT("WINDSWEPT"),
+    FLORAL("FLORAL"),
+    BADLANDS("BADLANDS"),
+    CAVES("CAVES");
 
     private static final Map<String, BiomeTrait> mapper = new HashMap<>();
 
@@ -83,9 +89,11 @@ public enum BiomeTrait {
         register(BiomeTrait.DRY);
         register(BiomeTrait.HOT);
         register(BiomeTrait.COLD);
+        register(BiomeTrait.TEMPERATE);
         register(BiomeTrait.SPARSE);
         register(BiomeTrait.DENSE);
         register(BiomeTrait.CONIFEROUS);
+        register(BiomeTrait.DECIDUOUS);
         register(BiomeTrait.SPOOKY);
         register(BiomeTrait.DEAD);
         register(BiomeTrait.MAGICAL);
@@ -98,6 +106,10 @@ public enum BiomeTrait {
         register(BiomeTrait.VOID);
         register(BiomeTrait.OVERWORLD);
         register(BiomeTrait.DEEP);
+        register(BiomeTrait.WINDSWEPT);
+        register(BiomeTrait.FLORAL);
+        register(BiomeTrait.BADLANDS);
+        register(BiomeTrait.CAVES);
     }
 
     private final String name;
@@ -105,11 +117,6 @@ public enum BiomeTrait {
     BiomeTrait(String name) {
         this.name = name.toUpperCase();
     }
-
-    // public static BiomeTrait of(Biome.Category category) {
-    // var result = mapper.get(category.getName().toUpperCase());
-    // return result == null ? UNKNOWN : result;
-    // }
 
     public static BiomeTrait of(String name) {
         var result = mapper.get(name.toUpperCase());

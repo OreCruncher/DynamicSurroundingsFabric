@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.lib;
 
-import it.unimi.dsi.fastutil.Pair;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Keyboard;
@@ -17,15 +16,14 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourcePackManager;
-import net.minecraft.tag.TagKey;
-import net.minecraft.util.registry.*;
+import net.minecraft.registry.*;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.stream.Stream;
+import java.util.Objects;
 
 /*
  * NOTE:  MinecraftClient is an AutoClosable that gives IDEs a bit of a fit with warnings.  The mods usage
- * context does not require closing so it is safe to ignore.
+ * context does not require closing, so it is safe to ignore.
  */
 @Environment(EnvType.CLIENT)
 public final class GameUtils {
@@ -39,7 +37,6 @@ public final class GameUtils {
         return getMC().player;
     }
 
-    @Nullable
     public static ClientWorld getWorld() {
         return getMC().world;
     }
@@ -78,10 +75,6 @@ public final class GameUtils {
 
     public static TextHandler getTextHandler() {
         return getTextRenderer().getTextHandler();
-    }
-
-    public static boolean displayDebug() {
-        return getGameSettings().debugEnabled;
     }
 
     public static SoundManager getSoundManager() {
@@ -123,12 +116,7 @@ public final class GameUtils {
         return getGameSettings().getPerspective() == Perspective.FIRST_PERSON;
     }
 
-    public static <T> Stream<Pair<T, Stream<TagKey<T>>>> getTagGroup(RegistryKey<? extends Registry<T>> registryKey) {
-        return GameUtils.getWorld().getRegistryManager().get(registryKey).streamEntries()
-                .map(reference -> Pair.of(reference.value(), reference.streamTags()));
-    }
-
     public static MinecraftClient getMC() {
-        return MinecraftClient.getInstance();
+        return Objects.requireNonNull(MinecraftClient.getInstance());
     }
 }

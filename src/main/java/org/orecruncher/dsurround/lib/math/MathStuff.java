@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.lib.math;
 
-import net.minecraft.client.util.math.Vector3d;
 import net.minecraft.util.math.Vec3d;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 
@@ -18,9 +17,9 @@ public class MathStuff {
         return value < 0.03D ? Math.log(value) : 6 * (value - 1) / (value + 1 + 4 * (Math.sqrt(value)));
     }
 
-    public static Vector3d normalize(Vector3d vec) {
+    public static Vec3d normalize(Vec3d vec) {
         double len = Math.sqrt((vec.x * vec.x) + (vec.y * vec.y) * (vec.z * vec.z));
-        return new Vector3d(vec.x / len, vec.y / len, vec.z / len);
+        return new Vec3d(vec.x / len, vec.y / len, vec.z / len);
     }
 
     public static Vec3d randomPoint(final int minRange, final int maxRange) {

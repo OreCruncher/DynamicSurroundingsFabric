@@ -5,22 +5,20 @@ import net.fabricmc.api.Environment;
 import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.config.BiomeLibrary;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
-import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
-import org.orecruncher.dsurround.lib.biome.BiomeUtils;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 
 @Environment(EnvType.CLIENT)
 public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBiomeVariables {
 
     private Biome biome;
-    private final Lazy<String> precipitationType = new Lazy<>(() -> this.biome.getPrecipitation().getName());
     private BiomeInfo info;
-    private final Lazy<String> name = new Lazy<>(() -> this.info.getBiomeName());
-    private final Lazy<String> modid = new Lazy<>(() -> this.info.getBiomeId().getNamespace());
+    private final Lazy<String> precipitationType = new Lazy<>(() -> {
+        var pos = GameUtils.getPlayer().getBlockPos();
+        return this.biome.getPrecipitation(pos).asString();
+    });
     private final Lazy<String> id = new Lazy<>(() -> this.info.getBiomeId().toString());
-    private final Lazy<BiomeTraits> traits = new Lazy<>(() -> this.info.getTraits());
 
     public BiomeVariables() {
         super("biome");
@@ -33,7 +31,7 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
 
     @Override
     public void update() {
-        Biome newBiome = BiomeUtils.DEFAULT_BIOME;
+        Biome newBiome = null;
         if (GameUtils.isInGame()) {
             newBiome = GameUtils.getPlayer().getEntityWorld().getBiome(GameUtils.getPlayer().getBlockPos()).value();
         }
@@ -44,17 +42,14 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
         if (this.biome != biome) {
             this.biome = biome;
             this.info = BiomeLibrary.getBiomeInfo(this.biome);
-            this.name.reset();
-            this.modid.reset();
             this.id.reset();
             this.precipitationType.reset();
-            this.traits.reset();
         }
     }
 
     @Override
     public String getModId() {
-        return this.modid.get();
+        return this.info.getBiomeId().getNamespace();
     }
 
     @Override
@@ -64,12 +59,12 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
 
     @Override
     public String getName() {
-        return this.name.get();
+        return this.info.getBiomeName();
     }
 
     @Override
     public float getRainfall() {
-        return this.biome.getDownfall();
+        return this.biome.weather.downfall();
     }
 
     @Override
@@ -84,32 +79,30 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
 
     @Override
     public String getTraits() {
-        return this.traits.get().toString();
+        return this.info.getTraits().toString();
     }
 
     @Override
     public boolean is(String trait) {
-        return this.traits.get().contains(trait);
+        return this.info.hasTrait(trait);
     }
 
     @Override
     public boolean isAllOf(String... trait) {
-        if (trait == null || trait.length == 0)
+        if (trait == null)
             return false;
-        var traits = this.traits.get();
         for (var t : trait)
-            if (!traits.contains(t))
+            if (!this.is(t))
                 return false;
         return true;
     }
 
     @Override
     public boolean isOneOf(String... trait) {
-        if (trait == null || trait.length == 0)
+        if (trait == null)
             return false;
-        var traits = this.traits.get();
         for (var t : trait)
-            if (traits.contains(t))
+            if (this.is(t))
                 return true;
         return false;
     }

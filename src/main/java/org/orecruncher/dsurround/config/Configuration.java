@@ -109,11 +109,6 @@ public class Configuration extends ConfigurationData {
         public int backgroundThreadWorkers = 0;
 
         @Property
-        @RestartRequired
-        @Comment("Enable/disable HRTF sound processing if OpenAL feature is available")
-        public boolean enableHRTF = true;
-
-        @Property
         @Comment("Enable/disable on the fly conversion of stereo sounds to mono as needed")
         public boolean enableMonoConversion = true;
 
@@ -141,13 +136,6 @@ public class Configuration extends ConfigurationData {
         @DefaultValue
         @Comment("Total distance a reverb ray will traverse before ending calculation")
         public int reverbRayTraceDistance = 256;
-
-        @Property
-        @RestartRequired
-        @DefaultValue
-        @Hidden
-        @Comment("Sets the output frequency for sound play.  Adjust only if you know what you are doing.")
-        public int outputFrequency = 0;
     }
 
     public static class ThunderStorms {

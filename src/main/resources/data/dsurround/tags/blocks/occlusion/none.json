@@ -1,0 +1,21 @@
+{
+  "values": [
+    "#minecraft:flowers",
+    "#minecraft:rails",
+    "#minecraft:crops",
+    "#minecraft:all_signs",
+    "#minecraft:pressure_plates",
+    "#minecraft:saplings",
+    "#minecraft:buttons",
+    "minecraft:air",
+    "minecraft:void_air",
+    "minecraft:barrier",
+    "minecraft:end_stone",
+    "minecraft:big_dripleaf",
+    "minecraft:big_dripleaf_stem",
+    "minecraft:short_grass",
+    "minecraft:tall_grass",
+    "minecraft:target",
+    "minecraft:torch"
+  ]
+}

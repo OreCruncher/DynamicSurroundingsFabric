@@ -101,14 +101,14 @@ public class SoundConfiguration {
     }
 
     public Optional<SoundEvent> getRandomStartupSound() {
-        if (this.startupSounds.size() == 0)
+        if (this.startupSounds.isEmpty())
             return Optional.empty();
 
         int idx = 0;
         if (this.startupSounds.size() > 1) {
             idx = XorShiftRandom.current().nextInt(this.startupSounds.size());
         }
-        return Optional.of(new SoundEvent(this.startupSounds.get(idx)));
+        return Optional.of(SoundEvent.of(this.startupSounds.get(idx)));
     }
 
     public Collection<IndividualSoundConfigEntry> getIndividualSoundConfigs() {

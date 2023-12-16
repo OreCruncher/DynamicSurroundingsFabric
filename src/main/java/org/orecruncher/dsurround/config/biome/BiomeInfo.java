@@ -3,9 +3,8 @@ package org.orecruncher.dsurround.config.biome;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.tag.TagKey;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.world.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -14,6 +13,7 @@ import org.orecruncher.dsurround.config.AcousticConfig;
 import org.orecruncher.dsurround.config.BiomeLibrary;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.SoundLibrary;
+import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -25,6 +25,7 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
+import org.orecruncher.dsurround.tags.TagHelpers;
 
 import java.awt.*;
 import java.util.Collection;
@@ -120,6 +121,14 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         return this.traits;
     }
 
+    public boolean hasTrait(BiomeTrait trait) {
+        return this.traits.contains(trait);
+    }
+
+    public boolean hasTrait(String trait) {
+        return this.traits.contains(trait);
+    }
+
     @Override
     public Collection<ISoundFactory> findBiomeSoundMatches() {
         ObjectArray<ISoundFactory> results = new ObjectArray<>();
@@ -152,7 +161,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
             case LOOP -> sourceList = null;
         }
 
-        if (sourceList == null || sourceList.size() == 0)
+        if (sourceList == null || sourceList.isEmpty())
             return null;
 
         var candidates = sourceList.stream().filter(AcousticEntry::matches);
@@ -233,15 +242,11 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
             // It's fake and has no tags
             tags = "FAKE BIOME";
         } else {
-            var biomes = GameUtils.getWorld().getRegistryManager().get(Registry.BIOME_KEY);
+            var biomes = GameUtils.getWorld().getRegistryManager().get(RegistryKeys.BIOME);
 
             var entry = biomes.getEntry(biomes.getRawId(getBiome()));
             if (entry.isPresent()) {
-                tags = entry.get()
-                        .streamTags()
-                        .map(TagKey::toString)
-                        .sorted()
-                        .collect(Collectors.joining(","));
+                tags = TagHelpers.asString(entry.get().streamTags());
             }
         }
 
@@ -254,19 +259,19 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
             builder.append("\nfogColor: ").append(ColorPalette.toHTMLColorCode(this.fogColor));
         }
 
-        if (this.loopSounds.size() > 0) {
+        if (!this.loopSounds.isEmpty()) {
             builder.append("\nLOOP sounds [\n");
             builder.append(this.loopSounds.stream().map(c -> indent + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n]");
         }
 
-        if (this.musicSounds.size() > 0) {
+        if (!this.musicSounds.isEmpty()) {
             builder.append("\nMUSIC sounds [\n");
             builder.append(this.musicSounds.stream().map(c -> indent + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n]");
         }
 
-        if (this.additionalSounds.size() > 0) {
+        if (!this.additionalSounds.isEmpty()) {
             builder.append("\nADDITIONAL chance: ").append(this.additionalSoundChance);
             builder.append("\nADDITIONAL sounds [\n");
             builder.append(
@@ -274,14 +279,14 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
             builder.append("\n]");
         }
 
-        if (this.moodSounds.size() > 0) {
+        if (!this.moodSounds.isEmpty()) {
             builder.append("\nMOOD chance: ").append(this.additionalSoundChance);
             builder.append("\nMOOD sounds [\n");
             builder.append(this.moodSounds.stream().map(c -> indent + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n]");
         }
 
-        if (this.comments != null && this.comments.size() > 0) {
+        if (this.comments != null && !this.comments.isEmpty()) {
             builder.append("\ncomments:\n");
             builder.append(this.comments.stream().map(c -> indent + c).collect(Collectors.joining("\n")));
             builder.append('\n');

@@ -6,7 +6,6 @@ import net.minecraft.util.Formatting;
 
 import java.awt.*;
 
-@SuppressWarnings("unused")
 @Environment(EnvType.CLIENT)
 public final class ColorPalette {
     // Minecraft colors mapped to codes

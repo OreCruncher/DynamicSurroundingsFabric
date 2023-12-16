@@ -11,6 +11,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.BlockLibrary;
@@ -96,7 +97,7 @@ public final class SoundFXUtils {
         this.source = source;
     }
 
-    public void calculate(final WorldContext ctx) {
+    public void calculate(final @NotNull WorldContext ctx) {
 
         assert ctx.player != null;
         assert ctx.world != null;
@@ -170,11 +171,11 @@ public final class SoundFXUtils {
                 target = MathStuff.addScaled(origin, newRayDir, MAX_REVERB_DISTANCE);
 
                 rayHit = traceContext.trace(origin, target);
+                final boolean missed = isMiss(rayHit);
 
-                if (isMiss(rayHit)) {
+                if (missed) {
                     totalRayDistance += lastHitPos.distanceTo(ctx.playerEyePosition);
                 } else {
-
                     bounceRatio[j] += blockReflectivity;
                     totalRayDistance += lastHitPos.distanceTo(rayHit.getPos());
 
@@ -206,7 +207,7 @@ public final class SoundFXUtils {
                 sendGain3 += cross3 * energyTowardsPlayer * 12.8F;
 
                 // Nowhere to bounce off of, stop bouncing!
-                if (isMiss(rayHit)) {
+                if (missed) {
                     break;
                 }
             }
@@ -314,7 +315,7 @@ public final class SoundFXUtils {
         float factor = 0F;
 
         Vec3d lastHit = origin;
-        BlockState lastState = ctx.world.getBlockState(new BlockPos(lastHit.getX(), lastHit.getY(), lastHit.getZ()));
+        BlockState lastState = ctx.world.getBlockState(BlockPos.ofFloored(lastHit.getX(), lastHit.getY(), lastHit.getZ()));
         var traceContext = new ReusableRaycastContext(ctx.world, origin, target, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.ANY);
         var itr = new ReusableRaycastIterator(traceContext);
         for (int i = 0; i < OCCLUSION_SEGMENTS; i++) {
@@ -323,7 +324,7 @@ public final class SoundFXUtils {
                 final float occlusion = getOcclusion(lastState);
                 final double distance = lastHit.distanceTo(result.getPos());
                 // Occlusion is scaled by the distance travelled through the block.
-                factor += occlusion * distance;
+                factor += (float) (occlusion * distance);
                 lastHit = result.getPos();
                 lastState = ctx.world.getBlockState(result.getBlockPos());
             } else {
@@ -340,9 +341,9 @@ public final class SoundFXUtils {
         if (!ctx.isPrecipitating)
             return 1F;
 
-        final BlockPos low = new BlockPos(pt1);
-        final BlockPos mid = new BlockPos(MathStuff.addScaled(pt1, pt2, 0.5F));
-        final BlockPos high = new BlockPos(pt2);
+        final BlockPos low = BlockPos.ofFloored(pt1);
+        final BlockPos mid = BlockPos.ofFloored(MathStuff.addScaled(pt1, pt2, 0.5F));
+        final BlockPos high = BlockPos.ofFloored(pt2);
 
         // Determine the precipitation type at each point
         final Biome.Precipitation rt1 = WorldUtils.getCurrentPrecipitationAt(ctx.world, low);
@@ -373,7 +374,7 @@ public final class SoundFXUtils {
     }
 
     private static Vec3d offsetPositionIfSolid(final World world, final Vec3d origin, final Vec3d target) {
-        if (world.getBlockState(new BlockPos(origin)) != Blocks.AIR.getDefaultState()) {
+        if (world.getBlockState(BlockPos.ofFloored(origin)) != Blocks.AIR.getDefaultState()) {
             var normal = origin.relativize(target).normalize();
             return MathStuff.addScaled(origin, normal, 0.876F);
         }

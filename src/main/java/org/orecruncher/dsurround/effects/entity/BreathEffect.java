@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.effects.entity;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Material;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
@@ -63,15 +62,15 @@ public class BreathEffect extends EntityEffectBase {
 
     protected BlockPos getHeadPosition(final LivingEntity entity) {
         final double d0 = entity.getEyeY();
-        return new BlockPos(entity.getX(), d0, entity.getZ());
+        return BlockPos.ofFloored(entity.getX(), d0, entity.getZ());
     }
 
     protected boolean showWaterBubbles(final BlockState headBlock) {
-        return headBlock.getMaterial().isLiquid();
+        return !headBlock.getFluidState().isEmpty();
     }
 
     protected boolean showFrostBreath(final LivingEntity entity, final BlockState headBlock, final BlockPos pos) {
-        if (headBlock.getMaterial() == Material.AIR) {
+        if (headBlock.isAir()) {
             final World world = entity.getEntityWorld();
             return WorldUtils.isColdTemperature(WorldUtils.getTemperatureAt(world, pos));
         }

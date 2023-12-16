@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.lib.math;
 
-@SuppressWarnings("unused")
 public class LoggingTimerEMA extends TimerEMA {
 
     private long timeMark;

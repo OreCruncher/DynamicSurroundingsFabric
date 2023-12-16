@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Material;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -16,11 +15,12 @@ import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.material.MaterialUtils;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
+import org.orecruncher.dsurround.tags.OcclusionTags;
+import org.orecruncher.dsurround.tags.ReflectanceTags;
 
 import java.util.Collection;
 import java.util.Random;
@@ -31,7 +31,7 @@ public class BlockInfo {
 
     private static final float DEFAULT_OPAQUE_OCCLUSION = 0.5F;
     private static final float DEFAULT_TRANSLUCENT_OCCLUSION = 0.15F;
-    private static final float DEFAULT_REFLECTION = 0.4F;
+    private static final float DEFAULT_REFLECTION = 0.0F; //0.4F;
 
     // Lazy init on add
     @Nullable
@@ -42,7 +42,6 @@ public class BlockInfo {
     protected ObjectArray<IBlockEffectProducer> alwaysOnEffects;
 
     protected final int version;
-    protected final Material material;
 
     protected Script soundChance = new Script("0.01");
     protected float soundReflectivity = DEFAULT_REFLECTION;
@@ -50,14 +49,12 @@ public class BlockInfo {
 
     public BlockInfo(int version) {
         this.version = version;
-        this.material = Material.AIR;
     }
 
     public BlockInfo(int version, BlockState state) {
         this.version = version;
-        this.soundOcclusion = state.getMaterial().blocksLight() ? DEFAULT_OPAQUE_OCCLUSION
-                : DEFAULT_TRANSLUCENT_OCCLUSION;
-        this.material = state.getMaterial();
+        this.soundOcclusion = getSoundOcclusionSetting(state);
+        this.soundReflectivity = getSoundReflectionSetting(state);
     }
 
     public boolean isDefault() {
@@ -104,8 +101,6 @@ public class BlockInfo {
             this.clearSounds();
 
         config.soundChance.ifPresent(v -> this.soundChance = v);
-        config.soundReflectivity.ifPresent(v -> this.soundReflectivity = v);
-        config.soundOcclusion.ifPresent(v -> this.soundOcclusion = v);
 
         for (final AcousticConfig sr : config.acoustics) {
             if (sr.soundEventId != null) {
@@ -166,32 +161,65 @@ public class BlockInfo {
 
     public void trim() {
         if (this.sounds != null) {
-            if (sounds.size() == 0)
+            if (sounds.isEmpty())
                 this.sounds = null;
             else
                 this.sounds.trim();
         }
         if (this.alwaysOnEffects != null) {
-            if (alwaysOnEffects.size() == 0)
+            if (alwaysOnEffects.isEmpty())
                 this.alwaysOnEffects = null;
             else
                 this.alwaysOnEffects.trim();
         }
         if (this.blockEffects != null) {
-            if (blockEffects.size() == 0)
+            if (blockEffects.isEmpty())
                 this.blockEffects = null;
             else
                 this.blockEffects.trim();
         }
     }
 
+    private static float getSoundReflectionSetting(BlockState state) {
+        if (state.isIn(ReflectanceTags.NONE))
+            return 0;
+        if (state.isIn(ReflectanceTags.VERY_LOW))
+            return 0.15F;
+        if (state.isIn(ReflectanceTags.LOW))
+            return 0.35F;
+        if (state.isIn(ReflectanceTags.MEDIUM))
+            return 0.5F;
+        if (state.isIn(ReflectanceTags.HIGH))
+            return 0.65F;
+        if (state.isIn(ReflectanceTags.VERY_HIGH))
+            return 0.8F;
+        if (state.isIn(ReflectanceTags.MAX))
+            return 1.0F;
+        return DEFAULT_REFLECTION;
+    }
+
+    private static float getSoundOcclusionSetting(BlockState state) {
+        if (state.isIn(OcclusionTags.NONE))
+            return 0;
+        if (state.isIn(OcclusionTags.VERY_LOW))
+            return 0.15F;
+        if (state.isIn(OcclusionTags.LOW))
+            return 0.35F;
+        if (state.isIn(OcclusionTags.MEDIUM))
+            return 0.5F;
+        if (state.isIn(OcclusionTags.HIGH))
+            return 0.65F;
+        if (state.isIn(OcclusionTags.VERY_HIGH))
+            return 0.8F;
+        if (state.isIn(OcclusionTags.MAX))
+            return 1.0F;
+        return state.isOpaque() ? DEFAULT_OPAQUE_OCCLUSION : DEFAULT_TRANSLUCENT_OCCLUSION;
+    }
+
     public String toString() {
         final StringBuilder builder = new StringBuilder();
 
-        builder.append("material: ")
-                .append(MaterialUtils.getMaterialName(this.material));
-
-        builder.append("; reflectivity: ")
+        builder.append("reflectivity: ")
                 .append(this.soundReflectivity)
                 .append("; occlusion: ")
                 .append(this.soundOcclusion)

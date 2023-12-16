@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.processing.scanner;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.tag.FluidTags;
+import net.minecraft.registry.tag.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeAccess;
@@ -72,6 +72,8 @@ public final class BiomeScanner {
             this.surveyedPosition = position;
             surveyedDimension = dimensionInfo;
 
+            this.weights = new Reference2IntOpenHashMap<>(8);
+
             // If the player is underwater, underwater effects will rule over everything else
             isUnderWater = player.isSubmergedIn(FluidTags.WATER);
             if (isUnderWater) {
@@ -93,8 +95,6 @@ public final class BiomeScanner {
             }
 
             logicalBiomeInfo = this.resolveBiome(dimensionInfo, biomes, position);
-
-            this.weights = new Reference2IntOpenHashMap<>(8);
 
             for (int z = 0; z < SURVEY_HORIZONTAL_DIMENSION; z++) {
                 var dZ = z - SURVEY_HORIZONTAL_OFFSET + this.surveyedPosition.getZ();

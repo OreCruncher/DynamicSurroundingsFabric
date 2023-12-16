@@ -5,16 +5,18 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistrySetupCallback;
 import net.minecraft.client.resource.language.I18n;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registry;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeKeys;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Guard;
-import org.orecruncher.dsurround.lib.biome.BiomeUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
@@ -86,7 +88,7 @@ public final class BiomeLibrary {
     }
 
     private static Registry<Biome> getActiveRegistry() {
-        return GameUtils.getRegistryManager().get(Registry.BIOME_KEY);
+        return GameUtils.getRegistryManager().get(RegistryKeys.BIOME);
     }
 
     public static Biome getBiome(Identifier biomeId) {
@@ -157,11 +159,8 @@ public final class BiomeLibrary {
     }
 
     static Identifier getBiomeId(Biome biome) {
-        Registry<Biome> biomeRegistry = getActiveRegistry();
-        Identifier id = biomeRegistry.getId(biome);
-        if (id == null)
-            id = BiomeUtils.DEFAULT_ID;
-        return id;
+        RegistryKey<Biome> key = getActiveRegistry().getKey(biome).orElse(BiomeKeys.THE_VOID);
+        return key.getValue();
     }
 
     public static String getBiomeName(Identifier id) {

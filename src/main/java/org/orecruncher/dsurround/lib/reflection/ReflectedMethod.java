@@ -7,7 +7,6 @@ import org.orecruncher.dsurround.Client;
 
 import java.lang.reflect.Method;
 
-@SuppressWarnings("unused")
 public class ReflectedMethod<R> {
 
     protected final String className;

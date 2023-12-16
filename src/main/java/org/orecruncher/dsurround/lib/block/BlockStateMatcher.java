@@ -4,12 +4,10 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Material;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
 import org.orecruncher.dsurround.lib.IMatcher;
-import org.orecruncher.dsurround.lib.material.MaterialUtils;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -23,13 +21,12 @@ public abstract class BlockStateMatcher implements IMatcher<BlockState> {
                     IMatcher::toString).stable();
 
     public static final String TAG_TYPE = "#";
-    public static final String MATERIAL_TYPE = "@";
 
     private static DataResult<IMatcher<BlockState>> manifest(String blockId) {
         try {
             return DataResult.success(create(blockId, true, true));
         } catch (Throwable t) {
-            return DataResult.error(t.getMessage());
+            return DataResult.error(t::getMessage);
         }
     }
 
@@ -45,10 +42,6 @@ public abstract class BlockStateMatcher implements IMatcher<BlockState> {
         return new MatchOnBlock(block);
     }
 
-    public static IMatcher<BlockState> create(final Material material) {
-        return new MatchOnMaterial(material);
-    }
-
     public static IMatcher<BlockState> create(final String blockId) throws BlockStateParseException {
         return create(blockId, true, true);
     }
@@ -59,11 +52,6 @@ public abstract class BlockStateMatcher implements IMatcher<BlockState> {
                 return createTagMatcher(blockId.substring(1));
             else
                 throw new BlockStateParseException(String.format("Block id %s is for a tag, and it is not permitted in this context", blockId));
-        if (blockId.startsWith(MATERIAL_TYPE))
-            if (allowMaterials)
-                return createMaterialMatcher(blockId.substring(1));
-            else
-                throw new BlockStateParseException(String.format("Block id %s is for material, and it is not permitted in this context", blockId));
         return createBlockStateMatcher(BlockStateParser.parse(blockId));
     }
 
@@ -71,13 +59,6 @@ public abstract class BlockStateMatcher implements IMatcher<BlockState> {
         if (!Identifier.isValid(tagId))
             throw new BlockStateParseException(String.format("%s is not a valid block tag", tagId));
         return new MatchOnBlockTag(new Identifier(tagId));
-    }
-
-    private static BlockStateMatcher createMaterialMatcher(String materialName) throws BlockStateParseException {
-        var material = MaterialUtils.getMaterial(materialName);
-        if (material == null)
-            throw new BlockStateParseException(String.format("Material %s is not known", materialName));
-        return new MatchOnMaterial(material);
     }
 
     private static BlockStateMatcher createBlockStateMatcher(final BlockStateParser.ParseResult result) throws BlockStateParseException {

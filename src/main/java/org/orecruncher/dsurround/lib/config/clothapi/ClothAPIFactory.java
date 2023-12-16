@@ -88,7 +88,7 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
             if (prop instanceof ConfigElement.PropertyGroup group) {
                 var result = this.generate(entryBuilder, group, instance);
                 root.addEntry(result.build());
-            } else if (prop instanceof ConfigElement.PropertyValue pv) {
+            } else if (prop instanceof ConfigElement.PropertyValue<?> pv) {
                 var result = this.generate(entryBuilder, pv, instance);
                 if (result != null)
                     root.addEntry(result.build());
@@ -107,7 +107,7 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
                 continue;
 
             // Can't have categories within categories, so we ignore the case of where a config is set up that way
-            if (prop instanceof ConfigElement.PropertyValue pv) {
+            if (prop instanceof ConfigElement.PropertyValue<?> pv) {
                 var result = this.generate(builder, pv, propertyGroup.getInstance(instance));
                 if (result != null)
                     categoryBuilder.add(result.build());
@@ -117,8 +117,8 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
         return categoryBuilder;
     }
 
-    protected @Nullable FieldBuilder<?, ? extends AbstractConfigListEntry<?>> generate(final ConfigEntryBuilder builder, ConfigElement.PropertyValue<?> pv, Object instance) {
-        FieldBuilder<?, ? extends AbstractConfigListEntry<?>> fieldBuilder = null;
+    protected @Nullable FieldBuilder<?, ? extends AbstractConfigListEntry<?>, ?> generate(final ConfigEntryBuilder builder, ConfigElement.PropertyValue<?> pv, Object instance) {
+        FieldBuilder<?, ? extends AbstractConfigListEntry<?>, ?> fieldBuilder = null;
 
         var name = this.options.transformProperty(pv.getElementNameKey());
         var tooltip = this.options.transformTooltip(pv.getTooltip());
@@ -160,7 +160,7 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
                     .setDefaultValue(v.getDefaultValue())
                     .setSaveConsumer(data -> v.setCurrentValue(instance, data));
         } else if (pv instanceof ConfigElement.EnumValue v) {
-            fieldBuilder = new EnumSelectorBuilder(builder.getResetButtonKey(), name, v.getEnumClass(), v.getCurrentValue(instance))
+            fieldBuilder = new EnumSelectorBuilder(builder.getResetButtonKey(), name, (Class<Enum<?>>)(v.getEnumClass()), v.getCurrentValue(instance))
                     .setTooltip(tooltip)
                     .setDefaultValue(v.getDefaultValue())
                     .setSaveConsumer(data -> v.setCurrentValue(instance, data));

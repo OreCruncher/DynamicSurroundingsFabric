@@ -5,14 +5,11 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.item.Item;
-import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.ItemClassType;
 import org.orecruncher.dsurround.config.ItemTypeMatcher;
 import org.orecruncher.dsurround.lib.IMatcher;
-import org.orecruncher.dsurround.lib.MatchOnClass;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Environment(EnvType.CLIENT)
 public class ItemConfigRule {
@@ -28,32 +25,6 @@ public class ItemConfigRule {
     ItemConfigRule(ItemClassType itemClassType, List<IMatcher<Item>> items) {
         this.itemClassType = itemClassType;
         this.items = items;
-    }
-
-    public @Nullable ItemConfigRule asSpecificMatchOnly() {
-        var rules = this.items.stream()
-                .filter(matcher -> matcher instanceof ItemConfigRule)
-                .collect(Collectors.toList());
-        if (rules.size() == items.size())
-            return this;
-
-        if (rules.size() == 0)
-            return null;
-
-        return new ItemConfigRule(this.itemClassType, rules);
-    }
-
-    public @Nullable ItemConfigRule asGeneralMatchOnly() {
-        var rules = this.items.stream()
-                .filter(matcher -> matcher instanceof MatchOnClass)
-                .collect(Collectors.toList());
-        if (rules.size() == items.size())
-            return this;
-
-        if (rules.size() == 0)
-            return null;
-
-        return new ItemConfigRule(this.itemClassType, rules);
     }
 
     public boolean match(Item item) {

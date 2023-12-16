@@ -5,7 +5,8 @@ import net.fabricmc.api.Environment;
 import net.minecraft.block.AbstractFurnaceBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.tag.FluidTags;
+import net.minecraft.block.CampfireBlock;
+import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
@@ -58,13 +59,19 @@ public abstract class BlockEffectProducer implements IBlockEffectProducer {
 
     public static final Predicate<BlockState> WATER_PREDICATE = (state) -> state.getFluidState().isIn(FluidTags.WATER);
 
-    public static final Predicate<BlockState> SOLID_PREDICATE = (state) -> state.getMaterial().isSolid();
+    public static final Predicate<BlockState> SOLID_PREDICATE = (state) -> state.isSolid();
 
+    // Covers blast furnace
     public static final Predicate<BlockState> LIT_FURNACE = (state) ->
             state.getBlock() instanceof AbstractFurnaceBlock && state.get(AbstractFurnaceBlock.LIT);
 
+    public static final Predicate<BlockState> LIT_CAMPFIRE = CampfireBlock::isLitCampfire;
+
+    public static final Predicate<BlockState> MAGMA_BLOCK = (state) ->
+            state.getBlock() == Blocks.MAGMA_BLOCK;
+
     public static final Predicate<BlockState> HOTBLOCK_PREDICATE = (state) ->
-            LAVA_PREDICATE.test(state) || state.getBlock() == Blocks.MAGMA_BLOCK || LIT_FURNACE.test(state);
+            LAVA_PREDICATE.test(state) || MAGMA_BLOCK.test(state) || LIT_FURNACE.test(state) || LIT_CAMPFIRE.test(state);
 
     public static int countVerticalBlocks(final World provider,
                                           final BlockPos pos,

@@ -46,9 +46,9 @@ public class MixinSource implements ISourceContext {
      * @param ci Ignored
      */
     @Inject(method = "play()V", at = @At("HEAD"))
-    public void dsurround_onPlay(CallbackInfo ci) {
+    public void dsurround_onSourcePlay(CallbackInfo ci) {
         try {
-            SoundFXProcessor.tick((Source) ((Object) this));
+            SoundFXProcessor.onSourcePlay((Source) ((Object) this));
         } catch(final Throwable t) {
             Client.LOGGER.error(t, "Error in dsurround_onPlay()!");
         }
@@ -60,7 +60,7 @@ public class MixinSource implements ISourceContext {
      * @param ci Ignored
      */
     @Inject(method = "tick()V", at = @At("HEAD"))
-    public void dsurround_onTick(CallbackInfo ci) {
+    public void dsurround_onSourceTick(CallbackInfo ci) {
         try {
             SoundFXProcessor.tick((Source) ((Object) this));
         } catch(final Throwable t) {
@@ -73,7 +73,7 @@ public class MixinSource implements ISourceContext {
      * @param ci Ignored
      */
     @Inject(method = "stop()V", at = @At("HEAD"))
-    public void dsurround_onStop(CallbackInfo ci) {
+    public void dsurround_onSourceStop(CallbackInfo ci) {
         try {
             SoundFXProcessor.stopSoundPlay((Source) ((Object) this));
         } catch(final Throwable t) {

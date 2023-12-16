@@ -66,7 +66,7 @@ public class WorldUtils {
         final Biome biome = world.getBiome(pos).value();
 
         // If the biome has no rain...
-        if (biome.getPrecipitation() == Biome.Precipitation.NONE)
+        if (biome.getPrecipitation(pos) == Biome.Precipitation.NONE)
             return Biome.Precipitation.NONE;
 
         // Is there a block above that is blocking the rainfall?

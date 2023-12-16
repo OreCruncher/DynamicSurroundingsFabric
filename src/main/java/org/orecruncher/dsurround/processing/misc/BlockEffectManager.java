@@ -34,8 +34,8 @@ public class BlockEffectManager        {
 
         if (!sittingStill) {
             final double range = Client.Config.blockEffects.blockEffectRange;
-            final BlockPos min = new BlockPos(current.getX() - range, current.getY() - range, current.getZ() - range);
-            final BlockPos max = new BlockPos(current.getX() + range, current.getY() + range, current.getZ() + range);
+            final BlockPos min = BlockPos.ofFloored(current.getX() - range, current.getY() - range, current.getZ() - range);
+            final BlockPos max = BlockPos.ofFloored(current.getX() + range, current.getY() + range, current.getZ() + range);
 
             pred = system -> {
 
@@ -64,5 +64,4 @@ public class BlockEffectManager        {
     public int count() {
         return this.systems.size();
     }
-
 }

@@ -4,7 +4,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-@SuppressWarnings("unused")
 public interface IModLog {
 
     default void info(final String msg, @Nullable final Object... parms) {

@@ -14,7 +14,6 @@ import java.util.stream.Stream;
  *
  * @param <T>
  */
-@SuppressWarnings("unused")
 public class WeightTable<T> {
 
     private static final int DEFAULT_ARRAY_SIZE = 8;

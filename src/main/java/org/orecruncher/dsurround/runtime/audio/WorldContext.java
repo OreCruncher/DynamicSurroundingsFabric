@@ -62,8 +62,8 @@ public final class WorldContext {
             this.isPrecipitating = w.isRaining();
             this.playerPosition = this.player.getPos();
             this.playerEyePosition = this.player.getEyePos();
-            this.playerPos = new BlockPos(this.playerPosition);
-            this.playerEyePos = new BlockPos(this.playerEyePosition);
+            this.playerPos = BlockPos.ofFloored(this.playerPosition);
+            this.playerEyePos = BlockPos.ofFloored(this.playerEyePosition);
 
             if (this.player.isSubmergedInWater())
                 this.auralDampening = 0.6F;

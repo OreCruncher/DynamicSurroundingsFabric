@@ -13,7 +13,7 @@ import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 @Environment(EnvType.CLIENT)
 public class BowUseEffect extends EntityEffectBase {
 
-    private static final SoundEvent BOW_PULL_SOUNDEVENT = new SoundEvent(new Identifier(Client.ModId, "item.bow.pull"));
+    private static final SoundEvent BOW_PULL_SOUNDEVENT = SoundEvent.of(new Identifier(Client.ModId, "item.bow.pull"));
     private static final ISoundFactory BOW_PULL_SOUND = SoundFactoryBuilder
             .create(BOW_PULL_SOUNDEVENT)
             .pitchRange(0.9F, 1.1F)

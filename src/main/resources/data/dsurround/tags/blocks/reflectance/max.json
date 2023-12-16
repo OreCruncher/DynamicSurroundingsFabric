@@ -1,0 +1,17 @@
+{
+  "values": [
+    "#c:ores",
+    "minecraft:stone",
+    "minecraft:infested_stone",
+    "minecraft:infested_stone_bricks",
+    "minecraft:andesite",
+    "minecraft:diorite",
+    "minecraft:granite",
+    "minecraft:deepslate",
+    "minecraft:tuff",
+    "minecraft:deepslate_bricks",
+    "minecraft:deepslate_tiles",
+    "minecraft:infested_deepslate",
+    "minecraft:infested_mossy_stone_bricks"
+  ]
+}

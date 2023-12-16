@@ -5,10 +5,10 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.state.State;
-import net.minecraft.tag.TagKey;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.block.BlockInfo;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
@@ -17,6 +17,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
+import org.orecruncher.dsurround.tags.TagHelpers;
 import org.orecruncher.dsurround.xface.IBlockStateExtended;
 
 import java.util.Collection;
@@ -81,20 +82,20 @@ public class BlockLibrary {
     }
 
     public static Stream<String> dumpBlockStates() {
-        return GameUtils.getRegistryManager().get(Registry.BLOCK_KEY).stream().flatMap(block -> block.getStateManager().getStates().stream()).map(State::toString).sorted();
+        return GameUtils.getRegistryManager().get(RegistryKeys.BLOCK).stream().flatMap(block -> block.getStateManager().getStates().stream()).map(State::toString).sorted();
     }
 
     public static Stream<String> dumpBlockConfigRules() {
         return blockConfigs.stream().map(BlockLibrary::formatBlockConfigRuleOutput).sorted();
     }
 
-    public static Stream<String> dumpBlocks() {
-        var blockRegistry = GameUtils.getRegistryManager().get(Registry.BLOCK_KEY).getEntrySet();
-        return blockRegistry.stream().map(kvp -> formatBlockOutput(kvp.getKey().getValue(), kvp.getValue())).sorted();
+    public static Stream<String> dumpBlocks(boolean noStates) {
+        var blockRegistry = GameUtils.getRegistryManager().get(RegistryKeys.BLOCK).getEntrySet();
+        return blockRegistry.stream().map(kvp -> formatBlockOutput(kvp.getKey().getValue(), kvp.getValue(), noStates)).sorted();
     }
 
     public static Stream<String> dumpBlocksByTag() {
-        var tagGroup = GameUtils.getTagGroup(Registry.BLOCK_KEY);
+        var tagGroup = TagHelpers.getTagGroup(RegistryKeys.BLOCK);
         if (tagGroup != null) {
             return tagGroup.filter(pair -> pair.value().findAny().isPresent()).map(pair -> BlockLibrary.formatBlockTagOutput(pair.key(), pair.value())).sorted();
         }
@@ -114,29 +115,35 @@ public class BlockLibrary {
         return builder.toString();
     }
 
-    private static String formatBlockOutput(Identifier id, Block block) {
-        var blocks = GameUtils.getWorld().getRegistryManager().get(Registry.BLOCK_KEY);
+    private static String formatBlockOutput(Identifier id, Block block, boolean noStates) {
+        var blocks = GameUtils.getWorld().getRegistryManager().get(RegistryKeys.BLOCK);
 
         var tags = "null";
         var entry = blocks.getEntry(blocks.getRawId(block));
         if (entry.isPresent()) {
-            tags = entry.get()
-                    .streamTags()
-                    .map(TagKey::toString)
-                    .sorted()
-                    .collect(Collectors.joining(","));
+            tags = TagHelpers.asString(entry.get().streamTags());
         }
 
         StringBuilder builder = new StringBuilder();
         builder.append(id.toString());
         builder.append("\nTags: ").append(tags);
-        builder.append("\nstates [\n");
-        for (var blockState : block.getStateManager().getStates()) {
-            builder.append(blockState.toString()).append("\n");
-            var info = getBlockInfo(blockState);
-            builder.append(info);
+
+        var info = getBlockInfo(block.getDefaultState());
+        builder.append("\nreflectance: ").append(info.getSoundReflectivity());
+        builder.append("; occlusion: ").append(info.getSoundOcclusion());
+
+        if (!noStates) {
+            builder.append("\nstates [\n");
+            for (var blockState : block.getStateManager().getStates()) {
+                builder.append(blockState.toString()).append("\n");
+                info = getBlockInfo(blockState);
+                builder.append(info);
+            }
+            builder.append("]");
         }
-        builder.append("]\n");
+
+        builder.append("\n");
+
         return builder.toString();
     }
 

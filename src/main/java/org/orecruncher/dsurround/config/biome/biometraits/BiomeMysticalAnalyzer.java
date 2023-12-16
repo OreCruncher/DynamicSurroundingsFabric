@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
 
@@ -10,7 +11,7 @@ import java.util.List;
 public class BiomeMysticalAnalyzer implements IBiomeTraitAnalyzer {
 
     @Override
-    public Collection<BiomeTrait> evaluate(Identifier id, Biome biome) {
+    public Collection<BiomeTrait> evaluate(Identifier id, Biome biome, RegistryEntry.Reference<Biome> biomeEntry) {
         List<BiomeTrait> results = new ArrayList<>();
 
         var path = id.getPath();

@@ -1,0 +1,12 @@
+accessWidener v2 named
+
+# For sound GUI
+accessible class net/minecraft/client/gui/widget/EntryListWidget$Entry
+
+# For Biome weather accessible
+accessible class net/minecraft/world/biome/Biome$Weather
+accessible field net/minecraft/world/biome/Biome weather Lnet/minecraft/world/biome/Biome$Weather;
+
+# Sound engine access
+accessible field net/minecraft/client/sound/SoundEngine devicePointer J
+accessible field net/minecraft/client/sound/Channel$SourceManager source Lnet/minecraft/client/sound/Source;

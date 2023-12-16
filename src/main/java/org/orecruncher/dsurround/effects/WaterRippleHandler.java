@@ -20,7 +20,7 @@ public class WaterRippleHandler {
 
     // Hook for Rain particle effect to generate a ripple instead of a splash
     public static void spawnRippleOnBlock(final ClientWorld world, final Vec3d position) {
-        final BlockPos pos = new BlockPos(position.x, position.y - 0.01D, position.z);
+        final BlockPos pos = BlockPos.ofFloored(position.x, position.y - 0.01D, position.z);
         final FluidState fluidState = world.getFluidState(pos);
         if (fluidState.isEmpty() || !fluidState.isStill()) return;
 

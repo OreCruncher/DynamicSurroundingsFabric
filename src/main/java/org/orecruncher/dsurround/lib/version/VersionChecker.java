@@ -65,7 +65,7 @@ public class VersionChecker {
 
         public Text getChatText() {
             var formattedText = I18n.translate("dsurround.text.NewVersion", this.displayName, this.version.getFriendlyString(), this.downloadLocation);
-            return Text.Serializer.fromJson(formattedText);
+            return Text.Serialization.fromJson(formattedText);
         }
     }
 }

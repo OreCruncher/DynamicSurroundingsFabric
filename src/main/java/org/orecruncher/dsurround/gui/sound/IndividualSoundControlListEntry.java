@@ -3,11 +3,10 @@ package org.orecruncher.dsurround.gui.sound;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.EntryListWidget;
-import net.minecraft.client.sound.SoundManager;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -15,7 +14,6 @@ import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.SoundLibrary;
 import org.orecruncher.dsurround.lib.FrameworkUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.gui.ButtonControl;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.gui.GuiHelpers;
 import org.orecruncher.dsurround.sound.SoundMetadata;
@@ -50,9 +48,9 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
 
     private final IndividualSoundConfigEntry config;
     private final VolumeSliderControl volume;
-    private final ButtonControl blockButton;
-    private final ButtonControl cullButton;
-    private final ButtonControl playButton;
+    private final ButtonWidget blockButton;
+    private final ButtonWidget cullButton;
+    private final ButtonWidget playButton;
 
     private final List<ClickableWidget> children = new ArrayList<>();
     private final List<OrderedText> cachedToolTip = new ArrayList<>();
@@ -64,37 +62,19 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
         this.volume = new VolumeSliderControl(this, 0, 0);
         this.children.add(this.volume);
 
-        this.blockButton = new ButtonControl(
-                0,
-                0,
-                BUTTON_WIDTH,
-                0,
-                this.config.block ? BLOCK_ON : BLOCK_OFF,
-                this::toggleBlock);
+        this.blockButton = ButtonWidget.builder(this.config.block ? BLOCK_ON : BLOCK_OFF, this::toggleBlock)
+            .size(BUTTON_WIDTH, 0)
+            .build();
         this.children.add(this.blockButton);
 
-        this.cullButton = new ButtonControl(
-                0,
-                0,
-                BUTTON_WIDTH,
-                0,
-                this.config.cull ? CULL_ON : CULL_OFF,
-                this::toggleCull);
+        this.cullButton = ButtonWidget.builder(this.config.block ? CULL_ON : CULL_OFF, this::toggleCull)
+            .size(BUTTON_WIDTH, 0)
+            .build();
         this.children.add(this.cullButton);
 
-        this.playButton = new ButtonControl(
-                0,
-                0,
-                BUTTON_WIDTH,
-                0,
-                PLAY,
-                this::play) {
-
-            @Override
-            public void playDownSound(final SoundManager ignore) {
-                // Suppress the button click to avoid conflicting with the sound play
-            }
-        };
+        this.playButton = ButtonWidget.builder(PLAY, this::play)
+            .size(BUTTON_WIDTH, 0)
+            .build();
 
         this.playButton.active = enablePlay;
         this.children.add(this.playButton);
@@ -127,10 +107,10 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
         return false;
     }
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double hAmount, double vAmount) {
         ClickableWidget child = this.findChild(mouseX, mouseY);
         if (child != null)
-            return child.mouseScrolled(mouseX, mouseY, amount);
+            return child.mouseScrolled(mouseX, mouseY, hAmount, vAmount);
         return false;
     }
 
@@ -146,35 +126,35 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
     }
 
     @Override
-    public void render(final MatrixStack matrixStack, int index, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTick_) {
+    public void render(final DrawContext context, int index, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTick_) {
         final TextRenderer font = GameUtils.getTextRenderer();
-        final float labelY = rowTop + (rowHeight - font.fontHeight) / 2F;
+        final int labelY = rowTop + (rowHeight - font.fontHeight) / 2;
         final String text = this.config.soundEventId.toString();
-        font.draw(matrixStack, text, (float) rowLeft, labelY, ColorPalette.WHITE.getRGB());
+        context.drawText(font, text, rowLeft, labelY, ColorPalette.MC_WHITE.getRGB(), false);
 
         // Need to position the other controls appropriately
         int rightMargin = rowLeft + rowWidth;
-        this.volume.x = rightMargin - this.volume.getWidth();
-        this.volume.y = rowTop;
+        this.volume.setX(rightMargin - this.volume.getWidth());
+        this.volume.setY(rowTop);
         this.volume.setHeight(rowHeight);
         rightMargin -= this.volume.getWidth() + CONTROL_SPACING;
 
-        this.playButton.x = rightMargin - this.playButton.getWidth();
-        this.playButton.y = rowTop;
+        this.playButton.setX(rightMargin - this.playButton.getWidth());
+        this.playButton.setY(rowTop);
         this.playButton.setHeight(rowHeight);
         rightMargin -= this.playButton.getWidth() + CONTROL_SPACING;
 
-        this.blockButton.x = rightMargin - this.blockButton.getWidth();
-        this.blockButton.y = rowTop;
+        this.blockButton.setX(rightMargin - this.blockButton.getWidth());
+        this.blockButton.setY(rowTop);
         this.blockButton.setHeight(rowHeight);
         rightMargin -= this.blockButton.getWidth() + CONTROL_SPACING;
 
-        this.cullButton.x = rightMargin - this.cullButton.getWidth();
+        this.cullButton.setX(rightMargin - this.cullButton.getWidth());
         this.cullButton.setHeight(rowHeight);
-        this.cullButton.y = rowTop;
+        this.cullButton.setY(rowTop);
 
         for (final ClickableWidget w : this.children)
-            w.render(matrixStack, mouseX, mouseY, partialTick_);
+            w.render(context, mouseX, mouseY, partialTick_);
     }
 
     protected void toggleBlock(final ButtonWidget button) {
@@ -218,7 +198,7 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
     protected List<OrderedText> getToolTip(final int mouseX, final int mouseY) {
 
         // Cache the static part of the tooltip if needed
-        if (this.cachedToolTip.size() == 0) {
+        if (this.cachedToolTip.isEmpty()) {
 
             Identifier id = this.config.soundEventId;
             final String mod = FrameworkUtils.getModDisplayName(id.getNamespace());
