@@ -22,8 +22,6 @@ public class BlockConfigRule {
                     .forGetter(info -> info.blocks),
             Codec.BOOL.optionalFieldOf("clearSounds", false).forGetter(info -> info.clearSounds),
             Script.CODEC.optionalFieldOf("soundChance").forGetter(info -> info.soundChance),
-            Codec.FLOAT.optionalFieldOf("soundReflectivity").forGetter(info -> info.soundReflectivity),
-            Codec.FLOAT.optionalFieldOf("soundOcclusion").forGetter(info -> info.soundOcclusion),
             Codec.list(AcousticConfig.CODEC).optionalFieldOf("acoustics", ImmutableList.of())
                     .forGetter(info -> info.acoustics),
             Codec.list(BlockEffectConfig.CODEC).optionalFieldOf("effects", ImmutableList.of())
@@ -33,19 +31,14 @@ public class BlockConfigRule {
     public List<IMatcher<BlockState>> blocks;
     public boolean clearSounds;
     public Optional<Script> soundChance;
-    public Optional<Float> soundReflectivity;
-    public Optional<Float> soundOcclusion;
     public List<AcousticConfig> acoustics;
     public List<BlockEffectConfig> effects;
 
     BlockConfigRule(List<IMatcher<BlockState>> blocks, Boolean soundReset, Optional<Script> chance,
-            Optional<Float> soundReflectivity, Optional<Float> soundOcclusion, List<AcousticConfig> acoustics,
-            List<BlockEffectConfig> effects) {
+            List<AcousticConfig> acoustics, List<BlockEffectConfig> effects) {
         this.blocks = blocks;
         this.clearSounds = soundReset;
         this.soundChance = chance;
-        this.soundReflectivity = soundReflectivity;
-        this.soundOcclusion = soundOcclusion;
         this.acoustics = acoustics;
         this.effects = effects;
     }

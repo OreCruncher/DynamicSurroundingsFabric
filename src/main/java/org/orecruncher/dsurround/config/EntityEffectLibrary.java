@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.config;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.objects.*;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -9,44 +8,25 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.config.data.EntityEffectConfigRule;
 import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
-import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
-import org.orecruncher.dsurround.lib.resources.ResourceUtils;
+import org.orecruncher.dsurround.tags.EntityEffectTags;
 import org.orecruncher.dsurround.xface.ILivingEntityExtended;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 @Environment(EnvType.CLIENT)
 public class EntityEffectLibrary {
 
-    private static final String FILE_NAME = "effects.json";
-    private static final Codec<List<EntityEffectConfigRule>> CODEC = Codec.list(EntityEffectConfigRule.CODEC);
     private static final IModLog LOGGER = Client.LOGGER.createChild(EntityEffectLibrary.class);
 
     private static final Reference2ObjectMap<EntityType<?>, Set<EntityEffectType>> entityEffects = new Reference2ObjectOpenHashMap<>();
-    private static Collection<EntityEffectConfigRule> entityConfigRules;
     private static EntityEffectInfo DEFAULT;
     private static int version;
 
     public static void load() {
         entityEffects.clear();
-        final Collection<IResourceAccessor> accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), FILE_NAME);
-
-        entityConfigRules = new ObjectArray<>();
-        // Iterate through the configs gathering the EntityEffectType data that is defined.  The result
-        // of this process is each EntityType having deduped set of effects that can be applied.
-        IResourceAccessor.process(accessors, accessor -> {
-            var cfg = accessor.as(CODEC);
-            if (cfg != null)
-                entityConfigRules.addAll(cfg);
-        });
-
         version++;
 
         DEFAULT = new EntityEffectInfo(version, null, ImmutableList.of()) {
@@ -75,7 +55,7 @@ public class EntityEffectLibrary {
             }
         };
 
-        LOGGER.info("%d entity config rules loaded; version is now %d", entityConfigRules.size(), version);
+        LOGGER.info("Entity config rules configured; version is now %d", version);
     }
 
     public static boolean doesEntityEffectInfoExist(LivingEntity entity) {
@@ -135,10 +115,16 @@ public class EntityEffectLibrary {
     private static Set<EntityEffectType> gatherEffectsFromConfigRules(LivingEntity entity) {
         // Gather all the effect types that apply to the entity
         Set<EntityEffectType> effectTypes = new ReferenceOpenHashSet<>();
-        for (var rule : entityConfigRules) {
-            if (rule.match(entity))
-                effectTypes.addAll(rule.effects);
-        }
+
+        var entityType = entity.getType();
+        if (entityType.isIn(EntityEffectTags.BOW_PULL))
+            effectTypes.add(EntityEffectType.BOW_PULL);
+        if (entityType.isIn(EntityEffectTags.FROST_BREATH))
+            effectTypes.add(EntityEffectType.FROST_BREATH);
+        if (entityType.isIn(EntityEffectTags.ITEM_SWING))
+            effectTypes.add(EntityEffectType.ITEM_SWING);
+        if (entityType.isIn(EntityEffectTags.TOOLBAR))
+            effectTypes.add(EntityEffectType.PLAYER_TOOLBAR);
 
         return effectTypes;
     }

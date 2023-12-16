@@ -20,7 +20,8 @@
         "spawnChance": "0.0005"
       }
     ]
-  },  {
+  },
+  {
     "blocks": [
       "minecraft:water"
     ],
@@ -112,89 +113,5 @@
         "maxPitch": 1.2
       }
     ]
-  },
-  {
-    "blocks": [
-      "#dsurround:occlusion/none"
-    ],
-    "soundOcclusion": 0.0
-  },
-  {
-    "blocks": [
-      "#dsurround:occlusion/very_low"
-    ],
-    "soundOcclusion": 0.15
-  },
-  {
-    "blocks": [
-      "#dsurround:occlusion/low"
-    ],
-    "soundOcclusion": 0.35
-  },
-  {
-    "blocks": [
-      "#dsurround:occlusion/medium"
-    ],
-    "soundOcclusion": 0.5
-  },
-  {
-    "blocks": [
-      "#dsurround:occlusion/high"
-    ],
-    "soundOcclusion": 0.65
-  },
-  {
-    "blocks": [
-      "#dsurround:occlusion/very_high"
-    ],
-    "soundOcclusion": 0.8
-  },
-  {
-    "blocks": [
-      "#dsurround:occlusion/max"
-    ],
-    "soundOcclusion": 0.95
-  },
-  {
-    "blocks": [
-      "#dsurround:reflectance/none"
-    ],
-    "soundReflectivity": 0.0
-  },
-  {
-    "blocks": [
-      "#dsurround:reflectance/very_low"
-    ],
-    "soundReflectivity": 0.15
-  },
-  {
-    "blocks": [
-      "#dsurround:reflectance/low"
-    ],
-    "soundReflectivity": 0.35
-  },
-  {
-    "blocks": [
-      "#dsurround:reflectance/medium"
-    ],
-    "soundReflectivity": 0.5
-  },
-  {
-    "blocks": [
-      "#dsurround:reflectance/high"
-    ],
-    "soundReflectivity": 0.65
-  },
-  {
-    "blocks": [
-      "#dsurround:reflectance/very_high"
-    ],
-    "soundReflectivity": 0.8
-  },
-  {
-    "blocks": [
-      "#dsurround:reflectance/max"
-    ],
-    "soundReflectivity": 0.95
   }
 ]

@@ -19,6 +19,8 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
+import org.orecruncher.dsurround.tags.OcclusionTags;
+import org.orecruncher.dsurround.tags.ReflectanceTags;
 
 import java.util.Collection;
 import java.util.Random;
@@ -51,8 +53,8 @@ public class BlockInfo {
 
     public BlockInfo(int version, BlockState state) {
         this.version = version;
-        this.soundOcclusion = state.isOpaque()? DEFAULT_OPAQUE_OCCLUSION
-                : DEFAULT_TRANSLUCENT_OCCLUSION;
+        this.soundOcclusion = getSoundOcclusionSetting(state);
+        this.soundReflectivity = getSoundReflectionSetting(state);
     }
 
     public boolean isDefault() {
@@ -99,8 +101,6 @@ public class BlockInfo {
             this.clearSounds();
 
         config.soundChance.ifPresent(v -> this.soundChance = v);
-        config.soundReflectivity.ifPresent(v -> this.soundReflectivity = v);
-        config.soundOcclusion.ifPresent(v -> this.soundOcclusion = v);
 
         for (final AcousticConfig sr : config.acoustics) {
             if (sr.soundEventId != null) {
@@ -178,6 +178,42 @@ public class BlockInfo {
             else
                 this.blockEffects.trim();
         }
+    }
+
+    private static float getSoundReflectionSetting(BlockState state) {
+        if (state.isIn(ReflectanceTags.NONE))
+            return 0;
+        if (state.isIn(ReflectanceTags.VERY_LOW))
+            return 0.15F;
+        if (state.isIn(ReflectanceTags.LOW))
+            return 0.35F;
+        if (state.isIn(ReflectanceTags.MEDIUM))
+            return 0.5F;
+        if (state.isIn(ReflectanceTags.HIGH))
+            return 0.65F;
+        if (state.isIn(ReflectanceTags.VERY_HIGH))
+            return 0.8F;
+        if (state.isIn(ReflectanceTags.MAX))
+            return 1.0F;
+        return DEFAULT_REFLECTION;
+    }
+
+    private static float getSoundOcclusionSetting(BlockState state) {
+        if (state.isIn(OcclusionTags.NONE))
+            return 0;
+        if (state.isIn(OcclusionTags.VERY_LOW))
+            return 0.15F;
+        if (state.isIn(OcclusionTags.LOW))
+            return 0.35F;
+        if (state.isIn(OcclusionTags.MEDIUM))
+            return 0.5F;
+        if (state.isIn(OcclusionTags.HIGH))
+            return 0.65F;
+        if (state.isIn(OcclusionTags.VERY_HIGH))
+            return 0.8F;
+        if (state.isIn(OcclusionTags.MAX))
+            return 1.0F;
+        return state.isOpaque() ? DEFAULT_OPAQUE_OCCLUSION : DEFAULT_TRANSLUCENT_OCCLUSION;
     }
 
     public String toString() {
