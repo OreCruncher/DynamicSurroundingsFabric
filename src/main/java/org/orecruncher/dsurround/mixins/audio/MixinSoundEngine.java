@@ -7,10 +7,7 @@ import org.lwjgl.openal.SOFTOutputLimiter;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.*;
 
 import java.nio.IntBuffer;
 
@@ -29,19 +26,21 @@ public class MixinSoundEngine {
      * Rewrite the capability buffer - wee!
      * NOTE: The dev plugin for Intellij does not like the method signature - just ignore.
      */
-    @ModifyVariable(method = "init(Ljava/lang/String;Z)V", at = @At(value = "STORE"), name = "intBuffer")
-    private IntBuffer dsurround_buildCapabilities(IntBuffer intBuffer) {
+    @Redirect(method = "init(Ljava/lang/String;Z)V", at = @At(value = "INVOKE", target = "Lorg/lwjgl/openal/ALC10;alcCreateContext(JLjava/nio/IntBuffer;)J", remap = false))
+    private long dsurround_buildCapabilities(long deviceHandle, IntBuffer attrList) {
         if (AudioUtilities.doEnhancedSounds()) {
             // Buffer should have been resized by the constant modification above
-            intBuffer.clear();
+            attrList.clear();
             // From the original code
-            intBuffer.put(SOFTOutputLimiter.ALC_OUTPUT_LIMITER_SOFT).put(ALC10.ALC_TRUE);
+            attrList.put(SOFTOutputLimiter.ALC_OUTPUT_LIMITER_SOFT).put(ALC10.ALC_TRUE);
             // Increase send channels
-            intBuffer.put(EXTEfx.ALC_MAX_AUXILIARY_SENDS).put(4).put(0);
-            return intBuffer.flip();
+            attrList.put(EXTEfx.ALC_MAX_AUXILIARY_SENDS).put(4);
+            // Done!
+            attrList.put(0);
+            attrList.flip();
         }
         // Leave the buffer intact
-        return intBuffer;
+        return ALC10.alcCreateContext(deviceHandle, attrList);
     }
 
     /**

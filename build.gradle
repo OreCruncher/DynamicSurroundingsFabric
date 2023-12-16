@@ -41,7 +41,7 @@ dependencies {
 
 processResources {
     inputs.property "version", project.version
-    filteringCharset "UTF-8"
+//    filteringCharset 'UTF-8'
 
     filesMatching("fabric.mod.json") {
         expand "version": project.version
@@ -54,7 +54,7 @@ tasks.withType(JavaCompile).configureEach {
     // this fixes some edge cases with special characters not displaying correctly
     // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
     // If Javadoc is generated, this must be specified in that task too.
-    it.options.encoding = "UTF-8"
+//    it.options.encoding = 'UTF-8'
     if (targetJavaVersion >= 10|| JavaVersion.current().isJava10Compatible()) {
         it.options.release = targetJavaVersion
     }
