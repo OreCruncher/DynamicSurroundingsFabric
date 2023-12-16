@@ -36,7 +36,7 @@ public class BlockViewer {
         data.add(COLOR_TITLE + type);
 
         var state = world.getBlockState(result.getBlockPos());
-        data.add(state.getBlock().toString());
+        data.add(state.toString());
 
         state.streamTags().forEach(tag -> {
             var formatting = Formatting.YELLOW;
