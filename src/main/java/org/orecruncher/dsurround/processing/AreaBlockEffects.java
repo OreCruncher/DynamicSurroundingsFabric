@@ -31,7 +31,8 @@ public class AreaBlockEffects extends ClientHandler {
 
     @Override
     public void process(final PlayerEntity player) {
-        if (!this.isConnected) return;
+        if (!this.isConnected)
+            return;
 
         // TODO: Reports that this reduces some crashes.  Not sure how since the connected
         // would prevent this logic from executing because it sets the isConnected

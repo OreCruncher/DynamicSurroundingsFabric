@@ -18,16 +18,21 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
+import org.orecruncher.dsurround.lib.threading.ClientTasking;
+import org.orecruncher.dsurround.lib.threading.IClientTasking;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 import java.util.Collection;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 @Environment(EnvType.CLIENT)
 public class Handlers {
 
     private static final IModLog LOGGER = Client.LOGGER.createChild(Handlers.class);
     private static final Singleton<Handlers> INSTANCE = new Singleton<>(Handlers::new);
+    private static final Singleton<IClientTasking> TASKING = new Singleton<>(ClientTasking::new);
 
     private final ObjectArray<ClientHandler> effectHandlers = new ObjectArray<>();
     private final LoggingTimerEMA handlerTimer = new LoggingTimerEMA("Handlers");
@@ -65,19 +70,31 @@ public class Handlers {
     }
 
     private void onConnect(ClientPlayNetworkHandler handler, PacketSender sender, MinecraftClient client) {
-        if (isConnected) {
-            LOGGER.warn("Attempt to initialize EffectManager when it is already initialized");
-            onDisconnect(null, null);
+        try {
+            TASKING.get().execute(() -> {
+                if (this.isConnected) {
+                    LOGGER.warn("Attempt to initialize EffectManager when it is already initialized");
+                    onDisconnect(null, null);
+                }
+                for (final ClientHandler h : this.effectHandlers)
+                    h.connect0();
+                this.isConnected = true;
+            });
+        } catch (Exception ex) {
+            LOGGER.error(ex, "Unable to perform client connect");
         }
-        isConnected = true;
-        for (final ClientHandler h : this.effectHandlers)
-            h.connect0();
     }
 
     private void onDisconnect(ClientPlayNetworkHandler handler, MinecraftClient client) {
-        for (final ClientHandler h : this.effectHandlers)
-            h.disconnect0();
-        isConnected = false;
+        try {
+            TASKING.get().execute(() -> {
+                this.isConnected = false;
+                for (final ClientHandler h : this.effectHandlers)
+                    h.disconnect0();
+            });
+        } catch (Exception ex) {
+            LOGGER.error(ex, "Unable to perform client disconnect");
+        }
     }
 
     protected boolean doTick() {
