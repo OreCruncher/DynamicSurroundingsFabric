@@ -31,12 +31,22 @@ public class AreaBlockEffects extends ClientHandler {
 
     @Override
     public void process(final PlayerEntity player) {
-        if (!isConnected) return;
+        if (!this.isConnected) return;
 
-        this.blockEffects.tick(player);
-        this.nearEffects.tick();
-        this.farEffects.tick();
-        this.alwaysOn.tick();
+        // TODO: Reports that this reduces some crashes.  Not sure how since the connected
+        // would prevent this logic from executing because it sets the isConnected
+        // flag.
+        if (player == null)
+            return;
+
+        if (this.blockEffects != null)
+            this.blockEffects.tick(player);
+        if (this.nearEffects != null)
+            this.nearEffects.tick();
+        if (this.farEffects != null)
+            this.farEffects.tick();
+        if (this.alwaysOn != null)
+            this.alwaysOn.tick();
     }
 
     @Override
@@ -52,13 +62,13 @@ public class AreaBlockEffects extends ClientHandler {
 
     @Override
     public void onDisconnect() {
+        this.isConnected = false;
+
         this.locus = null;
         this.blockEffects = null;
         this.alwaysOn = null;
         this.nearEffects = null;
         this.farEffects = null;
-
-        this.isConnected = false;
     }
 
     private void blockUpdates(Collection<BlockPos> blockPos) {
