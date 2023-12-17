@@ -2,13 +2,13 @@ package org.orecruncher.dsurround.effects.entity;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.item.BowItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
+import org.orecruncher.dsurround.tags.ItemEffectTags;
 
 @Environment(EnvType.CLIENT)
 public class BowUseEffect extends EntityEffectBase {
@@ -46,7 +46,6 @@ public class BowUseEffect extends EntityEffectBase {
     }
 
     private static boolean isApplicable(ItemStack stack) {
-        return !stack.isEmpty() && stack.getItem() instanceof BowItem;
+        return stack.isIn(ItemEffectTags.BOWS);
     }
-
 }
