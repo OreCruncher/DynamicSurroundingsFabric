@@ -100,7 +100,7 @@
   "dsurround.config.particleTweaks": "Particle Tweaks",
   "dsurround.config.particleTweaks.tooltip": "Configuration options for tweaking particle behavior",
   "dsurround.config.particleTweaks.suppressPlayerParticles": "Suppress Player Potion Effects",
-  "dsurround.config.particleTweaks.suppressPlayerParticles.tooltip": "Enable/disable suppressing the current players potion particles",
+  "dsurround.config.particleTweaks.suppressPlayerParticles.tooltip": "Enable/disable suppressing the current players potion particles when in first person view",
   "dsurround.config.particleTweaks.showProjectileTrails": "Show Projectile Particle Trails",
   "dsurround.config.particleTweaks.showProjectileTrails.tooltip": "Enable/disable showing of projectile particle trails",
   "dsurround.config.enhancedSounds": "Enhanced Sound Processing",

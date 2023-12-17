@@ -27,16 +27,13 @@ public final class BiomeSoundHandler extends ClientHandler {
     public static final int MOOD_SOUND_MAX_RANGE = 16;
 
     // Reusable map for biome acoustic work
-    private static final Object2FloatOpenHashMap<ISoundFactory> WORK_MAP = new Object2FloatOpenHashMap<>(8, Hash.DEFAULT_LOAD_FACTOR);
-
-    static {
-        WORK_MAP.defaultReturnValue(0F);
-    }
+    private final Object2FloatOpenHashMap<ISoundFactory> workMap = new Object2FloatOpenHashMap<>(8, Hash.DEFAULT_LOAD_FACTOR);
 
     private final ObjectArray<BiomeSoundEmitter> emitters = new ObjectArray<>(8);
 
     BiomeSoundHandler() {
         super("Biome Sounds");
+        this.workMap.defaultReturnValue(0F);
     }
 
     private boolean doBiomeSounds() {
@@ -49,7 +46,7 @@ public final class BiomeSoundHandler extends ClientHandler {
             var acoustics = kvp.getKey().findBiomeSoundMatches();
             final float volume = 0.05F + 0.95F * (kvp.getIntValue() / area);
             for (var acoustic : acoustics) {
-                WORK_MAP.addTo(acoustic, volume);
+                this.workMap.addTo(acoustic, volume);
             }
         }
     }
@@ -73,7 +70,7 @@ public final class BiomeSoundHandler extends ClientHandler {
     }
 
     private void handleBiomeSounds(final PlayerEntity player) {
-        WORK_MAP.clear();
+        this.workMap.clear();
 
         // Only gather data if the player is alive. If the player is dead the biome sounds will cease playing.
         if (player.isAlive()) {
@@ -89,7 +86,7 @@ public final class BiomeSoundHandler extends ClientHandler {
 
             playerSounds.addAll(internalPlayerBiomeInfo.findBiomeSoundMatches());
             playerSounds.addAll(internalVillageBiomeInfo.findBiomeSoundMatches());
-            playerSounds.forEach(fx -> WORK_MAP.put(fx, 1.0F));
+            playerSounds.forEach(fx -> this.workMap.put(fx, 1.0F));
 
             if (biomeSounds) {
                 BiomeInfo playerBiome = BiomeScanner.playerLogicBiomeInfo();
@@ -125,12 +122,12 @@ public final class BiomeSoundHandler extends ClientHandler {
             if (entry.isDonePlaying()) {
                 return true;
             }
-            final float volume = WORK_MAP.getFloat(entry.getSoundEvent());
+            final float volume = this.workMap.getFloat(entry.getSoundEvent());
             if (volume > 0) {
                 entry.setVolumeScale(volume);
                 if (entry.isFading())
                     entry.unfade();
-                WORK_MAP.removeFloat(entry.getSoundEvent());
+                this.workMap.removeFloat(entry.getSoundEvent());
             } else if (!entry.isFading()) {
                 entry.fade();
             }
@@ -138,7 +135,7 @@ public final class BiomeSoundHandler extends ClientHandler {
         });
 
         // Any sounds left in the list are new and need an emitter created.
-        WORK_MAP.forEach((fx, volume) -> {
+        this.workMap.forEach((fx, volume) -> {
             final BiomeSoundEmitter e = new BiomeSoundEmitter(fx);
             e.setVolumeScale(volume);
             this.emitters.add(e);
@@ -148,7 +145,7 @@ public final class BiomeSoundHandler extends ClientHandler {
     public void clearSounds() {
         this.emitters.forEach(BiomeSoundEmitter::stop);
         this.emitters.clear();
-        WORK_MAP.clear();
+        this.workMap.clear();
     }
 
     @Override

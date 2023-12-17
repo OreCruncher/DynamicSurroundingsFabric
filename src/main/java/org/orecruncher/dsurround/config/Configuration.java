@@ -224,7 +224,6 @@ public class Configuration extends ConfigurationData {
     public static class ParticleTweaks {
 
         @Property
-        @RestartRequired
         @Comment("Enable/disable suppressing player potion particles in first person")
         public boolean suppressPlayerParticles = false;
 

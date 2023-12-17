@@ -24,8 +24,6 @@ import org.orecruncher.dsurround.lib.world.WorldUtils;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 import java.util.Collection;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 @Environment(EnvType.CLIENT)
 public class Handlers {
@@ -57,6 +55,10 @@ public class Handlers {
     }
 
     private void init() {
+        // If the user disabled the startup sound just flag it as having
+        // been performed.
+        this.startupSoundPlayed = !Client.Config.otherOptions.playRandomSoundOnStartup;
+
         register(new Scanners());           // Must be first
         register(new PlayerHandler());
         register(new EntityEffectHandler());
@@ -72,6 +74,7 @@ public class Handlers {
     private void onConnect(ClientPlayNetworkHandler handler, PacketSender sender, MinecraftClient client) {
         try {
             TASKING.get().execute(() -> {
+                LOGGER.info("Client connecting...");
                 if (this.isConnected) {
                     LOGGER.warn("Attempt to initialize EffectManager when it is already initialized");
                     onDisconnect(null, null);
@@ -88,6 +91,7 @@ public class Handlers {
     private void onDisconnect(ClientPlayNetworkHandler handler, MinecraftClient client) {
         try {
             TASKING.get().execute(() -> {
+                LOGGER.info("Client disconnecting...");
                 this.isConnected = false;
                 for (final ClientHandler h : this.effectHandlers)
                     h.disconnect0();
@@ -134,10 +138,7 @@ public class Handlers {
         if (client.getOverlay() != null)
             return;
 
-        startupSoundPlayed = true;
-
-        if (!Client.Config.otherOptions.playRandomSoundOnStartup)
-            return;
+        this.startupSoundPlayed = true;
 
         Client.SoundConfig
                 .getRandomStartupSound()
