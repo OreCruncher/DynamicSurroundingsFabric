@@ -64,28 +64,6 @@
   },
   {
     "blocks": [
-      "minecraft:lily_pad"
-    ],
-    "soundChance": "0.04",
-    "acoustics": [
-      {
-        "soundEventId": "dsurround:lilypad.frog",
-        "conditions": "!state.isInside() && !weather.canWaterFreeze()",
-        "weight": 30,
-        "minVolume": 0.6,
-        "maxVolume": 1.0,
-        "minPitch": 0.8,
-        "maxPitch": 1.2
-      },
-      {
-        "soundEventId": "dsurround:lilypad.bullfrog",
-        "conditions": "!state.isInside() && !weather.canWaterFreeze()",
-        "weight": 10
-      }
-    ]
-  },
-  {
-    "blocks": [
       "minecraft:soul_sand"
     ],
     "soundChance": "0.000125",
