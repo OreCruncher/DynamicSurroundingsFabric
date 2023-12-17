@@ -117,7 +117,7 @@ public final class SoundFXProcessor {
             return;
 
         ISourceContext source = (ISourceContext) entry.source;
-        var id = source.getId();
+        int id = source.getId();
         if (id > 0) {
             final SourceContext ctx = new SourceContext(id);
             ctx.attachSound(sound);

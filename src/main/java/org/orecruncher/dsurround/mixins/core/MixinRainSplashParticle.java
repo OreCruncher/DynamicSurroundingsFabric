@@ -17,8 +17,6 @@ public class MixinRainSplashParticle {
 
     @Inject(method = "createParticle(Lnet/minecraft/particle/DefaultParticleType;Lnet/minecraft/client/world/ClientWorld;DDDDDD)Lnet/minecraft/client/particle/Particle;", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILSOFT, cancellable = true)
     public void dsurround_makeParticle(DefaultParticleType defaultParticleType, ClientWorld clientWorld, double x, double y, double z, double g, double h, double i, CallbackInfoReturnable<Particle> cir) {
-        if (WaterRippleHandler.createRippleParticle(clientWorld, cir.getReturnValue(), new Vec3d(x, y, z))) {
-            cir.setReturnValue(null);
-        }
+        WaterRippleHandler.createRippleParticle(clientWorld, cir.getReturnValue(), new Vec3d(x, y, z));
     }
 }

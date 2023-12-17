@@ -12,9 +12,12 @@ import org.orecruncher.dsurround.sound.SoundInstanceHandler;
 import org.orecruncher.dsurround.sound.SoundVolumeEvaluator;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -61,12 +64,18 @@ public class MixinSoundSystem {
         }
     }
 
-    @Inject(method = "getAdjustedVolume(Lnet/minecraft/client/sound/SoundInstance;)F", at = @At("HEAD"), cancellable = true)
-    private void dsurround_getAdjustedVolume(SoundInstance sound, CallbackInfoReturnable<Float> ci) {
-        try {
-            ci.setReturnValue(SoundVolumeEvaluator.getAdjustedVolume(sound));
-        } catch (final Exception ignore) {
-        }
+    /**
+     * @author
+     * @reason Replacing algorithm for adjusting volume using other external factors
+     */
+    @Overwrite()
+    private float getAdjustedVolume(SoundInstance sound) {
+        return SoundVolumeEvaluator.getAdjustedVolume(sound);
+    }
+
+    @Redirect(method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sound/SoundSystem;getAdjustedVolume(FLnet/minecraft/sound/SoundCategory;)F"))
+    private float dsurround_playGetAdjustedVolume(SoundSystem instance, float volume, SoundCategory category, SoundInstance sound) {
+        return SoundVolumeEvaluator.getAdjustedVolume(sound);
     }
 
     @Inject(method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;<init>(DDD)V"), locals = LocalCapture.CAPTURE_FAILEXCEPTION, cancellable = true)

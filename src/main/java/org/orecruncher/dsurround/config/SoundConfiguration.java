@@ -92,12 +92,21 @@ public class SoundConfiguration {
 
     public boolean isBlocked(final Identifier id) {
         IndividualSoundConfigEntry entry = this.individualSoundConfiguration.get(id);
-        return entry != null && entry.block;
+        return entry != null && (entry.block || entry.volumeScale == 0);
     }
 
     public boolean isCulled(final Identifier id) {
         IndividualSoundConfigEntry entry = this.individualSoundConfiguration.get(id);
         return entry != null && entry.cull;
+    }
+
+    public float getVolumeScale(final Identifier id) {
+        IndividualSoundConfigEntry entry = this.individualSoundConfiguration.get(id);
+        if (entry != null && entry.isNotDefault()) {
+            return entry.volumeScale / 100f;
+        }
+
+        return 0f;
     }
 
     public Optional<SoundEvent> getRandomStartupSound() {

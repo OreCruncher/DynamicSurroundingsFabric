@@ -40,6 +40,10 @@ public class Configuration extends ConfigurationData {
     @Comment("Configuration options for tweaking particle behavior")
     public final ParticleTweaks particleTweaks = new ParticleTweaks();
 
+    @Property
+    @Comment("Configuration options for other things")
+    public final OtherOptions otherOptions = new OtherOptions();
+
     public static Configuration getConfig() {
         try {
             return ConfigurationData.getConfig(Configuration.class);
@@ -228,5 +232,11 @@ public class Configuration extends ConfigurationData {
         @Comment("Enable/disable showing of projectile particle trails")
         public boolean showProjectileTrails = false;
 
+    }
+
+    public static class OtherOptions {
+        @Property
+        @Comment("Enable/disable playing random sound at the Minecraft finish loading to main screen")
+        public boolean playRandomSoundOnStartup = true;
     }
 }
