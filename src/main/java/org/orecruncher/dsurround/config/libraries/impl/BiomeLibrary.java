@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.config.libraries.impl;
 import com.mojang.serialization.Codec;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.event.registry.DynamicRegistrySetupCallback;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
@@ -52,7 +51,6 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
     public BiomeLibrary(IModLog logger) {
         this.logger = logger;
-        DynamicRegistrySetupCallback.EVENT.register(registryManager -> this.logger.info("Biome registry reload detected"));
     }
 
     @Override
@@ -61,7 +59,6 @@ public final class BiomeLibrary implements IBiomeLibrary {
         this.internalBiomes.clear();
         this.biomeConfigs.clear();
 
-        ObjectArray<BiomeConfigRule> configs = new ObjectArray<>(64);
         var accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), FILE_NAME);
 
         IResourceAccessor.process(accessors, accessor -> {

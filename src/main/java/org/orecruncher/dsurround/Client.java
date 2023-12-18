@@ -14,7 +14,7 @@ import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.FrameworkUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.TickCounter;
+import org.orecruncher.dsurround.lib.infra.ModInformation;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.infra.IMinecraftMod;
@@ -63,7 +63,7 @@ public class Client implements IMinecraftMod, ClientModInitializer {
      */
     public static final SoundConfiguration SoundConfig = SoundConfiguration.getConfig();
 
-    private FrameworkUtils.ModCustomData modInfo;
+    private ModInformation modInfo;
     private CompletableFuture<Optional<VersionChecker.VersionResult>> versionInfo;
 
     @Override
@@ -75,12 +75,14 @@ public class Client implements IMinecraftMod, ClientModInitializer {
     public void onInitializeClient() {
         LOGGER.info("Initializing...");
 
-        // Get the custom metadata from the JAR
-        var info = FrameworkUtils.getModCustomData(ModId, ModId);
-        info.ifPresent(value -> this.modInfo = value);
-
         // Bootstrap library functions
         Library.initialize(this, LOGGER);
+
+        var container = ContainerManager.getDefaultContainer();
+        this.modInfo = container.resolve(ModInformation.class);
+
+        // Kick off version checking.  This should run in parallel with initialization.
+        this.versionInfo = CompletableFuture.supplyAsync(this::getVersionText);
 
         createPath(CONFIG_PATH);
         createPath(DATA_PATH);
@@ -88,23 +90,26 @@ public class Client implements IMinecraftMod, ClientModInitializer {
 
         ClientState.STARTED.register(this::onComplete, HandlerPriority.VERY_HIGH);
         ClientState.ON_CONNECT.register(this::onConnect, HandlerPriority.LOW);
+        ClientState.TAG_SYNC.register(event -> {
+            LOGGER.info("Tag sync event received - reloading libraries");
+            AssetLibraryEvent.reload();
+        }, HandlerPriority.VERY_HIGH);
 
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> Commands.register(dispatcher));
 
         // Register services
-        var container = ContainerManager.getDefaultContainer();
-        container.registerSingleton(Config);
-        container.registerSingleton(Handlers.class);
-        container.registerSingleton(Scanner.class);
-        container.registerSingleton(ISoundLibrary.class, SoundLibrary.class);
-        container.registerSingleton(IBiomeLibrary.class, BiomeLibrary.class);
-        container.registerSingleton(IDimensionLibrary.class, DimensionLibrary.class);
-        container.registerSingleton(IBlockLibrary.class, BlockLibrary.class);
-        container.registerSingleton(IItemLibrary.class, ItemLibrary.class);
-        container.registerSingleton(IEntityEffectLibrary.class, EntityEffectLibrary.class);
-        container.registerSingleton(IAudioPlayer.class, MinecraftAudioPlayer.class);
+        container
+            .registerSingleton(Config)
+            .registerSingleton(Handlers.class)
+            .registerSingleton(Scanner.class)
+            .registerSingleton(ISoundLibrary.class, SoundLibrary.class)
+            .registerSingleton(IBiomeLibrary.class, BiomeLibrary.class)
+            .registerSingleton(IDimensionLibrary.class, DimensionLibrary.class)
+            .registerSingleton(IBlockLibrary.class, BlockLibrary.class)
+            .registerSingleton(IItemLibrary.class, ItemLibrary.class)
+            .registerSingleton(IEntityEffectLibrary.class, EntityEffectLibrary.class)
+            .registerSingleton(IAudioPlayer.class, MinecraftAudioPlayer.class);
 
-        TickCounter.register();
         KeyBindings.register();
 
         // Register diagnostic handlers.  Ordering is semi important for
@@ -139,6 +144,8 @@ public class Client implements IMinecraftMod, ClientModInitializer {
         AssetLibraryEvent.RELOAD.register(container.resolve(IBlockLibrary.class)::reload);
         AssetLibraryEvent.RELOAD.register(container.resolve(IItemLibrary.class)::reload);
         AssetLibraryEvent.RELOAD.register(container.resolve(IEntityEffectLibrary.class)::reload);
+
+        // Make the libraries load their data
         AssetLibraryEvent.reload();
 
         // Force instantiation of the core Handler.  This should cause the rest
@@ -147,9 +154,6 @@ public class Client implements IMinecraftMod, ClientModInitializer {
 
         // Make sure our particle sheets get registered so they can render
         ParticleSheets.register();
-
-        // Kick off version checking.  This should run in parallel with initialization.
-        this.versionInfo = CompletableFuture.supplyAsync(this::getVersionText);
     }
 
     private Optional<VersionChecker.VersionResult> getVersionText() {
@@ -157,20 +161,14 @@ public class Client implements IMinecraftMod, ClientModInitializer {
         if (this.modInfo == null)
             return Optional.empty();
 
-        var modContainer = FrameworkUtils.getModContainer(ModId);
-        if (modContainer.isEmpty())
-            return Optional.empty();
-
-        var metadata = modContainer.get().getMetadata();
-
-        var displayName = metadata.getName();
-        var modVersion = metadata.getVersion();
-        var minecraftVersion = FrameworkUtils.getModVersion("minecraft");
+        var displayName = this.modInfo.get_displayName();
+        var modVersion = this.modInfo.get_version();
+        var minecraftVersion = FrameworkUtils.getMinecraftVersion();
 
         URL updateURL = null;
 
         try {
-            updateURL = new URL(this.modInfo.getString("updateURL"));
+            updateURL = this.modInfo.get_updateUrl();
         } catch (Throwable t) {
             LOGGER.warn("Unable to parse update URL");
         }

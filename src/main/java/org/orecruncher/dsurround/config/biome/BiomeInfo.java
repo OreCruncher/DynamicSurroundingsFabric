@@ -17,6 +17,7 @@ import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.IdentityUtils;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -193,7 +194,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
 
         for (final AcousticConfig sr : entry.acoustics) {
-            final Identifier res = soundLibrary.resolveIdentifier(Client.ModId, sr.soundEventId);
+            final Identifier res = IdentityUtils.resolveIdentifier(Client.ModId, sr.soundEventId);
             final SoundEvent acoustic = soundLibrary.getSound(res);
             var factory = SoundFactoryBuilder.create(acoustic)
                     .category(sr.category)

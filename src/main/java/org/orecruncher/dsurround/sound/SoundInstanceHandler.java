@@ -11,7 +11,7 @@ import net.minecraft.util.math.Vec3d;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.gui.sound.ConfigSoundInstance;
-import org.orecruncher.dsurround.lib.TickCounter;
+import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 import java.util.HashSet;
@@ -25,6 +25,7 @@ import java.util.Set;
 public final class SoundInstanceHandler {
 
     private static final IAudioPlayer audioPlayer = ContainerManager.resolve(IAudioPlayer.class);
+    private static final ITickCount tickCount = ContainerManager.resolve(ITickCount.class);
     private static final Configuration config = ContainerManager.resolve(Configuration.class);
 
     private static final Object2LongOpenHashMap<Identifier> soundCull = new Object2LongOpenHashMap<>(32);
@@ -52,7 +53,7 @@ public final class SoundInstanceHandler {
         int cullInterval = config.soundSystem.cullInterval;
         if (cullInterval > 0 && isSoundCulled(sound)) {
             final long lastOccurrence = soundCull.getLong(Objects.requireNonNull(sound));
-            final long currentTick = TickCounter.getTickCount();
+            final long currentTick = tickCount.getTickCount();
             if ((currentTick - lastOccurrence) < cullInterval) {
                 return true;
             } else {
@@ -120,5 +121,4 @@ public final class SoundInstanceHandler {
     public static boolean inRange(final Vec3d listener, final SoundInstance sound) {
         return inRange(listener, sound, 0);
     }
-
 }

@@ -11,12 +11,10 @@ import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.InternalBiomes;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
-import org.orecruncher.dsurround.lib.TickCounter;
+import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.ITimer;
-import org.orecruncher.dsurround.lib.scanner.Scanner;
-import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
@@ -31,16 +29,17 @@ public final class BiomeSoundHandler extends ClientHandler {
 
     // Reusable map for biome acoustic work
     private final Object2FloatOpenHashMap<ISoundFactory> workMap = new Object2FloatOpenHashMap<>(8, Hash.DEFAULT_LOAD_FACTOR);
-
     private final ObjectArray<BiomeSoundEmitter> emitters = new ObjectArray<>(8);
     private final IBiomeLibrary biomeLibrary;
     private final IAudioPlayer audioPlayer;
+    private final ITickCount tickCount;
     private final Scanners scanner;
 
-    public BiomeSoundHandler(IBiomeLibrary biomeLibrary, IAudioPlayer audioPlayer, Scanners scanner, Configuration config, IModLog logger) {
+    public BiomeSoundHandler(IBiomeLibrary biomeLibrary, IAudioPlayer audioPlayer, ITickCount tickCount, Scanners scanner, Configuration config, IModLog logger) {
         super("Biome Sounds", config, logger);
         this.audioPlayer = audioPlayer;
         this.biomeLibrary = biomeLibrary;
+        this.tickCount = tickCount;
         this.scanner = scanner;
         this.workMap.defaultReturnValue(0F);
     }
@@ -63,7 +62,7 @@ public final class BiomeSoundHandler extends ClientHandler {
     @Override
     public void process(final PlayerEntity player) {
         this.emitters.forEach(BiomeSoundEmitter::tick);
-        if ((TickCounter.getTickCount() % SCAN_INTERVAL) == 0) {
+        if ((this.tickCount.getTickCount() % SCAN_INTERVAL) == 0) {
             handleBiomeSounds(player);
         }
     }

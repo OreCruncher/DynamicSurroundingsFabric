@@ -5,9 +5,10 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.CommonLifecycleEvents;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.registry.DynamicRegistryManager;
 import org.orecruncher.dsurround.lib.events.EventingFactory;
-import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.events.IPhasedEvent;
 
 /**
@@ -40,6 +41,10 @@ public final class ClientState {
      * Event raised when the client disconnects from a server.
      */
     public static final IPhasedEvent<MinecraftClient> ON_DISCONNECT = EventingFactory.createPrioritizedEvent();
+    /**
+     * Event raised when tags sync to the client
+     */
+    public static final IPhasedEvent<TagSyncEvent> TAG_SYNC = EventingFactory.createPrioritizedEvent();
 
     private ClientState() {
     }
@@ -49,14 +54,15 @@ public final class ClientState {
         ClientLifecycleEvents.CLIENT_STOPPING.register(STOPPING::raise);
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> ON_CONNECT.raise(client));
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ON_DISCONNECT.raise(client));
-
-        STOPPING.register(server -> {
-            // Clear out tick handlers when the client is stopping.
-            TICK_START.clear();
-            TICK_END.clear();
-        }, HandlerPriority.VERY_HIGH);
-
         ClientTickEvents.START_CLIENT_TICK.register(TICK_START::raise);
         ClientTickEvents.END_CLIENT_TICK.register(TICK_END::raise);
+        CommonLifecycleEvents.TAGS_LOADED.register((registries, client) -> {
+            if (client)
+                TAG_SYNC.raise(new TagSyncEvent(registries));
+        });
     }
+
+    public record TagSyncEvent(DynamicRegistryManager registries) {
+
+    };
 }

@@ -12,5 +12,4 @@ public interface ISoundLibrary extends ILibrary {
     SoundEvent getSound(final Identifier sound);
     Collection<SoundEvent> getRegisteredSoundEvents();
     SoundMetadata getSoundMetadata(final Identifier sound);
-    Identifier resolveIdentifier(final String defaultDomain, final String name);
 }

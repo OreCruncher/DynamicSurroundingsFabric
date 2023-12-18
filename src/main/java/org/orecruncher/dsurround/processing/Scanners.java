@@ -8,7 +8,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Formatting;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
-import org.orecruncher.dsurround.lib.TickCounter;
+import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
@@ -23,13 +23,15 @@ public class Scanners extends ClientHandler {
     private final BiomeScanner biomeScanner;
     private final VillageScanner villageScanner;
     private final CeilingScanner ceilingScanner;
+    private final ITickCount tickCount;
 
-    public Scanners(BiomeScanner biomeScanner, VillageScanner villageScanner, CeilingScanner ceilingScanner, Configuration config, IModLog logger) {
+    public Scanners(BiomeScanner biomeScanner, VillageScanner villageScanner, CeilingScanner ceilingScanner, Configuration config, ITickCount tickCount, IModLog logger) {
         super("Scanners", config, logger);
 
         this.biomeScanner = biomeScanner;
         this.villageScanner = villageScanner;
         this.ceilingScanner = ceilingScanner;
+        this.tickCount = tickCount;
     }
 
     public boolean isInside() {
@@ -59,7 +61,7 @@ public class Scanners extends ClientHandler {
     @Override
     public void process(final PlayerEntity player) {
 
-        long ticks = TickCounter.getTickCount();
+        long ticks = this.tickCount.getTickCount();
         this.ceilingScanner.tick(ticks);
         this.villageScanner.tick(ticks);
         this.biomeScanner.tick(ticks);

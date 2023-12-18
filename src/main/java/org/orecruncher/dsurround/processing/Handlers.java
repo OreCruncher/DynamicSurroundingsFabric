@@ -9,7 +9,7 @@ import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.TickCounter;
+import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
@@ -29,15 +29,17 @@ public class Handlers {
     private final Configuration config;
     private final IModLog logger;
     private final IClientTasking tasking;
+    private final ITickCount tickCount;
     private final ObjectArray<ClientHandler> effectHandlers = new ObjectArray<>();
     private final LoggingTimerEMA handlerTimer = new LoggingTimerEMA("Handlers");
     private boolean isConnected = false;
     private boolean startupSoundPlayed = false;
 
-    public Handlers(Configuration config, IModLog logger, IClientTasking tasking) {
+    public Handlers(Configuration config, IModLog logger, IClientTasking tasking, ITickCount tickCount) {
         this.config = config;
         this.logger = logger;
         this.tasking = tasking;
+        this.tickCount = tickCount;
         init();
     }
 
@@ -126,7 +128,7 @@ public class Handlers {
             return;
 
         this.handlerTimer.begin();
-        final long tick = TickCounter.getTickCount();
+        final long tick = this.tickCount.getTickCount();
 
         for (final ClientHandler handler : this.effectHandlers) {
             final long mark = System.nanoTime();

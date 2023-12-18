@@ -62,7 +62,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
             }
         };
 
-        this.logger.info("Entity config rules configured; version is now %d", version);
+        this.logger.info("Entity effects configured; version is now %d", this.version);
     }
 
     @Override

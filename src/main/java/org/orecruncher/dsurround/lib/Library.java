@@ -12,7 +12,9 @@ import org.orecruncher.dsurround.lib.infra.events.ClientState;
 import org.orecruncher.dsurround.lib.infra.events.ClientWorldState;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.system.ISystemClock;
+import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.system.SystemClock;
+import org.orecruncher.dsurround.lib.system.TickCounter;
 import org.orecruncher.dsurround.lib.threading.IClientTasking;
 import org.orecruncher.dsurround.lib.threading.ClientTasking;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
@@ -58,9 +60,6 @@ public final class Library {
         // Hook server lifecycle so logs get emitted
         ClientState.STARTED.register(Library::onClientStarting, HandlerPriority.VERY_HIGH);
         ClientState.STOPPING.register((ignore) -> logger.info("Client stopping"), HandlerPriority.VERY_HIGH);
-
-        // Force service instantiations
-        forceServiceStarts();
     }
 
     public static Logger getLogger() {
@@ -93,15 +92,12 @@ public final class Library {
                 .registerSingleton(ModInformation.class, modInfo)
                 .registerSingleton(ISystemClock.class, SystemClock.class)
                 .registerSingleton(IMinecraftDirectories.class, MinecraftDirectories.class)
-                .registerSingleton(IClientTasking.class, ClientTasking.class);
+                .registerSingleton(IClientTasking.class, ClientTasking.class)
+                .registerSingleton(ITickCount.class, TickCounter.class);
     }
 
     private static void configureStateHandlers() {
         ClientState.initialize();
         ClientWorldState.initialize();
-    }
-
-    private static void forceServiceStarts() {
-        getClientTasking();
     }
 }

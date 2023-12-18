@@ -18,7 +18,7 @@ import java.util.Optional;
 public class BlockConfigRule {
 
     public static Codec<BlockConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
-            Codec.list(CodecExtensions.checkBlockStateSpecification(true, true)).fieldOf("blocks")
+            Codec.list(CodecExtensions.checkBlockStateSpecification(true)).fieldOf("blocks")
                     .forGetter(info -> info.blocks),
             Codec.BOOL.optionalFieldOf("clearSounds", false).forGetter(info -> info.clearSounds),
             Script.CODEC.optionalFieldOf("soundChance").forGetter(info -> info.soundChance),

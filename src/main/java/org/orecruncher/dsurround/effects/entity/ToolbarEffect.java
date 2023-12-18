@@ -13,7 +13,7 @@ public class ToolbarEffect extends EntityEffectBase {
 
     private final IItemLibrary itemLibrary;
 
-    private int lastSlot;
+    private int lastSlot = -1;
 
     public ToolbarEffect(IItemLibrary itemLibrary) {
         this.itemLibrary = itemLibrary;
@@ -22,9 +22,12 @@ public class ToolbarEffect extends EntityEffectBase {
     @Override
     public void tick(final EntityEffectInfo info) {
         final PlayerEntity player = (PlayerEntity) info.getEntity().get();
-
         var inventory = player.getInventory();
-        if (this.lastSlot != inventory.selectedSlot) {
+
+        // First time through we want to not trigger the equip sound
+        if (this.lastSlot == -1) {
+            this.lastSlot = inventory.selectedSlot;
+        } else if (this.lastSlot != inventory.selectedSlot) {
             final ItemStack currentStack = inventory.getStack(inventory.selectedSlot);
             if (!currentStack.isEmpty() & !player.isSpectator()) {
                 ISoundFactory factory = this.itemLibrary.getItemEquipSound(currentStack);

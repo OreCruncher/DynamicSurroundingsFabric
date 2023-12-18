@@ -28,6 +28,7 @@ public final class DimensionLibrary implements IDimensionLibrary {
     private final IModLog logger;
     private final ObjectArray<DimensionConfig> cache = new ObjectArray<>();
     private final Map<RegistryKey<World>, DimensionInfo> configs = new HashMap<>();
+    private int version = 0;
 
     public DimensionLibrary(IModLog logger) {
         this.logger = logger;
@@ -44,6 +45,10 @@ public final class DimensionLibrary implements IDimensionLibrary {
             if (cfg != null)
                 initFromConfig(cfg);
         });
+
+        this.version++;
+
+        this.logger.info("%d dimension configs loaded; version is now %d", this.configs.size(), this.version);
     }
 
     private void initFromConfig(final List<DimensionConfig> cfg) {
@@ -97,6 +102,6 @@ public final class DimensionLibrary implements IDimensionLibrary {
 
     @Override
     public Stream<String> dump() {
-        return cache.stream().map(Object::toString).sorted();
+        return this.cache.stream().map(Object::toString).sorted();
     }
 }

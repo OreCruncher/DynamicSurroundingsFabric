@@ -3,10 +3,12 @@ package org.orecruncher.dsurround.config.libraries.impl;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.tag.convention.v1.ConventionalItemTags;
 import net.minecraft.item.*;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.ItemClassType;
@@ -93,6 +95,15 @@ public class ItemLibrary implements IItemLibrary {
             itemEquipSound = armor.getEquipSound();
         else if (item instanceof ElytraItem elytraItem)
             itemEquipSound = elytraItem.getEquipSound();
+        else if (stack.isIn(ConventionalItemTags.LAVA_BUCKETS))
+            itemEquipSound = SoundEvents.ITEM_BUCKET_FILL_LAVA;
+        else if (stack.isIn(ConventionalItemTags.WATER_BUCKETS))
+            itemEquipSound = SoundEvents.ITEM_BUCKET_FILL;
+        else if (stack.isIn(ConventionalItemTags.ENTITY_WATER_BUCKETS))
+            itemEquipSound = SoundEvents.ITEM_BUCKET_FILL_FISH;
+        else if (stack.isIn(ConventionalItemTags.MILK_BUCKETS))
+            itemEquipSound = SoundEvents.ENTITY_COW_MILK;
+
         return itemEquipSound;
     }
 

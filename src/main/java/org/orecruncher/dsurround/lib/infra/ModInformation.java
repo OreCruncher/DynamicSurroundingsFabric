@@ -5,6 +5,9 @@ import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import org.jetbrains.annotations.Nullable;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 public final class ModInformation {
 
     private final ModMetadata _metadata;
@@ -29,6 +32,14 @@ public final class ModInformation {
 
     public Version get_version() {
         return this._metadata.getVersion();
+    }
+
+    public URL get_updateUrl() {
+        try {
+            return new URL(this._metadata.getCustomValue("updateURL").getAsString());
+        } catch (MalformedURLException ignored) {
+        }
+        return null;
     }
 
     public String get_branding() {

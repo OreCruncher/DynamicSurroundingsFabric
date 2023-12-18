@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
-import com.google.common.base.Preconditions;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.UnboundedMapCodec;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -58,7 +57,7 @@ public final class SoundLibrary implements ISoundLibrary {
 
         // Initializes the internal sound registry once all the other mods have
         // registered their sounds.
-        Registries.SOUND_EVENT.forEach(se -> myRegistry.put(se.getId(), se));
+        Registries.SOUND_EVENT.forEach(se -> this.myRegistry.put(se.getId(), se));
 
         // Gather resource pack sound files and process them to ensure metadata is collected.
         // Resource pack sounds generally replace existing registration, but this allows for new
@@ -69,7 +68,7 @@ public final class SoundLibrary implements ISoundLibrary {
             registerSoundFile(file);
         }
 
-        this.logger.info("Number of SoundEvents cached: %d", myRegistry.size());
+        this.logger.info("Number of SoundEvents cached: %d", this.myRegistry.size());
     }
 
     @Override
@@ -95,25 +94,6 @@ public final class SoundLibrary implements ISoundLibrary {
     @Override
     public SoundMetadata getSoundMetadata(final Identifier sound) {
         return this.soundMetadata.get(Objects.requireNonNull(sound));
-    }
-
-    @Override
-    public Identifier resolveIdentifier(final String defaultDomain, final String name) {
-        Preconditions.checkNotNull(defaultDomain);
-        Preconditions.checkNotNull(name);
-
-        Identifier res;
-        if (name.charAt(0) == '@') {
-            // Sound is in the Minecraft namespace
-            res = new Identifier("minecraft", name.substring(1));
-        } else if (!name.contains(":")) {
-            // It's just a path so assume the specified namespace
-            res = new Identifier(defaultDomain, name);
-        } else {
-            // It's a fully qualified location
-            res = new Identifier(name);
-        }
-        return res;
     }
 
     private void registerSoundFile(final IResourceAccessor soundFile) {
