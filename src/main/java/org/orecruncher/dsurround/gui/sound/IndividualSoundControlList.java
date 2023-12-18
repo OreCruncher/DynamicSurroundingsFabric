@@ -32,6 +32,8 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
     public IndividualSoundControlList(final Screen parent, final MinecraftClient mcIn, int widthIn, int heightIn, int topIn, int bottomIn, int slotWidth, int slotHeightIn, boolean enablePlay, final Supplier<String> filter, @Nullable final IndividualSoundControlList oldList) {
         super(mcIn, widthIn, heightIn, topIn, /* bottomIn ,*/ slotHeightIn);
 
+        this.soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
+
         this.parent = parent;
         this.enablePlay = enablePlay;
         this.width = slotWidth;
@@ -42,8 +44,6 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
 
         // Initialize the first pass
         this.setSearchFilter(filter, false);
-
-        this.soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
     }
 
     @Override

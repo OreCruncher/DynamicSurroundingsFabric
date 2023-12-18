@@ -61,7 +61,7 @@ public final class EventingFactory {
             try {
                 handler.accept(entity);
             } catch (Throwable t) {
-                Library.getLogger().error("Exception processing handler", t);
+                Library.getLogger().error(t, "Exception processing handler");
                 throw t;
             }
     }

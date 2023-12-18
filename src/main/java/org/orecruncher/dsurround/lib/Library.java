@@ -2,7 +2,6 @@ package org.orecruncher.dsurround.lib;
 
 import com.google.common.base.Preconditions;
 import net.minecraft.client.MinecraftClient;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
@@ -62,8 +61,8 @@ public final class Library {
         ClientState.STOPPING.register((ignore) -> logger.info("Client stopping"), HandlerPriority.VERY_HIGH);
     }
 
-    public static Logger getLogger() {
-        return ContainerManager.resolve(Logger.class);
+    public static IModLog getLogger() {
+        return _logger;
     }
 
     public static IMinecraftMod getMinecraftMod() {

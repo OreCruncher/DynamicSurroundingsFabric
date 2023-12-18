@@ -72,7 +72,7 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
             .build();
         this.children.add(this.blockButton);
 
-        this.cullButton = ButtonWidget.builder(this.config.block ? CULL_ON : CULL_OFF, this::toggleCull)
+        this.cullButton = ButtonWidget.builder(this.config.cull ? CULL_ON : CULL_OFF, this::toggleCull)
             .size(BUTTON_WIDTH, 0)
             .build();
         this.children.add(this.cullButton);
@@ -139,7 +139,7 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
         final TextRenderer font = GameUtils.getTextRenderer();
         final int labelY = rowTop + (rowHeight - font.fontHeight) / 2;
         final String text = this.config.soundEventId.toString();
-        context.drawText(font, text, rowLeft, labelY, ColorPalette.MC_WHITE.getRGB(), false);
+        context.drawText(font, text, rowLeft, labelY, ColorPalette.MC_WHITE.getRGB() & 0xFFFFFF, false);
 
         // Need to position the other controls appropriately
         int rightMargin = rowLeft + rowWidth;
@@ -211,16 +211,14 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
     }
 
     protected List<OrderedText> getToolTip(final int mouseX, final int mouseY) {
-
         // Cache the static part of the tooltip if needed
         if (this.cachedToolTip.isEmpty()) {
-
             Identifier id = this.config.soundEventId;
             final String mod = FrameworkUtils.getModDisplayName(id.getNamespace());
             assert mod != null;
             @SuppressWarnings("ConstantConditions")
             OrderedText modName = OrderedText.styledForwardsVisitedString(Formatting.strip(mod), modNameStyle);
-            OrderedText soundLocationId = OrderedText.styledForwardsVisitedString(this.config.soundEventId.toString(), idStyle);
+            OrderedText soundLocationId = OrderedText.styledForwardsVisitedString(id.toString(), idStyle);
 
             this.cachedToolTip.add(modName);
             this.cachedToolTip.add(soundLocationId);

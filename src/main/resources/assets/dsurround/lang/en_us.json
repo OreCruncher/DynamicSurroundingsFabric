@@ -139,5 +139,6 @@
   "dsurround.text.soundconfig.volume.help": "Set a volume scaling factor that gets applied when calculating the volume of a sound.  Increase to make quiet sounds louder; reduce to make loud sounds quieter.  x1.00 is normal volume.",
   "dsurround.text.keybind.section": "Dynamic Surroundings",
   "dsurround.text.keybind.individualSoundConfig": "Individual Sound Configuration",
-  "dsurround.text.keybind.diagnosticHud": "Display Diagnostic HUD (DEV)"
+  "dsurround.text.keybind.diagnosticHud": "Display Diagnostic HUD (DEV)",
+  "dsurround.text.reloadassets": "[%1$s\u00a7r] \u00a7aReloaded configurations"
 }

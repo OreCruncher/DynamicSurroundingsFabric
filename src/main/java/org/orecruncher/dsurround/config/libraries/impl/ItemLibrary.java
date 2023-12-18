@@ -102,7 +102,7 @@ public class ItemLibrary implements IItemLibrary {
         else if (stack.isIn(ConventionalItemTags.ENTITY_WATER_BUCKETS))
             itemEquipSound = SoundEvents.ITEM_BUCKET_FILL_FISH;
         else if (stack.isIn(ConventionalItemTags.MILK_BUCKETS))
-            itemEquipSound = SoundEvents.ENTITY_COW_MILK;
+            itemEquipSound = SoundEvents.ITEM_BUCKET_FILL;
 
         return itemEquipSound;
     }

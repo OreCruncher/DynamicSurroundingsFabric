@@ -10,6 +10,7 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
 import org.orecruncher.dsurround.lib.IMatcher;
+import org.orecruncher.dsurround.lib.IdentityUtils;
 import org.orecruncher.dsurround.tags.TagHelpers;
 
 @Environment(EnvType.CLIENT)
@@ -22,13 +23,13 @@ public abstract class ItemTypeMatcher implements IMatcher<Item> {
 
     private static DataResult<IMatcher<Item>> manifest(String itemId) {
         try {
+            final var id = IdentityUtils.resolveIdentifier(itemId);
             if (itemId.startsWith("#")) {
                 // Item tag
-                final var id = itemId.substring(1);
-                var tagKey = TagKey.of(RegistryKeys.ITEM, new Identifier(id));
+                var tagKey = TagKey.of(RegistryKeys.ITEM, id);
                 return DataResult.success(new ItemTypeMatcher.MatchOnItemTag(tagKey));
             } else if (itemId.contains(":")) {
-                var item = Registries.ITEM.get(new Identifier(itemId));
+                var item = Registries.ITEM.get(id);
                 return DataResult.success(new ItemTypeMatcher.MatchOnItem(item));
             }
 
