@@ -9,10 +9,10 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.config.BlockLibrary;
+import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.math.TimerEMA;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -21,6 +21,7 @@ import java.util.Objects;
 @Environment(EnvType.CLIENT)
 public class BlockViewer {
 
+    private static final IBlockLibrary blockLibrary = ContainerManager.resolve(IBlockLibrary.class);
     private static final String COLOR = Formatting.AQUA.toString();
     private static final String COLOR_TITLE = COLOR + Formatting.UNDERLINE;
 
@@ -38,23 +39,25 @@ public class BlockViewer {
         var state = world.getBlockState(result.getBlockPos());
         data.add(state.toString());
 
-        state.streamTags().forEach(tag -> {
-            var formatting = Formatting.YELLOW;
-            if (Objects.equals(tag.id().getNamespace(), Client.ModId))
-                formatting = Formatting.GOLD;
-            data.add(formatting + "#" + tag.id().toString());
-        });
+        state.streamTags()
+            .map(tag -> {
+                var formatting = Formatting.YELLOW;
+                if (Objects.equals(tag.id().getNamespace(), Client.ModId))
+                    formatting = Formatting.GOLD;
+                return formatting + "#" + tag.id().toString();
+            })
+            .sorted()
+            .forEach(data::add);
 
-        var info = BlockLibrary.getBlockInfo(state);
+        var info = blockLibrary.getBlockInfo(state);
         var wallOfText = info.toString();
-        var lines = Arrays.stream(wallOfText.split("\n"))
-                .map(l -> l.replaceAll("[\\[\\]]", "").strip())
-                .filter(s -> !Strings.isNullOrEmpty(s)).toList();
-
-        data.addAll(lines);
+        Arrays.stream(wallOfText.split("\n"))
+            .map(l -> l.replaceAll("[\\[\\]]", "").strip())
+            .filter(s -> !Strings.isNullOrEmpty(s))
+            .forEach(data::add);
     }
 
-    private static void onCollect(Collection<String> left, Collection<String> right, Collection<TimerEMA> timerEMAS) {
+    private static void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
         // Get the block info from the normal diagnostics
         Entity entity = GameUtils.getMC().getCameraEntity();
         if (entity == null)
@@ -63,9 +66,9 @@ public class BlockViewer {
         var blockHit = (BlockHitResult)entity.raycast(20.0D, 0.0F, false);
         var fluidHit = (BlockHitResult)entity.raycast(20.0D, 0.0F, true);
 
-        processBlockHitResult("Block", entity.getEntityWorld(), blockHit, right);
+        processBlockHitResult("Block", entity.getEntityWorld(), blockHit, event.right);
 
         if (!blockHit.getBlockPos().equals(fluidHit.getBlockPos()))
-            processBlockHitResult("Fluid", entity.getEntityWorld(), fluidHit, right);
+            processBlockHitResult("Fluid", entity.getEntityWorld(), fluidHit, event.right);
     }
 }

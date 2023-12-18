@@ -14,7 +14,8 @@ import net.minecraft.world.biome.Biome;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.config.BlockLibrary;
+import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.lib.math.ReusableRaycastContext;
 import org.orecruncher.dsurround.lib.math.ReusableRaycastIterator;
@@ -360,12 +361,12 @@ public final class SoundFXUtils {
     }
 
     private static float getReflectivity(BlockState state) {
-        var info = BlockLibrary.getBlockInfo(state);
+        var info = ContainerManager.resolve(IBlockLibrary.class).getBlockInfo(state);
         return info.getSoundReflectivity();
     }
 
     private static float getOcclusion(BlockState state) {
-        var info = BlockLibrary.getBlockInfo(state);
+        var info = ContainerManager.resolve(IBlockLibrary.class).getBlockInfo(state);
         return info.getSoundOcclusion();
     }
 

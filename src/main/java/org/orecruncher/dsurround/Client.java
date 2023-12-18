@@ -4,25 +4,31 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
 import org.orecruncher.dsurround.commands.Commands;
 import org.orecruncher.dsurround.config.*;
+import org.orecruncher.dsurround.config.libraries.*;
+import org.orecruncher.dsurround.config.libraries.impl.*;
 import org.orecruncher.dsurround.effects.particles.ParticleSheets;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.FrameworkUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.TickCounter;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.events.HandlerPriority;
+import org.orecruncher.dsurround.lib.infra.IMinecraftMod;
+import org.orecruncher.dsurround.lib.infra.events.ClientState;
 import org.orecruncher.dsurround.lib.logging.ModLog;
+import org.orecruncher.dsurround.lib.scanner.Scanner;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.processing.Handlers;
 import org.orecruncher.dsurround.runtime.diagnostics.BlockViewer;
 import org.orecruncher.dsurround.runtime.diagnostics.ClientProfiler;
 import org.orecruncher.dsurround.runtime.diagnostics.RuntimeDiagnostics;
 import org.orecruncher.dsurround.runtime.diagnostics.SoundEngineDiagnostics;
+import org.orecruncher.dsurround.sound.IAudioPlayer;
+import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 
 import java.net.URL;
 import java.nio.file.Files;
@@ -31,7 +37,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Environment(EnvType.CLIENT)
-public class Client implements ClientModInitializer {
+public class Client implements IMinecraftMod, ClientModInitializer {
 
     public static final String ModId = "dsurround";
     public static final ModLog LOGGER = new ModLog(ModId);
@@ -61,6 +67,11 @@ public class Client implements ClientModInitializer {
     private CompletableFuture<Optional<VersionChecker.VersionResult>> versionInfo;
 
     @Override
+    public String get_modId() {
+        return ModId;
+    }
+
+    @Override
     public void onInitializeClient() {
         LOGGER.info("Initializing...");
 
@@ -68,14 +79,30 @@ public class Client implements ClientModInitializer {
         var info = FrameworkUtils.getModCustomData(ModId, ModId);
         info.ifPresent(value -> this.modInfo = value);
 
+        // Bootstrap library functions
+        Library.initialize(this, LOGGER);
+
         createPath(CONFIG_PATH);
         createPath(DATA_PATH);
         createPath(DUMP_PATH);
 
-        ClientLifecycleEvents.CLIENT_STARTED.register(this::onComplete);
-        ClientPlayConnectionEvents.JOIN.register(this::onConnect);
+        ClientState.STARTED.register(this::onComplete, HandlerPriority.VERY_HIGH);
+        ClientState.ON_CONNECT.register(this::onConnect, HandlerPriority.LOW);
 
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> Commands.register(dispatcher));
+
+        // Register services
+        var container = ContainerManager.getDefaultContainer();
+        container.registerSingleton(Config);
+        container.registerSingleton(Handlers.class);
+        container.registerSingleton(Scanner.class);
+        container.registerSingleton(ISoundLibrary.class, SoundLibrary.class);
+        container.registerSingleton(IBiomeLibrary.class, BiomeLibrary.class);
+        container.registerSingleton(IDimensionLibrary.class, DimensionLibrary.class);
+        container.registerSingleton(IBlockLibrary.class, BlockLibrary.class);
+        container.registerSingleton(IItemLibrary.class, ItemLibrary.class);
+        container.registerSingleton(IEntityEffectLibrary.class, EntityEffectLibrary.class);
+        container.registerSingleton(IAudioPlayer.class, MinecraftAudioPlayer.class);
 
         TickCounter.register();
         KeyBindings.register();
@@ -98,19 +125,25 @@ public class Client implements ClientModInitializer {
         }
     }
 
-    public void refreshConfigs() {
-        SoundLibrary.load();
-        BiomeLibrary.load();
-        DimensionLibrary.load();
-        BlockLibrary.load();
-        ItemLibrary.load();
-        EntityEffectLibrary.load();
-    }
-
     public void onComplete(MinecraftClient client) {
-        // Initialize our sounds
-        this.refreshConfigs();
-        Handlers.initialize();
+        var container = ContainerManager.getDefaultContainer();
+
+        // Register the Minecraft sound manager
+        container.registerSingleton(GameUtils.getSoundManager());
+
+        // Register and initialize our libraries.  This will cause the libraries
+        // to be instantiated.
+        AssetLibraryEvent.RELOAD.register(container.resolve(ISoundLibrary.class)::reload);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IBiomeLibrary.class)::reload);
+        AssetLibraryEvent.RELOAD.register(container.resolve(DimensionLibrary.class)::reload);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IBlockLibrary.class)::reload);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IItemLibrary.class)::reload);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IEntityEffectLibrary.class)::reload);
+        AssetLibraryEvent.reload();
+
+        // Force instantiation of the core Handler.  This should cause the rest
+        // of the dependencies to be initialized.
+        var handlers = container.resolve(Handlers.class);
 
         // Make sure our particle sheets get registered so they can render
         ParticleSheets.register();
@@ -148,7 +181,7 @@ public class Client implements ClientModInitializer {
         return VersionChecker.getUpdateText(displayName, minecraftVersion, modVersion, updateURL);
     }
 
-    private void onConnect(ClientPlayNetworkHandler clientPlayNetworkHandler, PacketSender packetSender, MinecraftClient minecraftClient) {
+    private void onConnect(MinecraftClient minecraftClient) {
         // Display version information when joining a game and when a chat window is available.
         try {
             if (this.versionInfo != null) {

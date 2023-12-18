@@ -9,7 +9,8 @@ import net.minecraft.client.util.InputUtil;
 import org.orecruncher.dsurround.eventing.handlers.DiagnosticHandler;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 @Environment(EnvType.CLIENT)
 public class KeyBindings {
@@ -40,7 +41,7 @@ public class KeyBindings {
                     final boolean singlePlayer = GameUtils.isSinglePlayer();
                     GameUtils.setScreen(new IndividualSoundControlScreen(null, singlePlayer));
                     if (singlePlayer)
-                        MinecraftAudioPlayer.INSTANCE.stopAll();
+                        ContainerManager.resolve(IAudioPlayer.class).stopAll();
                 }
             }
         });

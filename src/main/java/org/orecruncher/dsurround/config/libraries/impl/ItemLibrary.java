@@ -1,16 +1,17 @@
-package org.orecruncher.dsurround.config;
+package org.orecruncher.dsurround.config.libraries.impl;
 
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.item.*;
 import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.TagKey;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.ItemClassType;
+import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
+import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.sound.ISoundFactory;
@@ -20,38 +21,48 @@ import org.orecruncher.dsurround.tags.TagHelpers;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Environment(EnvType.CLIENT)
-public class ItemLibrary {
+public class ItemLibrary implements IItemLibrary {
 
-    private static final IModLog LOGGER = Client.LOGGER.createChild(ItemLibrary.class);
+    private final IModLog logger;
+    private final Reference2ObjectOpenHashMap<Item, ISoundFactory> itemEquipFactories = new Reference2ObjectOpenHashMap<>();
+    private final Reference2ObjectOpenHashMap<Item, ISoundFactory> itemSwingFactories = new Reference2ObjectOpenHashMap<>();
+    private int version;
 
-    private static final Reference2ObjectOpenHashMap<Item, ISoundFactory> itemEquipFactories = new Reference2ObjectOpenHashMap<>();
-    private static final Reference2ObjectOpenHashMap<Item, ISoundFactory> itemSwingFactories = new Reference2ObjectOpenHashMap<>();
-    private static int version;
-
-    public static void load() {
-        itemEquipFactories.clear();
-        itemSwingFactories.clear();
-        version++;
-        LOGGER.info("Item library configured; version is now %d", version);
+    public ItemLibrary(IModLog logger) {
+        this.logger = logger;
     }
 
-    public static ISoundFactory getItemEquipSound(ItemStack stack) {
+    @Override
+    public void reload(AssetLibraryEvent.ReloadEvent event) {
+        this.itemEquipFactories.clear();
+        this.itemSwingFactories.clear();
+        this.version++;
+        this.logger.info("Item library configured; version is now %d", version);
+    }
+
+    @Override
+    public ISoundFactory getItemEquipSound(ItemStack stack) {
 
         if (stack.isEmpty())
             return null;
 
-        return itemEquipFactories.computeIfAbsent(stack.getItem(), k -> resolve(stack, ItemClassType::getToolBarSound, ItemClassType.NONE::getToolBarSound));
+        return this.itemEquipFactories.computeIfAbsent(stack.getItem(), k -> resolve(stack, ItemClassType::getToolBarSound, ItemClassType.NONE::getToolBarSound));
     }
 
-    public static @Nullable ISoundFactory getItemSwingSound(ItemStack stack) {
+    @Override
+    public @Nullable ISoundFactory getItemSwingSound(ItemStack stack) {
         if (stack.isEmpty())
             return null;
+        return this.itemSwingFactories.computeIfAbsent(stack.getItem(), k -> resolve(stack, ItemClassType::getSwingSound, () -> null));
+    }
 
-        return itemSwingFactories.computeIfAbsent(stack.getItem(), k -> resolve(stack, ItemClassType::getSwingSound, () -> null));
+    @Override
+    public Stream<String> dump() {
+        var blockRegistry = GameUtils.getRegistryManager().get(RegistryKeys.ITEM).getEntrySet();
+        return blockRegistry.stream().map(kvp -> formatItemOutput(kvp.getKey().getValue(), kvp.getValue())).sorted();
     }
 
     private static ISoundFactory resolve(ItemStack stack, Function<ItemClassType, ISoundFactory> resolveSound, Supplier<ISoundFactory> defaultSoundFactory) {
@@ -85,7 +96,7 @@ public class ItemLibrary {
         return itemEquipSound;
     }
 
-    public static ItemClassType resolveClassType(ItemStack stack) {
+    private static ItemClassType resolveClassType(ItemStack stack) {
         if (stack.isIn(ItemEffectTags.AXES))
             return ItemClassType.AXE;
         if (stack.isIn(ItemEffectTags.BOOKS))
@@ -104,11 +115,6 @@ public class ItemLibrary {
             return ItemClassType.TOOL;
 
         return ItemClassType.NONE;
-    }
-
-    public static Stream<String> dumpItems() {
-        var blockRegistry = GameUtils.getRegistryManager().get(RegistryKeys.ITEM).getEntrySet();
-        return blockRegistry.stream().map(kvp -> formatItemOutput(kvp.getKey().getValue(), kvp.getValue())).sorted();
     }
 
     private static String formatItemOutput(Identifier id, Item item) {

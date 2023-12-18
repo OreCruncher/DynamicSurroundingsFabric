@@ -9,12 +9,13 @@ import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.AcousticConfig;
-import org.orecruncher.dsurround.config.SoundLibrary;
+import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.biome.AcousticEntry;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
@@ -102,10 +103,12 @@ public class BlockInfo {
 
         config.soundChance.ifPresent(v -> this.soundChance = v);
 
+        var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
+
         for (final AcousticConfig sr : config.acoustics) {
             if (sr.soundEventId != null) {
-                final Identifier res = SoundLibrary.resolveIdentifier(Client.ModId, sr.soundEventId);
-                final SoundEvent acoustic = SoundLibrary.getSound(res);
+                final Identifier res = soundLibrary.resolveIdentifier(Client.ModId, sr.soundEventId);
+                final SoundEvent acoustic = soundLibrary.getSound(res);
                 var factory = SoundFactoryBuilder.create(acoustic)
                         .category(sr.category)
                         .volumeRange(sr.minVolume, sr.maxVolume)

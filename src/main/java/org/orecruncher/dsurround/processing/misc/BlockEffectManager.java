@@ -6,6 +6,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.lib.BlockPosUtil;
 
@@ -19,7 +20,10 @@ public class BlockEffectManager        {
         return system.isDone();
     };
 
-    public BlockEffectManager() {
+    protected final int blockEffectRange;
+
+    public BlockEffectManager(int blockEffectRange) {
+        this.blockEffectRange = blockEffectRange;
     }
 
     private final Long2ObjectOpenHashMap<IBlockEffect> systems = new Long2ObjectOpenHashMap<>(512);
@@ -33,12 +37,11 @@ public class BlockEffectManager        {
         Predicate<IBlockEffect> pred = STANDARD;
 
         if (!sittingStill) {
-            final double range = Client.Config.blockEffects.blockEffectRange;
+            final double range = this.blockEffectRange;
             final BlockPos min = BlockPos.ofFloored(current.getX() - range, current.getY() - range, current.getZ() - range);
             final BlockPos max = BlockPos.ofFloored(current.getX() + range, current.getY() + range, current.getZ() + range);
 
             pred = system -> {
-
                 if (BlockPosUtil.notContains(system.getPos(), min, max)) {
                     system.setDone();
                 } else {

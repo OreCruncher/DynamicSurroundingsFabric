@@ -8,7 +8,8 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.config.*;
+import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
+import org.orecruncher.dsurround.config.libraries.impl.*;
 
 @Environment(EnvType.CLIENT)
 public class ReloadCommand {
@@ -22,11 +23,7 @@ public class ReloadCommand {
 
     private static int execute(CommandContext<FabricClientCommandSource> ctx) {
         try {
-            SoundLibrary.load();
-            BlockLibrary.load();
-            BiomeLibrary.load();
-            DimensionLibrary.load();
-            EntityEffectLibrary.load();
+            AssetLibraryEvent.reload();
             Commands.sendSuccess(ctx.getSource(), "reload");
         } catch (Throwable t) {
             Client.LOGGER.error(t, "Configuration reload failed");

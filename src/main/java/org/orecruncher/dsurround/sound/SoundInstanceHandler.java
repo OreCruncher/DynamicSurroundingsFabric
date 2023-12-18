@@ -9,8 +9,10 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.gui.sound.ConfigSoundInstance;
 import org.orecruncher.dsurround.lib.TickCounter;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -21,6 +23,9 @@ import java.util.Set;
  */
 @Environment(EnvType.CLIENT)
 public final class SoundInstanceHandler {
+
+    private static final IAudioPlayer audioPlayer = ContainerManager.resolve(IAudioPlayer.class);
+    private static final Configuration config = ContainerManager.resolve(Configuration.class);
 
     private static final Object2LongOpenHashMap<Identifier> soundCull = new Object2LongOpenHashMap<>(32);
     private static final Set<Identifier> thunderSounds = new HashSet<>();
@@ -44,7 +49,7 @@ public final class SoundInstanceHandler {
     }
 
     private static boolean isSoundCulledLogical(final Identifier sound) {
-        int cullInterval = Client.Config.soundSystem.cullInterval;
+        int cullInterval = config.soundSystem.cullInterval;
         if (cullInterval > 0 && isSoundCulled(sound)) {
             final long lastOccurrence = soundCull.getLong(Objects.requireNonNull(sound));
             final long currentTick = TickCounter.getTickCount();
@@ -74,11 +79,11 @@ public final class SoundInstanceHandler {
 
         final Identifier id = theSound.getId();
 
-        if (Client.Config.thunderStorms.replaceThunderSounds && thunderSounds.contains(id)) {
+        if (config.thunderStorms.replaceThunderSounds && thunderSounds.contains(id)) {
             // Yeah - a bit reentrant but it should be good
             var sound = THUNDER_SOUND.createAtLocation(
                     new Vec3d(theSound.getX(), theSound.getY(), theSound.getZ()));
-            MinecraftAudioPlayer.INSTANCE.play(sound);
+            audioPlayer.play(sound);
             return true;
         }
 

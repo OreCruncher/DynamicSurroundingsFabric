@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.config;
+package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
 import net.fabricmc.api.EnvType;
@@ -9,7 +9,10 @@ import net.minecraft.world.World;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.data.DimensionConfig;
 import org.orecruncher.dsurround.config.dimension.DimensionInfo;
+import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
+import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 
@@ -17,16 +20,23 @@ import java.util.*;
 import java.util.stream.Stream;
 
 @Environment(EnvType.CLIENT)
-public final class DimensionLibrary {
+public final class DimensionLibrary implements IDimensionLibrary {
 
     private static final String FILE_NAME = "dimensions.json";
     private static final Codec<List<DimensionConfig>> CODEC = Codec.list(DimensionConfig.CODEC);
-    private static final ObjectArray<DimensionConfig> cache = new ObjectArray<>();
-    private static final Map<RegistryKey<World>, DimensionInfo> configs = new HashMap<>();
 
-    public static void load() {
-        configs.clear();
-        cache.clear();
+    private final IModLog logger;
+    private final ObjectArray<DimensionConfig> cache = new ObjectArray<>();
+    private final Map<RegistryKey<World>, DimensionInfo> configs = new HashMap<>();
+
+    public DimensionLibrary(IModLog logger) {
+        this.logger = logger;
+    }
+
+    @Override
+    public void reload(AssetLibraryEvent.ReloadEvent event) {
+        this.configs.clear();
+        this.cache.clear();
         final Collection<IResourceAccessor> accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), FILE_NAME);
 
         IResourceAccessor.process(accessors, accessor -> {
@@ -36,19 +46,19 @@ public final class DimensionLibrary {
         });
     }
 
-    private static void initFromConfig(final List<DimensionConfig> cfg) {
-        cfg.forEach(DimensionLibrary::register);
+    private void initFromConfig(final List<DimensionConfig> cfg) {
+        cfg.forEach(this::register);
     }
 
-    private static DimensionConfig getData(final DimensionConfig entry) {
-        final Optional<DimensionConfig> result = cache.stream().filter(e -> e.equals(entry)).findFirst();
+    private DimensionConfig getData(final DimensionConfig entry) {
+        final Optional<DimensionConfig> result = this.cache.stream().filter(e -> e.equals(entry)).findFirst();
         if (result.isPresent())
             return result.get();
-        cache.add(entry);
+        this.cache.add(entry);
         return entry;
     }
 
-    private static void register(final DimensionConfig entry) {
+    private void register(final DimensionConfig entry) {
         if (entry.dimensionId != null) {
             final DimensionConfig data = getData(entry);
             if (data == entry)
@@ -66,25 +76,27 @@ public final class DimensionLibrary {
         }
     }
 
-    public static DimensionInfo getData(final World world) {
+    @Override
+    public DimensionInfo getData(final World world) {
         RegistryKey<World> key = world.getRegistryKey();
-        DimensionInfo dimInfo = configs.get(key);
+        DimensionInfo dimInfo = this.configs.get(key);
 
         if (dimInfo == null) {
             DimensionConfig config = null;
             Identifier location = key.getValue();
-            for (final DimensionConfig e : cache)
+            for (final DimensionConfig e : this.cache)
                 if (e.dimensionId.equals(location)) {
                     config = e;
                     break;
                 }
 
-            configs.put(key, dimInfo = new DimensionInfo(world, config));
+            this.configs.put(key, dimInfo = new DimensionInfo(world, config));
         }
         return dimInfo;
     }
 
-    public static Stream<String> dump() {
+    @Override
+    public Stream<String> dump() {
         return cache.stream().map(Object::toString).sorted();
     }
 }

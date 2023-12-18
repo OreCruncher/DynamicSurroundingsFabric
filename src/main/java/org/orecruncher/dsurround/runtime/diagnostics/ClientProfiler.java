@@ -4,12 +4,11 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.lib.events.HandlerPriority;
+import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
-
-import java.util.Collection;
 
 @Environment(EnvType.CLIENT)
 public final class ClientProfiler {
@@ -23,7 +22,7 @@ public final class ClientProfiler {
     public static void register() {
         ClientTickEvents.START_CLIENT_TICK.register(ClientProfiler::tickStart);
         ClientTickEvents.END_CLIENT_TICK.register(ClientProfiler::tickEnd);
-        ClientEventHooks.COLLECT_DIAGNOSTICS.register(ClientProfiler::onCollect);
+        ClientEventHooks.COLLECT_DIAGNOSTICS.register(ClientProfiler::onCollect, HandlerPriority.VERY_HIGH);
     }
 
     private static void tickStart(MinecraftClient client) {
@@ -40,10 +39,21 @@ public final class ClientProfiler {
         clientTick.update(delta);
     }
 
-    private static void onCollect(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
-        timers.add(clientTick);
-        timers.add(lastTick);
+    private static void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
+        var tpsTimer = new ITimer() {
+            @Override
+            public double getMSecs() {
+                return tps;
+            }
 
-        right.add(Formatting.LIGHT_PURPLE + String.format("Client TPS:%7.3fms", tps));
+            @Override
+            public String toString() {
+                return String.format("Client TPS:%7.3fms", this.getMSecs());
+            }
+        };
+
+        event.timers.add(tpsTimer);
+        event.timers.add(clientTick);
+        event.timers.add(lastTick);
     }
 }

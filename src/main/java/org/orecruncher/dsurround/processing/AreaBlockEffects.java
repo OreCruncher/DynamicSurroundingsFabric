@@ -2,19 +2,23 @@ package org.orecruncher.dsurround.processing;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
-import org.orecruncher.dsurround.lib.math.TimerEMA;
+import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.scanner.ClientPlayerContext;
 import org.orecruncher.dsurround.processing.misc.BlockEffectManager;
 import org.orecruncher.dsurround.processing.scanner.AlwaysOnBlockEffectScanner;
 import org.orecruncher.dsurround.processing.scanner.RandomBlockEffectScanner;
+import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 import java.util.Collection;
 
 public class AreaBlockEffects extends ClientHandler {
 
+    private final IBlockLibrary blockLibrary;
+    private final IAudioPlayer audioPlayer;
     protected ClientPlayerContext locus;
     protected BlockEffectManager blockEffects;
     protected RandomBlockEffectScanner nearEffects;
@@ -23,9 +27,11 @@ public class AreaBlockEffects extends ClientHandler {
 
     private boolean isConnected = false;
 
-    AreaBlockEffects() {
-        super("Area Block Effects");
+    public AreaBlockEffects(IBlockLibrary blockLibrary, IAudioPlayer audioPlayer, Configuration config, IModLog logger) {
+        super("Area Block Effects", config, logger);
 
+        this.blockLibrary = blockLibrary;
+        this.audioPlayer = audioPlayer;
         ClientEventHooks.BLOCK_UPDATE.register(this::blockUpdates);
     }
 
@@ -53,10 +59,10 @@ public class AreaBlockEffects extends ClientHandler {
     @Override
     public void onConnect() {
         this.locus = new ClientPlayerContext();
-        this.blockEffects = new BlockEffectManager();
-        this.alwaysOn = new AlwaysOnBlockEffectScanner(this.locus, this.blockEffects, Client.Config.blockEffects.blockEffectRange);
-        this.nearEffects = new RandomBlockEffectScanner(this.locus, this.blockEffects, RandomBlockEffectScanner.NEAR_RANGE);
-        this.farEffects = new RandomBlockEffectScanner(this.locus, this.blockEffects, RandomBlockEffectScanner.FAR_RANGE);
+        this.blockEffects = new BlockEffectManager(this.config.blockEffects.blockEffectRange);
+        this.alwaysOn = new AlwaysOnBlockEffectScanner(this.locus, this.blockLibrary, this.blockEffects, this.config.blockEffects.blockEffectRange);
+        this.nearEffects = new RandomBlockEffectScanner(this.locus, this.blockLibrary, this.audioPlayer, this.blockEffects, RandomBlockEffectScanner.NEAR_RANGE);
+        this.farEffects = new RandomBlockEffectScanner(this.locus, this.blockLibrary, this.audioPlayer, this.blockEffects, RandomBlockEffectScanner.FAR_RANGE);
 
         this.isConnected = true;
     }
@@ -72,14 +78,14 @@ public class AreaBlockEffects extends ClientHandler {
         this.farEffects = null;
     }
 
-    private void blockUpdates(Collection<BlockPos> blockPos) {
+    private void blockUpdates(ClientEventHooks.BlockUpdateEvent event) {
         if (this.alwaysOn != null) {
-            blockPos.forEach(this.alwaysOn::onBlockUpdate);
+            event.updates().forEach(this.alwaysOn::onBlockUpdate);
         }
     }
 
     @Override
-    protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
+    protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<ITimer> timers) {
         left.add(Formatting.LIGHT_PURPLE + String.format("Total Effects: %d", this.blockEffects.count()));
     }
 }

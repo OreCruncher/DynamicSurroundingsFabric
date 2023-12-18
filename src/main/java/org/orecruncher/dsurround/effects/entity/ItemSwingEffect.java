@@ -11,13 +11,17 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.Hand;
 import net.minecraft.util.UseAction;
 import net.minecraft.util.hit.HitResult;
-import org.orecruncher.dsurround.config.ItemLibrary;
-import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
+import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 
 @Environment(EnvType.CLIENT)
 public class ItemSwingEffect extends EntityEffectBase {
 
+    private final IItemLibrary itemLibrary;
     private boolean isSwinging;
+
+    public ItemSwingEffect(IItemLibrary itemLibrary) {
+        this.itemLibrary = itemLibrary;
+    }
 
     @Override
     public void tick(final EntityEffectInfo info) {
@@ -44,7 +48,7 @@ public class ItemSwingEffect extends EntityEffectBase {
                 else
                     currentItem = entity.getActiveItem();
 
-                var factory = ItemLibrary.getItemSwingSound(currentItem);
+                var factory = this.itemLibrary.getItemSwingSound(currentItem);
 
                 if (factory != null && freeSwing(entity)) {
                     SoundInstance instance;
@@ -55,7 +59,7 @@ public class ItemSwingEffect extends EntityEffectBase {
                     }
 
                     if (instance != null)
-                        MinecraftAudioPlayer.INSTANCE.play(instance);
+                        this.playSound(instance);
                 }
 
                 this.isSwinging = true;

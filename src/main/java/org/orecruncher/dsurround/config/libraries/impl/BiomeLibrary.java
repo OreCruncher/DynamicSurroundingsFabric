@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.config;
+package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
 import net.fabricmc.api.EnvType;
@@ -12,9 +12,12 @@ import net.minecraft.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.InternalBiomes;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
+import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
+import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Guard;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -24,37 +27,39 @@ import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
 import org.orecruncher.dsurround.xface.IBiomeExtended;
 
-import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
 @Environment(EnvType.CLIENT)
-public final class BiomeLibrary {
+public final class BiomeLibrary implements IBiomeLibrary {
 
     private static final String FILE_NAME = "biomes.json";
     private static final Codec<List<BiomeConfigRule>> CODEC = Codec.list(BiomeConfigRule.CODEC);
-    private static final IModLog LOGGER = Client.LOGGER.createChild(BiomeLibrary.class);
 
-    private static final Map<InternalBiomes, BiomeInfo> internalBiomes = new EnumMap<>(InternalBiomes.class);
+    private final IModLog logger;
+
+    private final Map<InternalBiomes, BiomeInfo> internalBiomes = new EnumMap<>(InternalBiomes.class);
 
     // Cached list of biome config rules.  Need to hold onto them
     // because they may be needed to handle dynamic biome load.
-    private static Collection<BiomeConfigRule> biomeConfigs;
+    private final ObjectArray<BiomeConfigRule> biomeConfigs = new ObjectArray<>(64);
 
     // Current version of the configs that are loaded.  Used to detect when
     // configs changed and cached biome info needs a refresh.
-    private static int version = 0;
+    private int version = 0;
 
-    static {
-        // Log when the registry changes as to understand the log context better
-        DynamicRegistrySetupCallback.EVENT.register(registryManager -> LOGGER.info("Biome registry reload detected"));
+    public BiomeLibrary(IModLog logger) {
+        this.logger = logger;
+        DynamicRegistrySetupCallback.EVENT.register(registryManager -> this.logger.info("Biome registry reload detected"));
     }
 
-    public static void load() {
+    @Override
+    public void reload(AssetLibraryEvent.ReloadEvent event) {
         // Wipe out the internal biome cache.  These will be reset.
-        internalBiomes.clear();
+        this.internalBiomes.clear();
+        this.biomeConfigs.clear();
 
         ObjectArray<BiomeConfigRule> configs = new ObjectArray<>(64);
         var accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), FILE_NAME);
@@ -62,29 +67,28 @@ public final class BiomeLibrary {
         IResourceAccessor.process(accessors, accessor -> {
             var cfg = accessor.as(CODEC);
             if (cfg != null)
-                configs.addAll(cfg);
+                this.biomeConfigs.addAll(cfg);
         });
 
-        biomeConfigs = configs;
-        version++;
+        this.version++;
 
         for (var b : InternalBiomes.values())
             initializeInternalBiome(b);
 
-        LOGGER.info("%d biome configs loaded; version is now %d", biomeConfigs.size(), version);
+        this.logger.info("%d biome configs loaded; version is now %d", biomeConfigs.size(), version);
     }
 
-    private static void initializeInternalBiome(InternalBiomes biome) {
+    private void initializeInternalBiome(InternalBiomes biome) {
         String match = "@" + biome.getName();
-        var info = new BiomeInfo(version, biome.getId(), biome.getName(), biome.getTraits());
+        var info = new BiomeInfo(this.version, biome.getId(), biome.getName(), biome.getTraits());
 
-        for (var c : biomeConfigs) {
+        for (var c : this.biomeConfigs) {
             if (c.biomeSelector.asString().equalsIgnoreCase(match)) {
                 info.update(c);
             }
         }
 
-        internalBiomes.put(biome, info);
+        this.internalBiomes.put(biome, info);
     }
 
     private static Registry<Biome> getActiveRegistry() {
@@ -95,11 +99,12 @@ public final class BiomeLibrary {
         return getActiveRegistry().get(biomeId);
     }
 
-    public static BiomeInfo getBiomeInfo(Biome biome) {
+    @Override
+    public BiomeInfo getBiomeInfo(Biome biome) {
         // check the cached property on the biome and return the info
         // that is there.
         var info = ((IBiomeExtended) (Object) biome).getInfo();
-        if (info != null && info.getVersion() == version)
+        if (info != null && info.getVersion() == this.version)
             return info;
 
         // Not set or something changed.  Need a refresh.
@@ -121,7 +126,7 @@ public final class BiomeLibrary {
 
         // Build out the info object and store into the biome.  We need to do that
         // so that when applying configs the script engine can find it.
-        final var result = new BiomeInfo(version, id, name, traits);
+        final var result = new BiomeInfo(this.version, id, name, traits);
         ((IBiomeExtended) (Object) biome).setInfo(result);
 
         // Apply rule configs
@@ -129,12 +134,13 @@ public final class BiomeLibrary {
         return result;
     }
 
-    public static BiomeInfo getBiomeInfo(InternalBiomes biome) {
-        return internalBiomes.get(biome);
+    @Override
+    public BiomeInfo getBiomeInfo(InternalBiomes biome) {
+        return this.internalBiomes.get(biome);
     }
 
-    private static void applyRuleConfigs(Biome biome, BiomeInfo info) {
-        for (var c : biomeConfigs) {
+    private void applyRuleConfigs(Biome biome, BiomeInfo info) {
+        for (var c : this.biomeConfigs) {
             // Skip internal definitions - they are handled elsewhere and
             // do not apply to regular Minecraft biomes
             if (c.biomeSelector.asString().startsWith("@"))
@@ -146,11 +152,11 @@ public final class BiomeLibrary {
                     try {
                         info.update(c);
                     } catch (final Throwable t) {
-                        LOGGER.warn("Unable to process biome sound configuration [%s]", c.toString());
+                        this.logger.warn("Unable to process biome sound configuration [%s]", c.toString());
                     }
                 }
             } catch (Throwable t) {
-                LOGGER.error(t, "Unexpected error processing biome %s", info.getBiomeId());
+                this.logger.error(t, "Unexpected error processing biome %s", info.getBiomeId());
             }
         }
 
@@ -158,20 +164,22 @@ public final class BiomeLibrary {
         info.trim();
     }
 
-    static Identifier getBiomeId(Biome biome) {
+    private static Identifier getBiomeId(Biome biome) {
         RegistryKey<Biome> key = getActiveRegistry().getKey(biome).orElse(BiomeKeys.THE_VOID);
         return key.getValue();
     }
 
-    public static String getBiomeName(Identifier id) {
+    @Override
+    public String getBiomeName(Identifier id) {
         final String fmt = String.format("biome.%s.%s", id.getNamespace(), id.getPath());
         return I18n.translate(fmt);
     }
 
-    public static Stream<String> dumpBiomes() {
+    @Override
+    public Stream<String> dump() {
         return getActiveRegistry()
                 .stream()
-                .map(BiomeLibrary::getBiomeInfo)
+                .map(this::getBiomeInfo)
                 .map(BiomeInfo::toString)
                 .sorted();
     }

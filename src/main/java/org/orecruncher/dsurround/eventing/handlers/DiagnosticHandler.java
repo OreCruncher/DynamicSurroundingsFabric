@@ -3,13 +3,13 @@ package org.orecruncher.dsurround.eventing.handlers;
 import joptsimple.internal.Strings;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Formatting;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.infra.events.ClientState;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
 
@@ -17,18 +17,16 @@ import org.orecruncher.dsurround.lib.math.TimerEMA;
 public final class DiagnosticHandler {
 
     private static final LoggingTimerEMA diagnostics = new LoggingTimerEMA("Diagnostics");
-    private static final ObjectArray<String> left = new ObjectArray<>(16);
-    private static final ObjectArray<String> right = new ObjectArray<>(16);
     private static boolean enableCollection = false;
+    private static ObjectArray<String> left = new ObjectArray<>();
+    private static ObjectArray<String> right = new ObjectArray<>();
 
     static {
-        ClientTickEvents.END_CLIENT_TICK.register(DiagnosticHandler::tick);
+        ClientState.TICK_END.register(DiagnosticHandler::tick);
     }
 
     public static void toggleCollection() {
         enableCollection = !enableCollection;
-        left.clear();
-        right.clear();
     }
 
     public static boolean isCollecting() {
@@ -53,25 +51,25 @@ public final class DiagnosticHandler {
         if (enableCollection && GameUtils.isInGame()) {
             diagnostics.begin();
 
-            left.clear();
-            right.clear();
+            var event = new ClientEventHooks.CollectDiagnosticsEvent();
 
-            left.add(Client.Branding);
+            event.left.add(Client.Branding);
 
-            ObjectArray<TimerEMA> timers = new ObjectArray<>(8);
-            ObjectArray<String> temp = new ObjectArray<>(16);
-            ClientEventHooks.COLLECT_DIAGNOSTICS.invoker().onCollect(left, temp, timers);
+            ClientEventHooks.COLLECT_DIAGNOSTICS.raise(event);
 
-            right.add(Formatting.LIGHT_PURPLE + diagnostics.toString());
+            event.timers.add(diagnostics);
 
-            if (!timers.isEmpty()) {
-                for (TimerEMA timer : timers) {
+            left = event.left;
+            right = new ObjectArray<>(event.right.size() + event.timers.size() + 1);
+
+            if (!event.timers.isEmpty()) {
+                for (var timer : event.timers) {
                     right.add(Formatting.LIGHT_PURPLE + timer.toString());
                 }
-                right.add(Strings.EMPTY);
             }
 
-            right.addAll(temp);
+            right.add(Strings.EMPTY);
+            right.addAll(event.right);
 
             diagnostics.end();
         }

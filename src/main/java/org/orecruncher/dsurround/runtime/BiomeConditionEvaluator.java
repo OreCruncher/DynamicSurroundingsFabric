@@ -4,6 +4,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.sets.BiomeVariables;
@@ -20,7 +21,7 @@ public class BiomeConditionEvaluator {
 
     public BiomeConditionEvaluator() {
         this.context = new ExecutionContext("BiomeConditions");
-        this.biomeVariables = new BiomeVariables();
+        this.biomeVariables = ContainerManager.resolve(BiomeVariables.class);
         this.context.add(this.biomeVariables);
     }
 

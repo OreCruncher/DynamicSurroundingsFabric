@@ -10,15 +10,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.AcousticConfig;
-import org.orecruncher.dsurround.config.BiomeLibrary;
+import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
+import org.orecruncher.dsurround.config.libraries.impl.BiomeLibrary;
 import org.orecruncher.dsurround.config.SoundEventType;
-import org.orecruncher.dsurround.config.SoundLibrary;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.Script;
@@ -189,9 +190,11 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
             clearSounds();
         }
 
+        var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
+
         for (final AcousticConfig sr : entry.acoustics) {
-            final Identifier res = SoundLibrary.resolveIdentifier(Client.ModId, sr.soundEventId);
-            final SoundEvent acoustic = SoundLibrary.getSound(res);
+            final Identifier res = soundLibrary.resolveIdentifier(Client.ModId, sr.soundEventId);
+            final SoundEvent acoustic = soundLibrary.getSound(res);
             var factory = SoundFactoryBuilder.create(acoustic)
                     .category(sr.category)
                     .volumeRange(sr.minVolume, sr.maxVolume)

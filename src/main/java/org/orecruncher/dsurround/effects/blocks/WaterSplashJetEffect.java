@@ -9,9 +9,11 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.client.option.ParticlesMode;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.effects.blocks.producers.BlockEffectProducer;
 import org.orecruncher.dsurround.effects.blocks.producers.WaterSplashProducer;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.sound.*;
 
 import java.awt.*;
@@ -61,6 +63,8 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
     protected final float red;
     protected final float green;
     protected final float blue;
+    protected final IAudioPlayer audioPlayer;
+    protected final Configuration config;
 
     public WaterSplashJetEffect(final int strength, final World world, final BlockPos loc, final double dY) {
         super(0, strength, world, loc.getX() + 0.5D, loc.getY() + 0.5D, loc.getZ() + 0.5D, 4);
@@ -71,6 +75,9 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
         this.red = color.getRed() / 255F;
         this.green = color.getGreen() / 255F;
         this.blue = color.getBlue() / 255F;
+
+        this.audioPlayer = ContainerManager.resolve(IAudioPlayer.class);
+        this.config = ContainerManager.resolve(Configuration.class);
     }
 
     public void setSpawnCount(final int limit) {
@@ -95,9 +102,9 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
 
     @Override
     protected void soundUpdate() {
-        if (!Client.Config.blockEffects.enableWaterfallSounds) {
+        if (!this.config.blockEffects.enableWaterfallSounds) {
             if (this.sound != null) {
-                MinecraftAudioPlayer.INSTANCE.stop(this.sound);
+                this.audioPlayer.stop(this.sound);
                 this.sound = null;
             }
             return;
@@ -109,19 +116,19 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
         }
 
         final boolean inRange = SoundInstanceHandler.inRange(GameUtils.getPlayer().getEyePos(), this.sound, 4);
-        final boolean isDone = !MinecraftAudioPlayer.INSTANCE.isPlaying(this.sound);
+        final boolean isDone = !this.audioPlayer.isPlaying(this.sound);
 
         if (inRange && isDone) {
-            MinecraftAudioPlayer.INSTANCE.play(this.sound);
+            this.audioPlayer.play(this.sound);
         } else if (!inRange && !isDone) {
-            MinecraftAudioPlayer.INSTANCE.stop(this.sound);
+            this.audioPlayer.stop(this.sound);
         }
     }
 
     @Override
     protected void cleanUp() {
         if (this.sound != null) {
-            MinecraftAudioPlayer.INSTANCE.stop(this.sound);
+            this.audioPlayer.stop(this.sound);
             this.sound = null;
         }
         super.cleanUp();
@@ -129,7 +136,7 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
 
     @Override
     protected void spawnJetParticle() {
-        if (!Client.Config.blockEffects.enableWaterfallParticles)
+        if (!this.config.blockEffects.enableWaterfallParticles)
             return;
 
         final int splashCount = getSpawnCount();

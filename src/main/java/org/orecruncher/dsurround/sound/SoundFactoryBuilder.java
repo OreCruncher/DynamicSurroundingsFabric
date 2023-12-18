@@ -15,7 +15,8 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.util.math.random.RandomSeed;
 import org.jetbrains.annotations.NotNull;
-import org.orecruncher.dsurround.config.SoundLibrary;
+import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 
@@ -157,12 +158,12 @@ public final class SoundFactoryBuilder {
     }
 
     public static SoundFactoryBuilder create(String soundEventId) {
-        var se = SoundLibrary.getSound(soundEventId);
+        var se = ContainerManager.resolve(ISoundLibrary.class).getSound(soundEventId);
         return create(se);
     }
 
     public static SoundFactoryBuilder create(Identifier soundEventId) {
-        var se = SoundLibrary.getSound(soundEventId);
+        var se = ContainerManager.resolve(ISoundLibrary.class).getSound(soundEventId);
         return create(se);
     }
 

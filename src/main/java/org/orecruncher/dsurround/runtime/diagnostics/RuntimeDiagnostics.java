@@ -8,11 +8,10 @@ import net.minecraft.util.Formatting;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
-import org.orecruncher.dsurround.lib.math.TimerEMA;
+import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 
-import java.util.Collection;
 import java.util.List;
 
 @Environment(EnvType.CLIENT)
@@ -31,19 +30,19 @@ public final class RuntimeDiagnostics {
     );
 
     public static void register() {
-        ClientEventHooks.COLLECT_DIAGNOSTICS.register(RuntimeDiagnostics::onCollect);
+        ClientEventHooks.COLLECT_DIAGNOSTICS.register(RuntimeDiagnostics::onCollect, HandlerPriority.HIGH);
     }
 
-    private static void onCollect(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
+    private static void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
         if (GameUtils.isInGame()) {
             assert GameUtils.getWorld() != null;
             clock.update(GameUtils.getWorld());
-            left.add(Formatting.GREEN + clock.getFormattedTime());
-            left.add(Strings.EMPTY);
+            event.left.add(Formatting.GREEN + clock.getFormattedTime());
+            event.left.add(Strings.EMPTY);
 
             for (String script : scripts) {
                 Object result = ConditionEvaluator.INSTANCE.eval(new Script(script));
-                left.add(Formatting.YELLOW + result.toString());
+                event.left.add(Formatting.YELLOW + result.toString());
             }
         }
     }

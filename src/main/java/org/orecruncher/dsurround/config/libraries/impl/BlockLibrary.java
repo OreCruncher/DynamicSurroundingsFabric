@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.config;
+package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
 import net.fabricmc.api.EnvType;
@@ -12,6 +12,8 @@ import net.minecraft.util.Identifier;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.block.BlockInfo;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
+import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
+import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -22,15 +24,13 @@ import org.orecruncher.dsurround.xface.IBlockStateExtended;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Environment(EnvType.CLIENT)
-public class BlockLibrary {
+public class BlockLibrary implements IBlockLibrary {
 
     private static final String FILE_NAME = "blocks.json";
     private static final Codec<List<BlockConfigRule>> CODEC = Codec.list(BlockConfigRule.CODEC);
-    private static final IModLog LOGGER = Client.LOGGER.createChild(BlockLibrary.class);
 
     private static final int INDEFINITE = -1;
 
@@ -41,60 +41,76 @@ public class BlockLibrary {
         }
     };
 
-    private static final Collection<BlockConfigRule> blockConfigs = new ObjectArray<>();
-    private static int version = 0;
+    private final IModLog logger;
 
-    public static void load() {
+    private final Collection<BlockConfigRule> blockConfigs = new ObjectArray<>();
+    private int version = 0;
 
-        blockConfigs.clear();
+    public BlockLibrary(IModLog logger) {
+        this.logger = logger;
+    }
+
+    @Override
+    public void reload(AssetLibraryEvent.ReloadEvent event) {
+
+        this.blockConfigs.clear();
         final Collection<IResourceAccessor> accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), FILE_NAME);
 
         IResourceAccessor.process(accessors, accessor -> {
             var cfg = accessor.as(CODEC);
-            if (cfg != null) blockConfigs.addAll(cfg);
+            if (cfg != null)
+                this.blockConfigs.addAll(cfg);
         });
 
         version++;
 
-        LOGGER.info("%d block configs loaded; version is now %d", blockConfigs.size(), version);
+        this.logger.info("%d block configs loaded; version is now %d", blockConfigs.size(), version);
     }
 
-    public static BlockInfo getBlockInfo(BlockState state) {
+    @Override
+    public BlockInfo getBlockInfo(BlockState state) {
         var info = ((IBlockStateExtended) state).getBlockInfo();
         if (info != null) {
-            if (info.getVersion() == version || info == DEFAULT) return info;
+            if (info.getVersion() == this.version || info == DEFAULT)
+                return info;
         }
 
         // OK - need to build out an info for the block.
-        info = new BlockInfo(version, state);
-        for (var cfg : blockConfigs) {
+        info = new BlockInfo(this.version, state);
+        for (var cfg : this.blockConfigs) {
             if (cfg.match(state)) info.update(cfg);
         }
 
         // Optimization to reduce memory bloat.  Coalesce blocks that do not have any special
         // processing to the DEFAULT, and trim the others to release memory that is not needed.
-        if (info.isDefault()) info = DEFAULT;
-        else info.trim();
+        if (info.isDefault())
+            info = DEFAULT;
+        else
+            info.trim();
 
         ((IBlockStateExtended) state).setBlockInfo(info);
 
         return info;
     }
 
-    public static Stream<String> dumpBlockStates() {
+    @Override
+    public Stream<String> dumpBlockStates() {
         return GameUtils.getRegistryManager().get(RegistryKeys.BLOCK).stream().flatMap(block -> block.getStateManager().getStates().stream()).map(State::toString).sorted();
     }
 
-    public static Stream<String> dumpBlockConfigRules() {
-        return blockConfigs.stream().map(BlockLibrary::formatBlockConfigRuleOutput).sorted();
+    @Override
+    public Stream<String> dumpBlockConfigRules() {
+        return this.blockConfigs.stream().map(BlockLibrary::formatBlockConfigRuleOutput).sorted();
     }
 
-    public static Stream<String> dumpBlocks(boolean noStates) {
+    @Override
+    public Stream<String> dumpBlocks(boolean noStates) {
         var blockRegistry = GameUtils.getRegistryManager().get(RegistryKeys.BLOCK).getEntrySet();
         return blockRegistry.stream().map(kvp -> formatBlockOutput(kvp.getKey().getValue(), kvp.getValue(), noStates)).sorted();
     }
 
-    public static Stream<String> dumpBlocksByTag() {
+    @Override
+    public Stream<String> dump() {
         var tagGroup = TagHelpers.getTagGroup(RegistryKeys.BLOCK);
         if (tagGroup != null) {
             return tagGroup.filter(pair -> pair.value().findAny().isPresent()).map(pair -> BlockLibrary.formatBlockTagOutput(pair.key(), pair.value())).sorted();
@@ -115,7 +131,7 @@ public class BlockLibrary {
         return builder.toString();
     }
 
-    private static String formatBlockOutput(Identifier id, Block block, boolean noStates) {
+    private String formatBlockOutput(Identifier id, Block block, boolean noStates) {
         var blocks = GameUtils.getWorld().getRegistryManager().get(RegistryKeys.BLOCK);
 
         var tags = "null";
@@ -146,5 +162,4 @@ public class BlockLibrary {
 
         return builder.toString();
     }
-
 }

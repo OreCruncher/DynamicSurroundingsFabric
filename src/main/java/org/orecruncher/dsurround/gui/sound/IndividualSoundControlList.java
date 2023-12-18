@@ -6,15 +6,18 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.EntryListWidget;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
+import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @Environment(EnvType.CLIENT)
 public class IndividualSoundControlList extends EntryListWidget<IndividualSoundControlListEntry> {
@@ -22,6 +25,7 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
     private final Screen parent;
     private final boolean enablePlay;
     private final int width;
+    private final ISoundLibrary soundLibrary;
     private List<IndividualSoundConfigEntry> source;
     private String lastSearchText = null;
 
@@ -38,6 +42,8 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
 
         // Initialize the first pass
         this.setSearchFilter(filter, false);
+
+        this.soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
     }
 
     @Override
@@ -63,7 +69,7 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
 
         // Load up source if needed
         if (this.source == null || forceReload)
-            this.source = new ArrayList<>(SoundLibraryHelpers.getSortedSoundConfigurations());
+            this.source = new ArrayList<>(this.getSortedSoundConfigurations());
 
         // Get the filter string.  It's a simple contains check.
         final Function<IndividualSoundConfigEntry, Boolean> process;
@@ -114,5 +120,25 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
     @Override
     protected void appendClickableNarrations(NarrationMessageBuilder builder) {
         // Narrate my shiny metal...
+    }
+
+    protected Collection<IndividualSoundConfigEntry> getSortedSoundConfigurations() {
+
+        final SortedMap<Identifier, IndividualSoundConfigEntry> map = new TreeMap<>();
+
+        // Get a list of all registered sounds.  We don't use the vanilla registries since
+        // we will have more sounds than are registered.
+        for (final SoundEvent event : this.soundLibrary.getRegisteredSoundEvents()) {
+            IndividualSoundConfigEntry entry = IndividualSoundConfigEntry.createDefault(event);
+            map.put(entry.soundEventId, entry);
+        }
+
+        // Override with the defaults from configuration.  Make a copy of the original, so it doesn't change.
+        for (IndividualSoundConfigEntry entry : Client.SoundConfig.getIndividualSoundConfigs()) {
+            map.put(entry.soundEventId, entry);
+        }
+
+        final Comparator<IndividualSoundConfigEntry> iscComparator = Comparator.comparing(isc -> isc.soundEventId);
+        return map.values().stream().sorted(iscComparator).collect(Collectors.toList());
     }
 }

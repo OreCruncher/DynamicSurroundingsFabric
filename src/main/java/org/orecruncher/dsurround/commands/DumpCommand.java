@@ -2,23 +2,19 @@ package org.orecruncher.dsurround.commands;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.config.BiomeLibrary;
-import org.orecruncher.dsurround.config.BlockLibrary;
-import org.orecruncher.dsurround.config.DimensionLibrary;
-import org.orecruncher.dsurround.config.ItemLibrary;
+import org.orecruncher.dsurround.config.libraries.*;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 import java.io.PrintStream;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
 @Environment(EnvType.CLIENT)
@@ -44,35 +40,43 @@ class DumpCommand {
     }
 
     private static int dumpBiomes(FabricClientCommandSource src) {
-        return handle(src, "dump.biomes", BiomeLibrary::dumpBiomes);
+        var library = ContainerManager.resolve(IBiomeLibrary.class);
+        return handle(src, "dump.biomes", library::dump);
     }
 
     private static int dumpSounds(FabricClientCommandSource src) {
-        return handle(src, "dump.sounds", DumpCommand::tbd);
+        var library = ContainerManager.resolve(ISoundLibrary.class);
+        return handle(src, "dump.sounds", library::dump);
     }
 
     private static int dumpDimensions(FabricClientCommandSource src) {
-        return handle(src, "dump.dimensions", DimensionLibrary::dump);
+        var library = ContainerManager.resolve(IDimensionLibrary.class);
+        return handle(src, "dump.dimensions", library::dump);
     }
 
     private static int dumpBlockConfigRules(FabricClientCommandSource src) {
-        return handle(src, "dump.blockconfigrules", BlockLibrary::dumpBlockConfigRules);
+        var library = ContainerManager.resolve(IBlockLibrary.class);
+        return handle(src, "dump.blockconfigrules", library::dumpBlockConfigRules);
     }
 
     private static int dumpBlockState(FabricClientCommandSource src) {
-        return handle(src, "dump.blockstates", BlockLibrary::dumpBlockStates);
+        var library = ContainerManager.resolve(IBlockLibrary.class);
+        return handle(src, "dump.blockstates", library::dumpBlockStates);
     }
 
     private static int dumpBlocks(FabricClientCommandSource src, boolean noStates) {
-        return handle(src, "dump.blocks", () -> BlockLibrary.dumpBlocks(noStates));
+        var library = ContainerManager.resolve(IBlockLibrary.class);
+        return handle(src, "dump.blocks", () -> library.dumpBlocks(noStates));
     }
 
     private static int dumpBlocksByTag(FabricClientCommandSource src) {
-        return handle(src, "dump.blocksbytag", BlockLibrary::dumpBlocksByTag);
+        var library = ContainerManager.resolve(IBlockLibrary.class);
+        return handle(src, "dump.blocksbytag", library::dump);
     }
 
     private static int dumpItems(FabricClientCommandSource src) {
-        return handle(src, "dump.items", ItemLibrary::dumpItems);
+        var library = ContainerManager.resolve(IItemLibrary.class);
+        return handle(src, "dump.items", library::dump);
     }
 
     private static int handle(final FabricClientCommandSource source, final String cmdString, final Supplier<Stream<String>> supplier) {

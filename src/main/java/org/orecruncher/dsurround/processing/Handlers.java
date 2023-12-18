@@ -2,102 +2,106 @@ package org.orecruncher.dsurround.processing;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.Singleton;
 import org.orecruncher.dsurround.lib.TickCounter;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.events.HandlerPriority;
+import org.orecruncher.dsurround.lib.infra.events.ClientState;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
-import org.orecruncher.dsurround.lib.math.TimerEMA;
-import org.orecruncher.dsurround.lib.threading.ClientTasking;
 import org.orecruncher.dsurround.lib.threading.IClientTasking;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
+import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
+import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
+import org.orecruncher.dsurround.processing.scanner.VillageScanner;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
-
-import java.util.Collection;
 
 @Environment(EnvType.CLIENT)
 public class Handlers {
 
-    private static final IModLog LOGGER = Client.LOGGER.createChild(Handlers.class);
-    private static final Singleton<Handlers> INSTANCE = new Singleton<>(Handlers::new);
-    private static final Singleton<IClientTasking> TASKING = new Singleton<>(ClientTasking::new);
-
+    private final Configuration config;
+    private final IModLog logger;
+    private final IClientTasking tasking;
     private final ObjectArray<ClientHandler> effectHandlers = new ObjectArray<>();
     private final LoggingTimerEMA handlerTimer = new LoggingTimerEMA("Handlers");
     private boolean isConnected = false;
     private boolean startupSoundPlayed = false;
 
-    private Handlers() {
+    public Handlers(Configuration config, IModLog logger, IClientTasking tasking) {
+        this.config = config;
+        this.logger = logger;
+        this.tasking = tasking;
         init();
-    }
-
-    public static void initialize() {
-        INSTANCE.get();
     }
 
     protected static PlayerEntity getPlayer() {
         return GameUtils.getPlayer();
     }
 
-    private void register(final ClientHandler handler) {
+    private void register(final Class<? extends ClientHandler> clazz) {
+        var handler = ContainerManager.resolve(clazz);
         this.effectHandlers.add(handler);
-        LOGGER.debug("Registered handler [%s]", handler.getClass().getName());
+        this.logger.debug("Registered handler [%s]", handler.getClass().getName());
     }
 
     private void init() {
         // If the user disabled the startup sound just flag it as having
         // been performed.
-        this.startupSoundPlayed = !Client.Config.otherOptions.playRandomSoundOnStartup;
+        this.startupSoundPlayed = !config.otherOptions.playRandomSoundOnStartup;
 
-        register(new Scanners());           // Must be first
-        register(new PlayerHandler());
-        register(new EntityEffectHandler());
-        register(new BiomeSoundHandler());
-        register(new AreaBlockEffects());
+        // Register so that Scanners can be instantiated
+        var container = ContainerManager.getDefaultContainer();
+        container.registerSingleton(CeilingScanner.class);
+        container.registerSingleton(VillageScanner.class);
+        container.registerSingleton(BiomeScanner.class);
 
-        ClientTickEvents.END_CLIENT_TICK.register(this::onTick);
-        ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::gatherDiagnostics);
-        ClientPlayConnectionEvents.JOIN.register(this::onConnect);
-        ClientPlayConnectionEvents.DISCONNECT.register(this::onDisconnect);
+        register(Scanners.class);           // Must be first
+        register(PlayerHandler.class);
+        register(EntityEffectHandler.class);
+        register(BiomeSoundHandler.class);
+        register(AreaBlockEffects.class);
+
+        ClientState.TICK_END.register(this::onTick);
+        ClientState.ON_CONNECT.register(this::onConnect);
+        ClientState.ON_DISCONNECT.register(this::onDisconnect);
+
+        ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::gatherDiagnostics, HandlerPriority.HIGH);
     }
 
-    private void onConnect(ClientPlayNetworkHandler handler, PacketSender sender, MinecraftClient client) {
+    private void onConnect(MinecraftClient client) {
         try {
-            TASKING.get().execute(() -> {
-                LOGGER.info("Client connecting...");
+            this.tasking.execute(() -> {
+                this.logger.info("Client connecting...");
                 if (this.isConnected) {
-                    LOGGER.warn("Attempt to initialize EffectManager when it is already initialized");
-                    onDisconnect(null, null);
+                    this.logger.warn("Attempt to initialize EffectManager when it is already initialized");
+                    onDisconnect(client);
                 }
                 for (final ClientHandler h : this.effectHandlers)
                     h.connect0();
                 this.isConnected = true;
             });
         } catch (Exception ex) {
-            LOGGER.error(ex, "Unable to perform client connect");
+            this.logger.error(ex, "Unable to perform client connect");
         }
     }
 
-    private void onDisconnect(ClientPlayNetworkHandler handler, MinecraftClient client) {
+    private void onDisconnect(MinecraftClient client) {
         try {
-            TASKING.get().execute(() -> {
-                LOGGER.info("Client disconnecting...");
+            this.tasking.execute(() -> {
+                this.logger.info("Client disconnecting...");
                 this.isConnected = false;
                 for (final ClientHandler h : this.effectHandlers)
                     h.disconnect0();
             });
         } catch (Exception ex) {
-            LOGGER.error(ex, "Unable to perform client disconnect");
+            this.logger.error(ex, "Unable to perform client disconnect");
         }
     }
 
@@ -141,22 +145,22 @@ public class Handlers {
         this.startupSoundPlayed = true;
 
         Client.SoundConfig
-                .getRandomStartupSound()
-                .ifPresent(id -> {
-                    var sound = SoundFactoryBuilder
-                            .create(id)
-                            .build()
-                            .createAsAdditional();
-                    client.getSoundManager().play(sound);
-                });
+            .getRandomStartupSound()
+            .ifPresent(id -> {
+                var sound = SoundFactoryBuilder
+                        .create(id)
+                        .build()
+                        .createAsAdditional();
+                client.getSoundManager().play(sound);
+            });
     }
 
-    public void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
-        timers.add(this.handlerTimer);
+    public void gatherDiagnostics(ClientEventHooks.CollectDiagnosticsEvent event) {
+        event.timers.add(this.handlerTimer);
 
         this.effectHandlers.forEach(h -> {
-            h.gatherDiagnostics(left, right, timers);
-            timers.add(h.getTimer());
+            h.gatherDiagnostics(event.left, event.right, event.timers);
+            event.timers.add(h.getTimer());
         });
     }
 }

@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.runtime.sets;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.world.biome.Biome;
-import org.orecruncher.dsurround.config.BiomeLibrary;
+import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
@@ -12,16 +12,20 @@ import org.orecruncher.dsurround.lib.scripting.VariableSet;
 @Environment(EnvType.CLIENT)
 public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBiomeVariables {
 
-    private Biome biome;
-    private BiomeInfo info;
+    private final IBiomeLibrary biomeLibrary;
+
     private final Lazy<String> precipitationType = new Lazy<>(() -> {
         var pos = GameUtils.getPlayer().getBlockPos();
         return this.biome.getPrecipitation(pos).asString();
     });
     private final Lazy<String> id = new Lazy<>(() -> this.info.getBiomeId().toString());
 
-    public BiomeVariables() {
+    private Biome biome;
+    private BiomeInfo info;
+
+    public BiomeVariables(IBiomeLibrary biomeLibrary) {
         super("biome");
+        this.biomeLibrary = biomeLibrary;
     }
 
     @Override
@@ -41,7 +45,7 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
     public void setBiome(final Biome biome) {
         if (this.biome != biome) {
             this.biome = biome;
-            this.info = BiomeLibrary.getBiomeInfo(this.biome);
+            this.info = this.biomeLibrary.getBiomeInfo(this.biome);
             this.id.reset();
             this.precipitationType.reset();
         }
