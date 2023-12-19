@@ -17,20 +17,14 @@ public class VersionInformation {
 
     public static Codec<VersionInformation> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
-                    Codec.STRING.fieldOf("downloadLocation").forGetter(info -> info.downloadLocation),
-                    Codec.STRING.optionalFieldOf("downloadLocationModrinth", "").forGetter(info -> info.downloadLocationModrinth),
-                    MAJOR_VERSION_RELEASES.fieldOf("releases").forGetter(info -> info.releases),
-                    RECOMMENDATION.fieldOf("recommend").forGetter(info -> info.recommended)
+                MAJOR_VERSION_RELEASES.fieldOf("releases").forGetter(info -> info.releases),
+                RECOMMENDATION.fieldOf("recommend").forGetter(info -> info.recommended)
             ).apply(instance, VersionInformation::new));
 
-    public final String downloadLocation;
-    public final String downloadLocationModrinth;
     public final Map<Version, Map<Version, String>> releases;
     public final Map<Version, Version> recommended;
 
-    VersionInformation(String downloadLocation, String downloadLocationModrinth, Map<Version, Map<Version, String>> releases, Map<Version, Version> recommended) {
-        this.downloadLocation = downloadLocation;
-        this.downloadLocationModrinth = downloadLocationModrinth;
+    VersionInformation(Map<Version, Map<Version, String>> releases, Map<Version, Version> recommended) {
         this.releases = releases;
         this.recommended = recommended;
     }
@@ -47,7 +41,7 @@ public class VersionInformation {
         if (recommendation == null)
             return Optional.empty();
 
-        if (modVersion.compareTo(recommendation) >= 0) {
+        if (modVersion.compareTo(recommendation) < 0) {
             String notes = null;
             var releases = this.releases.get(minecraftVersion);
             if (releases != null) {
@@ -59,5 +53,4 @@ public class VersionInformation {
         }
         return Optional.empty();
     }
-
 }
