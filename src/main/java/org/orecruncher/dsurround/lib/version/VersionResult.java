@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.lib.version;
 import net.fabricmc.loader.api.Version;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.text.Text;
-import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.lib.Localization;
 
 public class VersionResult {
@@ -20,9 +19,8 @@ public class VersionResult {
     }
 
     public Text getChatText() {
-        var key = StringUtils.isEmpty(this.downloadLocationModrinth) ? "dsurround.text.NewVersion" : "dsurround.text.NewVersion.cfNmr";
         var formattedText = I18n.translate(
-                key,
+                "dsurround.text.NewVersion",
                 this.displayName,
                 this.version.getFriendlyString(),
                 Localization.load("dsurround.text.NewVersion.curseforge"),

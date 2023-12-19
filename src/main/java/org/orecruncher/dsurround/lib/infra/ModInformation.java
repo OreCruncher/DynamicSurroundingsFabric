@@ -12,9 +12,17 @@ import java.net.URL;
 public final class ModInformation {
 
     private final ModMetadata _metadata;
+    private final String updateURL;
+    private final String curseForgeLink;
+    private final String modrinthLink;
 
-    ModInformation(ModMetadata data) {
-        this._metadata = data;
+    ModInformation(ModMetadata metadata) {
+        this._metadata = metadata;
+
+        var data = this._metadata.getCustomValue("dsurround").getAsObject();
+        this.updateURL = data.get("updateURL").getAsString();
+        this.curseForgeLink = data.get("curseForgeLink").getAsString();
+        this.modrinthLink = data.get("modrinthLink").getAsString();
     }
 
     @Nullable
@@ -35,9 +43,17 @@ public final class ModInformation {
         return this._metadata.getVersion();
     }
 
+    public String get_curseForgeLink() {
+        return this.curseForgeLink;
+    }
+
+    public String get_modrinthLink() {
+        return this.modrinthLink;
+    }
+
     public URL get_updateUrl() {
         try {
-            return new URL(this._metadata.getCustomValue("updateURL").getAsString());
+            return new URL(this.updateURL);
         } catch (MalformedURLException ignored) {
         }
         return null;

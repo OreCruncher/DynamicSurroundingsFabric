@@ -3,11 +3,9 @@ package org.orecruncher.dsurround.lib.version;
 import org.orecruncher.dsurround.lib.CodecExtensions;
 
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import net.fabricmc.loader.api.Version;
 import org.orecruncher.dsurround.lib.FrameworkUtils;
 import org.orecruncher.dsurround.lib.infra.ModInformation;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -15,15 +13,11 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 public class VersionChecker implements IVersionChecker {
 
     private final IModLog logger;
-    private final String displayName;
-    private final Version modVersion;
-    private final URL updateURL;
+    private final ModInformation modInfo;
 
     public VersionChecker(ModInformation modInformation, IModLog logger) {
         this.logger = logger;
-        this.displayName = modInformation.get_displayName();
-        this.modVersion = modInformation.get_version();
-        this.updateURL = modInformation.get_updateUrl();
+        this.modInfo = modInformation;
     }
 
     @Override
@@ -36,21 +30,24 @@ public class VersionChecker implements IVersionChecker {
     }
 
     private Optional<String> getVersionData() {
-        try (InputStream in = this.updateURL.openStream()) {
-            byte[] bytes = in.readAllBytes();
-            return Optional.of(new String(bytes, StandardCharsets.UTF_8));
-        } catch (Throwable t) {
-            this.logger.error(t, "Unable to fetch version information from %s", this.updateURL);
+        var url = this.modInfo.get_updateUrl();
+        if (url != null) {
+            try (InputStream in = this.modInfo.get_updateUrl().openStream()) {
+                byte[] bytes = in.readAllBytes();
+                return Optional.of(new String(bytes, StandardCharsets.UTF_8));
+            } catch (Throwable t) {
+                this.logger.error(t, "Unable to fetch version information from %s", this.modInfo.get_updateUrl());
+            }
         }
         return Optional.empty();
     }
 
     private Optional<VersionResult> getUpdateText(VersionInformation info) {
-        var result = info.getNewestVersion(FrameworkUtils.getMinecraftVersion(), this.modVersion);
+        var result = info.getNewestVersion(FrameworkUtils.getMinecraftVersion(), this.modInfo.get_version());
         if (result.isEmpty())
             return Optional.empty();
 
         var version = result.get().getFirst();
-        return Optional.of(new VersionResult(version, this.displayName, info.downloadLocation, info.downloadLocationModrinth));
+        return Optional.of(new VersionResult(version, this.modInfo.get_displayName(), this.modInfo.get_curseForgeLink(), this.modInfo.get_modrinthLink()));
     }
 }
