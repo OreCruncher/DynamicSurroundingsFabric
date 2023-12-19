@@ -9,7 +9,6 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.state.State;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.block.BlockInfo;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
@@ -19,6 +18,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
+import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 import org.orecruncher.dsurround.tags.TagHelpers;
 import org.orecruncher.dsurround.xface.IBlockStateExtended;
 
@@ -42,19 +42,21 @@ public class BlockLibrary implements IBlockLibrary {
     };
 
     private final IModLog logger;
+    private final IMinecraftDirectories directories;
 
     private final Collection<BlockConfigRule> blockConfigs = new ObjectArray<>();
     private int version = 0;
 
-    public BlockLibrary(IModLog logger) {
+    public BlockLibrary(IModLog logger, IMinecraftDirectories directories) {
         this.logger = logger;
+        this.directories = directories;
     }
 
     @Override
     public void reload(AssetLibraryEvent.ReloadEvent event) {
 
         this.blockConfigs.clear();
-        final Collection<IResourceAccessor> accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), FILE_NAME);
+        final Collection<IResourceAccessor> accessors = ResourceUtils.findConfigs(this.directories.getModDataDirectory().toFile(), FILE_NAME);
 
         IResourceAccessor.process(accessors, accessor -> {
             var cfg = accessor.as(CODEC);

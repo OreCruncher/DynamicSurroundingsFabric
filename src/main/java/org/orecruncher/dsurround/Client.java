@@ -28,8 +28,6 @@ import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -39,21 +37,9 @@ public class Client implements IMinecraftMod, ClientModInitializer {
     public static final String ModId = "dsurround";
     public static final ModLog LOGGER = new ModLog(ModId);
     /**
-     * Path to the mod's configuration directory
-     */
-    public static final Path CONFIG_PATH = FrameworkUtils.getConfigPath(ModId);
-    /**
-     * Path to the external config data cache for user customization
-     */
-    public static final Path DATA_PATH = Path.of(CONFIG_PATH.toString(), "configs");
-    /**
-     * Path to the external folder for dumping data
-     */
-    public static final Path DUMP_PATH = Path.of(CONFIG_PATH.toString(), "dumps");
-    /**
      * Basic configuration settings
      */
-    public static final Configuration Config = Configuration.getConfig();
+    public static Configuration Config;
 
     private ModInformation modInfo;
     private CompletableFuture<Optional<VersionChecker.VersionResult>> versionInfo;
@@ -67,18 +53,24 @@ public class Client implements IMinecraftMod, ClientModInitializer {
     public void onInitializeClient() {
         LOGGER.info("Initializing...");
 
+        // Hook the config load event so set we can set the debug flags on logging
+        Configuration.CONFIG_CHANGED.register(event -> {
+            if (event.config() instanceof Configuration config){
+                LOGGER.setDebug(config.logging.enableDebugLogging);
+                LOGGER.setTraceMask(config.logging.traceMask);
+            }
+        });
+
         // Bootstrap library functions
         Library.initialize(this, LOGGER);
+
+        Config = Configuration.getConfig();
 
         var container = ContainerManager.getDefaultContainer();
         this.modInfo = container.resolve(ModInformation.class);
 
         // Kick off version checking.  This should run in parallel with initialization.
         this.versionInfo = CompletableFuture.supplyAsync(this::getVersionText);
-
-        createPath(CONFIG_PATH);
-        createPath(DATA_PATH);
-        createPath(DUMP_PATH);
 
         ClientState.STARTED.register(this::onComplete, HandlerPriority.VERY_HIGH);
         ClientState.ON_CONNECT.register(this::onConnect, HandlerPriority.LOW);
@@ -106,14 +98,6 @@ public class Client implements IMinecraftMod, ClientModInitializer {
         KeyBindings.register();
 
         LOGGER.info("Initialization complete");
-    }
-
-    private static void createPath(final Path path) {
-        try {
-            Files.createDirectories(path);
-        } catch (final Throwable t) {
-            LOGGER.error(t, "Unable to create data path %s", path.toString());
-        }
     }
 
     public void onComplete(MinecraftClient client) {

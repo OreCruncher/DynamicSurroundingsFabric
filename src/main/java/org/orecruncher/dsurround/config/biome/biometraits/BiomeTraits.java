@@ -65,6 +65,6 @@ public final class BiomeTraits {
                 .map(BiomeTrait::getName)
                 .collect(Collectors.joining(","));
 
-        return String.format("Traits [%s]", temp);
+        return String.format("[%s]", temp);
     }
 }

@@ -6,7 +6,6 @@ import net.fabricmc.api.Environment;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.world.World;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.data.DimensionConfig;
 import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
@@ -15,6 +14,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
+import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -26,19 +26,21 @@ public final class DimensionLibrary implements IDimensionLibrary {
     private static final Codec<List<DimensionConfig>> CODEC = Codec.list(DimensionConfig.CODEC);
 
     private final IModLog logger;
+    private final IMinecraftDirectories directories;
     private final ObjectArray<DimensionConfig> cache = new ObjectArray<>();
     private final Map<RegistryKey<World>, DimensionInfo> configs = new HashMap<>();
     private int version = 0;
 
-    public DimensionLibrary(IModLog logger) {
+    public DimensionLibrary(IModLog logger, IMinecraftDirectories directories) {
         this.logger = logger;
+        this.directories = directories;
     }
 
     @Override
     public void reload(AssetLibraryEvent.ReloadEvent event) {
         this.configs.clear();
         this.cache.clear();
-        final Collection<IResourceAccessor> accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), FILE_NAME);
+        final Collection<IResourceAccessor> accessors = ResourceUtils.findConfigs(this.directories.getModDataDirectory().toFile(), FILE_NAME);
 
         IResourceAccessor.process(accessors, accessor -> {
             var cfg = accessor.as(CODEC);

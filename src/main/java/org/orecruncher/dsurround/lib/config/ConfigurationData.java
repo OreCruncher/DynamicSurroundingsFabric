@@ -4,7 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import org.jetbrains.annotations.NotNull;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.events.EventingFactory;
+import org.orecruncher.dsurround.lib.events.IEvent;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -55,7 +57,7 @@ public abstract class ConfigurationData {
                     }
                 }
             } catch (Throwable t) {
-                Client.LOGGER.error(t, "Unable to handle configuration");
+                Library.getLogger().error(t, "Unable to handle configuration");
             }
 
             // Post load processing
@@ -69,7 +71,7 @@ public abstract class ConfigurationData {
 
             return (T) config;
         } catch (Throwable t) {
-            Client.LOGGER.error(t, "Unable to handle configuration");
+            Library.getLogger().error(t, "Unable to handle configuration");
         }
 
         return null;
@@ -93,7 +95,9 @@ public abstract class ConfigurationData {
                 GSON.toJson(this, writer);
             }
         } catch (Throwable t) {
-            Client.LOGGER.error(t, "Unable to save configurationL %s", t.getMessage());
+            Library.getLogger().error(t, "Unable to save configuration %s", t.getMessage());
+        } finally {
+            CONFIG_CHANGED.raise(new ConfigChangedEvent(this));
         }
     }
 
@@ -101,7 +105,6 @@ public abstract class ConfigurationData {
      * Hook to provide processing after the configuration is loaded from disk
      */
     public void postLoad() {
-
     }
 
     /**
@@ -191,4 +194,9 @@ public abstract class ConfigurationData {
     public @interface EnumType {
         Class<? extends Enum<?>> value();
     }
+
+    public static final IEvent<ConfigChangedEvent> CONFIG_CHANGED = EventingFactory.createEvent();
+
+    public record ConfigChangedEvent(ConfigurationData config){
+    };
 }

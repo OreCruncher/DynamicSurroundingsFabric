@@ -4,12 +4,17 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 
 @Environment(EnvType.CLIENT)
 public class Configuration extends ConfigurationData {
 
+    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+
     public Configuration() {
-        super("dsurround.config", Client.CONFIG_PATH.resolve(Client.ModId + ".json"));
+        super("dsurround.config", ContainerManager.resolve(IMinecraftDirectories.class).getModConfigDirectory().resolve(Client.ModId + ".json"));
     }
 
     @Property
@@ -48,15 +53,9 @@ public class Configuration extends ConfigurationData {
         try {
             return ConfigurationData.getConfig(Configuration.class);
         } catch(Throwable t) {
-            Client.LOGGER.error(t, "Unable to get config");
+            LOGGER.error(t, "Unable to get config");
         }
         return null;
-    }
-
-    @Override
-    public void postLoad() {
-        Client.LOGGER.setDebug(this.logging.enableDebugLogging);
-        Client.LOGGER.setTraceMask(this.logging.traceMask);
     }
 
     public static class Flags {

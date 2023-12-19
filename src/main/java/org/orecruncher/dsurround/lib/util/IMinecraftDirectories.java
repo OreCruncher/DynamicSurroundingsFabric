@@ -8,4 +8,10 @@ public interface IMinecraftDirectories {
     Path getConfigDirectory();
 
     Path getCrashReportDirectory();
+
+    Path getModConfigDirectory();
+
+    Path getModDataDirectory();
+
+    Path getModDumpDirectory();
 }

@@ -65,18 +65,6 @@ public final class Library {
         return _logger;
     }
 
-    public static IMinecraftMod getMinecraftMod() {
-        return ContainerManager.resolve(IMinecraftMod.class);
-    }
-
-    public static IMinecraftDirectories getMinecraftDirectories() {
-        return ContainerManager.resolve(IMinecraftDirectories.class);
-    }
-
-    public static IClientTasking getClientTasking() {
-        return ContainerManager.resolve(IClientTasking.class);
-    }
-
     private static void onClientStarting(MinecraftClient client) {
         _logger.info("Client starting");
         _client = client;

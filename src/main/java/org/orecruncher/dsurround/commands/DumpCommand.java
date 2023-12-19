@@ -6,9 +6,10 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 
 import java.io.PrintStream;
 import java.util.List;
@@ -19,6 +20,9 @@ import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.lit
 
 @Environment(EnvType.CLIENT)
 class DumpCommand {
+
+    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+    private static final IMinecraftDirectories directories = ContainerManager.resolve(IMinecraftDirectories.class);
 
     public static void register(@Nullable CommandDispatcher<FabricClientCommandSource> dispatcher) {
         if (dispatcher == null) {
@@ -83,7 +87,7 @@ class DumpCommand {
 
         final String operation = cmdString.substring(5);
         final String fileName = operation + ".txt";
-        var target = Client.DUMP_PATH.resolve(fileName).toFile();
+        var target = directories.getModDumpDirectory().resolve(fileName).toFile();
 
         try {
             try (PrintStream out = new PrintStream(target)) {
@@ -91,7 +95,7 @@ class DumpCommand {
                 stream.forEach(out::println);
                 out.flush();
             } catch (final Throwable t) {
-                Client.LOGGER.error(t, "Error writing dump file '%s'", target.toString());
+                LOGGER.error(t, "Error writing dump file '%s'", target.toString());
             }
             Commands.sendSuccess(source, "dump", operation, target.toString());
         } catch (final Throwable t) {

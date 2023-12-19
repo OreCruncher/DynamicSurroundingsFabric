@@ -10,7 +10,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeKeys;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.InternalBiomes;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
@@ -23,6 +22,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
+import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
 import org.orecruncher.dsurround.xface.IBiomeExtended;
 
@@ -38,6 +38,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
     private static final Codec<List<BiomeConfigRule>> CODEC = Codec.list(BiomeConfigRule.CODEC);
 
     private final IModLog logger;
+    private final IMinecraftDirectories directories;
 
     private final Map<InternalBiomes, BiomeInfo> internalBiomes = new EnumMap<>(InternalBiomes.class);
 
@@ -49,8 +50,9 @@ public final class BiomeLibrary implements IBiomeLibrary {
     // configs changed and cached biome info needs a refresh.
     private int version = 0;
 
-    public BiomeLibrary(IModLog logger) {
+    public BiomeLibrary(IModLog logger, IMinecraftDirectories directories) {
         this.logger = logger;
+        this.directories = directories;
     }
 
     @Override
@@ -59,7 +61,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
         this.internalBiomes.clear();
         this.biomeConfigs.clear();
 
-        var accessors = ResourceUtils.findConfigs(Client.DATA_PATH.toFile(), FILE_NAME);
+        var accessors = ResourceUtils.findConfigs(this.directories.getModDataDirectory().toFile(), FILE_NAME);
 
         IResourceAccessor.process(accessors, accessor -> {
             var cfg = accessor.as(CODEC);

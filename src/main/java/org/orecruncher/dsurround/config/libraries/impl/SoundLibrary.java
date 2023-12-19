@@ -21,6 +21,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
+import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 import org.orecruncher.dsurround.sound.SoundMetadata;
 
 import java.nio.file.Files;
@@ -38,7 +39,6 @@ import static java.nio.file.StandardOpenOption.*;
 public final class SoundLibrary implements ISoundLibrary {
 
     private static final String FILE_NAME = "sounds.json";
-    private static final Path SOUND_CONFIG_PATH = Client.CONFIG_PATH.resolve("soundconfig.json");
     private static final UnboundedMapCodec<String, SoundMetadataConfig> CODEC = Codec.unboundedMap(Codec.STRING, SoundMetadataConfig.CODEC);
     private static final Codec<List<IndividualSoundConfigEntry>> SOUND_CONFIG_CODEC = Codec.list(IndividualSoundConfigEntry.CODEC);
 
@@ -46,16 +46,19 @@ public final class SoundLibrary implements ISoundLibrary {
     private static final SoundEvent MISSING = SoundEvent.of(MISSING_RESOURCE);
 
     private final IModLog logger;
+    private final Path soundConfigPath;
+
     private final Object2ObjectOpenHashMap<Identifier, SoundEvent> myRegistry = new Object2ObjectOpenHashMap<>();
     private final Object2ObjectOpenHashMap<Identifier, SoundMetadata> soundMetadata = new Object2ObjectOpenHashMap<>();
     private final Map<Identifier, IndividualSoundConfigEntry> individualSoundConfiguration = new HashMap<>();
     private final List<Identifier> startupSounds = new ArrayList<>();
     private List<IndividualSoundConfigEntry> soundConfiguration = new ArrayList<>();
 
-    public SoundLibrary(IModLog logger) {
+    public SoundLibrary(IModLog logger, IMinecraftDirectories directories) {
         this.logger = logger;
         this.myRegistry.defaultReturnValue(SoundLibrary.MISSING);
         this.soundMetadata.defaultReturnValue(new SoundMetadata());
+        this.soundConfigPath = directories.getModConfigDirectory().resolve("soundconfig.json");
 
         this.loadSoundConfiguration();
     }
@@ -205,12 +208,12 @@ public final class SoundLibrary implements ISoundLibrary {
         // Check to see if it exists on disk, and if so, load it up.  Otherwise, save it so the defaults are
         // persisted and the user can edit manually.
         try {
-            if (Files.exists(SOUND_CONFIG_PATH)) {
-                var content = Files.readString(SOUND_CONFIG_PATH);
+            if (Files.exists(this.soundConfigPath)) {
+                var content = Files.readString(this.soundConfigPath);
                 var result = CodecExtensions.deserialize(content, SOUND_CONFIG_CODEC);
                 result.ifPresentOrElse(
                         cfgList -> this.soundConfiguration.addAll(cfgList),
-                        () -> this.logger.warn("Unable to obtain content of %s!", SOUND_CONFIG_PATH)
+                        () -> this.logger.warn("Unable to obtain content of %s!", this.soundConfigPath)
                 );
             }
         } catch (Throwable t) {
@@ -254,10 +257,10 @@ public final class SoundLibrary implements ISoundLibrary {
                         .setPrettyPrinting()
                         .create();
                 var output = gson.toJson(content);
-                Files.writeString(SOUND_CONFIG_PATH, output, CREATE, WRITE, TRUNCATE_EXISTING);
+                Files.writeString(this.soundConfigPath, output, CREATE, WRITE, TRUNCATE_EXISTING);
             }
         } catch (Throwable t) {
-            this.logger.error(t, "Unable to save sound configuration %s!", SOUND_CONFIG_PATH);
+            this.logger.error(t, "Unable to save sound configuration %s!", this.soundConfigPath);
         }
     }
 }

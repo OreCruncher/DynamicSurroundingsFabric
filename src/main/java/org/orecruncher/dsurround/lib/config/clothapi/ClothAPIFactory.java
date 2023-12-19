@@ -12,7 +12,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigElement;
 import org.orecruncher.dsurround.lib.config.ConfigOptions;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
@@ -63,7 +63,7 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
                     try {
                         this.configData.save();
                     } catch (Throwable t) {
-                        Client.LOGGER.error(t, "Unable to save configuration");
+                        Library.getLogger().error(t, "Unable to save configuration");
                     }
                 });
 
