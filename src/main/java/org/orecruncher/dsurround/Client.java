@@ -11,7 +11,6 @@ import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
 import org.orecruncher.dsurround.effects.particles.ParticleSheets;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
-import org.orecruncher.dsurround.lib.FrameworkUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.infra.ModInformation;
@@ -21,13 +20,14 @@ import org.orecruncher.dsurround.lib.infra.IMinecraftMod;
 import org.orecruncher.dsurround.lib.infra.events.ClientState;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.scanner.Scanner;
+import org.orecruncher.dsurround.lib.version.IVersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
+import org.orecruncher.dsurround.lib.version.VersionResult;
 import org.orecruncher.dsurround.processing.Handlers;
 import org.orecruncher.dsurround.runtime.diagnostics.*;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 
-import java.net.URL;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -42,7 +42,7 @@ public class Client implements IMinecraftMod, ClientModInitializer {
     public static Configuration Config;
 
     private ModInformation modInfo;
-    private CompletableFuture<Optional<VersionChecker.VersionResult>> versionInfo;
+    private CompletableFuture<Optional<VersionResult>> versionInfo;
 
     @Override
     public String get_modId() {
@@ -55,7 +55,7 @@ public class Client implements IMinecraftMod, ClientModInitializer {
 
         // Hook the config load event so set we can set the debug flags on logging
         Configuration.CONFIG_CHANGED.register(event -> {
-            if (event.config() instanceof Configuration config){
+            if (event.config() instanceof Configuration config) {
                 LOGGER.setDebug(config.logging.enableDebugLogging);
                 LOGGER.setTraceMask(config.logging.traceMask);
             }
@@ -69,9 +69,6 @@ public class Client implements IMinecraftMod, ClientModInitializer {
         var container = ContainerManager.getDefaultContainer();
         this.modInfo = container.resolve(ModInformation.class);
 
-        // Kick off version checking.  This should run in parallel with initialization.
-        this.versionInfo = CompletableFuture.supplyAsync(this::getVersionText);
-
         ClientState.STARTED.register(this::onComplete, HandlerPriority.VERY_HIGH);
         ClientState.ON_CONNECT.register(this::onConnect, HandlerPriority.LOW);
         ClientState.TAG_SYNC.register(event -> {
@@ -83,17 +80,24 @@ public class Client implements IMinecraftMod, ClientModInitializer {
 
         // Register services
         container
-            .registerSingleton(Config)
-            .registerSingleton(Handlers.class)
-            .registerSingleton(Scanner.class)
-            .registerSingleton(Diagnostics.class)
-            .registerSingleton(ISoundLibrary.class, SoundLibrary.class)
-            .registerSingleton(IBiomeLibrary.class, BiomeLibrary.class)
-            .registerSingleton(IDimensionLibrary.class, DimensionLibrary.class)
-            .registerSingleton(IBlockLibrary.class, BlockLibrary.class)
-            .registerSingleton(IItemLibrary.class, ItemLibrary.class)
-            .registerSingleton(IEntityEffectLibrary.class, EntityEffectLibrary.class)
-            .registerSingleton(IAudioPlayer.class, MinecraftAudioPlayer.class);
+                .registerSingleton(Config)
+                .registerSingleton(Handlers.class)
+                .registerSingleton(Scanner.class)
+                .registerSingleton(Diagnostics.class)
+                .registerSingleton(IVersionChecker.class, VersionChecker.class)
+                .registerSingleton(ISoundLibrary.class, SoundLibrary.class)
+                .registerSingleton(IBiomeLibrary.class, BiomeLibrary.class)
+                .registerSingleton(IDimensionLibrary.class, DimensionLibrary.class)
+                .registerSingleton(IBlockLibrary.class, BlockLibrary.class)
+                .registerSingleton(IItemLibrary.class, ItemLibrary.class)
+                .registerSingleton(IEntityEffectLibrary.class, EntityEffectLibrary.class)
+                .registerSingleton(IAudioPlayer.class, MinecraftAudioPlayer.class);
+
+        // Kick off version checking if configured.  This should run in parallel with initialization.
+        if (Config.logging.enableModUpdateChatMessage)
+            this.versionInfo = CompletableFuture.supplyAsync(ContainerManager.resolve(IVersionChecker.class)::getUpdateText);
+        else
+            this.versionInfo = CompletableFuture.completedFuture(Optional.empty());
 
         KeyBindings.register();
 
@@ -122,50 +126,26 @@ public class Client implements IMinecraftMod, ClientModInitializer {
         // of the dependencies to be initialized.
         var handlers = container.resolve(Handlers.class);
 
-        // Make sure our particle sheets get registered so they can render
+        // Make sure our particle sheets get registered otherwise they will not render.
+        // These sheets are purely client side - they have to be manhandled into the
+        // Minecraft environment.
         ParticleSheets.register();
-    }
-
-    private Optional<VersionChecker.VersionResult> getVersionText() {
-
-        if (this.modInfo == null)
-            return Optional.empty();
-
-        var displayName = this.modInfo.get_displayName();
-        var modVersion = this.modInfo.get_version();
-        var minecraftVersion = FrameworkUtils.getMinecraftVersion();
-
-        URL updateURL = null;
-
-        try {
-            updateURL = this.modInfo.get_updateUrl();
-        } catch (Throwable t) {
-            LOGGER.warn("Unable to parse update URL");
-        }
-
-        if (updateURL == null)
-            return Optional.empty();
-
-        return VersionChecker.getUpdateText(displayName, minecraftVersion, modVersion, updateURL);
     }
 
     private void onConnect(MinecraftClient minecraftClient) {
         // Display version information when joining a game and when a chat window is available.
         try {
-            if (this.versionInfo != null) {
-                var versionQueryResult = this.versionInfo.get();
-                if (versionQueryResult.isPresent()) {
-                    var result = versionQueryResult.get();
+            var versionQueryResult = this.versionInfo.get();
+            if (versionQueryResult.isPresent()) {
+                var result = versionQueryResult.get();
 
-                    LOGGER.info("Update to %s v%s is available", result.displayName, result.version);
-
-                    if (Config.logging.enableModUpdateChatMessage) {
-                        var player = GameUtils.getPlayer();
-                        player.sendMessage(versionQueryResult.get().getChatText(), false);
-                    }
-                }
+                LOGGER.info("Update to %s version %s is available", result.displayName, result.version);
+                var player = GameUtils.getPlayer();
+                player.sendMessage(result.getChatText(), false);
+            } else if(Config.logging.enableModUpdateChatMessage) {
+                LOGGER.info("The mod version is current");
             }
-        } catch(Throwable t) {
+        } catch (Throwable t) {
             LOGGER.error(t, "Unable to process version information");
         }
     }

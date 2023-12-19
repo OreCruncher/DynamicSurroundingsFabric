@@ -1,6 +1,9 @@
 {
   "dsurround.modname": "\u00a76Dynamic Surroundings",
-  "dsurround.text.NewVersion": "[\"\u00a76Update Available: \u00a79[\",{\"text\":\"\u00a72%1$s \u00a7ev%2$s\u00a7f\",\"color\":\"gold\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":{\"text\":\"Click for Download Page\",\"color\":\"aqua\"}},\"clickEvent\":{\"action\":\"open_url\",\"value\":\"%3$s\"}},\"\u00a79]\"]",
+  "dsurround.text.NewVersion": "[\"\u00a72Update %1$s v%2$s \u00a72at \u00a79[\",{\"text\":\"\u00a72%3$s\u00a7f\",\"color\":\"gold\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":{\"text\":\"Click for Download Page\",\"color\":\"aqua\"}},\"clickEvent\":{\"action\":\"open_url\",\"value\":\"%4$s\"}},\"\u00a79]\"]",
+  "dsurround.text.NewVersion.cfNmr": "[\"\u00a72Update %1$s v%2$s \u00a72at \u00a79[\",{\"text\":\"\u00a72%3$s\u00a7f\",\"color\":\"gold\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":{\"text\":\"Click for Download Page\",\"color\":\"aqua\"}},\"clickEvent\":{\"action\":\"open_url\",\"value\":\"%4$s\"}},\"\u00a79] \u00a72or \u00a79[\",{\"text\":\"§2%5$s§f\",\"color\":\"gold\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":{\"text\":\"Click for Download Page\",\"color\":\"aqua\"}},\"clickEvent\":{\"action\":\"open_url\",\"value\":\"%6$s\"}},\"\u00a79]\"]",
+  "dsurround.text.NewVersion.curseforge": "\u00a76CurseForge",
+  "dsurround.text.NewVersion.modrinth": "\u00a7aModrinth",
   "dsurround.mod.link.sources": "Source code repository",
   "dsurround.mod.link.credits": "Sound resource CREDIT and ATTRIBUTIONS",
   "dsurround.mod.link.clothapi": "Embedded: Cloth API (Fabric)",

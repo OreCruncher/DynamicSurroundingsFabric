@@ -41,8 +41,6 @@
         "dsurround.mod.link.nashorn": "https://github.com/openjdk/nashorn"
       }
     },
-    "dsurround": {
-      "updateURL": "https://raw.githubusercontent.com/OreCruncher/DynamicSurroundingsFabric/main/versions.json"
-    }
+    "updateURL": "https://raw.githubusercontent.com/OreCruncher/DynamicSurroundingsFabric/main/versions.json"
   }
 }
