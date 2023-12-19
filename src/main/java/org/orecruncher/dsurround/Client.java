@@ -23,10 +23,7 @@ import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.scanner.Scanner;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.processing.Handlers;
-import org.orecruncher.dsurround.runtime.diagnostics.BlockViewer;
-import org.orecruncher.dsurround.runtime.diagnostics.ClientProfiler;
-import org.orecruncher.dsurround.runtime.diagnostics.RuntimeDiagnostics;
-import org.orecruncher.dsurround.runtime.diagnostics.SoundEngineDiagnostics;
+import org.orecruncher.dsurround.runtime.diagnostics.*;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 
@@ -102,6 +99,7 @@ public class Client implements IMinecraftMod, ClientModInitializer {
             .registerSingleton(Config)
             .registerSingleton(Handlers.class)
             .registerSingleton(Scanner.class)
+            .registerSingleton(Diagnostics.class)
             .registerSingleton(ISoundLibrary.class, SoundLibrary.class)
             .registerSingleton(IBiomeLibrary.class, BiomeLibrary.class)
             .registerSingleton(IDimensionLibrary.class, DimensionLibrary.class)
@@ -111,13 +109,6 @@ public class Client implements IMinecraftMod, ClientModInitializer {
             .registerSingleton(IAudioPlayer.class, MinecraftAudioPlayer.class);
 
         KeyBindings.register();
-
-        // Register diagnostic handlers.  Ordering is semi important for
-        // debug display layout.
-        RuntimeDiagnostics.register();
-        ClientProfiler.register();
-        SoundEngineDiagnostics.register();
-        BlockViewer.register();
 
         LOGGER.info("Initialization complete");
     }

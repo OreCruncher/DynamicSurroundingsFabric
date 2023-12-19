@@ -15,9 +15,7 @@ import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import java.util.List;
 
 @Environment(EnvType.CLIENT)
-public final class RuntimeDiagnostics {
-
-    private static final MinecraftClock clock = new MinecraftClock();
+public class RuntimeDiagnostics implements IDiagnosticPlugin {
 
     private static final List<String> scripts = ImmutableList.of(
             "'Dim: ' + dim.getId() + '/' + dim.getDimName() + '; isSuperFlat: ' + dim.isSuperFlat()",
@@ -29,15 +27,17 @@ public final class RuntimeDiagnostics {
             "'State: isInside ' + state.isInside() + '; inVillage ' + state.isInVillage() + '; isUnderWater ' + state.isUnderWater()"
     );
 
-    public static void register() {
-        ClientEventHooks.COLLECT_DIAGNOSTICS.register(RuntimeDiagnostics::onCollect, HandlerPriority.HIGH);
+    private final MinecraftClock clock = new MinecraftClock();
+
+    public RuntimeDiagnostics() {
+        ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect, HandlerPriority.HIGH);
     }
 
-    private static void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
+    public void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
         if (GameUtils.isInGame()) {
             assert GameUtils.getWorld() != null;
-            clock.update(GameUtils.getWorld());
-            event.left.add(Formatting.GREEN + clock.getFormattedTime());
+            this.clock.update(GameUtils.getWorld());
+            event.left.add(Formatting.GREEN + this.clock.getFormattedTime());
             event.left.add(Strings.EMPTY);
 
             for (String script : scripts) {

@@ -1,11 +1,14 @@
 package org.orecruncher.dsurround.lib.di.internal;
 
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.di.*;
 import org.orecruncher.dsurround.lib.Lazy;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -33,58 +36,6 @@ public class DependencyContainer implements IServiceContainer {
         this._manager = manager;
         this._parent = parent;
         this._resolvers = new IdentityHashMap<>();
-    }
-
-    /**
-     * Crawls through the class hierarchy looking for @Injection points.
-     */
-    private static List<Field> getInjectedFields(Class<?> clazz) {
-        List<Field> fields = new ArrayList<>();
-
-        do {
-            for (var field : clazz.getDeclaredFields())
-                if (field.isAnnotationPresent(Injection.class))
-                    fields.add(field);
-            clazz = clazz.getSuperclass();
-        } while (!clazz.equals(Object.class));
-
-        return fields;
-    }
-
-    /**
-     * Creates an object instance using the supplied constructor.
-     */
-    private static Object createInstance(Constructor<?> constructor) {
-        try {
-            return constructor.newInstance();
-        } catch (Throwable t) {
-            return new RuntimeException(t.getMessage());
-        }
-    }
-
-    /**
-     * Creates an object instance using the supplied constructor.  The parameter
-     * resolvers are used to resolve the parameters that are to be passed in during
-     * construction.
-     */
-    private static Object createInstance(Constructor<?> constructor, Supplier<?>[] parameterResolvers) {
-        try {
-            var parameters = new Object[parameterResolvers.length];
-            for (int i = 0; i < parameters.length; i++)
-                parameters[i] = parameterResolvers[i].get();
-            return constructor.newInstance(parameters);
-        } catch (Throwable t) {
-            throw new RuntimeException(t.getMessage());
-        }
-    }
-
-    /**
-     * Applies injectors to the provided object instance.
-     */
-    private static Object applyInjectors(Object instance, List<Consumer<Object>> injections) {
-        for (var injector : injections)
-            injector.accept(instance);
-        return instance;
     }
 
     /**
@@ -119,9 +70,14 @@ public class DependencyContainer implements IServiceContainer {
      * @return Reference to the SimpleDIContainer for fluent declarations
      */
     public <T> DependencyContainer registerSingleton(Class<T> clazz) {
-        this.checkForKeySuitability(clazz);
-        this.checkForResolverSuitability(clazz);
-        return this.registerFactory(clazz, new Lazy<>(() -> this.createFactory(clazz).get()));
+        try {
+            this.checkForKeySuitability(clazz);
+            this.checkForResolverSuitability(clazz);
+            return this.registerFactory(clazz, new Lazy<>(() -> this.createFactory(clazz).get()));
+        } catch (Throwable ex) {
+            Library.getLogger().error(ex, "Unable to register singleton %s", clazz.getName());
+            throw ex;
+        }
     }
 
     /**
@@ -136,9 +92,14 @@ public class DependencyContainer implements IServiceContainer {
      */
     @Override
     public <T> DependencyContainer registerSingleton(Class<T> clazz, Class<? extends T> desiredClass) {
-        this.checkForKeySuitability(clazz);
-        this.checkForResolverSuitability(desiredClass);
-        return this.registerFactory(clazz, new Lazy<>(() -> this.createFactory(desiredClass).get()));
+        try {
+            this.checkForKeySuitability(clazz);
+            this.checkForResolverSuitability(desiredClass);
+            return this.registerFactory(clazz, new Lazy<>(() -> this.createFactory(desiredClass).get()));
+        } catch (Throwable ex) {
+            Library.getLogger().error(ex, "Unable to register singleton %s using class %s", clazz.getName(), desiredClass.getName());
+            throw ex;
+        }
     }
 
     /**
@@ -152,12 +113,18 @@ public class DependencyContainer implements IServiceContainer {
      * @return Reference to the SimpleDIContainer for fluent declarations
      */
     @Override
-    public <T> DependencyContainer registerFactory(Class<T> clazz, Supplier<? extends T> supplier) {
-        this.checkForKeySuitability(clazz);
-        synchronized (this._resolvers) {
-            this._resolvers.put(clazz, supplier);
+    public <T> DependencyContainer registerFactory(Class<T> clazz, Supplier<? extends T> supplier)
+    {
+        try {
+            this.checkForKeySuitability(clazz);
+            synchronized (this._resolvers) {
+                this._resolvers.put(clazz, supplier);
+            }
+            return this;
+        } catch (Throwable ex) {
+            Library.getLogger().error(ex, "Unable to register factor for class %s", clazz.getName());
+            throw ex;
         }
-        return this;
     }
 
     /**
@@ -172,26 +139,75 @@ public class DependencyContainer implements IServiceContainer {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T resolve(Class<T> clazz) {
-        var resolver = this.findResolver(clazz);
-        if (resolver != null)
-            return (T) resolver.get();
+        try {
+            var resolver = this.findResolver(clazz);
+            if (resolver != null)
+                return (T) resolver.get();
 
-        // Have not seen.  Create a factory object for the class.
-        var factory = this.createFactory(clazz);
+            // Have not seen.  Create a factory object for the class.
+            var factory = this.createFactory(clazz);
 
-        // Get the factory result
-        var result = factory.get();
+            // Get the factory result
+            var result = factory.get();
 
-        // If the class is not annotated with cacheable, register the factory so subsequent
-        // resolves will be pre-staged.  Otherwise, register the new class instance
-        // as it will be a singleton.
-        if (!clazz.isAnnotationPresent(Cacheable.class)) {
-            this.registerFactory(clazz, factory);
-        } else {
-            this.registerFactory(clazz, () -> result);
+            // If the class is not annotated with cacheable, register the factory so subsequent
+            // resolves will be pre-staged.  Otherwise, register the new class instance
+            // as it will be a singleton.
+            if (!clazz.isAnnotationPresent(Cacheable.class)) {
+                this.registerFactory(clazz, factory);
+            } else {
+                this.registerFactory(clazz, () -> result);
+            }
+
+            return result;
+        } catch (Throwable ex) {
+            Library.getLogger().error(ex, "Unable to resolve class %s", clazz.getName());
+            throw ex;
         }
+    }
 
-        return result;
+    /**
+     * Crawls through the class hierarchy looking for @Injection points.
+     */
+    private static List<Field> getInjectedFields(Class<?> clazz) {
+        List<Field> fields = new ArrayList<>();
+
+        do {
+            for (var field : clazz.getDeclaredFields())
+                if (field.isAnnotationPresent(Injection.class))
+                    fields.add(field);
+            clazz = clazz.getSuperclass();
+        } while (!clazz.equals(Object.class));
+
+        return fields;
+    }
+
+    /**
+     * Creates an object instance using the supplied constructor.
+     */
+    private static Object createInstance(Constructor<?> constructor) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+        return constructor.newInstance();
+    }
+
+    /**
+     * Creates an object instance using the supplied constructor.  The parameter
+     * resolvers are used to resolve the parameters that are to be passed in during
+     * construction.
+     */
+    private static Object createInstance(Constructor<?> constructor, Supplier<?>[] parameterResolvers) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+        var parameters = new Object[parameterResolvers.length];
+        for (int i = 0; i < parameters.length; i++)
+            parameters[i] = parameterResolvers[i].get();
+        return constructor.newInstance(parameters);
+    }
+
+    /**
+     * Applies injectors to the provided object instance.
+     */
+    private static Object applyInjectors(Object instance, List<Consumer<Object>> injections) {
+        for (var injector : injections)
+            injector.accept(instance);
+        return instance;
     }
 
     /**
@@ -205,6 +221,8 @@ public class DependencyContainer implements IServiceContainer {
             throw new RuntimeException(String.format("'%s' is a primitive type and cannot be used for dependency injection", clazz.getName()));
         if (clazz.equals(Object.class))
             throw new RuntimeException("Object is not a suitable key");
+        if (!Modifier.isPublic(clazz.getModifiers()))
+            throw new RuntimeException(String.format("Class '%s' is not public", clazz.getName()));
     }
 
     /**
@@ -216,6 +234,8 @@ public class DependencyContainer implements IServiceContainer {
     private void checkForResolverSuitability(Class<?> clazz) {
         if (clazz.isInterface())
             throw new RuntimeException(String.format("The class %s is an interface and cannot be instantiated directly", clazz.getName()));
+        if (!Modifier.isPublic(clazz.getModifiers()))
+            throw new RuntimeException(String.format("Class '%s' is not public", clazz.getName()));
     }
 
     /**
@@ -280,22 +300,44 @@ public class DependencyContainer implements IServiceContainer {
 
         // Simple case of no parameters or injections
         if (pTypes.length == 0 && injections.isEmpty())
-            return () -> (T) createInstance(constructor);
+            return () -> {
+                try {
+                    return (T) createInstance(constructor);
+                } catch (Throwable t) {
+                    throw new RuntimeException(t);
+                }
+            };
 
         // Has parameters but no injections
         if (injections.isEmpty())
-            return () -> (T) createInstance(constructor, parameterResolvers);
+            return () -> {
+                try {
+                    return (T) createInstance(constructor, parameterResolvers);
+                } catch (Throwable t) {
+                    throw new RuntimeException(t);
+                }
+            };
 
         // No parameters but has injections
         if (pTypes.length == 0)
             return () -> {
-                var created = createInstance(constructor);
+                Object created = null;
+                try {
+                    created = createInstance(constructor);
+                } catch (Throwable t) {
+                    throw new RuntimeException(t);
+                }
                 return (T) applyInjectors(created, injections);
             };
 
         // Has both parameters and injections
         return () -> {
-            var created = createInstance(constructor, parameterResolvers);
+            Object created = null;
+            try {
+                created = createInstance(constructor, parameterResolvers);
+            } catch (Throwable t) {
+                throw new RuntimeException(t);
+            }
             return (T) applyInjectors(created, injections);
         };
     }

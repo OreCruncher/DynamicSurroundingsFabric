@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.lib.infra;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.metadata.ModMetadata;
+import net.minecraft.SharedConstants;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.MalformedURLException;
@@ -43,6 +44,6 @@ public final class ModInformation {
     }
 
     public String get_branding() {
-        return String.format("%s (%s) v%s", this.get_displayName(), this.get_modId(), this.get_version());
+        return String.format("%s %s-%s", this.get_displayName(), SharedConstants.getGameVersion().getName(), this.get_version());
     }
 }

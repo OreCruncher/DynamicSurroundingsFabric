@@ -17,15 +17,15 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Environment(EnvType.CLIENT)
-public final class SoundEngineDiagnostics {
+public class SoundEngineDiagnostics implements IDiagnosticPlugin {
 
     private static final String FMT_DBG_SOUND = Formatting.GOLD + "%s: %d";
 
-    public static void register() {
-        ClientEventHooks.COLLECT_DIAGNOSTICS.register(SoundEngineDiagnostics::onCollect, HandlerPriority.LOW);
+    public SoundEngineDiagnostics() {
+        ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect, HandlerPriority.LOW);
     }
 
-    private static void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
+    public void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
         event.left.add(Strings.EMPTY);
         MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) GameUtils.getSoundManager();
         MixinSoundSystemAccessors accessors = (MixinSoundSystemAccessors) manager.getSoundSystem();

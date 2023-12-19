@@ -6,8 +6,9 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
-import org.orecruncher.dsurround.eventing.handlers.DiagnosticHandler;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.runtime.diagnostics.Diagnostics;
 
 /***
  * Our debug and diagnostics hud.  Derived from DebugHud.
@@ -21,27 +22,30 @@ public class DiagnosticsHud {
     private final MinecraftClient client;
     private final TextRenderer textRenderer;
 
+    private final Diagnostics diagnostics;
+
     public DiagnosticsHud(MinecraftClient client) {
         this.client = client;
         this.textRenderer = client.textRenderer;
+        this.diagnostics = ContainerManager.resolve(Diagnostics.class);
     }
 
     public void render(DrawContext context) {
         // Only want to rendered if configured to do so and when the regular
         // diagnostic menu is not showing
-        if (DiagnosticHandler.isCollecting() && !this.isDebugHudEnabled()) {
+        if (this.diagnostics.isCollecting() && !this.isDebugHudEnabled()) {
             this.renderLeftText(context);
             this.renderRightText(context);
         }
     }
 
     protected void renderLeftText(DrawContext context) {
-        ObjectArray<String> list = DiagnosticHandler.getLeft();
+        ObjectArray<String> list = this.diagnostics.getLeft();
         this.drawText(context, list, true);
     }
 
     protected void renderRightText(DrawContext context) {
-        ObjectArray<String> list = DiagnosticHandler.getRight();
+        ObjectArray<String> list = this.diagnostics.getRight();
         this.drawText(context, list, false);
     }
 

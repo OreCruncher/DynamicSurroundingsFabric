@@ -11,35 +11,35 @@ import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
 
 @Environment(EnvType.CLIENT)
-public final class ClientProfiler {
+public class ClientProfiler implements IDiagnosticPlugin {
 
-    private static final TimerEMA clientTick = new TimerEMA("Client Tick");
-    private static final TimerEMA lastTick = new TimerEMA("Last Tick");
-    private static long lastTickMark = -1;
-    private static long timeMark = 0;
-    private static float tps = 0;
+    private final TimerEMA clientTick = new TimerEMA("Client Tick");
+    private final TimerEMA lastTick = new TimerEMA("Last Tick");
+    private long lastTickMark = -1;
+    private long timeMark = 0;
+    private float tps = 0;
 
-    public static void register() {
-        ClientTickEvents.START_CLIENT_TICK.register(ClientProfiler::tickStart);
-        ClientTickEvents.END_CLIENT_TICK.register(ClientProfiler::tickEnd);
-        ClientEventHooks.COLLECT_DIAGNOSTICS.register(ClientProfiler::onCollect, HandlerPriority.VERY_HIGH);
+    public ClientProfiler() {
+        ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect, HandlerPriority.VERY_HIGH);
+        ClientTickEvents.START_CLIENT_TICK.register(this::tickStart);
+        ClientTickEvents.END_CLIENT_TICK.register(this::tickEnd);
     }
 
-    private static void tickStart(MinecraftClient client) {
-        timeMark = System.nanoTime();
-        if (lastTickMark != -1) {
-            lastTick.update(timeMark - lastTickMark);
-            tps = MathHelper.clamp((float) (50F / lastTick.getMSecs() * 20F), 0F, 20F);
+    private void tickStart(MinecraftClient client) {
+        this.timeMark = System.nanoTime();
+        if (this.lastTickMark != -1) {
+            this.lastTick.update(this.timeMark - this.lastTickMark);
+            this.tps = MathHelper.clamp((float) (50F / this.lastTick.getMSecs() * 20F), 0F, 20F);
         }
-        lastTickMark = timeMark;
+        this.lastTickMark = this.timeMark;
     }
 
-    private static void tickEnd(MinecraftClient client) {
-        final long delta = System.nanoTime() - timeMark;
-        clientTick.update(delta);
+    private void tickEnd(MinecraftClient client) {
+        final long delta = System.nanoTime() - this.timeMark;
+        this.clientTick.update(delta);
     }
 
-    private static void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
+    public void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
         var tpsTimer = new ITimer() {
             @Override
             public double getMSecs() {

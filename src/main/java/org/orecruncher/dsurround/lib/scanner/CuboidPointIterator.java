@@ -4,7 +4,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.lib.BlockPosUtil;
 
 import java.util.Iterator;
 
@@ -25,7 +24,7 @@ public class CuboidPointIterator implements IPointIterator {
 
     };
 
-    protected final Iterator<BlockPos.Mutable> itr;
+    protected final Iterator<BlockPos> itr;
     protected BlockPos peeked;
 
     private CuboidPointIterator() {
@@ -37,8 +36,7 @@ public class CuboidPointIterator implements IPointIterator {
     }
 
     public CuboidPointIterator( final BlockPos p1,  final BlockPos p2) {
-        // The getAllInBox() deals with figuring the min/max points
-        this.itr = BlockPosUtil.getAllInBoxMutable(p1, p2).iterator();
+        this.itr = BlockPos.iterate(p1, p2).iterator();
         if (this.itr.hasNext())
             this.peeked = this.itr.next();
     }
