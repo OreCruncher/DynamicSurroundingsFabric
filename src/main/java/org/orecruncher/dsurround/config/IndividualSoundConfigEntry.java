@@ -26,7 +26,7 @@ public class IndividualSoundConfigEntry {
     public boolean cull;
     public boolean startup;
 
-    IndividualSoundConfigEntry(Identifier id, Integer volumeScale, Boolean block, Boolean cull, Boolean startup) {
+    public IndividualSoundConfigEntry(Identifier id, Integer volumeScale, Boolean block, Boolean cull, Boolean startup) {
         this.soundEventId = id;
         this.volumeScale = MathHelper.clamp(volumeScale, 0, 400);
         this.block = block;

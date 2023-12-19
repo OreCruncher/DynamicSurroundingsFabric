@@ -10,6 +10,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.gui.sound.ConfigSoundInstance;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -24,6 +25,7 @@ import java.util.Set;
 @Environment(EnvType.CLIENT)
 public final class SoundInstanceHandler {
 
+    private static final ISoundLibrary soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
     private static final IAudioPlayer audioPlayer = ContainerManager.resolve(IAudioPlayer.class);
     private static final ITickCount tickCount = ContainerManager.resolve(ITickCount.class);
     private static final Configuration config = ContainerManager.resolve(Configuration.class);
@@ -42,11 +44,11 @@ public final class SoundInstanceHandler {
     }
 
     private static boolean isSoundBlocked(final Identifier id) {
-        return Client.SoundConfig.isBlocked(id);
+        return soundLibrary.isBlocked(id);
     }
 
     private static boolean isSoundCulled(final Identifier id) {
-        return Client.SoundConfig.isCulled(id);
+        return soundLibrary.isCulled(id);
     }
 
     private static boolean isSoundCulledLogical(final Identifier sound) {

@@ -50,15 +50,10 @@ public class Client implements IMinecraftMod, ClientModInitializer {
      * Path to the external folder for dumping data
      */
     public static final Path DUMP_PATH = Path.of(CONFIG_PATH.toString(), "dumps");
-    public static final String Branding = FrameworkUtils.getModBranding(ModId);
     /**
      * Basic configuration settings
      */
     public static final Configuration Config = Configuration.getConfig();
-    /**
-     * Settings for individual sound configuration
-     */
-    public static final SoundConfiguration SoundConfig = SoundConfiguration.getConfig();
 
     private ModInformation modInfo;
     private CompletableFuture<Optional<VersionChecker.VersionResult>> versionInfo;

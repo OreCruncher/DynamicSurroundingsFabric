@@ -9,7 +9,6 @@ import net.minecraft.client.gui.widget.EntryListWidget;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -114,7 +113,7 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
     }
 
     public void saveChanges() {
-        Client.SoundConfig.saveIndividualSoundConfigs(getConfigs());
+        this.soundLibrary.saveIndividualSoundConfigs(getConfigs());
     }
 
     @Override
@@ -134,7 +133,7 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
         }
 
         // Override with the defaults from configuration.  Make a copy of the original, so it doesn't change.
-        for (IndividualSoundConfigEntry entry : Client.SoundConfig.getIndividualSoundConfigs()) {
+        for (IndividualSoundConfigEntry entry : this.soundLibrary.getIndividualSoundConfigs()) {
             map.put(entry.soundEventId, entry);
         }
 

@@ -4,8 +4,8 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -21,6 +21,7 @@ import org.orecruncher.dsurround.lib.world.WorldUtils;
 import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
 import org.orecruncher.dsurround.processing.scanner.VillageScanner;
+import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 @Environment(EnvType.CLIENT)
@@ -30,16 +31,20 @@ public class Handlers {
     private final IModLog logger;
     private final IClientTasking tasking;
     private final ITickCount tickCount;
+    private final ISoundLibrary soundLibrary;
+    private final IAudioPlayer audioPlayer;
     private final ObjectArray<ClientHandler> effectHandlers = new ObjectArray<>();
     private final LoggingTimerEMA handlerTimer = new LoggingTimerEMA("Handlers");
     private boolean isConnected = false;
     private boolean startupSoundPlayed = false;
 
-    public Handlers(Configuration config, IModLog logger, IClientTasking tasking, ITickCount tickCount) {
+    public Handlers(Configuration config, IModLog logger, IClientTasking tasking, ITickCount tickCount, ISoundLibrary soundLibrary, IAudioPlayer audioPlayer) {
         this.config = config;
         this.logger = logger;
         this.tasking = tasking;
         this.tickCount = tickCount;
+        this.soundLibrary = soundLibrary;
+        this.audioPlayer = audioPlayer;
         init();
     }
 
@@ -146,14 +151,14 @@ public class Handlers {
 
         this.startupSoundPlayed = true;
 
-        Client.SoundConfig
+        this.soundLibrary
             .getRandomStartupSound()
             .ifPresent(id -> {
                 var sound = SoundFactoryBuilder
                         .create(id)
                         .build()
                         .createAsAdditional();
-                client.getSoundManager().play(sound);
+                this.audioPlayer.play(sound);
             });
     }
 

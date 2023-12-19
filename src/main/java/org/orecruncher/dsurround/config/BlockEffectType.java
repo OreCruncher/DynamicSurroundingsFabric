@@ -50,9 +50,9 @@ public enum BlockEffectType {
         return this.enabled.get();
     }
 
-    public Optional<IBlockEffectProducer> getInstance(Script chance, Script conditions) {
+    public Optional<IBlockEffectProducer> createInstance(Script chance, Script conditions) {
         if (this.isEnabled())
-            return Optional.ofNullable(producer.apply(chance, conditions));
+            return Optional.ofNullable(this.producer.apply(chance, conditions));
         return Optional.empty();
     }
 

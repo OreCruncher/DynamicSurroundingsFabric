@@ -121,7 +121,7 @@ public class BlockInfo {
         }
 
         for (var e : config.effects) {
-            var effect = e.effect.getInstance(e.spawnChance, e.conditions);
+            var effect = e.effect.createInstance(e.spawnChance, e.conditions);
             effect.ifPresent(t -> {
                 if (e.alwaysOn)
                     this.addToAlwaysOnEffects(t);

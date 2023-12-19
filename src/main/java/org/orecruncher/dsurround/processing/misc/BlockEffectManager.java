@@ -5,8 +5,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
-import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.lib.BlockPosUtil;
 
