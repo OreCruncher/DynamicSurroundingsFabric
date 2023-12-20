@@ -145,7 +145,8 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
     @Override
     public Object eval(Biome biome, Script script) {
-        return this.biomeConditionEvaluator.eval(biome, script);
+        var info = this.getBiomeInfo(biome);
+        return this.biomeConditionEvaluator.eval(biome, info, script);
     }
 
     private void applyRuleConfigs(Biome biome, BiomeInfo info) {

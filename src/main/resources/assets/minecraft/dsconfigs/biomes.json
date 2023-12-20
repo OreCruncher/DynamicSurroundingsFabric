@@ -125,7 +125,7 @@
     ]
   },
   {
-    "biomeSelector": "BEACH && ICY",
+    "biomeSelector": "BEACH && !ICY",
     "_comment": "Beach",
     "acoustics": [
       {

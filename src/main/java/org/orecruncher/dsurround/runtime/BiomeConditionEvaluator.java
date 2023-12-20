@@ -39,7 +39,7 @@ public class BiomeConditionEvaluator {
         return this.eval(biome, null, conditions);
     }
 
-    private Object eval(Biome biome, BiomeInfo info, final Script conditions) {
+    public Object eval(Biome biome, BiomeInfo info, final Script conditions) {
         try {
             if (info == null)
                 this.biomeVariables.setBiome(biome, this.context);
