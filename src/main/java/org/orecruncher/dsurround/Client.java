@@ -114,7 +114,7 @@ public class Client implements IMinecraftMod, ClientModInitializer {
         // to be instantiated.
         AssetLibraryEvent.RELOAD.register(container.resolve(ISoundLibrary.class)::reload);
         AssetLibraryEvent.RELOAD.register(container.resolve(IBiomeLibrary.class)::reload);
-        AssetLibraryEvent.RELOAD.register(container.resolve(DimensionLibrary.class)::reload);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IDimensionLibrary.class)::reload);
         AssetLibraryEvent.RELOAD.register(container.resolve(IBlockLibrary.class)::reload);
         AssetLibraryEvent.RELOAD.register(container.resolve(IItemLibrary.class)::reload);
         AssetLibraryEvent.RELOAD.register(container.resolve(IEntityEffectLibrary.class)::reload);

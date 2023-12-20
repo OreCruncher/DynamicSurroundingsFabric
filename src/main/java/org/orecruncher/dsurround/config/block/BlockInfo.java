@@ -99,14 +99,14 @@ public class BlockInfo {
     // TODO: Eliminate duplicates
     public void update(BlockConfigRule config) {
         // Reset of a block clears all registry
-        if (config.clearSounds)
+        if (config.clearSounds())
             this.clearSounds();
 
-        config.soundChance.ifPresent(v -> this.soundChance = v);
+        config.soundChance().ifPresent(v -> this.soundChance = v);
 
         var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
 
-        for (final AcousticConfig sr : config.acoustics) {
+        for (final AcousticConfig sr : config.acoustics()) {
             if (sr.soundEventId != null) {
                 final Identifier res = IdentityUtils.resolveIdentifier(Client.ModId, sr.soundEventId);
                 final SoundEvent acoustic = soundLibrary.getSound(res);
@@ -120,10 +120,10 @@ public class BlockInfo {
             }
         }
 
-        for (var e : config.effects) {
-            var effect = e.effect.createInstance(e.spawnChance, e.conditions);
+        for (var e : config.effects()) {
+            var effect = e.effect().createInstance(e.spawnChance(), e.conditions());
             effect.ifPresent(t -> {
-                if (e.alwaysOn)
+                if (e.alwaysOn())
                     this.addToAlwaysOnEffects(t);
                 else
                     this.addToBlockEffects(t);

@@ -29,6 +29,7 @@ import org.orecruncher.dsurround.xface.IBiomeExtended;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 @Environment(EnvType.CLIENT)
@@ -82,7 +83,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
         var info = new BiomeInfo(this.version, biome.getId(), biome.getName(), biome.getTraits());
 
         for (var c : this.biomeConfigs) {
-            if (c.biomeSelector.asString().equalsIgnoreCase(match)) {
+            if (c.biomeSelector().asString().equalsIgnoreCase(match)) {
                 info.update(c);
             }
         }
@@ -142,11 +143,11 @@ public final class BiomeLibrary implements IBiomeLibrary {
         for (var c : this.biomeConfigs) {
             // Skip internal definitions - they are handled elsewhere and
             // do not apply to regular Minecraft biomes
-            if (c.biomeSelector.asString().startsWith("@"))
+            if (c.biomeSelector().asString().startsWith("@"))
                 continue;
 
             try {
-                var applies = BiomeConditionEvaluator.INSTANCE.check(biome, c.biomeSelector);
+                var applies = BiomeConditionEvaluator.INSTANCE.check(biome, c.biomeSelector());
                 if (applies) {
                     try {
                         info.update(c);
@@ -176,10 +177,17 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
     @Override
     public Stream<String> dump() {
-        return getActiveRegistry()
+        var realBiomes = getActiveRegistry()
                 .stream()
                 .map(this::getBiomeInfo)
                 .map(BiomeInfo::toString)
                 .sorted();
+
+        var fakeBiomes = this.internalBiomes.values()
+                .stream()
+                .map(BiomeInfo::toString)
+                .sorted();
+
+        return Stream.of(realBiomes, fakeBiomes).flatMap(Function.identity());
     }
 }

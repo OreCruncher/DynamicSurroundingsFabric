@@ -181,19 +181,19 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
     public void update(final BiomeConfigRule entry) {
 
-        entry.comment.ifPresent(this::addComment);
-        entry.fogColor.ifPresent(v -> setFogColor(ColorPalette.fromHTMLColorCode(v)));
-        entry.additionalSoundChance.ifPresent(this::setAdditionalSoundChance);
-        entry.moodSoundChance.ifPresent(this::setMoodSoundChance);
+        entry.comment().ifPresent(this::addComment);
+        entry.fogColor().ifPresent(v -> setFogColor(ColorPalette.fromHTMLColorCode(v)));
+        entry.additionalSoundChance().ifPresent(this::setAdditionalSoundChance);
+        entry.moodSoundChance().ifPresent(this::setMoodSoundChance);
 
-        if (entry.clearSounds) {
+        if (entry.clearSounds()) {
             addComment("> Sound Clear");
             clearSounds();
         }
 
         var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
 
-        for (final AcousticConfig sr : entry.acoustics) {
+        for (final AcousticConfig sr : entry.acoustics()) {
             final Identifier res = IdentityUtils.resolveIdentifier(Client.ModId, sr.soundEventId);
             final SoundEvent acoustic = soundLibrary.getSound(res);
             var factory = SoundFactoryBuilder.create(acoustic)

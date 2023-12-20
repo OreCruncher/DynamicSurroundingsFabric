@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.config.dimension;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.config.data.DimensionConfig;
+import org.orecruncher.dsurround.config.data.DimensionConfigRule;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 
 public class DimensionInfo {
@@ -25,7 +25,7 @@ public class DimensionInfo {
         this.isFlatWorld = false;
     }
 
-    public DimensionInfo(final World world, final DimensionConfig dimConfig) {
+    public DimensionInfo(final World world) {
         // Attributes that come from the world object itself. Set now because the config may override.
         this.name = world.getRegistryKey().getValue();
         this.seaLevel = world.getSeaLevel();
@@ -37,17 +37,17 @@ public class DimensionInfo {
         // Force sea level based on known world types that give heartburn
         if (this.isFlatWorld)
             this.seaLevel = 0;
+    }
 
-        // Override based on player config settings
-        if (dimConfig != null) {
-            dimConfig.seaLevel.ifPresent(v -> this.seaLevel = v);
-            dimConfig.skyHeight.ifPresent(v -> this.skyHeight = v);
-            dimConfig.alwaysOutside.ifPresent(v -> this.alwaysOutside = v);
-            dimConfig.playBiomeSounds.ifPresent(v -> this.playBiomeSounds = v);
-            dimConfig.cloudHeight.ifPresentOrElse(
+    public void update(DimensionConfigRule config) {
+        if (this.name.equals(config.dimensionId())) {
+            config.seaLevel().ifPresent(v -> this.seaLevel = v);
+            config.skyHeight().ifPresent(v -> this.skyHeight = v);
+            config.alwaysOutside().ifPresent(v -> this.alwaysOutside = v);
+            config.playBiomeSounds().ifPresent(v -> this.playBiomeSounds = v);
+            config.cloudHeight().ifPresentOrElse(
                     v -> this.cloudHeight = v,
-                    () -> this.cloudHeight = this.skyHeight / 2
-            );
+                    () -> this.cloudHeight = this.skyHeight / 2);
 
             this.spaceHeight = this.skyHeight + SPACE_HEIGHT_OFFSET;
         }

@@ -27,14 +27,14 @@ public final class SoundMetadata {
     public SoundMetadata(final SoundMetadataConfig cfg) {
         Objects.requireNonNull(cfg);
 
-        this.title = cfg.title.map(Text::translatable).orElse(Text.empty());
-        this.caption = cfg.caption.map(Text::translatable).orElse(Text.empty());
+        this.title = cfg.title().map(Text::translatable).orElse(Text.empty());
+        this.caption = cfg.caption().map(Text::translatable).orElse(Text.empty());
 
-        if (cfg.credits == null || cfg.credits.isEmpty()) {
+        if (cfg.credits() == null || cfg.credits().isEmpty()) {
             this.credits = ImmutableList.of();
         } else {
             this.credits = new ArrayList<>();
-            for (final String s : cfg.credits) {
+            for (final String s : cfg.credits()) {
                 if (StringUtils.isEmpty(s))
                     this.credits.add(Text.empty());
                 else
