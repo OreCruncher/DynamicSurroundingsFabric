@@ -19,11 +19,11 @@ import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.infra.IMinecraftMod;
 import org.orecruncher.dsurround.lib.infra.events.ClientState;
 import org.orecruncher.dsurround.lib.logging.ModLog;
-import org.orecruncher.dsurround.lib.scanner.Scanner;
 import org.orecruncher.dsurround.lib.version.IVersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionResult;
 import org.orecruncher.dsurround.processing.Handlers;
+import org.orecruncher.dsurround.processing.Scanners;
 import org.orecruncher.dsurround.runtime.diagnostics.*;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
@@ -82,7 +82,7 @@ public class Client implements IMinecraftMod, ClientModInitializer {
         container
                 .registerSingleton(Config)
                 .registerSingleton(Handlers.class)
-                .registerSingleton(Scanner.class)
+                .registerSingleton(Scanners.class)
                 .registerSingleton(Diagnostics.class)
                 .registerSingleton(IVersionChecker.class, VersionChecker.class)
                 .registerSingleton(ISoundLibrary.class, SoundLibrary.class)

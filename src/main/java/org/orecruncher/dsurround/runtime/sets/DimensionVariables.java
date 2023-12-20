@@ -5,6 +5,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.dimension.DimensionType;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 
@@ -26,7 +27,7 @@ public class DimensionVariables extends VariableSet<IDimensionVariables> impleme
     }
 
     @Override
-    public void update() {
+    public void update(IVariableAccess variableAccess) {
         if (GameUtils.isInGame()) {
             assert GameUtils.getWorld() != null;
             final DimensionType dim = GameUtils.getWorld().getDimension();

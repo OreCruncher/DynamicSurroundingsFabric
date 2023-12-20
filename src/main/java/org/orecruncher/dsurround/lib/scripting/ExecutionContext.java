@@ -12,7 +12,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import java.util.Optional;
 
-public final class ExecutionContext {
+public final class ExecutionContext implements IVariableAccess {
 
     private static final IModLog LOGGER = Client.LOGGER.createChild(ExecutionContext.class);
 
@@ -47,7 +47,7 @@ public final class ExecutionContext {
     }
 
     public void update() {
-        this.variables.forEach(VariableSet::update);
+        this.variables.forEach(s -> s.update(this));
     }
 
     public boolean check(final Script script) {

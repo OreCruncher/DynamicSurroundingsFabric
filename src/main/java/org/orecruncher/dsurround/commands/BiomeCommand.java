@@ -13,9 +13,10 @@ import net.minecraft.util.Identifier;
 import net.minecraft.registry.RegistryKeys;
 
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 
@@ -36,7 +37,7 @@ final class BiomeCommand {
         var biomeId = ctx.getArgument("biomeId", Identifier.class);
         var script = ctx.getArgument("script", MessageArgumentType.MessageFormat.class);
         var biome = GameUtils.getRegistryManager().get(RegistryKeys.BIOME).get(biomeId);
-        var result = BiomeConditionEvaluator.INSTANCE.eval(biome, new Script(script.getContents()));
+        var result = ContainerManager.resolve(IBiomeLibrary.class).eval(biome, new Script(script.getContents()));
         ctx.getSource().sendFeedback(Text.of(result.toString()));
         return 1;
     }

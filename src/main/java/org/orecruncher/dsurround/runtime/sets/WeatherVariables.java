@@ -6,6 +6,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
+import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 
@@ -35,7 +36,7 @@ public class WeatherVariables extends VariableSet<IWeatherVariables> implements 
     }
 
     @Override
-    public void update() {
+    public void update(IVariableAccess variableAccess) {
         if (GameUtils.isInGame()) {
             final World world = GameUtils.getWorld();
             this.rainIntensity = world.getRainGradient(1F);

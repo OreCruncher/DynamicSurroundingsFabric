@@ -3,8 +3,9 @@ package org.orecruncher.dsurround.runtime;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.world.biome.Biome;
-import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.config.biome.BiomeInfo;
+import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.sets.BiomeVariables;
@@ -14,29 +15,40 @@ import java.util.Optional;
 @Environment(EnvType.CLIENT)
 public class BiomeConditionEvaluator {
 
-    public static BiomeConditionEvaluator INSTANCE = new BiomeConditionEvaluator();
-    // Internal visibility for diagnostics
-    final BiomeVariables biomeVariables;
+    private final IModLog logger;
+    private final BiomeVariables biomeVariables;
     private final ExecutionContext context;
 
-    public BiomeConditionEvaluator() {
+    public BiomeConditionEvaluator(IBiomeLibrary biomeLibrary, IModLog logger) {
+        this.logger = logger;
         this.context = new ExecutionContext("BiomeConditions");
-        this.biomeVariables = ContainerManager.resolve(BiomeVariables.class);
+        this.biomeVariables = new BiomeVariables(biomeLibrary);
         this.context.add(this.biomeVariables);
     }
 
-    public boolean check(Biome biome, final Script conditions) {
-        final Object result = eval(biome, conditions);
+    public void reset() {
+        this.biomeVariables.setBiome(null, null, this.context);
+    }
+
+    public boolean check(Biome biome, BiomeInfo info, final Script conditions) {
+        final Object result = this.eval(biome, info, conditions);
         return result instanceof Boolean && (boolean) result;
     }
 
     public Object eval(Biome biome, final Script conditions) {
+        return this.eval(biome, null, conditions);
+    }
+
+    private Object eval(Biome biome, BiomeInfo info, final Script conditions) {
         try {
-            this.biomeVariables.setBiome(biome);
+            if (info == null)
+                this.biomeVariables.setBiome(biome, this.context);
+            else
+                this.biomeVariables.setBiome(biome, info, this.context);
             final Optional<Object> result = this.context.eval(conditions);
             return result.orElse(false);
         } catch (Throwable t) {
-            Client.LOGGER.error(t, "Unable to evaluate script");
+            this.logger.error(t, "Unable to evaluate script");
         }
         return false;
     }

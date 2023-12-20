@@ -22,7 +22,7 @@ public abstract class VariableSet<T> {
         return this.setName;
     }
 
-    public void update() {
+    public void update(IVariableAccess varAccess) {
 
     }
 

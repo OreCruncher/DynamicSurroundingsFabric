@@ -3,10 +3,12 @@ package org.orecruncher.dsurround.runtime.sets;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.world.biome.Biome;
+import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
+import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 
 @Environment(EnvType.CLIENT)
@@ -34,20 +36,37 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
     }
 
     @Override
-    public void update() {
+    public void update(IVariableAccess variableAccess) {
         Biome newBiome = null;
         if (GameUtils.isInGame()) {
             newBiome = GameUtils.getPlayer().getEntityWorld().getBiome(GameUtils.getPlayer().getBlockPos()).value();
         }
-        setBiome(newBiome);
+        setBiome(newBiome, variableAccess);
     }
 
-    public void setBiome(final Biome biome) {
+    public void setBiome(final Biome biome, IVariableAccess variableAccess) {
         if (this.biome != biome) {
-            this.biome = biome;
-            this.info = this.biomeLibrary.getBiomeInfo(this.biome);
-            this.id.reset();
-            this.precipitationType.reset();
+            BiomeInfo info = null;
+            if (this.biome != null)
+                info = this.biomeLibrary.getBiomeInfo(this.biome);
+
+            this.setBiome(biome, info, variableAccess);
+        }
+    }
+
+    public void setBiome(final Biome biome, final BiomeInfo info, IVariableAccess variableAccess) {
+        this.biome = biome;
+        this.info = info;
+        this.id.reset();
+        this.precipitationType.reset();
+
+        // Clear out any previous trait settings
+        for (var trait : BiomeTrait.values())
+            variableAccess.put(trait.getName(), false);
+
+        if (this.info != null) {
+            // Set true the trait variables associated with the biome
+            this.info.getTraits().forEach(trait -> variableAccess.put(trait.getName(), true));
         }
     }
 

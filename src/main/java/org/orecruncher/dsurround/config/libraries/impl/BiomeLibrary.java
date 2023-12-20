@@ -22,6 +22,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
+import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
 import org.orecruncher.dsurround.xface.IBiomeExtended;
@@ -40,6 +41,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
     private final IModLog logger;
     private final IMinecraftDirectories directories;
+    private final BiomeConditionEvaluator biomeConditionEvaluator;
 
     private final Map<InternalBiomes, BiomeInfo> internalBiomes = new EnumMap<>(InternalBiomes.class);
 
@@ -54,6 +56,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
     public BiomeLibrary(IModLog logger, IMinecraftDirectories directories) {
         this.logger = logger;
         this.directories = directories;
+        this.biomeConditionEvaluator = new BiomeConditionEvaluator(this, logger);
     }
 
     @Override
@@ -61,6 +64,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
         // Wipe out the internal biome cache.  These will be reset.
         this.internalBiomes.clear();
         this.biomeConfigs.clear();
+        this.biomeConditionEvaluator.reset();
 
         var accessors = ResourceUtils.findConfigs(this.directories.getModDataDirectory().toFile(), FILE_NAME);
 
@@ -139,6 +143,11 @@ public final class BiomeLibrary implements IBiomeLibrary {
         return this.internalBiomes.get(biome);
     }
 
+    @Override
+    public Object eval(Biome biome, Script script) {
+        return this.biomeConditionEvaluator.eval(biome, script);
+    }
+
     private void applyRuleConfigs(Biome biome, BiomeInfo info) {
         for (var c : this.biomeConfigs) {
             // Skip internal definitions - they are handled elsewhere and
@@ -147,7 +156,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
                 continue;
 
             try {
-                var applies = BiomeConditionEvaluator.INSTANCE.check(biome, c.biomeSelector());
+                var applies = this.biomeConditionEvaluator.check(biome, info, c.biomeSelector());
                 if (applies) {
                     try {
                         info.update(c);

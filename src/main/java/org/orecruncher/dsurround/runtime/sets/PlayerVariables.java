@@ -9,6 +9,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
+import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 
@@ -63,7 +64,7 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
     }
 
     @Override
-    public void update() {
+    public void update(IVariableAccess variableAccess) {
 
         if (GameUtils.isInGame()) {
             final PlayerEntity player = GameUtils.getPlayer();
