@@ -95,34 +95,35 @@ public class ItemLibrary implements IItemLibrary {
             itemEquipSound = armor.getEquipSound();
         else if (item instanceof ElytraItem elytraItem)
             itemEquipSound = elytraItem.getEquipSound();
-        else if (stack.isIn(ConventionalItemTags.LAVA_BUCKETS))
+        else if (TagHelpers.isIn(ConventionalItemTags.LAVA_BUCKETS, item))
             itemEquipSound = SoundEvents.ITEM_BUCKET_FILL_LAVA;
-        else if (stack.isIn(ConventionalItemTags.WATER_BUCKETS))
+        else if (TagHelpers.isIn(ConventionalItemTags.WATER_BUCKETS, item))
             itemEquipSound = SoundEvents.ITEM_BUCKET_FILL;
-        else if (stack.isIn(ConventionalItemTags.ENTITY_WATER_BUCKETS))
+        else if (TagHelpers.isIn(ConventionalItemTags.ENTITY_WATER_BUCKETS, item))
             itemEquipSound = SoundEvents.ITEM_BUCKET_FILL_FISH;
-        else if (stack.isIn(ConventionalItemTags.MILK_BUCKETS))
+        else if (TagHelpers.isIn(ConventionalItemTags.MILK_BUCKETS, item))
             itemEquipSound = SoundEvents.ITEM_BUCKET_FILL;
 
         return itemEquipSound;
     }
 
     private static ItemClassType resolveClassType(ItemStack stack) {
-        if (stack.isIn(ItemEffectTags.AXES))
+        var item = stack.getItem();
+        if (TagHelpers.isIn(ItemEffectTags.AXES, item))
             return ItemClassType.AXE;
-        if (stack.isIn(ItemEffectTags.BOOKS))
+        if (TagHelpers.isIn(ItemEffectTags.BOOKS, item))
             return ItemClassType.BOOK;
-        if (stack.isIn(ItemEffectTags.BOWS))
+        if (TagHelpers.isIn(ItemEffectTags.BOWS, item))
             return ItemClassType.BOW;
-        if (stack.isIn(ItemEffectTags.POTIONS))
+        if (TagHelpers.isIn(ItemEffectTags.POTIONS, item))
             return ItemClassType.POTION;
-        if (stack.isIn(ItemEffectTags.CROSSBOWS))
+        if (TagHelpers.isIn(ItemEffectTags.CROSSBOWS, item))
             return ItemClassType.CROSSBOW;
-        if (stack.isIn(ItemEffectTags.SHIELDS))
+        if (TagHelpers.isIn(ItemEffectTags.SHIELDS, item))
             return ItemClassType.SHIELD;
-        if (stack.isIn(ItemEffectTags.SWORDS))
+        if (TagHelpers.isIn(ItemEffectTags.SWORDS, item))
             return ItemClassType.SWORD;
-        if (stack.isIn(ItemEffectTags.TOOLS))
+        if (TagHelpers.isIn(ItemEffectTags.TOOLS, item))
             return ItemClassType.TOOL;
 
         return ItemClassType.NONE;

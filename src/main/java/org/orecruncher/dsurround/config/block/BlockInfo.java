@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
+import net.minecraft.registry.Registries;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -23,6 +24,7 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.OcclusionTags;
 import org.orecruncher.dsurround.tags.ReflectanceTags;
+import org.orecruncher.dsurround.tags.TagHelpers;
 
 import java.util.Collection;
 import java.util.Random;
@@ -188,37 +190,39 @@ public class BlockInfo {
     }
 
     private static float getSoundReflectionSetting(BlockState state) {
-        if (state.isIn(ReflectanceTags.NONE))
+        var block = state.getBlock();
+        if (TagHelpers.isIn(ReflectanceTags.NONE, block))
             return 0;
-        if (state.isIn(ReflectanceTags.VERY_LOW))
+        if (TagHelpers.isIn(ReflectanceTags.VERY_LOW, block))
             return 0.15F;
-        if (state.isIn(ReflectanceTags.LOW))
+        if (TagHelpers.isIn(ReflectanceTags.LOW, block))
             return 0.35F;
-        if (state.isIn(ReflectanceTags.MEDIUM))
+        if (TagHelpers.isIn(ReflectanceTags.MEDIUM, block))
             return 0.5F;
-        if (state.isIn(ReflectanceTags.HIGH))
+        if (TagHelpers.isIn(ReflectanceTags.HIGH, block))
             return 0.65F;
-        if (state.isIn(ReflectanceTags.VERY_HIGH))
+        if (TagHelpers.isIn(ReflectanceTags.VERY_HIGH, block))
             return 0.8F;
-        if (state.isIn(ReflectanceTags.MAX))
+        if (TagHelpers.isIn(ReflectanceTags.MAX, block))
             return 1.0F;
         return DEFAULT_REFLECTION;
     }
 
     private static float getSoundOcclusionSetting(BlockState state) {
-        if (state.isIn(OcclusionTags.NONE))
+        var block = state.getBlock();
+        if (TagHelpers.isIn(OcclusionTags.NONE, block))
             return 0;
-        if (state.isIn(OcclusionTags.VERY_LOW))
+        if (TagHelpers.isIn(OcclusionTags.VERY_LOW, block))
             return 0.15F;
-        if (state.isIn(OcclusionTags.LOW))
+        if (TagHelpers.isIn(OcclusionTags.LOW, block))
             return 0.35F;
-        if (state.isIn(OcclusionTags.MEDIUM))
+        if (TagHelpers.isIn(OcclusionTags.MEDIUM, block))
             return 0.5F;
-        if (state.isIn(OcclusionTags.HIGH))
+        if (TagHelpers.isIn(OcclusionTags.HIGH, block))
             return 0.65F;
-        if (state.isIn(OcclusionTags.VERY_HIGH))
+        if (TagHelpers.isIn(OcclusionTags.VERY_HIGH, block))
             return 0.8F;
-        if (state.isIn(OcclusionTags.MAX))
+        if (TagHelpers.isIn(OcclusionTags.MAX, block))
             return 1.0F;
         return state.isOpaque() ? DEFAULT_OPAQUE_OCCLUSION : DEFAULT_TRANSLUCENT_OCCLUSION;
     }

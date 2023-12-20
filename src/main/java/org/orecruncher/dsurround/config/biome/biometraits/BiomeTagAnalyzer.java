@@ -67,12 +67,11 @@ public class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
     public Collection<BiomeTrait> evaluate(Identifier id, Biome biome, RegistryEntry.Reference<Biome> biomeEntry) {
         Set<BiomeTrait> results = new HashSet<>();
 
-        biomeEntry.streamTags().forEach(tag ->
-        {
-            var trait = tagToTraitMap.get(tag);
-            if (trait != null)
-                results.add(trait);
-        });
+        // Have to do it this way so that the client side tagging has a chance.  When connecting to
+        // vanilla servers they will ONLY have the Minecraft tags, not the Fabric ones.
+        for (var tagEntry : tagToTraitMap.entrySet())
+            if (TagHelpers.isIn(tagEntry.getKey(), biomeEntry))
+                results.add(tagEntry.getValue());
 
         // Check for compounds
         if (TagHelpers.isIn(ConventionalBiomeTags.AQUATIC_ICY, biomeEntry)) {

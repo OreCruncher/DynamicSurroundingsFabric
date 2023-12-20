@@ -45,12 +45,11 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
     }
 
     public void setBiome(final Biome biome, IVariableAccess variableAccess) {
-        if (this.biome != biome) {
-            BiomeInfo info = null;
-            if (this.biome != null)
-                info = this.biomeLibrary.getBiomeInfo(this.biome);
-
+        if (biome != null) {
+            BiomeInfo info = this.biomeLibrary.getBiomeInfo(biome);
             this.setBiome(biome, info, variableAccess);
+        } else {
+            this.setBiome(null, null, variableAccess);
         }
     }
 
@@ -82,6 +81,9 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
 
     @Override
     public String getName() {
+        if (this.info == null) {
+            int x = 0;
+        }
         return this.info.getBiomeName();
     }
 

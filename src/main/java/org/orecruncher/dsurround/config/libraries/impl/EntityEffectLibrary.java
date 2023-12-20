@@ -14,6 +14,7 @@ import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.tags.EntityEffectTags;
+import org.orecruncher.dsurround.tags.TagHelpers;
 import org.orecruncher.dsurround.xface.ILivingEntityExtended;
 
 import java.util.Set;
@@ -132,13 +133,13 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
         Set<EntityEffectType> effectTypes = new ReferenceOpenHashSet<>();
 
         var entityType = entity.getType();
-        if (entityType.isIn(EntityEffectTags.BOW_PULL))
+        if (TagHelpers.isIn(EntityEffectTags.BOW_PULL, entityType))
             effectTypes.add(EntityEffectType.BOW_PULL);
-        if (entityType.isIn(EntityEffectTags.FROST_BREATH))
+        if (TagHelpers.isIn(EntityEffectTags.FROST_BREATH, entityType))
             effectTypes.add(EntityEffectType.FROST_BREATH);
-        if (entityType.isIn(EntityEffectTags.ITEM_SWING))
+        if (TagHelpers.isIn(EntityEffectTags.ITEM_SWING, entityType))
             effectTypes.add(EntityEffectType.ITEM_SWING);
-        if (entityType.isIn(EntityEffectTags.TOOLBAR))
+        if (TagHelpers.isIn(EntityEffectTags.TOOLBAR, entityType))
             effectTypes.add(EntityEffectType.PLAYER_TOOLBAR);
 
         return effectTypes;
