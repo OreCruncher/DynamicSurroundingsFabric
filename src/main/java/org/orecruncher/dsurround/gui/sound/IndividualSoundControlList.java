@@ -43,6 +43,8 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
 
         // Initialize the first pass
         this.setSearchFilter(filter, false);
+
+        this.setRenderBackground(false);
     }
 
     @Override
