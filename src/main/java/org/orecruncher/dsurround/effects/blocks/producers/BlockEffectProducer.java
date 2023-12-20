@@ -15,6 +15,7 @@ import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
+import org.orecruncher.dsurround.tags.TagHelpers;
 
 import java.util.Optional;
 import java.util.Random;

@@ -15,7 +15,6 @@ public record BlockEffectConfigRule(
         Boolean alwaysOn) {
 
     private static final Script DEFAULT_SPAWN_CHANCE = new Script("0.01");
-    private static final Script ALWAYS_ON = new Script("1.0");
 
     public static Codec<BlockEffectConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
                     BlockEffectType.CODEC.fieldOf("effect").forGetter(BlockEffectConfigRule::effect),

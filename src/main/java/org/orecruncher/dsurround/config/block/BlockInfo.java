@@ -36,6 +36,7 @@ public class BlockInfo {
     private static final float DEFAULT_OPAQUE_OCCLUSION = 0.5F;
     private static final float DEFAULT_TRANSLUCENT_OCCLUSION = 0.15F;
     private static final float DEFAULT_REFLECTION = 0.0F; //0.4F;
+    private static final Script ALWAYS_ON_EFFECT_CHANCE = new Script("1.0");
 
     // Lazy init on add
     @Nullable
@@ -126,7 +127,8 @@ public class BlockInfo {
         }
 
         for (var e : config.effects()) {
-            var effect = e.effect().createInstance(e.spawnChance(), e.conditions());
+            var chance = e.alwaysOn() ? ALWAYS_ON_EFFECT_CHANCE : e.spawnChance();
+            var effect = e.effect().createInstance(chance, e.conditions());
             effect.ifPresent(t -> {
                 if (e.alwaysOn())
                     this.addToAlwaysOnEffects(t);
