@@ -12,8 +12,9 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.runtime.ConditionEvaluator;
+import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
 import java.util.Optional;
 import java.util.Random;
@@ -22,17 +23,20 @@ import java.util.function.Predicate;
 @Environment(EnvType.CLIENT)
 public abstract class BlockEffectProducer implements IBlockEffectProducer {
 
+    protected final IConditionEvaluator conditionEvaluator;
     protected final Script chance;
     protected final Script conditions;
+
 
     protected BlockEffectProducer(Script chance, Script conditions) {
         this.chance = chance;
         this.conditions = conditions;
+        this.conditionEvaluator = ContainerManager.resolve(IConditionEvaluator.class);
     }
 
     protected boolean canTrigger(World world, BlockState state, BlockPos pos, Random rand) {
-        if (ConditionEvaluator.INSTANCE.check(this.conditions)) {
-            var chance = ConditionEvaluator.INSTANCE.eval(this.chance);
+        if (this.conditionEvaluator.check(this.conditions)) {
+            var chance = this.conditionEvaluator.eval(this.chance);
             return chance instanceof Double c && rand.nextDouble() < c;
         }
         return false;
@@ -58,8 +62,6 @@ public abstract class BlockEffectProducer implements IBlockEffectProducer {
     public static final Predicate<BlockState> LAVA_PREDICATE = (state) -> state.getFluidState().isIn(FluidTags.LAVA);
 
     public static final Predicate<BlockState> WATER_PREDICATE = (state) -> state.getFluidState().isIn(FluidTags.WATER);
-
-    public static final Predicate<BlockState> SOLID_PREDICATE = (state) -> state.isSolid();
 
     // Covers blast furnace
     public static final Predicate<BlockState> LIT_FURNACE = (state) ->

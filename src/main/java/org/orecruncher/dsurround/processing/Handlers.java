@@ -55,7 +55,7 @@ public class Handlers {
     private void register(final Class<? extends ClientHandler> clazz) {
         var handler = ContainerManager.resolve(clazz);
         this.effectHandlers.add(handler);
-        this.logger.debug("Registered handler [%s]", handler.getClass().getName());
+        this.logger.debug("Registered handler [%s]", handler.getHandlerName());
     }
 
     private void init() {
@@ -63,19 +63,13 @@ public class Handlers {
         // been performed.
         this.startupSoundPlayed = !config.otherOptions.playRandomSoundOnStartup;
 
-        // Register so that Scanners can be instantiated
-        var container = ContainerManager.getDefaultContainer();
-        container.registerSingleton(CeilingScanner.class);
-        container.registerSingleton(VillageScanner.class);
-        container.registerSingleton(BiomeScanner.class);
-
         register(Scanners.class);           // Must be first
         register(PlayerHandler.class);
         register(EntityEffectHandler.class);
         register(BiomeSoundHandler.class);
         register(AreaBlockEffects.class);
 
-        ClientState.TICK_END.register(this::onTick);
+        ClientState.TICK_END.register(this::tick);
         ClientState.ON_CONNECT.register(this::onConnect);
         ClientState.ON_DISCONNECT.register(this::onDisconnect);
 
@@ -116,16 +110,16 @@ public class Handlers {
         return GameUtils.isInGame()
                 && !GameUtils.isPaused()
                 && !(GameUtils.getCurrentScreen() instanceof IndividualSoundControlScreen)
-                && playerChunkLoaded();
+                && isPlayerChunkLoaded();
     }
 
-    protected boolean playerChunkLoaded() {
+    protected boolean isPlayerChunkLoaded() {
         var player = GameUtils.getPlayer();
         var pos = player.getBlockPos();
         return WorldUtils.isChunkLoaded(player.getEntityWorld(), pos);
     }
 
-    public void onTick(MinecraftClient client) {
+    public void tick(MinecraftClient client) {
         if (!this.startupSoundPlayed)
             handleStartupSound();
 
@@ -169,5 +163,19 @@ public class Handlers {
             h.gatherDiagnostics(event.left, event.right, event.timers);
             event.timers.add(h.getTimer());
         });
+    }
+
+    public static void registerHandlers() {
+        // Register so that Scanners can be instantiated
+        ContainerManager.getDefaultContainer()
+            .registerSingleton(CeilingScanner.class)
+            .registerSingleton(VillageScanner.class)
+            .registerSingleton(BiomeScanner.class)
+            .registerSingleton(Scanners.class)
+            .registerSingleton(PlayerHandler.class)
+            .registerSingleton(EntityEffectHandler.class)
+            .registerSingleton(BiomeSoundHandler.class)
+            .registerSingleton(AreaBlockEffects.class)
+            .registerSingleton(Handlers.class);
     }
 }

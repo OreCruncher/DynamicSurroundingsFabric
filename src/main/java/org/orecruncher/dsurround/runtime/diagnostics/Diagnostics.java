@@ -5,6 +5,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Formatting;
+import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -12,6 +13,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.infra.ModInformation;
 import org.orecruncher.dsurround.lib.infra.events.ClientState;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
+import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
 @Environment(EnvType.CLIENT)
 public final class Diagnostics {
@@ -28,10 +30,10 @@ public final class Diagnostics {
 
         // Forces registration/creation of the various diagnostics plugins.
         // They should self register to the diagnostics collection event.
-        ContainerManager.resolve(ClientProfiler.class);
-        ContainerManager.resolve(BlockViewer.class);
-        ContainerManager.resolve(RuntimeDiagnostics.class);
-        ContainerManager.resolve(SoundEngineDiagnostics.class);
+        new ClientProfiler();
+        new BlockViewer(ContainerManager.resolve(IBlockLibrary.class));
+        new RuntimeDiagnostics(ContainerManager.resolve(IConditionEvaluator.class));
+        new SoundEngineDiagnostics();
 
         ClientState.TICK_END.register(this::tick);
     }

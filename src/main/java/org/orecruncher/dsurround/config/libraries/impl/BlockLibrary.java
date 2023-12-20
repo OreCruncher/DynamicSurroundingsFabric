@@ -19,6 +19,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
+import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.tags.TagHelpers;
 import org.orecruncher.dsurround.xface.IBlockStateExtended;
 
@@ -43,13 +44,15 @@ public class BlockLibrary implements IBlockLibrary {
 
     private final IModLog logger;
     private final IMinecraftDirectories directories;
+    private final IConditionEvaluator conditionEvaluator;
 
     private final Collection<BlockConfigRule> blockConfigs = new ObjectArray<>();
     private int version = 0;
 
-    public BlockLibrary(IModLog logger, IMinecraftDirectories directories) {
+    public BlockLibrary(IModLog logger, IMinecraftDirectories directories, IConditionEvaluator conditionEvaluator) {
         this.logger = logger;
         this.directories = directories;
+        this.conditionEvaluator = conditionEvaluator;
     }
 
     @Override
@@ -64,7 +67,7 @@ public class BlockLibrary implements IBlockLibrary {
                 this.blockConfigs.addAll(cfg);
         });
 
-        version++;
+        this.version++;
 
         this.logger.info("%d block configs loaded; version is now %d", blockConfigs.size(), version);
     }
@@ -78,7 +81,7 @@ public class BlockLibrary implements IBlockLibrary {
         }
 
         // OK - need to build out an info for the block.
-        info = new BlockInfo(this.version, state);
+        info = new BlockInfo(this.version, state, this.conditionEvaluator);
         for (var cfg : this.blockConfigs) {
             if (cfg.match(state)) info.update(cfg);
         }

@@ -13,7 +13,6 @@ import org.orecruncher.dsurround.effects.particles.ParticleSheets;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.infra.ModInformation;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.infra.IMinecraftMod;
@@ -23,7 +22,8 @@ import org.orecruncher.dsurround.lib.version.IVersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionResult;
 import org.orecruncher.dsurround.processing.Handlers;
-import org.orecruncher.dsurround.processing.Scanners;
+import org.orecruncher.dsurround.runtime.ConditionEvaluator;
+import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.runtime.diagnostics.*;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
@@ -41,7 +41,6 @@ public class Client implements IMinecraftMod, ClientModInitializer {
      */
     public static Configuration Config;
 
-    private ModInformation modInfo;
     private CompletableFuture<Optional<VersionResult>> versionInfo;
 
     @Override
@@ -63,11 +62,9 @@ public class Client implements IMinecraftMod, ClientModInitializer {
 
         // Bootstrap library functions
         Library.initialize(this, LOGGER);
+        Handlers.registerHandlers();
 
         Config = Configuration.getConfig();
-
-        var container = ContainerManager.getDefaultContainer();
-        this.modInfo = container.resolve(ModInformation.class);
 
         ClientState.STARTED.register(this::onComplete, HandlerPriority.VERY_HIGH);
         ClientState.ON_CONNECT.register(this::onConnect, HandlerPriority.LOW);
@@ -78,11 +75,10 @@ public class Client implements IMinecraftMod, ClientModInitializer {
 
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> Commands.register(dispatcher));
 
-        // Register services
-        container
+        // Register core services
+        ContainerManager.getDefaultContainer()
                 .registerSingleton(Config)
-                .registerSingleton(Handlers.class)
-                .registerSingleton(Scanners.class)
+                .registerSingleton(IConditionEvaluator.class, ConditionEvaluator.class)
                 .registerSingleton(Diagnostics.class)
                 .registerSingleton(IVersionChecker.class, VersionChecker.class)
                 .registerSingleton(ISoundLibrary.class, SoundLibrary.class)
@@ -105,6 +101,7 @@ public class Client implements IMinecraftMod, ClientModInitializer {
     }
 
     public void onComplete(MinecraftClient client) {
+
         var container = ContainerManager.getDefaultContainer();
 
         // Register the Minecraft sound manager

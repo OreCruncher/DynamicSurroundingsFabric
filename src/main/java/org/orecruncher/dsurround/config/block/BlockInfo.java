@@ -18,7 +18,7 @@ import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.runtime.ConditionEvaluator;
+import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.OcclusionTags;
@@ -44,6 +44,7 @@ public class BlockInfo {
     protected ObjectArray<IBlockEffectProducer> alwaysOnEffects;
 
     protected final int version;
+    protected final IConditionEvaluator conditionEvaluator;
 
     protected Script soundChance = new Script("0.01");
     protected float soundReflectivity = DEFAULT_REFLECTION;
@@ -51,10 +52,12 @@ public class BlockInfo {
 
     public BlockInfo(int version) {
         this.version = version;
+        this.conditionEvaluator = null;
     }
 
-    public BlockInfo(int version, BlockState state) {
+    public BlockInfo(int version, BlockState state, IConditionEvaluator conditionEvaluator) {
         this.version = version;
+        this.conditionEvaluator = conditionEvaluator;
         this.soundOcclusion = getSoundOcclusionSetting(state);
         this.soundReflectivity = getSoundReflectionSetting(state);
     }
@@ -146,7 +149,7 @@ public class BlockInfo {
 
     public ISoundFactory getSoundToPlay(final Random random) {
         if (this.sounds != null) {
-            var chance = ConditionEvaluator.INSTANCE.eval(this.soundChance);
+            var chance = this.conditionEvaluator.eval(this.soundChance);
             if (chance instanceof Double c && random.nextDouble() < c) {
                 var candidates = this.sounds.stream().filter(AcousticEntry::matches);
                 return WeightTable.makeSelection(candidates);
@@ -165,7 +168,7 @@ public class BlockInfo {
 
     public void trim() {
         if (this.sounds != null) {
-            if (sounds.isEmpty())
+            if (this.sounds.isEmpty())
                 this.sounds = null;
             else
                 this.sounds.trim();

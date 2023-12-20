@@ -10,7 +10,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.runtime.ConditionEvaluator;
+import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
 import java.util.List;
 
@@ -28,8 +28,10 @@ public class RuntimeDiagnostics implements IDiagnosticPlugin {
     );
 
     private final MinecraftClock clock = new MinecraftClock();
+    private final IConditionEvaluator conditionEvaluator;
 
-    public RuntimeDiagnostics() {
+    public RuntimeDiagnostics(IConditionEvaluator conditionEvaluator) {
+        this.conditionEvaluator = conditionEvaluator;
         ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect, HandlerPriority.HIGH);
     }
 
@@ -41,7 +43,7 @@ public class RuntimeDiagnostics implements IDiagnosticPlugin {
             event.left.add(Strings.EMPTY);
 
             for (String script : scripts) {
-                Object result = ConditionEvaluator.INSTANCE.eval(new Script(script));
+                Object result = this.conditionEvaluator.eval(new Script(script));
                 event.left.add(Formatting.YELLOW + result.toString());
             }
         }

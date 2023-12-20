@@ -24,7 +24,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.runtime.ConditionEvaluator;
+import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.TagHelpers;
@@ -51,6 +51,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private final boolean isRiver;
     private final boolean isOcean;
     private final boolean isDeepOcean;
+    private final IConditionEvaluator conditionEvaluator;
     private Color fogColor;
     private Script additionalSoundChance = DEFAULT_SOUND_CHANCE;
     private Script moodSoundChance = DEFAULT_SOUND_CHANCE;
@@ -65,6 +66,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         this.isRiver = this.traits.contains("RIVER");
         this.isOcean = this.traits.contains("OCEAN");
         this.isDeepOcean = this.isOcean && this.traits.contains("DEEP");
+        this.conditionEvaluator = ContainerManager.resolve(IConditionEvaluator.class);
     }
 
     public int getVersion() {
@@ -148,13 +150,13 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
         switch (type) {
             case ADDITION -> {
-                var chance = ConditionEvaluator.INSTANCE.eval(this.additionalSoundChance);
+                var chance = this.conditionEvaluator.eval(this.additionalSoundChance);
                 if (chance instanceof Double c) {
                     sourceList = random.nextDouble() < c ? this.additionalSounds : null;
                 }
             }
             case MOOD -> {
-                var chance = ConditionEvaluator.INSTANCE.eval(this.moodSoundChance);
+                var chance = this.conditionEvaluator.eval(this.moodSoundChance);
                 if (chance instanceof Double c) {
                     sourceList = random.nextDouble() < c ? this.moodSounds : null;
                 }

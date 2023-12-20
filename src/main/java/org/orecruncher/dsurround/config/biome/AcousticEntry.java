@@ -5,8 +5,9 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.WeightTable;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.runtime.ConditionEvaluator;
+import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
 @Environment(EnvType.CLIENT)
@@ -17,6 +18,7 @@ public class AcousticEntry implements WeightTable.IItem<ISoundFactory> {
     private final int weight;
     private final ISoundFactory acoustic;
     private final Script conditions;
+    private final IConditionEvaluator conditionEvaluator;
 
     public AcousticEntry(final ISoundFactory acoustic, @Nullable final Script condition) {
         this(acoustic, condition, DEFAULT_WEIGHT);
@@ -26,6 +28,7 @@ public class AcousticEntry implements WeightTable.IItem<ISoundFactory> {
         this.acoustic = acoustic;
         this.weight = weight;
         this.conditions = condition != null ? condition : Script.TRUE;
+        this.conditionEvaluator = ContainerManager.resolve(IConditionEvaluator.class);
     }
 
     @Override
@@ -47,7 +50,7 @@ public class AcousticEntry implements WeightTable.IItem<ISoundFactory> {
     }
 
     public boolean matches() {
-        return ConditionEvaluator.INSTANCE.check(this.conditions);
+        return this.conditions == Script.TRUE || this.conditionEvaluator.check(this.conditions);
     }
 
     protected Script getConditionsForLogging() {

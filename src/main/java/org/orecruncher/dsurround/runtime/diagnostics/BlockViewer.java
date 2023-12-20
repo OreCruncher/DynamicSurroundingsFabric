@@ -25,10 +25,10 @@ public class BlockViewer implements IDiagnosticPlugin {
     private static final String COLOR = Formatting.AQUA.toString();
     private static final String COLOR_TITLE = COLOR + Formatting.UNDERLINE;
 
-    @Injection
-    private final IBlockLibrary blockLibrary = DefaultValue.notSet();
+    private final IBlockLibrary blockLibrary;
 
-    public BlockViewer() {
+    public BlockViewer(IBlockLibrary blockLibrary) {
+        this.blockLibrary = blockLibrary;
         ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect);
     }
 
