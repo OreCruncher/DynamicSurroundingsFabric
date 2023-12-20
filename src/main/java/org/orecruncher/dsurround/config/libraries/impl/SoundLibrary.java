@@ -39,6 +39,7 @@ import static java.nio.file.StandardOpenOption.*;
 public final class SoundLibrary implements ISoundLibrary {
 
     private static final String FILE_NAME = "sounds.json";
+    private static final String SOUND_CONFIG_FILE = "soundconfig.json";
     private static final UnboundedMapCodec<String, SoundMetadataConfig> CODEC = Codec.unboundedMap(Codec.STRING, SoundMetadataConfig.CODEC);
     private static final Codec<List<IndividualSoundConfigEntry>> SOUND_CONFIG_CODEC = Codec.list(IndividualSoundConfigEntry.CODEC);
 
@@ -58,7 +59,7 @@ public final class SoundLibrary implements ISoundLibrary {
         this.logger = logger;
         this.myRegistry.defaultReturnValue(SoundLibrary.MISSING);
         this.soundMetadata.defaultReturnValue(new SoundMetadata());
-        this.soundConfigPath = directories.getModConfigDirectory().resolve("soundconfig.json");
+        this.soundConfigPath = directories.getModConfigDirectory().resolve(SOUND_CONFIG_FILE);
 
         this.loadSoundConfiguration();
     }
@@ -191,7 +192,32 @@ public final class SoundLibrary implements ISoundLibrary {
         this.startupSounds.clear();
         this.individualSoundConfiguration.clear();
 
-        // Bootstrap sound configurations
+        // Check to see if it exists on disk, and if so, load it up.  Otherwise, save it so the defaults are
+        // persisted and the user can edit manually.
+        try {
+            if (Files.exists(this.soundConfigPath)) {
+                var content = Files.readString(this.soundConfigPath);
+                var result = CodecExtensions.deserialize(content, SOUND_CONFIG_CODEC);
+                result.ifPresentOrElse(
+                        cfgList -> this.soundConfiguration.addAll(cfgList),
+                        () -> this.logger.warn("Unable to obtain content of %s!", SOUND_CONFIG_FILE)
+                );
+            } else {
+                this.addSoundConfigDefaults();
+            }
+        } catch (Throwable t) {
+            this.logger.error(t, "Unable to load sound configuration %s! Resetting to defaults.", SOUND_CONFIG_FILE);
+            this.addSoundConfigDefaults();
+        }
+
+        // Post load processing
+        this.validatePostLoad();
+
+        // Save it out.  Config parameters may have been added/removed
+        this.save();
+    }
+
+    private void addSoundConfigDefaults() {
         this.addSoundConfig("minecraft:entity.sheep.ambient", 100, false, true, false);
         this.addSoundConfig("minecraft:entity.chicken.ambient", 100, false, true, false);
         this.addSoundConfig("minecraft:entity.cow.ambient", 100, false, true, false);
@@ -204,27 +230,6 @@ public final class SoundLibrary implements ISoundLibrary {
         this.addSoundConfig("minecraft:entity.experience_orb.pickup", 100, false, false, true);
         this.addSoundConfig("minecraft:entity.chicken.egg", 100, false, false, true);
         this.addSoundConfig("minecraft:ambient.underwater.exit", 100, false, false, true);
-
-        // Check to see if it exists on disk, and if so, load it up.  Otherwise, save it so the defaults are
-        // persisted and the user can edit manually.
-        try {
-            if (Files.exists(this.soundConfigPath)) {
-                var content = Files.readString(this.soundConfigPath);
-                var result = CodecExtensions.deserialize(content, SOUND_CONFIG_CODEC);
-                result.ifPresentOrElse(
-                        cfgList -> this.soundConfiguration.addAll(cfgList),
-                        () -> this.logger.warn("Unable to obtain content of %s!", this.soundConfigPath)
-                );
-            }
-        } catch (Throwable t) {
-            this.logger.error(t, "Unable to handle configuration");
-        }
-
-        // Post load processing
-        this.validatePostLoad();
-
-        // Save it out.  Config parameters may have been added/removed
-        this.save();
     }
 
     private void addSoundConfig(final String id, int volumeScale, boolean block, boolean cull, boolean startup) {
@@ -249,6 +254,7 @@ public final class SoundLibrary implements ISoundLibrary {
     }
 
     private void save() {
+        this.soundConfiguration.sort(Comparator.comparing(e -> e.soundEventId));
         try {
             var result = SOUND_CONFIG_CODEC.encode(this.soundConfiguration, JsonOps.INSTANCE, JsonOps.INSTANCE.empty()).result();
             if (result.isPresent()) {
@@ -260,7 +266,7 @@ public final class SoundLibrary implements ISoundLibrary {
                 Files.writeString(this.soundConfigPath, output, CREATE, WRITE, TRUNCATE_EXISTING);
             }
         } catch (Throwable t) {
-            this.logger.error(t, "Unable to save sound configuration %s!", this.soundConfigPath);
+            this.logger.error(t, "Unable to save sound configuration %s!", SOUND_CONFIG_FILE);
         }
     }
 }

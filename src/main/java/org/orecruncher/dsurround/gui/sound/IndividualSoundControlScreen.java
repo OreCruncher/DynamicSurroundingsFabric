@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.gui.sound;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -54,8 +53,6 @@ public class IndividualSoundControlScreen extends Screen {
 
     @Override
     protected void init() {
-        //GameUtils.getKeyboard().setRepeatEvents(true);
-
         // Setup search bar
         final int searchBarLeftMargin = (this.width - SEARCH_BAR_WIDTH) / 2;
         final int searchBarY = TOP_OFFSET + HEADER_HEIGHT - SEARCH_BAR_HEIGHT;
@@ -80,7 +77,6 @@ public class IndividualSoundControlScreen extends Screen {
                 this.width,
                 bottomY,
                 topY,
-                bottomY,
                 SELECTION_WIDTH,
                 SELECTION_HEIGHT,
                 this.enablePlay,
@@ -118,10 +114,6 @@ public class IndividualSoundControlScreen extends Screen {
         // problem for the player while their head is buried in the menu.)
         if (this.enablePlay)
             GameUtils.getSoundManager().tick(false);
-    }
-
-    public boolean isPauseScreen() {
-        return true;
     }
 
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {

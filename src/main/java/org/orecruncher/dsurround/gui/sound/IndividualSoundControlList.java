@@ -28,8 +28,8 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
     private List<IndividualSoundConfigEntry> source;
     private String lastSearchText = null;
 
-    public IndividualSoundControlList(final Screen parent, final MinecraftClient mcIn, int widthIn, int heightIn, int topIn, int bottomIn, int slotWidth, int slotHeightIn, boolean enablePlay, final Supplier<String> filter, @Nullable final IndividualSoundControlList oldList) {
-        super(mcIn, widthIn, heightIn, topIn, /* bottomIn ,*/ slotHeightIn);
+    public IndividualSoundControlList(final Screen parent, final MinecraftClient mcIn, int widthIn, int heightIn, int topIn, int slotWidth, int slotHeightIn, boolean enablePlay, final Supplier<String> filter, @Nullable final IndividualSoundControlList oldList) {
+        super(mcIn, widthIn, heightIn, topIn, slotHeightIn);
 
         this.soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
 
@@ -123,7 +123,7 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
 
     protected Collection<IndividualSoundConfigEntry> getSortedSoundConfigurations() {
 
-        final SortedMap<Identifier, IndividualSoundConfigEntry> map = new TreeMap<>();
+        final Map<Identifier, IndividualSoundConfigEntry> map = new HashMap<>();
 
         // Get a list of all registered sounds.  We don't use the vanilla registries since
         // we will have more sounds than are registered.
@@ -137,7 +137,6 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
             map.put(entry.soundEventId, entry);
         }
 
-        final Comparator<IndividualSoundConfigEntry> iscComparator = Comparator.comparing(isc -> isc.soundEventId);
-        return map.values().stream().sorted(iscComparator).collect(Collectors.toList());
+        return map.values().stream().sorted(IndividualSoundConfigEntry::compareTo).collect(Collectors.toList());
     }
 }

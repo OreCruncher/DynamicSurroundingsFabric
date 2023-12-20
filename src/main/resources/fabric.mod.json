@@ -9,8 +9,7 @@
   ],
   "contact": {
     "homepage": "https://github.com/OreCruncher/DynamicSurroundingsFabric",
-    "issues": "https://github.com/OreCruncher/DynamicSurroundingsFabric/issues",
-    "sources": "https://github.com/OreCruncher/DynamicSurroundingsFabric"
+    "issues": "https://github.com/OreCruncher/DynamicSurroundingsFabric/issues"
   },
   "license": "MIT",
   "icon": "assets/dsurround/icon.png",
