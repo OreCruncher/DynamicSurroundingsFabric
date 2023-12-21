@@ -80,7 +80,7 @@ public class ItemLibrary implements IItemLibrary {
         if (sound != null)
             return SoundFactoryBuilder
                     .create(sound)
-                    .category(SoundCategory.PLAYERS).volume(0.15F).pitchRange(0.8F, 1.2F).build();
+                    .category(SoundCategory.PLAYERS).volume(0.07F).pitchRange(0.8F, 1F).build();
         return null;
     }
 

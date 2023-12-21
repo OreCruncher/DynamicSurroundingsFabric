@@ -21,7 +21,7 @@ class WaterySurfaceAccent implements IFootstepAccentProvider {
 
     private static final ISoundFactory wetSurfaceFactory = SoundFactoryBuilder
             .create(SoundEvent.of(new Identifier("dsurround", "footsteps.water_through")))
-            .category(SoundCategory.PLAYERS).volume(0.8F).pitchRange(0.8F, 1.2F).build();
+            .category(SoundCategory.PLAYERS).volume(0.3F).pitchRange(0.8F, 1.2F).build();
 
     private final Configuration config;
 
