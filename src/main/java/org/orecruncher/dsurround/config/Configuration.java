@@ -7,7 +7,6 @@ import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
-import org.orecruncher.dsurround.processing.accents.FootstepAccents;
 
 @Environment(EnvType.CLIENT)
 public class Configuration extends ConfigurationData {
@@ -162,19 +161,20 @@ public class Configuration extends ConfigurationData {
         public int blockEffectRange = 24;
 
         @Property
-        @RestartRequired
         @Comment("Enable/disable steam column effect when liquids are adjacent to hot sources, like lava and magma")
         public boolean steamColumnEnabled = true;
 
         @Property
-        @RestartRequired
         @Comment("Enable/disable flame jets produced over lava, etc.")
         public boolean flameJetEnabled = true;
 
         @Property
-        @RestartRequired
         @Comment("Enable/disable bubble columns generated underwater")
         public boolean bubbleColumnEnabled = true;
+
+        @Property
+        @Comment("Enable/disable firefly generation")
+        public boolean firefliesEnabled = true;
 
         @Property
         @RestartRequired

@@ -79,6 +79,8 @@
   "dsurround.config.blockEffects.flameJetEnabled.tooltip": "Enable/disable flame jets produced over lava and nether wart",
   "dsurround.config.blockEffects.bubbleColumnEnabled": "Enable Bubble Columns",
   "dsurround.config.blockEffects.bubbleColumnEnabled.tooltip": "Enable/disable bubble columns generated underwater",
+  "dsurround.config.blockEffects.firefliesEnabled": "Enable Fireflies",
+  "dsurround.config.blockEffects.firefliesEnabled.tooltip": "Enable/disable firefly particle effects",
   "dsurround.config.blockEffects.waterfallsEnabled": "Enable Waterfalls",
   "dsurround.config.blockEffects.waterfallsEnabled.tooltip": "Enable/disable waterfall effect from flowing water",
   "dsurround.config.blockEffects.enableWaterfallSounds": "Enable Waterfall Sounds",
