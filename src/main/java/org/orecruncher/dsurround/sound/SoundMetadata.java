@@ -14,31 +14,29 @@ import java.util.Objects;
 @Environment(EnvType.CLIENT)
 public final class SoundMetadata {
 
-    private static final Text NO_STRING = Text.empty();
-
     private final Text title;
     private final Text caption;
     private final List<Text> credits;
 
     public SoundMetadata() {
-        this.title = NO_STRING;
-        this.caption = NO_STRING;
+        this.title = Text.empty();
+        this.caption = Text.empty();
         this.credits = ImmutableList.of();
     }
 
     public SoundMetadata(final SoundMetadataConfig cfg) {
         Objects.requireNonNull(cfg);
 
-        this.title = cfg.title.isPresent() ? Text.translatable(cfg.title.get()) : NO_STRING;
-        this.caption = cfg.caption.isPresent() ? Text.translatable(cfg.caption.get()) : NO_STRING;
+        this.title = cfg.title().map(Text::translatable).orElse(Text.empty());
+        this.caption = cfg.caption().map(Text::translatable).orElse(Text.empty());
 
-        if (cfg.credits == null || cfg.credits.size() == 0) {
+        if (cfg.credits() == null || cfg.credits().isEmpty()) {
             this.credits = ImmutableList.of();
         } else {
             this.credits = new ArrayList<>();
-            for (final String s : cfg.credits) {
+            for (final String s : cfg.credits()) {
                 if (StringUtils.isEmpty(s))
-                    this.credits.add(NO_STRING);
+                    this.credits.add(Text.empty());
                 else
                     this.credits.add(Text.of(s));
             }

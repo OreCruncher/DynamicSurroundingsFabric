@@ -8,31 +8,30 @@ import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.util.Formatting;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.math.TimerEMA;
+import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundSystemAccessors;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Environment(EnvType.CLIENT)
-public final class SoundEngineDiagnostics {
+public class SoundEngineDiagnostics implements IDiagnosticPlugin {
 
     private static final String FMT_DBG_SOUND = Formatting.GOLD + "%s: %d";
 
-    public static void register() {
-        ClientEventHooks.COLLECT_DIAGNOSTICS.register(SoundEngineDiagnostics::onCollect);
+    public SoundEngineDiagnostics() {
+        ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect, HandlerPriority.LOW);
     }
 
-    private static void onCollect(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
-        left.add(Strings.EMPTY);
+    public void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
+        event.left.add(Strings.EMPTY);
         MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) GameUtils.getSoundManager();
         MixinSoundSystemAccessors accessors = (MixinSoundSystemAccessors) manager.getSoundSystem();
         Map<SoundInstance, Channel.SourceManager> sources = accessors.getSources();
 
-        left.add(Formatting.GOLD + GameUtils.getSoundManager().getDebugString());
+        event.left.add(Formatting.GOLD + GameUtils.getSoundManager().getDebugString());
 
         if (!sources.isEmpty()) {
             accessors.getSources().keySet().stream()
@@ -41,9 +40,9 @@ public final class SoundEngineDiagnostics {
                     .entrySet().stream()
                     .map(e -> String.format(FMT_DBG_SOUND, e.getKey().toString(), e.getValue()))
                     .sorted()
-                    .forEach(left::add);
+                    .forEach(event.left::add);
         } else {
-            left.add(Formatting.GOLD + "  No sounds playing");
+            event.left.add(Formatting.GOLD + "  No sounds playing");
         }
     }
 }

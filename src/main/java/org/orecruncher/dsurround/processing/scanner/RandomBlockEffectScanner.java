@@ -4,12 +4,12 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
-import org.orecruncher.dsurround.config.BlockLibrary;
+import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.scanner.RandomScanner;
 import org.orecruncher.dsurround.lib.scanner.ScanContext;
 import org.orecruncher.dsurround.processing.misc.BlockEffectManager;
-import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
+import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 import java.util.Collection;
 import java.util.Random;
@@ -22,24 +22,28 @@ public class RandomBlockEffectScanner extends RandomScanner {
     private static final int ITERATION_COUNT = 667;
 
     private final BlockEffectManager effectManager;
+    private final IBlockLibrary blockLibrary;
+    private final IAudioPlayer audioPlayer;
 
-    public RandomBlockEffectScanner(final ScanContext locus, final BlockEffectManager manager, int range) {
+    public RandomBlockEffectScanner(final ScanContext locus, final IBlockLibrary blockLibrary, IAudioPlayer audioPlayer, final BlockEffectManager manager, int range) {
         super(locus, "RandomBlockScanner: " + range, range, ITERATION_COUNT);
 
         this.effectManager = manager;
+        this.blockLibrary = blockLibrary;
+        this.audioPlayer = audioPlayer;
     }
 
     @Override
     protected boolean interestingBlock(final BlockState state) {
-        return BlockLibrary.getBlockInfo(state).hasSoundsOrEffects();
+        return this.blockLibrary.getBlockInfo(state).hasSoundsOrEffects();
     }
 
     @Override
     public void blockScan(final BlockState state, final BlockPos pos, final Random rand) {
-        var info = BlockLibrary.getBlockInfo(state);
+        var info = this.blockLibrary.getBlockInfo(state);
 
         final Collection<IBlockEffectProducer> effects = info.getEffectProducers();
-        if (effects.size() > 0 && this.effectManager.okToSpawn(pos)) {
+        if (!effects.isEmpty() && this.effectManager.okToSpawn(pos)) {
             var world = this.locus.getWorld();
             for (var be : effects) {
                 var effect = be.produce(world, state, pos, rand);
@@ -54,8 +58,7 @@ public class RandomBlockEffectScanner extends RandomScanner {
         var sound = info.getSoundToPlay(rand);
         if (sound != null) {
             var instance = sound.createAtLocation(pos);
-            MinecraftAudioPlayer.INSTANCE.play(instance);
+            this.audioPlayer.play(instance);
         }
     }
-
 }

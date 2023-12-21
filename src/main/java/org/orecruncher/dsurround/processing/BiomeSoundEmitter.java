@@ -2,13 +2,17 @@ package org.orecruncher.dsurround.processing;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.sound.BackgroundSoundLoop;
+import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.ISoundFactory;
-import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 
 @Environment(EnvType.CLIENT)
 public final class BiomeSoundEmitter {
+
+    private static final IModLog logger = ContainerManager.resolve(IModLog.class);
+    private static final IAudioPlayer audioPlayer = ContainerManager.resolve(IAudioPlayer.class);
 
     private final ISoundFactory soundEvent;
     private final BackgroundSoundLoop acousticSource;
@@ -22,7 +26,7 @@ public final class BiomeSoundEmitter {
 
     public void tick() {
 
-        boolean isPlaying = MinecraftAudioPlayer.INSTANCE.isPlaying(this.acousticSource);
+        boolean isPlaying = audioPlayer.isPlaying(this.acousticSource);
 
         // If the current sound is playing and the sound is fading just terminate the sound.
         if (isPlaying) {
@@ -38,7 +42,7 @@ public final class BiomeSoundEmitter {
         }
 
         // Play the sound if need be
-        MinecraftAudioPlayer.INSTANCE.play(this.acousticSource);
+        audioPlayer.play(this.acousticSource);
     }
 
     public void setVolumeScale(final float scale) {
@@ -46,7 +50,7 @@ public final class BiomeSoundEmitter {
     }
 
     public void fade() {
-        Client.LOGGER.debug("FADE: %s", this.acousticSource.toString());
+        logger.debug("FADE: %s", this.acousticSource.toString());
         this.acousticSource.fadeOut();
     }
 
@@ -55,7 +59,7 @@ public final class BiomeSoundEmitter {
     }
 
     public void unfade() {
-        Client.LOGGER.debug("UNFADE: %s", this.acousticSource.toString());
+        logger.debug("UNFADE: %s", this.acousticSource.toString());
         this.acousticSource.fadeIn();
     }
 
@@ -64,7 +68,7 @@ public final class BiomeSoundEmitter {
     }
 
     public void stop() {
-        MinecraftAudioPlayer.INSTANCE.stop(this.acousticSource);
+        audioPlayer.stop(this.acousticSource);
         this.done = true;
     }
 

@@ -2,44 +2,35 @@ package org.orecruncher.dsurround.eventing;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.event.Event;
-import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.util.math.BlockPos;
-import org.orecruncher.dsurround.lib.Guard;
+import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.events.EventingFactory;
+import org.orecruncher.dsurround.lib.events.IPhasedEvent;
+import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
 
 import java.util.Collection;
 
 @Environment(EnvType.CLIENT)
 public final class ClientEventHooks {
-
     /**
      * Used to collect diagnostic information for display in the debug HUD
      */
-    public static Event<CollectDiagnosticsEvent> COLLECT_DIAGNOSTICS = EventFactory.createArrayBacked(
-            CollectDiagnosticsEvent.class,
-            callbacks -> (left, right, timers) -> {
-                for (CollectDiagnosticsEvent callback : callbacks)
-                    Guard.execute(() -> callback.onCollect(left, right, timers));
-            });
+    public static final IPhasedEvent<CollectDiagnosticsEvent> COLLECT_DIAGNOSTICS = EventingFactory.createPrioritizedEvent();
+
 
     /**
      * Fired when block state updates are received clientside.  Results are coalesced for efficiency.
      */
-    public static Event<BlockUpdateEvent> BLOCK_UPDATE = EventFactory.createArrayBacked(
-            BlockUpdateEvent.class,
-            callbacks -> (positions) -> {
-                for (BlockUpdateEvent callback : callbacks)
-                    Guard.execute(() -> callback.onUpdate(positions));
-            });
+    public static IPhasedEvent<BlockUpdateEvent> BLOCK_UPDATE = EventingFactory.createPrioritizedEvent();
 
-    @FunctionalInterface
-    public interface CollectDiagnosticsEvent {
-        void onCollect(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers);
+    public static final class CollectDiagnosticsEvent {
+        public final ObjectArray<String> left = new ObjectArray<>();
+        public final ObjectArray<String> right = new ObjectArray<>();
+        public final ObjectArray<ITimer> timers = new ObjectArray<>();
     }
 
-    @FunctionalInterface
-    public interface BlockUpdateEvent {
-        void onUpdate(Collection<BlockPos> positions);
+    public record BlockUpdateEvent(Collection<BlockPos> updates){
+
     }
 }

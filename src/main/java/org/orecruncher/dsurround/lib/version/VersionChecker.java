@@ -1,71 +1,53 @@
 package org.orecruncher.dsurround.lib.version;
 
-import net.minecraft.client.resource.language.I18n;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.CodecExtensions;
 
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import net.fabricmc.loader.api.Version;
+import org.orecruncher.dsurround.lib.FrameworkUtils;
+import org.orecruncher.dsurround.lib.infra.ModInformation;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 
-public class VersionChecker {
+public class VersionChecker implements IVersionChecker {
 
-    public static Optional<String> getVersionData(URL url) {
-        try (InputStream in = url.openStream()) {
-            byte[] bytes = in.readAllBytes();
-            return Optional.of(new String(bytes, StandardCharsets.UTF_8));
-        } catch (Throwable t) {
-            Client.LOGGER.error(t, "Unable to fetch version information from %s", url);
+    private final IModLog logger;
+    private final ModInformation modInfo;
+
+    public VersionChecker(ModInformation modInformation, IModLog logger) {
+        this.logger = logger;
+        this.modInfo = modInformation;
+    }
+
+    @Override
+    public Optional<VersionResult> getUpdateText() {
+        return this.getVersionInformation().flatMap(this::getUpdateText);
+    }
+
+    private Optional<VersionInformation> getVersionInformation() {
+        return this.getVersionData().flatMap(c -> CodecExtensions.deserialize(c, VersionInformation.CODEC));
+    }
+
+    private Optional<String> getVersionData() {
+        var url = this.modInfo.get_updateUrl();
+        if (url != null) {
+            try (InputStream in = this.modInfo.get_updateUrl().openStream()) {
+                byte[] bytes = in.readAllBytes();
+                return Optional.of(new String(bytes, StandardCharsets.UTF_8));
+            } catch (Throwable t) {
+                this.logger.error(t, "Unable to fetch version information from %s", this.modInfo.get_updateUrl());
+            }
         }
         return Optional.empty();
     }
 
-    public static Optional<VersionInformation> getVersionInformation(URL url) {
-        var content = getVersionData(url);
-        if (content.isPresent()) {
-            return CodecExtensions.deserialize(content.get(), VersionInformation.CODEC);
-        }
-        return Optional.empty();
-    }
-
-    public static Optional<VersionResult> getUpdateText(String displayName, Version minecraftVersion, Version modVersion, VersionInformation info) {
-        // Sanitize the display name to remove any formatting
-        displayName = Formatting.strip(displayName);
-
-        var result = info.getNewestVersion(minecraftVersion, modVersion);
+    private Optional<VersionResult> getUpdateText(VersionInformation info) {
+        var result = info.getNewestVersion(FrameworkUtils.getMinecraftVersion(), this.modInfo.get_version());
         if (result.isEmpty())
             return Optional.empty();
 
         var version = result.get().getFirst();
-        return Optional.of(new VersionResult(version,displayName, info.downloadLocation));
-    }
-
-    public static Optional<VersionResult> getUpdateText(String displayName, Version minecraftVersion, Version modVersion, URL dataLocation) {
-        var info = getVersionInformation(dataLocation);
-        if (info.isEmpty())
-            return Optional.empty();
-        return getUpdateText(displayName, minecraftVersion, modVersion, info.get());
-    }
-
-    public static class VersionResult {
-        public final Version version;
-        public final String displayName;
-        public final String downloadLocation;
-
-        VersionResult(Version version, String displayName, String downloadLocation) {
-            this.version = version;
-            this.displayName = displayName;
-            this.downloadLocation = downloadLocation;
-        }
-
-        public Text getChatText() {
-            var formattedText = I18n.translate("dsurround.text.NewVersion", this.displayName, this.version.getFriendlyString(), this.downloadLocation);
-            return Text.Serialization.fromJson(formattedText);
-        }
+        return Optional.of(new VersionResult(version, this.modInfo.get_displayName(), this.modInfo.get_curseForgeLink(), this.modInfo.get_modrinthLink()));
     }
 }

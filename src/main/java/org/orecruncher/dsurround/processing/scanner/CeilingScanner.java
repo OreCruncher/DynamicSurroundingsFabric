@@ -9,7 +9,7 @@ import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
-import org.orecruncher.dsurround.config.DimensionLibrary;
+import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -53,13 +53,18 @@ public final class CeilingScanner {
         NON_CEILING.add(BlockTags.WALLS);
     }
 
+    private final IDimensionLibrary dimensionLibrary;
     private boolean reallyInside = false;
+
+    public CeilingScanner(IDimensionLibrary dimensionLibrary) {
+        this.dimensionLibrary = dimensionLibrary;
+    }
 
     public void tick(long tickCount) {
         if (tickCount % SURVEY_INTERVAL != 0)
             return;
 
-        final DimensionInfo dimInfo = DimensionLibrary.getData(GameUtils.getWorld());
+        final DimensionInfo dimInfo = this.dimensionLibrary.getData(GameUtils.getWorld());
         if (dimInfo.alwaysOutside()) {
             this.reallyInside = false;
         } else {
@@ -148,5 +153,4 @@ public final class CeilingScanner {
             return true;
         }
     }
-
 }

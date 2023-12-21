@@ -7,17 +7,19 @@ import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import org.jetbrains.annotations.NotNull;
+import org.orecruncher.dsurround.lib.Comparers;
 
 @Environment(EnvType.CLIENT)
-public class IndividualSoundConfigEntry {
+public class IndividualSoundConfigEntry implements Comparable<IndividualSoundConfigEntry> {
 
     public static final Codec<IndividualSoundConfigEntry> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
-                Identifier.CODEC.fieldOf("soundEventId").forGetter(info -> info.soundEventId),
-                Codec.intRange(0, 400).optionalFieldOf("volumeScale", 100).forGetter(info -> info.volumeScale),
-                Codec.BOOL.optionalFieldOf("block", false).forGetter(info -> info.block),
-                Codec.BOOL.optionalFieldOf("cull", false).forGetter(info -> info.cull),
-                Codec.BOOL.optionalFieldOf("startup", false).forGetter(info -> info.startup)
+                    Identifier.CODEC.fieldOf("soundEventId").forGetter(info -> info.soundEventId),
+                    Codec.intRange(0, 400).optionalFieldOf("volumeScale", 100).forGetter(info -> info.volumeScale),
+                    Codec.BOOL.optionalFieldOf("block", false).forGetter(info -> info.block),
+                    Codec.BOOL.optionalFieldOf("cull", false).forGetter(info -> info.cull),
+                    Codec.BOOL.optionalFieldOf("startup", false).forGetter(info -> info.startup)
             ).apply(instance, IndividualSoundConfigEntry::new));
 
     public Identifier soundEventId;
@@ -26,7 +28,7 @@ public class IndividualSoundConfigEntry {
     public boolean cull;
     public boolean startup;
 
-    IndividualSoundConfigEntry(Identifier id, Integer volumeScale, Boolean block, Boolean cull, Boolean startup) {
+    public IndividualSoundConfigEntry(Identifier id, Integer volumeScale, Boolean block, Boolean cull, Boolean startup) {
         this.soundEventId = id;
         this.volumeScale = MathHelper.clamp(volumeScale, 0, 400);
         this.block = block;
@@ -42,12 +44,12 @@ public class IndividualSoundConfigEntry {
         this.startup = source.startup;
     }
 
-    public IndividualSoundConfigEntry(String id) {
-        this(new Identifier(id), 100, false, false, false);
+    public IndividualSoundConfigEntry(Identifier id) {
+        this(id, 100, false, false, false);
     }
 
     public static IndividualSoundConfigEntry createDefault(final SoundEvent event) {
-        return new IndividualSoundConfigEntry(event.getId().toString());
+        return new IndividualSoundConfigEntry(event.getId());
     }
 
     public static IndividualSoundConfigEntry from(IndividualSoundConfigEntry source) {
@@ -56,5 +58,29 @@ public class IndividualSoundConfigEntry {
 
     public boolean isNotDefault() {
         return this.volumeScale != 100 || this.block || this.cull || this.startup;
+    }
+
+    @Override
+    public String toString() {
+        var builder = new StringBuilder();
+        builder.append(this.soundEventId.toString()).append("{");
+        if (this.cull)
+            builder.append("cull ");
+        if (this.block)
+            builder.append("block ");
+        if (this.startup)
+            builder.append("startup");
+        builder.append("}");
+        return builder.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return this.soundEventId.hashCode();
+    }
+
+    @Override
+    public int compareTo(@NotNull IndividualSoundConfigEntry o) {
+        return Comparers.IDENTIFIER_NATURAL_COMPARABLE.compare(this.soundEventId, o.soundEventId);
     }
 }

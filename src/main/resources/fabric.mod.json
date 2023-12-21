@@ -8,7 +8,7 @@
     "\u00a7aOreCruncher\u00a7r"
   ],
   "contact": {
-    "homepage": "https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings-fabric-edition",
+    "homepage": "https://github.com/OreCruncher/DynamicSurroundingsFabric",
     "issues": "https://github.com/OreCruncher/DynamicSurroundingsFabric/issues"
   },
   "license": "MIT",
@@ -42,7 +42,9 @@
       }
     },
     "dsurround": {
-      "updateURL": "https://raw.githubusercontent.com/OreCruncher/DynamicSurroundingsFabric/main/versions.json"
+      "updateURL": "https://raw.githubusercontent.com/OreCruncher/DynamicSurroundingsFabric/main/versions.json",
+      "curseForgeLink": "https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings-fabric-edition",
+      "modrinthLink": "https://modrinth.com/mod/dynamicsurroundingsfabric"
     }
   }
 }

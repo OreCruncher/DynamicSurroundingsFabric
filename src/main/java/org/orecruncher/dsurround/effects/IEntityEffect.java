@@ -6,7 +6,8 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.sound.SoundInstance;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 @Environment(EnvType.CLIENT)
 public interface IEntityEffect {
@@ -37,7 +38,7 @@ public interface IEntityEffect {
      * Helper method to play a sound.
      */
     default void playSound(SoundInstance sound) {
-        MinecraftAudioPlayer.INSTANCE.play(sound);
+        ContainerManager.resolve(IAudioPlayer.class).play(sound);
     }
 
     /**

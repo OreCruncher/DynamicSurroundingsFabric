@@ -43,6 +43,10 @@ public class FrameworkUtils {
         return container.map(modContainer -> modContainer.getMetadata().getName()).orElse(null);
     }
 
+    public static @Nullable Version getMinecraftVersion() {
+        return getModVersion("minecraft");
+    }
+
     public static @Nullable Version getModVersion(String namespace) {
         var container = FabricLoader.getInstance().getModContainer(namespace);
         return container.map(modContainer -> modContainer.getMetadata().getVersion()).orElse(null);

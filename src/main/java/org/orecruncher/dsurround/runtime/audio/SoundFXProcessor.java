@@ -117,7 +117,7 @@ public final class SoundFXProcessor {
             return;
 
         ISourceContext source = (ISourceContext) entry.source;
-        var id = source.getId();
+        int id = source.getId();
         if (id > 0) {
             final SourceContext ctx = new SourceContext(id);
             ctx.attachSound(sound);
@@ -226,11 +226,11 @@ public final class SoundFXProcessor {
     /**
      * Gather diagnostics for the display
      */
-    private static void onGatherText(Collection<String> left, Collection<String> right, Collection<TimerEMA> timerEMAS) {
+    private static void onGatherText(ClientEventHooks.CollectDiagnosticsEvent event ) {
         if (isAvailable() && soundProcessor != null) {
             final String msg = soundProcessor.getDiagnosticString();
             if (!StringUtils.isEmpty(msg))
-                left.add(Formatting.GREEN + msg);
+                event.left.add(Formatting.GREEN + msg);
         }
     }
 }

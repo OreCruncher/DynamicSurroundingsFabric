@@ -6,8 +6,9 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.Property;
-import net.minecraft.util.Identifier;
+import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.IMatcher;
+import org.orecruncher.dsurround.lib.IdentityUtils;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -49,16 +50,19 @@ public abstract class BlockStateMatcher implements IMatcher<BlockState> {
     public static IMatcher<BlockState> create(final String blockId, boolean allowTags, boolean allowMaterials) throws BlockStateParseException {
         if (blockId.startsWith(TAG_TYPE))
             if (allowTags)
-                return createTagMatcher(blockId.substring(1));
+                return createTagMatcher(blockId);
             else
                 throw new BlockStateParseException(String.format("Block id %s is for a tag, and it is not permitted in this context", blockId));
         return createBlockStateMatcher(BlockStateParser.parse(blockId));
     }
 
-    private static BlockStateMatcher createTagMatcher(String tagId) throws BlockStateParseException{
-        if (!Identifier.isValid(tagId))
+    private static BlockStateMatcher createTagMatcher(String tagId) throws BlockStateParseException {
+        try {
+            var id = IdentityUtils.resolveIdentifier(Client.ModId, tagId);
+            return new MatchOnBlockTag(id);
+        } catch (Throwable ignored) {
             throw new BlockStateParseException(String.format("%s is not a valid block tag", tagId));
-        return new MatchOnBlockTag(new Identifier(tagId));
+        }
     }
 
     private static BlockStateMatcher createBlockStateMatcher(final BlockStateParser.ParseResult result) throws BlockStateParseException {

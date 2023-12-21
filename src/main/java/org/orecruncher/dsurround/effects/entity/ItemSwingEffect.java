@@ -6,36 +6,21 @@ import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Hand;
+import net.minecraft.util.UseAction;
 import net.minecraft.util.hit.HitResult;
-import org.orecruncher.dsurround.config.ItemLibrary;
-import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
-
-import java.util.function.Function;
+import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 
 @Environment(EnvType.CLIENT)
 public class ItemSwingEffect extends EntityEffectBase {
 
-    private HandHandler offHand;
-    private HandHandler mainHand;
+    private final IItemLibrary itemLibrary;
+    private boolean isSwinging;
 
-    @Override
-    public void activate(final EntityEffectInfo info) {
-        this.mainHand = new HandHandler(
-                entity -> entity.handSwinging,
-                entity -> entity.getStackInHand(Hand.MAIN_HAND)
-        );
-
-        this.offHand = new HandHandler(
-                LivingEntity::isUsingItem,
-                LivingEntity::getActiveItem
-        ) {
-            @Override
-            public boolean freeSwing(LivingEntity entity) {
-                return true;
-            }
-        };
+    public ItemSwingEffect(IItemLibrary itemLibrary) {
+        this.itemLibrary = itemLibrary;
     }
 
     @Override
@@ -51,53 +36,49 @@ public class ItemSwingEffect extends EntityEffectBase {
         if (entity.getVehicle() instanceof BoatEntity)
             return;
 
-        this.mainHand.tick(info, entity);
-        this.offHand.tick(info, entity);
+        // Don't use entity.isBlocking() - it has a 5 tick delay which would cause the
+        // animation and the sound play to be out of sync.
+        var isTriggered = entity.getHandSwingProgress(1F) > 0 || looksToBeBlocking(entity);
+
+        if (isTriggered) {
+            if (!this.isSwinging) {
+                ItemStack currentItem;
+                if (entity.handSwinging)
+                    currentItem = entity.getStackInHand(Hand.MAIN_HAND);
+                else
+                    currentItem = entity.getActiveItem();
+
+                var factory = this.itemLibrary.getItemSwingSound(currentItem);
+
+                if (factory != null && freeSwing(entity)) {
+                    SoundInstance instance;
+                    if (info.isCurrentPlayer(entity)) {
+                        instance = factory.createAsAdditional();
+                    } else {
+                        instance = factory.createAtEntity(entity);
+                    }
+
+                    if (instance != null)
+                        this.playSound(instance);
+                }
+
+                this.isSwinging = true;
+            }
+        } else
+            this.isSwinging = false;
     }
 
-    private static class HandHandler {
-
-        private final Function<LivingEntity, Boolean> isTriggered;
-        private final Function<LivingEntity, ItemStack> getActiveItemStack;
-
-        private boolean isSwinging;
-
-        public HandHandler(Function<LivingEntity, Boolean> isTriggered, Function<LivingEntity, ItemStack> getActiveItemStack) {
-            this.isTriggered = isTriggered;
-            this.getActiveItemStack = getActiveItemStack;
+    protected static boolean looksToBeBlocking(LivingEntity entity) {
+        if (!entity.isUsingItem() || entity.getActiveItem().isEmpty()) {
+            return false;
         }
+        Item item = entity.getActiveItem().getItem();
+        return item.getUseAction(entity.getActiveItem()) == UseAction.BLOCK;
+    }
 
-        public void tick(final EntityEffectInfo info, final LivingEntity entity) {
-            if (this.isTriggered.apply(entity)) {
-                if (!this.isSwinging) {
-                    var currentItem = this.getActiveItemStack.apply(entity);
-                    if (!currentItem.isEmpty()) {
-                        if (freeSwing(entity)) {
-                            var factory = ItemLibrary.getItemSwingSound(currentItem);
-                            if (factory != null) {
-                                SoundInstance instance;
-                                if (info.isCurrentPlayer(entity)) {
-                                    instance = factory.createAsAdditional();
-                                } else {
-                                    instance = factory.createAtEntity(entity);
-                                }
-
-                                if (instance != null)
-                                    MinecraftAudioPlayer.INSTANCE.play(instance);
-                            }
-                        }
-                    }
-                }
-                this.isSwinging = true;
-            } else {
-                this.isSwinging = false;
-            }
-        }
-
-        protected boolean freeSwing(LivingEntity entity) {
-            var result = rayTraceBlock(entity);
-            return result.getType() == HitResult.Type.MISS;
-        }
+    protected static boolean freeSwing(LivingEntity entity) {
+        var result = rayTraceBlock(entity);
+        return result.getType() == HitResult.Type.MISS;
     }
 
     protected static double getReach(final LivingEntity entity) {

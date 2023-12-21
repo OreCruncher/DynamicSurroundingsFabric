@@ -7,14 +7,18 @@ import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.particle.ParticleEffect;
 import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.mixins.core.MixinParticleManager;
+import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 
 @Environment(EnvType.CLIENT)
 public abstract class EntityEffectBase implements IEntityEffect {
 
-    public EntityEffectBase() {
+    protected final IAudioPlayer audioPlayer;
 
+    public EntityEffectBase() {
+        this.audioPlayer = ContainerManager.resolve(IAudioPlayer.class);
     }
 
     /**
@@ -43,7 +47,7 @@ public abstract class EntityEffectBase implements IEntityEffect {
      * Helper method to play a sound.
      */
     public void playSound(SoundInstance sound) {
-        MinecraftAudioPlayer.INSTANCE.play(sound);
+        this.audioPlayer.play(sound);
     }
 
     /**

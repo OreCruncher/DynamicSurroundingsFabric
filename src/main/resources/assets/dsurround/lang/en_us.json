@@ -1,12 +1,13 @@
 {
   "dsurround.modname": "\u00a76Dynamic Surroundings",
-  "dsurround.text.NewVersion": "[\"\u00a76Update Available: \u00a79[\",{\"text\":\"\u00a72%1$s \u00a7ev%2$s\u00a7f\",\"color\":\"gold\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":{\"text\":\"Click for Download Page\",\"color\":\"aqua\"}},\"clickEvent\":{\"action\":\"open_url\",\"value\":\"%3$s\"}},\"\u00a79]\"]",
+  "dsurround.text.NewVersion": "[\"\u00a72Update %1$s v%2$s \u00a72at \u00a79[\",{\"text\":\"%3$s\",\"color\":\"#f16436\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":{\"text\":\"Click for Download Page\",\"color\":\"aqua\"}},\"clickEvent\":{\"action\":\"open_url\",\"value\":\"%4$s\"}},\"\u00a79] \u00a72or \u00a79[\",{\"text\":\"%5$s\",\"color\":\"#1bd96a\",\"hoverEvent\":{\"action\":\"show_text\",\"value\":{\"text\":\"Click for Download Page\",\"color\":\"aqua\"}},\"clickEvent\":{\"action\":\"open_url\",\"value\":\"%6$s\"}},\"\u00a79]\"]",
+  "dsurround.text.NewVersion.curseforge": "CurseForge",
+  "dsurround.text.NewVersion.modrinth": "Modrinth",
   "dsurround.mod.link.sources": "Source code repository",
   "dsurround.mod.link.credits": "Sound resource CREDIT and ATTRIBUTIONS",
   "dsurround.mod.link.clothapi": "Embedded: Cloth API (Fabric)",
   "dsurround.mod.link.nashorn": "Embedded: OpenJDK Nashorn JavaScript Engine 15.4",
   "dsurround.sound.caption.ice": "Ice cracks",
-  "dsurround.sound.caption.frog": "Frog croaks",
   "dsurround.sound.caption.wind": "Wind blows",
   "dsurround.sound.caption.soulsand": "Maniacal laughter",
   "dsurround.sound.caption.bird": "Bird chirping",
@@ -101,7 +102,7 @@
   "dsurround.config.particleTweaks": "Particle Tweaks",
   "dsurround.config.particleTweaks.tooltip": "Configuration options for tweaking particle behavior",
   "dsurround.config.particleTweaks.suppressPlayerParticles": "Suppress Player Potion Effects",
-  "dsurround.config.particleTweaks.suppressPlayerParticles.tooltip": "Enable/disable suppressing the current players potion particles",
+  "dsurround.config.particleTweaks.suppressPlayerParticles.tooltip": "Enable/disable suppressing the current players potion particles when in first person view",
   "dsurround.config.particleTweaks.showProjectileTrails": "Show Projectile Particle Trails",
   "dsurround.config.particleTweaks.showProjectileTrails.tooltip": "Enable/disable showing of projectile particle trails",
   "dsurround.config.enhancedSounds": "Enhanced Sound Processing",
@@ -122,6 +123,10 @@
   "dsurround.config.enhancedSounds.reverbBounces.tooltip": "The maximum number of reflections that will be made for a given reverb ray.  Higher values will increase CPU use and improves fidelity.  Lower numbers reduce CPU and decreases fidelity.",
   "dsurround.config.enhancedSounds.reverbRayTraceDistance": "Reverb Ray Projection Distance",
   "dsurround.config.enhancedSounds.reverbRayTraceDistance.tooltip": "Total distance, in blocks, that a ray will travel when calculating reverb. Higher values will increases CPU use and improves fidelity. Lower numbers reduce CPU and decreases fidelity.",
+  "dsurround.config.otherOptions": "Other Options",
+  "dsurround.config.otherOptions.tooltip": "Configuration options for other 'things'",
+  "dsurround.config.otherOptions.playRandomSoundOnStartup": "Play Random Sound On Startup",
+  "dsurround.config.otherOptions.playRandomSoundOnStartup.tooltip": "Enable/disable playing random sound at the Minecraft finish loading to main screen",
   "dsurround.text.soundconfig.vanilla": "Built in Vanilla Sound",
   "dsurround.text.soundconfig.caption": "\u00a7bCaption:\u00a7r \u00a7o%1$s",
   "dsurround.text.soundconfig.cull": "\u00a7aCULL",
@@ -136,5 +141,6 @@
   "dsurround.text.soundconfig.volume.help": "Set a volume scaling factor that gets applied when calculating the volume of a sound.  Increase to make quiet sounds louder; reduce to make loud sounds quieter.  x1.00 is normal volume.",
   "dsurround.text.keybind.section": "Dynamic Surroundings",
   "dsurround.text.keybind.individualSoundConfig": "Individual Sound Configuration",
-  "dsurround.text.keybind.diagnosticHud": "Display Diagnostic HUD (DEV)"
+  "dsurround.text.keybind.diagnosticHud": "Display Diagnostic HUD (DEV)",
+  "dsurround.text.reloadassets": "[%1$s\u00a7r] \u00a7aReloaded configurations"
 }

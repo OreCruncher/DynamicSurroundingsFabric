@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public final class BiomeTraits {
@@ -59,12 +60,17 @@ public final class BiomeTraits {
         return this.traits.contains(trait);
     }
 
+    public void forEach(Consumer<BiomeTrait> consumer) {
+        for (var t : this.traits)
+            consumer.accept(t);
+    }
+
     public String toString() {
         var temp = this.traits
                 .stream()
                 .map(BiomeTrait::getName)
                 .collect(Collectors.joining(","));
 
-        return String.format("Traits [%s]", temp);
+        return String.format("[%s]", temp);
     }
 }

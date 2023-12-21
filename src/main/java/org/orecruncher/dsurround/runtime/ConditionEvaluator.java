@@ -2,49 +2,40 @@ package org.orecruncher.dsurround.runtime;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.minecraft.client.MinecraftClient;
+import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.events.HandlerPriority;
+import org.orecruncher.dsurround.lib.infra.events.ClientState;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
+import org.orecruncher.dsurround.processing.Scanners;
 import org.orecruncher.dsurround.runtime.sets.*;
 
 import java.util.Optional;
 
 @Environment(EnvType.CLIENT)
-public final class ConditionEvaluator {
+public final class ConditionEvaluator implements IConditionEvaluator {
 
-    public static ConditionEvaluator INSTANCE = new ConditionEvaluator();
-
-    static {
-        // Setup ticker for the variables.  Only want to tick while in game and
-        // the GUI is not paused.
-        ClientTickEvents.START_CLIENT_TICK.register(client -> {
-            if (GameUtils.isInGame() && !client.isPaused())
-                INSTANCE.tick();
-        });
-    }
-
-    // Internal visibility for diagnostics
-    final BiomeVariables biomeVariables;
-    final DimensionVariables dimensionVariables;
-    final DiurnalVariables diurnalVariables;
-    final PlayerVariables playerVariables;
-    final WeatherVariables weatherVariables;
-    final EnvironmentState environmentState;
     private final ExecutionContext context;
 
     public ConditionEvaluator() {
         this.context = new ExecutionContext("Conditions");
-        this.context.add(this.biomeVariables = new BiomeVariables());
-        this.context.add(this.dimensionVariables = new DimensionVariables());
-        this.context.add(this.diurnalVariables = new DiurnalVariables());
-        this.context.add(this.playerVariables = new PlayerVariables());
-        this.context.add(this.weatherVariables = new WeatherVariables());
-        this.context.add(this.environmentState = new EnvironmentState());
+        this.context.add(new BiomeVariables(ContainerManager.resolve(IBiomeLibrary.class)));
+        this.context.add(new DimensionVariables());
+        this.context.add(new DiurnalVariables());
+        this.context.add(new PlayerVariables());
+        this.context.add(new WeatherVariables());
+        this.context.add(new EnvironmentState(ContainerManager.resolve(Scanners.class)));
+
+        ClientState.TICK_START.register(this::tick, HandlerPriority.VERY_HIGH);
     }
 
-    public void tick() {
-        this.context.update();
+    public void tick(MinecraftClient client) {
+        // Only want to tick while in game and the GUI is not paused.
+        if (GameUtils.isInGame() && !client.isPaused())
+            this.context.update();
     }
 
     public boolean check(final Script conditions) {

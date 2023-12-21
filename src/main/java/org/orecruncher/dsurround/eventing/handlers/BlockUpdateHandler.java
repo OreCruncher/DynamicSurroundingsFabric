@@ -3,11 +3,11 @@ package org.orecruncher.dsurround.eventing.handlers;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.lib.infra.events.ClientState;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -19,7 +19,7 @@ public class BlockUpdateHandler {
     private static final Set<BlockPos> updatedPositions = new HashSet<>(16);
 
     static {
-        ClientTickEvents.END_CLIENT_TICK.register(BlockUpdateHandler::tick);
+        ClientState.TICK_END.register(BlockUpdateHandler::tick);
     }
 
     /**
@@ -39,13 +39,15 @@ public class BlockUpdateHandler {
      */
     private static void tick(MinecraftClient ignored) {
         Collection<BlockPos> updates = expand();
-        if (updates != null)
-            ClientEventHooks.BLOCK_UPDATE.invoker().onUpdate(updates);
+        if (updates != null) {
+            var event = new ClientEventHooks.BlockUpdateEvent(updates);
+            ClientEventHooks.BLOCK_UPDATE.raise(event);
+        }
     }
 
     @Nullable
     private static Collection<BlockPos> expand() {
-        if (updatedPositions.size() == 0)
+        if (updatedPositions.isEmpty())
             return null;
 
         // Need to expand out the updates to adjacent blocks.  A state change

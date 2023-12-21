@@ -35,7 +35,7 @@ public interface CodecExtensions<A> extends Codec<A> {
     /**
      * Checks that a string is a valid format specification for BlockState
      */
-    static Codec<IMatcher<BlockState>> checkBlockStateSpecification(boolean allowTags, boolean allowMaterials) {
+    static Codec<IMatcher<BlockState>> checkBlockStateSpecification(boolean allowTags) {
         final Function<IMatcher<BlockState>, DataResult<IMatcher<BlockState>>> func = value -> {
             if (!allowTags && value instanceof MatchOnBlockTag)
                 return DataResult.error(() -> String.format("Current context does not allow block matching based on tags (%s)", value));

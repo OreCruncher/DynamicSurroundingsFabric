@@ -4,23 +4,27 @@ import com.google.common.collect.ImmutableList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
+import net.minecraft.registry.Registries;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.AcousticConfig;
-import org.orecruncher.dsurround.config.SoundLibrary;
+import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.biome.AcousticEntry;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
+import org.orecruncher.dsurround.lib.IdentityUtils;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.runtime.ConditionEvaluator;
+import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.OcclusionTags;
 import org.orecruncher.dsurround.tags.ReflectanceTags;
+import org.orecruncher.dsurround.tags.TagHelpers;
 
 import java.util.Collection;
 import java.util.Random;
@@ -32,6 +36,7 @@ public class BlockInfo {
     private static final float DEFAULT_OPAQUE_OCCLUSION = 0.5F;
     private static final float DEFAULT_TRANSLUCENT_OCCLUSION = 0.15F;
     private static final float DEFAULT_REFLECTION = 0.0F; //0.4F;
+    private static final Script ALWAYS_ON_EFFECT_CHANCE = new Script("1.0");
 
     // Lazy init on add
     @Nullable
@@ -42,6 +47,7 @@ public class BlockInfo {
     protected ObjectArray<IBlockEffectProducer> alwaysOnEffects;
 
     protected final int version;
+    protected final IConditionEvaluator conditionEvaluator;
 
     protected Script soundChance = new Script("0.01");
     protected float soundReflectivity = DEFAULT_REFLECTION;
@@ -49,10 +55,12 @@ public class BlockInfo {
 
     public BlockInfo(int version) {
         this.version = version;
+        this.conditionEvaluator = null;
     }
 
-    public BlockInfo(int version, BlockState state) {
+    public BlockInfo(int version, BlockState state, IConditionEvaluator conditionEvaluator) {
         this.version = version;
+        this.conditionEvaluator = conditionEvaluator;
         this.soundOcclusion = getSoundOcclusionSetting(state);
         this.soundReflectivity = getSoundReflectionSetting(state);
     }
@@ -97,15 +105,17 @@ public class BlockInfo {
     // TODO: Eliminate duplicates
     public void update(BlockConfigRule config) {
         // Reset of a block clears all registry
-        if (config.clearSounds)
+        if (config.clearSounds())
             this.clearSounds();
 
-        config.soundChance.ifPresent(v -> this.soundChance = v);
+        config.soundChance().ifPresent(v -> this.soundChance = v);
 
-        for (final AcousticConfig sr : config.acoustics) {
+        var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
+
+        for (final AcousticConfig sr : config.acoustics()) {
             if (sr.soundEventId != null) {
-                final Identifier res = SoundLibrary.resolveIdentifier(Client.ModId, sr.soundEventId);
-                final SoundEvent acoustic = SoundLibrary.getSound(res);
+                final Identifier res = IdentityUtils.resolveIdentifier(Client.ModId, sr.soundEventId);
+                final SoundEvent acoustic = soundLibrary.getSound(res);
                 var factory = SoundFactoryBuilder.create(acoustic)
                         .category(sr.category)
                         .volumeRange(sr.minVolume, sr.maxVolume)
@@ -116,10 +126,11 @@ public class BlockInfo {
             }
         }
 
-        for (var e : config.effects) {
-            var effect = e.effect.getInstance(e.spawnChance, e.conditions);
+        for (var e : config.effects()) {
+            var chance = e.alwaysOn() ? ALWAYS_ON_EFFECT_CHANCE : e.spawnChance();
+            var effect = e.effect().createInstance(chance, e.conditions());
             effect.ifPresent(t -> {
-                if (e.alwaysOn)
+                if (e.alwaysOn())
                     this.addToAlwaysOnEffects(t);
                 else
                     this.addToBlockEffects(t);
@@ -142,7 +153,7 @@ public class BlockInfo {
 
     public ISoundFactory getSoundToPlay(final Random random) {
         if (this.sounds != null) {
-            var chance = ConditionEvaluator.INSTANCE.eval(this.soundChance);
+            var chance = this.conditionEvaluator.eval(this.soundChance);
             if (chance instanceof Double c && random.nextDouble() < c) {
                 var candidates = this.sounds.stream().filter(AcousticEntry::matches);
                 return WeightTable.makeSelection(candidates);
@@ -161,7 +172,7 @@ public class BlockInfo {
 
     public void trim() {
         if (this.sounds != null) {
-            if (sounds.isEmpty())
+            if (this.sounds.isEmpty())
                 this.sounds = null;
             else
                 this.sounds.trim();
@@ -181,37 +192,39 @@ public class BlockInfo {
     }
 
     private static float getSoundReflectionSetting(BlockState state) {
-        if (state.isIn(ReflectanceTags.NONE))
+        var block = state.getBlock();
+        if (TagHelpers.isIn(ReflectanceTags.NONE, block))
             return 0;
-        if (state.isIn(ReflectanceTags.VERY_LOW))
+        if (TagHelpers.isIn(ReflectanceTags.VERY_LOW, block))
             return 0.15F;
-        if (state.isIn(ReflectanceTags.LOW))
+        if (TagHelpers.isIn(ReflectanceTags.LOW, block))
             return 0.35F;
-        if (state.isIn(ReflectanceTags.MEDIUM))
+        if (TagHelpers.isIn(ReflectanceTags.MEDIUM, block))
             return 0.5F;
-        if (state.isIn(ReflectanceTags.HIGH))
+        if (TagHelpers.isIn(ReflectanceTags.HIGH, block))
             return 0.65F;
-        if (state.isIn(ReflectanceTags.VERY_HIGH))
+        if (TagHelpers.isIn(ReflectanceTags.VERY_HIGH, block))
             return 0.8F;
-        if (state.isIn(ReflectanceTags.MAX))
+        if (TagHelpers.isIn(ReflectanceTags.MAX, block))
             return 1.0F;
         return DEFAULT_REFLECTION;
     }
 
     private static float getSoundOcclusionSetting(BlockState state) {
-        if (state.isIn(OcclusionTags.NONE))
+        var block = state.getBlock();
+        if (TagHelpers.isIn(OcclusionTags.NONE, block))
             return 0;
-        if (state.isIn(OcclusionTags.VERY_LOW))
+        if (TagHelpers.isIn(OcclusionTags.VERY_LOW, block))
             return 0.15F;
-        if (state.isIn(OcclusionTags.LOW))
+        if (TagHelpers.isIn(OcclusionTags.LOW, block))
             return 0.35F;
-        if (state.isIn(OcclusionTags.MEDIUM))
+        if (TagHelpers.isIn(OcclusionTags.MEDIUM, block))
             return 0.5F;
-        if (state.isIn(OcclusionTags.HIGH))
+        if (TagHelpers.isIn(OcclusionTags.HIGH, block))
             return 0.65F;
-        if (state.isIn(OcclusionTags.VERY_HIGH))
+        if (TagHelpers.isIn(OcclusionTags.VERY_HIGH, block))
             return 0.8F;
-        if (state.isIn(OcclusionTags.MAX))
+        if (TagHelpers.isIn(OcclusionTags.MAX, block))
             return 1.0F;
         return state.isOpaque() ? DEFAULT_OPAQUE_OCCLUSION : DEFAULT_TRANSLUCENT_OCCLUSION;
     }

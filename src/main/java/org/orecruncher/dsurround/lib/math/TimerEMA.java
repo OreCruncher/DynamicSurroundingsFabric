@@ -4,7 +4,7 @@ package org.orecruncher.dsurround.lib.math;
  * Specialization of the EMA based on measuring time. The time unit it expects
  * to deal with is nanoseconds.
  */
-public class TimerEMA extends EMA {
+public class TimerEMA extends EMA implements ITimer {
 
     public TimerEMA(final String name) {
         super(name);
@@ -22,5 +22,4 @@ public class TimerEMA extends EMA {
     public String toString() {
         return String.format("%s:%7.3fms", name(), getMSecs());
     }
-
 }

@@ -17,17 +17,14 @@ public class VersionInformation {
 
     public static Codec<VersionInformation> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
-                    Codec.STRING.fieldOf("downloadLocation").forGetter(info -> info.downloadLocation),
-                    MAJOR_VERSION_RELEASES.fieldOf("releases").forGetter(info -> info.releases),
-                    RECOMMENDATION.fieldOf("recommend").forGetter(info -> info.recommended)
+                MAJOR_VERSION_RELEASES.fieldOf("releases").forGetter(info -> info.releases),
+                RECOMMENDATION.fieldOf("recommend").forGetter(info -> info.recommended)
             ).apply(instance, VersionInformation::new));
 
-    public final String downloadLocation;
     public final Map<Version, Map<Version, String>> releases;
     public final Map<Version, Version> recommended;
 
-    VersionInformation(String downloadLocation, Map<Version, Map<Version, String>> releases, Map<Version, Version> recommended) {
-        this.downloadLocation = downloadLocation;
+    VersionInformation(Map<Version, Map<Version, String>> releases, Map<Version, Version> recommended) {
         this.releases = releases;
         this.recommended = recommended;
     }
@@ -56,5 +53,4 @@ public class VersionInformation {
         }
         return Optional.empty();
     }
-
 }

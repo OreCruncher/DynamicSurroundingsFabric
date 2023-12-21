@@ -9,14 +9,19 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.effects.particles.FrostBreathParticle;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.TickCounter;
+import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.random.MurmurHash3;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 
 @Environment(EnvType.CLIENT)
 public class BreathEffect extends EntityEffectBase {
 
+    private final ITickCount tickCount;
     private int seed;
+
+    public BreathEffect(ITickCount tickCount) {
+        this.tickCount = tickCount;
+    }
 
     @Override
     public void activate(final EntityEffectInfo info) {
@@ -27,7 +32,7 @@ public class BreathEffect extends EntityEffectBase {
     public void tick(final EntityEffectInfo info) {
         final LivingEntity entity = info.getEntity().get();
         if (isBreathVisible(entity)) {
-            final int c = (int) (TickCounter.getTickCount() + this.seed);
+            final int c = (int) (this.tickCount.getTickCount() + this.seed);
             final BlockPos headPos = getHeadPosition(entity);
             final BlockState state = entity.getEntityWorld().getBlockState(headPos);
             if (showWaterBubbles(state)) {

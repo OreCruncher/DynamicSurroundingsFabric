@@ -8,17 +8,14 @@ import net.minecraft.util.Formatting;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
-import org.orecruncher.dsurround.lib.math.TimerEMA;
+import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.runtime.ConditionEvaluator;
+import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
-import java.util.Collection;
 import java.util.List;
 
 @Environment(EnvType.CLIENT)
-public final class RuntimeDiagnostics {
-
-    private static final MinecraftClock clock = new MinecraftClock();
+public class RuntimeDiagnostics implements IDiagnosticPlugin {
 
     private static final List<String> scripts = ImmutableList.of(
             "'Dim: ' + dim.getId() + '/' + dim.getDimName() + '; isSuperFlat: ' + dim.isSuperFlat()",
@@ -30,20 +27,24 @@ public final class RuntimeDiagnostics {
             "'State: isInside ' + state.isInside() + '; inVillage ' + state.isInVillage() + '; isUnderWater ' + state.isUnderWater()"
     );
 
-    public static void register() {
-        ClientEventHooks.COLLECT_DIAGNOSTICS.register(RuntimeDiagnostics::onCollect);
+    private final MinecraftClock clock = new MinecraftClock();
+    private final IConditionEvaluator conditionEvaluator;
+
+    public RuntimeDiagnostics(IConditionEvaluator conditionEvaluator) {
+        this.conditionEvaluator = conditionEvaluator;
+        ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect, HandlerPriority.HIGH);
     }
 
-    private static void onCollect(Collection<String> left, Collection<String> right, Collection<TimerEMA> timers) {
+    public void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
         if (GameUtils.isInGame()) {
             assert GameUtils.getWorld() != null;
-            clock.update(GameUtils.getWorld());
-            left.add(Formatting.GREEN + clock.getFormattedTime());
-            left.add(Strings.EMPTY);
+            this.clock.update(GameUtils.getWorld());
+            event.left.add(Formatting.GREEN + this.clock.getFormattedTime());
+            event.left.add(Strings.EMPTY);
 
             for (String script : scripts) {
-                Object result = ConditionEvaluator.INSTANCE.eval(new Script(script));
-                left.add(Formatting.YELLOW + result.toString());
+                Object result = this.conditionEvaluator.eval(new Script(script));
+                event.left.add(Formatting.YELLOW + result.toString());
             }
         }
     }

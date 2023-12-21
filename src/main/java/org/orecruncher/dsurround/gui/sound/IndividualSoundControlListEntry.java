@@ -11,11 +11,13 @@ import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
-import org.orecruncher.dsurround.config.SoundLibrary;
+import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.FrameworkUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.gui.GuiHelpers;
+import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.SoundMetadata;
 
 import java.util.ArrayList;
@@ -55,6 +57,9 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
     private final List<ClickableWidget> children = new ArrayList<>();
     private final List<OrderedText> cachedToolTip = new ArrayList<>();
 
+    private final ISoundLibrary soundLibrary;
+    private final IAudioPlayer audioPlayer;
+
     private ConfigSoundInstance soundPlay;
 
     public IndividualSoundControlListEntry(final IndividualSoundConfigEntry data, final boolean enablePlay) {
@@ -67,7 +72,7 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
             .build();
         this.children.add(this.blockButton);
 
-        this.cullButton = ButtonWidget.builder(this.config.block ? CULL_ON : CULL_OFF, this::toggleCull)
+        this.cullButton = ButtonWidget.builder(this.config.cull ? CULL_ON : CULL_OFF, this::toggleCull)
             .size(BUTTON_WIDTH, 0)
             .build();
         this.children.add(this.cullButton);
@@ -78,6 +83,10 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
 
         this.playButton.active = enablePlay;
         this.children.add(this.playButton);
+
+        var container = ContainerManager.getDefaultContainer();
+        this.soundLibrary = container.resolve(ISoundLibrary.class);
+        this.audioPlayer = container.resolve(IAudioPlayer.class);
     }
 
     public void mouseMoved(double mouseX, double mouseY) {
@@ -130,7 +139,7 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
         final TextRenderer font = GameUtils.getTextRenderer();
         final int labelY = rowTop + (rowHeight - font.fontHeight) / 2;
         final String text = this.config.soundEventId.toString();
-        context.drawText(font, text, rowLeft, labelY, ColorPalette.MC_WHITE.getRGB(), false);
+        context.drawText(font, text, rowLeft, labelY, ColorPalette.MC_WHITE.getRGB() & 0xFFFFFF, false);
 
         // Need to position the other controls appropriately
         int rightMargin = rowLeft + rowWidth;
@@ -169,26 +178,32 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
 
     protected void play(final ButtonWidget button) {
         if (this.soundPlay == null) {
-            this.soundPlay = SoundLibraryHelpers.playSound(this.config);
+            this.soundPlay = this.playSound(this.config);
             button.setMessage(STOP);
         } else {
-            SoundLibraryHelpers.stopSound(this.soundPlay);
+            this.audioPlayer.stop(this.soundPlay);
             this.soundPlay = null;
             button.setMessage(PLAY);
         }
     }
 
+    protected ConfigSoundInstance playSound(IndividualSoundConfigEntry entry) {
+        ConfigSoundInstance sound = new ConfigSoundInstance(entry.soundEventId, entry.volumeScale);
+        this.audioPlayer.play(sound);
+        return sound;
+    }
+
     @Override
     public void close() {
         if (this.soundPlay != null) {
-            SoundLibraryHelpers.stopSound(this.soundPlay);
+            this.audioPlayer.stop(this.soundPlay);
             this.soundPlay = null;
         }
     }
 
     public void tick() {
         if (this.soundPlay != null) {
-            if (!SoundLibraryHelpers.isPlaying(this.soundPlay)) {
+            if (!this.audioPlayer.isPlaying(this.soundPlay)) {
                 this.soundPlay = null;
                 this.playButton.setMessage(PLAY);
             }
@@ -196,21 +211,19 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
     }
 
     protected List<OrderedText> getToolTip(final int mouseX, final int mouseY) {
-
         // Cache the static part of the tooltip if needed
         if (this.cachedToolTip.isEmpty()) {
-
             Identifier id = this.config.soundEventId;
             final String mod = FrameworkUtils.getModDisplayName(id.getNamespace());
             assert mod != null;
             @SuppressWarnings("ConstantConditions")
             OrderedText modName = OrderedText.styledForwardsVisitedString(Formatting.strip(mod), modNameStyle);
-            OrderedText soundLocationId = OrderedText.styledForwardsVisitedString(this.config.soundEventId.toString(), idStyle);
+            OrderedText soundLocationId = OrderedText.styledForwardsVisitedString(id.toString(), idStyle);
 
             this.cachedToolTip.add(modName);
             this.cachedToolTip.add(soundLocationId);
 
-            SoundMetadata metadata = SoundLibrary.getSoundMetadata(id);
+            SoundMetadata metadata = this.soundLibrary.getSoundMetadata(id);
             if (metadata != null) {
                 if (!metadata.getTitle().equals(Text.empty()))
                     this.cachedToolTip.add(metadata.getTitle().asOrderedText());

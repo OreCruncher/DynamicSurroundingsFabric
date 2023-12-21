@@ -8,8 +8,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Identifier;
 import org.orecruncher.dsurround.lib.IMatcher;
+import org.orecruncher.dsurround.lib.IdentityUtils;
 import org.orecruncher.dsurround.tags.TagHelpers;
 
 @Environment(EnvType.CLIENT)
@@ -24,8 +24,8 @@ public abstract class EntityTypeMatcher implements IMatcher<Entity> {
         try {
             if (entityTypeId.startsWith("#")) {
                 // Entity tag
-                final var id = entityTypeId.substring(1);
-                var tagKey = TagKey.of(RegistryKeys.ENTITY_TYPE, new Identifier(id));
+                final var id = IdentityUtils.resolveIdentifier(entityTypeId);
+                var tagKey = TagKey.of(RegistryKeys.ENTITY_TYPE, id);
                 return DataResult.success(new MatchOnEntityTag(tagKey));
             }
             else if (entityTypeId.contains(":")) {

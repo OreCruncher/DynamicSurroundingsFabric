@@ -70,45 +70,6 @@
 			}
 		]
 	},
-	"lilypad.frog": {
-		"subtitle": "dsurround.sound.caption.frog",
-		"sounds": [
-			{
-				"name": "dsurround:ambient/frog/croak1",
-				"volume": 0.4
-			},
-			{
-				"name": "dsurround:ambient/frog/croak2",
-				"volume": 0.4
-			},
-			{
-				"name": "dsurround:ambient/frog/croak3",
-				"volume": 0.4
-			}
-		]
-	},
-	"lilypad.bullfrog": {
-		"subtitle": "dsurround.sound.caption.frog",
-		"credits": [
-			"\u00a7aNight Crickets & Bullfrogs.wav",
-			"sunsinger",
-			"Creative Commons Attributions 3.0 Unported"
-		],
-		"sounds": [
-			{
-				"name": "dsurround:ambient/frog/bullfrog1"
-			},
-			{
-				"name": "dsurround:ambient/frog/bullfrog2"
-			},
-			{
-				"name": "dsurround:ambient/frog/bullfrog3"
-			},
-			{
-				"name": "dsurround:ambient/frog/bullfrog4"
-			}
-		]
-	},
 	"biome.wind": {
 		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [

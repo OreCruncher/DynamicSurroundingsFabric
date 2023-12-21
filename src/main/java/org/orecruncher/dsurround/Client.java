@@ -4,167 +4,145 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
 import org.orecruncher.dsurround.commands.Commands;
 import org.orecruncher.dsurround.config.*;
+import org.orecruncher.dsurround.config.libraries.*;
+import org.orecruncher.dsurround.config.libraries.impl.*;
 import org.orecruncher.dsurround.effects.particles.ParticleSheets;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
-import org.orecruncher.dsurround.lib.FrameworkUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.TickCounter;
+import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.events.HandlerPriority;
+import org.orecruncher.dsurround.lib.infra.IMinecraftMod;
+import org.orecruncher.dsurround.lib.infra.events.ClientState;
 import org.orecruncher.dsurround.lib.logging.ModLog;
+import org.orecruncher.dsurround.lib.version.IVersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
+import org.orecruncher.dsurround.lib.version.VersionResult;
 import org.orecruncher.dsurround.processing.Handlers;
-import org.orecruncher.dsurround.runtime.diagnostics.BlockViewer;
-import org.orecruncher.dsurround.runtime.diagnostics.ClientProfiler;
-import org.orecruncher.dsurround.runtime.diagnostics.RuntimeDiagnostics;
-import org.orecruncher.dsurround.runtime.diagnostics.SoundEngineDiagnostics;
+import org.orecruncher.dsurround.runtime.ConditionEvaluator;
+import org.orecruncher.dsurround.runtime.IConditionEvaluator;
+import org.orecruncher.dsurround.runtime.diagnostics.*;
+import org.orecruncher.dsurround.sound.IAudioPlayer;
+import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Environment(EnvType.CLIENT)
-public class Client implements ClientModInitializer {
+public class Client implements IMinecraftMod, ClientModInitializer {
 
     public static final String ModId = "dsurround";
     public static final ModLog LOGGER = new ModLog(ModId);
     /**
-     * Path to the mod's configuration directory
-     */
-    public static final Path CONFIG_PATH = FrameworkUtils.getConfigPath(ModId);
-    /**
-     * Path to the external config data cache for user customization
-     */
-    public static final Path DATA_PATH = Path.of(CONFIG_PATH.toString(), "configs");
-    /**
-     * Path to the external folder for dumping data
-     */
-    public static final Path DUMP_PATH = Path.of(CONFIG_PATH.toString(), "dumps");
-    public static final String Branding = FrameworkUtils.getModBranding(ModId);
-    /**
      * Basic configuration settings
      */
-    public static final Configuration Config = Configuration.getConfig();
-    /**
-     * Settings for individual sound configuration
-     */
-    public static final SoundConfiguration SoundConfig = SoundConfiguration.getConfig();
+    public static Configuration Config;
 
-    private FrameworkUtils.ModCustomData modInfo;
-    private CompletableFuture<Optional<VersionChecker.VersionResult>> versionInfo;
+    private CompletableFuture<Optional<VersionResult>> versionInfo;
+
+    @Override
+    public String get_modId() {
+        return ModId;
+    }
 
     @Override
     public void onInitializeClient() {
         LOGGER.info("Initializing...");
 
-        // Get the custom metadata from the JAR
-        var info = FrameworkUtils.getModCustomData(ModId, ModId);
-        info.ifPresent(value -> this.modInfo = value);
+        // Hook the config load event so set we can set the debug flags on logging
+        Configuration.CONFIG_CHANGED.register(event -> {
+            if (event.config() instanceof Configuration config) {
+                LOGGER.setDebug(config.logging.enableDebugLogging);
+                LOGGER.setTraceMask(config.logging.traceMask);
+            }
+        });
 
-        createPath(CONFIG_PATH);
-        createPath(DATA_PATH);
-        createPath(DUMP_PATH);
+        // Bootstrap library functions
+        Library.initialize(this, LOGGER);
+        Handlers.registerHandlers();
 
-        ClientLifecycleEvents.CLIENT_STARTED.register(this::onComplete);
-        ClientPlayConnectionEvents.JOIN.register(this::onConnect);
+        Config = Configuration.getConfig();
+
+        ClientState.STARTED.register(this::onComplete, HandlerPriority.VERY_HIGH);
+        ClientState.ON_CONNECT.register(this::onConnect, HandlerPriority.LOW);
+        ClientState.TAG_SYNC.register(event -> {
+            LOGGER.info("Tag sync event received - reloading libraries");
+            AssetLibraryEvent.reload();
+        }, HandlerPriority.VERY_HIGH);
 
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> Commands.register(dispatcher));
 
-        TickCounter.register();
-        KeyBindings.register();
+        // Register core services
+        ContainerManager.getDefaultContainer()
+                .registerSingleton(Config)
+                .registerSingleton(IConditionEvaluator.class, ConditionEvaluator.class)
+                .registerSingleton(Diagnostics.class)
+                .registerSingleton(IVersionChecker.class, VersionChecker.class)
+                .registerSingleton(ISoundLibrary.class, SoundLibrary.class)
+                .registerSingleton(IBiomeLibrary.class, BiomeLibrary.class)
+                .registerSingleton(IDimensionLibrary.class, DimensionLibrary.class)
+                .registerSingleton(IBlockLibrary.class, BlockLibrary.class)
+                .registerSingleton(IItemLibrary.class, ItemLibrary.class)
+                .registerSingleton(IEntityEffectLibrary.class, EntityEffectLibrary.class)
+                .registerSingleton(IAudioPlayer.class, MinecraftAudioPlayer.class);
 
-        // Register diagnostic handlers.  Ordering is semi important for
-        // debug display layout.
-        RuntimeDiagnostics.register();
-        ClientProfiler.register();
-        SoundEngineDiagnostics.register();
-        BlockViewer.register();
+        // Kick off version checking if configured.  This should run in parallel with initialization.
+        if (Config.logging.enableModUpdateChatMessage)
+            this.versionInfo = CompletableFuture.supplyAsync(ContainerManager.resolve(IVersionChecker.class)::getUpdateText);
+        else
+            this.versionInfo = CompletableFuture.completedFuture(Optional.empty());
+
+        KeyBindings.register();
 
         LOGGER.info("Initialization complete");
     }
 
-    private static void createPath(final Path path) {
-        try {
-            Files.createDirectories(path);
-        } catch (final Throwable t) {
-            LOGGER.error(t, "Unable to create data path %s", path.toString());
-        }
-    }
-
-    public void refreshConfigs() {
-        SoundLibrary.load();
-        BiomeLibrary.load();
-        DimensionLibrary.load();
-        BlockLibrary.load();
-        ItemLibrary.load();
-        EntityEffectLibrary.load();
-    }
-
     public void onComplete(MinecraftClient client) {
-        // Initialize our sounds
-        this.refreshConfigs();
-        Handlers.initialize();
 
-        // Make sure our particle sheets get registered so they can render
+        var container = ContainerManager.getDefaultContainer();
+
+        // Register the Minecraft sound manager
+        container.registerSingleton(GameUtils.getSoundManager());
+
+        // Register and initialize our libraries.  This will cause the libraries
+        // to be instantiated.
+        AssetLibraryEvent.RELOAD.register(container.resolve(ISoundLibrary.class)::reload);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IBiomeLibrary.class)::reload);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IDimensionLibrary.class)::reload);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IBlockLibrary.class)::reload);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IItemLibrary.class)::reload);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IEntityEffectLibrary.class)::reload);
+
+        // Make the libraries load their data
+        AssetLibraryEvent.reload();
+
+        // Force instantiation of the core Handler.  This should cause the rest
+        // of the dependencies to be initialized.
+        var handlers = container.resolve(Handlers.class);
+
+        // Make sure our particle sheets get registered otherwise they will not render.
+        // These sheets are purely client side - they have to be manhandled into the
+        // Minecraft environment.
         ParticleSheets.register();
-
-        // Kick off version checking.  This should run in parallel with initialization.
-        this.versionInfo = CompletableFuture.supplyAsync(this::getVersionText);
     }
 
-    private Optional<VersionChecker.VersionResult> getVersionText() {
-
-        if (this.modInfo == null)
-            return Optional.empty();
-
-        var modContainer = FrameworkUtils.getModContainer(ModId);
-        if (modContainer.isEmpty())
-            return Optional.empty();
-
-        var metadata = modContainer.get().getMetadata();
-
-        var displayName = metadata.getName();
-        var modVersion = metadata.getVersion();
-        var minecraftVersion = FrameworkUtils.getModVersion("minecraft");
-
-        URL updateURL = null;
-
-        try {
-            updateURL = new URL(this.modInfo.getString("updateURL"));
-        } catch (Throwable t) {
-            LOGGER.warn("Unable to parse update URL");
-        }
-
-        if (updateURL == null)
-            return Optional.empty();
-
-        return VersionChecker.getUpdateText(displayName, minecraftVersion, modVersion, updateURL);
-    }
-
-    private void onConnect(ClientPlayNetworkHandler clientPlayNetworkHandler, PacketSender packetSender, MinecraftClient minecraftClient) {
+    private void onConnect(MinecraftClient minecraftClient) {
         // Display version information when joining a game and when a chat window is available.
         try {
-            if (this.versionInfo != null) {
-                var versionQueryResult = this.versionInfo.get();
-                if (versionQueryResult.isPresent()) {
-                    var result = versionQueryResult.get();
+            var versionQueryResult = this.versionInfo.get();
+            if (versionQueryResult.isPresent()) {
+                var result = versionQueryResult.get();
 
-                    LOGGER.info("Update to %s v%s is available", result.displayName, result.version);
-
-                    if (Config.logging.enableModUpdateChatMessage) {
-                        var player = GameUtils.getPlayer();
-                        player.sendMessage(versionQueryResult.get().getChatText(), false);
-                    }
-                }
+                LOGGER.info("Update to %s version %s is available", result.displayName, result.version);
+                var player = GameUtils.getPlayer();
+                player.sendMessage(result.getChatText(), false);
+            } else if(Config.logging.enableModUpdateChatMessage) {
+                LOGGER.info("The mod version is current");
             }
-        } catch(Throwable t) {
+        } catch (Throwable t) {
             LOGGER.error(t, "Unable to process version information");
         }
     }

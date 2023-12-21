@@ -9,8 +9,9 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.command.argument.MessageArgumentType;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.runtime.ConditionEvaluator;
+import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 
@@ -29,7 +30,7 @@ final class ScriptCommand {
 
     private static int execute(CommandContext<FabricClientCommandSource> ctx) {
         var script = ctx.getArgument("script", MessageArgumentType.MessageFormat.class);
-        var result = ConditionEvaluator.INSTANCE.eval(new Script(script.getContents()));
+        var result = ContainerManager.resolve(IConditionEvaluator.class).eval(new Script(script.getContents()));
         ctx.getSource().sendFeedback(Text.of(result.toString()));
         return 0;
     }

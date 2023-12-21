@@ -1,6 +1,6 @@
 [
   {
-    "biomeSelector": "!biome.is('Mountain') && ((biome.is('Wasteland') && !biome.is('Swamp') && !biome.is('Cold')) || biome.is('Hills'))",
+    "biomeSelector": "!MOUNTAIN && ((WASTELAND && !SWAMP && !COLD) || HILLS)",
     "_comment": "Wind for Hills/Wasteland",
     "acoustics": [
       {
@@ -9,7 +9,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('Mountain')",
+    "biomeSelector": "MOUNTAIN",
     "_comment": "Wind for Mountain",
     "acoustics": [
       {
@@ -18,7 +18,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('Desert') && !biome.isOneOf('Hills', 'Mountains')",
+    "biomeSelector": "DESERT && !(HILLS || MOUNTAINS)",
     "_comment": "Desert Wind",
     "acoustics": [
       {
@@ -27,7 +27,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.isAllOf('Cold', 'Icy')",
+    "biomeSelector": "COLD && ICY",
     "_comment": "Arctic Wind",
     "acoustics": [
       {
@@ -36,7 +36,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('Jungle')",
+    "biomeSelector": "JUNGLE",
     "_comment": "Basic Jungle and Tropical",
     "clearSounds": true,
     "acoustics": [
@@ -47,7 +47,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('Savanna')",
+    "biomeSelector": "SAVANNA",
     "_comment": "Basic Savanna",
     "clearSounds": true,
     "acoustics": [
@@ -62,7 +62,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('Plains') && !biome.isOneOf('Cold', 'Hot')",
+    "biomeSelector": "PLAINS && !(HOT || COLD)",
     "_comment": "Basic Plains",
     "acoustics": [
       {
@@ -76,7 +76,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('Forest') && !biome.isOneOf('Dead','Wasteland','Dense','Swamp') && lib.isBetween(biome.temperature, 0.2, 1.0)",
+    "biomeSelector": "FOREST && !(DEAD || WASTELAND || DENSE || SWAMP) && lib.isBetween(biome.temperature, 0.2, 1.0)",
     "_comment": "Basic Forest w/Crickets",
     "acoustics": [
       {
@@ -90,7 +90,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.isAllOf('Forest','Dense') && !biome.isOneOf('Dead','Wasteland','Swamp','Jungle') && lib.isBetween(biome.temperature, 0.2, 1.0)",
+    "biomeSelector": "FOREST && DENSE && !(DEAD || WASTELAND || SWAMP || JUNGLE) && lib.isBetween(biome.temperature, 0.2, 1.0)",
     "_comment": "Deep Forest w/Crickets",
     "acoustics": [
       {
@@ -104,7 +104,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.isAllOf('Forest','Cold') && !biome.isOneOf('Swamp','Snowy','Dead','Dense')",
+    "biomeSelector": "FOREST && COLD && !(SWAMP || SNOWY || DEAD || DENSE)",
     "_comment": "Simple Forest",
     "acoustics": [
       {
@@ -114,7 +114,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('Forest') && !biome.is('Swamp') && biome.isOneOf('Cold','Snowy','Dead')",
+    "biomeSelector": "FOREST && !SWAMP && !(COLD || SNOWY || DEAD)",
     "_comment": "Wolf",
     "acoustics": [
       {
@@ -125,7 +125,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('Beach') && !biome.is('Icy')",
+    "biomeSelector": "BEACH && !ICY",
     "_comment": "Beach",
     "acoustics": [
       {
@@ -134,7 +134,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('Beach') && !biome.is('Snowy')",
+    "biomeSelector": "BEACH && !SNOWY",
     "_comment": "Seagulls",
     "acoustics": [
       {
@@ -150,7 +150,7 @@
     "fogColor": "#DCDBDF"
   },
   {
-    "biomeSelector": "biome.is('River') && !biome.isOneOf('Snowy','Dry','Ocean')",
+    "biomeSelector": "RIVER && !(SNOWY || DRY || OCEAN)",
     "_comment": "River",
     "acoustics": [
       {
@@ -159,7 +159,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('Ocean')",
+    "biomeSelector": "OCEAN",
     "_comment": "Ocean background",
     "acoustics": [
       {
@@ -168,7 +168,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.isAllOf('Ocean','Deep') && !biome.is('Icy')",
+    "biomeSelector": "OCEAN && DEEP && !ICY",
     "_comment": "Deep Ocean explicit set",
     "clearSounds": true,
     "acoustics": [
@@ -183,12 +183,12 @@
     "clearSounds": true
   },
   {
-    "biomeSelector": "biome.is('Swamp') && !biome.is('Forest')",
+    "biomeSelector": "SWAMP && !FOREST",
     "_comment": "Basic Swamp Fog",
     "fogColor": "#406040"
   },
   {
-    "biomeSelector": "biome.is('Swamp') && !biome.isOneOf('Forest','Dead','Cold')",
+    "biomeSelector": "SWAMP && !(FOREST || DEAD || COLD)",
     "_comment": "Basic Swamp Sounds",
     "acoustics": [
       {
@@ -197,7 +197,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('Swamp') && biome.isOneOf('Cold','Forest')",
+    "biomeSelector": "SWAMP && (COLD || FOREST)",
     "_comment": "Special Swamps such as Fen, Bog, Marsh, etc.",
     "acoustics": [
       {
@@ -212,12 +212,12 @@
     "fogColor": "#808080"
   },
   {
-    "biomeSelector": "biome.getRainfall() < 0.1 && (biome.isOneOf('Sandy','Mesa') || (biome.is('Wasteland') && !biome.isOneOf('Cold','Snowy','Swamp')))",
+    "biomeSelector": "biome.getRainfall() < 0.1 && (SAND || MESA || (WASTELAND && !(COLD || SNOWY || SWAMP)))",
     "_comment": "Dust for desert like biomes",
     "fogColor": "#FFEA97"
   },
   {
-    "biomeSelector": "!biome.isOneOf('Underground','Ocean','River','Nether','The_End','Mushroom') && !biome.isOneOf('Snowy','Swamp','Jungle','Beach','Wasteland','Wet')",
+    "biomeSelector": "!(UNDERGROUND || OCEAN || RIVER || NETHER || THE_END || MUSHROOM) && !(SNOWY || SWAMP || JUNGLE || BEACH || WASTELAND || WET)",
     "_comment": "Coyote",
     "acoustics": [
       {
@@ -228,7 +228,7 @@
     ]
   },
   {
-    "biomeSelector": "!biome.isOneOf('Underground','Ocean','River','Nether','The_End','Snowy','Jungle','Hot','Beach')",
+    "biomeSelector": "!(UNDERGROUND || OCEAN || RIVER || NETHER || THE_END || SNOWY || JUNGLE || HOT || BEACH)",
     "_comment": "Crow",
     "acoustics": [
       {
@@ -239,7 +239,7 @@
     ]
   },
   {
-    "biomeSelector": "!biome.isOneOf('Underground','Ocean','River','Nether','The_End','Dry','Jungle','Hot','Beach','Swamp','Wasteland')",
+    "biomeSelector": "!(UNDERGROUND || OCEAN || RIVER || NETHER || THE_END || DRY || JUNGLE || HOT || BEACH || SWAMP || WASTELAND)",
     "_comment": "Owl",
     "acoustics": [
       {
@@ -250,7 +250,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('Forest') && !biome.isOneOf('Hot','Swamp','Dead','Cold','Ocean','Wasteland','Jungle')",
+    "biomeSelector": "FOREST && !(HOT || SWAMP || DEAD || COLD || OCEAN || WASTELAND || JUNGLE)",
     "_comment": "Birds",
     "acoustics": [
       {
@@ -266,7 +266,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('Forest') && !biome.isOneOf('The_End','Nether','Ocean','River')",
+    "biomeSelector": "FOREST && !(THE_END || NETHER || OCEAN || RIVER)",
     "_comment": "Woodpecker",
     "acoustics": [
       {
@@ -277,7 +277,7 @@
     ]
   },
   {
-    "biomeSelector": "!biome.isOneOf('Underground','Mushroom','Dead','Swamp','Jungle','Wasteland','Ocean','Snowy','Nether','The_End')",
+    "biomeSelector": "!(UNDERGROUND || MUSHROOM || DEAD || SWAMP || JUNGLE || WASTELAND || OCEAN || SNOWY || NETHER || THE_END)",
     "_comment": "Raptors",
     "acoustics": [
       {
@@ -288,7 +288,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.isOneOf('Coniferous','Taiga') && !biome.is('Mountain')",
+    "biomeSelector": "(CONIFEROUS || TAIGA) && !MOUNTAIN",
     "_comment": "Loon",
     "acoustics": [
       {
@@ -299,12 +299,12 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('The_End') || biome.name == 'The Void'",
+    "biomeSelector": "THE_END || biome.name == 'The Void'",
     "_comment": "It's The End!",
     "clearSounds": true
   },
   {
-    "biomeSelector": "biome.is('Underground')",
+    "biomeSelector": "UNDERGROUND",
     "_comment": "Regular underground biomes",
     "acoustics": [
       {
@@ -326,7 +326,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.is('Mesa')",
+    "biomeSelector": "MESA",
     "_comment": "Mesa dust color specific override",
     "fogColor": "#D77D2F"
   },

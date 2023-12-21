@@ -5,6 +5,7 @@ import net.fabricmc.api.Environment;
 import org.orecruncher.dsurround.lib.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
+import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 
 @Environment(EnvType.CLIENT)
@@ -26,7 +27,7 @@ public class DiurnalVariables extends VariableSet<IDiurnalVariables> implements 
         return this;
     }
 
-    public void update() {
+    public void update(IVariableAccess variableAccess) {
 
         if (GameUtils.isInGame()) {
             DayCycle cycle = DayCycle.getCycle(GameUtils.getWorld());

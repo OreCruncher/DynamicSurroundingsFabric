@@ -9,7 +9,6 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.Localization;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
 import java.util.List;
@@ -54,8 +53,6 @@ public class IndividualSoundControlScreen extends Screen {
 
     @Override
     protected void init() {
-        //GameUtils.getKeyboard().setRepeatEvents(true);
-
         // Setup search bar
         final int searchBarLeftMargin = (this.width - SEARCH_BAR_WIDTH) / 2;
         final int searchBarY = TOP_OFFSET + HEADER_HEIGHT - SEARCH_BAR_HEIGHT;
@@ -80,7 +77,6 @@ public class IndividualSoundControlScreen extends Screen {
                 this.width,
                 bottomY,
                 topY,
-                bottomY,
                 SELECTION_WIDTH,
                 SELECTION_HEIGHT,
                 this.enablePlay,
@@ -97,13 +93,13 @@ public class IndividualSoundControlScreen extends Screen {
                 .size(BUTTON_WIDTH, BUTTON_HEIGHT)
                 .position(controlMargin, controlHeight)
                 .build();
-        this.addDrawableChild(this.save);
+        this.addSelectableChild(this.save);
 
         this.cancel = ButtonWidget.builder(CANCEL, this::cancel)
                 .size(BUTTON_WIDTH, BUTTON_HEIGHT)
                 .position(controlMargin + BUTTON_WIDTH + BUTTON_SPACING, controlHeight)
                 .build();
-        this.addDrawableChild(this.cancel);
+        this.addSelectableChild(this.cancel);
 
         this.setFocused(this.searchField);
     }
@@ -120,10 +116,6 @@ public class IndividualSoundControlScreen extends Screen {
             GameUtils.getSoundManager().tick(false);
     }
 
-    public boolean isPauseScreen() {
-        return true;
-    }
-
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         return super.keyPressed(keyCode, scanCode, modifiers) || this.searchField.keyPressed(keyCode, scanCode, modifiers);
     }
@@ -137,11 +129,14 @@ public class IndividualSoundControlScreen extends Screen {
     }
 
     public void render(final DrawContext context, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(context, mouseX, mouseY, partialTicks);
+        this.renderInGameBackground(context);
+
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, TOP_OFFSET, ColorPalette.MC_WHITE.getRGB());
+
         this.soundConfigList.render(context, mouseX, mouseY, partialTicks);
         this.searchField.render(context, mouseX, mouseY, partialTicks);
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, TOP_OFFSET, ColorPalette.MC_WHITE.getRGB());
-        super.render(context, mouseX, mouseY, partialTicks);
+        this.save.render(context, mouseX, mouseY, partialTicks);
+        this.cancel.render(context, mouseX, mouseY, partialTicks);
 
         if (this.soundConfigList.isMouseOver(mouseX, mouseY)) {
             final IndividualSoundControlListEntry entry = this.soundConfigList.getEntryAt(mouseX, mouseY);

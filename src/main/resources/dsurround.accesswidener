@@ -10,3 +10,6 @@ accessible field net/minecraft/world/biome/Biome weather Lnet/minecraft/world/bi
 # Sound engine access
 accessible field net/minecraft/client/sound/SoundEngine devicePointer J
 accessible field net/minecraft/client/sound/Channel$SourceManager source Lnet/minecraft/client/sound/Source;
+
+# Potion swirl suppression
+accessible field net/minecraft/entity/LivingEntity POTION_SWIRLS_COLOR Lnet/minecraft/entity/data/TrackedData;

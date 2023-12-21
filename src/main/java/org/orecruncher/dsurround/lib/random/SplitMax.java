@@ -13,7 +13,7 @@ final class SplitMax {
     private long x;
 
     private SplitMax() {
-        this(Instant.now().getNano() + System.nanoTime() * PRIME);
+        this(Instant.now().getNano() * PRIME);
     }
 
     private SplitMax(final long seed) {

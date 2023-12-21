@@ -7,8 +7,9 @@ import net.minecraft.particle.DefaultParticleType;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.world.World;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.ISoundFactory;
-import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 @Environment(EnvType.CLIENT)
@@ -20,6 +21,7 @@ public class FlameJetEffect extends ParticleJetEffect {
 
     protected final boolean isLava;
     protected final DefaultParticleType particleType;
+    protected final IAudioPlayer audioPlayer;
     protected final boolean isSolid;
     protected boolean soundFired;
 
@@ -28,6 +30,7 @@ public class FlameJetEffect extends ParticleJetEffect {
         this.isLava = !isSolid && RANDOM.nextInt(3) == 0;
         this.particleType = this.isLava ? ParticleTypes.LAVA : ParticleTypes.FLAME;
         this.isSolid = isSolid;
+        this.audioPlayer = ContainerManager.resolve(IAudioPlayer.class);
     }
 
     @Override
@@ -36,7 +39,7 @@ public class FlameJetEffect extends ParticleJetEffect {
             this.soundFired = true;
             if (this.jetStrength > 1) {
                 var soundInstance = FIRE_AMBIENT.createAtLocation(getPos());
-                MinecraftAudioPlayer.INSTANCE.play(soundInstance);
+                this.audioPlayer.play(soundInstance);
             }
         }
     }

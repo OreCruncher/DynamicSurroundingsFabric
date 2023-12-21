@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib;
 
 import com.google.common.base.Preconditions;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
 /**
@@ -9,7 +9,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
  */
 public final class Guard {
 
-    private static final IModLog LOGGER = Client.LOGGER.createChild(Guard.class);
+    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
 
     /**
      * Executes the Runnable.  Exceptions are logged to the mod's logger and then suppressed.

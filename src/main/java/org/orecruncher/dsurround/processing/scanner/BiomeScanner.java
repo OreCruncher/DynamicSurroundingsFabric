@@ -7,13 +7,13 @@ import net.minecraft.registry.tag.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.source.BiomeAccess;
-import org.orecruncher.dsurround.config.BiomeLibrary;
-import org.orecruncher.dsurround.config.DimensionLibrary;
+import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
+import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.config.InternalBiomes;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.processing.Scanners;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 
 @Environment(EnvType.CLIENT)
 public final class BiomeScanner {
@@ -26,9 +26,9 @@ public final class BiomeScanner {
     private static final int SURVEY_VERTICAL_OFFSET = SURVEY_VERTICAL_DIMENSION / 4 - 1;
     private static final int MAX_SURVEY_VOLUME = SURVEY_HORIZONTAL_DIMENSION * SURVEY_HORIZONTAL_DIMENSION * SURVEY_VERTICAL_DIMENSION;
 
-    private static DimensionInfo surveyedDimension;
-    private static boolean isUnderWater;
-    private static BiomeInfo logicalBiomeInfo;
+    private DimensionInfo surveyedDimension;
+    private boolean isUnderWater;
+    private BiomeInfo logicalBiomeInfo;
 
     private final BlockPos.Mutable mutable = new BlockPos.Mutable();
 
@@ -36,17 +36,28 @@ public final class BiomeScanner {
     private Reference2IntOpenHashMap<BiomeInfo> weights = new Reference2IntOpenHashMap<>(8);
     private Biome surveyedBiome = null;
     private BlockPos surveyedPosition = BlockPos.ORIGIN;
+    private final IModLog logger;
+    private final IBiomeLibrary biomeLibrary;
+    private final IDimensionLibrary dimensionLibrary;
+    private final CeilingScanner ceilingScanner;
 
-    public static BiomeInfo playerLogicBiomeInfo() {
-        return logicalBiomeInfo;
+    public BiomeScanner(IBiomeLibrary biomeLibrary, IDimensionLibrary dimensionLibrary, CeilingScanner ceilingScanner, IModLog logger) {
+        this.biomeLibrary = biomeLibrary;
+        this.dimensionLibrary = dimensionLibrary;
+        this.ceilingScanner = ceilingScanner;
+        this.logger = logger;
     }
 
-    public static DimensionInfo getDimInfo() {
-        return surveyedDimension;
+    public BiomeInfo playerLogicBiomeInfo() {
+        return this.logicalBiomeInfo;
     }
 
-    public static boolean isUnderWater() {
-        return isUnderWater;
+    public DimensionInfo getDimInfo() {
+        return this.surveyedDimension;
+    }
+
+    public boolean isUnderWater() {
+        return this.isUnderWater;
     }
 
     public void tick(long tickCount) {
@@ -60,25 +71,25 @@ public final class BiomeScanner {
         var world = player.getEntityWorld();
         var position = player.getBlockPos();
 
-        var dimensionInfo = DimensionLibrary.getData(world);
+        var dimensionInfo = this.dimensionLibrary.getData(world);
         var biomes = world.getBiomeAccess();
         var playerBiome = biomes.getBiome(position);
 
         if (this.surveyedBiome != playerBiome.value()
-                || !surveyedDimension.equals(dimensionInfo)
+                || !this.surveyedDimension.equals(dimensionInfo)
                 || !this.surveyedPosition.equals(position)) {
 
             this.surveyedBiome = playerBiome.value();
             this.surveyedPosition = position;
-            surveyedDimension = dimensionInfo;
+            this.surveyedDimension = dimensionInfo;
 
             this.weights = new Reference2IntOpenHashMap<>(8);
 
             // If the player is underwater, underwater effects will rule over everything else
-            isUnderWater = player.isSubmergedIn(FluidTags.WATER);
-            if (isUnderWater) {
+            this.isUnderWater = player.isSubmergedIn(FluidTags.WATER);
+            if (this.isUnderWater) {
                 InternalBiomes internalBiome;
-                var playerBiomeInfo = BiomeLibrary.getBiomeInfo(playerBiome.value());
+                var playerBiomeInfo = this.biomeLibrary.getBiomeInfo(playerBiome.value());
                 if (playerBiomeInfo.isRiver())
                     internalBiome = InternalBiomes.UNDER_RIVER;
                 else if (playerBiomeInfo.isDeepOcean())
@@ -88,13 +99,13 @@ public final class BiomeScanner {
                 else
                     internalBiome = InternalBiomes.UNDER_WATER;
 
-                logicalBiomeInfo = BiomeLibrary.getBiomeInfo(internalBiome);
+                this.logicalBiomeInfo = this.biomeLibrary.getBiomeInfo(internalBiome);
                 this.biomeArea = 1;
-                this.weights.addTo(logicalBiomeInfo, 1);
+                this.weights.addTo(this.logicalBiomeInfo, 1);
                 return;
             }
 
-            logicalBiomeInfo = this.resolveBiome(dimensionInfo, biomes, position);
+            this.logicalBiomeInfo = this.resolveBiome(dimensionInfo, biomes, position);
 
             for (int z = 0; z < SURVEY_HORIZONTAL_DIMENSION; z++) {
                 var dZ = z - SURVEY_HORIZONTAL_OFFSET + this.surveyedPosition.getZ();
@@ -121,18 +132,18 @@ public final class BiomeScanner {
 //        if (((BiomeAccessor) (Object) biome.value()).getCategory() != Biome.Category.UNDERGROUND) {
             var y = pos.getY();
             if (y < (dimInfo.getSeaLevel() - UNDERGROUND_THRESHOLD_OFFSET)) {
-                return BiomeLibrary.getBiomeInfo(InternalBiomes.UNDERGROUND);
-            } else if (!dimInfo.alwaysOutside() && Scanners.isInside()) {
+                return this.biomeLibrary.getBiomeInfo(InternalBiomes.UNDERGROUND);
+            } else if (!dimInfo.alwaysOutside() && this.ceilingScanner.isReallyInside()) {
                 // If it's not underground, and we are inside, return INSIDE
-                return BiomeLibrary.getBiomeInfo(InternalBiomes.INSIDE);
+                return this.biomeLibrary.getBiomeInfo(InternalBiomes.INSIDE);
             } else if (y >= dimInfo.getSpaceHeight()) {
-                return BiomeLibrary.getBiomeInfo(InternalBiomes.SPACE);
+                return this.biomeLibrary.getBiomeInfo(InternalBiomes.SPACE);
             } else if (y >= dimInfo.getCloudHeight()) {
-                return BiomeLibrary.getBiomeInfo(InternalBiomes.CLOUDS);
+                return this.biomeLibrary.getBiomeInfo(InternalBiomes.CLOUDS);
             }
 //        }
 
-        return BiomeLibrary.getBiomeInfo(biome.value());
+        return this.biomeLibrary.getBiomeInfo(biome.value());
     }
 
     public int getBiomeArea() {
@@ -142,5 +153,4 @@ public final class BiomeScanner {
     public Reference2IntOpenHashMap<BiomeInfo> getBiomes() {
         return this.weights;
     }
-
 }
