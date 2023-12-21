@@ -1,3 +1,23 @@
+> ### DynamicSurroundings-Fabric-1.20.4-0.0.7
+**Requirements**
+* JAVA 17+ (I am using Adoptium https://adoptium.net/)
+* Fabric Loader >=0.15.1
+* Fabric API 0.91.2+1.20.4
+* 100% client side; no server side deployment needed
+
+**What's New**
+* Removed frog sound effects since Minecraft has frogs.  I think they need a fez.
+* Detection of "built in" toolbar effect sounds, such as armor and buckets if a dsurround effect tag is not already supplied.  (These guys have item equip sounds.)
+* Works when connecting to Vanilla servers - yay!  Includes handling impact of tag sync between server and client.
+
+**Fixes**
+* Using a bow/crossbow will no longer trigger the swing sound
+* Cleaned up first person potion particle suppression.  Config setting change will no longer require a restart of the client.
+* Null ref exception triggered as a result of a race condition when connecting to a server.
+* Fixed rendering of the in-game individual sound config screen
+* Cleaned up new version detection and messaging
+* Fixed /reload and /dsreload effects on cached data
+
 > ### DynamicSurroundings-Fabric-1.20.4-0.0.6
 **Requirements**
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)
@@ -15,7 +35,7 @@
 * Support for client side tags - should ease addition of new blocks and providing Dynamic Surround support via data packs.
   * Block reflectance and occlusions for sound reverb processing
   * EntityType tags for entity effects (bow pull, frost breath, etc.)
-  * Item tags for Item sound effects (tool bar and swing)
+  * Item tags for Item sound effects (toolbar and swing)
   * Support of Biome tags for biome conditions
 
 **Fixes**
