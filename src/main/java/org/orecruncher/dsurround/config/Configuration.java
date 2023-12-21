@@ -7,6 +7,7 @@ import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
+import org.orecruncher.dsurround.processing.accents.FootstepAccents;
 
 @Environment(EnvType.CLIENT)
 public class Configuration extends ConfigurationData {
@@ -40,6 +41,10 @@ public class Configuration extends ConfigurationData {
     @Property
     @Comment("Configuration options for entity effects")
     public final EntityEffects entityEffects = new EntityEffects();
+
+    @Property
+    @Comment("Configuration options for footstep accent effects")
+    public final FootstepAccents footstepAccents = new FootstepAccents();
 
     @Property
     @Comment("Configuration options for tweaking particle behavior")
@@ -218,6 +223,20 @@ public class Configuration extends ConfigurationData {
         @RestartRequired
         @Comment("Enable/disable item swing sound effects from players and mobs")
         public boolean enableSwingEffect = false;
+    }
+
+    public static class FootstepAccents {
+        @Property
+        @Comment("Enable/disable foot step accents globally")
+        public boolean enableAccents = true;
+
+        @Property
+        @Comment("Enable/disable accents for armor that is worn")
+        public boolean enableArmorAccents = true;
+
+        @Property
+        @Comment("Enable/disable accents for when it is raining or blocks are waterlogged")
+        public boolean enableWetSurfaceAccents = true;
     }
 
     public static class ParticleTweaks {

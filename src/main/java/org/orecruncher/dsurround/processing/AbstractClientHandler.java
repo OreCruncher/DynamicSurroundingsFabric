@@ -5,8 +5,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.entity.player.PlayerEntity;
 import org.orecruncher.dsurround.config.Configuration;
-import org.orecruncher.dsurround.lib.di.DefaultValue;
-import org.orecruncher.dsurround.lib.di.Injection;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
@@ -16,7 +14,7 @@ import java.util.Collection;
 import java.util.Random;
 
 @Environment(EnvType.CLIENT)
-abstract class ClientHandler {
+abstract class AbstractClientHandler {
 
     protected static final Random RANDOM = XorShiftRandom.current();
 
@@ -25,7 +23,7 @@ abstract class ClientHandler {
     private final String handlerName;
     private final TimerEMA timer;
 
-    ClientHandler(final String name, Configuration config, IModLog logger) {
+    AbstractClientHandler(final String name, Configuration config, IModLog logger) {
         this.handlerName = name;
         this.config = config;
         this.logger = logger;

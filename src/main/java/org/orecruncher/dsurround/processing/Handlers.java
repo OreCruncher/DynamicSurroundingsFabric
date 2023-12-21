@@ -18,6 +18,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.threading.IClientTasking;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
+import org.orecruncher.dsurround.processing.accents.FootstepAccents;
 import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
 import org.orecruncher.dsurround.processing.scanner.VillageScanner;
@@ -33,7 +34,7 @@ public class Handlers {
     private final ITickCount tickCount;
     private final ISoundLibrary soundLibrary;
     private final IAudioPlayer audioPlayer;
-    private final ObjectArray<ClientHandler> effectHandlers = new ObjectArray<>();
+    private final ObjectArray<AbstractClientHandler> effectHandlers = new ObjectArray<>();
     private final LoggingTimerEMA handlerTimer = new LoggingTimerEMA("Handlers");
     private boolean isConnected = false;
     private boolean startupSoundPlayed = false;
@@ -52,7 +53,7 @@ public class Handlers {
         return GameUtils.getPlayer();
     }
 
-    private void register(final Class<? extends ClientHandler> clazz) {
+    private void register(final Class<? extends AbstractClientHandler> clazz) {
         var handler = ContainerManager.resolve(clazz);
         this.effectHandlers.add(handler);
         this.logger.debug("Registered handler [%s]", handler.getHandlerName());
@@ -68,6 +69,7 @@ public class Handlers {
         register(EntityEffectHandler.class);
         register(BiomeSoundHandler.class);
         register(AreaBlockEffects.class);
+        register(StepAccentGenerator.class);
 
         ClientState.TICK_END.register(this::tick);
         ClientState.ON_CONNECT.register(this::onConnect);
@@ -84,7 +86,7 @@ public class Handlers {
                     this.logger.warn("Attempt to initialize EffectManager when it is already initialized");
                     onDisconnect(client);
                 }
-                for (final ClientHandler h : this.effectHandlers)
+                for (final AbstractClientHandler h : this.effectHandlers)
                     h.connect0();
                 this.isConnected = true;
             });
@@ -98,7 +100,7 @@ public class Handlers {
             this.tasking.execute(() -> {
                 this.logger.info("Client disconnecting...");
                 this.isConnected = false;
-                for (final ClientHandler h : this.effectHandlers)
+                for (final AbstractClientHandler h : this.effectHandlers)
                     h.disconnect0();
             });
         } catch (Exception ex) {
@@ -129,7 +131,7 @@ public class Handlers {
         this.handlerTimer.begin();
         final long tick = this.tickCount.getTickCount();
 
-        for (final ClientHandler handler : this.effectHandlers) {
+        for (final AbstractClientHandler handler : this.effectHandlers) {
             final long mark = System.nanoTime();
             if (handler.doTick(tick))
                 handler.process(getPlayer());
@@ -176,6 +178,8 @@ public class Handlers {
             .registerSingleton(EntityEffectHandler.class)
             .registerSingleton(BiomeSoundHandler.class)
             .registerSingleton(AreaBlockEffects.class)
+            .registerSingleton(FootstepAccents.class)
+            .registerSingleton(StepAccentGenerator.class)
             .registerSingleton(Handlers.class);
     }
 }

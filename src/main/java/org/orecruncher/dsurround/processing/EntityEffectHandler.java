@@ -13,7 +13,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import java.util.stream.Collectors;
 
 @Environment(EnvType.CLIENT)
-public class EntityEffectHandler  extends ClientHandler {
+public class EntityEffectHandler  extends AbstractClientHandler {
 
     private final IEntityEffectLibrary entityEffectLibrary;
 

@@ -15,7 +15,7 @@ import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 import java.util.Collection;
 
-public class AreaBlockEffects extends ClientHandler {
+public class AreaBlockEffects extends AbstractClientHandler {
 
     private final IBlockLibrary blockLibrary;
     private final IAudioPlayer audioPlayer;

@@ -18,7 +18,7 @@ import org.orecruncher.dsurround.processing.scanner.VillageScanner;
 import java.util.Collection;
 
 @Environment(EnvType.CLIENT)
-public class Scanners extends ClientHandler {
+public class Scanners extends AbstractClientHandler {
 
     private final BiomeScanner biomeScanner;
     private final VillageScanner villageScanner;
