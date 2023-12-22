@@ -983,6 +983,7 @@
 	},
 	"footsteps.water_through": {
 		"category": "player",
+		"subtitle": "dsurround.sound.caption.footsteps.water_through",
 		"sounds": [
 			"dsurround:footsteps/water/water_through1",
 			"dsurround:footsteps/water/water_through10",

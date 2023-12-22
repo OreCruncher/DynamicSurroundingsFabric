@@ -251,14 +251,14 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @Comment("Enable/disable showing of projectile particle trails")
-        public boolean showProjectileTrails = false;
+        public boolean suppressProjectileParticleTrails = false;
 
     }
 
     public static class CompassOptions {
         @Property
         @Comment("Enable/disable display of the compass display when holding a compass item")
-        public boolean enableCompass = true;
+        public boolean enableCompass = false;
 
         @Property
         @Comment("Style of compass rendering")
