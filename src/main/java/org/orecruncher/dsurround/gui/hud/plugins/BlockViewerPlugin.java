@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.runtime.diagnostics;
+package org.orecruncher.dsurround.gui.hud.plugins;
 
 import joptsimple.internal.Strings;
 import net.fabricmc.api.EnvType;
@@ -11,23 +11,22 @@ import net.minecraft.world.World;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.gui.hud.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.di.DefaultValue;
-import org.orecruncher.dsurround.lib.di.Injection;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 
 @Environment(EnvType.CLIENT)
-public class BlockViewer implements IDiagnosticPlugin {
+public class BlockViewerPlugin implements IDiagnosticPlugin {
 
     private static final String COLOR = Formatting.AQUA.toString();
     private static final String COLOR_TITLE = COLOR + Formatting.UNDERLINE;
 
     private final IBlockLibrary blockLibrary;
 
-    public BlockViewer(IBlockLibrary blockLibrary) {
+    public BlockViewerPlugin(IBlockLibrary blockLibrary) {
         this.blockLibrary = blockLibrary;
         ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect);
     }
@@ -42,6 +41,7 @@ public class BlockViewer implements IDiagnosticPlugin {
         var state = world.getBlockState(result.getBlockPos());
         data.add(state.toString());
 
+        // TODO:  These tags are from the server.  Does not cover cases of dsurround.
         state.streamTags()
             .map(tag -> {
                 var formatting = Formatting.YELLOW;

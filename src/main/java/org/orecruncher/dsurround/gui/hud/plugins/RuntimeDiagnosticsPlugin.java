@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.runtime.diagnostics;
+package org.orecruncher.dsurround.gui.hud.plugins;
 
 import com.google.common.collect.ImmutableList;
 import joptsimple.internal.Strings;
@@ -6,6 +6,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.util.Formatting;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.gui.hud.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
@@ -15,7 +16,7 @@ import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import java.util.List;
 
 @Environment(EnvType.CLIENT)
-public class RuntimeDiagnostics implements IDiagnosticPlugin {
+public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
 
     private static final List<String> scripts = ImmutableList.of(
             "'Dim: ' + dim.getId() + '/' + dim.getDimName() + '; isSuperFlat: ' + dim.isSuperFlat()",
@@ -30,7 +31,7 @@ public class RuntimeDiagnostics implements IDiagnosticPlugin {
     private final MinecraftClock clock = new MinecraftClock();
     private final IConditionEvaluator conditionEvaluator;
 
-    public RuntimeDiagnostics(IConditionEvaluator conditionEvaluator) {
+    public RuntimeDiagnosticsPlugin(IConditionEvaluator conditionEvaluator) {
         this.conditionEvaluator = conditionEvaluator;
         ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect, HandlerPriority.HIGH);
     }

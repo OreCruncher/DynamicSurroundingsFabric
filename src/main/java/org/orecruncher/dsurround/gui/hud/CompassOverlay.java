@@ -16,7 +16,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
 
 @Environment(EnvType.CLIENT)
-public class CompassHud extends AbstractHudOverlay {
+public class CompassOverlay extends AbstractOverlay {
 
     private static final float BAND_WIDTH = 65F * 2;
     private static final float BAND_HEIGHT = 12F * 2;
@@ -30,7 +30,7 @@ public class CompassHud extends AbstractHudOverlay {
     private float scale;
     private float spriteOffset;
 
-    public CompassHud(Configuration config) {
+    public CompassOverlay(Configuration config) {
         this.config = config;
         this.showCompass = false;
         this.spriteOffset = this.config.compassOptions.compassStyle.getSpriteNumber();

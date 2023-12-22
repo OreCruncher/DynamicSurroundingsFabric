@@ -6,17 +6,18 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.infra.events.ClientState;
 
 @Environment(EnvType.CLIENT)
 public class OverlayManager {
 
-    private final ObjectArray<AbstractHudOverlay> overlays;
+    private final ObjectArray<AbstractOverlay> overlays;
 
     public OverlayManager(Configuration config) {
         this.overlays = new ObjectArray<>();
-        this.overlays.add(new DiagnosticsHud());
-        this.overlays.add(new CompassHud(config));
+        this.overlays.add(ContainerManager.resolve(DiagnosticsOverlay.class));
+        this.overlays.add(new CompassOverlay(config));
         ClientState.TICK_END.register(this::tick);
     }
 

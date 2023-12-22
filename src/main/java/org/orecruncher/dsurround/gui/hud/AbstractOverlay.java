@@ -6,9 +6,9 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 
 @Environment(EnvType.CLIENT)
-public abstract class AbstractHudOverlay {
+public abstract class AbstractOverlay {
 
-    public AbstractHudOverlay() {
+    public AbstractOverlay() {
 
     }
 

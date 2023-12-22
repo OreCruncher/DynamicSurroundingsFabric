@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.runtime.diagnostics;
+package org.orecruncher.dsurround.gui.hud;
 
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 

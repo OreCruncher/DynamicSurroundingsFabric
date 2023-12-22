@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.runtime.diagnostics;
+package org.orecruncher.dsurround.gui.hud.plugins;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -6,12 +6,13 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.MathHelper;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.gui.hud.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
 
 @Environment(EnvType.CLIENT)
-public class ClientProfiler implements IDiagnosticPlugin {
+public class ClientProfilerPlugin implements IDiagnosticPlugin {
 
     private final TimerEMA clientTick = new TimerEMA("Client Tick");
     private final TimerEMA lastTick = new TimerEMA("Last Tick");
@@ -19,8 +20,10 @@ public class ClientProfiler implements IDiagnosticPlugin {
     private long timeMark = 0;
     private float tps = 0;
 
-    public ClientProfiler() {
+    public ClientProfilerPlugin() {
         ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect, HandlerPriority.VERY_HIGH);
+
+        // Go to Fabric for these as it should encompass other mod impacts
         ClientTickEvents.START_CLIENT_TICK.register(this::tickStart);
         ClientTickEvents.END_CLIENT_TICK.register(this::tickEnd);
     }
