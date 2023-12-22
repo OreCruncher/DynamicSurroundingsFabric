@@ -18,8 +18,11 @@ import org.orecruncher.dsurround.tags.ItemEffectTags;
 @Environment(EnvType.CLIENT)
 public class CompassHud extends AbstractHudOverlay {
 
-    private static final float BAND_WIDTH = 65F;
-    private static final float BAND_HEIGHT = 12F;
+    private static final float BAND_WIDTH = 65F * 2;
+    private static final float BAND_HEIGHT = 12F * 2;
+    private static final int TEXTURE_SIZE = 512;
+    private static final float TEXTURE_SIZE_F = (float)TEXTURE_SIZE;
+    private static final int HALF_TEXTURE_SIZE = TEXTURE_SIZE / 2;
     private static final Identifier COMPASS_TEXTURE = new Identifier(Client.ModId, "textures/compass.png");
 
     private final Configuration config;
@@ -58,7 +61,7 @@ public class CompassHud extends AbstractHudOverlay {
 
                 matrixStack.push();
 
-                int direction = MathHelper.floor(((player.headYaw * 256F) / 360F) + 0.5D) & 255;
+                int direction = MathHelper.floor(((player.headYaw * TEXTURE_SIZE) / 360F) + 0.5D) & (TEXTURE_SIZE - 1);
                 float x = (context.getScaledWindowWidth() - BAND_WIDTH * this.scale) / 2F;
                 float y = (context.getScaledWindowHeight() - BAND_HEIGHT * this.scale) / 2F;
 
@@ -68,8 +71,8 @@ public class CompassHud extends AbstractHudOverlay {
 
                 float v = this.spriteOffset * (BAND_HEIGHT * 2);
 
-                if (direction >= 128) {
-                    direction -= 128;
+                if (direction >= HALF_TEXTURE_SIZE) {
+                    direction -= HALF_TEXTURE_SIZE;
                     v += BAND_HEIGHT;
                 }
 
@@ -86,7 +89,7 @@ public class CompassHud extends AbstractHudOverlay {
     }
 
     void drawTexture(MatrixStack stack, Identifier texture, float x1, float x2, float y1, float y2, float regionWidth, float regionHeight, float u, float v) {
-        this.drawTexturedQuad(stack, texture, x1, x2, y1, y2, (float) 0, u / 256F, (u + regionWidth) / 256F, v / 256F, (v + regionHeight) / 256F);
+        this.drawTexturedQuad(stack, texture, x1, x2, y1, y2, (float) 0, u / TEXTURE_SIZE_F, (u + regionWidth) / TEXTURE_SIZE_F, v / TEXTURE_SIZE_F, (v + regionHeight) / TEXTURE_SIZE_F);
     }
 
     void drawTexturedQuad(MatrixStack stack, Identifier texture, float x1, float x2, float y1, float y2, float z, float u1, float u2, float v1, float v2) {

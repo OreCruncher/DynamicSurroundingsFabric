@@ -267,8 +267,8 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @Comment("Scales the compass texture by the specified amount")
-        @DoubleRange(min = 1D, max = 4D)
-        public double scale = 2D;
+        @DoubleRange(min = 0.5D, max = 4D)
+        public double scale = 1D;
     }
 
     public static class OtherOptions {
