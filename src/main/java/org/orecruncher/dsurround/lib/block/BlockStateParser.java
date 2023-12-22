@@ -5,11 +5,10 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.PatternValidation;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import java.util.Arrays;
@@ -24,7 +23,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unused")
 final class BlockStateParser {
 
-    private static final IModLog LOGGER = Client.LOGGER.createChild(BlockStateParser.class);
+    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
 
     private BlockStateParser() {
 

@@ -39,7 +39,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
     public static final int DEFAULT_ADDITIONAL_SOUND_CHANCE = 1000 / 4;
     public static final Script DEFAULT_SOUND_CHANCE = new Script(String.valueOf(1D / DEFAULT_ADDITIONAL_SOUND_CHANCE));
-    private static final IModLog LOGGER = Client.LOGGER.createChild(BiomeInfo.class);
+    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
     private final int version;
     private final Identifier biomeId;
     private final String biomeName;

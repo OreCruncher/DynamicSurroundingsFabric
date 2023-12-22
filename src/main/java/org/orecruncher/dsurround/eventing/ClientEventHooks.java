@@ -22,12 +22,12 @@ public final class ClientEventHooks {
     /**
      * Fired when block state updates are received clientside.  Results are coalesced for efficiency.
      */
-    public static IPhasedEvent<BlockUpdateEvent> BLOCK_UPDATE = EventingFactory.createPrioritizedEvent();
+    public static final IPhasedEvent<BlockUpdateEvent> BLOCK_UPDATE = EventingFactory.createPrioritizedEvent();
 
     /**
      * Fired when an Entity is detected as generating a step sound.
      */
-    public static IPhasedEvent<EntityStepEvent> ENTITY_STEP_EVENT = EventingFactory.createPrioritizedEvent();
+    public static final IPhasedEvent<EntityStepEvent> ENTITY_STEP_EVENT = EventingFactory.createPrioritizedEvent();
 
     public static final class CollectDiagnosticsEvent {
         public final ObjectArray<String> left = new ObjectArray<>();

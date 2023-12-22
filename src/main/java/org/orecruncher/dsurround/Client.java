@@ -1,11 +1,6 @@
 package org.orecruncher.dsurround;
 
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.minecraft.client.MinecraftClient;
-import org.orecruncher.dsurround.commands.Commands;
 import org.orecruncher.dsurround.config.*;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
@@ -32,8 +27,7 @@ import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-@Environment(EnvType.CLIENT)
-public class Client implements IMinecraftMod, ClientModInitializer {
+public abstract class Client implements IMinecraftMod {
 
     public static final String ModId = "dsurround";
     public static final ModLog LOGGER = new ModLog(ModId);
@@ -49,8 +43,7 @@ public class Client implements IMinecraftMod, ClientModInitializer {
         return ModId;
     }
 
-    @Override
-    public void onInitializeClient() {
+    public void initializeClient() {
         LOGGER.info("Initializing...");
 
         // Hook the config load event so set we can set the debug flags on logging
@@ -73,8 +66,6 @@ public class Client implements IMinecraftMod, ClientModInitializer {
             LOGGER.info("Tag sync event received - reloading libraries");
             AssetLibraryEvent.reload();
         }, HandlerPriority.VERY_HIGH);
-
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> Commands.register(dispatcher));
 
         // Register core services
         ContainerManager.getDefaultContainer()

@@ -86,6 +86,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
 
     @Override
     protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<ITimer> timers) {
-        left.add(Formatting.LIGHT_PURPLE + String.format("Total Effects: %d", this.blockEffects.count()));
+        if (this.blockEffects != null)
+            left.add(Formatting.LIGHT_PURPLE + String.format("Total Effects: %d", this.blockEffects.count()));
     }
 }
