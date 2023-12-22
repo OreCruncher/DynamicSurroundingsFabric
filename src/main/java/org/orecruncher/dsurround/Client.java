@@ -10,6 +10,7 @@ import org.orecruncher.dsurround.config.*;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
 import org.orecruncher.dsurround.effects.particles.ParticleSheets;
+import org.orecruncher.dsurround.gui.hud.OverlayManager;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
@@ -87,7 +88,8 @@ public class Client implements IMinecraftMod, ClientModInitializer {
                 .registerSingleton(IBlockLibrary.class, BlockLibrary.class)
                 .registerSingleton(IItemLibrary.class, ItemLibrary.class)
                 .registerSingleton(IEntityEffectLibrary.class, EntityEffectLibrary.class)
-                .registerSingleton(IAudioPlayer.class, MinecraftAudioPlayer.class);
+                .registerSingleton(IAudioPlayer.class, MinecraftAudioPlayer.class)
+                .registerSingleton(OverlayManager.class);
 
         // Kick off version checking if configured.  This should run in parallel with initialization.
         if (Config.logging.enableModUpdateChatMessage)

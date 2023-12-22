@@ -50,6 +50,10 @@ public class Configuration extends ConfigurationData {
     public final ParticleTweaks particleTweaks = new ParticleTweaks();
 
     @Property
+    @Comment("Configuration options for the compass overlay")
+    public final CompassOptions compassOptions = new CompassOptions();
+
+    @Property
     @Comment("Configuration options for other things")
     public final OtherOptions otherOptions = new OtherOptions();
 
@@ -249,6 +253,22 @@ public class Configuration extends ConfigurationData {
         @Comment("Enable/disable showing of projectile particle trails")
         public boolean showProjectileTrails = false;
 
+    }
+
+    public static class CompassOptions {
+        @Property
+        @Comment("Enable/disable display of the compass display when holding a compass item")
+        public boolean enableCompass = true;
+
+        @Property
+        @Comment("Style of compass rendering")
+        @EnumType(CompassStyle.class)
+        public CompassStyle compassStyle = CompassStyle.TRANSPARENT_WITH_INDICATOR;
+
+        @Property
+        @Comment("Scales the compass texture by the specified amount")
+        @DoubleRange(min = 1D, max = 4D)
+        public double scale = 2D;
     }
 
     public static class OtherOptions {
