@@ -55,6 +55,18 @@ public final class ColorPalette {
     public static final TextColor SLATEGRAY = of(112, 128, 144);
     public static final TextColor DARKSLATEGRAY = of(47, 79, 79);
 
+    public static int getRed(int rgb) {
+        return (rgb >> 16) & 0xFF;
+    }
+
+    public static int getGreen(int rgb) {
+        return (rgb >> 8) & 0xFF;
+    }
+
+    public static int getBlue(int rgb) {
+        return rgb & 0xFF;
+    }
+
     private static TextColor of(Formatting formatColor) {
         return TextColor.fromFormatting(formatColor);
     }

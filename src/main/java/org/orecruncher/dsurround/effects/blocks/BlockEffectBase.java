@@ -6,10 +6,13 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 import org.orecruncher.dsurround.mixins.core.MixinParticleManager;
+import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 import java.util.Random;
 
@@ -17,6 +20,8 @@ import java.util.Random;
 public abstract class BlockEffectBase implements IBlockEffect {
 
     protected static final Random RANDOM = XorShiftRandom.current();
+    protected static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
+    protected static final Configuration CONFIG = ContainerManager.resolve(Configuration.class);
 
     protected final World world;
     protected final double posX;
