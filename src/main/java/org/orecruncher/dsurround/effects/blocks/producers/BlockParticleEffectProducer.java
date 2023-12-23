@@ -4,7 +4,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.particle.ParticleEffect;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.effects.IBlockEffect;
@@ -19,25 +18,28 @@ import java.util.Random;
  * no block effect will be generated and placed into the tracking system.
  */
 @Environment(EnvType.CLIENT)
-public abstract class BlockParticleEffectProducer extends BlockEffectProducer {
+public class BlockParticleEffectProducer extends BlockEffectProducer {
 
-    public BlockParticleEffectProducer(Script chance, Script conditions) {
+    private final IParticleSupplier supplier;
+
+    public BlockParticleEffectProducer(Script chance, Script conditions, IParticleSupplier particleSupplier) {
         super(chance, conditions);
+        this.supplier = particleSupplier;
     }
 
     @Override
     final protected Optional<IBlockEffect> produceImpl(World world, BlockState state, BlockPos pos, Random rand) {
-        this.produceParticle(world, state, pos, rand);
+        var particle = this.supplier.create(world, state, pos, rand);
+        this.addParticle(particle);
         return Optional.empty();
-    }
-
-    protected abstract void produceParticle(World world, BlockState state, BlockPos pos, Random rand);
-
-    protected void addParticle(ParticleEffect parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
-        GameUtils.getParticleManager().addParticle(parameters, x, y, z, velocityX, velocityY, velocityZ);
     }
 
     protected void addParticle(final Particle particle) {
         GameUtils.getParticleManager().addParticle(particle);
+    }
+
+    @FunctionalInterface
+    public interface IParticleSupplier {
+        Particle create(World world, BlockState state, BlockPos pos, Random rand);
     }
 }

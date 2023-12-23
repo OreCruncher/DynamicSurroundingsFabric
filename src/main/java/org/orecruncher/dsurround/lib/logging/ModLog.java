@@ -1,8 +1,9 @@
 package org.orecruncher.dsurround.lib.logging;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.lib.infra.IMinecraftMod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -17,8 +18,12 @@ public final class ModLog implements IModLog {
     private boolean debugging;
     private int traceMask;
 
-    public ModLog(final String name) {
-        this.logger = LogManager.getLogger(Objects.requireNonNull(name));
+    public ModLog(IMinecraftMod mod) {
+        this(mod.get_modId());
+    }
+
+    public ModLog(String modId) {
+        this.logger = LoggerFactory.getLogger(Objects.requireNonNull(modId));
     }
 
     private static void outputLines(final Consumer<String> out, final String format, @Nullable final Object... params) {
@@ -91,7 +96,7 @@ public final class ModLog implements IModLog {
     @Override
     public void error(final Throwable e, final String msg, @Nullable final Object... params) {
         outputLines(this.logger::error, msg, params);
-        this.logger.error(e);
+        this.logger.error(e.toString());
     }
 
     @Override
