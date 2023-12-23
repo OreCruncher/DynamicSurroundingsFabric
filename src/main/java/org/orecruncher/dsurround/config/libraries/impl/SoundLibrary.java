@@ -17,6 +17,7 @@ import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.CodecExtensions;
+import org.orecruncher.dsurround.lib.Comparers;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
@@ -52,6 +53,8 @@ public final class SoundLibrary implements ISoundLibrary {
     private final Object2ObjectOpenHashMap<Identifier, SoundEvent> myRegistry = new Object2ObjectOpenHashMap<>();
     private final Object2ObjectOpenHashMap<Identifier, SoundMetadata> soundMetadata = new Object2ObjectOpenHashMap<>();
     private final Map<Identifier, IndividualSoundConfigEntry> individualSoundConfiguration = new HashMap<>();
+    private final Set<Identifier> blockedSounds = new HashSet<>();
+    private final Set<Identifier> culledSounds = new HashSet<>();
     private final List<Identifier> startupSounds = new ArrayList<>();
     private List<IndividualSoundConfigEntry> soundConfiguration = new ArrayList<>();
 
@@ -119,20 +122,18 @@ public final class SoundLibrary implements ISoundLibrary {
     }
 
     @Override
-    public boolean isBlocked(final Identifier id) {
-        IndividualSoundConfigEntry entry = this.individualSoundConfiguration.get(id);
-        return entry != null && (entry.block || entry.volumeScale == 0);
+    public boolean isBlocked(final Identifier sound) {
+        return this.blockedSounds.contains(Objects.requireNonNull(sound));
     }
 
     @Override
-    public boolean isCulled(final Identifier id) {
-        IndividualSoundConfigEntry entry = this.individualSoundConfiguration.get(id);
-        return entry != null && entry.cull;
+    public boolean isCulled(final Identifier sound) {
+        return this.culledSounds.contains(Objects.requireNonNull(sound));
     }
 
     @Override
-    public float getVolumeScale(final Identifier id) {
-        IndividualSoundConfigEntry entry = this.individualSoundConfiguration.get(id);
+    public float getVolumeScale(final Identifier sound) {
+        IndividualSoundConfigEntry entry = this.individualSoundConfiguration.get(Objects.requireNonNull(sound));
         if (entry != null && entry.isNotDefault()) {
             return entry.volumeScale / 100f;
         }
@@ -163,7 +164,7 @@ public final class SoundLibrary implements ISoundLibrary {
                 .filter(IndividualSoundConfigEntry::isNotDefault)
                 .collect(Collectors.toList());
         this.save();
-        this.validatePostLoad();
+        this.postProcess();
     }
 
     private void registerSoundFile(final IResourceAccessor soundFile) {
@@ -191,6 +192,8 @@ public final class SoundLibrary implements ISoundLibrary {
         this.soundConfiguration.clear();
         this.startupSounds.clear();
         this.individualSoundConfiguration.clear();
+        this.blockedSounds.clear();
+        this.culledSounds.clear();
 
         // Check to see if it exists on disk, and if so, load it up.  Otherwise, save it so the defaults are
         // persisted and the user can edit manually.
@@ -210,8 +213,7 @@ public final class SoundLibrary implements ISoundLibrary {
             this.addSoundConfigDefaults();
         }
 
-        // Post load processing
-        this.validatePostLoad();
+        this.postProcess();
 
         // Save it out.  Config parameters may have been added/removed
         this.save();
@@ -242,19 +244,27 @@ public final class SoundLibrary implements ISoundLibrary {
         this.soundConfiguration.add(entry);
     }
 
-    private void validatePostLoad() {
-        this.soundConfiguration.forEach(entry -> {
-            if (entry.isNotDefault()) {
-                this.individualSoundConfiguration.put(entry.soundEventId, entry);
-                if (entry.startup) {
-                    this.startupSounds.add(entry.soundEventId);
-                }
-            }
-        });
+    private void postProcess() {
+        this.soundConfiguration.stream()
+                .filter(IndividualSoundConfigEntry::isNotDefault)
+                .forEach(e -> this.individualSoundConfiguration.put(e.soundEventId, e));
+
+        this.individualSoundConfiguration.values()
+                .forEach(entry -> {
+                    if (entry.startup) {
+                        this.startupSounds.add(entry.soundEventId);
+                    }
+                    if (entry.block || entry.volumeScale == 0) {
+                        this.blockedSounds.add(entry.soundEventId);
+                    }
+                    if (entry.cull) {
+                        this.culledSounds.add(entry.soundEventId);
+                    }
+                });
     }
 
     private void save() {
-        this.soundConfiguration.sort(Comparator.comparing(e -> e.soundEventId));
+        this.soundConfiguration.sort((e1, e2) -> Comparers.IDENTIFIER_NATURAL_COMPARABLE.compare(e1.soundEventId, e2.soundEventId));
         try {
             var result = SOUND_CONFIG_CODEC.encode(this.soundConfiguration, JsonOps.INSTANCE, JsonOps.INSTANCE.empty()).result();
             if (result.isPresent()) {
