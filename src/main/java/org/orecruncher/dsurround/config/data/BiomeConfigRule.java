@@ -6,7 +6,6 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.text.TextColor;
-import org.orecruncher.dsurround.config.AcousticConfig;
 import org.orecruncher.dsurround.lib.scripting.Script;
 
 import java.util.List;

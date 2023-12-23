@@ -10,7 +10,7 @@ import net.minecraft.world.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.config.AcousticConfig;
+import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.impl.BiomeLibrary;
 import org.orecruncher.dsurround.config.SoundEventType;
@@ -18,7 +18,6 @@ import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.IdentityUtils;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -195,31 +194,30 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
 
         for (final AcousticConfig sr : entry.acoustics()) {
-            final Identifier res = IdentityUtils.resolveIdentifier(Client.ModId, sr.soundEventId);
-            final SoundEvent acoustic = soundLibrary.getSound(res);
+            final SoundEvent acoustic = soundLibrary.getSound(sr.soundEventId());
             var factory = SoundFactoryBuilder.create(acoustic)
-                    .category(sr.category)
-                    .volumeRange(sr.minVolume, sr.maxVolume)
-                    .pitchRange(sr.minPitch, sr.maxPitch)
+                    .category(sr.category())
+                    .volumeRange(sr.minVolume(), sr.maxVolume())
+                    .pitchRange(sr.minPitch(), sr.maxPitch())
                     .build();
 
-            switch (sr.type) {
+            switch (sr.type()) {
                 case LOOP -> {
-                    final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions);
+                    final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions());
                     this.loopSounds.add(acousticEntry);
                 }
                 case MUSIC, MOOD, ADDITION -> {
-                    final int weight = sr.weight;
-                    final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions, weight);
+                    final int weight = sr.weight();
+                    final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions(), weight);
 
-                    if (sr.type == SoundEventType.ADDITION)
+                    if (sr.type() == SoundEventType.ADDITION)
                         this.additionalSounds.add(acousticEntry);
-                    else if (sr.type == SoundEventType.MOOD)
+                    else if (sr.type() == SoundEventType.MOOD)
                         this.moodSounds.add(acousticEntry);
                     else
                         this.musicSounds.add(acousticEntry);
                 }
-                default -> LOGGER.warn("Unknown SoundEventType %s", sr.type);
+                default -> LOGGER.warn("Unknown SoundEventType %s", sr.type());
             }
         }
     }

@@ -4,17 +4,13 @@ import com.google.common.collect.ImmutableList;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
-import net.minecraft.registry.Registries;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.config.AcousticConfig;
+import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.biome.AcousticEntry;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
-import org.orecruncher.dsurround.lib.IdentityUtils;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -113,17 +109,14 @@ public class BlockInfo {
         var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
 
         for (final AcousticConfig sr : config.acoustics()) {
-            if (sr.soundEventId != null) {
-                final Identifier res = IdentityUtils.resolveIdentifier(Client.ModId, sr.soundEventId);
-                final SoundEvent acoustic = soundLibrary.getSound(res);
+                final SoundEvent acoustic = soundLibrary.getSound(sr.soundEventId());
                 var factory = SoundFactoryBuilder.create(acoustic)
-                        .category(sr.category)
-                        .volumeRange(sr.minVolume, sr.maxVolume)
-                        .pitchRange(sr.minPitch, sr.maxPitch)
+                        .category(sr.category())
+                        .volumeRange(sr.minVolume(), sr.maxVolume())
+                        .pitchRange(sr.minPitch(), sr.maxPitch())
                         .build();
-                final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions, sr.weight);
+                final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions(), sr.weight());
                 this.addToSounds(acousticEntry);
-            }
         }
 
         for (var e : config.effects()) {
