@@ -18,7 +18,7 @@
     ]
   },
   {
-    "biomeSelector": "DESERT && !(HILLS || MOUNTAINS)",
+    "biomeSelector": "DESERT && !(HILLS || MOUNTAIN)",
     "_comment": "Desert Wind",
     "acoustics": [
       {
