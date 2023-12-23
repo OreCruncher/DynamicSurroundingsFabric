@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#c:mountain_peak",
+      "required": false
+    }
+  ]
+}

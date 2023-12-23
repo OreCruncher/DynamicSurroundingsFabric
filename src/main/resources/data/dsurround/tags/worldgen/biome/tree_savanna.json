@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#c:tree_savanna",
+      "required": false
+    }
+  ]
+}
