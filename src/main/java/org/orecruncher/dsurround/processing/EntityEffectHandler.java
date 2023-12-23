@@ -10,8 +10,6 @@ import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
-import java.util.stream.Collectors;
-
 @Environment(EnvType.CLIENT)
 public class EntityEffectHandler  extends AbstractClientHandler {
 
@@ -42,15 +40,7 @@ public class EntityEffectHandler  extends AbstractClientHandler {
             if (!hasInfo && entity.isAlive()) {
                 // If it does not have info, but is alive, and is not a spectator get info for it.
                 if (inRange && !entity.isSpectator()) {
-                    this.logger.debug("Obtaining effect info for %s (id %d)", entity.getClass().getSimpleName(), entity.getId());
                     info = this.entityEffectLibrary.getEntityEffectInfo(entity);
-                    EntityEffectInfo finalInfo = info;
-                    this.logger.debug(() -> {
-                        var txt = finalInfo.getEffects().stream()
-                                .map(e -> e.getClass().getSimpleName())
-                                .collect(Collectors.joining(","));
-                        return String.format("Effects attached: %s", txt);
-                    });
                 }
             } else if (hasInfo) {
                 // If it does have info just get whatever is currently cached
@@ -61,7 +51,6 @@ public class EntityEffectHandler  extends AbstractClientHandler {
                 if (inRange && info.isAlive() && !entity.isSpectator()) {
                     info.tick();
                 } else {
-                    this.logger.debug("Clearing effect info for %s (id %d)", entity.getClass().getSimpleName(), entity.getId());
                     info.deactivate();
                     this.entityEffectLibrary.clearEntityEffectInfo(entity);
                 }

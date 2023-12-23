@@ -10,21 +10,22 @@ import net.minecraft.entity.player.PlayerEntity;
 import org.orecruncher.dsurround.config.EntityEffectType;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
-import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.tags.EntityEffectTags;
 import org.orecruncher.dsurround.tags.TagHelpers;
 import org.orecruncher.dsurround.xface.ILivingEntityExtended;
 
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Environment(EnvType.CLIENT)
 public class EntityEffectLibrary implements IEntityEffectLibrary {
 
     private final IModLog logger;
-    private final Reference2ObjectMap<EntityType<?>, Set<EntityEffectType>> entityEffects = new Reference2ObjectOpenHashMap<>();
+    private final Reference2ObjectOpenHashMap<EntityType<?>, Set<EntityEffectType>> entityEffects = new Reference2ObjectOpenHashMap<>();
     private EntityEffectInfo defaultInfo;
     private int version;
 
@@ -94,23 +95,17 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
         // Going to initialize a new one.  Deactivate the existing manager.
         if (info != null) {
             info.deactivate();
-            info = null;
         }
 
         // Find the entity in our map
-        var types = this.entityEffects.get(entity.getType());
-        if (types == null) {
-            // Didn't find it.  Gather from the rules and cache
-            types = gatherEffectsFromConfigRules(entity);
-            this.entityEffects.put(entity.getType(), types);
-        }
+        var types = this.entityEffects.computeIfAbsent(entity.getType(), EntityEffectLibrary::gatherEffectsFromConfigRules);
 
         // Project the effect instances
-        Set<IEntityEffect> effects = new ReferenceOpenHashSet<>();
-        for (var type : types) {
-            var effectsToApply = type.produce(entity);
-            effects.addAll(effectsToApply);
-        }
+        var effects = types.stream()
+                .map(e -> e.produce(entity))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toCollection(ReferenceOpenHashSet::new));
 
         // If we have effect instances create a new info object.  Otherwise, set
         // the default.
@@ -128,11 +123,10 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
         return info;
     }
 
-    private static Set<EntityEffectType> gatherEffectsFromConfigRules(LivingEntity entity) {
+    private static Set<EntityEffectType> gatherEffectsFromConfigRules(EntityType<?> entityType) {
         // Gather all the effect types that apply to the entity
         Set<EntityEffectType> effectTypes = new ReferenceOpenHashSet<>();
 
-        var entityType = entity.getType();
         if (TagHelpers.isIn(EntityEffectTags.BOW_PULL, entityType))
             effectTypes.add(EntityEffectType.BOW_PULL);
         if (TagHelpers.isIn(EntityEffectTags.FROST_BREATH, entityType))

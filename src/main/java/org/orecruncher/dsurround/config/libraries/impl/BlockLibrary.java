@@ -82,9 +82,9 @@ public class BlockLibrary implements IBlockLibrary {
 
         // OK - need to build out an info for the block.
         info = new BlockInfo(this.version, state, this.conditionEvaluator);
-        for (var cfg : this.blockConfigs) {
-            if (cfg.match(state)) info.update(cfg);
-        }
+        this.blockConfigs.stream()
+                .filter(c -> c.match(state))
+                .forEach(info::update);
 
         // Optimization to reduce memory bloat.  Coalesce blocks that do not have any special
         // processing to the DEFAULT, and trim the others to release memory that is not needed.

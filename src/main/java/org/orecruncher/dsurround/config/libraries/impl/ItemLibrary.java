@@ -159,13 +159,12 @@ public class ItemLibrary implements IItemLibrary {
     }
 
     private static String formatItemOutput(Identifier id, Item item) {
-        var items = GameUtils.getWorld().getRegistryManager().get(RegistryKeys.ITEM);
+        var items = GameUtils.getWorld()
+                .getRegistryManager().get(RegistryKeys.ITEM);
 
-        var tags = "null";
-        var entry = items.getEntry(items.getRawId(item));
-        if (entry.isPresent()) {
-            tags = TagHelpers.asString(entry.get().streamTags());
-        }
+        var tags = items.getEntry(items.getRawId(item))
+                .map(e -> TagHelpers.asString(e.streamTags()))
+                .orElse("null");
 
         StringBuilder builder = new StringBuilder();
         builder.append(id.toString());

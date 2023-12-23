@@ -18,6 +18,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -55,13 +56,11 @@ public enum EntityEffectType {
         return this.enabled.get();
     }
 
-    public Collection<IEntityEffect> produce(LivingEntity entity) {
+    public Optional<IEntityEffect> produce(LivingEntity entity) {
         if (this.isEnabled()) {
-            var effect = this.factory.apply(entity);
-            if (effect != null)
-                return ImmutableList.of(effect);
+            return Optional.ofNullable(this.factory.apply(entity));
         }
-        return ImmutableList.of();
+        return Optional.empty();
     }
 
     public static EntityEffectType byName(String name) {

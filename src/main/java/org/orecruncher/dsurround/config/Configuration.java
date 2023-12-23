@@ -204,7 +204,6 @@ public class Configuration extends ConfigurationData {
         @Property
         @IntegerRange(min = 16, max = 64)
         @Slider
-        @RestartRequired
         @Comment("The maximum range at which entity special effects are applied")
         public int entityEffectRange = 24;
 
