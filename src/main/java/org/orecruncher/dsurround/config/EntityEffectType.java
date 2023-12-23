@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.config;
 
-import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 
@@ -9,14 +8,10 @@ import net.fabricmc.api.Environment;
 import net.minecraft.entity.LivingEntity;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.effects.IEntityEffect;
-import org.orecruncher.dsurround.effects.entity.BowUseEffect;
-import org.orecruncher.dsurround.effects.entity.BreathEffect;
-import org.orecruncher.dsurround.effects.entity.ItemSwingEffect;
-import org.orecruncher.dsurround.effects.entity.ToolbarEffect;
+import org.orecruncher.dsurround.effects.entity.*;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -29,7 +24,8 @@ public enum EntityEffectType {
     BOW_PULL("bow_pull", entity -> getInstance(BowUseEffect.class), () -> Client.Config.entityEffects.enableBowPull),
     FROST_BREATH("frost_breath", entity -> getInstance(BreathEffect.class), () -> Client.Config.entityEffects.enableBreathEffect),
     PLAYER_TOOLBAR("player_toolbar", entity -> getInstance(ToolbarEffect.class), () -> Client.Config.entityEffects.enablePlayerToolbarEffect),
-    ITEM_SWING("item_swing", entity -> getInstance(ItemSwingEffect.class), () -> Client.Config.entityEffects.enableSwingEffect);
+    ITEM_SWING("item_swing", entity -> getInstance(ItemSwingEffect.class), () -> Client.Config.entityEffects.enableSwingEffect),
+    BRUSH_STEP("brush_step", entity -> getInstance(StepThroughBrushEffect.class), () -> Client.Config.entityEffects.enableBrushStepEffect);
 
     private static IEntityEffect getInstance(Class<? extends IEntityEffect> clazz) {
         return ContainerManager.resolve(clazz);

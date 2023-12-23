@@ -10,6 +10,7 @@ public class BlockEffectTags {
 
     public static final TagKey<Block> FIREFLIES = of("fireflies");
     public static final TagKey<Block> FLOOR_SQUEAKS = of("floor_squeaks");
+    public static final TagKey<Block> BRUSH_STEP = of("brush_step");
 
     private static TagKey<Block> of(String id) {
         return TagKey.of(RegistryKeys.BLOCK, new Identifier(Client.ModId, "effects/" + id));

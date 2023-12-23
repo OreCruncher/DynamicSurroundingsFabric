@@ -31,8 +31,7 @@ public class StepAccentGenerator extends AbstractClientHandler {
 
     protected void footStepGenerated(ClientEventHooks.EntityStepEvent event) {
         if (event.entity() instanceof LivingEntity living) {
-            // If the entity is silent there are no accents
-            if (living.isSilent())
+            if (living.isSilent() || living.isSpectator())
                 return;
 
             this.accents.clear();

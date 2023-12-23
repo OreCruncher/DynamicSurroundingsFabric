@@ -135,6 +135,8 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
             effectTypes.add(EntityEffectType.ITEM_SWING);
         if (TagHelpers.isIn(EntityEffectTags.TOOLBAR, entityType))
             effectTypes.add(EntityEffectType.PLAYER_TOOLBAR);
+        if (TagHelpers.isIn(EntityEffectTags.BRUSH_STEP, entityType))
+            effectTypes.add(EntityEffectType.BRUSH_STEP);
 
         return effectTypes;
     }

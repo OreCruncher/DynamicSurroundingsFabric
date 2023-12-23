@@ -226,6 +226,11 @@ public class Configuration extends ConfigurationData {
         @RestartRequired
         @Comment("Enable/disable item swing sound effects from players and mobs")
         public boolean enableSwingEffect = false;
+
+        @Property
+        @RestartRequired
+        @Comment("Enable/disable sound effect when walking through dense brush")
+        public boolean enableBrushStepEffect = true;
     }
 
     public static class FootstepAccents {

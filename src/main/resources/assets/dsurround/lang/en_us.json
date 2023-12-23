@@ -103,6 +103,8 @@
   "dsurround.config.entityEffects.enablePlayerToolbarEffect.tooltip": "Enable/disable player toolbar sound effects",
   "dsurround.config.entityEffects.enableSwingEffect": "Enable Item Swing Effects",
   "dsurround.config.entityEffects.enableSwingEffect.tooltip": "Enable/disable item swing sound effects from players and mobs",
+  "dsurround.config.entityEffects.enableBrushStepEffect": "Enable Brush Step Effect",
+  "dsurround.config.entityEffects.enableBrushStepEffect.tooltip": "Enable/disable sound effect when walking through dense brush",
   "dsurround.config.footstepAccents": "Footstep Accent Options",
   "dsurround.config.footstepAccents.tooltip": "Configuration options for footstep accent effects",
   "dsurround.config.footstepAccents.enableAccents": "Enable Accents",
