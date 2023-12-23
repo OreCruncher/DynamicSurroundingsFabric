@@ -1,6 +1,9 @@
 {
   "values": [
-    "#c:glass_panes",
+    {
+      "id": "#c:glass_pane",
+      "required": false
+    },
     "#minecraft:ice",
     "#minecraft:impermeable",
     "minecraft:water",

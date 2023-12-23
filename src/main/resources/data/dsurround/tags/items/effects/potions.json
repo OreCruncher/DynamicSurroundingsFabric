@@ -1,5 +1,8 @@
 {
   "values": [
-    "#c:potions"
+    {
+      "id": "#c:potions",
+      "required": false
+    }
   ]
 }

@@ -1,7 +1,13 @@
 {
   "values": [
-    "#c:hoes",
-    "#c:shovels",
+    {
+      "id": "#c:hoes",
+      "required": false
+    },
+    {
+      "id": "#c:shovels",
+      "required": false
+    },
     "minecraft:fishing_rod"
   ]
 }

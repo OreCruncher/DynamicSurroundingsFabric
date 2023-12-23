@@ -1,6 +1,9 @@
 {
   "values": [
-    "#c:wooden_barrels",
+    {
+      "id": "#c:wooden_barrels",
+      "required": false
+    },
     "#minecraft:fences",
     "#minecraft:fence_gates",
     "#minecraft:trapdoors",

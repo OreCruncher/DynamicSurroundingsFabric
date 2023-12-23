@@ -1,5 +1,8 @@
 {
   "values": [
-    "#c:swords"
+    {
+      "id": "#c:swords",
+      "required": false
+    }
   ]
 }

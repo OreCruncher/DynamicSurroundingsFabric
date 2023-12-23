@@ -1,5 +1,8 @@
 {
   "values": [
-    "#c:shields"
+    {
+      "id": "#c:shields",
+      "required": false
+    }
   ]
 }
