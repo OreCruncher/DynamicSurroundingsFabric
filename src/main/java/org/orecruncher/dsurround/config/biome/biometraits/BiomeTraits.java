@@ -69,7 +69,7 @@ public final class BiomeTraits {
         var temp = this.traits
                 .stream()
                 .map(BiomeTrait::getName)
-                .collect(Collectors.joining(","));
+                .collect(Collectors.joining(", "));
 
         return String.format("[%s]", temp);
     }
