@@ -998,6 +998,24 @@
 			"dsurround:footsteps/water/water_through9"
 		]
 	},
+	"footsteps.floor_squeak": {
+		"category": "player",
+		"subtitle": "dsurround.sound.caption.footsteps.floor_squeak",
+		"sounds": [
+			{
+				"name": "dsurround:footsteps/floor_squeak/floorsqueak1",
+				"volume": 0.2
+			},
+			{
+				"name": "dsurround:footsteps/floor_squeak/floorsqueak2",
+				"volume": 0.2
+			},
+			{
+				"name": "dsurround:footsteps/floor_squeak/floorsqueak3",
+				"volume": 0.2
+			}
+		]
+	},
 	"silence": {
 		"sounds": [
 			"dsurround:ambient/silence"

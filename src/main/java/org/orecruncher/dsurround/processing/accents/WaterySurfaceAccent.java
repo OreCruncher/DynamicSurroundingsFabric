@@ -35,12 +35,12 @@ class WaterySurfaceAccent implements IFootstepAccentProvider {
     }
 
     @Override
-    public void provide(LivingEntity entity, BlockPos pos, BlockState posState, ObjectArray<ISoundFactory> acoustics) {
+    public void provide(LivingEntity entity, BlockPos pos, BlockState state, ObjectArray<ISoundFactory> acoustics) {
 
         boolean addAcoustic = false;
 
-        if (posState.getBlock() instanceof Waterloggable) {
-            addAcoustic = !posState.getFluidState().isEmpty();
+        if (state.getBlock() instanceof Waterloggable) {
+            addAcoustic = !state.getFluidState().isEmpty();
         }
 
         if (!addAcoustic) {

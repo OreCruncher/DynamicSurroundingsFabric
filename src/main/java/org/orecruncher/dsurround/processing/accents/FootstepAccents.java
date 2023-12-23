@@ -18,6 +18,7 @@ public class FootstepAccents {
     public FootstepAccents(Configuration config, IItemLibrary itemLibrary) {
         this.providers.add(new ArmorAccents(config, itemLibrary));
         this.providers.add(new WaterySurfaceAccent(config));
+        this.providers.add(new FloorSqueakAccent(config));
     }
 
     public void provide(final LivingEntity entity, final BlockPos pos, final BlockState blockState, final ObjectArray<ISoundFactory> in) {

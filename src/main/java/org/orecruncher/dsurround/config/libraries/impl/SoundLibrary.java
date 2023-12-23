@@ -242,7 +242,7 @@ public final class SoundLibrary implements ISoundLibrary {
      */
     private void postProcess() {
         // Purge the list of anything that is a default
-        this.soundConfiguration.removeIf(IndividualSoundConfigEntry::isNotDefault);
+        this.soundConfiguration.removeIf(e -> !e.isNotDefault());
         // Sort the list naturally based on identity
         this.soundConfiguration.sort((e1, e2) -> Comparers.IDENTIFIER_NATURAL_COMPARABLE.compare(e1.soundEventId, e2.soundEventId));
         // Insert the entries into our lookup collections

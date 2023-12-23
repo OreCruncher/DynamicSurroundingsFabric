@@ -238,8 +238,12 @@ public class Configuration extends ConfigurationData {
         public boolean enableArmorAccents = true;
 
         @Property
-        @Comment("Enable/disable accents for when it is raining or blocks are waterlogged")
+        @Comment("Enable/disable accents when it is raining or blocks are waterlogged")
         public boolean enableWetSurfaceAccents = true;
+
+        @Property
+        @Comment("Enable/disable accents when the player is walking on squeaky blocks")
+        public boolean enableFloorSqueaks = true;
     }
 
     public static class ParticleTweaks {
