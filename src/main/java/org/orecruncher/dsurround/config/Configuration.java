@@ -50,8 +50,8 @@ public class Configuration extends ConfigurationData {
     public final ParticleTweaks particleTweaks = new ParticleTweaks();
 
     @Property
-    @Comment("Configuration options for the compass overlay")
-    public final CompassOptions compassOptions = new CompassOptions();
+    @Comment("Configuration options for the compass and clock overlay")
+    public final CompassAndClockOptions compassAndClockOptions = new CompassAndClockOptions();
 
     @Property
     @Comment("Configuration options for other things")
@@ -255,7 +255,11 @@ public class Configuration extends ConfigurationData {
 
     }
 
-    public static class CompassOptions {
+    public static class CompassAndClockOptions {
+        @Property
+        @Comment("Enable/disable display of the clock display when holding a clock item")
+        public boolean enableClock = false;
+
         @Property
         @Comment("Enable/disable display of the compass display when holding a compass item")
         public boolean enableCompass = false;
@@ -266,7 +270,7 @@ public class Configuration extends ConfigurationData {
         public CompassStyle compassStyle = CompassStyle.TRANSPARENT_WITH_INDICATOR;
 
         @Property
-        @Comment("Scales the compass texture by the specified amount")
+        @Comment("Scales the display by the specified amount")
         @DoubleRange(min = 0.5D, max = 4D)
         public double scale = 1D;
     }

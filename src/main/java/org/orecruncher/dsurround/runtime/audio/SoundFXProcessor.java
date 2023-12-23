@@ -12,13 +12,11 @@ import org.orecruncher.dsurround.lib.Singleton;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.math.TimerEMA;
 import org.orecruncher.dsurround.lib.threading.Worker;
 import org.orecruncher.dsurround.runtime.audio.effects.Effects;
 import org.orecruncher.dsurround.xface.ISourceContext;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.concurrent.*;
 
 public final class SoundFXProcessor {

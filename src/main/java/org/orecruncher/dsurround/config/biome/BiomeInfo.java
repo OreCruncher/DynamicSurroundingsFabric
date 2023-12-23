@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.config.biome;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.world.biome.Biome;
@@ -21,7 +22,6 @@ import org.orecruncher.dsurround.lib.IdentityUtils;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
@@ -29,7 +29,6 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.TagHelpers;
 
-import java.awt.*;
 import java.util.Collection;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -52,7 +51,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private final boolean isOcean;
     private final boolean isDeepOcean;
     private final IConditionEvaluator conditionEvaluator;
-    private Color fogColor;
+    private TextColor fogColor;
     private Script additionalSoundChance = DEFAULT_SOUND_CHANCE;
     private Script moodSoundChance = DEFAULT_SOUND_CHANCE;
     private ObjectArray<String> comments;
@@ -101,11 +100,11 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         return this.biomeName;
     }
 
-    public Color getFogColor() {
+    public TextColor getFogColor() {
         return this.fogColor;
     }
 
-    void setFogColor(final Color color) {
+    void setFogColor(final TextColor color) {
         this.fogColor = color;
     }
 
@@ -184,7 +183,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     public void update(final BiomeConfigRule entry) {
 
         entry.comment().ifPresent(this::addComment);
-        entry.fogColor().ifPresent(v -> setFogColor(ColorPalette.fromHTMLColorCode(v)));
+        entry.fogColor().ifPresent(this::setFogColor);
         entry.additionalSoundChance().ifPresent(this::setAdditionalSoundChance);
         entry.moodSoundChance().ifPresent(this::setMoodSoundChance);
 
@@ -262,7 +261,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         builder.append("\n").append(getTraits().toString());
 
         if (this.fogColor != null) {
-            builder.append("\nfogColor: ").append(ColorPalette.toHTMLColorCode(this.fogColor));
+            builder.append("\nfogColor: ").append(this.fogColor.getHexCode());
         }
 
         if (!this.loopSounds.isEmpty()) {

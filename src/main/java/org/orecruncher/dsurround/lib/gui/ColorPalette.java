@@ -2,68 +2,71 @@ package org.orecruncher.dsurround.lib.gui;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
-
-import java.awt.*;
 
 @Environment(EnvType.CLIENT)
 public final class ColorPalette {
+    // Branding colors
+    public static final TextColor CURSEFORGE = of("#f16436");
+    public static final TextColor MODRINTH = of("#1bd96a");
+
     // Minecraft colors mapped to codes
-    public static final Color MC_BLACK = new Color(Formatting.BLACK.getColorValue());
-    public static final Color MC_DARKBLUE = new Color(Formatting.DARK_BLUE.getColorValue());
-    public static final Color MC_DARKGREEN = new Color(Formatting.DARK_GREEN.getColorValue());
-    public static final Color MC_DARKAQUA = new Color(Formatting.DARK_AQUA.getColorValue());
-    public static final Color MC_DARKRED = new Color(Formatting.DARK_RED.getColorValue());
-    public static final Color MC_DARKPURPLE = new Color(Formatting.DARK_PURPLE.getColorValue());
-    public static final Color MC_GOLD = new Color(Formatting.GOLD.getColorValue());
-    public static final Color MC_GRAY = new Color(Formatting.GRAY.getColorValue());
-    public static final Color MC_DARKGRAY = new Color(Formatting.DARK_GRAY.getColorValue());
-    public static final Color MC_BLUE = new Color(Formatting.BLUE.getColorValue());
-    public static final Color MC_GREEN = new Color(Formatting.GREEN.getColorValue());
-    public static final Color MC_AQUA = new Color(Formatting.AQUA.getColorValue());
-    public static final Color MC_RED = new Color(Formatting.RED.getColorValue());
-    public static final Color MC_LIGHTPURPLE = new Color(Formatting.LIGHT_PURPLE.getColorValue());
-    public static final Color MC_YELLOW = new Color(Formatting.YELLOW.getColorValue());
-    public static final Color MC_WHITE = new Color(Formatting.WHITE.getColorValue());
+    public static final TextColor MC_BLACK = of(Formatting.BLACK);
+    public static final TextColor MC_DARKBLUE = of(Formatting.DARK_BLUE);
+    public static final TextColor MC_DARKGREEN = of(Formatting.DARK_GREEN);
+    public static final TextColor MC_DARKAQUA = of(Formatting.DARK_AQUA);
+    public static final TextColor MC_DARKRED = of(Formatting.DARK_RED);
+    public static final TextColor MC_DARKPURPLE = of(Formatting.DARK_PURPLE);
+    public static final TextColor MC_GOLD = of(Formatting.GOLD);
+    public static final TextColor MC_GRAY = of(Formatting.GRAY);
+    public static final TextColor MC_DARKGRAY = of(Formatting.DARK_GRAY);
+    public static final TextColor MC_BLUE = of(Formatting.BLUE);
+    public static final TextColor MC_GREEN = of(Formatting.GREEN);
+    public static final TextColor MC_AQUA = of(Formatting.AQUA);
+    public static final TextColor MC_RED = of(Formatting.RED);
+    public static final TextColor MC_LIGHTPURPLE = of(Formatting.LIGHT_PURPLE);
+    public static final TextColor MC_YELLOW = of(Formatting.YELLOW);
+    public static final TextColor MC_WHITE = of(Formatting.WHITE);
 
-    public static final Color RED = new Color(255, 0, 0);
-    public static final Color ORANGE = new Color(255, 127, 0);
-    public static final Color YELLOW = new Color(255, 255, 0);
-    public static final Color LGREEN = new Color(127, 255, 0);
-    public static final Color GREEN = new Color(0, 255, 0);
-    public static final Color TURQOISE = new Color(0, 255, 127);
-    public static final Color CYAN = new Color(0, 255, 255);
-    public static final Color AUQUAMARINE = new Color(0, 127, 255);
-    public static final Color BLUE = new Color(0, 0, 255);
-    public static final Color VIOLET = new Color(127, 0, 255);
-    public static final Color MAGENTA = new Color(255, 0, 255);
-    public static final Color RASPBERRY = new Color(255, 0, 127);
-    public static final Color BLACK = new Color(0, 0, 0);
-    public static final Color WHITE = new Color(255, 255, 255);
-    public static final Color PURPLE = new Color(80, 0, 80);
-    public static final Color INDIGO = new Color(75, 0, 130);
-    public static final Color NAVY = new Color(0, 0, 128);
-    public static final Color TAN = new Color(210, 180, 140);
-    public static final Color GOLD = new Color(255, 215, 0);
-    public static final Color GRAY = new Color(128, 128, 128);
-    public static final Color LGRAY = new Color(192, 192, 192);
-    public static final Color SLATEGRAY = new Color(112, 128, 144);
-    public static final Color DARKSLATEGRAY = new Color(47, 79, 79);
+    public static final TextColor CRIMSON = of("#8D230F");
 
-    public static final Color AURORA_RED = new Color(1.0F, 0F, 0F);
-    public static final Color AURORA_GREEN = new Color(0.5F, 1.0F, 0.0F);
-    public static final Color AURORA_BLUE = new Color(0F, 0.8F, 1.0F);
+    public static final TextColor RED = of(255, 0, 0);
+    public static final TextColor ORANGE = of(255, 127, 0);
+    public static final TextColor YELLOW = of(255, 255, 0);
+    public static final TextColor LGREEN = of(127, 255, 0);
+    public static final TextColor GREEN = of(0, 255, 0);
+    public static final TextColor TURQOISE = of(0, 255, 127);
+    public static final TextColor CYAN = of(0, 255, 255);
+    public static final TextColor AUQUAMARINE = of(0, 127, 255);
+    public static final TextColor BLUE = of(0, 0, 255);
+    public static final TextColor VIOLET = of(127, 0, 255);
+    public static final TextColor MAGENTA = of(255, 0, 255);
+    public static final TextColor RASPBERRY = of(255, 0, 127);
+    public static final TextColor BLACK = of(0, 0, 0);
+    public static final TextColor WHITE = of(255, 255, 255);
+    public static final TextColor PURPLE = of(80, 0, 80);
+    public static final TextColor INDIGO = of(75, 0, 130);
+    public static final TextColor NAVY = of(0, 0, 128);
+    public static final TextColor TAN = of(210, 180, 140);
+    public static final TextColor GOLD = of(255, 215, 0);
+    public static final TextColor GRAY = of(128, 128, 128);
+    public static final TextColor LGRAY = of(192, 192, 192);
+    public static final TextColor SLATEGRAY = of(112, 128, 144);
+    public static final TextColor DARKSLATEGRAY = of(47, 79, 79);
 
-    public static Color fromHTMLColorCode(String code) {
-        return Color.decode(code);
+    private static TextColor of(Formatting formatColor) {
+        return TextColor.fromFormatting(formatColor);
     }
 
-    public static String toHTMLColorCode(Color color) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("#");
-        if (color.getAlpha() != 255)
-            builder.append(String.format("%02X", color.getAlpha()));
-        builder.append(String.format("%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue()));
-        return builder.toString();
+    private static TextColor of(String formatColor) {
+        return TextColor.parse(formatColor).getOrThrow(false, (msg)-> {});
+    }
+
+    private static TextColor of(int red, int green, int blue) {
+        var rgb = ((red & 0xFF) << 16) |
+                  ((green & 0xFF) << 8)  |
+                  ((blue & 0xFF));
+        return TextColor.fromRgb(rgb);
     }
 }

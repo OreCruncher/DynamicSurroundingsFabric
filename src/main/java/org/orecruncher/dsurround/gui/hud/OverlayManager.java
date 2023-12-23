@@ -17,7 +17,7 @@ public class OverlayManager {
     public OverlayManager(Configuration config) {
         this.overlays = new ObjectArray<>();
         this.overlays.add(ContainerManager.resolve(DiagnosticsOverlay.class));
-        this.overlays.add(new CompassOverlay(config));
+        this.overlays.add(new CompassAndClockOverlay(config));
         ClientState.TICK_END.register(this::tick);
     }
 

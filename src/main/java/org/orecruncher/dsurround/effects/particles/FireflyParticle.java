@@ -27,8 +27,8 @@ public class FireflyParticle extends AnimatedParticle {
         super((ClientWorld)world, x, y, z, spriteProvider, 0F);
         this.scale *= 0.35f;
         this.maxAge = 60 + this.random.nextInt(12);
-        this.setColor(ColorPalette.MC_YELLOW.getRGB());
-        this.setTargetColor(ColorPalette.MC_GREEN.getRGB());
+        this.setColor(ColorPalette.MC_YELLOW.getRgb());
+        this.setTargetColor(ColorPalette.MC_GREEN.getRgb());
         this.setSpriteForAge(spriteProvider);
 
         this.velocityX = RANDOM.nextGaussian() * XZ_MOTION_DELTA;
