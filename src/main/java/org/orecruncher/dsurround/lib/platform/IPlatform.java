@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.lib.platform;
 
 import net.fabricmc.loader.api.Version;
+import net.minecraft.client.option.KeyBinding;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
@@ -31,4 +32,6 @@ public interface IPlatform {
      * @return Path to the mod's configuration directory.
      */
     Path getConfigPath(final String modId);
+
+    KeyBinding registerKeyBinding(String translationKey, int code, String category);
 }

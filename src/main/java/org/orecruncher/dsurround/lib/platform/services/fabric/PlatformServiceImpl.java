@@ -1,7 +1,9 @@
 package org.orecruncher.dsurround.lib.platform.services.fabric;
 
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.Version;
+import net.minecraft.client.option.KeyBinding;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
@@ -14,7 +16,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class FabricPlatformService implements IPlatform {
+public class PlatformServiceImpl implements IPlatform {
 
     public Optional<ModInformation> getModInformation(String modId) {
         var container = FabricLoader.getInstance().getModContainer(modId);
@@ -75,5 +77,10 @@ public class FabricPlatformService implements IPlatform {
             }
 
         return configPath;
+    }
+
+    @Override
+    public KeyBinding registerKeyBinding(String translationKey, int code, String category) {
+        return KeyBindingHelper.registerKeyBinding(new KeyBinding(translationKey, code, category));
     }
 }

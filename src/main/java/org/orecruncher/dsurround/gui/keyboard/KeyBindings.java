@@ -1,12 +1,12 @@
 package org.orecruncher.dsurround.gui.keyboard;
 
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.orecruncher.dsurround.gui.hud.DiagnosticsOverlay;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.platform.Services;
 import org.orecruncher.dsurround.lib.platform.events.ClientState;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
@@ -16,19 +16,15 @@ public class KeyBindings {
     public static final KeyBinding diagnosticHud;
 
     static {
-        individualSoundConfigBinding = KeyBindingHelper.registerKeyBinding(
-                new KeyBinding(
-                        "dsurround.text.keybind.individualSoundConfig",
-                        InputUtil.UNKNOWN_KEY.getCode(),
-                        "dsurround.text.keybind.section"
-                ));
+        individualSoundConfigBinding = Services.PLATFORM.registerKeyBinding(
+                "dsurround.text.keybind.individualSoundConfig",
+                InputUtil.UNKNOWN_KEY.getCode(),
+                "dsurround.text.keybind.section");
 
-        diagnosticHud = KeyBindingHelper.registerKeyBinding(
-                new KeyBinding(
-                        "dsurround.text.keybind.diagnosticHud",
-                        InputUtil.UNKNOWN_KEY.getCode(),
-                        "dsurround.text.keybind.section"
-                ));
+        diagnosticHud = Services.PLATFORM.registerKeyBinding(
+                "dsurround.text.keybind.diagnosticHud",
+                InputUtil.UNKNOWN_KEY.getCode(),
+                "dsurround.text.keybind.section");
     }
 
     public static void register() {

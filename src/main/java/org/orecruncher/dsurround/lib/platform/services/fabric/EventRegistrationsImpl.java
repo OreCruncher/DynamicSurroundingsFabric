@@ -10,7 +10,7 @@ import org.orecruncher.dsurround.lib.platform.events.ClientState;
 
 import java.util.function.Consumer;
 
-public class FabricEventRegistrations implements IEventRegistrations {
+public class EventRegistrationsImpl implements IEventRegistrations {
 
     public void register() {
         ClientLifecycleEvents.CLIENT_STARTED.register(ClientState.STARTED::raise);
