@@ -15,6 +15,7 @@ import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
+import org.orecruncher.dsurround.tags.BlockEffectTags;
 
 @Environment(EnvType.CLIENT)
 class WaterySurfaceAccent implements IFootstepAccentProvider {
@@ -41,6 +42,8 @@ class WaterySurfaceAccent implements IFootstepAccentProvider {
 
         if (state.getBlock() instanceof Waterloggable) {
             addAcoustic = !state.getFluidState().isEmpty();
+        } else {
+            addAcoustic = state.isIn(BlockEffectTags.WATERY_STEP);
         }
 
         if (!addAcoustic) {
