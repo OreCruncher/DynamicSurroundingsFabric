@@ -217,7 +217,12 @@ public final class SoundFactoryBuilder {
 
         @Override
         public int hashCode() {
-            return this.builder.soundEvent.hashCode();
+            return this.builder.soundEvent.getId().hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof Factory f && this.builder.soundEvent.getId().equals(f.builder.soundEvent.getId());
         }
 
         @Override

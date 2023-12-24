@@ -28,6 +28,7 @@ public abstract class BlockEffectBase implements IBlockEffect {
     protected final double posY;
     protected final double posZ;
     protected final BlockPos position;
+    protected final long positionIndex;
     private boolean isAlive = true;
 
     protected BlockEffectBase(final World worldIn, final double posXIn, final double posYIn, final double posZIn) {
@@ -36,10 +37,15 @@ public abstract class BlockEffectBase implements IBlockEffect {
         this.posY = posYIn;
         this.posZ = posZIn;
         this.position = BlockPos.ofFloored(posXIn, posYIn, posZIn);
+        this.positionIndex = this.position.asLong();
     }
 
     public BlockPos getPos() {
         return this.position;
+    }
+
+    public long getPositionIndex() {
+        return this.positionIndex;
     }
 
     /**
