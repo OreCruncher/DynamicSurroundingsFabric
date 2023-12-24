@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.config;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
@@ -17,7 +15,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Environment(EnvType.CLIENT)
 public enum ItemClassType {
     NONE("none",
             SoundFactoryBuilder
@@ -57,15 +54,15 @@ public enum ItemClassType {
                 .create(SoundEvent.of(new Identifier(Client.ModId, "item.bow.equip")))
                 .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
-                    .create(SoundEvent.of(new Identifier(Client.ModId, "item.blunt.swing")))
-                    .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.4F, 0.6F).build()),
+                    .create(SoundEvent.of(new Identifier(Client.ModId, "item.tool.swing")))
+                    .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
     CROSSBOW("crossbow",
             SoundFactoryBuilder
                 .create(SoundEvent.of(new Identifier(Client.ModId, "item.bow.equip")))
                 .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
                     .create(SoundEvent.of(new Identifier(Client.ModId, "item.blunt.swing")))
-                    .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.4F, 0.6F).build()),
+                    .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
     POTION("potion",
             SoundFactoryBuilder
                 .create(SoundEvent.of(new Identifier(Client.ModId, "item.potion.equip")))

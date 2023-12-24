@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.blocks;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -16,7 +14,6 @@ import org.orecruncher.dsurround.sound.*;
 
 import java.util.Arrays;
 
-@Environment(EnvType.CLIENT)
 public class WaterSplashJetEffect extends ParticleJetEffect {
 
     private static final ISoundFactory[] ACOUSTICS = new ISoundFactory[BlockEffectProducer.MAX_STRENGTH + 1];

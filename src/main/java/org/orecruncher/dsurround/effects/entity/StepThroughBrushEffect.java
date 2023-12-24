@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Identifier;
@@ -12,7 +10,6 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 
-@Environment(EnvType.CLIENT)
 public class StepThroughBrushEffect extends EntityEffectBase {
 
     private static final long BRUSH_INTERVAL = 2;

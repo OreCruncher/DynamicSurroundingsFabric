@@ -11,9 +11,9 @@ public class VersionData {
                     VersionData::manifest,
                     Version::getFriendlyString).stable();
 
-    private static DataResult<Version> manifest(String blockId) {
+    private static DataResult<Version> manifest(String versionData) {
         try {
-            return DataResult.success(Version.parse(blockId));
+            return DataResult.success(Version.parse(versionData));
         } catch (Throwable t) {
             return DataResult.error(t::getMessage);
         }

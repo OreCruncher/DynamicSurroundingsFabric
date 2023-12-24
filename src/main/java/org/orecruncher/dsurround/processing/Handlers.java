@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.processing;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import org.orecruncher.dsurround.config.Configuration;
@@ -13,7 +11,7 @@ import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
-import org.orecruncher.dsurround.lib.infra.events.ClientState;
+import org.orecruncher.dsurround.lib.platform.events.ClientState;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.threading.IClientTasking;
@@ -25,7 +23,6 @@ import org.orecruncher.dsurround.processing.scanner.VillageScanner;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
-@Environment(EnvType.CLIENT)
 public class Handlers {
 
     private final Configuration config;
@@ -65,7 +62,7 @@ public class Handlers {
         this.startupSoundPlayed = !config.otherOptions.playRandomSoundOnStartup;
 
         register(Scanners.class);           // Must be first
-        register(PlayerHandler.class);
+        register(PotionParticleSuppressionHandler.class);
         register(EntityEffectHandler.class);
         register(BiomeSoundHandler.class);
         register(AreaBlockEffects.class);
@@ -174,7 +171,7 @@ public class Handlers {
             .registerSingleton(VillageScanner.class)
             .registerSingleton(BiomeScanner.class)
             .registerSingleton(Scanners.class)
-            .registerSingleton(PlayerHandler.class)
+            .registerSingleton(PotionParticleSuppressionHandler.class)
             .registerSingleton(EntityEffectHandler.class)
             .registerSingleton(BiomeSoundHandler.class)
             .registerSingleton(AreaBlockEffects.class)

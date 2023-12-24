@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.processing.scanner;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.registry.tag.BlockTags;
@@ -19,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@Environment(EnvType.CLIENT)
 public final class CeilingScanner {
 
     private static final int SURVEY_INTERVAL = 4;

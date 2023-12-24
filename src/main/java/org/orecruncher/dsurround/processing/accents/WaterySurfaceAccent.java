@@ -1,9 +1,6 @@
 package org.orecruncher.dsurround.processing.accents;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Waterloggable;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
@@ -17,7 +14,6 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 
-@Environment(EnvType.CLIENT)
 class WaterySurfaceAccent implements IFootstepAccentProvider {
 
     private static final ISoundFactory wetSurfaceFactory = SoundFactoryBuilder
@@ -36,15 +32,12 @@ class WaterySurfaceAccent implements IFootstepAccentProvider {
     }
 
     @Override
-    public void provide(LivingEntity entity, BlockPos pos, BlockState state, ObjectArray<ISoundFactory> acoustics) {
+    public void provide(LivingEntity entity, BlockPos pos, BlockState state, boolean isWaterLogged, ObjectArray<ISoundFactory> acoustics) {
 
-        boolean addAcoustic = false;
+        boolean addAcoustic = isWaterLogged;
 
-        if (state.getBlock() instanceof Waterloggable) {
-            addAcoustic = !state.getFluidState().isEmpty();
-        } else {
+        if (!addAcoustic)
             addAcoustic = state.isIn(BlockEffectTags.WATERY_STEP);
-        }
 
         if (!addAcoustic) {
             // Get the precipitation type at the location

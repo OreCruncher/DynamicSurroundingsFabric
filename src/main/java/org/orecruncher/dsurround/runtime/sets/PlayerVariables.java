@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.runtime.sets;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.player.HungerManager;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.registry.RegistryKeys;
@@ -13,7 +11,6 @@ import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 
-@Environment(EnvType.CLIENT)
 public class PlayerVariables extends VariableSet<IPlayerVariables> implements IPlayerVariables {
 
     private final Lazy<Boolean> isSuffocating = new Lazy<>(() -> {

@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.lib.resources;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.util.Identifier;
 
 import java.io.File;
@@ -9,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-@Environment(EnvType.CLIENT)
 final class ResourceAccessorExternal extends ResourceAccessorBase {
 
     final Path filePath;

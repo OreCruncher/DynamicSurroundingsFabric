@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.client.particle.SpriteBillboardParticle;
 import net.minecraft.client.render.Camera;
@@ -12,7 +10,6 @@ import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
-@Environment(EnvType.CLIENT)
 public class WaterRippleParticle extends SpriteBillboardParticle {
 
     private static final float TEX_SIZE_HALF = 0.5F;

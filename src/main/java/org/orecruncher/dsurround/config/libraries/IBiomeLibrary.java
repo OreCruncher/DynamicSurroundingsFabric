@@ -1,14 +1,11 @@
 package org.orecruncher.dsurround.config.libraries;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.config.InternalBiomes;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.scripting.Script;
 
-@Environment(EnvType.CLIENT)
 public interface IBiomeLibrary extends ILibrary {
     BiomeInfo getBiomeInfo(Biome biome);
     BiomeInfo getBiomeInfo(InternalBiomes biome);

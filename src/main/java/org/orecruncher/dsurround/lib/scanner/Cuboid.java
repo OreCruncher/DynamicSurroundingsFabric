@@ -1,12 +1,9 @@
 package org.orecruncher.dsurround.lib.scanner;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.BlockPosUtil;
 
-@Environment(EnvType.CLIENT)
 public class Cuboid {
 
     protected final BlockPos[] vertices = new BlockPos[8];

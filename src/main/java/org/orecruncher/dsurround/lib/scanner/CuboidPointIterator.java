@@ -1,13 +1,10 @@
 package org.orecruncher.dsurround.lib.scanner;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 
-@Environment(EnvType.CLIENT)
 public class CuboidPointIterator implements IPointIterator {
 
     static final CuboidPointIterator NULL_ITERATOR = new CuboidPointIterator() {

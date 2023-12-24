@@ -1,10 +1,8 @@
 package org.orecruncher.dsurround.effects;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 
-@Environment(EnvType.CLIENT)
 public interface IBlockEffect {
 
     void tick();
@@ -14,6 +12,10 @@ public interface IBlockEffect {
     void setDone();
 
     BlockPos getPos();
+
+    default Vec3d getPosition() {
+        return Vec3d.ofCenter(this.getPos());
+    }
 
     default long getPosIndex() {
         return this.getPos().asLong();

@@ -1,8 +1,5 @@
 package org.orecruncher.dsurround.config;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.effects.blocks.producers.*;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
@@ -19,7 +16,6 @@ import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-@Environment(EnvType.CLIENT)
 public enum BlockEffectType {
     UNKNOWN("unknown",
             (chance, condition) -> null,

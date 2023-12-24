@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.sound;
 
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -22,7 +20,6 @@ import java.util.Set;
 /**
  * Handles sound block and culling.
  */
-@Environment(EnvType.CLIENT)
 public final class SoundInstanceHandler {
 
     private static final ISoundLibrary soundLibrary = ContainerManager.resolve(ISoundLibrary.class);

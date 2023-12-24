@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.gui.hud.plugins;
 
 import joptsimple.internal.Strings;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.hit.BlockHitResult;
@@ -18,7 +16,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 
-@Environment(EnvType.CLIENT)
 public class BlockViewerPlugin implements IDiagnosticPlugin {
 
     private static final String COLOR = Formatting.AQUA.toString();

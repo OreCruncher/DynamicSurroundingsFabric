@@ -6,8 +6,6 @@ import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.UnboundedMapCodec;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registries;
@@ -37,7 +35,6 @@ import static java.nio.file.StandardOpenOption.*;
 /**
  * Scans a sounds.json file looking for sounds to register.
  */
-@Environment(EnvType.CLIENT)
 public final class SoundLibrary implements ISoundLibrary {
 
     private static final String FILE_NAME = "sounds.json";

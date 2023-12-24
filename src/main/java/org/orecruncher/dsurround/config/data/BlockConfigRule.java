@@ -3,8 +3,6 @@ package org.orecruncher.dsurround.config.data;
 import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import org.orecruncher.dsurround.lib.CodecExtensions;
 import org.orecruncher.dsurround.lib.IMatcher;
@@ -13,7 +11,6 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 import java.util.List;
 import java.util.Optional;
 
-@Environment(EnvType.CLIENT)
 public record BlockConfigRule(
         List<IMatcher<BlockState>> blocks,
         Boolean clearSounds,

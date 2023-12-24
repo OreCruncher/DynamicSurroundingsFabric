@@ -1,10 +1,7 @@
 package org.orecruncher.dsurround.effects.blocks;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.world.World;
 
-@Environment(EnvType.CLIENT)
 public abstract class ParticleJetEffect extends BlockEffectBase {
 
     protected final int jetStrength;

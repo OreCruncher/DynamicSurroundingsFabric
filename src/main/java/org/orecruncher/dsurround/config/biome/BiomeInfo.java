@@ -1,14 +1,11 @@
 package org.orecruncher.dsurround.config.biome;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.world.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
@@ -29,10 +26,10 @@ import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.TagHelpers;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-@Environment(EnvType.CLIENT)
 public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvider {
 
     public static final int DEFAULT_ADDITIONAL_SOUND_CHANCE = 1000 / 4;
@@ -142,7 +139,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     }
 
     @Override
-    public @Nullable ISoundFactory getExtraSound(final SoundEventType type, final Random random) {
+    public Optional<ISoundFactory> getExtraSound(final SoundEventType type, final Random random) {
 
         ObjectArray<AcousticEntry> sourceList = null;
 
@@ -164,7 +161,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         }
 
         if (sourceList == null || sourceList.isEmpty())
-            return null;
+            return Optional.empty();
 
         var candidates = sourceList.stream().filter(AcousticEntry::matches);
         return WeightTable.makeSelection(candidates);

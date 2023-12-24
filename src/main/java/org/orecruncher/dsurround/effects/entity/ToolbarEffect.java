@@ -1,14 +1,10 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
-import org.orecruncher.dsurround.sound.ISoundFactory;
 
-@Environment(EnvType.CLIENT)
 public class ToolbarEffect extends EntityEffectBase {
 
     private final IItemLibrary itemLibrary;
@@ -30,15 +26,14 @@ public class ToolbarEffect extends EntityEffectBase {
         } else if (this.lastSlot != inventory.selectedSlot) {
             final ItemStack currentStack = inventory.getStack(inventory.selectedSlot);
             if (!currentStack.isEmpty() & !player.isSpectator()) {
-                ISoundFactory factory = this.itemLibrary.getItemEquipSound(currentStack);
-                if (factory != null) {
+                this.itemLibrary.getItemEquipSound(currentStack).ifPresent(factory -> {
                     SoundInstance instance;
                     if (info.isCurrentPlayer(player))
                         instance = factory.createAtEntity(player);
                     else
                         instance = factory.createAtLocation(player);
                     this.playSound(instance);
-                }
+                });
             }
             this.lastSlot = inventory.selectedSlot;
         }

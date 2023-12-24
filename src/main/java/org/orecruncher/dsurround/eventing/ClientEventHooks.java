@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.eventing;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
@@ -12,7 +10,6 @@ import org.orecruncher.dsurround.lib.math.ITimer;
 
 import java.util.Collection;
 
-@Environment(EnvType.CLIENT)
 public final class ClientEventHooks {
     /**
      * Used to collect diagnostic information for display in the debug HUD

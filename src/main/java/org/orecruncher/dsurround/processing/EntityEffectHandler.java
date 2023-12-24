@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.processing;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Box;
@@ -10,7 +8,6 @@ import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
-@Environment(EnvType.CLIENT)
 public class EntityEffectHandler  extends AbstractClientHandler {
 
     private final IEntityEffectLibrary entityEffectLibrary;

@@ -2,8 +2,6 @@ package org.orecruncher.dsurround.config;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.registry.RegistryKeys;
@@ -12,7 +10,6 @@ import org.orecruncher.dsurround.lib.IMatcher;
 import org.orecruncher.dsurround.lib.IdentityUtils;
 import org.orecruncher.dsurround.tags.TagHelpers;
 
-@Environment(EnvType.CLIENT)
 public abstract class EntityTypeMatcher implements IMatcher<Entity> {
 
     public static final Codec<IMatcher<Entity>> CODEC = Codec.STRING

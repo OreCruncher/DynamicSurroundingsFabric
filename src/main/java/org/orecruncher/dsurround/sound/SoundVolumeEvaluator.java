@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.sound;
 
 import com.google.common.base.Preconditions;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.math.MathHelper;
@@ -16,7 +14,6 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
  * based on configuration information.  This allows tuning of sound volumes on a per
  * sound basis.
  */
-@Environment(EnvType.CLIENT)
 public final class SoundVolumeEvaluator {
 
     private static final ISoundLibrary soundLibrary = ContainerManager.resolve(ISoundLibrary.class);

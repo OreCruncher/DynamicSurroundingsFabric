@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.lib.scanner;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -10,7 +8,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Random;
 
-@Environment(EnvType.CLIENT)
 public abstract class CuboidScanner extends Scanner {
 
     // Iteration variables

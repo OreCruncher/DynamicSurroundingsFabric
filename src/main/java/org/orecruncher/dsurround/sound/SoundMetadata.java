@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.sound;
 
 import com.google.common.collect.ImmutableList;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.text.Text;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
@@ -11,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@Environment(EnvType.CLIENT)
 public final class SoundMetadata {
 
     private final Text title;

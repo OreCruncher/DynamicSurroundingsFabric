@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib.infra;
+package org.orecruncher.dsurround.lib.platform;
 
 public interface IMinecraftMod {
 

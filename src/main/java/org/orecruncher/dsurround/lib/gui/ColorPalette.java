@@ -1,11 +1,8 @@
 package org.orecruncher.dsurround.lib.gui;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
 
-@Environment(EnvType.CLIENT)
 public final class ColorPalette {
     // Branding colors
     public static final TextColor CURSEFORGE = of("#f16436");

@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.processing;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.PotionUtil;
@@ -9,14 +7,13 @@ import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
-@Environment(EnvType.CLIENT)
-public class PlayerHandler extends AbstractClientHandler {
+public class PotionParticleSuppressionHandler extends AbstractClientHandler {
 
     // This value will be stuffed into the data tracker.  Rendering logic looks for
     // color values > 0 to trigger rendering.
     private static final int HIDE_PARTICLE_SENTINEL = -1;
 
-    public PlayerHandler(Configuration config, IModLog logger) {
+    public PotionParticleSuppressionHandler(Configuration config, IModLog logger) {
         super("Player Handler", config, logger);
     }
 

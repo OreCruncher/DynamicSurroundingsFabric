@@ -3,8 +3,6 @@ package org.orecruncher.dsurround.processing;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import joptsimple.internal.Strings;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.player.PlayerEntity;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.Configuration;
@@ -20,7 +18,6 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 
 import java.util.Collection;
 
-@Environment(EnvType.CLIENT)
 public final class BiomeSoundHandler extends AbstractClientHandler {
 
     public static final int SCAN_INTERVAL = 4;
@@ -108,17 +105,15 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
     }
 
     private void handleAddOnSounds(PlayerEntity player, BiomeInfo info) {
-        ISoundFactory sound = info.getExtraSound(SoundEventType.MOOD, RANDOM);
-        if (sound != null) {
-            var instance = sound.createAsMood(player, MOOD_SOUND_MIN_RANGE, MOOD_SOUND_MAX_RANGE);
+        info.getExtraSound(SoundEventType.MOOD, RANDOM).ifPresent(s -> {
+            var instance = s.createAsMood(player, MOOD_SOUND_MIN_RANGE, MOOD_SOUND_MAX_RANGE);
             this.audioPlayer.play(instance);
-        }
+        });
 
-        sound = info.getExtraSound(SoundEventType.ADDITION, RANDOM);
-        if (sound != null) {
-            var instance = sound.createAsAdditional();
+        info.getExtraSound(SoundEventType.ADDITION, RANDOM).ifPresent(s -> {
+            var instance = s.createAsAdditional();
             this.audioPlayer.play(instance);
-        }
+        });
     }
 
     private void queueAmbientSounds() {

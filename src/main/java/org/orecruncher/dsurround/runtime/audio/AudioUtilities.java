@@ -8,12 +8,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.*;
 import org.orecruncher.dsurround.config.Configuration;
-import org.orecruncher.dsurround.lib.FrameworkUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.platform.Services;
 import org.orecruncher.dsurround.mixins.core.MixinAbstractSoundInstance;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundSystemAccessors;
@@ -32,7 +32,7 @@ public final class AudioUtilities {
         if (CONFIG.enhancedSounds.enableEnhancedSounds) {
             // Next check to see if any present mods are in our exclusion list
             for (var modId : autoDisabledBecauseOf)
-                if (FrameworkUtils.isModLoaded(modId)) {
+                if (Services.PLATFORM.isModLoaded(modId)) {
                     LOGGER.warn("Enhanced sound processing is auto disabled due to the presence of the mod \"%s\"", modId);
                     return false;
                 }
@@ -157,7 +157,7 @@ public final class AudioUtilities {
         return advancedProcessingEnabled.get();
     }
 
-    public static void deinitialize(final SoundEngine soundEngine) {
+    public static void deinitialize(final SoundEngine ignore) {
         if (doEnhancedSounds())
             SoundFXProcessor.deinitialize();
     }

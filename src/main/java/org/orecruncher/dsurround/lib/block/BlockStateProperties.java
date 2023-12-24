@@ -5,7 +5,8 @@ import com.google.common.collect.ImmutableMap;
 import joptsimple.internal.Strings;
 import net.minecraft.block.BlockState;
 import net.minecraft.state.property.Property;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -15,6 +16,8 @@ import java.util.stream.Collectors;
  * property collections.  Used for partial matching.
  */
 public class BlockStateProperties {
+
+    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
 
     public static final BlockStateProperties NONE = new BlockStateProperties();
 
@@ -48,9 +51,9 @@ public class BlockStateProperties {
             }
             return true;
         } catch (final Throwable ignored) {
-            // A property in this list does not exist in the target list.  This is highly unsual because it is
+            // A property in this list does not exist in the target list.  This is highly unusual because it is
             // expected that this list is a subset of what could be found in a blockstate for the same block instance.
-            Client.LOGGER.warn("Property list %s does not correspond the properties in %s", this.toString(), new MatchOnBlockState(state).toString());
+            LOGGER.warn("Property list %s does not correspond the properties in %s", this.toString(), new MatchOnBlockState(state).toString());
         }
         return false;
     }

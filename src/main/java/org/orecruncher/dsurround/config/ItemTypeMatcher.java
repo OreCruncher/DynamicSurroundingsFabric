@@ -2,18 +2,14 @@ package org.orecruncher.dsurround.config;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Identifier;
 import org.orecruncher.dsurround.lib.IMatcher;
 import org.orecruncher.dsurround.lib.IdentityUtils;
 import org.orecruncher.dsurround.tags.TagHelpers;
 
-@Environment(EnvType.CLIENT)
 public abstract class ItemTypeMatcher implements IMatcher<Item> {
 
     public static final Codec<IMatcher<Item>> CODEC = Codec.STRING

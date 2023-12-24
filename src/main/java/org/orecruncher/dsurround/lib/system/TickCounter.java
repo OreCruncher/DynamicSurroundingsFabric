@@ -2,8 +2,7 @@ package org.orecruncher.dsurround.lib.system;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import org.orecruncher.dsurround.lib.infra.events.ClientState;
-import org.orecruncher.dsurround.lib.system.ITickCount;
+import org.orecruncher.dsurround.lib.platform.events.ClientState;
 
 /**
  * Monotonically increasing tick count based on client ticks.

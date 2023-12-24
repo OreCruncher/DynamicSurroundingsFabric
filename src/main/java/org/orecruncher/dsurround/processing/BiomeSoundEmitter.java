@@ -1,14 +1,11 @@
 package org.orecruncher.dsurround.processing;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.sound.BackgroundSoundLoop;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
-@Environment(EnvType.CLIENT)
 public final class BiomeSoundEmitter {
 
     private static final IModLog logger = ContainerManager.resolve(IModLog.class);

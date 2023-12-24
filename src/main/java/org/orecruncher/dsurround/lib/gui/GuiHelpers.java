@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.lib.gui;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.text.*;
@@ -12,7 +10,6 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-@Environment(EnvType.CLIENT)
 public class GuiHelpers {
 
     private final static String ELLIPSES = "...";

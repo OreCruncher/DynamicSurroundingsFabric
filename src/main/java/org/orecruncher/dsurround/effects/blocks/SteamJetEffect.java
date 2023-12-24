@@ -1,14 +1,11 @@
 package org.orecruncher.dsurround.effects.blocks;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.effects.blocks.producers.SteamColumnProducer;
 import org.orecruncher.dsurround.lib.GameUtils;
 
-@Environment(EnvType.CLIENT)
 public class SteamJetEffect extends ParticleJetEffect {
 
     private final BlockState source;

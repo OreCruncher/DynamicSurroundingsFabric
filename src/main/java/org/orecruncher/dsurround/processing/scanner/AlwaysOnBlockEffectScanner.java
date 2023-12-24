@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.processing.scanner;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -14,7 +12,6 @@ import org.orecruncher.dsurround.processing.misc.BlockEffectManager;
 import java.util.Collection;
 import java.util.Random;
 
-@Environment(EnvType.CLIENT)
 public class AlwaysOnBlockEffectScanner extends CuboidScanner {
 
     private final IBlockLibrary blockLibrary;

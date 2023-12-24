@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.gui.sound;
 
 import com.google.common.collect.ImmutableList;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import org.orecruncher.dsurround.lib.gui.SliderControl;
@@ -11,7 +9,6 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.List;
 
-@Environment(EnvType.CLIENT)
 public class VolumeSliderControl extends SliderControl {
 
     private static final int SLIDER_WIDTH = 100;

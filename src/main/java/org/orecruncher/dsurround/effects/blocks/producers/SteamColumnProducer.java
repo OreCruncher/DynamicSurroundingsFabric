@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.blocks.producers;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -12,7 +10,6 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 import java.util.Optional;
 import java.util.Random;
 
-@Environment(EnvType.CLIENT)
 public class SteamColumnProducer extends BlockEffectProducer {
 
     public SteamColumnProducer(final Script chance, final Script conditions) {

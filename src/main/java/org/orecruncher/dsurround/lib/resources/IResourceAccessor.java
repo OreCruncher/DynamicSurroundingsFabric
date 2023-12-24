@@ -3,8 +3,6 @@ package org.orecruncher.dsurround.lib.resources;
 import com.google.gson.*;
 import com.mojang.serialization.*;
 import joptsimple.internal.Strings;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.CodecExtensions;
@@ -19,7 +17,6 @@ import java.util.function.Consumer;
 /**
  * A resource accessor is used to obtain the content of a resource from within the JAR or from an external disk source.
  */
-@Environment(EnvType.CLIENT)
 public interface IResourceAccessor {
 
     /**

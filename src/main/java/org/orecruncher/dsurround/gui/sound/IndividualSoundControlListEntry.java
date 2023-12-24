@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.gui.sound;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -12,19 +10,19 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
-import org.orecruncher.dsurround.lib.FrameworkUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.gui.GuiHelpers;
+import org.orecruncher.dsurround.lib.platform.Services;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.SoundMetadata;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
-@Environment(EnvType.CLIENT)
 public class IndividualSoundControlListEntry extends EntryListWidget.Entry<IndividualSoundControlListEntry> implements AutoCloseable {
 
     private static final int BUTTON_WIDTH = 60;
@@ -214,13 +212,15 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
         // Cache the static part of the tooltip if needed
         if (this.cachedToolTip.isEmpty()) {
             Identifier id = this.config.soundEventId;
-            final String mod = FrameworkUtils.getModDisplayName(id.getNamespace());
-            assert mod != null;
+            var mod = Services.PLATFORM.getModDisplayName(id.getNamespace());
+            mod.ifPresent(name -> {
+                OrderedText modName = OrderedText.styledForwardsVisitedString(Objects.requireNonNull(Formatting.strip(name)), modNameStyle);
+                this.cachedToolTip.add(modName);
+            });
+
             @SuppressWarnings("ConstantConditions")
-            OrderedText modName = OrderedText.styledForwardsVisitedString(Formatting.strip(mod), modNameStyle);
             OrderedText soundLocationId = OrderedText.styledForwardsVisitedString(id.toString(), idStyle);
 
-            this.cachedToolTip.add(modName);
             this.cachedToolTip.add(soundLocationId);
 
             SoundMetadata metadata = this.soundLibrary.getSoundMetadata(id);

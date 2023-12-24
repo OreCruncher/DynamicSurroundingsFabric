@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
@@ -33,7 +31,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-@Environment(EnvType.CLIENT)
 public final class BiomeLibrary implements IBiomeLibrary {
 
     private static final String FILE_NAME = "biomes.json";

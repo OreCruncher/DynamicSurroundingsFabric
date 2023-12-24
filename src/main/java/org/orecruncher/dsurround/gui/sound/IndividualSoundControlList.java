@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.gui.sound;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
@@ -18,7 +16,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-@Environment(EnvType.CLIENT)
 public class IndividualSoundControlList extends EntryListWidget<IndividualSoundControlListEntry> {
 
     private final Screen parent;

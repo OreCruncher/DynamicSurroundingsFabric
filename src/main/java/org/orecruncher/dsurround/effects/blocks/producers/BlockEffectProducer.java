@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.blocks.producers;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.AbstractFurnaceBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -20,7 +18,6 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.Predicate;
 
-@Environment(EnvType.CLIENT)
 public abstract class BlockEffectProducer implements IBlockEffectProducer {
 
     protected final IConditionEvaluator conditionEvaluator;

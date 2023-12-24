@@ -1,15 +1,12 @@
 package org.orecruncher.dsurround.gui.hud;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.infra.events.ClientState;
+import org.orecruncher.dsurround.lib.platform.events.ClientState;
 
-@Environment(EnvType.CLIENT)
 public class OverlayManager {
 
     private final ObjectArray<AbstractOverlay> overlays;

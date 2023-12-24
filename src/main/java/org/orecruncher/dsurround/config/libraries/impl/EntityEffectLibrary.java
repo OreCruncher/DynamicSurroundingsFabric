@@ -2,8 +2,6 @@ package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.*;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -21,7 +19,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Environment(EnvType.CLIENT)
 public class EntityEffectLibrary implements IEntityEffectLibrary {
 
     private final IModLog logger;

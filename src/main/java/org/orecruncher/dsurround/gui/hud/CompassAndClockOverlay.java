@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.gui.hud;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.*;
@@ -19,11 +17,9 @@ import org.orecruncher.dsurround.lib.MinecraftClock;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
 
-import java.awt.*;
 import java.util.EnumMap;
 import java.util.Map;
 
-@Environment(EnvType.CLIENT)
 public class CompassAndClockOverlay extends AbstractOverlay {
 
     // Vertical offset to avoid writing over the cross-hair

@@ -2,14 +2,11 @@ package org.orecruncher.dsurround.effects.particles;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.client.render.*;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.util.Identifier;
 
-@Environment(EnvType.CLIENT)
 public class ParticleRenderType implements ParticleTextureSheet {
 
     private final Identifier texture;

@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.config.block;
 
 import com.google.common.collect.ImmutableList;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.sound.SoundEvent;
 import org.jetbrains.annotations.Nullable;
@@ -23,10 +21,10 @@ import org.orecruncher.dsurround.tags.ReflectanceTags;
 import org.orecruncher.dsurround.tags.TagHelpers;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-@Environment(EnvType.CLIENT)
 public class BlockInfo {
 
     private static final float DEFAULT_OPAQUE_OCCLUSION = 0.5F;
@@ -144,7 +142,7 @@ public class BlockInfo {
         return this.alwaysOnEffects != null;
     }
 
-    public ISoundFactory getSoundToPlay(final Random random) {
+    public Optional<ISoundFactory> getSoundToPlay(final Random random) {
         if (this.sounds != null) {
             var chance = this.conditionEvaluator.eval(this.soundChance);
             if (chance instanceof Double c && random.nextDouble() < c) {
@@ -152,7 +150,7 @@ public class BlockInfo {
                 return WeightTable.makeSelection(candidates);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
     public Collection<IBlockEffectProducer> getEffectProducers() {

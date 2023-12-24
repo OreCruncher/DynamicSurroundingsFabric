@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.gui.sound;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -13,7 +11,6 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
 import java.util.List;
 
-@Environment(EnvType.CLIENT)
 public class IndividualSoundControlScreen extends Screen {
 
     private static final int TOP_OFFSET = 10;

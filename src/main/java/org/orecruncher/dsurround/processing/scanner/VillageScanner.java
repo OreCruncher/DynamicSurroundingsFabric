@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.processing.scanner;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.entity.BellBlockEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -10,7 +8,6 @@ import net.minecraft.world.World;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 
-@Environment(EnvType.CLIENT)
 public class VillageScanner {
 
     private static final double VILLAGE_RANGE = 64;

@@ -1,17 +1,14 @@
 package org.orecruncher.dsurround.processing.misc;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import org.orecruncher.dsurround.effects.IBlockEffect;
-import org.orecruncher.dsurround.lib.BlockPosUtil;
 
 import java.util.function.Predicate;
 
-@Environment(EnvType.CLIENT)
-public class BlockEffectManager        {
+public class BlockEffectManager {
 
     private static final Predicate<IBlockEffect> STANDARD = system -> {
         system.tick();
@@ -35,12 +32,13 @@ public class BlockEffectManager        {
         Predicate<IBlockEffect> pred = STANDARD;
 
         if (!sittingStill) {
-            final double range = this.blockEffectRange;
-            final BlockPos min = BlockPos.ofFloored(current.getX() - range, current.getY() - range, current.getZ() - range);
-            final BlockPos max = BlockPos.ofFloored(current.getX() + range, current.getY() + range, current.getZ() + range);
+            final int range = this.blockEffectRange;
+            final BlockPos min = current.add(-range, -range, -range);
+            final BlockPos max = current.add(range, range, range);
+            final Box area = Box.enclosing(min, max);
 
             pred = system -> {
-                if (BlockPosUtil.notContains(system.getPos(), min, max)) {
+                if (!area.contains(system.getPosition())) {
                     system.setDone();
                 } else {
                     system.tick();

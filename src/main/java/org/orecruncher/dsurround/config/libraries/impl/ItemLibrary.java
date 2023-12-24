@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.tag.convention.v1.ConventionalItemTags;
 import net.minecraft.item.*;
 import net.minecraft.registry.RegistryKeys;
@@ -26,7 +24,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-@Environment(EnvType.CLIENT)
 public class ItemLibrary implements IItemLibrary {
 
     private final IModLog logger;
@@ -49,10 +46,10 @@ public class ItemLibrary implements IItemLibrary {
     }
 
     @Override
-    public ISoundFactory getItemEquipSound(ItemStack stack) {
+    public Optional<ISoundFactory> getItemEquipSound(ItemStack stack) {
         if (stack.isEmpty())
-            return null;
-        return this.itemEquipFactories.computeIfAbsent(stack.getItem(), k -> resolve(stack, ItemClassType::getToolBarSound, ItemClassType.NONE::getToolBarSound));
+            return Optional.empty();
+        return Optional.ofNullable(this.itemEquipFactories.computeIfAbsent(stack.getItem(), k -> resolve(stack, ItemClassType::getToolBarSound, ItemClassType.NONE::getToolBarSound)));
     }
 
     @Override
@@ -75,7 +72,7 @@ public class ItemLibrary implements IItemLibrary {
         return blockRegistry.stream().map(kvp -> formatItemOutput(kvp.getKey().getValue(), kvp.getValue())).sorted();
     }
 
-    private static ISoundFactory resolveEquipStepSound(ItemStack stack) {
+    private static @Nullable ISoundFactory resolveEquipStepSound(ItemStack stack) {
         var sound = getEquipableSoundEvent(stack);
         if (sound != null)
             return SoundFactoryBuilder
@@ -84,7 +81,7 @@ public class ItemLibrary implements IItemLibrary {
         return null;
     }
 
-    private static ISoundFactory resolve(ItemStack stack, Function<ItemClassType, ISoundFactory> resolveSound, Supplier<ISoundFactory> defaultSoundFactory) {
+    private static @Nullable ISoundFactory resolve(ItemStack stack, Function<ItemClassType, ISoundFactory> resolveSound, Supplier<ISoundFactory> defaultSoundFactory) {
 
         var itemClassType = resolveClassType(stack);
 

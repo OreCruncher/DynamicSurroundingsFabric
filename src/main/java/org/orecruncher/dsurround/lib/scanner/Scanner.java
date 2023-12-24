@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.lib.scanner;
 
 import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -13,7 +11,6 @@ import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 import java.util.Random;
 import java.util.Set;
 
-@Environment(EnvType.CLIENT)
 public abstract class Scanner {
 
     protected static final Set<BlockState> BLOCKSTATES_TO_IGNORE = new ReferenceArraySet<>(3);

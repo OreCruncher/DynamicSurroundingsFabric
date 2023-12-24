@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.scripting;
 
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.lib.FrameworkUtils;
+import org.orecruncher.dsurround.lib.platform.Services;
 
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -35,6 +35,6 @@ public final class LibraryFunctions {
     }
 
     public boolean isModLoaded(final String mod) {
-        return FrameworkUtils.isModLoaded(mod);
+        return Services.PLATFORM.isModLoaded(mod);
     }
 }

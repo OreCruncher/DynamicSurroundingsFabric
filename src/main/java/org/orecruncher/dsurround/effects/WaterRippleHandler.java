@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.fluid.FluidState;
@@ -12,7 +10,6 @@ import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.effects.particles.WaterRippleParticle;
 import org.orecruncher.dsurround.lib.GameUtils;
 
-@Environment(EnvType.CLIENT)
 public class WaterRippleHandler {
 
     // Fudge factor because the height algo is off.

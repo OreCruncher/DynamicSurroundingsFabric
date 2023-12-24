@@ -2,15 +2,12 @@ package org.orecruncher.dsurround.config;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.Comparers;
 
-@Environment(EnvType.CLIENT)
 public class IndividualSoundConfigEntry implements Comparable<IndividualSoundConfigEntry> {
 
     public static final Codec<IndividualSoundConfigEntry> CODEC = RecordCodecBuilder.create((instance) ->

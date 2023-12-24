@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import org.orecruncher.dsurround.effects.IEntityEffect;
@@ -11,7 +9,6 @@ import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Optional;
 
-@Environment(EnvType.CLIENT)
 public class EntityEffectInfo {
 
     // Entity can go out of scope for a variety of reasons besides

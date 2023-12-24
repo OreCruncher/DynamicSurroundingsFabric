@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.particle.ParticleTextureSheet;
 import net.minecraft.client.texture.ResourceTexture;
 import net.minecraft.util.Identifier;
@@ -11,7 +9,6 @@ import org.orecruncher.dsurround.mixins.core.MixinParticleManager;
 
 import java.util.ArrayList;
 
-@Environment(EnvType.CLIENT)
 public final class ParticleSheets {
 
     public static final Identifier TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE = new Identifier(Client.ModId, "textures/particles/pixel_ripples.png");

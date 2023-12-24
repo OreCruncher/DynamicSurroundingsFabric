@@ -6,9 +6,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import org.orecruncher.dsurround.lib.FrameworkUtils;
-import org.orecruncher.dsurround.lib.infra.ModInformation;
+import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.platform.Services;
 
 public class VersionChecker implements IVersionChecker {
 
@@ -30,24 +30,27 @@ public class VersionChecker implements IVersionChecker {
     }
 
     private Optional<String> getVersionData() {
-        var url = this.modInfo.get_updateUrl();
-        if (url != null) {
-            try (InputStream in = this.modInfo.get_updateUrl().openStream()) {
-                byte[] bytes = in.readAllBytes();
-                return Optional.of(new String(bytes, StandardCharsets.UTF_8));
-            } catch (Throwable t) {
-                this.logger.error(t, "Unable to fetch version information from %s", this.modInfo.get_updateUrl());
-            }
-        }
-        return Optional.empty();
+        return this.modInfo.getUpdateUrl()
+                .map(url -> {
+                    try (InputStream in = url.openStream()) {
+                        byte[] bytes = in.readAllBytes();
+                        return new String(bytes, StandardCharsets.UTF_8);
+                    } catch (Throwable t) {
+                        this.logger.error(t, "Unable to fetch version information from %s", this.modInfo.getUpdateUrl());
+                    }
+                    return null;
+                });
     }
 
     private Optional<VersionResult> getUpdateText(VersionInformation info) {
-        var result = info.getNewestVersion(FrameworkUtils.getMinecraftVersion(), this.modInfo.get_version());
-        if (result.isEmpty())
-            return Optional.empty();
-
-        var version = result.get().getFirst();
-        return Optional.of(new VersionResult(version, this.modInfo.get_displayName(), this.modInfo.get_curseForgeLink(), this.modInfo.get_modrinthLink()));
+        var mcVersion = Services.PLATFORM.getMinecraftVersion();
+        if (mcVersion.isPresent()) {
+            var newest = info.getNewestVersion(mcVersion.get(), this.modInfo.version());
+            if (newest.isPresent()) {
+                var version = newest.get().getFirst();
+                return Optional.of(new VersionResult(version, this.modInfo.displayName(), this.modInfo.curseForgeLink(), this.modInfo.modrinthLink()));
+            }
+        }
+        return Optional.empty();
     }
 }

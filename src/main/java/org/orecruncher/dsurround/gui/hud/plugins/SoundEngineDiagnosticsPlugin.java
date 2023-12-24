@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.gui.hud.plugins;
 
 import joptsimple.internal.Strings;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.Channel;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.util.Formatting;
@@ -17,7 +15,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Environment(EnvType.CLIENT)
 public class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
 
     private static final String FMT_DBG_SOUND = Formatting.GOLD + "%s: %d";

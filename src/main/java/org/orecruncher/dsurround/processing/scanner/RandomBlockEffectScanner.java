@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.processing.scanner;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
@@ -14,7 +12,6 @@ import org.orecruncher.dsurround.sound.IAudioPlayer;
 import java.util.Collection;
 import java.util.Random;
 
-@Environment(EnvType.CLIENT)
 public class RandomBlockEffectScanner extends RandomScanner {
 
     public static final int NEAR_RANGE = 16;
@@ -55,10 +52,9 @@ public class RandomBlockEffectScanner extends RandomScanner {
             }
         }
 
-        var sound = info.getSoundToPlay(rand);
-        if (sound != null) {
-            var instance = sound.createAtLocation(pos);
+        info.getSoundToPlay(rand).ifPresent(s -> {
+            var instance = s.createAtLocation(pos);
             this.audioPlayer.play(instance);
-        }
+        });
     }
 }

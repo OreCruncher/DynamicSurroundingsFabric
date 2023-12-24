@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.runtime.sets;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
@@ -11,7 +9,6 @@ import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 
-@Environment(EnvType.CLIENT)
 public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBiomeVariables {
 
     private final IBiomeLibrary biomeLibrary;

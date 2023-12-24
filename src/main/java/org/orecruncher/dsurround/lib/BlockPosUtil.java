@@ -1,14 +1,8 @@
 package org.orecruncher.dsurround.lib;
 
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 
 public final class BlockPosUtil {
-
-    public static BlockPos.Mutable setPos( final BlockPos.Mutable pos,
-                                           final Vec3d vec) {
-        return pos.set(vec.x, vec.y, vec.z);
-    }
 
     public static boolean canFormCuboid( final BlockPos p1,  final BlockPos p2) {
         return !(p1.getX() == p2.getX() || p1.getZ() == p2.getZ() || p1.getY() == p2.getY());
@@ -41,24 +35,5 @@ public final class BlockPosUtil {
         return test.getX() >= min.getX() && test.getX() <= max.getX()
                 && test.getY() >= min.getY() && test.getY() <= max.getY()
                 && test.getZ() >= min.getZ() && test.getZ() <= max.getZ();
-    }
-
-    /**
-     * Determines if the test point is outside the volume described by two other
-     * points. It is expected that the calling routine has ensured that the min/max
-     * points are valid. If they are not valid the results will more than likely be
-     * erroneous.
-     *
-     * @param test The point that is being tested
-     * @param min  The point describing the minimum vertex of the volume
-     * @param max  The point describing the maximum vertex of the volume
-     * @return Whether the test point is outside the boundaries of the volume,
-     * exclusive
-     */
-    public static boolean notContains( final BlockPos test,  final BlockPos min,
-                                       final BlockPos max) {
-        return test.getX() < min.getX() || test.getX() > max.getX()
-                || test.getY() < min.getY() || test.getY() > max.getY()
-                || test.getZ() < min.getZ() || test.getZ() > max.getZ();
     }
 }

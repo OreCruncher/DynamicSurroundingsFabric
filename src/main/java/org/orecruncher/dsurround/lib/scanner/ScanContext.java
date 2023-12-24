@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.lib.scanner;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -10,7 +8,6 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import java.util.function.Supplier;
 
-@Environment(EnvType.CLIENT)
 public class ScanContext {
 
     private final Supplier<World> worldReader;

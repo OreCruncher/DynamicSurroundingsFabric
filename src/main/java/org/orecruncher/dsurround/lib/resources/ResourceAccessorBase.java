@@ -1,11 +1,8 @@
 package org.orecruncher.dsurround.lib.resources;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.util.Identifier;
 import org.orecruncher.dsurround.lib.Singleton;
 
-@Environment(EnvType.CLIENT)
 abstract class ResourceAccessorBase implements IResourceAccessor {
 
     private final Identifier location;

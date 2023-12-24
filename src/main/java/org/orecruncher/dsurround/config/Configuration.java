@@ -1,14 +1,11 @@
 package org.orecruncher.dsurround.config;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 
-@Environment(EnvType.CLIENT)
 public class Configuration extends ConfigurationData {
 
     private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);

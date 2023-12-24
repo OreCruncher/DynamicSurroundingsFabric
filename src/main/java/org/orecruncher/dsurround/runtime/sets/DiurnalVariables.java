@@ -1,14 +1,11 @@
 package org.orecruncher.dsurround.runtime.sets;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import org.orecruncher.dsurround.lib.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 
-@Environment(EnvType.CLIENT)
 public class DiurnalVariables extends VariableSet<IDiurnalVariables> implements IDiurnalVariables {
 
     private final Lazy<Float> moonPhaseFactor = new Lazy<>(() -> GameUtils.isInGame() ? DayCycle.getMoonSize(GameUtils.getWorld()) : 0F);

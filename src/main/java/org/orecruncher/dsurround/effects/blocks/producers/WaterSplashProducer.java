@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.blocks.producers;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SideShapeType;
 import net.minecraft.fluid.FlowableFluid;
@@ -17,7 +15,6 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 import java.util.Optional;
 import java.util.Random;
 
-@Environment(EnvType.CLIENT)
 public class WaterSplashProducer extends BlockEffectProducer {
 
     private final static Vec3i[] cardinal_offsets = {

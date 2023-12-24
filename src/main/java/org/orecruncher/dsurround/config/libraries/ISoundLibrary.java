@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.config.libraries;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
@@ -10,7 +8,6 @@ import org.orecruncher.dsurround.sound.SoundMetadata;
 import java.util.Collection;
 import java.util.Optional;
 
-@Environment(EnvType.CLIENT)
 public interface ISoundLibrary extends ILibrary {
 
     SoundEvent getSound(final String sound);

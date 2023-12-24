@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.registry.RegistryKeys;
@@ -27,7 +25,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
-@Environment(EnvType.CLIENT)
 public class BlockLibrary implements IBlockLibrary {
 
     private static final String FILE_NAME = "blocks.json";

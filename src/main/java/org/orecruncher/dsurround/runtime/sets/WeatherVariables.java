@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.runtime.sets;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -10,7 +8,6 @@ import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 
-@Environment(EnvType.CLIENT)
 public class WeatherVariables extends VariableSet<IWeatherVariables> implements IWeatherVariables {
 
     private final Lazy<Float> temperature = new Lazy<>(() -> {

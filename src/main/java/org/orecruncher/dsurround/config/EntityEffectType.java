@@ -3,8 +3,6 @@ package org.orecruncher.dsurround.config;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.LivingEntity;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.effects.IEntityEffect;
@@ -18,7 +16,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-@Environment(EnvType.CLIENT)
 public enum EntityEffectType {
     UNKNOWN("unknown", entity -> null, () -> false),
     BOW_PULL("bow_pull", entity -> getInstance(BowUseEffect.class), () -> Client.Config.entityEffects.enableBowPull),

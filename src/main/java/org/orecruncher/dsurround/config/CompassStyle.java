@@ -8,7 +8,7 @@ public enum CompassStyle {
 
     private final int spriteNumber;
 
-    private CompassStyle(int sprite) {
+    CompassStyle(int sprite) {
         this.spriteNumber = sprite;
     }
 

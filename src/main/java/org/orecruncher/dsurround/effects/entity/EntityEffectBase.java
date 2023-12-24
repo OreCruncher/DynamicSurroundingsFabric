@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.particle.ParticleEffect;
@@ -10,9 +8,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.mixins.core.MixinParticleManager;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
-import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 
-@Environment(EnvType.CLIENT)
 public abstract class EntityEffectBase implements IEntityEffect {
 
     protected final IAudioPlayer audioPlayer;

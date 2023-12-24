@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.config.libraries;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.text.Text;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -9,7 +7,6 @@ import org.orecruncher.dsurround.lib.events.EventingFactory;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.events.IPhasedEvent;
 
-@Environment(EnvType.CLIENT)
 public class AssetLibraryEvent {
 
     public static final IPhasedEvent<ReloadEvent> RELOAD = EventingFactory.createPrioritizedEvent();

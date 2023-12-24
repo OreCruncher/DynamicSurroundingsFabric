@@ -1,11 +1,8 @@
 package org.orecruncher.dsurround.effects.blocks;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.world.World;
 
-@Environment(EnvType.CLIENT)
 public class BubbleJetEffect extends ParticleJetEffect {
 
     public BubbleJetEffect(final int strength, final World world, final double x, final double y, final double z) {

@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
@@ -10,7 +8,6 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
 
-@Environment(EnvType.CLIENT)
 public class BowUseEffect extends EntityEffectBase {
 
     private static final SoundEvent BOW_PULL_SOUNDEVENT = SoundEvent.of(new Identifier(Client.ModId, "item.bow.pull"));

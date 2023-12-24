@@ -1,13 +1,10 @@
 package org.orecruncher.dsurround.lib.scanner;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.util.math.BlockPos;
 import org.orecruncher.dsurround.lib.random.LCGRandom;
 
 import java.util.Random;
 
-@Environment(EnvType.CLIENT)
 public abstract class RandomScanner extends Scanner {
 
     private final LCGRandom lcg = new LCGRandom();

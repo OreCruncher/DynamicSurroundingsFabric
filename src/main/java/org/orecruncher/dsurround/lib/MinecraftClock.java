@@ -1,12 +1,9 @@
 package org.orecruncher.dsurround.lib;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.world.World;
 
 import java.text.DecimalFormat;
 
-@Environment(EnvType.CLIENT)
 public class MinecraftClock {
 
     private static final String AM = "dsurround.format.AM";

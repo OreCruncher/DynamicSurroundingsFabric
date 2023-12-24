@@ -1,11 +1,9 @@
 package org.orecruncher.dsurround.lib;
 
-import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Stream;
 
@@ -25,13 +23,8 @@ public class WeightTable<T> {
     protected int maxEntryIdx = 0;
     protected int totalWeight = 0;
 
-    public WeightTable() {
-
-    }
-
-    public WeightTable(final Collection<? extends IItem<T>> input) {
-        for (final IItem<T> i : input)
-            add(i.getItem(), i.getWeight());
+    public WeightTable(Stream<? extends IItem<T>> inputStream) {
+        this.add(inputStream);
     }
 
     public void add(final T e, final int weight) {
@@ -51,6 +44,10 @@ public class WeightTable<T> {
         this.maxEntryIdx++;
     }
 
+    public void add(Stream<? extends IItem<T>> inputStream) {
+        inputStream.forEach(this::add);
+    }
+
     public void add(final IItem<T> entry) {
         this.add(entry.getItem(), entry.getWeight());
     }
@@ -59,41 +56,31 @@ public class WeightTable<T> {
         return this.item.length;
     }
 
+    public void clear() {
+        this.totalWeight = 0;
+        this.maxEntryIdx = 0;
+    }
+
     @SuppressWarnings("unchecked")
-    public @Nullable T next() {
+    public Optional<T> next() {
         if (this.totalWeight <= 0)
-            return null;
+            return Optional.empty();
 
         if (this.item.length == 1)
-            return (T) this.item[0];
+            return Optional.of((T) this.item[0]);
 
         int targetWeight = RANDOM.nextInt(this.totalWeight);
 
         for (int i = 0; i < this.maxEntryIdx; i++)
             if (targetWeight < this.weightSegment[i])
-                return (T) this.item[i];
+                return Optional.of((T) this.item[i]);
 
         // Shouldn't get here
         throw new RuntimeException("Bad weight table - ran off the end");
     }
 
-    public static <T> @Nullable T makeSelection(final List<? extends IItem<T>> input) {
-        if (input.size() == 0)
-            return null;
-        if (input.size() == 1)
-            return input.get(0).getItem();
-        return new WeightTable<>(input).next();
-    }
-
-    public static <T> @Nullable T makeSelection(final Stream<? extends IItem<T>> inputStream) {
-        WeightTable<T> table = null;
-        var itr = inputStream.iterator();
-        while (itr.hasNext()) {
-            if (table == null)
-                table = new WeightTable<>();
-            table.add(itr.next());
-        }
-        return table != null ? table.next() : null;
+    public static <T> Optional<T> makeSelection(final Stream<? extends IItem<T>> inputStream) {
+        return new WeightTable<>(inputStream).next();
     }
 
     public interface IItem<T> {

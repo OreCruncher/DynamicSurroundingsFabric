@@ -1,11 +1,8 @@
 package org.orecruncher.dsurround.lib.scanner;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
-@Environment(EnvType.CLIENT)
 public class ComplementsPointIterator implements IPointIterator {
 
     protected CuboidPointIterator[] segments = new CuboidPointIterator[3];

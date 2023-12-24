@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -13,7 +11,6 @@ import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.random.MurmurHash3;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 
-@Environment(EnvType.CLIENT)
 public class BreathEffect extends EntityEffectBase {
 
     private final ITickCount tickCount;

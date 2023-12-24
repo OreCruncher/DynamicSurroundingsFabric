@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.blocks;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.util.math.BlockPos;
@@ -16,7 +14,6 @@ import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 import java.util.Random;
 
-@Environment(EnvType.CLIENT)
 public abstract class BlockEffectBase implements IBlockEffect {
 
     protected static final Random RANDOM = XorShiftRandom.current();

@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.sound;
 
 import com.google.common.base.MoreObjects;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.MovingSoundInstance;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
@@ -10,7 +8,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.random.Random;
 
-@Environment(EnvType.CLIENT)
 public class BackgroundSoundLoop extends MovingSoundInstance {
 
     private static final float INITIAL_SCALE = 0.00002F;
