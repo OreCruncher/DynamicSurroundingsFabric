@@ -13,3 +13,6 @@ accessible field net/minecraft/client/sound/Channel$SourceManager source Lnet/mi
 
 # Potion swirl suppression
 accessible field net/minecraft/entity/LivingEntity POTION_SWIRLS_COLOR Lnet/minecraft/entity/data/TrackedData;
+
+# Get at Entity inards
+accessible field net/minecraft/entity/LivingEntity jumping Z

@@ -16,6 +16,8 @@ public class ItemEffectTags {
     public static final TagKey<Item> SHIELDS = of("shields");
     public static final TagKey<Item> SWORDS = of("swords");
     public static final TagKey<Item> TOOLS = of("tools");
+    public static final TagKey<Item> COMPASSES = of("compasses");
+    public static final TagKey<Item> CLOCKS = of("clocks");
 
     private static TagKey<Item> of(String id) {
         return TagKey.of(RegistryKeys.ITEM, new Identifier(Client.ModId, "effects/" + id));

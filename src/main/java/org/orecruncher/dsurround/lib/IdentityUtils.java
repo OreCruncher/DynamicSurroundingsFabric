@@ -1,9 +1,13 @@
 package org.orecruncher.dsurround.lib;
 
 import com.google.common.base.Preconditions;
+import com.mojang.serialization.Codec;
 import net.minecraft.util.Identifier;
+import org.orecruncher.dsurround.Client;
 
 public class IdentityUtils {
+
+    public static final Codec<Identifier> CODEC = Codec.STRING.xmap(s -> IdentityUtils.resolveIdentifier(Client.ModId, s), Identifier::toString).stable();
 
     /**
      * Parses a string into an Identifier based on the input.  If the input is prefixed with the tag signature '#'

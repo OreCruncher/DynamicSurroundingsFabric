@@ -10,19 +10,18 @@ import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.Singleton;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.math.TimerEMA;
 import org.orecruncher.dsurround.lib.threading.Worker;
 import org.orecruncher.dsurround.runtime.audio.effects.Effects;
 import org.orecruncher.dsurround.xface.ISourceContext;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.concurrent.*;
 
 public final class SoundFXProcessor {
 
-    private static final IModLog LOGGER = Client.LOGGER.createChild(SoundFXProcessor.class);
+    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
     private static final int SOUND_PROCESS_ITERATION = 1000 / 20;   // Match MC client tick rate
 
     static boolean isAvailable;

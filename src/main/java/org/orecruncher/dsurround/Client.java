@@ -1,15 +1,12 @@
 package org.orecruncher.dsurround;
 
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.minecraft.client.MinecraftClient;
-import org.orecruncher.dsurround.commands.Commands;
 import org.orecruncher.dsurround.config.*;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
 import org.orecruncher.dsurround.effects.particles.ParticleSheets;
+import org.orecruncher.dsurround.gui.hud.DiagnosticsOverlay;
+import org.orecruncher.dsurround.gui.hud.OverlayManager;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
@@ -24,15 +21,13 @@ import org.orecruncher.dsurround.lib.version.VersionResult;
 import org.orecruncher.dsurround.processing.Handlers;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
-import org.orecruncher.dsurround.runtime.diagnostics.*;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-@Environment(EnvType.CLIENT)
-public class Client implements IMinecraftMod, ClientModInitializer {
+public abstract class Client implements IMinecraftMod {
 
     public static final String ModId = "dsurround";
     public static final ModLog LOGGER = new ModLog(ModId);
@@ -48,8 +43,7 @@ public class Client implements IMinecraftMod, ClientModInitializer {
         return ModId;
     }
 
-    @Override
-    public void onInitializeClient() {
+    public void initializeClient() {
         LOGGER.info("Initializing...");
 
         // Hook the config load event so set we can set the debug flags on logging
@@ -73,13 +67,10 @@ public class Client implements IMinecraftMod, ClientModInitializer {
             AssetLibraryEvent.reload();
         }, HandlerPriority.VERY_HIGH);
 
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> Commands.register(dispatcher));
-
         // Register core services
         ContainerManager.getDefaultContainer()
                 .registerSingleton(Config)
                 .registerSingleton(IConditionEvaluator.class, ConditionEvaluator.class)
-                .registerSingleton(Diagnostics.class)
                 .registerSingleton(IVersionChecker.class, VersionChecker.class)
                 .registerSingleton(ISoundLibrary.class, SoundLibrary.class)
                 .registerSingleton(IBiomeLibrary.class, BiomeLibrary.class)
@@ -87,7 +78,9 @@ public class Client implements IMinecraftMod, ClientModInitializer {
                 .registerSingleton(IBlockLibrary.class, BlockLibrary.class)
                 .registerSingleton(IItemLibrary.class, ItemLibrary.class)
                 .registerSingleton(IEntityEffectLibrary.class, EntityEffectLibrary.class)
-                .registerSingleton(IAudioPlayer.class, MinecraftAudioPlayer.class);
+                .registerSingleton(IAudioPlayer.class, MinecraftAudioPlayer.class)
+                .registerSingleton(DiagnosticsOverlay.class)
+                .registerSingleton(OverlayManager.class);
 
         // Kick off version checking if configured.  This should run in parallel with initialization.
         if (Config.logging.enableModUpdateChatMessage)

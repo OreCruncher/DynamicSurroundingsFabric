@@ -42,8 +42,16 @@ public class Configuration extends ConfigurationData {
     public final EntityEffects entityEffects = new EntityEffects();
 
     @Property
+    @Comment("Configuration options for footstep accent effects")
+    public final FootstepAccents footstepAccents = new FootstepAccents();
+
+    @Property
     @Comment("Configuration options for tweaking particle behavior")
     public final ParticleTweaks particleTweaks = new ParticleTweaks();
+
+    @Property
+    @Comment("Configuration options for the compass and clock overlay")
+    public final CompassAndClockOptions compassAndClockOptions = new CompassAndClockOptions();
 
     @Property
     @Comment("Configuration options for other things")
@@ -157,19 +165,20 @@ public class Configuration extends ConfigurationData {
         public int blockEffectRange = 24;
 
         @Property
-        @RestartRequired
         @Comment("Enable/disable steam column effect when liquids are adjacent to hot sources, like lava and magma")
         public boolean steamColumnEnabled = true;
 
         @Property
-        @RestartRequired
         @Comment("Enable/disable flame jets produced over lava, etc.")
         public boolean flameJetEnabled = true;
 
         @Property
-        @RestartRequired
         @Comment("Enable/disable bubble columns generated underwater")
         public boolean bubbleColumnEnabled = true;
+
+        @Property
+        @Comment("Enable/disable firefly generation")
+        public boolean firefliesEnabled = true;
 
         @Property
         @RestartRequired
@@ -195,7 +204,6 @@ public class Configuration extends ConfigurationData {
         @Property
         @IntegerRange(min = 16, max = 64)
         @Slider
-        @RestartRequired
         @Comment("The maximum range at which entity special effects are applied")
         public int entityEffectRange = 24;
 
@@ -218,6 +226,29 @@ public class Configuration extends ConfigurationData {
         @RestartRequired
         @Comment("Enable/disable item swing sound effects from players and mobs")
         public boolean enableSwingEffect = false;
+
+        @Property
+        @RestartRequired
+        @Comment("Enable/disable sound effect when walking through dense brush")
+        public boolean enableBrushStepEffect = true;
+    }
+
+    public static class FootstepAccents {
+        @Property
+        @Comment("Enable/disable foot step accents globally")
+        public boolean enableAccents = true;
+
+        @Property
+        @Comment("Enable/disable accents for armor that is worn")
+        public boolean enableArmorAccents = true;
+
+        @Property
+        @Comment("Enable/disable accents when it is raining or blocks are waterlogged")
+        public boolean enableWetSurfaceAccents = true;
+
+        @Property
+        @Comment("Enable/disable accents when the player is walking on squeaky blocks")
+        public boolean enableFloorSqueaks = true;
     }
 
     public static class ParticleTweaks {
@@ -228,8 +259,28 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @Comment("Enable/disable showing of projectile particle trails")
-        public boolean showProjectileTrails = false;
+        public boolean suppressProjectileParticleTrails = false;
 
+    }
+
+    public static class CompassAndClockOptions {
+        @Property
+        @Comment("Enable/disable display of the clock display when holding a clock item")
+        public boolean enableClock = false;
+
+        @Property
+        @Comment("Enable/disable display of the compass display when holding a compass item")
+        public boolean enableCompass = false;
+
+        @Property
+        @Comment("Style of compass rendering")
+        @EnumType(CompassStyle.class)
+        public CompassStyle compassStyle = CompassStyle.TRANSPARENT_WITH_INDICATOR;
+
+        @Property
+        @Comment("Scales the display by the specified amount")
+        @DoubleRange(min = 0.5D, max = 4D)
+        public double scale = 1D;
     }
 
     public static class OtherOptions {

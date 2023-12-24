@@ -10,7 +10,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
 @Environment(EnvType.CLIENT)
-public class PlayerHandler extends ClientHandler {
+public class PlayerHandler extends AbstractClientHandler {
 
     // This value will be stuffed into the data tracker.  Rendering logic looks for
     // color values > 0 to trigger rendering.

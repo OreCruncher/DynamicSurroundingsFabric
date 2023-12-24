@@ -33,7 +33,7 @@ public class MixinBiome implements IBiomeExtended {
         if (this.dsurround_info != null) {
             var color = this.dsurround_info.getFogColor();
             if (color != null)
-                cir.setReturnValue(color.getRGB());
+                cir.setReturnValue(color.getRgb());
         }
     }
 }

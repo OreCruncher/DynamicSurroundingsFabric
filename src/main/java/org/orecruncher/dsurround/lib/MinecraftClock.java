@@ -66,6 +66,10 @@ public class MinecraftClock {
         return this.isAM;
     }
 
+    public DayCycle getCycle() {
+        return this.cycle;
+    }
+
     public String getTimeOfDay() {
         return this.cycle.getFormattedName();
     }

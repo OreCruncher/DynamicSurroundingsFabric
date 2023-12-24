@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.registry.RegistryKey;
@@ -27,7 +28,7 @@ public final class DimensionLibrary implements IDimensionLibrary {
     private final IModLog logger;
     private final IMinecraftDirectories directories;
     private final ObjectArray<DimensionConfigRule> dimensionRules = new ObjectArray<>();
-    private final Map<RegistryKey<World>, DimensionInfo> configs = new HashMap<>();
+    private final Map<RegistryKey<World>, DimensionInfo> configs = new Object2ObjectOpenHashMap<>();
     private int version = 0;
 
     public DimensionLibrary(IModLog logger, IMinecraftDirectories directories) {
@@ -54,18 +55,13 @@ public final class DimensionLibrary implements IDimensionLibrary {
 
     @Override
     public DimensionInfo getData(final World world) {
-        RegistryKey<World> key = world.getRegistryKey();
-        DimensionInfo dimInfo = this.configs.get(key);
-
-        if (dimInfo == null) {
-            dimInfo = new DimensionInfo(world);
-            for (final DimensionConfigRule e : this.dimensionRules)
-                dimInfo.update(e);
-
-            this.configs.put(key, dimInfo);
-        }
-
-        return dimInfo;
+        return this.configs.computeIfAbsent(
+                world.getRegistryKey(),
+                key -> {
+                    var dimInfo = new DimensionInfo(world);
+                    this.dimensionRules.forEach(dimInfo::update);
+                    return dimInfo;
+                });
     }
 
     @Override

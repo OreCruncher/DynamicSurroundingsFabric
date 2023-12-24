@@ -4,6 +4,8 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 
 @Environment(EnvType.CLIENT)
 public class ClientPlayerContext extends ScanContext {
@@ -12,7 +14,7 @@ public class ClientPlayerContext extends ScanContext {
         super(
                 GameUtils::getWorld,
                 () -> GameUtils.getPlayer().getBlockPos(),
-                () -> Client.LOGGER,
+                () -> ContainerManager.resolve(IModLog.class),
                 () -> GameUtils.getWorld().getRegistryKey().getValue()
         );
     }

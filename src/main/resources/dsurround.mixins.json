@@ -19,6 +19,7 @@
     "core.MixinClientWorldProperties",
     "core.MixinEntityArrow",
     "core.MixinIngameHud",
+    "core.MixinEntity",
     "core.MixinLivingEntity",
     "core.MixinParticle",
     "core.MixinParticleManager",

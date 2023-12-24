@@ -59,7 +59,7 @@ public class BlockEffectManager        {
     }
 
     public void add(final IBlockEffect system) {
-        this.systems.put(system.getPos().asLong(), system);
+        this.systems.put(system.getPosIndex(), system);
     }
 
     public int count() {

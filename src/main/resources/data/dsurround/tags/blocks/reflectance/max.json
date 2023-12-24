@@ -1,6 +1,9 @@
 {
   "values": [
-    "#c:ores",
+    {
+      "id": "#c:ores",
+      "required": false
+    },
     "minecraft:stone",
     "minecraft:infested_stone",
     "minecraft:infested_stone_bricks",

@@ -9,75 +9,58 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.client.option.ParticlesMode;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.effects.blocks.producers.BlockEffectProducer;
 import org.orecruncher.dsurround.effects.blocks.producers.WaterSplashProducer;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.sound.*;
 
-import java.awt.*;
 import java.util.Arrays;
 
 @Environment(EnvType.CLIENT)
 public class WaterSplashJetEffect extends ParticleJetEffect {
 
-    private static final ISoundFactory[] waterfallAcoustics = new ISoundFactory[BlockEffectProducer.MAX_STRENGTH + 1];
+    private static final ISoundFactory[] ACOUSTICS = new ISoundFactory[BlockEffectProducer.MAX_STRENGTH + 1];
 
     static {
         var factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.0"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
-        Arrays.fill(waterfallAcoustics, factory);
+        Arrays.fill(ACOUSTICS, factory);
 
         factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.1"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
-        waterfallAcoustics[2] = waterfallAcoustics[3] = factory;
+        ACOUSTICS[2] = ACOUSTICS[3] = factory;
 
         factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.2"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
-        waterfallAcoustics[4] = factory;
+        ACOUSTICS[4] = factory;
 
         factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.3"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
-        waterfallAcoustics[5] = waterfallAcoustics[6] = factory;
+        ACOUSTICS[5] = ACOUSTICS[6] = factory;
 
         factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.4"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
-        waterfallAcoustics[7] = waterfallAcoustics[8] = factory;
+        ACOUSTICS[7] = ACOUSTICS[8] = factory;
 
         factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.5"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
-        waterfallAcoustics[9] = waterfallAcoustics[10] = factory;
+        ACOUSTICS[9] = ACOUSTICS[10] = factory;
     }
 
     protected BackgroundSoundLoop sound;
     protected int particleLimit;
     protected final double deltaY;
 
-    protected final float red;
-    protected final float green;
-    protected final float blue;
-    protected final IAudioPlayer audioPlayer;
-    protected final Configuration config;
-
     public WaterSplashJetEffect(final int strength, final World world, final BlockPos loc, final double dY) {
         super(0, strength, world, loc.getX() + 0.5D, loc.getY() + 0.5D, loc.getZ() + 0.5D, 4);
         this.deltaY = loc.getY() + dY;
         setSpawnCount((int) (strength * 2.5F));
-
-        var color = new Color(this.world.getBiome(this.position).value().getWaterColor());
-        this.red = color.getRed() / 255F;
-        this.green = color.getGreen() / 255F;
-        this.blue = color.getBlue() / 255F;
-
-        this.audioPlayer = ContainerManager.resolve(IAudioPlayer.class);
-        this.config = ContainerManager.resolve(Configuration.class);
     }
 
     public void setSpawnCount(final int limit) {
@@ -102,33 +85,33 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
 
     @Override
     protected void soundUpdate() {
-        if (!this.config.blockEffects.enableWaterfallSounds) {
+        if (!CONFIG.blockEffects.enableWaterfallSounds) {
             if (this.sound != null) {
-                this.audioPlayer.stop(this.sound);
+                AUDIO_PLAYER.stop(this.sound);
                 this.sound = null;
             }
             return;
         }
 
         if (this.sound == null) {
-            final int idx = MathHelper.clamp(this.jetStrength, 0, waterfallAcoustics.length - 1);
-            this.sound = waterfallAcoustics[idx].createBackgroundSoundLoopAt(this.position);
+            final int idx = MathHelper.clamp(this.jetStrength, 0, ACOUSTICS.length - 1);
+            this.sound = ACOUSTICS[idx].createBackgroundSoundLoopAt(this.position);
         }
 
         final boolean inRange = SoundInstanceHandler.inRange(GameUtils.getPlayer().getEyePos(), this.sound, 4);
-        final boolean isDone = !this.audioPlayer.isPlaying(this.sound);
+        final boolean isDone = !AUDIO_PLAYER.isPlaying(this.sound);
 
         if (inRange && isDone) {
-            this.audioPlayer.play(this.sound);
+            AUDIO_PLAYER.play(this.sound);
         } else if (!inRange && !isDone) {
-            this.audioPlayer.stop(this.sound);
+            AUDIO_PLAYER.stop(this.sound);
         }
     }
 
     @Override
     protected void cleanUp() {
         if (this.sound != null) {
-            this.audioPlayer.stop(this.sound);
+            AUDIO_PLAYER.stop(this.sound);
             this.sound = null;
         }
         super.cleanUp();
@@ -136,7 +119,7 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
 
     @Override
     protected void spawnJetParticle() {
-        if (!this.config.blockEffects.enableWaterfallParticles)
+        if (!CONFIG.blockEffects.enableWaterfallParticles)
             return;
 
         final int splashCount = getSpawnCount();
@@ -154,7 +137,6 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
                     this.deltaY, this.posZ + zOffset, motionX, motionY, motionZ);
             particle.setVelocity(motionX, motionY, motionZ);
             particle.setMaxAge(particle.getMaxAge() * 2);
-            //particle.setColor(this.red, this.green, this.blue);
             this.addParticle(particle);
         }
     }

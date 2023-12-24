@@ -1,3 +1,27 @@
+> ### DynamicSurroundings-Fabric-1.20.4-0.0.8
+**Requirements**
+* JAVA 17+ (I am using Adoptium https://adoptium.net/)
+* Fabric Loader >=0.15.1
+* Fabric API 0.91.2+1.20.4
+* 100% client side; no server side deployment needed
+
+**What's New**
+* Added footstep accents when the player steps.  These can be independently disabled in the config.
+  * Armor rustling based on worn armor.  Derived from the items equip sound.
+  * Water splash when raining, walking on waterlogged blocks, or blocks like lily pads
+  * Floor squeaks when walking on squeaky floors (like wood planks)
+  * Brush sound when walking through dense brush or climbing vines
+* Added Firefly particle effect.  Spawn around flowers at night when it is not raining.
+* Added a compass and clock overlay that displays when a compass and/or clock is held.  Disabled by default.
+
+**Changes**
+* Config setting for particle trail effect on projectiles has changed.  By default, suppression is not enabled.  This can be changed in config settings.
+* Tweaked diurnal processing - sunrise and day start should occur a little bit earlier.
+* Removed time of day (/dstod) command
+
+**Fixes**
+* Fixed mixin conflict with SoundPhysics Remastered.  New behavior is to Auto-disable enhanced sound processing if SoundPhysics Remastered is present.
+
 > ### DynamicSurroundings-Fabric-1.20.4-0.0.7
 **Requirements**
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)

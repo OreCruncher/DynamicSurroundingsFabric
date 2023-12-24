@@ -4,6 +4,7 @@
     "#minecraft:wool",
     "#minecraft:logs",
     "#minecraft:trapdoors",
-    "minecraft:hay_block"
+    "minecraft:hay_block",
+    "minecraft:gravel"
   ]
 }

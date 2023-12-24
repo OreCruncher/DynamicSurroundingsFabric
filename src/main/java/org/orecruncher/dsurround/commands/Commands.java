@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.text.Text;
 
@@ -15,7 +14,6 @@ public final class Commands {
         ScriptCommand.register(dispatcher);
         DumpCommand.register(dispatcher);
         ReloadCommand.register(dispatcher);
-        TimeOfDayCommand.register(dispatcher);
     }
 
     public static void sendSuccess(final FabricClientCommandSource source, String command) {

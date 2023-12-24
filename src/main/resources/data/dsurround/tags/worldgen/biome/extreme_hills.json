@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#c:extreme_hills",
+      "required": false
+    }
+  ]
+}

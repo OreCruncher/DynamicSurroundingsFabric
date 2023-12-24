@@ -21,7 +21,7 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 import java.util.Collection;
 
 @Environment(EnvType.CLIENT)
-public final class BiomeSoundHandler extends ClientHandler {
+public final class BiomeSoundHandler extends AbstractClientHandler {
 
     public static final int SCAN_INTERVAL = 4;
     public static final int MOOD_SOUND_MIN_RANGE = 8;

@@ -50,12 +50,12 @@ public class ItemSwingEffect extends EntityEffectBase {
 
                 var factory = this.itemLibrary.getItemSwingSound(currentItem);
 
-                if (factory != null && freeSwing(entity)) {
+                if (factory.isPresent() && freeSwing(entity)) {
                     SoundInstance instance;
                     if (info.isCurrentPlayer(entity)) {
-                        instance = factory.createAsAdditional();
+                        instance = factory.get().createAsAdditional();
                     } else {
-                        instance = factory.createAtEntity(entity);
+                        instance = factory.get().createAtEntity(entity);
                     }
 
                     if (instance != null)

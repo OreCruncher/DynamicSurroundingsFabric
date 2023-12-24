@@ -18,7 +18,7 @@
     ]
   },
   {
-    "biomeSelector": "DESERT && !(HILLS || MOUNTAINS)",
+    "biomeSelector": "DESERT && !(HILLS || MOUNTAIN)",
     "_comment": "Desert Wind",
     "acoustics": [
       {
@@ -212,7 +212,7 @@
     "fogColor": "#808080"
   },
   {
-    "biomeSelector": "biome.getRainfall() < 0.1 && (SAND || MESA || (WASTELAND && !(COLD || SNOWY || SWAMP)))",
+    "biomeSelector": "biome.getRainfall() < 0.1 && (DESERT || MESA || (WASTELAND && !(COLD || SNOWY || SWAMP)))",
     "_comment": "Dust for desert like biomes",
     "fogColor": "#FFEA97"
   },

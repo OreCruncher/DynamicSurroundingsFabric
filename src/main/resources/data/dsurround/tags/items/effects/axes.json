@@ -1,6 +1,12 @@
 {
   "values": [
-    "#c:axes",
-    "#c:pickaxes"
+    {
+      "id": "#c:axes",
+      "required": false
+    },
+    {
+      "id": "#c:pickaxes",
+      "required": false
+    }
   ]
 }

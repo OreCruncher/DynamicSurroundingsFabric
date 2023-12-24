@@ -981,6 +981,58 @@
 			"dsurround:items/potion_slosh4"
 		]
 	},
+	"footsteps.water_through": {
+		"category": "player",
+		"subtitle": "dsurround.sound.caption.footsteps.water_through",
+		"sounds": [
+			"dsurround:footsteps/water/water_through1",
+			"dsurround:footsteps/water/water_through10",
+			"dsurround:footsteps/water/water_through11",
+			"dsurround:footsteps/water/water_through2",
+			"dsurround:footsteps/water/water_through3",
+			"dsurround:footsteps/water/water_through4",
+			"dsurround:footsteps/water/water_through5",
+			"dsurround:footsteps/water/water_through6",
+			"dsurround:footsteps/water/water_through7",
+			"dsurround:footsteps/water/water_through8",
+			"dsurround:footsteps/water/water_through9"
+		]
+	},
+	"footsteps.floor_squeak": {
+		"category": "player",
+		"subtitle": "dsurround.sound.caption.footsteps.floor_squeak",
+		"sounds": [
+			{
+				"name": "dsurround:footsteps/floor_squeak/floorsqueak1",
+				"volume": 0.2
+			},
+			{
+				"name": "dsurround:footsteps/floor_squeak/floorsqueak2",
+				"volume": 0.2
+			},
+			{
+				"name": "dsurround:footsteps/floor_squeak/floorsqueak3",
+				"volume": 0.2
+			}
+		]
+	},
+	"footsteps.brush_through": {
+		"category": "player",
+		"subtitle": "dsurround.sound.caption.footsteps.brush_through",
+		"sounds": [
+			"dsurround:footsteps/brush/brush_through1",
+			"dsurround:footsteps/brush/brush_through10",
+			"dsurround:footsteps/brush/brush_through11",
+			"dsurround:footsteps/brush/brush_through2",
+			"dsurround:footsteps/brush/brush_through3",
+			"dsurround:footsteps/brush/brush_through4",
+			"dsurround:footsteps/brush/brush_through5",
+			"dsurround:footsteps/brush/brush_through6",
+			"dsurround:footsteps/brush/brush_through7",
+			"dsurround:footsteps/brush/brush_through8",
+			"dsurround:footsteps/brush/brush_through9"
+		]
+	},
 	"silence": {
 		"sounds": [
 			"dsurround:ambient/silence"

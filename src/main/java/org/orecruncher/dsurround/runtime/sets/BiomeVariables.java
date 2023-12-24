@@ -81,9 +81,6 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
 
     @Override
     public String getName() {
-        if (this.info == null) {
-            int x = 0;
-        }
         return this.info.getBiomeName();
     }
 

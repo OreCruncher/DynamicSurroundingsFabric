@@ -14,4 +14,8 @@ public interface IBlockEffect {
     void setDone();
 
     BlockPos getPos();
+
+    default long getPosIndex() {
+        return this.getPos().asLong();
+    }
 }

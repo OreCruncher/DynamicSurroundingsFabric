@@ -4,9 +4,9 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.Identifier;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.FrameworkUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import java.io.File;
@@ -17,7 +17,7 @@ import java.util.function.Function;
 @Environment(EnvType.CLIENT)
 public final class ResourceUtils {
 
-    static final IModLog LOGGER = Client.LOGGER.createChild(ResourceUtils.class);
+    static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
 
     /**
      * Scans the local disk as well as resource packs and JARs locating and creating accessors for the config file

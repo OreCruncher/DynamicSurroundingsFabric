@@ -15,7 +15,7 @@ import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 import java.util.Collection;
 
-public class AreaBlockEffects extends ClientHandler {
+public class AreaBlockEffects extends AbstractClientHandler {
 
     private final IBlockLibrary blockLibrary;
     private final IAudioPlayer audioPlayer;
@@ -86,6 +86,7 @@ public class AreaBlockEffects extends ClientHandler {
 
     @Override
     protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<ITimer> timers) {
-        left.add(Formatting.LIGHT_PURPLE + String.format("Total Effects: %d", this.blockEffects.count()));
+        if (this.blockEffects != null)
+            left.add(Formatting.LIGHT_PURPLE + String.format("Total Effects: %d", this.blockEffects.count()));
     }
 }

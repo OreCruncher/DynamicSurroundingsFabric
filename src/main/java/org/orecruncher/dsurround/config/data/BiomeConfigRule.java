@@ -5,8 +5,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import org.orecruncher.dsurround.config.AcousticConfig;
-import org.orecruncher.dsurround.lib.CodecExtensions;
+import net.minecraft.text.TextColor;
 import org.orecruncher.dsurround.lib.scripting.Script;
 
 import java.util.List;
@@ -17,7 +16,7 @@ public record BiomeConfigRule(
         Script biomeSelector,
         Optional<String> comment,
         Boolean clearSounds,
-        Optional<String> fogColor,
+        Optional<TextColor> fogColor,
         Optional<Script> additionalSoundChance,
         Optional<Script> moodSoundChance,
         List<AcousticConfig> acoustics) {
@@ -26,7 +25,7 @@ public record BiomeConfigRule(
                         Script.CODEC.fieldOf("biomeSelector").forGetter(BiomeConfigRule::biomeSelector),
                         Codec.STRING.optionalFieldOf("_comment").forGetter(BiomeConfigRule::comment),
                         Codec.BOOL.optionalFieldOf("clearSounds", false).forGetter(BiomeConfigRule::clearSounds),
-                        CodecExtensions.checkHTMLColor().optionalFieldOf("fogColor").forGetter(BiomeConfigRule::fogColor),
+                        TextColor.CODEC.optionalFieldOf("fogColor").forGetter(BiomeConfigRule::fogColor),
                         Script.CODEC.optionalFieldOf("additionalSoundChance").forGetter(BiomeConfigRule::additionalSoundChance),
                         Script.CODEC.optionalFieldOf("moodSoundChance").forGetter(BiomeConfigRule::moodSoundChance),
                         Codec.list(AcousticConfig.CODEC).optionalFieldOf("acoustics", ImmutableList.of()).forGetter(BiomeConfigRule::acoustics))

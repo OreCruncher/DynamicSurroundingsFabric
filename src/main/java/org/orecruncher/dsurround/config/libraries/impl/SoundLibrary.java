@@ -5,6 +5,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.UnboundedMapCodec;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
@@ -17,6 +18,7 @@ import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.CodecExtensions;
+import org.orecruncher.dsurround.lib.Comparers;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
@@ -51,7 +53,9 @@ public final class SoundLibrary implements ISoundLibrary {
 
     private final Object2ObjectOpenHashMap<Identifier, SoundEvent> myRegistry = new Object2ObjectOpenHashMap<>();
     private final Object2ObjectOpenHashMap<Identifier, SoundMetadata> soundMetadata = new Object2ObjectOpenHashMap<>();
-    private final Map<Identifier, IndividualSoundConfigEntry> individualSoundConfiguration = new HashMap<>();
+    private final Map<Identifier, IndividualSoundConfigEntry> individualSoundConfiguration = new Object2ObjectOpenHashMap<>();
+    private final Set<Identifier> blockedSounds = new ObjectOpenHashSet<>();
+    private final Set<Identifier> culledSounds = new ObjectOpenHashSet<>();
     private final List<Identifier> startupSounds = new ArrayList<>();
     private List<IndividualSoundConfigEntry> soundConfiguration = new ArrayList<>();
 
@@ -72,10 +76,10 @@ public final class SoundLibrary implements ISoundLibrary {
     @Override
     public void reload(AssetLibraryEvent.ReloadEvent event) {
 
-        // Clear our registries in case this is a re-load
-        this.loadSoundConfiguration();
+        // Forget cached data and reload
         this.myRegistry.clear();
         this.soundMetadata.clear();
+        this.loadSoundConfiguration();
 
         // Initializes the internal sound registry once all the other mods have
         // registered their sounds.
@@ -84,11 +88,7 @@ public final class SoundLibrary implements ISoundLibrary {
         // Gather resource pack sound files and process them to ensure metadata is collected.
         // Resource pack sounds generally replace existing registration, but this allows for new
         // sounds to be added client side.
-        final Collection<IResourceAccessor> soundFiles = ResourceUtils.findSounds(FILE_NAME);
-
-        for (final IResourceAccessor file : soundFiles) {
-            registerSoundFile(file);
-        }
+        ResourceUtils.findSounds(FILE_NAME).forEach(this::registerSoundFile);
 
         this.logger.info("Number of SoundEvents cached: %d", this.myRegistry.size());
     }
@@ -119,20 +119,18 @@ public final class SoundLibrary implements ISoundLibrary {
     }
 
     @Override
-    public boolean isBlocked(final Identifier id) {
-        IndividualSoundConfigEntry entry = this.individualSoundConfiguration.get(id);
-        return entry != null && (entry.block || entry.volumeScale == 0);
+    public boolean isBlocked(final Identifier sound) {
+        return this.blockedSounds.contains(Objects.requireNonNull(sound));
     }
 
     @Override
-    public boolean isCulled(final Identifier id) {
-        IndividualSoundConfigEntry entry = this.individualSoundConfiguration.get(id);
-        return entry != null && entry.cull;
+    public boolean isCulled(final Identifier sound) {
+        return this.culledSounds.contains(Objects.requireNonNull(sound));
     }
 
     @Override
-    public float getVolumeScale(final Identifier id) {
-        IndividualSoundConfigEntry entry = this.individualSoundConfiguration.get(id);
+    public float getVolumeScale(final Identifier sound) {
+        IndividualSoundConfigEntry entry = this.individualSoundConfiguration.get(Objects.requireNonNull(sound));
         if (entry != null && entry.isNotDefault()) {
             return entry.volumeScale / 100f;
         }
@@ -162,8 +160,8 @@ public final class SoundLibrary implements ISoundLibrary {
         this.soundConfiguration = configs.stream()
                 .filter(IndividualSoundConfigEntry::isNotDefault)
                 .collect(Collectors.toList());
+        this.postProcess();
         this.save();
-        this.validatePostLoad();
     }
 
     private void registerSoundFile(final IResourceAccessor soundFile) {
@@ -189,8 +187,6 @@ public final class SoundLibrary implements ISoundLibrary {
 
     private void loadSoundConfiguration() {
         this.soundConfiguration.clear();
-        this.startupSounds.clear();
-        this.individualSoundConfiguration.clear();
 
         // Check to see if it exists on disk, and if so, load it up.  Otherwise, save it so the defaults are
         // persisted and the user can edit manually.
@@ -210,8 +206,7 @@ public final class SoundLibrary implements ISoundLibrary {
             this.addSoundConfigDefaults();
         }
 
-        // Post load processing
-        this.validatePostLoad();
+        this.postProcess();
 
         // Save it out.  Config parameters may have been added/removed
         this.save();
@@ -242,19 +237,27 @@ public final class SoundLibrary implements ISoundLibrary {
         this.soundConfiguration.add(entry);
     }
 
-    private void validatePostLoad() {
-        this.soundConfiguration.forEach(entry -> {
-            if (entry.isNotDefault()) {
-                this.individualSoundConfiguration.put(entry.soundEventId, entry);
-                if (entry.startup) {
-                    this.startupSounds.add(entry.soundEventId);
-                }
-            }
+    /**
+     * This routine assumes that soundConfiguration has been initialized with data.
+     */
+    private void postProcess() {
+        // Purge the list of anything that is a default
+        this.soundConfiguration.removeIf(e -> !e.isNotDefault());
+        // Sort the list naturally based on identity
+        this.soundConfiguration.sort((e1, e2) -> Comparers.IDENTIFIER_NATURAL_COMPARABLE.compare(e1.soundEventId, e2.soundEventId));
+        // Insert the entries into our lookup collections
+        this.soundConfiguration.forEach(e -> {
+            this.individualSoundConfiguration.put(e.soundEventId, e);
+            if (e.startup)
+                this.startupSounds.add(e.soundEventId);
+            if (e.block || e.volumeScale == 0)
+                this.blockedSounds.add(e.soundEventId);
+            if (e.cull)
+                this.culledSounds.add(e.soundEventId);
         });
     }
 
     private void save() {
-        this.soundConfiguration.sort(Comparator.comparing(e -> e.soundEventId));
         try {
             var result = SOUND_CONFIG_CODEC.encode(this.soundConfiguration, JsonOps.INSTANCE, JsonOps.INSTANCE.empty()).result();
             if (result.isPresent()) {

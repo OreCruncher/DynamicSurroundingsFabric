@@ -56,8 +56,8 @@ public final class Worker {
                     logger.warn("Terminating thread [%s]", this.thread.getName());
                     return;
                 }
-            } else {
-                logger.warn("[%s] is behind %d msecs", this.thread.getName(), Math.abs(sleepTime));
+            } else if (sleepTime < 0) {
+                this.diagnosticString = () -> this.diagnosticString.get() + String.format("; running behind %dms", Math.abs(sleepTime));
             }
         }
 

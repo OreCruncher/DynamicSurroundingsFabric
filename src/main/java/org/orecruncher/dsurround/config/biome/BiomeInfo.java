@@ -3,13 +3,14 @@ package org.orecruncher.dsurround.config.biome;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.world.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.config.AcousticConfig;
+import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.impl.BiomeLibrary;
 import org.orecruncher.dsurround.config.SoundEventType;
@@ -17,11 +18,9 @@ import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.IdentityUtils;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
@@ -29,7 +28,6 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.TagHelpers;
 
-import java.awt.*;
 import java.util.Collection;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -39,7 +37,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
     public static final int DEFAULT_ADDITIONAL_SOUND_CHANCE = 1000 / 4;
     public static final Script DEFAULT_SOUND_CHANCE = new Script(String.valueOf(1D / DEFAULT_ADDITIONAL_SOUND_CHANCE));
-    private static final IModLog LOGGER = Client.LOGGER.createChild(BiomeInfo.class);
+    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
     private final int version;
     private final Identifier biomeId;
     private final String biomeName;
@@ -52,7 +50,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private final boolean isOcean;
     private final boolean isDeepOcean;
     private final IConditionEvaluator conditionEvaluator;
-    private Color fogColor;
+    private TextColor fogColor;
     private Script additionalSoundChance = DEFAULT_SOUND_CHANCE;
     private Script moodSoundChance = DEFAULT_SOUND_CHANCE;
     private ObjectArray<String> comments;
@@ -101,11 +99,11 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         return this.biomeName;
     }
 
-    public Color getFogColor() {
+    public TextColor getFogColor() {
         return this.fogColor;
     }
 
-    void setFogColor(final Color color) {
+    void setFogColor(final TextColor color) {
         this.fogColor = color;
     }
 
@@ -184,7 +182,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     public void update(final BiomeConfigRule entry) {
 
         entry.comment().ifPresent(this::addComment);
-        entry.fogColor().ifPresent(v -> setFogColor(ColorPalette.fromHTMLColorCode(v)));
+        entry.fogColor().ifPresent(this::setFogColor);
         entry.additionalSoundChance().ifPresent(this::setAdditionalSoundChance);
         entry.moodSoundChance().ifPresent(this::setMoodSoundChance);
 
@@ -196,31 +194,30 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
 
         for (final AcousticConfig sr : entry.acoustics()) {
-            final Identifier res = IdentityUtils.resolveIdentifier(Client.ModId, sr.soundEventId);
-            final SoundEvent acoustic = soundLibrary.getSound(res);
+            final SoundEvent acoustic = soundLibrary.getSound(sr.soundEventId());
             var factory = SoundFactoryBuilder.create(acoustic)
-                    .category(sr.category)
-                    .volumeRange(sr.minVolume, sr.maxVolume)
-                    .pitchRange(sr.minPitch, sr.maxPitch)
+                    .category(sr.category())
+                    .volumeRange(sr.minVolume(), sr.maxVolume())
+                    .pitchRange(sr.minPitch(), sr.maxPitch())
                     .build();
 
-            switch (sr.type) {
+            switch (sr.type()) {
                 case LOOP -> {
-                    final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions);
+                    final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions());
                     this.loopSounds.add(acousticEntry);
                 }
                 case MUSIC, MOOD, ADDITION -> {
-                    final int weight = sr.weight;
-                    final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions, weight);
+                    final int weight = sr.weight();
+                    final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions(), weight);
 
-                    if (sr.type == SoundEventType.ADDITION)
+                    if (sr.type() == SoundEventType.ADDITION)
                         this.additionalSounds.add(acousticEntry);
-                    else if (sr.type == SoundEventType.MOOD)
+                    else if (sr.type() == SoundEventType.MOOD)
                         this.moodSounds.add(acousticEntry);
                     else
                         this.musicSounds.add(acousticEntry);
                 }
-                default -> LOGGER.warn("Unknown SoundEventType %s", sr.type);
+                default -> LOGGER.warn("Unknown SoundEventType %s", sr.type());
             }
         }
     }
@@ -262,7 +259,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         builder.append("\n").append(getTraits().toString());
 
         if (this.fogColor != null) {
-            builder.append("\nfogColor: ").append(ColorPalette.toHTMLColorCode(this.fogColor));
+            builder.append("\nfogColor: ").append(this.fogColor.getHexCode());
         }
 
         if (!this.loopSounds.isEmpty()) {

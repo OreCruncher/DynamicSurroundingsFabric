@@ -10,8 +10,7 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.*;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.lib.GameUtils;
-
-import java.awt.*;
+import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
 @Environment(EnvType.CLIENT)
 public class WaterRippleParticle extends SpriteBillboardParticle {
@@ -52,10 +51,10 @@ public class WaterRippleParticle extends SpriteBillboardParticle {
         var cameraPos = BlockPos.ofFloored(GameUtils.getPlayer().getCameraPosVec(1.0f));
         var position = BlockPos.ofFloored(this.x, this.y, this.z);
 
-        var color = new Color(this.world.getBiome(position).value().getWaterColor());
-        this.red = color.getRed() / 255F;
-        this.green = color.getGreen() / 255F;
-        this.blue = color.getBlue() / 255F;
+        var colorRgb = this.world.getBiome(position).value().getWaterColor();
+        this.red = ColorPalette.getRed(colorRgb) / 255F;
+        this.green = ColorPalette.getGreen(colorRgb) / 255F;
+        this.blue = ColorPalette.getBlue(colorRgb) / 255F;
 
         float distance = (float) MathHelper.clamp(
                 Math.sqrt(cameraPos.getSquaredDistance(position)) - BLOCKS_FROM_FADE,
@@ -104,12 +103,14 @@ public class WaterRippleParticle extends SpriteBillboardParticle {
 
         vertexConsumer
                 .vertex(-this.scaledWidth + X, Y, this.scaledWidth + Z)
-                .texture(this.texU2, this.texV2).color(this.red, this.green, this.blue, this.alpha)
+                .texture(this.texU2, this.texV2)
+                .color(this.red, this.green, this.blue, this.alpha)
                 .light(p)
                 .next();
         vertexConsumer
                 .vertex(this.scaledWidth + X, Y, this.scaledWidth + Z)
-                .texture( this.texU2, this.texV1).color(this.red, this.green, this.blue, this.alpha)
+                .texture( this.texU2, this.texV1)
+                .color(this.red, this.green, this.blue, this.alpha)
                 .light(p)
                 .next();
         vertexConsumer

@@ -91,5 +91,17 @@
         "maxPitch": 1.2
       }
     ]
+  },
+  {
+    "blocks": [
+      "#dsurround:effects/fireflies"
+    ],
+    "effects": [
+      {
+        "effect": "firefly",
+        "conditions": "weather.isNotRaining() && (diurnal.isNight() || diurnal.isSunset()) && !(HOT || weather.canWaterFreeze())",
+        "spawnChance": "0.05"
+      }
+    ]
   }
 ]

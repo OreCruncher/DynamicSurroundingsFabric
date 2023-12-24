@@ -7,9 +7,12 @@ import net.minecraft.client.sound.SoundSystem;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.*;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.lib.FrameworkUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.Lazy;
+import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.mixins.core.MixinAbstractSoundInstance;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;
@@ -18,9 +21,32 @@ import org.orecruncher.dsurround.mixins.audio.MixinSoundSystemAccessors;
 import java.util.function.Supplier;
 
 public final class AudioUtilities {
-    private static final IModLog LOGGER = Client.LOGGER.createChild(AudioUtilities.class);
+    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+    private static final Configuration CONFIG = ContainerManager.resolve(Configuration.class);
+
+    // If these mods are present enhanced sound processing will be disabled.
+    private static final ObjectArray<String> autoDisabledBecauseOf = new ObjectArray<>();
+
+    private static final Lazy<Boolean> advancedProcessingEnabled = new Lazy<>(() -> {
+        // First check general settings
+        if (CONFIG.enhancedSounds.enableEnhancedSounds) {
+            // Next check to see if any present mods are in our exclusion list
+            for (var modId : autoDisabledBecauseOf)
+                if (FrameworkUtils.isModLoaded(modId)) {
+                    LOGGER.warn("Enhanced sound processing is auto disabled due to the presence of the mod \"%s\"", modId);
+                    return false;
+                }
+            return true;
+        }
+
+        return false;
+    });
 
     private static int MAX_SOUNDS = 0;
+
+    static {
+        autoDisabledBecauseOf.add("sound_physics_remastered");
+    }
 
     public static int getMaxSounds() {
         return MAX_SOUNDS;
@@ -104,7 +130,7 @@ public final class AudioUtilities {
             if (doEnhancedSounds())
                 SoundFXProcessor.initialize();
             else
-                LOGGER.warn("Enhanced sounds are not enabled.  No fancy sounds for you!");
+                LOGGER.warn("Enhanced sound processing is disabled");
 
             final String vendor = AL10.alGetString(AL10.AL_VENDOR);
             final String version = AL10.alGetString(AL10.AL_VERSION);
@@ -128,11 +154,7 @@ public final class AudioUtilities {
     }
 
     public static boolean doEnhancedSounds() {
-        if (!Client.Config.enhancedSounds.enableEnhancedSounds) {
-            return false;
-        }
-
-        return true;
+        return advancedProcessingEnabled.get();
     }
 
     public static void deinitialize(final SoundEngine soundEngine) {
@@ -169,7 +191,7 @@ public final class AudioUtilities {
             if (msg == null)
                 msg = "NONE";
 
-            Client.LOGGER.warn(String.format("OpenAL Error: %s [%s]", errorName, msg));
+            LOGGER.warn(String.format("OpenAL Error: %s [%s]", errorName, msg));
         }
         return error;
     }

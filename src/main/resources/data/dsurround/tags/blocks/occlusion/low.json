@@ -1,7 +1,13 @@
 {
   "values": [
-    "#c:glass_blocks",
-    "#c:glass_panes",
+    {
+      "id": "#c:glass_blocks",
+      "required": false
+    },
+    {
+      "id": "#c:glass_pane",
+      "required": false
+    },
     "#minecraft:beehives",
     "#minecraft:leaves",
     "minecraft:chest",

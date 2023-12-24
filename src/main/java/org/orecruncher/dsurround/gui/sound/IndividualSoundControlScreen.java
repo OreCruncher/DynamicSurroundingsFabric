@@ -131,7 +131,7 @@ public class IndividualSoundControlScreen extends Screen {
     public void render(final DrawContext context, int mouseX, int mouseY, float partialTicks) {
         this.renderInGameBackground(context);
 
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, TOP_OFFSET, ColorPalette.MC_WHITE.getRGB());
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, TOP_OFFSET, ColorPalette.MC_WHITE.getRgb());
 
         this.soundConfigList.render(context, mouseX, mouseY, partialTicks);
         this.searchField.render(context, mouseX, mouseY, partialTicks);

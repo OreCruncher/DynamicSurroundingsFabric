@@ -1,5 +1,7 @@
 package org.orecruncher.dsurround.mixins.audio;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.sound.SoundEngine;
 import org.lwjgl.openal.ALC10;
 import org.lwjgl.openal.EXTEfx;
@@ -23,11 +25,10 @@ public class MixinSoundEngine {
     }
 
     /**
-     * Rewrite the capability buffer - wee!
-     * NOTE: The dev plugin for Intellij does not like the method signature - just ignore.
+     * Rewrite the capability buffer.  We only do this if advanced processing is enabled.
      */
-    @Redirect(method = "init(Ljava/lang/String;Z)V", at = @At(value = "INVOKE", target = "Lorg/lwjgl/openal/ALC10;alcCreateContext(JLjava/nio/IntBuffer;)J", remap = false))
-    private long dsurround_buildCapabilities(long deviceHandle, IntBuffer attrList) {
+    @WrapOperation(method = "init(Ljava/lang/String;Z)V", at = @At(value = "INVOKE", target = "Lorg/lwjgl/openal/ALC10;alcCreateContext(JLjava/nio/IntBuffer;)J", remap = false))
+    private long dsurround_buildCapabilities(long deviceHandle, IntBuffer attrList, Operation<Long> original) {
         if (AudioUtilities.doEnhancedSounds()) {
             // Buffer should have been resized by the constant modification above
             attrList.clear();
@@ -38,9 +39,10 @@ public class MixinSoundEngine {
             // Done!
             attrList.put(0);
             attrList.flip();
+            return ALC10.alcCreateContext(deviceHandle, attrList);
+        } else {
+            return original.call(deviceHandle, attrList);
         }
-        // Leave the buffer intact
-        return ALC10.alcCreateContext(deviceHandle, attrList);
     }
 
     /**
