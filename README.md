@@ -35,15 +35,15 @@ This mod is a spiritual successor to the Forge based Dynamic Surroundings series
 
 **FAQ**
 * Will there be releases for earlier versions of Minecraft?
-    * No.
+    * No.  Minecraft experiences large number of internal changes between releases and it would become a chore.
 * Will additional features from the Forge version make it's way into the Fabric version?
     * See below.
-* Will will there be updates to the Forge version of Dynamic Surroundings?
-    * At the moment I am not sure.  I have limited time, so I need to be a bit picky about what I do.  I have found that writing Fabric mods is much easier than on Forge, though it could just be the nature of what my mod does.  Take this as a biased assessment.
+* Will will there be updates to the Forge/Neoforge version of Dynamic Surroundings?
+  * Forge - highly unlikely.  I do not disagree with the perspective of the Neoforge team regarding Forge. 
+  * Neoforge, I am not sure.  Looking into hybrid development so that the mod can be built for Fabric and Neoforge at the same time.
 
 **What's Being Dropped**
 * Aurora.  Good at turning a computer into a space heater, and I do not know enough about shaders to improve.
-* Mob/player footstep and toolbar effects.
 * Specialized fog effects.  Minecraft has made some improvements in this area, and I expect it to continue.  I don't want to be in a position of overriding (or managing the problem) of when Microsoft adds more dynamic content.
 * Weather effects.  Again, there have been improvements to Minecraft.  I may add some additional processing around weather, but I do not expect to make major changes.
 
