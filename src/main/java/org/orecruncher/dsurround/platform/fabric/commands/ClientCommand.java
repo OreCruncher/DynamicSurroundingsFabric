@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib.commands.client;
+package org.orecruncher.dsurround.platform.fabric.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
@@ -8,7 +8,7 @@ import org.orecruncher.dsurround.lib.Library;
 
 import java.util.function.Supplier;
 
-public abstract class ClientCommand {
+abstract class ClientCommand {
 
     protected final String command;
 

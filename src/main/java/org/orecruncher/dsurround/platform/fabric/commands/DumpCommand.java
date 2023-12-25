@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.platform.fabric.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import org.orecruncher.dsurround.commands.DumpCommandHandler;
-import org.orecruncher.dsurround.lib.commands.client.ClientCommand;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 

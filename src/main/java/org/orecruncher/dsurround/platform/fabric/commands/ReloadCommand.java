@@ -4,7 +4,6 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import org.orecruncher.dsurround.commands.ReloadCommandHandler;
-import org.orecruncher.dsurround.lib.commands.client.ClientCommand;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
