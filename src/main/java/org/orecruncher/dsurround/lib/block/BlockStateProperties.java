@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.lib.block;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import joptsimple.internal.Strings;
 import net.minecraft.block.BlockState;
@@ -123,7 +122,7 @@ public class BlockStateProperties {
     }
 
     public String toString() {
-        return MoreObjects.toStringHelper(this).addValue(getFormattedProperties()).toString();
+        return "BlockStateProperties{" + getFormattedProperties() + "}";
     }
 
 }

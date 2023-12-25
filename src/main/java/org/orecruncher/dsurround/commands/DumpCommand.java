@@ -2,11 +2,12 @@ package org.orecruncher.dsurround.commands;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.text.Text;
 import org.orecruncher.dsurround.config.libraries.*;
+import org.orecruncher.dsurround.lib.commands.client.ClientCommand;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 
 import java.io.PrintStream;
@@ -16,71 +17,92 @@ import java.util.stream.Stream;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
-class DumpCommand {
+class DumpCommand extends ClientCommand {
 
-    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
     private static final IMinecraftDirectories directories = ContainerManager.resolve(IMinecraftDirectories.class);
 
-    public static void register(@Nullable CommandDispatcher<FabricClientCommandSource> dispatcher) {
-        if (dispatcher == null) {
-            return;
-        }
-        dispatcher.register(literal("dsdump")
-                .then(literal("biomes").executes(cmd -> dumpBiomes(cmd.getSource())))
-                .then(literal("sounds").executes(cmd -> dumpSounds(cmd.getSource())))
-                .then(literal("dimensions").executes(cmd -> dumpDimensions(cmd.getSource())))
-                .then(literal("blocks")
-                        .executes(cmd -> dumpBlocks(cmd.getSource(), false))
-                        .then(literal("nostates")
-                        .executes(cmd -> dumpBlocks(cmd.getSource(), true))))
-                .then(literal("blocksbytag").executes(cmd -> dumpBlocksByTag(cmd.getSource())))
-                .then(literal("blockconfigrules").executes(cmd -> dumpBlockConfigRules(cmd.getSource())))
-                .then(literal("blockstates").executes(cmd -> dumpBlockState(cmd.getSource())))
-                .then(literal("items").executes(cmd -> dumpItems(cmd.getSource())))
+    DumpCommand() {
+        super("dsdump");
+    }
+
+    public void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
+        dispatcher.register(literal(this.command)
+                .then(
+                        literal("biomes")
+                                .executes(cmd -> execute(cmd, DumpCommandHandler::dumpBiomes)))
+                .then(
+                        literal("sounds")
+                                .executes(cmd -> execute(cmd, DumpCommandHandler::dumpSounds)))
+                .then(
+                        literal("dimensions")
+                                .executes(cmd -> execute(cmd, DumpCommandHandler::dumpDimensions)))
+                .then(
+                        literal("blocks")
+                                .executes(cmd -> execute(cmd, () -> DumpCommandHandler.dumpBlocks(false)))
+                            .then(literal("nostates")
+                                .executes(cmd -> execute(cmd, () -> DumpCommandHandler.dumpBlocks(true)))))
+                .then(
+                        literal("blocksbytag")
+                                .executes(cmd -> execute(cmd, DumpCommandHandler::dumpBlocksByTag)))
+                .then(
+                        literal("blockconfigrules")
+                                .executes(cmd -> execute(cmd, DumpCommandHandler::dumpBlockConfigRules)))
+                .then(
+                        literal("blockstates")
+                                .executes(cmd -> execute(cmd, DumpCommandHandler::dumpBlockState)))
+                .then(
+                        literal("items")
+                                .executes(cmd -> execute(cmd, DumpCommandHandler::dumpItems)))
         );
     }
 
-    private static int dumpBiomes(FabricClientCommandSource src) {
+    private int execute(CommandContext<FabricClientCommandSource> ctx, Supplier<Text> commandHandler) {
+        var result = commandHandler.get();
+        ctx.getSource().sendFeedback(result);
+        return 0;
+    }
+
+    private int dumpBiomes(FabricClientCommandSource src) {
         var library = ContainerManager.resolve(IBiomeLibrary.class);
         return handle(src, "dump.biomes", library::dump);
     }
 
-    private static int dumpSounds(FabricClientCommandSource src) {
+    private int dumpSounds(FabricClientCommandSource src) {
         var library = ContainerManager.resolve(ISoundLibrary.class);
         return handle(src, "dump.sounds", library::dump);
     }
 
-    private static int dumpDimensions(FabricClientCommandSource src) {
+    private int dumpDimensions(FabricClientCommandSource src) {
         var library = ContainerManager.resolve(IDimensionLibrary.class);
         return handle(src, "dump.dimensions", library::dump);
     }
 
-    private static int dumpBlockConfigRules(FabricClientCommandSource src) {
+    private int dumpBlockConfigRules(FabricClientCommandSource src) {
         var library = ContainerManager.resolve(IBlockLibrary.class);
         return handle(src, "dump.blockconfigrules", library::dumpBlockConfigRules);
     }
 
-    private static int dumpBlockState(FabricClientCommandSource src) {
+    private int dumpBlockState(FabricClientCommandSource src) {
         var library = ContainerManager.resolve(IBlockLibrary.class);
         return handle(src, "dump.blockstates", library::dumpBlockStates);
     }
 
-    private static int dumpBlocks(FabricClientCommandSource src, boolean noStates) {
+    private int dumpBlocks(FabricClientCommandSource src, boolean noStates) {
         var library = ContainerManager.resolve(IBlockLibrary.class);
         return handle(src, "dump.blocks", () -> library.dumpBlocks(noStates));
     }
 
-    private static int dumpBlocksByTag(FabricClientCommandSource src) {
+    private int dumpBlocksByTag(FabricClientCommandSource src) {
         var library = ContainerManager.resolve(IBlockLibrary.class);
         return handle(src, "dump.blocksbytag", library::dump);
     }
 
-    private static int dumpItems(FabricClientCommandSource src) {
+    private int dumpItems(FabricClientCommandSource src) {
         var library = ContainerManager.resolve(IItemLibrary.class);
         return handle(src, "dump.items", library::dump);
     }
 
-    private static int handle(final FabricClientCommandSource source, final String cmdString, final Supplier<Stream<String>> supplier) {
+    private int handle(final FabricClientCommandSource source, final String cmdString, final Supplier<Stream<String>> supplier) {
 
         final String operation = cmdString.substring(5);
         final String fileName = operation + ".txt";
@@ -94,9 +116,9 @@ class DumpCommand {
             } catch (final Throwable t) {
                 LOGGER.error(t, "Error writing dump file '%s'", target.toString());
             }
-            Commands.sendSuccess(source, "dump", operation, target.toString());
+            this.sendSuccess(source, operation, target.toString());
         } catch (final Throwable t) {
-            Commands.sendFailure(source, cmdString, operation);
+            this.sendFailure(source, cmdString, operation);
         }
         return 0;
     }

@@ -3,17 +3,13 @@ package org.orecruncher.dsurround.lib.block;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
 
 class MatchOnBlock extends BlockStateMatcher {
 
     private final Block block;
-    private final Identifier blockId;
 
     MatchOnBlock(Block block) {
         this.block = block;
-        this.blockId = Registries.BLOCK.getId(block);
     }
 
     @Override
@@ -43,6 +39,6 @@ class MatchOnBlock extends BlockStateMatcher {
 
     @Override
     public String toString() {
-        return this.blockId.toString();
+        return "BlockStateMatcher{" + this.block.toString() + "}";
     }
 }

@@ -67,7 +67,9 @@ public final class SoundLibrary implements ISoundLibrary {
 
     @Override
     public Stream<String> dump() {
-        return Stream.of();
+        return this.myRegistry.values().stream()
+                .sorted((c1, c2) -> Comparers.IDENTIFIER_NATURAL_COMPARABLE.compare(c1.getId(), c2.getId()))
+                .map(e -> e.getId().toString());
     }
 
     @Override

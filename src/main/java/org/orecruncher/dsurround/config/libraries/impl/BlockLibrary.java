@@ -122,7 +122,7 @@ public class BlockLibrary implements IBlockLibrary {
     }
 
     private static String formatBlockConfigRuleOutput(BlockConfigRule rule) {
-        return "";
+        return rule.toString();
     }
 
     private static String formatBlockTagOutput(Block block, Stream<TagKey<Block>> tags) {

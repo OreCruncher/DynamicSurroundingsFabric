@@ -35,4 +35,24 @@ public record BlockConfigRule(
                 return true;
         return false;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Blocks [\n");
+        for (var matcher : this.blocks)
+            builder.append("  ").append(matcher.toString()).append("\n");
+        builder.append("]\n");
+        builder.append("Clear Sounds: ").append(this.clearSounds).append("\n");
+        builder.append("Sound Chance: ").append(this.soundChance.map(Script::asString).orElse("default")).append("\n");
+        builder.append("Acoustics: [\n");
+        for (var acoustic : this.acoustics)
+            builder.append("  ").append(acoustic.toString()).append("\n");
+        builder.append("]\n");
+        builder.append("Block Effects: [\n");
+        for (var effect : this.effects)
+            builder.append("  ").append(effect.toString()).append("\n");
+        builder.append("]\n");
+        return builder.toString();
+    }
 }

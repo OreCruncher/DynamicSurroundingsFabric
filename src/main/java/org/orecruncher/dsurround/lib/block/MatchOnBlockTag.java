@@ -24,4 +24,9 @@ public class MatchOnBlockTag extends BlockStateMatcher {
     public boolean match(BlockState state) {
         return TagHelpers.isIn(this.tagId, state.getBlock());
     }
+
+    @Override
+    public String toString() {
+        return "MatchOnBlockTag{" + this.tagId.id().toString() + "}";
+    }
 }

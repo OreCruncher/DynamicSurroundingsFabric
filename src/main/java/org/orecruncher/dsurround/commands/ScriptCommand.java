@@ -2,34 +2,28 @@ package org.orecruncher.dsurround.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.command.argument.MessageArgumentType;
-import net.minecraft.text.Text;
-import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.runtime.IConditionEvaluator;
+import org.orecruncher.dsurround.lib.commands.client.ClientCommand;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
-final class ScriptCommand {
+class ScriptCommand extends ClientCommand {
 
-    public static void register(@Nullable CommandDispatcher<FabricClientCommandSource> dispatcher) {
-        if (dispatcher == null) {
-            return;
-        }
-        dispatcher.register(
-                ClientCommandManager.literal("dsscript")
-                        .then(argument("script", MessageArgumentType.message())
-                                .executes(ScriptCommand::execute)));
+    ScriptCommand() {
+        super("dsscript");
     }
 
-    private static int execute(CommandContext<FabricClientCommandSource> ctx) {
+    public void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
+        dispatcher.register(literal(this.command)
+                .then(argument("script", MessageArgumentType.message()).executes(this::execute)));
+    }
+
+    private int execute(CommandContext<FabricClientCommandSource> ctx) {
         var script = ctx.getArgument("script", MessageArgumentType.MessageFormat.class);
-        var result = ContainerManager.resolve(IConditionEvaluator.class).eval(new Script(script.getContents()));
-        ctx.getSource().sendFeedback(Text.of(result.toString()));
+        var handlerResult = ScriptCommandHandler.execute(script.getContents());
+        ctx.getSource().sendFeedback(handlerResult);
         return 0;
     }
-
 }
