@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib.platform.services.fabric;
+package org.orecruncher.dsurround.platform.fabric.services;
 
 import net.fabricmc.fabric.api.tag.client.v1.ClientTags;
 import net.minecraft.registry.entry.RegistryEntry;

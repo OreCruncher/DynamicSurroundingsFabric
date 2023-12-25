@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
-import net.fabricmc.fabric.api.tag.convention.v1.ConventionalItemTags;
 import net.minecraft.item.*;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.sound.SoundCategory;
@@ -17,6 +16,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
+import org.orecruncher.dsurround.tags.ItemTags;
 import org.orecruncher.dsurround.tags.TagHelpers;
 
 import java.util.Optional;
@@ -121,13 +121,13 @@ public class ItemLibrary implements IItemLibrary {
 
         if (item instanceof ElytraItem elytraItem)
             itemEquipSound = elytraItem.getEquipSound();
-        else if (TagHelpers.isIn(ConventionalItemTags.LAVA_BUCKETS, item))
+        else if (TagHelpers.isIn(ItemTags.LAVA_BUCKETS, item))
             itemEquipSound = SoundEvents.ITEM_BUCKET_FILL_LAVA;
-        else if (TagHelpers.isIn(ConventionalItemTags.WATER_BUCKETS, item))
+        else if (TagHelpers.isIn(ItemTags.WATER_BUCKETS, item))
             itemEquipSound = SoundEvents.ITEM_BUCKET_FILL;
-        else if (TagHelpers.isIn(ConventionalItemTags.ENTITY_WATER_BUCKETS, item))
+        else if (TagHelpers.isIn(ItemTags.ENTITY_WATER_BUCKETS, item))
             itemEquipSound = SoundEvents.ITEM_BUCKET_FILL_FISH;
-        else if (TagHelpers.isIn(ConventionalItemTags.MILK_BUCKETS, item))
+        else if (TagHelpers.isIn(ItemTags.MILK_BUCKETS, item))
             itemEquipSound = SoundEvents.ITEM_BUCKET_FILL;
 
         return itemEquipSound;
@@ -163,10 +163,6 @@ public class ItemLibrary implements IItemLibrary {
                 .map(e -> TagHelpers.asString(e.streamTags()))
                 .orElse("null");
 
-        StringBuilder builder = new StringBuilder();
-        builder.append(id.toString());
-        builder.append("\nTags: ").append(tags);
-        builder.append("\n");
-        return builder.toString();
+        return id.toString() + "\nTags: " + tags + "\n";
     }
 }

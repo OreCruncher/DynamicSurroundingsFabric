@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.commands;
+package org.orecruncher.dsurround.platform.fabric.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;

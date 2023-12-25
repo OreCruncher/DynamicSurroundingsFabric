@@ -1,34 +1,28 @@
-package org.orecruncher.dsurround.commands;
+package org.orecruncher.dsurround.platform.fabric.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.command.argument.MessageArgumentType;
-import net.minecraft.util.Identifier;
-
+import org.orecruncher.dsurround.commands.ScriptCommandHandler;
 import org.orecruncher.dsurround.lib.commands.client.ClientCommand;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
-class BiomeCommand extends ClientCommand {
+class ScriptCommand extends ClientCommand {
 
-    BiomeCommand() {
-        super("dsbiome");
+    ScriptCommand() {
+        super("dsscript");
     }
 
     public void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
         dispatcher.register(literal(this.command)
-                    .then(argument("biomeId", IdentifierArgumentType.identifier())
-                    .then(argument("script", MessageArgumentType.message()).executes(this::execute))));
+                .then(argument("script", MessageArgumentType.message()).executes(this::execute)));
     }
 
-    public int execute(CommandContext<FabricClientCommandSource> ctx) {
-        var biomeId = ctx.getArgument("biomeId", Identifier.class);
+    private int execute(CommandContext<FabricClientCommandSource> ctx) {
         var script = ctx.getArgument("script", MessageArgumentType.MessageFormat.class);
-        var handlerResult = BiomeCommandHandler.execute(biomeId, script.getContents());
-        ctx.getSource().sendFeedback(handlerResult);
-        return 0;
+        return this.execute(ctx, () -> ScriptCommandHandler.execute(script.getContents()));
     }
 }

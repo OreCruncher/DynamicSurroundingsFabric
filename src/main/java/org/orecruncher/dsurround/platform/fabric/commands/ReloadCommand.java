@@ -1,8 +1,9 @@
-package org.orecruncher.dsurround.commands;
+package org.orecruncher.dsurround.platform.fabric.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import org.orecruncher.dsurround.commands.ReloadCommandHandler;
 import org.orecruncher.dsurround.lib.commands.client.ClientCommand;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
@@ -18,8 +19,6 @@ class ReloadCommand extends ClientCommand {
     }
 
     private int execute(CommandContext<FabricClientCommandSource> ctx) {
-        var handlerResult = ReloadCommandHandler.execute();
-        ctx.getSource().sendFeedback(handlerResult);
-        return 0;
+        return this.execute(ctx, ReloadCommandHandler::execute);
     }
 }

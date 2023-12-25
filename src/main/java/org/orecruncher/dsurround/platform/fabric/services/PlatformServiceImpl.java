@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib.platform.services.fabric;
+package org.orecruncher.dsurround.platform.fabric.services;
 
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
