@@ -2,8 +2,8 @@ package org.orecruncher.dsurround.lib.scripting;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import javax.script.Compilable;
@@ -14,7 +14,7 @@ import java.util.Optional;
 
 public final class ExecutionContext implements IVariableAccess {
 
-    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+    private static final IModLog LOGGER = Library.getLogger();
 
     private final String contextName;
     private final ScriptEngine engine;

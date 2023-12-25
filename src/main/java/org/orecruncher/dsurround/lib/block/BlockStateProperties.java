@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import joptsimple.internal.Strings;
 import net.minecraft.block.BlockState;
 import net.minecraft.state.property.Property;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import java.util.Map;
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  */
 public class BlockStateProperties {
 
-    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+    private static final IModLog LOGGER = Library.getLogger();
 
     public static final BlockStateProperties NONE = new BlockStateProperties();
 

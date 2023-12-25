@@ -1,8 +1,7 @@
 package org.orecruncher.dsurround.lib.scanner;
 
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.Library;
 
 public class ClientPlayerContext extends ScanContext {
 
@@ -10,7 +9,7 @@ public class ClientPlayerContext extends ScanContext {
         super(
                 GameUtils::getWorld,
                 () -> GameUtils.getPlayer().getBlockPos(),
-                () -> ContainerManager.resolve(IModLog.class),
+                Library::getLogger,
                 () -> GameUtils.getWorld().getRegistryKey().getValue()
         );
     }

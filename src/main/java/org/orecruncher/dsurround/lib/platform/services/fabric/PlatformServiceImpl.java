@@ -4,15 +4,11 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.Version;
 import net.minecraft.client.option.KeyBinding;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -57,26 +53,8 @@ public class PlatformServiceImpl implements IPlatform {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Gets the path to a mod's configuration directory. If it doesn't exist it will be created.  If for some reason
-     * it cannot be created, the standard Minecraft config path will be returned.
-     *
-     * @param modId ModId to obtain the configuration path.
-     * @return Path to the mod's configuration directory.
-     */
-    public Path getConfigPath(final String modId) {
-        var configDir = FabricLoader.getInstance().getConfigDir();
-        var configPath = configDir.resolve(Objects.requireNonNull(modId));
-
-        if (Files.notExists(configPath))
-            try {
-                Files.createDirectory(configPath);
-            } catch (final IOException ex) {
-                Client.LOGGER.error(ex, "Unable to create directory path %s", configPath.toString());
-                configPath = configDir;
-            }
-
-        return configPath;
+    public Path getConfigPath() {
+        return FabricLoader.getInstance().getConfigDir();
     }
 
     @Override

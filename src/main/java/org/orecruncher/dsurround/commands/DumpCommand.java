@@ -2,8 +2,6 @@ package org.orecruncher.dsurround.commands;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.CommandDispatcher;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.libraries.*;
@@ -18,7 +16,6 @@ import java.util.stream.Stream;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
-@Environment(EnvType.CLIENT)
 class DumpCommand {
 
     private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);

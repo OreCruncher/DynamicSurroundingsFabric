@@ -13,7 +13,7 @@ import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.platform.Services;
+import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.mixins.core.MixinAbstractSoundInstance;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundSystemAccessors;
@@ -31,11 +31,13 @@ public final class AudioUtilities {
         // First check general settings
         if (CONFIG.enhancedSounds.enableEnhancedSounds) {
             // Next check to see if any present mods are in our exclusion list
-            for (var modId : autoDisabledBecauseOf)
-                if (Services.PLATFORM.isModLoaded(modId)) {
+            for (var modId : autoDisabledBecauseOf) {
+                var platform = ContainerManager.resolve(IPlatform.class);
+                if (platform.isModLoaded(modId)) {
                     LOGGER.warn("Enhanced sound processing is auto disabled due to the presence of the mod \"%s\"", modId);
                     return false;
                 }
+            }
             return true;
         }
 

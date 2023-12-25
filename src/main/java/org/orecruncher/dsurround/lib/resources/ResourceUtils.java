@@ -2,9 +2,9 @@ package org.orecruncher.dsurround.lib.resources;
 
 import net.minecraft.util.Identifier;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.platform.Services;
+import org.orecruncher.dsurround.lib.platform.IPlatform;
 
 import java.io.File;
 import java.io.InputStream;
@@ -13,7 +13,8 @@ import java.util.function.Function;
 
 public final class ResourceUtils {
 
-    static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+    static final IModLog LOGGER = Library.getLogger();
+    private static final IPlatform PLATFORM = Library.getPlatform();
 
     /**
      * Scans the local disk as well as resource packs and JARs locating and creating accessors for the config file
@@ -32,7 +33,7 @@ public final class ResourceUtils {
 
     private static void collectFromResourcePacks(final Map<Identifier, IResourceAccessor> accessorMap, final String config) {
         var results = findAssets(
-                Services.PLATFORM::isModLoaded,
+                PLATFORM::isModLoaded,
                 ns -> new Identifier(ns, String.format("dsconfigs/%s", config)));
         for (var e : results) {
             accessorMap.put(e.location(), e);
@@ -41,7 +42,7 @@ public final class ResourceUtils {
 
     private static void collectFromDisk(final Map<Identifier, IResourceAccessor> accessorMap, File diskPath, final String config) {
         // Gather loaded mods.  We focus on those from within the JAR
-        var loadedMods = Services.PLATFORM.getModIdList(true);
+        var loadedMods = PLATFORM.getModIdList(true);
         for (var mod : loadedMods) {
             Identifier location = new Identifier(mod, config);
             IResourceAccessor accessor = IResourceAccessor.createExternalResource(diskPath, location);

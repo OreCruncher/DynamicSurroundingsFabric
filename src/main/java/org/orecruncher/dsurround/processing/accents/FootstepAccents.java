@@ -12,6 +12,7 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 public class FootstepAccents {
 
     private final ObjectArray<IFootstepAccentProvider> providers = new ObjectArray<>();
+
     public FootstepAccents(Configuration config, IItemLibrary itemLibrary) {
         this.providers.add(new ArmorAccents(config, itemLibrary));
         this.providers.add(new WaterySurfaceAccent(config));

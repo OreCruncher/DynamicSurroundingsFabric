@@ -4,9 +4,7 @@ import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
-import org.orecruncher.dsurround.lib.platform.IMinecraftMod;
-import org.orecruncher.dsurround.lib.platform.ModInformation;
-import org.orecruncher.dsurround.lib.platform.Services;
+import org.orecruncher.dsurround.lib.platform.*;
 import org.orecruncher.dsurround.lib.platform.events.ClientState;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.system.ISystemClock;
@@ -23,7 +21,12 @@ import org.orecruncher.dsurround.lib.util.MinecraftDirectories;
  */
 public final class Library {
 
-    private static IModLog _logger;
+    // Loader specific API implementations
+    private static final IPlatform PLATFORM = ContainerManager.resolve(IPlatform.class);
+    private static final IEventRegistrations EVENT_REGISTRATIONS = ContainerManager.resolve(IEventRegistrations.class);
+    private static final ITagUtilities TAG_UTILITIES = ContainerManager.resolve(ITagUtilities.class);
+
+    private static IModLog LOGGER;
 
     /**
      * Initializes key functionality of library logic during startup.
@@ -32,26 +35,41 @@ public final class Library {
         Preconditions.checkNotNull(mod);
         Preconditions.checkNotNull(logger);
 
-        _logger = logger;
+        LOGGER = logger;
 
         // Do this first so the rest of the library can get dependencies
         configureServiceDependencies(mod, logger);
 
         // Initialize event handlers
-        Services.EVENT_REGISTRATIONS.register();
+        EVENT_REGISTRATIONS.register();
 
         // Hook server lifecycle so logs get emitted
-        ClientState.STARTED.register((ignore -> _logger.info("Client starting")), HandlerPriority.VERY_HIGH);
-        ClientState.STOPPING.register(ignore -> _logger.info("Client stopping"), HandlerPriority.VERY_HIGH);
+        ClientState.STARTED.register((ignore -> LOGGER.info("Client starting")), HandlerPriority.VERY_HIGH);
+        ClientState.STOPPING.register(ignore -> LOGGER.info("Client stopping"), HandlerPriority.VERY_HIGH);
     }
 
     @NotNull
     public static IModLog getLogger() {
-        return _logger;
+        return LOGGER;
+    }
+
+    @NotNull
+    public static IPlatform getPlatform() {
+        return PLATFORM;
+    }
+
+    @NotNull
+    public static ITagUtilities getTagUtilities() {
+        return TAG_UTILITIES;
+    }
+
+    @NotNull
+    public static IEventRegistrations getEventRegistrations() {
+        return EVENT_REGISTRATIONS;
     }
 
     private static void configureServiceDependencies(IMinecraftMod mod, IModLog logger) {
-        var modInfo = Services.PLATFORM.getModInformation(mod.get_modId())
+        var modInfo = PLATFORM.getModInformation(mod.get_modId())
                 .orElseThrow( () -> new RuntimeException("Unable to acquire mod information!"));
 
         ContainerManager

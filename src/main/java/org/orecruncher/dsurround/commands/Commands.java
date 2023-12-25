@@ -1,12 +1,9 @@
 package org.orecruncher.dsurround.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.text.Text;
 
-@Environment(EnvType.CLIENT)
 public final class Commands {
 
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {

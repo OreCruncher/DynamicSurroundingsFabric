@@ -2,8 +2,6 @@ package org.orecruncher.dsurround.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.command.argument.IdentifierArgumentType;
@@ -20,7 +18,6 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 
-@Environment(EnvType.CLIENT)
 final class BiomeCommand {
 
     public static void register(@Nullable CommandDispatcher<FabricClientCommandSource> dispatcher) {
