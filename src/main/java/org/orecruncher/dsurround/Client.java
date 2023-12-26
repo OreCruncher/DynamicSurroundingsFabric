@@ -29,8 +29,8 @@ import java.util.concurrent.CompletableFuture;
 
 public abstract class Client implements IMinecraftMod {
 
-    public static final String ModId = "dsurround";
-    public static final ModLog LOGGER = new ModLog(ModId);
+    public static final ModLog LOGGER = new ModLog(Constants.MOD_ID);
+
     /**
      * Basic configuration settings
      */
@@ -39,8 +39,8 @@ public abstract class Client implements IMinecraftMod {
     private CompletableFuture<Optional<VersionResult>> versionInfo;
 
     @Override
-    public String get_modId() {
-        return ModId;
+    public String getModId() {
+        return Constants.MOD_ID;
     }
 
     public void initializeClient() {

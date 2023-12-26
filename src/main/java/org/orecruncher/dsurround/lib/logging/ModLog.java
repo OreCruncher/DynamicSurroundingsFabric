@@ -19,7 +19,7 @@ public final class ModLog implements IModLog {
     private int traceMask;
 
     public ModLog(IMinecraftMod mod) {
-        this(mod.get_modId());
+        this(mod.getModId());
     }
 
     public ModLog(String modId) {

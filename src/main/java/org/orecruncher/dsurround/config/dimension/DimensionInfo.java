@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.config.dimension;
 
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.data.DimensionConfigRule;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 
@@ -21,7 +21,7 @@ public class DimensionInfo {
     protected boolean playBiomeSounds = true;
 
     DimensionInfo() {
-        this.name = new Identifier(Client.ModId, "no_dimension");
+        this.name = new Identifier(Constants.MOD_ID, "no_dimension");
         this.isFlatWorld = false;
     }
 

@@ -4,7 +4,7 @@ import net.minecraft.item.Item;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 
 public class ItemTags {
 
@@ -14,7 +14,7 @@ public class ItemTags {
     public static final TagKey<Item> WATER_BUCKETS = of("water_buckets");
 
     private static TagKey<Item> of(String id) {
-        return TagKey.of(RegistryKeys.ITEM, new Identifier(Client.ModId, id));
+        return TagKey.of(RegistryKeys.ITEM, new Identifier(Constants.MOD_ID, id));
     }
 
 }

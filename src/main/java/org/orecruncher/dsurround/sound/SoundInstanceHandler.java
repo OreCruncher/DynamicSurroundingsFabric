@@ -6,7 +6,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.gui.sound.ConfigSoundInstance;
@@ -34,7 +34,7 @@ public final class SoundInstanceHandler {
     static {
         thunderSounds.add(SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER.getId());
 
-        THUNDER_SOUND = SoundFactoryBuilder.create(new Identifier(Client.ModId, "thunder"))
+        THUNDER_SOUND = SoundFactoryBuilder.create(new Identifier(Constants.MOD_ID, "thunder"))
                 .category(SoundCategory.WEATHER)
                 .volume(10000)
                 .build();
@@ -73,7 +73,7 @@ public final class SoundInstanceHandler {
      */
     public static boolean shouldBlockSoundPlay(final SoundInstance theSound) {
         // Don't block ConfigSoundInstances.  They are triggered from the individual sound config
-        // options and though it may be blocked the player may wish to hear.
+        // options, and though it may be blocked, the player may wish to hear.
         if (theSound instanceof ConfigSoundInstance)
             return false;
 

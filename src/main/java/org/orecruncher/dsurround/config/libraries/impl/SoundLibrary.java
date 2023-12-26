@@ -10,7 +10,7 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.JsonHelper;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
@@ -42,7 +42,7 @@ public final class SoundLibrary implements ISoundLibrary {
     private static final UnboundedMapCodec<String, SoundMetadataConfig> CODEC = Codec.unboundedMap(Codec.STRING, SoundMetadataConfig.CODEC);
     private static final Codec<List<IndividualSoundConfigEntry>> SOUND_CONFIG_CODEC = Codec.list(IndividualSoundConfigEntry.CODEC);
 
-    private static final Identifier MISSING_RESOURCE = new Identifier(Client.ModId, "missing_sound");
+    private static final Identifier MISSING_RESOURCE = new Identifier(Constants.MOD_ID, "missing_sound");
     private static final SoundEvent MISSING = SoundEvent.of(MISSING_RESOURCE);
 
     private final IModLog logger;

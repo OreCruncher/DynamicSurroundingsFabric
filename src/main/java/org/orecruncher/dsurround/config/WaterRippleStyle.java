@@ -1,13 +1,13 @@
 package org.orecruncher.dsurround.config;
 
 import net.minecraft.util.Identifier;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.particles.ParticleSheets;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 
 public enum WaterRippleStyle {
 
-    NONE (new Identifier(Client.ModId, "none")),
+    NONE (new Identifier(Constants.MOD_ID, "none")),
     PIXELATED_CIRCLE(ParticleSheets.TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE) {
         private final int FRAMES = 7;
         private final float DELTA = 1F / this.FRAMES;

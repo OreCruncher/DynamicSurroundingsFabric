@@ -6,7 +6,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.Property;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.IMatcher;
 import org.orecruncher.dsurround.lib.IdentityUtils;
 
@@ -58,7 +58,7 @@ public abstract class BlockStateMatcher implements IMatcher<BlockState> {
 
     private static BlockStateMatcher createTagMatcher(String tagId) throws BlockStateParseException {
         try {
-            var id = IdentityUtils.resolveIdentifier(Client.ModId, tagId);
+            var id = IdentityUtils.resolveIdentifier(Constants.MOD_ID, tagId);
             return new MatchOnBlockTag(id);
         } catch (Throwable ignored) {
             throw new BlockStateParseException(String.format("%s is not a valid block tag", tagId));

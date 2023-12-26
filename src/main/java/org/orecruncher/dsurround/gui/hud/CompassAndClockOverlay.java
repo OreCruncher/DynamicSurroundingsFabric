@@ -9,7 +9,7 @@ import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import org.joml.Matrix4f;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -32,7 +32,7 @@ public class CompassAndClockOverlay extends AbstractOverlay {
     private static final float BAND_HEIGHT = 12F * 2;
     private static final float TEXTURE_SIZE_F = (float)TEXTURE_SIZE;
     private static final int HALF_TEXTURE_SIZE = TEXTURE_SIZE / 2;
-    private static final Identifier COMPASS_TEXTURE = new Identifier(Client.ModId, "textures/compass.png");
+    private static final Identifier COMPASS_TEXTURE = new Identifier(Constants.MOD_ID, "textures/compass.png");
 
     private static final Map<DayCycle, TextColor> COLOR_MAP = new EnumMap<>(DayCycle.class);
 

@@ -6,7 +6,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.world.World;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.gui.hud.IDiagnosticPlugin;
@@ -42,7 +42,7 @@ public class BlockViewerPlugin implements IDiagnosticPlugin {
         state.streamTags()
             .map(tag -> {
                 var formatting = Formatting.YELLOW;
-                if (Objects.equals(tag.id().getNamespace(), Client.ModId))
+                if (Objects.equals(tag.id().getNamespace(), Constants.MOD_ID))
                     formatting = Formatting.GOLD;
                 return formatting + "#" + tag.id().toString();
             })

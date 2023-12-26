@@ -69,7 +69,7 @@ public final class Library {
     }
 
     private static void configureServiceDependencies(IMinecraftMod mod, IModLog logger) {
-        var modInfo = PLATFORM.getModInformation(mod.get_modId())
+        var modInfo = PLATFORM.getModInformation(mod.getModId())
                 .orElseThrow( () -> new RuntimeException("Unable to acquire mod information!"));
 
         ContainerManager

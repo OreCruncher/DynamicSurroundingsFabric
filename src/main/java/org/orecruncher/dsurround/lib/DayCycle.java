@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib;
 
 import net.minecraft.world.World;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 
 public enum DayCycle {
 
@@ -20,7 +20,7 @@ public enum DayCycle {
     private final String localizeString;
 
     DayCycle(final String localName) {
-        this.localizeString = Client.ModId + ".format." + localName;
+        this.localizeString = Constants.MOD_ID + ".format." + localName;
     }
 
     public static boolean isDaytime(final World world) {

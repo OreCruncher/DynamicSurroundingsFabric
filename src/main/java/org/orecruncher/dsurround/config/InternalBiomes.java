@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.config;
 
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 
@@ -39,7 +39,7 @@ public enum InternalBiomes {
 
     InternalBiomes(String name, BiomeTrait... traits) {
         this.name = name;
-        this.id = new Identifier(Client.ModId, String.format("fakebiome/%s", name));
+        this.id = new Identifier(Constants.MOD_ID, String.format("fakebiome/%s", name));
         traits = Arrays.copyOf(traits, traits.length + 1);
         traits[traits.length - 1] = BiomeTrait.FAKE;
         this.traits = BiomeTraits.from(traits);

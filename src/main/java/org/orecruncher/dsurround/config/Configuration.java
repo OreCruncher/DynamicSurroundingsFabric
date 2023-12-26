@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config;
 
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -11,7 +11,7 @@ public class Configuration extends ConfigurationData {
     private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
 
     public Configuration() {
-        super("dsurround.config", ContainerManager.resolve(IMinecraftDirectories.class).getModConfigDirectory().resolve(Client.ModId + ".json"));
+        super("dsurround.config", ContainerManager.resolve(IMinecraftDirectories.class).getModConfigDirectory().resolve(Constants.MOD_ID + ".json"));
     }
 
     @Property

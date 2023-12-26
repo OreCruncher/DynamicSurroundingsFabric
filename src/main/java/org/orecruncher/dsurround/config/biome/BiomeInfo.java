@@ -6,7 +6,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.world.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.impl.BiomeLibrary;
@@ -238,7 +238,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
         String tags = "null";
 
-        if (this.biomeId.getNamespace().equalsIgnoreCase(Client.ModId)) {
+        if (this.biomeId.getNamespace().equalsIgnoreCase(Constants.MOD_ID)) {
             // It's fake and has no tags
             tags = "FAKE BIOME";
         } else {

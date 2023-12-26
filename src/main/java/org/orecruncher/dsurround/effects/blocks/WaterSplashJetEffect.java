@@ -6,7 +6,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.client.option.ParticlesMode;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.blocks.producers.BlockEffectProducer;
 import org.orecruncher.dsurround.effects.blocks.producers.WaterSplashProducer;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -19,32 +19,32 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
     private static final ISoundFactory[] ACOUSTICS = new ISoundFactory[BlockEffectProducer.MAX_STRENGTH + 1];
 
     static {
-        var factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.0"))
+        var factory = SoundFactoryBuilder.create(new Identifier(Constants.MOD_ID, "waterfall.0"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
         Arrays.fill(ACOUSTICS, factory);
 
-        factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.1"))
+        factory = SoundFactoryBuilder.create(new Identifier(Constants.MOD_ID, "waterfall.1"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
         ACOUSTICS[2] = ACOUSTICS[3] = factory;
 
-        factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.2"))
+        factory = SoundFactoryBuilder.create(new Identifier(Constants.MOD_ID, "waterfall.2"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
         ACOUSTICS[4] = factory;
 
-        factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.3"))
+        factory = SoundFactoryBuilder.create(new Identifier(Constants.MOD_ID, "waterfall.3"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
         ACOUSTICS[5] = ACOUSTICS[6] = factory;
 
-        factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.4"))
+        factory = SoundFactoryBuilder.create(new Identifier(Constants.MOD_ID, "waterfall.4"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
         ACOUSTICS[7] = ACOUSTICS[8] = factory;
 
-        factory = SoundFactoryBuilder.create(new Identifier(Client.ModId, "waterfall.5"))
+        factory = SoundFactoryBuilder.create(new Identifier(Constants.MOD_ID, "waterfall.5"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
         ACOUSTICS[9] = ACOUSTICS[10] = factory;

@@ -4,7 +4,7 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 
 public class BiomeTags {
 
@@ -60,7 +60,7 @@ public class BiomeTags {
     public static final TagKey<Biome> WINDSWEPT = of("windswept");
 
     private static TagKey<Biome> of(String id) {
-        return TagKey.of(RegistryKeys.BIOME, new Identifier(Client.ModId, id));
+        return TagKey.of(RegistryKeys.BIOME, new Identifier(Constants.MOD_ID, id));
     }
 
 }
