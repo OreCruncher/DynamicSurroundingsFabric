@@ -104,7 +104,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
     public BiomeInfo getBiomeInfo(Biome biome) {
         // check the cached property on the biome and return the info
         // that is there.
-        var info = ((IBiomeExtended) (Object) biome).getInfo();
+        var info = ((IBiomeExtended) (Object) biome).dsurround_getInfo();
         if (info != null && info.getVersion() == this.version)
             return info;
 
@@ -128,7 +128,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
         // Build out the info object and store into the biome.  We need to do that
         // so that when applying configs the script engine can find it.
         final var result = new BiomeInfo(this.version, id, name, traits);
-        ((IBiomeExtended) (Object) biome).setInfo(result);
+        ((IBiomeExtended) (Object) biome).dsurround_setInfo(result);
 
         // Apply rule configs
         Guard.execute(() -> applyRuleConfigs(biome, result));

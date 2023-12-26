@@ -7,9 +7,9 @@ import java.util.Optional;
 
 public interface ISourceContext {
 
-    int getId();
+    int dsurround_getId();
 
-    Optional<SourceContext> getData();
+    Optional<SourceContext> dsurround_getData();
 
-    void setData(@Nullable SourceContext data);
+    void dsurround_setData(@Nullable SourceContext data);
 }

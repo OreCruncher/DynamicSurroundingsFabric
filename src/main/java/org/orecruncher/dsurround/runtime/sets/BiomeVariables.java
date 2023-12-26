@@ -8,6 +8,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
+import org.orecruncher.dsurround.xface.IBiomeExtended;
 
 public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBiomeVariables {
 
@@ -84,7 +85,7 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
 
     @Override
     public float getRainfall() {
-        return this.biome.weather.downfall();
+        return ((IBiomeExtended)((Object)this.biome)).dsurround_getWeather().downfall();
     }
 
     @Override

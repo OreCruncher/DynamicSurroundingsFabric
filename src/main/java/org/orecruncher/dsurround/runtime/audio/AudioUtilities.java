@@ -17,6 +17,7 @@ import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.mixins.core.MixinAbstractSoundInstance;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundSystemAccessors;
+import org.orecruncher.dsurround.xface.ISoundEngine;
 
 import java.util.function.Supplier;
 
@@ -126,8 +127,10 @@ public final class AudioUtilities {
 
         try {
 
+            long devicePointer = ((ISoundEngine)soundEngine).dsurround_getDevicePointer();
+
             // Calculate the number of source slots available
-            MAX_SOUNDS = ALC11.alcGetInteger(soundEngine.devicePointer, ALC11.ALC_MONO_SOURCES);
+            MAX_SOUNDS = ALC11.alcGetInteger(devicePointer, ALC11.ALC_MONO_SOURCES);
 
             // Do this last because it is dependent on the sound calculations
             if (doEnhancedSounds())
@@ -140,8 +143,8 @@ public final class AudioUtilities {
             final String renderer = AL10.alGetString(AL10.AL_RENDERER);
             final String extensions = AL10.alGetString(AL10.AL_EXTENSIONS);
 
-            final int frequency = ALC11.alcGetInteger(soundEngine.devicePointer, ALC11.ALC_FREQUENCY);
-            final int auxSendsConfigured = ALC11.alcGetInteger(soundEngine.devicePointer, EXTEfx.ALC_MAX_AUXILIARY_SENDS);
+            final int frequency = ALC11.alcGetInteger(devicePointer, ALC11.ALC_FREQUENCY);
+            final int auxSendsConfigured = ALC11.alcGetInteger(devicePointer, EXTEfx.ALC_MAX_AUXILIARY_SENDS);
 
             LOGGER.info("Vendor: %s", vendor);
             LOGGER.info("Version: %s", version);

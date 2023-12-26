@@ -6,9 +6,11 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.system.ITickCount;
+import org.orecruncher.dsurround.mixins.core.MixinLivingEntity;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
+import org.orecruncher.dsurround.xface.ILivingEntityExtended;
 
 public class StepThroughBrushEffect extends EntityEffectBase {
 
@@ -48,7 +50,7 @@ public class StepThroughBrushEffect extends EntityEffectBase {
             return false;
         if (entity.sidewaysSpeed != 0 || entity.forwardSpeed != 0 || entity.upwardSpeed != 0)
             return true;
-        return entity.jumping;
+        return ((ILivingEntityExtended)entity).dsurround_isJumping();
     }
 
     private void playBrushSound(BlockPos pos) {

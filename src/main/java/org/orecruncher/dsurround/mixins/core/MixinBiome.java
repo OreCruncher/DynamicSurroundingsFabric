@@ -3,7 +3,10 @@ package org.orecruncher.dsurround.mixins.core;
 import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.xface.IBiomeExtended;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -11,16 +14,26 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Biome.class)
 public class MixinBiome implements IBiomeExtended {
 
+    @Unique
     private BiomeInfo dsurround_info;
 
+    @Final
+    @Shadow
+    private Biome.Weather weather;
+
     @Override
-    public BiomeInfo getInfo() {
+    public BiomeInfo dsurround_getInfo() {
         return this.dsurround_info;
     }
 
     @Override
-    public void setInfo(BiomeInfo info) {
+    public void dsurround_setInfo(BiomeInfo info) {
         this.dsurround_info = info;
+    }
+
+    @Override
+    public Biome.Weather dsurround_getWeather() {
+        return this.weather;
     }
 
     /**

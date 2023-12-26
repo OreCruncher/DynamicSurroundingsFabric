@@ -119,12 +119,12 @@ public final class SoundFXProcessor {
 
         ISourceContext source = (ISourceContext) entry.source;
         assert source != null;
-        int id = source.getId();
+        int id = source.dsurround_getId();
         if (id > 0) {
             final SourceContext ctx = new SourceContext(id);
             ctx.attachSound(sound);
             ctx.enable();
-            source.setData(ctx);
+            source.dsurround_setData(ctx);
         }
     }
 
@@ -134,7 +134,7 @@ public final class SoundFXProcessor {
      */
     public static void onSourcePlay(final Source source) {
         var context = (ISourceContext) source;
-        var data = context.getData();
+        var data = context.dsurround_getData();
         data.ifPresent(ctx -> {
             var id = ctx.getId();
             ctx.exec();
@@ -150,7 +150,7 @@ public final class SoundFXProcessor {
      */
     public static void tick(final Source source) {
         var src = (ISourceContext) source;
-        var data = src.getData();
+        var data = src.dsurround_getData();
         data.ifPresent(SourceContext::tick);
     }
 
@@ -161,7 +161,7 @@ public final class SoundFXProcessor {
      */
     public static void stopSoundPlay(final Source source) {
         var sourceContext = (ISourceContext) source;
-        var data = sourceContext.getData();
+        var data = sourceContext.dsurround_getData();
         data.ifPresent(sc -> sources[sc.getId()] = null);
     }
 
@@ -181,7 +181,7 @@ public final class SoundFXProcessor {
         if (!Client.Config.enhancedSounds.enableMonoConversion)
             return;
 
-        var data = ((ISourceContext) source).getData();
+        var data = ((ISourceContext) source).dsurround_getData();
         data.ifPresent(ctx ->{
             var s = ctx.getSound();
             if (s != null && s.getAttenuationType() != SoundInstance.AttenuationType.NONE && !s.isRelative())

@@ -1,11 +1,11 @@
 package org.orecruncher.dsurround.processing;
 
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.PotionUtil;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.xface.ILivingEntityExtended;
 
 public class PotionParticleSuppressionHandler extends AbstractClientHandler {
 
@@ -20,9 +20,9 @@ public class PotionParticleSuppressionHandler extends AbstractClientHandler {
     @Override
     public void process(final PlayerEntity player) {
         if (GameUtils.isInGame()) {
-            int color = player.getDataTracker().get(LivingEntity.POTION_SWIRLS_COLOR);
+            int color = getPotionParticleColor(player);
 
-            // If there is no color there are no particles to render
+            // If there is no color, there are no particles to render
             if (color == 0)
                 return;
 
@@ -45,11 +45,18 @@ public class PotionParticleSuppressionHandler extends AbstractClientHandler {
         }
     }
 
+    private static int getPotionParticleColor(PlayerEntity player) {
+        var accessor = (ILivingEntityExtended)player;
+        return accessor.dsurround_getPotionSwirlColor();
+    }
+
     private static void suppressPotionParticles(PlayerEntity player) {
-        player.getDataTracker().set(LivingEntity.POTION_SWIRLS_COLOR, HIDE_PARTICLE_SENTINEL);
+        var accessor = (ILivingEntityExtended)player;
+        accessor.dsurround_setPotionSwirlColor(HIDE_PARTICLE_SENTINEL);
     }
 
     private static void unsuppressPotionParticles(PlayerEntity player) {
-        player.getDataTracker().set(LivingEntity.POTION_SWIRLS_COLOR, PotionUtil.getColor(player.getStatusEffects()));
+        var accessor = (ILivingEntityExtended)player;
+        accessor.dsurround_setPotionSwirlColor(PotionUtil.getColor(player.getStatusEffects()));
     }
 }

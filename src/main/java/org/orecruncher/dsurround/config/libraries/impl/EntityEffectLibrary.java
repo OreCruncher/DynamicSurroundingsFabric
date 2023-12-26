@@ -72,19 +72,19 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
     @Override
     public boolean doesEntityEffectInfoExist(LivingEntity entity) {
         ILivingEntityExtended accessor = (ILivingEntityExtended) entity;
-        return accessor.getEffectInfo() != null;
+        return accessor.dsurround_getEffectInfo() != null;
     }
 
     @Override
     public void clearEntityEffectInfo(LivingEntity entity) {
         ILivingEntityExtended accessor = (ILivingEntityExtended) entity;
-        accessor.setEffectInfo(null);
+        accessor.dsurround_setEffectInfo(null);
     }
 
     @Override
     public EntityEffectInfo getEntityEffectInfo(LivingEntity entity) {
         ILivingEntityExtended accessor = (ILivingEntityExtended) entity;
-        var info = accessor.getEffectInfo();
+        var info = accessor.dsurround_getEffectInfo();
 
         if (info != null && info.getVersion() == this.version)
             return info;
@@ -111,7 +111,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
         else
             info = this.defaultInfo;
 
-        accessor.setEffectInfo(info);
+        accessor.dsurround_setEffectInfo(info);
 
         // Initialize the attached effects before returning.  Usually the next step in processing would be
         // to tick the effects.
