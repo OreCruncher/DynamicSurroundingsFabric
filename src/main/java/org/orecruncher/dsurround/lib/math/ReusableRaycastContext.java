@@ -19,7 +19,7 @@ public class ReusableRaycastContext extends RaycastContext {
     }
 
     public ReusableRaycastContext(World world, Vec3d start, Vec3d end, ShapeType shapeType, FluidHandling fluidHandling) {
-        this(world, start, end, shapeType, fluidHandling, GameUtils.getPlayer());
+        this(world, start, end, shapeType, fluidHandling, GameUtils.getPlayer().orElseThrow());
 
         // Override the shape context that was passed into the ctor
         this.accessor.setShapeContext(ShapeContext.absent());

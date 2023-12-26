@@ -49,14 +49,14 @@ public abstract class BlockEffectBase implements IBlockEffect {
      * Adds a particle to the Minecraft particle system
      */
     public void addParticle(final Particle particle) {
-        GameUtils.getParticleManager().addParticle(particle);
+        GameUtils.getParticleManager().ifPresent(pm -> pm.addParticle(particle));
     }
 
     /**
      * Adds a particle to the Minecraft particle system
      */
     public void addParticle(ParticleEffect parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
-        GameUtils.getParticleManager().addParticle(parameters, x, y, z, velocityX, velocityY, velocityZ);
+        GameUtils.getParticleManager().ifPresent(pm -> pm.addParticle(parameters, x, y, z, velocityX, velocityY, velocityZ));
     }
 
     /**
@@ -64,11 +64,13 @@ public abstract class BlockEffectBase implements IBlockEffect {
      * it to the particle manager.
      */
     public <T extends ParticleEffect> Particle createParticle(T parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
-        return ((MixinParticleManager) GameUtils.getParticleManager())
-                .dsurroundCreateParticle(
-                        parameters,
-                        x, y, z,
-                        velocityX, velocityY, velocityZ);
+        return GameUtils.getParticleManager().map(pm -> {
+            var t = (MixinParticleManager) pm;
+            return t.dsurroundCreateParticle(
+                parameters,
+                x, y, z,
+                velocityX, velocityY, velocityZ);
+        }).orElse(null);
     }
 
     public boolean isDone() {

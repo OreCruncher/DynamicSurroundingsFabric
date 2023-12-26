@@ -1,13 +1,15 @@
 package org.orecruncher.dsurround.processing;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Formatting;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.ITimer;
-import org.orecruncher.dsurround.lib.scanner.ClientPlayerContext;
+import org.orecruncher.dsurround.lib.scanner.ScanContext;
 import org.orecruncher.dsurround.processing.misc.BlockEffectManager;
 import org.orecruncher.dsurround.processing.scanner.AlwaysOnBlockEffectScanner;
 import org.orecruncher.dsurround.processing.scanner.RandomBlockEffectScanner;
@@ -19,7 +21,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
 
     private final IBlockLibrary blockLibrary;
     private final IAudioPlayer audioPlayer;
-    protected ClientPlayerContext locus;
+    protected ScanContext locus;
     protected BlockEffectManager blockEffects;
     protected RandomBlockEffectScanner nearEffects;
     protected RandomBlockEffectScanner farEffects;
@@ -58,7 +60,12 @@ public class AreaBlockEffects extends AbstractClientHandler {
 
     @Override
     public void onConnect() {
-        this.locus = new ClientPlayerContext();
+        this.locus = new ScanContext(
+                () -> GameUtils.getWorld().orElseThrow(),
+                () -> GameUtils.getPlayer().map(Entity::getBlockPos).orElseThrow(),
+                this.logger,
+                () -> GameUtils.getWorld().map(w -> w.getRegistryKey().getValue()).orElseThrow()
+        );
         this.blockEffects = new BlockEffectManager(this.config.blockEffects.blockEffectRange);
         this.alwaysOn = new AlwaysOnBlockEffectScanner(this.locus, this.blockLibrary, this.blockEffects, this.config.blockEffects.blockEffectRange);
         this.nearEffects = new RandomBlockEffectScanner(this.locus, this.blockLibrary, this.audioPlayer, this.blockEffects, RandomBlockEffectScanner.NEAR_RANGE);

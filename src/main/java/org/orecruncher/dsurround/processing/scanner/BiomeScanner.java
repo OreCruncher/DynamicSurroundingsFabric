@@ -62,9 +62,7 @@ public final class BiomeScanner {
         if (tickCount % SCAN_INTERVAL != 0)
             return;
 
-        var player = GameUtils.getPlayer();
-        assert player != null;
-
+        var player = GameUtils.getPlayer().orElseThrow();
         var world = player.getEntityWorld();
         var position = player.getBlockPos();
 

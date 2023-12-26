@@ -47,7 +47,7 @@ public class Handlers {
     }
 
     protected static PlayerEntity getPlayer() {
-        return GameUtils.getPlayer();
+        return GameUtils.getPlayer().orElseThrow();
     }
 
     private void register(final Class<? extends AbstractClientHandler> clazz) {
@@ -108,12 +108,12 @@ public class Handlers {
     protected boolean doTick() {
         return GameUtils.isInGame()
                 && !GameUtils.isPaused()
-                && !(GameUtils.getCurrentScreen() instanceof IndividualSoundControlScreen)
+                && !(GameUtils.getCurrentScreen().map(s -> s instanceof  IndividualSoundControlScreen).orElse(false))
                 && isPlayerChunkLoaded();
     }
 
     protected boolean isPlayerChunkLoaded() {
-        var player = GameUtils.getPlayer();
+        var player = GameUtils.getPlayer().orElseThrow();
         var pos = player.getBlockPos();
         return WorldUtils.isChunkLoaded(player.getEntityWorld(), pos);
     }

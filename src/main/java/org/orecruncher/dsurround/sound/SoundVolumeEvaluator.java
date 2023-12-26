@@ -21,7 +21,7 @@ public final class SoundVolumeEvaluator {
     private static float getCategoryVolumeScale(final SoundInstance sound) {
         // Master category already controlled by master gain so ignore
         final SoundCategory category = sound.getCategory();
-        return category == SoundCategory.MASTER ? 1F : GameUtils.getGameSettings().getSoundVolume(category);
+        return category == SoundCategory.MASTER ? 1F : GameUtils.getGameSettings().map(s -> s.getSoundVolume(category)).orElse(1F);
     }
 
     /**

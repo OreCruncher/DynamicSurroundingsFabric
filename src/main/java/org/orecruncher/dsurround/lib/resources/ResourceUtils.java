@@ -65,7 +65,7 @@ public final class ResourceUtils {
     // Modeled after sound list processing in SoundManager
     private static Collection<IResourceAccessor> findAssets(Function<String, Boolean> namespaceFilter, Function<String, Identifier> identitySupplier) {
         final List<IResourceAccessor> results = new ArrayList<>();
-        var resourceManager = GameUtils.getResourceManager();
+        var resourceManager = GameUtils.getResourceManager().orElseThrow();
 
         for (var namespace : resourceManager.getAllNamespaces()) {
             try {

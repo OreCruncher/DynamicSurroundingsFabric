@@ -6,37 +6,15 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 
 public class PlayerVariables extends VariableSet<IPlayerVariables> implements IPlayerVariables {
 
-    private final Lazy<Boolean> isSuffocating = new Lazy<>(() -> {
-        if (GameUtils.isInGame()) {
-            final PlayerEntity player = GameUtils.getPlayer();
-            return !player.isCreative() && player.getAir() < 0;
-        }
-        return false;
-    });
-    private final Lazy<Boolean> canSeeSky = new Lazy<>(() -> {
-        if (GameUtils.isInGame()) {
-            final World world = GameUtils.getWorld();
-            final PlayerEntity player = GameUtils.getPlayer();
-            return world.isSkyVisible(player.getBlockPos().add(0, 2, 0));
-        }
-        return false;
-    });
-    private final Lazy<Boolean> canRainOn = new Lazy<>(() -> {
-        if (GameUtils.isInGame()) {
-            final World world = GameUtils.getWorld();
-            final PlayerEntity player = GameUtils.getPlayer();
-            if (world.isSkyVisible(player.getBlockPos().add(0, 2, 0)))
-                return WorldUtils.getTopSolidOrLiquidBlock(world, player.getBlockPos()).getY() <= player.getBlockPos().getY();
-        }
-        return false;
-    });
+    private boolean isSuffocating;
+    private boolean canSeeSky;
+    private boolean canRainOn;
     private boolean isCreative;
     private boolean isBurning;
     private boolean isFlying;
@@ -64,10 +42,10 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
     public void update(IVariableAccess variableAccess) {
 
         if (GameUtils.isInGame()) {
-            final PlayerEntity player = GameUtils.getPlayer();
-            assert player != null;
+            final PlayerEntity player = GameUtils.getPlayer().orElseThrow();
 
             HungerManager hm = player.getHungerManager();
+            World world = player.getEntityWorld();
 
             this.isCreative = player.isCreative();
             this.isBurning = player.isOnFire();
@@ -87,6 +65,10 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
             this.x = player.getX();
             this.y = player.getY();
             this.z = player.getZ();
+
+            this.isSuffocating = !player.isCreative() && player.getAir() < 0;
+            this.canRainOn = world.isSkyVisible(player.getBlockPos().add(0, 2, 0));
+            this.canSeeSky = this.canRainOn && WorldUtils.getTopSolidOrLiquidBlock(world, player.getBlockPos()).getY() <= player.getBlockPos().getY();
 
         } else {
 
@@ -108,12 +90,10 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
             this.y = 0;
             this.z = 0;
 
+            this.isSuffocating = false;
+            this.canRainOn = false;
+            this.canSeeSky = false;
         }
-
-        this.isSuffocating.reset();
-        this.canRainOn.reset();
-        this.canSeeSky.reset();
-
     }
 
     @Override
@@ -133,7 +113,7 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
 
     @Override
     public boolean isSuffocating() {
-        return this.isSuffocating.get();
+        return this.isSuffocating;
     }
 
     @Override
@@ -183,12 +163,12 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
 
     @Override
     public boolean canRainOn() {
-        return this.canRainOn.get();
+        return this.canRainOn;
     }
 
     @Override
     public boolean canSeeSky() {
-        return this.canSeeSky.get();
+        return this.canSeeSky;
     }
 
     @Override
@@ -230,8 +210,8 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
     public boolean hasEffect(String effect) {
         try {
             var id = new Identifier(effect);
-            var statusEffect = GameUtils.getRegistryManager().get(RegistryKeys.STATUS_EFFECT).get(id);
-            return GameUtils.getPlayer().hasStatusEffect(statusEffect);
+            var statusEffect = GameUtils.getRegistryManager().orElseThrow().get(RegistryKeys.STATUS_EFFECT).get(id);
+            return GameUtils.getPlayer().orElseThrow().hasStatusEffect(statusEffect);
         } catch (Throwable ignore) {
         }
 

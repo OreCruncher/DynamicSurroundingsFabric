@@ -21,11 +21,8 @@ public class VillageScanner {
             return;
 
         this.isInVillage = false;
-        World world = GameUtils.getWorld();
-        assert world != null;
-
-        PlayerEntity player = GameUtils.getPlayer();
-        assert player != null;
+        World world = GameUtils.getWorld().orElseThrow();
+        PlayerEntity player = GameUtils.getPlayer().orElseThrow();
 
         // Only for surface worlds.  Other types of worlds are interpreted as not having villages.
         if (world.getDimension().natural()) {

@@ -41,7 +41,7 @@ public class RandomBlockEffectScanner extends RandomScanner {
 
         final Collection<IBlockEffectProducer> effects = info.getEffectProducers();
         if (!effects.isEmpty() && this.effectManager.okToSpawn(pos)) {
-            var world = this.locus.getWorld();
+            var world = this.locus.world().get();
             for (var be : effects) {
                 var effect = be.produce(world, state, pos, rand);
                 if (effect.isPresent()) {

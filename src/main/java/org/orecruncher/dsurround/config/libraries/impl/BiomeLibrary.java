@@ -93,7 +93,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
     }
 
     private static Registry<Biome> getActiveRegistry() {
-        return GameUtils.getRegistryManager().get(RegistryKeys.BIOME);
+        return GameUtils.getRegistryManager().orElseThrow().get(RegistryKeys.BIOME);
     }
 
     public static Biome getBiome(Identifier biomeId) {

@@ -24,7 +24,7 @@ public abstract class RandomScanner extends Scanner {
 
     @Override
     public void preScan() {
-        final BlockPos pos = this.locus.getCenter();
+        final BlockPos pos = this.locus.scanCenter().get();
         this.playerX = pos.getX();
         this.playerY = pos.getY();
         this.playerZ = pos.getZ();

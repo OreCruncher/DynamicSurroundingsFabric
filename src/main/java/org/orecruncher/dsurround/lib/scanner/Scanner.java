@@ -17,7 +17,6 @@ public abstract class Scanner {
     private final static int MAX_BLOCKS_TICK = 6000;
 
     static {
-        // The implementation searches backwards so order so the most common blocks will be hit first
         BLOCKSTATES_TO_IGNORE.add(Blocks.VOID_AIR.getDefaultState());
         BLOCKSTATES_TO_IGNORE.add(Blocks.CAVE_AIR.getDefaultState());
         BLOCKSTATES_TO_IGNORE.add(Blocks.AIR.getDefaultState());
@@ -108,7 +107,7 @@ public abstract class Scanner {
 
         preScan();
 
-        final World provider = this.locus.getWorld();
+        final World provider = this.locus.world().get();
         for (int count = 0; count < this.blocksPerTick; count++) {
             final BlockPos pos = nextPos(this.workingPos, this.random);
             if (pos == null)

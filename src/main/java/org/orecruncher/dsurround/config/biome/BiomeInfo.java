@@ -242,7 +242,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
             // It's fake and has no tags
             tags = "FAKE BIOME";
         } else {
-            var biomes = GameUtils.getWorld().getRegistryManager().get(RegistryKeys.BIOME);
+            var manager = GameUtils.getRegistryManager().orElseThrow();
+            var biomes = manager.get(RegistryKeys.BIOME);
 
             var entry = biomes.getEntry(biomes.getRawId(getBiome()));
             if (entry.isPresent()) {

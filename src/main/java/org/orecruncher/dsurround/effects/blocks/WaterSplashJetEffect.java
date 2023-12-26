@@ -65,7 +65,8 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
     }
 
     public int getSpawnCount() {
-        ParticlesMode state = GameUtils.getGameSettings().getParticles().getValue();
+        var settings = GameUtils.getGameSettings().orElseThrow();
+        ParticlesMode state = settings.getParticles().getValue();
         return switch (state) {
             case MINIMAL -> 0;
             case ALL -> this.particleLimit;
@@ -95,7 +96,8 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
             this.sound = ACOUSTICS[idx].createBackgroundSoundLoopAt(this.position);
         }
 
-        final boolean inRange = SoundInstanceHandler.inRange(GameUtils.getPlayer().getEyePos(), this.sound, 4);
+        var player = GameUtils.getPlayer().orElseThrow();
+        final boolean inRange = SoundInstanceHandler.inRange(player.getEyePos(), this.sound, 4);
         final boolean isDone = !AUDIO_PLAYER.isPlaying(this.sound);
 
         if (inRange && isDone) {

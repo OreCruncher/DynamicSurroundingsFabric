@@ -55,9 +55,10 @@ public class BreathEffect extends EntityEffectBase {
     }
 
     protected boolean isBreathVisible(final LivingEntity entity) {
-        final PlayerEntity player = GameUtils.getPlayer();
+        final PlayerEntity player = GameUtils.getPlayer().orElseThrow();
+        var settings = GameUtils.getGameSettings().orElseThrow();
         if (entity == player) {
-            return !(player.isSpectator() || GameUtils.getGameSettings().hudHidden);
+            return !(player.isSpectator() || settings.hudHidden);
         }
         return !entity.isInvisibleTo(player) && entity.canSee(player);
     }

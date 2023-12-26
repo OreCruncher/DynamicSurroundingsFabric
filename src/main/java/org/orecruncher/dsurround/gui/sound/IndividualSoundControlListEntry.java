@@ -137,7 +137,7 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
 
     @Override
     public void render(final DrawContext context, int index, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTick_) {
-        final TextRenderer font = GameUtils.getTextRenderer();
+        final TextRenderer font = GameUtils.getTextRenderer().orElseThrow();
         final int labelY = rowTop + (rowHeight - font.fontHeight) / 2;
         final String text = this.config.soundEventId.toString();
         context.drawText(font, text, rowLeft, labelY, ColorPalette.MC_WHITE.getRgb(), false);

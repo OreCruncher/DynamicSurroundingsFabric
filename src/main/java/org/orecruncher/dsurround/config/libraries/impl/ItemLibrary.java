@@ -68,7 +68,8 @@ public class ItemLibrary implements IItemLibrary {
 
     @Override
     public Stream<String> dump() {
-        var blockRegistry = GameUtils.getRegistryManager().get(RegistryKeys.ITEM).getEntrySet();
+        var manager = GameUtils.getRegistryManager().orElseThrow();
+        var blockRegistry = manager.get(RegistryKeys.ITEM).getEntrySet();
         return blockRegistry.stream().map(kvp -> formatItemOutput(kvp.getKey().getValue(), kvp.getValue())).sorted();
     }
 
@@ -156,8 +157,8 @@ public class ItemLibrary implements IItemLibrary {
     }
 
     private static String formatItemOutput(Identifier id, Item item) {
-        var items = GameUtils.getWorld()
-                .getRegistryManager().get(RegistryKeys.ITEM);
+        var manager = GameUtils.getRegistryManager().orElseThrow();
+        var items = manager.get(RegistryKeys.ITEM);
 
         var tags = items.getEntry(items.getRawId(item))
                 .map(e -> TagHelpers.asString(e.streamTags()))

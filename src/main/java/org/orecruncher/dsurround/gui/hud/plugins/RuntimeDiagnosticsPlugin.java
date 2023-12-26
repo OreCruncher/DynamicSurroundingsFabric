@@ -35,8 +35,8 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
 
     public void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
         if (GameUtils.isInGame()) {
-            assert GameUtils.getWorld() != null;
-            this.clock.update(GameUtils.getWorld());
+            var world = GameUtils.getWorld().orElseThrow();
+            this.clock.update(world);
             event.left.add(Formatting.GREEN + this.clock.getFormattedTime());
             event.left.add(Strings.EMPTY);
 

@@ -14,7 +14,7 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
     private final IBiomeLibrary biomeLibrary;
 
     private final Lazy<String> precipitationType = new Lazy<>(() -> {
-        var pos = GameUtils.getPlayer().getBlockPos();
+        var pos = GameUtils.getPlayer().orElseThrow().getBlockPos();
         return this.biome.getPrecipitation(pos).asString();
     });
     private final Lazy<String> id = new Lazy<>(() -> this.info.getBiomeId().toString());
@@ -36,7 +36,8 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
     public void update(IVariableAccess variableAccess) {
         Biome newBiome = null;
         if (GameUtils.isInGame()) {
-            newBiome = GameUtils.getPlayer().getEntityWorld().getBiome(GameUtils.getPlayer().getBlockPos()).value();
+            var player = GameUtils.getPlayer().orElseThrow();
+            newBiome = player.getEntityWorld().getBiome(player.getBlockPos()).value();
         }
         setBiome(newBiome, variableAccess);
     }

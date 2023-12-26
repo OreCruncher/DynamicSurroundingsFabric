@@ -98,7 +98,7 @@ public abstract class Client implements IMinecraftMod {
         var container = ContainerManager.getDefaultContainer();
 
         // Register the Minecraft sound manager
-        container.registerSingleton(GameUtils.getSoundManager());
+        container.registerSingleton(GameUtils.getSoundManager().orElseThrow());
 
         // Register and initialize our libraries.  This will cause the libraries
         // to be instantiated.
@@ -131,7 +131,7 @@ public abstract class Client implements IMinecraftMod {
 
                 LOGGER.info("Update to %s version %s is available", result.displayName, result.version);
                 var player = GameUtils.getPlayer();
-                player.sendMessage(result.getChatText(), false);
+                player.ifPresent(p -> p.sendMessage(result.getChatText(), false));
             } else if(Config.logging.enableModUpdateChatMessage) {
                 LOGGER.info("The mod version is current");
             }

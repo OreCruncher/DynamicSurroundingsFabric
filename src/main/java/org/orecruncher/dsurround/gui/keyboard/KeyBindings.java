@@ -31,21 +31,25 @@ public class KeyBindings {
 
     public static void register() {
         ClientState.TICK_END.register(client -> {
-            if (GameUtils.getCurrentScreen() == null && GameUtils.getPlayer() != null) {
-                if (individualSoundConfigBinding.wasPressed()) {
-                    final boolean singlePlayer = GameUtils.isSinglePlayer();
-                    GameUtils.setScreen(new IndividualSoundControlScreen(null, singlePlayer));
-                    if (singlePlayer)
-                        ContainerManager.resolve(IAudioPlayer.class).stopAll();
-                }
-            }
+            if (GameUtils.getCurrentScreen().isEmpty())
+                GameUtils.getPlayer()
+                        .ifPresent(p -> {
+                            if (individualSoundConfigBinding.wasPressed()) {
+                                final boolean singlePlayer = GameUtils.isSinglePlayer();
+                                GameUtils.setScreen(new IndividualSoundControlScreen(null, singlePlayer));
+                                if (singlePlayer)
+                                    ContainerManager.resolve(IAudioPlayer.class).stopAll();
+                            }
+                        });
         });
 
         ClientState.TICK_END.register(client -> {
-            if (GameUtils.getCurrentScreen() == null && GameUtils.getPlayer() != null) {
-                if (diagnosticHud.wasPressed())
-                    ContainerManager.resolve(DiagnosticsOverlay.class).toggleCollection();
-            }
+            if (GameUtils.getCurrentScreen().isEmpty())
+                GameUtils.getPlayer()
+                        .ifPresent(p -> {
+                            if (diagnosticHud.wasPressed())
+                                ContainerManager.resolve(DiagnosticsOverlay.class).toggleCollection();
+                        });
         });
     }
 }

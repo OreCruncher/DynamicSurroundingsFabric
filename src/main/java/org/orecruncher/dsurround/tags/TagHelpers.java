@@ -32,7 +32,8 @@ public class TagHelpers {
     }
 
     public static <T> Stream<Pair<T, Stream<TagKey<T>>>> getTagGroup(RegistryKey<? extends Registry<T>> registryKey) {
-        return GameUtils.getWorld().getRegistryManager().get(registryKey).streamEntries()
+        var manager = GameUtils.getRegistryManager().orElseThrow();
+        return manager.get(registryKey).streamEntries()
                 .map(reference -> Pair.of(reference.value(), reference.streamTags()));
     }
 }

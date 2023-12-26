@@ -24,23 +24,27 @@ public class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
     }
 
     public void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
-        event.left.add(Strings.EMPTY);
-        MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) GameUtils.getSoundManager();
-        MixinSoundSystemAccessors accessors = (MixinSoundSystemAccessors) manager.getSoundSystem();
-        Map<SoundInstance, Channel.SourceManager> sources = accessors.getSources();
+        var soundManager = GameUtils.getSoundManager();
+        soundManager.ifPresent(sm -> {
+            event.left.add(Strings.EMPTY);
+            MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) sm;
+            MixinSoundSystemAccessors accessors = (MixinSoundSystemAccessors) manager.getSoundSystem();
+            Map<SoundInstance, Channel.SourceManager> sources = accessors.getSources();
 
-        event.left.add(Formatting.GOLD + GameUtils.getSoundManager().getDebugString());
+            var str = sm.getDebugString();
+            event.left.add(Formatting.GOLD + str);
 
-        if (!sources.isEmpty()) {
-            accessors.getSources().keySet().stream()
-                    .map(s -> s.getSound().getIdentifier())
-                    .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
-                    .entrySet().stream()
-                    .map(e -> String.format(FMT_DBG_SOUND, e.getKey().toString(), e.getValue()))
-                    .sorted()
-                    .forEach(event.left::add);
-        } else {
-            event.left.add(Formatting.GOLD + "  No sounds playing");
-        }
+            if (!sources.isEmpty()) {
+                accessors.getSources().keySet().stream()
+                        .map(s -> s.getSound().getIdentifier())
+                        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+                        .entrySet().stream()
+                        .map(e -> String.format(FMT_DBG_SOUND, e.getKey().toString(), e.getValue()))
+                        .sorted()
+                        .forEach(event.left::add);
+            } else {
+                event.left.add(Formatting.GOLD + "  No sounds playing");
+            }
+        });
     }
 }

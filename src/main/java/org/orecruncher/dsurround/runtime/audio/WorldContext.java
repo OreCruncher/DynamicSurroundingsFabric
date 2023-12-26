@@ -52,14 +52,9 @@ public final class WorldContext {
 
     public WorldContext() {
         if (GameUtils.isInGame()) {
-            final World w = GameUtils.getWorld();
-            this.world = w;
-            assert world != null;
-
-            this.player = GameUtils.getPlayer();
-            assert this.player != null;
-
-            this.isPrecipitating = w.isRaining();
+            this.world = GameUtils.getWorld().orElseThrow();
+            this.player = GameUtils.getPlayer().orElseThrow();
+            this.isPrecipitating = this.world.isRaining();
             this.playerPosition = this.player.getPos();
             this.playerEyePosition = this.player.getEyePos();
             this.playerPos = BlockPos.ofFloored(this.playerPosition);
@@ -71,7 +66,7 @@ public final class WorldContext {
                 this.auralDampening = 0;
 
             // Get our current rain strength.
-            this.precipitationStrength = w.getRainGradient(1F);
+            this.precipitationStrength = this.world.getRainGradient(1F);
             this.mc = GameUtils.getMC();
         } else {
             this.mc = null;

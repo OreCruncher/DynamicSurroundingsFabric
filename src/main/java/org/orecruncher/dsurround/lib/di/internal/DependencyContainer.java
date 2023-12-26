@@ -221,6 +221,8 @@ public class DependencyContainer implements IServiceContainer {
             throw new RuntimeException(String.format("'%s' is a primitive type and cannot be used for dependency injection", clazz.getName()));
         if (clazz.equals(Object.class))
             throw new RuntimeException("Object is not a suitable key");
+        if (clazz.equals(Optional.class))
+            throw new RuntimeException("Cannot use an optional as a key");
         if (!Modifier.isPublic(clazz.getModifiers()))
             throw new RuntimeException(String.format("Class '%s' is not public", clazz.getName()));
     }
@@ -234,6 +236,8 @@ public class DependencyContainer implements IServiceContainer {
     private void checkForResolverSuitability(Class<?> clazz) {
         if (clazz.isInterface())
             throw new RuntimeException(String.format("The class %s is an interface and cannot be instantiated directly", clazz.getName()));
+        if (clazz.equals(Optional.class))
+            throw new RuntimeException("Cannot use an optional as a resolved type");
         if (!Modifier.isPublic(clazz.getModifiers()))
             throw new RuntimeException(String.format("Class '%s' is not public", clazz.getName()));
     }

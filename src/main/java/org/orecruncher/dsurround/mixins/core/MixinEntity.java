@@ -32,7 +32,7 @@ public class MixinEntity {
             var current = (Entity) ((Object) this);
 
             // Is the entity in range?  If not avoid generating an event
-            if (GameUtils.getPlayer().squaredDistanceTo(current) > DSURROUND_MAX_ACCENT_RANGE)
+            if (GameUtils.getPlayer().orElseThrow().squaredDistanceTo(current) > DSURROUND_MAX_ACCENT_RANGE)
                 return;
 
             // Lastly, the entity has to be tagged

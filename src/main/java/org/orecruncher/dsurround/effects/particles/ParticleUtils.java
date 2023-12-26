@@ -18,7 +18,7 @@ public final class ParticleUtils {
 
     public static SpriteProvider getSpriteProvider(ParticleType<?> particleType) {
         var id = Registries.PARTICLE_TYPE.getId(particleType);
-        return ((MixinParticleManager) GameUtils.getParticleManager()).getSpriteAwareFactories().get(id);
+        return ((MixinParticleManager) GameUtils.getParticleManager().orElseThrow()).getSpriteAwareFactories().get(id);
     }
 
     public static Vec3d getBreathOrigin(final LivingEntity entity) {

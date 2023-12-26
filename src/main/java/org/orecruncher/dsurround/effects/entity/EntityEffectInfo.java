@@ -7,6 +7,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 
 public class EntityEffectInfo {
@@ -56,11 +57,11 @@ public class EntityEffectInfo {
     }
 
     public boolean isCurrentPlayer(LivingEntity player) {
-        return GameUtils.getPlayer().getId() == player.getId();
+        return GameUtils.getPlayer().orElseThrow().getId() == player.getId();
     }
 
     public boolean isVisibleTo(PlayerEntity player) {
-        return this.entity.get().isInvisibleTo(player);
+        return Objects.requireNonNull(this.entity.get()).isInvisibleTo(player);
     }
 
     /**

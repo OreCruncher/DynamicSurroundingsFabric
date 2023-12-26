@@ -88,7 +88,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     }
 
     private void drawText(DrawContext context, ObjectArray<String> text, boolean left) {
-        var textRenderer = GameUtils.getTextRenderer();
+        var textRenderer = GameUtils.getTextRenderer().orElseThrow();
         int m;
         int l;
         int k;

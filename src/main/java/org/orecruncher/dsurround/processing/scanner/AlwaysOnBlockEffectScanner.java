@@ -33,7 +33,7 @@ public class AlwaysOnBlockEffectScanner extends CuboidScanner {
     public void blockScan(final BlockState state, final BlockPos pos, final Random rand) {
         final Collection<IBlockEffectProducer> effects = this.blockLibrary.getBlockInfo(state).getAlwaysOnEffectProducers();
         if (!effects.isEmpty() && this.effectManager.okToSpawn(pos)) {
-            final World world = this.locus.getWorld();
+            final World world = this.locus.world().get();
             for (var be : effects) {
                 var effect = be.produce(world, state, pos, rand);
                 if (effect.isPresent()) {

@@ -13,12 +13,13 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.registry.*;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.World;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /*
- * NOTE:  MinecraftClient is an AutoClosable that gives IDEs a bit of a fit with warnings.  The mods usage
+ * NOTE: MinecraftClient is an AutoClosable that gives IDEs a bit of a fit with warnings.  The mods usage
  * context does not require closing, so it is safe to ignore.
  */
 public final class GameUtils {
@@ -27,22 +28,20 @@ public final class GameUtils {
     }
 
     // Client methods
-    @Nullable
-    public static PlayerEntity getPlayer() {
-        return getMC().player;
+    public static Optional<PlayerEntity> getPlayer() {
+        return Optional.ofNullable(getMC().player);
     }
 
-    public static ClientWorld getWorld() {
-        return getMC().world;
+    public static Optional<ClientWorld> getWorld() {
+        return Optional.ofNullable(getMC().world);
     }
 
-    public static DynamicRegistryManager getRegistryManager() {
-        return getWorld().getRegistryManager();
+    public static Optional<DynamicRegistryManager> getRegistryManager() {
+        return getWorld().map(World::getRegistryManager);
     }
 
-    public static Screen getCurrentScreen()
-    {
-        return getMC().currentScreen;
+    public static Optional<Screen> getCurrentScreen() {
+        return Optional.ofNullable(getMC().currentScreen);
     }
 
     public static void setScreen(Screen screen)
@@ -50,38 +49,36 @@ public final class GameUtils {
         getMC().setScreen(screen);
     }
 
-    public static ParticleManager getParticleManager()
-    {
-        return getMC().particleManager;
+    public static Optional<ParticleManager> getParticleManager() {
+        return Optional.ofNullable(getMC().particleManager);
     }
 
-    public static GameOptions getGameSettings() {
-        return getMC().options;
+    public static Optional<GameOptions> getGameSettings() {
+        return Optional.ofNullable(getMC().options);
     }
 
-    public static TextRenderer getTextRenderer() {
-        return getMC().textRenderer;
+    public static Optional<TextRenderer> getTextRenderer() {
+        return Optional.ofNullable(getMC().textRenderer);
     }
 
-    public static TextHandler getTextHandler() {
-        return getTextRenderer().getTextHandler();
+    public static Optional<TextHandler> getTextHandler() {
+        return getTextRenderer().map(TextRenderer::getTextHandler);
     }
 
-    public static SoundManager getSoundManager() {
-        return getMC().getSoundManager();
+    public static Optional<SoundManager> getSoundManager() {
+        return Optional.ofNullable(getMC().getSoundManager());
     }
 
-    public static ResourceManager getResourceManager() {
-        return getMC().getResourceManager();
+    public static Optional<ResourceManager> getResourceManager() {
+        return Optional.ofNullable(getMC().getResourceManager());
     }
 
-    public static TextureManager getTextureManager()
-    {
-        return getMC().getTextureManager();
+    public static Optional<TextureManager> getTextureManager() {
+        return Optional.ofNullable(getMC().getTextureManager());
     }
 
     public static boolean isInGame() {
-        return getWorld() != null && getPlayer() != null;
+        return getWorld().isPresent() && getPlayer().isPresent();
     }
 
     public static boolean isPaused()
@@ -95,7 +92,8 @@ public final class GameUtils {
     }
 
     public static boolean isFirstPersonView() {
-        return getGameSettings().getPerspective() == Perspective.FIRST_PERSON;
+        var settings = getGameSettings();
+        return settings.map(s -> s.getPerspective() == Perspective.FIRST_PERSON).orElse(true);
     }
 
     public static MinecraftClient getMC() {

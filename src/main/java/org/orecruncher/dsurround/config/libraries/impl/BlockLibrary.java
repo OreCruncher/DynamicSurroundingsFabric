@@ -97,7 +97,9 @@ public class BlockLibrary implements IBlockLibrary {
 
     @Override
     public Stream<String> dumpBlockStates() {
-        return GameUtils.getRegistryManager().get(RegistryKeys.BLOCK).stream().flatMap(block -> block.getStateManager().getStates().stream()).map(State::toString).sorted();
+        return GameUtils.getRegistryManager()
+                .orElseThrow()
+                .get(RegistryKeys.BLOCK).stream().flatMap(block -> block.getStateManager().getStates().stream()).map(State::toString).sorted();
     }
 
     @Override
@@ -107,7 +109,7 @@ public class BlockLibrary implements IBlockLibrary {
 
     @Override
     public Stream<String> dumpBlocks(boolean noStates) {
-        var blockRegistry = GameUtils.getRegistryManager().get(RegistryKeys.BLOCK).getEntrySet();
+        var blockRegistry = GameUtils.getRegistryManager().orElseThrow().get(RegistryKeys.BLOCK).getEntrySet();
         return blockRegistry.stream().map(kvp -> formatBlockOutput(kvp.getKey().getValue(), kvp.getValue(), noStates)).sorted();
     }
 
@@ -134,7 +136,8 @@ public class BlockLibrary implements IBlockLibrary {
     }
 
     private String formatBlockOutput(Identifier id, Block block, boolean noStates) {
-        var blocks = GameUtils.getWorld().getRegistryManager().get(RegistryKeys.BLOCK);
+        var manager = GameUtils.getRegistryManager().orElseThrow();
+        var blocks = manager.get(RegistryKeys.BLOCK);
 
         var tags = "null";
         var entry = blocks.getEntry(blocks.getRawId(block));

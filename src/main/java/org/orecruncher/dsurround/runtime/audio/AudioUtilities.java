@@ -24,7 +24,7 @@ public final class AudioUtilities {
     private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
     private static final Configuration CONFIG = ContainerManager.resolve(Configuration.class);
 
-    // If these mods are present enhanced sound processing will be disabled.
+    // If these mods are present, enhanced sound processing will be disabled.
     private static final ObjectArray<String> autoDisabledBecauseOf = new ObjectArray<>();
 
     private static final Lazy<Boolean> advancedProcessingEnabled = new Lazy<>(() -> {
@@ -55,7 +55,8 @@ public final class AudioUtilities {
     }
 
     public static SoundSystem getSoundSystem() {
-        MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) GameUtils.getSoundManager();
+        var soundManager = GameUtils.getSoundManager().orElseThrow();
+        MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) soundManager;
         return manager.getSoundSystem();
     }
 

@@ -70,7 +70,7 @@ public class CompassAndClockOverlay extends AbstractOverlay {
         this.spriteOffset = this.config.compassAndClockOptions.compassStyle.getSpriteNumber();
 
         if (GameUtils.isInGame()) {
-            var player = GameUtils.getPlayer();
+            var player = GameUtils.getPlayer().orElseThrow();
             var mainHandItem = player.getMainHandStack();
             var offHandItem = player.getOffHandStack();
 
@@ -90,14 +90,14 @@ public class CompassAndClockOverlay extends AbstractOverlay {
     @Override
     public void render(DrawContext context) {
         if (this.showCompass || this.showClock) {
-            final var player = GameUtils.getPlayer();
+            final var player = GameUtils.getPlayer().orElseThrow();
 
             var matrixStack = context.getMatrices();
 
             if (this.showClock)
                 try {
                     matrixStack.push();
-                    var textRender = GameUtils.getTextRenderer();
+                    var textRender = GameUtils.getTextRenderer().orElseThrow();
 
                     var width = textRender.getWidth(this.clockText);
                     var height = textRender.fontHeight;

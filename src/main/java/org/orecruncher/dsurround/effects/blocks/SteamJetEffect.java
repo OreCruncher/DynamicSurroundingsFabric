@@ -17,7 +17,8 @@ public class SteamJetEffect extends ParticleJetEffect {
 
     @Override
     public boolean shouldDie() {
-        return !SteamColumnProducer.isValidSpawnBlock(GameUtils.getWorld(), getPos(), this.source);
+        var world = GameUtils.getWorld();
+        return world.map(clientWorld -> !SteamColumnProducer.isValidSpawnBlock(clientWorld, this.getPos(), this.source)).orElse(true);
     }
 
     @Override

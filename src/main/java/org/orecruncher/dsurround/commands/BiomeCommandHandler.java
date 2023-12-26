@@ -11,11 +11,15 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 public class BiomeCommandHandler {
 
     public static Text execute(Identifier biomeIdentifier, String script) {
-        var biome = GameUtils.getRegistryManager().get(RegistryKeys.BIOME).get(biomeIdentifier);
-        if (biome == null) {
-            return Text.stringifiedTranslatable("dsurround.command.dsbiome.failure.unknown_biome", biomeIdentifier);
-        }
-        var result = ContainerManager.resolve(IBiomeLibrary.class).eval(biome, new Script(script));
-        return Text.literal(result.toString());
+        return GameUtils.getRegistryManager()
+                .map(rm -> {
+                    var biome = rm.get(RegistryKeys.BIOME).get(biomeIdentifier);
+                    if (biome == null) {
+                        return Text.stringifiedTranslatable("dsurround.command.dsbiome.failure.unknown_biome", biomeIdentifier);
+                    }
+                    var result = ContainerManager.resolve(IBiomeLibrary.class).eval(biome, new Script(script));
+                    return Text.literal(result.toString());
+                })
+                .orElse(Text.literal("Unable to locate registry manager"));
     }
 }

@@ -2,14 +2,13 @@ package org.orecruncher.dsurround.runtime.sets;
 
 import org.orecruncher.dsurround.lib.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 
 public class DiurnalVariables extends VariableSet<IDiurnalVariables> implements IDiurnalVariables {
 
-    private final Lazy<Float> moonPhaseFactor = new Lazy<>(() -> GameUtils.isInGame() ? DayCycle.getMoonSize(GameUtils.getWorld()) : 0F);
-    private final Lazy<Float> celestialAngle = new Lazy<>(() -> GameUtils.isInGame() ? GameUtils.getWorld().getSkyAngle(0F) : 0F);
+    private float moonPhaseFactor;
+    private float celestialAngle;
     private boolean isDay;
     private boolean isNight;
     private boolean isSunrise;
@@ -27,20 +26,22 @@ public class DiurnalVariables extends VariableSet<IDiurnalVariables> implements 
     public void update(IVariableAccess variableAccess) {
 
         if (GameUtils.isInGame()) {
-            DayCycle cycle = DayCycle.getCycle(GameUtils.getWorld());
+            var world = GameUtils.getWorld().orElseThrow();
+            DayCycle cycle = DayCycle.getCycle(world);
             this.isDay = cycle == DayCycle.DAYTIME;
             this.isNight = cycle == DayCycle.NIGHTTIME;
             this.isSunrise = cycle == DayCycle.SUNRISE;
             this.isSunset = cycle == DayCycle.SUNSET;
+            this.moonPhaseFactor = DayCycle.getMoonSize(world);
+            this.celestialAngle = world.getSkyAngle(0F);
         } else {
             this.isDay = false;
             this.isNight = false;
             this.isSunrise = false;
             this.isSunset = false;
+            this.moonPhaseFactor = 1F;
+            this.celestialAngle = 1F;
         }
-
-        this.moonPhaseFactor.reset();
-        this.celestialAngle.reset();
     }
 
     @Override
@@ -65,11 +66,11 @@ public class DiurnalVariables extends VariableSet<IDiurnalVariables> implements 
 
     @Override
     public float getMoonPhaseFactor() {
-        return this.moonPhaseFactor.get();
+        return this.moonPhaseFactor;
     }
 
     @Override
     public float getCelestialAngle() {
-        return this.celestialAngle.get();
+        return this.celestialAngle;
     }
 }

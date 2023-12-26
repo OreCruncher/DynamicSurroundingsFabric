@@ -54,8 +54,8 @@ public abstract class CuboidScanner extends Scanner {
     }
 
     protected void resetFullScan() {
-        this.lastPos = this.locus.getCenter();
-        this.lastReference = this.locus.getReference();
+        this.lastPos = this.locus.scanCenter().get();
+        this.lastReference = this.locus.worldReference().get();
         this.scanFinished = false;
 
         final BlockPos[] points = getMinMaxPointsForVolume(this.lastPos);
@@ -67,13 +67,13 @@ public abstract class CuboidScanner extends Scanner {
     public void tick() {
 
         // If there is no player position or it's bogus just return
-        final BlockPos playerPos = this.locus.getCenter();
+        final BlockPos playerPos = this.locus.scanCenter().get();
         if (this.locus.isOutOfHeightLimit(playerPos.getY())) {
             this.fullRange = null;
         } else {
             // If the full range was reset, or the player dimension changed,
             // dump everything and restart.
-            if (this.fullRange == null || this.locus.getReference() != this.lastReference) {
+            if (this.fullRange == null || this.locus.worldReference() != this.lastReference) {
                 resetFullScan();
                 super.tick();
             } else if (this.lastPos.equals(playerPos)) {
@@ -133,7 +133,7 @@ public abstract class CuboidScanner extends Scanner {
     protected void updateScan(final Cuboid newVolume, final Cuboid oldVolume,
                               final Cuboid intersect) {
 
-        final World provider = this.locus.getWorld();
+        final World provider = this.locus.world().get();
 
         if (doBlockUnscan()) {
             final ComplementsPointIterator newOutOfRange = new ComplementsPointIterator(oldVolume, intersect);
@@ -204,13 +204,13 @@ public abstract class CuboidScanner extends Scanner {
     public void onBlockUpdate(final BlockPos pos) {
         try {
             if (this.activeCuboid != null && this.activeCuboid.contains(pos)) {
-                final BlockState state = this.locus.getWorld().getBlockState(pos);
+                final BlockState state = this.locus.world().get().getBlockState(pos);
                 if (isInteresting(pos, state)) {
                     blockScan(state, pos, this.random);
                 }
             }
         } catch (final Throwable t) {
-            this.locus.getLogger().error(t, "onBlockUpdate() error");
+            this.locus.logger().error(t, "onBlockUpdate() error");
         }
     }
 

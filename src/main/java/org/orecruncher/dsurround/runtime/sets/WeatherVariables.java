@@ -1,23 +1,15 @@
 package org.orecruncher.dsurround.runtime.sets;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 
 public class WeatherVariables extends VariableSet<IWeatherVariables> implements IWeatherVariables {
 
-    private final Lazy<Float> temperature = new Lazy<>(() -> {
-        if (GameUtils.isInGame()) {
-            final World world = GameUtils.getWorld();
-            final BlockPos pos = GameUtils.getPlayer().getBlockPos();
-            return WorldUtils.getTemperatureAt(world, pos);
-        }
-        return 0F;
-    });
+    private float temperature;
     private boolean isRaining;
     private boolean isThundering;
     private float rainIntensity;
@@ -35,18 +27,20 @@ public class WeatherVariables extends VariableSet<IWeatherVariables> implements 
     @Override
     public void update(IVariableAccess variableAccess) {
         if (GameUtils.isInGame()) {
-            final World world = GameUtils.getWorld();
+            final PlayerEntity player = GameUtils.getPlayer().orElseThrow();
+            final World world = player.getEntityWorld();
             this.rainIntensity = world.getRainGradient(1F);
             this.thunderIndensity = world.getThunderGradient(1F);
             this.isRaining = world.isRaining();
             this.isThundering = world.isThundering();
+            this.temperature = WorldUtils.getTemperatureAt(world, player.getBlockPos());
         } else {
             this.rainIntensity = 0F;
             this.thunderIndensity = 0F;
             this.isRaining = false;
             this.isThundering = false;
+            this.temperature = 0;
         }
-        this.temperature.reset();
     }
 
     @Override
@@ -71,6 +65,6 @@ public class WeatherVariables extends VariableSet<IWeatherVariables> implements 
 
     @Override
     public float getTemperature() {
-        return this.temperature.get();
+        return this.temperature;
     }
 }
