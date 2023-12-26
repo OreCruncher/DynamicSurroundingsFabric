@@ -16,3 +16,7 @@ accessible field net/minecraft/entity/LivingEntity POTION_SWIRLS_COLOR Lnet/mine
 
 # Get at Entity inards
 accessible field net/minecraft/entity/LivingEntity jumping Z
+
+# Get at inards of ButtonWidget for cloning
+accessible field net/minecraft/client/gui/widget/ButtonWidget onPress Lnet/minecraft/client/gui/widget/ButtonWidget$PressAction;
+accessible field net/minecraft/client/gui/widget/ButtonWidget narrationSupplier Lnet/minecraft/client/gui/widget/ButtonWidget$NarrationSupplier;

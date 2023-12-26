@@ -43,6 +43,6 @@ public class VolumeSliderControl extends SliderControl {
 
     @Override
     protected void applyValue() {
-        entry.getData().volumeScale = (int) this.getValue();
+        this.entry.getData().volumeScale = (int) this.getValue();
     }
 }

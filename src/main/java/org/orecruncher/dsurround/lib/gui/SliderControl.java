@@ -43,14 +43,6 @@ public abstract class SliderControl extends SliderWidget {
         return SliderControl.getValue(this.value, this.min, this.max, this.step);
     }
 
-    public void setHeight(int height) {
-        this.height = height;
-    }
-
-    public void setWidth(int width) {
-        this.width = width;
-    }
-
     @Override
     protected abstract void updateMessage();
 

@@ -15,6 +15,7 @@ import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.gui.GuiHelpers;
+import org.orecruncher.dsurround.lib.gui.SilentButtonWidget;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.SoundMetadata;
@@ -78,9 +79,9 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
             .build();
         this.children.add(this.cullButton);
 
-        this.playButton = ButtonWidget.builder(PLAY, this::play)
+        this.playButton = SilentButtonWidget.from(ButtonWidget.builder(PLAY, this::play)
             .size(BUTTON_WIDTH, 0)
-            .build();
+            .build());
 
         this.playButton.active = enablePlay;
         this.children.add(this.playButton);
