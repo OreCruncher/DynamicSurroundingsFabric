@@ -6,13 +6,14 @@ import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.EntryListWidget;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 import java.util.*;
-import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -39,7 +40,7 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
             this.source = oldList.source;
 
         // Initialize the first pass
-        this.setSearchFilter(filter, false);
+        this.setSearchFilter(filter);
 
         this.setRenderBackground(false);
     }
@@ -54,10 +55,10 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
         return (this.parent.width + this.getRowWidth()) / 2 + 20;
     }
 
-    public void setSearchFilter(final Supplier<String> filterBy, final boolean forceReload) {
+    public void setSearchFilter(final Supplier<String> filterBy) {
         final String filter = filterBy.get();
 
-        if (!forceReload && this.lastSearchText != null && this.lastSearchText.equals(filter))
+        if (this.lastSearchText != null && this.lastSearchText.equals(filter))
             return;
 
         this.lastSearchText = filter;
@@ -65,22 +66,21 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
         // Clear any existing children - they are going to be repopulated
         this.clearEntries();
 
-        // Load up source if needed
-        if (this.source == null || forceReload)
+        // Load up sources if needed
+        if (this.source == null)
             this.source = new ArrayList<>(this.getSortedSoundConfigurations());
 
-        // Get the filter string.  It's a simple contains check.
-        final Function<IndividualSoundConfigEntry, Boolean> process;
+        // Get the filter string.  It's a simple contents check.
+        final Predicate<IndividualSoundConfigEntry> process;
 
-        if (filter == null || filter.isEmpty()) {
+        if (StringUtils.isEmpty(filter))
             process = (isc) -> true;
-        } else {
-            process = (isc) -> isc.soundEventId.toString().contains(filter);
-        }
+        else
+            process = (isc) -> isc.soundEventIdProjected.contains(filter);
 
         IndividualSoundControlListEntry first = null;
         for (IndividualSoundConfigEntry cfg : this.source) {
-            if (process.apply(cfg)) {
+            if (process.test(cfg)) {
                 final IndividualSoundControlListEntry entry = new IndividualSoundControlListEntry(cfg, this.enablePlay);
                 if (first == null)
                     first = entry;

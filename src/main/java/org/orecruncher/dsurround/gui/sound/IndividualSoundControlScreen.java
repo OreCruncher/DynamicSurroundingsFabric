@@ -62,7 +62,7 @@ public class IndividualSoundControlScreen extends Screen {
                 this.searchField,   // Copy existing data over
                 Text.empty());
 
-        this.searchField.setChangedListener((filter) -> this.soundConfigList.setSearchFilter(() -> filter, false));
+        this.searchField.setChangedListener((filter) -> this.soundConfigList.setSearchFilter(() -> filter));
         this.addSelectableChild(this.searchField);
 
         // Set up the list control
@@ -102,7 +102,6 @@ public class IndividualSoundControlScreen extends Screen {
     }
 
     public void tick() {
-        //this.searchField.tick();
         this.soundConfigList.tick();
 
         // Need to tick the Sound Manager because when the game is paused, sounds are not

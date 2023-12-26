@@ -27,6 +27,8 @@ import java.util.Objects;
 
 public class IndividualSoundControlListEntry extends EntryListWidget.Entry<IndividualSoundControlListEntry> implements AutoCloseable {
 
+    private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
+    private static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
     private static final IPlatform PLATFORM = Library.getPlatform();
 
     private static final int BUTTON_WIDTH = 60;
@@ -59,9 +61,6 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
     private final List<ClickableWidget> children = new ArrayList<>();
     private final List<OrderedText> cachedToolTip = new ArrayList<>();
 
-    private final ISoundLibrary soundLibrary;
-    private final IAudioPlayer audioPlayer;
-
     private ConfigSoundInstance soundPlay;
 
     public IndividualSoundControlListEntry(final IndividualSoundConfigEntry data, final boolean enablePlay) {
@@ -82,13 +81,8 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
         this.playButton = SilentButtonWidget.from(ButtonWidget.builder(PLAY, this::play)
             .size(BUTTON_WIDTH, 0)
             .build());
-
         this.playButton.active = enablePlay;
         this.children.add(this.playButton);
-
-        var container = ContainerManager.getRootContainer();
-        this.soundLibrary = container.resolve(ISoundLibrary.class);
-        this.audioPlayer = container.resolve(IAudioPlayer.class);
     }
 
     public void mouseMoved(double mouseX, double mouseY) {
@@ -140,7 +134,7 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
     public void render(final DrawContext context, int index, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTick_) {
         final TextRenderer font = GameUtils.getTextRenderer().orElseThrow();
         final int labelY = rowTop + (rowHeight - font.fontHeight) / 2;
-        final String text = this.config.soundEventId.toString();
+        final String text = this.config.soundEventIdProjected;
         context.drawText(font, text, rowLeft, labelY, ColorPalette.MC_WHITE.getRgb(), false);
 
         // Need to position the other controls appropriately
@@ -183,7 +177,7 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
             this.soundPlay = this.playSound(this.config);
             button.setMessage(STOP);
         } else {
-            this.audioPlayer.stop(this.soundPlay);
+            AUDIO_PLAYER.stop(this.soundPlay);
             this.soundPlay = null;
             button.setMessage(PLAY);
         }
@@ -191,21 +185,21 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
 
     protected ConfigSoundInstance playSound(IndividualSoundConfigEntry entry) {
         ConfigSoundInstance sound = new ConfigSoundInstance(entry.soundEventId, entry.volumeScale);
-        this.audioPlayer.play(sound);
+        AUDIO_PLAYER.play(sound);
         return sound;
     }
 
     @Override
     public void close() {
         if (this.soundPlay != null) {
-            this.audioPlayer.stop(this.soundPlay);
+            AUDIO_PLAYER.stop(this.soundPlay);
             this.soundPlay = null;
         }
     }
 
     public void tick() {
         if (this.soundPlay != null) {
-            if (!this.audioPlayer.isPlaying(this.soundPlay)) {
+            if (!AUDIO_PLAYER.isPlaying(this.soundPlay)) {
                 this.soundPlay = null;
                 this.playButton.setMessage(PLAY);
             }
@@ -227,7 +221,7 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
 
             this.cachedToolTip.add(soundLocationId);
 
-            SoundMetadata metadata = this.soundLibrary.getSoundMetadata(id);
+            SoundMetadata metadata = SOUND_LIBRARY.getSoundMetadata(id);
             if (metadata != null) {
                 if (!metadata.getTitle().equals(Text.empty()))
                     this.cachedToolTip.add(metadata.getTitle().asOrderedText());

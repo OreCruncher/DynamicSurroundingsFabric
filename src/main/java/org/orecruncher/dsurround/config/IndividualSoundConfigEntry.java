@@ -20,6 +20,7 @@ public class IndividualSoundConfigEntry implements Comparable<IndividualSoundCon
             ).apply(instance, IndividualSoundConfigEntry::new));
 
     public Identifier soundEventId;
+    public String soundEventIdProjected;
     public int volumeScale;
     public boolean block;
     public boolean cull;
@@ -27,6 +28,7 @@ public class IndividualSoundConfigEntry implements Comparable<IndividualSoundCon
 
     public IndividualSoundConfigEntry(Identifier id, Integer volumeScale, Boolean block, Boolean cull, Boolean startup) {
         this.soundEventId = id;
+        this.soundEventIdProjected = id.toString();
         this.volumeScale = MathHelper.clamp(volumeScale, 0, 400);
         this.block = block;
         this.cull = cull;
@@ -35,6 +37,7 @@ public class IndividualSoundConfigEntry implements Comparable<IndividualSoundCon
 
     IndividualSoundConfigEntry(IndividualSoundConfigEntry source) {
         this.soundEventId = source.soundEventId;
+        this.soundEventIdProjected = source.soundEventIdProjected;
         this.volumeScale = source.volumeScale;
         this.block = source.block;
         this.cull = source.cull;
