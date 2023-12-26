@@ -42,7 +42,7 @@ public class DependencyContainer implements IServiceContainer {
      * Returns the name of the container
      */
     @Override
-    public String get_name() {
+    public String getName() {
         return this._name;
     }
 
@@ -228,8 +228,8 @@ public class DependencyContainer implements IServiceContainer {
     }
 
     /**
-     * Checks the class for suitability for use in dependency injection.  If not suitable a RuntimeException
-     * is generated.
+     * Checks the class for suitability for use in dependency injection.
+     * If not suitable, a RuntimeException is generated.
      *
      * @param clazz Class to check for suitability
      */
@@ -243,8 +243,9 @@ public class DependencyContainer implements IServiceContainer {
     }
 
     /**
-     * Recursively searches for a resolver to satisfy the request.  Current container is searched
-     * prior to searching the parent as this allows for override in a child container.
+     * Recursively searches for a resolver to satisfy the request.
+     * The Current container is searched prior to searching the parent as this allows
+     * for override in a child container.
      *
      * @param clazz Instance resolver to locate
      * @return Resolver if found
@@ -348,7 +349,7 @@ public class DependencyContainer implements IServiceContainer {
 
     /**
      * Finds a suitable constructor to use when instantiating a class.  If a class has a single declared
-     * constructor it will be used.  As a fallback if a constructor has the DependencyConstructor annotation
+     * constructor, it will be used.  As a fallback if a constructor has the DependencyConstructor annotation,
      * it will be selected.  If a class has more than one constructor, or if more than one constructor has
      * the annotation and exception will be generated.
      *

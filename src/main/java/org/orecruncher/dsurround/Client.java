@@ -68,7 +68,7 @@ public abstract class Client implements IMinecraftMod {
         }, HandlerPriority.VERY_HIGH);
 
         // Register core services
-        ContainerManager.getDefaultContainer()
+        ContainerManager.getRootContainer()
                 .registerSingleton(Config)
                 .registerSingleton(IConditionEvaluator.class, ConditionEvaluator.class)
                 .registerSingleton(IVersionChecker.class, VersionChecker.class)
@@ -95,7 +95,7 @@ public abstract class Client implements IMinecraftMod {
 
     public void onComplete(MinecraftClient client) {
 
-        var container = ContainerManager.getDefaultContainer();
+        var container = ContainerManager.getRootContainer();
 
         // Register the Minecraft sound manager
         container.registerSingleton(GameUtils.getSoundManager().orElseThrow());

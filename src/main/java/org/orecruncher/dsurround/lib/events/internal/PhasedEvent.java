@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.lib.events.internal;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import org.orecruncher.dsurround.lib.events.EventPhase;
@@ -11,7 +12,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
- * Simple implementation of IEvent for callbacks processing.
+ * Simple implementation of IEvent for callback processing.
  *
  * @param <TEntityType> The type of information passed into callback handlers
  */
@@ -19,12 +20,16 @@ final class PhasedEvent<TEntityType> implements IPhasedEvent<TEntityType> {
 
     private final ImmutableList<EventPhase> _phasedOrdering;
 
-    // Basically a phased event is an aggregate of simple events based on
+    // A phased event is an aggregate of simple events based on
     // the list of phases.
     private final Event<TEntityType>[] _eventHandlers;
 
     @SuppressWarnings("unchecked")
     public PhasedEvent(ImmutableList<EventPhase> phasedOrdering, BiConsumer<TEntityType, List<Consumer<TEntityType>>> callbackProcessor) {
+        Preconditions.checkNotNull(phasedOrdering);
+        Preconditions.checkArgument(!phasedOrdering.isEmpty(), "At least one entry needs to be provided");
+        Preconditions.checkNotNull(callbackProcessor);
+
         this._phasedOrdering = phasedOrdering;
 
         Class<?> entityType = new TypeToken<Event<TEntityType>>() {
@@ -37,14 +42,19 @@ final class PhasedEvent<TEntityType> implements IPhasedEvent<TEntityType> {
 
     @Override
     public void register(Consumer<TEntityType> handler) {
+        Preconditions.checkNotNull(handler);
+
         // Register the handler with the default phase
         this.register(handler, EventPhase.DEFAULT);
     }
 
     @Override
     public void register(Consumer<TEntityType> handler, EventPhase phase) {
+        Preconditions.checkNotNull(handler);
+        Preconditions.checkNotNull(phase);
+
         // Identifier could be the same semantically as an entry in the phase order list.
-        // We want to use the reference that is in the event definition to act as
+        // We want to use the reference in the event definition to act as
         // the identity key.  Besides, this will also ensure that the requested
         // identifier is actually a phase for this event.
         this.getHandler(phase).register(handler);
@@ -52,6 +62,8 @@ final class PhasedEvent<TEntityType> implements IPhasedEvent<TEntityType> {
 
     @Override
     public void raise(TEntityType entity) {
+        Preconditions.checkNotNull(entity);
+
         // Process in phased order
         for (var eventHandler : this._eventHandlers)
             eventHandler.raise(entity);
@@ -59,6 +71,9 @@ final class PhasedEvent<TEntityType> implements IPhasedEvent<TEntityType> {
 
     @Override
     public void raise(TEntityType entity, EventPhase phase) {
+        Preconditions.checkNotNull(entity);
+        Preconditions.checkNotNull(phase);
+
         this.getHandler(phase).raise(entity);
     }
 

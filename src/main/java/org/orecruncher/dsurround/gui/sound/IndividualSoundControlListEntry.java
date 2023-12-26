@@ -85,7 +85,7 @@ public class IndividualSoundControlListEntry extends EntryListWidget.Entry<Indiv
         this.playButton.active = enablePlay;
         this.children.add(this.playButton);
 
-        var container = ContainerManager.getDefaultContainer();
+        var container = ContainerManager.getRootContainer();
         this.soundLibrary = container.resolve(ISoundLibrary.class);
         this.audioPlayer = container.resolve(IAudioPlayer.class);
     }

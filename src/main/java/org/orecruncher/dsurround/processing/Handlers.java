@@ -166,7 +166,7 @@ public class Handlers {
 
     public static void registerHandlers() {
         // Register so that Scanners can be instantiated
-        ContainerManager.getDefaultContainer()
+        ContainerManager.getRootContainer()
             .registerSingleton(CeilingScanner.class)
             .registerSingleton(VillageScanner.class)
             .registerSingleton(BiomeScanner.class)

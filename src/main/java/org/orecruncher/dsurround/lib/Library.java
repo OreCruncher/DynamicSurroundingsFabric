@@ -73,7 +73,7 @@ public final class Library {
                 .orElseThrow( () -> new RuntimeException("Unable to acquire mod information!"));
 
         ContainerManager
-                .getDefaultContainer()
+                .getRootContainer()
                 .registerSingleton(IModLog.class, logger)
                 .registerSingleton(IMinecraftMod.class, mod)
                 .registerSingleton(ModInformation.class, modInfo)

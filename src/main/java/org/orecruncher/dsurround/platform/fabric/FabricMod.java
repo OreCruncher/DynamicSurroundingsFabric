@@ -20,7 +20,7 @@ public class FabricMod extends Client implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         // Set up the platform environment
-        ContainerManager.getDefaultContainer()
+        ContainerManager.getRootContainer()
                 .registerSingleton(IEventRegistrations.class, EventRegistrationsImpl.class)
                 .registerSingleton(IPlatform.class, PlatformServiceImpl.class)
                 .registerSingleton(ITagUtilities.class, TagUtilitiesImpl.class);

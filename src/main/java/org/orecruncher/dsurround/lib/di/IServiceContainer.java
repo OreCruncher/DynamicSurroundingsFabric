@@ -9,7 +9,7 @@ public interface IServiceContainer {
     /**
      * Returns the name of the container
      */
-    String get_name();
+    String getName();
 
     /**
      * Registers the object in the container, with it being identified by its type.
