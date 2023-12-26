@@ -59,7 +59,7 @@ public class Handlers {
     private void init() {
         // If the user disabled the startup sound just flag it as having
         // been performed.
-        this.startupSoundPlayed = !config.otherOptions.playRandomSoundOnStartup;
+        this.startupSoundPlayed = !this.config.otherOptions.playRandomSoundOnStartup;
 
         register(Scanners.class);           // Must be first
         register(PotionParticleSuppressionHandler.class);

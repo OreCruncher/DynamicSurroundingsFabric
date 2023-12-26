@@ -21,7 +21,7 @@ public class EntityEffectHandler  extends AbstractClientHandler {
     @Override
     public void process(final PlayerEntity player) {
 
-        var range = config.entityEffects.entityEffectRange;
+        var range = this.config.entityEffects.entityEffectRange;
         var world = player.getEntityWorld();
 
         // Get living entities in the world.  Since the API does some fancy tracking of entities we create a box

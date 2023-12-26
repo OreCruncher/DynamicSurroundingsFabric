@@ -25,7 +25,8 @@ public final class SoundInstanceHandler {
     private static final ISoundLibrary soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
     private static final IAudioPlayer audioPlayer = ContainerManager.resolve(IAudioPlayer.class);
     private static final ITickCount tickCount = ContainerManager.resolve(ITickCount.class);
-    private static final Configuration config = ContainerManager.resolve(Configuration.class);
+    private static final Configuration.SoundSystem SOUND_SYSTEM_CONFIG = ContainerManager.resolve(Configuration.SoundSystem.class);
+    private static final Configuration.ThunderStorms THUNDERSTORM_CONFIG = ContainerManager.resolve(Configuration.ThunderStorms.class);
 
     private static final Object2LongOpenHashMap<Identifier> soundCull = new Object2LongOpenHashMap<>(32);
     private static final Set<Identifier> thunderSounds = new HashSet<>();
@@ -49,7 +50,7 @@ public final class SoundInstanceHandler {
     }
 
     private static boolean isSoundCulledLogical(final Identifier sound) {
-        int cullInterval = config.soundSystem.cullInterval;
+        int cullInterval = SOUND_SYSTEM_CONFIG.cullInterval;
         if (cullInterval > 0 && isSoundCulled(sound)) {
             final long lastOccurrence = soundCull.getLong(Objects.requireNonNull(sound));
             final long currentTick = tickCount.getTickCount();
@@ -65,8 +66,8 @@ public final class SoundInstanceHandler {
 
     /**
      * Special hook in the Minecraft SoundSystem that will be invoked when a sound is played.
-     * Based on configuration the sound play will be discarded if it is blocked or if it is
-     * within it's culling interval.
+     * Based on configuration, the sound play will be discarded if it is blocked or if it is
+     * within its culling interval.
      *
      * @param theSound The sound that is being played
      * @return True if the sound play is to be blocked, false otherwise
@@ -79,7 +80,7 @@ public final class SoundInstanceHandler {
 
         final Identifier id = theSound.getId();
 
-        if (config.thunderStorms.replaceThunderSounds && thunderSounds.contains(id)) {
+        if (THUNDERSTORM_CONFIG.replaceThunderSounds && thunderSounds.contains(id)) {
             // Yeah - a bit reentrant but it should be good
             var sound = THUNDER_SOUND.createAtLocation(
                     new Vec3d(theSound.getX(), theSound.getY(), theSound.getZ()));
@@ -100,13 +101,13 @@ public final class SoundInstanceHandler {
      */
     public static boolean inRange(final Vec3d listener, final SoundInstance sound, final int pad) {
         // Do not cancel if:
-        // - The sound is global.  Distance is not a factor.
+        // - The sound is global. Distance is not a factor.
         // - It is repeatable.  Player can move into range.
-        // - Weather related (thunder, lightening strike)
+        // - Weather related (thunder, lightning strike)
         if (sound.isRelative() || sound.getAttenuationType() == SoundInstance.AttenuationType.NONE || sound.isRepeatable() || sound.getCategory() == SoundCategory.WEATHER)
             return true;
 
-        // If it is a loud sound let it through
+        // If it is a loud sound, let it through
         if (sound.getVolume() > 1F)
             return true;
 

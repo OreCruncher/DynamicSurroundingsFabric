@@ -5,7 +5,6 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.effects.particles.WaterRippleParticle;
@@ -14,7 +13,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 public class WaterRippleHandler {
 
-    private static final Configuration CONFIG = ContainerManager.resolve(Configuration.class);
+    private static final Configuration.BlockEffects CONFIG = ContainerManager.resolve(Configuration.BlockEffects.class);
 
     // Fudge factor because the height algo is off.
     private static final double LIQUID_HEIGHT_ADJUST = (1D / 9D) + 0.1D;
@@ -30,13 +29,13 @@ public class WaterRippleHandler {
     }
 
     private static boolean doRipples() {
-        return Client.Config.blockEffects.waterRippleStyle != WaterRippleStyle.NONE;
+        return CONFIG.waterRippleStyle != WaterRippleStyle.NONE;
     }
 
     private static void addWaterRipple(ClientWorld world, double x, double y, double z) {
         GameUtils.getParticleManager().ifPresent(pm -> {
             var ripple = new WaterRippleParticle(
-                    CONFIG.blockEffects.waterRippleStyle,
+                    CONFIG.waterRippleStyle,
                     world, x, y, z);
             pm.addParticle(ripple);
         });

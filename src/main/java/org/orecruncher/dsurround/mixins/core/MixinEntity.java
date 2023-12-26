@@ -4,9 +4,10 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.tags.EntityEffectTags;
 import org.orecruncher.dsurround.tags.TagHelpers;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,16 +23,19 @@ public class MixinEntity {
     @Unique
     private static final double DSURROUND_MAX_ACCENT_RANGE = 16.0 * 16.0;
 
+    @Unique
+    private static final Configuration.FootstepAccents dsurround_config = ContainerManager.resolve(Configuration.FootstepAccents.class);
+
     @Shadow
     private World world;
 
     @Inject(method = "playStepSound(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)V", at = @At("TAIL"))
     public void dsurround_playStepSound(BlockPos pos, BlockState state, CallbackInfo ci) {
         // Only want to enable eventing if accents are enabled
-        if (Client.Config.footstepAccents.enableAccents && world.isClient) {
+        if (dsurround_config.enableAccents && world.isClient) {
             var current = (Entity) ((Object) this);
 
-            // Is the entity in range?  If not avoid generating an event
+            // Is the entity in range?  If not, avoid generating an event
             if (GameUtils.getPlayer().orElseThrow().squaredDistanceTo(current) > DSURROUND_MAX_ACCENT_RANGE)
                 return;
 

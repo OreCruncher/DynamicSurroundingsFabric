@@ -22,14 +22,14 @@ import java.util.function.Supplier;
 
 public final class AudioUtilities {
     private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
-    private static final Configuration CONFIG = ContainerManager.resolve(Configuration.class);
 
     // If these mods are present, enhanced sound processing will be disabled.
     private static final ObjectArray<String> autoDisabledBecauseOf = new ObjectArray<>();
 
     private static final Lazy<Boolean> advancedProcessingEnabled = new Lazy<>(() -> {
         // First check general settings
-        if (CONFIG.enhancedSounds.enableEnhancedSounds) {
+        var config = ContainerManager.resolve(Configuration.EnhancedSounds.class);
+        if (config.enableEnhancedSounds) {
             // Next check to see if any present mods are in our exclusion list
             for (var modId : autoDisabledBecauseOf) {
                 var platform = ContainerManager.resolve(IPlatform.class);

@@ -4,16 +4,14 @@ import net.minecraft.client.sound.*;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
 import org.orecruncher.dsurround.runtime.audio.SoundFXProcessor;
 import org.orecruncher.dsurround.sound.SoundInstanceHandler;
 import org.orecruncher.dsurround.sound.SoundVolumeEvaluator;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.*;
@@ -24,6 +22,11 @@ import java.util.concurrent.CompletableFuture;
 
 @Mixin(SoundSystem.class)
 public class MixinSoundSystem {
+
+    @Unique
+    private static final Configuration.SoundSystem dsurround_soundSystemConfig = ContainerManager.resolve(Configuration.SoundSystem.class);
+    @Unique
+    private static final IModLog dsurround_logger = ContainerManager.resolve(IModLog.class);
 
     @Final
     @Shadow
@@ -40,7 +43,7 @@ public class MixinSoundSystem {
     }
 
     /**
-     * Callback will trigger creation of sound context information for the sound play once it has been queued to the
+     * Callback will trigger the creation of sound context information for the sound play once it has been queued to the
      * sound engine.  It will also perform the first calculations of sound effects based on the player environment.
      */
     @Inject(method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sound/Channel$SourceManager;run(Ljava/util/function/Consumer;)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILEXCEPTION)
@@ -49,7 +52,7 @@ public class MixinSoundSystem {
             SoundFXProcessor.onSoundPlay(sound, sourceManager);
             AudioUtilities.onSoundPlay(sound);
         } catch(final Throwable t) {
-            Client.LOGGER.error(t, "Error in dsurround_onSoundPlay()!");
+            dsurround_logger.error(t, "Error in dsurround_onSoundPlay()!");
         }
     }
 
@@ -78,10 +81,10 @@ public class MixinSoundSystem {
 
     @Inject(method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;<init>(DDD)V"), locals = LocalCapture.CAPTURE_FAILEXCEPTION, cancellable = true)
     private void dsurround_soundRangeCheck(SoundInstance sound, CallbackInfo ci, WeightedSoundSet weightedSoundSet, Identifier identifier, Sound sound2, float f, float g, SoundCategory soundCategory, float h, float i, SoundInstance.AttenuationType attenuationType, boolean isGlobal) {
-        if (Client.Config.soundSystem.enableSoundPruning) {
-            // If not in range of the listener cancel.
+        if (dsurround_soundSystemConfig.enableSoundPruning) {
+            // If not in range of the listener, cancel.
             if (!SoundInstanceHandler.inRange(AudioUtilities.getSoundListener().getTransform().position(), sound, 4)) {
-                Client.LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> "TOO FAR: " + AudioUtilities.debugString(sound));
+                dsurround_logger.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> "TOO FAR: " + AudioUtilities.debugString(sound));
                 ci.cancel();
             }
         }

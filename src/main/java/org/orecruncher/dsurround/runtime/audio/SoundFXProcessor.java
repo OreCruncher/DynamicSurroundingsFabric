@@ -7,6 +7,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Formatting;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.Singleton;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -32,7 +33,8 @@ public final class SoundFXProcessor {
     // Use our own thread pool avoiding the common pool.  Thread allocation is better controlled, and we won't run
     // into/cause any problems with other tasks in the common pool.
     private static final Singleton<ExecutorService> threadPool = new Singleton<>(() -> {
-        int threads = Client.Config.enhancedSounds.backgroundThreadWorkers;
+        var config = ContainerManager.resolve(Configuration.EnhancedSounds.class);
+        int threads = config.backgroundThreadWorkers;
         if (threads == 0)
             threads = 2;
         LOGGER.info("Threads allocated to enhanced sound processor: %d", threads);
@@ -116,6 +118,7 @@ public final class SoundFXProcessor {
             return;
 
         ISourceContext source = (ISourceContext) entry.source;
+        assert source != null;
         int id = source.getId();
         if (id > 0) {
             final SourceContext ctx = new SourceContext(id);

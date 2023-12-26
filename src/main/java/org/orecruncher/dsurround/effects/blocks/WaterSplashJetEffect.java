@@ -7,14 +7,18 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.client.option.ParticlesMode;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.effects.blocks.producers.BlockEffectProducer;
 import org.orecruncher.dsurround.effects.blocks.producers.WaterSplashProducer;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.sound.*;
 
 import java.util.Arrays;
 
 public class WaterSplashJetEffect extends ParticleJetEffect {
+
+    private static final Configuration.BlockEffects CONFIG = ContainerManager.resolve(Configuration.BlockEffects.class);
 
     private static final ISoundFactory[] ACOUSTICS = new ISoundFactory[BlockEffectProducer.MAX_STRENGTH + 1];
 
@@ -83,7 +87,7 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
 
     @Override
     protected void soundUpdate() {
-        if (!CONFIG.blockEffects.enableWaterfallSounds) {
+        if (!CONFIG.enableWaterfallSounds) {
             if (this.sound != null) {
                 AUDIO_PLAYER.stop(this.sound);
                 this.sound = null;
@@ -118,7 +122,7 @@ public class WaterSplashJetEffect extends ParticleJetEffect {
 
     @Override
     protected void spawnJetParticle() {
-        if (!CONFIG.blockEffects.enableWaterfallParticles)
+        if (!CONFIG.enableWaterfallParticles)
             return;
 
         final int splashCount = getSpawnCount();
