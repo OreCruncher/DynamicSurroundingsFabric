@@ -66,14 +66,14 @@ public abstract class CuboidScanner extends Scanner {
     @Override
     public void tick() {
 
-        // If there is no player position or it's bogus just return
+        // If there is no player position, or it's bogus just return
         final BlockPos playerPos = this.locus.scanCenter().get();
         if (this.locus.isOutOfHeightLimit(playerPos.getY())) {
             this.fullRange = null;
         } else {
             // If the full range was reset, or the player dimension changed,
             // dump everything and restart.
-            if (this.fullRange == null || this.locus.worldReference() != this.lastReference) {
+            if (this.fullRange == null || this.locus.worldReference().get() != this.lastReference) {
                 resetFullScan();
                 super.tick();
             } else if (this.lastPos.equals(playerPos)) {
@@ -87,7 +87,7 @@ public abstract class CuboidScanner extends Scanner {
                 final Cuboid newVolume = getVolumeFor(playerPos);
                 final Cuboid intersect = oldVolume.intersection(newVolume);
 
-                // If there is no intersect it means the player moved
+                // If there is no intersection, it means the player moved
                 // enough of a distance in the last tick to make it a new
                 // area. Otherwise, if there is a sufficiently large
                 // change to the scan area dump and restart.
@@ -97,7 +97,7 @@ public abstract class CuboidScanner extends Scanner {
                 } else {
 
                     // Looks to be a small update, like a player walking around.
-                    // If the scan has already completed we do an update.
+                    // If the scan has already completed, we do an update.
                     if (this.scanFinished) {
                         this.lastPos = playerPos;
                         this.activeCuboid = newVolume;
