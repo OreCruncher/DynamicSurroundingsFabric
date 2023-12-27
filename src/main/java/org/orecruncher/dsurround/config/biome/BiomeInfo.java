@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.config.libraries.impl.BiomeLibrary;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
@@ -23,7 +24,6 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
-import org.orecruncher.dsurround.tags.TagHelpers;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -35,6 +35,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     public static final int DEFAULT_ADDITIONAL_SOUND_CHANCE = 1000 / 4;
     public static final Script DEFAULT_SOUND_CHANCE = new Script(String.valueOf(1D / DEFAULT_ADDITIONAL_SOUND_CHANCE));
     private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+    private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
+
     private final int version;
     private final Identifier biomeId;
     private final String biomeName;
@@ -247,7 +249,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
             var entry = biomes.getEntry(biomes.getRawId(getBiome()));
             if (entry.isPresent()) {
-                tags = TagHelpers.asString(entry.get().streamTags());
+                tags = TAG_LIBRARY.asString(entry.get().streamTags());
             }
         }
 

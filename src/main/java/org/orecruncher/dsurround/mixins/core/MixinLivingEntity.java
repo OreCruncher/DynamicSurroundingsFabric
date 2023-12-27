@@ -4,7 +4,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.data.TrackedData;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
-import org.orecruncher.dsurround.xface.ILivingEntityExtended;
+import org.orecruncher.dsurround.mixinutils.ILivingEntityExtended;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

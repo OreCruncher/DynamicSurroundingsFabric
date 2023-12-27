@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.xface;
+package org.orecruncher.dsurround.mixinutils;
 
 import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;

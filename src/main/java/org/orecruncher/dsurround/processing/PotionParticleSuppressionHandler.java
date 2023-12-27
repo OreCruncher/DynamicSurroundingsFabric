@@ -5,7 +5,7 @@ import net.minecraft.potion.PotionUtil;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.xface.ILivingEntityExtended;
+import org.orecruncher.dsurround.mixinutils.ILivingEntityExtended;
 
 public class PotionParticleSuppressionHandler extends AbstractClientHandler {
 

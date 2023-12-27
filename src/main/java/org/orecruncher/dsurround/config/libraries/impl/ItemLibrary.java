@@ -11,13 +11,13 @@ import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.ItemClassType;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
 import org.orecruncher.dsurround.tags.ItemTags;
-import org.orecruncher.dsurround.tags.TagHelpers;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -26,13 +26,15 @@ import java.util.stream.Stream;
 
 public class ItemLibrary implements IItemLibrary {
 
+    private final ITagLibrary tagLibrary;
     private final IModLog logger;
     private final Reference2ObjectOpenHashMap<Item, ISoundFactory> itemEquipFactories = new Reference2ObjectOpenHashMap<>();
     private final Reference2ObjectOpenHashMap<Item, ISoundFactory> itemSwingFactories = new Reference2ObjectOpenHashMap<>();
     private final Reference2ObjectOpenHashMap<Item, ISoundFactory> itemArmorStepFactories = new Reference2ObjectOpenHashMap<>();
     private int version;
 
-    public ItemLibrary(IModLog logger) {
+    public ItemLibrary(ITagLibrary tagLibrary, IModLog logger) {
+        this.tagLibrary = tagLibrary;
         this.logger = logger;
     }
 
@@ -82,7 +84,7 @@ public class ItemLibrary implements IItemLibrary {
         return null;
     }
 
-    private static @Nullable ISoundFactory resolve(ItemStack stack, Function<ItemClassType, ISoundFactory> resolveSound, Supplier<ISoundFactory> defaultSoundFactory) {
+    private @Nullable ISoundFactory resolve(ItemStack stack, Function<ItemClassType, ISoundFactory> resolveSound, Supplier<ISoundFactory> defaultSoundFactory) {
 
         var itemClassType = resolveClassType(stack);
 
@@ -112,7 +114,7 @@ public class ItemLibrary implements IItemLibrary {
     }
 
     @Nullable
-    private static SoundEvent getSoundEvent(ItemStack stack) {
+    private SoundEvent getSoundEvent(ItemStack stack) {
         // Look for special Equipment and ArmorItem types since they may have built in equip sounds
         SoundEvent itemEquipSound = getEquipableSoundEvent(stack);
         if (itemEquipSound != null)
@@ -122,46 +124,46 @@ public class ItemLibrary implements IItemLibrary {
 
         if (item instanceof ElytraItem elytraItem)
             itemEquipSound = elytraItem.getEquipSound();
-        else if (TagHelpers.isIn(ItemTags.LAVA_BUCKETS, item))
+        else if (this.tagLibrary.isIn(ItemTags.LAVA_BUCKETS, item))
             itemEquipSound = SoundEvents.ITEM_BUCKET_FILL_LAVA;
-        else if (TagHelpers.isIn(ItemTags.WATER_BUCKETS, item))
+        else if (this.tagLibrary.isIn(ItemTags.WATER_BUCKETS, item))
             itemEquipSound = SoundEvents.ITEM_BUCKET_FILL;
-        else if (TagHelpers.isIn(ItemTags.ENTITY_WATER_BUCKETS, item))
+        else if (this.tagLibrary.isIn(ItemTags.ENTITY_WATER_BUCKETS, item))
             itemEquipSound = SoundEvents.ITEM_BUCKET_FILL_FISH;
-        else if (TagHelpers.isIn(ItemTags.MILK_BUCKETS, item))
+        else if (this.tagLibrary.isIn(ItemTags.MILK_BUCKETS, item))
             itemEquipSound = SoundEvents.ITEM_BUCKET_FILL;
 
         return itemEquipSound;
     }
 
-    private static ItemClassType resolveClassType(ItemStack stack) {
+    private ItemClassType resolveClassType(ItemStack stack) {
         var item = stack.getItem();
-        if (TagHelpers.isIn(ItemEffectTags.AXES, item))
+        if (this.tagLibrary.isIn(ItemEffectTags.AXES, item))
             return ItemClassType.AXE;
-        if (TagHelpers.isIn(ItemEffectTags.BOOKS, item))
+        if (this.tagLibrary.isIn(ItemEffectTags.BOOKS, item))
             return ItemClassType.BOOK;
-        if (TagHelpers.isIn(ItemEffectTags.BOWS, item))
+        if (this.tagLibrary.isIn(ItemEffectTags.BOWS, item))
             return ItemClassType.BOW;
-        if (TagHelpers.isIn(ItemEffectTags.POTIONS, item))
+        if (this.tagLibrary.isIn(ItemEffectTags.POTIONS, item))
             return ItemClassType.POTION;
-        if (TagHelpers.isIn(ItemEffectTags.CROSSBOWS, item))
+        if (this.tagLibrary.isIn(ItemEffectTags.CROSSBOWS, item))
             return ItemClassType.CROSSBOW;
-        if (TagHelpers.isIn(ItemEffectTags.SHIELDS, item))
+        if (this.tagLibrary.isIn(ItemEffectTags.SHIELDS, item))
             return ItemClassType.SHIELD;
-        if (TagHelpers.isIn(ItemEffectTags.SWORDS, item))
+        if (this.tagLibrary.isIn(ItemEffectTags.SWORDS, item))
             return ItemClassType.SWORD;
-        if (TagHelpers.isIn(ItemEffectTags.TOOLS, item))
+        if (this.tagLibrary.isIn(ItemEffectTags.TOOLS, item))
             return ItemClassType.TOOL;
 
         return ItemClassType.NONE;
     }
 
-    private static String formatItemOutput(Identifier id, Item item) {
+    private String formatItemOutput(Identifier id, Item item) {
         var manager = GameUtils.getRegistryManager().orElseThrow();
         var items = manager.get(RegistryKeys.ITEM);
 
         var tags = items.getEntry(items.getRawId(item))
-                .map(e -> TagHelpers.asString(e.streamTags()))
+                .map(e -> this.tagLibrary.asString(e.streamTags()))
                 .orElse("null");
 
         return id.toString() + "\nTags: " + tags + "\n";

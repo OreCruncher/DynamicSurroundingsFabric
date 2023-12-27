@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.xface;
+package org.orecruncher.dsurround.mixinutils;
 
 import org.orecruncher.dsurround.config.block.BlockInfo;
 

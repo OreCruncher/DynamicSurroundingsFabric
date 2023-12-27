@@ -23,7 +23,7 @@ import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
-import org.orecruncher.dsurround.xface.IBiomeExtended;
+import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 
 import java.util.EnumMap;
 import java.util.List;

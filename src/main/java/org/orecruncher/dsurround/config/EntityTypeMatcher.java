@@ -6,9 +6,10 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.IMatcher;
 import org.orecruncher.dsurround.lib.IdentityUtils;
-import org.orecruncher.dsurround.tags.TagHelpers;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 public abstract class EntityTypeMatcher implements IMatcher<Entity> {
 
@@ -26,7 +27,7 @@ public abstract class EntityTypeMatcher implements IMatcher<Entity> {
                 return DataResult.success(new MatchOnEntityTag(tagKey));
             }
             else if (entityTypeId.contains(":")) {
-                // If it looks like an Identifier then it must be an EntityType
+                // If it looks like an Identifier, then it must be an EntityType
                 var type = EntityType.get(entityTypeId);
                 return type.<DataResult<IMatcher<Entity>>>map(entityType -> DataResult.success(new MatchOnEntityType(entityType)))
                         .orElseGet(() -> DataResult.error(() -> String.format("Unknown entity type id %s", entityTypeId)));
@@ -54,6 +55,7 @@ public abstract class EntityTypeMatcher implements IMatcher<Entity> {
     }
 
     private static class MatchOnEntityTag extends EntityTypeMatcher {
+        private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
         private final TagKey<EntityType<?>> tagKey;
 
@@ -62,7 +64,7 @@ public abstract class EntityTypeMatcher implements IMatcher<Entity> {
         }
 
         public boolean match(Entity entity) {
-            return TagHelpers.isIn(this.tagKey, entity.getType());
+            return TAG_LIBRARY.isIn(this.tagKey, entity.getType());
         }
     }
 }

@@ -81,6 +81,7 @@ public abstract class Client implements IMinecraftMod {
                 .registerSingleton(Config.otherOptions)
                 .registerSingleton(IConditionEvaluator.class, ConditionEvaluator.class)
                 .registerSingleton(IVersionChecker.class, VersionChecker.class)
+                .registerSingleton(ITagLibrary.class, TagLibrary.class)
                 .registerSingleton(ISoundLibrary.class, SoundLibrary.class)
                 .registerSingleton(IBiomeLibrary.class, BiomeLibrary.class)
                 .registerSingleton(IDimensionLibrary.class, DimensionLibrary.class)

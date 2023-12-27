@@ -9,7 +9,7 @@ import org.lwjgl.openal.SOFTOutputLimiter;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
-import org.orecruncher.dsurround.xface.ISoundEngine;
+import org.orecruncher.dsurround.mixinutils.ISoundEngine;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;

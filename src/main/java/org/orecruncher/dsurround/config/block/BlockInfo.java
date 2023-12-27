@@ -8,6 +8,7 @@ import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.biome.AcousticEntry;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -18,7 +19,6 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.OcclusionTags;
 import org.orecruncher.dsurround.tags.ReflectanceTags;
-import org.orecruncher.dsurround.tags.TagHelpers;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -26,6 +26,8 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 public class BlockInfo {
+
+    private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
     private static final float DEFAULT_OPAQUE_OCCLUSION = 0.5F;
     private static final float DEFAULT_TRANSLUCENT_OCCLUSION = 0.15F;
@@ -184,38 +186,38 @@ public class BlockInfo {
 
     private static float getSoundReflectionSetting(BlockState state) {
         var block = state.getBlock();
-        if (TagHelpers.isIn(ReflectanceTags.NONE, block))
+        if (TAG_LIBRARY.isIn(ReflectanceTags.NONE, block))
             return 0;
-        if (TagHelpers.isIn(ReflectanceTags.VERY_LOW, block))
+        if (TAG_LIBRARY.isIn(ReflectanceTags.VERY_LOW, block))
             return 0.15F;
-        if (TagHelpers.isIn(ReflectanceTags.LOW, block))
+        if (TAG_LIBRARY.isIn(ReflectanceTags.LOW, block))
             return 0.35F;
-        if (TagHelpers.isIn(ReflectanceTags.MEDIUM, block))
+        if (TAG_LIBRARY.isIn(ReflectanceTags.MEDIUM, block))
             return 0.5F;
-        if (TagHelpers.isIn(ReflectanceTags.HIGH, block))
+        if (TAG_LIBRARY.isIn(ReflectanceTags.HIGH, block))
             return 0.65F;
-        if (TagHelpers.isIn(ReflectanceTags.VERY_HIGH, block))
+        if (TAG_LIBRARY.isIn(ReflectanceTags.VERY_HIGH, block))
             return 0.8F;
-        if (TagHelpers.isIn(ReflectanceTags.MAX, block))
+        if (TAG_LIBRARY.isIn(ReflectanceTags.MAX, block))
             return 1.0F;
         return DEFAULT_REFLECTION;
     }
 
     private static float getSoundOcclusionSetting(BlockState state) {
         var block = state.getBlock();
-        if (TagHelpers.isIn(OcclusionTags.NONE, block))
+        if (TAG_LIBRARY.isIn(OcclusionTags.NONE, block))
             return 0;
-        if (TagHelpers.isIn(OcclusionTags.VERY_LOW, block))
+        if (TAG_LIBRARY.isIn(OcclusionTags.VERY_LOW, block))
             return 0.15F;
-        if (TagHelpers.isIn(OcclusionTags.LOW, block))
+        if (TAG_LIBRARY.isIn(OcclusionTags.LOW, block))
             return 0.35F;
-        if (TagHelpers.isIn(OcclusionTags.MEDIUM, block))
+        if (TAG_LIBRARY.isIn(OcclusionTags.MEDIUM, block))
             return 0.5F;
-        if (TagHelpers.isIn(OcclusionTags.HIGH, block))
+        if (TAG_LIBRARY.isIn(OcclusionTags.HIGH, block))
             return 0.65F;
-        if (TagHelpers.isIn(OcclusionTags.VERY_HIGH, block))
+        if (TAG_LIBRARY.isIn(OcclusionTags.VERY_HIGH, block))
             return 0.8F;
-        if (TagHelpers.isIn(OcclusionTags.MAX, block))
+        if (TAG_LIBRARY.isIn(OcclusionTags.MAX, block))
             return 1.0F;
         return state.isOpaque() ? DEFAULT_OPAQUE_OCCLUSION : DEFAULT_TRANSLUCENT_OCCLUSION;
     }

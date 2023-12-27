@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.xface;
+package org.orecruncher.dsurround.mixinutils;
 
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;

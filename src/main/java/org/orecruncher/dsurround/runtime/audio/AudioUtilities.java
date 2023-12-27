@@ -17,7 +17,7 @@ import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.mixins.core.MixinAbstractSoundInstance;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundSystemAccessors;
-import org.orecruncher.dsurround.xface.ISoundEngine;
+import org.orecruncher.dsurround.mixinutils.ISoundEngine;
 
 import java.util.function.Supplier;
 

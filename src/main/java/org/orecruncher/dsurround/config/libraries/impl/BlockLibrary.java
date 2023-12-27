@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
-import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.registry.RegistryKeys;
@@ -12,6 +11,7 @@ import org.orecruncher.dsurround.config.block.BlockInfo;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -19,17 +19,13 @@ import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
-import org.orecruncher.dsurround.tags.TagHelpers;
-import org.orecruncher.dsurround.xface.IBlockStateExtended;
+import org.orecruncher.dsurround.mixinutils.IBlockStateExtended;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.*;
 
 public class BlockLibrary implements IBlockLibrary {
 
@@ -48,14 +44,16 @@ public class BlockLibrary implements IBlockLibrary {
     private final IModLog logger;
     private final IMinecraftDirectories directories;
     private final IConditionEvaluator conditionEvaluator;
+    private final ITagLibrary tagLibrary;
 
     private final Collection<BlockConfigRule> blockConfigs = new ObjectArray<>();
     private int version = 0;
 
-    public BlockLibrary(IModLog logger, IMinecraftDirectories directories, IConditionEvaluator conditionEvaluator) {
+    public BlockLibrary(IModLog logger, IMinecraftDirectories directories, IConditionEvaluator conditionEvaluator, ITagLibrary tagLibrary) {
         this.logger = logger;
         this.directories = directories;
         this.conditionEvaluator = conditionEvaluator;
+        this.tagLibrary = tagLibrary;
     }
 
     @Override
@@ -124,11 +122,8 @@ public class BlockLibrary implements IBlockLibrary {
 
     @Override
     public Stream<String> dump() {
-        return TagHelpers.getTagGroup(RegistryKeys.BLOCK)
-                .flatMap(e -> e.value().map(tag -> Pair.of(tag, e.key())))
-                .collect(groupingBy(Pair::key, mapping(Pair::value, toSet())))
-                .entrySet().stream()
-                .map(pair -> formatBlockTagOutput(pair.getKey(), pair.getValue()))
+        return this.tagLibrary.getEntriesByTag(RegistryKeys.BLOCK)
+                .map(pair -> formatBlockTagOutput(pair.key(), pair.value()))
                 .sorted();
     }
 
@@ -157,7 +152,7 @@ public class BlockLibrary implements IBlockLibrary {
         var tags = "null";
         var entry = blocks.getEntry(blocks.getRawId(block));
         if (entry.isPresent()) {
-            tags = TagHelpers.asString(entry.get().streamTags());
+            tags = this.tagLibrary.asString(entry.get().streamTags());
         }
 
         StringBuilder builder = new StringBuilder();

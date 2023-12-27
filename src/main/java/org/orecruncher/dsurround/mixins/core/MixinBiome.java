@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.mixins.core;
 
 import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
-import org.orecruncher.dsurround.xface.IBiomeExtended;
+import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

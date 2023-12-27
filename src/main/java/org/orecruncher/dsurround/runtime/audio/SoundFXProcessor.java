@@ -14,10 +14,9 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.threading.Worker;
-import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;
 import org.orecruncher.dsurround.mixins.audio.MixinSourceManagerAccessor;
 import org.orecruncher.dsurround.runtime.audio.effects.Effects;
-import org.orecruncher.dsurround.xface.ISourceContext;
+import org.orecruncher.dsurround.mixinutils.ISourceContext;
 
 import java.util.Arrays;
 import java.util.concurrent.*;

@@ -8,7 +8,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
-import org.orecruncher.dsurround.xface.IBiomeExtended;
+import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 
 public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBiomeVariables {
 

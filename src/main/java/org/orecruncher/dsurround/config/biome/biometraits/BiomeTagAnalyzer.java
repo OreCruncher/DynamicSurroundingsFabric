@@ -4,12 +4,15 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.tags.BiomeTags;
-import org.orecruncher.dsurround.tags.TagHelpers;
 
 import java.util.*;
 
 public class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
+
+    private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
     private static final Map<TagKey<Biome>, BiomeTrait> tagToTraitMap = new HashMap<>();
 
@@ -70,26 +73,26 @@ public class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
         // Have to do it this way so that the client side tagging has a chance.  When connecting to
         // vanilla servers they will ONLY have the Minecraft tags, not the Fabric ones.
         for (var tagEntry : tagToTraitMap.entrySet())
-            if (TagHelpers.isIn(tagEntry.getKey(), biomeEntry))
+            if (TAG_LIBRARY.isIn(tagEntry.getKey(), biomeEntry))
                 results.add(tagEntry.getValue());
 
         // Check for compounds
-        if (TagHelpers.isIn(BiomeTags.AQUATIC_ICY, biomeEntry)) {
+        if (TAG_LIBRARY.isIn(BiomeTags.AQUATIC_ICY, biomeEntry)) {
             results.add(BiomeTrait.WATER);
             results.add(BiomeTrait.COLD);
         }
 
-        if (TagHelpers.isIn(BiomeTags.DEEP_OCEAN, biomeEntry)) {
+        if (TAG_LIBRARY.isIn(BiomeTags.DEEP_OCEAN, biomeEntry)) {
             results.add(BiomeTrait.OCEAN);
             results.add(BiomeTrait.DEEP);
         }
 
-        if (TagHelpers.isIn(BiomeTags.FLOWER_FORESTS, biomeEntry)) {
+        if (TAG_LIBRARY.isIn(BiomeTags.FLOWER_FORESTS, biomeEntry)) {
             results.add(BiomeTrait.FLORAL);
             results.add(BiomeTrait.FOREST);
         }
 
-        if (TagHelpers.isIn(BiomeTags.WINDSWEPT, biomeEntry)) {
+        if (TAG_LIBRARY.isIn(BiomeTags.WINDSWEPT, biomeEntry)) {
             results.add(BiomeTrait.EXTREME_HILLS);
         }
 
