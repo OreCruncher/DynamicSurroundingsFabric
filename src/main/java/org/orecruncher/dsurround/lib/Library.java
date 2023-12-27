@@ -23,8 +23,8 @@ public final class Library {
 
     // Loader specific API implementations
     private static final IPlatform PLATFORM = ContainerManager.resolve(IPlatform.class);
-    private static final IEventRegistrations EVENT_REGISTRATIONS = ContainerManager.resolve(IEventRegistrations.class);
-    private static final ITagUtilities TAG_UTILITIES = ContainerManager.resolve(ITagUtilities.class);
+    private static final IClientEventRegistrations EVENT_REGISTRATIONS = ContainerManager.resolve(IClientEventRegistrations.class);
+    private static final IClientTagUtilities TAG_UTILITIES = ContainerManager.resolve(IClientTagUtilities.class);
 
     private static IModLog LOGGER;
 
@@ -59,12 +59,12 @@ public final class Library {
     }
 
     @NotNull
-    public static ITagUtilities getTagUtilities() {
+    public static IClientTagUtilities getTagUtilities() {
         return TAG_UTILITIES;
     }
 
     @NotNull
-    public static IEventRegistrations getEventRegistrations() {
+    public static IClientEventRegistrations getEventRegistrations() {
         return EVENT_REGISTRATIONS;
     }
 

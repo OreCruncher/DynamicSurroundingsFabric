@@ -46,10 +46,11 @@ public class VersionChecker implements IVersionChecker {
     private Optional<VersionResult> getUpdateText(VersionInformation info) {
         var mcVersion = ContainerManager.resolve(IPlatform.class).getMinecraftVersion();
         if (mcVersion.isPresent()) {
-            var newest = info.getNewestVersion(mcVersion.get(), this.modInfo.version());
+            var semVer = mcVersion.get();
+            var newest = info.getNewestVersion(semVer, this.modInfo.version());
             if (newest.isPresent()) {
                 var version = newest.get().getFirst();
-                return Optional.of(new VersionResult(version, this.modInfo.displayName(), this.modInfo.curseForgeLink(), this.modInfo.modrinthLink()));
+                return Optional.of(new VersionResult(version.toString(), this.modInfo.displayName(), this.modInfo.curseForgeLink(), this.modInfo.modrinthLink()));
             }
         }
         return Optional.empty();

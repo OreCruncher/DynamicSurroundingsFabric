@@ -7,14 +7,14 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.TagKey;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.platform.ITagUtilities;
+import org.orecruncher.dsurround.lib.platform.IClientTagUtilities;
 
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TagHelpers {
 
-    private static final ITagUtilities TAG_UTILITIES = ContainerManager.resolve(ITagUtilities.class);
+    private static final IClientTagUtilities TAG_UTILITIES = ContainerManager.resolve(IClientTagUtilities.class);
 
     public static <T> String asString(Stream<TagKey<T>> tagStream) {
         return tagStream

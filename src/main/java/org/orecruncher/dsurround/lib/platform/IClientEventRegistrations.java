@@ -4,7 +4,7 @@ import net.minecraft.client.MinecraftClient;
 
 import java.util.function.Consumer;
 
-public interface IEventRegistrations {
+public interface IClientEventRegistrations {
 
     void register();
 

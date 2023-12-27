@@ -5,12 +5,12 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.CommonLifecycleEvents;
 import net.minecraft.client.MinecraftClient;
-import org.orecruncher.dsurround.lib.platform.IEventRegistrations;
+import org.orecruncher.dsurround.lib.platform.IClientEventRegistrations;
 import org.orecruncher.dsurround.lib.platform.events.ClientState;
 
 import java.util.function.Consumer;
 
-public class EventRegistrationsImpl implements IEventRegistrations {
+public class ClientEventRegistrationsImpl implements IClientEventRegistrations {
 
     public void register() {
         ClientLifecycleEvents.CLIENT_STARTED.register(ClientState.STARTED::raise);

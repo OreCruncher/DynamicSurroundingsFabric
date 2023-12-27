@@ -2,18 +2,17 @@ package org.orecruncher.dsurround.lib.version;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import net.fabricmc.loader.api.Version;
 
 public class VersionData {
 
-    public static final Codec<Version> CODEC = Codec.STRING
+    public static final Codec<SemanticVersion> CODEC = Codec.STRING
             .comapFlatMap(
                     VersionData::manifest,
-                    Version::getFriendlyString).stable();
+                    SemanticVersion::toString).stable();
 
-    private static DataResult<Version> manifest(String versionData) {
+    private static DataResult<SemanticVersion> manifest(String versionData) {
         try {
-            return DataResult.success(Version.parse(versionData));
+            return DataResult.success(new SemanticVersion(versionData));
         } catch (Throwable t) {
             return DataResult.error(t::getMessage);
         }

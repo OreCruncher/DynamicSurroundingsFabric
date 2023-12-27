@@ -1,13 +1,13 @@
 package org.orecruncher.dsurround.lib.platform;
 
-import net.fabricmc.loader.api.Version;
 import net.minecraft.SharedConstants;
+import org.orecruncher.dsurround.lib.version.SemanticVersion;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Optional;
 
-public record ModInformation(String modId, String displayName, Version version, String updateUrl, String curseForgeLink, String modrinthLink) {
+public record ModInformation(String modId, String displayName, SemanticVersion version, String updateUrl, String curseForgeLink, String modrinthLink) {
 
     public Optional<URL> getUpdateUrl() {
         try {

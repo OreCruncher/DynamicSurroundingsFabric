@@ -2,10 +2,10 @@ package org.orecruncher.dsurround.platform.fabric.services;
 
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.Version;
 import net.minecraft.client.option.KeyBinding;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
+import org.orecruncher.dsurround.lib.version.SemanticVersion;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -17,15 +17,19 @@ public class PlatformServiceImpl implements IPlatform {
     public Optional<ModInformation> getModInformation(String modId) {
         var container = FabricLoader.getInstance().getModContainer(modId);
         if (container.isPresent()) {
-            var metadata = container.get().getMetadata();
-            var data = metadata.getCustomValue("dsurround").getAsObject();
-            var displayName = metadata.getName();
-            var version = metadata.getVersion();
-            var updateURL = data.get("updateURL").getAsString();
-            var curseForgeLink = data.get("curseForgeLink").getAsString();
-            var modrinthLink = data.get("modrinthLink").getAsString();
-            var result = new ModInformation(modId, displayName, version, updateURL, curseForgeLink, modrinthLink);
-            return Optional.of(result);
+            try {
+                var metadata = container.get().getMetadata();
+                var data = metadata.getCustomValue("dsurround").getAsObject();
+                var displayName = metadata.getName();
+                var version = new SemanticVersion(metadata.getVersion().getFriendlyString());
+                var updateURL = data.get("updateURL").getAsString();
+                var curseForgeLink = data.get("curseForgeLink").getAsString();
+                var modrinthLink = data.get("modrinthLink").getAsString();
+                var result = new ModInformation(modId, displayName, version, updateURL, curseForgeLink, modrinthLink);
+                return Optional.of(result);
+            } catch(Exception ignored) {
+
+            }
         }
         return Optional.empty();
     }
@@ -35,9 +39,16 @@ public class PlatformServiceImpl implements IPlatform {
         return container.map(modContainer -> modContainer.getMetadata().getName());
     }
 
-    public Optional<Version> getModVersion(String namespace) {
+    public Optional<SemanticVersion> getModVersion(String namespace) {
         var container = FabricLoader.getInstance().getModContainer(namespace);
-        return container.map(modContainer -> modContainer.getMetadata().getVersion());
+        if (container.isPresent()) {
+            try {
+                return Optional.of(new SemanticVersion(container.get().getMetadata().getVersion().getFriendlyString()));
+            } catch (Exception ignored) {
+
+            }
+        }
+        return Optional.empty();
     }
 
     public boolean isModLoaded(String namespace) {

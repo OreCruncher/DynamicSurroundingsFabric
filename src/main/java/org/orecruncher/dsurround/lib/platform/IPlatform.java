@@ -1,8 +1,8 @@
 package org.orecruncher.dsurround.lib.platform;
 
-import net.fabricmc.loader.api.Version;
 import net.minecraft.client.option.KeyBinding;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.version.SemanticVersion;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,11 +17,11 @@ public interface IPlatform {
 
     Optional<String> getModDisplayName(String namespace);
 
-    default Optional<Version> getMinecraftVersion() {
+    default Optional<SemanticVersion> getMinecraftVersion() {
         return getModVersion("minecraft");
     }
 
-    Optional<Version> getModVersion(String namespace);
+    Optional<SemanticVersion> getModVersion(String namespace);
 
     boolean isModLoaded(String namespace);
 
