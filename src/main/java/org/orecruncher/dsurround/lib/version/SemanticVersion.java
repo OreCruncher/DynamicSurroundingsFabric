@@ -1,7 +1,33 @@
+/**
+ * Copyright 2019 Patrick Ahlbrecht
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+
 package org.orecruncher.dsurround.lib.version;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 /**
@@ -9,6 +35,19 @@ import java.util.regex.Pattern;
  */
 @SuppressWarnings("unused")
 public final class SemanticVersion implements Comparable<SemanticVersion> {
+
+    public static final Codec<SemanticVersion> CODEC = Codec.STRING
+            .comapFlatMap(
+                    SemanticVersion::manifest,
+                    SemanticVersion::toString).stable();
+
+    private static DataResult<SemanticVersion> manifest(String versionData) {
+        try {
+            return DataResult.success(SemanticVersion.parse(versionData));
+        } catch (Throwable t) {
+            return DataResult.error(t::getMessage);
+        }
+    }
 
     /**
      * Major version number
@@ -36,10 +75,11 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
      * to ensure read only access.
      */
     private final String[] buildMeta;
-    private int[] vParts;
-    private ArrayList<String> preParts, metaParts;
-    private int errPos;
-    private char[] input;
+
+    /**
+     * Cached hashCode
+     */
+    private final int hashCode;
 
     /**
      * Construct a new plain version object
@@ -87,39 +127,8 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
         this.major = major;
         this.minor = minor;
         this.patch = patch;
-    }
 
-    /**
-     * Convenience constructor for creating a Version object from the
-     * "Implementation-Version:" property of the Manifest file.
-     *
-     * @param clazz a class in the JAR file (or that otherwise has its
-     *              implementationVersion attribute set).
-     * @throws ParseException if the versionstring does not conform to the semver specs.
-     */
-    public SemanticVersion(Class<?> clazz) throws ParseException {
-        this(clazz.getPackage().getImplementationVersion());
-    }
-
-    /**
-     * Construct a version object by parsing a string.
-     *
-     * @param version version in flat string format
-     * @throws ParseException if the version string does not conform to the semver specs.
-     */
-    public SemanticVersion(String version) throws ParseException {
-        this.vParts = new int[3];
-        this.preParts = new ArrayList<>(5);
-        this.metaParts = new ArrayList<>(5);
-        this.input = version.toCharArray();
-        if (!stateMajor()) { // Start recursive descend
-            throw new ParseException(version, this.errPos);
-        }
-        this.major = this.vParts[0];
-        this.minor = this.vParts[1];
-        this.patch = this.vParts[2];
-        this.preRelease = this.preParts.toArray(new String[0]);
-        this.buildMeta = this.metaParts.toArray(new String[0]);
+        this.hashCode = this.toString().hashCode();
     }
 
     /**
@@ -158,9 +167,7 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
      * @return a potentially empty array, but never null.
      */
     public String[] getPreRelease() {
-        String[] ret = new String[this.preRelease.length];
-        System.arraycopy(this.preRelease, 0, ret, 0, ret.length);
-        return ret;
+        return this.preRelease.clone();
     }
 
     /**
@@ -169,9 +176,7 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
      * @return a potentially empty array, but never null.
      */
     public String[] getBuildMeta() {
-        String[] ret = new String[this.buildMeta.length];
-        System.arraycopy(this.buildMeta, 0, ret, 0, ret.length);
-        return ret;
+        return this.buildMeta.clone();
     }
 
     /**
@@ -237,7 +242,7 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
 
     @Override
     public int hashCode() {
-        return toString().hashCode(); // Lazy
+        return this.hashCode;
     }
 
     @Override
@@ -326,131 +331,167 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
         return here.compareTo(there); // Number compare
     }
 
-    private boolean stateMajor() {
-        int pos = 0;
-        while (pos < this.input.length && this.input[pos] >= '0' && this.input[pos] <= '9') {
-            pos++; // match [0..9]+
+    public static SemanticVersion parse(String versionString) throws ParseException {
+        var parser = new Parser();
+        if (parser.parse(versionString)) {
+            return new SemanticVersion(
+                    parser.vParts[0],
+                    parser.vParts[1],
+                    parser.vParts[2],
+                    parser.preParts.toArray(new String[0]),
+                    parser.metaParts.toArray(new String[0]));
         }
-        if (pos == 0) { // Empty String -> Error
-            return false;
-        }
-        if (this.input[0] == '0' && pos > 1) { // Leading zero
-            return false;
-        }
-
-        this.vParts[0] = Integer.parseInt(new String(this.input, 0, pos), 10);
-
-        if (this.input[pos] == '.') {
-            return stateMinor(pos + 1);
-        }
-
-        return false;
+        throw new ParseException(versionString, parser.errPos);
     }
 
-    private boolean stateMinor(int index) {
-        int pos = index;
-        while (pos < this.input.length && this.input[pos] >= '0' && this.input[pos] <= '9') {
-            pos++;// match [0..9]+
-        }
-        if (pos == index) { // Empty String -> Error
-            this.errPos = index;
-            return false;
-        }
-        if (this.input[0] == '0' && pos - index > 1) { // Leading zero
-            this.errPos = index;
-            return false;
-        }
-        this.vParts[1] = Integer.parseInt(new String(this.input, index, pos - index), 10);
+    private static class Parser {
 
-        if (this.input[pos] == '.') {
-            return statePatch(pos + 1);
+        private int errPos;
+        private char[] input;
+        public final int[] vParts;
+        public ArrayList<String> preParts, metaParts;
+
+        public Parser() {
+            this.vParts = new int[3];
+            this.preParts = new ArrayList<>();
+            this.metaParts = new ArrayList<>();
         }
 
-        this.errPos = pos;
-        return false;
-    }
-
-    private boolean statePatch(int index) {
-        int pos = index;
-        while (pos < this.input.length && this.input[pos] >= '0' && this.input[pos] <= '9') {
-            pos++; // match [0..9]+
-        }
-        if (pos == index) { // Empty String -> Error
-            this.errPos = index;
-            return false;
-        }
-        if (this.input[0] == '0' && pos - index > 1) { // Leading zero
-            this.errPos = index;
-            return false;
+        public boolean parse(String versionString) {
+            Arrays.fill(this.vParts, 0);
+            this.preParts.clear();
+            this.metaParts.clear();
+            this.input = versionString.toCharArray();
+            this.errPos = 0;
+            return this.stateMajor();
         }
 
-        this.vParts[2] = Integer.parseInt(new String(this.input, index, pos - index), 10);
+        private boolean stateMajor() {
+            int pos = 0;
+            while (pos < this.input.length && this.input[pos] >= '0' && this.input[pos] <= '9') {
+                pos++; // match [0..9]+
+            }
+            if (pos == 0) { // Empty String -> Error
+                return false;
+            }
+            if (this.input[0] == '0' && pos > 1) { // Leading zero
+                return false;
+            }
 
-        if (pos == this.input.length) { // We have a clean version string
-            return true;
-        }
+            this.vParts[0] = Integer.parseInt(new String(this.input, 0, pos), 10);
 
-        if (this.input[pos] == '+') { // We have build meta tags -> descend
-            return stateMeta(pos + 1);
-        }
+            if (this.input[pos] == '.') {
+                return stateMinor(pos + 1);
+            }
 
-        if (this.input[pos] == '-') { // We have pre-release tags -> descend
-            return stateRelease(pos + 1);
-        }
-
-        this.errPos = pos; // We have junk
-        return false;
-    }
-
-    private boolean stateRelease(int index) {
-        int pos = index;
-        while ((pos < this.input.length)
-                && ((this.input[pos] >= '0' && this.input[pos] <= '9')
-                || (this.input[pos] >= 'a' && this.input[pos] <= 'z')
-                || (this.input[pos] >= 'A' && this.input[pos] <= 'Z') || this.input[pos] == '-')) {
-            pos++; // match [0..9a-zA-Z-]+
-        }
-        if (pos == index) { // Empty String -> Error
-            this.errPos = index;
             return false;
         }
 
-        this.preParts.add(new String(this.input, index, pos - index));
-        if (pos == this.input.length) { // End of input
-            return true;
-        }
-        if (this.input[pos] == '.') { // More parts -> descend
-            return stateRelease(pos + 1);
-        }
-        if (this.input[pos] == '+') { // Build meta -> descend
-            return stateMeta(pos + 1);
-        }
+        private boolean stateMinor(int index) {
+            int pos = index;
+            while (pos < this.input.length && this.input[pos] >= '0' && this.input[pos] <= '9') {
+                pos++;// match [0..9]+
+            }
+            if (pos == index) { // Empty String -> Error
+                this.errPos = index;
+                return false;
+            }
+            if (this.input[0] == '0' && pos - index > 1) { // Leading zero
+                this.errPos = index;
+                return false;
+            }
+            this.vParts[1] = Integer.parseInt(new String(this.input, index, pos - index), 10);
 
-        this.errPos = pos;
-        return false;
-    }
+            if (this.input[pos] == '.') {
+                return statePatch(pos + 1);
+            }
 
-    private boolean stateMeta(int index) {
-        int pos = index;
-        while ((pos < this.input.length)
-                && ((this.input[pos] >= '0' && this.input[pos] <= '9')
-                || (this.input[pos] >= 'a' && this.input[pos] <= 'z')
-                || (this.input[pos] >= 'A' && this.input[pos] <= 'Z') || this.input[pos] == '-')) {
-            pos++; // match [0..9a-zA-Z-]+
-        }
-        if (pos == index) { // Empty String -> Error
-            this.errPos = index;
+            this.errPos = pos;
             return false;
         }
 
-        this.metaParts.add(new String(this.input, index, pos - index));
-        if (pos == this.input.length) { // End of input
-            return true;
+        private boolean statePatch(int index) {
+            int pos = index;
+            while (pos < this.input.length && this.input[pos] >= '0' && this.input[pos] <= '9') {
+                pos++; // match [0..9]+
+            }
+            if (pos == index) { // Empty String -> Error
+                this.errPos = index;
+                return false;
+            }
+            if (this.input[0] == '0' && pos - index > 1) { // Leading zero
+                this.errPos = index;
+                return false;
+            }
+
+            this.vParts[2] = Integer.parseInt(new String(this.input, index, pos - index), 10);
+
+            if (pos == this.input.length) { // We have a clean version string
+                return true;
+            }
+
+            if (this.input[pos] == '+') { // We have build meta tags -> descend
+                return stateMeta(pos + 1);
+            }
+
+            if (this.input[pos] == '-') { // We have pre-release tags -> descend
+                return stateRelease(pos + 1);
+            }
+
+            this.errPos = pos; // We have junk
+            return false;
         }
-        if (this.input[pos] == '.') { // More parts -> descend
-            return stateMeta(pos + 1);
+
+        private boolean stateRelease(int index) {
+            int pos = index;
+            while ((pos < this.input.length)
+                    && ((this.input[pos] >= '0' && this.input[pos] <= '9')
+                    || (this.input[pos] >= 'a' && this.input[pos] <= 'z')
+                    || (this.input[pos] >= 'A' && this.input[pos] <= 'Z') || this.input[pos] == '-')) {
+                pos++; // match [0..9a-zA-Z-]+
+            }
+            if (pos == index) { // Empty String -> Error
+                this.errPos = index;
+                return false;
+            }
+
+            this.preParts.add(new String(this.input, index, pos - index));
+            if (pos == this.input.length) { // End of input
+                return true;
+            }
+            if (this.input[pos] == '.') { // More parts -> descend
+                return stateRelease(pos + 1);
+            }
+            if (this.input[pos] == '+') { // Build meta -> descend
+                return stateMeta(pos + 1);
+            }
+
+            this.errPos = pos;
+            return false;
         }
-        this.errPos = pos;
-        return false;
+
+        private boolean stateMeta(int index) {
+            int pos = index;
+            while ((pos < this.input.length)
+                    && ((this.input[pos] >= '0' && this.input[pos] <= '9')
+                    || (this.input[pos] >= 'a' && this.input[pos] <= 'z')
+                    || (this.input[pos] >= 'A' && this.input[pos] <= 'Z') || this.input[pos] == '-')) {
+                pos++; // match [0..9a-zA-Z-]+
+            }
+            if (pos == index) { // Empty String -> Error
+                this.errPos = index;
+                return false;
+            }
+
+            this.metaParts.add(new String(this.input, index, pos - index));
+            if (pos == this.input.length) { // End of input
+                return true;
+            }
+            if (this.input[pos] == '.') { // More parts -> descend
+                return stateMeta(pos + 1);
+            }
+            this.errPos = pos;
+            return false;
+        }
     }
 }

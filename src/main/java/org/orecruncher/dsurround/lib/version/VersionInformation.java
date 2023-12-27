@@ -10,9 +10,9 @@ import java.util.Optional;
 
 public record VersionInformation(Map<SemanticVersion, Map<SemanticVersion, String>> releases, Map<SemanticVersion, SemanticVersion> recommended) {
 
-    private static final Codec<Map<SemanticVersion, String>> CODEC_RELEASES = Codec.unboundedMap(VersionData.CODEC, Codec.STRING).stable();
-    private static final Codec<Map<SemanticVersion, Map<SemanticVersion, String>>> MAJOR_VERSION_RELEASES = Codec.unboundedMap(VersionData.CODEC, CODEC_RELEASES).stable();
-    private static final Codec<Map<SemanticVersion, SemanticVersion>> RECOMMENDATION = Codec.unboundedMap(VersionData.CODEC, VersionData.CODEC).stable();
+    private static final Codec<Map<SemanticVersion, String>> CODEC_RELEASES = Codec.unboundedMap(SemanticVersion.CODEC, Codec.STRING).stable();
+    private static final Codec<Map<SemanticVersion, Map<SemanticVersion, String>>> MAJOR_VERSION_RELEASES = Codec.unboundedMap(SemanticVersion.CODEC, CODEC_RELEASES).stable();
+    private static final Codec<Map<SemanticVersion, SemanticVersion>> RECOMMENDATION = Codec.unboundedMap(SemanticVersion.CODEC, SemanticVersion.CODEC).stable();
 
     public static Codec<VersionInformation> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
@@ -33,7 +33,7 @@ public record VersionInformation(Map<SemanticVersion, Map<SemanticVersion, Strin
             return Optional.empty();
 
         if (modVersion.compareTo(recommendation) < 0) {
-            String notes = null;
+            String notes = Strings.EMPTY;
             var releases = this.releases.get(minecraftVersion);
             if (releases != null) {
                 notes = releases.get(recommendation);

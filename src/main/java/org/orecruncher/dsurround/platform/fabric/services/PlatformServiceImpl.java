@@ -21,7 +21,7 @@ public class PlatformServiceImpl implements IPlatform {
                 var metadata = container.get().getMetadata();
                 var data = metadata.getCustomValue("dsurround").getAsObject();
                 var displayName = metadata.getName();
-                var version = new SemanticVersion(metadata.getVersion().getFriendlyString());
+                var version = SemanticVersion.parse(metadata.getVersion().getFriendlyString());
                 var updateURL = data.get("updateURL").getAsString();
                 var curseForgeLink = data.get("curseForgeLink").getAsString();
                 var modrinthLink = data.get("modrinthLink").getAsString();
@@ -43,7 +43,7 @@ public class PlatformServiceImpl implements IPlatform {
         var container = FabricLoader.getInstance().getModContainer(namespace);
         if (container.isPresent()) {
             try {
-                return Optional.of(new SemanticVersion(container.get().getMetadata().getVersion().getFriendlyString()));
+                return Optional.of(SemanticVersion.parse(container.get().getMetadata().getVersion().getFriendlyString()));
             } catch (Exception ignored) {
 
             }
