@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
+import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.registry.RegistryKeys;
@@ -23,7 +24,12 @@ import org.orecruncher.dsurround.xface.IBlockStateExtended;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.*;
 
 public class BlockLibrary implements IBlockLibrary {
 
@@ -99,7 +105,10 @@ public class BlockLibrary implements IBlockLibrary {
     public Stream<String> dumpBlockStates() {
         return GameUtils.getRegistryManager()
                 .orElseThrow()
-                .get(RegistryKeys.BLOCK).stream().flatMap(block -> block.getStateManager().getStates().stream()).map(State::toString).sorted();
+                .get(RegistryKeys.BLOCK).stream()
+                .flatMap(block -> block.getStateManager().getStates().stream())
+                .map(State::toString)
+                .sorted();
     }
 
     @Override
@@ -115,22 +124,28 @@ public class BlockLibrary implements IBlockLibrary {
 
     @Override
     public Stream<String> dump() {
-        var tagGroup = TagHelpers.getTagGroup(RegistryKeys.BLOCK);
-        if (tagGroup != null) {
-            return tagGroup.filter(pair -> pair.value().findAny().isPresent()).map(pair -> BlockLibrary.formatBlockTagOutput(pair.key(), pair.value())).sorted();
-        }
-
-        return Stream.empty();
+        return TagHelpers.getTagGroup(RegistryKeys.BLOCK)
+                .flatMap(e -> e.value().map(tag -> Pair.of(tag, e.key())))
+                .collect(groupingBy(Pair::key, mapping(Pair::value, toSet())))
+                .entrySet().stream()
+                .map(pair -> formatBlockTagOutput(pair.getKey(), pair.getValue()))
+                .sorted();
     }
 
     private static String formatBlockConfigRuleOutput(BlockConfigRule rule) {
         return rule.toString();
     }
 
-    private static String formatBlockTagOutput(Block block, Stream<TagKey<Block>> tags) {
+    private static String formatBlockTagOutput(TagKey<Block> blockTag, Set<Block> blocks) {
+        var manager = GameUtils.getRegistryManager().orElseThrow();
+        var blockRegistry = manager.get(RegistryKeys.BLOCK);
+
         StringBuilder builder = new StringBuilder();
-        builder.append("Tag: ").append(block);
-        tags.forEach(tag -> builder.append("\n    ").append(tag.toString()));
+        builder.append("Tag: ").append(blockTag.id().toString());
+        blocks.stream()
+                .map(block -> Objects.requireNonNull(blockRegistry.getId(block)).toString())
+                .sorted()
+                .forEach(tag -> builder.append("\n  ").append(tag));
         builder.append("\n");
         return builder.toString();
     }
