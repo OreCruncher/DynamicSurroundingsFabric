@@ -12,6 +12,7 @@
     "audio.MixinSoundSystem",
     "audio.MixinSoundSystemAccessors",
     "audio.MixinSource",
+    "audio.MixinSourceManagerAccessor",
     "audio.MixinStaticSoundAccessor",
     "core.MixinAbstractSoundInstance",
     "core.MixinBiome",
