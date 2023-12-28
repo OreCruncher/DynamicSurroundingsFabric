@@ -141,8 +141,7 @@ public abstract class CuboidScanner extends Scanner {
             for (BlockPos point = newOutOfRange.next(); point != null; point = newOutOfRange.next()) {
                 if (!this.locus.isOutOfHeightLimit(point.getY())) {
                     final BlockState state = provider.getBlockState(point);
-                    if (interestingBlock(state))
-                        blockUnscan(state, point, this.random);
+                    blockUnscan(state, point, this.random);
                 }
             }
         }
@@ -152,8 +151,7 @@ public abstract class CuboidScanner extends Scanner {
         for (BlockPos point = newInRange.next(); point != null; point = newInRange.next()) {
             if (!this.locus.isOutOfHeightLimit(point.getY())) {
                 final BlockState state = provider.getBlockState(point);
-                if (interestingBlock(state))
-                    blockScan(state, point, this.random);
+                blockScan(state, point, this.random);
             }
         }
 
@@ -191,27 +189,14 @@ public abstract class CuboidScanner extends Scanner {
         return null;
     }
 
-    protected boolean isInteresting(final BlockPos pos, final BlockState state) {
-        if (this.activeCuboid == null)
-            return false;
-
-        if (!this.activeCuboid.contains(pos))
-            return false;
-
-        return interestingBlock(state);
-    }
-
     public void onBlockUpdate(final BlockPos pos) {
         try {
             if (this.activeCuboid != null && this.activeCuboid.contains(pos)) {
                 final BlockState state = this.locus.world().get().getBlockState(pos);
-                if (isInteresting(pos, state)) {
-                    blockScan(state, pos, this.random);
-                }
+                blockScan(state, pos, this.random);
             }
         } catch (final Throwable t) {
             this.locus.logger().error(t, "onBlockUpdate() error");
         }
     }
-
 }

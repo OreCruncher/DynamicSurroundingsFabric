@@ -10,7 +10,6 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.scanner.ScanContext;
-import org.orecruncher.dsurround.processing.misc.BlockEffectManager;
 import org.orecruncher.dsurround.processing.scanner.AlwaysOnBlockEffectScanner;
 import org.orecruncher.dsurround.processing.scanner.RandomBlockEffectScanner;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
@@ -22,7 +21,6 @@ public class AreaBlockEffects extends AbstractClientHandler {
     private final IBlockLibrary blockLibrary;
     private final IAudioPlayer audioPlayer;
     protected ScanContext locus;
-    protected BlockEffectManager blockEffects;
     protected RandomBlockEffectScanner nearEffects;
     protected RandomBlockEffectScanner farEffects;
     protected AlwaysOnBlockEffectScanner alwaysOn;
@@ -48,14 +46,12 @@ public class AreaBlockEffects extends AbstractClientHandler {
         if (player == null)
             return;
 
-        if (this.blockEffects != null)
-            this.blockEffects.tick(player);
+        if (this.alwaysOn != null)
+            this.alwaysOn.tick();
         if (this.nearEffects != null)
             this.nearEffects.tick();
         if (this.farEffects != null)
             this.farEffects.tick();
-        if (this.alwaysOn != null)
-            this.alwaysOn.tick();
     }
 
     @Override
@@ -66,10 +62,10 @@ public class AreaBlockEffects extends AbstractClientHandler {
                 this.logger,
                 () -> GameUtils.getWorld().map(w -> w.getRegistryKey().getValue()).orElseThrow()
         );
-        this.blockEffects = new BlockEffectManager(this.config.blockEffects.blockEffectRange);
-        this.alwaysOn = new AlwaysOnBlockEffectScanner(this.locus, this.blockLibrary, this.blockEffects, this.config.blockEffects.blockEffectRange);
-        this.nearEffects = new RandomBlockEffectScanner(this.locus, this.blockLibrary, this.audioPlayer, this.blockEffects, RandomBlockEffectScanner.NEAR_RANGE);
-        this.farEffects = new RandomBlockEffectScanner(this.locus, this.blockLibrary, this.audioPlayer, this.blockEffects, RandomBlockEffectScanner.FAR_RANGE);
+
+        this.alwaysOn = new AlwaysOnBlockEffectScanner(this.locus, this.blockLibrary, this.config.blockEffects.blockEffectRange);
+        this.nearEffects = new RandomBlockEffectScanner(this.locus, this.blockLibrary, this.audioPlayer, this.alwaysOn, RandomBlockEffectScanner.NEAR_RANGE);
+        this.farEffects = new RandomBlockEffectScanner(this.locus, this.blockLibrary, this.audioPlayer, this.alwaysOn, RandomBlockEffectScanner.FAR_RANGE);
 
         this.isConnected = true;
     }
@@ -79,7 +75,6 @@ public class AreaBlockEffects extends AbstractClientHandler {
         this.isConnected = false;
 
         this.locus = null;
-        this.blockEffects = null;
         this.alwaysOn = null;
         this.nearEffects = null;
         this.farEffects = null;
@@ -93,7 +88,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
 
     @Override
     protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<ITimer> timers) {
-        if (this.blockEffects != null)
-            left.add(Formatting.LIGHT_PURPLE + String.format("Total Effects: %d", this.blockEffects.count()));
+        if (this.alwaysOn != null)
+            left.add(Formatting.LIGHT_PURPLE + String.format("Total Effects: %d", this.alwaysOn.count()));
     }
 }

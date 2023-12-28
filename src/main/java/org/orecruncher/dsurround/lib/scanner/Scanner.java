@@ -87,14 +87,6 @@ public abstract class Scanner {
     public abstract void blockScan(final BlockState state, final BlockPos pos,
                                    final Random rand);
 
-    /**
-     * Determines if the block is of interest to the effects. Override to provide
-     * logic beyond the basics.
-     */
-    protected boolean interestingBlock(final BlockState state) {
-        return !state.isAir();
-    }
-
     public void preScan() {
 
     }
@@ -115,9 +107,7 @@ public abstract class Scanner {
             final BlockState state = provider.getBlockState(pos);
             if (BLOCKSTATES_TO_IGNORE.contains(state))
                 continue;
-            if (interestingBlock(state)) {
-                blockScan(state, pos, this.random);
-            }
+            blockScan(state, pos, this.random);
         }
 
         postScan();
