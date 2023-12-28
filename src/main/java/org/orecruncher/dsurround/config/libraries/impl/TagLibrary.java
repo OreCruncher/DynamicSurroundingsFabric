@@ -51,21 +51,34 @@ public class TagLibrary implements ITagLibrary {
                 .map(kvp -> {
                     var builder = new StringBuilder();
 
-                    builder.append("Tag: ").append(kvp.getKey().toString()).append("\n");
-                    builder.append("Members [");
-                    for (var e : kvp.getValue().members())
-                        builder.append("\n  ").append(e.toString());
-                    builder.append("\n]\nTags [");
-                    for (var e : kvp.getValue().immediateChildTags())
-                        builder.append("\n  ").append(e.toString());
-                    builder.append("\n]\nDirect [");
-                    for (var e : kvp.getValue().immediateChildIds())
-                        builder.append("\n  ").append(e.toString());
-                    builder.append("\n]\n");
+                    builder.append("Tag: ").append(kvp.getKey().toString());
+                    var td = kvp.getValue();
 
+                    if (td.isEmpty()) {
+                        // Makes it easier to spot in the logs
+                        builder.append("\n*** EMPTY ***");
+                    } else {
+                        this.formatHelper(builder, "Members", td.members());
+                        this.formatHelper(builder, "Tags", td.immediateChildTags());
+                        this.formatHelper(builder, "Direct", td.immediateChildIds());
+                    }
+
+                    builder.append("\n");
                     return builder.toString();
                 })
                 .sorted();
+    }
+
+    private void formatHelper(StringBuilder builder, String entryName, Set<?> data) {
+        builder.append("\n").append(entryName).append(" ");
+        if (data.isEmpty())
+            builder.append("NONE");
+        else {
+            builder.append("[");
+            for (var e : data)
+                builder.append("\n  ").append(e.toString());
+            builder.append("\n]");
+        }
     }
 
     @Override
@@ -176,7 +189,7 @@ public class TagLibrary implements ITagLibrary {
         }
 
         if (entries.isEmpty()) {
-            // This could be legitimately possible. However, if there is a type in the json, like
+            // This could be legitimately possible. However, if there is a typo in the json, like
             // c:glass_pane vs. c:glass_panes, it could result in an empty scan.  Ask me how I
             // know.
             return TagData.EMPTY;
@@ -218,5 +231,9 @@ public class TagLibrary implements ITagLibrary {
 
     private record TagData(Set<Identifier> members, Set<TagKey<?>> immediateChildTags, Set<Identifier> immediateChildIds) {
         public static final TagData EMPTY = new TagData(ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of());
+
+        public boolean isEmpty() {
+            return this.members.isEmpty() && this.immediateChildIds.isEmpty() && this.immediateChildTags.isEmpty();
+        }
     }
 }
