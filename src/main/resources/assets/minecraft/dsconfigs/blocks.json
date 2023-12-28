@@ -12,6 +12,17 @@
   },
   {
     "blocks": [
+      "minecraft:lava_cauldron"
+    ],
+    "effects": [
+      {
+        "effect": "fire_jet",
+        "spawnChance": "0.03"
+      }
+    ]
+  },
+  {
+    "blocks": [
       "minecraft:lava"
     ],
     "effects": [

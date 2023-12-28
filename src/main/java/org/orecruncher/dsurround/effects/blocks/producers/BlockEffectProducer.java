@@ -66,11 +66,11 @@ public abstract class BlockEffectProducer implements IBlockEffectProducer {
 
     public static final Predicate<BlockState> LIT_CAMPFIRE = CampfireBlock::isLitCampfire;
 
-    public static final Predicate<BlockState> MAGMA_BLOCK = (state) ->
-            state.getBlock() == Blocks.MAGMA_BLOCK;
+    public static final Predicate<BlockState> HOT_BLOCK = (state) ->
+            state.getBlock() == Blocks.MAGMA_BLOCK || state.getBlock() == Blocks.LAVA_CAULDRON;
 
     public static final Predicate<BlockState> HOTBLOCK_PREDICATE = (state) ->
-            LAVA_PREDICATE.test(state) || MAGMA_BLOCK.test(state) || LIT_FURNACE.test(state) || LIT_CAMPFIRE.test(state);
+            LAVA_PREDICATE.test(state) || HOT_BLOCK.test(state) || LIT_FURNACE.test(state) || LIT_CAMPFIRE.test(state);
 
     public static int countVerticalBlocks(final World provider,
                                           final BlockPos pos,

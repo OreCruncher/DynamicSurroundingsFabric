@@ -20,8 +20,9 @@ public class UnderwaterBubbleProducer extends BlockEffectProducer {
     protected boolean canTrigger(final World world, final BlockState state,
                                  final BlockPos pos, final Random random) {
         if (WATER_PREDICATE.test(state)) {
-            var belowBlock = world.getBlockState(pos.down());
-            var isSolidBlock = belowBlock.isSolid();
+            var belowPos = pos.down();
+            var belowBlock = world.getBlockState(belowPos);
+            var isSolidBlock = belowBlock.isSolidBlock(world, belowPos);
             return isSolidBlock && super.canTrigger(world, state, pos, random);
         }
         return false;

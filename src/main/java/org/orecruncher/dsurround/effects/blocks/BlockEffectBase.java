@@ -4,7 +4,6 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -18,14 +17,12 @@ public abstract class BlockEffectBase implements IBlockEffect {
 
     protected static final Random RANDOM = XorShiftRandom.current();
     protected static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
-    protected static final Configuration CONFIG = ContainerManager.resolve(Configuration.class);
 
     protected final World world;
     protected final double posX;
     protected final double posY;
     protected final double posZ;
     protected final BlockPos position;
-    protected final long positionIndex;
     private boolean isAlive = true;
 
     protected BlockEffectBase(final World worldIn, final double posXIn, final double posYIn, final double posZIn) {
@@ -34,15 +31,10 @@ public abstract class BlockEffectBase implements IBlockEffect {
         this.posY = posYIn;
         this.posZ = posZIn;
         this.position = BlockPos.ofFloored(posXIn, posYIn, posZIn);
-        this.positionIndex = this.position.asLong();
     }
 
     public BlockPos getPos() {
         return this.position;
-    }
-
-    public long getPositionIndex() {
-        return this.positionIndex;
     }
 
     /**
@@ -84,7 +76,7 @@ public abstract class BlockEffectBase implements IBlockEffect {
 
     /**
      * By default, a system will stay alive indefinitely until the
-     * ParticleSystemManager kills it. Override to provide termination capability.
+     * ParticleSystemManager removes it. Override to provide termination capability.
      */
     public boolean shouldDie() {
         return false;

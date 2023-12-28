@@ -42,7 +42,7 @@ public class FlameJetProducer extends BlockEffectProducer {
             final double blockHeight = shape.getBoundingBox().maxY;
             spawnHeight = (float) (pos.getY() + blockHeight);
             isSolid = true;
-            if (state.isSolid()) {
+            if (state.isSolidBlock(world, pos)) {
                 blockCount = 2;
             } else {
                 blockCount = 1;
