@@ -11,7 +11,6 @@ import java.util.stream.Stream;
 
 public interface ITagLibrary extends ILibrary {
 
-    <T> Stream<TagKey<T>> streamTags(T entity);
     <T> String asString(Stream<TagKey<T>> tagStream);
     <T> boolean isIn(TagKey<T> tagKey, T entry);
     <T> boolean isIn(TagKey<T> tagKey, RegistryEntry<T> registryEntry);

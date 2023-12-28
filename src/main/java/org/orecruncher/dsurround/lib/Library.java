@@ -21,10 +21,9 @@ import org.orecruncher.dsurround.lib.util.MinecraftDirectories;
  */
 public final class Library {
 
-    // Loader specific API implementations
+    // Loader-specific API implementations
     private static final IPlatform PLATFORM = ContainerManager.resolve(IPlatform.class);
     private static final IClientEventRegistrations EVENT_REGISTRATIONS = ContainerManager.resolve(IClientEventRegistrations.class);
-    private static final IClientTagUtilities TAG_UTILITIES = ContainerManager.resolve(IClientTagUtilities.class);
 
     private static IModLog LOGGER;
 
@@ -56,11 +55,6 @@ public final class Library {
     @NotNull
     public static IPlatform getPlatform() {
         return PLATFORM;
-    }
-
-    @NotNull
-    public static IClientTagUtilities getTagUtilities() {
-        return TAG_UTILITIES;
     }
 
     @NotNull

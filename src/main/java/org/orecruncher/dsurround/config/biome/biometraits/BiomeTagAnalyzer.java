@@ -71,7 +71,7 @@ public class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
         Set<BiomeTrait> results = new HashSet<>();
 
         // Have to do it this way so that the client side tagging has a chance.  When connecting to
-        // vanilla servers they will ONLY have the Minecraft tags, not the Fabric ones.
+        // vanilla servers, they will ONLY have the Minecraft tags, not the Fabric ones.
         for (var tagEntry : tagToTraitMap.entrySet())
             if (TAG_LIBRARY.isIn(tagEntry.getKey(), biomeEntry))
                 results.add(tagEntry.getValue());

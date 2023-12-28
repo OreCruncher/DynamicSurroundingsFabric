@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.platform.fabric.services;
 
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.option.KeyBinding;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
@@ -9,7 +10,9 @@ import org.orecruncher.dsurround.lib.version.SemanticVersion;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class PlatformServiceImpl implements IPlatform {
@@ -66,6 +69,16 @@ public class PlatformServiceImpl implements IPlatform {
 
     public Path getConfigPath() {
         return FabricLoader.getInstance().getConfigDir();
+    }
+
+    public Set<Path> getResourcePaths(String path) {
+        Set<Path> out = new HashSet<>();
+
+        for (ModContainer mod : FabricLoader.getInstance().getAllMods()) {
+            mod.findPath(path).ifPresent(out::add);
+        }
+
+        return out;
     }
 
     @Override

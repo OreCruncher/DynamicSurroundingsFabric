@@ -5,6 +5,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
@@ -19,10 +20,12 @@ public class StepThroughBrushEffect extends EntityEffectBase {
             .category(SoundCategory.PLAYERS).volume(0.3F).pitchRange(0.8F, 1.2F).build();
 
     private final ITickCount tickCount;
+    private final ITagLibrary tagLibrary;
     private long lastBrushCheck;
 
-    public StepThroughBrushEffect(ITickCount tickCount) {
+    public StepThroughBrushEffect(ITickCount tickCount, ITagLibrary tagLibrary) {
         this.tickCount = tickCount;
+        this.tagLibrary = tagLibrary;
     }
 
     @Override
@@ -32,14 +35,20 @@ public class StepThroughBrushEffect extends EntityEffectBase {
             this.lastBrushCheck = currentCount + BRUSH_INTERVAL;
             var entity = info.getEntity().orElseThrow();
             if (this.shouldProcess(entity)) {
+
                 var world = entity.getEntityWorld();
                 var pos = entity.getPos();
                 var feetPos = BlockPos.ofFloored(pos.getX(), pos.getY() + 0.25D, pos.getZ());
-                var headPos = feetPos.up();
-                if (world.getBlockState(feetPos).isIn(BlockEffectTags.BRUSH_STEP))
+
+                var block = world.getBlockState(feetPos).getBlock();
+                if (this.tagLibrary.isIn(BlockEffectTags.BRUSH_STEP, block)) {
                     this.playBrushSound(feetPos);
-                else if (world.getBlockState(headPos).isIn(BlockEffectTags.BRUSH_STEP))
-                    this.playBrushSound(headPos);
+                } else {
+                    var headPos = feetPos.up();
+                    block = world.getBlockState(headPos).getBlock();
+                    if (this.tagLibrary.isIn(BlockEffectTags.BRUSH_STEP, block))
+                        this.playBrushSound(headPos);
+                }
             }
         }
     }

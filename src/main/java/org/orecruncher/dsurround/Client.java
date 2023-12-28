@@ -118,6 +118,7 @@ public abstract class Client implements IMinecraftMod {
         AssetLibraryEvent.RELOAD.register(container.resolve(IBlockLibrary.class)::reload);
         AssetLibraryEvent.RELOAD.register(container.resolve(IItemLibrary.class)::reload);
         AssetLibraryEvent.RELOAD.register(container.resolve(IEntityEffectLibrary.class)::reload);
+        AssetLibraryEvent.RELOAD.register(container.resolve(ITagLibrary.class)::reload);
 
         // Make the libraries load their data
         AssetLibraryEvent.reload();

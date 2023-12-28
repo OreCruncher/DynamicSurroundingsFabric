@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 public final class ParticleSheets {
 
-    private static final Configuration.BlockEffects CONFIG = ContainerManager.resolve(Configuration.BlockEffects.class);
+    private static Configuration.BlockEffects CONFIG;
 
     public static final Identifier TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE = new Identifier(Constants.MOD_ID, "textures/particles/pixel_ripples.png");
 
@@ -27,6 +27,7 @@ public final class ParticleSheets {
 
     public static void register() {
 
+        CONFIG = ContainerManager.resolve(Configuration.BlockEffects.class);
         var manager = GameUtils.getTextureManager().orElseThrow();
         manager.registerTexture(TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE, new ResourceTexture(TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE));
 

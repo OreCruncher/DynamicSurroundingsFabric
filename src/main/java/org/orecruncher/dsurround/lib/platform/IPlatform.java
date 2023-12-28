@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 public interface IPlatform {
 
@@ -53,6 +54,11 @@ public interface IPlatform {
 
         return configPath;
     }
+
+    /**
+     * @return all paths from the available mods that match the given internal path
+     */
+    Set<Path> getResourcePaths(String pathPrefix);
 
     KeyBinding registerKeyBinding(String translationKey, int code, String category);
 }
