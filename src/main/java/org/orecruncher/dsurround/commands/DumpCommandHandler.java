@@ -21,6 +21,7 @@ public class DumpCommandHandler {
     private static final IDimensionLibrary dimensionLibrary = ContainerManager.resolve(IDimensionLibrary.class);
     private static final IBlockLibrary blockLibrary = ContainerManager.resolve(IBlockLibrary.class);
     private static final IItemLibrary itemLibrary = ContainerManager.resolve(IItemLibrary.class);
+    private static final ITagLibrary tagLibrary = ContainerManager.resolve(ITagLibrary.class);
 
     public static Text dumpBiomes() {
         return handle("biomes", biomeLibrary::dump);
@@ -52,6 +53,10 @@ public class DumpCommandHandler {
 
     public static Text dumpItems() {
         return handle("items", itemLibrary::dump);
+    }
+
+    public static Text dumpTags() {
+        return handle("tags", tagLibrary::dump);
     }
 
     private static Text handle(final String operation, final Supplier<Stream<String>> supplier) {

@@ -40,6 +40,9 @@ class DumpCommand extends ClientCommand {
                 .then(
                         literal("items")
                                 .executes(cmd -> this.execute(cmd, DumpCommandHandler::dumpItems)))
+                .then(
+                        literal("tags")
+                                .executes(cmd -> this.execute(cmd, DumpCommandHandler::dumpTags)))
         );
     }
 }

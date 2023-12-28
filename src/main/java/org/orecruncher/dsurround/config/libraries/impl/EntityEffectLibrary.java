@@ -115,7 +115,8 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
 
         accessor.dsurround_setEffectInfo(info);
 
-        // Initialize the attached effects before returning.  Usually the next step in processing would be
+        // Initialize the attached effects before returning.
+        // Usually, the next step in processing would be
         // to tick the effects.
         info.activate();
 

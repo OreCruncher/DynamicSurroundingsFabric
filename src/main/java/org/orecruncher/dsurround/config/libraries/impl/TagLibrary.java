@@ -6,7 +6,6 @@ import com.google.gson.JsonParser;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.JsonOps;
 import it.unimi.dsi.fastutil.Pair;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
@@ -39,7 +38,7 @@ public class TagLibrary implements ITagLibrary {
     private final IPlatform platform;
     private final IModLog logger;
 
-    private final Object2ObjectOpenHashMap<TagKey<?>, TagData> tagCache = new Object2ObjectOpenHashMap<>();
+    private final Map<TagKey<?>, TagData> tagCache = new HashMap<>();
 
     public TagLibrary(IPlatform platform, IModLog logger) {
         this.platform = platform;
@@ -48,7 +47,25 @@ public class TagLibrary implements ITagLibrary {
 
     @Override
     public Stream<String> dump() {
-        return Stream.of("Not implemented");
+        return this.tagCache.entrySet().stream()
+                .map(kvp -> {
+                    var builder = new StringBuilder();
+
+                    builder.append("Tag: ").append(kvp.getKey().toString()).append("\n");
+                    builder.append("Members [");
+                    for (var e : kvp.getValue().members())
+                        builder.append("\n  ").append(e.toString());
+                    builder.append("\n]\nTags [");
+                    for (var e : kvp.getValue().immediateChildTags())
+                        builder.append("\n  ").append(e.toString());
+                    builder.append("\n]\nDirect [");
+                    for (var e : kvp.getValue().immediateChildIds())
+                        builder.append("\n  ").append(e.toString());
+                    builder.append("\n]\n");
+
+                    return builder.toString();
+                })
+                .sorted();
     }
 
     @Override
@@ -78,9 +95,11 @@ public class TagLibrary implements ITagLibrary {
         if (registryEntry.isIn(tagKey)) {
             return true;
         }
+
         // Fallback to data packs on the client
-        var id = registryEntry.getKey().map(RegistryKey::getValue).orElseThrow();
-        return this.getTagData(tagKey).completeIds().contains(id);
+        return this.getObjectIdentifier(registryEntry)
+                .map(id -> this.getTagData(tagKey).members().contains(id))
+                .orElse(false);
     }
 
     @Override
@@ -92,6 +111,10 @@ public class TagLibrary implements ITagLibrary {
                 .flatMap(e -> e.streamTags().map(tag -> Pair.of(tag, e.value())))
                 .collect(groupingBy(Pair::key, mapping(Pair::value, toSet())))
                 .entrySet().stream().map(e -> Pair.of(e.getKey(), e.getValue()));
+    }
+
+    private <T> Optional<Identifier> getObjectIdentifier(RegistryEntry<T> registryEntry) {
+        return registryEntry.getKey().map(RegistryKey::getValue);
     }
 
     private <T> Optional<RegistryEntry<T>> getRegistryEntry(TagKey<T> tagKey, T entry) {
@@ -118,11 +141,20 @@ public class TagLibrary implements ITagLibrary {
     }
 
     private TagData getTagData(TagKey<?> tagKey) {
-        return this.tagCache.computeIfAbsent(tagKey, this::loadTagData);
+        // We cannot use computeIfAbsent() because tag loading is a
+        // recursive process and will refer back and potentially modify the
+        // tag cache.
+        var data = this.tagCache.get(tagKey);
+        if (data == null) {
+            data = this.loadTagData(tagKey);
+            this.tagCache.put(tagKey, data);
+        }
+        return data;
     }
 
+    // This is based on the Fabric client tag handling code.
     private TagData loadTagData(TagKey<?> tagKey) {
-        Set<TagEntry> tags = new HashSet<>();
+        Set<TagEntry> entries = new HashSet<>();
         Set<Path> tagFiles = this.getTagFiles(tagKey.registry(), tagKey.id());
 
         for (Path tagPath : tagFiles) {
@@ -133,17 +165,20 @@ public class TagLibrary implements ITagLibrary {
 
                 if (maybeTagFile != null) {
                     if (maybeTagFile.replace()) {
-                        tags.clear();
+                        entries.clear();
                     }
 
-                    tags.addAll(maybeTagFile.entries());
+                    entries.addAll(maybeTagFile.entries());
                 }
             } catch (IOException e) {
                 this.logger.error(e, "Error loading tag: " + tagKey);
             }
         }
 
-        if (tags.isEmpty()) {
+        if (entries.isEmpty()) {
+            // This could be legitimately possible. However, if there is a type in the json, like
+            // c:glass_pane vs. c:glass_panes, it could result in an empty scan.  Ask me how I
+            // know.
             return TagData.EMPTY;
         }
 
@@ -151,7 +186,7 @@ public class TagLibrary implements ITagLibrary {
         Set<Identifier> immediateChildIds = new HashSet<>();
         Set<TagKey<?>> immediateChildTags = new HashSet<>();
 
-        for (TagEntry tagEntry : tags) {
+        for (TagEntry tagEntry : entries) {
             tagEntry.resolve(new TagEntry.ValueGetter<>() {
                 @Nullable
                 @Override
@@ -166,7 +201,7 @@ public class TagLibrary implements ITagLibrary {
                     TagKey<?> tag = TagKey.of(tagKey.registry(), id);
                     immediateChildTags.add(tag);
                     // This will trigger recursion to generate a complete list of IDs
-                    return getTagData(tag).completeIds();
+                    return getTagData(tag).members();
                 }
             }, completeIds::add);
         }
@@ -181,7 +216,7 @@ public class TagLibrary implements ITagLibrary {
         return this.platform.getResourcePaths(tagFile);
     }
 
-    private record TagData(Set<Identifier> completeIds, Set<TagKey<?>> immediateChildTags, Set<Identifier> immediateChildIds) {
+    private record TagData(Set<Identifier> members, Set<TagKey<?>> immediateChildTags, Set<Identifier> immediateChildIds) {
         public static final TagData EMPTY = new TagData(ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of());
     }
 }
