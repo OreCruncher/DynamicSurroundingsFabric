@@ -26,6 +26,10 @@ public abstract class ParticleJetEffect extends BlockEffectBase {
         this.particleMaxAge = (RANDOM.nextInt(strength) + 2) * 20;
     }
 
+    public int getJetStrength() {
+        return this.jetStrength;
+    }
+
     /*
      * Override in derived class to provide particle for the jet.
      */

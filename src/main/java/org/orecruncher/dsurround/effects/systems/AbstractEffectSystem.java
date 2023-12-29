@@ -57,7 +57,7 @@ public abstract class AbstractEffectSystem implements IEffectSystem {
         var effect = this.systems.get(longPos);
         if (effect != null) {
             effect.setDone();
-            this.systems.remove(longPos);
+            this.onRemoveSystem(longPos);
         }
     };
 
@@ -68,6 +68,10 @@ public abstract class AbstractEffectSystem implements IEffectSystem {
 
     protected boolean hasSystemAtPosition(BlockPos pos) {
         return this.systems.containsKey(pos.asLong());
+    }
+
+    protected void onRemoveSystem(long posLong) {
+        this.systems.remove(posLong);
     }
 
     protected <T extends ParticleEffect> Optional<Particle> createParticle(T parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {

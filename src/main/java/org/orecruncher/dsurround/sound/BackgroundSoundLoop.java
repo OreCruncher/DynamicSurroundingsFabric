@@ -55,6 +55,10 @@ public class BackgroundSoundLoop extends MovingSoundInstance {
             this.setDone();
     }
 
+    public BlockPos getPos() {
+        return BlockPos.ofFloored(this.x, this.y, this.z);
+    }
+
     public BackgroundSoundLoop setVolume(float volume) {
         this.volume = volume;
         return this;
