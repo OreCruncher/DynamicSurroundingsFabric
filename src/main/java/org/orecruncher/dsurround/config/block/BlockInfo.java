@@ -32,15 +32,12 @@ public class BlockInfo {
     private static final float DEFAULT_OPAQUE_OCCLUSION = 0.5F;
     private static final float DEFAULT_TRANSLUCENT_OCCLUSION = 0.15F;
     private static final float DEFAULT_REFLECTION = 0.0F; //0.4F;
-    private static final Script ALWAYS_ON_EFFECT_CHANCE = new Script("1.0");
 
     // Lazy init on add
     @Nullable
     protected ObjectArray<AcousticEntry> sounds;
     @Nullable
     protected ObjectArray<IBlockEffectProducer> blockEffects;
-    @Nullable
-    protected ObjectArray<IBlockEffectProducer> alwaysOnEffects;
 
     protected final int version;
     protected final IConditionEvaluator conditionEvaluator;
@@ -62,7 +59,7 @@ public class BlockInfo {
     }
 
     public boolean isDefault() {
-        return this.sounds == null && this.blockEffects == null && this.alwaysOnEffects == null
+        return this.sounds == null && this.blockEffects == null
                 && this.soundReflectivity == DEFAULT_REFLECTION
                 && (this.soundOcclusion == DEFAULT_OPAQUE_OCCLUSION
                         || this.soundOcclusion == DEFAULT_TRANSLUCENT_OCCLUSION);
@@ -92,12 +89,6 @@ public class BlockInfo {
         this.blockEffects.add(effect);
     }
 
-    private void addToAlwaysOnEffects(IBlockEffectProducer effect) {
-        if (this.alwaysOnEffects == null)
-            this.alwaysOnEffects = new ObjectArray<>(2);
-        this.alwaysOnEffects.add(effect);
-    }
-
     // TODO: Eliminate duplicates
     public void update(BlockConfigRule config) {
         // Reset of a block clears all registry
@@ -120,14 +111,8 @@ public class BlockInfo {
         }
 
         for (var e : config.effects()) {
-            var chance = e.alwaysOn() ? ALWAYS_ON_EFFECT_CHANCE : e.spawnChance();
-            var effect = e.effect().createInstance(chance, e.conditions());
-            effect.ifPresent(t -> {
-                if (e.alwaysOn())
-                    this.addToAlwaysOnEffects(t);
-                else
-                    this.addToBlockEffects(t);
-            });
+            var effect = e.effect().createInstance(e.spawnChance(), e.conditions());
+            effect.ifPresent(this::addToBlockEffects);
         }
     }
 
@@ -138,10 +123,6 @@ public class BlockInfo {
 
     public boolean hasSoundsOrEffects() {
         return this.sounds != null || this.blockEffects != null;
-    }
-
-    public boolean hasAlwaysOnEffects() {
-        return this.alwaysOnEffects != null;
     }
 
     public Optional<ISoundFactory> getSoundToPlay(final Random random) {
@@ -159,22 +140,12 @@ public class BlockInfo {
         return this.blockEffects == null ? ImmutableList.of() : this.blockEffects;
     }
 
-    public Collection<IBlockEffectProducer> getAlwaysOnEffectProducers() {
-        return this.alwaysOnEffects == null ? ImmutableList.of() : this.alwaysOnEffects;
-    }
-
     public void trim() {
         if (this.sounds != null) {
             if (this.sounds.isEmpty())
                 this.sounds = null;
             else
                 this.sounds.trim();
-        }
-        if (this.alwaysOnEffects != null) {
-            if (alwaysOnEffects.isEmpty())
-                this.alwaysOnEffects = null;
-            else
-                this.alwaysOnEffects.trim();
         }
         if (this.blockEffects != null) {
             if (blockEffects.isEmpty())
@@ -243,13 +214,6 @@ public class BlockInfo {
             builder.append(
                     this.blockEffects.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n]\n");
-        }
-
-        if (this.alwaysOnEffects != null) {
-            builder.append("always on effects [\n");
-            builder.append(
-                    this.alwaysOnEffects.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));
-            builder.append("\n]");
         }
 
         return builder.toString();

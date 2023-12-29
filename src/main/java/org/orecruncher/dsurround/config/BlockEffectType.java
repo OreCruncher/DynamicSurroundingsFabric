@@ -18,10 +18,8 @@ import java.util.stream.Collectors;
 
 public enum BlockEffectType {
     UNKNOWN("unknown", (chance, condition) -> null),
-    STEAM_COLUMN("steam_column", SteamColumnProducer::new),
     FLAME_JET("fire_jet", FlameJetProducer::new),
     BUBBLE_COLUMN("bubble_column", UnderwaterBubbleProducer::new),
-    WATERFALL("waterfall", WaterSplashProducer::new),
     FIREFLY("firefly",
             (chance, conditions) -> new BlockParticleEffectProducer(chance, conditions,
                     (world, state, pos, rand) -> new FireflyParticle(world, pos.getX() + 0.D, pos.getY() + 0.5D, pos.getZ() + 0.5D)));
@@ -63,10 +61,8 @@ public enum BlockEffectType {
     static {
         Configuration.BlockEffects config = ContainerManager.resolve(Configuration.BlockEffects.class);
         UNKNOWN.setConfigProvider(() -> false);
-        STEAM_COLUMN.setConfigProvider(() -> config.steamColumnEnabled);
         FLAME_JET.setConfigProvider(() -> config.flameJetEnabled);
         BUBBLE_COLUMN.setConfigProvider(() -> config.bubbleColumnEnabled);
-        WATERFALL.setConfigProvider(() -> config.waterfallsEnabled);
         FIREFLY.setConfigProvider(() -> config.firefliesEnabled);
     }
 }

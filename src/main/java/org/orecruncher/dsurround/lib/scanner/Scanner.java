@@ -84,8 +84,7 @@ public abstract class Scanner {
      * safe to hold on to beyond the call so if it needs to be kept it needs to be
      * copied.
      */
-    public abstract void blockScan(final BlockState state, final BlockPos pos,
-                                   final Random rand);
+    public abstract void blockScan(final World world, final BlockState state, final BlockPos pos, final Random rand);
 
     public void preScan() {
 
@@ -107,11 +106,10 @@ public abstract class Scanner {
             final BlockState state = provider.getBlockState(pos);
             if (BLOCKSTATES_TO_IGNORE.contains(state))
                 continue;
-            blockScan(state, pos, this.random);
+            blockScan(provider, state, pos, this.random);
         }
 
         postScan();
-
     }
 
     /**

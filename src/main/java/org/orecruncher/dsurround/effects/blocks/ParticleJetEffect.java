@@ -10,12 +10,15 @@ public abstract class ParticleJetEffect extends BlockEffectBase {
     protected final int particleMaxAge;
     protected int particleAge;
 
-    public ParticleJetEffect(final int strength, final World world, final double x, final double y, final double z) {
-        this(0, strength, world, x, y, z, 3);
+    public ParticleJetEffect(World world, double x, double y, double z) {
+        this(1, world, x, y, z);
     }
 
-    public ParticleJetEffect(final int layer, final int strength, final World world, final double x, final double y,
-               final double z, final int freq) {
+    public ParticleJetEffect(int strength, World world, double x, double y, double z) {
+        this(strength, world, x, y, z, 3);
+    }
+
+    public ParticleJetEffect(int strength, World world, double x, double y, double z, int freq) {
         super(world, x, y, z);
 
         this.jetStrength = strength;
@@ -34,14 +37,14 @@ public abstract class ParticleJetEffect extends BlockEffectBase {
     }
 
     /*
-     * During update see if a particle needs to be spawned so that it can rise up.
+     * Ages the effect and detects whether a particle needs to be emitted.
      */
     @Override
     public void think() {
 
         // Check to see if a particle needs to be generated
         if (this.particleAge % this.updateFrequency == 0) {
-            spawnJetParticle();
+            this.spawnJetParticle();
         }
 
         // Grow older

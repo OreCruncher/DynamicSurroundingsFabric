@@ -11,6 +11,7 @@ import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 import org.orecruncher.dsurround.mixins.core.MixinParticleManager;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
+import java.util.Optional;
 import java.util.Random;
 
 public abstract class BlockEffectBase implements IBlockEffect {
@@ -55,14 +56,14 @@ public abstract class BlockEffectBase implements IBlockEffect {
      * Creates a particle effect but does not queue.  Allows for the particle to be manipulated prior to handing
      * it to the particle manager.
      */
-    public <T extends ParticleEffect> Particle createParticle(T parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
+    public <T extends ParticleEffect> Optional<Particle> createParticle(T parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
         return GameUtils.getParticleManager().map(pm -> {
             var t = (MixinParticleManager) pm;
             return t.dsurroundCreateParticle(
                 parameters,
                 x, y, z,
                 velocityX, velocityY, velocityZ);
-        }).orElse(null);
+        });
     }
 
     public boolean isDone() {

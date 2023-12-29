@@ -54,24 +54,6 @@ public abstract class BlockEffectProducer implements IBlockEffectProducer {
     //
     public static final int MAX_STRENGTH = 10;
 
-    public static final Predicate<BlockState> FLUID_PREDICATE = (state) -> !state.getFluidState().isEmpty();
-
-    public static final Predicate<BlockState> LAVA_PREDICATE = (state) -> state.getFluidState().isIn(FluidTags.LAVA);
-
-    public static final Predicate<BlockState> WATER_PREDICATE = (state) -> state.getFluidState().isIn(FluidTags.WATER);
-
-    // Covers blast furnace
-    public static final Predicate<BlockState> LIT_FURNACE = (state) ->
-            state.getBlock() instanceof AbstractFurnaceBlock && state.get(AbstractFurnaceBlock.LIT);
-
-    public static final Predicate<BlockState> LIT_CAMPFIRE = CampfireBlock::isLitCampfire;
-
-    public static final Predicate<BlockState> HOT_BLOCK = (state) ->
-            state.getBlock() == Blocks.MAGMA_BLOCK || state.getBlock() == Blocks.LAVA_CAULDRON;
-
-    public static final Predicate<BlockState> HOTBLOCK_PREDICATE = (state) ->
-            LAVA_PREDICATE.test(state) || HOT_BLOCK.test(state) || LIT_FURNACE.test(state) || LIT_CAMPFIRE.test(state);
-
     public static int countVerticalBlocks(final World provider,
                                           final BlockPos pos,
                                           final Predicate<BlockState> predicate,

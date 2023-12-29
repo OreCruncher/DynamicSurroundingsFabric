@@ -12,6 +12,8 @@ public class BlockEffectTags {
     public static final TagKey<Block> FLOOR_SQUEAKS = of("floor_squeaks");
     public static final TagKey<Block> BRUSH_STEP = of("brush_step");
     public static final TagKey<Block> WATERY_STEP = of("watery_step");
+    public static final TagKey<Block> STEAM_PRODUCERS = of("steam_producers");
+    public static final TagKey<Block> HEAT_PRODUCERS = of("heat_producers");
 
     private static TagKey<Block> of(String id) {
         return TagKey.of(RegistryKeys.BLOCK, new Identifier(Constants.MOD_ID, "effects/" + id));

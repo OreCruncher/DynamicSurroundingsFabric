@@ -10,6 +10,8 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 import java.util.Optional;
 import java.util.Random;
 
+import static org.orecruncher.dsurround.effects.BlockEffectUtils.IS_WATER;
+
 public class UnderwaterBubbleProducer extends BlockEffectProducer {
 
     public UnderwaterBubbleProducer(Script chance, Script conditions) {
@@ -19,7 +21,7 @@ public class UnderwaterBubbleProducer extends BlockEffectProducer {
     @Override
     protected boolean canTrigger(final World world, final BlockState state,
                                  final BlockPos pos, final Random random) {
-        if (WATER_PREDICATE.test(state)) {
+        if (IS_WATER.test(state)) {
             var belowPos = pos.down();
             var belowBlock = world.getBlockState(belowPos);
             var isSolidBlock = belowBlock.isSolidBlock(world, belowPos);
@@ -31,7 +33,7 @@ public class UnderwaterBubbleProducer extends BlockEffectProducer {
     @Override
     protected Optional<IBlockEffect> produceImpl(final World world, final BlockState state,
                                               final BlockPos pos, final Random random) {
-        var liquidBlocks = countVerticalBlocks(world, pos, WATER_PREDICATE, 1);
+        var liquidBlocks = countVerticalBlocks(world, pos, IS_WATER, 1);
         if (liquidBlocks > 0) {
             var effect = new BubbleJetEffect(liquidBlocks, world, pos.getX() + 0.5D,
                     pos.getY() + 0.1D, pos.getZ() + 0.5D);

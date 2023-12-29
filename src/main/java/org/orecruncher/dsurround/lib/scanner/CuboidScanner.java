@@ -105,7 +105,7 @@ public abstract class CuboidScanner extends Scanner {
                     } else {
                         // The existing scan hasn't completed, but now we
                         // have a delta set. Finish out scanning the
-                        // old volume and once that is locked then a
+                        // old volume, and once that is locked, then a
                         // subsequent tick will do a delta update to get
                         // the new blocks.
                         super.tick();
@@ -126,7 +126,7 @@ public abstract class CuboidScanner extends Scanner {
      * This is the hook that gets called when a block goes out of scope because the
      * player moved or something.
      */
-    public void blockUnscan(final BlockState state, final BlockPos pos, final Random rand) {
+    public void blockUnscan(final World world, final BlockState state, final BlockPos pos, final Random rand) {
 
     }
 
@@ -141,7 +141,7 @@ public abstract class CuboidScanner extends Scanner {
             for (BlockPos point = newOutOfRange.next(); point != null; point = newOutOfRange.next()) {
                 if (!this.locus.isOutOfHeightLimit(point.getY())) {
                     final BlockState state = provider.getBlockState(point);
-                    blockUnscan(state, point, this.random);
+                    blockUnscan(provider, state, point, this.random);
                 }
             }
         }
@@ -151,7 +151,7 @@ public abstract class CuboidScanner extends Scanner {
         for (BlockPos point = newInRange.next(); point != null; point = newInRange.next()) {
             if (!this.locus.isOutOfHeightLimit(point.getY())) {
                 final BlockState state = provider.getBlockState(point);
-                blockScan(state, point, this.random);
+                blockScan(provider, state, point, this.random);
             }
         }
 
@@ -192,8 +192,9 @@ public abstract class CuboidScanner extends Scanner {
     public void onBlockUpdate(final BlockPos pos) {
         try {
             if (this.activeCuboid != null && this.activeCuboid.contains(pos)) {
-                final BlockState state = this.locus.world().get().getBlockState(pos);
-                blockScan(state, pos, this.random);
+                var world = this.locus.world().get();
+                final BlockState state = world.getBlockState(pos);
+                blockScan(world, state, pos, this.random);
             }
         } catch (final Throwable t) {
             this.locus.logger().error(t, "onBlockUpdate() error");
