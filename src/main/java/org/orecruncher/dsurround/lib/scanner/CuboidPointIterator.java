@@ -28,11 +28,11 @@ public class CuboidPointIterator implements IPointIterator {
         this.itr = null;
     }
 
-    public CuboidPointIterator( final BlockPos[] points) {
+    public CuboidPointIterator(final BlockPos[] points) {
         this(points[0], points[1]);
     }
 
-    public CuboidPointIterator( final BlockPos p1,  final BlockPos p2) {
+    public CuboidPointIterator(final BlockPos p1, final BlockPos p2) {
         this.itr = BlockPos.iterate(p1, p2).iterator();
         if (this.itr.hasNext())
             this.peeked = this.itr.next();

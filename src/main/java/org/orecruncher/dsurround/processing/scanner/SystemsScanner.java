@@ -3,11 +3,11 @@ package org.orecruncher.dsurround.processing.scanner;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IEffectSystem;
+import org.orecruncher.dsurround.lib.BlockPosUtil;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.scanner.CuboidScanner;
@@ -55,12 +55,11 @@ public class SystemsScanner extends CuboidScanner {
         Predicate<IBlockEffect> pred;
 
         if (!sittingStill) {
-            final BlockPos min = current.add(-this.range, -this.range, -this.range);
-            final BlockPos max = current.add(this.range, this.range, this.range);
-            final Box area = Box.enclosing(min, max);
+            var minPoint = current.add(-this.range, -this.range, -this.range);
+            var maxPoint = current.add(this.range, this.range, this.range);
 
             pred = system -> {
-                if (!area.contains(system.getPosition())) {
+                if (!BlockPosUtil.contains(system.getPos(), minPoint, maxPoint)) {
                     system.setDone();
                 } else {
                     system.tick();

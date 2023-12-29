@@ -156,6 +156,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
                 }
             } else if (sound != null) {
                 // Not in the list - cross it off
+                this.logger.debug("[%s] removing sound instance %s", this.systemName, sound.toString());
                 this.audioPlayer.stop(sound);
                 this.waterfallSoundInstances.remove(posIndex);
             }
@@ -194,9 +195,11 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
         return this.systems.values().stream()
                 .map(e -> {
                     var effect = (WaterfallEffect)e;
+                    var posIndex = effect.getPosIndex();
+                    var strength = effect.getJetStrength();
                     var pos = effect.getPosition();
-                    var weight = (effect.getJetStrength() * effect.getJetStrength()) / player.squaredDistanceTo(pos);
-                    return Pair.of(weight, effect.getPosIndex());
+                    var weight = (strength * strength) / player.getEyePos().squaredDistanceTo(pos);
+                    return Pair.of(weight, posIndex);
                 })
                 .sorted((e1, e2) -> -Double.compare(e1.key(), e2.key()))
                 .limit(SOUND_INSTANCE_CAP)
