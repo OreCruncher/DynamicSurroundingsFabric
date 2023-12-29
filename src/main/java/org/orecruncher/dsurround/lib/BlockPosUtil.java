@@ -5,7 +5,7 @@ import net.minecraft.util.math.BlockPos;
 public final class BlockPosUtil {
 
     public static boolean canFormCuboid( final BlockPos p1,  final BlockPos p2) {
-        return !(p1.getX() == p2.getX() || p1.getZ() == p2.getZ() || p1.getY() == p2.getY());
+        return !(p1.getX() == p2.getX() && p1.getZ() == p2.getZ() && p1.getY() == p2.getY());
     }
 
     public static BlockPos createMinPoint( final BlockPos p1,  final BlockPos p2) {
@@ -21,7 +21,7 @@ public final class BlockPosUtil {
     /**
      * Determines if the test point is contained within the volume described by two
      * other points. It is expected that the calling routine has ensured that the
-     * min/max points are valid. If they are not valid the results will more than
+     * min/max points are valid. If they are not valid, the results will more than
      * likely be erroneous.
      *
      * @param test The point that is being tested

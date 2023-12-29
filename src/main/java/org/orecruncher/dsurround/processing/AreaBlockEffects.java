@@ -63,10 +63,10 @@ public class AreaBlockEffects extends AbstractClientHandler {
         );
 
         this.effectSystems = new SystemsScanner(this.config, this.locus);
-        this.effectSystems.addEffectSystem(new SteamEffectSystem(this.config));
-        this.effectSystems.addEffectSystem(new WaterfallEffectSystem(this.config));
-        this.effectSystems.addEffectSystem(new RandomBlockEffectSystem(this.config, this.blockLibrary, this.audioPlayer, RandomBlockEffectSystem.NEAR_RANGE));
-        this.effectSystems.addEffectSystem(new RandomBlockEffectSystem(this.config, this.blockLibrary, this.audioPlayer, RandomBlockEffectSystem.FAR_RANGE));
+        this.effectSystems.addEffectSystem(new SteamEffectSystem(this.logger, this.config));
+        this.effectSystems.addEffectSystem(new WaterfallEffectSystem(this.logger, this.config));
+        this.effectSystems.addEffectSystem(new RandomBlockEffectSystem(this.logger, this.config, this.blockLibrary, this.audioPlayer, RandomBlockEffectSystem.NEAR_RANGE));
+        this.effectSystems.addEffectSystem(new RandomBlockEffectSystem(this.logger, this.config, this.blockLibrary, this.audioPlayer, RandomBlockEffectSystem.FAR_RANGE));
 
         this.isConnected = true;
     }
@@ -81,7 +81,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
 
     private void clear(AssetLibraryEvent.ReloadEvent reloadEvent) {
         if (this.effectSystems != null)
-            this.effectSystems.clear();
+            this.effectSystems.resetFullScan();
     }
 
     private void blockUpdates(ClientEventHooks.BlockUpdateEvent event) {

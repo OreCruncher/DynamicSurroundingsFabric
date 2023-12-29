@@ -22,6 +22,7 @@ import org.orecruncher.dsurround.effects.IEffectSystem;
 import org.orecruncher.dsurround.effects.blocks.ParticleJetEffect;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.sound.*;
 
 import java.util.Arrays;
@@ -82,8 +83,8 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     private final Long2ObjectOpenHashMap<BackgroundSoundLoop> waterfallSoundInstances = new Long2ObjectOpenHashMap<>();
     private long soundCheckThrottle;
 
-    public WaterfallEffectSystem(Configuration config) {
-        super(config,"Waterfall");
+    public WaterfallEffectSystem(IModLog logger, Configuration config) {
+        super(logger, config,"Waterfall");
         this.audioPlayer = ContainerManager.resolve(IAudioPlayer.class);
         this.soundCheckThrottle = 0;
     }
@@ -159,6 +160,15 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
                 this.waterfallSoundInstances.remove(posIndex);
             }
         }
+
+        this.waterfallSoundInstances.values().removeIf(sound -> {
+           if (!this.systems.containsKey(sound.getPos().asLong())) {
+               this.logger.debug("[%s] Orphan sound removed: %s", this.systemName, sound.toString());
+               this.audioPlayer.stop(sound);
+               return true;
+           }
+           return false;
+        });
     }
 
     protected Set<Long> getDesiredWaterfallSoundLocations() {
@@ -185,7 +195,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
                 .map(e -> {
                     var effect = (WaterfallEffect)e;
                     var pos = effect.getPosition();
-                    var weight = effect.getJetStrength() / player.squaredDistanceTo(pos);
+                    var weight = (effect.getJetStrength() * effect.getJetStrength()) / player.squaredDistanceTo(pos);
                     return Pair.of(weight, effect.getPosIndex());
                 })
                 .sorted((e1, e2) -> -Double.compare(e1.key(), e2.key()))
@@ -209,6 +219,8 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
             // water cauldron.
             var effect = getWaterfallEffect(world, state, pos);
             this.systems.put(pos.asLong(), effect);
+        } else if (this.hasSystemAtPosition(pos)) {
+            this.onRemoveSystem(pos.asLong());
         }
     }
 

@@ -11,6 +11,7 @@ import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.random.LCGRandom;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
@@ -49,8 +50,8 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
     private final IAudioPlayer audioPlayer;
     private final int range;
 
-    public RandomBlockEffectSystem(Configuration config, IBlockLibrary blockLibrary, IAudioPlayer audioPlayer, int range) {
-        super(config, "Random(%d block)".formatted(range));
+    public RandomBlockEffectSystem(IModLog logger, Configuration config, IBlockLibrary blockLibrary, IAudioPlayer audioPlayer, int range) {
+        super(logger, config, "Random(%d block)".formatted(range));
 
         this.blockLibrary = blockLibrary;
         this.audioPlayer = audioPlayer;

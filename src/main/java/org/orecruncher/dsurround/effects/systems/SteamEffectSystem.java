@@ -8,14 +8,15 @@ import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.effects.IEffectSystem;
 import org.orecruncher.dsurround.effects.blocks.ParticleJetEffect;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 
 import static org.orecruncher.dsurround.effects.BlockEffectUtils.*;
 
 public class SteamEffectSystem extends AbstractEffectSystem implements IEffectSystem {
 
-    public SteamEffectSystem(Configuration config) {
-        super(config,"Steam");
+    public SteamEffectSystem(IModLog logger, Configuration config) {
+        super(logger, config,"Steam");
     }
 
     @Override

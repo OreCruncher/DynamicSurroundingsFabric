@@ -12,6 +12,7 @@ import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IEffectSystem;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.mixins.core.MixinParticleManager;
 
 import java.util.Optional;
@@ -21,12 +22,14 @@ public abstract class AbstractEffectSystem implements IEffectSystem {
 
     protected final static ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
+    protected final IModLog logger;
     protected final Configuration config;
     protected final String systemName;
 
     protected final Long2ObjectOpenHashMap<IBlockEffect> systems = new Long2ObjectOpenHashMap<>();
 
-    protected AbstractEffectSystem(Configuration config, String systemName) {
+    protected AbstractEffectSystem(IModLog logger, Configuration config, String systemName) {
+        this.logger = logger;
         this.config = config;
         this.systemName = systemName;
     }
@@ -41,6 +44,7 @@ public abstract class AbstractEffectSystem implements IEffectSystem {
     @Override
     public void clear() {
         if (!this.systems.isEmpty()) {
+            this.logger.debug("[%s] clearing %d effects", this.systemName, this.systems.size());
             this.systems.values().forEach(IBlockEffect::setDone);
             this.systems.clear();
         }

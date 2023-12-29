@@ -38,9 +38,9 @@ public class SystemsScanner extends CuboidScanner {
         this.systems.add(system);
     }
 
-    public void clear() {
+    public void resetFullScan() {
+        super.resetFullScan();
         this.systems.forEach(IEffectSystem::clear);
-        this.resetFullScan();
     }
 
     @Override

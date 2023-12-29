@@ -39,11 +39,15 @@ public abstract class CuboidScanner extends Scanner {
     }
 
     protected BlockPos[] getMinMaxPointsForVolume(final BlockPos pos) {
-        BlockPos min = pos.add(-this.xRange, -this.yRange, -this.zRange);
-        final BlockPos max = pos.add(this.xRange, this.yRange, this.zRange);
+        var mutable = new BlockPos.Mutable();
 
-        if (this.locus.isOutOfHeightLimit(min.getY()))
-            min = new BlockPos(min.getX(), this.locus.clampHeight(min.getY()), min.getZ());
+        mutable.set(pos, -this.xRange, -this.yRange, -this.zRange);
+        mutable.setY(this.locus.clampHeight(mutable.getY()));
+        var min = mutable.toImmutable();
+
+        mutable.set(pos, this.xRange, this.yRange, this.zRange);
+        mutable.setY(this.locus.clampHeight(mutable.getY()));
+        var max = mutable.toImmutable();
 
         return new BlockPos[]{min, max};
     }
@@ -53,7 +57,7 @@ public abstract class CuboidScanner extends Scanner {
         return new Cuboid(points);
     }
 
-    protected void resetFullScan() {
+    public void resetFullScan() {
         this.lastPos = this.locus.scanCenter().get();
         this.lastReference = this.locus.worldReference().get();
         this.scanFinished = false;
@@ -74,6 +78,7 @@ public abstract class CuboidScanner extends Scanner {
             // If the full range was reset, or the player dimension changed,
             // dump everything and restart.
             if (this.fullRange == null || this.locus.worldReference().get() != this.lastReference) {
+                this.locus.logger().debug("[%s] full range reset", this.name);
                 resetFullScan();
                 super.tick();
             } else if (this.lastPos.equals(playerPos)) {
@@ -91,7 +96,8 @@ public abstract class CuboidScanner extends Scanner {
                 // enough of a distance in the last tick to make it a new
                 // area. Otherwise, if there is a sufficiently large
                 // change to the scan area dump and restart.
-                if (intersect == null || oldVolume.volume() < (oldVolume.volume() - intersect.volume()) * 2) {
+                if (intersect == null) {
+                    this.locus.logger().debug("[%s] no intersection: %s, %s", this.name, oldVolume.toString(), newVolume.toString() );
                     resetFullScan();
                     super.tick();
                 } else {

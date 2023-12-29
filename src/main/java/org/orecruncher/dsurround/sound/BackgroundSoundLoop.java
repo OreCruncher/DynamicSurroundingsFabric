@@ -11,7 +11,7 @@ import net.minecraft.util.math.random.Random;
 public class BackgroundSoundLoop extends MovingSoundInstance {
 
     private static final float INITIAL_SCALE = 0.00002F;
-    private static final float SCALE_AMOUNT = 0.02F;
+    private static final float SCALE_AMOUNT = 0.033F;
 
     private float scale;
     private float target;

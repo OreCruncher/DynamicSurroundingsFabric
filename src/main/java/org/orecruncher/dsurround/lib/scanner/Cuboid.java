@@ -75,4 +75,9 @@ public class Cuboid {
         return vx2 == null ? null : new Cuboid(vx1, vx2);
     }
 
+    @Override
+    public String toString() {
+        return "Cuboid{min=%s,max=%s,volume=%d}".formatted(this.minPoint.toString(), this.maxPoint.toString(), this.volume());
+    }
+
 }
