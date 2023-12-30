@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.runtime;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
@@ -12,7 +10,6 @@ import org.orecruncher.dsurround.runtime.sets.BiomeVariables;
 
 import java.util.Optional;
 
-@Environment(EnvType.CLIENT)
 public class BiomeConditionEvaluator {
 
     private final IModLog logger;

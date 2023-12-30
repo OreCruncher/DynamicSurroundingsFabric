@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.config.block;
 
 import com.google.common.collect.ImmutableList;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.sound.SoundEvent;
 import org.jetbrains.annotations.Nullable;
@@ -10,6 +8,7 @@ import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.biome.AcousticEntry;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -20,27 +19,25 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.OcclusionTags;
 import org.orecruncher.dsurround.tags.ReflectanceTags;
-import org.orecruncher.dsurround.tags.TagHelpers;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-@Environment(EnvType.CLIENT)
 public class BlockInfo {
+
+    private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
     private static final float DEFAULT_OPAQUE_OCCLUSION = 0.5F;
     private static final float DEFAULT_TRANSLUCENT_OCCLUSION = 0.15F;
     private static final float DEFAULT_REFLECTION = 0.0F; //0.4F;
-    private static final Script ALWAYS_ON_EFFECT_CHANCE = new Script("1.0");
 
     // Lazy init on add
     @Nullable
     protected ObjectArray<AcousticEntry> sounds;
     @Nullable
     protected ObjectArray<IBlockEffectProducer> blockEffects;
-    @Nullable
-    protected ObjectArray<IBlockEffectProducer> alwaysOnEffects;
 
     protected final int version;
     protected final IConditionEvaluator conditionEvaluator;
@@ -62,7 +59,7 @@ public class BlockInfo {
     }
 
     public boolean isDefault() {
-        return this.sounds == null && this.blockEffects == null && this.alwaysOnEffects == null
+        return this.sounds == null && this.blockEffects == null
                 && this.soundReflectivity == DEFAULT_REFLECTION
                 && (this.soundOcclusion == DEFAULT_OPAQUE_OCCLUSION
                         || this.soundOcclusion == DEFAULT_TRANSLUCENT_OCCLUSION);
@@ -92,12 +89,6 @@ public class BlockInfo {
         this.blockEffects.add(effect);
     }
 
-    private void addToAlwaysOnEffects(IBlockEffectProducer effect) {
-        if (this.alwaysOnEffects == null)
-            this.alwaysOnEffects = new ObjectArray<>(2);
-        this.alwaysOnEffects.add(effect);
-    }
-
     // TODO: Eliminate duplicates
     public void update(BlockConfigRule config) {
         // Reset of a block clears all registry
@@ -120,14 +111,8 @@ public class BlockInfo {
         }
 
         for (var e : config.effects()) {
-            var chance = e.alwaysOn() ? ALWAYS_ON_EFFECT_CHANCE : e.spawnChance();
-            var effect = e.effect().createInstance(chance, e.conditions());
-            effect.ifPresent(t -> {
-                if (e.alwaysOn())
-                    this.addToAlwaysOnEffects(t);
-                else
-                    this.addToBlockEffects(t);
-            });
+            var effect = e.effect().createInstance(e.spawnChance(), e.conditions());
+            effect.ifPresent(this::addToBlockEffects);
         }
     }
 
@@ -140,11 +125,7 @@ public class BlockInfo {
         return this.sounds != null || this.blockEffects != null;
     }
 
-    public boolean hasAlwaysOnEffects() {
-        return this.alwaysOnEffects != null;
-    }
-
-    public ISoundFactory getSoundToPlay(final Random random) {
+    public Optional<ISoundFactory> getSoundToPlay(final Random random) {
         if (this.sounds != null) {
             var chance = this.conditionEvaluator.eval(this.soundChance);
             if (chance instanceof Double c && random.nextDouble() < c) {
@@ -152,15 +133,11 @@ public class BlockInfo {
                 return WeightTable.makeSelection(candidates);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
     public Collection<IBlockEffectProducer> getEffectProducers() {
         return this.blockEffects == null ? ImmutableList.of() : this.blockEffects;
-    }
-
-    public Collection<IBlockEffectProducer> getAlwaysOnEffectProducers() {
-        return this.alwaysOnEffects == null ? ImmutableList.of() : this.alwaysOnEffects;
     }
 
     public void trim() {
@@ -169,12 +146,6 @@ public class BlockInfo {
                 this.sounds = null;
             else
                 this.sounds.trim();
-        }
-        if (this.alwaysOnEffects != null) {
-            if (alwaysOnEffects.isEmpty())
-                this.alwaysOnEffects = null;
-            else
-                this.alwaysOnEffects.trim();
         }
         if (this.blockEffects != null) {
             if (blockEffects.isEmpty())
@@ -186,38 +157,38 @@ public class BlockInfo {
 
     private static float getSoundReflectionSetting(BlockState state) {
         var block = state.getBlock();
-        if (TagHelpers.isIn(ReflectanceTags.NONE, block))
+        if (TAG_LIBRARY.isIn(ReflectanceTags.NONE, block))
             return 0;
-        if (TagHelpers.isIn(ReflectanceTags.VERY_LOW, block))
+        if (TAG_LIBRARY.isIn(ReflectanceTags.VERY_LOW, block))
             return 0.15F;
-        if (TagHelpers.isIn(ReflectanceTags.LOW, block))
+        if (TAG_LIBRARY.isIn(ReflectanceTags.LOW, block))
             return 0.35F;
-        if (TagHelpers.isIn(ReflectanceTags.MEDIUM, block))
+        if (TAG_LIBRARY.isIn(ReflectanceTags.MEDIUM, block))
             return 0.5F;
-        if (TagHelpers.isIn(ReflectanceTags.HIGH, block))
+        if (TAG_LIBRARY.isIn(ReflectanceTags.HIGH, block))
             return 0.65F;
-        if (TagHelpers.isIn(ReflectanceTags.VERY_HIGH, block))
+        if (TAG_LIBRARY.isIn(ReflectanceTags.VERY_HIGH, block))
             return 0.8F;
-        if (TagHelpers.isIn(ReflectanceTags.MAX, block))
+        if (TAG_LIBRARY.isIn(ReflectanceTags.MAX, block))
             return 1.0F;
         return DEFAULT_REFLECTION;
     }
 
     private static float getSoundOcclusionSetting(BlockState state) {
         var block = state.getBlock();
-        if (TagHelpers.isIn(OcclusionTags.NONE, block))
+        if (TAG_LIBRARY.isIn(OcclusionTags.NONE, block))
             return 0;
-        if (TagHelpers.isIn(OcclusionTags.VERY_LOW, block))
+        if (TAG_LIBRARY.isIn(OcclusionTags.VERY_LOW, block))
             return 0.15F;
-        if (TagHelpers.isIn(OcclusionTags.LOW, block))
+        if (TAG_LIBRARY.isIn(OcclusionTags.LOW, block))
             return 0.35F;
-        if (TagHelpers.isIn(OcclusionTags.MEDIUM, block))
+        if (TAG_LIBRARY.isIn(OcclusionTags.MEDIUM, block))
             return 0.5F;
-        if (TagHelpers.isIn(OcclusionTags.HIGH, block))
+        if (TAG_LIBRARY.isIn(OcclusionTags.HIGH, block))
             return 0.65F;
-        if (TagHelpers.isIn(OcclusionTags.VERY_HIGH, block))
+        if (TAG_LIBRARY.isIn(OcclusionTags.VERY_HIGH, block))
             return 0.8F;
-        if (TagHelpers.isIn(OcclusionTags.MAX, block))
+        if (TAG_LIBRARY.isIn(OcclusionTags.MAX, block))
             return 1.0F;
         return state.isOpaque() ? DEFAULT_OPAQUE_OCCLUSION : DEFAULT_TRANSLUCENT_OCCLUSION;
     }
@@ -243,13 +214,6 @@ public class BlockInfo {
             builder.append(
                     this.blockEffects.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n]\n");
-        }
-
-        if (this.alwaysOnEffects != null) {
-            builder.append("always on effects [\n");
-            builder.append(
-                    this.alwaysOnEffects.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));
-            builder.append("\n]");
         }
 
         return builder.toString();

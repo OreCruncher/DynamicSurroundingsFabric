@@ -2,8 +2,6 @@ package org.orecruncher.dsurround.processing;
 
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import joptsimple.internal.Strings;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Formatting;
 import org.orecruncher.dsurround.config.Configuration;
@@ -17,7 +15,6 @@ import org.orecruncher.dsurround.processing.scanner.VillageScanner;
 
 import java.util.Collection;
 
-@Environment(EnvType.CLIENT)
 public class Scanners extends AbstractClientHandler {
 
     private final BiomeScanner biomeScanner;

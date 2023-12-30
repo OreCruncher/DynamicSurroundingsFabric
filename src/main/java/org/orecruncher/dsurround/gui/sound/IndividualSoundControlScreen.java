@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.gui.sound;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -13,7 +11,6 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
 import java.util.List;
 
-@Environment(EnvType.CLIENT)
 public class IndividualSoundControlScreen extends Screen {
 
     private static final int TOP_OFFSET = 10;
@@ -65,7 +62,7 @@ public class IndividualSoundControlScreen extends Screen {
                 this.searchField,   // Copy existing data over
                 Text.empty());
 
-        this.searchField.setChangedListener((filter) -> this.soundConfigList.setSearchFilter(() -> filter, false));
+        this.searchField.setChangedListener((filter) -> this.soundConfigList.setSearchFilter(() -> filter));
         this.addSelectableChild(this.searchField);
 
         // Set up the list control
@@ -105,15 +102,14 @@ public class IndividualSoundControlScreen extends Screen {
     }
 
     public void tick() {
-        //this.searchField.tick();
         this.soundConfigList.tick();
 
-        // Need to tick the Sound Manager because when the game is paused sounds are not
+        // Need to tick the Sound Manager because when the game is paused, sounds are not
         // processed.  We do this to enable handling of the "play" button.  (If the game
-        // were not paused mobs and things will still wander around and can cause a
+        // is not paused, mobs and things will still wander around and can cause a
         // problem for the player while their head is buried in the menu.)
         if (this.enablePlay)
-            GameUtils.getSoundManager().tick(false);
+            GameUtils.getSoundManager().ifPresent(sm -> sm.tick(false));
     }
 
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {

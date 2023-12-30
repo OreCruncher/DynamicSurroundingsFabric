@@ -1,9 +1,6 @@
 package org.orecruncher.dsurround.processing.accents;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Waterloggable;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
@@ -16,7 +13,6 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 
-@Environment(EnvType.CLIENT)
 class FloorSqueakAccent  implements IFootstepAccentProvider {
 
     private static final ISoundFactory floorSqueakFactory = SoundFactoryBuilder
@@ -30,12 +26,12 @@ class FloorSqueakAccent  implements IFootstepAccentProvider {
     }
 
     @Override
-    public void provide(LivingEntity entity, BlockPos pos, BlockState state, ObjectArray<ISoundFactory> acoustics) {
-        if (state.isIn(BlockEffectTags.FLOOR_SQUEAKS)) {
-            // Check for waterlogged.  Don't want to squeak if waterlogged.
-            if (state.getBlock() instanceof Waterloggable && !state.getFluidState().isEmpty())
-                return;
+    public void provide(LivingEntity entity, BlockPos pos, BlockState state, boolean isWaterLogged, ObjectArray<ISoundFactory> acoustics) {
+        // Check for waterlogged.  Don't want to squeak if waterlogged.
+        if (isWaterLogged)
+            return;
 
+        if (state.isIn(BlockEffectTags.FLOOR_SQUEAKS)) {
             // 1 in 10 chance of a squeak
             if (XorShiftRandom.current().nextInt(10) == 0)
                 acoustics.add(floorSqueakFactory);

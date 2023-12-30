@@ -6,13 +6,11 @@ import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.UnboundedMapCodec;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.JsonHelper;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
@@ -37,7 +35,6 @@ import static java.nio.file.StandardOpenOption.*;
 /**
  * Scans a sounds.json file looking for sounds to register.
  */
-@Environment(EnvType.CLIENT)
 public final class SoundLibrary implements ISoundLibrary {
 
     private static final String FILE_NAME = "sounds.json";
@@ -45,7 +42,7 @@ public final class SoundLibrary implements ISoundLibrary {
     private static final UnboundedMapCodec<String, SoundMetadataConfig> CODEC = Codec.unboundedMap(Codec.STRING, SoundMetadataConfig.CODEC);
     private static final Codec<List<IndividualSoundConfigEntry>> SOUND_CONFIG_CODEC = Codec.list(IndividualSoundConfigEntry.CODEC);
 
-    private static final Identifier MISSING_RESOURCE = new Identifier(Client.ModId, "missing_sound");
+    private static final Identifier MISSING_RESOURCE = new Identifier(Constants.MOD_ID, "missing_sound");
     private static final SoundEvent MISSING = SoundEvent.of(MISSING_RESOURCE);
 
     private final IModLog logger;
@@ -70,7 +67,9 @@ public final class SoundLibrary implements ISoundLibrary {
 
     @Override
     public Stream<String> dump() {
-        return Stream.of();
+        return this.myRegistry.values().stream()
+                .sorted((c1, c2) -> Comparers.IDENTIFIER_NATURAL_COMPARABLE.compare(c1.getId(), c2.getId()))
+                .map(e -> e.getId().toString());
     }
 
     @Override

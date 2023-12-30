@@ -1,17 +1,15 @@
 package org.orecruncher.dsurround.config.biome;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.world.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.config.libraries.impl.BiomeLibrary;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
@@ -26,18 +24,19 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
-import org.orecruncher.dsurround.tags.TagHelpers;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-@Environment(EnvType.CLIENT)
 public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvider {
 
     public static final int DEFAULT_ADDITIONAL_SOUND_CHANCE = 1000 / 4;
     public static final Script DEFAULT_SOUND_CHANCE = new Script(String.valueOf(1D / DEFAULT_ADDITIONAL_SOUND_CHANCE));
     private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+    private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
+
     private final int version;
     private final Identifier biomeId;
     private final String biomeName;
@@ -142,7 +141,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     }
 
     @Override
-    public @Nullable ISoundFactory getExtraSound(final SoundEventType type, final Random random) {
+    public Optional<ISoundFactory> getExtraSound(final SoundEventType type, final Random random) {
 
         ObjectArray<AcousticEntry> sourceList = null;
 
@@ -164,7 +163,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         }
 
         if (sourceList == null || sourceList.isEmpty())
-            return null;
+            return Optional.empty();
 
         var candidates = sourceList.stream().filter(AcousticEntry::matches);
         return WeightTable.makeSelection(candidates);
@@ -241,15 +240,17 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
         String tags = "null";
 
-        if (this.biomeId.getNamespace().equalsIgnoreCase(Client.ModId)) {
+        if (this.biomeId.getNamespace().equalsIgnoreCase(Constants.MOD_ID)) {
             // It's fake and has no tags
             tags = "FAKE BIOME";
         } else {
-            var biomes = GameUtils.getWorld().getRegistryManager().get(RegistryKeys.BIOME);
+            var manager = GameUtils.getRegistryManager().orElseThrow();
+            var biomes = manager.get(RegistryKeys.BIOME);
 
             var entry = biomes.getEntry(biomes.getRawId(getBiome()));
             if (entry.isPresent()) {
-                tags = TagHelpers.asString(entry.get().streamTags());
+                var temp = TAG_LIBRARY.streamTags(entry.get());
+                tags = TAG_LIBRARY.asString(temp);
             }
         }
 

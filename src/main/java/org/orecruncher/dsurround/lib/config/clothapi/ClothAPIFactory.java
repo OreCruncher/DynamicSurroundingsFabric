@@ -6,8 +6,6 @@ import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.impl.builders.FieldBuilder;
 import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.Identifier;
@@ -20,7 +18,6 @@ import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 
 import java.util.function.BiFunction;
 
-@Environment(EnvType.CLIENT)
 public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Screen> {
 
     private static final Identifier[] BACKGROUNDS = {

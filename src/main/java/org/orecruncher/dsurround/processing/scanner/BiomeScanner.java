@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.processing.scanner;
 
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.registry.tag.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
@@ -15,7 +13,6 @@ import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
-@Environment(EnvType.CLIENT)
 public final class BiomeScanner {
 
     public static final int SCAN_INTERVAL = 4;
@@ -65,9 +62,7 @@ public final class BiomeScanner {
         if (tickCount % SCAN_INTERVAL != 0)
             return;
 
-        var player = GameUtils.getPlayer();
-        assert player != null;
-
+        var player = GameUtils.getPlayer().orElseThrow();
         var world = player.getEntityWorld();
         var position = player.getBlockPos();
 

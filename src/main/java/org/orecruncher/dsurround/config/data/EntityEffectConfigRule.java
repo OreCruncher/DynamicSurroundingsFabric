@@ -2,8 +2,6 @@ package org.orecruncher.dsurround.config.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import org.orecruncher.dsurround.config.EntityEffectType;
@@ -12,7 +10,6 @@ import org.orecruncher.dsurround.lib.IMatcher;
 
 import java.util.List;
 
-@Environment(EnvType.CLIENT)
 public record EntityEffectConfigRule(
         List<IMatcher<Entity>> entityTypeMatchers,
         List<EntityEffectType> effects) {

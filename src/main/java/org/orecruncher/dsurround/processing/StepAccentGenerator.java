@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.processing;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.LivingEntity;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
@@ -15,7 +13,6 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
  * Listens to the ENTITY_STEP_EVENT stream for opportunities to accentuate an Entities
  * step effect.
  */
-@Environment(EnvType.CLIENT)
 public class StepAccentGenerator extends AbstractClientHandler {
 
     private final IAudioPlayer audioPlayer;

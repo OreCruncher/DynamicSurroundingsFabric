@@ -4,7 +4,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 
 public class EntityEffectTags {
     public static final TagKey<EntityType<?>> BOW_PULL = of("bow_pull");
@@ -14,6 +14,6 @@ public class EntityEffectTags {
     public static final TagKey<EntityType<?>> BRUSH_STEP = of ("brush_step");
 
     private static TagKey<EntityType<?>> of(String id) {
-        return TagKey.of(RegistryKeys.ENTITY_TYPE, new Identifier(Client.ModId, "effects/" + id));
+        return TagKey.of(RegistryKeys.ENTITY_TYPE, new Identifier(Constants.MOD_ID, "effects/" + id));
     }
 }

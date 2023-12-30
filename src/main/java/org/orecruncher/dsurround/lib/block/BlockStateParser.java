@@ -8,8 +8,6 @@ import net.minecraft.registry.Registries;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.PatternValidation;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -22,8 +20,6 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings("unused")
 final class BlockStateParser {
-
-    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
 
     private BlockStateParser() {
 
@@ -79,7 +75,7 @@ final class BlockStateParser {
 
         final Identifier resource = new Identifier(temp);
         final Block block = Registries.BLOCK.get(resource);
-        if (block == Blocks.AIR && !"mincraft:air".equals(temp)) {
+        if (block == Blocks.AIR && !"minecraft:air".equals(temp)) {
             throw new BlockStateParseException(String.format("Unknown block '%s' for entry '%s'", temp, blockName));
         }
 

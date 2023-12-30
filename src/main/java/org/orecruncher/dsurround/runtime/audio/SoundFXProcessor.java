@@ -7,14 +7,16 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Formatting;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.Singleton;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.threading.Worker;
+import org.orecruncher.dsurround.mixins.audio.MixinSourceManagerAccessor;
 import org.orecruncher.dsurround.runtime.audio.effects.Effects;
-import org.orecruncher.dsurround.xface.ISourceContext;
+import org.orecruncher.dsurround.mixinutils.ISourceContext;
 
 import java.util.Arrays;
 import java.util.concurrent.*;
@@ -32,7 +34,8 @@ public final class SoundFXProcessor {
     // Use our own thread pool avoiding the common pool.  Thread allocation is better controlled, and we won't run
     // into/cause any problems with other tasks in the common pool.
     private static final Singleton<ExecutorService> threadPool = new Singleton<>(() -> {
-        int threads = Client.Config.enhancedSounds.backgroundThreadWorkers;
+        var config = ContainerManager.resolve(Configuration.EnhancedSounds.class);
+        int threads = config.backgroundThreadWorkers;
         if (threads == 0)
             threads = 2;
         LOGGER.info("Threads allocated to enhanced sound processor: %d", threads);
@@ -115,13 +118,14 @@ public final class SoundFXProcessor {
         if (shouldIgnoreSound(sound))
             return;
 
-        ISourceContext source = (ISourceContext) entry.source;
-        int id = source.getId();
+        ISourceContext source = (ISourceContext)(((MixinSourceManagerAccessor) entry).dsurround_getSource());
+        assert source != null;
+        int id = source.dsurround_getId();
         if (id > 0) {
             final SourceContext ctx = new SourceContext(id);
             ctx.attachSound(sound);
             ctx.enable();
-            source.setData(ctx);
+            source.dsurround_setData(ctx);
         }
     }
 
@@ -131,7 +135,7 @@ public final class SoundFXProcessor {
      */
     public static void onSourcePlay(final Source source) {
         var context = (ISourceContext) source;
-        var data = context.getData();
+        var data = context.dsurround_getData();
         data.ifPresent(ctx -> {
             var id = ctx.getId();
             ctx.exec();
@@ -147,7 +151,7 @@ public final class SoundFXProcessor {
      */
     public static void tick(final Source source) {
         var src = (ISourceContext) source;
-        var data = src.getData();
+        var data = src.dsurround_getData();
         data.ifPresent(SourceContext::tick);
     }
 
@@ -158,7 +162,7 @@ public final class SoundFXProcessor {
      */
     public static void stopSoundPlay(final Source source) {
         var sourceContext = (ISourceContext) source;
-        var data = sourceContext.getData();
+        var data = sourceContext.dsurround_getData();
         data.ifPresent(sc -> sources[sc.getId()] = null);
     }
 
@@ -178,7 +182,7 @@ public final class SoundFXProcessor {
         if (!Client.Config.enhancedSounds.enableMonoConversion)
             return;
 
-        var data = ((ISourceContext) source).getData();
+        var data = ((ISourceContext) source).dsurround_getData();
         data.ifPresent(ctx ->{
             var s = ctx.getSound();
             if (s != null && s.getAttenuationType() != SoundInstance.AttenuationType.NONE && !s.isRelative())

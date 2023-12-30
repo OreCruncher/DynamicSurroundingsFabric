@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.blocks.producers;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.shape.VoxelShape;
@@ -13,7 +11,8 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 import java.util.Optional;
 import java.util.Random;
 
-@Environment(EnvType.CLIENT)
+import static org.orecruncher.dsurround.effects.BlockEffectUtils.IS_LAVA;
+
 public class FlameJetProducer extends BlockEffectProducer {
 
     public FlameJetProducer(final Script chance, final Script conditions) {
@@ -34,7 +33,7 @@ public class FlameJetProducer extends BlockEffectProducer {
         final boolean isSolid;
 
         if (!state.getFluidState().isEmpty()) {
-            blockCount = countVerticalBlocks(world, pos, LAVA_PREDICATE, -1);
+            blockCount = countVerticalBlocks(world, pos, IS_LAVA, -1);
             spawnHeight = pos.getY() + state.getFluidState().getHeight() + 0.1F;
             isSolid = false;
         } else {
@@ -45,7 +44,7 @@ public class FlameJetProducer extends BlockEffectProducer {
             final double blockHeight = shape.getBoundingBox().maxY;
             spawnHeight = (float) (pos.getY() + blockHeight);
             isSolid = true;
-            if (state.isSolid()) {
+            if (state.isSolidBlock(world, pos)) {
                 blockCount = 2;
             } else {
                 blockCount = 1;

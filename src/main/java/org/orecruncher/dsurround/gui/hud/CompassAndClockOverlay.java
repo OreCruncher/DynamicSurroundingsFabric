@@ -1,29 +1,27 @@
 package org.orecruncher.dsurround.gui.hud;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.item.ItemStack;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import org.joml.Matrix4f;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
 
-import java.awt.*;
 import java.util.EnumMap;
 import java.util.Map;
 
-@Environment(EnvType.CLIENT)
 public class CompassAndClockOverlay extends AbstractOverlay {
 
     // Vertical offset to avoid writing over the cross-hair
@@ -36,7 +34,7 @@ public class CompassAndClockOverlay extends AbstractOverlay {
     private static final float BAND_HEIGHT = 12F * 2;
     private static final float TEXTURE_SIZE_F = (float)TEXTURE_SIZE;
     private static final int HALF_TEXTURE_SIZE = TEXTURE_SIZE / 2;
-    private static final Identifier COMPASS_TEXTURE = new Identifier(Client.ModId, "textures/compass.png");
+    private static final Identifier COMPASS_TEXTURE = new Identifier(Constants.MOD_ID, "textures/compass.png");
 
     private static final Map<DayCycle, TextColor> COLOR_MAP = new EnumMap<>(DayCycle.class);
 
@@ -48,6 +46,7 @@ public class CompassAndClockOverlay extends AbstractOverlay {
         COLOR_MAP.put(DayCycle.SUNSET, ColorPalette.ORANGE);
     }
 
+    private final ITagLibrary tagLibrary;
     private final Configuration config;
     private final MinecraftClock clock;
     private boolean showCompass;
@@ -57,7 +56,8 @@ public class CompassAndClockOverlay extends AbstractOverlay {
     private String clockText;
     private TextColor clockColor;
 
-    public CompassAndClockOverlay(Configuration config) {
+    public CompassAndClockOverlay(Configuration config, ITagLibrary tagLibrary) {
+        this.tagLibrary = tagLibrary;
         this.config = config;
         this.clock = new MinecraftClock();
         this.showCompass = false;
@@ -74,34 +74,42 @@ public class CompassAndClockOverlay extends AbstractOverlay {
         this.spriteOffset = this.config.compassAndClockOptions.compassStyle.getSpriteNumber();
 
         if (GameUtils.isInGame()) {
-            var player = GameUtils.getPlayer();
+            var player = GameUtils.getPlayer().orElseThrow();
             var mainHandItem = player.getMainHandStack();
             var offHandItem = player.getOffHandStack();
 
             if (this.config.compassAndClockOptions.enableClock) {
-                this.showClock = mainHandItem.isIn(ItemEffectTags.CLOCKS) || offHandItem.isIn(ItemEffectTags.CLOCKS);
+                this.showClock = doShowClock(mainHandItem) || doShowClock(offHandItem);
                 this.clock.update(player.getEntityWorld());
                 this.clockText = this.clock.getFormattedTime();
                 this.clockColor = COLOR_MAP.get(this.clock.getCycle());
             }
 
             if (this.config.compassAndClockOptions.enableCompass) {
-                this.showCompass = mainHandItem.isIn(ItemEffectTags.COMPASSES) || offHandItem.isIn(ItemEffectTags.COMPASSES);
+                this.showCompass = doShowCompass(mainHandItem) || doShowCompass(offHandItem);
             }
         }
+    }
+
+    private boolean doShowClock(ItemStack stack) {
+        return !stack.isEmpty() && this.tagLibrary.isIn(ItemEffectTags.CLOCKS, stack.getItem());
+    }
+
+    private boolean doShowCompass(ItemStack stack) {
+        return !stack.isEmpty() && this.tagLibrary.isIn(ItemEffectTags.COMPASSES, stack.getItem());
     }
 
     @Override
     public void render(DrawContext context) {
         if (this.showCompass || this.showClock) {
-            final var player = GameUtils.getPlayer();
+            final var player = GameUtils.getPlayer().orElseThrow();
 
             var matrixStack = context.getMatrices();
 
             if (this.showClock)
                 try {
                     matrixStack.push();
-                    var textRender = GameUtils.getTextRenderer();
+                    var textRender = GameUtils.getTextRenderer().orElseThrow();
 
                     var width = textRender.getWidth(this.clockText);
                     var height = textRender.fontHeight;

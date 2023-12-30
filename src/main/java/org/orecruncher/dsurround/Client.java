@@ -12,8 +12,8 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
-import org.orecruncher.dsurround.lib.infra.IMinecraftMod;
-import org.orecruncher.dsurround.lib.infra.events.ClientState;
+import org.orecruncher.dsurround.lib.platform.IMinecraftMod;
+import org.orecruncher.dsurround.lib.platform.events.ClientState;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.version.IVersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
@@ -29,8 +29,8 @@ import java.util.concurrent.CompletableFuture;
 
 public abstract class Client implements IMinecraftMod {
 
-    public static final String ModId = "dsurround";
-    public static final ModLog LOGGER = new ModLog(ModId);
+    public static final ModLog LOGGER = new ModLog(Constants.MOD_ID);
+
     /**
      * Basic configuration settings
      */
@@ -39,8 +39,8 @@ public abstract class Client implements IMinecraftMod {
     private CompletableFuture<Optional<VersionResult>> versionInfo;
 
     @Override
-    public String get_modId() {
-        return ModId;
+    public String getModId() {
+        return Constants.MOD_ID;
     }
 
     public void initializeClient() {
@@ -68,10 +68,20 @@ public abstract class Client implements IMinecraftMod {
         }, HandlerPriority.VERY_HIGH);
 
         // Register core services
-        ContainerManager.getDefaultContainer()
+        ContainerManager.getRootContainer()
                 .registerSingleton(Config)
+                .registerSingleton(Config.soundSystem)
+                .registerSingleton(Config.enhancedSounds)
+                .registerSingleton(Config.thunderStorms)
+                .registerSingleton(Config.blockEffects)
+                .registerSingleton(Config.entityEffects)
+                .registerSingleton(Config.footstepAccents)
+                .registerSingleton(Config.particleTweaks)
+                .registerSingleton(Config.compassAndClockOptions)
+                .registerSingleton(Config.otherOptions)
                 .registerSingleton(IConditionEvaluator.class, ConditionEvaluator.class)
                 .registerSingleton(IVersionChecker.class, VersionChecker.class)
+                .registerSingleton(ITagLibrary.class, TagLibrary.class)
                 .registerSingleton(ISoundLibrary.class, SoundLibrary.class)
                 .registerSingleton(IBiomeLibrary.class, BiomeLibrary.class)
                 .registerSingleton(IDimensionLibrary.class, DimensionLibrary.class)
@@ -95,10 +105,10 @@ public abstract class Client implements IMinecraftMod {
 
     public void onComplete(MinecraftClient client) {
 
-        var container = ContainerManager.getDefaultContainer();
+        var container = ContainerManager.getRootContainer();
 
         // Register the Minecraft sound manager
-        container.registerSingleton(GameUtils.getSoundManager());
+        container.registerSingleton(GameUtils.getSoundManager().orElseThrow());
 
         // Register and initialize our libraries.  This will cause the libraries
         // to be instantiated.
@@ -108,6 +118,7 @@ public abstract class Client implements IMinecraftMod {
         AssetLibraryEvent.RELOAD.register(container.resolve(IBlockLibrary.class)::reload);
         AssetLibraryEvent.RELOAD.register(container.resolve(IItemLibrary.class)::reload);
         AssetLibraryEvent.RELOAD.register(container.resolve(IEntityEffectLibrary.class)::reload);
+        AssetLibraryEvent.RELOAD.register(container.resolve(ITagLibrary.class)::reload);
 
         // Make the libraries load their data
         AssetLibraryEvent.reload();
@@ -131,7 +142,7 @@ public abstract class Client implements IMinecraftMod {
 
                 LOGGER.info("Update to %s version %s is available", result.displayName, result.version);
                 var player = GameUtils.getPlayer();
-                player.sendMessage(result.getChatText(), false);
+                player.ifPresent(p -> p.sendMessage(result.getChatText(), false));
             } else if(Config.logging.enableModUpdateChatMessage) {
                 LOGGER.info("The mod version is current");
             }

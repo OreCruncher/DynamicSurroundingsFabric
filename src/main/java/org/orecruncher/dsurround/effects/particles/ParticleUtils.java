@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.particle.SpriteProvider;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -14,14 +12,13 @@ import org.orecruncher.dsurround.mixins.core.MixinParticleManager;
 
 import java.util.Random;
 
-@Environment(EnvType.CLIENT)
 public final class ParticleUtils {
 
     private static final Random RANDOM = XorShiftRandom.current();
 
     public static SpriteProvider getSpriteProvider(ParticleType<?> particleType) {
         var id = Registries.PARTICLE_TYPE.getId(particleType);
-        return ((MixinParticleManager) GameUtils.getParticleManager()).getSpriteAwareFactories().get(id);
+        return ((MixinParticleManager) GameUtils.getParticleManager().orElseThrow()).getSpriteAwareFactories().get(id);
     }
 
     public static Vec3d getBreathOrigin(final LivingEntity entity) {

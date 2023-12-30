@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.processing.accents;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
@@ -11,7 +9,6 @@ import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
-@Environment(EnvType.CLIENT)
 class ArmorAccents implements IFootstepAccentProvider {
 
     private final Configuration config;
@@ -28,7 +25,7 @@ class ArmorAccents implements IFootstepAccentProvider {
     }
 
     @Override
-    public void provide(LivingEntity entity, BlockPos pos, BlockState posState, ObjectArray<ISoundFactory> acoustics) {
+    public void provide(LivingEntity entity, BlockPos pos, BlockState posState, boolean isWaterLogged, ObjectArray<ISoundFactory> acoustics) {
         var footAccent = this.itemLibrary.getEquipableStepAccentSound(entity.getEquippedStack(EquipmentSlot.FEET));
         footAccent.ifPresent(acoustics::add);
 

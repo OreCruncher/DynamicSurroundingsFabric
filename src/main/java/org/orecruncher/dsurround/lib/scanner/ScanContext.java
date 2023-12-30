@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.lib.scanner;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -10,48 +8,44 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import java.util.function.Supplier;
 
-@Environment(EnvType.CLIENT)
-public class ScanContext {
+public final class ScanContext {
 
-    private final Supplier<World> worldReader;
+    private final Supplier<World> world;
     private final Supplier<BlockPos> scanCenter;
-    private final Supplier<Identifier> worldReference;
-    private final Supplier<IModLog> logger;
+    private final IModLog logger;
 
     public ScanContext(
-            final Supplier<World> worldReader,
-            final Supplier<BlockPos> scanCenter,
-            final Supplier<IModLog> logger,
-            final Supplier<Identifier> worldReference
-    ) {
-        this.worldReader = worldReader;
+            Supplier<World> world,
+            Supplier<BlockPos> scanCenter,
+            IModLog logger) {
+
+        this.world = world;
         this.scanCenter = scanCenter;
-        this.worldReference = worldReference;
         this.logger = logger;
     }
 
     public World getWorld() {
-        return this.worldReader.get();
+        return this.world.get();
     }
 
-    public BlockPos getCenter() {
+    public BlockPos getScanCenter() {
         return this.scanCenter.get();
     }
 
     public IModLog getLogger() {
-        return this.logger.get();
+        return this.logger;
     }
 
-    public Identifier getReference() {
-        return this.worldReference.get();
+    public Identifier getWorldReference() {
+        return this.getWorld().getRegistryKey().getValue();
     }
 
     public boolean isOutOfHeightLimit(int y) {
-        return this.worldReader.get().isOutOfHeightLimit(y);
+        return this.getWorld().isOutOfHeightLimit(y);
     }
 
     public int clampHeight(int y) {
-        var world = this.worldReader.get();
+        var world = this.getWorld();
         return MathHelper.clamp(y, world.getBottomY(), world.getTopY());
     }
 }

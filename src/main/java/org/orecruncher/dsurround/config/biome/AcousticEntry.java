@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.config.biome;
 
 import com.google.common.base.MoreObjects;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -10,7 +8,6 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
-@Environment(EnvType.CLIENT)
 public class AcousticEntry implements WeightTable.IItem<ISoundFactory> {
 
     private static final int DEFAULT_WEIGHT = 10;

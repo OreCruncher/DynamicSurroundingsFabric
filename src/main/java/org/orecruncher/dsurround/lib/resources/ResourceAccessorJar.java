@@ -1,13 +1,10 @@
 package org.orecruncher.dsurround.lib.resources;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.util.Identifier;
 import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;
 
-@Environment(EnvType.CLIENT)
 final class ResourceAccessorJar extends ResourceAccessorBase {
 
     // Used to find assets within the current jar

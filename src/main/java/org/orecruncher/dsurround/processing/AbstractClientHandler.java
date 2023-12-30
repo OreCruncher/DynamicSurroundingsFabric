@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.processing;
 
 import com.google.common.base.MoreObjects;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.player.PlayerEntity;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -13,7 +11,6 @@ import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 import java.util.Collection;
 import java.util.Random;
 
-@Environment(EnvType.CLIENT)
 abstract class AbstractClientHandler {
 
     protected static final Random RANDOM = XorShiftRandom.current();

@@ -3,8 +3,6 @@ package org.orecruncher.dsurround.config.data;
 import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import org.orecruncher.dsurround.lib.CodecExtensions;
 import org.orecruncher.dsurround.lib.IMatcher;
@@ -13,7 +11,6 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 import java.util.List;
 import java.util.Optional;
 
-@Environment(EnvType.CLIENT)
 public record BlockConfigRule(
         List<IMatcher<BlockState>> blocks,
         Boolean clearSounds,
@@ -37,5 +34,25 @@ public record BlockConfigRule(
             if (rule.match(state))
                 return true;
         return false;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Blocks [\n");
+        for (var matcher : this.blocks)
+            builder.append("  ").append(matcher.toString()).append("\n");
+        builder.append("]\n");
+        builder.append("Clear Sounds: ").append(this.clearSounds).append("\n");
+        builder.append("Sound Chance: ").append(this.soundChance.map(Script::asString).orElse("default")).append("\n");
+        builder.append("Acoustics: [\n");
+        for (var acoustic : this.acoustics)
+            builder.append("  ").append(acoustic.toString()).append("\n");
+        builder.append("]\n");
+        builder.append("Block Effects: [\n");
+        for (var effect : this.effects)
+            builder.append("  ").append(effect.toString()).append("\n");
+        builder.append("]\n");
+        return builder.toString();
     }
 }

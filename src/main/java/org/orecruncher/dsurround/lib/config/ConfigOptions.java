@@ -126,9 +126,10 @@ public class ConfigOptions {
     }
 
     public Text[] transformTooltip(List<Text> tooltip) {
+        var textHandler = GameUtils.getTextHandler().orElseThrow();
         var result = new ArrayList<Text>(tooltip.size());
         for (var e : tooltip) {
-            var wrapped = GameUtils.getTextHandler()
+            var wrapped = textHandler
                     .wrapLines(
                             e,
                             this.toolTipWidth,

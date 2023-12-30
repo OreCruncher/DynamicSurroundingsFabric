@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.sound;
 
 import com.google.common.base.MoreObjects;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.EntityTrackingSoundInstance;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundInstance;
@@ -20,7 +18,6 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 
-@Environment(EnvType.CLIENT)
 public final class SoundFactoryBuilder {
 
     private static final Vec3d BLOCK_CENTER_ADJUST = new Vec3d(0.5D, 0.5D, 0.5D);

@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -13,7 +11,6 @@ import net.minecraft.util.UseAction;
 import net.minecraft.util.hit.HitResult;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 
-@Environment(EnvType.CLIENT)
 public class ItemSwingEffect extends EntityEffectBase {
 
     private final IItemLibrary itemLibrary;

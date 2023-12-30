@@ -1,3 +1,32 @@
+> ### DynamicSurroundings-Fabric-1.20.4-0.0.9
+**Requirements**
+* JAVA 17+ (I am using Adoptium https://adoptium.net/)
+* Fabric Loader >=0.15.1
+* Fabric API 0.91.2+1.20.4
+* 100% client side; no server side deployment needed
+
+**What's New**
+* Overhauled the waterfall sound effect system.  The number of sound instances played is significantly reduced around large falls.
+* Lava cauldrons have effects:
+  * Count as a hot block for steam production.
+  * Chance of spawning small flame jets similar to fully grown nether wart crops.
+* Kelp plants and tall seagrass will trigger brush step sounds.
+
+**Changes**
+* Adjusted item swing sounds for bows and crossbows. Now less hefty.
+* Changes to block effect settings will no longer require a restart.
+  * Adjusting while in game will cause the currently playing effects to reset.
+* Default for block effect range is now 32 from 24.
+  * The 32 range matches the Minecraft particle render range as well as the larger random display tick range.
+  * Higher ranges will consume more of the client tick for processing and may not add any additional experience. YMMV.
+  * Existing configurations will require manual changes of the block effect range to get the range of 32.
+* Diagnostic commands and HUDs will report local tag information even when connected to a remote server.
+
+**Fixes**
+* No more button click sound when pressing the PLAY button in individual sound config UI.
+* Fixed step brush sounds when connected to a vanilla server.
+* Dark Forest should now play the deep forest sounds.
+
 > ### DynamicSurroundings-Fabric-1.20.4-0.0.8
 **Requirements**
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)

@@ -1,12 +1,9 @@
 package org.orecruncher.dsurround.effects;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.LivingEntity;
 
 import java.util.Collection;
 
-@Environment(EnvType.CLIENT)
 @FunctionalInterface
 public interface IEntityEffectProducer {
     /**

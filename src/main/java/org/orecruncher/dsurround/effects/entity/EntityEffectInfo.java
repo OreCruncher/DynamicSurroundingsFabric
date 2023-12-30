@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import org.orecruncher.dsurround.effects.IEntityEffect;
@@ -9,9 +7,9 @@ import org.orecruncher.dsurround.lib.GameUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 
-@Environment(EnvType.CLIENT)
 public class EntityEffectInfo {
 
     // Entity can go out of scope for a variety of reasons besides
@@ -59,11 +57,11 @@ public class EntityEffectInfo {
     }
 
     public boolean isCurrentPlayer(LivingEntity player) {
-        return GameUtils.getPlayer().getId() == player.getId();
+        return GameUtils.getPlayer().orElseThrow().getId() == player.getId();
     }
 
     public boolean isVisibleTo(PlayerEntity player) {
-        return this.entity.get().isInvisibleTo(player);
+        return Objects.requireNonNull(this.entity.get()).isInvisibleTo(player);
     }
 
     /**

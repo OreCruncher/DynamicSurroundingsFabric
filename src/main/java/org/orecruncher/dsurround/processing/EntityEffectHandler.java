@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.processing;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Box;
@@ -10,7 +8,6 @@ import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
-@Environment(EnvType.CLIENT)
 public class EntityEffectHandler  extends AbstractClientHandler {
 
     private final IEntityEffectLibrary entityEffectLibrary;
@@ -24,7 +21,7 @@ public class EntityEffectHandler  extends AbstractClientHandler {
     @Override
     public void process(final PlayerEntity player) {
 
-        var range = config.entityEffects.entityEffectRange;
+        var range = this.config.entityEffects.entityEffectRange;
         var world = player.getEntityWorld();
 
         // Get living entities in the world.  Since the API does some fancy tracking of entities we create a box

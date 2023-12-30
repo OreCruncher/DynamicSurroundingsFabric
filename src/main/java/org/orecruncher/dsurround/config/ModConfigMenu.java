@@ -2,15 +2,12 @@ package org.orecruncher.dsurround.config;
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.util.Formatting;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.config.ConfigOptions;
 import org.orecruncher.dsurround.lib.config.clothapi.ClothAPIFactory;
 
-@Environment(EnvType.CLIENT)
 public class ModConfigMenu implements ModMenuApi {
 
     @Override

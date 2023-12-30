@@ -2,8 +2,6 @@ package org.orecruncher.dsurround.config.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.item.Item;
 import org.orecruncher.dsurround.config.ItemClassType;
 import org.orecruncher.dsurround.config.ItemTypeMatcher;
@@ -11,7 +9,6 @@ import org.orecruncher.dsurround.lib.IMatcher;
 
 import java.util.List;
 
-@Environment(EnvType.CLIENT)
 public record ItemConfigRule(
         ItemClassType itemClassType,
         List<IMatcher<Item>> items) {

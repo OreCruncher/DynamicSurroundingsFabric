@@ -1,13 +1,11 @@
 package org.orecruncher.dsurround.lib.scanner;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import com.google.common.collect.AbstractIterator;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 
-@Environment(EnvType.CLIENT)
 public class CuboidPointIterator implements IPointIterator {
 
     static final CuboidPointIterator NULL_ITERATOR = new CuboidPointIterator() {
@@ -31,13 +29,12 @@ public class CuboidPointIterator implements IPointIterator {
         this.itr = null;
     }
 
-    public CuboidPointIterator( final BlockPos[] points) {
+    public CuboidPointIterator(final BlockPos[] points) {
         this(points[0], points[1]);
     }
 
-    public CuboidPointIterator( final BlockPos p1,  final BlockPos p2) {
-        this.itr = BlockPos.iterate(p1, p2).iterator();
-        if (this.itr.hasNext())
+    public CuboidPointIterator(final BlockPos p1, final BlockPos p2) {
+        this.itr = iterateCuboid(p1.getX(), p1.getY(), p1.getZ(), p2.getX(), p2.getY(), p2.getZ()).iterator();
             this.peeked = this.itr.next();
     }
 
@@ -55,4 +52,31 @@ public class CuboidPointIterator implements IPointIterator {
         return this.peeked;
     }
 
+    /**
+     * Customized cube iterator that favors iterating x, z, and then y as to maximize on CPU cache hits when
+     * traversing the cube.
+     */
+    private static Iterable<BlockPos> iterateCuboid(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+        int length = maxX - minX + 1;
+        int height = maxY - minY + 1;
+        int width = maxZ - minZ + 1;
+        int volume = length * height * width;
+        return () -> new AbstractIterator<>() {
+            private final BlockPos.Mutable pos = new BlockPos.Mutable();
+            private int index;
+
+            protected BlockPos computeNext() {
+                if (this.index == volume) {
+                    return this.endOfData();
+                } else {
+                    int dX = this.index % length;
+                    int jx = this.index / length;
+                    int dZ = jx % width;
+                    int dY = jx / width;
+                    ++this.index;
+                    return this.pos.set(minX + dX, minY + dY, minZ + dZ);
+                }
+            }
+        };
+    }
 }

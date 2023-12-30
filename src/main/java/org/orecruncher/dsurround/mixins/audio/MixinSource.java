@@ -3,13 +3,14 @@ package org.orecruncher.dsurround.mixins.audio;
 import net.minecraft.client.sound.Source;
 import net.minecraft.client.sound.StaticSound;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.orecruncher.dsurround.runtime.audio.SoundFXProcessor;
 import org.orecruncher.dsurround.runtime.audio.SourceContext;
-import org.orecruncher.dsurround.xface.ISourceContext;
+import org.orecruncher.dsurround.mixinutils.ISourceContext;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -19,6 +20,7 @@ import java.util.Optional;
 @Mixin(Source.class)
 public class MixinSource implements ISourceContext {
 
+    @Unique
     private SourceContext dsurround_data = null;
 
     @Shadow
@@ -26,17 +28,17 @@ public class MixinSource implements ISourceContext {
     private int pointer;
 
     @Override
-    public int getId() {
+    public int dsurround_getId() {
         return this.pointer;
     }
 
     @Override
-    public Optional<SourceContext> getData() {
+    public Optional<SourceContext> dsurround_getData() {
         return Optional.ofNullable(this.dsurround_data);
     }
 
     @Override
-    public void setData(@Nullable SourceContext data) {
+    public void dsurround_setData(@Nullable SourceContext data) {
         this.dsurround_data = data;
     }
 
@@ -50,7 +52,7 @@ public class MixinSource implements ISourceContext {
         try {
             SoundFXProcessor.onSourcePlay((Source) ((Object) this));
         } catch(final Throwable t) {
-            Client.LOGGER.error(t, "Error in dsurround_onPlay()!");
+            MixinHelpers.LOGGER.error(t, "Error in dsurround_onPlay()!");
         }
     }
 
@@ -64,7 +66,7 @@ public class MixinSource implements ISourceContext {
         try {
             SoundFXProcessor.tick((Source) ((Object) this));
         } catch(final Throwable t) {
-            Client.LOGGER.error(t, "Error in dsurround_onTick()!");
+            MixinHelpers.LOGGER.error(t, "Error in dsurround_onTick()!");
         }
     }
 
@@ -77,7 +79,7 @@ public class MixinSource implements ISourceContext {
         try {
             SoundFXProcessor.stopSoundPlay((Source) ((Object) this));
         } catch(final Throwable t) {
-            Client.LOGGER.error(t, "Error in dsurround_onStop()!");
+            MixinHelpers.LOGGER.error(t, "Error in dsurround_onStop()!");
         }
     }
 
@@ -95,7 +97,7 @@ public class MixinSource implements ISourceContext {
             var src = (Source) ((Object) this);
             SoundFXProcessor.doMonoConversion(src, soundBuffer);
         } catch(final Throwable t) {
-            Client.LOGGER.error(t, "Error in dsurround_monoConversion()!");
+            MixinHelpers.LOGGER.error(t, "Error in dsurround_monoConversion()!");
         }
     }
 }

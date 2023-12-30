@@ -76,7 +76,7 @@
     ]
   },
   {
-    "biomeSelector": "FOREST && !(DEAD || WASTELAND || DENSE || SWAMP) && lib.isBetween(biome.temperature, 0.2, 1.0)",
+    "biomeSelector": "FOREST && !(DEAD || WASTELAND || DENSE || SWAMP || SPOOKY) && lib.isBetween(biome.temperature, 0.2, 1.0)",
     "_comment": "Basic Forest w/Crickets",
     "acoustics": [
       {
@@ -90,7 +90,7 @@
     ]
   },
   {
-    "biomeSelector": "FOREST && DENSE && !(DEAD || WASTELAND || SWAMP || JUNGLE) && lib.isBetween(biome.temperature, 0.2, 1.0)",
+    "biomeSelector": "FOREST && SPOOKY && !(DEAD || WASTELAND || SWAMP || JUNGLE) && lib.isBetween(biome.temperature, 0.2, 1.0)",
     "_comment": "Deep Forest w/Crickets",
     "acoustics": [
       {

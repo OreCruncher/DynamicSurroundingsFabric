@@ -2,8 +2,6 @@ package org.orecruncher.dsurround.gui.hud.plugins;
 
 import com.google.common.collect.ImmutableList;
 import joptsimple.internal.Strings;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.util.Formatting;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.gui.hud.IDiagnosticPlugin;
@@ -15,7 +13,6 @@ import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
 import java.util.List;
 
-@Environment(EnvType.CLIENT)
 public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
 
     private static final List<String> scripts = ImmutableList.of(
@@ -38,8 +35,8 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
 
     public void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
         if (GameUtils.isInGame()) {
-            assert GameUtils.getWorld() != null;
-            this.clock.update(GameUtils.getWorld());
+            var world = GameUtils.getWorld().orElseThrow();
+            this.clock.update(world);
             event.left.add(Formatting.GREEN + this.clock.getFormattedTime());
             event.left.add(Strings.EMPTY);
 

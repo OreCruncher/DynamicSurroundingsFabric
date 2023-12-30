@@ -2,34 +2,33 @@ package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.*;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import org.orecruncher.dsurround.config.EntityEffectType;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.tags.EntityEffectTags;
-import org.orecruncher.dsurround.tags.TagHelpers;
-import org.orecruncher.dsurround.xface.ILivingEntityExtended;
+import org.orecruncher.dsurround.mixinutils.ILivingEntityExtended;
 
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Environment(EnvType.CLIENT)
 public class EntityEffectLibrary implements IEntityEffectLibrary {
 
+    private final ITagLibrary tagLibrary;
     private final IModLog logger;
     private final Reference2ObjectOpenHashMap<EntityType<?>, Set<EntityEffectType>> entityEffects = new Reference2ObjectOpenHashMap<>();
     private EntityEffectInfo defaultInfo;
     private int version;
 
-    public EntityEffectLibrary(IModLog logger) {
+    public EntityEffectLibrary(ITagLibrary tagLibrary, IModLog logger) {
+        this.tagLibrary = tagLibrary;
         this.logger = logger;
     }
 
@@ -75,19 +74,19 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
     @Override
     public boolean doesEntityEffectInfoExist(LivingEntity entity) {
         ILivingEntityExtended accessor = (ILivingEntityExtended) entity;
-        return accessor.getEffectInfo() != null;
+        return accessor.dsurround_getEffectInfo() != null;
     }
 
     @Override
     public void clearEntityEffectInfo(LivingEntity entity) {
         ILivingEntityExtended accessor = (ILivingEntityExtended) entity;
-        accessor.setEffectInfo(null);
+        accessor.dsurround_setEffectInfo(null);
     }
 
     @Override
     public EntityEffectInfo getEntityEffectInfo(LivingEntity entity) {
         ILivingEntityExtended accessor = (ILivingEntityExtended) entity;
-        var info = accessor.getEffectInfo();
+        var info = accessor.dsurround_getEffectInfo();
 
         if (info != null && info.getVersion() == this.version)
             return info;
@@ -98,7 +97,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
         }
 
         // Find the entity in our map
-        var types = this.entityEffects.computeIfAbsent(entity.getType(), EntityEffectLibrary::gatherEffectsFromConfigRules);
+        var types = this.entityEffects.computeIfAbsent(entity.getType(), this::gatherEffectsFromConfigRules);
 
         // Project the effect instances
         var effects = types.stream()
@@ -114,28 +113,29 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
         else
             info = this.defaultInfo;
 
-        accessor.setEffectInfo(info);
+        accessor.dsurround_setEffectInfo(info);
 
-        // Initialize the attached effects before returning.  Usually the next step in processing would be
+        // Initialize the attached effects before returning.
+        // Usually, the next step in processing would be
         // to tick the effects.
         info.activate();
 
         return info;
     }
 
-    private static Set<EntityEffectType> gatherEffectsFromConfigRules(EntityType<?> entityType) {
+    private Set<EntityEffectType> gatherEffectsFromConfigRules(EntityType<?> entityType) {
         // Gather all the effect types that apply to the entity
         Set<EntityEffectType> effectTypes = new ReferenceOpenHashSet<>();
 
-        if (TagHelpers.isIn(EntityEffectTags.BOW_PULL, entityType))
+        if (this.tagLibrary.isIn(EntityEffectTags.BOW_PULL, entityType))
             effectTypes.add(EntityEffectType.BOW_PULL);
-        if (TagHelpers.isIn(EntityEffectTags.FROST_BREATH, entityType))
+        if (this.tagLibrary.isIn(EntityEffectTags.FROST_BREATH, entityType))
             effectTypes.add(EntityEffectType.FROST_BREATH);
-        if (TagHelpers.isIn(EntityEffectTags.ITEM_SWING, entityType))
+        if (this.tagLibrary.isIn(EntityEffectTags.ITEM_SWING, entityType))
             effectTypes.add(EntityEffectType.ITEM_SWING);
-        if (TagHelpers.isIn(EntityEffectTags.TOOLBAR, entityType))
+        if (this.tagLibrary.isIn(EntityEffectTags.TOOLBAR, entityType))
             effectTypes.add(EntityEffectType.PLAYER_TOOLBAR);
-        if (TagHelpers.isIn(EntityEffectTags.BRUSH_STEP, entityType))
+        if (this.tagLibrary.isIn(EntityEffectTags.BRUSH_STEP, entityType))
             effectTypes.add(EntityEffectType.BRUSH_STEP);
 
         return effectTypes;

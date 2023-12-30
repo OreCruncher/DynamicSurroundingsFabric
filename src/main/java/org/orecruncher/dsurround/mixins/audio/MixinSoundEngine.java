@@ -6,15 +6,25 @@ import net.minecraft.client.sound.SoundEngine;
 import org.lwjgl.openal.ALC10;
 import org.lwjgl.openal.EXTEfx;
 import org.lwjgl.openal.SOFTOutputLimiter;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
+import org.orecruncher.dsurround.mixinutils.ISoundEngine;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 
 import java.nio.IntBuffer;
 
 @Mixin(SoundEngine.class)
-public class MixinSoundEngine {
+public class MixinSoundEngine implements ISoundEngine {
+
+    @Shadow
+    private long devicePointer;
+
+    public long dsurround_getDevicePointer() {
+        return this.devicePointer;
+    }
 
     /**
      * This will resize the capability buffer to accommodate additional settings
@@ -34,7 +44,7 @@ public class MixinSoundEngine {
             attrList.clear();
             // From the original code
             attrList.put(SOFTOutputLimiter.ALC_OUTPUT_LIMITER_SOFT).put(ALC10.ALC_TRUE);
-            // Increase send channels
+            // Increase sends channels
             attrList.put(EXTEfx.ALC_MAX_AUXILIARY_SENDS).put(4);
             // Done!
             attrList.put(0);
@@ -54,6 +64,7 @@ public class MixinSoundEngine {
      */
     @ModifyConstant(method = "init(Ljava/lang/String;Z)V", constant = @Constant(intValue = 8))
     public int dsurround_initialize(int v) {
-        return Client.Config.soundSystem.streamingChannels;
+        var config = ContainerManager.resolve(Configuration.SoundSystem.class);
+        return config.streamingChannels;
     }
 }

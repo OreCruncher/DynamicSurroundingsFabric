@@ -57,7 +57,8 @@ public final class Worker {
                     return;
                 }
             } else if (sleepTime < 0) {
-                this.diagnosticString = () -> this.diagnosticString.get() + String.format("; running behind %dms", Math.abs(sleepTime));
+                var temp = this.diagnosticString.get() + String.format("; running behind %dms", Math.abs(sleepTime));
+                this.diagnosticString = () -> temp;
             }
         }
 

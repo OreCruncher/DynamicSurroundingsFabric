@@ -1,13 +1,11 @@
 package org.orecruncher.dsurround.runtime;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
-import org.orecruncher.dsurround.lib.infra.events.ClientState;
+import org.orecruncher.dsurround.lib.platform.events.ClientState;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.processing.Scanners;
@@ -15,7 +13,6 @@ import org.orecruncher.dsurround.runtime.sets.*;
 
 import java.util.Optional;
 
-@Environment(EnvType.CLIENT)
 public final class ConditionEvaluator implements IConditionEvaluator {
 
     private final ExecutionContext context;

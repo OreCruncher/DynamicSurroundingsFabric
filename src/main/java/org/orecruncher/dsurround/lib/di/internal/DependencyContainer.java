@@ -42,7 +42,7 @@ public class DependencyContainer implements IServiceContainer {
      * Returns the name of the container
      */
     @Override
-    public String get_name() {
+    public String getName() {
         return this._name;
     }
 
@@ -221,26 +221,31 @@ public class DependencyContainer implements IServiceContainer {
             throw new RuntimeException(String.format("'%s' is a primitive type and cannot be used for dependency injection", clazz.getName()));
         if (clazz.equals(Object.class))
             throw new RuntimeException("Object is not a suitable key");
+        if (clazz.equals(Optional.class))
+            throw new RuntimeException("Cannot use an optional as a key");
         if (!Modifier.isPublic(clazz.getModifiers()))
             throw new RuntimeException(String.format("Class '%s' is not public", clazz.getName()));
     }
 
     /**
-     * Checks the class for suitability for use in dependency injection.  If not suitable a RuntimeException
-     * is generated.
+     * Checks the class for suitability for use in dependency injection.
+     * If not suitable, a RuntimeException is generated.
      *
      * @param clazz Class to check for suitability
      */
     private void checkForResolverSuitability(Class<?> clazz) {
         if (clazz.isInterface())
             throw new RuntimeException(String.format("The class %s is an interface and cannot be instantiated directly", clazz.getName()));
+        if (clazz.equals(Optional.class))
+            throw new RuntimeException("Cannot use an optional as a resolved type");
         if (!Modifier.isPublic(clazz.getModifiers()))
             throw new RuntimeException(String.format("Class '%s' is not public", clazz.getName()));
     }
 
     /**
-     * Recursively searches for a resolver to satisfy the request.  Current container is searched
-     * prior to searching the parent as this allows for override in a child container.
+     * Recursively searches for a resolver to satisfy the request.
+     * The Current container is searched prior to searching the parent as this allows
+     * for override in a child container.
      *
      * @param clazz Instance resolver to locate
      * @return Resolver if found
@@ -344,7 +349,7 @@ public class DependencyContainer implements IServiceContainer {
 
     /**
      * Finds a suitable constructor to use when instantiating a class.  If a class has a single declared
-     * constructor it will be used.  As a fallback if a constructor has the DependencyConstructor annotation
+     * constructor, it will be used.  As a fallback if a constructor has the DependencyConstructor annotation,
      * it will be selected.  If a class has more than one constructor, or if more than one constructor has
      * the annotation and exception will be generated.
      *

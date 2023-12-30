@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.lib.world;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.impl.event.lifecycle.LoadedChunksCache;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.util.math.BlockPos;
@@ -27,7 +25,6 @@ public class WorldUtils {
      */
     public static final float SNOW_THRESHOLD = 0.15F;
 
-    @Environment(EnvType.CLIENT)
     public static boolean isSuperFlat(final World world) {
         final WorldProperties info = world.getLevelProperties();
         return info instanceof MixinClientWorldProperties && ((MixinClientWorldProperties) info).isFlatWorld();
@@ -45,7 +42,6 @@ public class WorldUtils {
         return world.getTopY(Heightmap.Type.MOTION_BLOCKING, pos.getX(), pos.getZ());
     }
 
-    @Environment(EnvType.CLIENT)
     public static List<BlockEntity> getLoadedBlockEntities(World world, Predicate<BlockEntity> predicate) {
         return ((LoadedChunksCache) world).fabric_getLoadedChunks().stream()
                 .flatMap(chunk -> chunk.getBlockEntities().values().stream())

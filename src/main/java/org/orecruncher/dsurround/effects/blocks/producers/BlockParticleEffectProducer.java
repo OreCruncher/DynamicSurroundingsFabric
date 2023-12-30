@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.blocks.producers;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.util.math.BlockPos;
@@ -17,7 +15,6 @@ import java.util.Random;
  * Special block effect producer that just produces particle effects - no fancy systems.  As a result
  * no block effect will be generated and placed into the tracking system.
  */
-@Environment(EnvType.CLIENT)
 public class BlockParticleEffectProducer extends BlockEffectProducer {
 
     private final IParticleSupplier supplier;
@@ -35,7 +32,7 @@ public class BlockParticleEffectProducer extends BlockEffectProducer {
     }
 
     protected void addParticle(final Particle particle) {
-        GameUtils.getParticleManager().addParticle(particle);
+        GameUtils.getParticleManager().ifPresent(pm -> pm.addParticle(particle));
     }
 
     @FunctionalInterface

@@ -5,7 +5,7 @@
       "required": false
     },
     {
-      "id": "#c:glass_pane",
+      "id": "#c:glass_panes",
       "required": false
     },
     "#minecraft:beehives",

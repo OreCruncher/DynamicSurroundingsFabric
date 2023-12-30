@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.sound.SoundInstance;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
@@ -9,7 +7,6 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
-@Environment(EnvType.CLIENT)
 public interface IEntityEffect {
 
     /**
@@ -45,7 +42,7 @@ public interface IEntityEffect {
      * Helper method to add a particle to the particle system
      */
     default void addParticle(Particle particle) {
-        GameUtils.getParticleManager().addParticle(particle);
+        GameUtils.getParticleManager().ifPresent(pm -> pm.addParticle(particle));
     }
 
 }

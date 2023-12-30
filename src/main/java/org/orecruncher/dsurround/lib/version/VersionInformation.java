@@ -4,30 +4,21 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import joptsimple.internal.Strings;
-import net.fabricmc.loader.api.Version;
 
 import java.util.Map;
 import java.util.Optional;
 
-public class VersionInformation {
+public record VersionInformation(Map<SemanticVersion, Map<SemanticVersion, String>> releases, Map<SemanticVersion, SemanticVersion> recommended) {
 
-    private static final Codec<Map<Version, String>> CODEC_RELEASES = Codec.unboundedMap(VersionData.CODEC, Codec.STRING).stable();
-    private static final Codec<Map<Version, Map<Version, String>>> MAJOR_VERSION_RELEASES = Codec.unboundedMap(VersionData.CODEC, CODEC_RELEASES).stable();
-    private static final Codec<Map<Version,Version>> RECOMMENDATION = Codec.unboundedMap(VersionData.CODEC, VersionData.CODEC).stable();
+    private static final Codec<Map<SemanticVersion, String>> CODEC_RELEASES = Codec.unboundedMap(SemanticVersion.CODEC, Codec.STRING).stable();
+    private static final Codec<Map<SemanticVersion, Map<SemanticVersion, String>>> MAJOR_VERSION_RELEASES = Codec.unboundedMap(SemanticVersion.CODEC, CODEC_RELEASES).stable();
+    private static final Codec<Map<SemanticVersion, SemanticVersion>> RECOMMENDATION = Codec.unboundedMap(SemanticVersion.CODEC, SemanticVersion.CODEC).stable();
 
     public static Codec<VersionInformation> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
-                MAJOR_VERSION_RELEASES.fieldOf("releases").forGetter(info -> info.releases),
-                RECOMMENDATION.fieldOf("recommend").forGetter(info -> info.recommended)
+                MAJOR_VERSION_RELEASES.fieldOf("releases").forGetter(VersionInformation::releases),
+                RECOMMENDATION.fieldOf("recommend").forGetter(VersionInformation::recommended)
             ).apply(instance, VersionInformation::new));
-
-    public final Map<Version, Map<Version, String>> releases;
-    public final Map<Version, Version> recommended;
-
-    VersionInformation(Map<Version, Map<Version, String>> releases, Map<Version, Version> recommended) {
-        this.releases = releases;
-        this.recommended = recommended;
-    }
 
     /**
      * Gets the newest release as compared to the current version information provided.
@@ -35,14 +26,14 @@ public class VersionInformation {
      * @param modVersion        Mod version installed
      * @return Pair containing the newest version and associated information
      */
-    public Optional<Pair<Version, String>> getNewestVersion(Version minecraftVersion, Version modVersion) {
+    public Optional<Pair<SemanticVersion, String>> getNewestVersion(SemanticVersion minecraftVersion, SemanticVersion modVersion) {
 
         var recommendation = this.recommended.get(minecraftVersion);
         if (recommendation == null)
             return Optional.empty();
 
         if (modVersion.compareTo(recommendation) < 0) {
-            String notes = null;
+            String notes = Strings.EMPTY;
             var releases = this.releases.get(minecraftVersion);
             if (releases != null) {
                 notes = releases.get(recommendation);

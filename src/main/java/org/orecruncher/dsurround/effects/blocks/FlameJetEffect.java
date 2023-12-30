@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.blocks;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.particle.FlameParticle;
 import net.minecraft.particle.DefaultParticleType;
 import net.minecraft.particle.ParticleTypes;
@@ -12,7 +10,6 @@ import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
-@Environment(EnvType.CLIENT)
 public class FlameJetEffect extends ParticleJetEffect {
 
     private static final ISoundFactory FIRE_AMBIENT = SoundFactoryBuilder
@@ -61,11 +58,13 @@ public class FlameJetEffect extends ParticleJetEffect {
         }
 
         var particle = this.createParticle(this.particleType, x, this.posY, z, 0, speedY, 0D);
+        float finalScale = scale;
+        particle.ifPresent(p -> {
+            if (p instanceof FlameParticle) {
+                p.scale(finalScale);
+            }
 
-        if (particle instanceof FlameParticle) {
-            particle.scale(scale);
-        }
-
-        this.addParticle(particle);
+            this.addParticle(p);
+        });
     }
 }

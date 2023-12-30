@@ -1,15 +1,15 @@
 package org.orecruncher.dsurround.lib;
 
 import net.minecraft.world.World;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 
 public enum DayCycle {
 
-    NO_SKY(false, "NoSky"),
-    SUNRISE(false, "Sunrise"),
-    SUNSET(true, "Sunset"),
-    DAYTIME(false, "Daytime"),
-    NIGHTTIME(true, "Nighttime");
+    NO_SKY("NoSky"),
+    SUNRISE("Sunrise"),
+    SUNSET("Sunset"),
+    DAYTIME("Daytime"),
+    NIGHTTIME("Nighttime");
 
     // Thresholds are in degrees.  Noon is 0 degrees, and midnight is 180
     private static final float DAYTIME_THRESHOLD = 274;
@@ -17,12 +17,10 @@ public enum DayCycle {
     private static final float NIGHTTIME_THRESHOLD = 94F;
     private static final float SUNSET_THRESHOLD = NIGHTTIME_THRESHOLD - 15F;
 
-    private final boolean auroraVisible;
     private final String localizeString;
 
-    DayCycle(final boolean auroraVisible, final String localName) {
-        this.auroraVisible = auroraVisible;
-        this.localizeString = Client.ModId + ".format." + localName;
+    DayCycle(final String localName) {
+        this.localizeString = Constants.MOD_ID + ".format." + localName;
     }
 
     public static boolean isDaytime(final World world) {
@@ -60,14 +58,6 @@ public enum DayCycle {
 
     public static float getMoonSize(final World world) {
         return world.getMoonSize();
-    }
-
-    public static boolean isAuroraInvisible(final World world) {
-        return !getCycle(world).isAuroraVisible();
-    }
-
-    public boolean isAuroraVisible() {
-        return this.auroraVisible;
     }
 
     public String getFormattedName() {

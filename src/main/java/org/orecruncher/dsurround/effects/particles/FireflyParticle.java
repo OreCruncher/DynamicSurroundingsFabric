@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.particle.*;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.particle.ParticleTypes;
@@ -11,7 +9,6 @@ import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 
 import java.util.Random;
 
-@Environment(EnvType.CLIENT)
 public class FireflyParticle extends AnimatedParticle {
     private static final Random RANDOM = XorShiftRandom.current();
     private static final float XZ_MOTION_DELTA = 0.1F;

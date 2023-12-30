@@ -7,7 +7,6 @@ import com.mojang.serialization.*;
 import com.mojang.serialization.codecs.ListCodec;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.JsonHelper;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.block.BlockStateMatcher;
 import org.orecruncher.dsurround.lib.block.MatchOnBlockTag;
 
@@ -19,19 +18,6 @@ import java.util.function.Function;
  * Extensions to the Codec serialization framework.
  */
 public interface CodecExtensions<A> extends Codec<A> {
-    /**
-     * Checks that a string is a valid format for HTML color coding.
-     */
-    static Codec<String> checkHTMLColor() {
-        final Function<String, DataResult<String>> func = value -> {
-            if (PatternValidation.HTML_COLOR_ENCODING.matcher(value).matches()) {
-                return DataResult.success(value);
-            }
-            return DataResult.error(() -> String.format("%s is not a valid HTML color description", value));
-        };
-        return Codec.STRING.flatXmap(func, func);
-    }
-
     /**
      * Checks that a string is a valid format specification for BlockState
      */
@@ -60,9 +46,9 @@ public interface CodecExtensions<A> extends Codec<A> {
         }
         try {
             DataResult<A> result = codec.parse(dynamic);
-            return result.resultOrPartial(Client.LOGGER::warn);
+            return result.resultOrPartial(Library.getLogger()::warn);
         } catch (Throwable t) {
-            Client.LOGGER.error(t, "Unable to parse input");
+            Library.getLogger().error(t, "Unable to parse input");
         }
 
         return Optional.empty();

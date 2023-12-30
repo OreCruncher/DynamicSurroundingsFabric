@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.processing.scanner;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.registry.tag.BlockTags;
@@ -19,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@Environment(EnvType.CLIENT)
 public final class CeilingScanner {
 
     private static final int SURVEY_INTERVAL = 4;
@@ -64,11 +61,13 @@ public final class CeilingScanner {
         if (tickCount % SURVEY_INTERVAL != 0)
             return;
 
-        final DimensionInfo dimInfo = this.dimensionLibrary.getData(GameUtils.getWorld());
+        var world = GameUtils.getWorld().orElseThrow();
+        final DimensionInfo dimInfo = this.dimensionLibrary.getData(world);
         if (dimInfo.alwaysOutside()) {
             this.reallyInside = false;
         } else {
-            final BlockPos pos = GameUtils.getPlayer().getBlockPos();
+            var player = GameUtils.getPlayer().orElseThrow();
+            final BlockPos pos = player.getBlockPos();
             float score = 0.0F;
             for (Cell cell : cells) score += cell.score(pos);
             float ceilingCoverageRatio = 1.0F - (score / TOTAL_POINTS);
@@ -106,7 +105,7 @@ public final class CeilingScanner {
                     playerPos.getZ() + this.offset.getZ()
             );
 
-            final World world = GameUtils.getWorld();
+            final World world = GameUtils.getWorld().orElseThrow();
             final int playerHeight = Math.max(playerPos.getY() + 1, 0);
 
             // Get the precipitation height

@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.lib.events.internal;
 
+import com.google.common.base.Preconditions;
 import org.orecruncher.dsurround.lib.events.IEvent;
 
 import java.util.ArrayList;
@@ -14,17 +15,23 @@ final class Event<TEntityType> implements IEvent<TEntityType> {
     private final BiConsumer<TEntityType, List<Consumer<TEntityType>>> _callbackProcessor;
 
     public Event(BiConsumer<TEntityType, List<Consumer<TEntityType>>> callbackProcessor) {
+        Preconditions.checkNotNull(callbackProcessor);
+
         this._handlers = new ArrayList<>(4);
         this._callbackProcessor = callbackProcessor;
     }
 
     @Override
     public void register(Consumer<TEntityType> handler) {
+        Preconditions.checkNotNull(handler);
+
         this._handlers.add(handler);
     }
 
     @Override
     public void raise(TEntityType entity) {
+        Preconditions.checkNotNull(entity);
+
         if (!this._handlers.isEmpty())
             this._callbackProcessor.accept(entity, Collections.unmodifiableList(this._handlers));
     }

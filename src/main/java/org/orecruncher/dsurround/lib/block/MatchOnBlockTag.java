@@ -5,9 +5,12 @@ import net.minecraft.block.BlockState;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
 import net.minecraft.registry.RegistryKeys;
-import org.orecruncher.dsurround.tags.TagHelpers;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 public class MatchOnBlockTag extends BlockStateMatcher {
+
+    private final static ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
     private final TagKey<Block> tagId;
 
@@ -22,6 +25,11 @@ public class MatchOnBlockTag extends BlockStateMatcher {
 
     @Override
     public boolean match(BlockState state) {
-        return TagHelpers.isIn(this.tagId, state.getBlock());
+        return TAG_LIBRARY.isIn(this.tagId, state.getBlock());
+    }
+
+    @Override
+    public String toString() {
+        return "MatchOnBlockTag{" + this.tagId.id().toString() + "}";
     }
 }

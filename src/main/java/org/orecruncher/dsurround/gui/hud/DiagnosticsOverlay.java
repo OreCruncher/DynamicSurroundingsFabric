@@ -1,25 +1,23 @@
 package org.orecruncher.dsurround.gui.hud;
 
 import com.google.common.base.Strings;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.Formatting;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.gui.hud.plugins.*;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.infra.ModInformation;
+import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
 /***
  * Our debug and diagnostics overlay.  Derived from DebugHud.
  */
-@Environment(EnvType.CLIENT)
 public class DiagnosticsOverlay extends AbstractOverlay {
 
     private static final int backgroundColor = -1873784752;
@@ -35,11 +33,11 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     private ObjectArray<String> right = new ObjectArray<>();
 
     public DiagnosticsOverlay(ModInformation modInformation) {
-        this.branding = modInformation.get_branding();
+        this.branding = modInformation.getBranding();
         this.showHud = false;
 
         this.plugins.add(new ClientProfilerPlugin());
-        this.plugins.add(new BlockViewerPlugin(ContainerManager.resolve(IBlockLibrary.class)));
+        this.plugins.add(new BlockViewerPlugin(ContainerManager.resolve(IBlockLibrary.class), ContainerManager.resolve(ITagLibrary.class)));
         this.plugins.add(new RuntimeDiagnosticsPlugin(ContainerManager.resolve(IConditionEvaluator.class)));
         this.plugins.add(new SoundEngineDiagnosticsPlugin());
     }
@@ -91,7 +89,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     }
 
     private void drawText(DrawContext context, ObjectArray<String> text, boolean left) {
-        var textRenderer = GameUtils.getTextRenderer();
+        var textRenderer = GameUtils.getTextRenderer().orElseThrow();
         int m;
         int l;
         int k;

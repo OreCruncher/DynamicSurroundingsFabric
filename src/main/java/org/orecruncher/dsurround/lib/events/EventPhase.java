@@ -15,10 +15,15 @@ public final class EventPhase {
     private final String _name;
 
     EventPhase(String phaseName) {
+        Preconditions.checkNotNull(phaseName);
+
         this._name = phaseName;
     }
 
     public static EventPhase of(String... name) {
+        Preconditions.checkNotNull(name);
+        Preconditions.checkArgument(name.length > 0, "Name needs to be provided");
+
         return new EventPhase(String.join(".", name));
     }
 

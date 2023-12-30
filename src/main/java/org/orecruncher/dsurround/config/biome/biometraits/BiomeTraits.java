@@ -43,7 +43,8 @@ public final class BiomeTraits {
     }
 
     private static RegistryEntry.Reference<Biome> getBiomeEntry(Biome biome) {
-        var biomeRegistry = GameUtils.getRegistryManager().get(RegistryKeys.BIOME);
+        var manager = GameUtils.getRegistryManager().orElseThrow();
+        var biomeRegistry = manager.get(RegistryKeys.BIOME);
         RegistryKey<Biome> key = biomeRegistry.getKey(biome).orElse(BiomeKeys.THE_VOID);
         return biomeRegistry.entryOf(key);
     }

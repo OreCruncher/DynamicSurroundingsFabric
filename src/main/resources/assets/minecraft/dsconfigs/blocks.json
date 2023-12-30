@@ -12,6 +12,17 @@
   },
   {
     "blocks": [
+      "minecraft:lava_cauldron"
+    ],
+    "effects": [
+      {
+        "effect": "fire_jet",
+        "spawnChance": "0.03"
+      }
+    ]
+  },
+  {
+    "blocks": [
       "minecraft:lava"
     ],
     "effects": [
@@ -29,25 +40,6 @@
       {
         "effect": "bubble_column",
         "spawnChance": "0.0005"
-      },
-      {
-        "effect": "steam_column",
-        "alwaysOn": true
-      },
-      {
-        "effect": "waterfall",
-        "alwaysOn": true
-      }
-    ]
-  },
-  {
-    "blocks": [
-      "minecraft:water_cauldron[level=3]"
-    ],
-    "effects": [
-      {
-        "effect": "steam_column",
-        "alwaysOn": true
       }
     ]
   },

@@ -2,8 +2,7 @@ package org.orecruncher.dsurround.lib.random;
 
 /**
  * Simple Linear congruential generator for integer psuedo random numbers.
- * Intended to be fast. Limit is that it can only generate random numbers 0 -
- * 32K.
+ * Intended to be fast. The Limit is that it can only generate random numbers 0-32K.
  */
 public final class LCGRandom {
 
@@ -13,7 +12,7 @@ public final class LCGRandom {
      * Creates and seeds an LCG using an integer from XorShiftRandom.
      */
     public LCGRandom() {
-        this(XorShiftRandom.current().nextLong());
+        this(SplitMax.current().next());
     }
 
     /**
@@ -26,7 +25,7 @@ public final class LCGRandom {
     }
 
     /**
-     * Generates a random number between 0 and the bound specified.
+     * Generates a random number between zero and the bound specified.
      *
      * @param bound upper bound of the random integer generated
      * @return Pseudo random integer between 0 and bound

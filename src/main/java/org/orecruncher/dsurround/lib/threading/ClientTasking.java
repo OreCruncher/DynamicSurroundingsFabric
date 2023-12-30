@@ -1,13 +1,10 @@
 package org.orecruncher.dsurround.lib.threading;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.GameUtils;
 
 import java.util.concurrent.*;
 
-@Environment(EnvType.CLIENT)
 public final class ClientTasking implements IClientTasking {
 
     /**

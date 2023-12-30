@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.runtime.sets;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.dimension.DimensionType;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -9,7 +7,6 @@ import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 
-@Environment(EnvType.CLIENT)
 public class DimensionVariables extends VariableSet<IDimensionVariables> implements IDimensionVariables {
 
     private String id;
@@ -29,13 +26,13 @@ public class DimensionVariables extends VariableSet<IDimensionVariables> impleme
     @Override
     public void update(IVariableAccess variableAccess) {
         if (GameUtils.isInGame()) {
-            assert GameUtils.getWorld() != null;
-            final DimensionType dim = GameUtils.getWorld().getDimension();
-            final Identifier location = GameUtils.getWorld().getRegistryKey().getValue();
+            var world = GameUtils.getWorld().orElseThrow();
+            final DimensionType dim = world.getDimension();
+            final Identifier location = world.getRegistryKey().getValue();
             this.id = location.toString();
             this.hasSky = dim.hasSkyLight();
             this.name = location.getPath();
-            this.isSuperFlat = WorldUtils.isSuperFlat(GameUtils.getWorld());
+            this.isSuperFlat = WorldUtils.isSuperFlat(world);
         } else {
             this.id = "UNKNOWN";
             this.hasSky = false;

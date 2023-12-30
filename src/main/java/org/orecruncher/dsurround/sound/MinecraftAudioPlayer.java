@@ -1,14 +1,11 @@
 package org.orecruncher.dsurround.sound;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.client.sound.SoundManager;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
 
-@Environment(EnvType.CLIENT)
 public class MinecraftAudioPlayer implements IAudioPlayer {
 
     private final IModLog logger;

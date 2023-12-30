@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.lib.gui;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.text.*;
@@ -12,7 +10,6 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-@Environment(EnvType.CLIENT)
 public class GuiHelpers {
 
     private final static String ELLIPSES = "...";
@@ -27,8 +24,9 @@ public class GuiHelpers {
      * @return Collection of ITextComponents for the given key
      */
     public static Collection<OrderedText> getTrimmedTextCollection(final String key, final int width, @Nullable final Formatting... formatting) {
+        var textHandler = GameUtils.getTextHandler().orElseThrow();
         final Style style = prefixHelper(formatting);
-        return GameUtils.getTextHandler()
+        return textHandler
                 .wrapLines(
                         Text.translatable(key),
                         width,
@@ -47,9 +45,9 @@ public class GuiHelpers {
      * @return ITextComponent fitting the criteria specified
      */
     public static StringVisitable getTrimmedText(final String key, final int width, @Nullable final Formatting... formatting) {
+        final TextRenderer fr = GameUtils.getTextRenderer().orElseThrow();
         final Style style = prefixHelper(formatting);
         final StringVisitable text = Text.translatable(key);
-        final TextRenderer fr = GameUtils.getTextRenderer();
         final TextHandler cm = fr.getTextHandler();
         if (fr.getWidth(text) > width) {
             final int ellipsesWidth = fr.getWidth(ELLIPSES);

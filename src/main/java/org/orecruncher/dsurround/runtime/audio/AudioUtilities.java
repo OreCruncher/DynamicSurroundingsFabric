@@ -8,34 +8,37 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.*;
 import org.orecruncher.dsurround.config.Configuration;
-import org.orecruncher.dsurround.lib.FrameworkUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.mixins.core.MixinAbstractSoundInstance;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundSystemAccessors;
+import org.orecruncher.dsurround.mixinutils.ISoundEngine;
 
 import java.util.function.Supplier;
 
 public final class AudioUtilities {
     private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
-    private static final Configuration CONFIG = ContainerManager.resolve(Configuration.class);
 
-    // If these mods are present enhanced sound processing will be disabled.
+    // If these mods are present, enhanced sound processing will be disabled.
     private static final ObjectArray<String> autoDisabledBecauseOf = new ObjectArray<>();
 
     private static final Lazy<Boolean> advancedProcessingEnabled = new Lazy<>(() -> {
         // First check general settings
-        if (CONFIG.enhancedSounds.enableEnhancedSounds) {
+        var config = ContainerManager.resolve(Configuration.EnhancedSounds.class);
+        if (config.enableEnhancedSounds) {
             // Next check to see if any present mods are in our exclusion list
-            for (var modId : autoDisabledBecauseOf)
-                if (FrameworkUtils.isModLoaded(modId)) {
+            for (var modId : autoDisabledBecauseOf) {
+                var platform = ContainerManager.resolve(IPlatform.class);
+                if (platform.isModLoaded(modId)) {
                     LOGGER.warn("Enhanced sound processing is auto disabled due to the presence of the mod \"%s\"", modId);
                     return false;
                 }
+            }
             return true;
         }
 
@@ -53,7 +56,8 @@ public final class AudioUtilities {
     }
 
     public static SoundSystem getSoundSystem() {
-        MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) GameUtils.getSoundManager();
+        var soundManager = GameUtils.getSoundManager().orElseThrow();
+        MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) soundManager;
         return manager.getSoundSystem();
     }
 
@@ -123,8 +127,10 @@ public final class AudioUtilities {
 
         try {
 
+            long devicePointer = ((ISoundEngine)soundEngine).dsurround_getDevicePointer();
+
             // Calculate the number of source slots available
-            MAX_SOUNDS = ALC11.alcGetInteger(soundEngine.devicePointer, ALC11.ALC_MONO_SOURCES);
+            MAX_SOUNDS = ALC11.alcGetInteger(devicePointer, ALC11.ALC_MONO_SOURCES);
 
             // Do this last because it is dependent on the sound calculations
             if (doEnhancedSounds())
@@ -137,8 +143,8 @@ public final class AudioUtilities {
             final String renderer = AL10.alGetString(AL10.AL_RENDERER);
             final String extensions = AL10.alGetString(AL10.AL_EXTENSIONS);
 
-            final int frequency = ALC11.alcGetInteger(soundEngine.devicePointer, ALC11.ALC_FREQUENCY);
-            final int auxSendsConfigured = ALC11.alcGetInteger(soundEngine.devicePointer, EXTEfx.ALC_MAX_AUXILIARY_SENDS);
+            final int frequency = ALC11.alcGetInteger(devicePointer, ALC11.ALC_FREQUENCY);
+            final int auxSendsConfigured = ALC11.alcGetInteger(devicePointer, EXTEfx.ALC_MAX_AUXILIARY_SENDS);
 
             LOGGER.info("Vendor: %s", vendor);
             LOGGER.info("Version: %s", version);
@@ -157,7 +163,7 @@ public final class AudioUtilities {
         return advancedProcessingEnabled.get();
     }
 
-    public static void deinitialize(final SoundEngine soundEngine) {
+    public static void deinitialize(final SoundEngine ignore) {
         if (doEnhancedSounds())
             SoundFXProcessor.deinitialize();
     }

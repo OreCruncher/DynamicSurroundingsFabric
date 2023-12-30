@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
@@ -25,7 +23,7 @@ import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
-import org.orecruncher.dsurround.xface.IBiomeExtended;
+import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 
 import java.util.EnumMap;
 import java.util.List;
@@ -33,7 +31,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-@Environment(EnvType.CLIENT)
 public final class BiomeLibrary implements IBiomeLibrary {
 
     private static final String FILE_NAME = "biomes.json";
@@ -96,7 +93,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
     }
 
     private static Registry<Biome> getActiveRegistry() {
-        return GameUtils.getRegistryManager().get(RegistryKeys.BIOME);
+        return GameUtils.getRegistryManager().orElseThrow().get(RegistryKeys.BIOME);
     }
 
     public static Biome getBiome(Identifier biomeId) {
@@ -107,7 +104,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
     public BiomeInfo getBiomeInfo(Biome biome) {
         // check the cached property on the biome and return the info
         // that is there.
-        var info = ((IBiomeExtended) (Object) biome).getInfo();
+        var info = ((IBiomeExtended) (Object) biome).dsurround_getInfo();
         if (info != null && info.getVersion() == this.version)
             return info;
 
@@ -131,7 +128,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
         // Build out the info object and store into the biome.  We need to do that
         // so that when applying configs the script engine can find it.
         final var result = new BiomeInfo(this.version, id, name, traits);
-        ((IBiomeExtended) (Object) biome).setInfo(result);
+        ((IBiomeExtended) (Object) biome).dsurround_setInfo(result);
 
         // Apply rule configs
         Guard.execute(() -> applyRuleConfigs(biome, result));

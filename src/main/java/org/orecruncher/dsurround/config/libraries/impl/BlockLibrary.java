@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.registry.RegistryKeys;
@@ -13,6 +11,7 @@ import org.orecruncher.dsurround.config.block.BlockInfo;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -20,14 +19,14 @@ import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
-import org.orecruncher.dsurround.tags.TagHelpers;
-import org.orecruncher.dsurround.xface.IBlockStateExtended;
+import org.orecruncher.dsurround.mixinutils.IBlockStateExtended;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
-@Environment(EnvType.CLIENT)
 public class BlockLibrary implements IBlockLibrary {
 
     private static final String FILE_NAME = "blocks.json";
@@ -45,14 +44,16 @@ public class BlockLibrary implements IBlockLibrary {
     private final IModLog logger;
     private final IMinecraftDirectories directories;
     private final IConditionEvaluator conditionEvaluator;
+    private final ITagLibrary tagLibrary;
 
     private final Collection<BlockConfigRule> blockConfigs = new ObjectArray<>();
     private int version = 0;
 
-    public BlockLibrary(IModLog logger, IMinecraftDirectories directories, IConditionEvaluator conditionEvaluator) {
+    public BlockLibrary(IModLog logger, IMinecraftDirectories directories, IConditionEvaluator conditionEvaluator, ITagLibrary tagLibrary) {
         this.logger = logger;
         this.directories = directories;
         this.conditionEvaluator = conditionEvaluator;
+        this.tagLibrary = tagLibrary;
     }
 
     @Override
@@ -100,7 +101,12 @@ public class BlockLibrary implements IBlockLibrary {
 
     @Override
     public Stream<String> dumpBlockStates() {
-        return GameUtils.getRegistryManager().get(RegistryKeys.BLOCK).stream().flatMap(block -> block.getStateManager().getStates().stream()).map(State::toString).sorted();
+        return GameUtils.getRegistryManager()
+                .orElseThrow()
+                .get(RegistryKeys.BLOCK).stream()
+                .flatMap(block -> block.getStateManager().getStates().stream())
+                .map(State::toString)
+                .sorted();
     }
 
     @Override
@@ -110,39 +116,44 @@ public class BlockLibrary implements IBlockLibrary {
 
     @Override
     public Stream<String> dumpBlocks(boolean noStates) {
-        var blockRegistry = GameUtils.getRegistryManager().get(RegistryKeys.BLOCK).getEntrySet();
+        var blockRegistry = GameUtils.getRegistryManager().orElseThrow().get(RegistryKeys.BLOCK).getEntrySet();
         return blockRegistry.stream().map(kvp -> formatBlockOutput(kvp.getKey().getValue(), kvp.getValue(), noStates)).sorted();
     }
 
     @Override
     public Stream<String> dump() {
-        var tagGroup = TagHelpers.getTagGroup(RegistryKeys.BLOCK);
-        if (tagGroup != null) {
-            return tagGroup.filter(pair -> pair.value().findAny().isPresent()).map(pair -> BlockLibrary.formatBlockTagOutput(pair.key(), pair.value())).sorted();
-        }
-
-        return Stream.empty();
+        return this.tagLibrary.getEntriesByTag(RegistryKeys.BLOCK)
+                .map(pair -> formatBlockTagOutput(pair.key(), pair.value()))
+                .sorted();
     }
 
     private static String formatBlockConfigRuleOutput(BlockConfigRule rule) {
-        return "";
+        return rule.toString();
     }
 
-    private static String formatBlockTagOutput(Block block, Stream<TagKey<Block>> tags) {
+    private static String formatBlockTagOutput(TagKey<Block> blockTag, Set<Block> blocks) {
+        var manager = GameUtils.getRegistryManager().orElseThrow();
+        var blockRegistry = manager.get(RegistryKeys.BLOCK);
+
         StringBuilder builder = new StringBuilder();
-        builder.append("Tag: ").append(block);
-        tags.forEach(tag -> builder.append("\n    ").append(tag.toString()));
+        builder.append("Tag: ").append(blockTag.id().toString());
+        blocks.stream()
+                .map(block -> Objects.requireNonNull(blockRegistry.getId(block)).toString())
+                .sorted()
+                .forEach(tag -> builder.append("\n  ").append(tag));
         builder.append("\n");
         return builder.toString();
     }
 
     private String formatBlockOutput(Identifier id, Block block, boolean noStates) {
-        var blocks = GameUtils.getWorld().getRegistryManager().get(RegistryKeys.BLOCK);
+        var manager = GameUtils.getRegistryManager().orElseThrow();
+        var blocks = manager.get(RegistryKeys.BLOCK);
 
         var tags = "null";
         var entry = blocks.getEntry(blocks.getRawId(block));
         if (entry.isPresent()) {
-            tags = TagHelpers.asString(entry.get().streamTags());
+            var t = this.tagLibrary.streamTags(entry.get());
+            tags = this.tagLibrary.asString(t);
         }
 
         StringBuilder builder = new StringBuilder();

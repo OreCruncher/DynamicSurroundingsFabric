@@ -13,7 +13,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.math.MathStuff;
@@ -27,6 +27,8 @@ import org.orecruncher.dsurround.sound.SoundInstanceHandler;
 
 public final class SoundFXUtils {
 
+    private static final Configuration.EnhancedSounds CONFIG = ContainerManager.resolve(Configuration.EnhancedSounds.class);
+
     /**
      * Maximum number of segments to check when ray tracing for occlusion.
      */
@@ -34,15 +36,15 @@ public final class SoundFXUtils {
     /**
      * Number of rays to project when doing reverb calculations.
      */
-    private static final int REVERB_RAYS = Client.Config.enhancedSounds.reverbRays;
+    private static final int REVERB_RAYS = CONFIG.reverbRays;
     /**
      * Number of bounces a sound wave will make when projecting.
      */
-    private static final int REVERB_RAY_BOUNCES = Client.Config.enhancedSounds.reverbBounces;
+    private static final int REVERB_RAY_BOUNCES = CONFIG.reverbBounces;
     /**
      * Maximum distance to trace a reverb ray segment before stopping.
      */
-    private static final float MAX_REVERB_DISTANCE = Client.Config.enhancedSounds.reverbRayTraceDistance;
+    private static final float MAX_REVERB_DISTANCE = CONFIG.reverbRayTraceDistance;
     /**
      * Reciprocal of the total number of rays cast.
      */
@@ -391,7 +393,7 @@ public final class SoundFXUtils {
     }
 
     private static boolean skipOcclusion(SoundCategory category) {
-        return !Client.Config.enhancedSounds.enableOcclusionProcessing
+        return !CONFIG.enableOcclusionProcessing
                 || category == SoundCategory.MASTER
                 || category == SoundCategory.MUSIC;
     }

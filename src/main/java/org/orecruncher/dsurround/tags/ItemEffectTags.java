@@ -4,7 +4,7 @@ import net.minecraft.item.Item;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 
 public class ItemEffectTags {
 
@@ -20,7 +20,7 @@ public class ItemEffectTags {
     public static final TagKey<Item> CLOCKS = of("clocks");
 
     private static TagKey<Item> of(String id) {
-        return TagKey.of(RegistryKeys.ITEM, new Identifier(Client.ModId, "effects/" + id));
+        return TagKey.of(RegistryKeys.ITEM, new Identifier(Constants.MOD_ID, "effects/" + id));
     }
 
 }

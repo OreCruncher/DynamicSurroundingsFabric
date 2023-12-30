@@ -1,7 +1,8 @@
 package org.orecruncher.dsurround.lib.scripting;
 
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.lib.FrameworkUtils;
+import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.platform.IPlatform;
 
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -10,6 +11,8 @@ import java.util.regex.Pattern;
  * Library functions exposed via the JavaScript engine.  They are not directly used by code.
  */
 public final class LibraryFunctions {
+
+    private static final IPlatform PLATFORM = Library.getPlatform();
 
     public Object iif(final boolean flag, @Nullable final Object trueResult, @Nullable final Object falseResult) {
         return flag ? trueResult : falseResult;
@@ -35,6 +38,6 @@ public final class LibraryFunctions {
     }
 
     public boolean isModLoaded(final String mod) {
-        return FrameworkUtils.isModLoaded(mod);
+        return PLATFORM.isModLoaded(mod);
     }
 }

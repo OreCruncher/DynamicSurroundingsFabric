@@ -2,18 +2,15 @@ package org.orecruncher.dsurround.config;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Identifier;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.IMatcher;
 import org.orecruncher.dsurround.lib.IdentityUtils;
-import org.orecruncher.dsurround.tags.TagHelpers;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 
-@Environment(EnvType.CLIENT)
 public abstract class ItemTypeMatcher implements IMatcher<Item> {
 
     public static final Codec<IMatcher<Item>> CODEC = Codec.STRING
@@ -56,6 +53,8 @@ public abstract class ItemTypeMatcher implements IMatcher<Item> {
 
     private static class MatchOnItemTag extends ItemTypeMatcher {
 
+        private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
+
         private final TagKey<Item> tagKey;
 
         public MatchOnItemTag(TagKey<Item> tagKey) {
@@ -63,7 +62,7 @@ public abstract class ItemTypeMatcher implements IMatcher<Item> {
         }
 
         public boolean match(Item item) {
-            return TagHelpers.isIn(this.tagKey, item);
+            return TAG_LIBRARY.isIn(this.tagKey, item);
         }
     }
 }

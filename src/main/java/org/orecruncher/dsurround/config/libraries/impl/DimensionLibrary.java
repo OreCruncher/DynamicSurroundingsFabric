@@ -2,8 +2,6 @@ package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.world.World;
 import org.orecruncher.dsurround.config.data.DimensionConfigRule;
@@ -19,7 +17,6 @@ import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 import java.util.*;
 import java.util.stream.Stream;
 
-@Environment(EnvType.CLIENT)
 public final class DimensionLibrary implements IDimensionLibrary {
 
     private static final String FILE_NAME = "dimensions.json";

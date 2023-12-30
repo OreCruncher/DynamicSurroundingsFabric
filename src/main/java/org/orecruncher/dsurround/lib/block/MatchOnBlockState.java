@@ -32,6 +32,6 @@ public class MatchOnBlockState extends MatchOnBlock {
 
     @Override
     public String toString() {
-        return super.toString() + this.props.getFormattedProperties();
+        return super.toString() + "[" + this.props.getFormattedProperties() + "]";
     }
 }

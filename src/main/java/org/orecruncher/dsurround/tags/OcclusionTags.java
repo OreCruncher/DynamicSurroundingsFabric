@@ -4,7 +4,7 @@ import net.minecraft.block.Block;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 
 public final class OcclusionTags {
 
@@ -17,6 +17,6 @@ public final class OcclusionTags {
     public static final TagKey<Block> MAX = of("max");
 
     private static TagKey<Block> of(String id) {
-        return TagKey.of(RegistryKeys.BLOCK, new Identifier(Client.ModId, "occlusion/" + id));
+        return TagKey.of(RegistryKeys.BLOCK, new Identifier(Constants.MOD_ID, "occlusion/" + id));
     }
 }

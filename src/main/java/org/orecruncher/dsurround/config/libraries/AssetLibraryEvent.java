@@ -1,17 +1,16 @@
 package org.orecruncher.dsurround.config.libraries;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.text.Text;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.EventingFactory;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.events.IPhasedEvent;
 
-@Environment(EnvType.CLIENT)
 public class AssetLibraryEvent {
 
+    private static final Configuration CONFIG = ContainerManager.resolve(Configuration.class);
     public static final IPhasedEvent<ReloadEvent> RELOAD = EventingFactory.createPrioritizedEvent();
 
     public static void reload() {
@@ -24,12 +23,10 @@ public class AssetLibraryEvent {
 
     private static void afterReload(ReloadEvent event) {
         // Only want to send a message if debug logging is enabled
-        if (Client.Config.logging.enableDebugLogging) {
+        if (CONFIG.logging.enableDebugLogging) {
+            var msg = Text.translatable("dsurround.text.reloadassets", Text.translatable("dsurround.modname"));
             var player = GameUtils.getPlayer();
-            if (player != null) {
-                var msg = Text.stringifiedTranslatable("dsurround.text.reloadassets", Text.translatable("dsurround.modname"));
-                player.sendMessage(msg);
-            }
+            player.ifPresent( p -> p.sendMessage(msg));
         }
     }
 

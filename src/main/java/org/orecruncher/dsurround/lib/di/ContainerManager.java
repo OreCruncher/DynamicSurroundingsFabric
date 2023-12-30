@@ -1,29 +1,33 @@
 package org.orecruncher.dsurround.lib.di;
 
+import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.di.internal.DependencyContainer;
-import org.orecruncher.dsurround.lib.Lazy;
 
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressWarnings("unused")
 public final class ContainerManager {
-    public static final ContainerManager Default = new ContainerManager();
-    private static final String DefaultContainerName = "Default";
-    private final ConcurrentMap<String, IServiceContainer> _containers = new ConcurrentHashMap<>();
+    private static final ContainerManager CONTAINER_MANAGER = new ContainerManager();
+    private static final String ROOT_CONTAINER_NAME = "ROOT";
+    private static final IServiceContainer ROOT_CONTAINER = new DependencyContainer(ROOT_CONTAINER_NAME, CONTAINER_MANAGER);
 
-    private static final Lazy<IServiceContainer> DefaultContainer = new Lazy<>(() -> Default._containers.computeIfAbsent(DefaultContainerName, n -> new DependencyContainer(n, Default)));
+    static {
+        CONTAINER_MANAGER.containers.put(ROOT_CONTAINER_NAME, ROOT_CONTAINER);
+    }
+
+    private final Map<String, IServiceContainer> containers = new HashMap<>();
 
     private ContainerManager() {
     }
 
     /**
-     * Obtains the default container.  This container is a well named container within the default
-     * container manager.
+     * Obtains the root container.
      */
-    public static IServiceContainer getDefaultContainer() {
-        return DefaultContainer.get();
+    @NotNull
+    public static IServiceContainer getRootContainer() {
+        return ROOT_CONTAINER;
     }
 
     /**
@@ -33,21 +37,21 @@ public final class ContainerManager {
      * @param <T>   Type of instance to return
      * @return Instance of the specified class
      */
-    public static <T> T resolve(Class<T> clazz) {
-        return getDefaultContainer().resolve(clazz);
+    @NotNull
+    public static <T> T resolve(@NotNull Class<T> clazz) {
+        return ROOT_CONTAINER.resolve(clazz);
     }
 
-    public IServiceContainer createContainer(String containerName) {
-        var container = new DependencyContainer(containerName, this);
-        this.registerContainer(container);
-        return container;
+    public void registerContainer(@NotNull IServiceContainer container) {
+        Preconditions.checkNotNull(container);
+        this.validiateContainerName(container.getName());
+        this.containers.put(container.getName(), container);
     }
 
-    public void registerContainer(IServiceContainer container) {
-        this._containers.put(container.get_name(), container);
-    }
-
-    public Optional<IServiceContainer> getContainer(String containerName) {
-        return Optional.ofNullable(this._containers.get(containerName));
+    private void validiateContainerName(String containerName) {
+        Preconditions.checkNotNull(containerName);
+        Preconditions.checkArgument(containerName.length() > 3, "Container name must be > 3 characters");
+        Preconditions.checkArgument(ROOT_CONTAINER_NAME.equalsIgnoreCase(containerName), String.format("Container name cannot be '%s'", ROOT_CONTAINER_NAME));
+        Preconditions.checkArgument(this.containers.containsKey(containerName), "A container with that name already exists");
     }
 }

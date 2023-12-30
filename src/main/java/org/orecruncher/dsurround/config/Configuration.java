@@ -1,20 +1,17 @@
 package org.orecruncher.dsurround.config;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 
-@Environment(EnvType.CLIENT)
 public class Configuration extends ConfigurationData {
 
     private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
 
     public Configuration() {
-        super("dsurround.config", ContainerManager.resolve(IMinecraftDirectories.class).getModConfigDirectory().resolve(Client.ModId + ".json"));
+        super("dsurround.config", ContainerManager.resolve(IMinecraftDirectories.class).getModConfigDirectory().resolve(Constants.MOD_ID + ".json"));
     }
 
     @Property
@@ -160,9 +157,8 @@ public class Configuration extends ConfigurationData {
         @Property
         @IntegerRange(min = 16, max = 64)
         @Slider
-        @RestartRequired
         @Comment("Distance that will be scanned when generating block effects")
-        public int blockEffectRange = 24;
+        public int blockEffectRange = 32;
 
         @Property
         @Comment("Enable/disable steam column effect when liquids are adjacent to hot sources, like lava and magma")
@@ -181,7 +177,6 @@ public class Configuration extends ConfigurationData {
         public boolean firefliesEnabled = true;
 
         @Property
-        @RestartRequired
         @Comment("Enable/disable waterfall effect from flowing water")
         public boolean waterfallsEnabled = true;
 

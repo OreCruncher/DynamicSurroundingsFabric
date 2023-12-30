@@ -2,15 +2,12 @@ package org.orecruncher.dsurround.config;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.Comparers;
 
-@Environment(EnvType.CLIENT)
 public class IndividualSoundConfigEntry implements Comparable<IndividualSoundConfigEntry> {
 
     public static final Codec<IndividualSoundConfigEntry> CODEC = RecordCodecBuilder.create((instance) ->
@@ -23,6 +20,7 @@ public class IndividualSoundConfigEntry implements Comparable<IndividualSoundCon
             ).apply(instance, IndividualSoundConfigEntry::new));
 
     public Identifier soundEventId;
+    public String soundEventIdProjected;
     public int volumeScale;
     public boolean block;
     public boolean cull;
@@ -30,6 +28,7 @@ public class IndividualSoundConfigEntry implements Comparable<IndividualSoundCon
 
     public IndividualSoundConfigEntry(Identifier id, Integer volumeScale, Boolean block, Boolean cull, Boolean startup) {
         this.soundEventId = id;
+        this.soundEventIdProjected = id.toString();
         this.volumeScale = MathHelper.clamp(volumeScale, 0, 400);
         this.block = block;
         this.cull = cull;
@@ -38,6 +37,7 @@ public class IndividualSoundConfigEntry implements Comparable<IndividualSoundCon
 
     IndividualSoundConfigEntry(IndividualSoundConfigEntry source) {
         this.soundEventId = source.soundEventId;
+        this.soundEventIdProjected = source.soundEventIdProjected;
         this.volumeScale = source.volumeScale;
         this.block = source.block;
         this.cull = source.cull;

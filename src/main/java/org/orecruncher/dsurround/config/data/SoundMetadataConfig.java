@@ -3,13 +3,10 @@ package org.orecruncher.dsurround.config.data;
 import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 
 import java.util.List;
 import java.util.Optional;
 
-@Environment(EnvType.CLIENT)
 public record SoundMetadataConfig(Optional<String> title, Optional<String> caption, List<String> credits) {
 
     public static Codec<SoundMetadataConfig> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
