@@ -24,43 +24,46 @@ public abstract class Scanner {
 
     protected final String name;
 
-    protected final int xRange;
-    protected final int yRange;
-    protected final int zRange;
+    protected int xRange;
+    protected int yRange;
+    protected int zRange;
 
-    protected final int xSize;
-    protected final int ySize;
-    protected final int zSize;
-    protected final int blocksPerTick;
-    protected final int volume;
+    protected int xSize;
+    protected int ySize;
+    protected int zSize;
+    protected int blocksPerTick;
+    protected int volume;
 
     protected final ScanContext locus;
 
     protected final Random random = new XorShiftRandom();
     protected final BlockPos.Mutable workingPos = new BlockPos.Mutable();
 
-    public Scanner(final ScanContext locus, final String name, final int range,
-                   final int blocksPerTick) {
-        this(locus, name, range, range, range, blocksPerTick);
+    public Scanner(final ScanContext locus, final String name, final int range) {
+        this(locus, name, range, range, range);
     }
 
-    public Scanner(final ScanContext locus, final String name, final int xRange, final int yRange,
-                   final int zRange, final int blocksPerTick) {
+    public Scanner(final ScanContext locus, final String name, final int xRange, final int yRange, final int zRange) {
         this.name = name;
+        this.locus = locus;
+
+        this.setRange(xRange, yRange, zRange);
+    }
+
+    protected void setRange(int range) {
+        this.setRange(range, range, range);
+    }
+
+    protected void setRange(int xRange, int yRange, int zRange) {
         this.xRange = xRange;
         this.yRange = yRange;
         this.zRange = zRange;
 
-        this.xSize = xRange * 2;
-        this.ySize = yRange * 2;
-        this.zSize = zRange * 2;
+        this.xSize = xRange * 2 + 1;
+        this.ySize = yRange * 2 + 1;
+        this.zSize = zRange * 2 + 1;
         this.volume = this.xSize * this.ySize * this.zSize;
-        if (blocksPerTick == 0)
-            this.blocksPerTick = Math.min(this.volume / 20, MAX_BLOCKS_TICK);
-        else
-            this.blocksPerTick = Math.min(blocksPerTick, MAX_BLOCKS_TICK);
-
-        this.locus = locus;
+        this.blocksPerTick = Math.min(this.volume / 20, MAX_BLOCKS_TICK);
     }
 
     /**
@@ -78,15 +81,15 @@ public abstract class Scanner {
     public abstract void blockScan(final World world, final BlockState state, final BlockPos pos, final Random rand);
 
     public void tick() {
-        final World provider = this.locus.getWorld();
+        final World world = this.locus.getWorld();
         for (int count = 0; count < this.blocksPerTick; count++) {
             final BlockPos pos = nextPos(this.workingPos, this.random);
             if (pos == null)
                 break;
-            final BlockState state = provider.getBlockState(pos);
+            final BlockState state = world.getBlockState(pos);
             if (BLOCKSTATES_TO_IGNORE.contains(state))
                 continue;
-            blockScan(provider, state, pos, this.random);
+            blockScan(world, state, pos, this.random);
         }
     }
 

@@ -19,9 +19,8 @@ public abstract class CuboidScanner extends Scanner {
     protected BlockPos lastPos;
     protected Identifier lastReference = new Identifier("dsurround:aintnothin");
 
-    protected CuboidScanner(final ScanContext locus, final String name, final int range,
-                            final int blocksPerTick) {
-        super(locus, name, range, blocksPerTick);
+    protected CuboidScanner(final ScanContext locus, final String name, final int range) {
+        super(locus, name, range);
     }
 
     protected BlockPos[] getMinMaxPointsForVolume(final BlockPos pos) {
@@ -41,6 +40,15 @@ public abstract class CuboidScanner extends Scanner {
     protected Cuboid getVolumeFor(final BlockPos pos) {
         final BlockPos[] points = getMinMaxPointsForVolume(pos);
         return new Cuboid(points);
+    }
+
+    @Override
+    protected void setRange(int range) {
+        // If there is a range change, we need to trigger a reset of the cuboid
+        if (this.xRange != range || this.yRange != range || this.zRange != range) {
+            super.setRange(range);
+            this.resetFullScan();
+        }
     }
 
     public void resetFullScan() {

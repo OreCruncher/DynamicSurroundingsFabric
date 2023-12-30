@@ -25,13 +25,16 @@ public class SystemsScanner extends CuboidScanner {
         return system.isDone();
     };
 
+    private final Configuration config;
     private final ObjectArray<IEffectSystem> systems = new ObjectArray<>();
-    private final int range;
+
+    private int lastRange;
 
     public SystemsScanner(Configuration config, ScanContext locus) {
-        super(locus, "SystemsScanner", config.blockEffects.blockEffectRange, 0);;
+        super(locus, "SystemsScanner", config.blockEffects.blockEffectRange);
 
-        this.range = config.blockEffects.blockEffectRange;
+        this.config = config;
+        this.lastRange = config.blockEffects.blockEffectRange;
     }
 
     public void addEffectSystem(IEffectSystem system) {
@@ -47,6 +50,13 @@ public class SystemsScanner extends CuboidScanner {
     public void tick() {
         super.tick();
 
+        // If the range changed, we need to reset all effects in process
+        if (this.lastRange != this.config.blockEffects.blockEffectRange) {
+            this.lastRange = this.config.blockEffects.blockEffectRange;
+            this.setRange(this.lastRange);
+            return;
+        }
+
         var player = GameUtils.getPlayer().orElseThrow();
         final BlockPos current = player.getBlockPos();
         final boolean sittingStill = this.lastPos.equals(current);
@@ -55,8 +65,9 @@ public class SystemsScanner extends CuboidScanner {
         Predicate<IBlockEffect> pred;
 
         if (!sittingStill) {
-            var minPoint = current.add(-this.range, -this.range, -this.range);
-            var maxPoint = current.add(this.range, this.range, this.range);
+            var range = this.config.blockEffects.blockEffectRange;
+            var minPoint = current.add(-range, -range, -range);
+            var maxPoint = current.add(range, range, range);
 
             pred = system -> {
                 if (!BlockPosUtil.contains(system.getPos(), minPoint, maxPoint)) {

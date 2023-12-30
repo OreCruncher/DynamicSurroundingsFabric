@@ -111,7 +111,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
 
         // May need to flat out purge if water fall sounds
         // are disabled.
-        if (!this.config.blockEffects.waterfallsEnabled) {
+        if (!(this.isEnabled() && this.config.blockEffects.enableWaterfallSounds)) {
             // Fast happy path for purge
             if (this.waterfallSoundInstances.isEmpty())
                 return;

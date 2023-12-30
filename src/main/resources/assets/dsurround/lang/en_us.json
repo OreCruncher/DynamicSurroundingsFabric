@@ -76,7 +76,7 @@
   "dsurround.config.blockEffects": "Block Effect Options",
   "dsurround.config.blockEffects.tooltip": "Configuration options for block effects",
   "dsurround.config.blockEffects.blockEffectRange": "Block Effect Range",
-  "dsurround.config.blockEffects.blockEffectRange.tooltip": "Distance that will be scanned when generating block effects",
+  "dsurround.config.blockEffects.blockEffectRange.tooltip": "Distance that will be scanned when generating block effects. Changing this setting will cause existing effects to be reset and the area rescanned.",
   "dsurround.config.blockEffects.steamColumnEnabled": "Enable Steam Columns",
   "dsurround.config.blockEffects.steamColumnEnabled.tooltip": "Enable/disable steam column effect when liquids hit hot sources",
   "dsurround.config.blockEffects.flameJetEnabled": "Enable Flame Jets",
