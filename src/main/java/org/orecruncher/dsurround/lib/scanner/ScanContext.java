@@ -8,18 +8,44 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import java.util.function.Supplier;
 
-public record ScanContext(
-        Supplier<World> world,
-        Supplier<BlockPos> scanCenter,
-        IModLog logger,
-        Supplier<Identifier> worldReference
-    ) {
+public final class ScanContext {
+
+    private final Supplier<World> world;
+    private final Supplier<BlockPos> scanCenter;
+    private final IModLog logger;
+
+    public ScanContext(
+            Supplier<World> world,
+            Supplier<BlockPos> scanCenter,
+            IModLog logger) {
+
+        this.world = world;
+        this.scanCenter = scanCenter;
+        this.logger = logger;
+    }
+
+    public World getWorld() {
+        return this.world.get();
+    }
+
+    public BlockPos getScanCenter() {
+        return this.scanCenter.get();
+    }
+
+    public IModLog getLogger() {
+        return this.logger;
+    }
+
+    public Identifier getWorldReference() {
+        return this.getWorld().getRegistryKey().getValue();
+    }
 
     public boolean isOutOfHeightLimit(int y) {
-        return this.world.get().isOutOfHeightLimit(y);
+        return this.getWorld().isOutOfHeightLimit(y);
     }
 
     public int clampHeight(int y) {
-        return MathHelper.clamp(y, this.world.get().getBottomY(), this.world.get().getTopY());
+        var world = this.getWorld();
+        return MathHelper.clamp(y, world.getBottomY(), world.getTopY());
     }
 }

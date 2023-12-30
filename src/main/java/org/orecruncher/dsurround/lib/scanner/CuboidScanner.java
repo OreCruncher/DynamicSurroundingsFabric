@@ -24,20 +24,6 @@ public abstract class CuboidScanner extends Scanner {
         super(locus, name, range, blocksPerTick);
     }
 
-    protected CuboidScanner(final ScanContext locus, final String name, final int xRange,
-                            final int yRange, final int zRange) {
-        super(locus, name, xRange, yRange, zRange);
-    }
-
-    protected CuboidScanner(final ScanContext locus, final String name, final int xSize,
-                            final int ySize, final int zSize, final int blocksPerTick) {
-        super(locus, name, xSize, ySize, zSize, blocksPerTick);
-    }
-
-    public boolean isScanFinished() {
-        return this.scanFinished;
-    }
-
     protected BlockPos[] getMinMaxPointsForVolume(final BlockPos pos) {
         var mutable = new BlockPos.Mutable();
 
@@ -58,8 +44,8 @@ public abstract class CuboidScanner extends Scanner {
     }
 
     public void resetFullScan() {
-        this.lastPos = this.locus.scanCenter().get();
-        this.lastReference = this.locus.worldReference().get();
+        this.lastPos = this.locus.getScanCenter();
+        this.lastReference = this.locus.getWorldReference();
         this.scanFinished = false;
 
         final BlockPos[] points = getMinMaxPointsForVolume(this.lastPos);
@@ -71,14 +57,14 @@ public abstract class CuboidScanner extends Scanner {
     public void tick() {
 
         // If there is no player position, or it's bogus just return
-        final BlockPos playerPos = this.locus.scanCenter().get();
+        final BlockPos playerPos = this.locus.getScanCenter();
         if (this.locus.isOutOfHeightLimit(playerPos.getY())) {
             this.fullRange = null;
         } else {
             // If the full range was reset, or the player dimension changed,
             // dump everything and restart.
-            if (this.fullRange == null || this.locus.worldReference().get() != this.lastReference) {
-                this.locus.logger().debug("[%s] full range reset", this.name);
+            if (this.fullRange == null || this.locus.getWorldReference() != this.lastReference) {
+                this.locus.getLogger().debug("[%s] full range reset", this.name);
                 resetFullScan();
                 super.tick();
             } else if (this.lastPos.equals(playerPos)) {
@@ -97,7 +83,7 @@ public abstract class CuboidScanner extends Scanner {
                 // area. Otherwise, if there is a sufficiently large
                 // change to the scan area dump and restart.
                 if (intersect == null) {
-                    this.locus.logger().debug("[%s] no intersection: %s, %s", this.name, oldVolume.toString(), newVolume.toString() );
+                    this.locus.getLogger().debug("[%s] no intersection: %s, %s", this.name, oldVolume.toString(), newVolume.toString() );
                     resetFullScan();
                     super.tick();
                 } else {
@@ -139,7 +125,7 @@ public abstract class CuboidScanner extends Scanner {
     protected void updateScan(final Cuboid newVolume, final Cuboid oldVolume,
                               final Cuboid intersect) {
 
-        final World provider = this.locus.world().get();
+        final World provider = this.locus.getWorld();
 
         if (doBlockUnscan()) {
             final ComplementsPointIterator newOutOfRange = new ComplementsPointIterator(oldVolume, intersect);
@@ -198,12 +184,12 @@ public abstract class CuboidScanner extends Scanner {
     public void onBlockUpdate(final BlockPos pos) {
         try {
             if (this.activeCuboid != null && this.activeCuboid.contains(pos)) {
-                var world = this.locus.world().get();
+                var world = this.locus.getWorld();
                 final BlockState state = world.getBlockState(pos);
                 blockScan(world, state, pos, this.random);
             }
         } catch (final Throwable t) {
-            this.locus.logger().error(t, "onBlockUpdate() error");
+            this.locus.getLogger().error(t, "onBlockUpdate() error");
         }
     }
 }

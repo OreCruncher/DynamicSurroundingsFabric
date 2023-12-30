@@ -39,18 +39,9 @@ public abstract class Scanner {
     protected final Random random = new XorShiftRandom();
     protected final BlockPos.Mutable workingPos = new BlockPos.Mutable();
 
-    public Scanner(final ScanContext locus, final String name, final int range) {
-        this(locus, name, range, 0);
-    }
-
     public Scanner(final ScanContext locus, final String name, final int range,
                    final int blocksPerTick) {
         this(locus, name, range, range, range, blocksPerTick);
-    }
-
-    public Scanner(final ScanContext locus, final String name, final int xRange, final int yRange,
-                   final int zRange) {
-        this(locus, name, xRange, yRange, zRange, 0);
     }
 
     public Scanner(final ScanContext locus, final String name, final int xRange, final int yRange,
@@ -81,24 +72,13 @@ public abstract class Scanner {
 
     /**
      * Invoked when a block of interest is discovered. The BlockPos provided is not
-     * safe to hold on to beyond the call so if it needs to be kept it needs to be
+     * safe to hold on to beyond the call, so if it needs to be kept, it needs to be
      * copied.
      */
     public abstract void blockScan(final World world, final BlockState state, final BlockPos pos, final Random rand);
 
-    public void preScan() {
-
-    }
-
-    public void postScan() {
-
-    }
-
     public void tick() {
-
-        preScan();
-
-        final World provider = this.locus.world().get();
+        final World provider = this.locus.getWorld();
         for (int count = 0; count < this.blocksPerTick; count++) {
             final BlockPos pos = nextPos(this.workingPos, this.random);
             if (pos == null)
@@ -108,8 +88,6 @@ public abstract class Scanner {
                 continue;
             blockScan(provider, state, pos, this.random);
         }
-
-        postScan();
     }
 
     /**

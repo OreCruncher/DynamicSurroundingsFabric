@@ -58,8 +58,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
         this.locus = new ScanContext(
                 () -> GameUtils.getWorld().orElseThrow(),
                 () -> GameUtils.getPlayer().map(Entity::getBlockPos).orElseThrow(),
-                this.logger,
-                () -> GameUtils.getWorld().map(w -> w.getRegistryKey().getValue()).orElseThrow()
+                this.logger
         );
 
         this.effectSystems = new SystemsScanner(this.config, this.locus);

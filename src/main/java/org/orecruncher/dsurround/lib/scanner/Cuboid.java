@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.lib.scanner;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
-public class Cuboid {
+public final class Cuboid {
 
     private final int minX;
     private final int minY;
@@ -17,12 +17,12 @@ public class Cuboid {
     }
 
     public Cuboid(final BlockPos vx1, final BlockPos vx2) {
-        this.minX = Math.min(vx1.getX(), vx2.getX());
-        this.minY = Math.min(vx1.getY(), vx2.getY());
-        this.minZ = Math.min(vx1.getZ(), vx2.getZ());
-        this.maxX = Math.max(vx1.getX(), vx2.getX());
-        this.maxY = Math.max(vx1.getY(), vx2.getY());
-        this.maxZ = Math.max(vx1.getZ(), vx2.getZ());
+        this(Math.min(vx1.getX(), vx2.getX()),
+                Math.min(vx1.getY(), vx2.getY()),
+                Math.min(vx1.getZ(), vx2.getZ()),
+                Math.max(vx1.getX(), vx2.getX()),
+                Math.max(vx1.getY(), vx2.getY()),
+                Math.max(vx1.getZ(), vx2.getZ()));
     }
 
     public Cuboid(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
@@ -40,11 +40,9 @@ public class Cuboid {
                 && p.getZ() >= this.minZ && p.getZ() <= this.maxZ;
     }
 
-
     public BlockPos maximum() {
         return new BlockPos(this.maxX, this.maxY, this.maxZ);
     }
-
 
     public BlockPos minimum() {
         return new BlockPos(this.minX, this.minY, this.minZ);
@@ -84,5 +82,4 @@ public class Cuboid {
     public String toString() {
         return "Cuboid{min=(%d,%d,%d),max=(%d,%d,%d),volume=%d}".formatted(this.minX, this.minY, this.minZ, this.maxX, this.maxY, this.maxZ, this.volume());
     }
-
 }

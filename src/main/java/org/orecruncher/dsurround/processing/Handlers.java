@@ -2,11 +2,13 @@ package org.orecruncher.dsurround.processing;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.math.BlockPos;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.scanner.CuboidPointIterator;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -57,6 +59,7 @@ public class Handlers {
     }
 
     private void init() {
+
         // If the user disabled the startup sound just flag it as having
         // been performed.
         this.startupSoundPlayed = !this.config.otherOptions.playRandomSoundOnStartup;
