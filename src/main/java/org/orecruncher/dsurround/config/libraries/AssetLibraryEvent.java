@@ -24,7 +24,7 @@ public class AssetLibraryEvent {
     private static void afterReload(ReloadEvent event) {
         // Only want to send a message if debug logging is enabled
         if (CONFIG.logging.enableDebugLogging) {
-            var msg = Text.stringifiedTranslatable("dsurround.text.reloadassets", Text.translatable("dsurround.modname"));
+            var msg = Text.translatable("dsurround.text.reloadassets", Text.translatable("dsurround.modname"));
             var player = GameUtils.getPlayer();
             player.ifPresent( p -> p.sendMessage(msg));
         }

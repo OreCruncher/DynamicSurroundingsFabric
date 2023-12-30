@@ -70,10 +70,10 @@ public class DumpCommandHandler {
                 stream.forEach(out::println);
                 out.flush();
             }
-            return Text.stringifiedTranslatable("dsurround.command.dsdump.success", operation, target.toString());
+            return Text.translatable("dsurround.command.dsdump.success", operation, target.toString());
         } catch (final Throwable t) {
             LOGGER.error(t, "Error writing dump file '%s'", target.toString());
-            return Text.stringifiedTranslatable("dsurround.command.dsdump.failure", operation, t.getMessage());
+            return Text.translatable("dsurround.command.dsdump.failure", operation, t.getMessage());
         }
     }
 

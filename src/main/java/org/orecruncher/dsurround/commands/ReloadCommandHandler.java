@@ -10,7 +10,7 @@ public class ReloadCommandHandler {
             AssetLibraryEvent.reload();
             return Text.translatable("dsurround.command.dsreload.success");
         } catch (Throwable t) {
-            return Text.stringifiedTranslatable("dsurround.command.dsreload.failure", t.getMessage());
+            return Text.translatable("dsurround.command.dsreload.failure", t.getMessage());
         }
     }
 }
