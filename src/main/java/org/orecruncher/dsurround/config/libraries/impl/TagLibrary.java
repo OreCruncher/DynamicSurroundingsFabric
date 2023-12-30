@@ -20,6 +20,7 @@ import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.platform.IPlatform;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,8 +29,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.orecruncher.dsurround.lib.platform.IPlatform;
 
 import static java.util.stream.Collectors.*;
 
@@ -69,18 +68,6 @@ public class TagLibrary implements ITagLibrary {
                 .sorted();
     }
 
-    private void formatHelper(StringBuilder builder, String entryName, Set<?> data) {
-        builder.append("\n").append(entryName).append(" ");
-        if (data.isEmpty())
-            builder.append("NONE");
-        else {
-            builder.append("[");
-            for (var e : data)
-                builder.append("\n  ").append(e.toString());
-            builder.append("\n]");
-        }
-    }
-
     @Override
     public void reload(AssetLibraryEvent.ReloadEvent event) {
         this.logger.info("Clearing TagKey cache - total entries before clear: %d", this.tagCache.size());
@@ -117,13 +104,37 @@ public class TagLibrary implements ITagLibrary {
 
     @Override
     public <T> Stream<Pair<TagKey<T>, Set<T>>> getEntriesByTag(RegistryKey<? extends Registry<T>> registryKey) {
-        // TODO: How to include client tag references
         var registryManager = GameUtils.getRegistryManager().orElseThrow();
         var registry = registryManager.get(registryKey);
         return registry.streamEntries()
-                .flatMap(e -> e.streamTags().map(tag -> Pair.of(tag, e.value())))
+                .flatMap(e -> this.streamTags(e).map(tag -> Pair.of(tag, e.value())))
                 .collect(groupingBy(Pair::key, mapping(Pair::value, toSet())))
                 .entrySet().stream().map(e -> Pair.of(e.getKey(), e.getValue()));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> Stream<TagKey<T>> streamTags(RegistryEntry<T> registryEntry) {
+        Set<TagKey<T>> tags = registryEntry.streamTags().collect(toSet());
+        var entryId = this.getObjectIdentifier(registryEntry).orElseThrow();
+        for (var kvp: this.tagCache.entrySet()) {
+            var cachedTag = kvp.getKey();
+            if (kvp.getValue().members().contains(entryId))
+                tags.add((TagKey<T>)cachedTag);
+        }
+        return tags.stream();
+    }
+
+    private void formatHelper(StringBuilder builder, String entryName, Set<?> data) {
+        builder.append("\n").append(entryName).append(" ");
+        if (data.isEmpty())
+            builder.append("NONE");
+        else {
+            builder.append("[");
+            for (var e : data)
+                builder.append("\n  ").append(e.toString());
+            builder.append("\n]");
+        }
     }
 
     private <T> Optional<Identifier> getObjectIdentifier(RegistryEntry<T> registryEntry) {
@@ -229,7 +240,8 @@ public class TagLibrary implements ITagLibrary {
         return this.platform.getResourcePaths(tagFile);
     }
 
-    private record TagData(Set<Identifier> members, Set<TagKey<?>> immediateChildTags, Set<Identifier> immediateChildIds) {
+    private record TagData(Set<Identifier> members, Set<TagKey<?>> immediateChildTags,
+                           Set<Identifier> immediateChildIds) {
         public static final TagData EMPTY = new TagData(ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of());
 
         public boolean isEmpty() {

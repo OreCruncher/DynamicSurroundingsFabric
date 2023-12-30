@@ -12,7 +12,12 @@ import java.util.stream.Stream;
 public interface ITagLibrary extends ILibrary {
 
     <T> String asString(Stream<TagKey<T>> tagStream);
+
     <T> boolean isIn(TagKey<T> tagKey, T entry);
+
     <T> boolean isIn(TagKey<T> tagKey, RegistryEntry<T> registryEntry);
+
     <T> Stream<Pair<TagKey<T>, Set<T>>> getEntriesByTag(RegistryKey<? extends Registry<T>> registryKey);
+
+    <T> Stream<TagKey<T>> streamTags(RegistryEntry<T> registryEntry);
 }

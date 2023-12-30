@@ -249,7 +249,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
             var entry = biomes.getEntry(biomes.getRawId(getBiome()));
             if (entry.isPresent()) {
-                tags = TAG_LIBRARY.asString(entry.get().streamTags());
+                var temp = TAG_LIBRARY.streamTags(entry.get());
+                tags = TAG_LIBRARY.asString(temp);
             }
         }
 

@@ -163,7 +163,10 @@ public class ItemLibrary implements IItemLibrary {
         var items = manager.get(RegistryKeys.ITEM);
 
         var tags = items.getEntry(items.getRawId(item))
-                .map(e -> this.tagLibrary.asString(e.streamTags()))
+                .map(e -> {
+                    var t = this.tagLibrary.streamTags(e);
+                    return this.tagLibrary.asString(t);
+                })
                 .orElse("null");
 
         return id.toString() + "\nTags: " + tags + "\n";

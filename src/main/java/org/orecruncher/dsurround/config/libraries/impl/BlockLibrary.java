@@ -152,7 +152,8 @@ public class BlockLibrary implements IBlockLibrary {
         var tags = "null";
         var entry = blocks.getEntry(blocks.getRawId(block));
         if (entry.isPresent()) {
-            tags = this.tagLibrary.asString(entry.get().streamTags());
+            var t = this.tagLibrary.streamTags(entry.get());
+            tags = this.tagLibrary.asString(t);
         }
 
         StringBuilder builder = new StringBuilder();

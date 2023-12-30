@@ -5,6 +5,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.Formatting;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.gui.hud.plugins.*;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -36,7 +37,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         this.showHud = false;
 
         this.plugins.add(new ClientProfilerPlugin());
-        this.plugins.add(new BlockViewerPlugin(ContainerManager.resolve(IBlockLibrary.class)));
+        this.plugins.add(new BlockViewerPlugin(ContainerManager.resolve(IBlockLibrary.class), ContainerManager.resolve(ITagLibrary.class)));
         this.plugins.add(new RuntimeDiagnosticsPlugin(ContainerManager.resolve(IConditionEvaluator.class)));
         this.plugins.add(new SoundEngineDiagnosticsPlugin());
     }
