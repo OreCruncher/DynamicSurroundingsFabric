@@ -27,7 +27,7 @@ public class WorldUtils {
 
     public static boolean isSuperFlat(final World world) {
         final WorldProperties info = world.getLevelProperties();
-        return info instanceof MixinClientWorldProperties && ((MixinClientWorldProperties) info).isFlatWorld();
+        return info instanceof MixinClientWorldProperties && ((MixinClientWorldProperties) info).dsurround_isFlatWorld();
     }
 
     public static BlockPos getTopSolidOrLiquidBlock(final World world, final BlockPos pos) {

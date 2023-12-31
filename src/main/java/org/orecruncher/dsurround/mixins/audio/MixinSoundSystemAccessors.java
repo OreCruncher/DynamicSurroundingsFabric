@@ -13,8 +13,8 @@ import java.util.Map;
 public interface MixinSoundSystemAccessors {
 
     @Accessor("sources")
-    Map<SoundInstance, Channel.SourceManager> getSources();
+    Map<SoundInstance, Channel.SourceManager> dsurround_getSources();
 
     @Accessor("listener")
-    SoundListener getListener();
+    SoundListener dsurround_getListener();
 }

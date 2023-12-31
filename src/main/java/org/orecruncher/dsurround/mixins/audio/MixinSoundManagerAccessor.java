@@ -9,5 +9,5 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface MixinSoundManagerAccessor {
 
     @Accessor("soundSystem")
-    SoundSystem getSoundSystem();
+    SoundSystem dsurround_getSoundSystem();
 }

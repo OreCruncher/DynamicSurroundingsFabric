@@ -75,7 +75,7 @@ public class BlockLibrary implements IBlockLibrary {
 
     @Override
     public BlockInfo getBlockInfo(BlockState state) {
-        var info = ((IBlockStateExtended) state).getBlockInfo();
+        var info = ((IBlockStateExtended) state).dsurround_getBlockInfo();
         if (info != null) {
             if (info.getVersion() == this.version || info == DEFAULT)
                 return info;
@@ -94,7 +94,7 @@ public class BlockLibrary implements IBlockLibrary {
         else
             info.trim();
 
-        ((IBlockStateExtended) state).setBlockInfo(info);
+        ((IBlockStateExtended) state).dsurround_setBlockInfo(info);
 
         return info;
     }

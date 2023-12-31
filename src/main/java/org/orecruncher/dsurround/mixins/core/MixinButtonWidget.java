@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface MixinButtonWidget {
 
     @Accessor("onPress")
-    ButtonWidget.PressAction getPressAction();
+    ButtonWidget.PressAction dsurround_getPressAction();
 
     @Accessor("narrationSupplier")
-    ButtonWidget.NarrationSupplier getNarrationSupplier();
+    ButtonWidget.NarrationSupplier dsurround_getNarrationSupplier();
 }

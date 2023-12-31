@@ -58,11 +58,11 @@ public final class AudioUtilities {
     public static SoundSystem getSoundSystem() {
         var soundManager = GameUtils.getSoundManager().orElseThrow();
         MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) soundManager;
-        return manager.getSoundSystem();
+        return manager.dsurround_getSoundSystem();
     }
 
     public static SoundListener getSoundListener() {
-        return ((MixinSoundSystemAccessors)getSoundSystem()).getListener();
+        return ((MixinSoundSystemAccessors)getSoundSystem()).dsurround_getListener();
     }
 
     /**
@@ -91,12 +91,12 @@ public final class AudioUtilities {
 
             // Depending on call context the sound property may be null
             if (sound.getSound() != null) {
-                sb.append(String.format(", v: %.4f(%.4f)", sound.getVolume(), accessor.getRawVolume()));
-                sb.append(String.format(", p: %.4f(%.4f)", sound.getPitch(), accessor.getRawPitch()));
+                sb.append(String.format(", v: %.4f(%.4f)", sound.getVolume(), accessor.dsurround_getRawVolume()));
+                sb.append(String.format(", p: %.4f(%.4f)", sound.getPitch(), accessor.dsurround_getRawPitch()));
                 sb.append(", s: ").append(sound.getSound().isStreamed());
             } else {
-                sb.append(String.format(", vr: %.4f", accessor.getRawVolume()));
-                sb.append(String.format(", pr: %.4f", accessor.getRawPitch()));
+                sb.append(String.format(", vr: %.4f", accessor.dsurround_getRawVolume()));
+                sb.append(String.format(", pr: %.4f", accessor.dsurround_getRawPitch()));
             }
 
             sb.append(", g: ").append(sound.isRelative());

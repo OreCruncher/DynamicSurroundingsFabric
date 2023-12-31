@@ -8,14 +8,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface MixinAbstractSoundInstance {
 
     @Accessor("volume")
-    float getRawVolume();
-
-    @Accessor("volume")
-    void setRawVolume(float vol);
+    float dsurround_getRawVolume();
 
     @Accessor("pitch")
-    float getRawPitch();
-
-    @Accessor("pitch")
-    void setRawPitch(float pitch);
+    float dsurround_getRawPitch();
 }

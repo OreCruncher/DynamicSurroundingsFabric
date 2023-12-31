@@ -31,10 +31,10 @@ public final class ParticleSheets {
         var manager = GameUtils.getTextureManager().orElseThrow();
         manager.registerTexture(TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE, new ResourceTexture(TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE));
 
-        var existingSheets = MixinParticleManager.getParticleTextureSheets();
+        var existingSheets = MixinParticleManager.dsurround_getParticleTextureSheets();
         assert existingSheets != null;
         existingSheets = new ArrayList<>(existingSheets);
         existingSheets.add(RIPPLE_RENDER);
-        MixinParticleManager.setParticleTextureSheets(existingSheets);
+        MixinParticleManager.dsurround_setParticleTextureSheets(existingSheets);
     }
 }
