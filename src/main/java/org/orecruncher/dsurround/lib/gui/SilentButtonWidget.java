@@ -8,7 +8,7 @@ import org.orecruncher.dsurround.mixins.core.MixinButtonWidget;
 public class SilentButtonWidget extends ButtonWidget {
 
     protected SilentButtonWidget(ButtonWidget sourceButton) {
-        this(sourceButton.getX(), sourceButton.getY(), sourceButton.getWidth(), sourceButton.getHeight(), sourceButton.getMessage(), ((MixinButtonWidget)sourceButton).getPressAction(), ((MixinButtonWidget)sourceButton).getNarrationSupplier());
+        this(sourceButton.getX(), sourceButton.getY(), sourceButton.getWidth(), sourceButton.getHeight(), sourceButton.getMessage(), ((MixinButtonWidget)sourceButton).dsurround_getPressAction(), ((MixinButtonWidget)sourceButton).dsurround_getNarrationSupplier());
     }
 
     protected SilentButtonWidget(int x, int y, int width, int height, Text message, PressAction onPress, NarrationSupplier narrationSupplier) {

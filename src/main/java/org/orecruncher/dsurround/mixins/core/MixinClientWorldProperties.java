@@ -7,5 +7,5 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(ClientWorld.Properties.class)
 public interface MixinClientWorldProperties {
     @Accessor("flatWorld")
-    boolean isFlatWorld();
+    boolean dsurround_isFlatWorld();
 }

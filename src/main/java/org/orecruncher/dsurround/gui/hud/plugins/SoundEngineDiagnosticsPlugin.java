@@ -28,14 +28,14 @@ public class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
         soundManager.ifPresent(sm -> {
             event.left.add(Strings.EMPTY);
             MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) sm;
-            MixinSoundSystemAccessors accessors = (MixinSoundSystemAccessors) manager.getSoundSystem();
-            Map<SoundInstance, Channel.SourceManager> sources = accessors.getSources();
+            MixinSoundSystemAccessors accessors = (MixinSoundSystemAccessors) manager.dsurround_getSoundSystem();
+            Map<SoundInstance, Channel.SourceManager> sources = accessors.dsurround_getSources();
 
             var str = sm.getDebugString();
             event.left.add(Formatting.GOLD + str);
 
             if (!sources.isEmpty()) {
-                accessors.getSources().keySet().stream()
+                accessors.dsurround_getSources().keySet().stream()
                         .map(s -> s.getSound().getIdentifier())
                         .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
                         .entrySet().stream()

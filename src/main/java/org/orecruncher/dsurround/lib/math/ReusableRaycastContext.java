@@ -22,7 +22,7 @@ public class ReusableRaycastContext extends RaycastContext {
         this(world, start, end, shapeType, fluidHandling, GameUtils.getPlayer().orElseThrow());
 
         // Override the shape context that was passed into the ctor
-        this.accessor.setShapeContext(ShapeContext.absent());
+        this.accessor.dsurround_setShapeContext(ShapeContext.absent());
     }
 
     public ReusableRaycastContext(World world, Vec3d start, Vec3d end, ShapeType shapeType, FluidHandling fluidHandling, Entity entity) {
@@ -46,18 +46,18 @@ public class ReusableRaycastContext extends RaycastContext {
     }
 
     public Vec3d getStart() {
-        return this.accessor.getStartPoint();
+        return this.accessor.dsurround_getStartPoint();
     }
 
     void setStart(Vec3d point) {
-        this.accessor.setStartPoint(point);
+        this.accessor.dsurround_setStartPoint(point);
     }
 
     public Vec3d getEnd() {
-        return this.accessor.getEndPoint();
+        return this.accessor.dsurround_getEndPoint();
     }
 
     void setEnd(Vec3d point) {
-        this.accessor.setEndPoint(point);
+        this.accessor.dsurround_setEndPoint(point);
     }
 }

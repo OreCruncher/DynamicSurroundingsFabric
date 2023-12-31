@@ -12,13 +12,13 @@ import java.nio.ByteBuffer;
 public interface MixinStaticSoundAccessor {
 
     @Accessor("sample")
-    ByteBuffer getSample();
+    ByteBuffer dsurround_getSample();
 
     @Accessor("format")
-    AudioFormat getFormat();
+    AudioFormat dsurround_getFormat();
 
     @Accessor("format")
     @Mutable
-    void setFormat(AudioFormat format);
+    void dsurround_setFormat(AudioFormat format);
 
 }

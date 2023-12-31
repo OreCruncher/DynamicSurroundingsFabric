@@ -18,15 +18,15 @@ import java.util.Map;
 public interface MixinParticleManager {
 
     @Accessor("PARTICLE_TEXTURE_SHEETS")
-    static List<ParticleTextureSheet> getParticleTextureSheets() { return null; }
+    static List<ParticleTextureSheet> dsurround_getParticleTextureSheets() { return null; }
 
     @Accessor("PARTICLE_TEXTURE_SHEETS")
     @Mutable
-    static void setParticleTextureSheets(List<ParticleTextureSheet> sheets) { }
+    static void dsurround_setParticleTextureSheets(List<ParticleTextureSheet> sheets) { }
 
     @Accessor("spriteAwareFactories")
-    Map<Identifier, SpriteProvider> getSpriteAwareFactories();
+    Map<Identifier, SpriteProvider> dsurround_getSpriteAwareFactories();
 
     @Invoker("createParticle")
-    <T extends ParticleEffect> Particle dsurroundCreateParticle(T parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ);
+    <T extends ParticleEffect> Particle dsurround_createParticle(T parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ);
 }

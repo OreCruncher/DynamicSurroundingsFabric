@@ -4,7 +4,7 @@ import org.orecruncher.dsurround.config.block.BlockInfo;
 
 public interface IBlockStateExtended {
 
-    BlockInfo getBlockInfo();
+    BlockInfo dsurround_getBlockInfo();
 
-    void setBlockInfo(final BlockInfo data);
+    void dsurround_setBlockInfo(final BlockInfo data);
 }

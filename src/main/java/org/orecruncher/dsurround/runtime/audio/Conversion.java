@@ -32,7 +32,7 @@ public final class Conversion {
     public static void convert(final StaticSound buffer) {
 
         MixinStaticSoundAccessor accessor = (MixinStaticSoundAccessor) buffer;
-        final AudioFormat format = accessor.getFormat();
+        final AudioFormat format = accessor.dsurround_getFormat();
 
         // If it is already mono return original buffer
         if (format.getChannels() == 1)
@@ -54,7 +54,7 @@ public final class Conversion {
                 format.getFrameRate(),
                 bigendian);
 
-        final ByteBuffer source = accessor.getSample();
+        final ByteBuffer source = accessor.dsurround_getSample();
         if (source == null) {
             return;
         }
@@ -77,7 +77,7 @@ public final class Conversion {
         }
 
         // Patch up the old object
-        accessor.setFormat(monoformat);
+        accessor.dsurround_setFormat(monoformat);
         source.rewind();
         source.limit(sourceLength >> 1);
     }

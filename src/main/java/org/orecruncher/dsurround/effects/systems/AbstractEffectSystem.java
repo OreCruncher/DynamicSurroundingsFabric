@@ -81,7 +81,7 @@ public abstract class AbstractEffectSystem implements IEffectSystem {
     protected <T extends ParticleEffect> Optional<Particle> createParticle(T parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
         return GameUtils.getParticleManager().map(pm -> {
             var t = (MixinParticleManager) pm;
-            return t.dsurroundCreateParticle(
+            return t.dsurround_createParticle(
                     parameters,
                     x, y, z,
                     velocityX, velocityY, velocityZ);
