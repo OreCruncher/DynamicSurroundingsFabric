@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.runtime.audio;
 
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.sound.*;
 import net.minecraft.sound.SoundCategory;
@@ -13,6 +12,7 @@ import org.orecruncher.dsurround.lib.Singleton;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.platform.IClientEventRegistrations;
 import org.orecruncher.dsurround.lib.threading.Worker;
 import org.orecruncher.dsurround.mixins.audio.MixinSourceManagerAccessor;
 import org.orecruncher.dsurround.runtime.audio.effects.Effects;
@@ -46,7 +46,7 @@ public final class SoundFXProcessor {
 
     static {
         ClientEventHooks.COLLECT_DIAGNOSTICS.register(SoundFXProcessor::onGatherText);
-        ClientTickEvents.START_CLIENT_TICK.register(SoundFXProcessor::clientTick);
+        ContainerManager.resolve(IClientEventRegistrations.class).registerClientTickStart(SoundFXProcessor::clientTick);
     }
 
     public static WorldContext getWorldContext() {

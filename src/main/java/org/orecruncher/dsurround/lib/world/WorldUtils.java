@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.lib.world;
 
-import net.fabricmc.fabric.impl.event.lifecycle.LoadedChunksCache;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkSectionPos;
@@ -9,6 +8,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldProperties;
 import net.minecraft.world.biome.Biome;
 import org.orecruncher.dsurround.mixins.core.MixinClientWorldProperties;
+import org.orecruncher.dsurround.mixinutils.IClientWorld;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -43,7 +43,8 @@ public class WorldUtils {
     }
 
     public static List<BlockEntity> getLoadedBlockEntities(World world, Predicate<BlockEntity> predicate) {
-        return ((LoadedChunksCache) world).fabric_getLoadedChunks().stream()
+        var accessor = (IClientWorld) world;
+        return accessor.dsurround_getLoadedChunks()
                 .flatMap(chunk -> chunk.getBlockEntities().values().stream())
                 .filter(predicate)
                 .collect(Collectors.toList());
