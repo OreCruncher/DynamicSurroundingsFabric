@@ -23,6 +23,7 @@ import org.orecruncher.dsurround.mixinutils.IBlockStateExtended;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -136,7 +137,7 @@ public class BlockLibrary implements IBlockLibrary {
         StringBuilder builder = new StringBuilder();
         builder.append("Tag: ").append(blockTag.location());
         blocks.stream()
-                .map(blockRegistry::getResourceKey)
+                .map(b -> Objects.requireNonNull(blockRegistry.getKey(b)).toString())
                 .sorted()
                 .forEach(tag -> builder.append("\n  ").append(tag));
         builder.append("\n");
