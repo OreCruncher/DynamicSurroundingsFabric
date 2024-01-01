@@ -12,8 +12,8 @@ import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Guard;
+import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
@@ -91,7 +91,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
     }
 
     private static Registry<Biome> getActiveRegistry() {
-        return GameUtils.getRegistry(Registries.BIOME).orElseThrow();
+        return RegistryUtils.getRegistry(Registries.BIOME).orElseThrow();
     }
 
     @Override
@@ -166,7 +166,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
     }
 
     private static ResourceLocation getBiomeId(Biome biome) {
-        return GameUtils.getRegistryEntry(Registries.BIOME, biome)
+        return RegistryUtils.getRegistryEntry(Registries.BIOME, biome)
                 .map(holder -> holder.unwrapKey().orElseThrow().location()).orElseThrow();
     }
 

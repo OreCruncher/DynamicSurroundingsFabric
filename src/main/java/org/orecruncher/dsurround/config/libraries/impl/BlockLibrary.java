@@ -12,7 +12,7 @@ import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
-import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
@@ -101,7 +101,7 @@ public class BlockLibrary implements IBlockLibrary {
 
     @Override
     public Stream<String> dumpBlockStates() {
-        return GameUtils.getRegistry(Registries.BLOCK).orElseThrow()
+        return RegistryUtils.getRegistry(Registries.BLOCK).orElseThrow()
                 .stream()
                 .flatMap(block -> block.getStateDefinition().getPossibleStates().stream())
                 .map(StateHolder::toString)
@@ -115,7 +115,7 @@ public class BlockLibrary implements IBlockLibrary {
 
     @Override
     public Stream<String> dumpBlocks(boolean noStates) {
-        var blockRegistry = GameUtils.getRegistry(Registries.BLOCK).orElseThrow();
+        var blockRegistry = RegistryUtils.getRegistry(Registries.BLOCK).orElseThrow();
         var entrySet = blockRegistry.entrySet();
         return entrySet.stream().map(kvp -> formatBlockOutput(kvp.getKey().location(), kvp.getValue(), noStates)).sorted();
     }
@@ -132,7 +132,7 @@ public class BlockLibrary implements IBlockLibrary {
     }
 
     private static String formatBlockTagOutput(TagKey<Block> blockTag, Set<Block> blocks) {
-        var blockRegistry = GameUtils.getRegistry(Registries.BLOCK).orElseThrow();
+        var blockRegistry = RegistryUtils.getRegistry(Registries.BLOCK).orElseThrow();
 
         StringBuilder builder = new StringBuilder();
         builder.append("Tag: ").append(blockTag.location());
@@ -145,7 +145,7 @@ public class BlockLibrary implements IBlockLibrary {
     }
 
     private String formatBlockOutput(ResourceLocation id, Block block, boolean noStates) {
-        var entry = GameUtils.getRegistryEntry(Registries.BLOCK, block).orElseThrow();
+        var entry = RegistryUtils.getRegistryEntry(Registries.BLOCK, block).orElseThrow();
 
         var t = this.tagLibrary.streamTags(entry);
         var tags = this.tagLibrary.asString(t);

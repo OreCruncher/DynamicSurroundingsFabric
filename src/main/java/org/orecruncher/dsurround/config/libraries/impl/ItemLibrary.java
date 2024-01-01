@@ -14,7 +14,7 @@ import org.orecruncher.dsurround.config.ItemClassType;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
-import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
@@ -72,7 +72,7 @@ public class ItemLibrary implements IItemLibrary {
 
     @Override
     public Stream<String> dump() {
-        var itemRegistry = GameUtils.getRegistry(Registries.ITEM).map(Registry::entrySet).orElseThrow();
+        var itemRegistry = RegistryUtils.getRegistry(Registries.ITEM).map(Registry::entrySet).orElseThrow();
         return itemRegistry.stream().map(kvp -> formatItemOutput(kvp.getKey().location(), kvp.getValue())).sorted();
     }
 
@@ -160,7 +160,7 @@ public class ItemLibrary implements IItemLibrary {
     }
 
     private String formatItemOutput(ResourceLocation id, Item item) {
-        var tags = GameUtils.getRegistryEntry(Registries.ITEM, item)
+        var tags = RegistryUtils.getRegistryEntry(Registries.ITEM, item)
                 .map(e -> {
                     var t = this.tagLibrary.streamTags(e);
                     return this.tagLibrary.asString(t);

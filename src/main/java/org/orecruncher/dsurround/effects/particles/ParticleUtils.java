@@ -8,6 +8,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 import org.orecruncher.dsurround.mixins.core.MixinParticleManager;
 
@@ -18,7 +19,7 @@ public final class ParticleUtils {
     private static final Random RANDOM = XorShiftRandom.current();
 
     public static SpriteSet getSpriteProvider(ParticleType<?> particleType) {
-        var id = GameUtils.getRegistry(Registries.PARTICLE_TYPE)
+        var id = RegistryUtils.getRegistry(Registries.PARTICLE_TYPE)
                 .map(r -> r.getResourceKey(particleType).map(ResourceKey::location))
                 .orElseThrow();
         return ((MixinParticleManager) GameUtils.getParticleManager()).dsurround_getSpriteAwareFactories().get(id.get());

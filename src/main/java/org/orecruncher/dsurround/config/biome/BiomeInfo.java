@@ -13,7 +13,7 @@ import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
-import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -239,7 +239,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         final String indent = "    ";
 
         var tags = this.biome.map(b -> {
-                    var holder = GameUtils.getRegistryEntry(Registries.BIOME, b);
+                    var holder = RegistryUtils.getRegistryEntry(Registries.BIOME, b);
                     if (holder.isEmpty())
                         return "null";
                     return TAG_LIBRARY.asString(TAG_LIBRARY.streamTags(holder.get()));

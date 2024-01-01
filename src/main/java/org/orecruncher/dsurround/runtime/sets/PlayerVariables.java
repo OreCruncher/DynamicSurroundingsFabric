@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.runtime.sets;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
@@ -207,7 +208,7 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
     public boolean hasEffect(String effect) {
         try {
             var id = new ResourceLocation(effect);
-            var r = GameUtils.getRegistryEntry(Registries.MOB_EFFECT, id).orElseThrow();
+            var r = RegistryUtils.getRegistryEntry(Registries.MOB_EFFECT, id).orElseThrow();
             return GameUtils.getPlayer().map(p -> p.hasEffect(r.value())).orElse(false);
         } catch (Throwable ignore) {
         }

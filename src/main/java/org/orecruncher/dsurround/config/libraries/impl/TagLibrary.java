@@ -14,7 +14,7 @@ import net.minecraft.tags.*;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
-import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 
@@ -100,7 +100,7 @@ public class TagLibrary implements ITagLibrary {
 
     @Override
     public <T> Stream<Pair<TagKey<T>, Set<T>>> getEntriesByTag(ResourceKey<? extends Registry<T>> registryKey) {
-        var registry = GameUtils.getRegistry(registryKey).orElseThrow();
+        var registry = RegistryUtils.getRegistry(registryKey).orElseThrow();
         return registry.holders()
                 .flatMap(e -> this.streamTags(e).map(tag -> Pair.of(tag, e.value())))
                 .collect(groupingBy(Pair::key, mapping(Pair::value, toSet())))
@@ -151,7 +151,7 @@ public class TagLibrary implements ITagLibrary {
     }
 
     private <T> Optional<Registry<T>> getRegistry(TagKey<T> tagKey) {
-        return GameUtils.getRegistry(tagKey.registry());
+        return RegistryUtils.getRegistry(tagKey.registry());
     }
 
     private TagData getTagData(TagKey<?> tagKey) {

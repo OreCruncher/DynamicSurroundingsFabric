@@ -4,7 +4,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
-import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 
 import java.util.*;
@@ -38,7 +38,7 @@ public final class BiomeTraits {
     }
 
     private static Holder<Biome> getBiomeEntry(Biome biome) {
-        return GameUtils.getRegistryEntry(Registries.BIOME, biome).orElseThrow();
+        return RegistryUtils.getRegistryEntry(Registries.BIOME, biome).orElseThrow();
     }
 
     public static BiomeTraits from(BiomeTrait... traits) {
