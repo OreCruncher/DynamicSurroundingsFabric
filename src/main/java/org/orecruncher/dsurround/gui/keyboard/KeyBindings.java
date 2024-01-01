@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.gui.keyboard;
 
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.KeyMapping;
 import org.orecruncher.dsurround.gui.hud.DiagnosticsOverlay;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -12,20 +12,20 @@ import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 public class KeyBindings {
 
-    public static final KeyBinding individualSoundConfigBinding;
-    public static final KeyBinding diagnosticHud;
+    public static final KeyMapping individualSoundConfigBinding;
+    public static final KeyMapping diagnosticHud;
 
     static {
         var platform = Library.getPlatform();
 
         individualSoundConfigBinding = platform.registerKeyBinding(
                 "dsurround.text.keybind.individualSoundConfig",
-                InputUtil.UNKNOWN_KEY.getCode(),
+                InputConstants.UNKNOWN.getValue(),
                 "dsurround.text.keybind.section");
 
         diagnosticHud = platform.registerKeyBinding(
                 "dsurround.text.keybind.diagnosticHud",
-                InputUtil.UNKNOWN_KEY.getCode(),
+                InputConstants.UNKNOWN.getValue(),
                 "dsurround.text.keybind.section");
     }
 
@@ -34,7 +34,7 @@ public class KeyBindings {
             if (GameUtils.getCurrentScreen().isEmpty())
                 GameUtils.getPlayer()
                         .ifPresent(p -> {
-                            if (individualSoundConfigBinding.wasPressed()) {
+                            if (individualSoundConfigBinding.consumeClick()) {
                                 final boolean singlePlayer = GameUtils.isSinglePlayer();
                                 GameUtils.setScreen(new IndividualSoundControlScreen(null, singlePlayer));
                                 if (singlePlayer)
@@ -47,7 +47,7 @@ public class KeyBindings {
             if (GameUtils.getCurrentScreen().isEmpty())
                 GameUtils.getPlayer()
                         .ifPresent(p -> {
-                            if (diagnosticHud.wasPressed())
+                            if (diagnosticHud.consumeClick())
                                 ContainerManager.resolve(DiagnosticsOverlay.class).toggleCollection();
                         });
         });

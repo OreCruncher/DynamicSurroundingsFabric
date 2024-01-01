@@ -2,9 +2,9 @@ package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.*;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.config.EntityEffectType;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
@@ -54,7 +54,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
                 return true;
             }
             @Override
-            public boolean isVisibleTo(PlayerEntity player) {
+            public boolean isVisibleTo(LocalPlayer player) {
                 return false;
             }
             @Override

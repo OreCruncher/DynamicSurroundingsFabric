@@ -1,25 +1,25 @@
 package org.orecruncher.dsurround.lib.resources;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.orecruncher.dsurround.lib.Singleton;
 
 abstract class ResourceAccessorBase implements IResourceAccessor {
 
-    private final Identifier location;
+    private final ResourceLocation location;
     private final Singleton<byte[]> bytes;
 
-    public ResourceAccessorBase(final Identifier location, byte[] bytes) {
+    public ResourceAccessorBase(final ResourceLocation location, byte[] bytes) {
         this.location = location;
         this.bytes = new Singleton<>(() -> bytes);
     }
 
-    public ResourceAccessorBase(final Identifier location) {
+    public ResourceAccessorBase(final ResourceLocation location) {
         this.location = location;
         this.bytes = new Singleton<>(this::getAsset);
     }
 
     @Override
-    public Identifier location() {
+    public ResourceLocation location() {
         return this.location;
     }
 

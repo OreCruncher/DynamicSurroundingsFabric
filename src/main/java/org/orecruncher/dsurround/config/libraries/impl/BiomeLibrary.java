@@ -1,13 +1,11 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.client.resource.language.I18n;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.util.Identifier;
-import net.minecraft.registry.Registry;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeKeys;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.locale.Language;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.InternalBiomes;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
@@ -93,11 +91,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
     }
 
     private static Registry<Biome> getActiveRegistry() {
-        return GameUtils.getRegistryManager().orElseThrow().get(RegistryKeys.BIOME);
-    }
-
-    public static Biome getBiome(Identifier biomeId) {
-        return getActiveRegistry().get(biomeId);
+        return GameUtils.getRegistry(Registries.BIOME).orElseThrow();
     }
 
     @Override
@@ -109,7 +103,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
             return info;
 
         // Not set or something changed.  Need a refresh.
-        Identifier id;
+        ResourceLocation id;
         String name;
 
         // Pull from cached data if we have it, otherwise lookup
@@ -127,7 +121,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
         // Build out the info object and store into the biome.  We need to do that
         // so that when applying configs the script engine can find it.
-        final var result = new BiomeInfo(this.version, id, name, traits);
+        final var result = new BiomeInfo(this.version, id, name, traits, biome);
         ((IBiomeExtended) (Object) biome).dsurround_setInfo(result);
 
         // Apply rule configs
@@ -171,15 +165,15 @@ public final class BiomeLibrary implements IBiomeLibrary {
         info.trim();
     }
 
-    private static Identifier getBiomeId(Biome biome) {
-        RegistryKey<Biome> key = getActiveRegistry().getKey(biome).orElse(BiomeKeys.THE_VOID);
-        return key.getValue();
+    private static ResourceLocation getBiomeId(Biome biome) {
+        return GameUtils.getRegistryEntry(Registries.BIOME, biome)
+                .map(holder -> holder.unwrapKey().orElseThrow().location()).orElseThrow();
     }
 
     @Override
-    public String getBiomeName(Identifier id) {
+    public String getBiomeName(ResourceLocation id) {
         final String fmt = String.format("biome.%s.%s", id.getNamespace(), id.getPath());
-        return I18n.translate(fmt);
+        return Language.getInstance().getOrDefault(fmt);
     }
 
     @Override

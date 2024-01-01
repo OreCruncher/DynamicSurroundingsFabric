@@ -1,10 +1,10 @@
 package org.orecruncher.dsurround.lib.scanner;
 
 import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 
@@ -17,9 +17,9 @@ public abstract class Scanner {
     private final static int MAX_BLOCKS_TICK = 6000;
 
     static {
-        BLOCKSTATES_TO_IGNORE.add(Blocks.VOID_AIR.getDefaultState());
-        BLOCKSTATES_TO_IGNORE.add(Blocks.CAVE_AIR.getDefaultState());
-        BLOCKSTATES_TO_IGNORE.add(Blocks.AIR.getDefaultState());
+        BLOCKSTATES_TO_IGNORE.add(Blocks.VOID_AIR.defaultBlockState());
+        BLOCKSTATES_TO_IGNORE.add(Blocks.CAVE_AIR.defaultBlockState());
+        BLOCKSTATES_TO_IGNORE.add(Blocks.AIR.defaultBlockState());
     }
 
     protected final String name;
@@ -37,7 +37,7 @@ public abstract class Scanner {
     protected final ScanContext locus;
 
     protected final Random random = new XorShiftRandom();
-    protected final BlockPos.Mutable workingPos = new BlockPos.Mutable();
+    protected final BlockPos.MutableBlockPos workingPos = new BlockPos.MutableBlockPos();
 
     public Scanner(final ScanContext locus, final String name, final int range) {
         this(locus, name, range, range, range);
@@ -78,10 +78,10 @@ public abstract class Scanner {
      * safe to hold on to beyond the call, so if it needs to be kept, it needs to be
      * copied.
      */
-    public abstract void blockScan(final World world, final BlockState state, final BlockPos pos, final Random rand);
+    public abstract void blockScan(final Level world, final BlockState state, final BlockPos pos, final Random rand);
 
     public void tick() {
-        final World world = this.locus.getWorld();
+        var world = this.locus.getWorld();
         for (int count = 0; count < this.blocksPerTick; count++) {
             final BlockPos pos = nextPos(this.workingPos, this.random);
             if (pos == null)
@@ -99,6 +99,6 @@ public abstract class Scanner {
      * returned from the function call.
      */
     @Nullable
-    protected abstract BlockPos nextPos(final BlockPos.Mutable pos, final Random rand);
+    protected abstract BlockPos nextPos(final BlockPos.MutableBlockPos pos, final Random rand);
 
 }

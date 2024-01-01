@@ -1,10 +1,10 @@
 package org.orecruncher.dsurround.runtime.audio;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.lib.GameUtils;
 
 public final class WorldContext {
@@ -12,23 +12,23 @@ public final class WorldContext {
     /**
      * Quick Minecraft reference
      */
-    public final MinecraftClient mc;
+    public final Minecraft mc;
     /**
      * Reference to the client side PlayerEntity
      */
-    public final PlayerEntity player;
+    public final Player player;
     /**
      * Reference to the player's world
      */
-    public final World world;
+    public final Level world;
     /**
      * Position of the player.
      */
-    public final Vec3d playerPosition;
+    public final Vec3 playerPosition;
     /**
      * Position of the player's eyes.
      */
-    public final Vec3d playerEyePosition;
+    public final Vec3 playerEyePosition;
     /**
      * Block position of the player.
      */
@@ -55,28 +55,28 @@ public final class WorldContext {
             this.world = GameUtils.getWorld().orElseThrow();
             this.player = GameUtils.getPlayer().orElseThrow();
             this.isPrecipitating = this.world.isRaining();
-            this.playerPosition = this.player.getPos();
-            this.playerEyePosition = this.player.getEyePos();
-            this.playerPos = BlockPos.ofFloored(this.playerPosition);
-            this.playerEyePos = BlockPos.ofFloored(this.playerEyePosition);
+            this.playerPosition = this.player.getPosition(1F);
+            this.playerEyePosition = this.player.getEyePosition();
+            this.playerPos = BlockPos.containing(this.playerPosition);
+            this.playerEyePos = BlockPos.containing(this.playerEyePosition);
 
-            if (this.player.isSubmergedInWater())
+            if (this.player.isUnderWater())
                 this.auralDampening = 0.6F;
             else
                 this.auralDampening = 0;
 
             // Get our current rain strength.
-            this.precipitationStrength = this.world.getRainGradient(1F);
+            this.precipitationStrength = this.world.getRainLevel(1F);
             this.mc = GameUtils.getMC();
         } else {
             this.mc = null;
             this.player = null;
             this.world = null;
             this.isPrecipitating = false;
-            this.playerPosition = Vec3d.ZERO;
-            this.playerEyePosition = Vec3d.ZERO;
-            this.playerPos = BlockPos.ORIGIN;
-            this.playerEyePos = BlockPos.ORIGIN;
+            this.playerPosition = Vec3.ZERO;
+            this.playerEyePosition = Vec3.ZERO;
+            this.playerPos = BlockPos.ZERO;
+            this.playerEyePos = BlockPos.ZERO;
             this.auralDampening = 0;
             this.precipitationStrength = 0F;
         }

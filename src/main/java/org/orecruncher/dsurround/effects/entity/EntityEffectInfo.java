@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.lib.GameUtils;
 
@@ -60,7 +60,7 @@ public class EntityEffectInfo {
         return GameUtils.getPlayer().orElseThrow().getId() == player.getId();
     }
 
-    public boolean isVisibleTo(PlayerEntity player) {
+    public boolean isVisibleTo(LocalPlayer player) {
         return Objects.requireNonNull(this.entity.get()).isInvisibleTo(player);
     }
 
@@ -76,6 +76,6 @@ public class EntityEffectInfo {
      * Determines if the entity is within a certain range of another
      */
     public boolean isWithinDistance(LivingEntity entity, int distance) {
-        return entity.getBlockPos().isWithinDistance(this.entity.get().getBlockPos(), distance);
+        return entity.blockPosition().closerThan(this.entity.get().blockPosition(), distance);
     }
 }

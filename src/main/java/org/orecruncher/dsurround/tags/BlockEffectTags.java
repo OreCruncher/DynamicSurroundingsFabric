@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.tags;
 
-import net.minecraft.block.Block;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.block.Block;
 import org.orecruncher.dsurround.Constants;
 
 public class BlockEffectTags {
@@ -16,6 +16,6 @@ public class BlockEffectTags {
     public static final TagKey<Block> HEAT_PRODUCERS = of("heat_producers");
 
     private static TagKey<Block> of(String id) {
-        return TagKey.of(RegistryKeys.BLOCK, new Identifier(Constants.MOD_ID, "effects/" + id));
+        return TagKey.create(Registries.BLOCK, new ResourceLocation(Constants.MOD_ID, "effects/" + id));
     }
 }

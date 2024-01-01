@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.runtime.sets;
 
-import net.minecraft.util.Identifier;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.dimension.DimensionType;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
@@ -27,8 +27,8 @@ public class DimensionVariables extends VariableSet<IDimensionVariables> impleme
     public void update(IVariableAccess variableAccess) {
         if (GameUtils.isInGame()) {
             var world = GameUtils.getWorld().orElseThrow();
-            final DimensionType dim = world.getDimension();
-            final Identifier location = world.getRegistryKey().getValue();
+            final DimensionType dim = world.dimensionType();
+            final ResourceLocation location = world.dimensionTypeId().registry();
             this.id = location.toString();
             this.hasSky = dim.hasSkyLight();
             this.name = location.getPath();

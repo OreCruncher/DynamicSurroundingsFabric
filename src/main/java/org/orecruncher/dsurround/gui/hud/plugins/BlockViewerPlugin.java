@@ -1,11 +1,11 @@
 package org.orecruncher.dsurround.gui.hud.plugins;
 
 import joptsimple.internal.Strings;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.world.World;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
@@ -19,8 +19,8 @@ import java.util.Objects;
 
 public class BlockViewerPlugin implements IDiagnosticPlugin {
 
-    private static final String COLOR = Formatting.AQUA.toString();
-    private static final String COLOR_TITLE = COLOR + Formatting.UNDERLINE;
+    private static final String COLOR = ChatFormatting.AQUA.toString();
+    private static final String COLOR_TITLE = COLOR + ChatFormatting.UNDERLINE;
 
     private final IBlockLibrary blockLibrary;
     private final ITagLibrary tagLibrary;
@@ -31,7 +31,7 @@ public class BlockViewerPlugin implements IDiagnosticPlugin {
         ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect);
     }
 
-    private void processBlockHitResult(String type, World world, BlockHitResult result, Collection<String> data) {
+    private void processBlockHitResult(String type, Level world, BlockHitResult result, Collection<String> data) {
         if (result.getType() != HitResult.Type.BLOCK)
             return;
 
@@ -41,12 +41,12 @@ public class BlockViewerPlugin implements IDiagnosticPlugin {
         var state = world.getBlockState(result.getBlockPos());
         data.add(state.toString());
 
-        this.tagLibrary.streamTags(state.getBlock().getRegistryEntry())
+        this.tagLibrary.streamTags(state.getBlockHolder())
             .map(tag -> {
-                var formatting = Formatting.YELLOW;
-                if (Objects.equals(tag.id().getNamespace(), Constants.MOD_ID))
-                    formatting = Formatting.GOLD;
-                return formatting + "#" + tag.id().toString();
+                var formatting = ChatFormatting.YELLOW;
+                if (Objects.equals(tag.location().getNamespace(), Constants.MOD_ID))
+                    formatting = ChatFormatting.GOLD;
+                return formatting + "#" + tag.location();
             })
             .sorted()
             .forEach(data::add);
@@ -65,12 +65,12 @@ public class BlockViewerPlugin implements IDiagnosticPlugin {
         if (entity == null)
             return;
 
-        var blockHit = (BlockHitResult)entity.raycast(20.0D, 0.0F, false);
-        var fluidHit = (BlockHitResult)entity.raycast(20.0D, 0.0F, true);
+        var blockHit = (BlockHitResult)entity.pick(20.0D, 0.0F, false);
+        var fluidHit = (BlockHitResult)entity.pick(20.0D, 0.0F, true);
 
-        processBlockHitResult("Block", entity.getEntityWorld(), blockHit, event.right);
+        processBlockHitResult("Block", entity.level(), blockHit, event.right);
 
         if (!blockHit.getBlockPos().equals(fluidHit.getBlockPos()))
-            processBlockHitResult("Fluid", entity.getEntityWorld(), fluidHit, event.right);
+            processBlockHitResult("Fluid", entity.level(), fluidHit, event.right);
     }
 }

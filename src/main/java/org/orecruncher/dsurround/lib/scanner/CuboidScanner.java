@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.lib.scanner;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Random;
@@ -17,22 +17,22 @@ public abstract class CuboidScanner extends Scanner {
 
     // State of last tick
     protected BlockPos lastPos;
-    protected Identifier lastReference = new Identifier("dsurround:aintnothin");
+    protected ResourceLocation lastReference = new ResourceLocation("dsurround:aintnothin");
 
     protected CuboidScanner(final ScanContext locus, final String name, final int range) {
         super(locus, name, range);
     }
 
     protected BlockPos[] getMinMaxPointsForVolume(final BlockPos pos) {
-        var mutable = new BlockPos.Mutable();
+        var mutable = new BlockPos.MutableBlockPos();
 
-        mutable.set(pos, -this.xRange, -this.yRange, -this.zRange);
+        mutable.setWithOffset(pos, -this.xRange, -this.yRange, -this.zRange);
         mutable.setY(this.locus.clampHeight(mutable.getY()));
-        var min = mutable.toImmutable();
+        var min = mutable.immutable();
 
-        mutable.set(pos, this.xRange, this.yRange, this.zRange);
+        mutable.setWithOffset(pos, this.xRange, this.yRange, this.zRange);
         mutable.setY(this.locus.clampHeight(mutable.getY()));
-        var max = mutable.toImmutable();
+        var max = mutable.immutable();
 
         return new BlockPos[]{min, max};
     }
@@ -126,14 +126,14 @@ public abstract class CuboidScanner extends Scanner {
      * This is the hook that gets called when a block goes out of scope because the
      * player moved or something.
      */
-    public void blockUnscan(final World world, final BlockState state, final BlockPos pos, final Random rand) {
+    public void blockUnscan(final Level world, final BlockState state, final BlockPos pos, final Random rand) {
 
     }
 
     protected void updateScan(final Cuboid newVolume, final Cuboid oldVolume,
                               final Cuboid intersect) {
 
-        final World provider = this.locus.getWorld();
+        var provider = this.locus.getWorld();
 
         if (doBlockUnscan()) {
             final ComplementsPointIterator newOutOfRange = new ComplementsPointIterator(oldVolume, intersect);
@@ -160,7 +160,7 @@ public abstract class CuboidScanner extends Scanner {
 
     @Override
     @Nullable
-    protected BlockPos nextPos(final BlockPos.Mutable workingPos, final Random rand) {
+    protected BlockPos nextPos(final BlockPos.MutableBlockPos workingPos, final Random rand) {
 
         if (this.scanFinished)
             return null;

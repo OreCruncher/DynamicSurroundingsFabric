@@ -2,8 +2,8 @@ package org.orecruncher.dsurround.processing;
 
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import joptsimple.internal.Strings;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.system.ITickCount;
@@ -56,7 +56,7 @@ public class Scanners extends AbstractClientHandler {
     }
 
     @Override
-    public void process(final PlayerEntity player) {
+    public void process(final Player player) {
 
         long ticks = this.tickCount.getTickCount();
         this.ceilingScanner.tick(ticks);
@@ -67,7 +67,7 @@ public class Scanners extends AbstractClientHandler {
     @Override
     protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<ITimer> timers) {
         right.add(Strings.EMPTY);
-        right.add(Formatting.AQUA.toString() + Formatting.UNDERLINE + "Biome Survey");
+        right.add(ChatFormatting.AQUA.toString() + ChatFormatting.UNDERLINE + "Biome Survey");
         for (var e : this.biomeScanner.getBiomes().reference2IntEntrySet()) {
             right.add(String.format("%s [%d]", e.getKey().getBiomeId(), e.getIntValue()));
         }

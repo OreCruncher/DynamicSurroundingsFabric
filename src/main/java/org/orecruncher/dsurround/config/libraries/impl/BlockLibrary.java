@@ -1,12 +1,12 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.state.State;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateHolder;
 import org.orecruncher.dsurround.config.block.BlockInfo;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
@@ -23,7 +23,6 @@ import org.orecruncher.dsurround.mixinutils.IBlockStateExtended;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -81,7 +80,7 @@ public class BlockLibrary implements IBlockLibrary {
                 return info;
         }
 
-        // OK - need to build out an info for the block.
+        // OK - need to build out info for the block.
         info = new BlockInfo(this.version, state, this.conditionEvaluator);
         this.blockConfigs.stream()
                 .filter(c -> c.match(state))
@@ -101,11 +100,10 @@ public class BlockLibrary implements IBlockLibrary {
 
     @Override
     public Stream<String> dumpBlockStates() {
-        return GameUtils.getRegistryManager()
-                .orElseThrow()
-                .get(RegistryKeys.BLOCK).stream()
-                .flatMap(block -> block.getStateManager().getStates().stream())
-                .map(State::toString)
+        return GameUtils.getRegistry(Registries.BLOCK).orElseThrow()
+                .stream()
+                .flatMap(block -> block.getStateDefinition().getPossibleStates().stream())
+                .map(StateHolder::toString)
                 .sorted();
     }
 
@@ -116,13 +114,14 @@ public class BlockLibrary implements IBlockLibrary {
 
     @Override
     public Stream<String> dumpBlocks(boolean noStates) {
-        var blockRegistry = GameUtils.getRegistryManager().orElseThrow().get(RegistryKeys.BLOCK).getEntrySet();
-        return blockRegistry.stream().map(kvp -> formatBlockOutput(kvp.getKey().getValue(), kvp.getValue(), noStates)).sorted();
+        var blockRegistry = GameUtils.getRegistry(Registries.BLOCK).orElseThrow();
+        var entrySet = blockRegistry.entrySet();
+        return entrySet.stream().map(kvp -> formatBlockOutput(kvp.getKey().location(), kvp.getValue(), noStates)).sorted();
     }
 
     @Override
     public Stream<String> dump() {
-        return this.tagLibrary.getEntriesByTag(RegistryKeys.BLOCK)
+        return this.tagLibrary.getEntriesByTag(Registries.BLOCK)
                 .map(pair -> formatBlockTagOutput(pair.key(), pair.value()))
                 .sorted();
     }
@@ -132,41 +131,35 @@ public class BlockLibrary implements IBlockLibrary {
     }
 
     private static String formatBlockTagOutput(TagKey<Block> blockTag, Set<Block> blocks) {
-        var manager = GameUtils.getRegistryManager().orElseThrow();
-        var blockRegistry = manager.get(RegistryKeys.BLOCK);
+        var blockRegistry = GameUtils.getRegistry(Registries.BLOCK).orElseThrow();
 
         StringBuilder builder = new StringBuilder();
-        builder.append("Tag: ").append(blockTag.id().toString());
+        builder.append("Tag: ").append(blockTag.location());
         blocks.stream()
-                .map(block -> Objects.requireNonNull(blockRegistry.getId(block)).toString())
+                .map(blockRegistry::getResourceKey)
                 .sorted()
                 .forEach(tag -> builder.append("\n  ").append(tag));
         builder.append("\n");
         return builder.toString();
     }
 
-    private String formatBlockOutput(Identifier id, Block block, boolean noStates) {
-        var manager = GameUtils.getRegistryManager().orElseThrow();
-        var blocks = manager.get(RegistryKeys.BLOCK);
+    private String formatBlockOutput(ResourceLocation id, Block block, boolean noStates) {
+        var entry = GameUtils.getRegistryEntry(Registries.BLOCK, block).orElseThrow();
 
-        var tags = "null";
-        var entry = blocks.getEntry(blocks.getRawId(block));
-        if (entry.isPresent()) {
-            var t = this.tagLibrary.streamTags(entry.get());
-            tags = this.tagLibrary.asString(t);
-        }
+        var t = this.tagLibrary.streamTags(entry);
+        var tags = this.tagLibrary.asString(t);
 
         StringBuilder builder = new StringBuilder();
         builder.append(id.toString());
         builder.append("\nTags: ").append(tags);
 
-        var info = getBlockInfo(block.getDefaultState());
+        var info = getBlockInfo(block.defaultBlockState());
         builder.append("\nreflectance: ").append(info.getSoundReflectivity());
         builder.append("; occlusion: ").append(info.getSoundOcclusion());
 
         if (!noStates) {
             builder.append("\nstates [\n");
-            for (var blockState : block.getStateManager().getStates()) {
+            for (var blockState : block.getStateDefinition().getPossibleStates()) {
                 builder.append(blockState.toString()).append("\n");
                 info = getBlockInfo(blockState);
                 builder.append(info);

@@ -1,9 +1,11 @@
 package org.orecruncher.dsurround.effects.blocks.producers;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.SupportType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.orecruncher.dsurround.effects.blocks.FlameJetEffect;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.lib.scripting.Script;
@@ -20,13 +22,13 @@ public class FlameJetProducer extends BlockEffectProducer {
     }
 
     @Override
-    protected boolean canTrigger(final World world, final BlockState state,
+    protected boolean canTrigger(final Level world, final BlockState state,
                                  final BlockPos pos, final Random random) {
-        return world.getBlockState(pos.up()).isAir() && super.canTrigger(world, state, pos, random);
+        return world.getBlockState(pos.above()).isAir() && super.canTrigger(world, state, pos, random);
     }
 
     @Override
-    public Optional<IBlockEffect> produceImpl(final World world, final BlockState state,
+    public Optional<IBlockEffect> produceImpl(final Level world, final BlockState state,
                                               final BlockPos pos, final Random random) {
         final int blockCount;
         final float spawnHeight;
@@ -34,17 +36,17 @@ public class FlameJetProducer extends BlockEffectProducer {
 
         if (!state.getFluidState().isEmpty()) {
             blockCount = countVerticalBlocks(world, pos, IS_LAVA, -1);
-            spawnHeight = pos.getY() + state.getFluidState().getHeight() + 0.1F;
+            spawnHeight = pos.getY() + state.getFluidState().getOwnHeight() + 0.1F;
             isSolid = false;
         } else {
-            final VoxelShape shape = state.getOutlineShape(world, pos);
+            final VoxelShape shape = state.getShape(world, pos);
             if (shape.isEmpty()) {
                 return Optional.empty();
             }
-            final double blockHeight = shape.getBoundingBox().maxY;
+            final double blockHeight = shape.bounds().maxY;
             spawnHeight = (float) (pos.getY() + blockHeight);
             isSolid = true;
-            if (state.isSolidBlock(world, pos)) {
+            if (state.isFaceSturdy(world, pos, Direction.UP, SupportType.FULL)) {
                 blockCount = 2;
             } else {
                 blockCount = 1;

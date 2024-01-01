@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.scanner;
 
 import com.google.common.collect.AbstractIterator;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
@@ -62,7 +62,7 @@ public class CuboidPointIterator implements IPointIterator {
         int width = maxZ - minZ + 1;
         int volume = length * height * width;
         return () -> new AbstractIterator<>() {
-            private final BlockPos.Mutable pos = new BlockPos.Mutable();
+            private final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
             private int index;
 
             protected BlockPos computeNext() {

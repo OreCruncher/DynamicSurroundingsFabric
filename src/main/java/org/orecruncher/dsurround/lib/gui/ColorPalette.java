@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.gui;
 
-import net.minecraft.text.TextColor;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.TextColor;
 
 public final class ColorPalette {
     // Branding colors
@@ -9,22 +9,22 @@ public final class ColorPalette {
     public static final TextColor MODRINTH = of("#1bd96a");
 
     // Minecraft colors mapped to codes
-    public static final TextColor MC_BLACK = of(Formatting.BLACK);
-    public static final TextColor MC_DARKBLUE = of(Formatting.DARK_BLUE);
-    public static final TextColor MC_DARKGREEN = of(Formatting.DARK_GREEN);
-    public static final TextColor MC_DARKAQUA = of(Formatting.DARK_AQUA);
-    public static final TextColor MC_DARKRED = of(Formatting.DARK_RED);
-    public static final TextColor MC_DARKPURPLE = of(Formatting.DARK_PURPLE);
-    public static final TextColor MC_GOLD = of(Formatting.GOLD);
-    public static final TextColor MC_GRAY = of(Formatting.GRAY);
-    public static final TextColor MC_DARKGRAY = of(Formatting.DARK_GRAY);
-    public static final TextColor MC_BLUE = of(Formatting.BLUE);
-    public static final TextColor MC_GREEN = of(Formatting.GREEN);
-    public static final TextColor MC_AQUA = of(Formatting.AQUA);
-    public static final TextColor MC_RED = of(Formatting.RED);
-    public static final TextColor MC_LIGHTPURPLE = of(Formatting.LIGHT_PURPLE);
-    public static final TextColor MC_YELLOW = of(Formatting.YELLOW);
-    public static final TextColor MC_WHITE = of(Formatting.WHITE);
+    public static final TextColor MC_BLACK = of(ChatFormatting.BLACK);
+    public static final TextColor MC_DARKBLUE = of(ChatFormatting.DARK_BLUE);
+    public static final TextColor MC_DARKGREEN = of(ChatFormatting.DARK_GREEN);
+    public static final TextColor MC_DARKAQUA = of(ChatFormatting.DARK_AQUA);
+    public static final TextColor MC_DARKRED = of(ChatFormatting.DARK_RED);
+    public static final TextColor MC_DARKPURPLE = of(ChatFormatting.DARK_PURPLE);
+    public static final TextColor MC_GOLD = of(ChatFormatting.GOLD);
+    public static final TextColor MC_GRAY = of(ChatFormatting.GRAY);
+    public static final TextColor MC_DARKGRAY = of(ChatFormatting.DARK_GRAY);
+    public static final TextColor MC_BLUE = of(ChatFormatting.BLUE);
+    public static final TextColor MC_GREEN = of(ChatFormatting.GREEN);
+    public static final TextColor MC_AQUA = of(ChatFormatting.AQUA);
+    public static final TextColor MC_RED = of(ChatFormatting.RED);
+    public static final TextColor MC_LIGHTPURPLE = of(ChatFormatting.LIGHT_PURPLE);
+    public static final TextColor MC_YELLOW = of(ChatFormatting.YELLOW);
+    public static final TextColor MC_WHITE = of(ChatFormatting.WHITE);
 
     public static final TextColor CRIMSON = of("#8D230F");
 
@@ -64,12 +64,12 @@ public final class ColorPalette {
         return rgb & 0xFF;
     }
 
-    private static TextColor of(Formatting formatColor) {
-        return TextColor.fromFormatting(formatColor);
+    private static TextColor of(ChatFormatting formatColor) {
+        return TextColor.fromLegacyFormat(formatColor);
     }
 
     private static TextColor of(String formatColor) {
-        return TextColor.parse(formatColor).getOrThrow(false, (msg)-> {});
+        return TextColor.parseColor(formatColor).getOrThrow(false, (msg)-> {});
     }
 
     private static TextColor of(int red, int green, int blue) {

@@ -1,13 +1,14 @@
 package org.orecruncher.dsurround.effects;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Optional;
 import java.util.Random;
 
 @FunctionalInterface
 public interface IBlockEffectProducer {
-    Optional<IBlockEffect> produce(World world, BlockState state, BlockPos pos, Random rand);
+    Optional<IBlockEffect> produce(Level world, BlockState state, BlockPos pos, Random rand);
 }

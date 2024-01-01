@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config.libraries;
 
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -24,9 +24,9 @@ public class AssetLibraryEvent {
     private static void afterReload(ReloadEvent event) {
         // Only want to send a message if debug logging is enabled
         if (CONFIG.logging.enableDebugLogging) {
-            var msg = Text.translatable("dsurround.text.reloadassets", Text.translatable("dsurround.modname"));
+            var msg = Component.translatable("dsurround.text.reloadassets", Component.translatable("dsurround.modname"));
             var player = GameUtils.getPlayer();
-            player.ifPresent( p -> p.sendMessage(msg));
+            player.ifPresent( p -> p.sendSystemMessage(msg));
         }
     }
 

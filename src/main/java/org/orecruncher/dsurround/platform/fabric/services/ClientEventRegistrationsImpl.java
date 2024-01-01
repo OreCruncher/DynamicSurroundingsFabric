@@ -4,7 +4,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.CommonLifecycleEvents;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import org.orecruncher.dsurround.lib.platform.IClientEventRegistrations;
 import org.orecruncher.dsurround.lib.platform.events.ClientState;
 
@@ -25,11 +25,11 @@ public class ClientEventRegistrationsImpl implements IClientEventRegistrations {
         });
     }
 
-    public void registerClientTickStart(Consumer<MinecraftClient> handler) {
+    public void registerClientTickStart(Consumer<Minecraft> handler) {
         ClientTickEvents.START_CLIENT_TICK.register(handler::accept);
     }
 
-    public void registerClientTickEnd(Consumer<MinecraftClient> handler) {
+    public void registerClientTickEnd(Consumer<Minecraft> handler) {
         ClientTickEvents.END_CLIENT_TICK.register(handler::accept);
     }
 }

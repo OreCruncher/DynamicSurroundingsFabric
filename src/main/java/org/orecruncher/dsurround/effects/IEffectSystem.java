@@ -1,8 +1,8 @@
 package org.orecruncher.dsurround.effects;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.function.Predicate;
 
@@ -21,12 +21,12 @@ public interface IEffectSystem {
     /**
      * Invoked when a new block comes into the scan area
      */
-    void blockScan(World world, BlockState state, BlockPos pos);
+    void blockScan(Level world, BlockState state, BlockPos pos);
 
     /**
      * Invoked when a block position leaves the scan area
      */
-    void blockUnscan(World world, BlockState state, BlockPos pos);
+    void blockUnscan(Level world, BlockState state, BlockPos pos);
 
     /**
      * Invoked when the system should clear because the area scanner reset

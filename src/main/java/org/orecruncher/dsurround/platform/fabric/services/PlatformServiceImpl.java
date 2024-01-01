@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.platform.fabric.services;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.KeyMapping;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.version.SemanticVersion;
@@ -82,7 +82,7 @@ public class PlatformServiceImpl implements IPlatform {
     }
 
     @Override
-    public KeyBinding registerKeyBinding(String translationKey, int code, String category) {
-        return KeyBindingHelper.registerKeyBinding(new KeyBinding(translationKey, code, category));
+    public KeyMapping registerKeyBinding(String translationKey, int code, String category) {
+        return KeyBindingHelper.registerKeyBinding(new KeyMapping(translationKey, code, category));
     }
 }

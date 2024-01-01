@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.sound;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
 
@@ -11,21 +11,21 @@ import java.util.Objects;
 
 public final class SoundMetadata {
 
-    private final Text title;
-    private final Text caption;
-    private final List<Text> credits;
+    private final Component title;
+    private final Component caption;
+    private final List<Component> credits;
 
     public SoundMetadata() {
-        this.title = Text.empty();
-        this.caption = Text.empty();
+        this.title = Component.empty();
+        this.caption = Component.empty();
         this.credits = ImmutableList.of();
     }
 
     public SoundMetadata(final SoundMetadataConfig cfg) {
         Objects.requireNonNull(cfg);
 
-        this.title = cfg.title().map(Text::translatable).orElse(Text.empty());
-        this.caption = cfg.caption().map(Text::translatable).orElse(Text.empty());
+        this.title = cfg.title().map(Component::translatable).orElse(Component.empty());
+        this.caption = cfg.caption().map(Component::translatable).orElse(Component.empty());
 
         if (cfg.credits() == null || cfg.credits().isEmpty()) {
             this.credits = ImmutableList.of();
@@ -33,9 +33,9 @@ public final class SoundMetadata {
             this.credits = new ArrayList<>();
             for (final String s : cfg.credits()) {
                 if (StringUtils.isEmpty(s))
-                    this.credits.add(Text.empty());
+                    this.credits.add(Component.empty());
                 else
-                    this.credits.add(Text.of(s));
+                    this.credits.add(Component.literal(s));
             }
         }
     }
@@ -45,7 +45,7 @@ public final class SoundMetadata {
      *
      * @return Configured title, or EMPTY if not present.
      */
-    public Text getTitle() {
+    public Component getTitle() {
         return this.title;
     }
 
@@ -54,7 +54,7 @@ public final class SoundMetadata {
      *
      * @return Configured caption, or EMPTY if not present.
      */
-    public Text getCaption() {
+    public Component getCaption() {
         return this.caption;
     }
 
@@ -63,7 +63,7 @@ public final class SoundMetadata {
      *
      * @return List containing 0 or more strings describing the sound credits.
      */
-    public List<Text> getCredits() {
+    public List<Component> getCredits() {
         return this.credits;
     }
 }

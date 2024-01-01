@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.lib.config.clothapi;
 
 import me.shedaniel.clothconfig2.gui.entries.EnumListEntry;
 import me.shedaniel.clothconfig2.impl.builders.FieldBuilder;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -17,21 +17,21 @@ import java.util.function.Supplier;
  */
 public class EnumSelectorBuilder extends FieldBuilder<Enum<?>, EnumListEntry<Enum<?>>, EnumSelectorBuilder> {
     private Consumer<Enum<?>> saveConsumer = null;
-    private Function<Enum<?>, Optional<Text[]>> tooltipSupplier = e -> Optional.empty();
+    private Function<Enum<?>, Optional<Component[]>> tooltipSupplier = e -> Optional.empty();
     private final Enum<?> value;
     private final Class<Enum<?>> clazz;
-    private Function<Enum, Text> enumNameProvider;
+    private Function<Enum, Component> enumNameProvider;
 
-    public EnumSelectorBuilder(Text resetButtonKey, Text fieldNameKey, Class<Enum<?>> clazz, Enum<?> value) {
+    public EnumSelectorBuilder(Component resetButtonKey, Component fieldNameKey, Class<Enum<?>> clazz, Enum<?> value) {
         super(resetButtonKey, fieldNameKey);
-        this.enumNameProvider = e -> Text.of(e.name());
+        this.enumNameProvider = e -> Component.literal(e.name());
         Objects.requireNonNull(clazz);
         Objects.requireNonNull(value);
         this.value = value;
         this.clazz = clazz;
     }
 
-    public EnumSelectorBuilder setErrorSupplier(Function<Enum<?>, Optional<Text>> errorSupplier) {
+    public EnumSelectorBuilder setErrorSupplier(Function<Enum<?>, Optional<Component>> errorSupplier) {
         this.errorSupplier = errorSupplier;
         return this;
     }
@@ -57,27 +57,27 @@ public class EnumSelectorBuilder extends FieldBuilder<Enum<?>, EnumListEntry<Enu
         return this;
     }
 
-    public EnumSelectorBuilder setTooltipSupplier(Function<Enum<?>, Optional<Text[]>> tooltipSupplier) {
+    public EnumSelectorBuilder setTooltipSupplier(Function<Enum<?>, Optional<Component[]>> tooltipSupplier) {
         this.tooltipSupplier = tooltipSupplier;
         return this;
     }
 
-    public EnumSelectorBuilder setTooltipSupplier(Supplier<Optional<Text[]>> tooltipSupplier) {
+    public EnumSelectorBuilder setTooltipSupplier(Supplier<Optional<Component[]>> tooltipSupplier) {
         this.tooltipSupplier = e -> tooltipSupplier.get();
         return this;
     }
 
-    public EnumSelectorBuilder setTooltip(Optional<Text[]> tooltip) {
+    public EnumSelectorBuilder setTooltip(Optional<Component[]> tooltip) {
         this.tooltipSupplier = e -> tooltip;
         return this;
     }
 
-    public EnumSelectorBuilder setTooltip(Text... tooltip) {
+    public EnumSelectorBuilder setTooltip(Component... tooltip) {
         this.tooltipSupplier = e -> Optional.ofNullable(tooltip);
         return this;
     }
 
-    public EnumSelectorBuilder setEnumNameProvider(Function<Enum, Text> enumNameProvider) {
+    public EnumSelectorBuilder setEnumNameProvider(Function<Enum, Component> enumNameProvider) {
         Objects.requireNonNull(enumNameProvider);
         this.enumNameProvider = enumNameProvider;
         return this;

@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.minecraft.client.sound.SoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance;
 import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.sound.IAudioPlayer;

@@ -3,16 +3,20 @@ package org.orecruncher.dsurround.effects.systems;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.SideShapeType;
-import net.minecraft.client.option.ParticlesMode;
-import net.minecraft.fluid.FlowableFluid;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.*;
-import net.minecraft.world.World;
+import net.minecraft.client.ParticleStatus;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SupportType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.FlowingFluid;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.Configuration;
@@ -36,7 +40,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
 
     private static final int SOUND_CHECK_INTERVAL = 4;
     private static final int SOUND_INSTANCE_CAP = 32;
-    private static final Vec3d SPLASH_INTENSITY = new Vec3d(0.05, 0.05, 0.05);
+    private static final Vec3 SPLASH_INTENSITY = new Vec3(0.05, 0.05, 0.05);
     private final static Vec3i[] CARDINAL_OFFSETS = {
             new Vec3i(-1, 0, 0),
             new Vec3i(1, 0, 0),
@@ -47,32 +51,32 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     private static final ISoundFactory[] ACOUSTICS = new ISoundFactory[BlockEffectUtils.MAX_STRENGTH + 1];
 
     static {
-        var factory = SoundFactoryBuilder.create(new Identifier(Constants.MOD_ID, "waterfall.0"))
+        var factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.0"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
         Arrays.fill(ACOUSTICS, factory);
 
-        factory = SoundFactoryBuilder.create(new Identifier(Constants.MOD_ID, "waterfall.1"))
+        factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.1"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
         ACOUSTICS[2] = ACOUSTICS[3] = factory;
 
-        factory = SoundFactoryBuilder.create(new Identifier(Constants.MOD_ID, "waterfall.2"))
+        factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.2"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
         ACOUSTICS[4] = factory;
 
-        factory = SoundFactoryBuilder.create(new Identifier(Constants.MOD_ID, "waterfall.3"))
+        factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.3"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
         ACOUSTICS[5] = ACOUSTICS[6] = factory;
 
-        factory = SoundFactoryBuilder.create(new Identifier(Constants.MOD_ID, "waterfall.4"))
+        factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.4"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
         ACOUSTICS[7] = ACOUSTICS[8] = factory;
 
-        factory = SoundFactoryBuilder.create(new Identifier(Constants.MOD_ID, "waterfall.5"))
+        factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.5"))
                 .pitchRange(0.8F, 1.2F)
                 .build();
         ACOUSTICS[9] = ACOUSTICS[10] = factory;
@@ -125,7 +129,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
             return;
 
         var player = GameUtils.getPlayer().orElseThrow();
-        var eyePosition = player.getEyePos();
+        var eyePosition = player.getEyePosition();
 
         // Do a fancy evaluation to determine the desired sound play locations
         var desiredLocations = this.getDesiredWaterfallSoundLocations();
@@ -141,7 +145,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
             // If it is in a desired location, make it happen
             if (desiredLocations.contains(posIndex)) {
                 if (sound == null) {
-                    int idx = MathHelper.clamp(waterFallEffect.getJetStrength(), 0, ACOUSTICS.length - 1);
+                    int idx = Mth.clamp(waterFallEffect.getJetStrength(), 0, ACOUSTICS.length - 1);
                     sound = ACOUSTICS[idx].createBackgroundSoundLoopAt(system.getPos());
                     this.waterfallSoundInstances.put(posIndex, sound);
                 }
@@ -198,7 +202,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
                     var posIndex = effect.getPosIndex();
                     var strength = effect.getJetStrength();
                     var pos = effect.getPosition();
-                    var weight = (strength * strength) / player.getEyePos().squaredDistanceTo(pos);
+                    var weight = (strength * strength) / player.getEyePosition().distanceToSqr(pos);
                     return Pair.of(weight, posIndex);
                 })
                 .sorted((e1, e2) -> -Double.compare(e1.key(), e2.key()))
@@ -208,7 +212,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     }
 
     @Override
-    public void blockScan(World world, BlockState state, BlockPos pos) {
+    public void blockScan(Level world, BlockState state, BlockPos pos) {
         // Steam jet can form if the blockState in question is a fluid block, there is an air block
         // above, and there is a hot block adjacent.
         if (canWaterfallSpawn(world, state, pos)) {
@@ -240,39 +244,39 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     }
 
     @NotNull
-    private static WaterfallEffect getWaterfallEffect(World world, BlockState state, BlockPos pos) {
+    private static WaterfallEffect getWaterfallEffect(Level world, BlockState state, BlockPos pos) {
         var strength = BlockEffectUtils.countVerticalBlocks(world, pos, HAS_FLUID, 1);
         final float height = state.getFluidState().getHeight(world, pos) + 0.1F;
         return new WaterfallEffect(strength, world, pos, height);
     }
 
-    private static boolean canWaterfallSpawn(World world, BlockState state, BlockPos pos) {
+    private static boolean canWaterfallSpawn(Level world, BlockState state, BlockPos pos) {
         return state.getBlock() != Blocks.LAVA && isValidWaterfallSource(world, state, pos);
     }
 
-    private static boolean isValidWaterfallSource(World world, BlockState state, BlockPos pos) {
+    private static boolean isValidWaterfallSource(Level world, BlockState state, BlockPos pos) {
         if (state.getFluidState().isEmpty())
             return false;
-        if (world.getFluidState(pos.up()).isEmpty())
+        if (world.getFluidState(pos.above()).isEmpty())
             return false;
         if (isUnboundedLiquid(world, pos)) {
-            var downPos = pos.down();
-            if (world.getBlockState(downPos).isSideSolid(world, downPos, Direction.UP, SideShapeType.FULL))
+            var downPos = pos.below();
+            if (world.getBlockState(downPos).isFaceSturdy(world, downPos, Direction.UP, SupportType.FULL))
                 return true;
             return isBoundedLiquid(world, pos);
         }
         return false;
     }
 
-    private static boolean isUnboundedLiquid(final World provider, final BlockPos pos) {
-        var mutable = new BlockPos.Mutable();
+    private static boolean isUnboundedLiquid(final Level provider, final BlockPos pos) {
+        var mutable = new BlockPos.MutableBlockPos();
         for (final Vec3i cardinal_offset : CARDINAL_OFFSETS) {
-            final BlockPos tp = mutable.set(pos, cardinal_offset);
+            final BlockPos tp = mutable.setWithOffset(pos, cardinal_offset);
             final BlockState state = provider.getBlockState(tp);
             if (state.isAir())
                 return true;
             final FluidState fluidState = state.getFluidState();
-            final int height = fluidState.getLevel();
+            final int height = fluidState.getAmount();
             if (height > 0 && height < 8)
                 return true;
         }
@@ -280,10 +284,10 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
         return false;
     }
 
-    private static boolean isBoundedLiquid(World provider, BlockPos pos) {
-        var mutable = new BlockPos.Mutable();
+    private static boolean isBoundedLiquid(Level provider, BlockPos pos) {
+        var mutable = new BlockPos.MutableBlockPos();
         for (final Vec3i cardinal_offset : CARDINAL_OFFSETS) {
-            final BlockPos tp = mutable.set(pos, cardinal_offset);
+            final BlockPos tp = mutable.setWithOffset(pos, cardinal_offset);
             final BlockState state = provider.getBlockState(tp);
             if (state.isAir())
                 return false;
@@ -291,9 +295,9 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
             if (fluidState.isEmpty()) {
                 continue;
             }
-            if (fluidState.get(FlowableFluid.FALLING))
+            if (fluidState.hasProperty(FlowingFluid.FALLING))
                 return false;
-            final int height = fluidState.getLevel();
+            final int height = fluidState.getAmount();
             if (height > 0 && height < 8)
                 return false;
         }
@@ -308,14 +312,14 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
         protected int particleLimit;
         protected final double deltaY;
 
-        public WaterfallEffect(final int strength, final World world, final BlockPos loc, final double dY) {
+        public WaterfallEffect(final int strength, final Level world, final BlockPos loc, final double dY) {
             super(strength, world, loc.getX() + 0.5D, loc.getY() + 0.5D, loc.getZ() + 0.5D, 4);
             this.deltaY = loc.getY() + dY;
             setSpawnCount((int) (strength * 2.5F));
         }
 
         public void setSpawnCount(final int limit) {
-            this.particleLimit = MathHelper.clamp(limit, 5, 20);
+            this.particleLimit = Mth.clamp(limit, 5, 20);
         }
 
         @Override
@@ -326,7 +330,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
         }
 
         private int getSplashParticleSpawnCount() {
-            ParticlesMode state = GameUtils.getGameSettings().map(v -> v.getParticles().getValue()).orElse(ParticlesMode.ALL);
+            ParticleStatus state = GameUtils.getGameSettings().particles().get();
             var count = switch (state) {
                 case MINIMAL -> 0;
                 case ALL -> this.particleLimit;
@@ -342,16 +346,16 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
             if (!CONFIG.enableWaterfallParticles)
                 return;
 
-            var intensity = SPLASH_INTENSITY.multiply(this.jetStrength);
+            var intensity = SPLASH_INTENSITY.scale(this.jetStrength);
 
             for (int i = 0; i <= this.getSplashParticleSpawnCount(); i++) {
 
                 final double xOffset = (RANDOM.nextFloat() * 2.0F - 1.0F);
                 final double zOffset = (RANDOM.nextFloat() * 2.0F - 1.0F);
 
-                final double motionX = xOffset * intensity.getX();
-                final double motionZ = zOffset * intensity.getZ();
-                final double motionY = 0.1D + RANDOM.nextFloat() * intensity.getY();
+                final double motionX = xOffset * intensity.x();
+                final double motionZ = zOffset * intensity.z();
+                final double motionY = 0.1D + RANDOM.nextFloat() * intensity.y();
 
                 var posX = this.posX + xOffset;
                 var posY = this.deltaY;
@@ -360,8 +364,8 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
                 var particle = this.createParticle(ParticleTypes.SPLASH, posX, posY, posZ, motionX, motionY, motionZ);
 
                 particle.ifPresent(p -> {
-                    p.setVelocity(motionX, motionY, motionZ);
-                    p.setMaxAge(p.getMaxAge() * 2);
+                    p.setParticleSpeed(motionX, motionY, motionZ);
+                    p.setLifetime(p.getLifetime() * 2);
                     this.addParticle(p);
                 });
             }

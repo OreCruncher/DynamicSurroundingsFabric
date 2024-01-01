@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.lib.resources;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -11,7 +11,7 @@ final class ResourceAccessorExternal extends ResourceAccessorBase {
 
     final Path filePath;
 
-    public ResourceAccessorExternal(final File root, final Identifier location) {
+    public ResourceAccessorExternal(final File root, final ResourceLocation location) {
         super(location);
         this.filePath = Paths.get(root.getPath(), location.getNamespace(), location.getPath());
     }

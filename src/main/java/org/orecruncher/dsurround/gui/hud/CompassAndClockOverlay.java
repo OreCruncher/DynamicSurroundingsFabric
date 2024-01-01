@@ -1,14 +1,14 @@
 package org.orecruncher.dsurround.gui.hud;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.*;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.TextColor;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
+import com.mojang.blaze3d.vertex.*;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix4f;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.Configuration;
@@ -34,7 +34,7 @@ public class CompassAndClockOverlay extends AbstractOverlay {
     private static final float BAND_HEIGHT = 12F * 2;
     private static final float TEXTURE_SIZE_F = (float)TEXTURE_SIZE;
     private static final int HALF_TEXTURE_SIZE = TEXTURE_SIZE / 2;
-    private static final Identifier COMPASS_TEXTURE = new Identifier(Constants.MOD_ID, "textures/compass.png");
+    private static final ResourceLocation COMPASS_TEXTURE = new ResourceLocation(Constants.MOD_ID, "textures/compass.png");
 
     private static final Map<DayCycle, TextColor> COLOR_MAP = new EnumMap<>(DayCycle.class);
 
@@ -66,7 +66,7 @@ public class CompassAndClockOverlay extends AbstractOverlay {
         this.scale = (float)this.config.compassAndClockOptions.scale;
     }
 
-    public void tick(MinecraftClient client) {
+    public void tick(Minecraft client) {
         this.showClock = false;
         this.showCompass = false;
 
@@ -75,12 +75,12 @@ public class CompassAndClockOverlay extends AbstractOverlay {
 
         if (GameUtils.isInGame()) {
             var player = GameUtils.getPlayer().orElseThrow();
-            var mainHandItem = player.getMainHandStack();
-            var offHandItem = player.getOffHandStack();
+            var mainHandItem = player.getMainHandItem();
+            var offHandItem = player.getOffhandItem();
 
             if (this.config.compassAndClockOptions.enableClock) {
                 this.showClock = doShowClock(mainHandItem) || doShowClock(offHandItem);
-                this.clock.update(player.getEntityWorld());
+                this.clock.update(player.level());
                 this.clockText = this.clock.getFormattedTime();
                 this.clockColor = COLOR_MAP.get(this.clock.getCycle());
             }
@@ -100,42 +100,43 @@ public class CompassAndClockOverlay extends AbstractOverlay {
     }
 
     @Override
-    public void render(DrawContext context) {
+    public void render(GuiGraphics context) {
         if (this.showCompass || this.showClock) {
             final var player = GameUtils.getPlayer().orElseThrow();
 
-            var matrixStack = context.getMatrices();
+            var matrixStack = context.pose();
 
             if (this.showClock)
                 try {
-                    matrixStack.push();
-                    var textRender = GameUtils.getTextRenderer().orElseThrow();
+                    matrixStack.pushPose();
+                    var textRender = GameUtils.getTextRenderer();
 
-                    var width = textRender.getWidth(this.clockText);
-                    var height = textRender.fontHeight;
+                    var width = textRender.width(this.clockText);
+                    var height = textRender.lineHeight;
                     var adjustment = this.showCompass ? 6 : 1;
 
-                    float x = (context.getScaledWindowWidth() - width * this.scale) / 2F;
-                    float y = (context.getScaledWindowHeight() - CROSSHAIR_OFFSET - (height * adjustment) * this.scale) / 2F;
+                    float x = (context.guiWidth() - width * this.scale) / 2F;
+                    float y = (context.guiHeight() - CROSSHAIR_OFFSET - (height * adjustment) * this.scale) / 2F;
 
                     matrixStack.scale(this.scale, this.scale, 0F);
                     x /= this.scale;
                     y /= this.scale;
 
-                    context.drawText(textRender, this.clockText, (int)x, (int)y, this.clockColor.getRgb(), true);
+                    context.drawString(textRender, this.clockText, (int)x, (int)y, this.clockColor.getValue(), true);
 
                 } finally {
-                    matrixStack.pop();
+                    matrixStack.popPose();
                 }
 
             if (this.showCompass)
                 try {
 
-                    matrixStack.push();
+                    matrixStack.pushPose();
 
-                    int direction = MathHelper.floor(((player.headYaw * TEXTURE_SIZE) / 360F) + 0.5D) & (TEXTURE_SIZE - 1);
-                    float x = (context.getScaledWindowWidth() - BAND_WIDTH * this.scale) / 2F;
-                    float y = (context.getScaledWindowHeight() - CROSSHAIR_OFFSET - BAND_HEIGHT * this.scale) / 2F;
+                    // TODO: Verify rotation for compass
+                    int direction = Mth.floor(((player.yHeadRot * TEXTURE_SIZE) / 360F) + 0.5D) & (TEXTURE_SIZE - 1);
+                    float x = (context.guiWidth() - BAND_WIDTH * this.scale) / 2F;
+                    float y = (context.guiHeight() - CROSSHAIR_OFFSET - BAND_HEIGHT * this.scale) / 2F;
 
                     matrixStack.scale(this.scale, this.scale, 0F);
                     x /= this.scale;
@@ -151,29 +152,29 @@ public class CompassAndClockOverlay extends AbstractOverlay {
                     this.drawTexture(matrixStack, COMPASS_TEXTURE, x, y, direction, v, BAND_WIDTH, BAND_HEIGHT);
 
                 } finally {
-                    matrixStack.pop();
+                    matrixStack.popPose();
                 }
         }
     }
 
-    public void drawTexture(MatrixStack stack, Identifier texture, float x, float y, float u, float v, float width, float height) {
+    public void drawTexture(PoseStack stack, ResourceLocation texture, float x, float y, float u, float v, float width, float height) {
         this.drawTexture(stack, texture, x, x + width, y, y + height, width, height, u, v);
     }
 
-    void drawTexture(MatrixStack stack, Identifier texture, float x1, float x2, float y1, float y2, float regionWidth, float regionHeight, float u, float v) {
+    void drawTexture(PoseStack stack, ResourceLocation texture, float x1, float x2, float y1, float y2, float regionWidth, float regionHeight, float u, float v) {
         this.drawTexturedQuad(stack, texture, x1, x2, y1, y2, (float) 0, u / TEXTURE_SIZE_F, (u + regionWidth) / TEXTURE_SIZE_F, v / TEXTURE_SIZE_F, (v + regionHeight) / TEXTURE_SIZE_F);
     }
 
-    void drawTexturedQuad(MatrixStack stack, Identifier texture, float x1, float x2, float y1, float y2, float z, float u1, float u2, float v1, float v2) {
+    void drawTexturedQuad(PoseStack stack, ResourceLocation texture, float x1, float x2, float y1, float y2, float z, float u1, float u2, float v1, float v2) {
         RenderSystem.setShaderTexture(0, texture);
-        RenderSystem.setShader(GameRenderer::getPositionTexProgram);
-        Matrix4f matrix4f = stack.peek().getPositionMatrix();
-        BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
-        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
-        bufferBuilder.vertex(matrix4f, x1, y1, z).texture(u1, v1).next();
-        bufferBuilder.vertex(matrix4f, x1, y2, z).texture(u1, v2).next();
-        bufferBuilder.vertex(matrix4f, x2, y2, z).texture(u2, v2).next();
-        bufferBuilder.vertex(matrix4f, x2, y1, z).texture(u2, v1).next();
-        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
+        RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
+        Matrix4f matrix4f = stack.last().pose();
+        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
+        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        bufferBuilder.vertex(matrix4f, x1, y1, z).uv(u1, v1).endVertex();
+        bufferBuilder.vertex(matrix4f, x1, y2, z).uv(u1, v2).endVertex();
+        bufferBuilder.vertex(matrix4f, x2, y2, z).uv(u2, v2).endVertex();
+        bufferBuilder.vertex(matrix4f, x2, y1, z).uv(u2, v1).endVertex();
+        BufferUploader.drawWithShader(bufferBuilder.end());
     }
 }

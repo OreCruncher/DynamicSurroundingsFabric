@@ -2,10 +2,10 @@ package org.orecruncher.dsurround.config;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import net.minecraft.item.Item;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.TagKey;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.IMatcher;
 import org.orecruncher.dsurround.lib.IdentityUtils;
@@ -23,10 +23,10 @@ public abstract class ItemTypeMatcher implements IMatcher<Item> {
             final var id = IdentityUtils.resolveIdentifier(itemId);
             if (itemId.startsWith("#")) {
                 // Item tag
-                var tagKey = TagKey.of(RegistryKeys.ITEM, id);
+                var tagKey = TagKey.create(Registries.ITEM, id);
                 return DataResult.success(new ItemTypeMatcher.MatchOnItemTag(tagKey));
             } else if (itemId.contains(":")) {
-                var item = Registries.ITEM.get(id);
+                var item = BuiltInRegistries.ITEM.get(id);
                 return DataResult.success(new ItemTypeMatcher.MatchOnItem(item));
             }
 

@@ -1,13 +1,9 @@
 package org.orecruncher.dsurround.effects.blocks.producers;
 
-import net.minecraft.block.AbstractFurnaceBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.CampfireBlock;
-import net.minecraft.registry.tag.FluidTags;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -31,7 +27,7 @@ public abstract class BlockEffectProducer implements IBlockEffectProducer {
         this.conditionEvaluator = ContainerManager.resolve(IConditionEvaluator.class);
     }
 
-    protected boolean canTrigger(World world, BlockState state, BlockPos pos, Random rand) {
+    protected boolean canTrigger(Level world, BlockState state, BlockPos pos, Random rand) {
         if (this.conditionEvaluator.check(this.conditions)) {
             var chance = this.conditionEvaluator.eval(this.chance);
             return chance instanceof Double c && rand.nextDouble() < c;
@@ -40,32 +36,32 @@ public abstract class BlockEffectProducer implements IBlockEffectProducer {
     }
 
     @Override
-    public Optional<IBlockEffect> produce(World world, BlockState state, BlockPos pos, Random rand) {
+    public Optional<IBlockEffect> produce(Level world, BlockState state, BlockPos pos, Random rand) {
         if (this.canTrigger(world, state, pos, rand)) {
             return this.produceImpl(world, state, pos, rand);
         }
         return Optional.empty();
     }
 
-    protected abstract Optional<IBlockEffect> produceImpl(World world, BlockState state, BlockPos pos, Random rand);
+    protected abstract Optional<IBlockEffect> produceImpl(Level world, BlockState state, BlockPos pos, Random rand);
 
     //
     // Bunch of helper methods for implementations
     //
     public static final int MAX_STRENGTH = 10;
 
-    public static int countVerticalBlocks(final World provider,
+    public static int countVerticalBlocks(final Level provider,
                                           final BlockPos pos,
                                           final Predicate<BlockState> predicate,
                                           final int step) {
         int count = 0;
-        final BlockPos.Mutable mutable = pos.mutableCopy();
+        final BlockPos.MutableBlockPos mutable = pos.mutable();
         for (; count < MAX_STRENGTH && predicate.test(provider.getBlockState(mutable)); count++)
             mutable.setY(mutable.getY() + step);
-        return MathHelper.clamp(count, 0, MAX_STRENGTH);
+        return Mth.clamp(count, 0, MAX_STRENGTH);
     }
 
-    public static int countCubeBlocks(final World provider,
+    public static int countCubeBlocks(final Level provider,
                                       final BlockPos pos,
                                       final Predicate<BlockState> predicate,
                                       final boolean fastFirst) {
@@ -73,7 +69,7 @@ public abstract class BlockEffectProducer implements IBlockEffectProducer {
         for (int k = -1; k <= 1; k++)
             for (int j = -1; j <= 1; j++)
                 for (int i = -1; i <= 1; i++) {
-                    final BlockState state = provider.getBlockState(pos.add(i, j, k));
+                    final BlockState state = provider.getBlockState(pos.offset(i, j, k));
                     if (predicate.test(state)) {
                         if (fastFirst)
                             return 1;

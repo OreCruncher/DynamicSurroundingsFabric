@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.runtime.sets;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.world.World;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
@@ -27,13 +25,13 @@ public class WeatherVariables extends VariableSet<IWeatherVariables> implements 
     @Override
     public void update(IVariableAccess variableAccess) {
         if (GameUtils.isInGame()) {
-            final PlayerEntity player = GameUtils.getPlayer().orElseThrow();
-            final World world = player.getEntityWorld();
-            this.rainIntensity = world.getRainGradient(1F);
-            this.thunderIndensity = world.getThunderGradient(1F);
+            final var player = GameUtils.getPlayer().orElseThrow();
+            final var world = player.level();
+            this.rainIntensity = world.getRainLevel(1F);
+            this.thunderIndensity = world.getThunderLevel(1F);
             this.isRaining = world.isRaining();
             this.isThundering = world.isThundering();
-            this.temperature = WorldUtils.getTemperatureAt(world, player.getBlockPos());
+            this.temperature = WorldUtils.getTemperatureAt(world, player.blockPosition());
         } else {
             this.rainIntensity = 0F;
             this.thunderIndensity = 0F;

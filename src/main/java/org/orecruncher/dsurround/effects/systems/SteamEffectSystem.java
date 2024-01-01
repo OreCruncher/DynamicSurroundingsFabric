@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.effects.systems;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.effects.IEffectSystem;
@@ -25,7 +25,7 @@ public class SteamEffectSystem extends AbstractEffectSystem implements IEffectSy
     }
 
     @Override
-    public void blockScan(World world, BlockState state, BlockPos pos) {
+    public void blockScan(Level world, BlockState state, BlockPos pos) {
         if (!this.isEnabled())
             return;
 
@@ -51,30 +51,30 @@ public class SteamEffectSystem extends AbstractEffectSystem implements IEffectSy
     }
 
     @NotNull
-    private static SteamEffect getSteamEffect(World world, BlockState state, BlockPos pos) {
+    private static SteamEffect getSteamEffect(Level world, BlockState state, BlockPos pos) {
         var fluidState = state.getFluidState();
         final float spawnHeight;
         if (fluidState.isEmpty()) {
             spawnHeight = pos.getY() + 0.9F;
         } else {
-            spawnHeight = pos.getY() + fluidState.getHeight() + 0.1F;
+            spawnHeight = pos.getY() + fluidState.getOwnHeight() + 0.1F;
         }
 
         return new SteamEffect(world, pos.getX() + 0.5D, spawnHeight, pos.getZ() + 0.5D);
     }
 
-    private static boolean canSteamSpawn(World world, BlockState state, BlockPos pos) {
+    private static boolean canSteamSpawn(Level world, BlockState state, BlockPos pos) {
         return isValidSteamSource(world, state, pos)
                 && blockExistsAround(world, pos, IS_HOT_SOURCE);
     }
 
-    private static boolean isValidSteamSource(World world, BlockState state, BlockPos pos) {
-        return world.getBlockState(pos.up()).isAir() && TAG_LIBRARY.isIn(BlockEffectTags.STEAM_PRODUCERS, state.getBlock());
+    private static boolean isValidSteamSource(Level world, BlockState state, BlockPos pos) {
+        return world.getBlockState(pos.above()).isAir() && TAG_LIBRARY.isIn(BlockEffectTags.STEAM_PRODUCERS, state.getBlock());
     }
 
     private static class SteamEffect extends ParticleJetEffect {
 
-        public SteamEffect(World world, double x, double y, double z) {
+        public SteamEffect(Level world, double x, double y, double z) {
             super(world, x, y, z);
         }
 

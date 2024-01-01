@@ -18,6 +18,6 @@ public record ModInformation(String modId, String displayName, SemanticVersion v
     }
 
     public String getBranding() {
-        return String.format("%s %s-%s", this.displayName, SharedConstants.getGameVersion().getName(), this.version);
+        return String.format("%s %s-%s", this.displayName, SharedConstants.getCurrentVersion().getName(), this.version);
     }
 }

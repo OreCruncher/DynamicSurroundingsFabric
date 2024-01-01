@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.effects.blocks;
 
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 
 public abstract class ParticleJetEffect extends BlockEffectBase {
 
@@ -10,15 +10,15 @@ public abstract class ParticleJetEffect extends BlockEffectBase {
     protected final int particleMaxAge;
     protected int particleAge;
 
-    public ParticleJetEffect(World world, double x, double y, double z) {
+    public ParticleJetEffect(Level world, double x, double y, double z) {
         this(1, world, x, y, z);
     }
 
-    public ParticleJetEffect(int strength, World world, double x, double y, double z) {
+    public ParticleJetEffect(int strength, Level world, double x, double y, double z) {
         this(strength, world, x, y, z, 3);
     }
 
-    public ParticleJetEffect(int strength, World world, double x, double y, double z, int freq) {
+    public ParticleJetEffect(int strength, Level world, double x, double y, double z, int freq) {
         super(world, x, y, z);
 
         this.jetStrength = strength;

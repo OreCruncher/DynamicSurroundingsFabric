@@ -1,14 +1,14 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.vehicle.BoatEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Hand;
-import net.minecraft.util.UseAction;
-import net.minecraft.util.hit.HitResult;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.phys.HitResult;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 
 public class ItemSwingEffect extends EntityEffectBase {
@@ -30,20 +30,20 @@ public class ItemSwingEffect extends EntityEffectBase {
         final LivingEntity entity = optional.get();
 
         // Boats are strange - ignore them for now
-        if (entity.getVehicle() instanceof BoatEntity)
+        if (entity.getVehicle() instanceof Boat)
             return;
 
         // Don't use entity.isBlocking() - it has a 5 tick delay which would cause the
         // animation and the sound play to be out of sync.
-        var isTriggered = entity.getHandSwingProgress(1F) > 0 || looksToBeBlocking(entity);
+        var isTriggered = entity.getAttackAnim(1F) > 0 || looksToBeBlocking(entity);
 
         if (isTriggered) {
             if (!this.isSwinging) {
                 ItemStack currentItem;
-                if (entity.handSwinging)
-                    currentItem = entity.getStackInHand(Hand.MAIN_HAND);
+                if (entity.swinging)
+                    currentItem = entity.getItemInHand(InteractionHand.MAIN_HAND);
                 else
-                    currentItem = entity.getActiveItem();
+                    currentItem = entity.getUseItem();
 
                 var factory = this.itemLibrary.getItemSwingSound(currentItem);
 
@@ -66,11 +66,11 @@ public class ItemSwingEffect extends EntityEffectBase {
     }
 
     protected static boolean looksToBeBlocking(LivingEntity entity) {
-        if (!entity.isUsingItem() || entity.getActiveItem().isEmpty()) {
+        if (!entity.isUsingItem() || entity.getUseItem().isEmpty()) {
             return false;
         }
-        Item item = entity.getActiveItem().getItem();
-        return item.getUseAction(entity.getActiveItem()) == UseAction.BLOCK;
+        Item item = entity.getUseItem().getItem();
+        return item.getUseAnimation(entity.getUseItem()) == UseAnim.BLOCK;
     }
 
     protected static boolean freeSwing(LivingEntity entity) {
@@ -79,18 +79,18 @@ public class ItemSwingEffect extends EntityEffectBase {
     }
 
     protected static double getReach(final LivingEntity entity) {
-        if (entity instanceof PlayerEntity p)
+        if (entity instanceof LocalPlayer p)
             return p.isCreative() ? 5D : 3D;
 
-        var dist = entity.getWidth();
+        var dist = entity.getBbWidth();
         dist *= 2;
         dist *= dist;
-        dist += entity.getWidth();
+        dist += entity.getBbWidth();
         return dist;
     }
 
     protected static HitResult rayTraceBlock(final LivingEntity entity) {
         double range = getReach(entity);
-        return entity.raycast(range, 1F, true);
+        return entity.pick(range, 1F, true);
     }
 }

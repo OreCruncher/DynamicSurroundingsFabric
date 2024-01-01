@@ -1,8 +1,8 @@
 package org.orecruncher.dsurround.eventing.handlers;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.platform.events.ClientState;
@@ -34,7 +34,7 @@ public class BlockUpdateHandler {
      *
      * @param ignored MinecraftClient instance - ignored
      */
-    private static void tick(MinecraftClient ignored) {
+    private static void tick(Minecraft ignored) {
         Collection<BlockPos> updates = expand();
         if (updates != null) {
             var event = new ClientEventHooks.BlockUpdateEvent(updates);
@@ -54,7 +54,7 @@ public class BlockUpdateHandler {
             for (int i = -1; i < 2; i++)
                 for (int j = -1; j < 2; j++)
                     for (int k = -1; k < 2; k++)
-                        updates.add(center.add(i, j, k));
+                        updates.add(center.offset(i, j, k));
         }
 
         // Have to clear for next run

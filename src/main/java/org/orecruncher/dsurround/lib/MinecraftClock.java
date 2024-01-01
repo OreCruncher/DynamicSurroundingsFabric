@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.lib;
 
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 
 import java.text.DecimalFormat;
 
@@ -22,13 +22,13 @@ public class MinecraftClock {
 
     }
 
-    public MinecraftClock(final World world) {
+    public MinecraftClock(final Level world) {
         update(world);
     }
 
-    public void update(final World world) {
+    public void update(final Level world) {
 
-        long time = world.getTimeOfDay();
+        long time = world.getDayTime();
         this.day = (int) (time / 24000);
         time -= this.day * 24000L;
         this.day++; // It's day 1, not 0 :)

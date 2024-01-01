@@ -1,10 +1,10 @@
 package org.orecruncher.dsurround.lib;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 public final class BlockPosUtil {
 
-    public static boolean canFormCuboid( final BlockPos p1,  final BlockPos p2) {
+    public static boolean canFormCuboid(final BlockPos p1, final BlockPos p2) {
         return !(p1.getX() == p2.getX() && p1.getZ() == p2.getZ() && p1.getY() == p2.getY());
     }
 

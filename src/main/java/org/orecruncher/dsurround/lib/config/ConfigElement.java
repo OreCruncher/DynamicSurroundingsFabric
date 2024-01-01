@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.config;
 
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -24,14 +24,14 @@ public abstract class ConfigElement<T> {
         return this.elementNameKey + ".tooltip";
     }
 
-    public List<Text> getTooltip() {
-        var result = new ArrayList<Text>();
+    public List<Component> getTooltip() {
+        var result = new ArrayList<Component>();
         var key = this.getElementNameTooltipKey();
-        Text txt = Text.translatable(key);
+        Component txt = Component.translatable(key);
         if (txt.toString().equals(key)) {
             var comment = this.getComment();
             if (comment != null)
-                txt = Text.of(comment);
+                txt = Component.literal(comment);
         }
         result.add(txt);
         return result;
@@ -134,17 +134,17 @@ public abstract class ConfigElement<T> {
         }
 
         @Override
-        public List<Text> getTooltip() {
+        public List<Component> getTooltip() {
             var result = super.getTooltip();
 
             if (this.isClientRestartRequired())
-                result.add(Text.translatable("dsurround.config.tooltip.clientRestartRequired"));
+                result.add(Component.translatable("dsurround.config.tooltip.clientRestartRequired"));
             else if (this.isWorldRestartRequired())
-                result.add(Text.translatable("dsurround.config.tooltip.worldRestartRequired"));
+                result.add(Component.translatable("dsurround.config.tooltip.worldRestartRequired"));
 
             var dv = this.wrapper.getAnnotation(ConfigurationData.DefaultValue.class);
             if (dv != null)
-                result.add(Text.translatable("dsurround.config.tooltip.defaultValue", this.defaultValue));
+                result.add(Component.translatable("dsurround.config.tooltip.defaultValue", this.defaultValue));
 
             return result;
         }
@@ -198,16 +198,16 @@ public abstract class ConfigElement<T> {
         }
 
         @Override
-        public List<Text> getTooltip() {
+        public List<Component> getTooltip() {
             var result = super.getTooltip();
             if (this.hasRange())
-                result.add(Text.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()));
+                result.add(Component.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()));
             return result;
         }
 
         @Override
         protected Integer clamp(Integer val) {
-            return MathHelper.clamp(val, this.minValue, this.maxValue);
+            return Mth.clamp(val, this.minValue, this.maxValue);
         }
 
     }
@@ -239,16 +239,16 @@ public abstract class ConfigElement<T> {
         }
 
         @Override
-        public List<Text> getTooltip() {
+        public List<Component> getTooltip() {
             var result = super.getTooltip();
             if (this.hasRange())
-                result.add(Text.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()));
+                result.add(Component.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()));
             return result;
         }
 
         @Override
         protected Double clamp(Double val) {
-            return MathHelper.clamp(val, this.minValue, this.maxValue);
+            return Mth.clamp(val, this.minValue, this.maxValue);
         }
 
     }

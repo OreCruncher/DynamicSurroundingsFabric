@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.core.Holder;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.tags.BiomeTags;
@@ -67,7 +67,7 @@ public class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
     }
 
     @Override
-    public Collection<BiomeTrait> evaluate(Identifier id, Biome biome, RegistryEntry.Reference<Biome> biomeEntry) {
+    public Collection<BiomeTrait> evaluate(ResourceLocation id, Biome biome, Holder<Biome> biomeEntry) {
         Set<BiomeTrait> results = new HashSet<>();
 
         // Have to do it this way so that the client side tagging has a chance.  When connecting to

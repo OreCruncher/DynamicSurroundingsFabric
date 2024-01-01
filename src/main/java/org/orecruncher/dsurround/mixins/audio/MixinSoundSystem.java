@@ -1,9 +1,14 @@
 package org.orecruncher.dsurround.mixins.audio;
 
-import net.minecraft.client.sound.*;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.resources.sounds.Sound;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.sounds.ChannelAccess;
+import net.minecraft.client.sounds.SoundEngine;
+import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.client.sounds.WeighedSoundEvents;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
@@ -19,38 +24,38 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.concurrent.CompletableFuture;
 
-@Mixin(SoundSystem.class)
+@Mixin(SoundEngine.class)
 public class MixinSoundSystem {
 
     @Final
     @Shadow
-    private SoundEngine soundEngine;
+    private SoundManager soundManager;
 
-    @Inject(method = "start()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sound/SoundEngine;init(Ljava/lang/String;Z)V", shift = At.Shift.AFTER))
+    @Inject(method = "loadLibrary()V", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/audio/Library;init(Ljava/lang/String;Z)V", shift = At.Shift.AFTER))
     public void dsurround_init(CallbackInfo ci) {
-        AudioUtilities.initialize(this.soundEngine);
+        AudioUtilities.initialize(this.soundManager);
     }
 
-    @Inject(method = "stop()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sound/SoundLoader;close()V", shift = At.Shift.BEFORE))
+    @Inject(method = "destroy()V", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/audio/Library;cleanup()V", shift = At.Shift.BEFORE))
     public void dsurround_deinit(CallbackInfo ci) {
-        AudioUtilities.deinitialize(this.soundEngine);
+        AudioUtilities.deinitialize(this.soundManager);
     }
 
     /**
      * Callback will trigger the creation of sound context information for the sound play once it has been queued to the
      * sound engine.  It will also perform the first calculations of sound effects based on the player environment.
      */
-    @Inject(method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sound/Channel$SourceManager;run(Ljava/util/function/Consumer;)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILEXCEPTION)
-    public void dsurround_onSoundPlay(SoundInstance sound, CallbackInfo ci, WeightedSoundSet weightedSoundSet, Identifier identifier, Sound sound2, float f, float g, SoundCategory soundCategory, float h, float i, SoundInstance.AttenuationType attenuationType, boolean bl, Vec3d vec3d, boolean bl3, boolean bl4, CompletableFuture<Channel.SourceManager> completableFuture, Channel.SourceManager sourceManager) {
+    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/ChannelAccess$ChannelHandle;execute(Ljava/util/function/Consumer;)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILEXCEPTION)
+    public void dsurround_onSoundPlay(SoundInstance soundInstance, CallbackInfo ci, WeighedSoundEvents weighedSoundEvents, ResourceLocation resourceLocation, Sound sound, float f, float g, SoundSource soundSource, float h, float i, SoundInstance.Attenuation attenuation, boolean bl, Vec3 vec3, boolean bl2, boolean bl3, CompletableFuture completableFuture, ChannelAccess.ChannelHandle channelHandle) {
         try {
-            SoundFXProcessor.onSoundPlay(sound, sourceManager);
-            AudioUtilities.onSoundPlay(sound);
+            SoundFXProcessor.onSoundPlay(soundInstance, channelHandle);
+            AudioUtilities.onSoundPlay(soundInstance);
         } catch(final Throwable t) {
             MixinHelpers.LOGGER.error(t, "Error in dsurround_onSoundPlay()!");
         }
     }
 
-    @Inject(method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At("HEAD"), cancellable = true)
     private void dsurround_play(SoundInstance sound, CallbackInfo ci) {
         try {
             if (SoundInstanceHandler.shouldBlockSoundPlay(sound))
@@ -64,21 +69,21 @@ public class MixinSoundSystem {
      * @reason Replacing algorithm for adjusting volume using other external factors
      */
     @Overwrite()
-    private float getAdjustedVolume(SoundInstance sound) {
+    private float calculateVolume(SoundInstance sound) {
         return SoundVolumeEvaluator.getAdjustedVolume(sound);
     }
 
-    @Redirect(method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sound/SoundSystem;getAdjustedVolume(FLnet/minecraft/sound/SoundCategory;)F"))
-    private float dsurround_playGetAdjustedVolume(SoundSystem instance, float volume, SoundCategory category, SoundInstance sound) {
+    @Redirect(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/SoundEngine;calculateVolume(FLnet/minecraft/sounds/SoundSource;)F"))
+    private float dsurround_playGetAdjustedVolume(SoundEngine instance, float f, SoundSource soundSource, SoundInstance sound) {
         return SoundVolumeEvaluator.getAdjustedVolume(sound);
     }
 
-    @Inject(method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;<init>(DDD)V"), locals = LocalCapture.CAPTURE_FAILEXCEPTION, cancellable = true)
-    private void dsurround_soundRangeCheck(SoundInstance sound, CallbackInfo ci, WeightedSoundSet weightedSoundSet, Identifier identifier, Sound sound2, float f, float g, SoundCategory soundCategory, float h, float i, SoundInstance.AttenuationType attenuationType, boolean isGlobal) {
+    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;<init>(DDD)V"), locals = LocalCapture.CAPTURE_FAILEXCEPTION, cancellable = true)
+    private void dsurround_soundRangeCheck(SoundInstance soundInstance, CallbackInfo ci, WeighedSoundEvents weighedSoundEvents, ResourceLocation resourceLocation, Sound sound, float f, float g, SoundSource soundSource, float h, float i, SoundInstance.Attenuation attenuation, boolean bl) {
         if (MixinHelpers.soundSystemConfig.enableSoundPruning) {
             // If not in range of the listener, cancel.
-            if (!SoundInstanceHandler.inRange(AudioUtilities.getSoundListener().getTransform().position(), sound, 4)) {
-                MixinHelpers.LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> "TOO FAR: " + AudioUtilities.debugString(sound));
+            if (!SoundInstanceHandler.inRange(AudioUtilities.getSoundListener().getTransform().position(), soundInstance, 4)) {
+                MixinHelpers.LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> "TOO FAR: " + AudioUtilities.debugString(soundInstance));
                 ci.cancel();
             }
         }

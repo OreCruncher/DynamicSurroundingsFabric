@@ -1,8 +1,8 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.core.Holder;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.biome.Biome;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,7 +11,7 @@ import java.util.List;
 public class BiomeMysticalAnalyzer implements IBiomeTraitAnalyzer {
 
     @Override
-    public Collection<BiomeTrait> evaluate(Identifier id, Biome biome, RegistryEntry.Reference<Biome> biomeEntry) {
+    public Collection<BiomeTrait> evaluate(ResourceLocation id, Biome biome, Holder<Biome> biomeEntry) {
         List<BiomeTrait> results = new ArrayList<>();
 
         var path = id.getPath();

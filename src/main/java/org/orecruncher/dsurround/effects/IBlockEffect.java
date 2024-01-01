@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.effects;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 
 public interface IBlockEffect {
 
@@ -13,8 +13,8 @@ public interface IBlockEffect {
 
     BlockPos getPos();
 
-    default Vec3d getPosition() {
-        return Vec3d.ofCenter(this.getPos());
+    default Vec3 getPosition() {
+        return Vec3.atCenterOf(this.getPos());
     }
 
     default long getPosIndex() {

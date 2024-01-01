@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.processing;
 
 import com.google.common.base.MoreObjects;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.ITimer;
@@ -56,7 +56,7 @@ abstract class AbstractClientHandler {
      *
      * @param player The player currently behind the keyboard.
      */
-    public void process(final PlayerEntity player) {
+    public void process(final Player player) {
 
     }
 

@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.processing;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import joptsimple.internal.Strings;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.InternalBiomes;
@@ -57,7 +57,7 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
     }
 
     @Override
-    public void process(final PlayerEntity player) {
+    public void process(final Player player) {
         this.emitters.forEach(BiomeSoundEmitter::tick);
         if ((this.tickCount.getTickCount() % SCAN_INTERVAL) == 0) {
             handleBiomeSounds(player);
@@ -74,7 +74,7 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
         clearSounds();
     }
 
-    private void handleBiomeSounds(final PlayerEntity player) {
+    private void handleBiomeSounds(final Player player) {
         this.workMap.clear();
 
         // Only gather data if the player is alive. If the player is dead the biome sounds will cease playing.
@@ -104,7 +104,7 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
         queueAmbientSounds();
     }
 
-    private void handleAddOnSounds(PlayerEntity player, BiomeInfo info) {
+    private void handleAddOnSounds(Player player, BiomeInfo info) {
         info.getExtraSound(SoundEventType.MOOD, RANDOM).ifPresent(s -> {
             var instance = s.createAsMood(player, MOOD_SOUND_MIN_RANGE, MOOD_SOUND_MAX_RANGE);
             this.audioPlayer.play(instance);

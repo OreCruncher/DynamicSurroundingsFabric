@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.mixins.core;
 
-import net.minecraft.block.BlockState;
+import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.config.block.BlockInfo;
 import org.orecruncher.dsurround.mixinutils.IBlockStateExtended;
 import org.spongepowered.asm.mixin.Mixin;

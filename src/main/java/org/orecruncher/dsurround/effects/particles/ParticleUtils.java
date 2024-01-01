@@ -1,11 +1,12 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import net.minecraft.client.particle.SpriteProvider;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.particle.ParticleType;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.particle.SpriteSet;
+import net.minecraft.core.particles.ParticleType;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 import org.orecruncher.dsurround.mixins.core.MixinParticleManager;
@@ -16,21 +17,23 @@ public final class ParticleUtils {
 
     private static final Random RANDOM = XorShiftRandom.current();
 
-    public static SpriteProvider getSpriteProvider(ParticleType<?> particleType) {
-        var id = Registries.PARTICLE_TYPE.getId(particleType);
-        return ((MixinParticleManager) GameUtils.getParticleManager().orElseThrow()).dsurround_getSpriteAwareFactories().get(id);
+    public static SpriteSet getSpriteProvider(ParticleType<?> particleType) {
+        var id = GameUtils.getRegistry(Registries.PARTICLE_TYPE)
+                .map(r -> r.getResourceKey(particleType).map(ResourceKey::location))
+                .orElseThrow();
+        return ((MixinParticleManager) GameUtils.getParticleManager()).dsurround_getSpriteAwareFactories().get(id.get());
     }
 
-    public static Vec3d getBreathOrigin(final LivingEntity entity) {
-        final Vec3d eyePosition = eyePosition(entity).subtract(0D, entity.isBaby() ? 0.1D : 0.2D, 0D);
-        final Vec3d look = entity.getRotationVec(1F); // Don't use the other look vector method!
-        return eyePosition.add(look.multiply(entity.isBaby() ? 0.25D : 0.5D));
+    public static Vec3 getBreathOrigin(final LivingEntity entity) {
+        final Vec3 eyePosition = eyePosition(entity).subtract(0D, entity.isBaby() ? 0.1D : 0.2D, 0D);
+        final Vec3 look = entity.getViewVector(1F); // Don't use the other look vector method!
+        return eyePosition.add(look.scale(entity.isBaby() ? 0.25D : 0.5D));
     }
 
-    public static Vec3d getLookTrajectory(final LivingEntity entity) {
-        return entity.getRotationVec(1F)
-                .rotateZ(RANDOM.nextFloat() * 2F)   // yaw
-                .rotateY(RANDOM.nextFloat() * 2F)   // pitch
+    public static Vec3 getLookTrajectory(final LivingEntity entity) {
+        return entity.getLookAngle()
+                .zRot(RANDOM.nextFloat() * 2F)   // yaw
+                .yRot(RANDOM.nextFloat() * 2F)   // pitch
                 .normalize();
     }
 
@@ -38,9 +41,9 @@ public final class ParticleUtils {
      * Use some corrective lenses because the MC routine just doesn't lower the
      * height enough for our rendering purpose.
      */
-    private static Vec3d eyePosition(final Entity e) {
-        var y = e.getEyePos();
-        if (e.isSneaking()) {
+    private static Vec3 eyePosition(final Entity e) {
+        var y = e.getEyePosition();
+        if (e.isCrouching()) {
             y = y.subtract(0, 0.25D, 0);
         }
         return y;

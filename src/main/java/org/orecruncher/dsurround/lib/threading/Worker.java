@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.lib.threading;
 
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
@@ -46,7 +46,7 @@ public final class Worker {
             }
             timeTrack.end();
             long sleepTime = this.frequency - timeTrack.getLastSampleMSecs();
-            long idleTime = MathHelper.clamp(sleepTime, 0, Long.MAX_VALUE);
+            long idleTime = Mth.clamp(sleepTime, 0, Long.MAX_VALUE);
             var track = timeTrack.toString();
             this.diagnosticString = () -> String.format("%s (idle for %dmsecs)", track, idleTime);
             if (sleepTime > 0) {

@@ -1,17 +1,16 @@
 package org.orecruncher.dsurround.sound;
 
 import com.google.common.base.MoreObjects;
-import net.minecraft.client.sound.EntityTrackingSoundInstance;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.entity.Entity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.util.math.random.RandomSeed;
+import net.minecraft.client.resources.sounds.EntityBoundSoundInstance;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -20,18 +19,16 @@ import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 
 public final class SoundFactoryBuilder {
 
-    private static final Vec3d BLOCK_CENTER_ADJUST = new Vec3d(0.5D, 0.5D, 0.5D);
-
     private final SoundEvent soundEvent;
     private float minVolume = 1F;
     private float maxVolume = 1F;
     private float minPitch = 1F;
     private float maxPitch = 1F;
-    private SoundCategory category = SoundCategory.AMBIENT;
+    private SoundSource category = SoundSource.AMBIENT;
     private boolean isRepeatable = false;
     private int repeatDelay = 0;
     private boolean global = false;
-    private SoundInstance.AttenuationType attenuationType = SoundInstance.AttenuationType.LINEAR;
+    private SoundInstance.Attenuation attenuationType = SoundInstance.Attenuation.LINEAR;
 
     SoundFactoryBuilder(SoundEvent soundEvent) {
         this.soundEvent = soundEvent;
@@ -59,7 +56,7 @@ public final class SoundFactoryBuilder {
         return this;
     }
 
-    public SoundFactoryBuilder category(SoundCategory category) {
+    public SoundFactoryBuilder category(SoundSource category) {
         this.category = category;
         return this;
     }
@@ -76,14 +73,14 @@ public final class SoundFactoryBuilder {
         return this;
     }
 
-    public SoundFactoryBuilder attenuation(SoundInstance.AttenuationType attenuation) {
+    public SoundFactoryBuilder attenuation(SoundInstance.Attenuation attenuation) {
         this.attenuationType = attenuation;
-        this.global = attenuation == SoundInstance.AttenuationType.NONE;
+        this.global = attenuation == SoundInstance.Attenuation.NONE;
         return this;
     }
 
     public SoundFactoryBuilder global() {
-        this.attenuationType = SoundInstance.AttenuationType.NONE;
+        this.attenuationType = SoundInstance.Attenuation.NONE;
         this.global = true;
         return this;
     }
@@ -111,13 +108,13 @@ public final class SoundFactoryBuilder {
                 .setPitch(this.generate(this.minPitch, this.maxPitch));
     }
 
-    private PositionedSoundInstance createAsAdditional() {
-        return new PositionedSoundInstance(
-                this.soundEvent.getId(),
+    private SimpleSoundInstance createAsAdditional() {
+        return new SimpleSoundInstance(
+                this.soundEvent.getLocation(),
                 this.category,
                 this.generate(this.minVolume, this.maxVolume),
                 this.generate(this.minPitch, this.maxPitch),
-                Random.create(),
+                RandomSource.create(),
                 this.isRepeatable,
                 this.repeatDelay,
                 this.attenuationType,
@@ -127,30 +124,30 @@ public final class SoundFactoryBuilder {
                 true);
     }
 
-    private EntityTrackingSoundInstance createAtEntity(Entity entity) {
-        return new EntityTrackingSoundInstance(
+    private EntityBoundSoundInstance createAtEntity(Entity entity) {
+        return new EntityBoundSoundInstance(
                 this.soundEvent,
                 this.category,
                 this.generate(this.minVolume, this.maxVolume),
                 this.generate(this.minPitch, this.maxPitch),
                 entity,
-                RandomSeed.getSeed()
+                XorShiftRandom.current().nextLong()
         );
     }
 
-    private PositionedSoundInstance createAtLocation(Vec3d position) {
-        return new PositionedSoundInstance(
-                this.soundEvent.getId(),
+    private SimpleSoundInstance createAtLocation(Vec3 position) {
+        return new SimpleSoundInstance(
+                this.soundEvent.getLocation(),
                 this.category,
                 this.generate(this.minVolume, this.maxVolume),
                 this.generate(this.minPitch, this.maxPitch),
-                Random.create(),
+                RandomSource.create(),
                 this.isRepeatable,
                 this.repeatDelay,
                 this.attenuationType,
-                position.getX(),
-                position.getY(),
-                position.getZ(),
+                position.x(),
+                position.y(),
+                position.z(),
                 this.global);
     }
 
@@ -159,7 +156,7 @@ public final class SoundFactoryBuilder {
         return create(se);
     }
 
-    public static SoundFactoryBuilder create(Identifier soundEventId) {
+    public static SoundFactoryBuilder create(ResourceLocation soundEventId) {
         var se = ContainerManager.resolve(ISoundLibrary.class).getSound(soundEventId);
         return create(se);
     }
@@ -186,51 +183,51 @@ public final class SoundFactoryBuilder {
         }
 
         @Override
-        public PositionedSoundInstance createAsMood(Entity entity, int minRange, int maxRange) {
+        public SimpleSoundInstance createAsMood(Entity entity, int minRange, int maxRange) {
             var offset = MathStuff.randomPoint(minRange, maxRange);
-            var position = entity.getEyePos().add(offset);
+            var position = entity.getEyePosition().add(offset);
             return this.builder.createAtLocation(position);
         }
 
         @Override
-        public PositionedSoundInstance createAsAdditional() {
+        public SimpleSoundInstance createAsAdditional() {
             return this.builder.createAsAdditional();
         }
 
         @Override
-        public PositionedSoundInstance createAtLocation(BlockPos pos) {
-            return this.builder.createAtLocation(Vec3d.of(pos).add(BLOCK_CENTER_ADJUST));
+        public SimpleSoundInstance createAtLocation(BlockPos pos) {
+            return this.builder.createAtLocation(Vec3.atCenterOf(pos));
         }
 
         @Override
-        public EntityTrackingSoundInstance createAtEntity(Entity entity) {
+        public EntityBoundSoundInstance createAtEntity(Entity entity) {
             return this.builder.createAtEntity(entity);
         }
 
         @Override
-        public PositionedSoundInstance createAtLocation(Vec3d position) {
+        public SimpleSoundInstance createAtLocation(Vec3 position) {
             return this.builder.createAtLocation(position);
         }
 
         @Override
         public int hashCode() {
-            return this.builder.soundEvent.getId().hashCode();
+            return this.builder.soundEvent.getLocation().hashCode();
         }
 
         @Override
         public boolean equals(Object obj) {
-            return obj instanceof Factory f && this.builder.soundEvent.getId().equals(f.builder.soundEvent.getId());
+            return obj instanceof Factory f && this.builder.soundEvent.getLocation().equals(f.builder.soundEvent.getLocation());
         }
 
         @Override
         public int compareTo(@NotNull ISoundFactory o) {
-            return this.builder.soundEvent.getId().compareTo(o.getSoundEvent().getId());
+            return this.builder.soundEvent.getLocation().compareTo(o.getSoundEvent().getLocation());
         }
 
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                    .add("SoundEvent", this.builder.soundEvent.getId())
+                    .add("SoundEvent", this.builder.soundEvent.getLocation())
                     .toString();
         }
     }

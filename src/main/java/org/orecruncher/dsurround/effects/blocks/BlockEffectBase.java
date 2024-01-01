@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.effects.blocks;
 
 import net.minecraft.client.particle.Particle;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -19,19 +19,19 @@ public abstract class BlockEffectBase implements IBlockEffect {
     protected static final Random RANDOM = XorShiftRandom.current();
     protected static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
 
-    protected final World world;
+    protected final Level world;
     protected final double posX;
     protected final double posY;
     protected final double posZ;
     protected final BlockPos position;
     private boolean isAlive = true;
 
-    protected BlockEffectBase(final World worldIn, final double posXIn, final double posYIn, final double posZIn) {
+    protected BlockEffectBase(final Level worldIn, final double posXIn, final double posYIn, final double posZIn) {
         this.world = worldIn;
         this.posX = posXIn;
         this.posY = posYIn;
         this.posZ = posZIn;
-        this.position = BlockPos.ofFloored(posXIn, posYIn, posZIn);
+        this.position = BlockPos.containing(posXIn, posYIn, posZIn);
     }
 
     public BlockPos getPos() {
@@ -42,28 +42,24 @@ public abstract class BlockEffectBase implements IBlockEffect {
      * Adds a particle to the Minecraft particle system
      */
     public void addParticle(final Particle particle) {
-        GameUtils.getParticleManager().ifPresent(pm -> pm.addParticle(particle));
+        GameUtils.getParticleManager().add(particle);
     }
 
     /**
      * Adds a particle to the Minecraft particle system
      */
-    public void addParticle(ParticleEffect parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
-        GameUtils.getParticleManager().ifPresent(pm -> pm.addParticle(parameters, x, y, z, velocityX, velocityY, velocityZ));
+    public void addParticle(ParticleOptions parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
+        GameUtils.getParticleManager().createParticle(parameters, x, y, z, velocityX, velocityY, velocityZ);
     }
 
     /**
      * Creates a particle effect but does not queue.  Allows for the particle to be manipulated prior to handing
      * it to the particle manager.
      */
-    public <T extends ParticleEffect> Optional<Particle> createParticle(T parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
-        return GameUtils.getParticleManager().map(pm -> {
-            var t = (MixinParticleManager) pm;
-            return t.dsurround_createParticle(
-                parameters,
-                x, y, z,
-                velocityX, velocityY, velocityZ);
-        });
+    public <T extends ParticleOptions> Optional<Particle> createParticle(T parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
+        var pm = GameUtils.getParticleManager();
+        var t = (MixinParticleManager) pm;
+        return Optional.ofNullable(t.dsurround_createParticle(parameters, x, y, z, velocityX, velocityY, velocityZ));
     }
 
     public boolean isDone() {

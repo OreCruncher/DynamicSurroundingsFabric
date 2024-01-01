@@ -1,10 +1,10 @@
 package org.orecruncher.dsurround.effects.blocks;
 
 import net.minecraft.client.particle.FlameParticle;
-import net.minecraft.particle.DefaultParticleType;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.world.World;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.world.level.Level;
+import net.minecraft.sounds.SoundEvents;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.ISoundFactory;
@@ -13,16 +13,16 @@ import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 public class FlameJetEffect extends ParticleJetEffect {
 
     private static final ISoundFactory FIRE_AMBIENT = SoundFactoryBuilder
-            .create(SoundEvents.BLOCK_FIRE_AMBIENT)
+            .create(SoundEvents.FIRE_AMBIENT)
             .build();
 
     protected final boolean isLava;
-    protected final DefaultParticleType particleType;
+    protected final SimpleParticleType particleType;
     protected final IAudioPlayer audioPlayer;
     protected final boolean isSolid;
     protected boolean soundFired;
 
-    public FlameJetEffect(final int strength, final World world, final double x, final double y, final double z, boolean isSolid) {
+    public FlameJetEffect(final int strength, final Level world, final double x, final double y, final double z, boolean isSolid) {
         super(strength, world, x, y, z);
         this.isLava = !isSolid && RANDOM.nextInt(3) == 0;
         this.particleType = this.isLava ? ParticleTypes.LAVA : ParticleTypes.FLAME;

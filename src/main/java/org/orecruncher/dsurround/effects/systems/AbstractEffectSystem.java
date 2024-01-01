@@ -1,21 +1,16 @@
 package org.orecruncher.dsurround.effects.systems;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.particle.Particle;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IEffectSystem;
-import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.mixins.core.MixinParticleManager;
 
-import java.util.Optional;
 import java.util.function.Predicate;
 
 public abstract class AbstractEffectSystem implements IEffectSystem {
@@ -51,10 +46,10 @@ public abstract class AbstractEffectSystem implements IEffectSystem {
     }
 
     @Override
-    public abstract void blockScan(World world, BlockState state, BlockPos pos);
+    public abstract void blockScan(Level world, BlockState state, BlockPos pos);
 
     @Override
-    public void blockUnscan(World world, BlockState state, BlockPos pos) {
+    public void blockUnscan(Level world, BlockState state, BlockPos pos) {
         if (this.systems.isEmpty())
             return;
         var longPos = pos.asLong();
@@ -76,15 +71,5 @@ public abstract class AbstractEffectSystem implements IEffectSystem {
 
     protected void onRemoveSystem(long posLong) {
         this.systems.remove(posLong);
-    }
-
-    protected <T extends ParticleEffect> Optional<Particle> createParticle(T parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
-        return GameUtils.getParticleManager().map(pm -> {
-            var t = (MixinParticleManager) pm;
-            return t.dsurround_createParticle(
-                    parameters,
-                    x, y, z,
-                    velocityX, velocityY, velocityZ);
-        });
     }
 }

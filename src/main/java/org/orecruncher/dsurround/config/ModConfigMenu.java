@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.config;
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.config.ConfigOptions;
@@ -15,9 +15,9 @@ public class ModConfigMenu implements ModMenuApi {
         return parent -> {
             ConfigOptions options = new ConfigOptions()
                     .setTranslationRoot("dsurround.config")
-                    .setPropertyGroupStyle(Formatting.GOLD)
-                    .setPropertyValueStyle(Formatting.GRAY)
-                    .setTooltipStyle(Formatting.WHITE)
+                    .setPropertyGroupStyle(ChatFormatting.GOLD)
+                    .setPropertyValueStyle(ChatFormatting.GRAY)
+                    .setTooltipStyle(ChatFormatting.WHITE)
                     .setStripTitle(false);
 
             return new ClothAPIFactory(options, Client.Config).apply(GameUtils.getMC(), parent);

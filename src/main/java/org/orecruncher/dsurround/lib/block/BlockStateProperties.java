@@ -2,8 +2,8 @@ package org.orecruncher.dsurround.lib.block;
 
 import com.google.common.collect.ImmutableMap;
 import joptsimple.internal.Strings;
-import net.minecraft.block.BlockState;
-import net.minecraft.state.property.Property;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
@@ -27,7 +27,7 @@ public class BlockStateProperties {
     }
 
     public BlockStateProperties(final BlockState state) {
-        this(state.getEntries());
+        this(state.getValues());
     }
 
     public BlockStateProperties(final Map<Property<?>, Comparable<?>> props) {
@@ -44,7 +44,7 @@ public class BlockStateProperties {
     public boolean matches(final BlockState state) {
         try {
             for (final Map.Entry<Property<?>, Comparable<?>> kvp : this.props.entrySet()) {
-                final Comparable<?> comp = state.get(kvp.getKey());
+                final Comparable<?> comp = state.getValue(kvp.getKey());
                 if (!comp.equals(kvp.getValue()))
                     return false;
             }
@@ -88,7 +88,7 @@ public class BlockStateProperties {
             return true;
         } catch (final Throwable ignored) {
             // This is probable in that a property in this list does not exist in the target list.  Can happen if
-            // the two lists are for fuzzy matching against blockstate and the sets are disjoint.
+            // the two lists are for fuzzy matching against blockstate and the sets are disjointed.
         }
         return false;
     }

@@ -1,8 +1,8 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 
 public class ToolbarEffect extends EntityEffectBase {
@@ -17,14 +17,14 @@ public class ToolbarEffect extends EntityEffectBase {
 
     @Override
     public void tick(final EntityEffectInfo info) {
-        final PlayerEntity player = (PlayerEntity) info.getEntity().get();
+        final LocalPlayer player = (LocalPlayer) info.getEntity().get();
         var inventory = player.getInventory();
 
         // First time through we want to not trigger the equip sound
         if (this.lastSlot == -1) {
-            this.lastSlot = inventory.selectedSlot;
-        } else if (this.lastSlot != inventory.selectedSlot) {
-            final ItemStack currentStack = inventory.getStack(inventory.selectedSlot);
+            this.lastSlot = inventory.selected;
+        } else if (this.lastSlot != inventory.selected) {
+            final ItemStack currentStack = inventory.getItem(inventory.selected);
             if (!currentStack.isEmpty() & !player.isSpectator()) {
                 this.itemLibrary.getItemEquipSound(currentStack).ifPresent(factory -> {
                     SoundInstance instance;
@@ -35,7 +35,7 @@ public class ToolbarEffect extends EntityEffectBase {
                     this.playSound(instance);
                 });
             }
-            this.lastSlot = inventory.selectedSlot;
+            this.lastSlot = inventory.selected;
         }
     }
 }

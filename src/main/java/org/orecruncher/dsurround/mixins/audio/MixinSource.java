@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.mixins.audio;
 
-import net.minecraft.client.sound.Source;
-import net.minecraft.client.sound.StaticSound;
+import com.mojang.blaze3d.audio.Channel;
+import com.mojang.blaze3d.audio.SoundBuffer;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.orecruncher.dsurround.runtime.audio.SoundFXProcessor;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Optional;
 
-@Mixin(Source.class)
+@Mixin(Channel.class)
 public class MixinSource implements ISourceContext {
 
     @Unique
@@ -25,11 +25,11 @@ public class MixinSource implements ISourceContext {
 
     @Shadow
     @Final
-    private int pointer;
+    private int source;
 
     @Override
     public int dsurround_getId() {
-        return this.pointer;
+        return this.source;
     }
 
     @Override
@@ -50,9 +50,9 @@ public class MixinSource implements ISourceContext {
     @Inject(method = "play()V", at = @At("HEAD"))
     public void dsurround_onSourcePlay(CallbackInfo ci) {
         try {
-            SoundFXProcessor.onSourcePlay((Source) ((Object) this));
+            SoundFXProcessor.onSourcePlay((Channel) ((Object) this));
         } catch(final Throwable t) {
-            MixinHelpers.LOGGER.error(t, "Error in dsurround_onPlay()!");
+            MixinHelpers.LOGGER.error(t, "Error in dsurround_onSourcePlay()!");
         }
     }
 
@@ -61,12 +61,12 @@ public class MixinSource implements ISourceContext {
      * at the time of tick.
      * @param ci Ignored
      */
-    @Inject(method = "tick()V", at = @At("HEAD"))
+    @Inject(method = "updateStream()V", at = @At("HEAD"))
     public void dsurround_onSourceTick(CallbackInfo ci) {
         try {
-            SoundFXProcessor.tick((Source) ((Object) this));
+            SoundFXProcessor.tick((Channel) ((Object) this));
         } catch(final Throwable t) {
-            MixinHelpers.LOGGER.error(t, "Error in dsurround_onTick()!");
+            MixinHelpers.LOGGER.error(t, "Error in dsurround_onSourceTick()!");
         }
     }
 
@@ -77,9 +77,9 @@ public class MixinSource implements ISourceContext {
     @Inject(method = "stop()V", at = @At("HEAD"))
     public void dsurround_onSourceStop(CallbackInfo ci) {
         try {
-            SoundFXProcessor.stopSoundPlay((Source) ((Object) this));
+            SoundFXProcessor.stopSoundPlay((Channel) ((Object) this));
         } catch(final Throwable t) {
-            MixinHelpers.LOGGER.error(t, "Error in dsurround_onStop()!");
+            MixinHelpers.LOGGER.error(t, "Error in dsurround_onSourceStop()!");
         }
     }
 
@@ -90,11 +90,11 @@ public class MixinSource implements ISourceContext {
      * @param soundBuffer Buffer to convert to mono if needed.
      * @param ci Call will always be cancelled.
      */
-    @Inject(method = "setBuffer(Lnet/minecraft/client/sound/StaticSound;)V", at = @At("HEAD"))
-    public void dsurround_monoConversion(StaticSound soundBuffer, CallbackInfo ci) {
+    @Inject(method = "attachStaticBuffer(Lcom/mojang/blaze3d/audio/SoundBuffer;)V", at = @At("HEAD"))
+    public void dsurround_monoConversion(SoundBuffer soundBuffer, CallbackInfo ci) {
         try {
             // The buffer is modified in place, meaning that it is not reallocated.
-            var src = (Source) ((Object) this);
+            var src = (Channel) ((Object) this);
             SoundFXProcessor.doMonoConversion(src, soundBuffer);
         } catch(final Throwable t) {
             MixinHelpers.LOGGER.error(t, "Error in dsurround_monoConversion()!");

@@ -1,11 +1,11 @@
 package org.orecruncher.dsurround.effects.blocks;
 
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.world.World;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.level.Level;
 
 public class BubbleJetEffect extends ParticleJetEffect {
 
-    public BubbleJetEffect(final int strength, final World world, final double x, final double y, final double z) {
+    public BubbleJetEffect(final int strength, final Level world, final double x, final double y, final double z) {
         super(strength, world, x, y, z);
     }
 

@@ -1,14 +1,12 @@
 package org.orecruncher.dsurround.processing;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.scanner.CuboidPointIterator;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -48,7 +46,7 @@ public class Handlers {
         init();
     }
 
-    protected static PlayerEntity getPlayer() {
+    protected static Player getPlayer() {
         return GameUtils.getPlayer().orElseThrow();
     }
 
@@ -78,7 +76,7 @@ public class Handlers {
         ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::gatherDiagnostics, HandlerPriority.HIGH);
     }
 
-    private void onConnect(MinecraftClient client) {
+    private void onConnect(Minecraft client) {
         try {
             this.tasking.execute(() -> {
                 this.logger.info("Client connecting...");
@@ -95,7 +93,7 @@ public class Handlers {
         }
     }
 
-    private void onDisconnect(MinecraftClient client) {
+    private void onDisconnect(Minecraft client) {
         try {
             this.tasking.execute(() -> {
                 this.logger.info("Client disconnecting...");
@@ -117,11 +115,11 @@ public class Handlers {
 
     protected boolean isPlayerChunkLoaded() {
         var player = GameUtils.getPlayer().orElseThrow();
-        var pos = player.getBlockPos();
-        return WorldUtils.isChunkLoaded(player.getEntityWorld(), pos);
+        var pos = player.blockPosition();
+        return WorldUtils.isChunkLoaded(player.level(), pos);
     }
 
-    public void tick(MinecraftClient client) {
+    public void tick(Minecraft client) {
         if (!this.startupSoundPlayed)
             handleStartupSound();
 

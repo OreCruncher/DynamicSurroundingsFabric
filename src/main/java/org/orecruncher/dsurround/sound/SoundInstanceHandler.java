@@ -1,11 +1,11 @@
 package org.orecruncher.dsurround.sound;
 
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
@@ -28,28 +28,28 @@ public final class SoundInstanceHandler {
     private static final Configuration.SoundSystem SOUND_SYSTEM_CONFIG = ContainerManager.resolve(Configuration.SoundSystem.class);
     private static final Configuration.ThunderStorms THUNDERSTORM_CONFIG = ContainerManager.resolve(Configuration.ThunderStorms.class);
 
-    private static final Object2LongOpenHashMap<Identifier> soundCull = new Object2LongOpenHashMap<>(32);
-    private static final Set<Identifier> thunderSounds = new HashSet<>();
+    private static final Object2LongOpenHashMap<ResourceLocation> soundCull = new Object2LongOpenHashMap<>(32);
+    private static final Set<ResourceLocation> thunderSounds = new HashSet<>();
     private static final ISoundFactory THUNDER_SOUND;
 
     static {
-        thunderSounds.add(SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER.getId());
+        thunderSounds.add(SoundEvents.LIGHTNING_BOLT_THUNDER.getLocation());
 
-        THUNDER_SOUND = SoundFactoryBuilder.create(new Identifier(Constants.MOD_ID, "thunder"))
-                .category(SoundCategory.WEATHER)
+        THUNDER_SOUND = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "thunder"))
+                .category(SoundSource.WEATHER)
                 .volume(10000)
                 .build();
     }
 
-    private static boolean isSoundBlocked(final Identifier id) {
+    private static boolean isSoundBlocked(final ResourceLocation id) {
         return soundLibrary.isBlocked(id);
     }
 
-    private static boolean isSoundCulled(final Identifier id) {
+    private static boolean isSoundCulled(final ResourceLocation id) {
         return soundLibrary.isCulled(id);
     }
 
-    private static boolean isSoundCulledLogical(final Identifier sound) {
+    private static boolean isSoundCulledLogical(final ResourceLocation sound) {
         int cullInterval = SOUND_SYSTEM_CONFIG.cullInterval;
         if (cullInterval > 0 && isSoundCulled(sound)) {
             final long lastOccurrence = soundCull.getLong(Objects.requireNonNull(sound));
@@ -78,12 +78,12 @@ public final class SoundInstanceHandler {
         if (theSound instanceof ConfigSoundInstance)
             return false;
 
-        final Identifier id = theSound.getId();
+        final ResourceLocation id = theSound.getLocation();
 
         if (THUNDERSTORM_CONFIG.replaceThunderSounds && thunderSounds.contains(id)) {
             // Yeah - a bit reentrant but it should be good
             var sound = THUNDER_SOUND.createAtLocation(
-                    new Vec3d(theSound.getX(), theSound.getY(), theSound.getZ()));
+                    new Vec3(theSound.getX(), theSound.getY(), theSound.getZ()));
             audioPlayer.play(sound);
             return true;
         }
@@ -99,12 +99,12 @@ public final class SoundInstanceHandler {
      * @param pad      Additional distance to add when evaluating
      * @return true if the sound is within the attenuation distance; false otherwise
      */
-    public static boolean inRange(final Vec3d listener, final SoundInstance sound, final int pad) {
+    public static boolean inRange(final Vec3 listener, final SoundInstance sound, final int pad) {
         // Do not cancel if:
         // - The sound is global. Distance is not a factor.
         // - It is repeatable.  Player can move into range.
         // - Weather related (thunder, lightning strike)
-        if (sound.isRelative() || sound.getAttenuationType() == SoundInstance.AttenuationType.NONE || sound.isRepeatable() || sound.getCategory() == SoundCategory.WEATHER)
+        if (sound.isRelative() || sound.getAttenuation() == SoundInstance.Attenuation.NONE || sound.isLooping() || sound.getSource() == SoundSource.WEATHER)
             return true;
 
         // If it is a loud sound, let it through
@@ -113,12 +113,12 @@ public final class SoundInstanceHandler {
 
         // Get the max distance of the sound range.  Pad is added because a player may move into hearing
         // range before the sound terminates.
-        int distSq = sound.getSound().getAttenuation() + pad;
+        int distSq = sound.getSound().getAttenuationDistance() + pad;
         distSq *= distSq;
-        return listener.squaredDistanceTo(sound.getX(), sound.getY(), sound.getZ()) < distSq;
+        return listener.distanceToSqr(sound.getX(), sound.getY(), sound.getZ()) < distSq;
     }
 
-    public static boolean inRange(final Vec3d listener, final SoundInstance sound) {
+    public static boolean inRange(final Vec3 listener, final SoundInstance sound) {
         return inRange(listener, sound, 0);
     }
 }

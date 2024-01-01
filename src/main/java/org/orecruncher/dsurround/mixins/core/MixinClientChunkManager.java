@@ -1,12 +1,12 @@
 package org.orecruncher.dsurround.mixins.core;
 
-import net.minecraft.client.world.ClientChunkManager;
+import net.minecraft.client.multiplayer.ClientChunkCache;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(ClientChunkManager.class)
+@Mixin(ClientChunkCache.class)
 public interface MixinClientChunkManager {
 
-    @Accessor("chunks")
-    ClientChunkManager.ClientChunkMap dsurround_getClientChunkMap();
+    @Accessor("storage")
+    ClientChunkCache.Storage dsurround_getClientChunkMap();
 }

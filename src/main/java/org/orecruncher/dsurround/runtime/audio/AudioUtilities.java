@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.runtime.audio;
 
-import net.minecraft.client.sound.SoundEngine;
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.client.sound.SoundListener;
-import net.minecraft.client.sound.SoundSystem;
+import com.mojang.blaze3d.audio.Listener;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.sounds.SoundEngine;
+import net.minecraft.client.sounds.SoundManager;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.*;
@@ -55,13 +55,13 @@ public final class AudioUtilities {
         return MAX_SOUNDS;
     }
 
-    public static SoundSystem getSoundSystem() {
-        var soundManager = GameUtils.getSoundManager().orElseThrow();
+    public static SoundEngine getSoundSystem() {
+        var soundManager = GameUtils.getSoundManager();
         MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) soundManager;
         return manager.dsurround_getSoundSystem();
     }
 
-    public static SoundListener getSoundListener() {
+    public static Listener getSoundListener() {
         return ((MixinSoundSystemAccessors)getSoundSystem()).dsurround_getListener();
     }
 
@@ -84,30 +84,24 @@ public final class AudioUtilities {
 
             MixinAbstractSoundInstance accessor = (MixinAbstractSoundInstance) sound;
             sb.append(sound.getClass().getSimpleName()).append("{");
-            sb.append(sound.getId());
-            sb.append(", ").append(sound.getCategory().getName());
-            sb.append(", ").append(sound.getAttenuationType().toString());
+            sb.append(sound.getLocation());
+            sb.append(", ").append(sound.getSource().getName());
+            sb.append(", ").append(sound.getAttenuation().toString());
             sb.append(String.format(", (%.2f,%.2f,%.2f)", sound.getX(), sound.getY(), sound.getZ()));
 
             // Depending on call context the sound property may be null
-            if (sound.getSound() != null) {
-                sb.append(String.format(", v: %.4f(%.4f)", sound.getVolume(), accessor.dsurround_getRawVolume()));
-                sb.append(String.format(", p: %.4f(%.4f)", sound.getPitch(), accessor.dsurround_getRawPitch()));
-                sb.append(", s: ").append(sound.getSound().isStreamed());
-            } else {
-                sb.append(String.format(", vr: %.4f", accessor.dsurround_getRawVolume()));
-                sb.append(String.format(", pr: %.4f", accessor.dsurround_getRawPitch()));
-            }
+            sb.append(String.format(", v: %.4f(%.4f)", sound.getVolume(), accessor.dsurround_getRawVolume()));
+            sb.append(String.format(", p: %.4f(%.4f)", sound.getPitch(), accessor.dsurround_getRawPitch()));
+            sb.append(", s: ").append(sound.getSound().shouldStream());
 
             sb.append(", g: ").append(sound.isRelative());
             sb.append("}");
 
             if (!sound.isRelative()) {
                 var listener = getSoundListener();
-                var distance = Math.sqrt(listener.getTransform().position().squaredDistanceTo(sound.getX(), sound.getY(), sound.getZ()));
+                var distance = Math.sqrt(listener.getTransform().position().distanceToSqr(sound.getX(), sound.getY(), sound.getZ()));
                 sb.append(String.format(", distance: %.1f", distance));
-                if (sound.getSound() != null)
-                    sb.append(" (").append(sound.getSound().getAttenuation()).append(")");
+                sb.append(" (").append(sound.getSound().getAttenuationDistance()).append(")");
             }
 
             return sb.toString();
@@ -123,7 +117,7 @@ public final class AudioUtilities {
      *
      * @param soundEngine The sound system instance being initialized
      */
-    public static void initialize(final SoundEngine soundEngine) {
+    public static void initialize(final SoundManager soundEngine) {
 
         try {
 
@@ -163,7 +157,7 @@ public final class AudioUtilities {
         return advancedProcessingEnabled.get();
     }
 
-    public static void deinitialize(final SoundEngine ignore) {
+    public static void deinitialize(final SoundManager ignore) {
         if (doEnhancedSounds())
             SoundFXProcessor.deinitialize();
     }

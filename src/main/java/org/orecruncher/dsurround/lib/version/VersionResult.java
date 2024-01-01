@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.lib.version;
 
-import net.minecraft.client.resource.language.I18n;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.lib.Localization;
 
 public class VersionResult {
@@ -17,16 +16,16 @@ public class VersionResult {
         this.downloadLocationModrinth = downloadLocationModrinth;
     }
 
-    public Text getChatText() {
-        var formattedText = I18n.translate(
+    public Component getChatText() {
+        var formattedText = Component.translatableEscape(
                 "dsurround.text.NewVersion",
                 this.displayName,
                 this.version,
                 Localization.load("dsurround.text.NewVersion.curseforge"),
                 this.downloadLocation,
                 Localization.load("dsurround.text.NewVersion.modrinth"),
-                this.downloadLocationModrinth);
+                this.downloadLocationModrinth).toString();
 
-        return Text.Serialization.fromJson(formattedText);
+        return Component.Serializer.fromJson(formattedText);
     }
 }

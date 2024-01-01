@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.gui.hud.plugins;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.gui.hud.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.Library;
@@ -26,16 +26,16 @@ public class ClientProfilerPlugin implements IDiagnosticPlugin {
         eventRegistrations.registerClientTickEnd(this::tickEnd);
     }
 
-    private void tickStart(MinecraftClient client) {
+    private void tickStart(Minecraft client) {
         this.timeMark = System.nanoTime();
         if (this.lastTickMark != -1) {
             this.lastTick.update(this.timeMark - this.lastTickMark);
-            this.tps = MathHelper.clamp((float) (50F / this.lastTick.getMSecs() * 20F), 0F, 20F);
+            this.tps = Mth.clamp((float) (50F / this.lastTick.getMSecs() * 20F), 0F, 20F);
         }
         this.lastTickMark = this.timeMark;
     }
 
-    private void tickEnd(MinecraftClient client) {
+    private void tickEnd(Minecraft client) {
         final long delta = System.nanoTime() - this.timeMark;
         this.clientTick.update(delta);
     }

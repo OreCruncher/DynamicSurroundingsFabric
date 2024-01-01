@@ -61,7 +61,7 @@ public final class BiomeSoundEmitter {
     }
 
     public boolean isDonePlaying() {
-        return this.done || this.acousticSource.isDone();
+        return this.done || this.acousticSource.isStopped();
     }
 
     public void stop() {

@@ -1,11 +1,11 @@
 package org.orecruncher.dsurround.gui.sound;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.gui.widget.EntryListWidget;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractSelectionList;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
@@ -17,7 +17,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class IndividualSoundControlList extends EntryListWidget<IndividualSoundControlListEntry> {
+public class IndividualSoundControlList extends AbstractSelectionList<IndividualSoundControlListEntry> {
 
     private final Screen parent;
     private final boolean enablePlay;
@@ -26,7 +26,7 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
     private List<IndividualSoundConfigEntry> source;
     private String lastSearchText = null;
 
-    public IndividualSoundControlList(final Screen parent, final MinecraftClient mcIn, int widthIn, int heightIn, int topIn, int slotWidth, int slotHeightIn, boolean enablePlay, final Supplier<String> filter, @Nullable final IndividualSoundControlList oldList) {
+    public IndividualSoundControlList(final Screen parent, final Minecraft mcIn, int widthIn, int heightIn, int topIn, int slotWidth, int slotHeightIn, boolean enablePlay, final Supplier<String> filter, @Nullable final IndividualSoundControlList oldList) {
         super(mcIn, widthIn, heightIn, topIn, slotHeightIn);
 
         this.soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
@@ -51,7 +51,7 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
     }
 
     @Override
-    protected int getScrollbarPositionX() {
+    protected int getScrollbarPosition() {
         return (this.parent.width + this.getRowWidth()) / 2 + 20;
     }
 
@@ -116,13 +116,13 @@ public class IndividualSoundControlList extends EntryListWidget<IndividualSoundC
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
+    protected void updateWidgetNarration(NarrationElementOutput builder) {
         // Narrate my shiny metal...
     }
 
     protected Collection<IndividualSoundConfigEntry> getSortedSoundConfigurations() {
 
-        final Map<Identifier, IndividualSoundConfigEntry> map = new HashMap<>();
+        final Map<ResourceLocation, IndividualSoundConfigEntry> map = new HashMap<>();
 
         // Get a list of all registered sounds.  We don't use the vanilla registries since
         // we will have more sounds than are registered.

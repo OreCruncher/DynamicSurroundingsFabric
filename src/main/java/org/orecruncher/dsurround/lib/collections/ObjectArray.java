@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.lib.collections;
 
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,7 +36,7 @@ public class ObjectArray<T> implements Collection<T> {
     }
 
     private void resize() {
-        final int newSize = MathHelper.smallestEncompassingPowerOfTwo(Math.max(this.data.length * 2, DEFAULT_SIZE));
+        final int newSize = Mth.smallestEncompassingPowerOfTwo(Math.max(this.data.length * 2, DEFAULT_SIZE));
         final Object[] t = new Object[newSize];
         if (this.data.length > 0)
             System.arraycopy(this.data, 0, t, 0, this.data.length);

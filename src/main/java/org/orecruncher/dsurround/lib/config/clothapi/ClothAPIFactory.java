@@ -6,9 +6,9 @@ import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.impl.builders.FieldBuilder;
 import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigElement;
@@ -18,20 +18,20 @@ import org.orecruncher.dsurround.lib.random.XorShiftRandom;
 
 import java.util.function.BiFunction;
 
-public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Screen> {
+public class ClothAPIFactory implements BiFunction<Minecraft, Screen, Screen> {
 
-    private static final Identifier[] BACKGROUNDS = {
-            new Identifier("minecraft:textures/block/cobblestone.png"),
-            new Identifier("minecraft:textures/block/bedrock.png"),
-            new Identifier("minecraft:textures/block/bricks.png"),
-            new Identifier("minecraft:textures/block/sandstone.png"),
-            new Identifier("minecraft:textures/block/stone.png"),
-            new Identifier("minecraft:textures/block/oak_planks.png"),
-            new Identifier("minecraft:textures/block/gilded_blackstone.png"),
-            new Identifier("minecraft:textures/block/dirt.png")
+    private static final ResourceLocation[] BACKGROUNDS = {
+            new ResourceLocation("minecraft:textures/block/cobblestone.png"),
+            new ResourceLocation("minecraft:textures/block/bedrock.png"),
+            new ResourceLocation("minecraft:textures/block/bricks.png"),
+            new ResourceLocation("minecraft:textures/block/sandstone.png"),
+            new ResourceLocation("minecraft:textures/block/stone.png"),
+            new ResourceLocation("minecraft:textures/block/oak_planks.png"),
+            new ResourceLocation("minecraft:textures/block/gilded_blackstone.png"),
+            new ResourceLocation("minecraft:textures/block/dirt.png")
     };
 
-    private final Identifier background;
+    private final ResourceLocation background;
     private final ConfigOptions options;
     private final ConfigurationData configData;
 
@@ -39,7 +39,7 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
         this(options, config, null);
     }
 
-    public ClothAPIFactory(ConfigOptions options, final ConfigurationData config, @Nullable final Identifier background) {
+    public ClothAPIFactory(ConfigOptions options, final ConfigurationData config, @Nullable final ResourceLocation background) {
         this.options = options;
         this.configData = config;
 
@@ -52,7 +52,7 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
     }
 
     @Override
-    public Screen apply(final MinecraftClient MinecraftClient, final Screen screen) {
+    public Screen apply(final Minecraft MinecraftClient, final Screen screen) {
         ConfigBuilder builder = ConfigBuilder.create()
                 .setParentScreen(screen)
                 .setTitle(this.options.transformTitle())

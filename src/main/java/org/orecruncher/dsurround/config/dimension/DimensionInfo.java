@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.config.dimension;
 
-import net.minecraft.util.Identifier;
-import net.minecraft.world.World;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.data.DimensionConfigRule;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
@@ -11,8 +11,8 @@ public class DimensionInfo {
     public static final DimensionInfo NONE = new DimensionInfo();
     private static final int SPACE_HEIGHT_OFFSET = 32;
     protected final boolean isFlatWorld;
-    // Attributes about the dimension. This is information is loaded from local configs.
-    protected Identifier name;
+    // Attributes about the dimension. This information is loaded from local configs.
+    protected ResourceLocation name;
     protected int seaLevel;
     protected int skyHeight;
     protected int cloudHeight;
@@ -21,13 +21,13 @@ public class DimensionInfo {
     protected boolean playBiomeSounds = true;
 
     DimensionInfo() {
-        this.name = new Identifier(Constants.MOD_ID, "no_dimension");
+        this.name = new ResourceLocation(Constants.MOD_ID, "no_dimension");
         this.isFlatWorld = false;
     }
 
-    public DimensionInfo(final World world) {
+    public DimensionInfo(final Level world) {
         // Attributes that come from the world object itself. Set now because the config may override.
-        this.name = world.getRegistryKey().getValue();
+        this.name = world.dimension().location();
         this.seaLevel = world.getSeaLevel();
         this.skyHeight = world.getHeight();
         this.cloudHeight = this.skyHeight;
@@ -53,7 +53,7 @@ public class DimensionInfo {
         }
     }
 
-    public Identifier getName() {
+    public ResourceLocation getName() {
         return this.name;
     }
 

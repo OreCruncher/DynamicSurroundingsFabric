@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.effects;
 
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.sound.SoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -42,7 +42,7 @@ public interface IEntityEffect {
      * Helper method to add a particle to the particle system
      */
     default void addParticle(Particle particle) {
-        GameUtils.getParticleManager().ifPresent(pm -> pm.addParticle(particle));
+        GameUtils.getParticleManager().add(particle);
     }
 
 }

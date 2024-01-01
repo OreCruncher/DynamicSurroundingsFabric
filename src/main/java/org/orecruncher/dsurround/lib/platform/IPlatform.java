@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.lib.platform;
 
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.KeyMapping;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.version.SemanticVersion;
 
@@ -60,5 +60,5 @@ public interface IPlatform {
      */
     Set<Path> getResourcePaths(String pathPrefix);
 
-    KeyBinding registerKeyBinding(String translationKey, int code, String category);
+    KeyMapping registerKeyBinding(String translationKey, int code, String category);
 }

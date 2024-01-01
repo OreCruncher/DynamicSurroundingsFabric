@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.lib.resources;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -25,26 +25,26 @@ public final class ResourceUtils {
      * @return A collection of resource accessors that match the config criteria
      */
     public static Collection<IResourceAccessor> findConfigs(final File diskPath, final String config) {
-        Map<Identifier, IResourceAccessor> accessorMap = new HashMap<>();
+        Map<ResourceLocation, IResourceAccessor> accessorMap = new HashMap<>();
         collectFromResourcePacks(accessorMap, config);
         collectFromDisk(accessorMap, diskPath, config);
         return new ArrayList<>(accessorMap.values());
     }
 
-    private static void collectFromResourcePacks(final Map<Identifier, IResourceAccessor> accessorMap, final String config) {
+    private static void collectFromResourcePacks(final Map<ResourceLocation, IResourceAccessor> accessorMap, final String config) {
         var results = findAssets(
                 PLATFORM::isModLoaded,
-                ns -> new Identifier(ns, String.format("dsconfigs/%s", config)));
+                ns -> new ResourceLocation(ns, String.format("dsconfigs/%s", config)));
         for (var e : results) {
             accessorMap.put(e.location(), e);
         }
     }
 
-    private static void collectFromDisk(final Map<Identifier, IResourceAccessor> accessorMap, File diskPath, final String config) {
+    private static void collectFromDisk(final Map<ResourceLocation, IResourceAccessor> accessorMap, File diskPath, final String config) {
         // Gather loaded mods.  We focus on those from within the JAR
         var loadedMods = PLATFORM.getModIdList(true);
         for (var mod : loadedMods) {
-            Identifier location = new Identifier(mod, config);
+            ResourceLocation location = new ResourceLocation(mod, config);
             IResourceAccessor accessor = IResourceAccessor.createExternalResource(diskPath, location);
             if (accessor.exists())
                 accessorMap.put(location, accessor);
@@ -59,25 +59,25 @@ public final class ResourceUtils {
     public static Collection<IResourceAccessor> findSounds(String configId) {
         return findAssets(
                 ns -> true,
-                ns -> new Identifier(ns, configId));
+                ns -> new ResourceLocation(ns, configId));
     }
 
     // Modeled after sound list processing in SoundManager
-    private static Collection<IResourceAccessor> findAssets(Function<String, Boolean> namespaceFilter, Function<String, Identifier> identitySupplier) {
+    private static Collection<IResourceAccessor> findAssets(Function<String, Boolean> namespaceFilter, Function<String, ResourceLocation> identitySupplier) {
         final List<IResourceAccessor> results = new ArrayList<>();
-        var resourceManager = GameUtils.getResourceManager().orElseThrow();
+        var resourceManager = GameUtils.getResourceManager();
 
-        for (var namespace : resourceManager.getAllNamespaces()) {
+        for (var namespace : resourceManager.getNamespaces()) {
             try {
                 if (!namespaceFilter.apply(namespace))
                     continue;
 
                 var location = identitySupplier.apply(namespace);
-                var resourceList = resourceManager.getAllResources(location);
+                var resourceList = resourceManager.getResourceStack(location);
 
                 try {
                     for (var resource : resourceList) {
-                        try (InputStream inputStream = resource.getInputStream()) {
+                        try (InputStream inputStream = resource.open()) {
                             byte[] asset = inputStream.readAllBytes();
                             IResourceAccessor accessor = IResourceAccessor.createRawBytes(location, asset);
                             results.add(accessor);

@@ -29,7 +29,7 @@ public final class ClientTasking implements IClientTasking {
     @Nullable
     public <T> T execute(Callable<T> supplier) throws ExecutionException, InterruptedException, TimeoutException {
         var future = new FutureTask<>(supplier);
-        GameUtils.getMC().submitAndJoin(future);
+        GameUtils.getMC().executeBlocking(future);
         return future.get(TIMEOUT, TIME_UNIT);
     }
 
@@ -45,7 +45,7 @@ public final class ClientTasking implements IClientTasking {
             runnable.run();
             return null;
         });
-        GameUtils.getMC().submitAndJoin(future);
+        GameUtils.getMC().execute(future);
         future.get(TIMEOUT, TIME_UNIT);
     }
 }

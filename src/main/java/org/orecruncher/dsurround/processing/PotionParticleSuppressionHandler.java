@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.processing;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.potion.PotionUtil;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.alchemy.PotionUtils;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -18,7 +18,7 @@ public class PotionParticleSuppressionHandler extends AbstractClientHandler {
     }
 
     @Override
-    public void process(final PlayerEntity player) {
+    public void process(final Player player) {
         if (GameUtils.isInGame()) {
             int color = getPotionParticleColor(player);
 
@@ -45,18 +45,18 @@ public class PotionParticleSuppressionHandler extends AbstractClientHandler {
         }
     }
 
-    private static int getPotionParticleColor(PlayerEntity player) {
+    private static int getPotionParticleColor(Player player) {
         var accessor = (ILivingEntityExtended)player;
         return accessor.dsurround_getPotionSwirlColor();
     }
 
-    private static void suppressPotionParticles(PlayerEntity player) {
+    private static void suppressPotionParticles(Player player) {
         var accessor = (ILivingEntityExtended)player;
         accessor.dsurround_setPotionSwirlColor(HIDE_PARTICLE_SENTINEL);
     }
 
-    private static void unsuppressPotionParticles(PlayerEntity player) {
+    private static void unsuppressPotionParticles(Player player) {
         var accessor = (ILivingEntityExtended)player;
-        accessor.dsurround_setPotionSwirlColor(PotionUtil.getColor(player.getStatusEffects()));
+        accessor.dsurround_setPotionSwirlColor(PotionUtils.getColor(player.getActiveEffects()));
     }
 }

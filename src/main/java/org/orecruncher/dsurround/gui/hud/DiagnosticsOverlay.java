@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.gui.hud;
 
 import com.google.common.base.Strings;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
@@ -47,7 +47,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     }
 
     @Override
-    public void tick(MinecraftClient client) {
+    public void tick(Minecraft client) {
         // Only want to rendered if configured to do so and when the regular
         // diagnostic menu is not showing
         this.showHud = this.enableCollection && !this.isDebugHudEnabled();
@@ -67,7 +67,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
             this.right = new ObjectArray<>(event.right.size() + event.timers.size() + 1);
 
             for (var timer : event.timers)
-                this.right.add(Formatting.LIGHT_PURPLE + timer.toString());
+                this.right.add(ChatFormatting.LIGHT_PURPLE + timer.toString());
 
             this.right.add(joptsimple.internal.Strings.EMPTY);
             this.right.addAll(event.right);
@@ -77,7 +77,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     }
 
     @Override
-    public void render(DrawContext context) {
+    public void render(GuiGraphics context) {
         if (this.showHud) {
             this.drawText(context, this.left, true);
             this.drawText(context, this.right, false);
@@ -85,32 +85,32 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     }
 
     private boolean isDebugHudEnabled() {
-        return GameUtils.isInGame() && GameUtils.getMC().getDebugHud().shouldShowDebugHud();
+        return GameUtils.isInGame() && GameUtils.getMC().getDebugOverlay().showDebugScreen();
     }
 
-    private void drawText(DrawContext context, ObjectArray<String> text, boolean left) {
-        var textRenderer = GameUtils.getTextRenderer().orElseThrow();
+    private void drawText(GuiGraphics context, ObjectArray<String> text, boolean left) {
+        var textRenderer = GameUtils.getTextRenderer();
         int m;
         int l;
         int k;
         String string;
         int j;
-        int i = textRenderer.fontHeight;
+        int i = textRenderer.lineHeight;
         for (j = 0; j < text.size(); ++j) {
             string = text.get(j);
             if (Strings.isNullOrEmpty(string)) continue;
-            k = textRenderer.getWidth(string);
-            l = left ? 2 : context.getScaledWindowWidth() - 2 - k;
+            k = textRenderer.width(string);
+            l = left ? 2 : context.guiWidth() - 2 - k;
             m = 2 + i * j;
             context.fill(l - 1, m - 1, l + k + 1, m + i - 1, backgroundColor);
         }
         for (j = 0; j < text.size(); ++j) {
             string = text.get(j);
             if (Strings.isNullOrEmpty(string)) continue;
-            k = textRenderer.getWidth(string);
-            l = left ? 2 : context.getScaledWindowWidth() - 2 - k;
+            k = textRenderer.width(string);
+            l = left ? 2 : context.guiWidth() - 2 - k;
             m = 2 + i * j;
-            context.drawText(textRenderer, string, l, m, foregroundColor, false);
+            context.drawString(textRenderer, string, l, m, foregroundColor, false);
         }
     }
 }

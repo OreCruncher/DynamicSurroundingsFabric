@@ -26,6 +26,6 @@ public class FabricMod extends Client implements ClientModInitializer {
         this.initializeClient();
 
         // Fabric specific registrations
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> Commands.register(dispatcher));
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> Commands.register(dispatcher, registryAccess));
     }
 }

@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.runtime.sets;
 
-import net.minecraft.world.biome.Biome;
+import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
@@ -15,8 +15,8 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
     private final IBiomeLibrary biomeLibrary;
 
     private final Lazy<String> precipitationType = new Lazy<>(() -> {
-        var pos = GameUtils.getPlayer().orElseThrow().getBlockPos();
-        return this.biome.getPrecipitation(pos).asString();
+        var pos = GameUtils.getPlayer().orElseThrow().getOnPos();
+        return this.biome.getPrecipitationAt(pos).name();
     });
     private final Lazy<String> id = new Lazy<>(() -> this.info.getBiomeId().toString());
 
@@ -38,7 +38,7 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
         Biome newBiome = null;
         if (GameUtils.isInGame()) {
             var player = GameUtils.getPlayer().orElseThrow();
-            newBiome = player.getEntityWorld().getBiome(player.getBlockPos()).value();
+            newBiome = player.level().getBiome(player.getOnPos()).value();
         }
         setBiome(newBiome, variableAccess);
     }
@@ -90,7 +90,7 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
 
     @Override
     public float getTemperature() {
-        return this.biome.getTemperature();
+        return this.biome.getBaseTemperature();
     }
 
     @Override

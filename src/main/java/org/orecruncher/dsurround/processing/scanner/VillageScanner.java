@@ -1,10 +1,9 @@
 package org.orecruncher.dsurround.processing.scanner;
 
-import net.minecraft.block.entity.BellBlockEntity;
-import net.minecraft.entity.passive.VillagerEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.Box;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.entity.BellBlockEntity;
+import net.minecraft.world.phys.AABB;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 
@@ -21,19 +20,19 @@ public class VillageScanner {
             return;
 
         this.isInVillage = false;
-        World world = GameUtils.getWorld().orElseThrow();
-        PlayerEntity player = GameUtils.getPlayer().orElseThrow();
+        var world = GameUtils.getWorld().orElseThrow();
+        Player player = GameUtils.getPlayer().orElseThrow();
 
         // Only for surface worlds.  Other types of worlds are interpreted as not having villages.
-        if (world.getDimension().natural()) {
-            var playerEyes = player.getEyePos();
-            Box box = Box.from(playerEyes).expand(VILLAGE_RANGE);
+        if (world.dimensionType().natural()) {
+            var playerEyes = player.getEyePosition();
+            AABB box = AABB.unitCubeFromLowerCorner(playerEyes).inflate(VILLAGE_RANGE);
 
-            var villagerEntities = world.getNonSpectatingEntities(VillagerEntity.class, box);
+            var villagerEntities = world.getEntitiesOfClass(Villager.class, box);
 
             if (!villagerEntities.isEmpty()) {
                 // We have villagers.  Now find a bell!
-                var bell = WorldUtils.getLoadedBlockEntities(world, blockEntity -> blockEntity instanceof BellBlockEntity && blockEntity.getPos().isWithinDistance(playerEyes, VILLAGE_RANGE));
+                var bell = WorldUtils.getLoadedBlockEntities(world, blockEntity -> blockEntity instanceof BellBlockEntity && blockEntity.getBlockPos().closerToCenterThan(playerEyes, VILLAGE_RANGE));
                 this.isInVillage = !bell.isEmpty();
             }
         }

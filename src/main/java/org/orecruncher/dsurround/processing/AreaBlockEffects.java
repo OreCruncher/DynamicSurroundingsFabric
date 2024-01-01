@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.processing;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
@@ -39,7 +38,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
     }
 
     @Override
-    public void process(final PlayerEntity player) {
+    public void process(final Player player) {
         if (!this.isConnected)
             return;
 
@@ -57,7 +56,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
     public void onConnect() {
         this.locus = new ScanContext(
                 () -> GameUtils.getWorld().orElseThrow(),
-                () -> GameUtils.getPlayer().map(Entity::getBlockPos).orElseThrow(),
+                () -> GameUtils.getPlayer().get().getOnPos(),
                 this.logger
         );
 

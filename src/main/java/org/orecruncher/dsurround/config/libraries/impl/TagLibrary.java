@@ -6,15 +6,11 @@ import com.google.gson.JsonParser;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.JsonOps;
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.tag.TagEntry;
-import net.minecraft.registry.tag.TagFile;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.registry.tag.TagManagerLoader;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.*;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
@@ -77,7 +73,7 @@ public class TagLibrary implements ITagLibrary {
     @Override
     public <T> String asString(Stream<TagKey<T>> tagStream) {
         return tagStream
-                .map(key -> key.id().toString())
+                .map(key -> key.location().toString())
                 .sorted()
                 .collect(Collectors.joining(", "));
     }
@@ -90,9 +86,9 @@ public class TagLibrary implements ITagLibrary {
     }
 
     @Override
-    public <T> boolean isIn(TagKey<T> tagKey, RegistryEntry<T> registryEntry) {
+    public <T> boolean isIn(TagKey<T> tagKey, Holder<T> registryEntry) {
         // Check dynamic registry first - may have set by the server
-        if (registryEntry.isIn(tagKey)) {
+        if (registryEntry.is(tagKey)) {
             return true;
         }
 
@@ -103,10 +99,9 @@ public class TagLibrary implements ITagLibrary {
     }
 
     @Override
-    public <T> Stream<Pair<TagKey<T>, Set<T>>> getEntriesByTag(RegistryKey<? extends Registry<T>> registryKey) {
-        var registryManager = GameUtils.getRegistryManager().orElseThrow();
-        var registry = registryManager.get(registryKey);
-        return registry.streamEntries()
+    public <T> Stream<Pair<TagKey<T>, Set<T>>> getEntriesByTag(ResourceKey<? extends Registry<T>> registryKey) {
+        var registry = GameUtils.getRegistry(registryKey).orElseThrow();
+        return registry.holders()
                 .flatMap(e -> this.streamTags(e).map(tag -> Pair.of(tag, e.value())))
                 .collect(groupingBy(Pair::key, mapping(Pair::value, toSet())))
                 .entrySet().stream().map(e -> Pair.of(e.getKey(), e.getValue()));
@@ -114,8 +109,8 @@ public class TagLibrary implements ITagLibrary {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> Stream<TagKey<T>> streamTags(RegistryEntry<T> registryEntry) {
-        Set<TagKey<T>> tags = registryEntry.streamTags().collect(toSet());
+    public <T> Stream<TagKey<T>> streamTags(Holder<T> registryEntry) {
+        Set<TagKey<T>> tags = registryEntry.tags().collect(toSet());
         var entryId = this.getObjectIdentifier(registryEntry).orElseThrow();
         for (var kvp: this.tagCache.entrySet()) {
             var cachedTag = kvp.getKey();
@@ -137,31 +132,26 @@ public class TagLibrary implements ITagLibrary {
         }
     }
 
-    private <T> Optional<Identifier> getObjectIdentifier(RegistryEntry<T> registryEntry) {
-        return registryEntry.getKey().map(RegistryKey::getValue);
+    private <T> Optional<ResourceLocation> getObjectIdentifier(Holder<T> registryEntry) {
+        return registryEntry.unwrapKey().map(ResourceKey::location);
     }
 
-    private <T> Optional<RegistryEntry<T>> getRegistryEntry(TagKey<T> tagKey, T entry) {
+    private <T> Optional<Holder<T>> getRegistryEntry(TagKey<T> tagKey, T entry) {
         var maybeRegistry = getRegistry(tagKey);
 
-        if (maybeRegistry.isEmpty() || !tagKey.isOf(maybeRegistry.get().getKey())) {
+        if (maybeRegistry.isEmpty() || !tagKey.isFor(maybeRegistry.get().key())) {
             return Optional.empty();
         }
 
         Registry<T> registry = maybeRegistry.get();
 
-        return registry.getKey(entry).map(registry::entryOf);
+        Optional<ResourceKey<T>> maybeKey = registry.getResourceKey(entry);
+
+        return maybeKey.map(registry::getHolderOrThrow);
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> Optional<? extends Registry<T>> getRegistry(TagKey<T> tagKey) {
-        if (GameUtils.isInGame()) {
-            var maybeRegistry = GameUtils.getRegistryManager().map(rm -> rm.getOptional(tagKey.registry())).orElseThrow();
-            if (maybeRegistry.isPresent())
-                return maybeRegistry;
-        }
-
-        return (Optional<? extends Registry<T>>) Registries.REGISTRIES.getOrEmpty(tagKey.registry().getValue());
+    private <T> Optional<Registry<T>> getRegistry(TagKey<T> tagKey) {
+        return GameUtils.getRegistry(tagKey.registry());
     }
 
     private TagData getTagData(TagKey<?> tagKey) {
@@ -179,7 +169,7 @@ public class TagLibrary implements ITagLibrary {
     // This is based on the Fabric client tag handling code.
     private TagData loadTagData(TagKey<?> tagKey) {
         Set<TagEntry> entries = new HashSet<>();
-        Set<Path> tagFiles = this.getTagFiles(tagKey.registry(), tagKey.id());
+        Set<Path> tagFiles = this.getTagFiles(tagKey.registry(), tagKey.location());
 
         for (Path tagPath : tagFiles) {
             try (BufferedReader tagReader = Files.newBufferedReader(tagPath)) {
@@ -206,23 +196,23 @@ public class TagLibrary implements ITagLibrary {
             return TagData.EMPTY;
         }
 
-        Set<Identifier> completeIds = new HashSet<>();
-        Set<Identifier> immediateChildIds = new HashSet<>();
+        Set<ResourceLocation> completeIds = new HashSet<>();
+        Set<ResourceLocation> immediateChildIds = new HashSet<>();
         Set<TagKey<?>> immediateChildTags = new HashSet<>();
 
         for (TagEntry tagEntry : entries) {
-            tagEntry.resolve(new TagEntry.ValueGetter<>() {
+            tagEntry.build(new TagEntry.Lookup<>() {
                 @Nullable
                 @Override
-                public Identifier direct(Identifier id) {
+                public ResourceLocation element(ResourceLocation id) {
                     immediateChildIds.add(id);
                     return id;
                 }
 
                 @Nullable
                 @Override
-                public Collection<Identifier> tag(Identifier id) {
-                    TagKey<?> tag = TagKey.of(tagKey.registry(), id);
+                public Collection<ResourceLocation> tag(ResourceLocation id) {
+                    TagKey<?> tag = TagKey.create(tagKey.registry(), id);
                     immediateChildTags.add(tag);
                     // This will trigger recursion to generate a complete list of IDs
                     return getTagData(tag).members();
@@ -234,14 +224,14 @@ public class TagLibrary implements ITagLibrary {
         return new TagData(ImmutableSet.copyOf(completeIds), ImmutableSet.copyOf(immediateChildTags), ImmutableSet.copyOf(immediateChildIds));
     }
 
-    private Set<Path> getTagFiles(RegistryKey<? extends Registry<?>> registryKey, Identifier identifier) {
-        var tagType = TagManagerLoader.getPath(registryKey);
+    private Set<Path> getTagFiles(ResourceKey<? extends Registry<?>> registryKey, ResourceLocation identifier) {
+        var tagType = TagManager.getTagDir(registryKey);
         var tagFile = "data/%s/%s/%s.json".formatted(identifier.getNamespace(), tagType, identifier.getPath());
         return this.platform.getResourcePaths(tagFile);
     }
 
-    private record TagData(Set<Identifier> members, Set<TagKey<?>> immediateChildTags,
-                           Set<Identifier> immediateChildIds) {
+    private record TagData(Set<ResourceLocation> members, Set<TagKey<?>> immediateChildTags,
+                           Set<ResourceLocation> immediateChildIds) {
         public static final TagData EMPTY = new TagData(ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of());
 
         public boolean isEmpty() {

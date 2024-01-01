@@ -1,10 +1,9 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.effects.particles.FrostBreathParticle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.system.ITickCount;
@@ -31,9 +30,9 @@ public class BreathEffect extends EntityEffectBase {
         if (isBreathVisible(entity)) {
             final int c = (int) (this.tickCount.getTickCount() + this.seed);
             final BlockPos headPos = getHeadPosition(entity);
-            final BlockState state = entity.getEntityWorld().getBlockState(headPos);
+            final BlockState state = entity.level().getBlockState(headPos);
             if (showWaterBubbles(state)) {
-                final int air = entity.getAir();
+                final int air = entity.getAirSupply();
                 if (air > 0) {
                     final int interval = c % 3;
                     if (interval == 0) {
@@ -55,17 +54,17 @@ public class BreathEffect extends EntityEffectBase {
     }
 
     protected boolean isBreathVisible(final LivingEntity entity) {
-        final PlayerEntity player = GameUtils.getPlayer().orElseThrow();
-        var settings = GameUtils.getGameSettings().orElseThrow();
+        final var player = GameUtils.getPlayer().orElseThrow();
+        var settings = GameUtils.getGameSettings();
         if (entity == player) {
-            return !(player.isSpectator() || settings.hudHidden);
+            return !(player.isSpectator() || settings.hideGui);
         }
-        return !entity.isInvisibleTo(player) && entity.canSee(player);
+        return !entity.isInvisibleTo(player) && player.hasLineOfSight(entity);
     }
 
     protected BlockPos getHeadPosition(final LivingEntity entity) {
         final double d0 = entity.getEyeY();
-        return BlockPos.ofFloored(entity.getX(), d0, entity.getZ());
+        return BlockPos.containing(entity.getX(), d0, entity.getZ());
     }
 
     protected boolean showWaterBubbles(final BlockState headBlock) {
@@ -74,7 +73,7 @@ public class BreathEffect extends EntityEffectBase {
 
     protected boolean showFrostBreath(final LivingEntity entity, final BlockState headBlock, final BlockPos pos) {
         if (headBlock.isAir()) {
-            final World world = entity.getEntityWorld();
+            final Level world = entity.level();
             return WorldUtils.isColdTemperature(WorldUtils.getTemperatureAt(world, pos));
         }
         return false;

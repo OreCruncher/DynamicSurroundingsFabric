@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.lib;
 
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.Constants;
 
 public enum DayCycle {
@@ -23,27 +23,27 @@ public enum DayCycle {
         this.localizeString = Constants.MOD_ID + ".format." + localName;
     }
 
-    public static boolean isDaytime(final World world) {
+    public static boolean isDaytime(final Level world) {
         return getCycle(world) == DayCycle.DAYTIME;
     }
 
-    public static boolean isNighttime(final World world) {
+    public static boolean isNighttime(final Level world) {
         return getCycle(world) == DayCycle.NIGHTTIME;
     }
 
-    public static boolean isSunrise(final World world) {
+    public static boolean isSunrise(final Level world) {
         return getCycle(world) == DayCycle.SUNRISE;
     }
 
-    public static boolean isSunset(final World world) {
+    public static boolean isSunset(final Level world) {
         return getCycle(world) == DayCycle.SUNSET;
     }
 
-    public static DayCycle getCycle(final World world) {
-        if (world.getDimension().hasCeiling() || !world.getDimension().hasSkyLight())
+    public static DayCycle getCycle(final Level world) {
+        if (world.dimensionType().hasCeiling() || !world.dimensionType().hasSkyLight())
             return DayCycle.NO_SKY;
 
-        final float angleDegrees = world.getSkyAngle(0) * 360F;
+        final float angleDegrees = world.getSunAngle(0) * 360F;
 
         if (angleDegrees > DAYTIME_THRESHOLD)
             return DayCycle.DAYTIME;
@@ -56,8 +56,8 @@ public enum DayCycle {
         return DayCycle.DAYTIME;
     }
 
-    public static float getMoonSize(final World world) {
-        return world.getMoonSize();
+    public static float getMoonSize(final Level world) {
+        return world.getMoonBrightness();
     }
 
     public String getFormattedName() {

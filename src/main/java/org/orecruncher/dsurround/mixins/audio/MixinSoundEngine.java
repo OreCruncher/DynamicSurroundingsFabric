@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.mixins.audio;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.minecraft.client.sound.SoundEngine;
+import com.mojang.blaze3d.audio.Library;
 import org.lwjgl.openal.ALC10;
 import org.lwjgl.openal.EXTEfx;
 import org.lwjgl.openal.SOFTOutputLimiter;
@@ -16,14 +16,14 @@ import org.spongepowered.asm.mixin.injection.*;
 
 import java.nio.IntBuffer;
 
-@Mixin(SoundEngine.class)
+@Mixin(Library.class)
 public class MixinSoundEngine implements ISoundEngine {
 
     @Shadow
-    private long devicePointer;
+    private long currentDevice;
 
     public long dsurround_getDevicePointer() {
-        return this.devicePointer;
+        return this.currentDevice;
     }
 
     /**

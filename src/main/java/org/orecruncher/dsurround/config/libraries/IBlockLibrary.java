@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config.libraries;
 
-import net.minecraft.block.BlockState;
+import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.config.block.BlockInfo;
 
 import java.util.stream.Stream;

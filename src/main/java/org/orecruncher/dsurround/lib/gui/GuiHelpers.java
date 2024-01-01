@@ -1,9 +1,10 @@
 package org.orecruncher.dsurround.lib.gui;
 
-import net.minecraft.client.font.TextHandler;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.text.*;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.GameUtils;
 
@@ -23,15 +24,15 @@ public class GuiHelpers {
      * @param formatting Formatting to apply to each line
      * @return Collection of ITextComponents for the given key
      */
-    public static Collection<OrderedText> getTrimmedTextCollection(final String key, final int width, @Nullable final Formatting... formatting) {
-        var textHandler = GameUtils.getTextHandler().orElseThrow();
+    public static Collection<FormattedCharSequence> getTrimmedTextCollection(final String key, final int width, @Nullable final ChatFormatting... formatting) {
+        var textHandler = GameUtils.getTextHandler();
         final Style style = prefixHelper(formatting);
         return textHandler
-                .wrapLines(
-                        Text.translatable(key),
+                .splitLines(
+                        Component.translatable(key),
                         width,
                         style)
-                .stream().map(e -> Text.of(e.getString()).asOrderedText())
+                .stream().map(e -> Component.literal(e.getString()).getVisualOrderText())
                 .collect(Collectors.toList());
     }
 
@@ -44,25 +45,26 @@ public class GuiHelpers {
      * @param formatting Formatting to apply to the text
      * @return ITextComponent fitting the criteria specified
      */
-    public static StringVisitable getTrimmedText(final String key, final int width, @Nullable final Formatting... formatting) {
-        final TextRenderer fr = GameUtils.getTextRenderer().orElseThrow();
+    public static FormattedText getTrimmedText(final String key, final int width, @Nullable final ChatFormatting... formatting) {
+        var fr = GameUtils.getTextRenderer();
+        var cm = GameUtils.getTextHandler();
+
         final Style style = prefixHelper(formatting);
-        final StringVisitable text = Text.translatable(key);
-        final TextHandler cm = fr.getTextHandler();
-        if (fr.getWidth(text) > width) {
-            final int ellipsesWidth = fr.getWidth(ELLIPSES);
+        final FormattedText text = Component.translatable(key);
+        if (fr.width(text) > width) {
+            final int ellipsesWidth = fr.width(ELLIPSES);
             final int trueWidth = width - ellipsesWidth;
-            final StringVisitable str = cm.trimToWidth(text, trueWidth, style);
-            return Text.of(str.getString() + ELLIPSES);
+            final FormattedText str = cm.headByWidth(text, trueWidth, style);
+            return Component.literal(str.getString() + ELLIPSES);
         }
-        final StringVisitable str = cm.trimToWidth(text, width, style);
-        return Text.of(str.getString());
+        final FormattedText str = cm.headByWidth(text, width, style);
+        return Component.literal(str.getString());
     }
 
-    private static Style prefixHelper(@Nullable final Formatting[] formatting) {
+    private static Style prefixHelper(@Nullable final ChatFormatting[] formatting) {
         final Style style;
         if (formatting != null && formatting.length > 0)
-            style = Style.EMPTY.withFormatting(formatting);
+            style = Style.EMPTY.applyFormats(formatting);
         else
             style = Style.EMPTY;
         return style;

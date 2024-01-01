@@ -1,8 +1,7 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import net.minecraft.client.particle.ParticleTextureSheet;
-import net.minecraft.client.texture.ResourceTexture;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.renderer.texture.SimpleTexture;
+import net.minecraft.resources.ResourceLocation;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -15,12 +14,12 @@ public final class ParticleSheets {
 
     private static Configuration.BlockEffects CONFIG;
 
-    public static final Identifier TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE = new Identifier(Constants.MOD_ID, "textures/particles/pixel_ripples.png");
+    public static final ResourceLocation TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE = new ResourceLocation(Constants.MOD_ID, "textures/particles/pixel_ripples.png");
 
-    public static final ParticleTextureSheet RIPPLE_RENDER =
-            new ParticleRenderType(TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE) {
+    public static final net.minecraft.client.particle.ParticleRenderType RIPPLE_RENDER =
+            new DsurroundParticleRenderType(TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE) {
                 @Override
-                protected Identifier getTexture() {
+                protected ResourceLocation getTexture() {
                     return CONFIG.waterRippleStyle.getTexture();
                 }
             };
@@ -28,8 +27,8 @@ public final class ParticleSheets {
     public static void register() {
 
         CONFIG = ContainerManager.resolve(Configuration.BlockEffects.class);
-        var manager = GameUtils.getTextureManager().orElseThrow();
-        manager.registerTexture(TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE, new ResourceTexture(TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE));
+        var manager = GameUtils.getTextureManager();
+        manager.register(TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE, new SimpleTexture(TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE));
 
         var existingSheets = MixinParticleManager.dsurround_getParticleTextureSheets();
         assert existingSheets != null;

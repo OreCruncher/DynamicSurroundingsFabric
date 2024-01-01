@@ -3,7 +3,8 @@ package org.orecruncher.dsurround.platform.fabric.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.command.argument.MessageArgumentType;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.arguments.MessageArgument;
 import org.orecruncher.dsurround.commands.ScriptCommandHandler;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
@@ -17,13 +18,13 @@ class ScriptCommand extends ClientCommand {
         super("dsscript");
     }
 
-    public void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
+    public void register(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandBuildContext registryAccess) {
         dispatcher.register(literal(this.command)
-                .then(argument(SCRIPT_PARAMETER, MessageArgumentType.message()).executes(this::execute)));
+                .then(argument(SCRIPT_PARAMETER, MessageArgument.message()).executes(this::execute)));
     }
 
     private int execute(CommandContext<FabricClientCommandSource> ctx) {
-        var script = ctx.getArgument(SCRIPT_PARAMETER, MessageArgumentType.MessageFormat.class);
-        return this.execute(ctx, () -> ScriptCommandHandler.execute(script.getContents()));
+        var script = ctx.getArgument(SCRIPT_PARAMETER, MessageArgument.Message.class);
+        return this.execute(ctx, () -> ScriptCommandHandler.execute(script.getText()));
     }
 }

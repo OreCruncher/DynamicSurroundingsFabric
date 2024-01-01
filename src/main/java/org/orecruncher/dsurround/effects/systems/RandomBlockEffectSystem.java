@@ -2,10 +2,10 @@ package org.orecruncher.dsurround.effects.systems;
 
 import com.google.common.collect.AbstractIterator;
 import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.effects.IBlockEffect;
@@ -33,9 +33,9 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
     protected static final Set<BlockState> BLOCKSTATES_TO_IGNORE = new ReferenceArraySet<>(3);
 
     static {
-        BLOCKSTATES_TO_IGNORE.add(Blocks.VOID_AIR.getDefaultState());
-        BLOCKSTATES_TO_IGNORE.add(Blocks.CAVE_AIR.getDefaultState());
-        BLOCKSTATES_TO_IGNORE.add(Blocks.AIR.getDefaultState());
+        BLOCKSTATES_TO_IGNORE.add(Blocks.VOID_AIR.defaultBlockState());
+        BLOCKSTATES_TO_IGNORE.add(Blocks.CAVE_AIR.defaultBlockState());
+        BLOCKSTATES_TO_IGNORE.add(Blocks.AIR.defaultBlockState());
     }
 
     public static final int NEAR_RANGE = 16;
@@ -68,9 +68,9 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
         super.tick(processingPredicate);
 
         var player = GameUtils.getPlayer().orElseThrow();
-        var world = player.getEntityWorld();
+        var world = player.level();
 
-        var iterator = iterateRandomly(this.lcg, ITERATION_COUNT, player.getBlockPos(), this.range);
+        var iterator = iterateRandomly(this.lcg, ITERATION_COUNT, player.getOnPos(), this.range);
 
         for (var blockPos : iterator) {
             if (this.hasSystemAtPosition(blockPos))
@@ -105,13 +105,13 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
     }
 
     @Override
-    public void blockScan(World world, BlockState state, BlockPos pos) {
+    public void blockScan(Level world, BlockState state, BlockPos pos) {
         // Do nothing - everything is in the tick
     }
 
     protected Iterable<BlockPos> iterateRandomly(LCGRandom random, int count, BlockPos center, int range) {
         return () -> new AbstractIterator<>() {
-            final BlockPos.Mutable pos = new BlockPos.Mutable();
+            final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
             final LCGRandom lcg = random;
             int remaining = count;
 
@@ -124,7 +124,7 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
                     return this.endOfData();
                 } else {
                     --this.remaining;
-                    return this.pos.set(
+                    return this.pos.setWithOffset(
                             center,
                             this.randomRange(range),
                             this.randomRange(range),
