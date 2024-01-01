@@ -1,8 +1,8 @@
 package org.orecruncher.dsurround.sound;
 
 import com.google.common.collect.ImmutableList;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
 
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ public final class SoundMetadata {
 
     private final Component title;
     private final Component caption;
-    private final List<Component> credits;
+    private final List<Credit> credits;
 
     public SoundMetadata() {
         this.title = Component.empty();
@@ -30,14 +30,20 @@ public final class SoundMetadata {
         if (cfg.credits() == null || cfg.credits().isEmpty()) {
             this.credits = ImmutableList.of();
         } else {
-            this.credits = new ArrayList<>();
-            for (final String s : cfg.credits()) {
-                if (StringUtils.isEmpty(s))
-                    this.credits.add(Component.empty());
-                else
-                    this.credits.add(Component.literal(s));
+            var temp = new ArrayList<Credit>(cfg.credits().size());
+            for (var entry : cfg.credits()) {
+                var name = Component.nullToEmpty(ChatFormatting.stripFormatting(entry.name()));
+                var author = Component.nullToEmpty(ChatFormatting.stripFormatting(entry.author()));
+                var license = Component.nullToEmpty(ChatFormatting.stripFormatting(entry.license()));
+                var creditEntry = new Credit(name, author, license);
+                temp.add(creditEntry);
             }
+            this.credits = ImmutableList.copyOf(temp);
         }
+    }
+
+    public record Credit(Component name, Component author, Component license) {
+
     }
 
     /**
@@ -61,9 +67,9 @@ public final class SoundMetadata {
     /**
      * Gets the credits configured for the sound event in sounds.json, or an empty list if not present.
      *
-     * @return List containing 0 or more strings describing the sound credits.
+     * @return List containing zero or more strings describing the sound credits.
      */
-    public List<Component> getCredits() {
+    public List<Credit> getCredits() {
         return this.credits;
     }
 }

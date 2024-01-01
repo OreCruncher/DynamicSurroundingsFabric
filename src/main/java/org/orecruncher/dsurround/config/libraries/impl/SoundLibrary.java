@@ -69,7 +69,7 @@ public final class SoundLibrary implements ISoundLibrary {
     public Stream<String> dump() {
         return this.myRegistry.values().stream()
                 .sorted((c1, c2) -> Comparers.IDENTIFIER_NATURAL_COMPARABLE.compare(c1.getLocation(), c2.getLocation()))
-                .map(e -> e.getLocation().toString());
+                .map(Object::toString);
     }
 
     @Override
@@ -187,7 +187,7 @@ public final class SoundLibrary implements ISoundLibrary {
     private void loadSoundConfiguration() {
         this.soundConfiguration.clear();
 
-        // Check to see if it exists on disk, and if so, load it up.  Otherwise, save it so the defaults are
+        // Check to see if it exists on the disk, and if so, load it up. Otherwise, save it so the defaults are
         // persisted and the user can edit manually.
         try {
             if (Files.exists(this.soundConfigPath)) {

@@ -52,8 +52,11 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private static final Collection<FormattedCharSequence> CULL_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.cull.help", TOOLTIP_WIDTH, CODING);
     private static final Collection<FormattedCharSequence> BLOCK_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.block.help", TOOLTIP_WIDTH, CODING);
 
-    private static final Style modNameStyle = Style.EMPTY.applyFormat(ChatFormatting.GOLD);
-    private static final Style idStyle = Style.EMPTY.applyFormat(ChatFormatting.GRAY);
+    private static final Style STYLE_MOD_NAME = Style.EMPTY.applyFormat(ChatFormatting.GOLD);
+    private static final Style STYLE_ID = Style.EMPTY.applyFormat(ChatFormatting.GRAY);
+    private static final Style STYLE_CREDIT_NAME = Style.EMPTY.applyFormat(ChatFormatting.GREEN);
+    private static final Style STYLE_CREDIT_AUTHOR = Style.EMPTY.applyFormat(ChatFormatting.WHITE);
+    private static final Style STYLE_CREDIT_LICENSE = Style.EMPTY.applyFormats(ChatFormatting.ITALIC, ChatFormatting.DARK_AQUA);
 
     private static final int CONTROL_SPACING = 3;
 
@@ -228,12 +231,12 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
             ResourceLocation id = this.config.soundEventId;
             PLATFORM.getModDisplayName(id.getNamespace())
                     .ifPresent(name -> {
-                        FormattedCharSequence modName = FormattedCharSequence.forward(Objects.requireNonNull(ChatFormatting.stripFormatting(name)), modNameStyle);
+                        FormattedCharSequence modName = FormattedCharSequence.forward(Objects.requireNonNull(ChatFormatting.stripFormatting(name)), STYLE_MOD_NAME);
                         this.cachedToolTip.add(modName);
                     });
 
             @SuppressWarnings("ConstantConditions")
-            FormattedCharSequence soundLocationId = FormattedCharSequence.forward(id.toString(), idStyle);
+            FormattedCharSequence soundLocationId = FormattedCharSequence.forward(id.toString(), STYLE_ID);
 
             this.cachedToolTip.add(soundLocationId);
 
@@ -244,8 +247,14 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
                 if (!metadata.getCaption().equals(Component.empty()))
                     this.cachedToolTip.add(Component.translatable("dsurround.text.soundconfig.caption", metadata.getCaption()).getVisualOrderText());
 
-                for (Component t : metadata.getCredits())
-                    this.cachedToolTip.add(t.getVisualOrderText());
+                if (!metadata.getCredits().isEmpty()) {
+                    for (var credit : metadata.getCredits()) {
+                        this.cachedToolTip.add(Component.empty().getVisualOrderText());
+                        this.cachedToolTip.add(credit.name().copy().withStyle(STYLE_CREDIT_NAME).getVisualOrderText());
+                        this.cachedToolTip.add(credit.author().copy().withStyle(STYLE_CREDIT_AUTHOR).getVisualOrderText());
+                        this.cachedToolTip.add(credit.license().copy().withStyle(STYLE_CREDIT_LICENSE).getVisualOrderText());
+                    }
+                }
             }
 
             if (id.getNamespace().equals("minecraft")) {
