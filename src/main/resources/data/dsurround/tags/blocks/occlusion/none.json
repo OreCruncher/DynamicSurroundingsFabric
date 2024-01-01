@@ -16,6 +16,8 @@
     "minecraft:short_grass",
     "minecraft:tall_grass",
     "minecraft:target",
-    "minecraft:torch"
+    "minecraft:torch",
+    "minecraft:cobweb",
+    "minecraft:cocoa"
   ]
 }

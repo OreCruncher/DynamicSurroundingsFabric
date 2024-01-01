@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(ChannelAccess.ChannelHandle.class)
-public interface MixinSourceManagerAccessor {
+public interface MixinChannelHandleAccessor {
 
     @Accessor("channel")
     Channel dsurround_getSource();

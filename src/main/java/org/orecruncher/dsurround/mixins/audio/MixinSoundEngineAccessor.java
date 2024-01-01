@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import java.util.Map;
 
 @Mixin(SoundEngine.class)
-public interface MixinSoundSystemAccessors {
+public interface MixinSoundEngineAccessor {
 
     @Accessor("instanceToChannel")
     Map<SoundInstance, ChannelAccess.ChannelHandle> dsurround_getSources();

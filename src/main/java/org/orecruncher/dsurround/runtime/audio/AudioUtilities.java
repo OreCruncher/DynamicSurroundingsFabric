@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.runtime.audio;
 
+import com.mojang.blaze3d.audio.Library;
 import com.mojang.blaze3d.audio.Listener;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.SoundEngine;
-import net.minecraft.client.sounds.SoundManager;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.*;
@@ -16,7 +16,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.mixins.core.MixinAbstractSoundInstance;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;
-import org.orecruncher.dsurround.mixins.audio.MixinSoundSystemAccessors;
+import org.orecruncher.dsurround.mixins.audio.MixinSoundEngineAccessor;
 import org.orecruncher.dsurround.mixinutils.ISoundEngine;
 
 import java.util.function.Supplier;
@@ -62,7 +62,7 @@ public final class AudioUtilities {
     }
 
     public static Listener getSoundListener() {
-        return ((MixinSoundSystemAccessors)getSoundSystem()).dsurround_getListener();
+        return ((MixinSoundEngineAccessor)getSoundSystem()).dsurround_getListener();
     }
 
     /**
@@ -117,11 +117,11 @@ public final class AudioUtilities {
      *
      * @param soundEngine The sound system instance being initialized
      */
-    public static void initialize(final SoundManager soundEngine) {
+    public static void initialize(final Library soundEngine) {
 
         try {
 
-            long devicePointer = ((ISoundEngine)soundEngine).dsurround_getDevicePointer();
+            long devicePointer = ((ISoundEngine) soundEngine).dsurround_getDevicePointer();
 
             // Calculate the number of source slots available
             MAX_SOUNDS = ALC11.alcGetInteger(devicePointer, ALC11.ALC_MONO_SOURCES);
@@ -157,7 +157,7 @@ public final class AudioUtilities {
         return advancedProcessingEnabled.get();
     }
 
-    public static void deinitialize(final SoundManager ignore) {
+    public static void deinitialize(final Library ignore) {
         if (doEnhancedSounds())
             SoundFXProcessor.deinitialize();
     }

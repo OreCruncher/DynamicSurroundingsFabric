@@ -17,7 +17,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.platform.IClientEventRegistrations;
 import org.orecruncher.dsurround.lib.threading.Worker;
-import org.orecruncher.dsurround.mixins.audio.MixinSourceManagerAccessor;
+import org.orecruncher.dsurround.mixins.audio.MixinChannelHandleAccessor;
 import org.orecruncher.dsurround.runtime.audio.effects.Effects;
 import org.orecruncher.dsurround.mixinutils.ISourceContext;
 
@@ -121,7 +121,7 @@ public final class SoundFXProcessor {
         if (shouldIgnoreSound(sound))
             return;
 
-        ISourceContext source = (ISourceContext)(((MixinSourceManagerAccessor) entry).dsurround_getSource());
+        ISourceContext source = (ISourceContext)(((MixinChannelHandleAccessor) entry).dsurround_getSource());
         assert source != null;
         int id = source.dsurround_getId();
         if (id > 0) {

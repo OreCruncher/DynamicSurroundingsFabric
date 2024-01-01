@@ -7,7 +7,7 @@ import org.orecruncher.dsurround.gui.hud.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;
-import org.orecruncher.dsurround.mixins.audio.MixinSoundSystemAccessors;
+import org.orecruncher.dsurround.mixins.audio.MixinSoundEngineAccessor;
 
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -24,7 +24,7 @@ public class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
         var soundManager = GameUtils.getSoundManager();
         event.left.add(Strings.EMPTY);
         MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) soundManager;
-        MixinSoundSystemAccessors accessors = (MixinSoundSystemAccessors) manager.dsurround_getSoundSystem();
+        MixinSoundEngineAccessor accessors = (MixinSoundEngineAccessor) manager.dsurround_getSoundSystem();
         var sources = accessors.dsurround_getSources();
         var str = soundManager.getDebugString();
         event.left.add(ChatFormatting.GOLD + str);

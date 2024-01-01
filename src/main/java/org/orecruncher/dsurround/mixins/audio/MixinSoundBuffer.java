@@ -9,7 +9,7 @@ import javax.sound.sampled.AudioFormat;
 import java.nio.ByteBuffer;
 
 @Mixin(SoundBuffer.class)
-public interface MixinStaticSoundAccessor {
+public interface MixinSoundBuffer {
 
     @Accessor("data")
     ByteBuffer dsurround_getSample();

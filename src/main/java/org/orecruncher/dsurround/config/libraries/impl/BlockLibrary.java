@@ -161,9 +161,7 @@ public class BlockLibrary implements IBlockLibrary {
         if (!noStates) {
             builder.append("\nstates [\n");
             for (var blockState : block.getStateDefinition().getPossibleStates()) {
-                builder.append(blockState.toString()).append("\n");
-                info = getBlockInfo(blockState);
-                builder.append(info);
+                builder.append("  ").append(blockState.toString()).append("\n");
             }
             builder.append("]");
         }
