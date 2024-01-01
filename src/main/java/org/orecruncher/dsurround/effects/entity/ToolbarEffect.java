@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 
@@ -17,7 +17,7 @@ public class ToolbarEffect extends EntityEffectBase {
 
     @Override
     public void tick(final EntityEffectInfo info) {
-        final LocalPlayer player = (LocalPlayer) info.getEntity().get();
+        final Player player = (Player) info.getEntity().get();
         var inventory = player.getInventory();
 
         // First time through we want to not trigger the equip sound

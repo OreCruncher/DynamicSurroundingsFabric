@@ -43,6 +43,6 @@ public class BowUseEffect extends EntityEffectBase {
     }
 
     private static boolean isApplicable(ItemStack stack) {
-        return stack.is(ItemEffectTags.BOWS);
+        return TAG_LIBRARY.isIn(ItemEffectTags.BOWS, stack.getItem());
     }
 }
