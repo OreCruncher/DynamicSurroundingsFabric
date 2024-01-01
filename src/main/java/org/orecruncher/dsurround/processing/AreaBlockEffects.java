@@ -56,7 +56,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
     public void onConnect() {
         this.locus = new ScanContext(
                 () -> GameUtils.getWorld().orElseThrow(),
-                () -> GameUtils.getPlayer().get().getOnPos(),
+                () -> GameUtils.getPlayer().get().blockPosition(),
                 this.logger
         );
 

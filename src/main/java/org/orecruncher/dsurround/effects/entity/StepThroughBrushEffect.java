@@ -37,7 +37,7 @@ public class StepThroughBrushEffect extends EntityEffectBase {
             if (this.shouldProcess(entity)) {
 
                 var world = entity.level();
-                var pos = entity.getOnPos();
+                var pos = entity.blockPosition();
                 var feetPos = BlockPos.containing(pos.getX(), pos.getY() + 0.25D, pos.getZ());
 
                 var block = world.getBlockState(feetPos).getBlock();

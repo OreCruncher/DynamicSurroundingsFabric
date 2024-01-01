@@ -98,9 +98,11 @@ public class BackgroundSoundLoop extends AbstractTickableSoundInstance {
                 .addValue(this.getSource().getName());
 
         // Possible that the sound was not yet assigned.  Seen issues when exiting worlds.
-        temp.add("v", getVolume())
-            .add("ev", SoundVolumeEvaluator.getAdjustedVolume(this))
-            .add("p", getPitch());
+        if (this.sound != null) {
+            temp.add("v", getVolume())
+                    .add("ev", SoundVolumeEvaluator.getAdjustedVolume(this))
+                    .add("p", getPitch());
+        }
 
         return temp.add("f", this.scale)
             .add("fading", isFading())

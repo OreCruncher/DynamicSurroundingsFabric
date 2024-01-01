@@ -45,7 +45,7 @@ public final class ClientTasking implements IClientTasking {
             runnable.run();
             return null;
         });
-        GameUtils.getMC().execute(future);
+        GameUtils.getMC().executeBlocking(future);
         future.get(TIMEOUT, TIME_UNIT);
     }
 }

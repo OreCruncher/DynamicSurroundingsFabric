@@ -67,7 +67,7 @@ public final class CeilingScanner {
             this.reallyInside = false;
         } else {
             var player = GameUtils.getPlayer().orElseThrow();
-            final BlockPos pos = player.getOnPos();
+            final BlockPos pos = player.blockPosition();
             float score = 0.0F;
             for (Cell cell : cells) score += cell.score(pos);
             float ceilingCoverageRatio = 1.0F - (score / TOTAL_POINTS);

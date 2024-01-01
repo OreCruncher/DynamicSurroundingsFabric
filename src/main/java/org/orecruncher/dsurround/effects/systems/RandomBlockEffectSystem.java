@@ -70,7 +70,7 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
         var player = GameUtils.getPlayer().orElseThrow();
         var world = player.level();
 
-        var iterator = iterateRandomly(this.lcg, ITERATION_COUNT, player.getOnPos(), this.range);
+        var iterator = iterateRandomly(this.lcg, ITERATION_COUNT, player.blockPosition(), this.range);
 
         for (var blockPos : iterator) {
             if (this.hasSystemAtPosition(blockPos))

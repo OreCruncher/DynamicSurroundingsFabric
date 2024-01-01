@@ -43,7 +43,7 @@ public enum DayCycle {
         if (world.dimensionType().hasCeiling() || !world.dimensionType().hasSkyLight())
             return DayCycle.NO_SKY;
 
-        final float angleDegrees = world.getSunAngle(0) * 360F;
+        final float angleDegrees = world.getTimeOfDay(0) * 360F;
 
         if (angleDegrees > DAYTIME_THRESHOLD)
             return DayCycle.DAYTIME;

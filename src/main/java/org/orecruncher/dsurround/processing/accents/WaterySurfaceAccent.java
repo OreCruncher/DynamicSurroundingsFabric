@@ -38,11 +38,14 @@ class WaterySurfaceAccent implements IFootstepAccentProvider {
         if (!addAcoustic)
             addAcoustic = state.is(BlockEffectTags.WATERY_STEP);
 
+        // Check the block above because it may be flagged as having a wet effect, like a lily pad.
         if (!addAcoustic) {
-            // Get the precipitation type at the location
             var world = entity.level();
             var up = pos.above();
-            if (world.isRainingAt(up)) {
+            addAcoustic = world.getBlockState(up).is(BlockEffectTags.WATERY_STEP);
+
+            if (!addAcoustic && world.isRainingAt(up)) {
+                // Get the precipitation type at the location
                 var precipitation = world.getBiome(up).value().getPrecipitationAt(up);
                 addAcoustic = precipitation == Biome.Precipitation.RAIN;
             }

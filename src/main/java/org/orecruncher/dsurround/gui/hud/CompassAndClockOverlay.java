@@ -133,7 +133,6 @@ public class CompassAndClockOverlay extends AbstractOverlay {
 
                     matrixStack.pushPose();
 
-                    // TODO: Verify rotation for compass
                     int direction = Mth.floor(((player.yHeadRot * TEXTURE_SIZE) / 360F) + 0.5D) & (TEXTURE_SIZE - 1);
                     float x = (context.guiWidth() - BAND_WIDTH * this.scale) / 2F;
                     float y = (context.guiHeight() - CROSSHAIR_OFFSET - BAND_HEIGHT * this.scale) / 2F;
@@ -167,7 +166,7 @@ public class CompassAndClockOverlay extends AbstractOverlay {
 
     void drawTexturedQuad(PoseStack stack, ResourceLocation texture, float x1, float x2, float y1, float y2, float z, float u1, float u2, float v1, float v2) {
         RenderSystem.setShaderTexture(0, texture);
-        RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
         Matrix4f matrix4f = stack.last().pose();
         BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
         bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
