@@ -74,27 +74,33 @@ public class WaterRippleParticle extends TextureSheetParticle {
         return ParticleSheets.RIPPLE_RENDER;
     }
 
-    public float getSize(float tickDelta) {
+    @Override
+    public float getQuadSize(float tickDelta) {
         return this.quadSize * Mth.clamp(((float)this.age + tickDelta) / (float)this.lifetime * 32.0F, 0.0F, 1.0F);
     }
 
+    @Override
     protected float getU0() {
         return this.texU1;
     }
 
+    @Override
     protected float getU1() {
         return this.texU2;
     }
 
+    @Override
     protected float getV0() {
         return this.texV1;
     }
 
+    @Override
     protected float getV1() {
         return this.texV2;
     }
 
-    public void buildGeometry(VertexConsumer vertexConsumer, Camera camera, float tickDelta) {
+    @Override
+    public void render(VertexConsumer vertexConsumer, Camera camera, float tickDelta) {
         Vec3 vec3d = camera.getPosition();
         float X = (float)(Mth.lerp(tickDelta, this.xo, this.x) - vec3d.x());
         float Y = (float)(Mth.lerp(tickDelta, this.yo, this.y) - vec3d.y());
@@ -128,6 +134,7 @@ public class WaterRippleParticle extends TextureSheetParticle {
                 .endVertex();
     }
 
+    @Override
     public void tick() {
         this.xo = this.x;
         this.yo = this.y;

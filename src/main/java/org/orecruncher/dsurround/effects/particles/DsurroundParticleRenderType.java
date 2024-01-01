@@ -18,7 +18,7 @@ public class DsurroundParticleRenderType implements ParticleRenderType {
     }
 
     protected VertexFormat getVertexFormat() {
-        return DefaultVertexFormat.POSITION_TEX_LIGHTMAP_COLOR; //.POSITION_TEXTURE_COLOR_LIGHT;
+        return DefaultVertexFormat.PARTICLE; //.POSITION_TEXTURE_COLOR_LIGHT;
     }
 
     @Override
