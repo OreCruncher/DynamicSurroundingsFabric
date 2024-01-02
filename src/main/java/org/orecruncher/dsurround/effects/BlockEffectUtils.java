@@ -45,16 +45,7 @@ public class BlockEffectUtils {
         final Level provider,
         final BlockPos pos,
         final Predicate<BlockState> predicate) {
-
-        for (int k = -1; k <= 1; k++)
-            for (int j = -1; j <= 1; j++)
-                for (int i = -1; i <= 1; i++) {
-                    final BlockState state = provider.getBlockState(pos.offset(i, j, k));
-                    if (predicate.test(state)) {
-                        return true;
-                    }
-                }
-        return false;
+        return BlockPos.findClosestMatch(pos, 1, 1, blockPos -> predicate.test(provider.getBlockState(blockPos))).isPresent();
     }
 
     public static int countVerticalBlocks(final Level provider,

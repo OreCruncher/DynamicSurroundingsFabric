@@ -21,6 +21,7 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
@@ -51,6 +52,10 @@ public class TagLibrary implements ITagLibrary {
 
     @Override
     public boolean is(TagKey<Block> tagKey, BlockState entry) {
+        // For our purposes, blocks that are ignored will not have the
+        // tags we are interested in.
+        if (Constants.BLOCKS_TO_IGNORE.contains(entry.getBlock()))
+            return false;
         if (entry.is(tagKey))
             return true;
         return this.isInCache(tagKey, entry);

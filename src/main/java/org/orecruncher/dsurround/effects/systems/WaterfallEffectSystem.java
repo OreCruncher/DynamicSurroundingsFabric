@@ -224,7 +224,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
             // We are going for spawn! The location of where the steam column starts
             // is based on whether we have a fluid or a solid water block like a
             // water cauldron.
-            var effect = getWaterfallEffect(world, state, pos);
+            var effect = createWaterfallEffect(world, state, pos);
             this.systems.put(pos.asLong(), effect);
         } else if (this.hasSystemAtPosition(pos)) {
             this.onRemoveSystem(pos.asLong());
@@ -244,7 +244,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     }
 
     @NotNull
-    private static WaterfallEffect getWaterfallEffect(Level world, BlockState state, BlockPos pos) {
+    private static WaterfallEffect createWaterfallEffect(Level world, BlockState state, BlockPos pos) {
         var strength = BlockEffectUtils.countVerticalBlocks(world, pos, HAS_FLUID, 1);
         final float height = state.getFluidState().getHeight(world, pos) + 0.1F;
         return new WaterfallEffect(strength, world, pos, height);
@@ -358,10 +358,9 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
                 final double motionY = 0.1D + RANDOM.nextFloat() * intensity.y();
 
                 var posX = this.posX + xOffset;
-                var posY = this.deltaY;
                 var posZ = this.posZ + zOffset;
 
-                var particle = this.createParticle(ParticleTypes.SPLASH, posX, posY, posZ, motionX, motionY, motionZ);
+                var particle = this.createParticle(ParticleTypes.SPLASH, posX, this.deltaY, posZ, motionX, motionY, motionZ);
 
                 particle.ifPresent(p -> {
                     p.setParticleSpeed(motionX, motionY, motionZ);

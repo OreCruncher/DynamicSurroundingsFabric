@@ -1,11 +1,10 @@
 package org.orecruncher.dsurround.effects.systems;
 
 import com.google.common.collect.AbstractIterator;
-import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.effects.IBlockEffect;
@@ -18,7 +17,6 @@ import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 import java.util.Random;
 import java.util.Collection;
-import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -27,16 +25,6 @@ import java.util.function.Predicate;
 public class RandomBlockEffectSystem extends AbstractEffectSystem {
 
     protected static final Random RANDOM = XorShiftRandom.current();
-
-    // These block states are to be ignored as they have no value for effects
-    // within the system.
-    protected static final Set<BlockState> BLOCKSTATES_TO_IGNORE = new ReferenceArraySet<>(3);
-
-    static {
-        BLOCKSTATES_TO_IGNORE.add(Blocks.VOID_AIR.defaultBlockState());
-        BLOCKSTATES_TO_IGNORE.add(Blocks.CAVE_AIR.defaultBlockState());
-        BLOCKSTATES_TO_IGNORE.add(Blocks.AIR.defaultBlockState());
-    }
 
     public static final int NEAR_RANGE = 16;
     public static final int FAR_RANGE = 32;
@@ -77,7 +65,7 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
                 continue;
 
             var state = world.getBlockState(blockPos);
-            if (BLOCKSTATES_TO_IGNORE.contains(state))
+            if (Constants.BLOCKS_TO_IGNORE.contains(state.getBlock()))
                 continue;
 
             var info = this.blockLibrary.getBlockInfo(state);
