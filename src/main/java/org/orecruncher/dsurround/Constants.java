@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround;
 
-import it.unimi.dsi.fastutil.objects.ReferenceLinkedOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
@@ -21,7 +21,7 @@ public final class Constants {
      * Blocks that will be ignored by the system during configuration
      * and processing.
      */
-    public static final Set<Block> BLOCKS_TO_IGNORE = new ReferenceLinkedOpenHashSet<>(5);
+    public static final Set<Block> BLOCKS_TO_IGNORE = new ReferenceOpenHashSet<>(5);
 
     static {
         BLOCKS_TO_IGNORE.add(Blocks.VOID_AIR);

@@ -96,8 +96,8 @@ public class TagLibrary implements ITagLibrary {
                         // Makes it easier to spot in the logs
                         builder.append("\n*** EMPTY ***");
                     } else {
-                        this.formatHelper(builder, "Members", td.members());
-                        this.formatHelper(builder, "Tags", td.immediateChildTags());
+                        this.formatHelper(builder, "Members", td.completeIds());
+                        this.formatHelper(builder, "Child Tags", td.immediateChildTags());
                         this.formatHelper(builder, "Direct", td.immediateChildIds());
                     }
 
