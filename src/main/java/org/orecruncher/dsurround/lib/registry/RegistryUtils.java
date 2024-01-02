@@ -11,15 +11,11 @@ import java.util.Optional;
 
 public class RegistryUtils {
 
-    @SuppressWarnings("unckecked")
+    @SuppressWarnings("unchecked")
     public static <T> Optional<Registry<T>> getRegistry(ResourceKey<? extends Registry<T>> registryKey) {
-        var registry = GameUtils.getRegistryManager()
-                .flatMap(rm -> rm.registry(registryKey));
-
-        if (registry.isEmpty())
-            registry = (Optional<Registry<T>>) BuiltInRegistries.REGISTRY.getOptional(registryKey.location());
-
-        return registry;
+        return GameUtils.getRegistryManager()
+                .flatMap(rm -> rm.registry(registryKey))
+                .or(() -> (Optional<Registry<T>>) BuiltInRegistries.REGISTRY.getOptional(registryKey.location()));
     }
 
     public static <T> Optional<Holder<T>> getRegistryEntry(ResourceKey<Registry<T>> registryKey, T instance) {

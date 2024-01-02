@@ -62,7 +62,7 @@ public abstract class ItemTypeMatcher implements IMatcher<Item> {
         }
 
         public boolean match(Item item) {
-            return TAG_LIBRARY.isIn(this.tagKey, item);
+            return TAG_LIBRARY.is(this.tagKey, item);
         }
     }
 }

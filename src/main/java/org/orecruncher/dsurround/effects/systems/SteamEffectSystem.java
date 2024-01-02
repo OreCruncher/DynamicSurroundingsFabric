@@ -64,12 +64,9 @@ public class SteamEffectSystem extends AbstractEffectSystem implements IEffectSy
     }
 
     private static boolean canSteamSpawn(Level world, BlockState state, BlockPos pos) {
-        return isValidSteamSource(world, state, pos)
+        return world.getBlockState(pos.above()).isAir()
+                && TAG_LIBRARY.is(BlockEffectTags.STEAM_PRODUCERS, state)
                 && blockExistsAround(world, pos, IS_HOT_SOURCE);
-    }
-
-    private static boolean isValidSteamSource(Level world, BlockState state, BlockPos pos) {
-        return world.getBlockState(pos.above()).isAir() && TAG_LIBRARY.isIn(BlockEffectTags.STEAM_PRODUCERS, state.getBlock());
     }
 
     private static class SteamEffect extends ParticleJetEffect {
@@ -80,8 +77,12 @@ public class SteamEffectSystem extends AbstractEffectSystem implements IEffectSy
 
         @Override
         public boolean shouldDie() {
-            var source = this.world.getBlockState(this.getPos());
-            return !canSteamSpawn(this.world, source, this.getPos());
+            // Throttle checks for going away
+            if ((this.particleAge % 10) == 0) {
+                var source = this.world.getBlockState(this.getPos());
+                return !canSteamSpawn(this.world, source, this.getPos());
+            }
+            return false;
         }
 
         @Override

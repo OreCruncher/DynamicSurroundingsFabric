@@ -35,7 +35,7 @@ public class MixinEntity {
                 return;
 
             // Lastly, the entity has to be tagged
-            if (MixinHelpers.TAG_LIBRARY.isIn(EntityEffectTags.BRUSH_STEP, current.getType())) {
+            if (MixinHelpers.TAG_LIBRARY.is(EntityEffectTags.BRUSH_STEP, current.getType())) {
                 var event = new ClientEventHooks.EntityStepEvent(current, pos, state);
                 ClientEventHooks.ENTITY_STEP_EVENT.raise(event);
             }

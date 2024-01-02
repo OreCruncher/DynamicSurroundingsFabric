@@ -25,7 +25,7 @@ public class MatchOnBlockTag extends BlockStateMatcher {
 
     @Override
     public boolean match(BlockState state) {
-        return TAG_LIBRARY.isIn(this.tagId, state.getBlock());
+        return TAG_LIBRARY.is(this.tagId, state);
     }
 
     @Override

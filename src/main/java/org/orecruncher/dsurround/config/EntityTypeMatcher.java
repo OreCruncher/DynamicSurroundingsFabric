@@ -64,7 +64,7 @@ public abstract class EntityTypeMatcher implements IMatcher<Entity> {
         }
 
         public boolean match(Entity entity) {
-            return TAG_LIBRARY.isIn(this.tagKey, entity.getType());
+            return TAG_LIBRARY.is(this.tagKey, entity.getType());
         }
     }
 }

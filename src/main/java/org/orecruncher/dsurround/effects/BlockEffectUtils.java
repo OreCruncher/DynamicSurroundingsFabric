@@ -36,7 +36,7 @@ public class BlockEffectUtils {
     public static final Predicate<BlockState> IS_LIT_CAMPFIRE = CampfireBlock::isLitCampfire;
 
     public static final Predicate<BlockState> IS_HEAT_PRODUCER = (state) ->
-            TAG_LIBRARY.isIn(BlockEffectTags.HEAT_PRODUCERS, state.getBlock());
+            TAG_LIBRARY.is(BlockEffectTags.HEAT_PRODUCERS, state);
 
     public static final Predicate<BlockState> IS_HOT_SOURCE = (state) ->
             IS_HEAT_PRODUCER.test(state) || IS_LIT_FURNACE.test(state) || IS_LIT_CAMPFIRE.test(state);

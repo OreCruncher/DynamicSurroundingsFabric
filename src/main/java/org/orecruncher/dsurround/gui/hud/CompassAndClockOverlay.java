@@ -92,11 +92,11 @@ public class CompassAndClockOverlay extends AbstractOverlay {
     }
 
     private boolean doShowClock(ItemStack stack) {
-        return !stack.isEmpty() && this.tagLibrary.isIn(ItemEffectTags.CLOCKS, stack.getItem());
+        return !stack.isEmpty() && this.tagLibrary.is(ItemEffectTags.CLOCKS, stack);
     }
 
     private boolean doShowCompass(ItemStack stack) {
-        return !stack.isEmpty() && this.tagLibrary.isIn(ItemEffectTags.COMPASSES, stack.getItem());
+        return !stack.isEmpty() && this.tagLibrary.is(ItemEffectTags.COMPASSES, stack);
     }
 
     @Override

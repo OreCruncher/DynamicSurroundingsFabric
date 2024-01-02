@@ -40,13 +40,13 @@ public class StepThroughBrushEffect extends EntityEffectBase {
                 var pos = entity.blockPosition();
                 var feetPos = BlockPos.containing(pos.getX(), pos.getY() + 0.25D, pos.getZ());
 
-                var block = world.getBlockState(feetPos).getBlock();
-                if (this.tagLibrary.isIn(BlockEffectTags.BRUSH_STEP, block)) {
+                var block = world.getBlockState(feetPos);
+                if (this.tagLibrary.is(BlockEffectTags.BRUSH_STEP, block)) {
                     this.playBrushSound(feetPos);
                 } else {
                     var headPos = feetPos.above();
-                    block = world.getBlockState(headPos).getBlock();
-                    if (this.tagLibrary.isIn(BlockEffectTags.BRUSH_STEP, block))
+                    block = world.getBlockState(headPos);
+                    if (this.tagLibrary.is(BlockEffectTags.BRUSH_STEP, block))
                         this.playBrushSound(headPos);
                 }
             }

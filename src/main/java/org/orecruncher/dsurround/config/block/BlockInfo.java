@@ -156,39 +156,37 @@ public class BlockInfo {
     }
 
     private static float getSoundReflectionSetting(BlockState state) {
-        var block = state.getBlock();
-        if (TAG_LIBRARY.isIn(ReflectanceTags.NONE, block))
+        if (TAG_LIBRARY.is(ReflectanceTags.NONE, state))
             return 0;
-        if (TAG_LIBRARY.isIn(ReflectanceTags.VERY_LOW, block))
+        if (TAG_LIBRARY.is(ReflectanceTags.VERY_LOW, state))
             return 0.15F;
-        if (TAG_LIBRARY.isIn(ReflectanceTags.LOW, block))
+        if (TAG_LIBRARY.is(ReflectanceTags.LOW, state))
             return 0.35F;
-        if (TAG_LIBRARY.isIn(ReflectanceTags.MEDIUM, block))
+        if (TAG_LIBRARY.is(ReflectanceTags.MEDIUM, state))
             return 0.5F;
-        if (TAG_LIBRARY.isIn(ReflectanceTags.HIGH, block))
+        if (TAG_LIBRARY.is(ReflectanceTags.HIGH, state))
             return 0.65F;
-        if (TAG_LIBRARY.isIn(ReflectanceTags.VERY_HIGH, block))
+        if (TAG_LIBRARY.is(ReflectanceTags.VERY_HIGH, state))
             return 0.8F;
-        if (TAG_LIBRARY.isIn(ReflectanceTags.MAX, block))
+        if (TAG_LIBRARY.is(ReflectanceTags.MAX, state))
             return 1.0F;
         return DEFAULT_REFLECTION;
     }
 
     private static float getSoundOcclusionSetting(BlockState state) {
-        var block = state.getBlock();
-        if (TAG_LIBRARY.isIn(OcclusionTags.NONE, block))
+        if (TAG_LIBRARY.is(OcclusionTags.NONE, state))
             return 0;
-        if (TAG_LIBRARY.isIn(OcclusionTags.VERY_LOW, block))
+        if (TAG_LIBRARY.is(OcclusionTags.VERY_LOW, state))
             return 0.15F;
-        if (TAG_LIBRARY.isIn(OcclusionTags.LOW, block))
+        if (TAG_LIBRARY.is(OcclusionTags.LOW, state))
             return 0.35F;
-        if (TAG_LIBRARY.isIn(OcclusionTags.MEDIUM, block))
+        if (TAG_LIBRARY.is(OcclusionTags.MEDIUM, state))
             return 0.5F;
-        if (TAG_LIBRARY.isIn(OcclusionTags.HIGH, block))
+        if (TAG_LIBRARY.is(OcclusionTags.HIGH, state))
             return 0.65F;
-        if (TAG_LIBRARY.isIn(OcclusionTags.VERY_HIGH, block))
+        if (TAG_LIBRARY.is(OcclusionTags.VERY_HIGH, state))
             return 0.8F;
-        if (TAG_LIBRARY.isIn(OcclusionTags.MAX, block))
+        if (TAG_LIBRARY.is(OcclusionTags.MAX, state))
             return 1.0F;
         return state.canOcclude() ? DEFAULT_OPAQUE_OCCLUSION : DEFAULT_TRANSLUCENT_OCCLUSION;
     }

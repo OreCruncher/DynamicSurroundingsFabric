@@ -2,7 +2,6 @@ package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.*;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -128,15 +127,15 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
         // Gather all the effect types that apply to the entity
         Set<EntityEffectType> effectTypes = new ReferenceOpenHashSet<>();
 
-        if (this.tagLibrary.isIn(EntityEffectTags.BOW_PULL, entityType))
+        if (this.tagLibrary.is(EntityEffectTags.BOW_PULL, entityType))
             effectTypes.add(EntityEffectType.BOW_PULL);
-        if (this.tagLibrary.isIn(EntityEffectTags.FROST_BREATH, entityType))
+        if (this.tagLibrary.is(EntityEffectTags.FROST_BREATH, entityType))
             effectTypes.add(EntityEffectType.FROST_BREATH);
-        if (this.tagLibrary.isIn(EntityEffectTags.ITEM_SWING, entityType))
+        if (this.tagLibrary.is(EntityEffectTags.ITEM_SWING, entityType))
             effectTypes.add(EntityEffectType.ITEM_SWING);
-        if (this.tagLibrary.isIn(EntityEffectTags.TOOLBAR, entityType))
+        if (this.tagLibrary.is(EntityEffectTags.TOOLBAR, entityType))
             effectTypes.add(EntityEffectType.PLAYER_TOOLBAR);
-        if (this.tagLibrary.isIn(EntityEffectTags.BRUSH_STEP, entityType))
+        if (this.tagLibrary.is(EntityEffectTags.BRUSH_STEP, entityType))
             effectTypes.add(EntityEffectType.BRUSH_STEP);
 
         return effectTypes;
