@@ -33,7 +33,7 @@ public class TagLibrary implements ITagLibrary {
     private final IPlatform platform;
     private final IModLog logger;
 
-    private final Map<TagKey<?>, TagData> tagCache = new HashMap<>();
+    private final Map<TagKey<?>, TagData> tagCache = new IdentityHashMap<>();
 
     public TagLibrary(IPlatform platform, IModLog logger) {
         this.platform = platform;

@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.objects.*;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.config.EntityEffectType;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
@@ -54,7 +55,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
                 return true;
             }
             @Override
-            public boolean isVisibleTo(LocalPlayer player) {
+            public boolean isVisibleTo(Player player) {
                 return false;
             }
             @Override

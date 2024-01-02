@@ -34,8 +34,9 @@ public class CuboidPointIterator implements IPointIterator {
     }
 
     public CuboidPointIterator(final BlockPos p1, final BlockPos p2) {
-        this.itr = iterateCuboid(p1.getX(), p1.getY(), p1.getZ(), p2.getX(), p2.getY(), p2.getZ()).iterator();
-            this.peeked = this.itr.next();
+        this.itr = BlockPos.betweenClosed(p1, p2).iterator();
+        //this.itr = iterateCuboid(p1.getX(), p1.getY(), p1.getZ(), p2.getX(), p2.getY(), p2.getZ()).iterator();
+        this.peeked = this.itr.next();
     }
 
     @Override

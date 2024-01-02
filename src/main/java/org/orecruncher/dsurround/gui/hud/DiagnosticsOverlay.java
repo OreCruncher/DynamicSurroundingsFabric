@@ -48,11 +48,15 @@ public class DiagnosticsOverlay extends AbstractOverlay {
 
     @Override
     public void tick(Minecraft client) {
-        // Only want to rendered if configured to do so and when the regular
+        // Only want to render if configured to do so and when the regular
         // diagnostic menu is not showing
         this.showHud = this.enableCollection && !this.isDebugHudEnabled();
 
         if (this.showHud) {
+
+            // Perform tick on the plugins
+            this.plugins.forEach(p -> p.tick(client));
+
             this.diagnostics.begin();
 
             var event = new ClientEventHooks.CollectDiagnosticsEvent();

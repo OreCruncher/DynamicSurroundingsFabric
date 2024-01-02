@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.effects.entity;
 
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.lib.GameUtils;
 
@@ -60,7 +61,7 @@ public class EntityEffectInfo {
         return GameUtils.getPlayer().orElseThrow().getId() == player.getId();
     }
 
-    public boolean isVisibleTo(LocalPlayer player) {
+    public boolean isVisibleTo(Player player) {
         return Objects.requireNonNull(this.entity.get()).isInvisibleTo(player);
     }
 
