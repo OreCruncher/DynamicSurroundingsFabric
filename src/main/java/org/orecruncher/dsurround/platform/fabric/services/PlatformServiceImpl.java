@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.KeyMapping;
+import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.version.SemanticVersion;
@@ -30,8 +31,8 @@ public class PlatformServiceImpl implements IPlatform {
                 var modrinthLink = data.get("modrinthLink").getAsString();
                 var result = new ModInformation(modId, displayName, version, updateURL, curseForgeLink, modrinthLink);
                 return Optional.of(result);
-            } catch(Exception ignored) {
-
+            } catch(Exception ex) {
+                Client.LOGGER.error(ex, "What?");
             }
         }
         return Optional.empty();
