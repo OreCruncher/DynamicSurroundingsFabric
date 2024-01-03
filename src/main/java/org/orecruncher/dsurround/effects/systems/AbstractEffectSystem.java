@@ -40,7 +40,7 @@ public abstract class AbstractEffectSystem implements IEffectSystem {
     public void clear() {
         if (!this.systems.isEmpty()) {
             this.logger.debug("[%s] clearing %d effects", this.systemName, this.systems.size());
-            this.systems.values().forEach(IBlockEffect::setDone);
+            this.systems.values().forEach(IBlockEffect::remove);
             this.systems.clear();
         }
     }
@@ -55,7 +55,7 @@ public abstract class AbstractEffectSystem implements IEffectSystem {
         var longPos = pos.asLong();
         var effect = this.systems.get(longPos);
         if (effect != null) {
-            effect.setDone();
+            effect.remove();
             this.onRemoveSystem(longPos);
         }
     };

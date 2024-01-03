@@ -9,7 +9,7 @@ public interface IBlockEffect {
 
     boolean isDone();
 
-    void setDone();
+    void remove();
 
     BlockPos getPos();
 

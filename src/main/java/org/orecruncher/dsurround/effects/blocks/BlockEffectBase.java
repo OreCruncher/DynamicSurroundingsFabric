@@ -66,7 +66,7 @@ public abstract class BlockEffectBase implements IBlockEffect {
         return !this.isAlive;
     }
 
-    public void setDone() {
+    public void remove() {
         this.isAlive = false;
         cleanUp();
     }
@@ -93,7 +93,7 @@ public abstract class BlockEffectBase implements IBlockEffect {
      */
     public void tick() {
         if (shouldDie()) {
-            setDone();
+            remove();
             return;
         }
 

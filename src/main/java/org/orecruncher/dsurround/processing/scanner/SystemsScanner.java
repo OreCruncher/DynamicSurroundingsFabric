@@ -71,7 +71,7 @@ public class SystemsScanner extends CuboidScanner {
 
             pred = system -> {
                 if (!BlockPosUtil.contains(system.getPos(), minPoint, maxPoint)) {
-                    system.setDone();
+                    system.remove();
                 } else {
                     system.tick();
                 }
