@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.effects.systems;
 
+import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.level.Level;
@@ -7,9 +8,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.effects.IEffectSystem;
-import org.orecruncher.dsurround.effects.blocks.ParticleJetEffect;
+import org.orecruncher.dsurround.effects.blocks.AbstractParticleEmitterEffect;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
+
+import java.util.Optional;
 
 import static org.orecruncher.dsurround.effects.BlockEffectUtils.*;
 
@@ -69,16 +72,16 @@ public class SteamEffectSystem extends AbstractEffectSystem implements IEffectSy
                 && blockExistsAround(world, pos, IS_HOT_SOURCE);
     }
 
-    private static class SteamEffect extends ParticleJetEffect {
+    private static class SteamEffect extends AbstractParticleEmitterEffect {
 
         public SteamEffect(Level world, double x, double y, double z) {
             super(world, x, y, z);
         }
 
         @Override
-        public boolean shouldDie() {
+        public boolean shouldRemove() {
             // Throttle checks for going away
-            if ((this.particleAge % 10) == 0) {
+            if ((this.age % 10) == 0) {
                 var source = this.world.getBlockState(this.getPos());
                 return !canSteamSpawn(this.world, source, this.getPos());
             }
@@ -86,8 +89,8 @@ public class SteamEffectSystem extends AbstractEffectSystem implements IEffectSy
         }
 
         @Override
-        protected void spawnJetParticle() {
-            this.addParticle(ParticleTypes.CLOUD, this.posX, this.posY, this.posZ, 0, 0.1D, 0D);
+        protected Optional<Particle> produceParticle() {
+            return this.createParticle(ParticleTypes.CLOUD, this.posX, this.posY, this.posZ, 0, 0.1D, 0D);
         }
     }
 }

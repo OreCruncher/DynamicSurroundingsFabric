@@ -8,8 +8,8 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 
 public final class BiomeSoundEmitter {
 
-    private static final IModLog logger = ContainerManager.resolve(IModLog.class);
-    private static final IAudioPlayer audioPlayer = ContainerManager.resolve(IAudioPlayer.class);
+    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+    private static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
 
     private final ISoundFactory soundEvent;
     private final BackgroundSoundLoop acousticSource;
@@ -23,13 +23,13 @@ public final class BiomeSoundEmitter {
 
     public void tick() {
 
-        boolean isPlaying = audioPlayer.isPlaying(this.acousticSource);
+        boolean isPlaying = AUDIO_PLAYER.isPlaying(this.acousticSource);
 
-        // If the current sound is playing and the sound is fading just terminate the sound.
+        // If the current sound is playing and the sound is fading, terminate the sound.
         if (isPlaying) {
             return;
         } else if (isFading()) {
-            // If we get here the sound is no longer playing and is in the
+            // If we get here, the sound is no longer playing and is in the
             // fading state. This is possible because the actual sound
             // volume down in the engine could have hit 0 but the tick
             // handler on the sound did not have a chance to get there
@@ -38,16 +38,16 @@ public final class BiomeSoundEmitter {
             return;
         }
 
-        // Play the sound if need be
-        audioPlayer.play(this.acousticSource);
+        // Play the sound if needed
+        AUDIO_PLAYER.play(this.acousticSource);
     }
 
     public void setVolumeScale(final float scale) {
         this.acousticSource.setScaleTarget(scale);
     }
 
-    public void fade() {
-        logger.debug("FADE: %s", this.acousticSource.toString());
+    public void fadeOut() {
+        LOGGER.debug("FADE OUT: %s", this.acousticSource.toString());
         this.acousticSource.fadeOut();
     }
 
@@ -55,17 +55,17 @@ public final class BiomeSoundEmitter {
         return this.acousticSource.isFading();
     }
 
-    public void unfade() {
-        logger.debug("UNFADE: %s", this.acousticSource.toString());
+    public void fadeIn() {
+        LOGGER.debug("FADE IN: %s", this.acousticSource.toString());
         this.acousticSource.fadeIn();
     }
 
-    public boolean isDonePlaying() {
+    public boolean isDone() {
         return this.done || this.acousticSource.isStopped();
     }
 
     public void stop() {
-        audioPlayer.stop(this.acousticSource);
+        AUDIO_PLAYER.stop(this.acousticSource);
         this.done = true;
     }
 

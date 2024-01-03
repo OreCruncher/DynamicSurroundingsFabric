@@ -14,7 +14,7 @@ import org.orecruncher.dsurround.sound.IAudioPlayer;
 import java.util.Optional;
 import java.util.Random;
 
-public abstract class BlockEffectBase implements IBlockEffect {
+public abstract class AbstractBlockEffect implements IBlockEffect {
 
     protected static final Random RANDOM = Randomizer.current();
     protected static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
@@ -24,9 +24,9 @@ public abstract class BlockEffectBase implements IBlockEffect {
     protected final double posY;
     protected final double posZ;
     protected final BlockPos position;
-    private boolean isAlive = true;
+    private boolean removed = false;
 
-    protected BlockEffectBase(final Level worldIn, final double posXIn, final double posYIn, final double posZIn) {
+    protected AbstractBlockEffect(final Level worldIn, final double posXIn, final double posYIn, final double posZIn) {
         this.world = worldIn;
         this.posX = posXIn;
         this.posY = posYIn;
@@ -46,13 +46,6 @@ public abstract class BlockEffectBase implements IBlockEffect {
     }
 
     /**
-     * Adds a particle to the Minecraft particle system
-     */
-    public void addParticle(ParticleOptions parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
-        GameUtils.getParticleManager().createParticle(parameters, x, y, z, velocityX, velocityY, velocityZ);
-    }
-
-    /**
      * Creates a particle effect but does not queue.  Allows for the particle to be manipulated prior to handing
      * it to the particle manager.
      */
@@ -63,36 +56,31 @@ public abstract class BlockEffectBase implements IBlockEffect {
     }
 
     public boolean isDone() {
-        return !this.isAlive;
+        return this.removed;
     }
 
     public void remove() {
-        this.isAlive = false;
+        this.removed = true;
         cleanUp();
     }
 
     /**
-     * By default, a system will stay alive indefinitely until the
-     * ParticleSystemManager removes it. Override to provide termination capability.
+     * Override to provide the necessary signal so the system will start the process of removal.
      */
-    public boolean shouldDie() {
-        return false;
-    }
+    public abstract boolean shouldRemove();
 
     /**
-     * Perform any cleanup activities prior to dying.
+     * Perform any cleanup activities prior to being removed from tracking collections.
      */
     protected void cleanUp() {
 
     }
 
     /**
-     * Update the state of the particle system. Any particles are queued into the
-     * Minecraft particle system or to a ParticleCollection so they do not have to
-     * be ticked.
+     * Update the state of the effect.
      */
-    public void tick() {
-        if (shouldDie()) {
+    public final void tick() {
+        if (shouldRemove()) {
             remove();
             return;
         }

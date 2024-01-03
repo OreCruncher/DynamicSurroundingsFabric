@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.client.ParticleStatus;
+import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
@@ -16,20 +17,20 @@ import net.minecraft.world.level.block.SupportType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.effects.BlockEffectUtils;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IEffectSystem;
-import org.orecruncher.dsurround.effects.blocks.ParticleJetEffect;
+import org.orecruncher.dsurround.effects.blocks.AbstractParticleEmitterEffect;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.sound.*;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -40,7 +41,6 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
 
     private static final int SOUND_CHECK_INTERVAL = 4;
     private static final int SOUND_INSTANCE_CAP = 32;
-    private static final Vec3 SPLASH_INTENSITY = new Vec3(0.05, 0.05, 0.05);
     private final static Vec3i[] CARDINAL_OFFSETS = {
             new Vec3i(-1, 0, 0),
             new Vec3i(1, 0, 0),
@@ -145,7 +145,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
             // If it is in a desired location, make it happen
             if (desiredLocations.contains(posIndex)) {
                 if (sound == null) {
-                    int idx = Mth.clamp(waterFallEffect.getJetStrength(), 0, ACOUSTICS.length - 1);
+                    int idx = Mth.clamp(waterFallEffect.getStrength(), 0, ACOUSTICS.length - 1);
                     sound = ACOUSTICS[idx].createBackgroundSoundLoopAt(system.getPos());
                     this.waterfallSoundInstances.put(posIndex, sound);
                 }
@@ -200,7 +200,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
                 .map(e -> {
                     var effect = (WaterfallEffect)e;
                     var posIndex = effect.getPosIndex();
-                    var strength = effect.getJetStrength();
+                    var strength = effect.getStrength();
                     var pos = effect.getPosition();
                     var weight = (strength * strength) / player.getEyePosition().distanceToSqr(pos);
                     return Pair.of(weight, posIndex);
@@ -305,7 +305,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
         return true;
     }
 
-    private static class WaterfallEffect extends ParticleJetEffect {
+    private static class WaterfallEffect extends AbstractParticleEmitterEffect {
 
         private static final Configuration.BlockEffects CONFIG = ContainerManager.resolve(Configuration.BlockEffects.class);
 
@@ -323,9 +323,9 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
         }
 
         @Override
-        public boolean shouldDie() {
+        public boolean shouldRemove() {
             // Check every half second
-            return (this.particleAge % 10) == 0
+            return (this.age % 10) == 0
                     && !canWaterfallSpawn(this.world, this.world.getBlockState(this.position), this.position);
         }
 
@@ -342,32 +342,35 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
         }
 
         @Override
-        protected void spawnJetParticle() {
+        protected void handleParticles() {
             if (!CONFIG.enableWaterfallParticles)
                 return;
 
-            var intensity = SPLASH_INTENSITY.scale(this.jetStrength);
-
             for (int i = 0; i <= this.getSplashParticleSpawnCount(); i++) {
-
-                final double xOffset = (RANDOM.nextFloat() * 2.0F - 1.0F);
-                final double zOffset = (RANDOM.nextFloat() * 2.0F - 1.0F);
-
-                final double motionX = xOffset * intensity.x();
-                final double motionZ = zOffset * intensity.z();
-                final double motionY = 0.1D + RANDOM.nextFloat() * intensity.y();
-
-                var posX = this.posX + xOffset;
-                var posZ = this.posZ + zOffset;
-
-                var particle = this.createParticle(ParticleTypes.SPLASH, posX, this.deltaY, posZ, motionX, motionY, motionZ);
-
-                particle.ifPresent(p -> {
-                    p.setParticleSpeed(motionX, motionY, motionZ);
-                    p.setLifetime(p.getLifetime() * 2);
-                    this.addParticle(p);
-                });
+                this.produceParticle().ifPresent(this::addParticle);
             }
+        }
+
+        @Override
+        protected Optional<Particle> produceParticle() {
+            final double xOffset = (RANDOM.nextFloat() * 2.0F - 1.0F);
+            final double zOffset = (RANDOM.nextFloat() * 2.0F - 1.0F);
+
+            final double motionX = xOffset * 0.05D;
+            final double motionZ = zOffset * 0.05D;
+            final double motionY = 0.1D + RANDOM.nextFloat() * 0.05D;
+
+            var posX = this.posX + xOffset;
+            var posZ = this.posZ + zOffset;
+
+            var particle = this.createParticle(ParticleTypes.SPLASH, posX, this.deltaY, posZ, motionX, motionY, motionZ);
+
+            particle.ifPresent(p -> {
+                p.setParticleSpeed(motionX, motionY, motionZ);
+                p.setLifetime(p.getLifetime() * 2);
+            });
+
+            return particle;
         }
     }
 }

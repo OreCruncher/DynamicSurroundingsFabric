@@ -32,12 +32,12 @@ public class FlameJetProducer extends BlockEffectProducer {
                                               final BlockPos pos, final Random random) {
         final int blockCount;
         final float spawnHeight;
-        final boolean isSolid;
+        final boolean isNonLiquidBlock;
 
         if (!state.getFluidState().isEmpty()) {
             blockCount = countVerticalBlocks(world, pos, IS_LAVA, -1);
             spawnHeight = pos.getY() + state.getFluidState().getOwnHeight() + 0.1F;
-            isSolid = false;
+            isNonLiquidBlock = false;
         } else {
             final VoxelShape shape = state.getShape(world, pos);
             if (shape.isEmpty()) {
@@ -45,7 +45,7 @@ public class FlameJetProducer extends BlockEffectProducer {
             }
             final double blockHeight = shape.bounds().maxY;
             spawnHeight = (float) (pos.getY() + blockHeight);
-            isSolid = true;
+            isNonLiquidBlock = true;
             if (state.isFaceSturdy(world, pos, Direction.UP, SupportType.FULL)) {
                 blockCount = 2;
             } else {
@@ -54,7 +54,7 @@ public class FlameJetProducer extends BlockEffectProducer {
         }
 
         if (blockCount > 0) {
-            var effect = new FlameJetEffect(blockCount, world, pos.getX() + 0.5D, spawnHeight, pos.getZ() + 0.5D, isSolid);
+            var effect = new FlameJetEffect(blockCount, world, pos.getX() + 0.5D, spawnHeight, pos.getZ() + 0.5D, isNonLiquidBlock);
             return Optional.of(effect);
         }
 

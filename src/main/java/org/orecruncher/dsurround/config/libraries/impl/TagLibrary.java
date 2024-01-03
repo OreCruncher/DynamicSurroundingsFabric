@@ -167,7 +167,6 @@ public class TagLibrary implements ITagLibrary {
         return RegistryUtils.getRegistry(tagKey.registry());
     }
 
-    @SuppressWarnings("unchecked")
     private <T> TagData<T> getTagData(TagKey<T> tagKey) {
         // We cannot use computeIfAbsent() because tag loading is a
         // recursive process and will refer back and potentially modify the
@@ -177,11 +176,10 @@ public class TagLibrary implements ITagLibrary {
             data = this.loadTagData(tagKey);
             this.tagCache.put(tagKey, data);
         }
-        return (TagData<T>)data;
+        return TagData.cast(data);
     }
 
     // This is based on the Fabric client tag handling code.
-    @SuppressWarnings("unchecked")
     private <T> TagData<T> loadTagData(TagKey<T> tagKey) {
         Set<TagEntry> entries = new HashSet<>();
         Set<Path> tagFiles = this.getTagFiles(tagKey.registry(), tagKey.location());
@@ -208,7 +206,7 @@ public class TagLibrary implements ITagLibrary {
             // This could be legitimately possible. However, if there is a typo in the json, like
             // c:glass_pane vs. c:glass_panes, it could result in an empty scan.  Ask me how I
             // know.
-            return (TagData<T>)TagData.EMPTY;
+            return TagData.empty();
         }
 
         Set<ResourceLocation> completeIds = new HashSet<>();
@@ -265,7 +263,16 @@ public class TagLibrary implements ITagLibrary {
             Set<ResourceLocation> completeIds,
             Set<TagKey<?>> immediateChildTags,
             Set<ResourceLocation> immediateChildIds) {
-        public static final TagData<?> EMPTY = new TagData<>(ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of());
+        private static final TagData<?> EMPTY = new TagData<>(ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of());
+
+        public static <T> TagData<T> empty() {
+            return cast(EMPTY);
+        }
+
+        @SuppressWarnings("unchecked")
+        public static <T> TagData<T> cast(TagData<?> tagData) {
+            return (TagData<T>)tagData;
+        }
 
         public boolean isEmpty() {
             return this.members.isEmpty() && this.immediateChildIds.isEmpty() && this.immediateChildTags.isEmpty();
