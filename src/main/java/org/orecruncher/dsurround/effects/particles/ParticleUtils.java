@@ -9,14 +9,14 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
-import org.orecruncher.dsurround.lib.random.XorShiftRandom;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.mixins.core.MixinParticleManager;
 
 import java.util.Random;
 
 public final class ParticleUtils {
 
-    private static final Random RANDOM = XorShiftRandom.current();
+    private static final Random RANDOM = Randomizer.current();
 
     public static SpriteSet getSpriteProvider(ParticleType<?> particleType) {
         var id = RegistryUtils.getRegistry(Registries.PARTICLE_TYPE)

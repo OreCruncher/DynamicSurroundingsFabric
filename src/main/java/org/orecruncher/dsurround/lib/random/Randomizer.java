@@ -2,27 +2,29 @@ package org.orecruncher.dsurround.lib.random;
 
 import java.util.Random;
 import java.util.random.RandomGenerator;
+import java.util.random.RandomGeneratorFactory;
 
 /**
  * Proxies the RandomGenerator from modern Java with a Random signature.
  */
-public final class XorShiftRandom extends Random {
+public final class Randomizer extends Random {
 
-    private static final ThreadLocal<XorShiftRandom> localRandom = ThreadLocal.withInitial(XorShiftRandom::new);
+    // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/random/package-summary.html
+    private static final String RNG_ALGORITHM = "Xoroshiro128PlusPlus";
+    private static final ThreadLocal<Randomizer> LOCAL_RANDOM = ThreadLocal.withInitial(Randomizer::new);
 
     private final RandomGenerator generator;
 
-    public XorShiftRandom() {
-        this(0);
+    public Randomizer() {
+        this.generator = RandomGeneratorFactory.of(RNG_ALGORITHM).create();
     }
 
-    public XorShiftRandom(final long ignore) {
-        // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/random/package-summary.html
-        this.generator = RandomGenerator.of("Xoroshiro128PlusPlus");
+    public Randomizer(final long seed) {
+        this.generator = RandomGeneratorFactory.of(RNG_ALGORITHM).create(seed);
     }
 
-    public static XorShiftRandom current() {
-        return localRandom.get();
+    public static Randomizer current() {
+        return LOCAL_RANDOM.get();
     }
 
     @Override

@@ -9,7 +9,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
-import org.orecruncher.dsurround.lib.random.XorShiftRandom;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import java.util.Random;
 
@@ -20,7 +20,7 @@ public class FrostBreathParticle extends TextureSheetParticle {
     public FrostBreathParticle(LivingEntity entity) {
         super((ClientLevel) entity.level(), 0, 0, 0, 0.0, 0.0, 0.0);
         
-        final Random rand = XorShiftRandom.current();
+        final Random rand = Randomizer.current();
 
         // Reuse the cloud sheet
         this.spriteProvider = ParticleUtils.getSpriteProvider(ParticleTypes.CLOUD);

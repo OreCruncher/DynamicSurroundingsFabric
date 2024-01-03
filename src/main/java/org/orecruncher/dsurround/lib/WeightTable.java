@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.lib;
 
-import org.orecruncher.dsurround.lib.random.XorShiftRandom;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -16,7 +16,7 @@ public class WeightTable<T> {
 
     private static final int DEFAULT_ARRAY_SIZE = 8;
 
-    protected static final Random RANDOM = XorShiftRandom.current();
+    protected static final Random RANDOM = Randomizer.current();
 
     protected int[] weightSegment = new int[DEFAULT_ARRAY_SIZE];
     protected Object[] item = new Object[DEFAULT_ARRAY_SIZE];

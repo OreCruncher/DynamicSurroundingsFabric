@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.math;
 
 import net.minecraft.world.phys.Vec3;
-import org.orecruncher.dsurround.lib.random.XorShiftRandom;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import java.util.Random;
 
@@ -23,7 +23,7 @@ public class MathStuff {
     }
 
     public static Vec3 randomPoint(final int minRange, final int maxRange) {
-        Random rand = XorShiftRandom.current();
+        Random rand = Randomizer.current();
 
         // Establish a random unit vector
         final double x = rand.nextDouble() - 0.5D;

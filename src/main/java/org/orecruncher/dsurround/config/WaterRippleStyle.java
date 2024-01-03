@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.config;
 import net.minecraft.resources.ResourceLocation;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.particles.ParticleSheets;
-import org.orecruncher.dsurround.lib.random.XorShiftRandom;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 
 public enum WaterRippleStyle {
 
@@ -69,6 +69,6 @@ public enum WaterRippleStyle {
     }
 
     public int getMaxAge() {
-        return 12 + XorShiftRandom.current().nextInt(8);
+        return 12 + Randomizer.current().nextInt(8);
     }
 }

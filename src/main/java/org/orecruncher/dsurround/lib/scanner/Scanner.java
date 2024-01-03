@@ -6,7 +6,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.lib.random.XorShiftRandom;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import java.util.Random;
 import java.util.Set;
@@ -36,7 +36,7 @@ public abstract class Scanner {
 
     protected final ScanContext locus;
 
-    protected final Random random = new XorShiftRandom();
+    protected final Random random = new Randomizer();
     protected final BlockPos.MutableBlockPos workingPos = new BlockPos.MutableBlockPos();
 
     public Scanner(final ScanContext locus, final String name, final int range) {

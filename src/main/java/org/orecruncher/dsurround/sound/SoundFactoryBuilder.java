@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.math.MathStuff;
-import org.orecruncher.dsurround.lib.random.XorShiftRandom;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 
 public final class SoundFactoryBuilder {
 
@@ -93,7 +93,7 @@ public final class SoundFactoryBuilder {
         var delta = max - min;
         if (Float.compare(delta, 0) == 0)
             return min;
-        return (float) (XorShiftRandom.current().nextDouble() * delta + min);
+        return (float) (Randomizer.current().nextDouble() * delta + min);
     }
 
     private BackgroundSoundLoop createBackgroundSoundLoop() {
@@ -131,7 +131,7 @@ public final class SoundFactoryBuilder {
                 this.generate(this.minVolume, this.maxVolume),
                 this.generate(this.minPitch, this.maxPitch),
                 entity,
-                XorShiftRandom.current().nextLong()
+                Randomizer.current().nextLong()
         );
     }
 

@@ -11,8 +11,8 @@ import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.random.LCGRandom;
-import org.orecruncher.dsurround.lib.random.XorShiftRandom;
+import org.orecruncher.dsurround.lib.random.Randomizer;
+import org.orecruncher.dsurround.lib.random.SplitMax;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 import java.util.Random;
@@ -24,7 +24,7 @@ import java.util.function.Predicate;
  */
 public class RandomBlockEffectSystem extends AbstractEffectSystem {
 
-    protected static final Random RANDOM = XorShiftRandom.current();
+    protected static final Random RANDOM = Randomizer.current();
 
     public static final int NEAR_RANGE = 16;
     public static final int FAR_RANGE = 32;
@@ -33,7 +33,7 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
     // Use LCG because it is FAST. A random block scanner system will be
     // checking a lot of block positions per tick, so we avoid "true"
     // random for performance.
-    private final LCGRandom lcg = new LCGRandom();
+    private final SplitMax lcg = new SplitMax();
     private final IBlockLibrary blockLibrary;
     private final IAudioPlayer audioPlayer;
     private final int range;
@@ -97,10 +97,10 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
         // Do nothing - everything is in the tick
     }
 
-    protected Iterable<BlockPos> iterateRandomly(LCGRandom random, int count, BlockPos center, int range) {
+    protected Iterable<BlockPos> iterateRandomly(SplitMax random, int count, BlockPos center, int range) {
         return () -> new AbstractIterator<>() {
             final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-            final LCGRandom lcg = random;
+            final SplitMax lcg = random;
             int remaining = count;
 
             private int randomRange(int range) {

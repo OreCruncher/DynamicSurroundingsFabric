@@ -8,7 +8,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.random.XorShiftRandom;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
@@ -33,7 +33,7 @@ class FloorSqueakAccent  implements IFootstepAccentProvider {
 
         if (state.is(BlockEffectTags.FLOOR_SQUEAKS)) {
             // 1 in 10 chance of a squeak
-            if (XorShiftRandom.current().nextInt(10) == 0)
+            if (Randomizer.current().nextInt(10) == 0)
                 acoustics.add(floorSqueakFactory);
         }
     }

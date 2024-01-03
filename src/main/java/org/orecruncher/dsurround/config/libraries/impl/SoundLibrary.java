@@ -18,7 +18,7 @@ import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.CodecExtensions;
 import org.orecruncher.dsurround.lib.Comparers;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.random.XorShiftRandom;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
@@ -144,7 +144,7 @@ public final class SoundLibrary implements ISoundLibrary {
 
         int idx = 0;
         if (this.startupSounds.size() > 1) {
-            idx = XorShiftRandom.current().nextInt(this.startupSounds.size());
+            idx = Randomizer.current().nextInt(this.startupSounds.size());
         }
         return Optional.of(SoundEvent.createVariableRangeEvent(this.startupSounds.get(idx)));
     }

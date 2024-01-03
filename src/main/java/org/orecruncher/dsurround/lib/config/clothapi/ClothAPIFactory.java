@@ -14,7 +14,7 @@ import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigElement;
 import org.orecruncher.dsurround.lib.config.ConfigOptions;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
-import org.orecruncher.dsurround.lib.random.XorShiftRandom;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import java.util.function.BiFunction;
 
@@ -44,7 +44,7 @@ public class ClothAPIFactory implements BiFunction<Minecraft, Screen, Screen> {
         this.configData = config;
 
         if (background == null) {
-            var idx = XorShiftRandom.current().nextInt(BACKGROUNDS.length);
+            var idx = Randomizer.current().nextInt(BACKGROUNDS.length);
             this.background = BACKGROUNDS[idx];
         } else {
             this.background = background;
