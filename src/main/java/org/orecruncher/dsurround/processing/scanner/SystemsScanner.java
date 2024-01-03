@@ -10,11 +10,11 @@ import org.orecruncher.dsurround.effects.IEffectSystem;
 import org.orecruncher.dsurround.lib.BlockPosUtil;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.scanner.CuboidScanner;
 import org.orecruncher.dsurround.lib.scanner.ScanContext;
 
 import java.util.Collection;
-import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -98,12 +98,12 @@ public class SystemsScanner extends CuboidScanner {
     }
 
     @Override
-    public void blockScan(Level world, BlockState state, BlockPos pos, Random rand) {
+    public void blockScan(Level world, BlockState state, BlockPos pos, IRandomizer rand) {
         this.processIfEnabled(false, system -> system.blockScan(world, state, pos));
     }
 
     @Override
-    public void blockUnscan(Level world, BlockState state, BlockPos pos, Random rand) {
+    public void blockUnscan(Level world, BlockState state, BlockPos pos, IRandomizer rand) {
         this.processIfEnabled(false, system -> system.blockUnscan(world, state, pos));
     }
 

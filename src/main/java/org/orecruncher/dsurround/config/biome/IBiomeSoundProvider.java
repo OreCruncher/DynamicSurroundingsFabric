@@ -1,11 +1,11 @@
 package org.orecruncher.dsurround.config.biome;
 
 import org.orecruncher.dsurround.config.SoundEventType;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
 import java.util.Collection;
 import java.util.Optional;
-import java.util.Random;
 
 public interface IBiomeSoundProvider {
 
@@ -24,5 +24,5 @@ public interface IBiomeSoundProvider {
      * @param random Randomizer to use
      * @return SoundEvent that matches crtieria, if any
      */
-    Optional<ISoundFactory> getExtraSound(SoundEventType type, Random random);
+    Optional<ISoundFactory> getExtraSound(SoundEventType type, IRandomizer random);
 }

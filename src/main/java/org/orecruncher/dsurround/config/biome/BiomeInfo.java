@@ -13,6 +13,7 @@ import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -25,7 +26,6 @@ import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 import java.util.Collection;
 import java.util.Optional;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvider {
@@ -145,7 +145,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     }
 
     @Override
-    public Optional<ISoundFactory> getExtraSound(final SoundEventType type, final Random random) {
+    public Optional<ISoundFactory> getExtraSound(final SoundEventType type, final IRandomizer random) {
 
         ObjectArray<AcousticEntry> sourceList = null;
 

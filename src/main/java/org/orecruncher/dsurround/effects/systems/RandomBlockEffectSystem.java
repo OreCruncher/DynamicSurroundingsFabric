@@ -11,11 +11,10 @@ import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
-import org.orecruncher.dsurround.lib.random.SplitMax;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
-import java.util.Random;
 import java.util.Collection;
 import java.util.function.Predicate;
 
@@ -24,22 +23,18 @@ import java.util.function.Predicate;
  */
 public class RandomBlockEffectSystem extends AbstractEffectSystem {
 
-    protected static final Random RANDOM = Randomizer.current();
+    protected static final IRandomizer RANDOM = Randomizer.current();
 
     public static final int NEAR_RANGE = 16;
     public static final int FAR_RANGE = 32;
     private static final int ITERATION_COUNT = 667;
 
-    // Use LCG because it is FAST. A random block scanner system will be
-    // checking a lot of block positions per tick, so we avoid "true"
-    // random for performance.
-    private final SplitMax lcg = new SplitMax();
     private final IBlockLibrary blockLibrary;
     private final IAudioPlayer audioPlayer;
     private final int range;
 
     public RandomBlockEffectSystem(IModLog logger, Configuration config, IBlockLibrary blockLibrary, IAudioPlayer audioPlayer, int range) {
-        super(logger, config, "Random(%d block)".formatted(range));
+        super(logger, config, "Random(%d block range)".formatted(range));
 
         this.blockLibrary = blockLibrary;
         this.audioPlayer = audioPlayer;
@@ -58,7 +53,7 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
         var player = GameUtils.getPlayer().orElseThrow();
         var world = player.level();
 
-        var iterator = iterateRandomly(this.lcg, ITERATION_COUNT, player.blockPosition(), this.range);
+        var iterator = iterateRandomly(Randomizer.current(), ITERATION_COUNT, player.blockPosition(), this.range);
 
         for (var blockPos : iterator) {
             if (this.hasSystemAtPosition(blockPos))
@@ -97,26 +92,20 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
         // Do nothing - everything is in the tick
     }
 
-    protected Iterable<BlockPos> iterateRandomly(SplitMax random, int count, BlockPos center, int range) {
+    protected Iterable<BlockPos> iterateRandomly(IRandomizer random, int count, BlockPos center, int range) {
         return () -> new AbstractIterator<>() {
             final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-            final SplitMax lcg = random;
             int remaining = count;
-
-            private int randomRange(int range) {
-                return this.lcg.nextInt(range) - this.lcg.nextInt(range);
-            }
 
             protected BlockPos computeNext() {
                 if (this.remaining <= 0) {
                     return this.endOfData();
                 } else {
                     --this.remaining;
-                    return this.pos.setWithOffset(
-                            center,
-                            this.randomRange(range),
-                            this.randomRange(range),
-                            this.randomRange(range));
+                    return this.pos.set(
+                            random.triangle(center.getX(), range),
+                            random.triangle(center.getY(), range),
+                            random.triangle(center.getZ(), range));
                 }
             }
         };

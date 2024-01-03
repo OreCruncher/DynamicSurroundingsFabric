@@ -6,10 +6,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.scripting.Script;
 
 import java.util.Optional;
-import java.util.Random;
 
 /**
  * Special block effect producer that just produces particle effects - no fancy systems.  As a result
@@ -25,7 +25,7 @@ public class BlockParticleEffectProducer extends BlockEffectProducer {
     }
 
     @Override
-    final protected Optional<IBlockEffect> produceImpl(Level world, BlockState state, BlockPos pos, Random rand) {
+    final protected Optional<IBlockEffect> produceImpl(Level world, BlockState state, BlockPos pos, IRandomizer rand) {
         var particle = this.supplier.create(world, state, pos, rand);
         this.addParticle(particle);
         return Optional.empty();
@@ -37,6 +37,6 @@ public class BlockParticleEffectProducer extends BlockEffectProducer {
 
     @FunctionalInterface
     public interface IParticleSupplier {
-        Particle create(Level world, BlockState state, BlockPos pos, Random rand);
+        Particle create(Level world, BlockState state, BlockPos pos, IRandomizer rand);
     }
 }

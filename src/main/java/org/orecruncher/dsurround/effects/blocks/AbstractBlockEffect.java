@@ -7,16 +7,16 @@ import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.mixins.core.MixinParticleManager;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 import java.util.Optional;
-import java.util.Random;
 
 public abstract class AbstractBlockEffect implements IBlockEffect {
 
-    protected static final Random RANDOM = Randomizer.current();
+    protected static final IRandomizer RANDOM = Randomizer.current();
     protected static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
 
     protected final Level world;

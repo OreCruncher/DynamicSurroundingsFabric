@@ -7,11 +7,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
 import java.util.Optional;
-import java.util.Random;
 import java.util.function.Predicate;
 
 public abstract class BlockEffectProducer implements IBlockEffectProducer {
@@ -27,7 +27,7 @@ public abstract class BlockEffectProducer implements IBlockEffectProducer {
         this.conditionEvaluator = ContainerManager.resolve(IConditionEvaluator.class);
     }
 
-    protected boolean canTrigger(Level world, BlockState state, BlockPos pos, Random rand) {
+    protected boolean canTrigger(Level world, BlockState state, BlockPos pos, IRandomizer rand) {
         if (this.conditionEvaluator.check(this.conditions)) {
             var chance = this.conditionEvaluator.eval(this.chance);
             return chance instanceof Double c && rand.nextDouble() < c;
@@ -36,14 +36,14 @@ public abstract class BlockEffectProducer implements IBlockEffectProducer {
     }
 
     @Override
-    public Optional<IBlockEffect> produce(Level world, BlockState state, BlockPos pos, Random rand) {
+    public Optional<IBlockEffect> produce(Level world, BlockState state, BlockPos pos, IRandomizer rand) {
         if (this.canTrigger(world, state, pos, rand)) {
             return this.produceImpl(world, state, pos, rand);
         }
         return Optional.empty();
     }
 
-    protected abstract Optional<IBlockEffect> produceImpl(Level world, BlockState state, BlockPos pos, Random rand);
+    protected abstract Optional<IBlockEffect> produceImpl(Level world, BlockState state, BlockPos pos, IRandomizer rand);
 
     //
     // Bunch of helper methods for implementations

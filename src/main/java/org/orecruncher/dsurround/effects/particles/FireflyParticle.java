@@ -5,12 +5,11 @@ import net.minecraft.client.particle.*;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
-import java.util.Random;
-
 public class FireflyParticle extends SimpleAnimatedParticle {
-    private static final Random RANDOM = Randomizer.current();
+    private static final IRandomizer RANDOM = Randomizer.current();
     private static final float XZ_MOTION_DELTA = 0.1F;
     private static final float Y_MOTION_DELTA = XZ_MOTION_DELTA / 2.0F;
     private static final float ACCELERATION = 0.004F;

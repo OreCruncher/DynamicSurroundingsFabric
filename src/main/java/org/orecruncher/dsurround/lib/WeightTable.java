@@ -1,10 +1,10 @@
 package org.orecruncher.dsurround.lib;
 
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.Random;
 import java.util.stream.Stream;
 
 /**
@@ -16,7 +16,7 @@ public class WeightTable<T> {
 
     private static final int DEFAULT_ARRAY_SIZE = 8;
 
-    protected static final Random RANDOM = Randomizer.current();
+    protected static final IRandomizer RANDOM = Randomizer.current();
 
     protected int[] weightSegment = new int[DEFAULT_ARRAY_SIZE];
     protected Object[] item = new Object[DEFAULT_ARRAY_SIZE];

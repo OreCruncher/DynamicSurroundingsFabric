@@ -1,26 +1,16 @@
 package org.orecruncher.dsurround.lib.scanner;
 
-import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
-
-import java.util.Random;
-import java.util.Set;
 
 public abstract class Scanner {
 
-    protected static final Set<BlockState> BLOCKSTATES_TO_IGNORE = new ReferenceArraySet<>(3);
     private final static int MAX_BLOCKS_TICK = 6000;
-
-    static {
-        BLOCKSTATES_TO_IGNORE.add(Blocks.VOID_AIR.defaultBlockState());
-        BLOCKSTATES_TO_IGNORE.add(Blocks.CAVE_AIR.defaultBlockState());
-        BLOCKSTATES_TO_IGNORE.add(Blocks.AIR.defaultBlockState());
-    }
 
     protected final String name;
 
@@ -36,7 +26,7 @@ public abstract class Scanner {
 
     protected final ScanContext locus;
 
-    protected final Random random = new Randomizer();
+    protected final IRandomizer random = Randomizer.current();
     protected final BlockPos.MutableBlockPos workingPos = new BlockPos.MutableBlockPos();
 
     public Scanner(final ScanContext locus, final String name, final int range) {
@@ -78,7 +68,7 @@ public abstract class Scanner {
      * safe to hold on to beyond the call, so if it needs to be kept, it needs to be
      * copied.
      */
-    public abstract void blockScan(final Level world, final BlockState state, final BlockPos pos, final Random rand);
+    public abstract void blockScan(final Level world, final BlockState state, final BlockPos pos, final IRandomizer rand);
 
     public void tick() {
         var world = this.locus.getWorld();
@@ -87,7 +77,7 @@ public abstract class Scanner {
             if (pos == null)
                 break;
             final BlockState state = world.getBlockState(pos);
-            if (BLOCKSTATES_TO_IGNORE.contains(state))
+            if (Constants.BLOCKS_TO_IGNORE.contains(state.getBlock()))
                 continue;
             blockScan(world, state, pos, this.random);
         }
@@ -99,6 +89,6 @@ public abstract class Scanner {
      * returned from the function call.
      */
     @Nullable
-    protected abstract BlockPos nextPos(final BlockPos.MutableBlockPos pos, final Random rand);
+    protected abstract BlockPos nextPos(final BlockPos.MutableBlockPos pos, final IRandomizer rand);
 
 }

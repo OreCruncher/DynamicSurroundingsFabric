@@ -3,8 +3,6 @@ package org.orecruncher.dsurround.lib.math;
 import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
-import java.util.Random;
-
 public class MathStuff {
     public static final double PHI = 0.5D + Math.sqrt(5) / 2D;  // Golden ratio
     public static final float PHI_F = (float) PHI;
@@ -23,7 +21,7 @@ public class MathStuff {
     }
 
     public static Vec3 randomPoint(final int minRange, final int maxRange) {
-        Random rand = Randomizer.current();
+        var rand = Randomizer.current();
 
         // Establish a random unit vector
         final double x = rand.nextDouble() - 0.5D;

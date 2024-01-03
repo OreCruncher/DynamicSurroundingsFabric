@@ -8,10 +8,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.orecruncher.dsurround.effects.blocks.FlameJetEffect;
 import org.orecruncher.dsurround.effects.IBlockEffect;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.scripting.Script;
 
 import java.util.Optional;
-import java.util.Random;
 
 import static org.orecruncher.dsurround.effects.BlockEffectUtils.IS_LAVA;
 
@@ -23,13 +23,13 @@ public class FlameJetProducer extends BlockEffectProducer {
 
     @Override
     protected boolean canTrigger(final Level world, final BlockState state,
-                                 final BlockPos pos, final Random random) {
+                                 final BlockPos pos, final IRandomizer random) {
         return world.getBlockState(pos.above()).isAir() && super.canTrigger(world, state, pos, random);
     }
 
     @Override
     public Optional<IBlockEffect> produceImpl(final Level world, final BlockState state,
-                                              final BlockPos pos, final Random random) {
+                                              final BlockPos pos, final IRandomizer random) {
         final int blockCount;
         final float spawnHeight;
         final boolean isNonLiquidBlock;

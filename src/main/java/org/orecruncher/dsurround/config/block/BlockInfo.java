@@ -13,6 +13,7 @@ import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
@@ -125,7 +126,7 @@ public class BlockInfo {
         return this.sounds != null || this.blockEffects != null;
     }
 
-    public Optional<ISoundFactory> getSoundToPlay(final Random random) {
+    public Optional<ISoundFactory> getSoundToPlay(final IRandomizer random) {
         if (this.sounds != null) {
             var chance = this.conditionEvaluator.eval(this.soundChance);
             if (chance instanceof Double c && random.nextDouble() < c) {

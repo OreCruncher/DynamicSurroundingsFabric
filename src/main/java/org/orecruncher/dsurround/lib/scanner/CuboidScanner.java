@@ -5,8 +5,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Random;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 
 public abstract class CuboidScanner extends Scanner {
 
@@ -126,7 +125,7 @@ public abstract class CuboidScanner extends Scanner {
      * This is the hook that gets called when a block goes out of scope because the
      * player moved or something.
      */
-    public void blockUnscan(final Level world, final BlockState state, final BlockPos pos, final Random rand) {
+    public void blockUnscan(final Level world, final BlockState state, final BlockPos pos, final IRandomizer rand) {
 
     }
 
@@ -160,7 +159,7 @@ public abstract class CuboidScanner extends Scanner {
 
     @Override
     @Nullable
-    protected BlockPos nextPos(final BlockPos.MutableBlockPos workingPos, final Random rand) {
+    protected BlockPos nextPos(final BlockPos.MutableBlockPos workingPos, final IRandomizer rand) {
 
         if (this.scanFinished)
             return null;
