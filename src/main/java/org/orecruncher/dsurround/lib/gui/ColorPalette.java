@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.lib.gui;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextColor;
 
 @SuppressWarnings("unused")
@@ -37,7 +36,7 @@ public final class ColorPalette {
     public static final TextColor GREEN = of(0, 255, 0);
     public static final TextColor TURQOISE = of(0, 255, 127);
     public static final TextColor CYAN = of(0, 255, 255);
-    public static final TextColor AUQUAMARINE = of(0, 127, 255);
+    public static final TextColor AUQUAMARINE = of(127,255,212);
     public static final TextColor BLUE = of(0, 0, 255);
     public static final TextColor VIOLET = of(127, 0, 255);
     public static final TextColor MAGENTA = of(255, 0, 255);
@@ -53,6 +52,9 @@ public final class ColorPalette {
     public static final TextColor LGRAY = of(192, 192, 192);
     public static final TextColor SLATEGRAY = of(112, 128, 144);
     public static final TextColor DARKSLATEGRAY = of(47, 79, 79);
+    public static final TextColor SILVER_SAND = of(191,193,194);
+    public static final TextColor SUN_GLOW = of(255,204,51);
+    public static final TextColor CORN_FLOWER_BLUE = of(100,149,237);
 
     public static int getRed(int rgb) {
         return (rgb >> 16) & 0xFF;
