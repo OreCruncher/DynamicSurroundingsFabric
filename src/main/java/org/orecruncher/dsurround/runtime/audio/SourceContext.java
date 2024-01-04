@@ -17,7 +17,8 @@ import java.util.concurrent.Callable;
 public final class SourceContext implements Callable<Void> {
 
     // Randomizer used to distribute updates across an interval
-    private static final IRandomizer RANDOM = Randomizer.current();
+    private static final IRandomizer RANDOM = Randomizer.create();
+
     // Frequency of sound effect updates in thread schedule ticks.  Works out to be 3 times a second.
     private static final int UPDATE_FEQUENCY_TICKS = 7;
 

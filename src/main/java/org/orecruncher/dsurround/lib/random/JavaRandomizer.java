@@ -6,7 +6,8 @@ import java.util.random.RandomGeneratorFactory;
 /**
  * Implementation of IRandomizer that wraps a Java RandomGenerator
  */
-public final class JavaRandomizer implements IRandomizer {
+@SuppressWarnings("unused")
+final class JavaRandomizer implements IRandomizer {
 
     // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/random/package-summary.html
     private static final String RNG_ALGORITHM = "Xoroshiro128PlusPlus";

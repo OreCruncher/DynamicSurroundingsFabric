@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.lib.random;
 
 import net.minecraft.util.RandomSource;
 
-public class MinecraftRandomizer implements IRandomizer {
+class MinecraftRandomizer implements IRandomizer {
 
     private final RandomSource source;
 
