@@ -46,7 +46,7 @@ public class MixinSoundEngine {
      * sound engine.  It will also perform the first calculations of sound effects based on the player environment.
      */
     @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/ChannelAccess$ChannelHandle;execute(Ljava/util/function/Consumer;)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILEXCEPTION)
-    public void dsurround_onSoundPlay(SoundInstance soundInstance, CallbackInfo ci, WeighedSoundEvents weighedSoundEvents, ResourceLocation resourceLocation, Sound sound, float f, float g, SoundSource soundSource, float h, float i, SoundInstance.Attenuation attenuation, boolean bl, Vec3 vec3, boolean bl2, boolean bl3, CompletableFuture completableFuture, ChannelAccess.ChannelHandle channelHandle) {
+    public void dsurround_onSoundPlay(SoundInstance soundInstance, CallbackInfo ci, WeighedSoundEvents weighedSoundEvents, ResourceLocation resourceLocation, Sound sound, float f, float g, SoundSource soundSource, float h, float i, SoundInstance.Attenuation attenuation, boolean bl, Vec3 vec3, boolean bl2, boolean bl3, CompletableFuture<?> completableFuture, ChannelAccess.ChannelHandle channelHandle) {
         try {
             SoundFXProcessor.onSoundPlay(soundInstance, channelHandle);
             AudioUtilities.onSoundPlay(soundInstance);
@@ -60,12 +60,13 @@ public class MixinSoundEngine {
         try {
             if (SoundInstanceHandler.shouldBlockSoundPlay(sound))
                 ci.cancel();
-        } catch (final Exception ignore) {
+        } catch (final Exception t) {
+            MixinHelpers.LOGGER.error(t, "Error in dsurround_play()!");
         }
     }
 
     /**
-     * @author
+     * @author OreCruncher
      * @reason Replacing algorithm for adjusting volume using other external factors
      */
     @Overwrite()

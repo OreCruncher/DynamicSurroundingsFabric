@@ -1,8 +1,10 @@
 package org.orecruncher.dsurround.lib.gui;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextColor;
 
+@SuppressWarnings("unused")
 public final class ColorPalette {
     // Branding colors
     public static final TextColor CURSEFORGE = of("#f16436");

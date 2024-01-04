@@ -3,12 +3,13 @@ package org.orecruncher.dsurround.eventing.handlers;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.platform.events.ClientState;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 public class BlockUpdateHandler {
@@ -24,7 +25,7 @@ public class BlockUpdateHandler {
      *
      * @param pos Block position that has been updated
      */
-    public static void blockPositionUpdate(BlockPos pos) {
+    public static void blockPositionUpdate(BlockPos pos, BlockState oldState, BlockState newState) {
         updatedPositions.add(pos);
     }
 
@@ -35,17 +36,16 @@ public class BlockUpdateHandler {
      * @param ignored MinecraftClient instance - ignored
      */
     private static void tick(Minecraft ignored) {
-        Collection<BlockPos> updates = expand();
-        if (updates != null) {
-            var event = new ClientEventHooks.BlockUpdateEvent(updates);
+        var updates = expand();
+        updates.ifPresent(positions -> {
+            var event = new ClientEventHooks.BlockUpdateEvent(positions);
             ClientEventHooks.BLOCK_UPDATE.raise(event);
-        }
+        });
     }
 
-    @Nullable
-    private static Collection<BlockPos> expand() {
+    private static Optional<Collection<BlockPos>> expand() {
         if (updatedPositions.isEmpty())
-            return null;
+            return Optional.empty();
 
         // Need to expand out the updates to adjacent blocks.  A state change
         // of a block may affect how the adjacent blocks are handled.
@@ -57,8 +57,8 @@ public class BlockUpdateHandler {
                         updates.add(center.offset(i, j, k));
         }
 
-        // Have to clear for next run
+        // Have to clear for the next run
         updatedPositions.clear();
-        return updates;
+        return Optional.of(updates);
     }
 }
