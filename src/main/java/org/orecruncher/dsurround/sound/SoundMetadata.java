@@ -12,12 +12,12 @@ import java.util.Objects;
 public final class SoundMetadata {
 
     private final Component title;
-    private final Component caption;
+    private final Component subTitle;
     private final List<Credit> credits;
 
     public SoundMetadata() {
         this.title = Component.empty();
-        this.caption = Component.empty();
+        this.subTitle = Component.empty();
         this.credits = ImmutableList.of();
     }
 
@@ -25,7 +25,7 @@ public final class SoundMetadata {
         Objects.requireNonNull(cfg);
 
         this.title = cfg.title().map(Component::translatable).orElse(Component.empty());
-        this.caption = cfg.caption().map(Component::translatable).orElse(Component.empty());
+        this.subTitle = cfg.subtitle().map(Component::translatable).orElse(Component.empty());
 
         if (cfg.credits() == null || cfg.credits().isEmpty()) {
             this.credits = ImmutableList.of();
@@ -56,12 +56,12 @@ public final class SoundMetadata {
     }
 
     /**
-     * Gets the caption (subtitle) configured in sounds.json, or EMPTY if not present.
+     * Gets the subtitle (subtitle) configured in sounds.json, or EMPTY if not present.
      *
-     * @return Configured caption, or EMPTY if not present.
+     * @return Configured subtitle, or EMPTY if not present.
      */
-    public Component getCaption() {
-        return this.caption;
+    public Component getSubTitle() {
+        return this.subTitle;
     }
 
     /**

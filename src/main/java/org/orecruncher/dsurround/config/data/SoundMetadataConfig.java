@@ -7,11 +7,11 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.List;
 import java.util.Optional;
 
-public record SoundMetadataConfig(Optional<String> title, Optional<String> caption, List<CreditEntry> credits) {
+public record SoundMetadataConfig(Optional<String> title, Optional<String> subtitle, List<CreditEntry> credits) {
 
     public static Codec<SoundMetadataConfig> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
             Codec.STRING.optionalFieldOf("title").forGetter(SoundMetadataConfig::title),
-            Codec.STRING.optionalFieldOf("caption").forGetter(SoundMetadataConfig::caption),
+            Codec.STRING.optionalFieldOf("subtitle").forGetter(SoundMetadataConfig::subtitle),
             Codec.list(CreditEntry.CODEC).optionalFieldOf("credits", ImmutableList.of()).forGetter(SoundMetadataConfig::credits))
             .apply(instance, SoundMetadataConfig::new));
 
@@ -21,7 +21,7 @@ public record SoundMetadataConfig(Optional<String> title, Optional<String> capti
      * @return true if the properties are the same as defaults; false otherwise
      */
     public boolean isDefault() {
-        return this.title.isEmpty() && this.caption.isEmpty() && this.credits.isEmpty();
+        return this.title.isEmpty() && this.subtitle.isEmpty() && this.credits.isEmpty();
     }
 
     public record CreditEntry(String name, String author, String license) {

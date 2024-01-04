@@ -44,6 +44,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private static final Component BLOCK_OFF = Component.translatable("dsurround.text.soundconfig.noblock");
     private static final Component PLAY = Component.translatable("dsurround.text.soundconfig.play");
     private static final Component STOP = Component.translatable("dsurround.text.soundconfig.stop").withColor(ColorPalette.RED.getValue());
+    private static final Component SUBTITLE = Component.translatable("dsurround.text.soundconfig.subtitle").withColor(ColorPalette.APRICOT.getValue());
     private static final FormattedCharSequence VANILLA_CREDIT = Component.translatable("dsurround.text.soundconfig.vanilla").getVisualOrderText();
 
     private static final ChatFormatting[] CODING = new ChatFormatting[]{ChatFormatting.ITALIC, ChatFormatting.AQUA};
@@ -244,8 +245,9 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
             if (metadata != null) {
                 if (!metadata.getTitle().equals(Component.empty()))
                     this.cachedToolTip.add(metadata.getTitle().getVisualOrderText());
-                if (!metadata.getCaption().equals(Component.empty()))
-                    this.cachedToolTip.add(Component.translatable("dsurround.text.soundconfig.caption", metadata.getCaption()).getVisualOrderText());
+                if (!metadata.getSubTitle().equals(Component.empty())) {
+                    this.cachedToolTip.add(SUBTITLE.copy().append(metadata.getSubTitle()).getVisualOrderText());
+                }
 
                 if (!metadata.getCredits().isEmpty()) {
                     for (var credit : metadata.getCredits()) {

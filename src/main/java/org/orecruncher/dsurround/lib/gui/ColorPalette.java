@@ -55,6 +55,7 @@ public final class ColorPalette {
     public static final TextColor SILVER_SAND = of(191,193,194);
     public static final TextColor SUN_GLOW = of(255,204,51);
     public static final TextColor CORN_FLOWER_BLUE = of(100,149,237);
+    public static final TextColor APRICOT = of(251,206,177);
 
     public static int getRed(int rgb) {
         return (rgb >> 16) & 0xFF;

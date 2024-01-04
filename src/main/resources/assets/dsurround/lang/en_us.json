@@ -157,7 +157,7 @@
   "dsurround.config.otherOptions.playRandomSoundOnStartup": "Play Random Sound On Startup",
   "dsurround.config.otherOptions.playRandomSoundOnStartup.tooltip": "Enable/disable playing random sound at the Minecraft finish loading to main screen",
   "dsurround.text.soundconfig.vanilla": "Built in Vanilla Sound",
-  "dsurround.text.soundconfig.caption": "\u00a7bCaption:\u00a7r \u00a7o%1$s",
+  "dsurround.text.soundconfig.subtitle": "Subtitle: ",
   "dsurround.text.soundconfig.cull": "CULL",
   "dsurround.text.soundconfig.nocull": "No Cull",
   "dsurround.text.soundconfig.block": "BLOCK",
