@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.lib.version;
 
+import net.minecraft.ChatFormatting;
 import org.orecruncher.dsurround.lib.CodecExtensions;
 
 import java.io.InputStream;
@@ -50,7 +51,7 @@ public class VersionChecker implements IVersionChecker {
             var newest = info.getNewestVersion(semVer, this.modInfo.version());
             if (newest.isPresent()) {
                 var version = newest.get().getFirst();
-                return Optional.of(new VersionResult(version.toString(), this.modInfo.displayName(), this.modInfo.curseForgeLink(), this.modInfo.modrinthLink()));
+                return Optional.of(new VersionResult(version.toString(), this.modInfo.modId(), ChatFormatting.stripFormatting(this.modInfo.displayName()), this.modInfo.curseForgeLink(), this.modInfo.modrinthLink()));
             }
         }
         return Optional.empty();

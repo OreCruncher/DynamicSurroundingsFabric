@@ -129,14 +129,18 @@ public class ConfigOptions {
         var textHandler = GameUtils.getTextHandler();
         var result = new ArrayList<Component>(tooltip.size());
         for (var e : tooltip) {
-            var wrapped = textHandler
-                    .splitLines(
-                            e,
-                            this.toolTipWidth,
-                            Style.EMPTY)
-                    .stream()
-                    .map(l -> Component.literal(this.tooltipStyle + l.getString())).toList();
-            result.addAll(wrapped);
+            if (e.getStyle() != Style.EMPTY) {
+                result.add(e);
+            } else {
+                var wrapped = textHandler
+                        .splitLines(
+                                e,
+                                this.toolTipWidth,
+                                Style.EMPTY)
+                        .stream()
+                        .map(l -> Component.literal(this.tooltipStyle + l.getString())).toList();
+                result.addAll(wrapped);
+            }
         }
 
         return result.toArray(new Component[0]);

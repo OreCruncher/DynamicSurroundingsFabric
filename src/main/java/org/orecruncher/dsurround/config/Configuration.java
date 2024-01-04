@@ -88,12 +88,14 @@ public class Configuration extends ConfigurationData {
         @IntegerRange(min = 8, max = 16)
         @Slider
         @RestartRequired
+        @DefaultValue
         @Comment("The number of sound channels to reserve for streaming sounds (music, biome sounds, records, etc.)")
         public int streamingChannels = 12;
 
         @Property
         @IntegerRange(min = 0, max = 20 * 10)
         @Slider
+        @DefaultValue
         @Comment("Ticks between culled sound events (0 to disable culling)")
         public int cullInterval = 20;
 
@@ -157,6 +159,7 @@ public class Configuration extends ConfigurationData {
         @Property
         @IntegerRange(min = 16, max = 64)
         @Slider
+        @DefaultValue
         @Comment("Distance that will be scanned when generating block effects")
         public int blockEffectRange = 32;
 
@@ -190,6 +193,7 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @EnumType(WaterRippleStyle.class)
+        @DefaultValue
         @Comment("The style of water ripple to render when a drop hits a fluid")
         public WaterRippleStyle waterRippleStyle = WaterRippleStyle.PIXELATED_CIRCLE;
     }
@@ -199,6 +203,7 @@ public class Configuration extends ConfigurationData {
         @Property
         @IntegerRange(min = 16, max = 64)
         @Slider
+        @DefaultValue
         @Comment("The maximum range at which entity special effects are applied")
         public int entityEffectRange = 24;
 
@@ -270,11 +275,13 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Style of compass rendering")
         @EnumType(CompassStyle.class)
+        @DefaultValue
         public CompassStyle compassStyle = CompassStyle.TRANSPARENT_WITH_INDICATOR;
 
         @Property
         @Comment("Scales the display by the specified amount")
         @DoubleRange(min = 0.5D, max = 4D)
+        @DefaultValue
         public double scale = 1D;
     }
 

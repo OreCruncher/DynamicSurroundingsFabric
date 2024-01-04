@@ -1,64 +1,47 @@
 package org.orecruncher.dsurround.lib.version;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
-public class VersionResult {
-    public final String version;
-    public final String displayName;
-    public final String downloadLocation;
-    public final String downloadLocationModrinth;
-
-    VersionResult(String version, String displayName, String downloadLocation, String downloadLocationModrinth) {
-        this.version = version;
-        this.displayName = displayName;
-        this.downloadLocation = downloadLocation;
-        this.downloadLocationModrinth = downloadLocationModrinth;
-    }
+public record VersionResult(String version, String modId, String displayName, String downloadLocation, String downloadLocationModrinth) {
 
     public Component getChatText() {
-        var openBracket = Component.empty().withColor(ColorPalette.SILVER_SAND.getValue()).append("[");
-        var closeBracket = Component.empty().withColor(ColorPalette.SILVER_SAND.getValue()).append("]");
+        var openBracket = Component.literal("[").withColor(ColorPalette.SILVER_SAND.getValue());
+        var closeBracket = Component.literal("]").withColor(ColorPalette.SILVER_SAND.getValue());
 
-        var downloadPage = Component.empty()
-                .withColor(ColorPalette.CORN_FLOWER_BLUE.getValue())
-                .append(Component.translatable("dsurround.newversion.downloadpage"));
-        var downloadEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, downloadPage);
+        var downloadPage = Component.translatable(this.modId + ".newversion.downloadpage")
+                .withColor(ColorPalette.CORN_FLOWER_BLUE.getValue());
+        var downloadHoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, downloadPage);
 
         var downloadStyleCurse = Style.EMPTY
-                .withHoverEvent(downloadEvent)
+                .withHoverEvent(downloadHoverEvent)
                 .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, this.downloadLocation));
-        var curseHover = Component.empty()
+        var curseHover = Component.translatable(this.modId + ".newversion.curseforge")
                 .withColor(ColorPalette.CURSEFORGE.getValue())
-                .append(Component.translatable("dsurround.newversion.curseforge"))
                 .withStyle(downloadStyleCurse);
 
         var downloadStyleModrinth = Style.EMPTY
-                .withHoverEvent(downloadEvent)
+                .withHoverEvent(downloadHoverEvent)
                 .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, this.downloadLocationModrinth));
-        var modrinthHover = Component.empty()
+        var modrinthHover = Component.translatable(this.modId + ".newversion.modrinth")
                 .withColor(ColorPalette.MODRINTH.getValue())
-                .append(Component.translatable("dsurround.newversion.modrinth"))
                 .withStyle(downloadStyleModrinth);
 
-        return Component.empty()
+        var modDisplayNameAndVersion = Component.literal(this.displayName)
+                .append(" v").append(this.version)
+                .withColor(ColorPalette.SUN_GLOW.getValue());
+
+        return Component.translatable(this.modId + ".newversion.update")
                 .withColor(ColorPalette.AUQUAMARINE.getValue())
-                .append(Component.translatable("dsurround.newversion.update"))
-                .append(
-                        Component.empty()
-                                .withColor(ColorPalette.SUN_GLOW.getValue())
-                                .append(ChatFormatting.stripFormatting(this.displayName))
-                                .append(" v").append(this.version)
-                )
-                .append(Component.translatable("dsurround.newversion.at"))
+                .append(modDisplayNameAndVersion)
+                .append(Component.translatable(this.modId + ".newversion.at"))
                 .append(openBracket)
                 .append(curseHover)
                 .append(closeBracket)
-                .append(Component.translatable("dsurround.newversion.or"))
+                .append(Component.translatable(this.modId + ".newversion.or"))
                 .append(openBracket)
                 .append(modrinthHover)
                 .append(closeBracket);

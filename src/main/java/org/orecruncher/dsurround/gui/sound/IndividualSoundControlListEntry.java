@@ -38,12 +38,12 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
 
     private static final int BUTTON_WIDTH = 60;
     private static final int TOOLTIP_WIDTH = 300;
-    private static final Component CULL_ON = Component.translatable("dsurround.text.soundconfig.cull");
+    private static final Component CULL_ON = Component.translatable("dsurround.text.soundconfig.cull").withColor(ColorPalette.GREEN.getValue());
     private static final Component CULL_OFF = Component.translatable("dsurround.text.soundconfig.nocull");
-    private static final Component BLOCK_ON = Component.translatable("dsurround.text.soundconfig.block");
+    private static final Component BLOCK_ON = Component.translatable("dsurround.text.soundconfig.block").withColor(ColorPalette.GREEN.getValue());
     private static final Component BLOCK_OFF = Component.translatable("dsurround.text.soundconfig.noblock");
     private static final Component PLAY = Component.translatable("dsurround.text.soundconfig.play");
-    private static final Component STOP = Component.translatable("dsurround.text.soundconfig.stop");
+    private static final Component STOP = Component.translatable("dsurround.text.soundconfig.stop").withColor(ColorPalette.RED.getValue());
     private static final FormattedCharSequence VANILLA_CREDIT = Component.translatable("dsurround.text.soundconfig.vanilla").getVisualOrderText();
 
     private static final ChatFormatting[] CODING = new ChatFormatting[]{ChatFormatting.ITALIC, ChatFormatting.AQUA};

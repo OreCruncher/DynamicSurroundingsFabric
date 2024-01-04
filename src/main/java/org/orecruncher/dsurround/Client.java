@@ -140,7 +140,7 @@ public abstract class Client implements IMinecraftMod {
             if (versionQueryResult.isPresent()) {
                 var result = versionQueryResult.get();
 
-                LOGGER.info("Update to %s version %s is available", result.displayName, result.version);
+                LOGGER.info("Update to %s version %s is available", result.displayName(), result.version());
                 var player = GameUtils.getPlayer();
                 player.ifPresent(p -> p.sendSystemMessage(result.getChatText()));
             } else if(Config.logging.enableModUpdateChatMessage) {
