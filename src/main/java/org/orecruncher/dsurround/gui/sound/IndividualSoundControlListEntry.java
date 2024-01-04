@@ -47,7 +47,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private static final Component SUBTITLE = Component.translatable("dsurround.text.soundconfig.subtitle").withColor(ColorPalette.APRICOT.getValue());
     private static final FormattedCharSequence VANILLA_CREDIT = Component.translatable("dsurround.text.soundconfig.vanilla").getVisualOrderText();
 
-    private static final ChatFormatting[] CODING = new ChatFormatting[]{ChatFormatting.ITALIC, ChatFormatting.AQUA};
+    private static final Style CODING = Style.EMPTY.withItalic(true).withColor(ColorPalette.KEY_LIME.getValue());
     private static final Collection<FormattedCharSequence> VOLUME_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.volume.help", TOOLTIP_WIDTH, CODING);
     private static final Collection<FormattedCharSequence> PLAY_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.play.help", TOOLTIP_WIDTH, CODING);
     private static final Collection<FormattedCharSequence> CULL_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.cull.help", TOOLTIP_WIDTH, CODING);

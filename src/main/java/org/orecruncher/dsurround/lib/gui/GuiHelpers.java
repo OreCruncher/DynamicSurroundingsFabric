@@ -19,20 +19,20 @@ public class GuiHelpers {
      * Gets the text associated with the given language key that is formatted so that a line is <= the width
      * specified.
      *
-     * @param key        Translation key for the associated text
-     * @param width      Maximum width of a line
-     * @param formatting Formatting to apply to each line
+     * @param key       Translation key for the associated text
+     * @param width     Maximum width of a line
+     * @param style     The style to apply to each of the resulting split lines
      * @return Collection of ITextComponents for the given key
      */
-    public static Collection<FormattedCharSequence> getTrimmedTextCollection(final String key, final int width, @Nullable final ChatFormatting... formatting) {
+    public static Collection<FormattedCharSequence> getTrimmedTextCollection(final String key, final int width, @Nullable final Style style) {
         var textHandler = GameUtils.getTextHandler();
-        final Style style = prefixHelper(formatting);
         return textHandler
                 .splitLines(
                         Component.translatable(key),
                         width,
                         style)
-                .stream().map(e -> Component.literal(e.getString()).getVisualOrderText())
+                .stream()
+                .map(e -> Component.literal(e.getString()).withStyle(style).getVisualOrderText())
                 .collect(Collectors.toList());
     }
 
