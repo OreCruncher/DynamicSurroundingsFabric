@@ -8,16 +8,16 @@ import java.util.Collection;
 
 public class ConfigProcessor {
 
-    public static Collection<ConfigElement<?>> generateAccessors(ConfigurationData data) {
+    public static Collection<ConfigElement> generateAccessors(ConfigurationData data) {
         var ctx = new GenerationContext(data.getTranslationRoot());
         return ctx.generateLevel(data);
     }
 
     private record GenerationContext(String translationRoot) {
 
-        public Collection<ConfigElement<?>> generateLevel(Object instance) {
+        public Collection<ConfigElement> generateLevel(Object instance) {
 
-                var elements = new ObjectArray<ConfigElement<?>>();
+                var elements = new ObjectArray<ConfigElement>();
 
                 var fields = instance.getClass().getFields();
 
@@ -37,7 +37,7 @@ public class ConfigProcessor {
                         else
                             elements.add(processClassInstance(property, instance, f));
                     } else {
-                        ConfigElement<?> element;
+                        ConfigElement element;
                         if (fieldType == Integer.class || fieldType == int.class) {
                             element = processIntegerInstance(property, instance, f);
                         } else if (fieldType == Double.class || fieldType == Float.class || fieldType == double.class || fieldType == float.class) {
@@ -62,7 +62,7 @@ public class ConfigProcessor {
                 return new GenerationContext(langKey);
             }
 
-            private ConfigElement<?> processEnumInstance(ConfigurationData.Property property, Object instance, Field f) {
+            private ConfigElement processEnumInstance(ConfigurationData.Property property, Object instance, Field f) {
                 var enumType = f.getAnnotation(ConfigurationData.EnumType.class);
                 if (enumType == null)
                     throw new RuntimeException("Enum field must have an EnumType annotation");
@@ -70,7 +70,7 @@ public class ConfigProcessor {
                 return new ConfigElement.EnumValue(enumType.value(), instance, calculateLangKey(property, f), wrapper);
             }
 
-            private ConfigElement<?> processClassInstance(ConfigurationData.Property property, Object instance, Field f) {
+            private ConfigElement processClassInstance(ConfigurationData.Property property, Object instance, Field f) {
                 var wrapper = new ConfigValue<>(f);
                 var key = calculateLangKey(property, f);
                 var ctx = this.createChild(key);
@@ -78,17 +78,17 @@ public class ConfigProcessor {
                 return new ConfigElement.PropertyGroup(wrapper, key, subElements);
             }
 
-            private ConfigElement<?> processStringInstance(ConfigurationData.Property property, Object instance, Field f) {
+            private ConfigElement processStringInstance(ConfigurationData.Property property, Object instance, Field f) {
                 var wrapper = new ConfigValue<String>(f);
                 return new ConfigElement.StringValue(instance, calculateLangKey(property, f), wrapper);
             }
 
-            private ConfigElement<?> processBooleanInstance(ConfigurationData.Property property, Object instance, Field f) {
+            private ConfigElement processBooleanInstance(ConfigurationData.Property property, Object instance, Field f) {
                 var wrapper = new ConfigValue<Boolean>(f);
                 return new ConfigElement.BooleanValue(instance, calculateLangKey(property, f), wrapper);
             }
 
-            private ConfigElement<?> processIntegerInstance(ConfigurationData.Property property, Object instance, Field f) {
+            private ConfigElement processIntegerInstance(ConfigurationData.Property property, Object instance, Field f) {
                 var wrapper = new ConfigValue<Integer>(f);
                 var element = new ConfigElement.IntegerValue(instance, calculateLangKey(property, f), wrapper);
                 var range = f.getAnnotation(ConfigurationData.IntegerRange.class);
@@ -98,7 +98,7 @@ public class ConfigProcessor {
                 return element;
             }
 
-            private ConfigElement<?> processDoubleInstance(ConfigurationData.Property property, Object instance, Field f) {
+            private ConfigElement processDoubleInstance(ConfigurationData.Property property, Object instance, Field f) {
                 var wrapper = new ConfigValue<Double>(f);
                 var element = new ConfigElement.DoubleValue(instance, calculateLangKey(property, f), wrapper);
                 var range = f.getAnnotation(ConfigurationData.DoubleRange.class);

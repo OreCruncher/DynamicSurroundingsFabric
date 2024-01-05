@@ -21,7 +21,7 @@ import java.util.Collection;
 public abstract class ConfigurationData {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Reference2ObjectOpenHashMap<Class<?>, Collection<ConfigElement<?>>> specifications = new Reference2ObjectOpenHashMap<>();
+    private static final Reference2ObjectOpenHashMap<Class<?>, Collection<ConfigElement>> specifications = new Reference2ObjectOpenHashMap<>();
     private static final Reference2ObjectOpenHashMap<Class<?>, ConfigurationData> configs = new Reference2ObjectOpenHashMap<>();
 
 
@@ -78,7 +78,7 @@ public abstract class ConfigurationData {
         return null;
     }
 
-    public Collection<ConfigElement<?>> getSpecification() {
+    public Collection<ConfigElement> getSpecification() {
         return specifications.get(this.getClass());
     }
 

@@ -38,26 +38,27 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
 
     private static final int BUTTON_WIDTH = 60;
     private static final int TOOLTIP_WIDTH = 300;
-    private static final Component CULL_ON = Component.translatable("dsurround.text.soundconfig.cull").withColor(ColorPalette.GREEN.getValue());
+
+    private static final Style STYLE_MOD_NAME = Style.EMPTY.withColor(ColorPalette.GOLD);
+    private static final Style STYLE_ID = Style.EMPTY.withColor(ColorPalette.SLATEGRAY);
+    private static final Style STYLE_SUBTITLE = Style.EMPTY.withColor(ColorPalette.APRICOT).withItalic(true);
+    private static final Style STYLE_CREDIT_NAME = Style.EMPTY.withColor(ColorPalette.GREEN);
+    private static final Style STYLE_CREDIT_AUTHOR = Style.EMPTY.withColor(ColorPalette.WHITE);
+    private static final Style STYLE_CREDIT_LICENSE = Style.EMPTY.withItalic(true).withColor(ColorPalette.MC_DARKAQUA);
+    private static final Style STYLE_TOGGLE_ON = Style.EMPTY.withColor(ColorPalette.GREEN);
+    private static final Style STYLE_HELP = Style.EMPTY.withItalic(true).withColor(ColorPalette.KEY_LIME);
+
+    private static final Component CULL_ON = Component.translatable("dsurround.text.soundconfig.cull").withStyle(STYLE_TOGGLE_ON);
     private static final Component CULL_OFF = Component.translatable("dsurround.text.soundconfig.nocull");
-    private static final Component BLOCK_ON = Component.translatable("dsurround.text.soundconfig.block").withColor(ColorPalette.GREEN.getValue());
+    private static final Component BLOCK_ON = Component.translatable("dsurround.text.soundconfig.block").withStyle(STYLE_TOGGLE_ON);
     private static final Component BLOCK_OFF = Component.translatable("dsurround.text.soundconfig.noblock");
     private static final Component PLAY = Component.translatable("dsurround.text.soundconfig.play");
     private static final Component STOP = Component.translatable("dsurround.text.soundconfig.stop").withColor(ColorPalette.RED.getValue());
-    private static final Component SUBTITLE = Component.translatable("dsurround.text.soundconfig.subtitle").withColor(ColorPalette.APRICOT.getValue());
     private static final FormattedCharSequence VANILLA_CREDIT = Component.translatable("dsurround.text.soundconfig.vanilla").getVisualOrderText();
-
-    private static final Style CODING = Style.EMPTY.withItalic(true).withColor(ColorPalette.KEY_LIME.getValue());
-    private static final Collection<Component> VOLUME_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.volume.help", TOOLTIP_WIDTH, CODING);
-    private static final Collection<Component> PLAY_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.play.help", TOOLTIP_WIDTH, CODING);
-    private static final Collection<Component> CULL_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.cull.help", TOOLTIP_WIDTH, CODING);
-    private static final Collection<Component> BLOCK_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.block.help", TOOLTIP_WIDTH, CODING);
-
-    private static final Style STYLE_MOD_NAME = Style.EMPTY.applyFormat(ChatFormatting.GOLD);
-    private static final Style STYLE_ID = Style.EMPTY.applyFormat(ChatFormatting.GRAY);
-    private static final Style STYLE_CREDIT_NAME = Style.EMPTY.applyFormat(ChatFormatting.GREEN);
-    private static final Style STYLE_CREDIT_AUTHOR = Style.EMPTY.applyFormat(ChatFormatting.WHITE);
-    private static final Style STYLE_CREDIT_LICENSE = Style.EMPTY.applyFormats(ChatFormatting.ITALIC, ChatFormatting.DARK_AQUA);
+    private static final Collection<Component> VOLUME_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.volume.help", TOOLTIP_WIDTH, STYLE_HELP);
+    private static final Collection<Component> PLAY_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.play.help", TOOLTIP_WIDTH, STYLE_HELP);
+    private static final Collection<Component> CULL_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.cull.help", TOOLTIP_WIDTH, STYLE_HELP);
+    private static final Collection<Component> BLOCK_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.block.help", TOOLTIP_WIDTH, STYLE_HELP);
 
     private static final int CONTROL_SPACING = 3;
 
@@ -101,8 +102,8 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     }
 
     @Override
-    public List<? extends GuiEventListener> children() {
-        // TODO:  Whut?
+    public @NotNull List<? extends GuiEventListener> children() {
+        // TODO:  What?
         return this.children;
     }
 
@@ -246,7 +247,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
                 if (!metadata.getTitle().equals(Component.empty()))
                     this.cachedToolTip.add(metadata.getTitle().getVisualOrderText());
                 if (!metadata.getSubTitle().equals(Component.empty())) {
-                    this.cachedToolTip.add(SUBTITLE.copy().append(metadata.getSubTitle()).getVisualOrderText());
+                    this.cachedToolTip.add(metadata.getSubTitle().copy().withStyle(STYLE_SUBTITLE).getVisualOrderText());
                 }
 
                 if (!metadata.getCredits().isEmpty()) {
