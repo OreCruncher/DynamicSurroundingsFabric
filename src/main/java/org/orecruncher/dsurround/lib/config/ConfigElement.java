@@ -1,15 +1,17 @@
 package org.orecruncher.dsurround.lib.config;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
+import org.orecruncher.dsurround.lib.gui.GuiHelpers;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 public abstract class ConfigElement<T> {
+
+    private static final int TOOLTIP_WIDTH = 300;
 
     private static final Component CLIENT_RESTART_REQUIRED = Component.translatable("dsurround.config.tooltip.clientRestartRequired").withColor(ColorPalette.RED.getValue());
     private static final Component WORLD_RESTART_REQUIRED = Component.translatable("dsurround.config.tooltip.worldRestartRequired").withColor(ColorPalette.RED.getValue());
@@ -28,17 +30,9 @@ public abstract class ConfigElement<T> {
         return this.elementNameKey + ".tooltip";
     }
 
-    public List<Component> getTooltip() {
-        var result = new ArrayList<Component>();
+    public Collection<Component> getTooltip(Style style) {
         var key = this.getElementNameTooltipKey();
-        Component txt = Component.translatable(key);
-        if (txt.toString().equals(key)) {
-            var comment = this.getComment();
-            if (comment != null)
-                txt = Component.literal(comment);
-        }
-        result.add(txt);
-        return result;
+        return GuiHelpers.getTrimmedTextCollection(key, TOOLTIP_WIDTH, style);
     }
 
     public boolean isHidden() {
@@ -139,13 +133,8 @@ public abstract class ConfigElement<T> {
         }
 
         @Override
-        public List<Component> getTooltip() {
-
-            if (this.useSlider()) {
-                int x = 0;
-            }
-
-            var result = super.getTooltip();
+        public Collection<Component> getTooltip(Style style) {
+            var result = super.getTooltip(style);
 
             if (this.isClientRestartRequired())
                 result.add(CLIENT_RESTART_REQUIRED);
@@ -208,8 +197,8 @@ public abstract class ConfigElement<T> {
         }
 
         @Override
-        public List<Component> getTooltip() {
-            var result = super.getTooltip();
+        public Collection<Component> getTooltip(Style style) {
+            var result = super.getTooltip(style);
             if (this.hasRange())
                 result.add(Component.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()).withColor(ColorPalette.CORN_FLOWER_BLUE.getValue()));
             return result;
@@ -249,8 +238,8 @@ public abstract class ConfigElement<T> {
         }
 
         @Override
-        public List<Component> getTooltip() {
-            var result = super.getTooltip();
+        public Collection<Component> getTooltip(Style style) {
+            var result = super.getTooltip(style);
             if (this.hasRange())
                 result.add(Component.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()).withColor(ColorPalette.CORN_FLOWER_BLUE.getValue()));
             return result;

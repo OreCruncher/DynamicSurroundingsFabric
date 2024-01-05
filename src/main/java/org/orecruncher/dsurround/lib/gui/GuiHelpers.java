@@ -4,12 +4,11 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
-import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.GameUtils;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 public class GuiHelpers {
 
@@ -22,18 +21,14 @@ public class GuiHelpers {
      * @param key       Translation key for the associated text
      * @param width     Maximum width of a line
      * @param style     The style to apply to each of the resulting split lines
-     * @return Collection of ITextComponents for the given key
+     * @return Collection of Components for the given key
      */
-    public static Collection<FormattedCharSequence> getTrimmedTextCollection(final String key, final int width, @Nullable final Style style) {
+    public static Collection<Component> getTrimmedTextCollection(final String key, final int width, final Style style) {
+        var result = new ArrayList<Component>();
         var textHandler = GameUtils.getTextHandler();
-        return textHandler
-                .splitLines(
-                        Component.translatable(key),
-                        width,
-                        style)
-                .stream()
-                .map(e -> Component.literal(e.getString()).withStyle(style).getVisualOrderText())
-                .collect(Collectors.toList());
+        var text = Component.translatable(key);
+        textHandler.splitLines(text, width, style).forEach(line -> result.add(Component.literal(line.getString()).withStyle(style)));
+        return result;
     }
 
     /**
@@ -43,7 +38,7 @@ public class GuiHelpers {
      * @param key        Translation key for the associated text
      * @param width      Maximum width of the text in GUI pixels
      * @param formatting Formatting to apply to the text
-     * @return ITextComponent fitting the criteria specified
+     * @return FormattedText fitting the criteria specified
      */
     public static FormattedText getTrimmedText(final String key, final int width, @Nullable final ChatFormatting... formatting) {
         var fr = GameUtils.getTextRenderer();

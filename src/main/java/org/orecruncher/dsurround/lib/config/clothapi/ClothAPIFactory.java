@@ -4,6 +4,7 @@ import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
+import me.shedaniel.clothconfig2.impl.builders.EnumSelectorBuilder;
 import me.shedaniel.clothconfig2.impl.builders.FieldBuilder;
 import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
 import net.minecraft.client.Minecraft;
@@ -96,7 +97,7 @@ public class ClothAPIFactory implements BiFunction<Minecraft, Screen, Screen> {
     protected SubCategoryBuilder generate(final ConfigEntryBuilder builder, ConfigElement.PropertyGroup propertyGroup, Object instance) {
         SubCategoryBuilder categoryBuilder = builder
                 .startSubCategory(this.options.transformPropertyGroup(propertyGroup.getElementNameKey()))
-                .setTooltip(this.options.transformTooltip(propertyGroup.getTooltip()));
+                .setTooltip(this.options.transformTooltip(propertyGroup.getTooltip(this.options.getTooltipStyle())));
 
         for (var prop : propertyGroup.getChildren()) {
             // Skip entries that are marked as hidden
@@ -114,11 +115,12 @@ public class ClothAPIFactory implements BiFunction<Minecraft, Screen, Screen> {
         return categoryBuilder;
     }
 
+    @SuppressWarnings("unchecked")
     protected @Nullable FieldBuilder<?, ? extends AbstractConfigListEntry<?>, ?> generate(final ConfigEntryBuilder builder, ConfigElement.PropertyValue<?> pv, Object instance) {
         FieldBuilder<?, ? extends AbstractConfigListEntry<?>, ?> fieldBuilder = null;
 
         var name = this.options.transformProperty(pv.getElementNameKey());
-        var tooltip = this.options.transformTooltip(pv.getTooltip());
+        var tooltip = this.options.transformTooltip(pv.getTooltip(this.options.getTooltipStyle()));
 
         if (pv instanceof ConfigElement.IntegerValue v) {
             if (pv.useSlider()) {
@@ -157,7 +159,7 @@ public class ClothAPIFactory implements BiFunction<Minecraft, Screen, Screen> {
                     .setDefaultValue(v.getDefaultValue())
                     .setSaveConsumer(data -> v.setCurrentValue(instance, data));
         } else if (pv instanceof ConfigElement.EnumValue v) {
-            fieldBuilder = new EnumSelectorBuilder(builder.getResetButtonKey(), name, (Class<Enum<?>>)(v.getEnumClass()), v.getCurrentValue(instance))
+            fieldBuilder = new EnumSelectorBuilder<>(builder.getResetButtonKey(), name, (Class<Enum<?>>)(v.getEnumClass()), v.getCurrentValue(instance))
                     .setTooltip(tooltip)
                     .setDefaultValue(v.getDefaultValue())
                     .setSaveConsumer(data -> v.setCurrentValue(instance, data));

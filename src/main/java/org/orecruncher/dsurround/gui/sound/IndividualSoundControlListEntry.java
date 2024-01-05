@@ -48,10 +48,10 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private static final FormattedCharSequence VANILLA_CREDIT = Component.translatable("dsurround.text.soundconfig.vanilla").getVisualOrderText();
 
     private static final Style CODING = Style.EMPTY.withItalic(true).withColor(ColorPalette.KEY_LIME.getValue());
-    private static final Collection<FormattedCharSequence> VOLUME_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.volume.help", TOOLTIP_WIDTH, CODING);
-    private static final Collection<FormattedCharSequence> PLAY_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.play.help", TOOLTIP_WIDTH, CODING);
-    private static final Collection<FormattedCharSequence> CULL_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.cull.help", TOOLTIP_WIDTH, CODING);
-    private static final Collection<FormattedCharSequence> BLOCK_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.block.help", TOOLTIP_WIDTH, CODING);
+    private static final Collection<Component> VOLUME_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.volume.help", TOOLTIP_WIDTH, CODING);
+    private static final Collection<Component> PLAY_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.play.help", TOOLTIP_WIDTH, CODING);
+    private static final Collection<Component> CULL_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.cull.help", TOOLTIP_WIDTH, CODING);
+    private static final Collection<Component> BLOCK_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.block.help", TOOLTIP_WIDTH, CODING);
 
     private static final Style STYLE_MOD_NAME = Style.EMPTY.applyFormat(ChatFormatting.GOLD);
     private static final Style STYLE_ID = Style.EMPTY.applyFormat(ChatFormatting.GRAY);
@@ -266,7 +266,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
 
         List<FormattedCharSequence> generatedTip = new ArrayList<>(this.cachedToolTip);
 
-        Collection<FormattedCharSequence> toAppend = null;
+        Collection<Component> toAppend = null;
         if (this.volume.isMouseOver(mouseX, mouseY)) {
             toAppend = VOLUME_HELP;
         } else if (this.blockButton.isMouseOver(mouseX, mouseY)) {
@@ -279,7 +279,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
 
         if (toAppend != null) {
             generatedTip.add(FormattedCharSequence.EMPTY);
-            generatedTip.addAll(toAppend);
+            toAppend.forEach(e -> generatedTip.add(e.getVisualOrderText()));
         }
 
         return generatedTip;
