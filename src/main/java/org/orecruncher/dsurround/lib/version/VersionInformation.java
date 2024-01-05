@@ -33,14 +33,14 @@ public record VersionInformation(Map<SemanticVersion, Map<SemanticVersion, Strin
             return Optional.empty();
 
         if (modVersion.compareTo(recommendation) < 0) {
-            String notes = Strings.EMPTY;
+            String releaseNotes = Strings.EMPTY;
             var releases = this.releases.get(minecraftVersion);
             if (releases != null) {
-                notes = releases.get(recommendation);
-                if (notes == null)
-                    notes = Strings.EMPTY;
+                releaseNotes = releases.get(recommendation);
+                if (releaseNotes == null)
+                    releaseNotes = Strings.EMPTY;
             }
-            return Optional.of(Pair.of(recommendation, notes));
+            return Optional.of(Pair.of(recommendation, releaseNotes));
         }
         return Optional.empty();
     }

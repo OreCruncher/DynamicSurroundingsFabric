@@ -51,7 +51,8 @@ public class VersionChecker implements IVersionChecker {
             var newest = info.getNewestVersion(semVer, this.modInfo.version());
             if (newest.isPresent()) {
                 var version = newest.get().getFirst();
-                return Optional.of(new VersionResult(version.toString(), this.modInfo.modId(), ChatFormatting.stripFormatting(this.modInfo.displayName()), this.modInfo.curseForgeLink(), this.modInfo.modrinthLink()));
+                var releaseNotes = newest.get().getSecond();
+                return Optional.of(new VersionResult(version.toString(), this.modInfo.modId(), ChatFormatting.stripFormatting(this.modInfo.displayName()), this.modInfo.curseForgeLink(), this.modInfo.modrinthLink(), releaseNotes));
             }
         }
         return Optional.empty();
