@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.effects.particles;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.*;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
@@ -37,6 +38,20 @@ public class FireflyParticle extends SimpleAnimatedParticle {
         this.zAcceleration = RANDOM.nextGaussian() * ACCELERATION;
 
         this.gravity = 0F;
+    }
+
+    // From GlowParticle
+    @Override
+    public int getLightColor(float f) {
+        float g = ((float)this.age + f) / (float)this.lifetime;
+        g = Mth.clamp(g, 0.0f, 1.0f);
+        int i = super.getLightColor(f);
+        int j = i & 0xFF;
+        int k = i >> 16 & 0xFF;
+        if ((j += (int)(g * 15.0f * 16.0f)) > 240) {
+            j = 240;
+        }
+        return j | k << 16;
     }
 
     @Override
