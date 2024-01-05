@@ -24,9 +24,13 @@ public class GuiHelpers {
      * @return Collection of Components for the given key
      */
     public static Collection<Component> getTrimmedTextCollection(final String key, final int width, final Style style) {
+        var text = Component.translatable(key);
+        return getTrimmedTextCollection(text, width, style);
+    }
+
+    public static Collection<Component> getTrimmedTextCollection(Component text, int width, Style style) {
         var result = new ArrayList<Component>();
         var textHandler = GameUtils.getTextHandler();
-        var text = Component.translatable(key);
         textHandler.splitLines(text, width, style).forEach(line -> result.add(Component.literal(line.getString()).withStyle(style)));
         return result;
     }
