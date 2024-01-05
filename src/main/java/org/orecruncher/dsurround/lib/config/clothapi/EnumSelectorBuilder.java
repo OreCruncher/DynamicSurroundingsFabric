@@ -9,7 +9,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * Special EnumSelectorBuilder that deal with enums anonymously.  Makes for easier gluing between config and
@@ -20,7 +19,7 @@ public class EnumSelectorBuilder extends FieldBuilder<Enum<?>, EnumListEntry<Enu
     private Function<Enum<?>, Optional<Component[]>> tooltipSupplier = e -> Optional.empty();
     private final Enum<?> value;
     private final Class<Enum<?>> clazz;
-    private Function<Enum, Component> enumNameProvider;
+    private final Function<Enum, Component> enumNameProvider;
 
     public EnumSelectorBuilder(Component resetButtonKey, Component fieldNameKey, Class<Enum<?>> clazz, Enum<?> value) {
         super(resetButtonKey, fieldNameKey);
@@ -31,23 +30,8 @@ public class EnumSelectorBuilder extends FieldBuilder<Enum<?>, EnumListEntry<Enu
         this.clazz = clazz;
     }
 
-    public EnumSelectorBuilder setErrorSupplier(Function<Enum<?>, Optional<Component>> errorSupplier) {
-        this.errorSupplier = errorSupplier;
-        return this;
-    }
-
-    public EnumSelectorBuilder requiresRestart() {
-        this.requireRestart(true);
-        return this;
-    }
-
     public EnumSelectorBuilder setSaveConsumer(Consumer<Enum<?>> saveConsumer) {
         this.saveConsumer = saveConsumer;
-        return this;
-    }
-
-    public EnumSelectorBuilder setDefaultValue(Supplier<Enum<?>> defaultValue) {
-        this.defaultValue = defaultValue;
         return this;
     }
 
@@ -57,29 +41,8 @@ public class EnumSelectorBuilder extends FieldBuilder<Enum<?>, EnumListEntry<Enu
         return this;
     }
 
-    public EnumSelectorBuilder setTooltipSupplier(Function<Enum<?>, Optional<Component[]>> tooltipSupplier) {
-        this.tooltipSupplier = tooltipSupplier;
-        return this;
-    }
-
-    public EnumSelectorBuilder setTooltipSupplier(Supplier<Optional<Component[]>> tooltipSupplier) {
-        this.tooltipSupplier = e -> tooltipSupplier.get();
-        return this;
-    }
-
-    public EnumSelectorBuilder setTooltip(Optional<Component[]> tooltip) {
-        this.tooltipSupplier = e -> tooltip;
-        return this;
-    }
-
     public EnumSelectorBuilder setTooltip(Component... tooltip) {
         this.tooltipSupplier = e -> Optional.ofNullable(tooltip);
-        return this;
-    }
-
-    public EnumSelectorBuilder setEnumNameProvider(Function<Enum, Component> enumNameProvider) {
-        Objects.requireNonNull(enumNameProvider);
-        this.enumNameProvider = enumNameProvider;
         return this;
     }
 
