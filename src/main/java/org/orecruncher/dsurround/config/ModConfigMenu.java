@@ -16,10 +16,10 @@ public class ModConfigMenu implements ModMenuApi {
         return parent -> {
             ConfigOptions options = new ConfigOptions()
                     .setTranslationRoot("dsurround.config")
-                    .setPropertyGroupStyle(Style.EMPTY.withColor(ColorPalette.GOLD.getValue()))
-                    .setPropertyStyle(Style.EMPTY.withColor(ColorPalette.GRAY.getValue()))
-                    .setTooltipStyle(Style.EMPTY.withColor(ColorPalette.WHITE.getValue()))
-                    .setStripTitle(false);
+                    .setTitleStyle(Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE.getValue()))
+                    .setPropertyGroupStyle(Style.EMPTY.withColor(ColorPalette.GOLDENROD.getValue()))
+                    .setPropertyStyle(Style.EMPTY.withColor(ColorPalette.WHEAT.getValue()))
+                    .setTooltipStyle(Style.EMPTY.withColor(ColorPalette.SEASHELL.getValue()));
 
             return new ClothAPIFactory(options, Client.Config).apply(GameUtils.getMC(), parent);
         };

@@ -58,6 +58,15 @@ public final class ColorPalette {
     public static final TextColor APRICOT = of(251,206,177);
     public static final TextColor KEY_LIME = of(232,244,140);
     public static final TextColor BRIGHT_CERULEAN = of(29,172,214);
+    public static final TextColor BURNT_UMBER = of(110, 38, 14);
+    public static final TextColor GOLDENROD = of(218, 165, 32);
+    public static final TextColor WHEAT = of(245, 222, 179);
+    public static final TextColor PUMPKIN_ORANGE = of(255, 117, 24);
+    public static final TextColor DESERT = of(250, 213, 165);
+    public static final TextColor CORNSILK = of(255, 248, 220);
+    public static final TextColor BRASS = of(225, 193, 110);
+    public static final TextColor ECRU = of(194, 178, 128);
+    public static final TextColor SEASHELL = of(255, 245, 238);
 
     public static int getRed(int rgb) {
         return (rgb >> 16) & 0xFF;

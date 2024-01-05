@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "dsurround",
   "version": "${version}",
-  "name": "\u00a76Dynamic Surroundings",
-  "description": "Alters the \u00a7ffabric\u00a7r of Minecraft experience by \u00a7fweaving\u00a7r a \u00a7ftapestry\u00a7r of \u00a73sound\u00a7r and \u00a73visual\u00a7r effects",
+  "name": "Dynamic Surroundings",
+  "description": "Alters the fabric of Minecraft experience by weaving a tapestry of sound and visual effects",
   "authors": [
-    "\u00a7aOreCruncher\u00a7r"
+    "OreCruncher"
   ],
   "contact": {
     "homepage": "https://github.com/OreCruncher/DynamicSurroundingsFabric",
