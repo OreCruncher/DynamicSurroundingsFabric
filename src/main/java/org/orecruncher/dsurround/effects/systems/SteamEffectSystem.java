@@ -90,7 +90,9 @@ public class SteamEffectSystem extends AbstractEffectSystem implements IEffectSy
 
         @Override
         protected Optional<Particle> produceParticle() {
-            return this.createParticle(ParticleTypes.CLOUD, this.posX, this.posY, this.posZ, 0, 0.1D, 0D);
+            var particle = this.createParticle(ParticleTypes.CLOUD, this.posX, this.posY, this.posZ, 0, 0.08D, 0D);
+            particle.ifPresent(p -> p.setLifetime(p.getLifetime() * 2));
+            return particle;
         }
     }
 }

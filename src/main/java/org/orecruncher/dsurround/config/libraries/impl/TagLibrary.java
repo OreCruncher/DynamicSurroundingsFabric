@@ -54,18 +54,19 @@ public class TagLibrary implements ITagLibrary {
     public boolean is(TagKey<Block> tagKey, BlockState entry) {
         // For our purposes, blocks that are ignored will not have the
         // tags we are interested in.
+        var block = entry.getBlock();
         if (Constants.BLOCKS_TO_IGNORE.contains(entry.getBlock()))
             return false;
         if (entry.is(tagKey))
             return true;
-        return this.isInCache(tagKey, entry);
+        return this.isInCache(tagKey, block);
     }
 
     @Override
     public boolean is(TagKey<Item> tagKey, ItemStack entry) {
         if (entry.is(tagKey))
             return true;
-        return this.isInCache(tagKey, entry);
+        return this.isInCache(tagKey, entry.getItem());
     }
 
     @Override
