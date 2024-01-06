@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.config.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.item.Item;
+import net.minecraft.world.item.Item;
 import org.orecruncher.dsurround.config.ItemClassType;
 import org.orecruncher.dsurround.config.ItemTypeMatcher;
 import org.orecruncher.dsurround.lib.IMatcher;

@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.lib.resources;
 import com.google.gson.*;
 import com.mojang.serialization.*;
 import joptsimple.internal.Strings;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.CodecExtensions;
 
@@ -26,7 +26,7 @@ public interface IResourceAccessor {
      * @param location The resource location of the data that needs to be retrieved.
      * @return Reference to a resource accessor to obtain the necessary data.
      */
-    static IResourceAccessor createExternalResource(final File root, final Identifier location) {
+    static IResourceAccessor createExternalResource(final File root, final ResourceLocation location) {
         return new ResourceAccessorExternal(root, location);
     }
 
@@ -38,7 +38,7 @@ public interface IResourceAccessor {
      * @param bytes    Bytes representing the asset
      * @return Reference to a resource accessor to obtain the necessary data
      */
-    static IResourceAccessor createRawBytes(final Identifier location, byte[] bytes) {
+    static IResourceAccessor createRawBytes(final ResourceLocation location, byte[] bytes) {
         return new ResourceAccessorBytes(location, bytes);
     }
 
@@ -65,7 +65,7 @@ public interface IResourceAccessor {
      *
      * @return Resource location
      */
-    Identifier location();
+    ResourceLocation location();
 
     /**
      * Obtains the content of the resource as a string

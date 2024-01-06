@@ -4,34 +4,39 @@ import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
+import me.shedaniel.clothconfig2.impl.builders.EnumSelectorBuilder;
 import me.shedaniel.clothconfig2.impl.builders.FieldBuilder;
 import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigElement;
 import org.orecruncher.dsurround.lib.config.ConfigOptions;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
-import org.orecruncher.dsurround.lib.random.XorShiftRandom;
+import org.orecruncher.dsurround.lib.gui.ColorPalette;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import java.util.function.BiFunction;
 
-public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Screen> {
+public class ClothAPIFactory implements BiFunction<Minecraft, Screen, Screen> {
 
-    private static final Identifier[] BACKGROUNDS = {
-            new Identifier("minecraft:textures/block/cobblestone.png"),
-            new Identifier("minecraft:textures/block/bedrock.png"),
-            new Identifier("minecraft:textures/block/bricks.png"),
-            new Identifier("minecraft:textures/block/sandstone.png"),
-            new Identifier("minecraft:textures/block/stone.png"),
-            new Identifier("minecraft:textures/block/oak_planks.png"),
-            new Identifier("minecraft:textures/block/gilded_blackstone.png"),
-            new Identifier("minecraft:textures/block/dirt.png")
+    private static final ResourceLocation[] BACKGROUNDS = {
+            new ResourceLocation("minecraft:textures/block/cobblestone.png"),
+            new ResourceLocation("minecraft:textures/block/bedrock.png"),
+            new ResourceLocation("minecraft:textures/block/bricks.png"),
+            new ResourceLocation("minecraft:textures/block/sandstone.png"),
+            new ResourceLocation("minecraft:textures/block/stone.png"),
+            new ResourceLocation("minecraft:textures/block/oak_planks.png"),
+            new ResourceLocation("minecraft:textures/block/gilded_blackstone.png"),
+            new ResourceLocation("minecraft:textures/block/dirt.png")
     };
 
-    private final Identifier background;
+    private final ResourceLocation background;
     private final ConfigOptions options;
     private final ConfigurationData configData;
 
@@ -39,20 +44,31 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
         this(options, config, null);
     }
 
-    public ClothAPIFactory(ConfigOptions options, final ConfigurationData config, @Nullable final Identifier background) {
+    public ClothAPIFactory(ConfigOptions options, final ConfigurationData config, @Nullable final ResourceLocation background) {
         this.options = options;
         this.configData = config;
 
         if (background == null) {
-            var idx = XorShiftRandom.current().nextInt(BACKGROUNDS.length);
+            var idx = Randomizer.current().nextInt(BACKGROUNDS.length);
             this.background = BACKGROUNDS[idx];
         } else {
             this.background = background;
         }
     }
 
+    public static Screen createDefaultConfigScreen(Screen parent) {
+        ConfigOptions options = new ConfigOptions()
+                .setTranslationRoot("dsurround.config")
+                .setTitleStyle(Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE.getValue()))
+                .setPropertyGroupStyle(Style.EMPTY.withColor(ColorPalette.GOLDENROD.getValue()))
+                .setPropertyStyle(Style.EMPTY.withColor(ColorPalette.WHEAT.getValue()))
+                .setTooltipStyle(Style.EMPTY.withColor(ColorPalette.SEASHELL.getValue()));
+
+        return new ClothAPIFactory(options, Client.Config).apply(GameUtils.getMC(), parent);
+    }
+
     @Override
-    public Screen apply(final MinecraftClient MinecraftClient, final Screen screen) {
+    public Screen apply(final Minecraft MinecraftClient, final Screen screen) {
         ConfigBuilder builder = ConfigBuilder.create()
                 .setParentScreen(screen)
                 .setTitle(this.options.transformTitle())
@@ -96,7 +112,7 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
     protected SubCategoryBuilder generate(final ConfigEntryBuilder builder, ConfigElement.PropertyGroup propertyGroup, Object instance) {
         SubCategoryBuilder categoryBuilder = builder
                 .startSubCategory(this.options.transformPropertyGroup(propertyGroup.getElementNameKey()))
-                .setTooltip(this.options.transformTooltip(propertyGroup.getTooltip()));
+                .setTooltip(this.options.transformTooltip(propertyGroup.getTooltip(this.options.getTooltipStyle())));
 
         for (var prop : propertyGroup.getChildren()) {
             // Skip entries that are marked as hidden
@@ -114,11 +130,12 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
         return categoryBuilder;
     }
 
+    @SuppressWarnings("unchecked")
     protected @Nullable FieldBuilder<?, ? extends AbstractConfigListEntry<?>, ?> generate(final ConfigEntryBuilder builder, ConfigElement.PropertyValue<?> pv, Object instance) {
         FieldBuilder<?, ? extends AbstractConfigListEntry<?>, ?> fieldBuilder = null;
 
         var name = this.options.transformProperty(pv.getElementNameKey());
-        var tooltip = this.options.transformTooltip(pv.getTooltip());
+        var tooltip = this.options.transformTooltip(pv.getTooltip(this.options.getTooltipStyle()));
 
         if (pv instanceof ConfigElement.IntegerValue v) {
             if (pv.useSlider()) {
@@ -157,7 +174,7 @@ public class ClothAPIFactory implements BiFunction<MinecraftClient, Screen, Scre
                     .setDefaultValue(v.getDefaultValue())
                     .setSaveConsumer(data -> v.setCurrentValue(instance, data));
         } else if (pv instanceof ConfigElement.EnumValue v) {
-            fieldBuilder = new EnumSelectorBuilder(builder.getResetButtonKey(), name, (Class<Enum<?>>)(v.getEnumClass()), v.getCurrentValue(instance))
+            fieldBuilder = new EnumSelectorBuilder<>(builder.getResetButtonKey(), name, (Class<Enum<?>>)(v.getEnumClass()), v.getCurrentValue(instance))
                     .setTooltip(tooltip)
                     .setDefaultValue(v.getDefaultValue())
                     .setSaveConsumer(data -> v.setCurrentValue(instance, data));

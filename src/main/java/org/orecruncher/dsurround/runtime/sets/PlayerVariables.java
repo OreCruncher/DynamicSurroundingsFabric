@@ -1,11 +1,9 @@
 package org.orecruncher.dsurround.runtime.sets;
 
-import net.minecraft.entity.player.HungerManager;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.World;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
@@ -42,10 +40,10 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
     public void update(IVariableAccess variableAccess) {
 
         if (GameUtils.isInGame()) {
-            final PlayerEntity player = GameUtils.getPlayer().orElseThrow();
+            final var player = GameUtils.getPlayer().orElseThrow();
 
-            HungerManager hm = player.getHungerManager();
-            World world = player.getEntityWorld();
+            var hm = player.getFoodData();
+            var world = player.level();
 
             this.isCreative = player.isCreative();
             this.isBurning = player.isOnFire();
@@ -53,11 +51,11 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
             this.isSprintnig = player.isSprinting();
             this.isInLava = player.isInLava();
             this.isInvisible = player.isInvisible();
-            this.isInWater = player.isSubmergedInWater();
-            this.isWet = player.isWet();
-            this.isRiding = player.hasVehicle();
-            this.isOnGround = player.isOnGround();
-            this.isMoving = player.strideDistance != player.prevStrideDistance;
+            this.isInWater = player.isUnderWater();
+            this.isWet = player.isInWaterOrRain();
+            this.isRiding = player.isPassenger();
+            this.isOnGround = player.onGround();
+            this.isMoving = player.bob != player.oBob;
             this.health = player.getHealth();
             this.maxHealth = player.getMaxHealth();
             this.foodLevel = hm.getFoodLevel();
@@ -66,9 +64,9 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
             this.y = player.getY();
             this.z = player.getZ();
 
-            this.isSuffocating = !player.isCreative() && player.getAir() < 0;
-            this.canRainOn = world.isSkyVisible(player.getBlockPos().add(0, 2, 0));
-            this.canSeeSky = this.canRainOn && WorldUtils.getTopSolidOrLiquidBlock(world, player.getBlockPos()).getY() <= player.getBlockPos().getY();
+            this.isSuffocating = !player.isCreative() && player.getAirSupply() < 0;
+            this.canRainOn = world.canSeeSky(player.blockPosition().offset(0, 2, 0));
+            this.canSeeSky = this.canRainOn && WorldUtils.getTopSolidOrLiquidBlock(world, player.blockPosition()).getY() <= player.blockPosition().getY();
 
         } else {
 
@@ -209,9 +207,9 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
     @Override
     public boolean hasEffect(String effect) {
         try {
-            var id = new Identifier(effect);
-            var statusEffect = GameUtils.getRegistryManager().orElseThrow().get(RegistryKeys.STATUS_EFFECT).get(id);
-            return GameUtils.getPlayer().orElseThrow().hasStatusEffect(statusEffect);
+            var id = new ResourceLocation(effect);
+            var r = RegistryUtils.getRegistryEntry(Registries.MOB_EFFECT, id).orElseThrow();
+            return GameUtils.getPlayer().map(p -> p.hasEffect(r.value())).orElse(false);
         } catch (Throwable ignore) {
         }
 

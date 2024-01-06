@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround;
 
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import org.orecruncher.dsurround.config.*;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
@@ -103,12 +103,12 @@ public abstract class Client implements IMinecraftMod {
         LOGGER.info("Initialization complete");
     }
 
-    public void onComplete(MinecraftClient client) {
+    public void onComplete(Minecraft client) {
 
         var container = ContainerManager.getRootContainer();
 
         // Register the Minecraft sound manager
-        container.registerSingleton(GameUtils.getSoundManager().orElseThrow());
+        container.registerSingleton(GameUtils.getSoundManager());
 
         // Register and initialize our libraries.  This will cause the libraries
         // to be instantiated.
@@ -133,16 +133,16 @@ public abstract class Client implements IMinecraftMod {
         ParticleSheets.register();
     }
 
-    private void onConnect(MinecraftClient minecraftClient) {
+    private void onConnect(Minecraft minecraftClient) {
         // Display version information when joining a game and when a chat window is available.
         try {
             var versionQueryResult = this.versionInfo.get();
             if (versionQueryResult.isPresent()) {
                 var result = versionQueryResult.get();
 
-                LOGGER.info("Update to %s version %s is available", result.displayName, result.version);
+                LOGGER.info("Update to %s version %s is available", result.displayName(), result.version());
                 var player = GameUtils.getPlayer();
-                player.ifPresent(p -> p.sendMessage(result.getChatText(), false));
+                player.ifPresent(p -> p.sendSystemMessage(result.getChatText()));
             } else if(Config.logging.enableModUpdateChatMessage) {
                 LOGGER.info("The mod version is current");
             }

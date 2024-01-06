@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.lib.resources;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;
@@ -10,11 +10,11 @@ final class ResourceAccessorJar extends ResourceAccessorBase {
     // Used to find assets within the current jar
     final String asset;
 
-    public ResourceAccessorJar(final String rootContainer, final Identifier location) {
+    public ResourceAccessorJar(final String rootContainer, final ResourceLocation location) {
         this(location, String.format("/assets/%s/%s/%s", rootContainer, location.getNamespace(), location.getPath()));
     }
 
-    public ResourceAccessorJar(final Identifier location, final String asset) {
+    public ResourceAccessorJar(final ResourceLocation location, final String asset) {
         super(location);
         this.asset = asset;
     }

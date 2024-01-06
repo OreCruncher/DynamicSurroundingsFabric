@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.config;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.effects.entity.*;
 import org.orecruncher.dsurround.lib.di.ContainerManager;

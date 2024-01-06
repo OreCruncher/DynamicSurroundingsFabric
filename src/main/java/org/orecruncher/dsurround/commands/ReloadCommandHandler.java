@@ -1,16 +1,16 @@
 package org.orecruncher.dsurround.commands;
 
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 
 public class ReloadCommandHandler {
 
-    public static Text execute() {
+    public static Component execute() {
         try {
             AssetLibraryEvent.reload();
-            return Text.translatable("dsurround.command.dsreload.success");
+            return Component.translatable("dsurround.command.dsreload.success");
         } catch (Throwable t) {
-            return Text.translatable("dsurround.command.dsreload.failure", t.getMessage());
+            return Component.translatable("dsurround.command.dsreload.failure", t.getMessage());
         }
     }
 }

@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.lib.scanner;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 public interface IPointIterator {
     BlockPos next();

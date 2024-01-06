@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.mixinutils;
 
-import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.world.level.chunk.LevelChunk;
 
 import java.util.stream.Stream;
 
 public interface IClientWorld {
-    Stream<WorldChunk> dsurround_getLoadedChunks();
+    Stream<LevelChunk> dsurround_getLoadedChunks();
 }

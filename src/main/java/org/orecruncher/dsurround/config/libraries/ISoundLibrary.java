@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.config.libraries;
 
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.sound.SoundMetadata;
 
@@ -11,13 +11,13 @@ import java.util.Optional;
 public interface ISoundLibrary extends ILibrary {
 
     SoundEvent getSound(final String sound);
-    SoundEvent getSound(final Identifier sound);
+    SoundEvent getSound(final ResourceLocation sound);
     Collection<SoundEvent> getRegisteredSoundEvents();
-    SoundMetadata getSoundMetadata(final Identifier sound);
+    SoundMetadata getSoundMetadata(final ResourceLocation sound);
 
-    boolean isBlocked(final Identifier id);
-    boolean isCulled(final Identifier id);
-    float getVolumeScale(final Identifier id);
+    boolean isBlocked(final ResourceLocation id);
+    boolean isCulled(final ResourceLocation id);
+    float getVolumeScale(final ResourceLocation id);
     Optional<SoundEvent> getRandomStartupSound();
     Collection<IndividualSoundConfigEntry> getIndividualSoundConfigs();
     void saveIndividualSoundConfigs(Collection<IndividualSoundConfigEntry> configs);

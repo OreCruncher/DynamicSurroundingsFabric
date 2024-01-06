@@ -10,6 +10,7 @@
     "#minecraft:planks",
     "#minecraft:wooden_slabs",
     "#minecraft:wooden_stairs",
-    "#minecraft:wooden_doors"
+    "#minecraft:wooden_doors",
+    "minecraft:netherrack"
   ]
 }

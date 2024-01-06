@@ -1,9 +1,8 @@
 package org.orecruncher.dsurround.runtime.audio.effects;
 
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 import org.lwjgl.openal.AL11;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
-import org.orecruncher.dsurround.runtime.audio.SoundFXProcessor;
 
 public final class SourcePropertyInt {
 
@@ -34,7 +33,7 @@ public final class SourcePropertyInt {
     }
 
     public void setValue(final int f) {
-        this.value = MathHelper.clamp(f, this.min, this.max);
+        this.value = Mth.clamp(f, this.min, this.max);
     }
 
     public void apply(final int sourceId) {

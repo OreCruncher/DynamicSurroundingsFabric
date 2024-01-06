@@ -2,10 +2,10 @@ package org.orecruncher.dsurround.lib.block;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.Property;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.Property;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.IMatcher;
 import org.orecruncher.dsurround.lib.IdentityUtils;
@@ -67,9 +67,9 @@ public abstract class BlockStateMatcher implements IMatcher<BlockState> {
 
     private static BlockStateMatcher createBlockStateMatcher(final BlockStateParser.ParseResult result) throws BlockStateParseException {
         final Block block = result.getBlock();
-        final BlockState defaultState = block.getDefaultState();
-        final StateManager<Block, BlockState> container = block.getStateManager();
-        if (container.getStates().size() == 1) {
+        final BlockState defaultState = block.defaultBlockState();
+        final StateDefinition<Block, BlockState> container = block.getStateDefinition();
+        if (container.getPossibleStates().size() == 1) {
             // Easy case - it's always an identical match because there are no other properties
             return new MatchOnBlock(defaultState.getBlock());
         }
@@ -87,7 +87,7 @@ public abstract class BlockStateMatcher implements IMatcher<BlockState> {
             final String s = entry.getKey();
             final Property<?> prop = container.getProperty(s);
             if (prop != null) {
-                final Optional<?> optional = prop.parse(entry.getValue());
+                final Optional<?> optional = prop.getValue(entry.getValue());
                 if (optional.isPresent()) {
                     props.put(prop, (Comparable<?>) optional.get());
                 } else {

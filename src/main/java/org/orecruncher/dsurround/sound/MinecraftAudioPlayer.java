@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.sound;
 
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.client.sound.SoundManager;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.sounds.SoundManager;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
@@ -31,12 +31,12 @@ public class MinecraftAudioPlayer implements IAudioPlayer {
     @Override
     public void stopAll() {
         this.logger.debug(Configuration.Flags.AUDIO_PLAYER, "STOPPING all sounds");
-        this.manager.stopAll();
+        this.manager.stop();
     }
 
     @Override
     public boolean isPlaying(SoundInstance sound) {
-        return this.manager.isPlaying(sound);
+        return this.manager.isActive(sound);
     }
 
     protected String formatSound(SoundInstance sound) {

@@ -1,10 +1,10 @@
 package org.orecruncher.dsurround.lib.block;
 
 import com.google.common.collect.ImmutableMap;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.Identifier;
-import net.minecraft.registry.Registries;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.PatternValidation;
@@ -69,12 +69,12 @@ final class BlockStateParser {
             }
         }
 
-        if (!Identifier.isValid(temp)) {
+        final ResourceLocation resource = ResourceLocation.tryParse(temp);
+        if (temp == null) {
             throw new BlockStateParseException(String.format("Invalid block name '%s' for entry '%s'", temp, blockName));
         }
 
-        final Identifier resource = new Identifier(temp);
-        final Block block = Registries.BLOCK.get(resource);
+        final Block block = BuiltInRegistries.BLOCK.get(resource);
         if (block == Blocks.AIR && !"minecraft:air".equals(temp)) {
             throw new BlockStateParseException(String.format("Unknown block '%s' for entry '%s'", temp, blockName));
         }

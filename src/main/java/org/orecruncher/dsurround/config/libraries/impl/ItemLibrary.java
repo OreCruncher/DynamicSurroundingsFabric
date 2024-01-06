@@ -1,18 +1,20 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
-import net.minecraft.item.*;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.*;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.ItemClassType;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
-import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
@@ -70,9 +72,8 @@ public class ItemLibrary implements IItemLibrary {
 
     @Override
     public Stream<String> dump() {
-        var manager = GameUtils.getRegistryManager().orElseThrow();
-        var blockRegistry = manager.get(RegistryKeys.ITEM).getEntrySet();
-        return blockRegistry.stream().map(kvp -> formatItemOutput(kvp.getKey().getValue(), kvp.getValue())).sorted();
+        var itemRegistry = RegistryUtils.getRegistry(Registries.ITEM).map(Registry::entrySet).orElseThrow();
+        return itemRegistry.stream().map(kvp -> formatItemOutput(kvp.getKey().location(), kvp.getValue())).sorted();
     }
 
     private static @Nullable ISoundFactory resolveEquipStepSound(ItemStack stack) {
@@ -80,7 +81,7 @@ public class ItemLibrary implements IItemLibrary {
         if (sound != null)
             return SoundFactoryBuilder
                     .create(sound)
-                    .category(SoundCategory.PLAYERS).volume(0.07F).pitchRange(0.8F, 1F).build();
+                    .category(SoundSource.PLAYERS).volume(0.07F).pitchRange(0.8F, 1F).build();
         return null;
     }
 
@@ -93,7 +94,7 @@ public class ItemLibrary implements IItemLibrary {
             if (itemEquipSound != null)
                 return SoundFactoryBuilder
                         .create(itemEquipSound)
-                        .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build();
+                        .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build();
             return defaultSoundFactory.get();
         }
 
@@ -105,7 +106,7 @@ public class ItemLibrary implements IItemLibrary {
         var item = stack.getItem();
         SoundEvent itemEquipSound = null;
 
-        if (item instanceof Equipment equipment)
+        if (item instanceof Equipable equipment)
             itemEquipSound = equipment.getEquipSound();
         else if (item instanceof ArmorItem armor)
             itemEquipSound = armor.getEquipSound();
@@ -124,45 +125,41 @@ public class ItemLibrary implements IItemLibrary {
 
         if (item instanceof ElytraItem elytraItem)
             itemEquipSound = elytraItem.getEquipSound();
-        else if (this.tagLibrary.isIn(ItemTags.LAVA_BUCKETS, item))
-            itemEquipSound = SoundEvents.ITEM_BUCKET_FILL_LAVA;
-        else if (this.tagLibrary.isIn(ItemTags.WATER_BUCKETS, item))
-            itemEquipSound = SoundEvents.ITEM_BUCKET_FILL;
-        else if (this.tagLibrary.isIn(ItemTags.ENTITY_WATER_BUCKETS, item))
-            itemEquipSound = SoundEvents.ITEM_BUCKET_FILL_FISH;
-        else if (this.tagLibrary.isIn(ItemTags.MILK_BUCKETS, item))
-            itemEquipSound = SoundEvents.ITEM_BUCKET_FILL;
+        else if (this.tagLibrary.is(ItemTags.LAVA_BUCKETS, stack))
+            itemEquipSound = SoundEvents.BUCKET_FILL_LAVA;
+        else if (this.tagLibrary.is(ItemTags.WATER_BUCKETS, stack))
+            itemEquipSound = SoundEvents.BUCKET_FILL;
+        else if (this.tagLibrary.is(ItemTags.ENTITY_WATER_BUCKETS, stack))
+            itemEquipSound = SoundEvents.BUCKET_FILL_FISH;
+        else if (this.tagLibrary.is(ItemTags.MILK_BUCKETS, stack))
+            itemEquipSound = SoundEvents.BUCKET_FILL;
 
         return itemEquipSound;
     }
 
     private ItemClassType resolveClassType(ItemStack stack) {
-        var item = stack.getItem();
-        if (this.tagLibrary.isIn(ItemEffectTags.AXES, item))
+        if (this.tagLibrary.is(ItemEffectTags.AXES, stack))
             return ItemClassType.AXE;
-        if (this.tagLibrary.isIn(ItemEffectTags.BOOKS, item))
+        if (this.tagLibrary.is(ItemEffectTags.BOOKS, stack))
             return ItemClassType.BOOK;
-        if (this.tagLibrary.isIn(ItemEffectTags.BOWS, item))
+        if (this.tagLibrary.is(ItemEffectTags.BOWS, stack))
             return ItemClassType.BOW;
-        if (this.tagLibrary.isIn(ItemEffectTags.POTIONS, item))
+        if (this.tagLibrary.is(ItemEffectTags.POTIONS, stack))
             return ItemClassType.POTION;
-        if (this.tagLibrary.isIn(ItemEffectTags.CROSSBOWS, item))
+        if (this.tagLibrary.is(ItemEffectTags.CROSSBOWS, stack))
             return ItemClassType.CROSSBOW;
-        if (this.tagLibrary.isIn(ItemEffectTags.SHIELDS, item))
+        if (this.tagLibrary.is(ItemEffectTags.SHIELDS, stack))
             return ItemClassType.SHIELD;
-        if (this.tagLibrary.isIn(ItemEffectTags.SWORDS, item))
+        if (this.tagLibrary.is(ItemEffectTags.SWORDS, stack))
             return ItemClassType.SWORD;
-        if (this.tagLibrary.isIn(ItemEffectTags.TOOLS, item))
+        if (this.tagLibrary.is(ItemEffectTags.TOOLS, stack))
             return ItemClassType.TOOL;
 
         return ItemClassType.NONE;
     }
 
-    private String formatItemOutput(Identifier id, Item item) {
-        var manager = GameUtils.getRegistryManager().orElseThrow();
-        var items = manager.get(RegistryKeys.ITEM);
-
-        var tags = items.getEntry(items.getRawId(item))
+    private String formatItemOutput(ResourceLocation id, Item item) {
+        var tags = RegistryUtils.getRegistryEntry(Registries.ITEM, item)
                 .map(e -> {
                     var t = this.tagLibrary.streamTags(e);
                     return this.tagLibrary.asString(t);

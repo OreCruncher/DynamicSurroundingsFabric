@@ -17,10 +17,6 @@ public class ConfigValue<T> {
         return this.field.getAnnotation(annotation);
     }
 
-    public String getPropertyName() {
-        return this.field.getName();
-    }
-
     @SuppressWarnings("unchecked")
     public T get(Object instance) {
         try {

@@ -1,14 +1,28 @@
 package org.orecruncher.dsurround.lib.config;
 
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.lib.Localization;
+import org.orecruncher.dsurround.lib.gui.ColorPalette;
+import org.orecruncher.dsurround.lib.gui.GuiHelpers;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.Optional;
 
-public abstract class ConfigElement<T> {
+public abstract class ConfigElement {
+
+    private static final int TOOLTIP_WIDTH = 300;
+
+    private static final Style STYLE_RESTART = Style.EMPTY.withColor(ColorPalette.RED);
+    private static final Style STYLE_RANGE = Style.EMPTY.withColor(ColorPalette.CORN_FLOWER_BLUE);
+    private static final Style STYLE_DEFAULT = Style.EMPTY.withColor(ColorPalette.TAN);
+    private static final Style STYLE_MISSING = Style.EMPTY.withColor(ColorPalette.RED).withItalic(true);
+
+    private static final Component CLIENT_RESTART_REQUIRED = Component.translatable("dsurround.config.tooltip.clientRestartRequired").withStyle(STYLE_RESTART);
+    private static final Component WORLD_RESTART_REQUIRED = Component.translatable("dsurround.config.tooltip.worldRestartRequired").withStyle(STYLE_RESTART);
 
     private final String elementNameKey;
 
@@ -24,17 +38,22 @@ public abstract class ConfigElement<T> {
         return this.elementNameKey + ".tooltip";
     }
 
-    public List<Text> getTooltip() {
-        var result = new ArrayList<Text>();
+    public Collection<Component> getTooltip(Style style) {
+        // Get tooltip data from language file. If not present, fall back to the Comment annotation
+        // in the config model. If the property does not have a Comment annotation, use the resource key.
         var key = this.getElementNameTooltipKey();
-        Text txt = Text.translatable(key);
-        if (txt.toString().equals(key)) {
-            var comment = this.getComment();
-            if (comment != null)
-                txt = Text.of(comment);
+        var resourceText = Localization.loadIfPresent(key);
+
+        if (resourceText.isEmpty()) {
+            resourceText = Optional.ofNullable(this.getComment());
         }
-        result.add(txt);
-        return result;
+
+        if (resourceText.isEmpty()) {
+            var result = new ArrayList<Component>();
+            result.add(Component.literal("MISSING: " + key).withStyle(STYLE_MISSING));
+            return result;
+        }
+        return GuiHelpers.getTrimmedTextCollection(Component.literal(resourceText.get()), TOOLTIP_WIDTH, style);
     }
 
     public boolean isHidden() {
@@ -48,12 +67,12 @@ public abstract class ConfigElement<T> {
         return null;
     }
 
-    public static class PropertyGroup extends ConfigElement<String> {
+    public static class PropertyGroup extends ConfigElement {
 
         private final ConfigValue<?> wrapper;
-        private final Collection<ConfigElement<?>> children;
+        private final Collection<ConfigElement> children;
 
-        PropertyGroup(ConfigValue<?> wrapper, String translationKey, Collection<ConfigElement<?>> children) {
+        PropertyGroup(ConfigValue<?> wrapper, String translationKey, Collection<ConfigElement> children) {
             super(translationKey);
 
             this.wrapper = wrapper;
@@ -69,7 +88,7 @@ public abstract class ConfigElement<T> {
             return this.wrapper.getAnnotation(ConfigurationData.Hidden.class) != null;
         }
 
-        public Collection<ConfigElement<?>> getChildren() {
+        public Collection<ConfigElement> getChildren() {
             return this.children;
         }
 
@@ -81,7 +100,7 @@ public abstract class ConfigElement<T> {
 
     }
 
-    public static class PropertyValue<T> extends ConfigElement<T> {
+    public static class PropertyValue<T> extends ConfigElement {
 
         // Used to access the authoritative value of the property
         private final ConfigValue<T> wrapper;
@@ -90,6 +109,7 @@ public abstract class ConfigElement<T> {
 
         PropertyValue(Object instance, String translationKey, ConfigValue<T> wrapper) {
             super(translationKey);
+
             this.wrapper = wrapper;
             this.defaultValue = wrapper.get(instance);
         }
@@ -134,17 +154,17 @@ public abstract class ConfigElement<T> {
         }
 
         @Override
-        public List<Text> getTooltip() {
-            var result = super.getTooltip();
+        public Collection<Component> getTooltip(Style style) {
+            var result = super.getTooltip(style);
 
             if (this.isClientRestartRequired())
-                result.add(Text.translatable("dsurround.config.tooltip.clientRestartRequired"));
+                result.add(CLIENT_RESTART_REQUIRED);
             else if (this.isWorldRestartRequired())
-                result.add(Text.translatable("dsurround.config.tooltip.worldRestartRequired"));
+                result.add(WORLD_RESTART_REQUIRED);
 
             var dv = this.wrapper.getAnnotation(ConfigurationData.DefaultValue.class);
             if (dv != null)
-                result.add(Text.translatable("dsurround.config.tooltip.defaultValue", this.defaultValue));
+                result.add(Component.translatable("dsurround.config.tooltip.defaultValue", this.defaultValue).withStyle(STYLE_DEFAULT));
 
             return result;
         }
@@ -198,16 +218,16 @@ public abstract class ConfigElement<T> {
         }
 
         @Override
-        public List<Text> getTooltip() {
-            var result = super.getTooltip();
+        public Collection<Component> getTooltip(Style style) {
+            var result = super.getTooltip(style);
             if (this.hasRange())
-                result.add(Text.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()));
+                result.add(Component.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()).withStyle(STYLE_RANGE));
             return result;
         }
 
         @Override
         protected Integer clamp(Integer val) {
-            return MathHelper.clamp(val, this.minValue, this.maxValue);
+            return Mth.clamp(val, this.minValue, this.maxValue);
         }
 
     }
@@ -239,16 +259,16 @@ public abstract class ConfigElement<T> {
         }
 
         @Override
-        public List<Text> getTooltip() {
-            var result = super.getTooltip();
+        public Collection<Component> getTooltip(Style style) {
+            var result = super.getTooltip(style);
             if (this.hasRange())
-                result.add(Text.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()));
+                result.add(Component.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()).withStyle(STYLE_RANGE));
             return result;
         }
 
         @Override
         protected Double clamp(Double val) {
-            return MathHelper.clamp(val, this.minValue, this.maxValue);
+            return Mth.clamp(val, this.minValue, this.maxValue);
         }
 
     }

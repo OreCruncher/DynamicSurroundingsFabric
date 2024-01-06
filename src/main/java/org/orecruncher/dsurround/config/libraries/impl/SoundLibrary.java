@@ -6,10 +6,10 @@ import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.UnboundedMapCodec;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.Identifier;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.JsonHelper;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.util.GsonHelper;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
@@ -18,7 +18,7 @@ import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.CodecExtensions;
 import org.orecruncher.dsurround.lib.Comparers;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.random.XorShiftRandom;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
@@ -42,18 +42,18 @@ public final class SoundLibrary implements ISoundLibrary {
     private static final UnboundedMapCodec<String, SoundMetadataConfig> CODEC = Codec.unboundedMap(Codec.STRING, SoundMetadataConfig.CODEC);
     private static final Codec<List<IndividualSoundConfigEntry>> SOUND_CONFIG_CODEC = Codec.list(IndividualSoundConfigEntry.CODEC);
 
-    private static final Identifier MISSING_RESOURCE = new Identifier(Constants.MOD_ID, "missing_sound");
-    private static final SoundEvent MISSING = SoundEvent.of(MISSING_RESOURCE);
+    private static final ResourceLocation MISSING_RESOURCE = new ResourceLocation(Constants.MOD_ID, "missing_sound");
+    private static final SoundEvent MISSING = SoundEvent.createVariableRangeEvent(MISSING_RESOURCE);
 
     private final IModLog logger;
     private final Path soundConfigPath;
 
-    private final Object2ObjectOpenHashMap<Identifier, SoundEvent> myRegistry = new Object2ObjectOpenHashMap<>();
-    private final Object2ObjectOpenHashMap<Identifier, SoundMetadata> soundMetadata = new Object2ObjectOpenHashMap<>();
-    private final Map<Identifier, IndividualSoundConfigEntry> individualSoundConfiguration = new Object2ObjectOpenHashMap<>();
-    private final Set<Identifier> blockedSounds = new ObjectOpenHashSet<>();
-    private final Set<Identifier> culledSounds = new ObjectOpenHashSet<>();
-    private final List<Identifier> startupSounds = new ArrayList<>();
+    private final Object2ObjectOpenHashMap<ResourceLocation, SoundEvent> myRegistry = new Object2ObjectOpenHashMap<>();
+    private final Object2ObjectOpenHashMap<ResourceLocation, SoundMetadata> soundMetadata = new Object2ObjectOpenHashMap<>();
+    private final Map<ResourceLocation, IndividualSoundConfigEntry> individualSoundConfiguration = new Object2ObjectOpenHashMap<>();
+    private final Set<ResourceLocation> blockedSounds = new ObjectOpenHashSet<>();
+    private final Set<ResourceLocation> culledSounds = new ObjectOpenHashSet<>();
+    private final List<ResourceLocation> startupSounds = new ArrayList<>();
     private List<IndividualSoundConfigEntry> soundConfiguration = new ArrayList<>();
 
     public SoundLibrary(IModLog logger, IMinecraftDirectories directories) {
@@ -68,8 +68,8 @@ public final class SoundLibrary implements ISoundLibrary {
     @Override
     public Stream<String> dump() {
         return this.myRegistry.values().stream()
-                .sorted((c1, c2) -> Comparers.IDENTIFIER_NATURAL_COMPARABLE.compare(c1.getId(), c2.getId()))
-                .map(e -> e.getId().toString());
+                .sorted((c1, c2) -> Comparers.IDENTIFIER_NATURAL_COMPARABLE.compare(c1.getLocation(), c2.getLocation()))
+                .map(Object::toString);
     }
 
     @Override
@@ -82,7 +82,7 @@ public final class SoundLibrary implements ISoundLibrary {
 
         // Initializes the internal sound registry once all the other mods have
         // registered their sounds.
-        Registries.SOUND_EVENT.forEach(se -> this.myRegistry.put(se.getId(), se));
+        BuiltInRegistries.SOUND_EVENT.forEach(se -> this.myRegistry.put(se.getLocation(), se));
 
         // Gather resource pack sound files and process them to ensure metadata is collected.
         // Resource pack sounds generally replace existing registration, but this allows for new
@@ -94,11 +94,11 @@ public final class SoundLibrary implements ISoundLibrary {
 
     @Override
     public SoundEvent getSound(final String sound) {
-        return getSound(new Identifier(sound));
+        return getSound(new ResourceLocation(sound));
     }
 
     @Override
-    public SoundEvent getSound(final Identifier sound) {
+    public SoundEvent getSound(final ResourceLocation sound) {
         Objects.requireNonNull(sound);
         final SoundEvent se = this.myRegistry.get(sound);
         if (se == SoundLibrary.MISSING) {
@@ -113,22 +113,22 @@ public final class SoundLibrary implements ISoundLibrary {
     }
 
     @Override
-    public SoundMetadata getSoundMetadata(final Identifier sound) {
+    public SoundMetadata getSoundMetadata(final ResourceLocation sound) {
         return this.soundMetadata.get(Objects.requireNonNull(sound));
     }
 
     @Override
-    public boolean isBlocked(final Identifier sound) {
+    public boolean isBlocked(final ResourceLocation sound) {
         return this.blockedSounds.contains(Objects.requireNonNull(sound));
     }
 
     @Override
-    public boolean isCulled(final Identifier sound) {
+    public boolean isCulled(final ResourceLocation sound) {
         return this.culledSounds.contains(Objects.requireNonNull(sound));
     }
 
     @Override
-    public float getVolumeScale(final Identifier sound) {
+    public float getVolumeScale(final ResourceLocation sound) {
         IndividualSoundConfigEntry entry = this.individualSoundConfiguration.get(Objects.requireNonNull(sound));
         if (entry != null && entry.isNotDefault()) {
             return entry.volumeScale / 100f;
@@ -144,9 +144,9 @@ public final class SoundLibrary implements ISoundLibrary {
 
         int idx = 0;
         if (this.startupSounds.size() > 1) {
-            idx = XorShiftRandom.current().nextInt(this.startupSounds.size());
+            idx = Randomizer.current().nextInt(this.startupSounds.size());
         }
-        return Optional.of(SoundEvent.of(this.startupSounds.get(idx)));
+        return Optional.of(SoundEvent.createVariableRangeEvent(this.startupSounds.get(idx)));
     }
 
     @Override
@@ -166,13 +166,13 @@ public final class SoundLibrary implements ISoundLibrary {
     private void registerSoundFile(final IResourceAccessor soundFile) {
         final Map<String, SoundMetadataConfig> result = soundFile.as(CODEC);
         if (result != null && !result.isEmpty()) {
-            Identifier resource = soundFile.location();
+            ResourceLocation resource = soundFile.location();
             this.logger.info("Processing %s", resource);
             result.forEach((key, value) -> {
                 // We want to register the sound regardless of having metadata.
-                final Identifier loc = new Identifier(resource.getNamespace(), key);
+                final ResourceLocation loc = new ResourceLocation(resource.getNamespace(), key);
                 if (!this.myRegistry.containsKey(loc)) {
-                    this.myRegistry.put(loc, SoundEvent.of(loc));
+                    this.myRegistry.put(loc, SoundEvent.createVariableRangeEvent(loc));
                 }
                 if (!value.isDefault()) {
                     final SoundMetadata data = new SoundMetadata(value);
@@ -187,7 +187,7 @@ public final class SoundLibrary implements ISoundLibrary {
     private void loadSoundConfiguration() {
         this.soundConfiguration.clear();
 
-        // Check to see if it exists on disk, and if so, load it up.  Otherwise, save it so the defaults are
+        // Check to see if it exists on the disk, and if so, load it up. Otherwise, save it so the defaults are
         // persisted and the user can edit manually.
         try {
             if (Files.exists(this.soundConfigPath)) {
@@ -228,7 +228,7 @@ public final class SoundLibrary implements ISoundLibrary {
 
     private void addSoundConfig(final String id, int volumeScale, boolean block, boolean cull, boolean startup) {
         var entry = new IndividualSoundConfigEntry(
-                new Identifier(id),
+                new ResourceLocation(id),
                 volumeScale,
                 block,
                 cull,
@@ -260,7 +260,7 @@ public final class SoundLibrary implements ISoundLibrary {
         try {
             var result = SOUND_CONFIG_CODEC.encode(this.soundConfiguration, JsonOps.INSTANCE, JsonOps.INSTANCE.empty()).result();
             if (result.isPresent()) {
-                var content = JsonHelper.asArray(result.get(), "soundconfig");
+                var content = GsonHelper.convertToJsonArray(result.get(), "soundconfig");
                 var gson = new GsonBuilder()
                         .setPrettyPrinting()
                         .create();

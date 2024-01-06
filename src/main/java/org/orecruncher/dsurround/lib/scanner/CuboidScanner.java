@@ -1,12 +1,14 @@
 package org.orecruncher.dsurround.lib.scanner;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 
-import java.util.Random;
+import java.util.Collection;
 
 public abstract class CuboidScanner extends Scanner {
 
@@ -17,22 +19,22 @@ public abstract class CuboidScanner extends Scanner {
 
     // State of last tick
     protected BlockPos lastPos;
-    protected Identifier lastReference = new Identifier("dsurround:aintnothin");
+    protected ResourceLocation lastReference = new ResourceLocation("dsurround:aintnothin");
 
     protected CuboidScanner(final ScanContext locus, final String name, final int range) {
         super(locus, name, range);
     }
 
     protected BlockPos[] getMinMaxPointsForVolume(final BlockPos pos) {
-        var mutable = new BlockPos.Mutable();
+        var mutable = new BlockPos.MutableBlockPos();
 
-        mutable.set(pos, -this.xRange, -this.yRange, -this.zRange);
+        mutable.setWithOffset(pos, -this.xRange, -this.yRange, -this.zRange);
         mutable.setY(this.locus.clampHeight(mutable.getY()));
-        var min = mutable.toImmutable();
+        var min = mutable.immutable();
 
-        mutable.set(pos, this.xRange, this.yRange, this.zRange);
+        mutable.setWithOffset(pos, this.xRange, this.yRange, this.zRange);
         mutable.setY(this.locus.clampHeight(mutable.getY()));
-        var max = mutable.toImmutable();
+        var max = mutable.immutable();
 
         return new BlockPos[]{min, max};
     }
@@ -126,14 +128,14 @@ public abstract class CuboidScanner extends Scanner {
      * This is the hook that gets called when a block goes out of scope because the
      * player moved or something.
      */
-    public void blockUnscan(final World world, final BlockState state, final BlockPos pos, final Random rand) {
+    public void blockUnscan(final Level world, final BlockState state, final BlockPos pos, final IRandomizer rand) {
 
     }
 
     protected void updateScan(final Cuboid newVolume, final Cuboid oldVolume,
                               final Cuboid intersect) {
 
-        final World provider = this.locus.getWorld();
+        var provider = this.locus.getWorld();
 
         if (doBlockUnscan()) {
             final ComplementsPointIterator newOutOfRange = new ComplementsPointIterator(oldVolume, intersect);
@@ -160,7 +162,7 @@ public abstract class CuboidScanner extends Scanner {
 
     @Override
     @Nullable
-    protected BlockPos nextPos(final BlockPos.Mutable workingPos, final Random rand) {
+    protected BlockPos nextPos(final BlockPos.MutableBlockPos workingPos, final IRandomizer rand) {
 
         if (this.scanFinished)
             return null;
@@ -189,15 +191,20 @@ public abstract class CuboidScanner extends Scanner {
         return null;
     }
 
-    public void onBlockUpdate(final BlockPos pos) {
-        try {
-            if (this.activeCuboid != null && this.activeCuboid.contains(pos)) {
-                var world = this.locus.getWorld();
-                final BlockState state = world.getBlockState(pos);
-                blockScan(world, state, pos, this.random);
-            }
-        } catch (final Throwable t) {
-            this.locus.getLogger().error(t, "onBlockUpdate() error");
+    public void onBlockUpdates(Collection<BlockPos> positions) {
+        if (!positions.isEmpty() && this.activeCuboid != null) {
+            var world = this.locus.getWorld();
+            positions.stream()
+                    .filter(p -> this.activeCuboid.contains(p))
+                    .forEach(p -> {
+                        var state = world.getBlockState(p);
+                        if (!Constants.BLOCKS_TO_IGNORE.contains(state.getBlock()))
+                            try {
+                                blockScan(world, state, p, this.random);
+                            } catch (Throwable t) {
+                                this.locus.getLogger().error(t, "onBlockUpdate() error %s for state %s", p.toString(), state.toString());
+                            }
+                    });
         }
     }
 }

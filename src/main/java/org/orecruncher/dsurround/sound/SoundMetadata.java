@@ -1,8 +1,8 @@
 package org.orecruncher.dsurround.sound;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.text.Text;
-import org.apache.commons.lang3.StringUtils;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
 
 import java.util.ArrayList;
@@ -11,33 +11,39 @@ import java.util.Objects;
 
 public final class SoundMetadata {
 
-    private final Text title;
-    private final Text caption;
-    private final List<Text> credits;
+    private final Component title;
+    private final Component subTitle;
+    private final List<Credit> credits;
 
     public SoundMetadata() {
-        this.title = Text.empty();
-        this.caption = Text.empty();
+        this.title = Component.empty();
+        this.subTitle = Component.empty();
         this.credits = ImmutableList.of();
     }
 
     public SoundMetadata(final SoundMetadataConfig cfg) {
         Objects.requireNonNull(cfg);
 
-        this.title = cfg.title().map(Text::translatable).orElse(Text.empty());
-        this.caption = cfg.caption().map(Text::translatable).orElse(Text.empty());
+        this.title = cfg.title().map(Component::translatable).orElse(Component.empty());
+        this.subTitle = cfg.subtitle().map(Component::translatable).orElse(Component.empty());
 
         if (cfg.credits() == null || cfg.credits().isEmpty()) {
             this.credits = ImmutableList.of();
         } else {
-            this.credits = new ArrayList<>();
-            for (final String s : cfg.credits()) {
-                if (StringUtils.isEmpty(s))
-                    this.credits.add(Text.empty());
-                else
-                    this.credits.add(Text.of(s));
+            var temp = new ArrayList<Credit>(cfg.credits().size());
+            for (var entry : cfg.credits()) {
+                var name = Component.nullToEmpty(ChatFormatting.stripFormatting(entry.name()));
+                var author = Component.nullToEmpty(ChatFormatting.stripFormatting(entry.author()));
+                var license = Component.nullToEmpty(ChatFormatting.stripFormatting(entry.license()));
+                var creditEntry = new Credit(name, author, license);
+                temp.add(creditEntry);
             }
+            this.credits = ImmutableList.copyOf(temp);
         }
+    }
+
+    public record Credit(Component name, Component author, Component license) {
+
     }
 
     /**
@@ -45,25 +51,25 @@ public final class SoundMetadata {
      *
      * @return Configured title, or EMPTY if not present.
      */
-    public Text getTitle() {
+    public Component getTitle() {
         return this.title;
     }
 
     /**
-     * Gets the caption (subtitle) configured in sounds.json, or EMPTY if not present.
+     * Gets the subtitle (subtitle) configured in sounds.json, or EMPTY if not present.
      *
-     * @return Configured caption, or EMPTY if not present.
+     * @return Configured subtitle, or EMPTY if not present.
      */
-    public Text getCaption() {
-        return this.caption;
+    public Component getSubTitle() {
+        return this.subTitle;
     }
 
     /**
      * Gets the credits configured for the sound event in sounds.json, or an empty list if not present.
      *
-     * @return List containing 0 or more strings describing the sound credits.
+     * @return List containing zero or more strings describing the sound credits.
      */
-    public List<Text> getCredits() {
+    public List<Credit> getCredits() {
         return this.credits;
     }
 }

@@ -396,7 +396,7 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
                 this.errPos = index;
                 return false;
             }
-            if (this.input[0] == '0' && pos - index > 1) { // Leading zero
+            if (this.input[index] == '0' && pos - index > 1) { // Leading zero
                 this.errPos = index;
                 return false;
             }
@@ -419,7 +419,7 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
                 this.errPos = index;
                 return false;
             }
-            if (this.input[0] == '0' && pos - index > 1) { // Leading zero
+            if (this.input[index] == '0' && pos - index > 1) { // Leading zero
                 this.errPos = index;
                 return false;
             }

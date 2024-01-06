@@ -21,7 +21,7 @@ import java.util.Collection;
 public abstract class ConfigurationData {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Reference2ObjectOpenHashMap<Class<?>, Collection<ConfigElement<?>>> specifications = new Reference2ObjectOpenHashMap<>();
+    private static final Reference2ObjectOpenHashMap<Class<?>, Collection<ConfigElement>> specifications = new Reference2ObjectOpenHashMap<>();
     private static final Reference2ObjectOpenHashMap<Class<?>, ConfigurationData> configs = new Reference2ObjectOpenHashMap<>();
 
 
@@ -33,6 +33,7 @@ public abstract class ConfigurationData {
         this.configFilePath = configFilePath;
     }
 
+    @SuppressWarnings("unchecked")
     public static <T extends ConfigurationData> @NotNull T getConfig(Class<T> clazz) {
         try {
             var config = configs.get(clazz);
@@ -60,7 +61,7 @@ public abstract class ConfigurationData {
                 Library.getLogger().error(t, "Unable to handle configuration");
             }
 
-            // Post load processing
+            // Post-load processing
             config.postLoad();
 
             // Save it out.  Config parameters may have been added/removed
@@ -77,7 +78,7 @@ public abstract class ConfigurationData {
         return null;
     }
 
-    public Collection<ConfigElement<?>> getSpecification() {
+    public Collection<ConfigElement> getSpecification() {
         return specifications.get(this.getClass());
     }
 

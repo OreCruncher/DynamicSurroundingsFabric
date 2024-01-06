@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.scanner;
 
 import com.google.common.collect.AbstractIterator;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
@@ -34,8 +34,9 @@ public class CuboidPointIterator implements IPointIterator {
     }
 
     public CuboidPointIterator(final BlockPos p1, final BlockPos p2) {
-        this.itr = iterateCuboid(p1.getX(), p1.getY(), p1.getZ(), p2.getX(), p2.getY(), p2.getZ()).iterator();
-            this.peeked = this.itr.next();
+        this.itr = BlockPos.betweenClosed(p1, p2).iterator();
+        //this.itr = iterateCuboid(p1.getX(), p1.getY(), p1.getZ(), p2.getX(), p2.getY(), p2.getZ()).iterator();
+        this.peeked = this.itr.next();
     }
 
     @Override
@@ -62,7 +63,7 @@ public class CuboidPointIterator implements IPointIterator {
         int width = maxZ - minZ + 1;
         int volume = length * height * width;
         return () -> new AbstractIterator<>() {
-            private final BlockPos.Mutable pos = new BlockPos.Mutable();
+            private final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
             private int index;
 
             protected BlockPos computeNext() {

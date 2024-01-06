@@ -36,7 +36,7 @@ public final class Effects {
         reverbData0.lateReverbGain = EXTEfx.AL_EAXREVERB_DEFAULT_LATE_REVERB_GAIN;
         reverbData0.airAbsorptionGainHF = EXTEfx.AL_EAXREVERB_DEFAULT_AIR_ABSORPTION_GAINHF;
 
-        //reverbData0.decayTime = 0.15F;
+        reverbData0.decayTime = 0.15F;
         //reverbData0.density = 0.0F;
         reverbData0.gain = 0.2F * 0.85F * GLOBAL_REVERB_MULTIPLIER;
         reverbData0.gainHF = 0.99F;
@@ -51,7 +51,7 @@ public final class Effects {
         reverbData1.lateReverbGain = EXTEfx.AL_EAXREVERB_DEFAULT_LATE_REVERB_GAIN;
         reverbData1.airAbsorptionGainHF = EXTEfx.AL_EAXREVERB_DEFAULT_AIR_ABSORPTION_GAINHF;
 
-        //reverbData1.decayTime = 0.55F;
+        reverbData1.decayTime = 0.55F;
         //reverbData1.density = 0.0F;
         reverbData1.gain = 0.3F * 0.85F * GLOBAL_REVERB_MULTIPLIER;
         reverbData1.gainHF = 0.99F;
@@ -66,7 +66,7 @@ public final class Effects {
         reverbData2.lateReverbGain = EXTEfx.AL_EAXREVERB_DEFAULT_LATE_REVERB_GAIN;
         reverbData2.airAbsorptionGainHF = EXTEfx.AL_EAXREVERB_DEFAULT_AIR_ABSORPTION_GAINHF;
 
-        //reverbData2.decayTime = 1.68F;
+        reverbData2.decayTime = 1.68F;
         //reverbData2.density = 0.1F;
         reverbData2.gain = 0.5F * 0.85F * GLOBAL_REVERB_MULTIPLIER;
         reverbData2.gainHF = 0.99F;
@@ -81,7 +81,7 @@ public final class Effects {
         reverbData3.lateReverbGain = EXTEfx.AL_EAXREVERB_DEFAULT_LATE_REVERB_GAIN;
         reverbData3.airAbsorptionGainHF = EXTEfx.AL_EAXREVERB_DEFAULT_AIR_ABSORPTION_GAINHF;
 
-        //reverbData3.decayTime = 4.142F;
+        reverbData3.decayTime = 4.142F;
         //reverbData3.density = 0.5F;
         reverbData3.gain = 0.4F * 0.85F * GLOBAL_REVERB_MULTIPLIER;
         reverbData3.gainHF = 0.89F;

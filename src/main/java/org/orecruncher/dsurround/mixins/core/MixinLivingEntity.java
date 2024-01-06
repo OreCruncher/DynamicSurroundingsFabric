@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.mixins.core;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.data.TrackedData;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.mixinutils.ILivingEntityExtended;
@@ -21,7 +21,7 @@ public class MixinLivingEntity implements ILivingEntityExtended {
 
     @Final
     @Shadow
-    private static TrackedData<Integer> POTION_SWIRLS_COLOR;
+    private static EntityDataAccessor<Integer> DATA_EFFECT_COLOR_ID;
 
     @Override
     public EntityEffectInfo dsurround_getEffectInfo() {
@@ -41,12 +41,12 @@ public class MixinLivingEntity implements ILivingEntityExtended {
     @Override
     public int dsurround_getPotionSwirlColor() {
         var entity =  ((LivingEntity)((Object)this));
-        return entity.getDataTracker().get(POTION_SWIRLS_COLOR);
+        return entity.getEntityData().get(DATA_EFFECT_COLOR_ID);
     }
 
     @Override
     public void dsurround_setPotionSwirlColor(int color) {
         var entity =  ((LivingEntity)((Object)this));
-        entity.getDataTracker().set(POTION_SWIRLS_COLOR, color);
+        entity.getEntityData().set(DATA_EFFECT_COLOR_ID, color);
     }
 }

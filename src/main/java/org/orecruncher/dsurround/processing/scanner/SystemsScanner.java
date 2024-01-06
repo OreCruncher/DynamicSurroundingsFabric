@@ -1,20 +1,20 @@
 package org.orecruncher.dsurround.processing.scanner;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IEffectSystem;
 import org.orecruncher.dsurround.lib.BlockPosUtil;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.scanner.CuboidScanner;
 import org.orecruncher.dsurround.lib.scanner.ScanContext;
 
 import java.util.Collection;
-import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -58,7 +58,7 @@ public class SystemsScanner extends CuboidScanner {
         }
 
         var player = GameUtils.getPlayer().orElseThrow();
-        final BlockPos current = player.getBlockPos();
+        final BlockPos current = player.blockPosition();
         final boolean sittingStill = this.lastPos.equals(current);
         this.lastPos = current;
 
@@ -66,12 +66,12 @@ public class SystemsScanner extends CuboidScanner {
 
         if (!sittingStill) {
             var range = this.config.blockEffects.blockEffectRange;
-            var minPoint = current.add(-range, -range, -range);
-            var maxPoint = current.add(range, range, range);
+            var minPoint = current.offset(-range, -range, -range);
+            var maxPoint = current.offset(range, range, range);
 
             pred = system -> {
                 if (!BlockPosUtil.contains(system.getPos(), minPoint, maxPoint)) {
-                    system.setDone();
+                    system.remove();
                 } else {
                     system.tick();
                 }
@@ -98,20 +98,20 @@ public class SystemsScanner extends CuboidScanner {
     }
 
     @Override
-    public void blockScan(World world, BlockState state, BlockPos pos, Random rand) {
+    public void blockScan(Level world, BlockState state, BlockPos pos, IRandomizer rand) {
         this.processIfEnabled(false, system -> system.blockScan(world, state, pos));
     }
 
     @Override
-    public void blockUnscan(World world, BlockState state, BlockPos pos, Random rand) {
+    public void blockUnscan(Level world, BlockState state, BlockPos pos, IRandomizer rand) {
         this.processIfEnabled(false, system -> system.blockUnscan(world, state, pos));
     }
 
     public void gatherDiagnostics(Collection<String> output) {
         this.systems.forEach(system -> {
-            var text = Formatting.LIGHT_PURPLE + system.gatherDiagnostics();
+            var text = ChatFormatting.LIGHT_PURPLE + system.gatherDiagnostics();
             if (!system.isEnabled())
-                text += Formatting.RED + " (disabled)";
+                text += ChatFormatting.RED + " (disabled)";
             output.add(text);
         });
     }

@@ -1,12 +1,12 @@
 package org.orecruncher.dsurround.processing.scanner;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -67,7 +67,7 @@ public final class CeilingScanner {
             this.reallyInside = false;
         } else {
             var player = GameUtils.getPlayer().orElseThrow();
-            final BlockPos pos = player.getBlockPos();
+            final BlockPos pos = player.blockPosition();
             float score = 0.0F;
             for (Cell cell : cells) score += cell.score(pos);
             float ceilingCoverageRatio = 1.0F - (score / TOTAL_POINTS);
@@ -83,7 +83,7 @@ public final class CeilingScanner {
 
         private final Vec3i offset;
         private final float points;
-        private final BlockPos.Mutable working;
+        private final BlockPos.MutableBlockPos working;
 
         public Cell(final Vec3i offset, final int range) {
             this.offset = offset;
@@ -91,7 +91,7 @@ public final class CeilingScanner {
             final float zV = range - Math.abs(offset.getZ()) + 1;
             final float candidate = Math.min(xV, zV);
             this.points = candidate * candidate;
-            this.working = new BlockPos.Mutable();
+            this.working = new BlockPos.MutableBlockPos();
         }
 
         public float potentialPoints() {
@@ -105,7 +105,7 @@ public final class CeilingScanner {
                     playerPos.getZ() + this.offset.getZ()
             );
 
-            final World world = GameUtils.getWorld().orElseThrow();
+            final Level world = GameUtils.getWorld().orElseThrow();
             final int playerHeight = Math.max(playerPos.getY() + 1, 0);
 
             // Get the precipitation height
@@ -140,13 +140,13 @@ public final class CeilingScanner {
         }
 
         private boolean actsAsCeiling(final BlockState state) {
-            // If it doesn't block movement it doesn't count as a ceiling.
-            if (!state.blocksMovement())
+            // If it doesn't block movement, it doesn't count as a ceiling.
+            if (!state.blocksMotion())
                 return false;
 
             // Test the block tags in our NON_CEILING set to see if any match
             for (final TagKey<Block> tag : NON_CEILING) {
-                if (state.isIn(tag))
+                if (state.is(tag))
                     return false;
             }
             return true;

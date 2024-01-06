@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.mixins.core;
 
-import net.minecraft.world.biome.Biome;
+import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 import org.spongepowered.asm.mixin.Final;
@@ -19,7 +19,7 @@ public class MixinBiome implements IBiomeExtended {
 
     @Final
     @Shadow
-    private Biome.Weather weather;
+    private Biome.ClimateSettings climateSettings;
 
     @Override
     public BiomeInfo dsurround_getInfo() {
@@ -32,8 +32,8 @@ public class MixinBiome implements IBiomeExtended {
     }
 
     @Override
-    public Biome.Weather dsurround_getWeather() {
-        return this.weather;
+    public Biome.ClimateSettings dsurround_getWeather() {
+        return this.climateSettings;
     }
 
     /**
@@ -46,7 +46,7 @@ public class MixinBiome implements IBiomeExtended {
         if (this.dsurround_info != null) {
             var color = this.dsurround_info.getFogColor();
             if (color != null)
-                cir.setReturnValue(color.getRgb());
+                cir.setReturnValue(color.getValue());
         }
     }
 }

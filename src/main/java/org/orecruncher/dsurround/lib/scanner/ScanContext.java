@@ -1,21 +1,21 @@
 package org.orecruncher.dsurround.lib.scanner;
 
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import java.util.function.Supplier;
 
 public final class ScanContext {
 
-    private final Supplier<World> world;
+    private final Supplier<Level> world;
     private final Supplier<BlockPos> scanCenter;
     private final IModLog logger;
 
     public ScanContext(
-            Supplier<World> world,
+            Supplier<Level> world,
             Supplier<BlockPos> scanCenter,
             IModLog logger) {
 
@@ -24,7 +24,7 @@ public final class ScanContext {
         this.logger = logger;
     }
 
-    public World getWorld() {
+    public Level getWorld() {
         return this.world.get();
     }
 
@@ -36,16 +36,16 @@ public final class ScanContext {
         return this.logger;
     }
 
-    public Identifier getWorldReference() {
-        return this.getWorld().getRegistryKey().getValue();
+    public ResourceLocation getWorldReference() {
+        return this.getWorld().dimension().registry();
     }
 
     public boolean isOutOfHeightLimit(int y) {
-        return this.getWorld().isOutOfHeightLimit(y);
+        return this.getWorld().isOutsideBuildHeight(y);
     }
 
     public int clampHeight(int y) {
         var world = this.getWorld();
-        return MathHelper.clamp(y, world.getBottomY(), world.getTopY());
+        return Mth.clamp(y, world.getMinBuildHeight(), world.getMaxBuildHeight());
     }
 }

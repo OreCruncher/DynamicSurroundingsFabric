@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.config.data;
 import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.text.TextColor;
+import net.minecraft.network.chat.TextColor;
 import org.orecruncher.dsurround.lib.scripting.Script;
 
 import java.util.List;

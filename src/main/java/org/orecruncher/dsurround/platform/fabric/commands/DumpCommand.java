@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.platform.fabric.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.minecraft.commands.CommandBuildContext;
 import org.orecruncher.dsurround.commands.DumpCommandHandler;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
@@ -12,7 +13,7 @@ class DumpCommand extends ClientCommand {
         super("dsdump");
     }
 
-    public void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
+    public void register(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandBuildContext registryAccess) {
         dispatcher.register(literal(this.command)
                 .then(
                         literal("biomes")

@@ -1,8 +1,8 @@
 package org.orecruncher.dsurround.gui.sound;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
 import org.orecruncher.dsurround.lib.gui.SliderControl;
 
 import java.math.RoundingMode;
@@ -16,7 +16,7 @@ public class VolumeSliderControl extends SliderControl {
 
     private static final DecimalFormat FORMAT;
 
-    private static final Text OFF = Text.translatable("options.off");
+    private static final Component OFF = Component.translatable("options.off");
 
     static {
         FORMAT = new DecimalFormat("0");
@@ -30,14 +30,14 @@ public class VolumeSliderControl extends SliderControl {
         this(entry, x, y, ImmutableList.of());
     }
 
-    public VolumeSliderControl(IndividualSoundControlListEntry entry, int x, int y, List<OrderedText> toolTip) {
+    public VolumeSliderControl(IndividualSoundControlListEntry entry, int x, int y, List<FormattedCharSequence> toolTip) {
         super(x, y, SLIDER_WIDTH, SLIDER_HEIGHT, 0F, 400F, 1, entry.getData().volumeScale, toolTip);
         this.entry = entry;
         this.updateMessage();
     }
 
     protected void updateMessage() {
-        Text text = this.getValue() == 0 ? OFF : Text.of(FORMAT.format(this.getValue()) + "%");
+        Component text = this.getValue() == 0 ? OFF : Component.literal(FORMAT.format(this.getValue()) + "%");
         this.setMessage(text);
     }
 

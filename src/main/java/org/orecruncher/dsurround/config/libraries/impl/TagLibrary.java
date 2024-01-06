@@ -6,19 +6,25 @@ import com.google.gson.JsonParser;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.JsonOps;
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.tag.TagEntry;
-import net.minecraft.registry.tag.TagFile;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.registry.tag.TagManagerLoader;
-import net.minecraft.util.Identifier;
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.*;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
-import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 
@@ -37,11 +43,45 @@ public class TagLibrary implements ITagLibrary {
     private final IPlatform platform;
     private final IModLog logger;
 
-    private final Map<TagKey<?>, TagData> tagCache = new HashMap<>();
+    private final Map<TagKey<?>, TagData<?>> tagCache = new Reference2ObjectOpenHashMap<>();
 
     public TagLibrary(IPlatform platform, IModLog logger) {
         this.platform = platform;
         this.logger = logger;
+    }
+
+    @Override
+    public boolean is(TagKey<Block> tagKey, BlockState entry) {
+        // For our purposes, blocks that are ignored will not have the
+        // tags we are interested in.
+        var block = entry.getBlock();
+        if (Constants.BLOCKS_TO_IGNORE.contains(entry.getBlock()))
+            return false;
+        if (entry.is(tagKey))
+            return true;
+        return this.isInCache(tagKey, block);
+    }
+
+    @Override
+    public boolean is(TagKey<Item> tagKey, ItemStack entry) {
+        if (entry.is(tagKey))
+            return true;
+        return this.isInCache(tagKey, entry.getItem());
+    }
+
+    @Override
+    public boolean is(TagKey<Biome> tagKey, Biome entry) {
+        var registryEntry = RegistryUtils.getRegistryEntry(Registries.BIOME, entry);
+        if (registryEntry.isPresent() && registryEntry.get().is(tagKey))
+            return true;
+        return this.isInCache(tagKey, entry);
+    }
+
+    @Override
+    public boolean is(TagKey<EntityType<?>> tagKey, EntityType<?> entry) {
+        if (entry.is(tagKey))
+            return true;
+        return this.isInCache(tagKey, entry);
     }
 
     @Override
@@ -57,8 +97,8 @@ public class TagLibrary implements ITagLibrary {
                         // Makes it easier to spot in the logs
                         builder.append("\n*** EMPTY ***");
                     } else {
-                        this.formatHelper(builder, "Members", td.members());
-                        this.formatHelper(builder, "Tags", td.immediateChildTags());
+                        this.formatHelper(builder, "Members", td.completeIds());
+                        this.formatHelper(builder, "Child Tags", td.immediateChildTags());
                         this.formatHelper(builder, "Direct", td.immediateChildIds());
                     }
 
@@ -77,36 +117,15 @@ public class TagLibrary implements ITagLibrary {
     @Override
     public <T> String asString(Stream<TagKey<T>> tagStream) {
         return tagStream
-                .map(key -> key.id().toString())
+                .map(key -> key.location().toString())
                 .sorted()
                 .collect(Collectors.joining(", "));
     }
 
     @Override
-    public <T> boolean isIn(TagKey<T> tagKey, T entry) {
-        return this.getRegistryEntry(tagKey, entry)
-                .map(re -> this.isIn(tagKey, re))
-                .orElse(false);
-    }
-
-    @Override
-    public <T> boolean isIn(TagKey<T> tagKey, RegistryEntry<T> registryEntry) {
-        // Check dynamic registry first - may have set by the server
-        if (registryEntry.isIn(tagKey)) {
-            return true;
-        }
-
-        // Fallback to data packs on the client
-        return this.getObjectIdentifier(registryEntry)
-                .map(id -> this.getTagData(tagKey).members().contains(id))
-                .orElse(false);
-    }
-
-    @Override
-    public <T> Stream<Pair<TagKey<T>, Set<T>>> getEntriesByTag(RegistryKey<? extends Registry<T>> registryKey) {
-        var registryManager = GameUtils.getRegistryManager().orElseThrow();
-        var registry = registryManager.get(registryKey);
-        return registry.streamEntries()
+    public <T> Stream<Pair<TagKey<T>, Set<T>>> getEntriesByTag(ResourceKey<? extends Registry<T>> registryKey) {
+        var registry = RegistryUtils.getRegistry(registryKey).orElseThrow();
+        return registry.holders()
                 .flatMap(e -> this.streamTags(e).map(tag -> Pair.of(tag, e.value())))
                 .collect(groupingBy(Pair::key, mapping(Pair::value, toSet())))
                 .entrySet().stream().map(e -> Pair.of(e.getKey(), e.getValue()));
@@ -114,15 +133,19 @@ public class TagLibrary implements ITagLibrary {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> Stream<TagKey<T>> streamTags(RegistryEntry<T> registryEntry) {
-        Set<TagKey<T>> tags = registryEntry.streamTags().collect(toSet());
+    public <T> Stream<TagKey<T>> streamTags(Holder<T> registryEntry) {
+        Set<TagKey<T>> tags = registryEntry.tags().collect(toSet());
         var entryId = this.getObjectIdentifier(registryEntry).orElseThrow();
         for (var kvp: this.tagCache.entrySet()) {
             var cachedTag = kvp.getKey();
-            if (kvp.getValue().members().contains(entryId))
+            if (kvp.getValue().completeIds().contains(entryId))
                 tags.add((TagKey<T>)cachedTag);
         }
         return tags.stream();
+    }
+
+    private boolean isInCache(TagKey<?> tagKey, Object entry) {
+        return this.getTagData(tagKey).members().contains(entry);
     }
 
     private void formatHelper(StringBuilder builder, String entryName, Set<?> data) {
@@ -137,34 +160,15 @@ public class TagLibrary implements ITagLibrary {
         }
     }
 
-    private <T> Optional<Identifier> getObjectIdentifier(RegistryEntry<T> registryEntry) {
-        return registryEntry.getKey().map(RegistryKey::getValue);
+    private <T> Optional<ResourceLocation> getObjectIdentifier(Holder<T> registryEntry) {
+        return registryEntry.unwrapKey().map(ResourceKey::location);
     }
 
-    private <T> Optional<RegistryEntry<T>> getRegistryEntry(TagKey<T> tagKey, T entry) {
-        var maybeRegistry = getRegistry(tagKey);
-
-        if (maybeRegistry.isEmpty() || !tagKey.isOf(maybeRegistry.get().getKey())) {
-            return Optional.empty();
-        }
-
-        Registry<T> registry = maybeRegistry.get();
-
-        return registry.getKey(entry).map(registry::entryOf);
+    private <T> Optional<Registry<T>> getRegistry(TagKey<T> tagKey) {
+        return RegistryUtils.getRegistry(tagKey.registry());
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> Optional<? extends Registry<T>> getRegistry(TagKey<T> tagKey) {
-        if (GameUtils.isInGame()) {
-            var maybeRegistry = GameUtils.getRegistryManager().map(rm -> rm.getOptional(tagKey.registry())).orElseThrow();
-            if (maybeRegistry.isPresent())
-                return maybeRegistry;
-        }
-
-        return (Optional<? extends Registry<T>>) Registries.REGISTRIES.getOrEmpty(tagKey.registry().getValue());
-    }
-
-    private TagData getTagData(TagKey<?> tagKey) {
+    private <T> TagData<T> getTagData(TagKey<T> tagKey) {
         // We cannot use computeIfAbsent() because tag loading is a
         // recursive process and will refer back and potentially modify the
         // tag cache.
@@ -173,13 +177,13 @@ public class TagLibrary implements ITagLibrary {
             data = this.loadTagData(tagKey);
             this.tagCache.put(tagKey, data);
         }
-        return data;
+        return TagData.cast(data);
     }
 
     // This is based on the Fabric client tag handling code.
-    private TagData loadTagData(TagKey<?> tagKey) {
+    private <T> TagData<T> loadTagData(TagKey<T> tagKey) {
         Set<TagEntry> entries = new HashSet<>();
-        Set<Path> tagFiles = this.getTagFiles(tagKey.registry(), tagKey.id());
+        Set<Path> tagFiles = this.getTagFiles(tagKey.registry(), tagKey.location());
 
         for (Path tagPath : tagFiles) {
             try (BufferedReader tagReader = Files.newBufferedReader(tagPath)) {
@@ -203,46 +207,73 @@ public class TagLibrary implements ITagLibrary {
             // This could be legitimately possible. However, if there is a typo in the json, like
             // c:glass_pane vs. c:glass_panes, it could result in an empty scan.  Ask me how I
             // know.
-            return TagData.EMPTY;
+            return TagData.empty();
         }
 
-        Set<Identifier> completeIds = new HashSet<>();
-        Set<Identifier> immediateChildIds = new HashSet<>();
+        Set<ResourceLocation> completeIds = new HashSet<>();
+        Set<ResourceLocation> immediateChildIds = new HashSet<>();
         Set<TagKey<?>> immediateChildTags = new HashSet<>();
 
         for (TagEntry tagEntry : entries) {
-            tagEntry.resolve(new TagEntry.ValueGetter<>() {
+            tagEntry.build(new TagEntry.Lookup<>() {
                 @Nullable
                 @Override
-                public Identifier direct(Identifier id) {
+                public ResourceLocation element(ResourceLocation id) {
                     immediateChildIds.add(id);
                     return id;
                 }
 
                 @Nullable
                 @Override
-                public Collection<Identifier> tag(Identifier id) {
-                    TagKey<?> tag = TagKey.of(tagKey.registry(), id);
+                public Collection<ResourceLocation> tag(ResourceLocation id) {
+                    TagKey<?> tag = TagKey.create(tagKey.registry(), id);
                     immediateChildTags.add(tag);
                     // This will trigger recursion to generate a complete list of IDs
-                    return getTagData(tag).members();
+                    return getTagData(tag).completeIds();
                 }
             }, completeIds::add);
         }
 
+        // Make sure the current tag is not in the immediate list
         immediateChildTags.remove(tagKey);
-        return new TagData(ImmutableSet.copyOf(completeIds), ImmutableSet.copyOf(immediateChildTags), ImmutableSet.copyOf(immediateChildIds));
+
+        // Manifest the completeId list into object instances for identity lookup
+        var registry = this.getRegistry(tagKey).orElseThrow();
+        var instances = new ArrayList<T>();
+        for (var id : completeIds) {
+            var rk = ResourceKey.create(tagKey.registry(), id);
+            var instance = registry.get(rk);
+            instances.add(instance);
+        }
+
+        return new TagData<>(
+                new ReferenceOpenHashSet<>(instances),
+                ImmutableSet.copyOf(completeIds),
+                ImmutableSet.copyOf(immediateChildTags),
+                ImmutableSet.copyOf(immediateChildIds));
     }
 
-    private Set<Path> getTagFiles(RegistryKey<? extends Registry<?>> registryKey, Identifier identifier) {
-        var tagType = TagManagerLoader.getPath(registryKey);
+    private Set<Path> getTagFiles(ResourceKey<? extends Registry<?>> registryKey, ResourceLocation identifier) {
+        var tagType = TagManager.getTagDir(registryKey);
         var tagFile = "data/%s/%s/%s.json".formatted(identifier.getNamespace(), tagType, identifier.getPath());
         return this.platform.getResourcePaths(tagFile);
     }
 
-    private record TagData(Set<Identifier> members, Set<TagKey<?>> immediateChildTags,
-                           Set<Identifier> immediateChildIds) {
-        public static final TagData EMPTY = new TagData(ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of());
+    private record TagData<T>(
+            Set<T> members,
+            Set<ResourceLocation> completeIds,
+            Set<TagKey<?>> immediateChildTags,
+            Set<ResourceLocation> immediateChildIds) {
+        private static final TagData<?> EMPTY = new TagData<>(ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of());
+
+        public static <T> TagData<T> empty() {
+            return cast(EMPTY);
+        }
+
+        @SuppressWarnings("unchecked")
+        public static <T> TagData<T> cast(TagData<?> tagData) {
+            return (TagData<T>)tagData;
+        }
 
         public boolean isEmpty() {
             return this.members.isEmpty() && this.immediateChildIds.isEmpty() && this.immediateChildTags.isEmpty();

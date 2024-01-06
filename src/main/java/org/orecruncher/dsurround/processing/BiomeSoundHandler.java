@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.processing;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import joptsimple.internal.Strings;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.InternalBiomes;
@@ -24,13 +24,15 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
     public static final int MOOD_SOUND_MIN_RANGE = 8;
     public static final int MOOD_SOUND_MAX_RANGE = 16;
 
-    // Reusable map for biome acoustic work
-    private final Object2FloatOpenHashMap<ISoundFactory> workMap = new Object2FloatOpenHashMap<>(8, Hash.DEFAULT_LOAD_FACTOR);
-    private final ObjectArray<BiomeSoundEmitter> emitters = new ObjectArray<>(8);
     private final IBiomeLibrary biomeLibrary;
     private final IAudioPlayer audioPlayer;
     private final ITickCount tickCount;
     private final Scanners scanner;
+
+    // Scratch map used for calculating what sounds need to be playing
+    private final Object2FloatOpenHashMap<ISoundFactory> workMap = new Object2FloatOpenHashMap<>(8, Hash.DEFAULT_LOAD_FACTOR);
+    // List of emitters that are managing the currently playing biome-related sounds
+    private final ObjectArray<BiomeSoundEmitter> emitters = new ObjectArray<>(8);
 
     public BiomeSoundHandler(IBiomeLibrary biomeLibrary, IAudioPlayer audioPlayer, ITickCount tickCount, Scanners scanner, Configuration config, IModLog logger) {
         super("Biome Sounds", config, logger);
@@ -46,6 +48,11 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
     }
 
     private void generateBiomeSounds() {
+        // Get the biomes that have been scanned in the area along with the amount of area
+        // each occupies. For each of these biomes, obtain the sounds for that biome into the
+        // work array. The volume of each sound will be scaled by the amount of area being
+        // occupied. This will result in the sounds for the most dominant biomes being louder
+        // than the others.
         final float area = this.scanner.getBiomeArea();
         for (var kvp : this.scanner.getBiomes().reference2IntEntrySet()) {
             var acoustics = kvp.getKey().findBiomeSoundMatches();
@@ -57,7 +64,7 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
     }
 
     @Override
-    public void process(final PlayerEntity player) {
+    public void process(final Player player) {
         this.emitters.forEach(BiomeSoundEmitter::tick);
         if ((this.tickCount.getTickCount() % SCAN_INTERVAL) == 0) {
             handleBiomeSounds(player);
@@ -74,10 +81,10 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
         clearSounds();
     }
 
-    private void handleBiomeSounds(final PlayerEntity player) {
+    private void handleBiomeSounds(final Player player) {
         this.workMap.clear();
 
-        // Only gather data if the player is alive. If the player is dead the biome sounds will cease playing.
+        // Only gather data if the player is alive. If the player is dead, the biome sounds will cease playing.
         if (player.isAlive()) {
 
             final boolean biomeSounds = doBiomeSounds();
@@ -85,14 +92,16 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
             if (biomeSounds)
                 generateBiomeSounds();
 
+            // The following will look at the PLAYER and VILLAGE biomes, two artificial biomes
+            // that are used to configure effects.
+            final ObjectArray<ISoundFactory> playerSounds = new ObjectArray<>();
             final BiomeInfo internalPlayerBiomeInfo = this.biomeLibrary.getBiomeInfo(InternalBiomes.PLAYER);
             final BiomeInfo internalVillageBiomeInfo = this.biomeLibrary.getBiomeInfo(InternalBiomes.VILLAGE);
-            final ObjectArray<ISoundFactory> playerSounds = new ObjectArray<>();
-
             playerSounds.addAll(internalPlayerBiomeInfo.findBiomeSoundMatches());
             playerSounds.addAll(internalVillageBiomeInfo.findBiomeSoundMatches());
             playerSounds.forEach(fx -> this.workMap.put(fx, 1.0F));
 
+            // This will cause extra spot sounds to play, like birds chirping, wolves growling, etc.
             if (biomeSounds) {
                 BiomeInfo playerBiome = this.scanner.playerLogicBiomeInfo();
                 handleAddOnSounds(player, playerBiome);
@@ -101,10 +110,12 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
             }
         }
 
+        // At this point, we trigger the examination of the existing emitters list, comparing it to the
+        // generated work map. Adjustments will be made accordingly.
         queueAmbientSounds();
     }
 
-    private void handleAddOnSounds(PlayerEntity player, BiomeInfo info) {
+    private void handleAddOnSounds(Player player, BiomeInfo info) {
         info.getExtraSound(SoundEventType.MOOD, RANDOM).ifPresent(s -> {
             var instance = s.createAsMood(player, MOOD_SOUND_MIN_RANGE, MOOD_SOUND_MAX_RANGE);
             this.audioPlayer.play(instance);
@@ -119,20 +130,20 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
     private void queueAmbientSounds() {
         // Iterate through the existing emitters:
         // * If done, remove
-        // * If not in the incoming list, fade
-        // * If it does exist, update volume throttle and un-fade if needed
+        // * If not in the incoming list, fade out
+        // * If it does exist, update volume throttle and fade in if needed
         this.emitters.removeIf(entry -> {
-            if (entry.isDonePlaying()) {
+            if (entry.isDone()) {
                 return true;
             }
             final float volume = this.workMap.getFloat(entry.getSoundEvent());
             if (volume > 0) {
                 entry.setVolumeScale(volume);
                 if (entry.isFading())
-                    entry.unfade();
+                    entry.fadeIn();
                 this.workMap.removeFloat(entry.getSoundEvent());
             } else if (!entry.isFading()) {
-                entry.fade();
+                entry.fadeOut();
             }
             return false;
         });

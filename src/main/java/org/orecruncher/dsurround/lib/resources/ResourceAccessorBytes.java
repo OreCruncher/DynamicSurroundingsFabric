@@ -1,10 +1,10 @@
 package org.orecruncher.dsurround.lib.resources;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public class ResourceAccessorBytes extends ResourceAccessorBase {
 
-    public ResourceAccessorBytes(Identifier location, byte[] asset) {
+    public ResourceAccessorBytes(ResourceLocation location, byte[] asset) {
         super(location, asset);
     }
 

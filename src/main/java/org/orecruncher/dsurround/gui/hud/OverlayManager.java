@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.gui.hud;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -19,11 +19,11 @@ public class OverlayManager {
         ClientState.TICK_END.register(this::tick);
     }
 
-    public void render(DrawContext context) {
+    public void render(GuiGraphics context) {
         this.overlays.forEach(overlay -> overlay.render(context));
     }
 
-    public void tick(MinecraftClient client) {
+    public void tick(Minecraft client) {
         this.overlays.forEach(overlay -> overlay.tick(client));
     }
 

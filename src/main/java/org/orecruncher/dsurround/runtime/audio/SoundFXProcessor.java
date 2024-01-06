@@ -1,9 +1,12 @@
 package org.orecruncher.dsurround.runtime.audio;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.sound.*;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.util.Formatting;
+import com.mojang.blaze3d.audio.Channel;
+import com.mojang.blaze3d.audio.SoundBuffer;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.sounds.ChannelAccess;
+import net.minecraft.sounds.SoundSource;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.Configuration;
@@ -14,7 +17,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.platform.IClientEventRegistrations;
 import org.orecruncher.dsurround.lib.threading.Worker;
-import org.orecruncher.dsurround.mixins.audio.MixinSourceManagerAccessor;
+import org.orecruncher.dsurround.mixins.audio.MixinChannelHandleAccessor;
 import org.orecruncher.dsurround.runtime.audio.effects.Effects;
 import org.orecruncher.dsurround.mixinutils.ISourceContext;
 
@@ -97,10 +100,10 @@ public final class SoundFXProcessor {
 
     private static boolean shouldIgnoreSound(SoundInstance sound) {
         return sound.isRelative()
-                || sound.getAttenuationType() == SoundInstance.AttenuationType.NONE
-                || sound.getCategory() == SoundCategory.MASTER
-                || sound.getCategory() == SoundCategory.MUSIC
-                || sound.getCategory() == SoundCategory.WEATHER;
+                || sound.getAttenuation() == SoundInstance.Attenuation.NONE
+                || sound.getSource() == SoundSource.MASTER
+                || sound.getSource() == SoundSource.MUSIC
+                || sound.getSource() == SoundSource.WEATHER;
     }
 
     /**
@@ -110,7 +113,7 @@ public final class SoundFXProcessor {
      * @param sound The sound that is going to play
      * @param entry The ChannelManager.Entry instance for the sound play
      */
-    public static void onSoundPlay(final SoundInstance sound, final Channel.SourceManager entry) {
+    public static void onSoundPlay(final SoundInstance sound, final ChannelAccess.ChannelHandle entry) {
 
         if (!isAvailable())
             return;
@@ -118,7 +121,7 @@ public final class SoundFXProcessor {
         if (shouldIgnoreSound(sound))
             return;
 
-        ISourceContext source = (ISourceContext)(((MixinSourceManagerAccessor) entry).dsurround_getSource());
+        ISourceContext source = (ISourceContext)(((MixinChannelHandleAccessor) entry).dsurround_getSource());
         assert source != null;
         int id = source.dsurround_getId();
         if (id > 0) {
@@ -133,7 +136,7 @@ public final class SoundFXProcessor {
      * Invoked when the sound source is played.  This will cause the environment to be evaluated
      * before the sound instance is processed.
      */
-    public static void onSourcePlay(final Source source) {
+    public static void onSourcePlay(final Channel source) {
         var context = (ISourceContext) source;
         var data = context.dsurround_getData();
         data.ifPresent(ctx -> {
@@ -149,7 +152,7 @@ public final class SoundFXProcessor {
      *
      * @param source SoundSource being ticked
      */
-    public static void tick(final Source source) {
+    public static void tick(final Channel source) {
         var src = (ISourceContext) source;
         var data = src.dsurround_getData();
         data.ifPresent(SourceContext::tick);
@@ -160,7 +163,7 @@ public final class SoundFXProcessor {
      *
      * @param source The sound source that is stopping
      */
-    public static void stopSoundPlay(final Source source) {
+    public static void stopSoundPlay(final Channel source) {
         var sourceContext = (ISourceContext) source;
         var data = sourceContext.dsurround_getData();
         data.ifPresent(sc -> sources[sc.getId()] = null);
@@ -176,16 +179,16 @@ public final class SoundFXProcessor {
      * @param buffer The buffer in question.
      */
 
-    public static void doMonoConversion(final Source source, final StaticSound buffer) {
+    public static void doMonoConversion(final Channel source, final SoundBuffer buffer) {
 
-        // If disabled return
+        // If disabled, return
         if (!Client.Config.enhancedSounds.enableMonoConversion)
             return;
 
         var data = ((ISourceContext) source).dsurround_getData();
-        data.ifPresent(ctx ->{
+        data.ifPresent(ctx -> {
             var s = ctx.getSound();
-            if (s != null && s.getAttenuationType() != SoundInstance.AttenuationType.NONE && !s.isRelative())
+            if (s != null && s.getAttenuation() != SoundInstance.Attenuation.NONE && !s.isRelative())
                 Conversion.convert(buffer);
         });
     }
@@ -193,7 +196,7 @@ public final class SoundFXProcessor {
     /**
      * Invoked on a client tick. Establishes the current world context for further computation..
      */
-    public static void clientTick(MinecraftClient client) {
+    public static void clientTick(Minecraft client) {
         if (isAvailable()) {
             worldContext = new WorldContext();
         }
@@ -233,7 +236,7 @@ public final class SoundFXProcessor {
         if (isAvailable() && soundProcessor != null) {
             final String msg = soundProcessor.getDiagnosticString();
             if (!StringUtils.isEmpty(msg))
-                event.left.add(Formatting.GREEN + msg);
+                event.left.add(ChatFormatting.GREEN + msg);
         }
     }
 }

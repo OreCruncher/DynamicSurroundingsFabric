@@ -1,12 +1,13 @@
 package org.orecruncher.dsurround.runtime.audio;
 
 import com.google.common.base.MoreObjects;
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.EXTEfx;
-import org.orecruncher.dsurround.lib.random.LCGRandom;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.runtime.audio.effects.Effects;
 import org.orecruncher.dsurround.runtime.audio.effects.LowPassData;
 import org.orecruncher.dsurround.runtime.audio.effects.SourcePropertyFloat;
@@ -15,8 +16,9 @@ import java.util.concurrent.Callable;
 
 public final class SourceContext implements Callable<Void> {
 
-    // Lightweight randomizer used to distribute updates across an interval
-    private static final LCGRandom RANDOM = new LCGRandom();
+    // Randomizer used to distribute updates across an interval
+    private static final IRandomizer RANDOM = Randomizer.create();
+
     // Frequency of sound effect updates in thread schedule ticks.  Works out to be 3 times a second.
     private static final int UPDATE_FEQUENCY_TICKS = 7;
 
@@ -32,8 +34,8 @@ public final class SourceContext implements Callable<Void> {
     private final int sourceId;
 
     private SoundInstance sound;
-    private Vec3d pos;
-    private SoundCategory category = SoundCategory.MASTER;
+    private Vec3 pos;
+    private SoundSource category = SoundSource.MASTER;
 
     private boolean isEnabled;
     private int updateCount;
@@ -46,7 +48,7 @@ public final class SourceContext implements Callable<Void> {
         this.lowPass3 = new LowPassData();
         this.direct = new LowPassData();
         this.airAbsorb = new SourcePropertyFloat(EXTEfx.AL_AIR_ABSORPTION_FACTOR, EXTEfx.AL_DEFAULT_AIR_ABSORPTION_FACTOR, EXTEfx.AL_MIN_AIR_ABSORPTION_FACTOR, EXTEfx.AL_MAX_AIR_ABSORPTION_FACTOR);
-        this.pos = Vec3d.ZERO;
+        this.pos = Vec3.ZERO;
         this.fxProcessor = new SoundFXUtils(this);
     }
 
@@ -90,18 +92,18 @@ public final class SourceContext implements Callable<Void> {
         return this.airAbsorb;
     }
 
-    public Vec3d getPosition() {
+    public Vec3 getPosition() {
         return this.pos;
     }
 
 
-    public SoundCategory getCategory() {
+    public SoundSource getCategory() {
         return this.category;
     }
 
     public void attachSound(final SoundInstance sound) {
         this.sound = sound;
-        this.category = sound.getCategory();
+        this.category = sound.getSource();
         captureState();
     }
 
@@ -170,7 +172,7 @@ public final class SourceContext implements Callable<Void> {
 
     private void captureState() {
         if (this.sound != null) {
-            this.pos = new Vec3d(this.sound.getX(), this.sound.getY(), this.sound.getZ());
+            this.pos = new Vec3(this.sound.getX(), this.sound.getY(), this.sound.getZ());
         }
     }
 

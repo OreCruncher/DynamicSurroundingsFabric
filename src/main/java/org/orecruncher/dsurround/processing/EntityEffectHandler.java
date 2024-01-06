@@ -1,8 +1,8 @@
 package org.orecruncher.dsurround.processing;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.Box;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
@@ -19,28 +19,28 @@ public class EntityEffectHandler  extends AbstractClientHandler {
     }
 
     @Override
-    public void process(final PlayerEntity player) {
+    public void process(final Player player) {
 
         var range = this.config.entityEffects.entityEffectRange;
-        var world = player.getEntityWorld();
+        var world = player.level();
 
         // Get living entities in the world.  Since the API does some fancy tracking of entities we create a box
         // larger than the normal range size.
-        var worldBox = Box.from(player.getEyePos()).expand(range * 2);
-        var loadedEntities = world.getEntitiesByClass(LivingEntity.class, worldBox, entity -> true);
+        var worldBox = AABB.unitCubeFromLowerCorner(player.getEyePosition()).inflate(range * 2);
+        var loadedEntities = world.getEntitiesOfClass(LivingEntity.class, worldBox);
 
         for (var entity : loadedEntities) {
             var hasInfo = this.entityEffectLibrary.doesEntityEffectInfoExist(entity);
-            var inRange = entity.isInRange(player, range);
+            var inRange = entity.closerThan(player, range);
             EntityEffectInfo info = null;
 
             if (!hasInfo && entity.isAlive()) {
                 // If it does not have info, but is alive, and is not a spectator get info for it.
-                if (inRange && !entity.isSpectator()) {
+                if (inRange) {
                     info = this.entityEffectLibrary.getEntityEffectInfo(entity);
                 }
             } else if (hasInfo) {
-                // If it does have info just get whatever is currently cached
+                // If it does have info, get whatever is currently cached
                 info = this.entityEffectLibrary.getEntityEffectInfo(entity);
             }
 

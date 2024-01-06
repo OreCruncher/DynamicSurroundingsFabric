@@ -1,63 +1,63 @@
 package org.orecruncher.dsurround.lib.math;
 
-import net.minecraft.block.ShapeContext;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.mixins.core.MixinRaycastContextAccessor;
 
-public class ReusableRaycastContext extends RaycastContext {
+public class ReusableRaycastContext extends ClipContext {
 
-    private final World world;
+    private final Level world;
     private final MixinRaycastContextAccessor accessor;
 
-    public ReusableRaycastContext(World world, ShapeType shapeType, FluidHandling fluidHandling) {
-        this(world, Vec3d.ZERO, Vec3d.ZERO, shapeType, fluidHandling);
+    public ReusableRaycastContext(Level world, ClipContext.Block shapeType, ClipContext.Fluid fluidHandling) {
+        this(world, Vec3.ZERO, Vec3.ZERO, shapeType, fluidHandling);
     }
 
-    public ReusableRaycastContext(World world, Vec3d start, Vec3d end, ShapeType shapeType, FluidHandling fluidHandling) {
+    public ReusableRaycastContext(Level world, Vec3 start, Vec3 end, ClipContext.Block shapeType, ClipContext.Fluid fluidHandling) {
         this(world, start, end, shapeType, fluidHandling, GameUtils.getPlayer().orElseThrow());
 
         // Override the shape context that was passed into the ctor
-        this.accessor.dsurround_setShapeContext(ShapeContext.absent());
+        this.accessor.dsurround_setShapeContext(CollisionContext.empty());
     }
 
-    public ReusableRaycastContext(World world, Vec3d start, Vec3d end, ShapeType shapeType, FluidHandling fluidHandling, Entity entity) {
+    public ReusableRaycastContext(Level world, Vec3 start, Vec3 end, ClipContext.Block shapeType, ClipContext.Fluid fluidHandling, Entity entity) {
         super(start, end, shapeType, fluidHandling, entity);
 
         this.world = world;
         this.accessor = ((MixinRaycastContextAccessor)this);
     }
 
-    public BlockHitResult trace(Vec3d start, Vec3d end) {
+    public BlockHitResult trace(Vec3 start, Vec3 end) {
         this.setStart(start);
         this.setEnd(end);
-        return this.world.raycast(this);
+        return this.world.clip(this);
     }
 
     /**
      * Perform trace based on current values of start and end.
      */
     BlockHitResult trace() {
-        return this.world.raycast(this);
+        return this.world.clip(this);
     }
 
-    public Vec3d getStart() {
+    public Vec3 getStart() {
         return this.accessor.dsurround_getStartPoint();
     }
 
-    void setStart(Vec3d point) {
+    void setStart(Vec3 point) {
         this.accessor.dsurround_setStartPoint(point);
     }
 
-    public Vec3d getEnd() {
+    public Vec3 getEnd() {
         return this.accessor.dsurround_getEndPoint();
     }
 
-    void setEnd(Vec3d point) {
+    void setEnd(Vec3 point) {
         this.accessor.dsurround_setEndPoint(point);
     }
 }

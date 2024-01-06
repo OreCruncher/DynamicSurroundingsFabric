@@ -1,8 +1,9 @@
 package org.orecruncher.dsurround.runtime.audio;
 
-import net.minecraft.client.sound.AudioStream;
-import net.minecraft.client.sound.StaticSound;
-import org.orecruncher.dsurround.mixins.audio.MixinStaticSoundAccessor;
+import com.mojang.blaze3d.audio.SoundBuffer;
+import net.minecraft.client.sounds.AudioStream;
+import org.jetbrains.annotations.NotNull;
+import org.orecruncher.dsurround.mixins.audio.MixinSoundBuffer;
 
 import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
@@ -29,9 +30,9 @@ public final class Conversion {
      *
      * @param buffer Audio stream buffer to convert
      */
-    public static void convert(final StaticSound buffer) {
+    public static void convert(final SoundBuffer buffer) {
 
-        MixinStaticSoundAccessor accessor = (MixinStaticSoundAccessor) buffer;
+        MixinSoundBuffer accessor = (MixinSoundBuffer) buffer;
         final AudioFormat format = accessor.dsurround_getFormat();
 
         // If it is already mono return original buffer
@@ -91,13 +92,13 @@ public final class Conversion {
         }
 
         @Override
-        public AudioFormat getFormat() {
+        public @NotNull AudioFormat getFormat() {
             return this.source.getFormat();
         }
 
         @Override
-        public ByteBuffer getBuffer(int size) throws IOException {
-            return this.source.getBuffer(size);
+        public @NotNull ByteBuffer read(int i) throws IOException {
+            return this.source.read(i);
         }
 
         @Override

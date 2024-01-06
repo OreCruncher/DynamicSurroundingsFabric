@@ -3,7 +3,8 @@ package org.orecruncher.dsurround.platform.fabric.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.text.Text;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.lib.Library;
 
 import java.util.function.Supplier;
@@ -16,16 +17,16 @@ abstract class ClientCommand {
         this.command = command;
     }
 
-    public abstract void register(CommandDispatcher<FabricClientCommandSource> dispatcher);
+    public abstract void register(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandBuildContext registryAccess);
 
-    protected int execute(CommandContext<FabricClientCommandSource> ctx, Supplier<Text> commandHandler) {
+    protected int execute(CommandContext<FabricClientCommandSource> ctx, Supplier<Component> commandHandler) {
         try {
             var result = commandHandler.get();
             ctx.getSource().sendFeedback(result);
             return 0;
         } catch(Exception ex) {
             Library.getLogger().error(ex, "Unable to execute command %s", ctx.getCommand().toString());
-            ctx.getSource().sendFeedback(Text.literal(ex.getMessage()));
+            ctx.getSource().sendFeedback(Component.literal(ex.getMessage()));
             return 1;
         }
     }

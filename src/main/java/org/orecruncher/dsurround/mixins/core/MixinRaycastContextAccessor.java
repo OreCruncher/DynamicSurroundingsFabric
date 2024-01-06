@@ -1,30 +1,30 @@
 package org.orecruncher.dsurround.mixins.core;
 
-import net.minecraft.block.ShapeContext;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(RaycastContext.class)
+@Mixin(ClipContext.class)
 public interface MixinRaycastContextAccessor {
 
-    @Accessor("start")
-    Vec3d dsurround_getStartPoint();
+    @Accessor("from")
+    Vec3 dsurround_getStartPoint();
 
-    @Accessor("start")
+    @Accessor("from")
     @Mutable
-    void dsurround_setStartPoint(Vec3d point);
+    void dsurround_setStartPoint(Vec3 point);
 
-    @Accessor("end")
-    Vec3d dsurround_getEndPoint();
+    @Accessor("to")
+    Vec3 dsurround_getEndPoint();
 
-    @Accessor("end")
+    @Accessor("to")
     @Mutable
-    void dsurround_setEndPoint(Vec3d point);
+    void dsurround_setEndPoint(Vec3 point);
 
-    @Accessor("shapeContext")
+    @Accessor("collisionContext")
     @Mutable
-    void dsurround_setShapeContext(ShapeContext context);
+    void dsurround_setShapeContext(CollisionContext context);
 }

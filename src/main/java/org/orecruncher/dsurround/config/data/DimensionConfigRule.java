@@ -2,12 +2,12 @@ package org.orecruncher.dsurround.config.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.Optional;
 
 public record DimensionConfigRule(
-        Identifier dimensionId,
+        ResourceLocation dimensionId,
         Optional<Integer> seaLevel,
         Optional<Integer> skyHeight,
         Optional<Integer> cloudHeight,
@@ -15,13 +15,13 @@ public record DimensionConfigRule(
         Optional<Boolean> playBiomeSounds) {
 
     public static Codec<DimensionConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
-            Identifier.CODEC.fieldOf("dimId").forGetter(DimensionConfigRule::dimensionId),
-            Codec.INT.optionalFieldOf("seaLevel").forGetter(DimensionConfigRule::seaLevel),
-            Codec.INT.optionalFieldOf("skyHeight").forGetter(DimensionConfigRule::skyHeight),
-            Codec.INT.optionalFieldOf("cloudHeight").forGetter(DimensionConfigRule::cloudHeight),
-            Codec.BOOL.optionalFieldOf("alwaysOutside").forGetter(DimensionConfigRule::alwaysOutside),
-            Codec.BOOL.optionalFieldOf("playBiomeSounds").forGetter(DimensionConfigRule::playBiomeSounds))
-            .apply(instance, DimensionConfigRule::new));
+                ResourceLocation.CODEC.fieldOf("dimId").forGetter(DimensionConfigRule::dimensionId),
+                Codec.INT.optionalFieldOf("seaLevel").forGetter(DimensionConfigRule::seaLevel),
+                Codec.INT.optionalFieldOf("skyHeight").forGetter(DimensionConfigRule::skyHeight),
+                Codec.INT.optionalFieldOf("cloudHeight").forGetter(DimensionConfigRule::cloudHeight),
+                Codec.BOOL.optionalFieldOf("alwaysOutside").forGetter(DimensionConfigRule::alwaysOutside),
+                Codec.BOOL.optionalFieldOf("playBiomeSounds").forGetter(DimensionConfigRule::playBiomeSounds))
+                .apply(instance, DimensionConfigRule::new));
 
     @Override
     public String toString() {

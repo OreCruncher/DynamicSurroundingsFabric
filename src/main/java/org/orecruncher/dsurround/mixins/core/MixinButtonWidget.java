@@ -1,15 +1,15 @@
 package org.orecruncher.dsurround.mixins.core;
 
-import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.components.Button;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(ButtonWidget.class)
+@Mixin(Button.class)
 public interface MixinButtonWidget {
 
     @Accessor("onPress")
-    ButtonWidget.PressAction dsurround_getPressAction();
+    Button.OnPress dsurround_getPressAction();
 
-    @Accessor("narrationSupplier")
-    ButtonWidget.NarrationSupplier dsurround_getNarrationSupplier();
+    @Accessor("createNarration")
+    Button.CreateNarration dsurround_getNarrationSupplier();
 }

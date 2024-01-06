@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.processing;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
@@ -24,7 +24,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
     private final IAudioPlayer audioPlayer;
     protected ScanContext locus;
     protected SystemsScanner effectSystems;
-
+    protected int blockUpdateCount;
     private boolean isConnected = false;
 
     public AreaBlockEffects(IBlockLibrary blockLibrary, IAudioPlayer audioPlayer, Configuration config, IModLog logger) {
@@ -39,7 +39,8 @@ public class AreaBlockEffects extends AbstractClientHandler {
     }
 
     @Override
-    public void process(final PlayerEntity player) {
+    public void process(final Player player) {
+        this.blockUpdateCount = 0;
         if (!this.isConnected)
             return;
 
@@ -57,7 +58,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
     public void onConnect() {
         this.locus = new ScanContext(
                 () -> GameUtils.getWorld().orElseThrow(),
-                () -> GameUtils.getPlayer().map(Entity::getBlockPos).orElseThrow(),
+                () -> GameUtils.getPlayer().orElseThrow().blockPosition(),
                 this.logger
         );
 
@@ -86,12 +87,14 @@ public class AreaBlockEffects extends AbstractClientHandler {
     private void blockUpdates(ClientEventHooks.BlockUpdateEvent event) {
         // Need to pump the updates through to the effect system. The cuboid scanner
         // will handle the details for filtering and applying updates via blockScan().
+        this.blockUpdateCount = event.updates().size();
         if (this.effectSystems != null)
-            event.updates().forEach(pos -> this.effectSystems.onBlockUpdate(pos));
+            this.effectSystems.onBlockUpdates(event.updates());
     }
 
     @Override
     protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<ITimer> timers) {
+        left.add(ChatFormatting.GREEN + "Block Updates: %d".formatted(this.blockUpdateCount));
         if (this.effectSystems != null)
             this.effectSystems.gatherDiagnostics(left);
     }

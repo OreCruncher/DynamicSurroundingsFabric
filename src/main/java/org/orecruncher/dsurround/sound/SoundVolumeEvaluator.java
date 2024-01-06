@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.sound;
 
 import com.google.common.base.Preconditions;
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.gui.sound.ConfigSoundInstance;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -20,8 +20,8 @@ public final class SoundVolumeEvaluator {
 
     private static float getCategoryVolumeScale(final SoundInstance sound) {
         // Master category already controlled by master gain so ignore
-        final SoundCategory category = sound.getCategory();
-        return category == SoundCategory.MASTER ? 1F : GameUtils.getGameSettings().map(s -> s.getSoundVolume(category)).orElse(1F);
+        final SoundSource category = sound.getSource();
+        return category == SoundSource.MASTER ? 1F : GameUtils.getGameSettings().getSoundSourceVolume(category);
     }
 
     /**
@@ -37,12 +37,12 @@ public final class SoundVolumeEvaluator {
         if (!(sound instanceof ConfigSoundInstance)) {
             volume *= getCategoryVolumeScale(sound);
 
-            var volumeScale = soundLibrary.getVolumeScale(sound.getId());
+            var volumeScale = soundLibrary.getVolumeScale(sound.getLocation());
             if (volumeScale != 0f) {
                 volume *= volumeScale;
             }
         }
 
-        return MathHelper.clamp(volume, 0, 1F);
+        return Mth.clamp(volume, 0, 1F);
     }
 }

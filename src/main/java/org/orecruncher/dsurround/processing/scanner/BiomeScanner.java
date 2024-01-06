@@ -1,10 +1,10 @@
 package org.orecruncher.dsurround.processing.scanner;
 
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
-import net.minecraft.registry.tag.*;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.source.BiomeAccess;
+import net.minecraft.core.BlockPos;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeManager;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.config.InternalBiomes;
@@ -27,12 +27,12 @@ public final class BiomeScanner {
     private boolean isUnderWater;
     private BiomeInfo logicalBiomeInfo;
 
-    private final BlockPos.Mutable mutable = new BlockPos.Mutable();
+    private final BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
 
     private int biomeArea;
     private Reference2IntOpenHashMap<BiomeInfo> weights = new Reference2IntOpenHashMap<>(8);
     private Biome surveyedBiome = null;
-    private BlockPos surveyedPosition = BlockPos.ORIGIN;
+    private BlockPos surveyedPosition = BlockPos.ZERO;
     private final IModLog logger;
     private final IBiomeLibrary biomeLibrary;
     private final IDimensionLibrary dimensionLibrary;
@@ -63,11 +63,11 @@ public final class BiomeScanner {
             return;
 
         var player = GameUtils.getPlayer().orElseThrow();
-        var world = player.getEntityWorld();
-        var position = player.getBlockPos();
+        var world = player.level();
+        var position = player.blockPosition();
 
         var dimensionInfo = this.dimensionLibrary.getData(world);
-        var biomes = world.getBiomeAccess();
+        var biomes = world.getBiomeManager();
         var playerBiome = biomes.getBiome(position);
 
         if (this.surveyedBiome != playerBiome.value()
@@ -81,7 +81,7 @@ public final class BiomeScanner {
             this.weights = new Reference2IntOpenHashMap<>(8);
 
             // If the player is underwater, underwater effects will rule over everything else
-            this.isUnderWater = player.isSubmergedIn(FluidTags.WATER);
+            this.isUnderWater = player.isEyeInFluid(FluidTags.WATER);
             if (this.isUnderWater) {
                 InternalBiomes internalBiome;
                 var playerBiomeInfo = this.biomeLibrary.getBiomeInfo(playerBiome.value());
@@ -120,7 +120,7 @@ public final class BiomeScanner {
         }
     }
 
-    private BiomeInfo resolveBiome(DimensionInfo dimInfo, BiomeAccess access, BlockPos pos) {
+    private BiomeInfo resolveBiome(DimensionInfo dimInfo, BiomeManager access, BlockPos pos) {
         var biome = access.getBiome(pos);
 
         // If it is not an underground biome see if we need to simulate one of the other internal biomes

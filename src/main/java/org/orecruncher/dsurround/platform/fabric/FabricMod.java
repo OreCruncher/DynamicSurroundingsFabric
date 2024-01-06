@@ -17,6 +17,7 @@ public class FabricMod extends Client implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+
         // Set up the platform environment
         ContainerManager.getRootContainer()
                 .registerSingleton(IClientEventRegistrations.class, ClientEventRegistrationsImpl.class)
@@ -26,6 +27,6 @@ public class FabricMod extends Client implements ClientModInitializer {
         this.initializeClient();
 
         // Fabric specific registrations
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> Commands.register(dispatcher));
+        ClientCommandRegistrationCallback.EVENT.register(Commands::register);
     }
 }

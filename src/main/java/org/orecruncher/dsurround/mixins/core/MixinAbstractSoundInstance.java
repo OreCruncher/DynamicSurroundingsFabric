@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.mixins.core;
 
-import net.minecraft.client.sound.AbstractSoundInstance;
+import net.minecraft.client.resources.sounds.AbstractSoundInstance;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 

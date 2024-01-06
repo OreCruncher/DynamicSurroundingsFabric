@@ -1,8 +1,8 @@
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.sound.ISoundFactory;
@@ -18,65 +18,65 @@ import java.util.stream.Collectors;
 public enum ItemClassType {
     NONE("none",
             SoundFactoryBuilder
-                .create(SoundEvent.of(new Identifier(Constants.MOD_ID, "item.utility.equip")))
-                .category(SoundCategory.PLAYERS).volume(0.3F).build(),
+                .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.utility.equip")))
+                .category(SoundSource.PLAYERS).volume(0.3F).build(),
             null),
     TOOL("tool",
             SoundFactoryBuilder
-                .create(SoundEvent.of(new Identifier(Constants.MOD_ID, "item.tool.equip")))
-                .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
+                .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.tool.equip")))
+                .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
-                    .create(SoundEvent.of(new Identifier(Constants.MOD_ID, "item.tool.swing")))
-                    .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
+                    .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.tool.swing")))
+                    .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
     SWORD("sword",
             SoundFactoryBuilder
-                .create(SoundEvent.of(new Identifier(Constants.MOD_ID, "item.sword.equip")))
-                .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
+                .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.sword.equip")))
+                .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
-                    .create(SoundEvent.of(new Identifier(Constants.MOD_ID, "item.sword.swing")))
-                    .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
+                    .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.sword.swing")))
+                    .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
     SHIELD("shield",
             SoundFactoryBuilder
-                .create(SoundEvent.of(new Identifier(Constants.MOD_ID, "item.shield.equip")))
-                .category(SoundCategory.PLAYERS).volume(0.25F).pitchRange(0.8F, 1.2F).build(),
+                .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.shield.equip")))
+                .category(SoundSource.PLAYERS).volume(0.25F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
-                    .create(SoundEvent.of(new Identifier(Constants.MOD_ID, "item.shield.equip")))
-                    .category(SoundCategory.PLAYERS).volume(0.25F).pitchRange(0.4F, 0.6F).build()),
+                    .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.shield.equip")))
+                    .category(SoundSource.PLAYERS).volume(0.25F).pitchRange(0.4F, 0.6F).build()),
     AXE("axe",
             SoundFactoryBuilder
-                .create(SoundEvent.of(new Identifier(Constants.MOD_ID, "item.blunt.equip")))
-                .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
+                .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.blunt.equip")))
+                .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
-                    .create(SoundEvent.of(new Identifier(Constants.MOD_ID, "item.blunt.swing")))
-                    .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
+                    .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.blunt.swing")))
+                    .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
     BOW("bow",
             SoundFactoryBuilder
-                .create(SoundEvent.of(new Identifier(Constants.MOD_ID, "item.bow.equip")))
-                .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
+                .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.bow.equip")))
+                .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
-                    .create(SoundEvent.of(new Identifier(Constants.MOD_ID, "item.tool.swing")))
-                    .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
+                    .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.tool.swing")))
+                    .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
     CROSSBOW("crossbow",
             SoundFactoryBuilder
-                .create(SoundEvent.of(new Identifier(Constants.MOD_ID, "item.bow.equip")))
-                .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
+                .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.bow.equip")))
+                .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
-                    .create(SoundEvent.of(new Identifier(Constants.MOD_ID, "item.blunt.swing")))
-                    .category(SoundCategory.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
+                    .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.blunt.swing")))
+                    .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
     POTION("potion",
             SoundFactoryBuilder
-                .create(SoundEvent.of(new Identifier(Constants.MOD_ID, "item.potion.equip")))
-                .category(SoundCategory.PLAYERS).volume(0.8F).pitchRange(0.8F, 1.2F).build(),
+                .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.potion.equip")))
+                .category(SoundSource.PLAYERS).volume(0.8F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
-                    .create(SoundEvent.of(new Identifier(Constants.MOD_ID, "item.potion.equip")))
-                    .category(SoundCategory.PLAYERS).volume(1F).pitchRange(0.8F, 1.2F).build()),
+                    .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.potion.equip")))
+                    .category(SoundSource.PLAYERS).volume(1F).pitchRange(0.8F, 1.2F).build()),
     BOOK("book",
             SoundFactoryBuilder
-                .create(SoundEvent.of(new Identifier(Constants.MOD_ID, "pageflip")))
-                .category(SoundCategory.PLAYERS).volume(0.8F).pitchRange(0.8F, 1.2F).build(),
+                .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "pageflip")))
+                .category(SoundSource.PLAYERS).volume(0.8F).pitchRange(0.8F, 1.2F).build(),
             SoundFactoryBuilder
-                    .create(SoundEvent.of(new Identifier(Constants.MOD_ID, "pageflipheavy")))
-                    .category(SoundCategory.PLAYERS).volume(0.8F).pitchRange(0.8F, 1.2F).build());
+                    .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "pageflipheavy")))
+                    .category(SoundSource.PLAYERS).volume(0.8F).pitchRange(0.8F, 1.2F).build());
 
     private static final Map<String, ItemClassType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(ItemClassType::getName, (category) -> category));
     public static final Codec<ItemClassType> CODEC = Codec.STRING.comapFlatMap(DataResult.partialGet(BY_NAME::get, () -> "unknown item class type"), d -> d.name);

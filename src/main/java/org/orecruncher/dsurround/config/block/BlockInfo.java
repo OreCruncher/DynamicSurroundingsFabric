@@ -1,8 +1,8 @@
 package org.orecruncher.dsurround.config.block;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.block.BlockState;
-import net.minecraft.sound.SoundEvent;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
@@ -13,6 +13,7 @@ import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
@@ -91,7 +92,7 @@ public class BlockInfo {
 
     // TODO: Eliminate duplicates
     public void update(BlockConfigRule config) {
-        // Reset of a block clears all registry
+        // Reset of a block clears all registries
         if (config.clearSounds())
             this.clearSounds();
 
@@ -125,7 +126,7 @@ public class BlockInfo {
         return this.sounds != null || this.blockEffects != null;
     }
 
-    public Optional<ISoundFactory> getSoundToPlay(final Random random) {
+    public Optional<ISoundFactory> getSoundToPlay(final IRandomizer random) {
         if (this.sounds != null) {
             var chance = this.conditionEvaluator.eval(this.soundChance);
             if (chance instanceof Double c && random.nextDouble() < c) {
@@ -156,41 +157,39 @@ public class BlockInfo {
     }
 
     private static float getSoundReflectionSetting(BlockState state) {
-        var block = state.getBlock();
-        if (TAG_LIBRARY.isIn(ReflectanceTags.NONE, block))
+        if (TAG_LIBRARY.is(ReflectanceTags.NONE, state))
             return 0;
-        if (TAG_LIBRARY.isIn(ReflectanceTags.VERY_LOW, block))
+        if (TAG_LIBRARY.is(ReflectanceTags.VERY_LOW, state))
             return 0.15F;
-        if (TAG_LIBRARY.isIn(ReflectanceTags.LOW, block))
+        if (TAG_LIBRARY.is(ReflectanceTags.LOW, state))
             return 0.35F;
-        if (TAG_LIBRARY.isIn(ReflectanceTags.MEDIUM, block))
+        if (TAG_LIBRARY.is(ReflectanceTags.MEDIUM, state))
             return 0.5F;
-        if (TAG_LIBRARY.isIn(ReflectanceTags.HIGH, block))
+        if (TAG_LIBRARY.is(ReflectanceTags.HIGH, state))
             return 0.65F;
-        if (TAG_LIBRARY.isIn(ReflectanceTags.VERY_HIGH, block))
+        if (TAG_LIBRARY.is(ReflectanceTags.VERY_HIGH, state))
             return 0.8F;
-        if (TAG_LIBRARY.isIn(ReflectanceTags.MAX, block))
+        if (TAG_LIBRARY.is(ReflectanceTags.MAX, state))
             return 1.0F;
         return DEFAULT_REFLECTION;
     }
 
     private static float getSoundOcclusionSetting(BlockState state) {
-        var block = state.getBlock();
-        if (TAG_LIBRARY.isIn(OcclusionTags.NONE, block))
+        if (TAG_LIBRARY.is(OcclusionTags.NONE, state))
             return 0;
-        if (TAG_LIBRARY.isIn(OcclusionTags.VERY_LOW, block))
+        if (TAG_LIBRARY.is(OcclusionTags.VERY_LOW, state))
             return 0.15F;
-        if (TAG_LIBRARY.isIn(OcclusionTags.LOW, block))
+        if (TAG_LIBRARY.is(OcclusionTags.LOW, state))
             return 0.35F;
-        if (TAG_LIBRARY.isIn(OcclusionTags.MEDIUM, block))
+        if (TAG_LIBRARY.is(OcclusionTags.MEDIUM, state))
             return 0.5F;
-        if (TAG_LIBRARY.isIn(OcclusionTags.HIGH, block))
+        if (TAG_LIBRARY.is(OcclusionTags.HIGH, state))
             return 0.65F;
-        if (TAG_LIBRARY.isIn(OcclusionTags.VERY_HIGH, block))
+        if (TAG_LIBRARY.is(OcclusionTags.VERY_HIGH, state))
             return 0.8F;
-        if (TAG_LIBRARY.isIn(OcclusionTags.MAX, block))
+        if (TAG_LIBRARY.is(OcclusionTags.MAX, state))
             return 1.0F;
-        return state.isOpaque() ? DEFAULT_OPAQUE_OCCLUSION : DEFAULT_TRANSLUCENT_OCCLUSION;
+        return state.canOcclude() ? DEFAULT_OPAQUE_OCCLUSION : DEFAULT_TRANSLUCENT_OCCLUSION;
     }
 
     public String toString() {

@@ -1,80 +1,74 @@
 package org.orecruncher.dsurround.lib;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextHandler;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.option.GameOptions;
-import net.minecraft.client.option.Perspective;
-import net.minecraft.client.particle.ParticleManager;
-import net.minecraft.client.sound.SoundManager;
-import net.minecraft.client.texture.TextureManager;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.registry.*;
-import net.minecraft.world.World;
+import net.minecraft.client.CameraType;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.client.StringSplitter;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.particle.ParticleEngine;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.Objects;
 import java.util.Optional;
 
-/*
- * NOTE: MinecraftClient is an AutoClosable that gives IDEs a bit of a fit with warnings.  The mods usage
- * context does not require closing, so it is safe to ignore.
- */
 public final class GameUtils {
     private GameUtils() {
 
     }
 
     // Client methods
-    public static Optional<PlayerEntity> getPlayer() {
+    public static Optional<Player> getPlayer() {
         return Optional.ofNullable(getMC().player);
     }
 
-    public static Optional<ClientWorld> getWorld() {
-        return Optional.ofNullable(getMC().world);
+    public static Optional<ClientLevel> getWorld() {
+        return Optional.ofNullable(getMC().level);
     }
 
-    public static Optional<DynamicRegistryManager> getRegistryManager() {
-        return getWorld().map(World::getRegistryManager);
+    public static Optional<RegistryAccess> getRegistryManager() {
+        return getWorld().map(ClientLevel::registryAccess);
     }
 
     public static Optional<Screen> getCurrentScreen() {
-        return Optional.ofNullable(getMC().currentScreen);
+        return Optional.ofNullable(getMC().screen);
     }
 
-    public static void setScreen(Screen screen)
-    {
+    public static void setScreen(Screen screen) {
         getMC().setScreen(screen);
     }
 
-    public static Optional<ParticleManager> getParticleManager() {
-        return Optional.ofNullable(getMC().particleManager);
+    public static ParticleEngine getParticleManager() {
+        return getMC().particleEngine;
     }
 
-    public static Optional<GameOptions> getGameSettings() {
-        return Optional.ofNullable(getMC().options);
+    public static Options getGameSettings() {
+        return getMC().options;
     }
 
-    public static Optional<TextRenderer> getTextRenderer() {
-        return Optional.ofNullable(getMC().textRenderer);
+    public static Font getTextRenderer() {
+        return getMC().font;
     }
 
-    public static Optional<TextHandler> getTextHandler() {
-        return getTextRenderer().map(TextRenderer::getTextHandler);
+    public static StringSplitter getTextHandler() {
+        return getTextRenderer().getSplitter();
     }
 
-    public static Optional<SoundManager> getSoundManager() {
-        return Optional.ofNullable(getMC().getSoundManager());
+    public static SoundManager getSoundManager() {
+        return getMC().getSoundManager();
     }
 
-    public static Optional<ResourceManager> getResourceManager() {
-        return Optional.ofNullable(getMC().getResourceManager());
+    public static ResourceManager getResourceManager() {
+        return getMC().getResourceManager();
     }
 
-    public static Optional<TextureManager> getTextureManager() {
-        return Optional.ofNullable(getMC().getTextureManager());
+    public static TextureManager getTextureManager() {
+        return getMC().getTextureManager();
     }
 
     public static boolean isInGame() {
@@ -88,15 +82,14 @@ public final class GameUtils {
 
     public static boolean isSinglePlayer()
     {
-        return getMC().isInSingleplayer();
+        return getMC().isSingleplayer();
     }
 
     public static boolean isFirstPersonView() {
-        var settings = getGameSettings();
-        return settings.map(s -> s.getPerspective() == Perspective.FIRST_PERSON).orElse(true);
+        return getGameSettings().getCameraType() == CameraType.FIRST_PERSON;
     }
 
-    public static MinecraftClient getMC() {
-        return Objects.requireNonNull(MinecraftClient.getInstance());
+    public static Minecraft getMC() {
+        return Objects.requireNonNull(Minecraft.getInstance());
     }
 }

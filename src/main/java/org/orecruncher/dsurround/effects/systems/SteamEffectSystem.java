@@ -1,15 +1,18 @@
 package org.orecruncher.dsurround.effects.systems;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.client.particle.Particle;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.effects.IEffectSystem;
-import org.orecruncher.dsurround.effects.blocks.ParticleJetEffect;
+import org.orecruncher.dsurround.effects.blocks.AbstractParticleEmitterEffect;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
+
+import java.util.Optional;
 
 import static org.orecruncher.dsurround.effects.BlockEffectUtils.*;
 
@@ -25,7 +28,7 @@ public class SteamEffectSystem extends AbstractEffectSystem implements IEffectSy
     }
 
     @Override
-    public void blockScan(World world, BlockState state, BlockPos pos) {
+    public void blockScan(Level world, BlockState state, BlockPos pos) {
         if (!this.isEnabled())
             return;
 
@@ -51,42 +54,57 @@ public class SteamEffectSystem extends AbstractEffectSystem implements IEffectSy
     }
 
     @NotNull
-    private static SteamEffect getSteamEffect(World world, BlockState state, BlockPos pos) {
+    private static SteamEffect getSteamEffect(Level world, BlockState state, BlockPos pos) {
         var fluidState = state.getFluidState();
         final float spawnHeight;
         if (fluidState.isEmpty()) {
             spawnHeight = pos.getY() + 0.9F;
         } else {
-            spawnHeight = pos.getY() + fluidState.getHeight() + 0.1F;
+            spawnHeight = pos.getY() + fluidState.getOwnHeight() + 0.1F;
         }
 
         return new SteamEffect(world, pos.getX() + 0.5D, spawnHeight, pos.getZ() + 0.5D);
     }
 
-    private static boolean canSteamSpawn(World world, BlockState state, BlockPos pos) {
-        return isValidSteamSource(world, state, pos)
+    private static boolean canSteamSpawn(Level world, BlockState state, BlockPos pos) {
+        return world.getBlockState(pos.above()).isAir()
+                && TAG_LIBRARY.is(BlockEffectTags.STEAM_PRODUCERS, state)
                 && blockExistsAround(world, pos, IS_HOT_SOURCE);
     }
 
-    private static boolean isValidSteamSource(World world, BlockState state, BlockPos pos) {
-        return world.getBlockState(pos.up()).isAir() && TAG_LIBRARY.isIn(BlockEffectTags.STEAM_PRODUCERS, state.getBlock());
-    }
+    private static class SteamEffect extends AbstractParticleEmitterEffect {
 
-    private static class SteamEffect extends ParticleJetEffect {
-
-        public SteamEffect(World world, double x, double y, double z) {
+        public SteamEffect(Level world, double x, double y, double z) {
             super(world, x, y, z);
+            this.age = RANDOM.nextInt(20);
         }
 
         @Override
-        public boolean shouldDie() {
-            var source = this.world.getBlockState(this.getPos());
-            return !canSteamSpawn(this.world, source, this.getPos());
+        public boolean shouldRemove() {
+            // Throttle checks for going away
+            if ((this.age % 10) == 0) {
+                var source = this.world.getBlockState(this.getPos());
+                return !canSteamSpawn(this.world, source, this.getPos());
+            }
+            return false;
         }
 
         @Override
-        protected void spawnJetParticle() {
-            this.addParticle(ParticleTypes.CLOUD, this.posX, this.posY, this.posZ, 0, 0.1D, 0D);
+        protected Optional<Particle> produceParticle() {
+            final double VERTICAL_SPEED = 0.08D;
+            final double JITTER = 0.4D;
+            var isSolid = this.world.getBlockState(this.getPos()).getFluidState().isEmpty();
+            var x = RANDOM.triangle(this.posX, JITTER);
+            var z = RANDOM.triangle(this.posZ, JITTER);
+            var particle = this.createParticle(ParticleTypes.CLOUD, x, this.posY, z, 0, VERTICAL_SPEED, 0D);
+            particle.ifPresent(p -> {
+                p.setLifetime(p.getLifetime() * 2);
+                if (isSolid) {
+                    p.scale(0.5F);
+                    p.setParticleSpeed(0, VERTICAL_SPEED / 2, 0);
+                }
+            });
+            return particle;
         }
     }
 }

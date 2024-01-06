@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.processing;
 
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;

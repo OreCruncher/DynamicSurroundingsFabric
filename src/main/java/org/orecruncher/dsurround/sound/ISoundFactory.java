@@ -1,11 +1,12 @@
 package org.orecruncher.dsurround.sound;
 
-import net.minecraft.client.sound.EntityTrackingSoundInstance;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.entity.Entity;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+
+import net.minecraft.client.resources.sounds.EntityBoundSoundInstance;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
 
 public interface ISoundFactory {
 
@@ -32,39 +33,39 @@ public interface ISoundFactory {
      * a fixed location.  Mimics a biomes "mood" sound as defined in Minecraft.
      */
 
-    PositionedSoundInstance createAsMood(Entity entity, int minRange, int maxRange);
+    SimpleSoundInstance createAsMood(Entity entity, int minRange, int maxRange);
 
     /**
      * Creates a non-attenuated sound instance that will not repeat.  Mimics the sound profile of
      * a biome "additional" sound as defined in Minecraft.
      */
-    PositionedSoundInstance createAsAdditional();
+    SimpleSoundInstance createAsAdditional();
 
     /**
      * Creates an attenuated sound instance at the center of the specified block location.  The
      * sound instance is not repeated.
      */
-    PositionedSoundInstance createAtLocation(BlockPos pos);
+    SimpleSoundInstance createAtLocation(BlockPos pos);
 
     /**
      * Creates an attenuated sound instance that is attached to the entity and will move as
      * the entity moves.  The sound instance is not repeated.
      */
-    EntityTrackingSoundInstance createAtEntity(Entity entity);
+    EntityBoundSoundInstance createAtEntity(Entity entity);
 
     /**
      * Creates a sound instance at the eye location of the specified entity.  This sound instance is not attached
      * to the entity and will be at a fixed location.  The properties of the sound instance are defined by the
      * underlying factory settings.
      */
-    default PositionedSoundInstance createAtLocation(Entity entity) {
-        return this.createAtLocation(entity.getEyePos());
+    default SimpleSoundInstance createAtLocation(Entity entity) {
+        return this.createAtLocation(entity.getEyePosition());
     }
 
     /**
      * Creates a sound instance at the specified location.  This sound instance is not attached.  The properties
      * of the sound instance are defined by the underlying factory settings.
      */
-    PositionedSoundInstance createAtLocation(Vec3d position);
+    SimpleSoundInstance createAtLocation(Vec3 position);
 
 }

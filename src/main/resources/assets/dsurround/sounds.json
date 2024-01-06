@@ -2,29 +2,36 @@
 	"thunder": {
 		"subtitle": "dsurround.sound.caption.thunder",
 		"credits": [
-			"\u00a7aThunder 1",
-			"Yoyodaman234",
-			"Creative Commons 0",
-			"",
-			"\u00a7aDonner1.wav",
-			"swuing",
-			"Attribution",
-			"",
-			"\u00a7aThunder - 1",
-			"bone666138",
-			"Attribution",
-			"",
-			"\u00a7aThunder - 2",
-			"bone666138",
-			"Attribution",
-			"",
-			"\u00a7aDistant Thunder.wav",
-			"sarson",
-			"Creative Commons 0",
-			"",
-			"\u00a7aNM-Mejor-Lado-Thunder-01.wav",
-			"aaronstar",
-			"Creative Commons 0"
+			{
+				"name": "Thunder 1",
+				"author": "Yoyodaman234",
+				"license": "Creative Commons 0"
+			},
+			{
+				"name": "Donner1.wav",
+				"author": "swuing",
+				"license": "Attribution"
+			},
+			{
+				"name": "Thunder - 1",
+				"author": "bone666138",
+				"license": "Attribution"
+			},
+			{
+				"name": "Thunder - 2",
+				"author": "bone666138",
+				"license": "Attribution"
+			},
+			{
+				"name": "Distant Thunder.wav",
+				"author": "sarson",
+				"license": "Creative Commons 0"
+			},
+			{
+				"name": "NM-Mejor-Lado-Thunder-01.wav",
+				"author": "aaronstar",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			{
@@ -73,9 +80,11 @@
 	"biome.wind": {
 		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [
-			"\u00a7aWind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
-			"felix.blume",
-			"Creative Commons 0"
+			{
+				"name": "Wind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
+				"author": "felix.blume",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			{
@@ -87,9 +96,11 @@
 	"biome.wind.hills": {
 		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [
-			"\u00a7aWind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
-			"felix.blume",
-			"Creative Commons 0"
+			{
+				"name": "Wind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
+				"author": "felix.blume",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			{
@@ -103,9 +114,11 @@
 	"biome.wind.mountains": {
 		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [
-			"\u00a7aWind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
-			"felix.blume",
-			"Creative Commons 0"
+			{
+				"name": "Wind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
+				"author": "felix.blume",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			{
@@ -117,9 +130,11 @@
 	"biome.wind.desert": {
 		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [
-			"\u00a7adesertwind1FINAL.wav",
-			"nageor",
-			"Creative Commons 0"
+			{
+				"name": "desertwind1FINAL.wav",
+				"author": "nageor",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			{
@@ -130,9 +145,11 @@
 	"biome.wind.arctic": {
 		"subtitle": "dsurround.sound.caption.wind",
 		"credits": [
-			"\u00a7aHowling Wind Ambience",
-			"DBlover",
-			"Creative Commons 0"
+			{
+				"name": "Howling Wind Ambience",
+				"author": "DBlover",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			{
@@ -142,9 +159,11 @@
 	},
 	"biome.savanna.day": {
 		"credits": [
-			"\u00a7aMerlothPark_morning_ambiance.wav",
-			"reinsamba",
-			"Attribution"
+			{
+				"name": "MerlothPark_morning_ambiance.wav",
+				"author": "reinsamba",
+				"license": "Attribution"
+			}
 		],
 		"sounds": [
 			{
@@ -155,9 +174,11 @@
 	},
 	"biome.savanna.night": {
 		"credits": [
-			"\u00a7aMerlothPark_crickets2.WAV",
-			"reinsamba",
-			"Attribution"
+			{
+				"name": "MerlothPark_crickets2.WAV",
+				"author": "reinsamba",
+				"license": "Attribution"
+			}
 		],
 		"sounds": [
 			{
@@ -168,9 +189,11 @@
 	},
 	"biome.crickets": {
 		"credits": [
-			"\u00a7aSoft, Chilled Crickets Field Recording",
-			"rayjensen",
-			"Creative Commons 0"
+			{
+				"name": "Soft, Chilled Crickets Field Recording",
+				"author": "rayjensen",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			{
@@ -189,9 +212,11 @@
 	},
 	"biome.plains": {
 		"credits": [
-			"\u00a7aCalm Morning Outdoor Ambiance",
-			"blouhond",
-			"Attribution"
+			{
+				"name": "Calm Morning Outdoor Ambiance",
+				"author": "blouhond",
+				"license": "Attribution"
+			}
 		],
 		"sounds": [
 			{
@@ -202,9 +227,11 @@
 	},
 	"biome.forest": {
 		"credits": [
-			"\u00a7a001_forrest.wav",
-			"joepsporck",
-			"Creative Commons 0"
+			{
+				"name": "001_forrest.wav",
+				"author": "joepsporck",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			{
@@ -223,9 +250,11 @@
 	},
 	"biome.beach": {
 		"credits": [
-			"\u00a7aFiji Beach (Stereo)128kbps.mp3",
-			"c97059890",
-			"Creative Commons 0"
+			{
+				"name": "Fiji Beach (Stereo)128kbps.mp3",
+				"author": "c97059890",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			{
@@ -236,9 +265,11 @@
 	},
 	"biome.ocean": {
 		"credits": [
-			"\u00a7aocean waves surround me.wav",
-			"bohitomi",
-			"Attribution"
+			{
+				"name": "ocean waves surround me.wav",
+				"author": "bohitomi",
+				"license": "Attribution"
+			}
 		],
 		"sounds": [
 			{
@@ -250,9 +281,11 @@
 	},
 	"biome.ocean.deep": {
 		"credits": [
-			"\u00a7aocean waves surround me.wav",
-			"bohitomi",
-			"Attribution"
+			{
+				"name": "ocean waves surround me.wav",
+				"author": "bohitomi",
+				"license": "Attribution"
+			}
 		],
 		"sounds": [
 			{
@@ -264,9 +297,11 @@
 	},
 	"biome.river": {
 		"credits": [
-			"\u00a7aunderwater ambience.wav",
-			"AlienXXX",
-			"Attribution"
+			{
+				"name": "underwater ambience.wav",
+				"author": "AlienXXX",
+				"license": "Attribution"
+			}
 		],
 		"sounds": [
 			{
@@ -277,9 +312,11 @@
 	},
 	"biome.bog": {
 		"credits": [
-			"\u00a7arbh Mpls Bog birds.wav",
-			"RHumphries",
-			"Attribution"
+			{
+				"name": "rbh Mpls Bog birds.wav",
+				"author": "RHumphries",
+				"license": "Attribution"
+			}
 		],
 		"sounds": [
 			{
@@ -369,9 +406,11 @@
 	"crow": {
 		"subtitle": "dsurround.sound.caption.crow",
 		"credits": [
-			"\u00a7aANML_M_Ext_Crow_Calls_Single1.wav",
-			"conleec",
-			"Creative Commons 0"
+			{
+				"name": "ANML_M_Ext_Crow_Calls_Single1.wav",
+				"author": "conleec",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			"dsurround:ambient/birds/crow1",
@@ -443,13 +482,16 @@
 	"rockfall": {
 		"subtitle": "dsurround.sound.caption.rockfall",
 		"credits": [
-			"\u00a7aRocks falling over rocks, over a steep hill, like a cliff.flac",
-			"gfrog",
-			"Creative Commons 0",
-			"",
-			"\u00a7aRocks.wav",
-			"adamgryu",
-			"Creative Commons 0"
+			{
+				"name": "Rocks falling over rocks, over a steep hill, like a cliff.flac",
+				"author": "gfrog",
+				"license": "Creative Commons 0"
+			},
+			{
+				"name": "Rocks.wav",
+				"author": "adamgryu",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			"dsurround:ambient/underground/smallslide1",
@@ -460,13 +502,16 @@
 	"bigrockfall": {
 		"subtitle": "dsurround.sound.caption.rockfall",
 		"credits": [
-			"\u00a7aRockfall in mine.wav",
-			"Benboncan",
-			"Attribution",
-			"",
-			"\u00a7aRocks.wav",
-			"adamgryu",
-			"Creative Commons 0"
+			{
+				"name": "Rockfall in mine.wav",
+				"author": "Benboncan",
+				"license": "Attribution"
+			},
+			{
+				"name": "Rocks.wav",
+				"author": "adamgryu",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			{
@@ -499,9 +544,11 @@
 	"waterdrips": {
 		"subtitle": "dsurround.sound.caption.waterdrop",
 		"credits": [
-			"\u00a7aDripping, Very Fast, A.wav",
-			"InspectorJ",
-			"Attribution"
+			{
+				"name": "Dripping, Very Fast, A.wav",
+				"author": "InspectorJ",
+				"license": "Attribution"
+			}
 		],
 		"sounds": [
 			"dsurround:ambient/droplets/drop1",
@@ -526,9 +573,11 @@
 	"coyote": {
 		"subtitle": "dsurround.sound.caption.howling",
 		"credits": [
-			"\u00a7acoyote barks and howls",
-			"dkaufman",
-			"Creative Commons 0"
+			{
+				"name": "coyote barks and howls",
+				"author": "dkaufman",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			"dsurround:ambient/coyote/coyote1",
@@ -562,9 +611,11 @@
 	},
 	"biome.ocean.deep.under": {
 		"credits": [
-			"\u00a7aunderwater ambience.wav",
-			"AlienXXX",
-			"Attribution"
+			{
+				"name": "underwater ambience.wav",
+				"author": "AlienXXX",
+				"license": "Attribution"
+			}
 		],
 		"sounds": [
 			{
@@ -575,9 +626,11 @@
 	},
 	"biome.ocean.under": {
 		"credits": [
-			"\u00a7aunderwater ambience.wav",
-			"AlienXXX",
-			"Attribution"
+			{
+				"name": "underwater ambience.wav",
+				"author": "AlienXXX",
+				"license": "Attribution"
+			}
 		],
 		"sounds": [
 			{
@@ -596,9 +649,11 @@
 	},
 	"biome.water.under": {
 		"credits": [
-			"\u00a7aUnderwaterDrowning01.wav",
-			"Abolla",
-			"Creative Commons 0"
+			{
+				"name": "UnderwaterDrowning01.wav",
+				"author": "Abolla",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			{
@@ -744,9 +799,11 @@
 	},
 	"waterfall.0": {
 		"credits": [
-			"\u00a7aWaterfall Winspit Dorset.wav",
-			"genghis attenborough",
-			"Attribution Noncommercial"
+			{
+				"name": "Waterfall Winspit Dorset.wav",
+				"author": "genghis attenborough",
+				"license": "Attribution Noncommercial"
+			}
 		],
 		"sounds": [
 			{
@@ -758,9 +815,11 @@
 	},
 	"waterfall.1": {
 		"credits": [
-			"\u00a7aRunning-water-mountain-stream.mp3",
-			"Alexander",
-			"Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)"
+			{
+				"name": "Running-water-mountain-stream.mp3",
+				"author": "Alexander",
+				"license": "Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)"
+			}
 		],
 		"sounds": [
 			{
@@ -772,9 +831,11 @@
 	},
 	"waterfall.2": {
 		"credits": [
-			"\u00a7aWaterfall",
-			"Orpheuz",
-			"Creative Commons 0"
+			{
+				"name": "Waterfall",
+				"author": "Orpheuz",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			{
@@ -786,9 +847,11 @@
 	},
 	"waterfall.3": {
 		"credits": [
-			"\u00a7aSmall Waterfall at the Mill",
-			"willstepp",
-			"Creative Commons 0"
+			{
+				"name": "Small Waterfall at the Mill",
+				"author": "willstepp",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			{
@@ -800,9 +863,11 @@
 	},
 	"waterfall.4": {
 		"credits": [
-			"\u00a7aWaterfall, Large, A.wav",
-			"InspectorJ",
-			"Attribution"
+			{
+				"name": "Waterfall, Large, A.wav",
+				"author": "InspectorJ",
+				"license": "Attribution"
+			}
 		],
 		"sounds": [
 			{
@@ -814,9 +879,11 @@
 	},
 	"waterfall.5": {
 		"credits": [
-			"\u00a7aWaterfall, Small, B.wav",
-			"InspectorJ",
-			"Attribution"
+			{
+				"name": "Waterfall, Small, B.wav",
+				"author": "InspectorJ",
+				"license": "Attribution"
+			}
 		],
 		"sounds": [
 			{
@@ -829,9 +896,11 @@
 	"biome.village.rooster": {
 		"subtitle": "dsurround.sound.caption.rooster",
 		"credits": [
-			"\u00a7aVillage ambience rooster and light birds with wind .wav",
-			"Ramston",
-			"Creative Commons 0"
+			{
+				"name": "Village ambience rooster and light birds with wind .wav",
+				"author": "Ramston",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			"dsurround:ambient/village/rooster1",
@@ -842,9 +911,11 @@
 	"biome.village.anvil": {
 		"subtitle": "dsurround.sound.caption.anvil",
 		"credits": [
-			"\u00a7aAnvil",
-			"MrAuralization",
-			"Attribution"
+			{
+				"name": "Anvil",
+				"author": "MrAuralization",
+				"license": "Attribution"
+			}
 		],
 		"sounds": [
 			{
@@ -860,9 +931,11 @@
 	"biome.village.dogbark": {
 		"subtitle": "dsurround.sound.caption.dog",
 		"credits": [
-			"\u00a7aDogs Barking",
-			"darranambler",
-			"Creative Commons 0"
+			{
+				"name": "Dogs Barking",
+				"author": "darranambler",
+				"license": "Creative Commons 0"
+			}
 		],
 		"sounds": [
 			"dsurround:ambient/village/dogbark1",
@@ -875,9 +948,11 @@
 	},
 	"dimension.nether": {
 		"credits": [
-			"\u00a7aCreepy Dungeon Ambiance",
-			"DrMinky",
-			"Attribution"
+			{
+				"name": "Creepy Dungeon Ambiance",
+				"author": "DrMinky",
+				"license": "Attribution"
+			}
 		],
 		"sounds": [
 			{

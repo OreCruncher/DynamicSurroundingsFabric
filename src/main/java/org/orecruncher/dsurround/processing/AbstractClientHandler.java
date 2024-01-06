@@ -1,19 +1,19 @@
 package org.orecruncher.dsurround.processing;
 
 import com.google.common.base.MoreObjects;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
-import org.orecruncher.dsurround.lib.random.XorShiftRandom;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import java.util.Collection;
-import java.util.Random;
 
 abstract class AbstractClientHandler {
 
-    protected static final Random RANDOM = XorShiftRandom.current();
+    protected static final IRandomizer RANDOM = Randomizer.current();
 
     protected final Configuration config;
     protected final IModLog logger;
@@ -56,7 +56,7 @@ abstract class AbstractClientHandler {
      *
      * @param player The player currently behind the keyboard.
      */
-    public void process(final PlayerEntity player) {
+    public void process(final Player player) {
 
     }
 

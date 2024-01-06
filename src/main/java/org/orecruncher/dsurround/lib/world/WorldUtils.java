@@ -1,12 +1,11 @@
 package org.orecruncher.dsurround.lib.world;
 
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.world.Heightmap;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldProperties;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.storage.LevelData;
 import org.orecruncher.dsurround.mixins.core.MixinClientWorldProperties;
 import org.orecruncher.dsurround.mixinutils.IClientWorld;
 
@@ -25,24 +24,24 @@ public class WorldUtils {
      */
     public static final float SNOW_THRESHOLD = 0.15F;
 
-    public static boolean isSuperFlat(final World world) {
-        final WorldProperties info = world.getLevelProperties();
+    public static boolean isSuperFlat(final Level world) {
+        final LevelData info = world.getLevelData();
         return info instanceof MixinClientWorldProperties && ((MixinClientWorldProperties) info).dsurround_isFlatWorld();
     }
 
-    public static BlockPos getTopSolidOrLiquidBlock(final World world, final BlockPos pos) {
-        return world.getTopPosition(Heightmap.Type.MOTION_BLOCKING, pos);
+    public static BlockPos getTopSolidOrLiquidBlock(final Level world, final BlockPos pos) {
+        return world.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, pos);
     }
 
-    public static float getTemperatureAt(final World world, final BlockPos pos) {
-        return world.getBiomeAccess().getBiome(pos).value().getTemperature();
+    public static float getTemperatureAt(final Level world, final BlockPos pos) {
+        return world.getBiome(pos).value().getBaseTemperature();
     }
 
-    public static int getPrecipitationHeight(final World world, final BlockPos pos) {
-        return world.getTopY(Heightmap.Type.MOTION_BLOCKING, pos.getX(), pos.getZ());
+    public static int getPrecipitationHeight(final Level world, final BlockPos pos) {
+        return world.getHeight(Heightmap.Types.MOTION_BLOCKING, pos.getX(), pos.getZ());
     }
 
-    public static List<BlockEntity> getLoadedBlockEntities(World world, Predicate<BlockEntity> predicate) {
+    public static List<BlockEntity> getLoadedBlockEntities(Level world, Predicate<BlockEntity> predicate) {
         var accessor = (IClientWorld) world;
         return accessor.dsurround_getLoadedChunks()
                 .flatMap(chunk -> chunk.getBlockEntities().values().stream())
@@ -54,7 +53,7 @@ public class WorldUtils {
      * Gets the precipitation currently falling at the specified location.  It takes into account temperature and the
      * like.
      */
-    public static Biome.Precipitation getCurrentPrecipitationAt(final World world, final BlockPos pos) {
+    public static Biome.Precipitation getCurrentPrecipitationAt(final Level world, final BlockPos pos) {
         if (!world.isRaining()) {
             // Not currently raining
             return Biome.Precipitation.NONE;
@@ -63,7 +62,7 @@ public class WorldUtils {
         final Biome biome = world.getBiome(pos).value();
 
         // If the biome has no rain...
-        if (biome.getPrecipitation(pos) == Biome.Precipitation.NONE)
+        if (biome.getPrecipitationAt(pos) == Biome.Precipitation.NONE)
             return Biome.Precipitation.NONE;
 
         // Is there a block above that is blocking the rainfall?
@@ -91,9 +90,7 @@ public class WorldUtils {
         return temp < SNOW_THRESHOLD;
     }
 
-    public static boolean isChunkLoaded(World world, BlockPos pos) {
-        var chunkX = ChunkSectionPos.getSectionCoord(pos.getX());
-        var chunkZ = ChunkSectionPos.getSectionCoord(pos.getZ());
-        return world.getChunkManager().isChunkLoaded(chunkX, chunkZ);
+    public static boolean isChunkLoaded(Level world, BlockPos pos) {
+        return world.isLoaded(pos);
     }
 }
