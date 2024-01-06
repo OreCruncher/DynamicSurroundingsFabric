@@ -1,3 +1,30 @@
+> ### DynamicSurroundings-Fabric-1.20.4-0.1.0
+**Requirements**
+* JAVA 17+ (I am using Adoptium https://adoptium.net/)
+* Fabric Loader >=0.15.1
+* Fabric API >=0.91.2+1.20.4
+* 100% client side; no server side deployment needed
+
+**What's New**
+* Added key bind to activate the mod menu while in-game.
+  * If ModMenu is present, the key bind is not set in favor of using the various "Mod" configuration entry points.
+  * If ModMenu is not present, will default to the '=' key and can be accessed in game.
+
+**Changes**
+* Added more randomness to steam effects. In large steam areas, the particle spawns seemed a bit uniform.
+* Increased reverb decay time of sounds.  Needed more reverb.  FYI - reverb and echo are two different things.
+* Updated randomizers to use the newer random number generators in Java.  Performance increased a small amount.
+* Improve handling of tags when connected to remote server.  Should be more performant.
+* Short circuit some checks/operations for a set of blocks that should always be ignored, like air and command_block.
+* Attributions in sounds.json are now structured.  (Attributions for sounds show up in the tooltips while in the individual sound config menu.)
+* Added subtitle information to sound config entries tooltip.  Subtitles are text shown when a sound plays if the option is enabled in the sound menu.  (Not all sounds have subtitles defined—it's optional.)
+* Use official Mojang mappings rather than Yarn.  Should be transparent but let me know if anything strange happens.
+* Misc clean up such as removing loader-specific info from language file, recoloring of version update notification, etc.
+
+**Fixes**
+* Bow-use sound when connected to a vanilla server will now play.
+* Fixed concurrency issue when the background sound operations triggered tag access in the TagLibrary. The exception was an index range exception generated in a fastutil collection. The times I have experienced this problem are when joining a world where the location was sound dense, like large waterfalls.
+
 > ### DynamicSurroundings-Fabric-1.20.4-0.0.9
 **Requirements**
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)
