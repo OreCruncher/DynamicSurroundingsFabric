@@ -18,6 +18,12 @@ import java.util.stream.Collectors;
 
 public class PlatformServiceImpl implements IPlatform {
 
+    @Override
+    public String getPlatformName() {
+        return "Fabric";
+    }
+
+    @Override
     public Optional<ModInformation> getModInformation(String modId) {
         var container = FabricLoader.getInstance().getModContainer(modId);
         if (container.isPresent()) {
@@ -38,11 +44,13 @@ public class PlatformServiceImpl implements IPlatform {
         return Optional.empty();
     }
 
+    @Override
     public Optional<String> getModDisplayName(String namespace) {
         var container = FabricLoader.getInstance().getModContainer(namespace);
         return container.map(modContainer -> modContainer.getMetadata().getName());
     }
 
+    @Override
     public Optional<SemanticVersion> getModVersion(String namespace) {
         var container = FabricLoader.getInstance().getModContainer(namespace);
         if (container.isPresent()) {
@@ -55,10 +63,12 @@ public class PlatformServiceImpl implements IPlatform {
         return Optional.empty();
     }
 
+    @Override
     public boolean isModLoaded(String namespace) {
         return FabricLoader.getInstance().isModLoaded(namespace);
     }
 
+    @Override
     public Collection<String> getModIdList(boolean loadedOnly) {
         return FabricLoader.getInstance()
                 .getAllMods()
@@ -68,10 +78,12 @@ public class PlatformServiceImpl implements IPlatform {
                 .collect(Collectors.toList());
     }
 
+    @Override
     public Path getConfigPath() {
         return FabricLoader.getInstance().getConfigDir();
     }
 
+    @Override
     public Set<Path> getResourcePaths(String path) {
         Set<Path> out = new HashSet<>();
 

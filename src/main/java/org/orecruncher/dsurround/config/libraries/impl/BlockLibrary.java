@@ -21,10 +21,7 @@ import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.mixinutils.IBlockStateExtended;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class BlockLibrary implements IBlockLibrary {
@@ -71,6 +68,11 @@ public class BlockLibrary implements IBlockLibrary {
         this.version++;
 
         this.logger.info("%d block configs loaded; version is now %d", blockConfigs.size(), version);
+    }
+
+    @Override
+    public Optional<BlockInfo> getBlockInfoWeak(BlockState state) {
+        return Optional.ofNullable(((IBlockStateExtended) state).dsurround_getBlockInfo());
     }
 
     @Override

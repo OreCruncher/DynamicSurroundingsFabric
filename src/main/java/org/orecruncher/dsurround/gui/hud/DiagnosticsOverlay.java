@@ -11,6 +11,7 @@ import org.orecruncher.dsurround.gui.hud.plugins.*;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
@@ -33,7 +34,8 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     private ObjectArray<String> right = new ObjectArray<>();
 
     public DiagnosticsOverlay(ModInformation modInformation) {
-        this.branding = modInformation.getBranding();
+        var platformName = ContainerManager.resolve(IPlatform.class).getPlatformName();
+        this.branding = "%s (%s)".formatted(modInformation.getBranding(), platformName);
         this.showHud = false;
 
         this.plugins.add(new ClientProfilerPlugin());

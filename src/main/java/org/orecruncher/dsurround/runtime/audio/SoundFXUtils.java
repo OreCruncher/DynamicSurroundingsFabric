@@ -14,6 +14,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.config.block.BlockInfo;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.math.MathStuff;
@@ -27,6 +28,7 @@ import org.orecruncher.dsurround.sound.SoundInstanceHandler;
 
 public final class SoundFXUtils {
 
+    private static final IBlockLibrary BLOCK_LIBRARY = ContainerManager.resolve(IBlockLibrary.class);
     private static final Configuration.EnhancedSounds CONFIG = ContainerManager.resolve(Configuration.EnhancedSounds.class);
 
     /**
@@ -363,13 +365,21 @@ public final class SoundFXUtils {
     }
 
     private static float getReflectivity(BlockState state) {
-        var info = ContainerManager.resolve(IBlockLibrary.class).getBlockInfo(state);
-        return info.getSoundReflectivity();
+        // Use the weak form because the BlockInfo may not be filled out when
+        // the FX system needs to evaluate. The info object should only
+        // be filled out by the render thread.
+        return BLOCK_LIBRARY.getBlockInfoWeak(state)
+                .map(BlockInfo::getSoundReflectivity)
+                .orElse(0F);
     }
 
     private static float getOcclusion(BlockState state) {
-        var info = ContainerManager.resolve(IBlockLibrary.class).getBlockInfo(state);
-        return info.getSoundOcclusion();
+        // Use the weak form because the BlockInfo may not be filled out when
+        // the FX system needs to evaluate. The info object should only
+        // be filled out by the render thread.
+        return BLOCK_LIBRARY.getBlockInfoWeak(state)
+                .map(BlockInfo::getSoundReflectivity)
+                .orElse(0.4F);
     }
 
     private static Vec3 surfaceNormal(final Direction d) {

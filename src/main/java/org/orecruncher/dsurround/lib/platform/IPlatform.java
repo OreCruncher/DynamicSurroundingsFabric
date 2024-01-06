@@ -14,6 +14,8 @@ import java.util.Set;
 
 public interface IPlatform {
 
+    String getPlatformName();
+
     Optional<ModInformation> getModInformation(String modId);
 
     Optional<String> getModDisplayName(String namespace);
