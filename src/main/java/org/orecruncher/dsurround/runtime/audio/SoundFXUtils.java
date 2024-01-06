@@ -14,7 +14,6 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.Configuration;
-import org.orecruncher.dsurround.config.block.BlockInfo;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.math.MathStuff;
@@ -368,18 +367,14 @@ public final class SoundFXUtils {
         // Use the weak form because the BlockInfo may not be filled out when
         // the FX system needs to evaluate. The info object should only
         // be filled out by the render thread.
-        return BLOCK_LIBRARY.getBlockInfoWeak(state)
-                .map(BlockInfo::getSoundReflectivity)
-                .orElse(0F);
+        return BLOCK_LIBRARY.getBlockInfoWeak(state).getSoundReflectivity();
     }
 
     private static float getOcclusion(BlockState state) {
         // Use the weak form because the BlockInfo may not be filled out when
         // the FX system needs to evaluate. The info object should only
         // be filled out by the render thread.
-        return BLOCK_LIBRARY.getBlockInfoWeak(state)
-                .map(BlockInfo::getSoundReflectivity)
-                .orElse(0.4F);
+        return BLOCK_LIBRARY.getBlockInfoWeak(state).getSoundOcclusion();
     }
 
     private static Vec3 surfaceNormal(final Direction d) {

@@ -92,7 +92,7 @@ public class BlockInfo {
 
     // TODO: Eliminate duplicates
     public void update(BlockConfigRule config) {
-        // Reset of a block clears all registry
+        // Reset of a block clears all registries
         if (config.clearSounds())
             this.clearSounds();
 

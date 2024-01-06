@@ -71,8 +71,9 @@ public class BlockLibrary implements IBlockLibrary {
     }
 
     @Override
-    public Optional<BlockInfo> getBlockInfoWeak(BlockState state) {
-        return Optional.ofNullable(((IBlockStateExtended) state).dsurround_getBlockInfo());
+    public BlockInfo getBlockInfoWeak(BlockState state) {
+        var info = ((IBlockStateExtended) state).dsurround_getBlockInfo();
+        return info != null ? info : DEFAULT;
     }
 
     @Override
