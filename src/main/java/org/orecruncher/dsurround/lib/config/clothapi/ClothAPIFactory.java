@@ -9,12 +9,16 @@ import me.shedaniel.clothconfig2.impl.builders.FieldBuilder;
 import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigElement;
 import org.orecruncher.dsurround.lib.config.ConfigOptions;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
+import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import java.util.function.BiFunction;
@@ -50,6 +54,17 @@ public class ClothAPIFactory implements BiFunction<Minecraft, Screen, Screen> {
         } else {
             this.background = background;
         }
+    }
+
+    public static Screen createDefaultConfigScreen(Screen parent) {
+        ConfigOptions options = new ConfigOptions()
+                .setTranslationRoot("dsurround.config")
+                .setTitleStyle(Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE.getValue()))
+                .setPropertyGroupStyle(Style.EMPTY.withColor(ColorPalette.GOLDENROD.getValue()))
+                .setPropertyStyle(Style.EMPTY.withColor(ColorPalette.WHEAT.getValue()))
+                .setTooltipStyle(Style.EMPTY.withColor(ColorPalette.SEASHELL.getValue()));
+
+        return new ClothAPIFactory(options, Client.Config).apply(GameUtils.getMC(), parent);
     }
 
     @Override

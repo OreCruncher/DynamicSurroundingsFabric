@@ -170,6 +170,7 @@
   "dsurround.text.soundconfig.play.help": "Play the sound with the volume scaled by the volume scaling factor. Does not apply sound category volume modifiers.",
   "dsurround.text.soundconfig.volume.help": "Volume scaling factor applied when calculating the output volume of a sound. Increase to make quiet sounds louder; reduce to make loud sounds quieter. 100% is normal volume.",
   "dsurround.text.keybind.section": "Dynamic Surroundings",
+  "dsurround.text.keybind.modConfigurationMenu": "Mod Configuration Menu",
   "dsurround.text.keybind.individualSoundConfig": "Individual Sound Configuration",
   "dsurround.text.keybind.diagnosticHud": "Display Diagnostic HUD (DEV)",
   "dsurround.text.reloadassets": "[%1$s\u00a7r] \u00a7aReloaded configurations"
