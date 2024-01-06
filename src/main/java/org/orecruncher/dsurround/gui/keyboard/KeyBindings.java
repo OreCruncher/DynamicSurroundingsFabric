@@ -21,9 +21,10 @@ public class KeyBindings {
     static {
         var platform = Library.getPlatform();
 
+        var modMenuKey = platform.isModLoaded("modmenu") ? InputConstants.UNKNOWN.getValue() : InputConstants.KEY_EQUALS;
         modConfigurationMenu = platform.registerKeyBinding(
                 "dsurround.text.keybind.modConfigurationMenu",
-                InputConstants.UNKNOWN.getValue(),
+                modMenuKey,
                 "dsurround.text.keybind.section");
 
         individualSoundConfigBinding = platform.registerKeyBinding(
