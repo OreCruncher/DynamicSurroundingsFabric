@@ -5,7 +5,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
+
+import java.util.Collection;
 
 public abstract class CuboidScanner extends Scanner {
 
@@ -188,15 +191,20 @@ public abstract class CuboidScanner extends Scanner {
         return null;
     }
 
-    public void onBlockUpdate(final BlockPos pos) {
-        try {
-            if (this.activeCuboid != null && this.activeCuboid.contains(pos)) {
-                var world = this.locus.getWorld();
-                final BlockState state = world.getBlockState(pos);
-                blockScan(world, state, pos, this.random);
-            }
-        } catch (final Throwable t) {
-            this.locus.getLogger().error(t, "onBlockUpdate() error");
+    public void onBlockUpdates(Collection<BlockPos> positions) {
+        if (!positions.isEmpty() && this.activeCuboid != null) {
+            var world = this.locus.getWorld();
+            positions.stream()
+                    .filter(p -> this.activeCuboid.contains(p))
+                    .forEach(p -> {
+                        var state = world.getBlockState(p);
+                        if (!Constants.BLOCKS_TO_IGNORE.contains(state.getBlock()))
+                            try {
+                                blockScan(world, state, p, this.random);
+                            } catch (Throwable t) {
+                                this.locus.getLogger().error(t, "onBlockUpdate() error %s for state %s", p.toString(), state.toString());
+                            }
+                    });
         }
     }
 }

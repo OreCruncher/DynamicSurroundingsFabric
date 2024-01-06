@@ -76,6 +76,7 @@ public class SteamEffectSystem extends AbstractEffectSystem implements IEffectSy
 
         public SteamEffect(Level world, double x, double y, double z) {
             super(world, x, y, z);
+            this.age = RANDOM.nextInt(20);
         }
 
         @Override

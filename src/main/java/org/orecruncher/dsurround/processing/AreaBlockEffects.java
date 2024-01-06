@@ -89,7 +89,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
         // will handle the details for filtering and applying updates via blockScan().
         this.blockUpdateCount = event.updates().size();
         if (this.effectSystems != null)
-            event.updates().forEach(pos -> this.effectSystems.onBlockUpdate(pos));
+            this.effectSystems.onBlockUpdates(event.updates());
     }
 
     @Override
