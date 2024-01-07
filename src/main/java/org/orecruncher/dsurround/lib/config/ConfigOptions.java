@@ -63,7 +63,7 @@ public class ConfigOptions {
         return Component.literal(txt).withStyle(this.propertyStyle);
     }
 
-    public Component[] transformTooltip(Collection<Component> tooltip) {
-        return tooltip.toArray(new Component[0]);
+    public Component transformTooltip(Component tooltip) {
+        return tooltip;
     }
 }

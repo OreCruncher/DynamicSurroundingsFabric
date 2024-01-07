@@ -3,11 +3,11 @@ package org.orecruncher.dsurround.lib.config;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
-public class ConfigAccessor<T> {
+public class ElementAccessor<T> {
 
     private final Field field;
 
-    ConfigAccessor(Field field) {
+    ElementAccessor(Field field) {
         this.field = field;
 
         this.field.setAccessible(true);

@@ -1,10 +1,18 @@
 package org.orecruncher.dsurround.lib.config.clothapi;
 
+import dev.isxander.yacl3.api.*;
+import dev.isxander.yacl3.api.OptionGroup;
+import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
+import dev.isxander.yacl3.gui.controllers.cycling.EnumController;
+import dev.isxander.yacl3.gui.controllers.slider.DoubleSliderController;
+import dev.isxander.yacl3.gui.controllers.slider.IntegerSliderController;
+import dev.isxander.yacl3.gui.controllers.string.number.DoubleFieldController;
+import dev.isxander.yacl3.gui.controllers.string.number.IntegerFieldController;
+import dev.isxander.yacl3.gui.controllers.string.StringController;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
@@ -12,41 +20,24 @@ import org.orecruncher.dsurround.lib.config.ConfigElement;
 import org.orecruncher.dsurround.lib.config.ConfigOptions;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
-import org.orecruncher.dsurround.lib.random.Randomizer;
 
+import java.util.ArrayList;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
-public class ClothAPIFactory implements BiFunction<Minecraft, Screen, Screen> {
+public class ConfigScreenFactory implements BiFunction<Minecraft, Screen, Screen> {
 
-    private static final ResourceLocation[] BACKGROUNDS = {
-            new ResourceLocation("minecraft:textures/block/cobblestone.png"),
-            new ResourceLocation("minecraft:textures/block/bedrock.png"),
-            new ResourceLocation("minecraft:textures/block/bricks.png"),
-            new ResourceLocation("minecraft:textures/block/sandstone.png"),
-            new ResourceLocation("minecraft:textures/block/stone.png"),
-            new ResourceLocation("minecraft:textures/block/oak_planks.png"),
-            new ResourceLocation("minecraft:textures/block/gilded_blackstone.png"),
-            new ResourceLocation("minecraft:textures/block/dirt.png")
-    };
+    private static final Style STYLE_RESTART = Style.EMPTY.withColor(ColorPalette.RED);
+    private static final Component CLIENT_RESTART_REQUIRED = Component.translatable("dsurround.config.tooltip.clientRestartRequired").withStyle(STYLE_RESTART);
+    private static final Component WORLD_RESTART_REQUIRED = Component.translatable("dsurround.config.tooltip.worldRestartRequired").withStyle(STYLE_RESTART);
+    private static final Component ASSET_RELOAD_REQUIRED = Component.translatable("dsurround.config.tooltip.assetReloadRequired").withStyle(STYLE_RESTART);
 
-    private final ResourceLocation background;
     private final ConfigOptions options;
     private final ConfigurationData configData;
 
-    public ClothAPIFactory(ConfigOptions options, final ConfigurationData config) {
-        this(options, config, null);
-    }
-
-    public ClothAPIFactory(ConfigOptions options, final ConfigurationData config, @Nullable final ResourceLocation background) {
+    private ConfigScreenFactory(ConfigOptions options, final ConfigurationData config) {
         this.options = options;
         this.configData = config;
-
-        if (background == null) {
-            var idx = Randomizer.current().nextInt(BACKGROUNDS.length);
-            this.background = BACKGROUNDS[idx];
-        } else {
-            this.background = background;
-        }
     }
 
     public static Screen createDefaultConfigScreen(Screen parent) {
@@ -57,33 +48,31 @@ public class ClothAPIFactory implements BiFunction<Minecraft, Screen, Screen> {
                 .setPropertyStyle(Style.EMPTY.withColor(ColorPalette.WHEAT.getValue()))
                 .setTooltipStyle(Style.EMPTY.withColor(ColorPalette.SEASHELL.getValue()));
 
-        return new ClothAPIFactory(options, Client.Config).apply(GameUtils.getMC(), parent);
+        return new ConfigScreenFactory(options, Client.Config).apply(GameUtils.getMC(), parent);
     }
 
     @Override
     public Screen apply(final Minecraft MinecraftClient, final Screen screen) {
-        ConfigBuilder builder = ConfigBuilder.create()
-                .setParentScreen(screen)
-                .setTitle(this.options.transformTitle())
-                .setSavingRunnable(() -> {
+        var builder = YetAnotherConfigLib.createBuilder();
+
+        this.generate(builder, this.configData);
+
+        return builder
+                .title(this.options.transformTitle())
+                .save(() -> {
                     try {
                         this.configData.save();
                     } catch (Throwable t) {
                         Library.getLogger().error(t, "Unable to save configuration");
                     }
-                });
-
-        if (this.background != null) {
-            builder.setDefaultBackgroundTexture(this.background);
-        }
-
-        generate(builder, this.configData);
-        return builder.build();
+                })
+                .build()
+                .generateScreen(screen);
     }
 
-    protected void generate(final ConfigBuilder builder, Object instance) {
-        ConfigCategory root = builder.getOrCreateCategory(this.options.transformTitle());
-        final ConfigEntryBuilder entryBuilder = builder.entryBuilder();
+    protected void generate(final YetAnotherConfigLib.Builder builder, Object instance) {
+        var categoryBuilder = ConfigCategory.createBuilder();
+        categoryBuilder.name(this.options.transformTitle());
 
         var properties = this.configData.getSpecification();
         for (var prop : properties) {
@@ -92,20 +81,19 @@ public class ClothAPIFactory implements BiFunction<Minecraft, Screen, Screen> {
                 continue;
 
             if (prop instanceof ConfigElement.PropertyGroup group) {
-                var result = this.generate(entryBuilder, group, instance);
-                root.addEntry(result.build());
-            } else if (prop instanceof ConfigElement.PropertyValue<?> pv) {
-                var result = this.generate(entryBuilder, pv, instance);
-                if (result != null)
-                    root.addEntry(result.build());
+                var result = this.generate(group, instance);
+                categoryBuilder.group(result);
             }
         }
+        builder.category(categoryBuilder.build());
     }
 
-    protected SubCategoryBuilder generate(final ConfigEntryBuilder builder, ConfigElement.PropertyGroup propertyGroup, Object instance) {
-        SubCategoryBuilder categoryBuilder = builder
-                .startSubCategory(this.options.transformPropertyGroup(propertyGroup.getElementNameKey()))
-                .setTooltip(this.options.transformTooltip(propertyGroup.getTooltip(this.options.getTooltipStyle())));
+    protected OptionGroup generate(ConfigElement.PropertyGroup propertyGroup, Object instance) {
+        var tipBuilder = OptionDescription.createBuilder().text(this.options.transformTooltip(propertyGroup.getTooltip(this.options.getTooltipStyle()))).build();
+        var groupBuilder = OptionGroup.createBuilder()
+                .name(this.options.transformPropertyGroup(propertyGroup.getLanguageKey()))
+                .description(tipBuilder)
+                .collapsed(true);
 
         for (var prop : propertyGroup.getChildren()) {
             // Skip entries that are marked as hidden
@@ -114,69 +102,87 @@ public class ClothAPIFactory implements BiFunction<Minecraft, Screen, Screen> {
 
             // Can't have categories within categories, so we ignore the case of where a config is set up that way
             if (prop instanceof ConfigElement.PropertyValue<?> pv) {
-                var result = this.generate(builder, pv, propertyGroup.getInstance(instance));
-                if (result != null)
-                    categoryBuilder.add(result.build());
+                this.generate(pv, propertyGroup.getInstance(instance))
+                        .ifPresent(groupBuilder::option);
             }
         }
 
-        return categoryBuilder;
+        return groupBuilder.build();
     }
 
-    @SuppressWarnings("unchecked")
-    protected @Nullable FieldBuilder<?, ? extends AbstractConfigListEntry<?>, ?> generate(final ConfigEntryBuilder builder, ConfigElement.PropertyValue<?> pv, Object instance) {
-        FieldBuilder<?, ? extends AbstractConfigListEntry<?>, ?> fieldBuilder = null;
-
-        var name = this.options.transformProperty(pv.getElementNameKey());
-        var tooltip = this.options.transformTooltip(pv.getTooltip(this.options.getTooltipStyle()));
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    protected Optional<Option<?>> generate(ConfigElement.PropertyValue<?> pv, Object instance) {
+        Option.Builder<?> fieldBuilder = null;
 
         if (pv instanceof ConfigElement.IntegerValue v) {
+            var intBuilder = Option.<Integer>createBuilder().binding(pv.createBinder(instance));
             if (pv.useSlider()) {
-                fieldBuilder = builder
-                        .startIntSlider(name, v.getCurrentValue(instance), v.getMinValue(), v.getMaxValue())
-                        .setTooltip(tooltip)
-                        .setDefaultValue(v::getDefaultValue)
-                        .setSaveConsumer(data -> v.setCurrentValue(instance, data));
+                intBuilder.customController(opt -> new IntegerSliderController(opt, v.getMinValue(), v.getMaxValue(), 1));
             } else {
-                fieldBuilder = builder
-                        .startIntField(name, v.getCurrentValue(instance))
-                        .setTooltip(tooltip)
-                        .setDefaultValue(v.getDefaultValue())
-                        .setMin(v.getMinValue())
-                        .setMax(v.getMaxValue())
-                        .setSaveConsumer(data -> v.setCurrentValue(instance, data));
+                intBuilder.customController(IntegerFieldController::new);
             }
+            fieldBuilder = intBuilder;
         } else if (pv instanceof ConfigElement.DoubleValue v) {
-            fieldBuilder = builder
-                    .startDoubleField(name, v.getCurrentValue(instance))
-                    .setTooltip(tooltip)
-                    .setDefaultValue(v.getDefaultValue())
-                    .setMin(v.getMinValue())
-                    .setMax(v.getMaxValue())
-                    .setSaveConsumer(data -> v.setCurrentValue(instance, data));
-        } else if (pv instanceof ConfigElement.StringValue v) {
-            fieldBuilder = builder
-                    .startStrField(name, v.getCurrentValue(instance))
-                    .setTooltip(tooltip)
-                    .setDefaultValue(v.getDefaultValue())
-                    .setSaveConsumer(data -> v.setCurrentValue(instance, data));
-        } else if (pv instanceof ConfigElement.BooleanValue v) {
-            fieldBuilder = builder
-                    .startBooleanToggle(name, v.getCurrentValue(instance))
-                    .setTooltip(tooltip)
-                    .setDefaultValue(v.getDefaultValue())
-                    .setSaveConsumer(data -> v.setCurrentValue(instance, data));
+            var doubleBuilder = Option.<Double>createBuilder().binding(pv.createBinder(instance));
+            if (pv.useSlider()) {
+                doubleBuilder.customController(opt -> new DoubleSliderController(opt, v.getMinValue(), v.getMaxValue(), 0.01D));
+            } else {
+                doubleBuilder.customController(opt -> new DoubleFieldController(opt, v.getMinValue(), v.getMaxValue()));
+            }
+            fieldBuilder = doubleBuilder;
+        } else if (pv instanceof ConfigElement.StringValue) {
+            fieldBuilder = Option.<String>createBuilder()
+                    .binding(pv.createBinder(instance))
+                    .customController(StringController::new);
+        } else if (pv instanceof ConfigElement.BooleanValue) {
+            fieldBuilder = Option.<Boolean>createBuilder()
+                    .binding(pv.createBinder(instance))
+                    .customController(opt -> BooleanControllerBuilder.create(opt).formatValue(state -> state ? Component.translatable("gui.yes") : Component.translatable("gui.no")).coloured(true).build());
         } else if (pv instanceof ConfigElement.EnumValue v) {
-            fieldBuilder = new EnumSelectorBuilder<>(builder.getResetButtonKey(), name, (Class<Enum<?>>)(v.getEnumClass()), v.getCurrentValue(instance))
-                    .setTooltip(tooltip)
-                    .setDefaultValue(v.getDefaultValue())
-                    .setSaveConsumer(data -> v.setCurrentValue(instance, data));
+            fieldBuilder = Option.<Enum>createBuilder()
+                    .binding(pv.createBinder(instance))
+                    .customController(opt -> new EnumController(opt, v.getEnumClass()));
         }
 
         if (fieldBuilder != null) {
-            fieldBuilder.requireRestart(pv.isRestartRequired());
+
+            var name = this.options.transformProperty(pv.getLanguageKey());
+            var toolTip = this.generateToolTip(pv);
+
+            fieldBuilder.name(name);
+            fieldBuilder.description(toolTip);
+
+            if (pv.isRestartRequired())
+                fieldBuilder.flag(OptionFlag.GAME_RESTART);
+            if (pv.isAssetReloadRequired())
+                fieldBuilder.flag(OptionFlag.ASSET_RELOAD);
+
+            return Optional.of(fieldBuilder.build());
         }
 
-        return fieldBuilder;
+        return Optional.empty();
+    }
+
+    protected OptionDescription generateToolTip(ConfigElement.PropertyValue<?> pv) {
+        var toolTipEntries = new ArrayList<Component>();
+        toolTipEntries.add(this.options.transformTooltip(pv.getTooltip(this.options.getTooltipStyle())));
+        toolTipEntries.add(Component.empty());
+        toolTipEntries.add(pv.getDefaultValueTooltip());
+
+        if (pv instanceof ConfigElement.IRangeTooltip rt && rt.hasRange())
+            toolTipEntries.add(rt.getRangeTooltip());
+
+        if (pv.isRestartRequired()) {
+            toolTipEntries.add(Component.empty());
+            toolTipEntries.add(CLIENT_RESTART_REQUIRED);
+        } else if (pv.isWorldRestartRequired()) {
+            toolTipEntries.add(Component.empty());
+            toolTipEntries.add(WORLD_RESTART_REQUIRED);
+        } else if (pv.isAssetReloadRequired()) {
+            toolTipEntries.add(Component.empty());
+            toolTipEntries.add(ASSET_RELOAD_REQUIRED);
+        }
+
+        return OptionDescription.createBuilder().text(toolTipEntries).build();
     }
 }

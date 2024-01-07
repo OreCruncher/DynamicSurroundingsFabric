@@ -3,201 +3,184 @@ package org.orecruncher.dsurround.lib.config;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
-import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.Localization;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
-import org.orecruncher.dsurround.lib.gui.GuiHelpers;
 
-import java.util.ArrayList;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Optional;
 
-public abstract class ConfigElement {
+public abstract class ConfigElement<T> {
 
-    private static final int TOOLTIP_WIDTH = 300;
-
-    private static final Style STYLE_RESTART = Style.EMPTY.withColor(ColorPalette.RED);
     private static final Style STYLE_RANGE = Style.EMPTY.withColor(ColorPalette.CORN_FLOWER_BLUE);
     private static final Style STYLE_DEFAULT = Style.EMPTY.withColor(ColorPalette.TAN);
     private static final Style STYLE_MISSING = Style.EMPTY.withColor(ColorPalette.RED).withItalic(true);
 
-    private static final Component CLIENT_RESTART_REQUIRED = Component.translatable("dsurround.config.tooltip.clientRestartRequired").withStyle(STYLE_RESTART);
-    private static final Component WORLD_RESTART_REQUIRED = Component.translatable("dsurround.config.tooltip.worldRestartRequired").withStyle(STYLE_RESTART);
+    private final String languageKey;
+    private final ElementAccessor<T> field;
 
-    private final String elementNameKey;
-
-    ConfigElement(String elementNameKey) {
-        this.elementNameKey = elementNameKey;
+    ConfigElement(String elementNameKey, Field field) {
+        this.languageKey = elementNameKey;
+        this.field = new ElementAccessor<>(field);
     }
 
-    public String getElementNameKey() {
-        return this.elementNameKey;
+    public String getLanguageKey() {
+        return this.languageKey;
     }
 
-    public String getElementNameTooltipKey() {
-        return this.elementNameKey + ".tooltip";
+    public String getTooltipLanguageKey() {
+        return this.languageKey + ".tooltip";
     }
 
-    public Collection<Component> getTooltip(Style style) {
+    public Component getTooltip(Style style) {
         // Get tooltip data from language file. If not present, fall back to the Comment annotation
         // in the config model. If the property does not have a Comment annotation, use the resource key.
-        var key = this.getElementNameTooltipKey();
+        var key = this.getTooltipLanguageKey();
         var resourceText = Localization.loadIfPresent(key);
 
         if (resourceText.isEmpty()) {
-            resourceText = Optional.ofNullable(this.getComment());
+            resourceText = this.getComment();
         }
 
-        if (resourceText.isEmpty()) {
-            var result = new ArrayList<Component>();
-            result.add(Component.literal("MISSING: " + key).withStyle(STYLE_MISSING));
-            return result;
-        }
-        return GuiHelpers.getTrimmedTextCollection(Component.literal(resourceText.get()), TOOLTIP_WIDTH, style);
+        return resourceText
+                .map(txt -> Component.literal(txt).withStyle(style))
+                .orElse(Component.literal("MISSING: " + key).withStyle(STYLE_MISSING));
     }
 
     public boolean isHidden() {
-        return false;
+        return this.hasAnnotation(ConfigurationData.Hidden.class);
     }
 
     /**
      * Retrieve the comment, if any, associated with the property.
      */
-    public @Nullable String getComment() {
-        return null;
+    public Optional<String> getComment() {
+        var comment = this.getAnnotation(ConfigurationData.Comment.class);
+        return comment.map(ConfigurationData.Comment::value);
     }
 
-    public static class PropertyGroup extends ConfigElement {
+     protected T get(Object instance) {
+        return this.field.get(instance);
+    }
 
-        private final ConfigValue<?> wrapper;
-        private final Collection<ConfigElement> children;
+    protected void set(Object instance, T val) {
+        this.field.set(instance, val);
+    }
 
-        PropertyGroup(ConfigValue<?> wrapper, String translationKey, Collection<ConfigElement> children) {
-            super(translationKey);
+    protected <A extends Annotation> Optional<A> getAnnotation(Class<A> annotation) {
+        return Optional.ofNullable(this.field.getAnnotation(annotation));
+    }
 
-            this.wrapper = wrapper;
+    protected <A extends Annotation> boolean hasAnnotation(Class<A> annotation) {
+        return this.getAnnotation(annotation).isPresent();
+    }
+
+    public static class PropertyGroup extends ConfigElement<Object> {
+
+        private final Collection<ConfigElement<?>> children;
+
+        PropertyGroup(String translationKey, Collection<ConfigElement<?>> children, Field field) {
+            super(translationKey, field);
+
             this.children = children;
         }
 
         public Object getInstance(Object instance) {
-            return this.wrapper.get(instance);
+            return this.get(instance);
         }
 
-        @Override
-        public boolean isHidden() {
-            return this.wrapper.getAnnotation(ConfigurationData.Hidden.class) != null;
-        }
-
-        public Collection<ConfigElement> getChildren() {
+        public Collection<ConfigElement<?>> getChildren() {
             return this.children;
-        }
-
-        @Override
-        public @Nullable String getComment() {
-            var comment = this.wrapper.getAnnotation(ConfigurationData.Comment.class);
-            return comment != null ? comment.value() : null;
         }
 
     }
 
-    public static class PropertyValue<T> extends ConfigElement {
-
-        // Used to access the authoritative value of the property
-        private final ConfigValue<T> wrapper;
+    public static class PropertyValue<T> extends ConfigElement<T> {
 
         private final T defaultValue;
 
-        PropertyValue(Object instance, String translationKey, ConfigValue<T> wrapper) {
-            super(translationKey);
+        PropertyValue(Object instance, String translationKey, Field field) {
+            super(translationKey, field);
 
-            this.wrapper = wrapper;
-            this.defaultValue = wrapper.get(instance);
+            this.defaultValue = this.get(instance);
         }
 
-        public T getDefaultValue() {
+        public <V> Binder<V> createBinder(Object instance) {
+            return new Binder<>(this, instance);
+        }
+
+        public T defaultValue() {
             return this.defaultValue;
         }
 
-        public T getCurrentValue(Object instance) {
-            return this.wrapper.get(instance);
+        public T getValue(Object instance) {
+            return this.get(instance);
         }
 
-        public boolean isClientRestartRequired() {
-            var restart = this.wrapper.getAnnotation(ConfigurationData.RestartRequired.class);
-            return restart != null && restart.client();
-        }
-
-        public boolean isWorldRestartRequired() {
-            var restart = this.wrapper.getAnnotation(ConfigurationData.RestartRequired.class);
-            return restart != null && !restart.client();
+        public void setValue(Object instance, T value) {
+            this.set(instance, this.clamp(value));
         }
 
         public boolean isRestartRequired() {
-            return this.wrapper.getAnnotation(ConfigurationData.RestartRequired.class) != null;
+            var annotation = this.getAnnotation(ConfigurationData.RestartRequired.class);
+            return annotation.map(ConfigurationData.RestartRequired::client).orElse(false);
+        }
+
+        public boolean isWorldRestartRequired() {
+            var annotation = this.getAnnotation(ConfigurationData.RestartRequired.class);
+            return annotation.map(a -> !a.client()).orElse(false);
+        }
+
+        public boolean isAssetReloadRequired() {
+            return this.hasAnnotation(ConfigurationData.AssetReloadRequired.class);
         }
 
         public boolean useSlider() {
-            return this.wrapper.getAnnotation(ConfigurationData.Slider.class) != null;
+            return this.hasAnnotation(ConfigurationData.Slider.class);
         }
 
-        @Override
-        public boolean isHidden() {
-            return this.wrapper.getAnnotation(ConfigurationData.Hidden.class) != null;
-        }
-
-        public void setCurrentValue(Object instance, T value) {
-            this.wrapper.set(instance, this.clamp(value));
-        }
 
         protected T clamp(T value) {
             return value;
         }
 
-        @Override
-        public Collection<Component> getTooltip(Style style) {
-            var result = super.getTooltip(style);
-
-            if (this.isClientRestartRequired())
-                result.add(CLIENT_RESTART_REQUIRED);
-            else if (this.isWorldRestartRequired())
-                result.add(WORLD_RESTART_REQUIRED);
-
-            var dv = this.wrapper.getAnnotation(ConfigurationData.DefaultValue.class);
-            if (dv != null)
-                result.add(Component.translatable("dsurround.config.tooltip.defaultValue", this.defaultValue).withStyle(STYLE_DEFAULT));
-
-            return result;
+        public Component getDefaultValueTooltip() {
+            return Component.translatable("dsurround.config.tooltip.defaultValue", this.defaultValue).withStyle(STYLE_DEFAULT);
         }
-
-        @Override
-        public @Nullable String getComment() {
-            var comment = this.wrapper.getAnnotation(ConfigurationData.Comment.class);
-            return comment != null ? comment.value() : null;
-        }
-
     }
 
     public static class BooleanValue extends PropertyValue<Boolean> {
 
-        BooleanValue(Object instance, String translationKey, ConfigValue<Boolean> wrapper) {
-            super(instance, translationKey, wrapper);
+        private static final Component YES = Component.translatable("gui.yes").withColor(ColorPalette.GREEN.getValue());
+        private static final Component NO = Component.translatable("gui.no").withColor(ColorPalette.RED.getValue());
+
+        BooleanValue(Object instance, String translationKey, Field field) {
+            super(instance, translationKey, field);
         }
+
+        @Override
+        public Component getDefaultValueTooltip() {
+            var text = this.defaultValue() ? YES : NO;
+            return Component.translatable("dsurround.config.tooltip.defaultValue", text).withStyle(STYLE_DEFAULT);
+        }
+
     }
 
     public static class StringValue extends PropertyValue<String> {
 
-        StringValue(Object instance, String translationKey, ConfigValue<String> wrapper) {
-            super(instance, translationKey, wrapper);
+        StringValue(Object instance, String translationKey, Field field) {
+            super(instance, translationKey, field);
         }
     }
 
-    public static class IntegerValue extends PropertyValue<Integer> {
+    public static class IntegerValue extends PropertyValue<Integer> implements IRangeTooltip {
 
         private int minValue = Integer.MIN_VALUE;
         private int maxValue = Integer.MAX_VALUE;
 
-        IntegerValue(Object instance, String translationKey, ConfigValue<Integer> wrapper) {
-            super(instance, translationKey, wrapper);
+        IntegerValue(Object instance, String translationKey, Field field) {
+            super(instance, translationKey, field);
         }
 
         public void setRange(int min, int max) {
@@ -213,16 +196,14 @@ public abstract class ConfigElement {
             return this.maxValue;
         }
 
+        @Override
         public boolean hasRange() {
             return this.minValue != Integer.MIN_VALUE || this.maxValue != Integer.MAX_VALUE;
         }
 
         @Override
-        public Collection<Component> getTooltip(Style style) {
-            var result = super.getTooltip(style);
-            if (this.hasRange())
-                result.add(Component.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()).withStyle(STYLE_RANGE));
-            return result;
+        public Component getRangeTooltip() {
+            return Component.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()).withStyle(STYLE_RANGE);
         }
 
         @Override
@@ -232,13 +213,13 @@ public abstract class ConfigElement {
 
     }
 
-    public static class DoubleValue extends PropertyValue<Double> {
+    public static class DoubleValue extends PropertyValue<Double> implements IRangeTooltip {
 
         private double minValue = Double.MIN_VALUE;
         private double maxValue = Double.MAX_VALUE;
 
-        DoubleValue(Object instance, String translationKey, ConfigValue<Double> wrapper) {
-            super(instance, translationKey, wrapper);
+        DoubleValue(Object instance, String translationKey, Field field) {
+            super(instance, translationKey, field);
         }
 
         public void setRange(double min, double max) {
@@ -254,16 +235,14 @@ public abstract class ConfigElement {
             return this.maxValue;
         }
 
+        @Override
         public boolean hasRange() {
             return this.minValue != Double.MIN_VALUE || this.maxValue != Double.MAX_VALUE;
         }
 
         @Override
-        public Collection<Component> getTooltip(Style style) {
-            var result = super.getTooltip(style);
-            if (this.hasRange())
-                result.add(Component.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()).withStyle(STYLE_RANGE));
-            return result;
+        public Component getRangeTooltip() {
+            return Component.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()).withStyle(STYLE_RANGE);
         }
 
         @Override
@@ -277,8 +256,8 @@ public abstract class ConfigElement {
 
         private final Class<? extends Enum<?>> enumClass;
 
-        EnumValue(Class<? extends Enum<?>> enumClass, Object instance, String translationKey, ConfigValue<Enum<?>> wrapper) {
-            super(instance, translationKey, wrapper);
+        EnumValue(Class<? extends Enum<?>> enumClass, Object instance, String translationKey, Field field) {
+            super(instance, translationKey, field);
 
             this.enumClass = enumClass;
         }
@@ -286,6 +265,13 @@ public abstract class ConfigElement {
         public Class<? extends Enum<?>> getEnumClass() {
             return this.enumClass;
         }
+    }
+
+    public interface IRangeTooltip {
+
+        boolean hasRange();
+
+        Component getRangeTooltip();
     }
 
 }

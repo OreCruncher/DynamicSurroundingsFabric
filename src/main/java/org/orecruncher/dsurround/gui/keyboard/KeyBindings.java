@@ -7,7 +7,7 @@ import org.orecruncher.dsurround.gui.hud.DiagnosticsOverlay;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.config.clothapi.ClothAPIFactory;
+import org.orecruncher.dsurround.lib.config.clothapi.ConfigScreenFactory;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.platform.events.ClientState;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
@@ -46,7 +46,7 @@ public class KeyBindings {
         if (GameUtils.getCurrentScreen().isPresent() || GameUtils.getPlayer().isEmpty())
             return;
         if (modConfigurationMenu.consumeClick())
-            GameUtils.setScreen(ClothAPIFactory.createDefaultConfigScreen(null));
+            GameUtils.setScreen(ConfigScreenFactory.createDefaultConfigScreen(null));
         if (diagnosticHud.consumeClick())
             ContainerManager.resolve(DiagnosticsOverlay.class).toggleCollection();
         if (individualSoundConfigBinding.consumeClick()) {

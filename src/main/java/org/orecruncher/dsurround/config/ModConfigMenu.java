@@ -1,13 +1,15 @@
 package org.orecruncher.dsurround.config;
 
-import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
-import org.orecruncher.dsurround.lib.config.clothapi.ClothAPIFactory;
+import org.orecruncher.dsurround.lib.config.clothapi.ConfigScreenFactory;
 
+/**
+ * Used for packs that have ModMenu installed
+ */
 public class ModConfigMenu implements ModMenuApi {
 
     @Override
-    public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return ClothAPIFactory::createDefaultConfigScreen;
+    public com.terraformersmc.modmenu.api.ConfigScreenFactory<?> getModConfigScreenFactory() {
+        return ConfigScreenFactory::createDefaultConfigScreen;
     }
 }
