@@ -18,7 +18,7 @@ I expect this trend to continue.
 * 100% client side; no server side deployment needed
 
 **Recommended Additions**
-* [Mod Menu (CurseForge)](https://www.curseforge.com/minecraft/mc-mods/modmenu) or [ModMenu (Modrinth)](https://modrinth.com/mod/modmenu) to get in-game mod configuration menu.
+* [Mod Menu (CurseForge)](https://www.curseforge.com/minecraft/mc-mods/modmenu) or [ModMenu (Modrinth)](https://modrinth.com/mod/modmenu) to get an in-game mod configuration menu.
 * [Presence Footsteps (CurseForge)](https://www.curseforge.com/minecraft/mc-mods/presence-footsteps) or [Presence Foosteps (Modrinth)](https://modrinth.com/mod/presence-footsteps) for footstep acoustics
 
 **Features**
@@ -34,7 +34,7 @@ I expect this trend to continue.
 * Custom debug HUD that can be accessed by key bind.  Moves the Dynamic Surroundings clutter out of the traditional F3 display.
 
 **Embedded Jars**
-* Cloth Config API (Fabric) for configuration menu support.  Add Mod menu to your pack, and you can activate from the Mod's screen.
+* Yet Another Configuration Library for configuration menu support.
 * OpenJDK Nashorn JavaScript Engine 15.4 (https://github.com/openjdk/nashorn)
 
 **FAQ**

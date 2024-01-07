@@ -1,3 +1,17 @@
+> ### DynamicSurroundings-Fabric-1.20.4-0.2.0
+**Requirements**
+* JAVA 17+ (I am using Adoptium https://adoptium.net/)
+* Fabric Loader >=0.15.1
+* Fabric API >=0.91.2+1.20.4
+* 100% client side; no server side deployment needed
+
+**What's New**
+* Now using Yet Another Configuration Library
+
+**Changes**
+
+**Fixes**
+
 > ### DynamicSurroundings-Fabric-1.20.4-0.1.0
 **Requirements**
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)

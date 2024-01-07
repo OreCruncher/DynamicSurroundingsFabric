@@ -13,6 +13,7 @@ base {
 repositories {
     maven { url "https://maven.shedaniel.me/" }
     maven { url "https://maven.terraformersmc.com/" }
+    maven { url 'https://maven.isxander.dev/releases' }
 }
 
 loom {
@@ -34,10 +35,8 @@ dependencies {
     modImplementation "org.openjdk.nashorn:nashorn-core:${project.nashorn_version}"
     include("org.openjdk.nashorn:nashorn-core:${project.nashorn_version}")
 
-    modImplementation("me.shedaniel.cloth:cloth-config-fabric:${project.clothapi_version}") {
-        exclude(group: "net.fabricmc.fabric-api")
-    }
-    include("me.shedaniel.cloth:cloth-config-fabric:${project.clothapi_version}")
+    modImplementation("dev.isxander.yacl:yet-another-config-lib-fabric:${project.yacl_version}")
+    include("dev.isxander.yacl:yet-another-config-lib-fabric:${project.yacl_version}")
 }
 
 processResources {
