@@ -48,7 +48,7 @@ public class SystemsScanner extends CuboidScanner {
 
     @Override
     public void tick() {
-        super.tick();
+         super.tick();
 
         // If the range changed, we need to reset all effects in process
         if (this.lastRange != this.config.blockEffects.blockEffectRange) {
