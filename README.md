@@ -15,6 +15,7 @@ I expect this trend to continue.
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)
 * Fabric Loader >=0.15.1
 * Fabric API 0.91.2+1.20.4
+* Yet Another Configuration Library >=3.3.1+1.20.4
 * 100% client side; no server side deployment needed
 
 **Recommended Additions**
@@ -28,24 +29,24 @@ I expect this trend to continue.
     * This does not replace the Minecraft feature of a singular biome background sound.  Currently, the various biomes in the Nether use this capability, and Dynamic Surroundings does not have sound configurations for that dimension.
 * Hot block effects such as flame jets over lava, and steam where water hits a hot block.
     * Hot blocks are things like Lava and Magma.
-* Waterfall sound and visual effect - will trigger when flowing water is detected nearby.
+* Waterfall sound and visual effects - will trigger when flowing water is detected nearby.
 * Replace Minecraft's thunder sound with improved versions.
 * Various "DS" client side commands for dumping configuration information.  (I currently use these while developing. I do plan to document at some point for general use.)
+* HUD display when holding a clock (shows current time of day) and compass (gives the direction the player is looking).
 * Custom debug HUD that can be accessed by key bind.  Moves the Dynamic Surroundings clutter out of the traditional F3 display.
 
 **Embedded Jars**
-* Yet Another Configuration Library for configuration menu support.
 * OpenJDK Nashorn JavaScript Engine 15.4 (https://github.com/openjdk/nashorn)
 
 **FAQ**
 * Will there be releases for earlier versions of Minecraft?
-    * No.  Minecraft experiences large number of internal changes between releases and it would become a chore.
+    * Unlikely. Minecraft experienced a large number of internal changes between releases, and it would become a chore.
 * Will additional features from the Forge version be integrated into the Fabric version?
     * See below.
-* Will will there be updates to the Forge/Neoforge version of Dynamic Surroundings?
-  * Forge - highly unlikely.  I do not disagree with the perspective of the Neoforge team regarding Forge. 
-  * Neoforge, I am not sure.  Looking into hybrid development so that the mod can be built for Fabric and Neoforge at the same time.
-
+* Will there be updates to the Forge/NeoForged version of Dynamic Surroundings?
+  * NeoForged - likely.  Investigating possibilities.
+  * Forge - highly unlikely.  I do not disagree with the reasoning of the NeoForged team. 
+  
 **What's Being Dropped**
 * Aurora.  Good at turning a computer into a space heater, and I do not know enough about shaders to improve.
 * Specialized fog effects.  Minecraft has made some improvements in this area, and I expect it to continue.  I don't want to be in a position of overriding (or managing the problem) of when Microsoft adds more dynamic content.

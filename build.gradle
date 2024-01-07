@@ -36,7 +36,7 @@ dependencies {
     include("org.openjdk.nashorn:nashorn-core:${project.nashorn_version}")
 
     modImplementation("dev.isxander.yacl:yet-another-config-lib-fabric:${project.yacl_version}")
-    include("dev.isxander.yacl:yet-another-config-lib-fabric:${project.yacl_version}")
+    //include("dev.isxander.yacl:yet-another-config-lib-fabric:${project.yacl_version}")
 }
 
 processResources {

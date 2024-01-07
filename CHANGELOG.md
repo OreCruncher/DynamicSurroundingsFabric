@@ -3,14 +3,17 @@
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)
 * Fabric Loader >=0.15.1
 * Fabric API >=0.91.2+1.20.4
+* Yet Another Configuration Library >=3.3.1+1.20.4     <----- NEW
 * 100% client side; no server side deployment needed
 
 **What's New**
-* Now using Yet Another Configuration Library
+* Now using Yet Another Configuration Library.  Must install separately, though modpacks may already include.  The mod can be found on CurseForge as well as Modrinth.
 
 **Changes**
 
 **Fixes**
+* Null reference exception when spawning outside of build height
+* Sometimes the RandomGenerator algorithms for modern Java are not available and will cause Dynamic Surroundings to crash at startup.  If it is not possible to create this generator, logic will fall back to using the Minecraft random generator. Reinstalling the modpack from scratch may help.  
 
 > ### DynamicSurroundings-Fabric-1.20.4-0.1.0
 **Requirements**
