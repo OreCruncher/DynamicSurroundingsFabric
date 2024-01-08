@@ -1,10 +1,8 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
-import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.*;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.config.EntityEffectType;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
@@ -36,33 +34,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
     public void reload(AssetLibraryEvent.ReloadEvent event) {
         this.entityEffects.clear();
         this.version++;
-
-        this.defaultInfo = new EntityEffectInfo(this.version, null, ImmutableList.of()) {
-            @Override
-            public boolean isDefault() {
-                return true;
-            }
-            @Override
-            public void activate() {}
-            @Override
-            public void deactivate() {}
-            @Override
-            public void tick() {}
-            @Override
-            public boolean isAlive()
-            {
-                return true;
-            }
-            @Override
-            public boolean isVisibleTo(Player player) {
-                return false;
-            }
-            @Override
-            public boolean isWithinDistance(LivingEntity entity, int distance) {
-                throw new RuntimeException("Should not be invoked on DEFAULT EntityEffectInfo");
-            }
-        };
-
+        this.defaultInfo = EntityEffectInfo.createDefault(this.version);
         this.logger.info("Entity effects configured; version is now %d", this.version);
     }
 
@@ -104,7 +76,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
                 .map(e -> e.produce(entity))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .collect(Collectors.toCollection(ReferenceOpenHashSet::new));
+                .collect(Collectors.toList());
 
         // If we have effect instances create a new info object.  Otherwise, set
         // the default.

@@ -17,7 +17,10 @@ public class ToolbarEffect extends EntityEffectBase {
 
     @Override
     public void tick(final EntityEffectInfo info) {
-        final Player player = (Player) info.getEntity().get();
+        if (info.isRemoved())
+            return;
+
+        final Player player = (Player) info.getEntity();
         var inventory = player.getInventory();
 
         // First time through we want to not trigger the equip sound
