@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.eventing.handlers;
 
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
+import org.orecruncher.dsurround.eventing.BlockUpdateEvent;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.platform.events.ClientState;
 
@@ -38,7 +38,7 @@ public class BlockUpdateHandler {
     private static void tick(Minecraft ignored) {
         var updates = expand();
         updates.ifPresent(positions -> {
-            var event = new ClientEventHooks.BlockUpdateEvent(positions);
+            var event = new BlockUpdateEvent(positions);
             ClientEventHooks.BLOCK_UPDATE.raise(event);
         });
     }
@@ -49,7 +49,7 @@ public class BlockUpdateHandler {
 
         // Need to expand out the updates to adjacent blocks.  A state change
         // of a block may affect how the adjacent blocks are handled.
-        Set<BlockPos> updates = new ObjectOpenHashSet<>();
+        Set<BlockPos> updates = new HashSet<>();
         for (final BlockPos center : updatedPositions) {
             for (int i = -1; i < 2; i++)
                 for (int j = -1; j < 2; j++)

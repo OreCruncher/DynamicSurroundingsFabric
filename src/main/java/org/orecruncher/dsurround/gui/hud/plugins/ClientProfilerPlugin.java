@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.gui.hud.plugins;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.gui.hud.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
@@ -40,7 +41,7 @@ public class ClientProfilerPlugin implements IDiagnosticPlugin {
         this.clientTick.update(delta);
     }
 
-    public void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
+    public void onCollect(CollectDiagnosticsEvent event) {
         var tpsTimer = new ITimer() {
             @Override
             public double getMSecs() {

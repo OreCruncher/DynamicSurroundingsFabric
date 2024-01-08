@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.gui.hud.plugins;
 
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.gui.hud.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
@@ -18,13 +19,13 @@ public class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
         ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect, HandlerPriority.LOW);
     }
 
-    public void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
+    public void onCollect(CollectDiagnosticsEvent event) {
         var soundManager = GameUtils.getSoundManager();
         MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) soundManager;
         MixinSoundEngineAccessor accessors = (MixinSoundEngineAccessor) manager.dsurround_getSoundSystem();
         var sources = accessors.dsurround_getSources();
         var str = soundManager.getDebugString();
-        var panelText = event.getPanelText(ClientEventHooks.CollectDiagnosticsEvent.Panel.Sounds);
+        var panelText = event.getSectionText(CollectDiagnosticsEvent.Section.Sounds);
         panelText.add(str);
 
         if (!sources.isEmpty()) {

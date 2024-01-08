@@ -4,12 +4,14 @@ import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
 import org.orecruncher.dsurround.processing.scanner.VillageScanner;
+
+import java.util.stream.Collectors;
 
 public class Scanners extends AbstractClientHandler {
 
@@ -61,11 +63,12 @@ public class Scanners extends AbstractClientHandler {
     }
 
     @Override
-    protected void gatherDiagnostics(ClientEventHooks.CollectDiagnosticsEvent event) {
-        var panelText = event.getPanelText(ClientEventHooks.CollectDiagnosticsEvent.Panel.Survey);
+    protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
+        var panelText = event.getSectionText(CollectDiagnosticsEvent.Section.Survey);
         panelText.add("ceiling coverage: %f".formatted(this.ceilingScanner.getCoverageRatio()));
-        for (var e : this.biomeScanner.getBiomes().reference2IntEntrySet()) {
-            panelText.add("%s [%d]".formatted(e.getKey().getBiomeId(), e.getIntValue()));
-        }
+        this.biomeScanner.getBiomes().reference2IntEntrySet().stream()
+                .map(kvp -> "%s [%d]".formatted(kvp.getKey().getBiomeId(), kvp.getIntValue()))
+                .sorted()
+                .forEach(panelText::add);
     }
 }

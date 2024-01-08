@@ -8,7 +8,7 @@ import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.InternalBiomes;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -160,8 +160,8 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
     }
 
     @Override
-    protected void gatherDiagnostics(ClientEventHooks.CollectDiagnosticsEvent event) {
-        var panelText = event.getPanelText(ClientEventHooks.CollectDiagnosticsEvent.Panel.Emitters);
+    protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
+        var panelText = event.getSectionText(CollectDiagnosticsEvent.Section.Emitters);
         this.emitters.forEach(backgroundAcousticEmitter -> panelText.add(backgroundAcousticEmitter.toString()));
     }
 }

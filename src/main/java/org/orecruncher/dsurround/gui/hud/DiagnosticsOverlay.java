@@ -8,6 +8,7 @@ import net.minecraft.network.chat.TextColor;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.gui.hud.plugins.*;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -30,33 +31,33 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     private static final int BACKGROUND_COLOR = 0x90505050;     // Very dark gray with alpha
     private static final int FOREGROUND_COLOR = 0x00E0E0E0;     // Very light gray
 
-    private static final Map<ClientEventHooks.CollectDiagnosticsEvent.Panel, TextColor> COLOR_MAP = new EnumMap<>(ClientEventHooks.CollectDiagnosticsEvent.Panel.class);
-    private static final ObjectArray<ClientEventHooks.CollectDiagnosticsEvent.Panel> RIGHT_SIDE_LAYOUT = new ObjectArray<>();
-    private static final ObjectArray<ClientEventHooks.CollectDiagnosticsEvent.Panel> LEFT_SIDE_LAYOUT = new ObjectArray<>();
+    private static final Map<CollectDiagnosticsEvent.Section, TextColor> COLOR_MAP = new EnumMap<>(CollectDiagnosticsEvent.Section.class);
+    private static final ObjectArray<CollectDiagnosticsEvent.Section> RIGHT_SIDE_LAYOUT = new ObjectArray<>();
+    private static final ObjectArray<CollectDiagnosticsEvent.Section> LEFT_SIDE_LAYOUT = new ObjectArray<>();
 
     static {
-        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.Header, ColorPalette.PUMPKIN_ORANGE);
-        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.Handlers, ColorPalette.GREEN);
-        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.Timers, ColorPalette.KEY_LIME);
-        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.Environment, ColorPalette.AQUAMARINE);
-        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.Emitters, ColorPalette.SEASHELL);
-        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.Sounds, ColorPalette.APRICOT);
-        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.BlockView, ColorPalette.TURQUOISE);
-        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.FluidView, ColorPalette.TURQUOISE);
-        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.Survey, ColorPalette.ORCHID);
-        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.Misc, ColorPalette.GRAY);
+        COLOR_MAP.put(CollectDiagnosticsEvent.Section.Header, ColorPalette.PUMPKIN_ORANGE);
+        COLOR_MAP.put(CollectDiagnosticsEvent.Section.Systems, ColorPalette.GREEN);
+        COLOR_MAP.put(CollectDiagnosticsEvent.Section.Timers, ColorPalette.KEY_LIME);
+        COLOR_MAP.put(CollectDiagnosticsEvent.Section.Environment, ColorPalette.AQUAMARINE);
+        COLOR_MAP.put(CollectDiagnosticsEvent.Section.Emitters, ColorPalette.SEASHELL);
+        COLOR_MAP.put(CollectDiagnosticsEvent.Section.Sounds, ColorPalette.APRICOT);
+        COLOR_MAP.put(CollectDiagnosticsEvent.Section.BlockView, ColorPalette.TURQUOISE);
+        COLOR_MAP.put(CollectDiagnosticsEvent.Section.FluidView, ColorPalette.TURQUOISE);
+        COLOR_MAP.put(CollectDiagnosticsEvent.Section.Survey, ColorPalette.ORCHID);
+        COLOR_MAP.put(CollectDiagnosticsEvent.Section.Misc, ColorPalette.GRAY);
 
-        LEFT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Header);
-        LEFT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Environment);
-        LEFT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Handlers);
-        LEFT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Emitters);
-        LEFT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Sounds);
+        LEFT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Header);
+        LEFT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Environment);
+        LEFT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Systems);
+        LEFT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Emitters);
+        LEFT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Sounds);
 
-        RIGHT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Timers);
-        RIGHT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Survey);
-        RIGHT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Misc);
-        RIGHT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.BlockView);
-        RIGHT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.FluidView);
+        RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Timers);
+        RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Survey);
+        RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Misc);
+        RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.BlockView);
+        RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.FluidView);
     }
 
     private final LoggingTimerEMA diagnostics = new LoggingTimerEMA("Diagnostics");
@@ -96,8 +97,8 @@ public class DiagnosticsOverlay extends AbstractOverlay {
 
             this.diagnostics.begin();
 
-            var event = new ClientEventHooks.CollectDiagnosticsEvent();
-            event.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Header, this.branding);
+            var event = new CollectDiagnosticsEvent();
+            event.add(CollectDiagnosticsEvent.Section.Header, this.branding);
 
             ClientEventHooks.COLLECT_DIAGNOSTICS.raise(event);
 
@@ -113,10 +114,10 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         }
     }
 
-    private static void processOutput(ObjectArray<ClientEventHooks.CollectDiagnosticsEvent.Panel> panels, ClientEventHooks.CollectDiagnosticsEvent event, ObjectArray<Component> result) {
+    private static void processOutput(ObjectArray<CollectDiagnosticsEvent.Section> panels, CollectDiagnosticsEvent event, ObjectArray<Component> result) {
         boolean addBlankLine = false;
         for (var p : panels) {
-            var data = event.getPanelText(p);
+            var data = event.getSectionText(p);
             if (!data.isEmpty()) {
                 if (addBlankLine)
                     result.add(Component.empty());

@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.gui.hud;
 
 import net.minecraft.client.Minecraft;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 
 public interface IDiagnosticPlugin {
 
@@ -9,5 +9,5 @@ public interface IDiagnosticPlugin {
         // By default, does nothing.  Implement if the plugin needs to be ticked
     }
 
-    void onCollect(ClientEventHooks.CollectDiagnosticsEvent event);
+    void onCollect(CollectDiagnosticsEvent event);
 }

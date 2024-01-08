@@ -5,6 +5,7 @@ import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.system.ITickCount;
@@ -156,7 +157,7 @@ public class Handlers {
             });
     }
 
-    public void gatherDiagnostics(ClientEventHooks.CollectDiagnosticsEvent event) {
+    public void gatherDiagnostics(CollectDiagnosticsEvent event) {
         event.add(this.handlerTimer);
 
         this.effectHandlers.forEach(h -> {

@@ -10,6 +10,7 @@ import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.gui.hud.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.GameUtils;
 
@@ -53,7 +54,7 @@ public class BlockViewerPlugin implements IDiagnosticPlugin {
             .forEach(data::add);
     }
 
-    public void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
+    public void onCollect(CollectDiagnosticsEvent event) {
         // Get the block info from the normal diagnostics
         Entity entity = GameUtils.getMC().getCameraEntity();
         if (entity == null)
@@ -62,11 +63,11 @@ public class BlockViewerPlugin implements IDiagnosticPlugin {
         var blockHit = (BlockHitResult)entity.pick(20.0D, 0.0F, false);
         var fluidHit = (BlockHitResult)entity.pick(20.0D, 0.0F, true);
 
-        var panelText = event.getPanelText(ClientEventHooks.CollectDiagnosticsEvent.Panel.BlockView);
+        var panelText = event.getSectionText(CollectDiagnosticsEvent.Section.BlockView);
         processBlockHitResult(entity.level(), blockHit, panelText);
 
         if (!blockHit.getBlockPos().equals(fluidHit.getBlockPos())) {
-            panelText = event.getPanelText(ClientEventHooks.CollectDiagnosticsEvent.Panel.FluidView);
+            panelText = event.getSectionText(CollectDiagnosticsEvent.Section.FluidView);
             processBlockHitResult(entity.level(), fluidHit, panelText);
         }
     }

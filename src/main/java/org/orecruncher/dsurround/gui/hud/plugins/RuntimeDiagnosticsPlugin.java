@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.gui.hud.plugins;
 
 import com.google.common.collect.ImmutableList;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.gui.hud.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
@@ -31,15 +32,15 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
         ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect, HandlerPriority.HIGH);
     }
 
-    public void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
+    public void onCollect(CollectDiagnosticsEvent event) {
         if (GameUtils.isInGame()) {
             var world = GameUtils.getWorld().orElseThrow();
             this.clock.update(world);
-            event.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Header, this.clock.getFormattedTime());
+            event.add(CollectDiagnosticsEvent.Section.Header, this.clock.getFormattedTime());
 
             for (String script : scripts) {
                 Object result = this.conditionEvaluator.eval(new Script(script));
-                event.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Environment, result.toString());
+                event.add(CollectDiagnosticsEvent.Section.Environment, result.toString());
             }
         }
     }
