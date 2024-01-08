@@ -9,8 +9,10 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.config.dimension.DimensionInfo;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 
 import java.util.ArrayList;
@@ -18,6 +20,8 @@ import java.util.Collections;
 import java.util.List;
 
 public final class CeilingScanner {
+
+    private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
     private static final int SURVEY_INTERVAL = 4;
     private static final int INSIDE_SURVEY_RANGE = 3;
@@ -52,6 +56,7 @@ public final class CeilingScanner {
 
     private final IDimensionLibrary dimensionLibrary;
     private boolean reallyInside = false;
+    private float coverageRatio = 0;
 
     public CeilingScanner(IDimensionLibrary dimensionLibrary) {
         this.dimensionLibrary = dimensionLibrary;
@@ -70,13 +75,17 @@ public final class CeilingScanner {
             final BlockPos pos = player.blockPosition();
             float score = 0.0F;
             for (Cell cell : cells) score += cell.score(pos);
-            float ceilingCoverageRatio = 1.0F - (score / TOTAL_POINTS);
-            this.reallyInside = ceilingCoverageRatio > INSIDE_THRESHOLD;
+            this.coverageRatio = 1.0F - (score / TOTAL_POINTS);
+            this.reallyInside = this.coverageRatio > INSIDE_THRESHOLD;
         }
     }
 
     public boolean isReallyInside() {
         return this.reallyInside;
+    }
+
+    public float getCoverageRatio() {
+        return this.coverageRatio;
     }
 
     private static final class Cell implements Comparable<Cell> {
@@ -124,7 +133,7 @@ public final class CeilingScanner {
                 this.working.setY(this.working.getY() - 1);
             }
 
-            // Scanned down to the players head and found nothing. So give the points.
+            // Scanned down to the player head and found nothing. So give the points.
             return this.points;
         }
 
@@ -146,7 +155,7 @@ public final class CeilingScanner {
 
             // Test the block tags in our NON_CEILING set to see if any match
             for (final TagKey<Block> tag : NON_CEILING) {
-                if (state.is(tag))
+                if (TAG_LIBRARY.is(tag, state))
                     return false;
             }
             return true;

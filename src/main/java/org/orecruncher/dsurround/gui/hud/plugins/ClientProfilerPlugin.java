@@ -53,8 +53,8 @@ public class ClientProfilerPlugin implements IDiagnosticPlugin {
             }
         };
 
-        event.timers.add(tpsTimer);
-        event.timers.add(clientTick);
-        event.timers.add(lastTick);
+        event.add(tpsTimer);
+        event.add(clientTick);
+        event.add(lastTick);
     }
 }

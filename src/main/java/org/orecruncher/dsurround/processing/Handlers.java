@@ -157,11 +157,11 @@ public class Handlers {
     }
 
     public void gatherDiagnostics(ClientEventHooks.CollectDiagnosticsEvent event) {
-        event.timers.add(this.handlerTimer);
+        event.add(this.handlerTimer);
 
         this.effectHandlers.forEach(h -> {
-            h.gatherDiagnostics(event.left, event.right, event.timers);
-            event.timers.add(h.getTimer());
+            h.gatherDiagnostics(event);
+            event.add(h.getTimer());
         });
     }
 

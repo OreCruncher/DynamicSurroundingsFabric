@@ -236,7 +236,7 @@ public final class SoundFXProcessor {
         if (isAvailable() && soundProcessor != null) {
             final String msg = soundProcessor.getDiagnosticString();
             if (!StringUtils.isEmpty(msg))
-                event.left.add(ChatFormatting.GREEN + msg);
+                event.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Handlers, msg);
         }
     }
 }

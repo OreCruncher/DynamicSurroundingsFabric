@@ -7,6 +7,7 @@ import net.minecraft.world.phys.AABB;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
+import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.ITimer;
 
@@ -77,7 +78,7 @@ public class EntityEffectHandler  extends AbstractClientHandler {
     }
 
     @Override
-    protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<ITimer> timers) {
-        left.add(ChatFormatting.GREEN + "Entity effects (range %d/%d): entities %d, ticked %d".formatted(this.effectRange(), this.scanRange(), this.entityCount, this.entityEffectsTicked));
+    protected void gatherDiagnostics(ClientEventHooks.CollectDiagnosticsEvent event) {
+        event.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Handlers, "Entity effects (range %d/%d): entities %d, ticked %d".formatted(this.effectRange(), this.scanRange(), this.entityCount, this.entityEffectsTicked));
     }
 }

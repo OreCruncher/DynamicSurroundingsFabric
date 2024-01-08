@@ -19,9 +19,6 @@ import java.util.Objects;
 
 public class BlockViewerPlugin implements IDiagnosticPlugin {
 
-    private static final String COLOR = ChatFormatting.AQUA.toString();
-    private static final String COLOR_TITLE = COLOR + ChatFormatting.UNDERLINE;
-
     private final IBlockLibrary blockLibrary;
     private final ITagLibrary tagLibrary;
 
@@ -31,22 +28,19 @@ public class BlockViewerPlugin implements IDiagnosticPlugin {
         ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect);
     }
 
-    private void processBlockHitResult(String type, Level world, BlockHitResult result, Collection<String> data) {
+    private void processBlockHitResult(Level world, BlockHitResult result, Collection<String> data) {
         if (result.getType() != HitResult.Type.BLOCK)
             return;
-
-        data.add(Strings.EMPTY);
-        data.add(COLOR_TITLE + type);
 
         var state = world.getBlockState(result.getBlockPos());
         data.add(state.toString());
 
         this.tagLibrary.streamTags(state.getBlockHolder())
             .map(tag -> {
-                var formatting = ChatFormatting.YELLOW;
+                var txt = "#" + tag.location();
                 if (Objects.equals(tag.location().getNamespace(), Constants.MOD_ID))
-                    formatting = ChatFormatting.GOLD;
-                return formatting + "#" + tag.location();
+                    txt = ChatFormatting.GOLD + txt;
+                return txt;
             })
             .sorted()
             .forEach(data::add);
@@ -68,9 +62,12 @@ public class BlockViewerPlugin implements IDiagnosticPlugin {
         var blockHit = (BlockHitResult)entity.pick(20.0D, 0.0F, false);
         var fluidHit = (BlockHitResult)entity.pick(20.0D, 0.0F, true);
 
-        processBlockHitResult("Block", entity.level(), blockHit, event.right);
+        var panelText = event.getPanelText(ClientEventHooks.CollectDiagnosticsEvent.Panel.BlockView);
+        processBlockHitResult(entity.level(), blockHit, panelText);
 
-        if (!blockHit.getBlockPos().equals(fluidHit.getBlockPos()))
-            processBlockHitResult("Fluid", entity.level(), fluidHit, event.right);
+        if (!blockHit.getBlockPos().equals(fluidHit.getBlockPos())) {
+            panelText = event.getPanelText(ClientEventHooks.CollectDiagnosticsEvent.Panel.FluidView);
+            processBlockHitResult(entity.level(), fluidHit, panelText);
+        }
     }
 }

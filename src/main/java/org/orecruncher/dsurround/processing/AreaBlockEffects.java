@@ -93,9 +93,10 @@ public class AreaBlockEffects extends AbstractClientHandler {
     }
 
     @Override
-    protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<ITimer> timers) {
-        left.add(ChatFormatting.GREEN + "Block Updates: %d".formatted(this.blockUpdateCount));
+    protected void gatherDiagnostics(ClientEventHooks.CollectDiagnosticsEvent event) {
+        var panelText = event.getPanelText(ClientEventHooks.CollectDiagnosticsEvent.Panel.Handlers);
+        panelText.add("Block Updates: %d".formatted(this.blockUpdateCount));
         if (this.effectSystems != null)
-            this.effectSystems.gatherDiagnostics(left);
+            this.effectSystems.gatherDiagnostics(panelText);
     }
 }

@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.gui.hud.plugins;
 
 import com.google.common.collect.ImmutableList;
-import joptsimple.internal.Strings;
-import net.minecraft.ChatFormatting;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.gui.hud.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -37,12 +35,11 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
         if (GameUtils.isInGame()) {
             var world = GameUtils.getWorld().orElseThrow();
             this.clock.update(world);
-            event.left.add(ChatFormatting.GREEN + this.clock.getFormattedTime());
-            event.left.add(Strings.EMPTY);
+            event.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Header, this.clock.getFormattedTime());
 
             for (String script : scripts) {
                 Object result = this.conditionEvaluator.eval(new Script(script));
-                event.left.add(ChatFormatting.YELLOW + result.toString());
+                event.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Environment, result.toString());
             }
         }
     }

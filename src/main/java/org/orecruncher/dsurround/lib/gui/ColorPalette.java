@@ -34,9 +34,9 @@ public final class ColorPalette {
     public static final TextColor YELLOW = of(255, 255, 0);
     public static final TextColor LGREEN = of(127, 255, 0);
     public static final TextColor GREEN = of(0, 255, 0);
-    public static final TextColor TURQOISE = of(0, 255, 127);
+    public static final TextColor TURQUOISE = of(0, 255, 127);
     public static final TextColor CYAN = of(0, 255, 255);
-    public static final TextColor AUQUAMARINE = of(127,255,212);
+    public static final TextColor AQUAMARINE = of(127,255,212);
     public static final TextColor BLUE = of(0, 0, 255);
     public static final TextColor VIOLET = of(127, 0, 255);
     public static final TextColor MAGENTA = of(255, 0, 255);
@@ -67,6 +67,7 @@ public final class ColorPalette {
     public static final TextColor BRASS = of(225, 193, 110);
     public static final TextColor ECRU = of(194, 178, 128);
     public static final TextColor SEASHELL = of(255, 245, 238);
+    public static final TextColor ORCHID = of(218,112,214);
 
     public static int getRed(int rgb) {
         return (rgb >> 16) & 0xFF;

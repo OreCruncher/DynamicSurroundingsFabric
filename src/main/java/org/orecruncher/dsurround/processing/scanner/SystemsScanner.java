@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.processing.scanner;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -109,9 +108,9 @@ public class SystemsScanner extends CuboidScanner {
 
     public void gatherDiagnostics(Collection<String> output) {
         this.systems.forEach(system -> {
-            var text = ChatFormatting.LIGHT_PURPLE + system.gatherDiagnostics();
+            var text = system.gatherDiagnostics();
             if (!system.isEnabled())
-                text += ChatFormatting.RED + " (disabled)";
+                text += " (disabled)";
             output.add(text);
         });
     }

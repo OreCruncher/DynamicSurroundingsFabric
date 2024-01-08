@@ -1,9 +1,10 @@
 package org.orecruncher.dsurround.gui.hud;
 
-import com.google.common.base.Strings;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
@@ -11,18 +12,52 @@ import org.orecruncher.dsurround.gui.hud.plugins.*;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
+
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Objects;
 
 /***
  * Our debug and diagnostics overlay.  Derived from DebugHud.
  */
 public class DiagnosticsOverlay extends AbstractOverlay {
 
-    private static final int backgroundColor = -1873784752;
-    private static final int foregroundColor = 14737632;
+    private static final int BACKGROUND_COLOR = 0x90505050;     // Very dark gray with alpha
+    private static final int FOREGROUND_COLOR = 0x00E0E0E0;     // Very light gray
+
+    private static final Map<ClientEventHooks.CollectDiagnosticsEvent.Panel, TextColor> COLOR_MAP = new EnumMap<>(ClientEventHooks.CollectDiagnosticsEvent.Panel.class);
+    private static final ObjectArray<ClientEventHooks.CollectDiagnosticsEvent.Panel> RIGHT_SIDE_LAYOUT = new ObjectArray<>();
+    private static final ObjectArray<ClientEventHooks.CollectDiagnosticsEvent.Panel> LEFT_SIDE_LAYOUT = new ObjectArray<>();
+
+    static {
+        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.Header, ColorPalette.PUMPKIN_ORANGE);
+        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.Handlers, ColorPalette.GREEN);
+        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.Timers, ColorPalette.KEY_LIME);
+        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.Environment, ColorPalette.AQUAMARINE);
+        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.Emitters, ColorPalette.SEASHELL);
+        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.Sounds, ColorPalette.APRICOT);
+        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.BlockView, ColorPalette.TURQUOISE);
+        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.FluidView, ColorPalette.TURQUOISE);
+        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.Survey, ColorPalette.ORCHID);
+        COLOR_MAP.put(ClientEventHooks.CollectDiagnosticsEvent.Panel.Misc, ColorPalette.GRAY);
+
+        LEFT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Header);
+        LEFT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Environment);
+        LEFT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Handlers);
+        LEFT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Emitters);
+        LEFT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Sounds);
+
+        RIGHT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Timers);
+        RIGHT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Survey);
+        RIGHT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Misc);
+        RIGHT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.BlockView);
+        RIGHT_SIDE_LAYOUT.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.FluidView);
+    }
 
     private final LoggingTimerEMA diagnostics = new LoggingTimerEMA("Diagnostics");
     private final String branding;
@@ -30,8 +65,8 @@ public class DiagnosticsOverlay extends AbstractOverlay {
 
     private boolean showHud;
     private boolean enableCollection = false;
-    private ObjectArray<String> left = new ObjectArray<>();
-    private ObjectArray<String> right = new ObjectArray<>();
+    private ObjectArray<Component> left = new ObjectArray<>();
+    private ObjectArray<Component> right = new ObjectArray<>();
 
     public DiagnosticsOverlay(ModInformation modInformation) {
         var platformName = ContainerManager.resolve(IPlatform.class).getPlatformName();
@@ -62,23 +97,41 @@ public class DiagnosticsOverlay extends AbstractOverlay {
             this.diagnostics.begin();
 
             var event = new ClientEventHooks.CollectDiagnosticsEvent();
-
-            event.left.add(this.branding);
+            event.add(ClientEventHooks.CollectDiagnosticsEvent.Panel.Header, this.branding);
 
             ClientEventHooks.COLLECT_DIAGNOSTICS.raise(event);
 
-            event.timers.add(diagnostics);
+            event.add(diagnostics);
 
-            this.left = event.left;
-            this.right = new ObjectArray<>(event.right.size() + event.timers.size() + 1);
+            this.left = new ObjectArray<>();
+            this.right = new ObjectArray<>();
 
-            for (var timer : event.timers)
-                this.right.add(ChatFormatting.LIGHT_PURPLE + timer.toString());
-
-            this.right.add(joptsimple.internal.Strings.EMPTY);
-            this.right.addAll(event.right);
+            processOutput(LEFT_SIDE_LAYOUT, event, this.left);
+            processOutput(RIGHT_SIDE_LAYOUT, event, this.right);
 
             this.diagnostics.end();
+        }
+    }
+
+    private static void processOutput(ObjectArray<ClientEventHooks.CollectDiagnosticsEvent.Panel> panels, ClientEventHooks.CollectDiagnosticsEvent event, ObjectArray<Component> result) {
+        boolean addBlankLine = false;
+        for (var p : panels) {
+            var data = event.getPanelText(p);
+            if (!data.isEmpty()) {
+                if (addBlankLine)
+                    result.add(Component.empty());
+                else
+                    addBlankLine = true;
+                var color = COLOR_MAP.get(p);
+
+                if (p.addHeader()) {
+                    var style = Style.EMPTY.withColor(color).withUnderlined(true);
+                    result.add(Component.literal(p.name()).withStyle(style));
+                }
+
+                for (var d : data)
+                    result.add(Component.literal(d).withColor(color.getValue()));
+            }
         }
     }
 
@@ -94,29 +147,31 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         return GameUtils.isInGame() && GameUtils.getMC().getDebugOverlay().showDebugScreen();
     }
 
-    private void drawText(GuiGraphics context, ObjectArray<String> text, boolean left) {
+    private void drawText(GuiGraphics context, ObjectArray<Component> text, boolean left) {
         var textRenderer = GameUtils.getTextRenderer();
         int m;
         int l;
         int k;
-        String string;
+        Component string;
         int j;
         int i = textRenderer.lineHeight;
         for (j = 0; j < text.size(); ++j) {
             string = text.get(j);
-            if (Strings.isNullOrEmpty(string)) continue;
+            if (Objects.equals(string, Component.empty()))
+                continue;
             k = textRenderer.width(string);
             l = left ? 2 : context.guiWidth() - 2 - k;
             m = 2 + i * j;
-            context.fill(l - 1, m - 1, l + k + 1, m + i - 1, backgroundColor);
+            context.fill(l - 1, m - 1, l + k + 1, m + i - 1, BACKGROUND_COLOR);
         }
         for (j = 0; j < text.size(); ++j) {
             string = text.get(j);
-            if (Strings.isNullOrEmpty(string)) continue;
+            if (Objects.equals(string, Component.empty()))
+                continue;
             k = textRenderer.width(string);
             l = left ? 2 : context.guiWidth() - 2 - k;
             m = 2 + i * j;
-            context.drawString(textRenderer, string, l, m, foregroundColor, false);
+            context.drawString(textRenderer, string, l, m, FOREGROUND_COLOR, false);
         }
     }
 }

@@ -3,13 +3,11 @@ package org.orecruncher.dsurround.processing;
 import com.google.common.base.MoreObjects;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
-
-import java.util.Collection;
 
 abstract class AbstractClientHandler {
 
@@ -77,7 +75,7 @@ abstract class AbstractClientHandler {
     /**
      * Called when gather diagnostic information for the debug hud
      */
-    protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<ITimer> timers) {
+    protected void gatherDiagnostics(ClientEventHooks.CollectDiagnosticsEvent event) {
 
     }
 
