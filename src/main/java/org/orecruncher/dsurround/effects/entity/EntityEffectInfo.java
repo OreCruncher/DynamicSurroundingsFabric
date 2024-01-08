@@ -1,14 +1,11 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.lib.GameUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.Collection;
-import java.util.Objects;
 import java.util.Optional;
 
 public class EntityEffectInfo {
@@ -58,25 +55,13 @@ public class EntityEffectInfo {
     }
 
     public boolean isCurrentPlayer(LivingEntity player) {
-        return GameUtils.getPlayer().orElseThrow().getId() == player.getId();
-    }
-
-    public boolean isVisibleTo(Player player) {
-        return Objects.requireNonNull(this.entity.get()).isInvisibleTo(player);
+        return GameUtils.getPlayer().map(p -> p.getId() == player.getId()).orElse(false);
     }
 
     /**
      * Checks whether the entity is still loaded, alive, and within effect range of the player.
      */
     public boolean isAlive() {
-        var temp = this.entity.get();
-        return temp != null && temp.isAlive();
-    }
-
-    /**
-     * Determines if the entity is within a certain range of another
-     */
-    public boolean isWithinDistance(LivingEntity entity, int distance) {
-        return entity.blockPosition().closerThan(this.entity.get().blockPosition(), distance);
+        return this.getEntity().map(LivingEntity::isAlive).orElse(false);
     }
 }

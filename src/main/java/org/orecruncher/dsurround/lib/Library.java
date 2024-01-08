@@ -21,10 +21,6 @@ import org.orecruncher.dsurround.lib.util.MinecraftDirectories;
  */
 public final class Library {
 
-    // Loader-specific API implementations
-    private static final IPlatform PLATFORM = ContainerManager.resolve(IPlatform.class);
-    private static final IClientEventRegistrations EVENT_REGISTRATIONS = ContainerManager.resolve(IClientEventRegistrations.class);
-
     private static IModLog LOGGER;
 
     /**
@@ -40,7 +36,7 @@ public final class Library {
         configureServiceDependencies(mod, logger);
 
         // Initialize event handlers
-        EVENT_REGISTRATIONS.register();
+        Services.CLIENT_EVENT_REGISTRATIONS.register();
 
         // Hook server lifecycle so logs get emitted
         ClientState.STARTED.register((ignore -> LOGGER.info("Client starting")), HandlerPriority.VERY_HIGH);
@@ -54,16 +50,16 @@ public final class Library {
 
     @NotNull
     public static IPlatform getPlatform() {
-        return PLATFORM;
+        return Services.PLATFORM;
     }
 
     @NotNull
     public static IClientEventRegistrations getEventRegistrations() {
-        return EVENT_REGISTRATIONS;
+        return Services.CLIENT_EVENT_REGISTRATIONS;
     }
 
     private static void configureServiceDependencies(IMinecraftMod mod, IModLog logger) {
-        var modInfo = PLATFORM.getModInformation(mod.getModId())
+        var modInfo = Services.PLATFORM.getModInformation(mod.getModId())
                 .orElseThrow(() -> {
                     logger.warn("Unable to acquire mod information for %s!", mod.getModId());
                     return new RuntimeException("Unable to acquire mod information!");
@@ -71,6 +67,8 @@ public final class Library {
 
         ContainerManager
                 .getRootContainer()
+                .registerSingleton(IPlatform.class, Services.PLATFORM)
+                .registerSingleton(IClientEventRegistrations.class, Services.CLIENT_EVENT_REGISTRATIONS)
                 .registerSingleton(IModLog.class, logger)
                 .registerSingleton(IMinecraftMod.class, mod)
                 .registerSingleton(ModInformation.class, modInfo)

@@ -18,7 +18,7 @@ public abstract class CuboidScanner extends Scanner {
     protected CuboidPointIterator fullRange;
 
     // State of last tick
-    protected BlockPos lastPos;
+    protected BlockPos lastPos = BlockPos.ZERO;
     protected ResourceLocation lastReference = new ResourceLocation("dsurround:aintnothin");
 
     protected CuboidScanner(final ScanContext locus, final String name, final int range) {
@@ -70,48 +70,46 @@ public abstract class CuboidScanner extends Scanner {
         final BlockPos playerPos = this.locus.getScanCenter();
         if (this.locus.isOutOfHeightLimit(playerPos.getY())) {
             this.fullRange = null;
-        } else {
+        } else if (this.fullRange == null || this.locus.getWorldReference() != this.lastReference) {
             // If the full range was reset, or the player dimension changed,
             // dump everything and restart.
-            if (this.fullRange == null || this.locus.getWorldReference() != this.lastReference) {
-                this.locus.getLogger().debug("[%s] full range reset", this.name);
+            this.locus.getLogger().debug("[%s] full range reset", this.name);
+            resetFullScan();
+            super.tick();
+        } else if (this.lastPos.equals(playerPos)) {
+            // The player didn't move. If a scan is in progress
+            // continue.
+            if (!this.scanFinished)
+                super.tick();
+        } else {
+            // The player moved.
+            final Cuboid oldVolume = this.activeCuboid != null ? this.activeCuboid : getVolumeFor(this.lastPos);
+            final Cuboid newVolume = getVolumeFor(playerPos);
+            final Cuboid intersect = oldVolume.intersection(newVolume);
+
+            // If there is no intersection, it means the player moved
+            // enough of a distance in the last tick to make it a new
+            // area. Otherwise, if there is a sufficiently large
+            // change to the scan area dump and restart.
+            if (intersect == null) {
+                this.locus.getLogger().debug("[%s] no intersection: %s, %s", this.name, oldVolume.toString(), newVolume.toString());
                 resetFullScan();
                 super.tick();
-            } else if (this.lastPos.equals(playerPos)) {
-                // The player didn't move. If a scan is in progress
-                // continue.
-                if (!this.scanFinished)
-                    super.tick();
             } else {
-                // The player moved.
-                final Cuboid oldVolume = this.activeCuboid != null ? this.activeCuboid : getVolumeFor(this.lastPos);
-                final Cuboid newVolume = getVolumeFor(playerPos);
-                final Cuboid intersect = oldVolume.intersection(newVolume);
 
-                // If there is no intersection, it means the player moved
-                // enough of a distance in the last tick to make it a new
-                // area. Otherwise, if there is a sufficiently large
-                // change to the scan area dump and restart.
-                if (intersect == null) {
-                    this.locus.getLogger().debug("[%s] no intersection: %s, %s", this.name, oldVolume.toString(), newVolume.toString() );
-                    resetFullScan();
-                    super.tick();
+                // Looks to be a small update, like a player walking around.
+                // If the scan has already completed, we do an update.
+                if (this.scanFinished) {
+                    this.lastPos = playerPos;
+                    this.activeCuboid = newVolume;
+                    updateScan(newVolume, oldVolume, intersect);
                 } else {
-
-                    // Looks to be a small update, like a player walking around.
-                    // If the scan has already completed, we do an update.
-                    if (this.scanFinished) {
-                        this.lastPos = playerPos;
-                        this.activeCuboid = newVolume;
-                        updateScan(newVolume, oldVolume, intersect);
-                    } else {
-                        // The existing scan hasn't completed, but now we
-                        // have a delta set. Finish out scanning the
-                        // old volume, and once that is locked, then a
-                        // subsequent tick will do a delta update to get
-                        // the new blocks.
-                        super.tick();
-                    }
+                    // The existing scan hasn't completed, but now we
+                    // have a delta set. Finish out scanning the
+                    // old volume, and once that is locked, then a
+                    // subsequent tick will do a delta update to get
+                    // the new blocks.
+                    super.tick();
                 }
             }
         }
