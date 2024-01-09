@@ -5,7 +5,6 @@ import org.orecruncher.dsurround.config.*;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
 import org.orecruncher.dsurround.effects.particles.ParticleSheets;
-import org.orecruncher.dsurround.gui.overlay.DiagnosticsOverlay;
 import org.orecruncher.dsurround.gui.overlay.OverlayManager;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -89,7 +88,6 @@ public abstract class Client implements IMinecraftMod {
                 .registerSingleton(IItemLibrary.class, ItemLibrary.class)
                 .registerSingleton(IEntityEffectLibrary.class, EntityEffectLibrary.class)
                 .registerSingleton(IAudioPlayer.class, MinecraftAudioPlayer.class)
-                .registerSingleton(DiagnosticsOverlay.class)
                 .registerSingleton(OverlayManager.class);
 
         // Kick off version checking if configured.  This should run in parallel with initialization.

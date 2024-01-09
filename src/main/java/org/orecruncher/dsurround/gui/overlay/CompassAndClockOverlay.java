@@ -27,8 +27,8 @@ public class CompassAndClockOverlay extends AbstractOverlay {
     // Vertical offset to avoid writing over the cross-hair
     private static final int CROSSHAIR_OFFSET = 60;
 
-    // Width and height of the actual band in the texture.  The texture if a 512x512 but the actual texture
-    // is smaller.
+    // Width and height of the actual band in the texture. The texture is 512x512 but the actual
+    // rendering is smaller.
     private static final int TEXTURE_SIZE = 512;
     private static final float BAND_WIDTH = 65F * 2;
     private static final float BAND_HEIGHT = 12F * 2;
