@@ -17,6 +17,7 @@ public final class CollectDiagnosticsEvent {
         Sounds,
         BlockView,
         FluidView,
+        EntityView,
         Survey,
         Misc;
 

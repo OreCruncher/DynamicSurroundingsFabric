@@ -68,6 +68,7 @@ public final class ColorPalette {
     public static final TextColor ECRU = of(194, 178, 128);
     public static final TextColor SEASHELL = of(255, 245, 238);
     public static final TextColor ORCHID = of(218,112,214);
+    public static final TextColor PALE_BROWN = of(152,118,84);
 
     public static int getRed(int rgb) {
         return (rgb >> 16) & 0xFF;

@@ -11,8 +11,6 @@ import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
 import org.orecruncher.dsurround.processing.scanner.VillageScanner;
 
-import java.util.stream.Collectors;
-
 public class Scanners extends AbstractClientHandler {
 
     private final BiomeScanner biomeScanner;
@@ -65,7 +63,7 @@ public class Scanners extends AbstractClientHandler {
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
         var panelText = event.getSectionText(CollectDiagnosticsEvent.Section.Survey);
-        panelText.add("ceiling coverage: %f".formatted(this.ceilingScanner.getCoverageRatio()));
+        panelText.add("ceiling coverage: %.2f".formatted(this.ceilingScanner.getCoverageRatio()));
         this.biomeScanner.getBiomes().reference2IntEntrySet().stream()
                 .map(kvp -> "%s [%d]".formatted(kvp.getKey().getBiomeId(), kvp.getIntValue()))
                 .sorted()

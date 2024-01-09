@@ -6,6 +6,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
+import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
@@ -42,8 +43,9 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Environment, ColorPalette.AQUAMARINE);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Emitters, ColorPalette.SEASHELL);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Sounds, ColorPalette.APRICOT);
-        COLOR_MAP.put(CollectDiagnosticsEvent.Section.BlockView, ColorPalette.TURQUOISE);
+        COLOR_MAP.put(CollectDiagnosticsEvent.Section.BlockView, ColorPalette.BRASS);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.FluidView, ColorPalette.TURQUOISE);
+        COLOR_MAP.put(CollectDiagnosticsEvent.Section.EntityView, ColorPalette.RASPBERRY);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Survey, ColorPalette.ORCHID);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Misc, ColorPalette.GRAY);
 
@@ -58,6 +60,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Misc);
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.BlockView);
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.FluidView);
+        RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.EntityView);
     }
 
     private final LoggingTimerEMA diagnostics = new LoggingTimerEMA("Diagnostics");
@@ -75,7 +78,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         this.showHud = false;
 
         this.plugins.add(new ClientProfilerPlugin());
-        this.plugins.add(new BlockViewerPlugin(ContainerManager.resolve(IBlockLibrary.class), ContainerManager.resolve(ITagLibrary.class)));
+        this.plugins.add(new ViewerPlugin(ContainerManager.resolve(IBlockLibrary.class), ContainerManager.resolve(ITagLibrary.class), ContainerManager.resolve(IEntityEffectLibrary.class)));
         this.plugins.add(new RuntimeDiagnosticsPlugin(ContainerManager.resolve(IConditionEvaluator.class)));
         this.plugins.add(new SoundEngineDiagnosticsPlugin());
     }
