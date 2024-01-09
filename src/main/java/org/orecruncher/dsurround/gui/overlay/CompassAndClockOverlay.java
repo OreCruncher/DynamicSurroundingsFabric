@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.gui.hud;
+package org.orecruncher.dsurround.gui.overlay;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -100,7 +100,7 @@ public class CompassAndClockOverlay extends AbstractOverlay {
     }
 
     @Override
-    public void render(GuiGraphics context) {
+    public void render(GuiGraphics context, float partialTick) {
         if (this.showCompass || this.showClock) {
             final var player = GameUtils.getPlayer().orElseThrow();
 
@@ -133,7 +133,7 @@ public class CompassAndClockOverlay extends AbstractOverlay {
 
                     matrixStack.pushPose();
 
-                    int direction = Mth.floor(((player.yHeadRot * TEXTURE_SIZE) / 360F) + 0.5D) & (TEXTURE_SIZE - 1);
+                    int direction = Mth.floor(((player.getViewYRot(partialTick) * TEXTURE_SIZE) / 360F) + 0.5D) & (TEXTURE_SIZE - 1);
                     float x = (context.guiWidth() - BAND_WIDTH * this.scale) / 2F;
                     float y = (context.guiHeight() - CROSSHAIR_OFFSET - BAND_HEIGHT * this.scale) / 2F;
 

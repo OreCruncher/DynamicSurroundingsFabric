@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.gui.hud;
+package org.orecruncher.dsurround.gui.overlay;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -9,7 +9,7 @@ public abstract class AbstractOverlay {
 
     }
 
-    public abstract void render(GuiGraphics context);
+    public abstract void render(GuiGraphics context, float partialTick);
 
     public void tick(Minecraft client) {
 

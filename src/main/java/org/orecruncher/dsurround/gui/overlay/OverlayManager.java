@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.gui.hud;
+package org.orecruncher.dsurround.gui.overlay;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -19,8 +19,8 @@ public class OverlayManager {
         ClientState.TICK_END.register(this::tick);
     }
 
-    public void render(GuiGraphics context) {
-        this.overlays.forEach(overlay -> overlay.render(context));
+    public void render(GuiGraphics context, float partialTick) {
+        this.overlays.forEach(overlay -> overlay.render(context, partialTick));
     }
 
     public void tick(Minecraft client) {

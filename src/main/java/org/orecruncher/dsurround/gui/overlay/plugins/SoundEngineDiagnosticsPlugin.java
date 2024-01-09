@@ -1,8 +1,8 @@
-package org.orecruncher.dsurround.gui.hud.plugins;
+package org.orecruncher.dsurround.gui.overlay.plugins;
 
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
-import org.orecruncher.dsurround.gui.hud.IDiagnosticPlugin;
+import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;

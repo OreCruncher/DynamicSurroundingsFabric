@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.gui.keyboard;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import org.orecruncher.dsurround.gui.hud.DiagnosticsOverlay;
+import org.orecruncher.dsurround.gui.overlay.DiagnosticsOverlay;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;

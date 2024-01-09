@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -16,6 +17,19 @@ public final class Constants {
      */
     public static String MOD_ID = "dsurround";
 
+    /**
+     * ID's of mods that Dynamic Surroundings has an interest for disabling certain features.
+     */
+    // Brush step sound effect
+    public static String MOD_PRESENCE_FOOTSTEPS = "presencefootsteps";
+    // Enhanced sound processing.  Check AudioUtilities.java as well.
+    public static String MOD_SOUND_PHYSICS_REMASTERED = "sound_physics_remastered";
+
+    /**
+     * Collection of MOD IDs that are of interest.  Ease of iteration.
+     */
+    public static final Set<String> SPECIAL_MODS = new HashSet<>();
+
 
     /**
      * Blocks that will be ignored by the system during configuration
@@ -24,6 +38,9 @@ public final class Constants {
     public static final Set<Block> BLOCKS_TO_IGNORE = new ReferenceOpenHashSet<>(5);
 
     static {
+        SPECIAL_MODS.add(MOD_PRESENCE_FOOTSTEPS);
+        SPECIAL_MODS.add(MOD_SOUND_PHYSICS_REMASTERED);
+
         BLOCKS_TO_IGNORE.add(Blocks.VOID_AIR);
         BLOCKS_TO_IGNORE.add(Blocks.CAVE_AIR);
         BLOCKS_TO_IGNORE.add(Blocks.AIR);

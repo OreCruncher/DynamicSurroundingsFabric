@@ -172,6 +172,6 @@
   "dsurround.text.keybind.section": "Dynamic Surroundings",
   "dsurround.text.keybind.modConfigurationMenu": "Mod Configuration Menu",
   "dsurround.text.keybind.individualSoundConfig": "Individual Sound Configuration",
-  "dsurround.text.keybind.diagnosticHud": "Display Diagnostic HUD (DEV)",
+  "dsurround.text.keybind.diagnosticHud": "Diagnostic Overlay",
   "dsurround.text.reloadassets": "[%1$s\u00a7r] \u00a7aReloaded configurations"
 }

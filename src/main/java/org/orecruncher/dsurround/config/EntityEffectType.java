@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 
 import net.minecraft.world.entity.LivingEntity;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.effects.entity.*;
 import org.orecruncher.dsurround.lib.Library;
@@ -70,7 +71,7 @@ public enum EntityEffectType {
         FROST_BREATH.setConfigProvider(() -> config.enableBreathEffect);
         PLAYER_TOOLBAR.setConfigProvider(() -> config.enablePlayerToolbarEffect);
         ITEM_SWING.setConfigProvider(() -> config.enableSwingEffect);
-        BRUSH_STEP.setConfigProvider(() -> config.enableBrushStepEffect && !Library.getPlatform().isModLoaded("presencefootsteps"));
+        BRUSH_STEP.setConfigProvider(() -> config.enableBrushStepEffect && !Library.getPlatform().isModLoaded(Constants.MOD_PRESENCE_FOOTSTEPS));
     }
 
 }

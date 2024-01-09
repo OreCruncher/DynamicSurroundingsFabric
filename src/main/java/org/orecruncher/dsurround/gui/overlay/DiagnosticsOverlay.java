@@ -1,16 +1,17 @@
-package org.orecruncher.dsurround.gui.hud;
+package org.orecruncher.dsurround.gui.overlay;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
-import org.orecruncher.dsurround.gui.hud.plugins.*;
+import org.orecruncher.dsurround.gui.overlay.plugins.*;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -63,17 +64,19 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.EntityView);
     }
 
+    private final IPlatform platform;
     private final LoggingTimerEMA diagnostics = new LoggingTimerEMA("Diagnostics");
     private final String branding;
     private final ObjectArray<IDiagnosticPlugin> plugins = new ObjectArray<>();
 
     private boolean showHud;
     private boolean enableCollection = false;
-    private ObjectArray<Component> left = new ObjectArray<>();
-    private ObjectArray<Component> right = new ObjectArray<>();
+    private final ObjectArray<Component> left = new ObjectArray<>(64);
+    private final ObjectArray<Component> right = new ObjectArray<>(64);
 
-    public DiagnosticsOverlay(ModInformation modInformation) {
-        var platformName = ContainerManager.resolve(IPlatform.class).getPlatformName();
+    public DiagnosticsOverlay(ModInformation modInformation, IPlatform platform) {
+        this.platform = platform;
+        var platformName = platform.getPlatformName();
         this.branding = "%s (%s)".formatted(modInformation.getBranding(), platformName);
         this.showHud = false;
 
@@ -103,12 +106,17 @@ public class DiagnosticsOverlay extends AbstractOverlay {
             var event = new CollectDiagnosticsEvent();
             event.add(CollectDiagnosticsEvent.Section.Header, this.branding);
 
+            // Check for any special mods and add indicators
+            for (var modId : Constants.SPECIAL_MODS)
+                if (this.platform.isModLoaded(modId))
+                    event.add(CollectDiagnosticsEvent.Section.Header, "INSTALLED: " + modId);
+
             ClientEventHooks.COLLECT_DIAGNOSTICS.raise(event);
 
             event.add(diagnostics);
 
-            this.left = new ObjectArray<>();
-            this.right = new ObjectArray<>();
+            this.left.clear();
+            this.right.clear();
 
             processOutput(LEFT_SIDE_LAYOUT, event, this.left);
             processOutput(RIGHT_SIDE_LAYOUT, event, this.right);
@@ -117,30 +125,30 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         }
     }
 
-    private static void processOutput(ObjectArray<CollectDiagnosticsEvent.Section> panels, CollectDiagnosticsEvent event, ObjectArray<Component> result) {
+    private static void processOutput(ObjectArray<CollectDiagnosticsEvent.Section> sections, CollectDiagnosticsEvent event, ObjectArray<Component> result) {
         boolean addBlankLine = false;
-        for (var p : panels) {
+        for (var p : sections) {
             var data = event.getSectionText(p);
             if (!data.isEmpty()) {
                 if (addBlankLine)
                     result.add(Component.empty());
                 else
                     addBlankLine = true;
-                var color = COLOR_MAP.get(p);
+
+                var style = Style.EMPTY.withColor(COLOR_MAP.get(p));
 
                 if (p.addHeader()) {
-                    var style = Style.EMPTY.withColor(color).withUnderlined(true);
-                    result.add(Component.literal(p.name()).withStyle(style));
+                    result.add(Component.literal(p.name()).withStyle(style.withUnderlined(true)));
                 }
 
                 for (var d : data)
-                    result.add(Component.literal(d).withColor(color.getValue()));
+                    result.add(Component.literal(d).withStyle(style));
             }
         }
     }
 
     @Override
-    public void render(GuiGraphics context) {
+    public void render(GuiGraphics context, float partialTick) {
         if (this.showHud) {
             this.drawText(context, this.left, true);
             this.drawText(context, this.right, false);
@@ -156,26 +164,18 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         int m;
         int l;
         int k;
-        Component string;
+        Component component;
         int j;
         int i = textRenderer.lineHeight;
         for (j = 0; j < text.size(); ++j) {
-            string = text.get(j);
-            if (Objects.equals(string, Component.empty()))
+            component = text.get(j);
+            if (Objects.equals(component, Component.empty()))
                 continue;
-            k = textRenderer.width(string);
+            k = textRenderer.width(component);
             l = left ? 2 : context.guiWidth() - 2 - k;
             m = 2 + i * j;
             context.fill(l - 1, m - 1, l + k + 1, m + i - 1, BACKGROUND_COLOR);
-        }
-        for (j = 0; j < text.size(); ++j) {
-            string = text.get(j);
-            if (Objects.equals(string, Component.empty()))
-                continue;
-            k = textRenderer.width(string);
-            l = left ? 2 : context.guiWidth() - 2 - k;
-            m = 2 + i * j;
-            context.drawString(textRenderer, string, l, m, FOREGROUND_COLOR, false);
+            context.drawString(textRenderer, component, l, m, FOREGROUND_COLOR, false);
         }
     }
 }

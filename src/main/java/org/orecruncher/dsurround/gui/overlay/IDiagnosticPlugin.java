@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.gui.hud;
+package org.orecruncher.dsurround.gui.overlay;
 
 import net.minecraft.client.Minecraft;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;

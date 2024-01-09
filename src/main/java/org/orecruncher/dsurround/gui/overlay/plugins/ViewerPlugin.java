@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.gui.hud.plugins;
+package org.orecruncher.dsurround.gui.overlay.plugins;
 
 import joptsimple.internal.Strings;
 import net.minecraft.ChatFormatting;
@@ -16,7 +16,7 @@ import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
-import org.orecruncher.dsurround.gui.hud.IDiagnosticPlugin;
+import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 
