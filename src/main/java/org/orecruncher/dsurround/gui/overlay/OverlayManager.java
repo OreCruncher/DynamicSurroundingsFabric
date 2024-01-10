@@ -13,9 +13,10 @@ public class OverlayManager {
     private final ObjectArray<AbstractOverlay> overlays;
 
     public OverlayManager() {
-        this.overlays = new ObjectArray<>(2);
+        this.overlays = new ObjectArray<>(3);
         this.overlays.add(ContainerManager.resolve(DiagnosticsOverlay.class));
-        this.overlays.add(ContainerManager.resolve(CompassAndClockOverlay.class));
+        this.overlays.add(ContainerManager.resolve(CompassOverlay.class));
+        this.overlays.add(ContainerManager.resolve(ClockOverlay.class));
 
         ClientState.TICK_END.register(this::tick);
     }
