@@ -32,12 +32,15 @@
     "minecraft": "1.20.x",
     "java": ">=17"
   },
+  "suggests": {
+    "cloth-config": ">=13.0.121",
+    "yet_another_config_lib_v3": ">=3.3.1+1.20.4"
+  },
   "custom": {
     "modmenu": {
       "links": {
         "dsurround.mod.link.sources": "https://github.com/OreCruncher/DynamicSurroundingsFabric",
         "dsurround.mod.link.credits": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CREDITS.md",
-        "dsurround.mod.link.clothapi": "https://www.curseforge.com/minecraft/mc-mods/cloth-api",
         "dsurround.mod.link.nashorn": "https://github.com/openjdk/nashorn"
       }
     },

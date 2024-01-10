@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib.config.clothapi;
+package org.orecruncher.dsurround.lib.config.factories;
 
 import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
@@ -9,6 +9,7 @@ import me.shedaniel.clothconfig2.impl.builders.FieldBuilder;
 import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
@@ -21,9 +22,7 @@ import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
-import java.util.function.BiFunction;
-
-public class ClothAPIFactory implements BiFunction<Minecraft, Screen, Screen> {
+public class ClothAPIFactory extends AbstractConfigScreenFactory {
 
     private static final ResourceLocation[] BACKGROUNDS = {
             new ResourceLocation("minecraft:textures/block/cobblestone.png"),
@@ -37,16 +36,13 @@ public class ClothAPIFactory implements BiFunction<Minecraft, Screen, Screen> {
     };
 
     private final ResourceLocation background;
-    private final ConfigOptions options;
-    private final ConfigurationData configData;
 
     public ClothAPIFactory(ConfigOptions options, final ConfigurationData config) {
         this(options, config, null);
     }
 
     public ClothAPIFactory(ConfigOptions options, final ConfigurationData config, @Nullable final ResourceLocation background) {
-        this.options = options;
-        this.configData = config;
+        super(options, config);
 
         if (background == null) {
             var idx = Randomizer.current().nextInt(BACKGROUNDS.length);
@@ -111,7 +107,7 @@ public class ClothAPIFactory implements BiFunction<Minecraft, Screen, Screen> {
 
     protected SubCategoryBuilder generate(final ConfigEntryBuilder builder, ConfigElement.PropertyGroup propertyGroup, Object instance) {
         SubCategoryBuilder categoryBuilder = builder
-                .startSubCategory(this.options.transformPropertyGroup(propertyGroup.getElementNameKey()))
+                .startSubCategory(this.options.transformPropertyGroup(propertyGroup.getLanguageKey()))
                 .setTooltip(this.options.transformTooltip(propertyGroup.getTooltip(this.options.getTooltipStyle())));
 
         for (var prop : propertyGroup.getChildren()) {
@@ -134,50 +130,55 @@ public class ClothAPIFactory implements BiFunction<Minecraft, Screen, Screen> {
     protected @Nullable FieldBuilder<?, ? extends AbstractConfigListEntry<?>, ?> generate(final ConfigEntryBuilder builder, ConfigElement.PropertyValue<?> pv, Object instance) {
         FieldBuilder<?, ? extends AbstractConfigListEntry<?>, ?> fieldBuilder = null;
 
-        var name = this.options.transformProperty(pv.getElementNameKey());
-        var tooltip = this.options.transformTooltip(pv.getTooltip(this.options.getTooltipStyle()));
+        var name = this.options.transformProperty(pv.getLanguageKey());
+        var tooltip = this.generateToolTip(pv);
 
         if (pv instanceof ConfigElement.IntegerValue v) {
+            var binder = pv.<Integer>createBinder(instance);
             if (pv.useSlider()) {
                 fieldBuilder = builder
-                        .startIntSlider(name, v.getCurrentValue(instance), v.getMinValue(), v.getMaxValue())
+                        .startIntSlider(name, binder.getValue(), v.getMinValue(), v.getMaxValue())
                         .setTooltip(tooltip)
-                        .setDefaultValue(v::getDefaultValue)
-                        .setSaveConsumer(data -> v.setCurrentValue(instance, data));
+                        .setDefaultValue(binder::defaultValue)
+                        .setSaveConsumer(binder::setValue);
             } else {
                 fieldBuilder = builder
-                        .startIntField(name, v.getCurrentValue(instance))
+                        .startIntField(name, binder.getValue())
                         .setTooltip(tooltip)
-                        .setDefaultValue(v.getDefaultValue())
+                        .setDefaultValue(binder.defaultValue())
                         .setMin(v.getMinValue())
                         .setMax(v.getMaxValue())
-                        .setSaveConsumer(data -> v.setCurrentValue(instance, data));
+                        .setSaveConsumer(binder::setValue);
             }
         } else if (pv instanceof ConfigElement.DoubleValue v) {
+            var binder = pv.<Double>createBinder(instance);
             fieldBuilder = builder
-                    .startDoubleField(name, v.getCurrentValue(instance))
+                    .startDoubleField(name, binder.getValue())
                     .setTooltip(tooltip)
-                    .setDefaultValue(v.getDefaultValue())
+                    .setDefaultValue(binder.defaultValue())
                     .setMin(v.getMinValue())
                     .setMax(v.getMaxValue())
-                    .setSaveConsumer(data -> v.setCurrentValue(instance, data));
-        } else if (pv instanceof ConfigElement.StringValue v) {
+                    .setSaveConsumer(binder::setValue);
+        } else if (pv instanceof ConfigElement.StringValue) {
+            var binder = pv.<String>createBinder(instance);
             fieldBuilder = builder
-                    .startStrField(name, v.getCurrentValue(instance))
+                    .startStrField(name, binder.getValue())
                     .setTooltip(tooltip)
-                    .setDefaultValue(v.getDefaultValue())
-                    .setSaveConsumer(data -> v.setCurrentValue(instance, data));
-        } else if (pv instanceof ConfigElement.BooleanValue v) {
+                    .setDefaultValue(binder.defaultValue())
+                    .setSaveConsumer(binder::setValue);
+        } else if (pv instanceof ConfigElement.BooleanValue) {
+            var binder = pv.<Boolean>createBinder(instance);
             fieldBuilder = builder
-                    .startBooleanToggle(name, v.getCurrentValue(instance))
+                    .startBooleanToggle(name, binder.getValue())
                     .setTooltip(tooltip)
-                    .setDefaultValue(v.getDefaultValue())
-                    .setSaveConsumer(data -> v.setCurrentValue(instance, data));
+                    .setDefaultValue(binder.defaultValue())
+                    .setSaveConsumer(binder::setValue);
         } else if (pv instanceof ConfigElement.EnumValue v) {
-            fieldBuilder = new EnumSelectorBuilder<>(builder.getResetButtonKey(), name, (Class<Enum<?>>)(v.getEnumClass()), v.getCurrentValue(instance))
+            var binder = pv.<Enum<?>>createBinder(instance);
+            fieldBuilder = new EnumSelectorBuilder<>(builder.getResetButtonKey(), name, (Class<Enum<?>>)(v.getEnumClass()), binder.getValue())
                     .setTooltip(tooltip)
-                    .setDefaultValue(v.getDefaultValue())
-                    .setSaveConsumer(data -> v.setCurrentValue(instance, data));
+                    .setDefaultValue(binder.defaultValue())
+                    .setSaveConsumer(binder::setValue);
         }
 
         if (fieldBuilder != null) {
@@ -186,4 +187,8 @@ public class ClothAPIFactory implements BiFunction<Minecraft, Screen, Screen> {
 
         return fieldBuilder;
     }
+
+    private Component[] generateToolTip(ConfigElement.PropertyValue<?> pv) {
+        return this.generateToolTipCollection(pv).toArray(new Component[0]);
+   }
 }

@@ -7,7 +7,7 @@ import org.orecruncher.dsurround.gui.overlay.DiagnosticsOverlay;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.config.clothapi.ClothAPIFactory;
+import org.orecruncher.dsurround.lib.config.factories.FactoryResolver;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.platform.events.ClientState;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
@@ -45,10 +45,18 @@ public class KeyBindings {
     private static void handleMenuKeyPress(Minecraft client) {
         if (GameUtils.getCurrentScreen().isPresent() || GameUtils.getPlayer().isEmpty())
             return;
-        if (modConfigurationMenu.consumeClick())
-            GameUtils.setScreen(ClothAPIFactory.createDefaultConfigScreen(null));
+
+        if (modConfigurationMenu.consumeClick()) {
+            var screenFactory = FactoryResolver.getModConfigScreenFactory();
+            if (screenFactory != null)
+                GameUtils.setScreen(screenFactory.create(null));
+            else
+                Library.getLogger().info("Configuration GUI libraries not present");
+        }
+
         if (diagnosticHud.consumeClick())
             ContainerManager.resolve(DiagnosticsOverlay.class).toggleCollection();
+
         if (individualSoundConfigBinding.consumeClick()) {
             final boolean singlePlayer = GameUtils.isSinglePlayer();
             GameUtils.setScreen(new IndividualSoundControlScreen(null, singlePlayer));

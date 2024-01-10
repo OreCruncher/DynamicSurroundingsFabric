@@ -21,7 +21,7 @@ import java.util.Collection;
 public abstract class ConfigurationData {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Reference2ObjectOpenHashMap<Class<?>, Collection<ConfigElement>> specifications = new Reference2ObjectOpenHashMap<>();
+    private static final Reference2ObjectOpenHashMap<Class<?>, Collection<ConfigElement<?>>> specifications = new Reference2ObjectOpenHashMap<>();
     private static final Reference2ObjectOpenHashMap<Class<?>, ConfigurationData> configs = new Reference2ObjectOpenHashMap<>();
 
 
@@ -40,7 +40,7 @@ public abstract class ConfigurationData {
             if (config != null)
                 return (T) config;
 
-            // We need to construct a new instance to capture the specification.  Once that is done we can load
+            // We need to construct a new instance to capture the specification. Once that is done, we can load
             // from disk if present.
             var ctor = clazz.getDeclaredConstructor();
             ctor.setAccessible(true);
@@ -49,7 +49,7 @@ public abstract class ConfigurationData {
             var spec = ConfigProcessor.generateAccessors(config);
             specifications.put(clazz, spec);
 
-            // Check to see if it exists on disk, and if so, load it up.  Otherwise, save it so the defaults are
+            // Check to see if it exists on the disk, and if so, load it up. Otherwise, save it so the defaults are
             // persisted and the user can edit manually.
             try {
                 if (Files.exists(config.configFilePath)) {
@@ -78,7 +78,7 @@ public abstract class ConfigurationData {
         return null;
     }
 
-    public Collection<ConfigElement> getSpecification() {
+    public Collection<ConfigElement<?>> getSpecification() {
         return specifications.get(this.getClass());
     }
 
@@ -103,7 +103,7 @@ public abstract class ConfigurationData {
     }
 
     /**
-     * Hook to provide processing after the configuration is loaded from disk
+     * Hook to provide processing after the configuration is loaded from the disk
      */
     public void postLoad() {
     }
@@ -152,16 +152,24 @@ public abstract class ConfigurationData {
     }
 
     /**
-     * Indicates the default value should be displayed in the tooltip.
+     * Changing the value of this property will require the assets to be reloaded to have an effect.
      */
     @Target({ElementType.FIELD})
     @Retention(RetentionPolicy.RUNTIME)
-    public @interface DefaultValue {
+    public @interface AssetReloadRequired {
     }
 
     /**
-     * Comment associated with a property, if any.  This is used if a translation is not available.  Depending on
-     * config file format the comment may be persisted with the data as well.
+     * Changing the value of this property will require the world to be reloaded to have an effect.
+     */
+    @Target({ElementType.FIELD})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface WorldReloadRequired {
+    }
+
+    /**
+     * Comment associated with a property, if any. This is used if a translation is not available. Depending on
+     * config file format, the comment may be persisted with the data as well.
      */
     @Target({ElementType.FIELD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
@@ -188,7 +196,7 @@ public abstract class ConfigurationData {
     }
 
     /**
-     * The class of the Enum in question.  Thanks type erasure.
+     * The class of the Enum in question. Thanks type erasure.
      */
     @Target({ElementType.FIELD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)

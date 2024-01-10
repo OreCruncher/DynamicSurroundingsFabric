@@ -24,6 +24,8 @@ public final class Constants {
     public static String MOD_PRESENCE_FOOTSTEPS = "presencefootsteps";
     // Enhanced sound processing.  Check AudioUtilities.java as well.
     public static String MOD_SOUND_PHYSICS_REMASTERED = "sound_physics_remastered";
+    public static String CLOTH_CONFIG = "cloth-config";
+    public static String YACL = "yet_another_config_lib_v3";
 
     /**
      * Collection of MOD IDs that are of interest.  Ease of iteration.
@@ -40,6 +42,8 @@ public final class Constants {
     static {
         SPECIAL_MODS.add(MOD_PRESENCE_FOOTSTEPS);
         SPECIAL_MODS.add(MOD_SOUND_PHYSICS_REMASTERED);
+        SPECIAL_MODS.add(CLOTH_CONFIG);
+        SPECIAL_MODS.add(YACL);
 
         BLOCKS_TO_IGNORE.add(Blocks.VOID_AIR);
         BLOCKS_TO_IGNORE.add(Blocks.CAVE_AIR);
