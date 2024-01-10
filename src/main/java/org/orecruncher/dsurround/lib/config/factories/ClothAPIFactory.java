@@ -58,7 +58,8 @@ public class ClothAPIFactory extends AbstractConfigScreenFactory {
                 .setTitleStyle(Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE.getValue()))
                 .setPropertyGroupStyle(Style.EMPTY.withColor(ColorPalette.GOLDENROD.getValue()))
                 .setPropertyStyle(Style.EMPTY.withColor(ColorPalette.WHEAT.getValue()))
-                .setTooltipStyle(Style.EMPTY.withColor(ColorPalette.SEASHELL.getValue()));
+                .setTooltipStyle(Style.EMPTY.withColor(ColorPalette.SEASHELL.getValue()))
+                .wrapToolTip(true);
 
         return new ClothAPIFactory(options, Client.Config).apply(GameUtils.getMC(), parent);
     }
@@ -108,7 +109,7 @@ public class ClothAPIFactory extends AbstractConfigScreenFactory {
     protected SubCategoryBuilder generate(final ConfigEntryBuilder builder, ConfigElement.PropertyGroup propertyGroup, Object instance) {
         SubCategoryBuilder categoryBuilder = builder
                 .startSubCategory(this.options.transformPropertyGroup(propertyGroup.getLanguageKey()))
-                .setTooltip(this.options.transformTooltip(propertyGroup.getTooltip(this.options.getTooltipStyle())));
+                .setTooltip(this.options.transformTooltip(propertyGroup.getTooltip(this.options.getTooltipStyle())).toArray(new Component[0]));
 
         for (var prop : propertyGroup.getChildren()) {
             // Skip entries that are marked as hidden

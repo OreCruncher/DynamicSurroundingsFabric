@@ -15,17 +15,17 @@ public final class Constants {
     /**
      * The ID of the current mod
      */
-    public static String MOD_ID = "dsurround";
+    public static final String MOD_ID = "dsurround";
 
     /**
      * ID's of mods that Dynamic Surroundings has an interest for disabling certain features.
      */
     // Brush step sound effect
-    public static String MOD_PRESENCE_FOOTSTEPS = "presencefootsteps";
+    public static final String MOD_PRESENCE_FOOTSTEPS = "presencefootsteps";
     // Enhanced sound processing.  Check AudioUtilities.java as well.
-    public static String MOD_SOUND_PHYSICS_REMASTERED = "sound_physics_remastered";
-    public static String CLOTH_CONFIG = "cloth-config";
-    public static String YACL = "yet_another_config_lib_v3";
+    public static final String MOD_SOUND_PHYSICS_REMASTERED = "sound_physics_remastered";
+    public static final String CLOTH_CONFIG = "cloth-config";
+    public static final String YACL = "yet_another_config_lib_v3";
 
     /**
      * Collection of MOD IDs that are of interest.  Ease of iteration.

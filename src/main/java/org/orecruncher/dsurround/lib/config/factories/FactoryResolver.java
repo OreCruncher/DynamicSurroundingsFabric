@@ -16,14 +16,10 @@ public class FactoryResolver {
 
     @Nullable
     public static IScreenFactory getModConfigScreenFactory() {
-        if (Services.PLATFORM.isModLoaded(Constants.CLOTH_CONFIG)) {
+        if (Services.PLATFORM.isModLoaded(Constants.CLOTH_CONFIG))
             return ClothAPIFactory::createDefaultConfigScreen;
-        }
-
-        if (Services.PLATFORM.isModLoaded(Constants.YACL)) {
+        if (Services.PLATFORM.isModLoaded(Constants.YACL))
             return YaclFactory::createDefaultConfigScreen;
-        }
-
         return null;
     }
 }

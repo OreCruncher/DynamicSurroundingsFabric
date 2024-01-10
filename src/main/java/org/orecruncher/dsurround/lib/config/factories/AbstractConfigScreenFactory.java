@@ -9,7 +9,6 @@ import org.orecruncher.dsurround.lib.config.ConfigOptions;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.BiFunction;
 
@@ -33,8 +32,7 @@ public abstract class AbstractConfigScreenFactory implements BiFunction<Minecraf
     }
 
     protected Collection<Component> generateToolTipCollection(ConfigElement.PropertyValue<?> pv) {
-        var toolTipEntries = new ArrayList<Component>();
-        toolTipEntries.add(this.options.transformTooltip(pv.getTooltip(this.options.getTooltipStyle())));
+        var toolTipEntries = this.options.transformTooltip(pv.getTooltip(this.options.getTooltipStyle()));
         toolTipEntries.add(EMPTY_LINE);
         toolTipEntries.add(pv.getDefaultValueTooltip());
 

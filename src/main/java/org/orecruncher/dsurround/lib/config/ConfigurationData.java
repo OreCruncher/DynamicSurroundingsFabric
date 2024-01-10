@@ -2,8 +2,9 @@ package org.orecruncher.dsurround.lib.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.events.EventingFactory;
 import org.orecruncher.dsurround.lib.events.IEvent;
@@ -17,40 +18,49 @@ import java.lang.annotation.Target;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.Objects;
 
 public abstract class ConfigurationData {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Reference2ObjectOpenHashMap<Class<?>, Collection<ConfigElement<?>>> specifications = new Reference2ObjectOpenHashMap<>();
-    private static final Reference2ObjectOpenHashMap<Class<?>, ConfigurationData> configs = new Reference2ObjectOpenHashMap<>();
+    private static final Map<Class<? extends ConfigurationData>, Collection<ConfigElement<?>>> SPECIFICATIONS = new IdentityHashMap<>();
+    private static final Map<Class<? extends ConfigurationData>, ConfigurationData> CONFIGS = new IdentityHashMap<>();
 
+    transient final Path configFilePath;
 
-    private transient final String translationRoot;
-    private transient final Path configFilePath;
-
-    protected ConfigurationData(String translationRoot, Path configFilePath) {
-        this.translationRoot = translationRoot;
+    protected ConfigurationData(Path configFilePath) {
         this.configFilePath = configFilePath;
     }
 
     @SuppressWarnings("unchecked")
     public static <T extends ConfigurationData> @NotNull T getConfig(Class<T> clazz) {
-        try {
-            var config = configs.get(clazz);
-            if (config != null)
-                return (T) config;
+        return (T) Objects.requireNonNull(CONFIGS.computeIfAbsent(clazz, ConfigurationData::computeConfiguration));
+    }
 
+    @Nullable
+    public static <T extends ConfigurationData> Collection<ConfigElement<?>> getSpecification(Class<T> clazz) {
+        var spec = SPECIFICATIONS.get(clazz);
+        if (spec == null) {
+            var specResult = ConfigProcessor.generateAccessors(clazz);
+            if (specResult.isPresent()) {
+                spec = specResult.get();
+                SPECIFICATIONS.put(clazz, spec);
+            }
+        }
+        return spec;
+    }
+
+    private static <T extends ConfigurationData> T computeConfiguration(Class<T> clazz) {
+        try {
             // We need to construct a new instance to capture the specification. Once that is done, we can load
             // from disk if present.
-            var ctor = clazz.getDeclaredConstructor();
-            ctor.setAccessible(true);
-            config = ctor.newInstance();
-
-            var spec = ConfigProcessor.generateAccessors(config);
-            specifications.put(clazz, spec);
+            var ignored = getSpecification(clazz);
 
             // Check to see if it exists on the disk, and if so, load it up. Otherwise, save it so the defaults are
             // persisted and the user can edit manually.
+            T config = ConfigProcessor.createPrototype(clazz).orElseThrow();
             try {
                 if (Files.exists(config.configFilePath)) {
                     try (BufferedReader reader = Files.newBufferedReader(config.configFilePath)) {
@@ -61,16 +71,19 @@ public abstract class ConfigurationData {
                 Library.getLogger().error(t, "Unable to handle configuration");
             }
 
+            if (config == null) {
+                var ctor = clazz.getDeclaredConstructor();
+                ctor.setAccessible(true);
+                config = ctor.newInstance();
+            }
+
             // Post-load processing
             config.postLoad();
 
-            // Save it out.  Config parameters may have been added/removed
+            // Save it out.  Config parameters may have been added, removed, clamped, etc.
             config.save();
 
-            // Now save the config for future queries
-            configs.put(clazz, config);
-
-            return (T) config;
+            return config;
         } catch (Throwable t) {
             Library.getLogger().error(t, "Unable to handle configuration");
         }
@@ -79,11 +92,7 @@ public abstract class ConfigurationData {
     }
 
     public Collection<ConfigElement<?>> getSpecification() {
-        return specifications.get(this.getClass());
-    }
-
-    public String getTranslationRoot() {
-        return this.translationRoot;
+        return SPECIFICATIONS.get(this.getClass());
     }
 
     /**
@@ -106,6 +115,15 @@ public abstract class ConfigurationData {
      * Hook to provide processing after the configuration is loaded from the disk
      */
     public void postLoad() {
+    }
+
+    /**
+     * Defines the root of language translation keys
+     */
+    @Target({ElementType.TYPE})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface TranslationRoot {
+        String value() default Constants.MOD_ID;
     }
 
     /**

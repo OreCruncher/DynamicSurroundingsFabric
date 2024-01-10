@@ -1,5 +1,7 @@
 package org.orecruncher.dsurround.lib.config;
 
+import org.orecruncher.dsurround.lib.Library;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
@@ -21,7 +23,8 @@ public class ElementAccessor<T> {
     protected T get(Object instance) {
         try {
             return (T) this.field.get(instance);
-        } catch (Throwable ignore) {
+        } catch (Throwable t) {
+            Library.getLogger().error(t, "Error obtaining value instance");
         }
         return null;
     }
@@ -29,7 +32,8 @@ public class ElementAccessor<T> {
     protected void set(Object instance, T val) {
         try {
             this.field.set(instance, val);
-        } catch (Throwable ignore) {
+        } catch (Throwable t) {
+            Library.getLogger().error(t, "Error setting value instance");
         }
     }
 }

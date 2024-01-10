@@ -4,8 +4,10 @@ import joptsimple.internal.Strings;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.orecruncher.dsurround.lib.Localization;
+import org.orecruncher.dsurround.lib.gui.GuiHelpers;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class ConfigOptions {
 
@@ -14,6 +16,8 @@ public class ConfigOptions {
     private Style propertyGroupStyle = Style.EMPTY;
     private Style propertyStyle = Style.EMPTY;
     private Style tooltipStyle = Style.EMPTY;
+    private boolean wrapToolTip = false;
+    private int toolTipWidth = 300;
 
     public ConfigOptions() {
 
@@ -36,6 +40,16 @@ public class ConfigOptions {
 
     public ConfigOptions setTooltipStyle(Style style) {
         this.tooltipStyle = style;
+        return this;
+    }
+
+    public ConfigOptions setTooltipWidth(int width) {
+        this.toolTipWidth = width;
+        return this;
+    }
+
+    public ConfigOptions wrapToolTip(boolean flag) {
+        this.wrapToolTip = flag;
         return this;
     }
 
@@ -63,7 +77,11 @@ public class ConfigOptions {
         return Component.literal(txt).withStyle(this.propertyStyle);
     }
 
-    public Component transformTooltip(Component tooltip) {
-        return tooltip;
+    public Collection<Component> transformTooltip(Component tooltip) {
+        if (this.wrapToolTip)
+            return GuiHelpers.getTrimmedTextCollection(tooltip, toolTipWidth, this.tooltipStyle);
+        var result = new ArrayList<Component>();
+        result.add(tooltip);
+        return result;
     }
 }
