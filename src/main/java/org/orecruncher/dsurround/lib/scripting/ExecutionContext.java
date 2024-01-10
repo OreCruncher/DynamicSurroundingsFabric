@@ -6,10 +6,7 @@ import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
-import javax.script.Compilable;
-import javax.script.CompiledScript;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineFactory;
+import javax.script.*;
 import java.util.Optional;
 
 public final class ExecutionContext implements IVariableAccess {
@@ -22,7 +19,7 @@ public final class ExecutionContext implements IVariableAccess {
 
     public ExecutionContext(final String contextName) {
         this.contextName = contextName;
-        this.engine = ScriptEngineLoader.getEngine();
+        this.engine = ScriptEngineLoader.getEngine().orElseThrow(() -> new RuntimeException("Unable to load a JavaScript engine!"));
         this.put("lib", new LibraryFunctions());
 
         ScriptEngineFactory factory = this.engine.getFactory();
@@ -51,7 +48,7 @@ public final class ExecutionContext implements IVariableAccess {
     }
 
     public boolean check(final Script script) {
-        final Optional<Object> result = eval(script);
+        final Optional<Object> result = this.eval(script);
         if (result.isPresent())
             return "true".equalsIgnoreCase(result.toString());
         return false;
@@ -70,9 +67,8 @@ public final class ExecutionContext implements IVariableAccess {
             return Optional.ofNullable(result);
         } catch (final Throwable t) {
             LOGGER.error(t, "Error execution script: %s", script.asString());
+            return Optional.of("ERROR? " + t.getMessage());
         }
-
-        return Optional.of("ERROR?");
     }
 
     private CompiledScript makeFunction(final String script) {
