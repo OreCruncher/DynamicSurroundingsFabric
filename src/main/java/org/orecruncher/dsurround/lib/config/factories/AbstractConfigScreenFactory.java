@@ -19,6 +19,9 @@ public abstract class AbstractConfigScreenFactory implements BiFunction<Minecraf
     private static final Component CLIENT_RESTART_REQUIRED = Component.translatable("dsurround.config.tooltip.clientRestartRequired").withStyle(STYLE_RESTART);
     private static final Component WORLD_RESTART_REQUIRED = Component.translatable("dsurround.config.tooltip.worldRestartRequired").withStyle(STYLE_RESTART);
     private static final Component ASSET_RELOAD_REQUIRED = Component.translatable("dsurround.config.tooltip.assetReloadRequired").withStyle(STYLE_RESTART);
+    // Use a string with a single space as an empty line. Some config UI frameworks elide
+    // Component.empty() entries and the tooltip logic uses empty lines as part of its
+    // formatting.
     private static final Component EMPTY_LINE = Component.literal(" ");
 
     protected final ConfigOptions options;
@@ -38,7 +41,7 @@ public abstract class AbstractConfigScreenFactory implements BiFunction<Minecraf
         if (pv instanceof ConfigElement.IRangeTooltip rt && rt.hasRange())
             toolTipEntries.add(rt.getRangeTooltip());
 
-        if (pv.isRestartRequired()) {
+        if (pv.isClientRestartRequired()) {
             toolTipEntries.add(EMPTY_LINE);
             toolTipEntries.add(CLIENT_RESTART_REQUIRED);
         } else if (pv.isWorldRestartRequired()) {

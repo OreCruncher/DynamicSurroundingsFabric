@@ -71,7 +71,12 @@ public enum EntityEffectType {
         FROST_BREATH.setConfigProvider(() -> config.enableBreathEffect);
         PLAYER_TOOLBAR.setConfigProvider(() -> config.enablePlayerToolbarEffect);
         ITEM_SWING.setConfigProvider(() -> config.enableSwingEffect);
-        BRUSH_STEP.setConfigProvider(() -> config.enableBrushStepEffect && !Library.getPlatform().isModLoaded(Constants.MOD_PRESENCE_FOOTSTEPS));
+
+        // Do not do brush step effects if Presence Footsteps is installed
+        if (Library.getPlatform().isModLoaded(Constants.MOD_PRESENCE_FOOTSTEPS))
+            BRUSH_STEP.setConfigProvider(() -> false);
+        else
+            BRUSH_STEP.setConfigProvider(() -> config.enableBrushStepEffect);
     }
 
 }

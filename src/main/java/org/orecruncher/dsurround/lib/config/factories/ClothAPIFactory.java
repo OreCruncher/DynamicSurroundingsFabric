@@ -182,7 +182,7 @@ public class ClothAPIFactory extends AbstractConfigScreenFactory {
         }
 
         if (fieldBuilder != null) {
-            fieldBuilder.requireRestart(pv.isRestartRequired());
+            fieldBuilder.requireRestart(pv.isAnyRestartRequired());
         }
 
         return fieldBuilder;

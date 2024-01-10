@@ -142,7 +142,7 @@ public class YaclFactory extends AbstractConfigScreenFactory {
             fieldBuilder.name(name);
             fieldBuilder.description(toolTip);
 
-            if (pv.isRestartRequired())
+            if (pv.isClientRestartRequired())
                 fieldBuilder.flag(OptionFlag.GAME_RESTART);
             if (pv.isAssetReloadRequired())
                 fieldBuilder.flag(OptionFlag.ASSET_RELOAD);

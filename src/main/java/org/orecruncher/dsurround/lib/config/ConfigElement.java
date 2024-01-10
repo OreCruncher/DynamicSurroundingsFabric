@@ -122,16 +122,34 @@ public abstract class ConfigElement<T> {
             this.set(instance, this.clamp(value));
         }
 
-        public boolean isRestartRequired() {
+        /**
+         * Determines if the RestartRequired annotation is present
+         */
+        public boolean isAnyRestartRequired() {
+            return this.getAnnotation(ConfigurationData.RestartRequired.class).isPresent();
+        }
+
+        /**
+         * Determines if the RestartRequired annotation is present and is set for Client
+         * (i.e., restart the Minecraft application).
+         */
+        public boolean isClientRestartRequired() {
             var annotation = this.getAnnotation(ConfigurationData.RestartRequired.class);
             return annotation.map(ConfigurationData.RestartRequired::client).orElse(false);
         }
 
+        /**
+         * Determines if the RestartRequired annotation is present and is not set for Client
+         * (i.e., exit current world and then rejoin).
+         */
         public boolean isWorldRestartRequired() {
             var annotation = this.getAnnotation(ConfigurationData.RestartRequired.class);
             return annotation.map(a -> !a.client()).orElse(false);
         }
 
+        /**
+         * Determines if the Minecraft assets need to be reloaded for changes to take effect.
+         */
         public boolean isAssetReloadRequired() {
             return this.hasAnnotation(ConfigurationData.AssetReloadRequired.class);
         }
