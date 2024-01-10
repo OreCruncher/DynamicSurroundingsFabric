@@ -2,18 +2,15 @@ package org.orecruncher.dsurround.gui.overlay;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
-import org.orecruncher.dsurround.lib.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
-
-import java.util.EnumMap;
-import java.util.Map;
 
 public class ClockOverlay extends AbstractOverlay {
 
@@ -22,23 +19,20 @@ public class ClockOverlay extends AbstractOverlay {
      * "now playing" text that displays when playing a record in a jukebox. Position above that.
      */
     private static final int BOTTOM_OFFSET = 68 + 20;
+    /**
+     * Offset on the X because of the box rendering.
+     */
+    private static final int TOOLTIP_XOFFSET = 12;
 
-    private static final Map<DayCycle, TextColor> COLOR_MAP = new EnumMap<>(DayCycle.class);
-
-    static {
-        COLOR_MAP.put(DayCycle.NO_SKY, ColorPalette.GOLD);
-        COLOR_MAP.put(DayCycle.DAYTIME, ColorPalette.GOLD);
-        COLOR_MAP.put(DayCycle.NIGHTTIME, ColorPalette.GREEN);
-        COLOR_MAP.put(DayCycle.SUNRISE, ColorPalette.YELLOW);
-        COLOR_MAP.put(DayCycle.SUNSET, ColorPalette.ORANGE);
-    }
+    private static final TextColor MIDNIGHT_COLOR = ColorPalette.DARK_VIOLET;
+    private static final TextColor NOON_COLOR = ColorPalette.SUN_GLOW;
 
     private final ITagLibrary tagLibrary;
     private final Configuration config;
     private final MinecraftClock clock;
-    private String clockText;
-    private TextColor clockColor;
     private boolean showClock;
+    private int textWidth;
+    private String clockText;
 
     public ClockOverlay(Configuration config, ITagLibrary tagLibrary) {
         this.tagLibrary = tagLibrary;
@@ -58,7 +52,7 @@ public class ClockOverlay extends AbstractOverlay {
             this.showClock = this.doShowClock(mainHandItem) || this.doShowClock(offHandItem);
             this.clock.update(player.level());
             this.clockText = this.clock.getFormattedTime();
-            this.clockColor = COLOR_MAP.get(this.clock.getCycle());
+            this.textWidth = GameUtils.getTextRenderer().width(clockText);
         }
     }
 
@@ -71,18 +65,27 @@ public class ClockOverlay extends AbstractOverlay {
         if (!this.showClock)
             return;
 
-        var matrixStack = context.pose();
+        var world = GameUtils.getWorld().orElseThrow();
+        // 0 is noon, 180 is midnight. Need to normalize so that midnight 0.
+        var angleDegrees = world.getTimeOfDay(partialTick)* 360F + 180;
+        // Wrap
+        if (angleDegrees > 360)
+            angleDegrees -= 360;
+        // Are we to decrease rather than increase toward noon?
+        if (angleDegrees > 180)
+            angleDegrees = 360 - angleDegrees;
 
-        try {
-            matrixStack.pushPose();
-            var textRender = GameUtils.getTextRenderer();
+        var ratio = angleDegrees / 180F;
 
-            matrixStack.translate(context.guiWidth() / 2.0F, context.guiHeight() - BOTTOM_OFFSET, 0.0f);
-            var o = textRender.width(this.clockText);
-            context.drawString(textRender, this.clockText, -o / 2, -4, this.clockColor.getValue(), true);
+        var color = ColorPalette.lerp(ratio, MIDNIGHT_COLOR, NOON_COLOR);
 
-        } finally {
-            matrixStack.popPose();
-        }
+        var textRender = GameUtils.getTextRenderer();
+        var x = (context.guiWidth() - this.textWidth) / 2 - TOOLTIP_XOFFSET;
+        var y = context.guiHeight() - BOTTOM_OFFSET;
+
+        // Don't use renderTooltip. It uses a Z which pushes the rendering to the top of the Z stack and can
+        // and can interfere with renders.
+        TooltipRenderUtil.renderTooltipBackground(context, x, y, this.textWidth, textRender.lineHeight - 2, 0);
+        context.drawString(textRender, this.clockText, x, y, color.getValue(), false);
     }
 }
