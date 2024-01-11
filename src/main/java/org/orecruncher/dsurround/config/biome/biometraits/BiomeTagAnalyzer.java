@@ -23,7 +23,9 @@ public class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
         tagToTraitMap.put(BiomeTags.EXTREME_HILLS, BiomeTrait.EXTREME_HILLS);
         tagToTraitMap.put(BiomeTags.WINDSWEPT, BiomeTrait.WINDSWEPT);
         tagToTraitMap.put(BiomeTags.JUNGLE, BiomeTrait.JUNGLE);
+        tagToTraitMap.put(BiomeTags.LUSH, BiomeTrait.LUSH);
         tagToTraitMap.put(BiomeTags.MESA, BiomeTrait.MESA);
+        tagToTraitMap.put(BiomeTags.MAGICAL, BiomeTrait.MAGICAL);
         tagToTraitMap.put(BiomeTags.PLAINS, BiomeTrait.PLAINS);
         tagToTraitMap.put(BiomeTags.SAVANNA, BiomeTrait.SAVANNA);
         tagToTraitMap.put(BiomeTags.ICY, BiomeTrait.ICY);
@@ -32,7 +34,9 @@ public class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
         tagToTraitMap.put(BiomeTags.BIRCH_FOREST, BiomeTrait.FOREST);
         tagToTraitMap.put(BiomeTags.OCEAN, BiomeTrait.OCEAN);
         tagToTraitMap.put(BiomeTags.DESERT, BiomeTrait.DESERT);
+        tagToTraitMap.put(BiomeTags.RARE, BiomeTrait.RARE);
         tagToTraitMap.put(BiomeTags.RIVER, BiomeTrait.RIVER);
+        tagToTraitMap.put(BiomeTags.SANDY, BiomeTrait.SANDY);
         tagToTraitMap.put(BiomeTags.SWAMP, BiomeTrait.SWAMP);
         tagToTraitMap.put(BiomeTags.MUSHROOM, BiomeTrait.MUSHROOM);
         tagToTraitMap.put(BiomeTags.UNDERGROUND, BiomeTrait.UNDERGROUND);
@@ -56,6 +60,7 @@ public class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
         tagToTraitMap.put(BiomeTags.DEAD, BiomeTrait.DEAD);
         tagToTraitMap.put(BiomeTags.FLORAL, BiomeTrait.FLORAL);
         tagToTraitMap.put(BiomeTags.SNOWY, BiomeTrait.SNOWY);
+        tagToTraitMap.put(BiomeTags.SPOOKY, BiomeTrait.SPOOKY);
         tagToTraitMap.put(BiomeTags.BADLANDS, BiomeTrait.BADLANDS);
         tagToTraitMap.put(BiomeTags.CAVES, BiomeTrait.CAVES);
         tagToTraitMap.put(BiomeTags.END_ISLANDS, BiomeTrait.THEEND);

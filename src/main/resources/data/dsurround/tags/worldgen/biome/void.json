@@ -4,6 +4,10 @@
     {
       "id": "#c:void",
       "required": false
+    },
+    {
+      "id": "#forge:is_void",
+      "required": false
     }
   ]
 }

@@ -4,6 +4,10 @@
     {
       "id": "#c:mountain",
       "required": false
+    },
+    {
+      "id": "#forge:is_mountain",
+      "required": false
     }
   ]
 }

@@ -4,6 +4,10 @@
     {
       "id": "#c:climate_cold",
       "required": false
+    },
+    {
+      "id": "#forge:is_cold",
+      "required": false
     }
   ]
 }

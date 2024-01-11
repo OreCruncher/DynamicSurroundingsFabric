@@ -4,6 +4,10 @@
     {
       "id": "#c:vegetation_sparse",
       "required": false
+    },
+    {
+      "id": "#forge:is_sparse",
+      "required": false
     }
   ]
 }

@@ -4,6 +4,10 @@
     {
       "id": "#c:desert",
       "required": false
+    },
+    {
+      "id": "#forge:is_desert",
+      "required": false
     }
   ]
 }

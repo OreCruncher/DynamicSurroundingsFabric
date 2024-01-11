@@ -4,6 +4,10 @@
     {
       "id": "#c:aquatic",
       "required": false
+    },
+    {
+      "id": "#forge:is_water",
+      "required": false
     }
   ]
 }

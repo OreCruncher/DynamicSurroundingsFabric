@@ -4,6 +4,10 @@
     {
       "id": "#c:swamp",
       "required": false
+    },
+    {
+      "id": "#forge:is_swamp",
+      "required": "false"
     }
   ]
 }
