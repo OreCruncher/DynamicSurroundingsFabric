@@ -1,19 +1,15 @@
 package org.orecruncher.dsurround.processing;
 
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
-import joptsimple.internal.Strings;
-import net.minecraft.ChatFormatting;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
+import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
 import org.orecruncher.dsurround.processing.scanner.VillageScanner;
-
-import java.util.Collection;
 
 public class Scanners extends AbstractClientHandler {
 
@@ -65,11 +61,12 @@ public class Scanners extends AbstractClientHandler {
     }
 
     @Override
-    protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<ITimer> timers) {
-        right.add(Strings.EMPTY);
-        right.add(ChatFormatting.AQUA.toString() + ChatFormatting.UNDERLINE + "Biome Survey");
-        for (var e : this.biomeScanner.getBiomes().reference2IntEntrySet()) {
-            right.add(String.format("%s [%d]", e.getKey().getBiomeId(), e.getIntValue()));
-        }
+    protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
+        var panelText = event.getSectionText(CollectDiagnosticsEvent.Section.Survey);
+        panelText.add("ceiling coverage: %.2f".formatted(this.ceilingScanner.getCoverageRatio()));
+        this.biomeScanner.getBiomes().reference2IntEntrySet().stream()
+                .map(kvp -> "%s [%d]".formatted(kvp.getKey().getBiomeId(), kvp.getIntValue()))
+                .sorted()
+                .forEach(panelText::add);
     }
 }

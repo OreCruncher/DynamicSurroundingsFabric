@@ -21,4 +21,8 @@ public abstract class EntityEffectBase implements IEntityEffect {
         AUDIO_PLAYER.play(sound);
     }
 
+    @Override
+    public String toString() {
+        return "EFFECT: " + this.getClass().getSimpleName();
+    }
 }

@@ -7,6 +7,7 @@ import net.minecraft.client.sounds.SoundEngine;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.*;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
@@ -32,8 +33,8 @@ public final class AudioUtilities {
         var config = ContainerManager.resolve(Configuration.EnhancedSounds.class);
         if (config.enableEnhancedSounds) {
             // Next check to see if any present mods are in our exclusion list
+            var platform = ContainerManager.resolve(IPlatform.class);
             for (var modId : autoDisabledBecauseOf) {
-                var platform = ContainerManager.resolve(IPlatform.class);
                 if (platform.isModLoaded(modId)) {
                     LOGGER.warn("Enhanced sound processing is auto disabled due to the presence of the mod \"%s\"", modId);
                     return false;
@@ -48,7 +49,7 @@ public final class AudioUtilities {
     private static int MAX_SOUNDS = 0;
 
     static {
-        autoDisabledBecauseOf.add("sound_physics_remastered");
+        autoDisabledBecauseOf.add(Constants.MOD_SOUND_PHYSICS_REMASTERED);
     }
 
     public static int getMaxSounds() {

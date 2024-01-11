@@ -4,6 +4,10 @@
     {
       "id": "#c:caves",
       "required": false
+    },
+    {
+      "id": "#forge:is_cave",
+      "required": false
     }
   ]
 }

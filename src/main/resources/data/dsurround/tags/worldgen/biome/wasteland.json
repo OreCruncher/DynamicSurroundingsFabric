@@ -4,6 +4,10 @@
     {
       "id": "#c:wasteland",
       "required": false
+    },
+    {
+      "id": "#forge:is_wasteland",
+      "required": false
     }
   ]
 }

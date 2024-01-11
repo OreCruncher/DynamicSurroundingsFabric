@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.processing;
 import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.eventing.EntityStepEvent;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.processing.accents.FootstepAccents;
@@ -26,7 +27,7 @@ public class StepAccentGenerator extends AbstractClientHandler {
         ClientEventHooks.ENTITY_STEP_EVENT.register(this::footStepGenerated);
     }
 
-    protected void footStepGenerated(ClientEventHooks.EntityStepEvent event) {
+    protected void footStepGenerated(EntityStepEvent event) {
         if (event.entity() instanceof LivingEntity living) {
             if (living.isSilent() || living.isSpectator())
                 return;

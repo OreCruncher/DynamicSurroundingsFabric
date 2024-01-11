@@ -2,21 +2,18 @@ package org.orecruncher.dsurround.processing;
 
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
-import joptsimple.internal.Strings;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.InternalBiomes;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
+import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.ISoundFactory;
-
-import java.util.Collection;
 
 public final class BiomeSoundHandler extends AbstractClientHandler {
 
@@ -163,8 +160,8 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
     }
 
     @Override
-    protected void gatherDiagnostics(Collection<String> left, Collection<String> right, Collection<ITimer> timers) {
-        left.add(Strings.EMPTY);
-        this.emitters.forEach(backgroundAcousticEmitter -> left.add("EMITTER: " + backgroundAcousticEmitter.toString()));
+    protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
+        var panelText = event.getSectionText(CollectDiagnosticsEvent.Section.Emitters);
+        this.emitters.forEach(backgroundAcousticEmitter -> panelText.add(backgroundAcousticEmitter.toString()));
     }
 }

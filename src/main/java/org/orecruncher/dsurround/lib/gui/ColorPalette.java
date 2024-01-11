@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.lib.gui;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.TextColor;
+import net.minecraft.util.Mth;
 
 @SuppressWarnings("unused")
 public final class ColorPalette {
@@ -34,9 +35,9 @@ public final class ColorPalette {
     public static final TextColor YELLOW = of(255, 255, 0);
     public static final TextColor LGREEN = of(127, 255, 0);
     public static final TextColor GREEN = of(0, 255, 0);
-    public static final TextColor TURQOISE = of(0, 255, 127);
+    public static final TextColor TURQUOISE = of(0, 255, 127);
     public static final TextColor CYAN = of(0, 255, 255);
-    public static final TextColor AUQUAMARINE = of(127,255,212);
+    public static final TextColor AQUAMARINE = of(127,255,212);
     public static final TextColor BLUE = of(0, 0, 255);
     public static final TextColor VIOLET = of(127, 0, 255);
     public static final TextColor MAGENTA = of(255, 0, 255);
@@ -67,6 +68,9 @@ public final class ColorPalette {
     public static final TextColor BRASS = of(225, 193, 110);
     public static final TextColor ECRU = of(194, 178, 128);
     public static final TextColor SEASHELL = of(255, 245, 238);
+    public static final TextColor ORCHID = of(218,112,214);
+    public static final TextColor PALE_BROWN = of(152,118,84);
+    public static final TextColor DARK_VIOLET = of(148,0,211);
 
     public static int getRed(int rgb) {
         return (rgb >> 16) & 0xFF;
@@ -89,9 +93,27 @@ public final class ColorPalette {
     }
 
     private static TextColor of(int red, int green, int blue) {
-        var rgb = ((red & 0xFF) << 16) |
-                  ((green & 0xFF) << 8)  |
-                  ((blue & 0xFF));
-        return TextColor.fromRgb(rgb);
+        return TextColor.fromRgb(toRGB(red, green, blue));
+    }
+
+    static int toRGB(int red, int green, int blue) {
+        return ((red & 0xFF) << 16) |
+                ((green & 0xFF) << 8)  |
+                ((blue & 0xFF));
+    }
+
+    public static TextColor lerp(float scale, TextColor start, TextColor end) {
+        var startRed = getRed(start.getValue());
+        var startGreen = getGreen(start.getValue());
+        var startBlue = getBlue(start.getValue());
+        var endRed = getRed(end.getValue());
+        var endGreen = getGreen(end.getValue());
+        var endBlue = getBlue(end.getValue());
+
+        var red = (int)Mth.lerp(scale, startRed, endRed);
+        var green = (int)Mth.lerp(scale, startGreen, endGreen);
+        var blue = (int)Mth.lerp(scale, startBlue, endBlue);
+
+        return of(red, green, blue);
     }
 }

@@ -47,7 +47,7 @@ public record VersionResult(String version, String modId, String displayName, St
                 .withColor(ColorPalette.SUN_GLOW.getValue());
 
         return Component.translatable(this.modId + ".newversion.update")
-                .withColor(ColorPalette.AUQUAMARINE.getValue())
+                .withColor(ColorPalette.AQUAMARINE.getValue())
                 .append(modDisplayNameAndVersion)
                 .append(space)
                 .append(openBracket)

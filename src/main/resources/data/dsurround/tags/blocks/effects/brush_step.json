@@ -10,6 +10,22 @@
     "minecraft:twisting_vines",
     "minecraft:cave_vines_plant",
     "minecraft:tall_seagrass",
-    "minecraft:kelp_plant"
+    "minecraft:kelp_plant",
+    {
+      "id": "biomesoplenty:dune_grass",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:sea_oats",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:bush",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:high_grass_plant",
+      "required": false
+    }
   ]
 }

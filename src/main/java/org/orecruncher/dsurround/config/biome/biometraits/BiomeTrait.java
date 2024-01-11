@@ -61,7 +61,9 @@ public enum BiomeTrait {
     WINDSWEPT("WINDSWEPT"),
     FLORAL("FLORAL"),
     BADLANDS("BADLANDS"),
-    CAVES("CAVES");
+    CAVES("CAVES"),
+    RARE("RARE"),
+    LUSH("LUSH");
 
     private static final Map<String, BiomeTrait> mapper = new HashMap<>();
 

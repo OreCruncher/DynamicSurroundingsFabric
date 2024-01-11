@@ -4,6 +4,10 @@
     {
       "id": "#c:vegetation_dense",
       "required": false
+    },
+    {
+      "id": "#forge:is_dense",
+      "required": false
     }
   ]
 }

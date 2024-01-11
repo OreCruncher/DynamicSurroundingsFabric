@@ -4,9 +4,7 @@ import net.minecraft.util.Mth;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -41,6 +39,11 @@ public class ObjectArray<T> implements Collection<T> {
         if (this.data.length > 0)
             System.arraycopy(this.data, 0, t, 0, this.data.length);
         this.data = t;
+    }
+
+    @SuppressWarnings("unchecked")
+    public void sort(Comparator<? super T> c) {
+        Arrays.sort((T[]) this.data, 0, this.size(), c);
     }
 
     @Override

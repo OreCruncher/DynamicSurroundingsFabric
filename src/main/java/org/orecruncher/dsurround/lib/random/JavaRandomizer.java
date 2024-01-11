@@ -10,16 +10,16 @@ import java.util.random.RandomGeneratorFactory;
 final class JavaRandomizer implements IRandomizer {
 
     // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/random/package-summary.html
-    private static final String RNG_ALGORITHM = "Xoroshiro128PlusPlus";
+    public static final String XOROSHIRO_128_PLUS_PLUS = "Xoroshiro128PlusPlus";
 
     private final RandomGenerator generator;
 
-    public JavaRandomizer() {
-        this.generator = RandomGeneratorFactory.of(RNG_ALGORITHM).create();
+    public JavaRandomizer(String algorithm) {
+        this.generator = RandomGeneratorFactory.of(algorithm).create();
     }
 
-    public JavaRandomizer(final long seed) {
-        this.generator = RandomGeneratorFactory.of(RNG_ALGORITHM).create(seed);
+    public JavaRandomizer(String algorithm, final long seed) {
+        this.generator = RandomGeneratorFactory.of(algorithm).create(seed);
     }
 
     @Override

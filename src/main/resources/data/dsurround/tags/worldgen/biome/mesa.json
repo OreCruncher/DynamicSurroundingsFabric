@@ -4,6 +4,10 @@
     {
       "id": "#c:mesa",
       "required": false
+    },
+    {
+      "id": "#forge:is_plateau",
+      "required": false
     }
   ]
 }

@@ -1,35 +1,39 @@
 package org.orecruncher.dsurround.lib.config;
 
+import org.orecruncher.dsurround.lib.Library;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
-public class ConfigValue<T> {
+public class ElementAccessor<T> {
 
     private final Field field;
 
-    ConfigValue(Field field) {
+    ElementAccessor(Field field) {
         this.field = field;
 
         this.field.setAccessible(true);
     }
 
-    public <A extends Annotation> A getAnnotation(Class<A> annotation) {
+    protected <A extends Annotation> A getAnnotation(Class<A> annotation) {
         return this.field.getAnnotation(annotation);
     }
 
     @SuppressWarnings("unchecked")
-    public T get(Object instance) {
+    protected T get(Object instance) {
         try {
             return (T) this.field.get(instance);
-        } catch (Throwable ignore) {
+        } catch (Throwable t) {
+            Library.getLogger().error(t, "Error obtaining value instance");
         }
         return null;
     }
 
-    public void set(Object instance, T val) {
+    protected void set(Object instance, T val) {
         try {
             this.field.set(instance, val);
-        } catch (Throwable ignore) {
+        } catch (Throwable t) {
+            Library.getLogger().error(t, "Error setting value instance");
         }
     }
 }

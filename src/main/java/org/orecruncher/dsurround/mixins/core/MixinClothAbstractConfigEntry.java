@@ -4,10 +4,13 @@ import me.shedaniel.clothconfig2.api.AbstractConfigEntry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
+/**
+ * NOTE: This mixin will fail application if Cloth Config is not present. Not harmful, just emits noise into logs
+ * and can make some folks concerned.
+ */
 @Mixin(AbstractConfigEntry.class)
 public class MixinClothAbstractConfigEntry {
 

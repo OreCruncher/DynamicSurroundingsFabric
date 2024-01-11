@@ -22,12 +22,10 @@ public class ItemSwingEffect extends EntityEffectBase {
 
     @Override
     public void tick(final EntityEffectInfo info) {
-
-        var optional = info.getEntity();
-        if (optional.isEmpty())
+        if (info.isRemoved())
             return;
 
-        final LivingEntity entity = optional.get();
+        final LivingEntity entity = info.getEntity();
 
         // Boats are strange - ignore them for now
         if (entity.getVehicle() instanceof Boat)

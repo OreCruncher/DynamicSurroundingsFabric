@@ -32,6 +32,8 @@ public class BiomeTags {
     public static final TagKey<Biome> IN_OVERWORLD = of("in_overworld");
     public static final TagKey<Biome> IN_THE_END = of("in_the_end");
     public static final TagKey<Biome> JUNGLE = of("jungle");
+    public static final TagKey<Biome> LUSH = of("lush");
+    public static final TagKey<Biome> MAGICAL = of("magical");
     public static final TagKey<Biome> MESA = of("mesa");
     public static final TagKey<Biome> MOUNTAIN = of("mountain");
     public static final TagKey<Biome> MOUNTAIN_PEAK = of("mountain_peak");
@@ -40,11 +42,14 @@ public class BiomeTags {
     public static final TagKey<Biome> NETHER_FORESTS = of("nether_forests");
     public static final TagKey<Biome> OCEAN = of("ocean");
     public static final TagKey<Biome> PLAINS = of("plains");
+    public static final TagKey<Biome> RARE = of("rare");
     public static final TagKey<Biome> RIVER = of("river");
+    public static final TagKey<Biome> SANDY = of("sandy");
     public static final TagKey<Biome> SAVANNA = of("savanna");
     public static final TagKey<Biome> SHALLOW_OCEAN = of("shallow_ocean");
     public static final TagKey<Biome> SNOWY = of("snowy");
     public static final TagKey<Biome> SNOWY_PLAINS = of("snowy_plains");
+    public static final TagKey<Biome> SPOOKY = of("spooky");
     public static final TagKey<Biome> STONY_SHORES = of("stony_shores");
     public static final TagKey<Biome> SWAMP = of("swamp");
     public static final TagKey<Biome> TAIGA = of("taiga");

@@ -1,9 +1,10 @@
-package org.orecruncher.dsurround.gui.hud.plugins;
+package org.orecruncher.dsurround.gui.overlay.plugins;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
-import org.orecruncher.dsurround.gui.hud.IDiagnosticPlugin;
+import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.math.ITimer;
@@ -40,7 +41,7 @@ public class ClientProfilerPlugin implements IDiagnosticPlugin {
         this.clientTick.update(delta);
     }
 
-    public void onCollect(ClientEventHooks.CollectDiagnosticsEvent event) {
+    public void onCollect(CollectDiagnosticsEvent event) {
         var tpsTimer = new ITimer() {
             @Override
             public double getMSecs() {
@@ -53,8 +54,8 @@ public class ClientProfilerPlugin implements IDiagnosticPlugin {
             }
         };
 
-        event.timers.add(tpsTimer);
-        event.timers.add(clientTick);
-        event.timers.add(lastTick);
+        event.add(tpsTimer);
+        event.add(clientTick);
+        event.add(lastTick);
     }
 }

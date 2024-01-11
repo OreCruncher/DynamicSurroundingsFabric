@@ -5,6 +5,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.eventing.EntityStepEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.orecruncher.dsurround.tags.EntityEffectTags;
@@ -36,7 +37,7 @@ public class MixinEntity {
 
             // Lastly, the entity has to be tagged
             if (MixinHelpers.TAG_LIBRARY.is(EntityEffectTags.BRUSH_STEP, current.getType())) {
-                var event = new ClientEventHooks.EntityStepEvent(current, pos, state);
+                var event = new EntityStepEvent(current, pos, state);
                 ClientEventHooks.ENTITY_STEP_EVENT.raise(event);
             }
         }

@@ -1,14 +1,7 @@
 package org.orecruncher.dsurround.eventing;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.block.state.BlockState;
-import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.events.EventingFactory;
 import org.orecruncher.dsurround.lib.events.IPhasedEvent;
-import org.orecruncher.dsurround.lib.math.ITimer;
-
-import java.util.Collection;
 
 public final class ClientEventHooks {
     /**
@@ -26,17 +19,4 @@ public final class ClientEventHooks {
      */
     public static final IPhasedEvent<EntityStepEvent> ENTITY_STEP_EVENT = EventingFactory.createPrioritizedEvent();
 
-    public static final class CollectDiagnosticsEvent {
-        public final ObjectArray<String> left = new ObjectArray<>();
-        public final ObjectArray<String> right = new ObjectArray<>();
-        public final ObjectArray<ITimer> timers = new ObjectArray<>();
-    }
-
-    public record BlockUpdateEvent(Collection<BlockPos> updates){
-
-    }
-
-    public record EntityStepEvent(Entity entity, BlockPos blockPos, BlockState blockState) {
-
-    }
 }

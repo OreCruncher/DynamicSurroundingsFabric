@@ -4,6 +4,10 @@
     {
       "id": "#c:climate_dry",
       "required": false
+    },
+    {
+      "id": "#forge:is_dry",
+      "required": false
     }
   ]
 }

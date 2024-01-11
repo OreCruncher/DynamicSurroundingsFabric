@@ -2,7 +2,6 @@ package org.orecruncher.dsurround.runtime.audio;
 
 import com.mojang.blaze3d.audio.Channel;
 import com.mojang.blaze3d.audio.SoundBuffer;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.ChannelAccess;
@@ -11,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.Singleton;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -232,11 +232,11 @@ public final class SoundFXProcessor {
     /**
      * Gather diagnostics for the display
      */
-    private static void onGatherText(ClientEventHooks.CollectDiagnosticsEvent event ) {
+    private static void onGatherText(CollectDiagnosticsEvent event ) {
         if (isAvailable() && soundProcessor != null) {
             final String msg = soundProcessor.getDiagnosticString();
             if (!StringUtils.isEmpty(msg))
-                event.left.add(ChatFormatting.GREEN + msg);
+                event.add(CollectDiagnosticsEvent.Section.Systems, msg);
         }
     }
 }

@@ -1,3 +1,26 @@
+ > ### DynamicSurroundings-Fabric-1.20.4-0.2.0
+**Requirements**
+* JAVA 17+ (I am using Adoptium https://adoptium.net/)
+* Fabric Loader >=0.15.1
+* Fabric API >=0.91.2+1.20.4
+* 100% client side; no server side deployment needed
+
+**What's New**
+* Cloth-Config is no longer embedded in the jar. Mod will use either Cloth-Config or Yet Another Config Library if installed.
+  * If both are installed Cloth-Config will be used
+  * If neither are installed, the mod will still work—you just won't have access to the mod configuration menu and will have to make hand edits to the dsurround.json config file.
+* Added Forge biome tags. Enables the broadest out-of-the-box support for cross-loader biome mods.
+
+**Changes**
+* Moved clock overlay display to above the hot bar. Seemed dorky to have it above the cross-hair. Rendering is similar to a tooltip, and the text color is a gradient between midnight (Dark Violet) and noon (Sun Glow) colors.
+* Auto-disable footstep brush effect at runtime if Presence Footsteps is installed
+* Reworked debug overlay screen for better organization. Added information about entities as well.
+
+**Fixes**
+* Rendering of compass overlay is smoother. I forgot to lerp.
+* Null reference exception when player spawns outside of build height
+* Sometimes the RandomGenerator algorithms for modern Java are not available (for some unknown reason) and will cause Dynamic Surroundings to crash at startup.  If it is not possible to create this generator, logic will fall back to using the Minecraft random generator. Reinstalling the modpack from scratch may help.
+
 > ### DynamicSurroundings-Fabric-1.20.4-0.1.0
 **Requirements**
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)

@@ -1,6 +1,9 @@
 package org.orecruncher.dsurround.lib.random;
 
+import org.orecruncher.dsurround.lib.Library;
+
 import java.util.function.Supplier;
+import java.util.random.RandomGeneratorFactory;
 
 /**
  * Pluggable randomizer instances to be used. At the time of this checking, the Java randomizer "Xoroshiro128PlusPlus"
@@ -9,8 +12,7 @@ import java.util.function.Supplier;
  */
 @SuppressWarnings("unused")
 public class Randomizer {
-    // Replace the Supplier with MinecraftRandomizer if the MC randomizer is desired
-    private static final Supplier<IRandomizer> DEFAULT_RANDOMIZER = JavaRandomizer::new;
+    private static final Supplier<IRandomizer> DEFAULT_RANDOMIZER = Randomizer::getRandomizer;
     private static final ThreadLocal<IRandomizer> SHARED = ThreadLocal.withInitial(DEFAULT_RANDOMIZER);
 
     /**
@@ -31,4 +33,21 @@ public class Randomizer {
 
     }
 
+    private static IRandomizer getRandomizer() {
+        try {
+            Library.getLogger().info("Creating RandomGenerator '%s'", JavaRandomizer.XOROSHIRO_128_PLUS_PLUS);
+            return new JavaRandomizer(JavaRandomizer.XOROSHIRO_128_PLUS_PLUS);
+        } catch (Exception ex) {
+            Library.getLogger().error(ex, "Unable to create randomizer!");
+            Library.getLogger().info("RandomGenerator factories available:");
+
+            RandomGeneratorFactory.all()
+                    .map(RandomGeneratorFactory::name)
+                    .sorted()
+                    .forEach(Library.getLogger()::info);
+        }
+
+        Library.getLogger().info("Falling back to Minecraft randomizer");
+        return new MinecraftRandomizer();
+    }
 }

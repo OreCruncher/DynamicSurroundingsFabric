@@ -4,8 +4,10 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 
 import net.minecraft.world.entity.LivingEntity;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.effects.entity.*;
+import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 import java.util.Arrays;
@@ -69,7 +71,12 @@ public enum EntityEffectType {
         FROST_BREATH.setConfigProvider(() -> config.enableBreathEffect);
         PLAYER_TOOLBAR.setConfigProvider(() -> config.enablePlayerToolbarEffect);
         ITEM_SWING.setConfigProvider(() -> config.enableSwingEffect);
-        BRUSH_STEP.setConfigProvider(() -> config.enableBrushStepEffect);
+
+        // Do not do brush step effects if Presence Footsteps is installed
+        if (Library.getPlatform().isModLoaded(Constants.MOD_PRESENCE_FOOTSTEPS))
+            BRUSH_STEP.setConfigProvider(() -> false);
+        else
+            BRUSH_STEP.setConfigProvider(() -> config.enableBrushStepEffect);
     }
 
 }

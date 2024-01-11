@@ -20,22 +20,18 @@ public class BowUseEffect extends EntityEffectBase {
 
     @Override
     public void tick(EntityEffectInfo info) {
-        var entityResult = info.getEntity();
+        if (info.isRemoved()) {
+            this.lastActiveStack = ItemStack.EMPTY;
+            return;
+        }
 
-        if (entityResult.isPresent()) {
-            var entity = entityResult.get();
-            final ItemStack currentStack = entity.getUseItem();
-            if (isApplicable(currentStack)) {
-                if (!ItemStack.matches(currentStack, this.lastActiveStack)) {
-                    if (isApplicable(currentStack)) {
-                        var sound = BOW_PULL_SOUND.createAtEntity(entity);
-                        this.playSound(sound);
-                    }
-
-                    this.lastActiveStack = currentStack;
-                }
-            } else {
-                this.lastActiveStack = ItemStack.EMPTY;
+        var entity = info.getEntity();
+        final ItemStack currentStack = entity.getUseItem();
+        if (isApplicable(currentStack)) {
+            if (!ItemStack.matches(currentStack, this.lastActiveStack)) {
+                var sound = BOW_PULL_SOUND.createAtEntity(entity);
+                this.playSound(sound);
+                this.lastActiveStack = currentStack;
             }
         } else {
             this.lastActiveStack = ItemStack.EMPTY;

@@ -2,13 +2,14 @@ package org.orecruncher.dsurround.lib.scripting;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import java.util.Optional;
 
 class ScriptEngineLoader {
-    public static ScriptEngine getEngine() {
+    public static Optional<ScriptEngine> getEngine() {
         try {
-            return NashornScriptEngineLoader.getEngine();
+            return Optional.of(NashornScriptEngineLoader.getEngine());
         } catch (final Throwable ignore) {
         }
-        return new ScriptEngineManager().getEngineByName("JavaScript");
+        return Optional.ofNullable(new ScriptEngineManager().getEngineByName("JavaScript"));
     }
 }

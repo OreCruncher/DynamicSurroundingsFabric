@@ -4,6 +4,10 @@
     {
       "id": "#c:tree_coniferous",
       "required": false
+    },
+    {
+      "id": "forge:is_coniferous",
+      "required": false
     }
   ]
 }
