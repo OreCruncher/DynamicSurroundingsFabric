@@ -7,7 +7,7 @@
     },
     {
       "id": "#forge:is_swamp",
-      "required": "false"
+      "required": false
     }
   ]
 }

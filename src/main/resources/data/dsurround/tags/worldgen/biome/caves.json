@@ -7,7 +7,7 @@
     },
     {
       "id": "#forge:is_cave",
-      "required": "false"
+      "required": false
     }
   ]
 }
