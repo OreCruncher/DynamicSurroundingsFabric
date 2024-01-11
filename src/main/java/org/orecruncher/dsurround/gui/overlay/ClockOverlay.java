@@ -3,12 +3,12 @@ package org.orecruncher.dsurround.gui.overlay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
-import net.minecraft.network.chat.TextColor;
 import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.config.Configuration;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
+import org.orecruncher.dsurround.lib.gui.ColorGradient;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
 
@@ -24,20 +24,20 @@ public class ClockOverlay extends AbstractOverlay {
      */
     private static final int TOOLTIP_XOFFSET = 12;
 
-    private static final TextColor MIDNIGHT_COLOR = ColorPalette.DARK_VIOLET;
-    private static final TextColor NOON_COLOR = ColorPalette.SUN_GLOW;
-
     private final ITagLibrary tagLibrary;
     private final Configuration config;
     private final MinecraftClock clock;
+    private final ColorGradient gradient;
     private boolean showClock;
     private int textWidth;
     private String clockText;
+    private int color;
 
     public ClockOverlay(Configuration config, ITagLibrary tagLibrary) {
         this.tagLibrary = tagLibrary;
         this.config = config;
         this.clock = new MinecraftClock();
+        this.gradient = new ColorGradient(ColorPalette.DARK_VIOLET, ColorPalette.SUN_GLOW, 180F);
         this.showClock = false;
     }
 
@@ -53,6 +53,19 @@ public class ClockOverlay extends AbstractOverlay {
             this.clock.update(player.level());
             this.clockText = this.clock.getFormattedTime();
             this.textWidth = GameUtils.getTextRenderer().width(clockText);
+
+            // Calculate the color this tick
+            var world = player.level();
+            // 0 is noon, 180 is midnight. Need to normalize so that midnight 0.
+            var angleDegrees = world.getTimeOfDay(1F)* 360F + 180;
+            // Wrap
+            if (angleDegrees >= 360)
+                angleDegrees -= 360;
+            // Are we to decrease rather than increase toward noon?
+            if (angleDegrees >= 180)
+                angleDegrees = 360 - angleDegrees;
+
+            this.color = this.gradient.getRGBColor(angleDegrees);
         }
     }
 
@@ -65,20 +78,6 @@ public class ClockOverlay extends AbstractOverlay {
         if (!this.showClock)
             return;
 
-        var world = GameUtils.getWorld().orElseThrow();
-        // 0 is noon, 180 is midnight. Need to normalize so that midnight 0.
-        var angleDegrees = world.getTimeOfDay(partialTick)* 360F + 180;
-        // Wrap
-        if (angleDegrees > 360)
-            angleDegrees -= 360;
-        // Are we to decrease rather than increase toward noon?
-        if (angleDegrees > 180)
-            angleDegrees = 360 - angleDegrees;
-
-        var ratio = angleDegrees / 180F;
-
-        var color = ColorPalette.lerp(ratio, MIDNIGHT_COLOR, NOON_COLOR);
-
         var textRender = GameUtils.getTextRenderer();
         var x = (context.guiWidth() - this.textWidth) / 2 - TOOLTIP_XOFFSET;
         var y = context.guiHeight() - BOTTOM_OFFSET;
@@ -86,6 +85,6 @@ public class ClockOverlay extends AbstractOverlay {
         // Don't use renderTooltip. It uses a Z which pushes the rendering to the top of the Z stack and can
         // and can interfere with renders.
         TooltipRenderUtil.renderTooltipBackground(context, x, y, this.textWidth, textRender.lineHeight - 2, 0);
-        context.drawString(textRender, this.clockText, x, y, color.getValue(), false);
+        context.drawString(textRender, this.clockText, x, y, this.color, false);
     }
 }

@@ -93,10 +93,13 @@ public final class ColorPalette {
     }
 
     private static TextColor of(int red, int green, int blue) {
-        var rgb = ((red & 0xFF) << 16) |
-                  ((green & 0xFF) << 8)  |
-                  ((blue & 0xFF));
-        return TextColor.fromRgb(rgb);
+        return TextColor.fromRgb(toRGB(red, green, blue));
+    }
+
+    static int toRGB(int red, int green, int blue) {
+        return ((red & 0xFF) << 16) |
+                ((green & 0xFF) << 8)  |
+                ((blue & 0xFF));
     }
 
     public static TextColor lerp(float scale, TextColor start, TextColor end) {
