@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.platform.fabric.services;
+package org.orecruncher.dsurround.fabric.services;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;

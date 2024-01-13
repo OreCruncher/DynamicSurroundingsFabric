@@ -17,7 +17,7 @@
   "environment": "client",
   "entrypoints": {
     "client": [
-      "org.orecruncher.dsurround.platform.fabric.FabricMod"
+      "org.orecruncher.dsurround.fabric.FabricMod"
     ],
     "modmenu": [
       "org.orecruncher.dsurround.config.ModConfigMenu"

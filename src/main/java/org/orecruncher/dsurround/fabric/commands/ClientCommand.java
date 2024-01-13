@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.platform.fabric.commands;
+package org.orecruncher.dsurround.fabric.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;

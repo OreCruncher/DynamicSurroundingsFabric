@@ -26,7 +26,7 @@ import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public abstract class Client implements IMinecraftMod {
+public final class Client implements IMinecraftMod {
 
     public static final ModLog LOGGER = new ModLog(Constants.MOD_ID);
 
