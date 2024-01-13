@@ -30,7 +30,8 @@
     "core.MixinParticleManager",
     "core.MixinRainSplashParticle",
     "core.MixinRaycastContextAccessor",
-    "core.MixinWorld"
+    "core.MixinWorld",
+    "events.MixinMinecraftClient"
   ],
   "server": [],
   "injectors": {

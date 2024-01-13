@@ -5,10 +5,10 @@ import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
-import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
+import org.orecruncher.dsurround.lib.platform.events.ClientState;
 
 public class ClientProfilerPlugin implements IDiagnosticPlugin {
 
@@ -20,11 +20,8 @@ public class ClientProfilerPlugin implements IDiagnosticPlugin {
 
     public ClientProfilerPlugin() {
         ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect, HandlerPriority.VERY_HIGH);
-
-        // Go to Fabric for these as it should encompass other mod impacts
-        var eventRegistrations = Library.getEventRegistrations();
-        eventRegistrations.registerClientTickStart(this::tickStart);
-        eventRegistrations.registerClientTickEnd(this::tickEnd);
+        ClientState.TICK_START.register(this::tickStart, HandlerPriority.VERY_HIGH);
+        ClientState.TICK_END.register(this::tickEnd, HandlerPriority.VERY_LOW);
     }
 
     private void tickStart(Minecraft client) {
