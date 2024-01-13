@@ -1,6 +1,9 @@
 package org.orecruncher.dsurround.lib.resources;
 
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.tags.TagKey;
+import net.minecraft.tags.TagManager;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -60,6 +63,38 @@ public final class ResourceUtils {
         return findAssets(
                 ns -> true,
                 ns -> new ResourceLocation(ns, configId));
+    }
+
+    /**
+     * Processes local tag definitions from resource packs and mods. Since Dynamic Surroundings is
+     * a client mod special tagging is lost when connecting to a remote server. This routine helps
+     * backfill that knowledge gap.
+     */
+    public static Collection<IResourceAccessor> findClientTagFiles(TagKey<?> tagKey) {
+        var tagIdentifier = tagKey.location();
+        var tagType = TagManager.getTagDir(tagKey.registry());
+        var tagFile = "%s/%s.json".formatted(tagType, tagIdentifier.getPath());
+
+        final List<IResourceAccessor> results = new ArrayList<>();
+        var resourceManager = GameUtils.getResourceManager();
+        resourceManager.listPacks()
+                .forEach(pack -> {
+                    try {
+                        var location = new ResourceLocation(tagIdentifier.getNamespace(), tagFile);
+                        var resource = pack.getResource(PackType.SERVER_DATA, location);
+                        if (resource != null)
+                            try (var inputStream = resource.get()) {
+                                byte[] asset = inputStream.readAllBytes();
+                                IResourceAccessor accessor = IResourceAccessor.createRawBytes(location, asset);
+                                results.add(accessor);
+                            } catch (Throwable t) {
+                                LOGGER.error(t, "Unable to read resource stream");
+                            }
+                    } catch (Throwable ignore) {
+                    }
+                });
+
+        return results;
     }
 
     // Modeled after sound list processing in SoundManager
