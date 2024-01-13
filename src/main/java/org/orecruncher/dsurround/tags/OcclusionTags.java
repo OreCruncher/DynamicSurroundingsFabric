@@ -6,7 +6,13 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import org.orecruncher.dsurround.Constants;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 public final class OcclusionTags {
+
+    static final Collection<TagKey<Block>> TAGS = new HashSet<>();
+
 
     public static final TagKey<Block> NONE = of("none");
     public static final TagKey<Block> VERY_LOW = of("very_low");
@@ -17,6 +23,8 @@ public final class OcclusionTags {
     public static final TagKey<Block> MAX = of("max");
 
     private static TagKey<Block> of(String id) {
-        return TagKey.create(Registries.BLOCK, new ResourceLocation(Constants.MOD_ID, "occlusion/" + id));
+        var tagKey = TagKey.create(Registries.BLOCK, new ResourceLocation(Constants.MOD_ID, "occlusion/" + id));
+        TAGS.add(tagKey);
+        return tagKey;
     }
 }

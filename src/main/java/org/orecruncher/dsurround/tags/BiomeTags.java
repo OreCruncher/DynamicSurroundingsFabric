@@ -6,7 +6,12 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.Constants;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 public class BiomeTags {
+
+    static final Collection<TagKey<Biome>> TAGS = new HashSet<>();
 
     public static final TagKey<Biome> AQUATIC = of("aquatic");
     public static final TagKey<Biome> AQUATIC_ICY = of("aquatic_icy");
@@ -65,7 +70,8 @@ public class BiomeTags {
     public static final TagKey<Biome> WINDSWEPT = of("windswept");
 
     private static TagKey<Biome> of(String id) {
-        return TagKey.create(Registries.BIOME, new ResourceLocation(Constants.MOD_ID, id));
+        var tagKey = TagKey.create(Registries.BIOME, new ResourceLocation(Constants.MOD_ID, id));
+        TAGS.add(tagKey);
+        return tagKey;
     }
-
 }

@@ -11,6 +11,7 @@ import org.orecruncher.dsurround.lib.platform.IPlatform;
 
 import java.io.File;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.function.Function;
 
@@ -71,28 +72,22 @@ public final class ResourceUtils {
      * backfill that knowledge gap.
      */
     public static Collection<IResourceAccessor> findClientTagFiles(TagKey<?> tagKey) {
+
+        final Collection<IResourceAccessor> results = new ArrayList<>();
+
         var tagIdentifier = tagKey.location();
         var tagType = TagManager.getTagDir(tagKey.registry());
-        var tagFile = "%s/%s.json".formatted(tagType, tagIdentifier.getPath());
+        var tagFile = "%s/%s/%s/%s.json".formatted(PackType.SERVER_DATA.getDirectory(), tagIdentifier.getNamespace(), tagType, tagIdentifier.getPath());
 
-        final List<IResourceAccessor> results = new ArrayList<>();
-        var resourceManager = GameUtils.getResourceManager();
-        resourceManager.listPacks()
-                .forEach(pack -> {
-                    try {
-                        var location = new ResourceLocation(tagIdentifier.getNamespace(), tagFile);
-                        var resource = pack.getResource(PackType.SERVER_DATA, location);
-                        if (resource != null)
-                            try (var inputStream = resource.get()) {
-                                byte[] asset = inputStream.readAllBytes();
-                                IResourceAccessor accessor = IResourceAccessor.createRawBytes(location, asset);
-                                results.add(accessor);
-                            } catch (Throwable t) {
-                                LOGGER.error(t, "Unable to read resource stream");
-                            }
-                    } catch (Throwable ignore) {
-                    }
-                });
+        for (var path : PLATFORM.findResourcePaths(tagFile)) {
+            try {
+                var asset = Files.readAllBytes(path);
+                IResourceAccessor accessor = IResourceAccessor.createRawBytes(tagIdentifier, asset);
+                results.add(accessor);
+            } catch (Throwable t) {
+                LOGGER.error(t, "Unable to read resource stream for path %s", path.toString());
+            }
+        }
 
         return results;
     }

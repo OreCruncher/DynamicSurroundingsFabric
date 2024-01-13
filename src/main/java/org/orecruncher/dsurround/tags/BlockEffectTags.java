@@ -6,7 +6,12 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import org.orecruncher.dsurround.Constants;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 public class BlockEffectTags {
+
+    static final Collection<TagKey<Block>> TAGS = new HashSet<>();
 
     public static final TagKey<Block> FIREFLIES = of("fireflies");
     public static final TagKey<Block> FLOOR_SQUEAKS = of("floor_squeaks");
@@ -16,6 +21,8 @@ public class BlockEffectTags {
     public static final TagKey<Block> HEAT_PRODUCERS = of("heat_producers");
 
     private static TagKey<Block> of(String id) {
-        return TagKey.create(Registries.BLOCK, new ResourceLocation(Constants.MOD_ID, "effects/" + id));
+        var tagKey = TagKey.create(Registries.BLOCK, new ResourceLocation(Constants.MOD_ID, "effects/" + id));
+        TAGS.add(tagKey);
+        return tagKey;
     }
 }

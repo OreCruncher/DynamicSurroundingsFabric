@@ -10,6 +10,7 @@ import org.orecruncher.dsurround.lib.version.SemanticVersion;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -83,5 +84,16 @@ public class PlatformServiceImpl implements IPlatform {
     @Override
     public KeyMapping registerKeyBinding(String translationKey, int code, String category) {
         return KeyBindingHelper.registerKeyBinding(new KeyMapping(translationKey, code, category));
+    }
+
+    @Override
+    public  Collection<Path> findResourcePaths(String file) {
+        Collection<Path> result = new HashSet<>();
+
+        for (var mod : FabricLoader.getInstance().getAllMods()) {
+            mod.findPath(file).ifPresent(result::add);
+        }
+
+        return result;
     }
 }

@@ -42,7 +42,7 @@ public interface IPlatform {
      * @return Path to the mod's configuration directory.
      */
     default Path getConfigPath(final String modId) {
-        var configDir =this.getConfigPath();
+        var configDir = this.getConfigPath();
         var configPath = configDir.resolve(Objects.requireNonNull(modId));
 
         if (Files.notExists(configPath))
@@ -57,4 +57,9 @@ public interface IPlatform {
     }
 
     KeyMapping registerKeyBinding(String translationKey, int code, String category);
+
+    /**
+     * Obtains a list of file paths corresponding to the resource file requested
+     */
+    Collection<Path> findResourcePaths(String file);
 }
