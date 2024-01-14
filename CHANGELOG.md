@@ -1,4 +1,18 @@
- > ### DynamicSurroundings-Fabric-1.20.4-0.2.0
+> ### DynamicSurroundings-Fabric-1.20.4-0.2.1
+**Requirements**
+* JAVA 17+ (I am using Adoptium https://adoptium.net/)
+* Fabric Loader >=0.15.1
+* Fabric API >=0.91.2+1.20.4
+* 100% client side; no server side deployment needed
+
+**Changes**
+* Reworked internal eventing implementation. Gained a bit of performance.
+
+**Fixes**
+* Config sporadically not present in ModMenu.
+* Minor fixes to data tagging.
+
+> ### DynamicSurroundings-Fabric-1.20.4-0.2.0
 **Requirements**
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)
 * Fabric Loader >=0.15.1
