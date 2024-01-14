@@ -19,10 +19,6 @@ public class ClockOverlay extends AbstractOverlay {
      * "now playing" text that displays when playing a record in a jukebox. Position above that.
      */
     private static final int BOTTOM_OFFSET = 68 + 20;
-    /**
-     * Offset on the X because of the box rendering.
-     */
-    private static final int TOOLTIP_XOFFSET = 12;
 
     private final ITagLibrary tagLibrary;
     private final Configuration config;
@@ -79,7 +75,7 @@ public class ClockOverlay extends AbstractOverlay {
             return;
 
         var textRender = GameUtils.getTextRenderer();
-        var x = (context.guiWidth() - this.textWidth) / 2 - TOOLTIP_XOFFSET;
+        var x = (context.guiWidth() - this.textWidth) / 2;
         var y = context.guiHeight() - BOTTOM_OFFSET;
 
         // Don't use renderTooltip. It uses a Z which pushes the rendering to the top of the Z stack and can
