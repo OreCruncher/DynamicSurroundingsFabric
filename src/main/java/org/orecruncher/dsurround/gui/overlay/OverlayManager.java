@@ -5,7 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.platform.events.ClientState;
+import org.orecruncher.dsurround.eventing.ClientState;
 
 @Cacheable
 public class OverlayManager {

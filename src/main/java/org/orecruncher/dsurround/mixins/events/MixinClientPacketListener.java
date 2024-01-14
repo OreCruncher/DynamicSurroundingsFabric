@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.mixins.events;
 
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.protocol.common.ClientboundUpdateTagsPacket;
-import org.orecruncher.dsurround.lib.platform.events.ClientState;
+import org.orecruncher.dsurround.eventing.ClientState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.lib.system;
 
 import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
-import org.orecruncher.dsurround.lib.platform.events.ClientState;
+import org.orecruncher.dsurround.eventing.ClientState;
 
 /**
  * Monotonically increasing tick count based on client ticks.

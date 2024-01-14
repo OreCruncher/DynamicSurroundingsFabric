@@ -10,7 +10,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.platform.Services;
-import org.orecruncher.dsurround.lib.platform.events.ClientState;
+import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 public class KeyBindings {

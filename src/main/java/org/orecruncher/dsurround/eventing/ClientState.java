@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib.platform.events;
+package org.orecruncher.dsurround.eventing;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.RegistryAccess;
@@ -106,6 +106,7 @@ public final class ClientState {
         void onDisconnect(Minecraft client);
     }
 
+    @FunctionalInterface
     public interface ITagSync {
         void onTagSync(RegistryAccess registryAccess);
     }

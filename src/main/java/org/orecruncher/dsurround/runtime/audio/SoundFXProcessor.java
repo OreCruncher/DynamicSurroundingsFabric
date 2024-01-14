@@ -15,7 +15,7 @@ import org.orecruncher.dsurround.lib.Singleton;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.platform.events.ClientState;
+import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.threading.Worker;
 import org.orecruncher.dsurround.mixins.audio.MixinChannelHandleAccessor;
 import org.orecruncher.dsurround.runtime.audio.effects.Effects;
