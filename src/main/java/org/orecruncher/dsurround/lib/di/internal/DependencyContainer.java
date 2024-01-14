@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.lib.di.internal;
 
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.Singleton;
 import org.orecruncher.dsurround.lib.di.*;
 import org.orecruncher.dsurround.lib.Lazy;
 
@@ -12,6 +13,7 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Simple dependency injection container that injects via constructor as well as
@@ -44,6 +46,25 @@ public class DependencyContainer implements IServiceContainer {
     @Override
     public String getName() {
         return this._name;
+    }
+
+    /**
+     * Dumps the registrations in the container
+     */
+    @Override
+    public Stream<String> dumpRegistrations() {
+        return this._resolvers.entrySet().stream()
+                .map(kvp -> {
+                    var builder = new StringBuilder();
+                    builder.append(kvp.getKey().getName())
+                            .append(" [");
+                    if (kvp.getValue() instanceof Singleton)
+                        builder.append("SINGLETON");
+                    else
+                        builder.append("PER INSTANCE");
+                    return builder.append("]").toString();
+                })
+                .sorted();
     }
 
     /**
@@ -156,7 +177,7 @@ public class DependencyContainer implements IServiceContainer {
             if (!clazz.isAnnotationPresent(Cacheable.class)) {
                 this.registerFactory(clazz, factory);
             } else {
-                this.registerFactory(clazz, () -> result);
+                this.registerFactory(clazz, new Singleton<>(result));
             }
 
             return result;

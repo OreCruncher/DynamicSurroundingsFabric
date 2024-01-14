@@ -1,8 +1,10 @@
 package org.orecruncher.dsurround.lib.di;
 
+import org.orecruncher.dsurround.lib.Singleton;
 import org.orecruncher.dsurround.lib.di.internal.DependencyContainer;
 
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
 public interface IServiceContainer {
@@ -10,6 +12,12 @@ public interface IServiceContainer {
      * Returns the name of the container
      */
     String getName();
+
+    /**
+     * Dumps the registrations in the container
+     * @return Stream of Strings describing registration entries
+     */
+    Stream<String> dumpRegistrations();
 
     /**
      * Registers the object in the container, with it being identified by its type.
@@ -42,10 +50,10 @@ public interface IServiceContainer {
      * @param object Object instance to register
      * @param <T>    Type of object to represent the instance as
      * @param <C>    Type of the object itself
-     * @return Reference to the SimpleDIContainer fro fluent declarations
+     * @return Reference to the SimpleDIContainer for fluent declarations
      */
     default <T, C extends T> DependencyContainer registerSingleton(Class<T> clazz, C object) {
-        return this.registerFactory(clazz, () -> object);
+        return this.registerFactory(clazz, new Singleton<T>(object));
     }
 
     /**

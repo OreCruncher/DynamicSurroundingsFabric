@@ -4,11 +4,13 @@ import com.google.common.base.MoreObjects;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
+@Cacheable
 abstract class AbstractClientHandler {
 
     protected static final IRandomizer RANDOM = Randomizer.current();

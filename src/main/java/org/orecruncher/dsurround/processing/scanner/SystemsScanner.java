@@ -9,6 +9,7 @@ import org.orecruncher.dsurround.effects.IEffectSystem;
 import org.orecruncher.dsurround.lib.BlockPosUtil;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.scanner.CuboidScanner;
 import org.orecruncher.dsurround.lib.scanner.ScanContext;
@@ -17,6 +18,7 @@ import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+@Cacheable
 public class SystemsScanner extends CuboidScanner {
 
     private static final Predicate<IBlockEffect> EFFECT_PREDICATE = system -> {

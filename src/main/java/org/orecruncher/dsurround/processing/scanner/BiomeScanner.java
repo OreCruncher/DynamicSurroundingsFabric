@@ -13,7 +13,7 @@ import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
-public final class BiomeScanner {
+public final class BiomeScanner extends AbstractScanner {
 
     public static final int SCAN_INTERVAL = 4;
     private static final int UNDERGROUND_THRESHOLD_OFFSET = 4;
