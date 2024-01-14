@@ -37,6 +37,12 @@ public final class Client implements IMinecraftMod {
 
     private CompletableFuture<Optional<VersionResult>> versionInfo;
 
+    public Client() {
+        // Bootstrap library functions
+        LOGGER.info("Bootstrapping...");
+        Library.initialize(this, LOGGER);
+    }
+
     @Override
     public String getModId() {
         return Constants.MOD_ID;
@@ -53,8 +59,7 @@ public final class Client implements IMinecraftMod {
             }
         });
 
-        // Bootstrap library functions
-        Library.initialize(this, LOGGER);
+        //Library.initialize(this, LOGGER);
         Handlers.registerHandlers();
 
         Config = ConfigurationData.getConfig(Configuration.class);
@@ -93,12 +98,11 @@ public final class Client implements IMinecraftMod {
             this.versionInfo = CompletableFuture.completedFuture(Optional.empty());
 
         KeyBindings.register();
-
-        LOGGER.info("Initialization complete");
     }
 
     public void onComplete(Minecraft client) {
 
+        LOGGER.info("Finalizing initialization...");
         var container = ContainerManager.getRootContainer();
 
         // Register the Minecraft sound manager
@@ -130,6 +134,8 @@ public final class Client implements IMinecraftMod {
         // These sheets are purely client side - they have to be manhandled into the
         // Minecraft environment.
         ParticleSheets.register();
+
+        LOGGER.info("Done!");
     }
 
     private void onConnect(Minecraft minecraftClient) {

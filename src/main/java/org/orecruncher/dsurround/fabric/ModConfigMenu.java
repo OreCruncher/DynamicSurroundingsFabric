@@ -14,6 +14,10 @@ public class ModConfigMenu implements ModMenuApi {
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
         var factory = Services.PLATFORM.getModConfigScreenFactory(Configuration.class);
-        return factory.<ConfigScreenFactory<?>>map(iScreenFactory -> (ConfigScreenFactory<?>) iScreenFactory.create(GameUtils.getMC(), null)).orElse(null);
+        if (factory.isPresent()) {
+            var f = factory.get();
+            return screen -> f.create(GameUtils.getMC(), screen);
+        }
+        return null;
     }
 }
