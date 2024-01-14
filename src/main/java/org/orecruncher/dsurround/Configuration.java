@@ -4,15 +4,10 @@ import org.orecruncher.dsurround.config.CompassStyle;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.config.ConfigurationData.*;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 
+@ConfigPlacement(folderName = Constants.MOD_ID, fileName = Constants.MOD_ID)
 @TranslationRoot(Constants.MOD_ID + ".config")
 public class Configuration extends ConfigurationData {
-
-    protected Configuration() {
-        super(ContainerManager.resolve(IMinecraftDirectories.class).getModConfigDirectory().resolve(Constants.MOD_ID + ".json"));
-    }
 
     @Property
     @Comment("Configuration options for modifying logging behavior")

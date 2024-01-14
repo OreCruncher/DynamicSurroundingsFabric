@@ -11,9 +11,9 @@ import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
-import org.orecruncher.dsurround.lib.platform.IMinecraftMod;
-import org.orecruncher.dsurround.eventing.ClientState;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
+import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.version.IVersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionResult;
@@ -26,40 +26,35 @@ import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public final class Client implements IMinecraftMod {
-
-    public static final ModLog LOGGER = new ModLog(Constants.MOD_ID);
+public final class Client {
 
     /**
      * Basic configuration settings
      */
     public static Configuration Config;
 
+    private final IModLog logger;
     private CompletableFuture<Optional<VersionResult>> versionInfo;
 
     public Client() {
         // Bootstrap library functions
-        LOGGER.info("Bootstrapping...");
-        Library.initialize(this, LOGGER);
-    }
-
-    @Override
-    public String getModId() {
-        return Constants.MOD_ID;
+        this.logger = Library.getLogger();
+        Library.initialize(Constants.MOD_ID);
     }
 
     public void initializeClient() {
-        LOGGER.info("Initializing...");
+        this.logger.info("Client initializing...");
 
         // Hook the config load event so set we can set the debug flags on logging
         Configuration.CONFIG_CHANGED.register(cfg -> {
             if (cfg instanceof Configuration config) {
-                LOGGER.setDebug(config.logging.enableDebugLogging);
-                LOGGER.setTraceMask(config.logging.traceMask);
+                if (this.logger instanceof ModLog ml) {
+                    ml.setDebug(config.logging.enableDebugLogging);
+                    ml.setTraceMask(config.logging.traceMask);
+                }
             }
         });
 
-        //Library.initialize(this, LOGGER);
         Handlers.registerHandlers();
 
         Config = ConfigurationData.getConfig(Configuration.class);
@@ -102,7 +97,7 @@ public final class Client implements IMinecraftMod {
 
     public void onComplete(Minecraft client) {
 
-        LOGGER.info("Finalizing initialization...");
+        this.logger.info("Finalizing initialization...");
         var container = ContainerManager.getRootContainer();
 
         // Register the Minecraft sound manager
@@ -119,7 +114,7 @@ public final class Client implements IMinecraftMod {
         AssetLibraryEvent.RELOAD.register(container.resolve(ITagLibrary.class)::reload);
 
         ClientState.TAG_SYNC.register(event -> {
-            LOGGER.info("Tag sync event received - reloading libraries");
+            this.logger.info("Tag sync event received - reloading libraries");
             AssetLibraryEvent.reload();
         }, HandlerPriority.VERY_HIGH);
 
@@ -128,14 +123,14 @@ public final class Client implements IMinecraftMod {
 
         // Force instantiation of the core Handler.  This should cause the rest
         // of the dependencies to be initialized.
-        var handlers = container.resolve(Handlers.class);
+        var ignore = container.resolve(Handlers.class);
 
         // Make sure our particle sheets get registered otherwise they will not render.
         // These sheets are purely client side - they have to be manhandled into the
         // Minecraft environment.
         ParticleSheets.register();
 
-        LOGGER.info("Done!");
+        this.logger.info("Done!");
     }
 
     private void onConnect(Minecraft minecraftClient) {
@@ -145,14 +140,14 @@ public final class Client implements IMinecraftMod {
             if (versionQueryResult.isPresent()) {
                 var result = versionQueryResult.get();
 
-                LOGGER.info("Update to %s version %s is available", result.displayName(), result.version());
+                this.logger.info("Update to %s version %s is available", result.displayName(), result.version());
                 var player = GameUtils.getPlayer();
                 player.ifPresent(p -> p.sendSystemMessage(result.getChatText()));
             } else if(Config.logging.enableModUpdateChatMessage) {
-                LOGGER.info("The mod version is current");
+                this.logger.info("The mod version is current");
             }
         } catch (Throwable t) {
-            LOGGER.error(t, "Unable to process version information");
+            this.logger.error(t, "Unable to process version information");
         }
     }
 }

@@ -2,8 +2,10 @@ package org.orecruncher.dsurround.lib;
 
 import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
+import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.platform.*;
 import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -21,19 +23,17 @@ import org.orecruncher.dsurround.lib.util.MinecraftDirectories;
  */
 public final class Library {
 
-    private static IModLog LOGGER;
+    private static final IModLog LOGGER = new ModLog(Constants.MOD_ID);
 
     /**
      * Initializes key functionality of library logic during startup.
      */
-    public static void initialize(@NotNull IMinecraftMod mod, @NotNull IModLog logger) {
-        Preconditions.checkNotNull(mod);
-        Preconditions.checkNotNull(logger);
-
-        LOGGER = logger;
+    public static void initialize(String modId) {
+        LOGGER.info("Library initializing");
+        Preconditions.checkNotNull(modId);
 
         // Do this first so the rest of the library can get dependencies
-        configureServiceDependencies(mod, logger);
+        configureServiceDependencies(modId);
 
         // Initialize event handlers
         Services.CLIENT_EVENT_REGISTRATIONS.register();
@@ -58,10 +58,10 @@ public final class Library {
         return Services.CLIENT_EVENT_REGISTRATIONS;
     }
 
-    private static void configureServiceDependencies(IMinecraftMod mod, IModLog logger) {
-        var modInfo = Services.PLATFORM.getModInformation(mod.getModId())
+    private static void configureServiceDependencies(String modId) {
+        var modInfo = Services.PLATFORM.getModInformation(modId)
                 .orElseThrow(() -> {
-                    logger.warn("Unable to acquire mod information for %s!", mod.getModId());
+                    LOGGER.warn("Unable to acquire mod information for %s!", modId);
                     return new RuntimeException("Unable to acquire mod information!");
                 });
 
@@ -69,8 +69,7 @@ public final class Library {
                 .getRootContainer()
                 .registerSingleton(IPlatform.class, Services.PLATFORM)
                 .registerSingleton(IClientEventRegistrations.class, Services.CLIENT_EVENT_REGISTRATIONS)
-                .registerSingleton(IModLog.class, logger)
-                .registerSingleton(IMinecraftMod.class, mod)
+                .registerSingleton(IModLog.class, LOGGER)
                 .registerSingleton(ModInformation.class, modInfo)
                 .registerSingleton(ISystemClock.class, SystemClock.class)
                 .registerSingleton(IMinecraftDirectories.class, MinecraftDirectories.class)

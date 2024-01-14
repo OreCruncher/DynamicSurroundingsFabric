@@ -3,9 +3,9 @@ package org.orecruncher.dsurround.fabric.services;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.fabric.config.ClothAPIFactory;
+import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.config.IScreenFactory;
 import org.orecruncher.dsurround.fabric.config.YaclFactory;
@@ -41,7 +41,7 @@ public class PlatformServiceImpl implements IPlatform {
                 var result = new ModInformation(modId, displayName, version, updateURL, curseForgeLink, modrinthLink);
                 return Optional.of(result);
             } catch(Exception ex) {
-                Client.LOGGER.error(ex, "What?");
+                Library.getLogger().error(ex, "What?");
             }
         }
         return Optional.empty();
