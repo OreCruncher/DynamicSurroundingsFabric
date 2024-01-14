@@ -9,12 +9,10 @@ import org.orecruncher.dsurround.lib.Library;
 
 import java.util.function.Supplier;
 
-abstract class ClientCommand {
+abstract class AbstractClientCommand {
 
-    protected final String command;
+    protected AbstractClientCommand() {
 
-    protected ClientCommand(String command) {
-        this.command = command;
     }
 
     public abstract void register(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandBuildContext registryAccess);

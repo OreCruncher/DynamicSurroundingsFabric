@@ -8,14 +8,12 @@ import org.orecruncher.dsurround.commands.ReloadCommandHandler;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
-class ReloadCommand extends ClientCommand {
+class ReloadCommand extends AbstractClientCommand {
 
-    ReloadCommand() {
-        super("dsreload");
-    }
+    private static final String COMMAND = "dsreload";
 
     public void register(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandBuildContext registryAccess) {
-        dispatcher.register(literal(this.command).executes(this::execute));
+        dispatcher.register(literal(COMMAND).executes(this::execute));
     }
 
     private int execute(CommandContext<FabricClientCommandSource> ctx) {

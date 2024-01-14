@@ -18,17 +18,14 @@ import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.arg
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 import static net.minecraft.commands.arguments.ResourceArgument.ERROR_INVALID_RESOURCE_TYPE;
 
-class BiomeCommand extends ClientCommand {
+class BiomeCommand extends AbstractClientCommand {
 
+    private static final String COMMAND = "dsbiome";
     private static final String BIOME_PARAMETER = "biome";
     private static final String SCRIPT_PARAMETER = "script";
 
-    BiomeCommand() {
-        super("dsbiome");
-    }
-
     public void register(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandBuildContext registryAccess) {
-        dispatcher.register(literal(this.command)
+        dispatcher.register(literal(COMMAND)
                 .then(argument(BIOME_PARAMETER, ResourceArgument.resource(registryAccess, Registries.BIOME))
                 .then(argument(SCRIPT_PARAMETER, MessageArgument.message()).executes(this::execute))));
     }

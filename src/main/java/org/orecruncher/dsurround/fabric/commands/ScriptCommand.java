@@ -10,16 +10,13 @@ import org.orecruncher.dsurround.commands.ScriptCommandHandler;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
-class ScriptCommand extends ClientCommand {
+class ScriptCommand extends AbstractClientCommand {
 
+    private static final String COMMAND = "dsscript";
     private static final String SCRIPT_PARAMETER = "script";
 
-    ScriptCommand() {
-        super("dsscript");
-    }
-
     public void register(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandBuildContext registryAccess) {
-        dispatcher.register(literal(this.command)
+        dispatcher.register(literal(COMMAND)
                 .then(argument(SCRIPT_PARAMETER, MessageArgument.message()).executes(this::execute)));
     }
 
