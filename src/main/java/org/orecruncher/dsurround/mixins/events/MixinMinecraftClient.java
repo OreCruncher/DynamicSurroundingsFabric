@@ -20,7 +20,7 @@ public abstract class MixinMinecraftClient {
         ClientState.TICK_END.raise().onTickEnd((Minecraft) (Object) this);
     }
 
-    @Inject(method = "destroy()V", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;info(Ljava/lang/String;)V", shift = At.Shift.AFTER), remap = false)
+    @Inject(method = "destroy()V", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;info(Ljava/lang/String;)V", shift = At.Shift.AFTER, remap = false))
     private void dsurround_stopping(CallbackInfo ci) {
         ClientState.STOPPING.raise().onStopping((Minecraft) (Object) this);
     }

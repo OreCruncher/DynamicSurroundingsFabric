@@ -1,11 +1,9 @@
 package org.orecruncher.dsurround.mixins.core;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
@@ -26,21 +24,19 @@ public abstract class MixinEntity {
     @Shadow
     private Level level;
 
-    @Shadow @Nullable public abstract Entity changeDimension(ServerLevel serverLevel);
-
     @Inject(method = "walkingStepSound(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("TAIL"))
     public void dsurround_playStepSound(BlockPos pos, BlockState state, CallbackInfo ci) {
         // Only want to enable eventing if accents are enabled
         if (MixinHelpers.footstepAccentsConfig.enableAccents && this.level.isClientSide) {
-            var current = (Entity) ((Object) this);
+            var self = (Entity) ((Object) this);
 
             // Is the entity in range?  If not, avoid generating an event
-            if (GameUtils.getPlayer().orElseThrow().distanceToSqr(current) > DSURROUND_MAX_ACCENT_RANGE)
+            if (GameUtils.getPlayer().orElseThrow().distanceToSqr(self) > DSURROUND_MAX_ACCENT_RANGE)
                 return;
 
             // Lastly, the entity has to be tagged
-            if (MixinHelpers.TAG_LIBRARY.is(EntityEffectTags.BRUSH_STEP, current.getType())) {
-                ClientEventHooks.ENTITY_STEP_EVENT.raise().onStep(current, pos, state);
+            if (MixinHelpers.TAG_LIBRARY.is(EntityEffectTags.BRUSH_STEP, self.getType())) {
+                ClientEventHooks.ENTITY_STEP_EVENT.raise().onStep(self, pos, state);
             }
         }
     }
