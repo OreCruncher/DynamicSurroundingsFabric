@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.mixins.events;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import org.orecruncher.dsurround.eventing.ClientState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,5 +29,14 @@ public abstract class MixinMinecraftClient {
     @Inject(method = "run()V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;gameThread:Ljava/lang/Thread;", shift = At.Shift.AFTER, ordinal = 0))
     private void dsurround_starting(CallbackInfo ci) {
         ClientState.STARTED.raise().onStart((Minecraft) (Object) this);
+    }
+
+    /**
+     * When Minecraft disconnects from a server disconnect() gets called to clean up state.
+     */
+    @Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;)V", at = @At("RETURN"))
+    private void dsurround_leave(Screen screen, CallbackInfo ci) {
+        var self = (Minecraft) (Object) this;
+        ClientState.ON_DISCONNECT.raise().onDisconnect(self);
     }
 }

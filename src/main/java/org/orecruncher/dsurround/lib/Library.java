@@ -35,9 +35,6 @@ public final class Library {
         // Do this first so the rest of the library can get dependencies
         configureServiceDependencies(modId);
 
-        // Initialize event handlers
-        Services.CLIENT_EVENT_REGISTRATIONS.register();
-
         // Hook server lifecycle so logs get emitted
         ClientState.STARTED.register((ignore -> LOGGER.info("Client starting")), HandlerPriority.VERY_HIGH);
         ClientState.STOPPING.register(ignore -> LOGGER.info("Client stopping"), HandlerPriority.VERY_HIGH);
@@ -53,11 +50,6 @@ public final class Library {
         return Services.PLATFORM;
     }
 
-    @NotNull
-    public static IClientEventRegistrations getEventRegistrations() {
-        return Services.CLIENT_EVENT_REGISTRATIONS;
-    }
-
     private static void configureServiceDependencies(String modId) {
         var modInfo = Services.PLATFORM.getModInformation(modId)
                 .orElseThrow(() -> {
@@ -68,7 +60,6 @@ public final class Library {
         ContainerManager
                 .getRootContainer()
                 .registerSingleton(IPlatform.class, Services.PLATFORM)
-                .registerSingleton(IClientEventRegistrations.class, Services.CLIENT_EVENT_REGISTRATIONS)
                 .registerSingleton(IModLog.class, LOGGER)
                 .registerSingleton(ModInformation.class, modInfo)
                 .registerSingleton(ISystemClock.class, SystemClock.class)
