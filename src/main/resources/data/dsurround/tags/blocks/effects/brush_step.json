@@ -26,6 +26,10 @@
     {
       "id": "biomesoplenty:high_grass_plant",
       "required": false
+    },
+    {
+      "id": "biomesoplenty:barley",
+      "required": false
     }
   ]
 }
