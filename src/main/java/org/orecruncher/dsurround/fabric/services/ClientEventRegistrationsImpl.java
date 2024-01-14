@@ -7,7 +7,7 @@ import org.orecruncher.dsurround.lib.platform.events.ClientState;
 public class ClientEventRegistrationsImpl implements IClientEventRegistrations {
 
     public void register() {
-        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> ClientState.ON_CONNECT.raise(client));
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ClientState.ON_DISCONNECT.raise(client));
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> ClientState.ON_CONNECT.raise().onConnect(client));
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ClientState.ON_DISCONNECT.raise().onDisconnect(client));
     }
 }

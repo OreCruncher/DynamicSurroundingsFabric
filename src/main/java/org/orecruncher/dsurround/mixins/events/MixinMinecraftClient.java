@@ -12,21 +12,21 @@ public abstract class MixinMinecraftClient {
 
     @Inject(method = "tick()V", at = @At("HEAD"))
     private void dsurround_tickStart(CallbackInfo info) {
-        ClientState.TICK_START.raise((Minecraft) (Object) this);
+        ClientState.TICK_START.raise().onTickStart((Minecraft) (Object) this);
     }
 
     @Inject(method = "tick()V", at = @At("RETURN"))
     private void dsurround_tickEnd(CallbackInfo info) {
-        ClientState.TICK_END.raise((Minecraft) (Object) this);
+        ClientState.TICK_END.raise().onTickEnd((Minecraft) (Object) this);
     }
 
     @Inject(method = "destroy()V", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;info(Ljava/lang/String;)V", shift = At.Shift.AFTER), remap = false)
     private void dsurround_stopping(CallbackInfo ci) {
-        ClientState.STOPPING.raise((Minecraft) (Object) this);
+        ClientState.STOPPING.raise().onStopping((Minecraft) (Object) this);
     }
 
     @Inject(method = "run()V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;gameThread:Ljava/lang/Thread;", shift = At.Shift.AFTER, ordinal = 0))
     private void dsurround_starting(CallbackInfo ci) {
-        ClientState.STARTED.raise((Minecraft) (Object) this);
+        ClientState.STARTED.raise().onStart((Minecraft) (Object) this);
     }
 }

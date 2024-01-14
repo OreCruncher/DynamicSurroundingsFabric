@@ -10,7 +10,6 @@ import org.orecruncher.dsurround.config.InternalBiomes;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
-import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.lib.Guard;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
@@ -55,7 +54,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
     }
 
     @Override
-    public void reload(AssetLibraryEvent.ReloadEvent event) {
+    public void reload() {
         // Wipe out the internal biome cache.  These will be reset.
         this.internalBiomes.clear();
         this.biomeConfigs.clear();

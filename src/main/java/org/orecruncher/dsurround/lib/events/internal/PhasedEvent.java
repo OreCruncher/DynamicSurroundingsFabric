@@ -2,46 +2,44 @@ package org.orecruncher.dsurround.lib.events.internal;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.reflect.TypeToken;
+import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.events.EventPhase;
 import org.orecruncher.dsurround.lib.events.IPhasedEvent;
 
-import java.lang.reflect.Array;
-import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
+import java.util.Collection;
+import java.util.function.Function;
 
 /**
  * Simple implementation of IEvent for callback processing.
  *
- * @param <TEntityType> The type of information passed into callback handlers
+ * @param <IHandler> The type of information passed into callback handlers
  */
-final class PhasedEvent<TEntityType> implements IPhasedEvent<TEntityType> {
+final class PhasedEvent<IHandler> implements IPhasedEvent<IHandler> {
 
-    private final ImmutableList<EventPhase> _phasedOrdering;
+    private final ImmutableList<EventPhase> phasedOrdering;
+    private final ObjectArray<IHandler> handlerSequence;
+    private final ObjectArray<ObjectArray<IHandler>> eventHandlers;
+    private final IHandler callback;
 
-    // A phased event is an aggregate of simple events based on
-    // the list of phases.
-    private final Event<TEntityType>[] _eventHandlers;
-
-    @SuppressWarnings("unchecked")
-    public PhasedEvent(ImmutableList<EventPhase> phasedOrdering, BiConsumer<TEntityType, List<Consumer<TEntityType>>> callbackProcessor) {
+    public PhasedEvent(ImmutableList<EventPhase> phasedOrdering, Function<Collection<IHandler>, IHandler> callbackFactory) {
         Preconditions.checkNotNull(phasedOrdering);
         Preconditions.checkArgument(!phasedOrdering.isEmpty(), "At least one entry needs to be provided");
-        Preconditions.checkNotNull(callbackProcessor);
+        Preconditions.checkNotNull(callbackFactory);
 
-        this._phasedOrdering = phasedOrdering;
+        this.phasedOrdering = phasedOrdering;
+        this.handlerSequence = new ObjectArray<>();
+        this.eventHandlers = new ObjectArray<>(this.phasedOrdering.size());
 
-        Class<?> entityType = new TypeToken<Event<TEntityType>>() {
-        }.getRawType();
-        this._eventHandlers = (Event<TEntityType>[]) Array.newInstance(entityType, this._phasedOrdering.size());
+        for(int i = 0; i < this.phasedOrdering.size(); i++)
+            this.eventHandlers.add(new ObjectArray<>());
 
-        for (int i = 0; i < this._eventHandlers.length; i++)
-            this._eventHandlers[i] = new Event<>(callbackProcessor);
+        this.callback = callbackFactory.apply(this.handlerSequence);
+
+        this.updateHandlerSequence();
     }
 
     @Override
-    public void register(Consumer<TEntityType> handler) {
+    public void register(IHandler handler) {
         Preconditions.checkNotNull(handler);
 
         // Register the handler with the default phase
@@ -49,44 +47,32 @@ final class PhasedEvent<TEntityType> implements IPhasedEvent<TEntityType> {
     }
 
     @Override
-    public void register(Consumer<TEntityType> handler, EventPhase phase) {
+    public IHandler raise() {
+        return this.callback;
+    }
+
+    @Override
+    public void register(IHandler handler, EventPhase phase) {
         Preconditions.checkNotNull(handler);
         Preconditions.checkNotNull(phase);
 
-        // Identifier could be the same semantically as an entry in the phase order list.
-        // We want to use the reference in the event definition to act as
-        // the identity key.  Besides, this will also ensure that the requested
-        // identifier is actually a phase for this event.
-        this.getHandler(phase).register(handler);
+        this.getHandler(phase).add(handler);
+        this.updateHandlerSequence();
     }
 
-    @Override
-    public void raise(TEntityType entity) {
-        Preconditions.checkNotNull(entity);
-
-        // Process in phased order
-        for (var eventHandler : this._eventHandlers)
-            eventHandler.raise(entity);
+    private void updateHandlerSequence() {
+        this.handlerSequence.clear();
+        for (int i = 0; i < this.eventHandlers.size(); i++) {
+            var handlerList = this.eventHandlers.get(i);
+            for (int j = 0; j < handlerList.size(); j++)
+                this.handlerSequence.add(handlerList.get(j));
+        }
     }
 
-    @Override
-    public void raise(TEntityType entity, EventPhase phase) {
-        Preconditions.checkNotNull(entity);
-        Preconditions.checkNotNull(phase);
-
-        this.getHandler(phase).raise(entity);
-    }
-
-    private Event<TEntityType> getHandler(EventPhase phase) {
-        for (int i = 0; i < this._phasedOrdering.size(); i++)
-            if (this._phasedOrdering.get(i).equals(phase))
-                return this._eventHandlers[i];
+    private Collection<IHandler> getHandler(EventPhase phase) {
+        for (int i = 0; i < this.phasedOrdering.size(); i++)
+            if (this.phasedOrdering.get(i).equals(phase))
+                return this.eventHandlers.get(i);
         throw new IllegalArgumentException(String.format("The event does not understand phase '%s'", phase.toString()));
-    }
-
-    @Override
-    public void clear() {
-        for (var eventHandler : this._eventHandlers)
-            eventHandler.clear();
     }
 }

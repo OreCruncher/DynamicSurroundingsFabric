@@ -14,6 +14,6 @@ public class MixinClientPacketListener {
     @Inject(method = "handleUpdateTags(Lnet/minecraft/network/protocol/common/ClientboundUpdateTagsPacket;)V", at = @At("RETURN"))
     public void dsurround_handleTagUpdates(ClientboundUpdateTagsPacket clientboundUpdateTagsPacket, CallbackInfo ci) {
         ClientPacketListener self = (ClientPacketListener) (Object) this;
-        ClientState.TAG_SYNC.raise(new ClientState.TagSyncEvent(self.registryAccess()));
+        ClientState.TAG_SYNC.raise().onTagSync(self.registryAccess());
     }
 }

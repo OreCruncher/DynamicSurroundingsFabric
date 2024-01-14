@@ -14,7 +14,6 @@ import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.gui.overlay.plugins.*;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
@@ -112,7 +111,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
                 if (this.platform.isModLoaded(modId))
                     event.add(CollectDiagnosticsEvent.Section.Header, "INSTALLED: " + modId);
 
-            ClientEventHooks.COLLECT_DIAGNOSTICS.raise(event);
+            ClientEventHooks.COLLECT_DIAGNOSTICS.raise().onCollect(event);
 
             event.add(diagnostics);
 

@@ -14,7 +14,6 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.Constants;
-import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -82,7 +81,7 @@ public class TagLibrary implements ITagLibrary {
     }
 
     @Override
-    public void reload(AssetLibraryEvent.ReloadEvent event) {
+    public void reload() {
         this.logger.info("Clearing tag cache; %d elements were present", this.tagCache.size());
         this.tagCache.clear();
         this.tagLoader.clear();

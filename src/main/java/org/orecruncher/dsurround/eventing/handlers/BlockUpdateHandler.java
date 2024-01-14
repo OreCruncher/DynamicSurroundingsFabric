@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.eventing.handlers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
-import org.orecruncher.dsurround.eventing.BlockUpdateEvent;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.lib.platform.events.ClientState;
 
@@ -37,10 +36,7 @@ public class BlockUpdateHandler {
      */
     private static void tick(Minecraft ignored) {
         var updates = expand();
-        updates.ifPresent(positions -> {
-            var event = new BlockUpdateEvent(positions);
-            ClientEventHooks.BLOCK_UPDATE.raise(event);
-        });
+        updates.ifPresent(positions -> ClientEventHooks.BLOCK_UPDATE.raise().onBlockUpdates(positions));
     }
 
     private static Optional<Collection<BlockPos>> expand() {

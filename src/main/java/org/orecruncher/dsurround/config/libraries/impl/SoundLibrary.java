@@ -13,7 +13,6 @@ import net.minecraft.util.GsonHelper;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
-import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.CodecExtensions;
 import org.orecruncher.dsurround.lib.Comparers;
@@ -73,7 +72,7 @@ public final class SoundLibrary implements ISoundLibrary {
     }
 
     @Override
-    public void reload(AssetLibraryEvent.ReloadEvent event) {
+    public void reload() {
 
         // Forget cached data and reload
         this.myRegistry.clear();

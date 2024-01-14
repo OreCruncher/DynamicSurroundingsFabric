@@ -46,8 +46,8 @@ public final class Client implements IMinecraftMod {
         LOGGER.info("Initializing...");
 
         // Hook the config load event so set we can set the debug flags on logging
-        Configuration.CONFIG_CHANGED.register(event -> {
-            if (event.config() instanceof Configuration config) {
+        Configuration.CONFIG_CHANGED.register(cfg -> {
+            if (cfg instanceof Configuration config) {
                 LOGGER.setDebug(config.logging.enableDebugLogging);
                 LOGGER.setTraceMask(config.logging.traceMask);
             }

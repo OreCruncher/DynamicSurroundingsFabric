@@ -1,9 +1,11 @@
 package org.orecruncher.dsurround.processing;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
-import org.orecruncher.dsurround.eventing.EntityStepEvent;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.processing.accents.FootstepAccents;
@@ -27,13 +29,13 @@ public class StepAccentGenerator extends AbstractClientHandler {
         ClientEventHooks.ENTITY_STEP_EVENT.register(this::footStepGenerated);
     }
 
-    protected void footStepGenerated(EntityStepEvent event) {
-        if (event.entity() instanceof LivingEntity living) {
+    protected void footStepGenerated(Entity entity, BlockPos blockPos, BlockState blockState) {
+        if (entity instanceof LivingEntity living) {
             if (living.isSilent() || living.isSpectator())
                 return;
 
             this.accents.clear();
-            this.footstepAccents.provide(living, event.blockPos(), event.blockState(), this.accents);
+            this.footstepAccents.provide(living, blockPos, blockState, this.accents);
             this.accents.forEach(factory -> this.audioPlayer.play(factory.createAtEntity(living)));
         }
     }

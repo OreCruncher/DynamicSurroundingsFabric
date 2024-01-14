@@ -11,7 +11,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.*;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.ItemClassType;
-import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
@@ -41,7 +40,7 @@ public class ItemLibrary implements IItemLibrary {
     }
 
     @Override
-    public void reload(AssetLibraryEvent.ReloadEvent event) {
+    public void reload() {
         this.itemEquipFactories.clear();
         this.itemSwingFactories.clear();
         this.itemArmorStepFactories.clear();
