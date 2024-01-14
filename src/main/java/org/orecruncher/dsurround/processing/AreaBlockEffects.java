@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.processing;
 
 import net.minecraft.world.entity.player.Player;
-import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.effects.systems.RandomBlockEffectSystem;

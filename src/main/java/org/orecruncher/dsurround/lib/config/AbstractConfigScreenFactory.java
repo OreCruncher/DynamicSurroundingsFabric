@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib.config.factories;
+package org.orecruncher.dsurround.lib.config;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;

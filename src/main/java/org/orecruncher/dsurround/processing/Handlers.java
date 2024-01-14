@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.processing;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
-import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;

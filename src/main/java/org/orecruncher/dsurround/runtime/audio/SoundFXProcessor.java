@@ -8,7 +8,7 @@ import net.minecraft.client.sounds.ChannelAccess;
 import net.minecraft.sounds.SoundSource;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.Singleton;

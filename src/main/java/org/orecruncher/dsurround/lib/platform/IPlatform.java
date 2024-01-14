@@ -2,6 +2,8 @@ package org.orecruncher.dsurround.lib.platform;
 
 import net.minecraft.client.KeyMapping;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.config.ConfigurationData;
+import org.orecruncher.dsurround.lib.config.IScreenFactory;
 import org.orecruncher.dsurround.lib.version.SemanticVersion;
 
 import java.io.IOException;
@@ -62,4 +64,9 @@ public interface IPlatform {
      * Obtains a list of file paths corresponding to the resource file requested
      */
     Collection<Path> findResourcePaths(String file);
+
+    /**
+     * Obtains a mod configuration screen factory for generating configuration screens
+     */
+    Optional<IScreenFactory<?>> getModConfigScreenFactory(Class<? extends ConfigurationData> configClass);
 }

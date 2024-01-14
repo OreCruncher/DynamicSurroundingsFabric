@@ -20,7 +20,7 @@
       "org.orecruncher.dsurround.fabric.FabricMod"
     ],
     "modmenu": [
-      "org.orecruncher.dsurround.config.ModConfigMenu"
+      "org.orecruncher.dsurround.fabric.ModConfigMenu"
     ]
   },
   "mixins": [

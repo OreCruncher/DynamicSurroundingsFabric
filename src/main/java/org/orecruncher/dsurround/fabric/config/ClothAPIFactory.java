@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib.config.factories;
+package org.orecruncher.dsurround.fabric.config;
 
 import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
@@ -13,12 +13,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigElement;
 import org.orecruncher.dsurround.lib.config.ConfigOptions;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
+import org.orecruncher.dsurround.lib.config.AbstractConfigScreenFactory;
+import org.orecruncher.dsurround.lib.config.IScreenFactory;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
@@ -52,7 +52,9 @@ public class ClothAPIFactory extends AbstractConfigScreenFactory {
         }
     }
 
-    public static Screen createDefaultConfigScreen(Screen parent) {
+    public static IScreenFactory<?> createDefaultConfigScreen(Class<? extends ConfigurationData> configClass) {
+        var configData = ConfigurationData.getConfig(configClass);
+
         ConfigOptions options = new ConfigOptions()
                 .setTranslationRoot("dsurround.config")
                 .setTitleStyle(Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE.getValue()))
@@ -61,7 +63,7 @@ public class ClothAPIFactory extends AbstractConfigScreenFactory {
                 .setTooltipStyle(Style.EMPTY.withColor(ColorPalette.SEASHELL.getValue()))
                 .wrapToolTip(true);
 
-        return new ClothAPIFactory(options, Client.Config).apply(GameUtils.getMC(), parent);
+        return new ClothAPIFactory(options, configData)::apply;
     }
 
     @Override

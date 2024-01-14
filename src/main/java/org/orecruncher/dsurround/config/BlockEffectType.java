@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.config;
 
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.effects.blocks.producers.*;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.effects.particles.FireflyParticle;

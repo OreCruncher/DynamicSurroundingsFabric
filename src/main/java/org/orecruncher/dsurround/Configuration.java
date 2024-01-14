@@ -1,18 +1,16 @@
-package org.orecruncher.dsurround.config;
+package org.orecruncher.dsurround;
 
-import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.config.CompassStyle;
+import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.config.ConfigurationData.*;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 
 @TranslationRoot(Constants.MOD_ID + ".config")
 public class Configuration extends ConfigurationData {
 
-    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
-
-    public Configuration() {
+    protected Configuration() {
         super(ContainerManager.resolve(IMinecraftDirectories.class).getModConfigDirectory().resolve(Constants.MOD_ID + ".json"));
     }
 
@@ -55,15 +53,6 @@ public class Configuration extends ConfigurationData {
     @Property
     @Comment("Configuration options for other things")
     public final OtherOptions otherOptions = new OtherOptions();
-
-    public static Configuration getConfig() {
-        try {
-            return ConfigurationData.getConfig(Configuration.class);
-        } catch(Throwable t) {
-            LOGGER.error(t, "Unable to get config");
-        }
-        return null;
-    }
 
     public static class Flags {
         public static final int AUDIO_PLAYER = 0x1;

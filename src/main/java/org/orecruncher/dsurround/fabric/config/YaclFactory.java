@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib.config.factories;
+package org.orecruncher.dsurround.fabric.config;
 
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.OptionGroup;
@@ -13,13 +13,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.Binder;
 import org.orecruncher.dsurround.lib.config.ConfigElement;
 import org.orecruncher.dsurround.lib.config.ConfigOptions;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
+import org.orecruncher.dsurround.lib.config.AbstractConfigScreenFactory;
+import org.orecruncher.dsurround.lib.config.IScreenFactory;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
 import java.util.Optional;
@@ -30,7 +30,8 @@ public class YaclFactory extends AbstractConfigScreenFactory {
         super(options, config);
     }
 
-    public static Screen createDefaultConfigScreen(Screen parent) {
+    public static IScreenFactory<?> createDefaultConfigScreen(Class<? extends ConfigurationData> configClass) {
+        var configData = ConfigurationData.getConfig(configClass);
         ConfigOptions options = new ConfigOptions()
                 .setTranslationRoot("dsurround.config")
                 .setTitleStyle(Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE.getValue()))
@@ -38,7 +39,7 @@ public class YaclFactory extends AbstractConfigScreenFactory {
                 .setPropertyStyle(Style.EMPTY.withColor(ColorPalette.WHEAT.getValue()))
                 .setTooltipStyle(Style.EMPTY.withColor(ColorPalette.SEASHELL.getValue()));
 
-        return new YaclFactory(options, Client.Config).apply(GameUtils.getMC(), parent);
+        return new YaclFactory(options, configData)::apply;
     }
 
     @Override

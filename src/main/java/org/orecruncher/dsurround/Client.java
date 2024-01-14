@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround;
 
 import net.minecraft.client.Minecraft;
-import org.orecruncher.dsurround.config.*;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
 import org.orecruncher.dsurround.effects.particles.ParticleSheets;
@@ -9,6 +8,7 @@ import org.orecruncher.dsurround.gui.overlay.OverlayManager;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.platform.IMinecraftMod;
@@ -57,14 +57,10 @@ public final class Client implements IMinecraftMod {
         Library.initialize(this, LOGGER);
         Handlers.registerHandlers();
 
-        Config = Configuration.getConfig();
+        Config = ConfigurationData.getConfig(Configuration.class);
 
         ClientState.STARTED.register(this::onComplete, HandlerPriority.VERY_HIGH);
         ClientState.ON_CONNECT.register(this::onConnect, HandlerPriority.LOW);
-        ClientState.TAG_SYNC.register(event -> {
-            LOGGER.info("Tag sync event received - reloading libraries");
-            AssetLibraryEvent.reload();
-        }, HandlerPriority.VERY_HIGH);
 
         // Register core services
         ContainerManager.getRootContainer()
@@ -117,6 +113,11 @@ public final class Client implements IMinecraftMod {
         AssetLibraryEvent.RELOAD.register(container.resolve(IItemLibrary.class)::reload);
         AssetLibraryEvent.RELOAD.register(container.resolve(IEntityEffectLibrary.class)::reload);
         AssetLibraryEvent.RELOAD.register(container.resolve(ITagLibrary.class)::reload);
+
+        ClientState.TAG_SYNC.register(event -> {
+            LOGGER.info("Tag sync event received - reloading libraries");
+            AssetLibraryEvent.reload();
+        }, HandlerPriority.VERY_HIGH);
 
         // Make the libraries load their data
         AssetLibraryEvent.reload();

@@ -3,12 +3,13 @@ package org.orecruncher.dsurround.gui.keyboard;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.gui.overlay.DiagnosticsOverlay;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.config.factories.FactoryResolver;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.platform.Services;
 import org.orecruncher.dsurround.lib.platform.events.ClientState;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
@@ -47,11 +48,12 @@ public class KeyBindings {
             return;
 
         if (modConfigurationMenu.consumeClick()) {
-            var screenFactory = FactoryResolver.getModConfigScreenFactory();
-            if (screenFactory != null)
-                GameUtils.setScreen(screenFactory.create(null));
-            else
+            var factory = Services.PLATFORM.getModConfigScreenFactory(Configuration.class);
+            if (factory.isPresent()) {
+                GameUtils.setScreen(factory.get().create(GameUtils.getMC(), null));
+            } else {
                 Library.getLogger().info("Configuration GUI libraries not present");
+            }
         }
 
         if (diagnosticHud.consumeClick())

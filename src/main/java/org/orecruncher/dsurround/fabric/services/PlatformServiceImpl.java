@@ -4,6 +4,11 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.fabric.config.ClothAPIFactory;
+import org.orecruncher.dsurround.lib.config.ConfigurationData;
+import org.orecruncher.dsurround.lib.config.IScreenFactory;
+import org.orecruncher.dsurround.fabric.config.YaclFactory;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.version.SemanticVersion;
@@ -95,5 +100,15 @@ public class PlatformServiceImpl implements IPlatform {
         }
 
         return result;
+    }
+
+    @Override
+    public Optional<IScreenFactory<?>> getModConfigScreenFactory(Class<? extends ConfigurationData> configClass) {
+        IScreenFactory<?> result = null;
+        if (this.isModLoaded(Constants.CLOTH_CONFIG))
+            result = ClothAPIFactory.createDefaultConfigScreen(configClass);
+        else if (this.isModLoaded(Constants.YACL))
+            result = YaclFactory.createDefaultConfigScreen(configClass);
+        return Optional.ofNullable(result);
     }
 }

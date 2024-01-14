@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.config.libraries;
 
 import net.minecraft.network.chat.Component;
-import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.EventingFactory;
