@@ -10,7 +10,7 @@ import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.config.SoundEventType;
-import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
+import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
@@ -188,6 +188,11 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         entry.fogColor().ifPresent(this::setFogColor);
         entry.additionalSoundChance().ifPresent(this::setAdditionalSoundChance);
         entry.moodSoundChance().ifPresent(this::setMoodSoundChance);
+
+        // Merge in any additional traits
+        if (!entry.traits().isEmpty()) {
+            this.traits.mergeTraits(entry.traits());
+        }
 
         if (entry.clearSounds()) {
             addComment("> Sound Clear");

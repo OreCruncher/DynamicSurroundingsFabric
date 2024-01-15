@@ -277,7 +277,8 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
                 return true;
             final FluidState fluidState = state.getFluidState();
             final int height = fluidState.getAmount();
-            if (height > 0 && height < 8)
+            // Fluids with a height of 0 are empty.
+            if (height > 0 && height < FluidState.AMOUNT_FULL)
                 return true;
         }
 

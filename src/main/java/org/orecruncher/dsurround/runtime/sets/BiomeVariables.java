@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.runtime.sets;
 
 import net.minecraft.world.level.biome.Biome;
-import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
+import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.GameUtils;

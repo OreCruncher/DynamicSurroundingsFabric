@@ -76,7 +76,7 @@
     ]
   },
   {
-    "biomeSelector": "FOREST && !(DEAD || WASTELAND || DENSE || SWAMP || SPOOKY) && lib.isBetween(biome.temperature, 0.2, 1.0)",
+    "biomeSelector": "FOREST && !(DEAD || WASTELAND || SWAMP || SPOOKY) && lib.isBetween(biome.temperature, 0.2, 1.0)",
     "_comment": "Basic Forest w/Crickets",
     "acoustics": [
       {

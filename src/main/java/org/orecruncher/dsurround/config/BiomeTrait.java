@@ -1,7 +1,12 @@
-package org.orecruncher.dsurround.config.biome.biometraits;
+package org.orecruncher.dsurround.config;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public enum BiomeTrait {
     // Generic case of WTF
@@ -64,6 +69,9 @@ public enum BiomeTrait {
     CAVES("CAVES"),
     RARE("RARE"),
     LUSH("LUSH");
+
+    private static final Map<String, BiomeTrait> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(BiomeTrait::getName, (category) -> category));
+    public static final Codec<BiomeTrait> CODEC = Codec.STRING.comapFlatMap(DataResult.partialGet(BY_NAME::get, () -> "unknown biome trait"), d -> d.name);
 
     private static final Map<String, BiomeTrait> mapper = new HashMap<>();
 

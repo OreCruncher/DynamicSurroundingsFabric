@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.config;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Constants;
-import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 
 import java.util.Arrays;
