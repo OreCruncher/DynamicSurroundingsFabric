@@ -103,22 +103,23 @@ public final class Client {
         // Register the Minecraft sound manager
         container.registerSingleton(GameUtils.getSoundManager());
 
-        // Register and initialize our libraries.  This will cause the libraries
-        // to be instantiated.
-        AssetLibraryEvent.RELOAD.register(container.resolve(ISoundLibrary.class)::reload);
-        AssetLibraryEvent.RELOAD.register(container.resolve(IBiomeLibrary.class)::reload);
-        AssetLibraryEvent.RELOAD.register(container.resolve(IDimensionLibrary.class)::reload);
-        AssetLibraryEvent.RELOAD.register(container.resolve(IBlockLibrary.class)::reload);
-        AssetLibraryEvent.RELOAD.register(container.resolve(IItemLibrary.class)::reload);
-        AssetLibraryEvent.RELOAD.register(container.resolve(IEntityEffectLibrary.class)::reload);
-        AssetLibraryEvent.RELOAD.register(container.resolve(ITagLibrary.class)::reload);
+        // Register and initialize our libraries. Handlers will be reloaded in priority order.
+        // Leave normal to very low priority for other things in the mod that would need such
+        // notification.
+        AssetLibraryEvent.RELOAD.register(container.resolve(ISoundLibrary.class)::reload, HandlerPriority.VERY_HIGH);
+        AssetLibraryEvent.RELOAD.register(container.resolve(ITagLibrary.class)::reload, HandlerPriority.VERY_HIGH);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IBiomeLibrary.class)::reload, HandlerPriority.HIGH);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IBlockLibrary.class)::reload, HandlerPriority.HIGH);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IItemLibrary.class)::reload, HandlerPriority.HIGH);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IEntityEffectLibrary.class)::reload, HandlerPriority.HIGH);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IDimensionLibrary.class)::reload, HandlerPriority.HIGH);
 
         ClientState.TAG_SYNC.register(event -> {
             this.logger.info("Tag sync event received - reloading libraries");
             AssetLibraryEvent.reload();
         }, HandlerPriority.VERY_HIGH);
 
-        // Make the libraries load their data
+        // Make the libraries load their data. Priority determines the sequence.
         AssetLibraryEvent.reload();
 
         // Force instantiation of the core Handler.  This should cause the rest
