@@ -137,7 +137,7 @@ public record SoundFactory(
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("location", this.location)
+                .add("location", this.getLocation())
                 .add("soundEvent", this.soundEvent.getLocation())
                 .toString();
     }

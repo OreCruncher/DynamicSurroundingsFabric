@@ -307,5 +307,23 @@
       "min": 0.8,
       "max": 1.2
     }
+  },
+  {
+    "location": "dsurround:soulsand.laughter",
+    "soundEvent": "dsurround:soulsand.laughter",
+    "pitch": {
+      "type": "minecraft:uniform",
+      "min": 0.6,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:netherbrick.breathing",
+    "soundEvent": "dsurround:netherbrick.breathing",
+    "pitch": {
+      "type": "minecraft:uniform",
+      "min": 0.6,
+      "max": 1.2
+    }
   }
 ]

@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.config.block;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
@@ -17,7 +16,6 @@ import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
-import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.OcclusionTags;
 import org.orecruncher.dsurround.tags.ReflectanceTags;
 
@@ -27,6 +25,7 @@ import java.util.stream.Collectors;
 
 public class BlockInfo {
 
+    private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
     private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
     private static final float DEFAULT_OPAQUE_OCCLUSION = 0.5F;
@@ -97,17 +96,10 @@ public class BlockInfo {
 
         config.soundChance().ifPresent(v -> this.soundChance = v);
 
-        var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
-
         for (final AcousticConfig sr : config.acoustics()) {
-                final SoundEvent acoustic = soundLibrary.getSound(sr.soundEventId());
-                var factory = SoundFactoryBuilder.create(acoustic)
-                        .category(sr.category())
-                        .volume(sr.volume())
-                        .pitch(sr.pitch())
-                        .build();
-                final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions(), sr.weight());
-                this.addToSounds(acousticEntry);
+            var factory = SOUND_LIBRARY.getSoundFactoryOrDefault(sr.factory());
+            final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions(), sr.weight());
+            this.addToSounds(acousticEntry);
         }
 
         for (var e : config.effects()) {

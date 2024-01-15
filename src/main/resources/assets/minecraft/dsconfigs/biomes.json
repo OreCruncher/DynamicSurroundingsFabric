@@ -4,7 +4,7 @@
     "_comment": "Wind for Hills/Wasteland",
     "acoustics": [
       {
-        "soundEventId": "biome.wind.hills"
+        "factory": "biome.wind.hills"
       }
     ]
   },
@@ -13,7 +13,7 @@
     "_comment": "Wind for Mountain",
     "acoustics": [
       {
-        "soundEventId": "biome.wind.mountains"
+        "factory": "biome.wind.mountains"
       }
     ]
   },
@@ -22,7 +22,7 @@
     "_comment": "Desert Wind",
     "acoustics": [
       {
-        "soundEventId": "biome.wind.desert"
+        "factory": "biome.wind.desert"
       }
     ]
   },
@@ -31,7 +31,7 @@
     "_comment": "Arctic Wind",
     "acoustics": [
       {
-        "soundEventId": "biome.wind.arctic"
+        "factory": "biome.wind.arctic"
       }
     ]
   },
@@ -41,7 +41,7 @@
     "clearSounds": true,
     "acoustics": [
       {
-        "soundEventId": "biome.jungle",
+        "factory": "biome.jungle",
         "conditions": "weather.isNotRaining()"
       }
     ]
@@ -52,11 +52,11 @@
     "clearSounds": true,
     "acoustics": [
       {
-        "soundEventId": "biome.savanna.day",
+        "factory": "biome.savanna.day",
         "conditions": "weather.isNotRaining() && diurnal.isDay()"
       },
       {
-        "soundEventId": "biome.savanna.night",
+        "factory": "biome.savanna.night",
         "conditions": "weather.isNotRaining() && diurnal.isNight()"
       }
     ]
@@ -66,11 +66,11 @@
     "_comment": "Basic Plains",
     "acoustics": [
       {
-        "soundEventId": "biome.plains",
+        "factory": "biome.plains",
         "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
       },
       {
-        "soundEventId": "biome.crickets",
+        "factory": "biome.crickets",
         "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isNight()"
       }
     ]
@@ -80,12 +80,22 @@
     "_comment": "Basic Forest w/Crickets",
     "acoustics": [
       {
-        "soundEventId": "biome.forest",
+        "factory": "biome.forest",
         "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
       },
       {
-        "soundEventId": "biome.crickets",
+        "factory": "biome.crickets",
         "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isNight()"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "CONIFEROUS && !(SNOWY || FOREST)",
+    "_comment": "Pine Forest",
+    "acoustics": [
+      {
+        "factory": "biome.forest.pine",
+        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
       }
     ]
   },
@@ -94,11 +104,11 @@
     "_comment": "Deep Forest w/Crickets",
     "acoustics": [
       {
-        "soundEventId": "biome.forest.deep",
+        "factory": "biome.forest.deep",
         "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
       },
       {
-        "soundEventId": "biome.crickets.deep",
+        "factory": "biome.crickets.deep",
         "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isNight()"
       }
     ]
@@ -108,7 +118,7 @@
     "_comment": "Simple Forest",
     "acoustics": [
       {
-        "soundEventId": "biome.forest",
+        "factory": "biome.forest",
         "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
       }
     ]
@@ -118,7 +128,7 @@
     "_comment": "Wolf",
     "acoustics": [
       {
-        "soundEventId": "wolf",
+        "factory": "wolf",
         "conditions": "weather.isNotRaining() && diurnal.isNight()",
         "type": "mood"
       }
@@ -129,7 +139,7 @@
     "_comment": "Beach",
     "acoustics": [
       {
-        "soundEventId": "biome.beach"
+        "factory": "biome.beach"
       }
     ]
   },
@@ -138,7 +148,7 @@
     "_comment": "Seagulls",
     "acoustics": [
       {
-        "soundEventId": "seagulls",
+        "factory": "seagulls",
         "conditions": "diurnal.isDay()",
         "type": "mood"
       }
@@ -154,7 +164,7 @@
     "_comment": "River",
     "acoustics": [
       {
-        "soundEventId": "biome.river"
+        "factory": "biome.river"
       }
     ]
   },
@@ -163,7 +173,7 @@
     "_comment": "Ocean background",
     "acoustics": [
       {
-        "soundEventId": "biome.ocean"
+        "factory": "biome.ocean"
       }
     ]
   },
@@ -173,7 +183,7 @@
     "clearSounds": true,
     "acoustics": [
       {
-        "soundEventId": "biome.ocean.deep"
+        "factory": "biome.ocean.deep"
       }
     ]
   },
@@ -192,7 +202,7 @@
     "_comment": "Basic Swamp Sounds",
     "acoustics": [
       {
-        "soundEventId": "biome.crickets"
+        "factory": "biome.crickets"
       }
     ]
   },
@@ -201,11 +211,11 @@
     "_comment": "Special Swamps such as Fen, Bog, Marsh, etc.",
     "acoustics": [
       {
-        "soundEventId": "biome.bog",
+        "factory": "biome.bog",
         "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
       },
       {
-        "soundEventId": "biome.crickets",
+        "factory": "biome.crickets",
         "conditions": "!weather.canWaterFreeze() && diurnal.isNight()"
       }
     ],
@@ -221,7 +231,7 @@
     "_comment": "Coyote",
     "acoustics": [
       {
-        "soundEventId": "coyote",
+        "factory": "coyote",
         "conditions": "weather.isNotRaining() && diurnal.isNight()",
         "type": "mood"
       }
@@ -232,7 +242,7 @@
     "_comment": "Crow",
     "acoustics": [
       {
-        "soundEventId": "crow",
+        "factory": "crow",
         "conditions": "weather.isNotRaining() && diurnal.isDay()",
         "type": "mood"
       }
@@ -243,7 +253,7 @@
     "_comment": "Owl",
     "acoustics": [
       {
-        "soundEventId": "owl",
+        "factory": "owl",
         "conditions": "weather.isNotRaining() && diurnal.isNight()",
         "type": "mood"
       }
@@ -254,12 +264,12 @@
     "_comment": "Birds",
     "acoustics": [
       {
-        "soundEventId": "bird",
+        "factory": "bird",
         "conditions": "weather.isNotRaining() && diurnal.isDay()",
         "type": "mood"
       },
       {
-        "soundEventId": "nightingale",
+        "factory": "nightingale",
         "conditions": "weather.isNotRaining() && diurnal.isDay()",
         "type": "mood"
       }
@@ -270,7 +280,7 @@
     "_comment": "Woodpecker",
     "acoustics": [
       {
-        "soundEventId": "woodpecker",
+        "factory": "woodpecker",
         "conditions": "weather.isNotRaining() && diurnal.isDay()",
         "type": "mood"
       }
@@ -281,7 +291,7 @@
     "_comment": "Raptors",
     "acoustics": [
       {
-        "soundEventId": "raptor",
+        "factory": "raptor",
         "conditions": "weather.isNotRaining() && diurnal.isDay()",
         "type": "mood"
       }
@@ -292,7 +302,7 @@
     "_comment": "Loon",
     "acoustics": [
       {
-        "soundEventId": "loon",
+        "factory": "loon",
         "conditions": "weather.isNotRaining() && !diurnal.isNight()",
         "type": "mood"
       }
@@ -308,17 +318,17 @@
     "_comment": "Regular underground biomes",
     "acoustics": [
       {
-        "soundEventId": "rockfall",
+        "factory": "rockfall",
         "type": "mood",
         "weight": 30
       },
       {
-        "soundEventId": "bigrockfall",
+        "factory": "bigrockfall",
         "type": "mood",
         "weight": 15
       },
       {
-        "soundEventId": "monstergrowl",
+        "factory": "monstergrowl",
         "conditions": "diurnal.isNight()",
         "type": "mood",
         "weight": 10
@@ -335,21 +345,21 @@
     "_comment": "Underground explicit set",
     "acoustics": [
       {
-        "soundEventId": "biome.underground",
+        "factory": "biome.underground",
         "conditions": "state.isInside() && player.getY() < 50"
       },
       {
-        "soundEventId": "rockfall",
+        "factory": "rockfall",
         "type": "mood",
         "weight": 30
       },
       {
-        "soundEventId": "bigrockfall",
+        "factory": "bigrockfall",
         "type": "mood",
         "weight": 15
       },
       {
-        "soundEventId": "monstergrowl",
+        "factory": "monstergrowl",
         "conditions": "diurnal.isNight()",
         "type": "mood",
         "weight": 10
@@ -361,7 +371,7 @@
     "_comment": "Under Ocean explicit set",
     "acoustics": [
       {
-        "soundEventId": "biome.ocean.under"
+        "factory": "biome.ocean.under"
       }
     ]
   },
@@ -370,10 +380,10 @@
     "_comment": "Under Deep Ocean explicit set",
     "acoustics": [
       {
-        "soundEventId": "biome.ocean.deep"
+        "factory": "biome.ocean.deep"
       },
       {
-        "soundEventId": "whale",
+        "factory": "whale",
         "type": "mood"
       }
     ]
@@ -383,7 +393,7 @@
     "_comment": "Under River explicit set",
     "acoustics": [
       {
-        "soundEventId": "biome.river.under"
+        "factory": "biome.river.under"
       }
     ]
   },
@@ -392,7 +402,7 @@
     "_comment": "Underwater explicit set",
     "acoustics": [
       {
-        "soundEventId": "biome.water.under"
+        "factory": "biome.water.under"
       }
     ]
   },
@@ -401,7 +411,7 @@
     "_comment": "Clouds explicit set",
     "acoustics": [
       {
-        "soundEventId": "biome.wind"
+        "factory": "biome.wind"
       }
     ]
   },
@@ -411,17 +421,17 @@
     "additionalSoundChance": "0.0034",
     "acoustics": [
       {
-        "soundEventId": "biome.village.rooster",
+        "factory": "biome.village.rooster",
         "conditions": "state.isInVillage() && !state.isInside() && diurnal.isSunrise() && weather.isNotRaining()",
         "type": "addition"
       },
       {
-        "soundEventId": "biome.village.anvil",
+        "factory": "biome.village.anvil",
         "conditions": "state.isInVillage() && !state.isInside() && diurnal.isDay() && weather.isNotRaining()",
         "type": "addition"
       },
       {
-        "soundEventId": "biome.village.dogbark",
+        "factory": "biome.village.dogbark",
         "conditions": "state.isInVillage() && !state.isInside() && weather.isNotRaining()",
         "type": "addition"
       }
@@ -433,11 +443,11 @@
     "additionalSoundChance": "0.009",
     "acoustics": [
       {
-        "soundEventId": "dimension.theend",
+        "factory": "dimension.theend",
         "conditions": "dim.getId() == 'minecraft:the_end'"
       },
       {
-        "soundEventId": "player.tummy",
+        "factory": "player.tummy",
         "conditions": "player.getFoodLevel() <= 4 || player.hasEffect('minecraft:hunger')",
         "type": "addition"
       }

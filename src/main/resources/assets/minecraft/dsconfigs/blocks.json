@@ -50,7 +50,7 @@
     "soundChance": "0.0001",
     "acoustics": [
       {
-        "soundEventId": "dsurround:ice"
+        "factory": "dsurround:ice"
       }
     ]
   },
@@ -61,13 +61,8 @@
     "soundChance": "0.000125",
     "acoustics": [
       {
-        "soundEventId": "dsurround:soulsand.laughter",
-        "conditions": "dim.getId() == 'minecraft:the_nether'",
-        "pitch": {
-          "type": "minecraft:uniform",
-          "min": 0.6,
-          "max": 1.2
-        }
+        "factory": "dsurround:soulsand.laughter",
+        "conditions": "dim.getId() == 'minecraft:the_nether'"
       }
     ]
   },
@@ -80,13 +75,8 @@
     "soundChance": "0.000125",
     "acoustics": [
       {
-        "soundEventId": "netherbrick.breathing",
-        "conditions": "dim.getId() == 'minecraft:the_nether'",
-        "pitch": {
-          "type": "minecraft:uniform",
-          "min": 0.6,
-          "max": 1.2
-        }
+        "factory": "netherbrick.breathing",
+        "conditions": "dim.getId() == 'minecraft:the_nether'"
       }
     ]
   },

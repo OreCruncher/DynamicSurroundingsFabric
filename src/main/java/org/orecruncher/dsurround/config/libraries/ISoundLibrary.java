@@ -16,6 +16,7 @@ public interface ISoundLibrary extends ILibrary {
     Collection<SoundEvent> getRegisteredSoundEvents();
     SoundMetadata getSoundMetadata(final ResourceLocation sound);
     Optional<ISoundFactory> getSoundFactory(ResourceLocation factoryLocation);
+    ISoundFactory getSoundFactoryOrDefault(ResourceLocation factoryLocation);
 
     boolean isBlocked(final ResourceLocation id);
     boolean isCulled(final ResourceLocation id);

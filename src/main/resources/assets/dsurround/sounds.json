@@ -248,6 +248,14 @@
 			}
 		]
 	},
+	"biome.forest.pine": {
+		"sounds": [
+			{
+				"name": "dsurround:ambient/outside/pine_forest",
+				"stream": true
+			}
+		]
+	},
 	"biome.beach": {
 		"credits": [
 			{

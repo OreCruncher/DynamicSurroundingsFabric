@@ -23,6 +23,7 @@ import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactory;
+import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.sound.SoundMetadata;
 
 import java.nio.file.Files;
@@ -54,7 +55,7 @@ public final class SoundLibrary implements ISoundLibrary {
     private final Object2ObjectOpenHashMap<ResourceLocation, SoundEvent> myRegistry = new Object2ObjectOpenHashMap<>();
     private final Object2ObjectOpenHashMap<ResourceLocation, SoundMetadata> soundMetadata = new Object2ObjectOpenHashMap<>();
     private final Map<ResourceLocation, IndividualSoundConfigEntry> individualSoundConfiguration = new Object2ObjectOpenHashMap<>();
-    private final Map<ResourceLocation, SoundFactory> soundFactories = new Object2ObjectOpenHashMap<>();
+    private final Map<ResourceLocation, ISoundFactory> soundFactories = new Object2ObjectOpenHashMap<>();
     private final Set<ResourceLocation> blockedSounds = new ObjectOpenHashSet<>();
     private final Set<ResourceLocation> culledSounds = new ObjectOpenHashSet<>();
     private final List<ResourceLocation> startupSounds = new ArrayList<>();
@@ -128,6 +129,11 @@ public final class SoundLibrary implements ISoundLibrary {
     public Optional<ISoundFactory> getSoundFactory(ResourceLocation factoryLocation) {
         return Optional.ofNullable(this.soundFactories.get(factoryLocation));
     }
+
+    public ISoundFactory getSoundFactoryOrDefault(ResourceLocation factoryLocation) {
+        return this.soundFactories.computeIfAbsent(factoryLocation, loc -> SoundFactoryBuilder.create(loc).build());
+    }
+
 
     @Override
     public boolean isBlocked(final ResourceLocation sound) {

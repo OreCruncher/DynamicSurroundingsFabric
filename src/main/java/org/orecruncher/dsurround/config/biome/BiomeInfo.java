@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.config.biome;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.level.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
@@ -22,7 +21,6 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
-import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -33,6 +31,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     public static final int DEFAULT_ADDITIONAL_SOUND_CHANCE = 1000 / 4;
     public static final Script DEFAULT_SOUND_CHANCE = new Script(String.valueOf(1D / DEFAULT_ADDITIONAL_SOUND_CHANCE));
     private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+    private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
     private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
     private final int version;
@@ -163,7 +162,6 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
                 }
             }
             case MUSIC -> sourceList = this.musicSounds;
-            case LOOP -> sourceList = null;
         }
 
         if (sourceList == null || sourceList.isEmpty())
@@ -199,15 +197,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
             clearSounds();
         }
 
-        var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
-
         for (final AcousticConfig sr : entry.acoustics()) {
-            final SoundEvent acoustic = soundLibrary.getSound(sr.soundEventId());
-            var factory = SoundFactoryBuilder.create(acoustic)
-                    .category(sr.category())
-                    .volume(sr.volume())
-                    .pitch(sr.pitch())
-                    .build();
+            var factory = SOUND_LIBRARY.getSoundFactoryOrDefault(sr.factory());
 
             switch (sr.type()) {
                 case LOOP -> {
