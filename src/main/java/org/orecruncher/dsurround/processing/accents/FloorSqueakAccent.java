@@ -2,22 +2,18 @@ package org.orecruncher.dsurround.processing.accents;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.sound.ISoundFactory;
-import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 
 class FloorSqueakAccent  implements IFootstepAccentProvider {
 
-    private static final ISoundFactory floorSqueakFactory = SoundFactoryBuilder
-            .create(SoundEvent.createVariableRangeEvent(new ResourceLocation("dsurround", "footsteps.floor_squeak")))
-            .category(SoundSource.PLAYERS).volume(0.3F).pitch(0.8F, 1.2F).build();
+    private static final ResourceLocation FLOOR_SQUEAK = new ResourceLocation(Constants.MOD_ID, "footstep/floorsqueak");
 
     private final Configuration config;
 
@@ -33,8 +29,10 @@ class FloorSqueakAccent  implements IFootstepAccentProvider {
 
         if (state.is(BlockEffectTags.FLOOR_SQUEAKS)) {
             // 1 in 10 chance of a squeak
-            if (Randomizer.current().nextInt(10) == 0)
-                acoustics.add(floorSqueakFactory);
+            if (Randomizer.current().nextInt(10) == 0) {
+                SOUND_LIBRARY.getSoundFactory(FLOOR_SQUEAK)
+                        .ifPresent(acoustics::add);
+            }
         }
     }
 

@@ -20,6 +20,7 @@ import net.minecraft.world.level.material.FluidState;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.effects.BlockEffectUtils;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IEffectSystem;
@@ -51,35 +52,16 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     private static final ISoundFactory[] ACOUSTICS = new ISoundFactory[BlockEffectUtils.MAX_STRENGTH + 1];
 
     static {
-        var factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.0"))
-                .pitch(0.8F, 1.2F)
-                .build();
+        var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
+
+        var factory = soundLibrary.getSoundFactory(new ResourceLocation(Constants.MOD_ID, "waterfalls/0")).orElseThrow();
         Arrays.fill(ACOUSTICS, factory);
 
-        factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.1"))
-                .pitch(0.8F, 1.2F)
-                .build();
-        ACOUSTICS[2] = ACOUSTICS[3] = factory;
-
-        factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.2"))
-                .pitch(0.8F, 1.2F)
-                .build();
-        ACOUSTICS[4] = factory;
-
-        factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.3"))
-                .pitch(0.8F, 1.2F)
-                .build();
-        ACOUSTICS[5] = ACOUSTICS[6] = factory;
-
-        factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.4"))
-                .pitch(0.8F, 1.2F)
-                .build();
-        ACOUSTICS[7] = ACOUSTICS[8] = factory;
-
-        factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.5"))
-                .pitch(0.8F, 1.2F)
-                .build();
-        ACOUSTICS[9] = ACOUSTICS[10] = factory;
+        ACOUSTICS[2] = ACOUSTICS[3] = soundLibrary.getSoundFactory(new ResourceLocation(Constants.MOD_ID, "waterfalls/1")).orElseThrow();
+        ACOUSTICS[4] = soundLibrary.getSoundFactory(new ResourceLocation(Constants.MOD_ID, "waterfalls/2")).orElseThrow();
+        ACOUSTICS[5] = ACOUSTICS[6] = soundLibrary.getSoundFactory(new ResourceLocation(Constants.MOD_ID, "waterfalls/3")).orElseThrow();
+        ACOUSTICS[7] = ACOUSTICS[8] = soundLibrary.getSoundFactory(new ResourceLocation(Constants.MOD_ID, "waterfalls/4")).orElseThrow();
+        ACOUSTICS[9] = ACOUSTICS[10] = soundLibrary.getSoundFactory(new ResourceLocation(Constants.MOD_ID, "waterfalls/5")).orElseThrow();
     }
 
     // Keep track of sound plays outside the effect.

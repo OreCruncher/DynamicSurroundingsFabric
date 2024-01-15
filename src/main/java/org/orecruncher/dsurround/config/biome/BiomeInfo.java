@@ -205,8 +205,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
             final SoundEvent acoustic = soundLibrary.getSound(sr.soundEventId());
             var factory = SoundFactoryBuilder.create(acoustic)
                     .category(sr.category())
-                    .volume(sr.minVolume(), sr.maxVolume())
-                    .pitch(sr.minPitch(), sr.maxPitch())
+                    .volume(sr.volume())
+                    .pitch(sr.pitch())
                     .build();
 
             switch (sr.type()) {

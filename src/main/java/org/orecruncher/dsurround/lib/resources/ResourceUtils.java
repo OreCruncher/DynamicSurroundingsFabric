@@ -56,11 +56,11 @@ public final class ResourceUtils {
     }
 
     /**
-     * Scans resource packs locating sound.json configurations.
+     * Scans resource packs locating resource files.
      *
-     * @return Collection of accessors to retrieve sound.json configurations.
+     * @return Collection of accessors to retrieve resource configurations.
      */
-    public static Collection<IResourceAccessor> findSounds(String configId) {
+    public static Collection<IResourceAccessor> findResources(String configId) {
         return findAssets(
                 ns -> true,
                 ns -> new ResourceLocation(ns, configId));

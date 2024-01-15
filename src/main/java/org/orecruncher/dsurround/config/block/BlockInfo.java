@@ -103,8 +103,8 @@ public class BlockInfo {
                 final SoundEvent acoustic = soundLibrary.getSound(sr.soundEventId());
                 var factory = SoundFactoryBuilder.create(acoustic)
                         .category(sr.category())
-                        .volume(sr.minVolume(), sr.maxVolume())
-                        .pitch(sr.minPitch(), sr.maxPitch())
+                        .volume(sr.volume())
+                        .pitch(sr.pitch())
                         .build();
                 final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions(), sr.weight());
                 this.addToSounds(acousticEntry);

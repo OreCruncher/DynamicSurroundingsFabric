@@ -21,6 +21,8 @@ import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
+import org.orecruncher.dsurround.sound.ISoundFactory;
+import org.orecruncher.dsurround.sound.SoundFactory;
 import org.orecruncher.dsurround.sound.SoundMetadata;
 
 import java.nio.file.Files;
@@ -36,9 +38,11 @@ import static java.nio.file.StandardOpenOption.*;
  */
 public final class SoundLibrary implements ISoundLibrary {
 
-    private static final String FILE_NAME = "sounds.json";
+    private static final String SOUNDS_JSON = "sounds.json";
+    private static final String FACTORY_JSON = "sound_factories.json";
     private static final String SOUND_CONFIG_FILE = "soundconfig.json";
-    private static final UnboundedMapCodec<String, SoundMetadataConfig> CODEC = Codec.unboundedMap(Codec.STRING, SoundMetadataConfig.CODEC);
+    private static final UnboundedMapCodec<String, SoundMetadataConfig> SOUND_FILE_CODEC = Codec.unboundedMap(Codec.STRING, SoundMetadataConfig.CODEC);
+    private static final Codec<List<SoundFactory>> FACTORY_FILE_CODEC = Codec.list(SoundFactory.CODEC);
     private static final Codec<List<IndividualSoundConfigEntry>> SOUND_CONFIG_CODEC = Codec.list(IndividualSoundConfigEntry.CODEC);
 
     private static final ResourceLocation MISSING_RESOURCE = new ResourceLocation(Constants.MOD_ID, "missing_sound");
@@ -50,6 +54,7 @@ public final class SoundLibrary implements ISoundLibrary {
     private final Object2ObjectOpenHashMap<ResourceLocation, SoundEvent> myRegistry = new Object2ObjectOpenHashMap<>();
     private final Object2ObjectOpenHashMap<ResourceLocation, SoundMetadata> soundMetadata = new Object2ObjectOpenHashMap<>();
     private final Map<ResourceLocation, IndividualSoundConfigEntry> individualSoundConfiguration = new Object2ObjectOpenHashMap<>();
+    private final Map<ResourceLocation, SoundFactory> soundFactories = new Object2ObjectOpenHashMap<>();
     private final Set<ResourceLocation> blockedSounds = new ObjectOpenHashSet<>();
     private final Set<ResourceLocation> culledSounds = new ObjectOpenHashSet<>();
     private final List<ResourceLocation> startupSounds = new ArrayList<>();
@@ -77,6 +82,7 @@ public final class SoundLibrary implements ISoundLibrary {
         // Forget cached data and reload
         this.myRegistry.clear();
         this.soundMetadata.clear();
+        this.soundFactories.clear();
         this.loadSoundConfiguration();
 
         // Initializes the internal sound registry once all the other mods have
@@ -86,9 +92,11 @@ public final class SoundLibrary implements ISoundLibrary {
         // Gather resource pack sound files and process them to ensure metadata is collected.
         // Resource pack sounds generally replace existing registration, but this allows for new
         // sounds to be added client side.
-        ResourceUtils.findSounds(FILE_NAME).forEach(this::registerSoundFile);
+        ResourceUtils.findResources(SOUNDS_JSON).forEach(this::registerSoundFile);
+        ResourceUtils.findResources(FACTORY_JSON).forEach(this::registerSoundFactoryFile);
 
         this.logger.info("Number of SoundEvents cached: %d", this.myRegistry.size());
+        this.logger.info("Number of factories cached: %d", this.soundFactories.size());
     }
 
     @Override
@@ -114,6 +122,11 @@ public final class SoundLibrary implements ISoundLibrary {
     @Override
     public SoundMetadata getSoundMetadata(final ResourceLocation sound) {
         return this.soundMetadata.get(Objects.requireNonNull(sound));
+    }
+
+    @Override
+    public Optional<ISoundFactory> getSoundFactory(ResourceLocation factoryLocation) {
+        return Optional.ofNullable(this.soundFactories.get(factoryLocation));
     }
 
     @Override
@@ -162,8 +175,8 @@ public final class SoundLibrary implements ISoundLibrary {
         this.save();
     }
 
-    private void registerSoundFile(final IResourceAccessor soundFile) {
-        final Map<String, SoundMetadataConfig> result = soundFile.as(CODEC);
+    private void registerSoundFile(IResourceAccessor soundFile) {
+        final Map<String, SoundMetadataConfig> result = soundFile.as(SOUND_FILE_CODEC);
         if (result != null && !result.isEmpty()) {
             ResourceLocation resource = soundFile.location();
             this.logger.info("Processing %s", resource);
@@ -180,6 +193,19 @@ public final class SoundLibrary implements ISoundLibrary {
             });
         } else {
             this.logger.debug("Skipping %s - unable to parse sound file or there are no sounds declared", soundFile.location());
+        }
+    }
+
+    private void registerSoundFactoryFile(IResourceAccessor factoryFile) {
+        var result = factoryFile.as(FACTORY_FILE_CODEC);
+        if (result != null && !result.isEmpty()) {
+            ResourceLocation resource = factoryFile.location();
+            this.logger.info("Processing %s", resource);
+            result.forEach(f -> {
+                this.soundFactories.put(f.getLocation(), f);
+            });
+        } else {
+            this.logger.debug("Skipping %s - unable to sound factory file or there are no factories declared", factoryFile.location());
         }
     }
 

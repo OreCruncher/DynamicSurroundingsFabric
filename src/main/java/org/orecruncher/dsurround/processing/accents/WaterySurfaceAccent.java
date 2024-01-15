@@ -2,22 +2,18 @@ package org.orecruncher.dsurround.processing.accents;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.sound.ISoundFactory;
-import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 
 class WaterySurfaceAccent implements IFootstepAccentProvider {
 
-    private static final ISoundFactory wetSurfaceFactory = SoundFactoryBuilder
-            .create(SoundEvent.createVariableRangeEvent(new ResourceLocation("dsurround", "footsteps.water_through")))
-            .category(SoundSource.PLAYERS).volume(0.3F).pitch(0.8F, 1.2F).build();
+    private static final ResourceLocation WETSURFACE_FACTORY = new ResourceLocation(Constants.MOD_ID, "footstep/wetsurface");
 
     private final Configuration config;
 
@@ -52,6 +48,7 @@ class WaterySurfaceAccent implements IFootstepAccentProvider {
         }
 
         if (addAcoustic)
-            acoustics.add(wetSurfaceFactory);
+            SOUND_LIBRARY.getSoundFactory(WETSURFACE_FACTORY)
+                    .ifPresent(acoustics::add);
     }
 }

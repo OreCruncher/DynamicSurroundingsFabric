@@ -66,7 +66,7 @@ public class ItemLibrary implements IItemLibrary {
     public Optional<ISoundFactory> getEquipableStepAccentSound(ItemStack stack) {
         if (stack.isEmpty())
             return Optional.empty();
-        return Optional.ofNullable(this.itemArmorStepFactories.computeIfAbsent(stack.getItem(), k -> resolveEquipStepSound(stack)));
+        return Optional.ofNullable(this.itemArmorStepFactories.computeIfAbsent(stack.getItem(), k -> resolveEquipableStepSound(stack)));
     }
 
     @Override
@@ -75,7 +75,7 @@ public class ItemLibrary implements IItemLibrary {
         return itemRegistry.stream().map(kvp -> formatItemOutput(kvp.getKey().location(), kvp.getValue())).sorted();
     }
 
-    private static @Nullable ISoundFactory resolveEquipStepSound(ItemStack stack) {
+    private static @Nullable ISoundFactory resolveEquipableStepSound(ItemStack stack) {
         var sound = getEquipableSoundEvent(stack);
         if (sound != null)
             return SoundFactoryBuilder

@@ -1,20 +1,13 @@
 package org.orecruncher.dsurround.effects.entity;
 
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.Constants;
-import org.orecruncher.dsurround.sound.ISoundFactory;
-import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
 
 public class BowUseEffect extends EntityEffectBase {
 
-    private static final SoundEvent BOW_PULL_SOUNDEVENT = SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.bow.pull"));
-    private static final ISoundFactory BOW_PULL_SOUND = SoundFactoryBuilder
-            .create(BOW_PULL_SOUNDEVENT)
-            .pitch(0.9F, 1.1F)
-            .build();
+    private static final ResourceLocation BOW_PULL_FACTORY = new ResourceLocation(Constants.MOD_ID, "bow_pull");
 
     protected ItemStack lastActiveStack = ItemStack.EMPTY;
 
@@ -29,8 +22,11 @@ public class BowUseEffect extends EntityEffectBase {
         final ItemStack currentStack = entity.getUseItem();
         if (isApplicable(currentStack)) {
             if (!ItemStack.matches(currentStack, this.lastActiveStack)) {
-                var sound = BOW_PULL_SOUND.attachToEntity(entity);
-                this.playSound(sound);
+                SOUND_LIBRARY.getSoundFactory(BOW_PULL_FACTORY)
+                        .ifPresent(f -> {
+                            var sound = f.attachToEntity(entity);
+                            this.playSound(sound);
+                        });
                 this.lastActiveStack = currentStack;
             }
         } else {

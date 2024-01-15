@@ -20,13 +20,8 @@ import org.orecruncher.dsurround.mixinutils.ILivingEntityExtended;
 public class StepThroughBrushEffect extends EntityEffectBase {
 
     private static final long BRUSH_INTERVAL = 2;
-    private static final ISoundFactory BRUSH_SOUND = SoundFactoryBuilder
-            .create(new ResourceLocation(Constants.MOD_ID, "footsteps.brush_through"))
-            .category(SoundSource.PLAYERS).volume(0.3F).pitch(0.8F, 1.2F).build();
-
-    private static final ISoundFactory STRAW_SOUND = SoundFactoryBuilder
-            .create(new ResourceLocation(Constants.MOD_ID, "footsteps.leaves_through"))
-            .category(SoundSource.PLAYERS).volume(0.5F).pitch(0.8F, 1.2F).build();
+    private static final ResourceLocation BRUSH_SOUND = new ResourceLocation(Constants.MOD_ID, "brush_step/brush");
+    private static final ResourceLocation STRAW_SOUND = new ResourceLocation(Constants.MOD_ID, "brush_step/straw");
 
     private final ITickCount tickCount;
     private final ITagLibrary tagLibrary;
@@ -56,7 +51,7 @@ public class StepThroughBrushEffect extends EntityEffectBase {
         }
     }
 
-    private boolean process(TagKey<Block> effectTag, ISoundFactory factory, Level world, BlockPos blockPos) {
+    private boolean process(TagKey<Block> effectTag, ResourceLocation factory, Level world, BlockPos blockPos) {
         var block = world.getBlockState(blockPos);
         if (this.tagLibrary.is(effectTag, block)) {
             this.playSoundEffect(blockPos, factory, getVolumeScaling(world, blockPos, block));
@@ -86,8 +81,11 @@ public class StepThroughBrushEffect extends EntityEffectBase {
         return ((ILivingEntityExtended)entity).dsurround_isJumping();
     }
 
-    private void playSoundEffect(BlockPos pos, ISoundFactory factory, float volumeScale) {
-        var soundInstance = factory.createAtLocation(pos, volumeScale);
-        this.playSound(soundInstance);
+    private void playSoundEffect(BlockPos pos, ResourceLocation factory, float volumeScale) {
+       SOUND_LIBRARY.getSoundFactory(factory)
+               .ifPresent(f -> {
+                   var soundInstance = f.createAtLocation(pos, volumeScale);
+                   this.playSound(soundInstance);
+               });
     }
 }
