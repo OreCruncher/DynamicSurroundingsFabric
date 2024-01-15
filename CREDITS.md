@@ -125,6 +125,12 @@ whether LPs can be monetized on the various streaming services.
      <li>S: <a href="https://www.freesound.org/people/joepsporck/sounds/262037/">001_forrest.wav</a> by <a href="https://www.freesound.org/people/joepsporck/">joepsporck</a> | License: Creative Commons 0</li> 
 </ul>
 
+*dsurround:biome.forest.pine*
+
+<ul>
+     <li>S: <a href="https://freesound.org/people/nfsgit/sounds/121960/">Nord_Odal_Nyhus_04_juni_2011_open_forest_birds_insects_wind_through_large_pines.wav</a> by <a href="https://www.freesound.org/people/nfsgit/">nfsgit</a> | License: Creative Commons 0</li> 
+</ul>
+
 *dsurround:coyote*
 
 <ul>

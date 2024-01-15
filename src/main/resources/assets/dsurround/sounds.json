@@ -249,6 +249,13 @@
 		]
 	},
 	"biome.forest.pine": {
+		"credits": [
+			{
+				"name": "Nord_Odal_Nyhus_04_juni_2011_open_forest_birds_insects_wind_through_large_pines.wav",
+				"author": "nfsgit",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/outside/pine_forest",
