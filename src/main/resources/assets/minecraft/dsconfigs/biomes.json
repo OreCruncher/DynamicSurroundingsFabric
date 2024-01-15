@@ -18,11 +18,24 @@
     ]
   },
   {
-    "biomeSelector": "DESERT && !(HILLS || MOUNTAIN)",
+    "biomeSelector": "DESERT && !(HILLS || MOUNTAIN || LUSH)",
     "_comment": "Desert Wind",
     "acoustics": [
       {
         "factory": "biome.wind.desert"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "DESERT && LUSH",
+    "_comment": "Lush deserts",
+    "acoustics": [
+      {
+        "factory": "biome.wind.desert",
+        "conditions": "weather.isRaining()"
+      },      {
+        "factory": "biome.crickets",
+        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isNight()"
       }
     ]
   },
@@ -90,7 +103,7 @@
     ]
   },
   {
-    "biomeSelector": "CONIFEROUS && !(SNOWY || FOREST)",
+    "biomeSelector": "CONIFEROUS && !(SNOWY || FOREST || SWAMP)",
     "_comment": "Pine Forest",
     "acoustics": [
       {

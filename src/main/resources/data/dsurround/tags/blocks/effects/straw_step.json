@@ -22,6 +22,14 @@
     {
       "id": "biomesoplenty:yellow_maple_leaf_pile",
       "required": false
+    },
+    {
+      "id": "biomesoplenty:cattail",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:reed",
+      "required": false
     }
   ]
 }

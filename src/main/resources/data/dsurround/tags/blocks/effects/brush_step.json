@@ -20,6 +20,14 @@
     {
       "id": "biomesoplenty:high_grass_plant",
       "required": false
+    },
+    {
+      "id": "biomesoplenty:willow_vine",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:spanish_moss_plant",
+      "required": false
     }
   ]
 }
