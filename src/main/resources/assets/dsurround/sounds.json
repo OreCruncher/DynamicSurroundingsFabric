@@ -1108,6 +1108,19 @@
 			"dsurround:footsteps/brush/brush_through9"
 		]
 	},
+	"footsteps.leaves_through": {
+		"category": "player",
+		"subtitle": "dsurround.sound.caption.footsteps.leaves_through",
+		"sounds": [
+			"dsurround:footsteps/leaves/leaves_through1",
+			"dsurround:footsteps/leaves/leaves_through2",
+			"dsurround:footsteps/leaves/leaves_through3",
+			"dsurround:footsteps/leaves/leaves_through4",
+			"dsurround:footsteps/leaves/leaves_through5",
+			"dsurround:footsteps/leaves/leaves_through6",
+			"dsurround:footsteps/leaves/leaves_through7"
+		]
+	},
 	"silence": {
 		"sounds": [
 			"dsurround:ambient/silence"

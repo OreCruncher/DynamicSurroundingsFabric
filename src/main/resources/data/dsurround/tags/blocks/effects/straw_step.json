@@ -1,0 +1,27 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:sugar_cane",
+    "minecraft:dead_bush",
+    {
+      "id": "biomesoplenty:sea_oats",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:barley",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:orange_maple_leaf_pile",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:red_maple_leaf_pile",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:yellow_maple_leaf_pile",
+      "required": false
+    }
+  ]
+}

@@ -7,7 +7,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
 public interface IFootstepAccentProvider {
-    void provide(LivingEntity entity, BlockPos pos, BlockState posState, boolean isWaterLogged, ObjectArray<ISoundFactory> acoustics);
+    void collect(LivingEntity entity, BlockPos pos, BlockState posState, boolean isWaterLogged, ObjectArray<ISoundFactory> acoustics);
 
     boolean isEnabled();
 }

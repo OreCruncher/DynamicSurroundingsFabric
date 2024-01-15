@@ -226,6 +226,10 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable accents when the player is walking on squeaky blocks")
         public boolean enableFloorSqueaks = true;
+
+        @Property
+        @Comment("Enable/disable accents for when the player is walking on leafy blocks")
+        public boolean enableLeafAccents = true;
     }
 
     public static class ParticleTweaks {

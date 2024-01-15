@@ -16,6 +16,8 @@ public class BlockEffectTags {
     public static final TagKey<Block> FIREFLIES = of("fireflies");
     public static final TagKey<Block> FLOOR_SQUEAKS = of("floor_squeaks");
     public static final TagKey<Block> BRUSH_STEP = of("brush_step");
+    public static final TagKey<Block> LEAVES_STEP = of("leaves_step");
+    public static final TagKey<Block> STRAW_STEP = of("straw_step");
     public static final TagKey<Block> WATERY_STEP = of("watery_step");
     public static final TagKey<Block> STEAM_PRODUCERS = of("steam_producers");
     public static final TagKey<Block> HEAT_PRODUCERS = of("heat_producers");
