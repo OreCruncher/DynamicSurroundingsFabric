@@ -52,32 +52,32 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
 
     static {
         var factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.0"))
-                .pitchRange(0.8F, 1.2F)
+                .pitch(0.8F, 1.2F)
                 .build();
         Arrays.fill(ACOUSTICS, factory);
 
         factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.1"))
-                .pitchRange(0.8F, 1.2F)
+                .pitch(0.8F, 1.2F)
                 .build();
         ACOUSTICS[2] = ACOUSTICS[3] = factory;
 
         factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.2"))
-                .pitchRange(0.8F, 1.2F)
+                .pitch(0.8F, 1.2F)
                 .build();
         ACOUSTICS[4] = factory;
 
         factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.3"))
-                .pitchRange(0.8F, 1.2F)
+                .pitch(0.8F, 1.2F)
                 .build();
         ACOUSTICS[5] = ACOUSTICS[6] = factory;
 
         factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.4"))
-                .pitchRange(0.8F, 1.2F)
+                .pitch(0.8F, 1.2F)
                 .build();
         ACOUSTICS[7] = ACOUSTICS[8] = factory;
 
         factory = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "waterfall.5"))
-                .pitchRange(0.8F, 1.2F)
+                .pitch(0.8F, 1.2F)
                 .build();
         ACOUSTICS[9] = ACOUSTICS[10] = factory;
     }

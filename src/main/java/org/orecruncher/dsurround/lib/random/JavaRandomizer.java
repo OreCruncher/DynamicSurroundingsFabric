@@ -1,5 +1,10 @@
 package org.orecruncher.dsurround.lib.random;
 
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.levelgen.LegacyRandomSource;
+import net.minecraft.world.level.levelgen.PositionalRandomFactory;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.random.RandomGenerator;
 import java.util.random.RandomGeneratorFactory;
 
@@ -20,6 +25,21 @@ final class JavaRandomizer implements IRandomizer {
 
     public JavaRandomizer(String algorithm, final long seed) {
         this.generator = RandomGeneratorFactory.of(algorithm).create(seed);
+    }
+
+    @Override
+    public @NotNull RandomSource fork() {
+        return new JavaRandomizer(XOROSHIRO_128_PLUS_PLUS, this.nextLong());
+    }
+
+    @Override
+    public @NotNull PositionalRandomFactory forkPositional() {
+        return new LegacyRandomSource.LegacyPositionalRandomFactory(this.nextLong());
+    }
+
+    @Override
+    public void setSeed(long l) {
+        // Pray I do not alter the deal any further...
     }
 
     @Override

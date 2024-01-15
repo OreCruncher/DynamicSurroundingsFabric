@@ -16,7 +16,7 @@ public class LeavesAccent implements IFootstepAccentProvider {
 
     private static final ISoundFactory LEAVES_FACTORY = SoundFactoryBuilder
             .create(SoundEvent.createVariableRangeEvent(new ResourceLocation("dsurround", "footsteps.leaves_through")))
-            .category(SoundSource.PLAYERS).volume(1.0F).pitchRange(0.8F, 1.2F).build();
+            .category(SoundSource.PLAYERS).volume(1.0F).pitch(0.8F, 1.2F).build();
 
     private final Configuration config;
 

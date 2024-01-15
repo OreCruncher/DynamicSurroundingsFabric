@@ -1,6 +1,8 @@
 package org.orecruncher.dsurround.lib.random;
 
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.levelgen.PositionalRandomFactory;
+import org.jetbrains.annotations.NotNull;
 
 class MinecraftRandomizer implements IRandomizer {
 
@@ -12,6 +14,21 @@ class MinecraftRandomizer implements IRandomizer {
 
     public MinecraftRandomizer(RandomSource source) {
         this.source = source;
+    }
+
+    @Override
+    public @NotNull RandomSource fork() {
+        return this.source.fork();
+    }
+
+    @Override
+    public @NotNull PositionalRandomFactory forkPositional() {
+        return this.source.forkPositional();
+    }
+
+    @Override
+    public void setSeed(long seed) {
+        this.source.setSeed(seed);
     }
 
     @Override

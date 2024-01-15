@@ -17,7 +17,7 @@ class FloorSqueakAccent  implements IFootstepAccentProvider {
 
     private static final ISoundFactory floorSqueakFactory = SoundFactoryBuilder
             .create(SoundEvent.createVariableRangeEvent(new ResourceLocation("dsurround", "footsteps.floor_squeak")))
-            .category(SoundSource.PLAYERS).volume(0.3F).pitchRange(0.8F, 1.2F).build();
+            .category(SoundSource.PLAYERS).volume(0.3F).pitch(0.8F, 1.2F).build();
 
     private final Configuration config;
 

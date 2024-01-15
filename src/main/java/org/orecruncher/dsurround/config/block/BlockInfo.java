@@ -23,7 +23,6 @@ import org.orecruncher.dsurround.tags.ReflectanceTags;
 
 import java.util.Collection;
 import java.util.Optional;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 public class BlockInfo {
@@ -104,8 +103,8 @@ public class BlockInfo {
                 final SoundEvent acoustic = soundLibrary.getSound(sr.soundEventId());
                 var factory = SoundFactoryBuilder.create(acoustic)
                         .category(sr.category())
-                        .volumeRange(sr.minVolume(), sr.maxVolume())
-                        .pitchRange(sr.minPitch(), sr.maxPitch())
+                        .volume(sr.minVolume(), sr.maxVolume())
+                        .pitch(sr.minPitch(), sr.maxPitch())
                         .build();
                 final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions(), sr.weight());
                 this.addToSounds(acousticEntry);

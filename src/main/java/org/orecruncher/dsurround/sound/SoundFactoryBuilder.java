@@ -8,51 +8,64 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.RandomSource;
+import net.minecraft.util.valueproviders.ConstantFloat;
+import net.minecraft.util.valueproviders.SampledFloat;
+import net.minecraft.util.valueproviders.UniformFloat;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
+@SuppressWarnings("unused")
 public final class SoundFactoryBuilder {
 
     private final SoundEvent soundEvent;
-    private float minVolume = 1F;
-    private float maxVolume = 1F;
-    private float minPitch = 1F;
-    private float maxPitch = 1F;
-    private SoundSource category = SoundSource.AMBIENT;
+    private SampledFloat volume;
+    private SampledFloat pitch;
+    private SoundSource category;
     private boolean isRepeatable = false;
     private int repeatDelay = 0;
     private boolean global = false;
-    private SoundInstance.Attenuation attenuationType = SoundInstance.Attenuation.LINEAR;
+    private SoundInstance.Attenuation attenuationType;
 
     SoundFactoryBuilder(SoundEvent soundEvent) {
         this.soundEvent = soundEvent;
+        this.volume = ConstantFloat.of(1F);
+        this.pitch = ConstantFloat.of(1F);
+        this.category = SoundSource.AMBIENT;
+        this.attenuationType = SoundInstance.Attenuation.LINEAR;
+    }
+
+    SoundFactoryBuilder(SoundFactoryBuilder source) {
+        this.soundEvent = source.soundEvent;
+        this.volume = source.volume;
+        this.pitch = source.pitch;
+        this.category = source.category;
+        this.isRepeatable = source.isRepeatable;
+        this.repeatDelay = source.repeatDelay;
+        this.global = source.global;
+        this.attenuationType = source.attenuationType;
     }
 
     public SoundFactoryBuilder volume(float vol) {
-        this.minVolume = this.maxVolume = vol;
+        this.volume = ConstantFloat.of(vol);
         return this;
     }
 
-    public SoundFactoryBuilder volumeRange(float min, float max) {
-        this.minVolume = min;
-        this.maxVolume = max;
+    public SoundFactoryBuilder volume(float min, float max) {
+        this.volume = Float.compare(min, max) == 0 ? ConstantFloat.of(min) : UniformFloat.of(min, max);
         return this;
     }
 
     public SoundFactoryBuilder pitch(float pitch) {
-        this.minPitch = this.maxPitch = pitch;
+        this.pitch = ConstantFloat.of(pitch);
         return this;
     }
 
-    public SoundFactoryBuilder pitchRange(float min, float max) {
-        this.minPitch = min;
-        this.maxPitch = max;
+    public SoundFactoryBuilder pitch(float min, float max) {
+        this.pitch = Float.compare(min, max) == 0 ? ConstantFloat.of(min) : UniformFloat.of(min, max);
         return this;
     }
 
@@ -89,32 +102,33 @@ public final class SoundFactoryBuilder {
         return new Factory(this);
     }
 
-    private float generate(float min, float max) {
-        var delta = max - min;
-        if (Float.compare(delta, 0) == 0)
-            return min;
-        return (float) (Randomizer.current().nextDouble() * delta + min);
+    private float getVolume() {
+        return this.volume.sample(Randomizer.current());
+    }
+
+    private float getPitch() {
+        return this.pitch.sample(Randomizer.current());
     }
 
     private BackgroundSoundLoop createBackgroundSoundLoop() {
         return new BackgroundSoundLoop(this.soundEvent)
-                .setVolume(this.generate(this.minVolume, this.maxVolume))
-                .setPitch(this.generate(this.minPitch, this.maxPitch));
+                .setVolume(this.getVolume())
+                .setPitch(this.getPitch());
     }
 
     private BackgroundSoundLoop createBackgroundSoundLoopAt(BlockPos pos) {
         return new BackgroundSoundLoop(this.soundEvent, pos)
-                .setVolume(this.generate(this.minVolume, this.maxVolume))
-                .setPitch(this.generate(this.minPitch, this.maxPitch));
+                .setVolume(this.getVolume())
+                .setPitch(this.getPitch());
     }
 
     private SimpleSoundInstance createAsAdditional() {
         return new SimpleSoundInstance(
                 this.soundEvent.getLocation(),
                 this.category,
-                this.generate(this.minVolume, this.maxVolume),
-                this.generate(this.minPitch, this.maxPitch),
-                RandomSource.create(),
+                this.getVolume(),
+                this.getPitch(),
+                Randomizer.current(),
                 this.isRepeatable,
                 this.repeatDelay,
                 this.attenuationType,
@@ -128,20 +142,20 @@ public final class SoundFactoryBuilder {
         return new EntityBoundSoundInstance(
                 this.soundEvent,
                 this.category,
-                this.generate(this.minVolume, this.maxVolume),
-                this.generate(this.minPitch, this.maxPitch),
+                this.getVolume(),
+                this.getPitch(),
                 entity,
                 Randomizer.current().nextLong()
         );
     }
 
-    private SimpleSoundInstance createAtLocation(Vec3 position) {
+    private SimpleSoundInstance createAtLocation(Vec3 position, float volumeScale) {
         return new SimpleSoundInstance(
                 this.soundEvent.getLocation(),
                 this.category,
-                this.generate(this.minVolume, this.maxVolume),
-                this.generate(this.minPitch, this.maxPitch),
-                RandomSource.create(),
+                this.getVolume() * volumeScale,
+                this.getPitch(),
+                Randomizer.current(),
                 this.isRepeatable,
                 this.repeatDelay,
                 this.attenuationType,
@@ -183,30 +197,18 @@ public final class SoundFactoryBuilder {
         }
 
         @Override
-        public SimpleSoundInstance createAsMood(Entity entity, int minRange, int maxRange) {
-            var offset = MathStuff.randomPoint(minRange, maxRange);
-            var position = entity.getEyePosition().add(offset);
-            return this.builder.createAtLocation(position);
-        }
-
-        @Override
         public SimpleSoundInstance createAsAdditional() {
             return this.builder.createAsAdditional();
         }
 
         @Override
-        public SimpleSoundInstance createAtLocation(BlockPos pos) {
-            return this.builder.createAtLocation(Vec3.atCenterOf(pos));
-        }
-
-        @Override
-        public EntityBoundSoundInstance createAtEntity(Entity entity) {
+        public EntityBoundSoundInstance attachToEntity(Entity entity) {
             return this.builder.createAtEntity(entity);
         }
 
         @Override
-        public SimpleSoundInstance createAtLocation(Vec3 position) {
-            return this.builder.createAtLocation(position);
+        public SimpleSoundInstance createAtLocation(Vec3 position, float volumeScale) {
+            return this.builder.createAtLocation(position, volumeScale);
         }
 
         @Override

@@ -7,6 +7,8 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.system.ITickCount;
@@ -20,11 +22,11 @@ public class StepThroughBrushEffect extends EntityEffectBase {
     private static final long BRUSH_INTERVAL = 2;
     private static final ISoundFactory BRUSH_SOUND = SoundFactoryBuilder
             .create(new ResourceLocation(Constants.MOD_ID, "footsteps.brush_through"))
-            .category(SoundSource.PLAYERS).volume(0.3F).pitchRange(0.8F, 1.2F).build();
+            .category(SoundSource.PLAYERS).volume(0.3F).pitch(0.8F, 1.2F).build();
 
     private static final ISoundFactory STRAW_SOUND = SoundFactoryBuilder
             .create(new ResourceLocation(Constants.MOD_ID, "footsteps.leaves_through"))
-            .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build();
+            .category(SoundSource.PLAYERS).volume(0.5F).pitch(0.8F, 1.2F).build();
 
     private final ITickCount tickCount;
     private final ITagLibrary tagLibrary;
@@ -43,30 +45,40 @@ public class StepThroughBrushEffect extends EntityEffectBase {
             if (info.isRemoved())
                 return;
             var entity = info.getEntity();
-            if (this.shouldProcess(entity)) {
+            if (shouldProcess(entity)) {
                 var world = entity.level();
                 var pos = entity.blockPosition();
                 var feetPos = BlockPos.containing(pos.getX(), pos.getY() + 0.25D, pos.getZ());
 
-                this.process(BlockEffectTags.BRUSH_STEP, BRUSH_SOUND, world, feetPos);
-                this.process(BlockEffectTags.STRAW_STEP, STRAW_SOUND, world, feetPos);
+                if (!this.process(BlockEffectTags.STRAW_STEP, STRAW_SOUND, world, feetPos))
+                    this.process(BlockEffectTags.BRUSH_STEP, BRUSH_SOUND, world, feetPos);
             }
         }
     }
 
-    private void process(TagKey<Block> effectTag, ISoundFactory factory, Level world, BlockPos blockPos) {
+    private boolean process(TagKey<Block> effectTag, ISoundFactory factory, Level world, BlockPos blockPos) {
         var block = world.getBlockState(blockPos);
         if (this.tagLibrary.is(effectTag, block)) {
-            this.playSoundEffect(blockPos, factory);
+            this.playSoundEffect(blockPos, factory, getVolumeScaling(world, blockPos, block));
+            return true;
         } else {
             var headPos = blockPos.above();
             block = world.getBlockState(headPos);
-            if (this.tagLibrary.is(effectTag, block))
-                this.playSoundEffect(headPos, factory);
+            if (this.tagLibrary.is(effectTag, block)) {
+                this.playSoundEffect(headPos, factory, getVolumeScaling(world, headPos, block));
+                return true;
+            }
         }
+
+        return false;
     }
 
-    private boolean shouldProcess(LivingEntity entity) {
+    private static float getVolumeScaling(Level world, BlockPos pos, BlockState state) {
+        final VoxelShape shape = state.getShape(world, pos);
+        return shape.isEmpty() ? 1F : (float) shape.bounds().maxY;
+    }
+
+    private static boolean shouldProcess(LivingEntity entity) {
         if (entity.isSilent() || entity.isSpectator())
             return false;
         if (entity.xxa != 0 || entity.zza != 0 || entity.yya != 0)
@@ -74,8 +86,8 @@ public class StepThroughBrushEffect extends EntityEffectBase {
         return ((ILivingEntityExtended)entity).dsurround_isJumping();
     }
 
-    private void playSoundEffect(BlockPos pos, ISoundFactory factory) {
-        var soundInstance = factory.createAtLocation(pos);
+    private void playSoundEffect(BlockPos pos, ISoundFactory factory, float volumeScale) {
+        var soundInstance = factory.createAtLocation(pos, volumeScale);
         this.playSound(soundInstance);
     }
 }

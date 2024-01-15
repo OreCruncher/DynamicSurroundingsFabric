@@ -80,7 +80,7 @@ public class ItemLibrary implements IItemLibrary {
         if (sound != null)
             return SoundFactoryBuilder
                     .create(sound)
-                    .category(SoundSource.PLAYERS).volume(0.07F).pitchRange(0.8F, 1F).build();
+                    .category(SoundSource.PLAYERS).volume(0.07F).pitch(0.8F, 1F).build();
         return null;
     }
 
@@ -93,7 +93,7 @@ public class ItemLibrary implements IItemLibrary {
             if (itemEquipSound != null)
                 return SoundFactoryBuilder
                         .create(itemEquipSound)
-                        .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build();
+                        .category(SoundSource.PLAYERS).volume(0.5F).pitch(0.8F, 1.2F).build();
             return defaultSoundFactory.get();
         }
 

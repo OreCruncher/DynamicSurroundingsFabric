@@ -24,59 +24,59 @@ public enum ItemClassType {
     TOOL("tool",
             SoundFactoryBuilder
                 .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.tool.equip")))
-                .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
+                .category(SoundSource.PLAYERS).volume(0.5F).pitch(0.8F, 1.2F).build(),
             SoundFactoryBuilder
                     .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.tool.swing")))
-                    .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
+                    .category(SoundSource.PLAYERS).volume(0.5F).pitch(0.8F, 1.2F).build()),
     SWORD("sword",
             SoundFactoryBuilder
                 .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.sword.equip")))
-                .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
+                .category(SoundSource.PLAYERS).volume(0.5F).pitch(0.8F, 1.2F).build(),
             SoundFactoryBuilder
                     .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.sword.swing")))
-                    .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
+                    .category(SoundSource.PLAYERS).volume(0.5F).pitch(0.8F, 1.2F).build()),
     SHIELD("shield",
             SoundFactoryBuilder
                 .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.shield.equip")))
-                .category(SoundSource.PLAYERS).volume(0.25F).pitchRange(0.8F, 1.2F).build(),
+                .category(SoundSource.PLAYERS).volume(0.25F).pitch(0.8F, 1.2F).build(),
             SoundFactoryBuilder
                     .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.shield.equip")))
-                    .category(SoundSource.PLAYERS).volume(0.25F).pitchRange(0.4F, 0.6F).build()),
+                    .category(SoundSource.PLAYERS).volume(0.25F).pitch(0.4F, 0.6F).build()),
     AXE("axe",
             SoundFactoryBuilder
                 .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.blunt.equip")))
-                .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
+                .category(SoundSource.PLAYERS).volume(0.5F).pitch(0.8F, 1.2F).build(),
             SoundFactoryBuilder
                     .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.blunt.swing")))
-                    .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
+                    .category(SoundSource.PLAYERS).volume(0.5F).pitch(0.8F, 1.2F).build()),
     BOW("bow",
             SoundFactoryBuilder
                 .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.bow.equip")))
-                .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
+                .category(SoundSource.PLAYERS).volume(0.5F).pitch(0.8F, 1.2F).build(),
             SoundFactoryBuilder
                     .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.tool.swing")))
-                    .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
+                    .category(SoundSource.PLAYERS).volume(0.5F).pitch(0.8F, 1.2F).build()),
     CROSSBOW("crossbow",
             SoundFactoryBuilder
                 .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.bow.equip")))
-                .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build(),
+                .category(SoundSource.PLAYERS).volume(0.5F).pitch(0.8F, 1.2F).build(),
             SoundFactoryBuilder
                     .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.blunt.swing")))
-                    .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build()),
+                    .category(SoundSource.PLAYERS).volume(0.5F).pitch(0.8F, 1.2F).build()),
     POTION("potion",
             SoundFactoryBuilder
                 .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.potion.equip")))
-                .category(SoundSource.PLAYERS).volume(0.8F).pitchRange(0.8F, 1.2F).build(),
+                .category(SoundSource.PLAYERS).volume(0.8F).pitch(0.8F, 1.2F).build(),
             SoundFactoryBuilder
                     .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "item.potion.equip")))
-                    .category(SoundSource.PLAYERS).volume(1F).pitchRange(0.8F, 1.2F).build()),
+                    .category(SoundSource.PLAYERS).volume(1F).pitch(0.8F, 1.2F).build()),
     BOOK("book",
             SoundFactoryBuilder
                 .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "pageflip")))
-                .category(SoundSource.PLAYERS).volume(0.8F).pitchRange(0.8F, 1.2F).build(),
+                .category(SoundSource.PLAYERS).volume(0.8F).pitch(0.8F, 1.2F).build(),
             SoundFactoryBuilder
                     .create(SoundEvent.createVariableRangeEvent(new ResourceLocation(Constants.MOD_ID, "pageflipheavy")))
-                    .category(SoundSource.PLAYERS).volume(0.8F).pitchRange(0.8F, 1.2F).build());
+                    .category(SoundSource.PLAYERS).volume(0.8F).pitch(0.8F, 1.2F).build());
 
     private static final Map<String, ItemClassType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(ItemClassType::getName, (category) -> category));
     public static final Codec<ItemClassType> CODEC = Codec.STRING.comapFlatMap(DataResult.partialGet(BY_NAME::get, () -> "unknown item class type"), d -> d.name);
