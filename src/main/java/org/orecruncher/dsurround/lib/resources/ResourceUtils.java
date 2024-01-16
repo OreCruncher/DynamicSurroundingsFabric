@@ -21,14 +21,14 @@ public final class ResourceUtils {
     private static final IPlatform PLATFORM = Library.getPlatform();
 
     /**
-     * Scans the local disk as well as resource packs and JARs locating and creating accessors for the config file
+     * Scans the local disk as well as resource packs and JARs locating and creating accessors for the resource file
      * in question.
      *
      * @param diskPath Location on disk where external configs can be cached
      * @param config   The config file that is of interest
      * @return A collection of resource accessors that match the config criteria
      */
-    public static Collection<IResourceAccessor> findConfigs(final File diskPath, final String config) {
+    public static Collection<IResourceAccessor> findResources(final File diskPath, final String config) {
         Map<ResourceLocation, IResourceAccessor> accessorMap = new HashMap<>();
         collectFromResourcePacks(accessorMap, config);
         collectFromDisk(accessorMap, diskPath, config);

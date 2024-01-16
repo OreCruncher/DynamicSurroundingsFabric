@@ -50,6 +50,7 @@ public final class SoundLibrary implements ISoundLibrary {
     private static final SoundEvent MISSING = SoundEvent.createVariableRangeEvent(MISSING_RESOURCE);
 
     private final IModLog logger;
+    private final IMinecraftDirectories directories;
     private final Path soundConfigPath;
 
     private final Object2ObjectOpenHashMap<ResourceLocation, SoundEvent> myRegistry = new Object2ObjectOpenHashMap<>();
@@ -63,6 +64,7 @@ public final class SoundLibrary implements ISoundLibrary {
 
     public SoundLibrary(IModLog logger, IMinecraftDirectories directories) {
         this.logger = logger;
+        this.directories = directories;
         this.myRegistry.defaultReturnValue(SoundLibrary.MISSING);
         this.soundMetadata.defaultReturnValue(new SoundMetadata());
         this.soundConfigPath = directories.getModConfigDirectory().resolve(SOUND_CONFIG_FILE);
@@ -94,7 +96,10 @@ public final class SoundLibrary implements ISoundLibrary {
         // Resource pack sounds generally replace existing registration, but this allows for new
         // sounds to be added client side.
         ResourceUtils.findResources(SOUNDS_JSON).forEach(this::registerSoundFile);
-        ResourceUtils.findResources(FACTORY_JSON).forEach(this::registerSoundFactoryFile);
+
+        // Gather the sound factory definitions. We scan the local data directory as well.
+        var filePath = this.directories.getModDataDirectory().toFile();
+        ResourceUtils.findResources(filePath, FACTORY_JSON).forEach(this::registerSoundFactoryFile);
 
         this.logger.info("Number of SoundEvents cached: %d", this.myRegistry.size());
         this.logger.info("Number of factories cached: %d", this.soundFactories.size());
