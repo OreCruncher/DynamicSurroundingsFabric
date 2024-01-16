@@ -1,11 +1,23 @@
 {
   "values": [
     {
+      "id": "#minecraft:hoes",
+      "required": false
+    },
+    {
+      "id": "#minecraft:shovels",
+      "required": false
+    },
+    {
       "id": "#c:hoes",
       "required": false
     },
     {
       "id": "#c:shovels",
+      "required": false
+    },
+    {
+      "id": "#forge:tools/fishing_rods",
       "required": false
     },
     "minecraft:fishing_rod"

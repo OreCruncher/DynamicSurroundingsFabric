@@ -1,9 +1,13 @@
 package org.orecruncher.dsurround.lib.resources;
 
+import com.google.gson.JsonParser;
+import com.mojang.serialization.Dynamic;
+import com.mojang.serialization.JsonOps;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.tags.TagFile;
 import net.minecraft.tags.TagKey;
 import net.minecraft.tags.TagManager;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -75,23 +79,23 @@ public final class ResourceUtils {
      * backfill that knowledge gap.
      *
      * @param tagKey Tag key instance that is the subject of the search
-     * @return Collection of IResourceAccessors for assets that were identified
+     * @return Collection of TagFile instances that were found
      */
-    public static Collection<IResourceAccessor> findClientTagFiles(TagKey<?> tagKey) {
+    public static Collection<TagFile> findClientTagFiles(TagKey<?> tagKey) {
 
-        final Collection<IResourceAccessor> results = new ArrayList<>();
+        final Collection<TagFile> results = new ObjectArray<>();
 
         var tagIdentifier = tagKey.location();
         var tagType = TagManager.getTagDir(tagKey.registry());
-        var tagFile = "%s/%s/%s/%s.json".formatted(PackType.SERVER_DATA.getDirectory(), tagIdentifier.getNamespace(), tagType, tagIdentifier.getPath());
+        var tagFilePath = "%s/%s/%s/%s.json".formatted(PackType.SERVER_DATA.getDirectory(), tagIdentifier.getNamespace(), tagType, tagIdentifier.getPath());
 
-        for (var path : PLATFORM.findResourcePaths(tagFile)) {
-            try {
-                var asset = Files.readAllBytes(path);
-                IResourceAccessor accessor = IResourceAccessor.createRawBytes(tagIdentifier, asset);
-                results.add(accessor);
+        for (var path : PLATFORM.findResourcePaths(tagFilePath)) {
+            try (var tagReader = Files.newBufferedReader(path)) {
+                var jsonElement = JsonParser.parseReader(tagReader);
+                TagFile.CODEC.parse(new Dynamic<>(JsonOps.INSTANCE, jsonElement))
+                        .result().ifPresentOrElse(results::add, () -> LOGGER.warn("Unable to parse tag file %s", path));
             } catch (Throwable t) {
-                LOGGER.error(t, "Unable to read resource stream for path %s", path.toString());
+                LOGGER.error(t, "Unable to read tag file %s", path.toString());
             }
         }
 

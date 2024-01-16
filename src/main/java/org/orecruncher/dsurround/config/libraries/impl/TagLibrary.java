@@ -36,7 +36,7 @@ public class TagLibrary implements ITagLibrary {
     public TagLibrary(IModLog logger) {
         this.logger = logger;
         this.tagCache = new Reference2ObjectOpenHashMap<>();
-        this.tagLoader = new ClientTagLoader(tag -> ModTags.getModTags().contains(tag));
+        this.tagLoader = new ClientTagLoader(this.logger, tag -> ModTags.getModTags().contains(tag));
     }
 
     @Override

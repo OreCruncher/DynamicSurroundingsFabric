@@ -1,6 +1,10 @@
 {
   "values": [
     {
+      "id": "#minecraft:swords",
+      "required": false
+    },
+    {
       "id": "#c:swords",
       "required": false
     }
