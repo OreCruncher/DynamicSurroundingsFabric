@@ -2,18 +2,19 @@ package org.orecruncher.dsurround.lib.resources;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.tags.TagKey;
 import net.minecraft.tags.TagManager;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 
 import java.io.File;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.function.Function;
 
 public final class ResourceUtils {
 
@@ -29,30 +30,26 @@ public final class ResourceUtils {
      * @return A collection of resource accessors that match the config criteria
      */
     public static Collection<IResourceAccessor> findResources(final File diskPath, final String config) {
-        Map<ResourceLocation, IResourceAccessor> accessorMap = new HashMap<>();
-        collectFromResourcePacks(accessorMap, config);
-        collectFromDisk(accessorMap, diskPath, config);
-        return new ArrayList<>(accessorMap.values());
+        var packResources = new ArrayList<>(collectFromResourcePacks(config));
+        packResources.addAll(collectFromDisk(diskPath, config));
+        return packResources;
     }
 
-    private static void collectFromResourcePacks(final Map<ResourceLocation, IResourceAccessor> accessorMap, final String config) {
-        var results = findAssets(
-                PLATFORM::isModLoaded,
-                ns -> new ResourceLocation(ns, String.format("dsconfigs/%s", config)));
-        for (var e : results) {
-            accessorMap.put(e.location(), e);
-        }
+    private static Collection<IResourceAccessor> collectFromResourcePacks(final String config) {
+        return findResources("dsconfigs/%s".formatted(config));
     }
 
-    private static void collectFromDisk(final Map<ResourceLocation, IResourceAccessor> accessorMap, File diskPath, final String config) {
-        // Gather loaded mods.  We focus on those from within the JAR
+    private static Collection<IResourceAccessor> collectFromDisk(File diskPath, final String config) {
+        Map<ResourceLocation, IResourceAccessor> result = new HashMap<>();
         var loadedMods = PLATFORM.getModIdList(true);
         for (var mod : loadedMods) {
             ResourceLocation location = new ResourceLocation(mod, config);
             IResourceAccessor accessor = IResourceAccessor.createExternalResource(diskPath, location);
             if (accessor.exists())
-                accessorMap.put(location, accessor);
+                result.put(location, accessor);
         }
+
+        return result.values();
     }
 
     /**
@@ -61,9 +58,7 @@ public final class ResourceUtils {
      * @return Collection of accessors to retrieve resource configurations.
      */
     public static Collection<IResourceAccessor> findResources(String configId) {
-        return findAssets(
-                ns -> true,
-                ns -> new ResourceLocation(ns, configId));
+        return findResources(GameUtils.getResourceManager(), configId);
     }
 
     /**
@@ -92,37 +87,28 @@ public final class ResourceUtils {
         return results;
     }
 
-    // Modeled after sound list processing in SoundManager
-    private static Collection<IResourceAccessor> findAssets(Function<String, Boolean> namespaceFilter, Function<String, ResourceLocation> identitySupplier) {
-        final List<IResourceAccessor> results = new ArrayList<>();
-        var resourceManager = GameUtils.getResourceManager();
+    private static Collection<IResourceAccessor> findResources(ResourceManager resourceManager, String assetName) {
 
-        for (var namespace : resourceManager.getNamespaces()) {
-            try {
-                if (!namespaceFilter.apply(namespace))
-                    continue;
+        var results = new HashMap<ResourceLocation, Collection<IResourceAccessor>>();
+        var namespaces = resourceManager.getNamespaces();
 
-                var location = identitySupplier.apply(namespace);
-                var resourceList = resourceManager.getResourceStack(location);
-
-                try {
-                    for (var resource : resourceList) {
-                        try (InputStream inputStream = resource.open()) {
-                            byte[] asset = inputStream.readAllBytes();
-                            IResourceAccessor accessor = IResourceAccessor.createRawBytes(location, asset);
-                            results.add(accessor);
-                        } catch (Throwable t) {
-                            LOGGER.error(t, "Unable to read the asset %s from the resource pack", location);
-                        }
+        for (var namespace : namespaces) {
+            var location = new ResourceLocation(namespace, assetName);
+            List<Resource> list = resourceManager.getResourceStack(new ResourceLocation(namespace, assetName));
+            if (!list.isEmpty()) {
+                var resultList = results.computeIfAbsent(location, i -> new ObjectArray<>());
+                for (var resource : list) {
+                    try (var inputStream = resource.open()) {
+                        var asset = inputStream.readAllBytes();
+                        IResourceAccessor accessor = IResourceAccessor.createRawBytes(location, asset);
+                        resultList.add(accessor);
+                    } catch (Throwable t) {
+                        LOGGER.error(t, "Unable to read resource stream for path %s", location);
                     }
-                } catch (Throwable t) {
-                    LOGGER.error(t, "Unable to enumerate resource for %s", location);
                 }
-            } catch (Throwable ignore) {
-                // Suppress - get a lot of not founds for packs that do not have a resource
             }
         }
 
-        return results;
+        return results.values().stream().flatMap(Collection::stream).toList();
     }
 }
