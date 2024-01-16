@@ -7,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-final class ResourceAccessorExternal extends ResourceAccessorBase {
+final class ResourceAccessorExternal extends AbstractResourceAccessor {
 
     final Path filePath;
 
@@ -33,6 +33,6 @@ final class ResourceAccessorExternal extends ResourceAccessorBase {
 
     @Override
     public String toString() {
-        return String.format("%s (%s)", super.toString(), this.filePath);
+        return "%s (%s)".formatted(super.toString(), this.filePath);
     }
 }

@@ -56,13 +56,9 @@ public class BlockLibrary implements IBlockLibrary {
     public void reload() {
 
         this.blockConfigs.clear();
-        final Collection<IResourceAccessor> accessors = ResourceUtils.findResources(this.directories.getModDataDirectory().toFile(), FILE_NAME);
 
-        IResourceAccessor.process(accessors, accessor -> {
-            var cfg = accessor.as(CODEC);
-            if (cfg != null)
-                this.blockConfigs.addAll(cfg);
-        });
+        final Collection<IResourceAccessor> accessors = ResourceUtils.findResources(this.directories.getModDataDirectory().toFile(), FILE_NAME);
+        IResourceAccessor.process(accessors, accessor -> accessor.as(CODEC).ifPresent(this.blockConfigs::addAll));
 
         this.version++;
 

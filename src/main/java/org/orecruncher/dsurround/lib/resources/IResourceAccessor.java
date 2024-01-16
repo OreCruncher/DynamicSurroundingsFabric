@@ -12,6 +12,7 @@ import java.io.FileNotFoundException;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -140,17 +141,15 @@ public interface IResourceAccessor {
      * @param <T>   The object type for casting
      * @return Reference to the deserialized object, null if not possible
      */
-    default <T> @Nullable T as(final Codec<T> codec) {
+    default <T> Optional<T> as(Codec<T> codec) {
         String content = this.asString();
         if (!Strings.isNullOrEmpty(content)) {
-            var result = CodecExtensions.deserialize(content, codec);
-            if (result.isPresent())
-                return result.get();
+            return CodecExtensions.deserialize(content, codec);
         }
-        return null;
+        return Optional.empty();
     }
 
-    default void logError(final Throwable t) {
+    default void logError(Throwable t) {
         if (t instanceof FileNotFoundException)
             ResourceUtils.LOGGER.debug("Asset not found for %s", this.toString());
         else

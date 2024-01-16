@@ -187,11 +187,12 @@ public final class SoundLibrary implements ISoundLibrary {
     }
 
     private void registerSoundFile(IResourceAccessor soundFile) {
-        final Map<String, SoundMetadataConfig> result = soundFile.as(SOUND_FILE_CODEC);
-        if (result != null && !result.isEmpty()) {
+        var result = soundFile.as(SOUND_FILE_CODEC);
+        if (result.isPresent()) {
             ResourceLocation resource = soundFile.location();
+            var sf = result.get();
             this.logger.info("Processing %s", resource);
-            result.forEach((key, value) -> {
+            sf.forEach((key, value) -> {
                 // We want to register the sound regardless of having metadata.
                 final ResourceLocation loc = new ResourceLocation(resource.getNamespace(), key);
                 if (!this.myRegistry.containsKey(loc)) {
@@ -202,21 +203,18 @@ public final class SoundLibrary implements ISoundLibrary {
                     this.soundMetadata.put(loc, data);
                 }
             });
-        } else {
-            this.logger.debug("Skipping %s - unable to parse sound file or there are no sounds declared", soundFile.location());
+            this.logger.info("%d entries processed", sf.size());
         }
     }
 
     private void registerSoundFactoryFile(IResourceAccessor factoryFile) {
         var result = factoryFile.as(FACTORY_FILE_CODEC);
-        if (result != null && !result.isEmpty()) {
+        if (result.isPresent()) {
             ResourceLocation resource = factoryFile.location();
+            var ff = result.get();
             this.logger.info("Processing %s", resource);
-            result.forEach(f -> {
-                this.soundFactories.put(f.getLocation(), f);
-            });
-        } else {
-            this.logger.debug("Skipping %s - unable to sound factory file or there are no factories declared", factoryFile.location());
+            ff.forEach(f -> this.soundFactories.put(f.getLocation(), f));
+            this.logger.info("%d entries processed", ff.size());
         }
     }
 

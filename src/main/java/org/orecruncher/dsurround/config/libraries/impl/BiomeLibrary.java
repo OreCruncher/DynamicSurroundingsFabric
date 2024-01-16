@@ -61,12 +61,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
         this.biomeConditionEvaluator.reset();
 
         var accessors = ResourceUtils.findResources(this.directories.getModDataDirectory().toFile(), FILE_NAME);
-
-        IResourceAccessor.process(accessors, accessor -> {
-            var cfg = accessor.as(CODEC);
-            if (cfg != null)
-                this.biomeConfigs.addAll(cfg);
-        });
+        IResourceAccessor.process(accessors, accessor -> accessor.as(CODEC).ifPresent(this.biomeConfigs::addAll));
 
         this.version++;
 

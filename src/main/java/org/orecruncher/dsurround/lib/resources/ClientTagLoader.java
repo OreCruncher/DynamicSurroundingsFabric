@@ -2,10 +2,6 @@ package org.orecruncher.dsurround.lib.resources;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-import com.mojang.serialization.Dynamic;
-import com.mojang.serialization.JsonOps;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.resources.ResourceKey;
@@ -61,17 +57,13 @@ public class ClientTagLoader {
         var tagFiles = ResourceUtils.findClientTagFiles(tagKey);
 
         for (var accessor : tagFiles) {
-            JsonElement jsonElement = JsonParser.parseString(accessor.asString());
-            TagFile maybeTagFile = TagFile.CODEC.parse(new Dynamic<>(JsonOps.INSTANCE, jsonElement))
-                    .result().orElse(null);
-
-            if (maybeTagFile != null) {
-                if (maybeTagFile.replace()) {
+            accessor.as(TagFile.CODEC).ifPresent(tf -> {
+                if (tf.replace()) {
                     entries.clear();
                 }
 
-                entries.addAll(maybeTagFile.entries());
-            }
+                entries.addAll(tf.entries());
+            });
         }
 
         if (entries.isEmpty()) {

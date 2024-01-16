@@ -3,17 +3,17 @@ package org.orecruncher.dsurround.lib.resources;
 import net.minecraft.resources.ResourceLocation;
 import org.orecruncher.dsurround.lib.Singleton;
 
-abstract class ResourceAccessorBase implements IResourceAccessor {
+abstract class AbstractResourceAccessor implements IResourceAccessor {
 
     private final ResourceLocation location;
     private final Singleton<byte[]> bytes;
 
-    public ResourceAccessorBase(final ResourceLocation location, byte[] bytes) {
+    public AbstractResourceAccessor(final ResourceLocation location, byte[] bytes) {
         this.location = location;
-        this.bytes = new Singleton<>(() -> bytes);
+        this.bytes = new Singleton<>(bytes);
     }
 
-    public ResourceAccessorBase(final ResourceLocation location) {
+    public AbstractResourceAccessor(final ResourceLocation location) {
         this.location = location;
         this.bytes = new Singleton<>(this::getAsset);
     }

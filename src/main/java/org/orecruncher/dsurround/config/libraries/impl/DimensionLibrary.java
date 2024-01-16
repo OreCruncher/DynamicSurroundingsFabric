@@ -36,13 +36,9 @@ public final class DimensionLibrary implements IDimensionLibrary {
     public void reload() {
         this.configs.clear();
         this.dimensionRules.clear();
-        final Collection<IResourceAccessor> accessors = ResourceUtils.findResources(this.directories.getModDataDirectory().toFile(), FILE_NAME);
 
-        IResourceAccessor.process(accessors, accessor -> {
-            var cfg = accessor.as(CODEC);
-            if (cfg != null)
-                this.dimensionRules.addAll(cfg);
-        });
+        final Collection<IResourceAccessor> accessors = ResourceUtils.findResources(this.directories.getModDataDirectory().toFile(), FILE_NAME);
+        IResourceAccessor.process(accessors, accessor -> accessor.as(CODEC).ifPresent(this.dimensionRules::addAll));
 
         this.version++;
 
