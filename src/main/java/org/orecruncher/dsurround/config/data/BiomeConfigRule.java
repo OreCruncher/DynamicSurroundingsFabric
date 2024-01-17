@@ -20,7 +20,7 @@ public record BiomeConfigRule(
         Optional<Script> moodSoundChance,
         List<AcousticConfig> acoustics) {
 
-        public static Codec<BiomeConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+        public static final Codec<BiomeConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
                         Script.CODEC.fieldOf("biomeSelector").forGetter(BiomeConfigRule::biomeSelector),
                         Codec.STRING.optionalFieldOf("_comment").forGetter(BiomeConfigRule::comment),
                         Codec.list(BiomeTrait.CODEC).optionalFieldOf("traits", ImmutableList.of()).forGetter(BiomeConfigRule::traits),

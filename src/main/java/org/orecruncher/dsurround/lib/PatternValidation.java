@@ -7,5 +7,5 @@ public final class PatternValidation {
     /**
      * BlockState Property names
      */
-    public static Pattern BLOCKSTATE_PROPERTY_NAME = Pattern.compile("^[a-z0-9_]+$");
+    public static final Pattern BLOCKSTATE_PROPERTY_NAME = Pattern.compile("^[a-z0-9_]+$");
 }

@@ -12,7 +12,7 @@ public record BlockEffectConfigRule(
 
     private static final Script DEFAULT_SPAWN_CHANCE = new Script("0.01");
 
-    public static Codec<BlockEffectConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+    public static final Codec<BlockEffectConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
                     BlockEffectType.CODEC.fieldOf("effect").forGetter(BlockEffectConfigRule::effect),
                     Script.CODEC.optionalFieldOf("conditions", Script.TRUE).forGetter(BlockEffectConfigRule::conditions),
                     Script.CODEC.optionalFieldOf("spawnChance", DEFAULT_SPAWN_CHANCE).forGetter(BlockEffectConfigRule::spawnChance))

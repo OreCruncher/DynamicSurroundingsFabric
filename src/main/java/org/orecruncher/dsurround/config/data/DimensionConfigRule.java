@@ -14,7 +14,7 @@ public record DimensionConfigRule(
         Optional<Boolean> alwaysOutside,
         Optional<Boolean> playBiomeSounds) {
 
-    public static Codec<DimensionConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+    public static final Codec<DimensionConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
                 ResourceLocation.CODEC.fieldOf("dimId").forGetter(DimensionConfigRule::dimensionId),
                 Codec.INT.optionalFieldOf("seaLevel").forGetter(DimensionConfigRule::seaLevel),
                 Codec.INT.optionalFieldOf("skyHeight").forGetter(DimensionConfigRule::skyHeight),

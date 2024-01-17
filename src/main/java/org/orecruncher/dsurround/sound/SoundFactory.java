@@ -33,7 +33,7 @@ public record SoundFactory(
         boolean global,
         SoundInstance.Attenuation attenuation) implements Comparable<ISoundFactory>, ISoundFactory {
 
-    public static Codec<SoundFactory> CODEC = RecordCodecBuilder.create((instance) ->
+    public static final Codec<SoundFactory> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
                     IdentityUtils.CODEC.optionalFieldOf("location").forGetter(SoundFactory::location),
                     SoundCodecHelpers.SOUND_EVENT_CODEC.fieldOf("soundEvent").forGetter(SoundFactory::soundEvent),

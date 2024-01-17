@@ -13,7 +13,7 @@ public record AcousticConfig(
         Integer weight,
         SoundEventType type) {
 
-    public static Codec<AcousticConfig> CODEC = RecordCodecBuilder.create((instance) ->
+    public static final Codec<AcousticConfig> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
                 IdentityUtils.CODEC.fieldOf("factory").forGetter(AcousticConfig::factory),
                 Script.CODEC.optionalFieldOf("conditions", Script.TRUE).forGetter(AcousticConfig::conditions),

@@ -13,7 +13,7 @@ public record ItemConfigRule(
         ItemClassType itemClassType,
         List<IMatcher<Item>> items) {
 
-    public static Codec<ItemConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+    public static final Codec<ItemConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
             ItemClassType.CODEC.fieldOf("itemClassType").forGetter(ItemConfigRule::itemClassType),
             Codec.list(ItemTypeMatcher.CODEC).fieldOf("items").forGetter(ItemConfigRule::items))
             .apply(instance, ItemConfigRule::new));

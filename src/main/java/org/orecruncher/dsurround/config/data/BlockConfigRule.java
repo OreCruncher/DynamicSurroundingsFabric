@@ -18,7 +18,7 @@ public record BlockConfigRule(
         List<AcousticConfig> acoustics,
         List<BlockEffectConfigRule> effects) {
 
-        public static Codec<BlockConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+        public static final Codec<BlockConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
                     Codec.list(CodecExtensions.checkBlockStateSpecification(true)).fieldOf("blocks")
                             .forGetter(BlockConfigRule::blocks),
                     Codec.BOOL.optionalFieldOf("clearSounds", false).forGetter(BlockConfigRule::clearSounds),

@@ -14,7 +14,7 @@ public record EntityEffectConfigRule(
         List<IMatcher<Entity>> entityTypeMatchers,
         List<EntityEffectType> effects) {
 
-    public static Codec<EntityEffectConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+    public static final Codec<EntityEffectConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
             Codec.list(EntityTypeMatcher.CODEC).fieldOf("entityTypes").forGetter(EntityEffectConfigRule::entityTypeMatchers),
             Codec.list(EntityEffectType.CODEC).fieldOf("effects").forGetter(EntityEffectConfigRule::effects))
             .apply(instance, EntityEffectConfigRule::new));
