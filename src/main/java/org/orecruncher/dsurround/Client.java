@@ -124,7 +124,7 @@ public final class Client {
 
         // Force instantiation of the core Handler.  This should cause the rest
         // of the dependencies to be initialized.
-        var ignore = container.resolve(Handlers.class);
+        container.resolve(Handlers.class);
 
         // Make sure our particle sheets get registered otherwise they will not render.
         // These sheets are purely client side - they have to be manhandled into the

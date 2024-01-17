@@ -16,7 +16,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 public final class BiomeScanner extends AbstractScanner {
 
     public static final int SCAN_INTERVAL = 4;
-    private static final int UNDERGROUND_THRESHOLD_OFFSET = 4;
+    private static final int UNDERGROUND_THRESHOLD_OFFSET = 8;
     private static final int SURVEY_HORIZONTAL_DIMENSION = 18;
     private static final int SURVEY_HORIZONTAL_OFFSET = SURVEY_HORIZONTAL_DIMENSION / 2 - 1;
     private static final int SURVEY_VERTICAL_DIMENSION = 16;

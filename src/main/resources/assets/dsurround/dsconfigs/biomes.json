@@ -332,7 +332,7 @@
     "acoustics": [
       {
         "factory": "biome.underground",
-        "conditions": "state.isInside() && player.getY() < 50"
+        "conditions": "state.isInside()"
       },
       {
         "factory": "rockfall",
@@ -369,7 +369,7 @@
     "acoustics": [
       {
         "factory": "biome.underground",
-        "conditions": "state.isInside() && player.getY() < 50"
+        "conditions": "state.isInside()"
       },
       {
         "factory": "rockfall",

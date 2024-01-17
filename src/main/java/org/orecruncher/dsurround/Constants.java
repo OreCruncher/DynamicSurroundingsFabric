@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround;
 
+import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -30,8 +31,7 @@ public final class Constants {
     /**
      * Collection of MOD IDs that are of interest.  Ease of iteration.
      */
-    public static final Set<String> SPECIAL_MODS = new HashSet<>();
-
+    public static final Set<String> SPECIAL_MODS;
 
     /**
      * Blocks that will be ignored by the system during configuration
@@ -40,10 +40,7 @@ public final class Constants {
     public static final Set<Block> BLOCKS_TO_IGNORE = new ReferenceOpenHashSet<>(5);
 
     static {
-        SPECIAL_MODS.add(MOD_PRESENCE_FOOTSTEPS);
-        SPECIAL_MODS.add(MOD_SOUND_PHYSICS_REMASTERED);
-        SPECIAL_MODS.add(CLOTH_CONFIG);
-        SPECIAL_MODS.add(YACL);
+        SPECIAL_MODS = ImmutableSet.of(MOD_PRESENCE_FOOTSTEPS, MOD_SOUND_PHYSICS_REMASTERED, CLOTH_CONFIG, YACL);
 
         BLOCKS_TO_IGNORE.add(Blocks.VOID_AIR);
         BLOCKS_TO_IGNORE.add(Blocks.CAVE_AIR);
