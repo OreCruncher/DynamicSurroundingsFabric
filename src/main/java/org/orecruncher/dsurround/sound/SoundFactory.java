@@ -20,6 +20,8 @@ import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import java.util.Optional;
 
+import static org.orecruncher.dsurround.sound.SoundCodecHelpers.SOUND_PROPERTY_RANGE;
+
 public record SoundFactory(
         Optional<ResourceLocation> location,
         SoundEvent soundEvent,
@@ -35,8 +37,8 @@ public record SoundFactory(
             instance.group(
                     IdentityUtils.CODEC.optionalFieldOf("location").forGetter(SoundFactory::location),
                     SoundCodecHelpers.SOUND_EVENT_CODEC.fieldOf("soundEvent").forGetter(SoundFactory::soundEvent),
-                    FloatProvider.CODEC.optionalFieldOf("volume", ConstantFloat.of(1F)).forGetter(SoundFactory::volume),
-                    FloatProvider.CODEC.optionalFieldOf("pitch", ConstantFloat.of(1F)).forGetter(SoundFactory::pitch),
+                    SOUND_PROPERTY_RANGE.optionalFieldOf("volume", ConstantFloat.of(1F)).forGetter(SoundFactory::volume),
+                    SOUND_PROPERTY_RANGE.optionalFieldOf("pitch", ConstantFloat.of(1F)).forGetter(SoundFactory::pitch),
                     SoundCodecHelpers.SOUND_CATEGORY_CODEC.optionalFieldOf("category", SoundSource.AMBIENT).forGetter(SoundFactory::category),
                     Codec.BOOL.optionalFieldOf("isRepeatable", false).forGetter(SoundFactory::isRepeatable),
                     Codec.INT.optionalFieldOf("repeatDelay", 0).forGetter(SoundFactory::repeatDelay),

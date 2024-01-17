@@ -28,6 +28,10 @@
     {
       "id": "biomesoplenty:spanish_moss_plant",
       "required": false
+    },
+    {
+      "id": "biomesoplenty:watergrass",
+      "required": false
     }
   ]
 }
