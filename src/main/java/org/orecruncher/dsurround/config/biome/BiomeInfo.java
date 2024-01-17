@@ -46,6 +46,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private final boolean isRiver;
     private final boolean isOcean;
     private final boolean isDeepOcean;
+    private final boolean isCave;
     private final IConditionEvaluator conditionEvaluator;
     private TextColor fogColor;
     private Script additionalSoundChance = DEFAULT_SOUND_CHANCE;
@@ -63,9 +64,10 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         this.biome = Optional.ofNullable(biome);
 
         this.traits = traits;
-        this.isRiver = this.traits.contains("RIVER");
-        this.isOcean = this.traits.contains("OCEAN");
-        this.isDeepOcean = this.isOcean && this.traits.contains("DEEP");
+        this.isRiver = this.traits.contains(BiomeTrait.RIVER);
+        this.isOcean = this.traits.contains(BiomeTrait.OCEAN);
+        this.isDeepOcean = this.isOcean && this.traits.contains(BiomeTrait.DEEP);
+        this.isCave = this.traits.contains(BiomeTrait.CAVES);
         this.conditionEvaluator = ContainerManager.resolve(IConditionEvaluator.class);
     }
 
@@ -83,6 +85,10 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
     public boolean isDeepOcean() {
         return this.isDeepOcean;
+    }
+
+    public boolean isCave() {
+        return this.isCave;
     }
 
     public ResourceLocation getBiomeId() {

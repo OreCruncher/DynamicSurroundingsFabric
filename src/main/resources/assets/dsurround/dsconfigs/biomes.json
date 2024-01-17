@@ -328,8 +328,12 @@
   },
   {
     "biomeSelector": "UNDERGROUND",
-    "_comment": "Regular underground biomes",
+    "_comment": "Caves and being underground",
     "acoustics": [
+      {
+        "factory": "biome.underground",
+        "conditions": "state.isInside() && player.getY() < 50"
+      },
       {
         "factory": "rockfall",
         "type": "mood",
@@ -339,7 +343,13 @@
         "factory": "bigrockfall",
         "type": "mood",
         "weight": 15
-      },
+      }
+    ]
+  },
+  {
+    "biomeSelector": "UNDERGROUND && !CAVES",
+    "_comment": "Underground and not in a cave",
+    "acoustics": [
       {
         "factory": "monstergrowl",
         "conditions": "diurnal.isNight()",

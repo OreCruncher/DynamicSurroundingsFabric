@@ -12,7 +12,7 @@ public enum BiomeTrait {
     // Generic case of WTF
     UNKNOWN("UNKNOWN"),
     // Special internal traits for synthetic biomes
-    FAKE("FAKE"),
+    SYNTHETIC("SYNTHETIC"),
     INSIDE("inside"),
     VILLAGE("VILLAGE"),
     PLAYER("PLAYER"),

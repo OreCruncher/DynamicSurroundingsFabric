@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum InternalBiomes {
+public enum SyntheticBiome {
     // Used to represent a value that is not the others.  Will not show up in
     // the lookup map.
     NONE("none"),
@@ -24,10 +24,10 @@ public enum InternalBiomes {
     UNDER_OCEAN("under_ocean", BiomeTrait.UNDER_OCEAN),
     UNDER_DEEP_OCEAN("under_deep_ocean", BiomeTrait.UNDER_OCEAN, BiomeTrait.DEEP);
 
-    private static final Map<String, InternalBiomes> lookup = new HashMap<>();
+    private static final Map<String, SyntheticBiome> lookup = new HashMap<>();
 
     static {
-        for (var e : InternalBiomes.values())
+        for (var e : SyntheticBiome.values())
             if (e != NONE)
                 lookup.put(e.getName(), e);
     }
@@ -36,16 +36,16 @@ public enum InternalBiomes {
     private final ResourceLocation id;
     private final BiomeTraits traits;
 
-    InternalBiomes(String name, BiomeTrait... traits) {
+    SyntheticBiome(String name, BiomeTrait... traits) {
         this.name = name;
-        this.id = new ResourceLocation(Constants.MOD_ID, String.format("fakebiome/%s", name));
+        this.id = new ResourceLocation(Constants.MOD_ID, String.format("synthetic_biome/%s", name));
         traits = Arrays.copyOf(traits, traits.length + 1);
-        traits[traits.length - 1] = BiomeTrait.FAKE;
+        traits[traits.length - 1] = BiomeTrait.SYNTHETIC;
         this.traits = BiomeTraits.from(traits);
     }
 
     @Nullable
-    public static InternalBiomes getByName(String name) {
+    public static SyntheticBiome getByName(String name) {
         return lookup.get(name.toLowerCase());
     }
 

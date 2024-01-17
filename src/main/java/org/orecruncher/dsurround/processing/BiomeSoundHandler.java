@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.config.InternalBiomes;
+import org.orecruncher.dsurround.config.SyntheticBiome;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
@@ -92,8 +92,8 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
             // The following will look at the PLAYER and VILLAGE biomes, two artificial biomes
             // that are used to configure effects.
             final ObjectArray<ISoundFactory> playerSounds = new ObjectArray<>();
-            final BiomeInfo internalPlayerBiomeInfo = this.biomeLibrary.getBiomeInfo(InternalBiomes.PLAYER);
-            final BiomeInfo internalVillageBiomeInfo = this.biomeLibrary.getBiomeInfo(InternalBiomes.VILLAGE);
+            final BiomeInfo internalPlayerBiomeInfo = this.biomeLibrary.getBiomeInfo(SyntheticBiome.PLAYER);
+            final BiomeInfo internalVillageBiomeInfo = this.biomeLibrary.getBiomeInfo(SyntheticBiome.VILLAGE);
             playerSounds.addAll(internalPlayerBiomeInfo.findBiomeSoundMatches());
             playerSounds.addAll(internalVillageBiomeInfo.findBiomeSoundMatches());
             playerSounds.forEach(fx -> this.workMap.put(fx, 1.0F));
