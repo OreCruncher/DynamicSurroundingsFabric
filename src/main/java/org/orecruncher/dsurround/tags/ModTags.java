@@ -23,6 +23,7 @@ public final class ModTags {
         MOD_TAGS.addAll(ItemTags.TAGS);
         MOD_TAGS.addAll(OcclusionTags.TAGS);
         MOD_TAGS.addAll(ReflectanceTags.TAGS);
+        MOD_TAGS.addAll(FluidTags.TAGS);
     }
 
     public static Collection<TagKey<?>> getModTags() {

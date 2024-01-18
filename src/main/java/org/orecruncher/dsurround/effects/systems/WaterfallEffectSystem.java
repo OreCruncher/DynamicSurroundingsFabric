@@ -12,7 +12,6 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SupportType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FlowingFluid;
@@ -29,6 +28,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.sound.*;
+import org.orecruncher.dsurround.tags.FluidTags;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -170,15 +170,19 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
             return ImmutableSet.of();
         }
 
+        var player = GameUtils.getPlayer().orElseThrow();
+
         // The next possible happy path is if the number of active waterfall instances is less
         // than the cap. All can be included.
         if (this.systems.size() <= SOUND_INSTANCE_CAP)
-            return this.systems.values().stream().map(IBlockEffect::getPosIndex).collect(Collectors.toSet());
+            return this.systems.values().stream()
+                    .filter(e -> shouldPlaySoundFilter(player.level(), e))
+                    .map(IBlockEffect::getPosIndex).collect(Collectors.toSet());
 
         // This is the interesting path where we need to stack rank using an impact
         // heuristic based on strength and distance to player.
-        var player = GameUtils.getPlayer().orElseThrow();
         return this.systems.values().stream()
+                .filter(e -> shouldPlaySoundFilter(player.level(), e))
                 .map(e -> {
                     var effect = (WaterfallEffect)e;
                     var posIndex = effect.getPosIndex();
@@ -191,6 +195,10 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
                 .limit(SOUND_INSTANCE_CAP)
                 .map(Pair::value)
                 .collect(Collectors.toSet());
+    }
+
+    private static boolean shouldPlaySoundFilter(Level world, IBlockEffect effect) {
+        return TAG_LIBRARY.is(FluidTags.WATERFALL_SOUND, world.getFluidState(effect.getPos()));
     }
 
     @Override
@@ -233,12 +241,10 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     }
 
     private static boolean canWaterfallSpawn(Level world, BlockState state, BlockPos pos) {
-        return state.getBlock() != Blocks.LAVA && isValidWaterfallSource(world, state, pos);
+        return TAG_LIBRARY.is(FluidTags.WATERFALL_SOURCE, state.getFluidState()) && isValidWaterfallSource(world, pos);
     }
 
-    private static boolean isValidWaterfallSource(Level world, BlockState state, BlockPos pos) {
-        if (state.getFluidState().isEmpty())
-            return false;
+    private static boolean isValidWaterfallSource(Level world, BlockPos pos) {
         if (world.getFluidState(pos.above()).isEmpty())
             return false;
         if (isUnboundedLiquid(world, pos)) {

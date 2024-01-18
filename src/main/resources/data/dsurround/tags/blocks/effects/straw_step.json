@@ -30,6 +30,10 @@
     {
       "id": "biomesoplenty:reed",
       "required": false
+    },
+    {
+      "id": "biomesoplenty:eyebulb",
+      "required": false
     }
   ]
 }

@@ -13,6 +13,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidState;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
@@ -70,6 +72,15 @@ public class TagLibrary implements ITagLibrary {
 
     @Override
     public boolean is(TagKey<EntityType<?>> tagKey, EntityType<?> entry) {
+        if (entry.is(tagKey))
+            return true;
+        return this.isInCache(tagKey, entry);
+    }
+
+    @Override
+    public boolean is(TagKey<Fluid> tagKey, FluidState entry) {
+        if (entry.isEmpty())
+            return false;
         if (entry.is(tagKey))
             return true;
         return this.isInCache(tagKey, entry);
