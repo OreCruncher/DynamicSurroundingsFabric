@@ -3,6 +3,8 @@ package org.orecruncher.dsurround.gui.overlay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
@@ -45,7 +47,7 @@ public class ClockOverlay extends AbstractOverlay {
             var mainHandItem = player.getMainHandItem();
             var offHandItem = player.getOffhandItem();
 
-            this.showClock = this.doShowClock(mainHandItem) || this.doShowClock(offHandItem);
+            this.showClock = this.doShowClock(mainHandItem) || this.doShowClock(offHandItem) || this.doShowClock(GameUtils.getMC().crosshairPickEntity);
             this.clock.update(player.level());
             this.clockText = this.clock.getFormattedTime();
             this.textWidth = GameUtils.getTextRenderer().width(clockText);
@@ -67,6 +69,14 @@ public class ClockOverlay extends AbstractOverlay {
 
     private boolean doShowClock(ItemStack stack) {
         return !stack.isEmpty() && this.tagLibrary.is(ItemEffectTags.CLOCKS, stack);
+    }
+
+    private boolean doShowClock(Entity entity) {
+        if (entity instanceof ItemFrame frame) {
+            var itemInFrame = frame.getItem();
+            return this.doShowClock(itemInFrame);
+        }
+        return false;
     }
 
     @Override
