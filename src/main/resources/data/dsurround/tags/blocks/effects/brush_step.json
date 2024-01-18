@@ -32,6 +32,10 @@
     {
       "id": "biomesoplenty:watergrass",
       "required": false
+    },
+    {
+      "id": "biomesoplenty:flesh_tendons_strand",
+      "required": false
     }
   ]
 }

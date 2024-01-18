@@ -33,6 +33,7 @@ public final class SoundFXProcessor {
     // Sparse array to hold references to the SoundContexts of playing sounds
     private static SourceContext[] sources;
     private static Worker soundProcessor;
+    private static String diagnosticString = StringUtils.EMPTY;
 
     // Use our own thread pool avoiding the common pool.  Thread allocation is better controlled, and we won't run
     // into/cause any problems with other tasks in the common pool.
@@ -212,17 +213,26 @@ public final class SoundFXProcessor {
             assert pool != null;
 
             final ObjectArray<Future<?>> tasks = new ObjectArray<>(sources.length);
+
+            // Each source will be examined once per 7 ticks. See
+            // SourceContext.UPDATE_FREQUENCY_TICKS for the current interval.
             for (final SourceContext ctx : sources) {
                 if (ctx != null && ctx.shouldExecute()) {
                     tasks.add(pool.submit(ctx));
                 }
             }
 
-            for (int i = 0; i < tasks.size(); i++)
+            diagnosticString = "(ticked: %d)".formatted(tasks.size());
+
+            tasks.forEach(task -> {
                 try {
-                    tasks.get(i).get();
+                    // This will cause this thread to block waiting for
+                    // a result. Since they are processed in order, the amount
+                    // of time spent blocking will be minimal.
+                    task.get();
                 } catch (InterruptedException | ExecutionException ignored) {
                 }
+            });
 
         } catch (final Throwable t) {
             LOGGER.error(t, "Error in SoundContext ForkJoinPool");
@@ -234,9 +244,10 @@ public final class SoundFXProcessor {
      */
     private static void onGatherText(CollectDiagnosticsEvent event ) {
         if (isAvailable() && soundProcessor != null) {
-            final String msg = soundProcessor.getDiagnosticString();
-            if (!StringUtils.isEmpty(msg))
-                event.add(CollectDiagnosticsEvent.Section.Systems, msg);
+            final String msg = soundProcessor.getDiagnosticString() + " " + diagnosticString;
+            event.add(CollectDiagnosticsEvent.Section.Systems, msg);
+        } else {
+            event.getSectionText(CollectDiagnosticsEvent.Section.Systems).add("Enhanced sound processing disabled");
         }
     }
 }
