@@ -1,13 +1,11 @@
 package org.orecruncher.dsurround.runtime.audio;
 
 import com.mojang.blaze3d.audio.Channel;
-import com.mojang.blaze3d.audio.SoundBuffer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.ChannelAccess;
 import net.minecraft.sounds.SoundSource;
 import org.apache.commons.lang3.StringUtils;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
@@ -168,30 +166,6 @@ public final class SoundFXProcessor {
         var sourceContext = (ISourceContext) source;
         var data = sourceContext.dsurround_getData();
         data.ifPresent(sc -> sources[sc.getId()] = null);
-    }
-
-    /**
-     * Injected into SoundSource and will be invoked when a non-streaming sound data stream is attached to the
-     * SoundSource.  Take the opportunity to convert the audio stream into mono format if needed.  Note that
-     * conversion will take place only if it is enabled in the configuration and the sound is playing
-     * non-attenuated.
-     *
-     * @param source SoundSource for which the audio buffer is being generated
-     * @param buffer The buffer in question.
-     */
-
-    public static void doMonoConversion(final Channel source, final SoundBuffer buffer) {
-
-        // If disabled, return
-        if (!Client.Config.enhancedSounds.enableMonoConversion)
-            return;
-
-        var data = ((ISourceContext) source).dsurround_getData();
-        data.ifPresent(ctx -> {
-            var s = ctx.getSound();
-            if (s != null && s.getAttenuation() != SoundInstance.Attenuation.NONE && !s.isRelative())
-                Conversion.convert(buffer);
-        });
     }
 
     /**

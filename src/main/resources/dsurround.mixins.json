@@ -7,7 +7,6 @@
   ],
   "client": [
     "audio.MixinChannelHandleAccessor",
-    "audio.MixinSoundBuffer",
     "audio.MixinSoundEngine",
     "audio.MixinSoundEngineAccessor",
     "audio.MixinSoundEvent",
