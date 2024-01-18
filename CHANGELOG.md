@@ -5,12 +5,23 @@
 * Fabric API >=0.91.2+1.20.4
 * 100% client side; no server side deployment needed
 
+**What's New**
+* Added biome sound for coniferous forests, like Taiga. I finally found one I kinda like.
+* Added step sound on leaf blocks.  It will auto-disable if Presence Footsteps is installed.
+* Reed like sound when walking through sugar cane and other "stiff" plants. The regular brush sound didn't fit right for these types of plants.
+* Biome scanning algorithm now accounts for Minecraft's 3D biome structure, like caves. Cave biomes can have sound effects tied to being underground. Additionally, underground biome sounds will fade in the lower the player's Y.
+* If enabled, the clock overlay will render if the player is looking at item frame containing a clock.
+
 **Changes**
-* Reworked internal eventing implementation. Gained a bit of performance.
+* Waterfall particles are more splashy.
+* Reworked internal eventing implementation. Gained a bit of performance and decoupled entirely from loader environment.
+* Reworked effects configuration system to be more data driven.
+* Removed on-the-fly mono conversion of sounds. Mod/pack authors should convert sounds to mono if they want to have them play in 3D space.
 
 **Fixes**
-* Config sporadically not present in ModMenu.
-* Minor fixes to data tagging.
+* Mod config sporadically isn't present in ModMenu.
+* Water ripple handler was removing rain impact particle effect for non-liquid blocks.
+* Accumulated updates for forge data tags as well as Biomes O'Plenty assets.
 
 > ### DynamicSurroundings-Fabric-1.20.4-0.2.0
 **Requirements**
