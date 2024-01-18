@@ -183,7 +183,7 @@
     "location": "dsurround:brush_step/straw",
     "soundEvent": "dsurround:footsteps.leaves_through",
     "category": "PLAYER",
-    "volume": 0.5,
+    "volume": 0.3,
     "pitch": {
       "min": 0.8,
       "max": 1.2

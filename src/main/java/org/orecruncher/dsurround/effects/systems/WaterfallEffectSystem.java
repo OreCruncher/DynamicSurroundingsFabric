@@ -336,12 +336,13 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
 
         @Override
         protected Optional<Particle> produceParticle() {
-            final double xOffset = (RANDOM.nextFloat() * 2.0F - 1.0F);
-            final double zOffset = (RANDOM.nextFloat() * 2.0F - 1.0F);
+            final double xOffset = RANDOM.nextFloat(-1.0F, 1.0F);
+            final double zOffset = RANDOM.nextFloat(-1.0F, 1.0F);
 
-            final double motionX = xOffset * 0.05D;
-            final double motionZ = zOffset * 0.05D;
-            final double motionY = 0.1D + RANDOM.nextFloat() * 0.05D;
+            final double motionStr = (this.strength + 1) / 20D;
+            final double motionX = xOffset * motionStr;
+            final double motionZ = zOffset * motionStr;
+            final double motionY = 0.1D + RANDOM.nextFloat() * motionStr;
 
             var posX = this.posX + xOffset;
             var posZ = this.posZ + zOffset;
