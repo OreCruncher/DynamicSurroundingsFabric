@@ -80,7 +80,6 @@ public class IndividualSoundControlScreen extends Screen {
                 GameUtils.getMC(),
                 this.width,
                 this.height,
-                bottomY,
                 topY,
                 bottomY,
                 SELECTION_WIDTH,
