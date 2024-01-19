@@ -16,7 +16,6 @@
 * Waterfall particles are more splashy.
 * Reworked internal eventing implementation. Gained a bit of performance and decoupled entirely from loader environment.
 * Reworked effects configuration system to be more data driven.
-* Removed on-the-fly mono conversion of sounds. Mod/pack authors should convert sounds to mono if they want to have them play in 3D space.
 
 **Fixes**
 * Mod config sporadically isn't present in ModMenu.
