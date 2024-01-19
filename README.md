@@ -11,16 +11,22 @@ My focus is on extending the Vanilla aspect of gameplay rather than introducing 
 Microsoft is adding features to Minecraft filling the gaps that Dynamic Surroundings have tried to address.
 I expect this trend to continue.
 
-**Requirements**
+**Minecraft 1.20.4 Requirements**
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)
 * Fabric Loader >=0.15.1
 * Fabric API 0.91.2+1.20.4
 * 100% client side; no server side deployment needed
 
+**Minecraft 1.20.1 Requirements**
+* JAVA 17+ (I am using Adoptium https://adoptium.net/)
+* Fabric Loader >=0.14.22
+* Fabric API >=0.91.0+1.20.1
+* 100% client side; no server side deployment needed
+
 **Recommended Additions**
 * For Config UI support, either:
   * Cloth Config API [(CurseForge)](https://www.curseforge.com/minecraft/mc-mods/cloth-config) or [(Modrinth)](https://modrinth.com/mod/cloth-config)
-  * YetAnotherConfigLib (YACL) [(CurseForge)](https://www.curseforge.com/minecraft/mc-mods/yacl) or [(Modrinth)](https://modrinth.com/mod/yacl)
+  * YetAnotherConfigLib (YACL) [(CurseForge)](https://www.curseforge.com/minecraft/mc-mods/yacl) or [(Modrinth)](https://modrinth.com/mod/yacl) - Only for the 1.20.4 version
   * If neither are installed, mod configuration will not be available in game.
 * Mod Menu [(Modrinth)](https://modrinth.com/mod/modmenu) to get in-game mod configuration menu listings.
 * Presence Footsteps [(Modrinth)](https://modrinth.com/mod/presence-footsteps) for footstep acoustics
@@ -46,8 +52,6 @@ I expect this trend to continue.
 * OpenJDK Nashorn JavaScript Engine 15.4 (https://github.com/openjdk/nashorn)
 
 **FAQ**
-* Will there be releases for earlier versions of Minecraft?
-    * Probably not.  Minecraft experiences a large number of internal changes between releases, and it would become a chore.
 * Will additional features from the Forge version be integrated into the Fabric version?
     * See below.
 * Will there be updates for the Forge/NeoForge loaders?
