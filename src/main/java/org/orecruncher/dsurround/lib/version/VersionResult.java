@@ -10,44 +10,44 @@ public record VersionResult(String version, String modId, String displayName, St
 
     public Component getChatText() {
         var space = Component.literal(" ");
-        var openBracket = Component.literal("[").withColor(ColorPalette.SILVER_SAND.getValue());
-        var closeBracket = Component.literal("]").withColor(ColorPalette.SILVER_SAND.getValue());
+        var openBracket = Component.literal("[").withStyle(Style.EMPTY.withColor(ColorPalette.SILVER_SAND));
+        var closeBracket = Component.literal("]").withStyle(Style.EMPTY.withColor(ColorPalette.SILVER_SAND));
 
         var downloadPage = Component.translatable(this.modId + ".newversion.downloadpage")
-                .withColor(ColorPalette.CORN_FLOWER_BLUE.getValue());
+                .withStyle(Style.EMPTY.withColor(ColorPalette.CORN_FLOWER_BLUE));
         var downloadHoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, downloadPage);
 
         var releaseNotesPage = Component.translatable(this.modId + ".newversion.releasenotespage")
-                .withColor(ColorPalette.CORN_FLOWER_BLUE.getValue());
+                .withStyle(Style.EMPTY.withColor(ColorPalette.CORN_FLOWER_BLUE));
         var releaseNotesHoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, releaseNotesPage);
 
         var downloadStyleCurse = Style.EMPTY
+                .withColor(ColorPalette.CURSEFORGE)
                 .withHoverEvent(downloadHoverEvent)
                 .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, this.downloadLocation));
         var curseHover = Component.translatable(this.modId + ".newversion.curseforge")
-                .withColor(ColorPalette.CURSEFORGE.getValue())
                 .withStyle(downloadStyleCurse);
 
         var releaseNotesStyle = Style.EMPTY
+                .withColor(ColorPalette.BRIGHT_CERULEAN)
                 .withHoverEvent(releaseNotesHoverEvent)
                 .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, this.releaseNotesLink));
         var releaseNotesHover = Component.translatable(this.modId + ".newversion.releasenotes")
-                .withColor(ColorPalette.BRIGHT_CERULEAN.getValue())
                 .withStyle(releaseNotesStyle);
 
         var downloadStyleModrinth = Style.EMPTY
+                .withColor(ColorPalette.MODRINTH)
                 .withHoverEvent(downloadHoverEvent)
                 .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, this.downloadLocationModrinth));
         var modrinthHover = Component.translatable(this.modId + ".newversion.modrinth")
-                .withColor(ColorPalette.MODRINTH.getValue())
                 .withStyle(downloadStyleModrinth);
 
         var modDisplayNameAndVersion = Component.literal(this.displayName)
                 .append(" v").append(this.version)
-                .withColor(ColorPalette.SUN_GLOW.getValue());
+                .withStyle(Style.EMPTY.withColor(ColorPalette.SUN_GLOW));
 
         return Component.translatable(this.modId + ".newversion.update")
-                .withColor(ColorPalette.AQUAMARINE.getValue())
+                .withStyle(Style.EMPTY.withColor(ColorPalette.AQUAMARINE))
                 .append(modDisplayNameAndVersion)
                 .append(space)
                 .append(openBracket)

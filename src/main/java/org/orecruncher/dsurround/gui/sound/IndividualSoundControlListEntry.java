@@ -128,10 +128,10 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         return false;
     }
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double hAmount, double vAmount) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
         AbstractWidget child = this.findChild(mouseX, mouseY);
         if (child != null)
-            return child.mouseScrolled(mouseX, mouseY, hAmount, vAmount);
+            return child.mouseScrolled(mouseX, mouseY, amount);
         return false;
     }
 
@@ -157,7 +157,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         int rightMargin = rowLeft + rowWidth;
         this.volume.setX(rightMargin - this.volume.getWidth());
         this.volume.setY(rowTop);
-        this.volume.setHeight(rowHeight);
+        this.volume.height = rowHeight;
         rightMargin -= this.volume.getWidth() + CONTROL_SPACING;
 
         if (this.playButton != null) {
@@ -169,11 +169,11 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
 
         this.blockButton.setX(rightMargin - this.blockButton.getWidth());
         this.blockButton.setY(rowTop);
-        this.blockButton.setHeight(rowHeight);
+        this.blockButton.height = rowHeight;
         rightMargin -= this.blockButton.getWidth() + CONTROL_SPACING;
 
         this.cullButton.setX(rightMargin - this.cullButton.getWidth());
-        this.cullButton.setHeight(rowHeight);
+        this.cullButton.height = rowHeight;
         this.cullButton.setY(rowTop);
 
         for (final AbstractWidget w : this.children)

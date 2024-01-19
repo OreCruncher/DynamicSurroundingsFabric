@@ -57,11 +57,6 @@ dependencies {
     modImplementation("me.shedaniel.cloth:cloth-config-fabric:${project.clothapi_version}") {
         exclude(group: "net.fabricmc.fabric-api")
     }
-    modImplementation("dev.isxander.yacl:yet-another-config-lib-fabric:${project.yacl_version}")
-
-    modImplementation "com.github.glitchfiend:GlitchCore-fabric:${minecraft_version}-${glitchcore_version}"
-    modImplementation "com.github.glitchfiend:SereneSeasons-fabric:${minecraft_version}-${serene_seasons_version}"
-    modImplementation "com.github.glitchfiend:BiomesOPlenty-fabric:${minecraft_version}-${bop_version}"
 }
 
 processResources {

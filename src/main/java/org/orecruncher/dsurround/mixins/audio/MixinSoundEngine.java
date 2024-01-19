@@ -100,7 +100,7 @@ public abstract class MixinSoundEngine {
     private void dsurround_soundRangeCheck(SoundInstance soundInstance, CallbackInfo ci, WeighedSoundEvents weighedSoundEvents, ResourceLocation resourceLocation, Sound sound, float f, float g, SoundSource soundSource, float h, float i, SoundInstance.Attenuation attenuation, boolean bl) {
         if (MixinHelpers.soundSystemConfig.enableSoundPruning) {
             // If not in range of the listener, cancel.
-            if (!SoundInstanceHandler.inRange(AudioUtilities.getSoundListener().getTransform().position(), soundInstance, 4)) {
+            if (!SoundInstanceHandler.inRange(AudioUtilities.getSoundListener().getListenerPosition(), soundInstance, 4)) {
                 MixinHelpers.LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> "TOO FAR: " + AudioUtilities.debugString(soundInstance));
                 ci.cancel();
             }
