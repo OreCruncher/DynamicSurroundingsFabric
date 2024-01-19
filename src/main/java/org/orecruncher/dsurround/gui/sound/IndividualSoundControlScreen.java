@@ -15,8 +15,8 @@ public class IndividualSoundControlScreen extends Screen {
 
     private static final int TOP_OFFSET = 10;
     private static final int BOTTOM_OFFSET = 15;
-    private static final int HEADER_HEIGHT = 40;
-    private static final int FOOTER_HEIGHT = 80;
+    private static final int HEADER_HEIGHT = 35;
+    private static final int FOOTER_HEIGHT = 50;
 
     private static final int SEARCH_BAR_WIDTH = 200;
     private static final int SEARCH_BAR_HEIGHT = 20;
@@ -73,8 +73,8 @@ public class IndividualSoundControlScreen extends Screen {
                 GameUtils.getMC(),
                 this.width,
                 this.height,
-                bottomY,
                 topY,
+                bottomY,
                 SELECTION_WIDTH,
                 SELECTION_HEIGHT,
                 this.enablePlay,
