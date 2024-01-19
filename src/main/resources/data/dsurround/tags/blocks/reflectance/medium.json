@@ -6,7 +6,6 @@
     },
     "#minecraft:terracotta",
     "minecraft:dripstone_block",
-    "minecraft:pointed_dripstone",
-    "minecraft:copper_door"
+    "minecraft:pointed_dripstone"
   ]
 }

@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.lib.threading;
 
-import net.minecraft.util.Mth;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
+import org.orecruncher.dsurround.lib.math.MathStuff;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -47,7 +47,7 @@ public final class Worker {
         }
         this.timeTrack.end();
         long sleepTime = this.frequency - this.timeTrack.getLastSampleMSecs();
-        long idleTime = Mth.clamp(sleepTime, 0, Long.MAX_VALUE);
+        long idleTime = MathStuff.clamp(sleepTime, 0, Long.MAX_VALUE);
         var track = this.timeTrack.toString();
         var diagText = "%s (idle for %dmsecs)".formatted(track, idleTime);
         if (sleepTime < 0) {

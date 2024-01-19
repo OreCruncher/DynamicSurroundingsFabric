@@ -53,7 +53,7 @@ dependencies {
     modImplementation("me.shedaniel.cloth:cloth-config-fabric:${project.clothapi_version}") {
         exclude(group: "net.fabricmc.fabric-api")
     }
-    modImplementation("dev.isxander.yacl:yet-another-config-lib-fabric:${project.yacl_version}")
+    //modImplementation("dev.isxander.yacl:yet-another-config-lib-fabric:${project.yacl_version}")
 }
 
 processResources {
