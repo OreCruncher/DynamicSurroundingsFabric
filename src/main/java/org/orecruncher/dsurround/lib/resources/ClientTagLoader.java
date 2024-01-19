@@ -32,7 +32,7 @@ public class ClientTagLoader {
 
     public <T> Collection<T> getMembers(TagKey<T> tagKey) {
         if (this.filter.test(tagKey))
-            return this.getTagData(tagKey).members();
+            return this.getTagData(tagKey, new HashSet<>()).members();
         return ImmutableList.of();
     }
 
@@ -40,21 +40,27 @@ public class ClientTagLoader {
         this.tagCache.clear();
     }
 
-    private <T> TagData<T> getTagData(TagKey<T> tagKey) {
+    private <T> TagData<T> getTagData(TagKey<T> tagKey, Set<TagKey<?>> visited) {
         // We cannot use computeIfAbsent() because tag loading is a
         // recursive process and will refer back and potentially modify the
         // tag cache.
         var data = this.tagCache.get(tagKey);
         if (data == null) {
+            // If we already visited, there is a recursion happening. Return an empty
+            // tag set. This tag is already being processed up the recursion stack,
+            // so we can prune.
+            if (visited.contains(tagKey))
+                return TagData.empty();
+            visited.add(tagKey);
             this.logger.debug("Loading tag files for %s", tagKey.toString());
-            data = this.loadTagData(tagKey);
+            data = this.loadTagData(tagKey, visited);
             this.tagCache.put(tagKey, data);
         }
         return TagData.cast(data);
     }
 
     // This is based on TagLoader. Inspiration from Fabric client tag API.
-    private <T> TagData<T> loadTagData(TagKey<T> tagKey) {
+    private <T> TagData<T> loadTagData(TagKey<T> tagKey, Set<TagKey<?>> visited) {
         Set<TagEntry> entries = new HashSet<>();
 
         var tagFiles = ResourceUtils.findClientTagFiles(tagKey);
@@ -91,7 +97,7 @@ public class ClientTagLoader {
                     TagKey<?> tag = TagKey.create(tagKey.registry(), id);
                     immediateChildTags.add(tag);
                     // This will trigger recursion to generate a complete list of IDs
-                    return getTagData(tag).completeIds();
+                    return getTagData(tag, visited).completeIds();
                 }
             }, completeIds::add);
         }
