@@ -53,7 +53,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private static final Component BLOCK_ON = Component.translatable("dsurround.text.soundconfig.block").withStyle(STYLE_TOGGLE_ON);
     private static final Component BLOCK_OFF = Component.translatable("dsurround.text.soundconfig.noblock");
     private static final Component PLAY = Component.translatable("dsurround.text.soundconfig.play");
-    private static final Component STOP = Component.translatable("dsurround.text.soundconfig.stop").withColor(ColorPalette.RED.getValue());
+    private static final Component STOP = Component.translatable("dsurround.text.soundconfig.stop").withStyle(Style.EMPTY.withColor(ColorPalette.RED));
     private static final FormattedCharSequence VANILLA_CREDIT = Component.translatable("dsurround.text.soundconfig.vanilla").getVisualOrderText();
     private static final Collection<Component> VOLUME_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.volume.help", TOOLTIP_WIDTH, STYLE_HELP);
     private static final Collection<Component> PLAY_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.play.help", TOOLTIP_WIDTH, STYLE_HELP);
@@ -133,10 +133,10 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         return false;
     }
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double hAmount, double vAmount) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
         AbstractWidget child = this.findChild(mouseX, mouseY);
         if (child != null)
-            return child.mouseScrolled(mouseX, mouseY, hAmount, vAmount);
+            return child.mouseScrolled(mouseX, mouseY, amount);
         return false;
     }
 
@@ -162,21 +162,21 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         int rightMargin = rowLeft + rowWidth;
         this.volume.setX(rightMargin - this.volume.getWidth());
         this.volume.setY(rowTop);
-        this.volume.setHeight(rowHeight);
+        this.volume.height = rowHeight;
         rightMargin -= this.volume.getWidth() + CONTROL_SPACING;
 
         this.playButton.setX(rightMargin - this.playButton.getWidth());
         this.playButton.setY(rowTop);
-        this.playButton.setHeight(rowHeight);
+        this.playButton.height = rowHeight;
         rightMargin -= this.playButton.getWidth() + CONTROL_SPACING;
 
         this.blockButton.setX(rightMargin - this.blockButton.getWidth());
         this.blockButton.setY(rowTop);
-        this.blockButton.setHeight(rowHeight);
+        this.blockButton.height = rowHeight;
         rightMargin -= this.blockButton.getWidth() + CONTROL_SPACING;
 
         this.cullButton.setX(rightMargin - this.cullButton.getWidth());
-        this.cullButton.setHeight(rowHeight);
+        this.cullButton.height = rowHeight;
         this.cullButton.setY(rowTop);
 
         for (final AbstractWidget w : this.children)

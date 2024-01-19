@@ -8,7 +8,6 @@ import org.orecruncher.dsurround.fabric.config.ClothAPIFactory;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.config.IScreenFactory;
-import org.orecruncher.dsurround.fabric.config.YaclFactory;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.version.SemanticVersion;
@@ -107,8 +106,6 @@ public class PlatformServiceImpl implements IPlatform {
         IScreenFactory<?> result = null;
         if (this.isModLoaded(Constants.CLOTH_CONFIG))
             result = ClothAPIFactory.createDefaultConfigScreen(configClass);
-        else if (this.isModLoaded(Constants.YACL))
-            result = YaclFactory.createDefaultConfigScreen(configClass);
         return Optional.ofNullable(result);
     }
 }

@@ -72,6 +72,7 @@ public class IndividualSoundControlScreen extends Screen {
                 this,
                 GameUtils.getMC(),
                 this.width,
+                this.height,
                 bottomY,
                 topY,
                 SELECTION_WIDTH,
@@ -125,7 +126,7 @@ public class IndividualSoundControlScreen extends Screen {
     }
 
     public void render(final GuiGraphics context, int mouseX, int mouseY, float partialTicks) {
-        this.renderTransparentBackground(context);
+        this.renderBackground(context);
 
         context.drawCenteredString(this.font, this.title, this.width / 2, TOP_OFFSET, ColorPalette.MC_WHITE.getValue());
 

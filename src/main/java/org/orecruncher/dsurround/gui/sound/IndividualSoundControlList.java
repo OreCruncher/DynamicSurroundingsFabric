@@ -26,8 +26,8 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
     private List<IndividualSoundConfigEntry> source;
     private String lastSearchText = null;
 
-    public IndividualSoundControlList(final Screen parent, final Minecraft mcIn, int widthIn, int heightIn, int topIn, int slotWidth, int slotHeightIn, boolean enablePlay, final Supplier<String> filter, @Nullable final IndividualSoundControlList oldList) {
-        super(mcIn, widthIn, heightIn, topIn, slotHeightIn);
+    public IndividualSoundControlList(final Screen parent, final Minecraft mcIn, int widthIn, int heightIn, int topIn, int bottomIn, int slotWidth, int slotHeightIn, boolean enablePlay, final Supplier<String> filter, @Nullable final IndividualSoundControlList oldList) {
+        super(mcIn, widthIn, heightIn, topIn, bottomIn, slotHeightIn);
 
         this.soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
 
@@ -116,7 +116,7 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
     }
 
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput builder) {
+    public void updateNarration(NarrationElementOutput narrationElementOutput) {
         // Narrate my shiny metal...
     }
 

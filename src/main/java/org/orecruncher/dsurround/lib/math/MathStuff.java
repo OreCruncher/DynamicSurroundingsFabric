@@ -75,6 +75,10 @@ public class MathStuff {
         return Double.longBitsToDouble(tmp2);
     }
 
+    public static long clamp(long v, long min, long max) {
+        return v < min ? min : Math.min(v, max);
+    }
+
     public static double exp(final double val) {
         final long tmp = (long) (1512775 * val + (1072693248 - 60801));
         return Double.longBitsToDouble(tmp << 32);
