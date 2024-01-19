@@ -145,6 +145,8 @@
   "dsurround.config.enhancedSounds.tooltip": "Configuration options for enhanced sound processing (reverb, etc.)",
   "dsurround.config.enhancedSounds.enableEnhancedSounds": "Enhanced Sound Processing",
   "dsurround.config.enhancedSounds.enableEnhancedSounds.tooltip": "Enable/disable enhanced sound processing (reverb, occlusion, etc)",
+  "dsurround.config.enhancedSounds.enableMonoConversion": "Mono Conversion",
+  "dsurround.config.enhancedSounds.enableMonoConversion.tooltip": "Enable/disable on the fly conversion of stereo sounds to mono as needed. This function will only be active when 'Enhanced Sound Processing' is enabled.",
   "dsurround.config.enhancedSounds.backgroundThreadWorkers": "Background Worker Threads",
   "dsurround.config.enhancedSounds.backgroundThreadWorkers.tooltip": "Number of background threads to use for enhanced sound processing. Do not arbitrarily change this value because it could impact performance.",
   "dsurround.config.enhancedSounds.enableOcclusionProcessing": "Occlusion Processing",
