@@ -8,7 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.*;
 import org.orecruncher.dsurround.Constants;
-import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -87,13 +87,16 @@ public final class AudioUtilities {
             sb.append(sound.getClass().getSimpleName()).append("{");
             sb.append(sound.getLocation());
             sb.append(", ").append(sound.getSource().getName());
-            sb.append(", ").append(sound.getAttenuation().toString());
+            sb.append(", ").append(sound.getAttenuation());
             sb.append(String.format(", (%.2f,%.2f,%.2f)", sound.getX(), sound.getY(), sound.getZ()));
 
-            // Depending on call context the sound property may be null
-            sb.append(String.format(", v: %.4f(%.4f)", sound.getVolume(), accessor.dsurround_getRawVolume()));
-            sb.append(String.format(", p: %.4f(%.4f)", sound.getPitch(), accessor.dsurround_getRawPitch()));
-            sb.append(", s: ").append(sound.getSound().shouldStream());
+            // Depending on call context, the sound property may be null
+            var underlyingSound = sound.getSound();
+            if (underlyingSound != null) {
+                sb.append(String.format(", v: %.4f(%.4f)", sound.getVolume(), accessor.dsurround_getRawVolume()));
+                sb.append(String.format(", p: %.4f(%.4f)", sound.getPitch(), accessor.dsurround_getRawPitch()));
+                sb.append(", s: ").append(sound.getSound().shouldStream());
+            }
 
             sb.append(", g: ").append(sound.isRelative());
             sb.append("}");
@@ -102,7 +105,8 @@ public final class AudioUtilities {
                 var listener = getSoundListener();
                 var distance = Math.sqrt(listener.getTransform().position().distanceToSqr(sound.getX(), sound.getY(), sound.getZ()));
                 sb.append(String.format(", distance: %.1f", distance));
-                sb.append(" (").append(sound.getSound().getAttenuationDistance()).append(")");
+                if (underlyingSound != null)
+                    sb.append(" (").append(underlyingSound.getAttenuationDistance()).append(")");
             }
 
             return sb.toString();

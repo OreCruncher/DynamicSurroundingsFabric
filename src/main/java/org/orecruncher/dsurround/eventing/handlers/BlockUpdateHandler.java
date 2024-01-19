@@ -3,9 +3,8 @@ package org.orecruncher.dsurround.eventing.handlers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
-import org.orecruncher.dsurround.eventing.BlockUpdateEvent;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
-import org.orecruncher.dsurround.lib.platform.events.ClientState;
+import org.orecruncher.dsurround.eventing.ClientState;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -37,10 +36,7 @@ public class BlockUpdateHandler {
      */
     private static void tick(Minecraft ignored) {
         var updates = expand();
-        updates.ifPresent(positions -> {
-            var event = new BlockUpdateEvent(positions);
-            ClientEventHooks.BLOCK_UPDATE.raise(event);
-        });
+        updates.ifPresent(positions -> ClientEventHooks.BLOCK_UPDATE.raise().onBlockUpdates(positions));
     }
 
     private static Optional<Collection<BlockPos>> expand() {
@@ -48,7 +44,9 @@ public class BlockUpdateHandler {
             return Optional.empty();
 
         // Need to expand out the updates to adjacent blocks.  A state change
-        // of a block may affect how the adjacent blocks are handled.
+        // of a block may affect how the adjacent blocks are handled. Can't rely on
+        // neighbor state changes since the effects the mod produces are virtual
+        // and do not exist server side.
         Set<BlockPos> updates = new HashSet<>();
         for (final BlockPos center : updatedPositions) {
             for (int i = -1; i < 2; i++)

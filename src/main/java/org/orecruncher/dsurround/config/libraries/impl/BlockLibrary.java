@@ -9,7 +9,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateHolder;
 import org.orecruncher.dsurround.config.block.BlockInfo;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
-import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
@@ -54,16 +53,12 @@ public class BlockLibrary implements IBlockLibrary {
     }
 
     @Override
-    public void reload(AssetLibraryEvent.ReloadEvent event) {
+    public void reload() {
 
         this.blockConfigs.clear();
-        final Collection<IResourceAccessor> accessors = ResourceUtils.findConfigs(this.directories.getModDataDirectory().toFile(), FILE_NAME);
 
-        IResourceAccessor.process(accessors, accessor -> {
-            var cfg = accessor.as(CODEC);
-            if (cfg != null)
-                this.blockConfigs.addAll(cfg);
-        });
+        final Collection<IResourceAccessor> accessors = ResourceUtils.findResources(this.directories.getModDataDirectory().toFile(), FILE_NAME);
+        IResourceAccessor.process(accessors, accessor -> accessor.as(CODEC).ifPresent(this.blockConfigs::addAll));
 
         this.version++;
 

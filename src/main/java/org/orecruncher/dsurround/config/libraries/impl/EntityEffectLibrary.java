@@ -4,7 +4,6 @@ import it.unimi.dsi.fastutil.objects.*;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.config.EntityEffectType;
-import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
@@ -31,7 +30,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
     }
 
     @Override
-    public void reload(AssetLibraryEvent.ReloadEvent event) {
+    public void reload() {
         this.entityEffects.clear();
         this.version++;
         this.defaultInfo = EntityEffectInfo.createDefault(this.version);

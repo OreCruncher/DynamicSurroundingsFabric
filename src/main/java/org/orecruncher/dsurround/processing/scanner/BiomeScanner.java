@@ -7,16 +7,16 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
-import org.orecruncher.dsurround.config.InternalBiomes;
+import org.orecruncher.dsurround.config.SyntheticBiome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
-public final class BiomeScanner {
+public final class BiomeScanner extends AbstractScanner {
 
     public static final int SCAN_INTERVAL = 4;
-    private static final int UNDERGROUND_THRESHOLD_OFFSET = 4;
+    private static final int UNDERGROUND_THRESHOLD_OFFSET = 8;
     private static final int SURVEY_HORIZONTAL_DIMENSION = 18;
     private static final int SURVEY_HORIZONTAL_OFFSET = SURVEY_HORIZONTAL_DIMENSION / 2 - 1;
     private static final int SURVEY_VERTICAL_DIMENSION = 16;
@@ -83,16 +83,16 @@ public final class BiomeScanner {
             // If the player is underwater, underwater effects will rule over everything else
             this.isUnderWater = player.isEyeInFluid(FluidTags.WATER);
             if (this.isUnderWater) {
-                InternalBiomes internalBiome;
+                SyntheticBiome internalBiome;
                 var playerBiomeInfo = this.biomeLibrary.getBiomeInfo(playerBiome.value());
                 if (playerBiomeInfo.isRiver())
-                    internalBiome = InternalBiomes.UNDER_RIVER;
+                    internalBiome = SyntheticBiome.UNDER_RIVER;
                 else if (playerBiomeInfo.isDeepOcean())
-                    internalBiome = InternalBiomes.UNDER_DEEP_OCEAN;
+                    internalBiome = SyntheticBiome.UNDER_DEEP_OCEAN;
                 else if (playerBiomeInfo.isOcean())
-                    internalBiome = InternalBiomes.UNDER_OCEAN;
+                    internalBiome = SyntheticBiome.UNDER_OCEAN;
                 else
-                    internalBiome = InternalBiomes.UNDER_WATER;
+                    internalBiome = SyntheticBiome.UNDER_WATER;
 
                 this.logicalBiomeInfo = this.biomeLibrary.getBiomeInfo(internalBiome);
                 this.biomeArea = 1;
@@ -121,24 +121,41 @@ public final class BiomeScanner {
     }
 
     private BiomeInfo resolveBiome(DimensionInfo dimInfo, BiomeManager access, BlockPos pos) {
-        var biome = access.getBiome(pos);
 
-        // If it is not an underground biome see if we need to simulate one of the other internal biomes
-//        if (((BiomeAccessor) (Object) biome.value()).getCategory() != Biome.Category.UNDERGROUND) {
-            var y = pos.getY();
-            if (y < (dimInfo.getSeaLevel() - UNDERGROUND_THRESHOLD_OFFSET)) {
-                return this.biomeLibrary.getBiomeInfo(InternalBiomes.UNDERGROUND);
-            } else if (!dimInfo.alwaysOutside() && this.ceilingScanner.isReallyInside()) {
-                // If it's not underground, and we are inside, return INSIDE
-                return this.biomeLibrary.getBiomeInfo(InternalBiomes.INSIDE);
-            } else if (y >= dimInfo.getSpaceHeight()) {
-                return this.biomeLibrary.getBiomeInfo(InternalBiomes.SPACE);
-            } else if (y >= dimInfo.getCloudHeight()) {
-                return this.biomeLibrary.getBiomeInfo(InternalBiomes.CLOUDS);
-            }
-//        }
+        // Get the biome at the specified position
+        var biome = access.getBiome(pos).value();
+        var biomeInfo = this.biomeLibrary.getBiomeInfo(biome);
 
-        return this.biomeLibrary.getBiomeInfo(biome.value());
+        // Check if the user is in a cave. This overrides the check for being underground.
+        if (biomeInfo.isCave()) {
+            return biomeInfo;
+        }
+
+        // Are we simulating underground? This is done by checking the Y level.
+        var y = pos.getY();
+        if (y < (dimInfo.getSeaLevel() - UNDERGROUND_THRESHOLD_OFFSET)) {
+            return this.biomeLibrary.getBiomeInfo(SyntheticBiome.UNDERGROUND);
+        }
+
+        // Inside check overrides everything else. Some dimensions are always out side
+        // so those are excluded (like the nether).
+        if (!dimInfo.alwaysOutside() && this.ceilingScanner.isReallyInside()) {
+            // If it's not underground, and we are inside, return INSIDE
+            return this.biomeLibrary.getBiomeInfo(SyntheticBiome.INSIDE);
+        }
+
+        // Are we really up in the sky
+        if (y >= dimInfo.getSpaceHeight()) {
+            return this.biomeLibrary.getBiomeInfo(SyntheticBiome.SPACE);
+        }
+
+        // Up in the clouds
+        if (y >= dimInfo.getCloudHeight()) {
+            return this.biomeLibrary.getBiomeInfo(SyntheticBiome.CLOUDS);
+        }
+
+        // Nothing special
+        return biomeInfo;
     }
 
     public int getBiomeArea() {

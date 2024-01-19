@@ -50,7 +50,7 @@ public class ItemSwingEffect extends EntityEffectBase {
                     if (info.isCurrentPlayer(entity)) {
                         instance = factory.get().createAsAdditional();
                     } else {
-                        instance = factory.get().createAtEntity(entity);
+                        instance = factory.get().attachToEntity(entity);
                     }
 
                     if (instance != null)

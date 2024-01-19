@@ -6,7 +6,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.config.data.DimensionConfigRule;
 import org.orecruncher.dsurround.config.dimension.DimensionInfo;
-import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -34,16 +33,12 @@ public final class DimensionLibrary implements IDimensionLibrary {
     }
 
     @Override
-    public void reload(AssetLibraryEvent.ReloadEvent event) {
+    public void reload() {
         this.configs.clear();
         this.dimensionRules.clear();
-        final Collection<IResourceAccessor> accessors = ResourceUtils.findConfigs(this.directories.getModDataDirectory().toFile(), FILE_NAME);
 
-        IResourceAccessor.process(accessors, accessor -> {
-            var cfg = accessor.as(CODEC);
-            if (cfg != null)
-                this.dimensionRules.addAll(cfg);
-        });
+        final Collection<IResourceAccessor> accessors = ResourceUtils.findResources(this.directories.getModDataDirectory().toFile(), FILE_NAME);
+        IResourceAccessor.process(accessors, accessor -> accessor.as(CODEC).ifPresent(this.dimensionRules::addAll));
 
         this.version++;
 

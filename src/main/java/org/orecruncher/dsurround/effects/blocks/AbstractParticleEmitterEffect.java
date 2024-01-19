@@ -2,6 +2,8 @@ package org.orecruncher.dsurround.effects.blocks;
 
 import net.minecraft.client.particle.Particle;
 import net.minecraft.world.level.Level;
+import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 import java.util.Optional;
 

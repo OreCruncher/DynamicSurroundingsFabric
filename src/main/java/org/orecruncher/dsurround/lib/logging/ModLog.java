@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.lib.logging;
 
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.lib.platform.IMinecraftMod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,10 +16,6 @@ public final class ModLog implements IModLog {
     private final Logger logger;
     private boolean debugging;
     private int traceMask;
-
-    public ModLog(IMinecraftMod mod) {
-        this(mod.getModId());
-    }
 
     public ModLog(String modId) {
         this.logger = LoggerFactory.getLogger(Objects.requireNonNull(modId));

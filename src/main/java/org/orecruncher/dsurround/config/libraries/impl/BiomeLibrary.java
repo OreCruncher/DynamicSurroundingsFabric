@@ -6,11 +6,10 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.locale.Language;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
-import org.orecruncher.dsurround.config.InternalBiomes;
+import org.orecruncher.dsurround.config.SyntheticBiome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
-import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.lib.Guard;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
@@ -38,7 +37,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
     private final IMinecraftDirectories directories;
     private final BiomeConditionEvaluator biomeConditionEvaluator;
 
-    private final Map<InternalBiomes, BiomeInfo> internalBiomes = new EnumMap<>(InternalBiomes.class);
+    private final Map<SyntheticBiome, BiomeInfo> internalBiomes = new EnumMap<>(SyntheticBiome.class);
 
     // Cached list of biome config rules.  Need to hold onto them
     // because they may be needed to handle dynamic biome load.
@@ -55,29 +54,24 @@ public final class BiomeLibrary implements IBiomeLibrary {
     }
 
     @Override
-    public void reload(AssetLibraryEvent.ReloadEvent event) {
+    public void reload() {
         // Wipe out the internal biome cache.  These will be reset.
         this.internalBiomes.clear();
         this.biomeConfigs.clear();
         this.biomeConditionEvaluator.reset();
 
-        var accessors = ResourceUtils.findConfigs(this.directories.getModDataDirectory().toFile(), FILE_NAME);
-
-        IResourceAccessor.process(accessors, accessor -> {
-            var cfg = accessor.as(CODEC);
-            if (cfg != null)
-                this.biomeConfigs.addAll(cfg);
-        });
+        var accessors = ResourceUtils.findResources(this.directories.getModDataDirectory().toFile(), FILE_NAME);
+        IResourceAccessor.process(accessors, accessor -> accessor.as(CODEC).ifPresent(this.biomeConfigs::addAll));
 
         this.version++;
 
-        for (var b : InternalBiomes.values())
-            initializeInternalBiome(b);
+        for (var b : SyntheticBiome.values())
+            initializeSyntheticBiome(b);
 
         this.logger.info("%d biome configs loaded; version is now %d", biomeConfigs.size(), version);
     }
 
-    private void initializeInternalBiome(InternalBiomes biome) {
+    private void initializeSyntheticBiome(SyntheticBiome biome) {
         String match = "@" + biome.getName();
         var info = new BiomeInfo(this.version, biome.getId(), biome.getName(), biome.getTraits());
 
@@ -130,7 +124,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
     }
 
     @Override
-    public BiomeInfo getBiomeInfo(InternalBiomes biome) {
+    public BiomeInfo getBiomeInfo(SyntheticBiome biome) {
         return this.internalBiomes.get(biome);
     }
 

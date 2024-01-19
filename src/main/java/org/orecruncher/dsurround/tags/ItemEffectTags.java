@@ -6,7 +6,12 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import org.orecruncher.dsurround.Constants;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 public class ItemEffectTags {
+
+    static final Collection<TagKey<Item>> TAGS = new HashSet<>();
 
     public static final TagKey<Item> AXES = of("axes");
     public static final TagKey<Item> BOOKS = of("books");
@@ -20,7 +25,9 @@ public class ItemEffectTags {
     public static final TagKey<Item> CLOCKS = of("clocks");
 
     private static TagKey<Item> of(String id) {
-        return TagKey.create(Registries.ITEM, new ResourceLocation(Constants.MOD_ID, "effects/" + id));
+        var tagKey = TagKey.create(Registries.ITEM, new ResourceLocation(Constants.MOD_ID, "effects/" + id));
+        TAGS.add(tagKey);
+        return tagKey;
     }
 
 }

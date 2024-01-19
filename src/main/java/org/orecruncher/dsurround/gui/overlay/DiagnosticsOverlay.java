@@ -14,7 +14,6 @@ import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.gui.overlay.plugins.*;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
@@ -70,10 +69,11 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     private final String branding;
     private final ObjectArray<IDiagnosticPlugin> plugins = new ObjectArray<>();
 
-    private boolean showHud;
-    private boolean enableCollection = false;
+    private final CollectDiagnosticsEvent reusableEvent = new CollectDiagnosticsEvent();
     private final ObjectArray<Component> left = new ObjectArray<>(64);
     private final ObjectArray<Component> right = new ObjectArray<>(64);
+    private boolean showHud;
+    private boolean enableCollection = false;
 
     public DiagnosticsOverlay(ModInformation modInformation, IPlatform platform) {
         this.platform = platform;
@@ -97,6 +97,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         // diagnostic menu is not showing
         this.showHud = this.enableCollection && !this.isDebugHudEnabled();
 
+        // We only want to take the processing hit if the debug overlay is activated
         if (this.showHud) {
 
             // Perform tick on the plugins
@@ -104,23 +105,23 @@ public class DiagnosticsOverlay extends AbstractOverlay {
 
             this.diagnostics.begin();
 
-            var event = new CollectDiagnosticsEvent();
-            event.add(CollectDiagnosticsEvent.Section.Header, this.branding);
+            this.reusableEvent.clear();
+            this.reusableEvent.add(CollectDiagnosticsEvent.Section.Header, this.branding);
 
             // Check for any special mods and add indicators
             for (var modId : Constants.SPECIAL_MODS)
                 if (this.platform.isModLoaded(modId))
-                    event.add(CollectDiagnosticsEvent.Section.Header, "INSTALLED: " + modId);
+                    this.reusableEvent.add(CollectDiagnosticsEvent.Section.Header, "INSTALLED: " + modId);
 
-            ClientEventHooks.COLLECT_DIAGNOSTICS.raise(event);
+            ClientEventHooks.COLLECT_DIAGNOSTICS.raise().onCollect(this.reusableEvent);
 
-            event.add(diagnostics);
+            this.reusableEvent.add(diagnostics);
 
             this.left.clear();
             this.right.clear();
 
-            processOutput(LEFT_SIDE_LAYOUT, event, this.left);
-            processOutput(RIGHT_SIDE_LAYOUT, event, this.right);
+            processOutput(LEFT_SIDE_LAYOUT, this.reusableEvent, this.left);
+            processOutput(RIGHT_SIDE_LAYOUT, this.reusableEvent, this.right);
 
             this.diagnostics.end();
         }

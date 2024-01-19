@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.config.biome.biometraits;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
+import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 
 import java.util.*;
@@ -10,7 +11,7 @@ import java.util.stream.Collectors;
 
 public final class BiomeTraits {
 
-    private static final ObjectArray<IBiomeTraitAnalyzer> traitAnalyzer = new ObjectArray<>(16);
+    private static final ObjectArray<IBiomeTraitAnalyzer> traitAnalyzer = new ObjectArray<>(4);
 
     static {
         traitAnalyzer.add(new BiomeTagAnalyzer());
@@ -35,6 +36,10 @@ public final class BiomeTraits {
 
     public static BiomeTraits from(BiomeTrait... traits) {
         return new BiomeTraits(List.of(traits));
+    }
+
+    public void mergeTraits(Collection<BiomeTrait> traits) {
+        this.traits.addAll(traits);
     }
 
     public boolean contains(String trait) {

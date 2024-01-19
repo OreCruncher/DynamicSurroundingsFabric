@@ -3,8 +3,10 @@ package org.orecruncher.dsurround.gui.overlay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.item.ItemStack;
-import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
@@ -19,10 +21,6 @@ public class ClockOverlay extends AbstractOverlay {
      * "now playing" text that displays when playing a record in a jukebox. Position above that.
      */
     private static final int BOTTOM_OFFSET = 68 + 20;
-    /**
-     * Offset on the X because of the box rendering.
-     */
-    private static final int TOOLTIP_XOFFSET = 12;
 
     private final ITagLibrary tagLibrary;
     private final Configuration config;
@@ -49,7 +47,7 @@ public class ClockOverlay extends AbstractOverlay {
             var mainHandItem = player.getMainHandItem();
             var offHandItem = player.getOffhandItem();
 
-            this.showClock = this.doShowClock(mainHandItem) || this.doShowClock(offHandItem);
+            this.showClock = this.doShowClock(mainHandItem) || this.doShowClock(offHandItem) || this.doShowClock(GameUtils.getMC().crosshairPickEntity);
             this.clock.update(player.level());
             this.clockText = this.clock.getFormattedTime();
             this.textWidth = GameUtils.getTextRenderer().width(clockText);
@@ -73,13 +71,21 @@ public class ClockOverlay extends AbstractOverlay {
         return !stack.isEmpty() && this.tagLibrary.is(ItemEffectTags.CLOCKS, stack);
     }
 
+    private boolean doShowClock(Entity entity) {
+        if (entity instanceof ItemFrame frame) {
+            var itemInFrame = frame.getItem();
+            return this.doShowClock(itemInFrame);
+        }
+        return false;
+    }
+
     @Override
     public void render(GuiGraphics context, float partialTick) {
         if (!this.showClock)
             return;
 
         var textRender = GameUtils.getTextRenderer();
-        var x = (context.guiWidth() - this.textWidth) / 2 - TOOLTIP_XOFFSET;
+        var x = (context.guiWidth() - this.textWidth) / 2;
         var y = context.guiHeight() - BOTTOM_OFFSET;
 
         // Don't use renderTooltip. It uses a Z which pushes the rendering to the top of the Z stack and can

@@ -6,7 +6,7 @@
       "required": false
     },
     {
-      "id": "forge:is_coniferous",
+      "id": "#forge:is_coniferous",
       "required": false
     }
   ]

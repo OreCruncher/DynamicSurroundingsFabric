@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround;
 
 import net.minecraft.client.Minecraft;
-import org.orecruncher.dsurround.config.*;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
 import org.orecruncher.dsurround.effects.particles.ParticleSheets;
@@ -9,11 +8,12 @@ import org.orecruncher.dsurround.gui.overlay.OverlayManager;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
-import org.orecruncher.dsurround.lib.platform.IMinecraftMod;
-import org.orecruncher.dsurround.lib.platform.events.ClientState;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
+import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.version.IVersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionResult;
@@ -26,45 +26,41 @@ import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public abstract class Client implements IMinecraftMod {
-
-    public static final ModLog LOGGER = new ModLog(Constants.MOD_ID);
+public final class Client {
 
     /**
      * Basic configuration settings
      */
     public static Configuration Config;
 
+    private final IModLog logger;
     private CompletableFuture<Optional<VersionResult>> versionInfo;
 
-    @Override
-    public String getModId() {
-        return Constants.MOD_ID;
+    public Client() {
+        // Bootstrap library functions
+        this.logger = Library.getLogger();
+        Library.initialize(Constants.MOD_ID);
     }
 
     public void initializeClient() {
-        LOGGER.info("Initializing...");
+        this.logger.info("Client initializing...");
 
         // Hook the config load event so set we can set the debug flags on logging
-        Configuration.CONFIG_CHANGED.register(event -> {
-            if (event.config() instanceof Configuration config) {
-                LOGGER.setDebug(config.logging.enableDebugLogging);
-                LOGGER.setTraceMask(config.logging.traceMask);
+        Configuration.CONFIG_CHANGED.register(cfg -> {
+            if (cfg instanceof Configuration config) {
+                if (this.logger instanceof ModLog ml) {
+                    ml.setDebug(config.logging.enableDebugLogging);
+                    ml.setTraceMask(config.logging.traceMask);
+                }
             }
         });
 
-        // Bootstrap library functions
-        Library.initialize(this, LOGGER);
         Handlers.registerHandlers();
 
-        Config = Configuration.getConfig();
+        Config = ConfigurationData.getConfig(Configuration.class);
 
         ClientState.STARTED.register(this::onComplete, HandlerPriority.VERY_HIGH);
         ClientState.ON_CONNECT.register(this::onConnect, HandlerPriority.LOW);
-        ClientState.TAG_SYNC.register(event -> {
-            LOGGER.info("Tag sync event received - reloading libraries");
-            AssetLibraryEvent.reload();
-        }, HandlerPriority.VERY_HIGH);
 
         // Register core services
         ContainerManager.getRootContainer()
@@ -97,38 +93,45 @@ public abstract class Client implements IMinecraftMod {
             this.versionInfo = CompletableFuture.completedFuture(Optional.empty());
 
         KeyBindings.register();
-
-        LOGGER.info("Initialization complete");
     }
 
     public void onComplete(Minecraft client) {
 
+        this.logger.info("Finalizing initialization...");
         var container = ContainerManager.getRootContainer();
 
         // Register the Minecraft sound manager
         container.registerSingleton(GameUtils.getSoundManager());
 
-        // Register and initialize our libraries.  This will cause the libraries
-        // to be instantiated.
-        AssetLibraryEvent.RELOAD.register(container.resolve(ISoundLibrary.class)::reload);
-        AssetLibraryEvent.RELOAD.register(container.resolve(IBiomeLibrary.class)::reload);
-        AssetLibraryEvent.RELOAD.register(container.resolve(IDimensionLibrary.class)::reload);
-        AssetLibraryEvent.RELOAD.register(container.resolve(IBlockLibrary.class)::reload);
-        AssetLibraryEvent.RELOAD.register(container.resolve(IItemLibrary.class)::reload);
-        AssetLibraryEvent.RELOAD.register(container.resolve(IEntityEffectLibrary.class)::reload);
-        AssetLibraryEvent.RELOAD.register(container.resolve(ITagLibrary.class)::reload);
+        // Register and initialize our libraries. Handlers will be reloaded in priority order.
+        // Leave normal to very low priority for other things in the mod that would need such
+        // notification.
+        AssetLibraryEvent.RELOAD.register(container.resolve(ISoundLibrary.class)::reload, HandlerPriority.VERY_HIGH);
+        AssetLibraryEvent.RELOAD.register(container.resolve(ITagLibrary.class)::reload, HandlerPriority.VERY_HIGH);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IBiomeLibrary.class)::reload, HandlerPriority.HIGH);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IBlockLibrary.class)::reload, HandlerPriority.HIGH);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IItemLibrary.class)::reload, HandlerPriority.HIGH);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IEntityEffectLibrary.class)::reload, HandlerPriority.HIGH);
+        AssetLibraryEvent.RELOAD.register(container.resolve(IDimensionLibrary.class)::reload, HandlerPriority.HIGH);
 
-        // Make the libraries load their data
+        ClientState.TAG_SYNC.register(event -> {
+            this.logger.info("Tag sync event received - reloading libraries");
+            AssetLibraryEvent.reload();
+        }, HandlerPriority.VERY_HIGH);
+
+        // Make the libraries load their data. Priority determines the sequence.
         AssetLibraryEvent.reload();
 
         // Force instantiation of the core Handler.  This should cause the rest
         // of the dependencies to be initialized.
-        var handlers = container.resolve(Handlers.class);
+        container.resolve(Handlers.class);
 
         // Make sure our particle sheets get registered otherwise they will not render.
         // These sheets are purely client side - they have to be manhandled into the
         // Minecraft environment.
         ParticleSheets.register();
+
+        this.logger.info("Done!");
     }
 
     private void onConnect(Minecraft minecraftClient) {
@@ -138,14 +141,14 @@ public abstract class Client implements IMinecraftMod {
             if (versionQueryResult.isPresent()) {
                 var result = versionQueryResult.get();
 
-                LOGGER.info("Update to %s version %s is available", result.displayName(), result.version());
+                this.logger.info("Update to %s version %s is available", result.displayName(), result.version());
                 var player = GameUtils.getPlayer();
                 player.ifPresent(p -> p.sendSystemMessage(result.getChatText()));
             } else if(Config.logging.enableModUpdateChatMessage) {
-                LOGGER.info("The mod version is current");
+                this.logger.info("The mod version is current");
             }
         } catch (Throwable t) {
-            LOGGER.error(t, "Unable to process version information");
+            this.logger.error(t, "Unable to process version information");
         }
     }
 }

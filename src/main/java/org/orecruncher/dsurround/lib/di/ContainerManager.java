@@ -6,6 +6,7 @@ import org.orecruncher.dsurround.lib.di.internal.DependencyContainer;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
 public final class ContainerManager {
@@ -20,6 +21,10 @@ public final class ContainerManager {
     private final Map<String, IServiceContainer> containers = new HashMap<>();
 
     private ContainerManager() {
+    }
+
+    public static Stream<String> dumpRegistrations() {
+        return ROOT_CONTAINER.dumpRegistrations();
     }
 
     /**

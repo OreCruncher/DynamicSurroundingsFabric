@@ -1,13 +1,13 @@
 package org.orecruncher.dsurround.processing;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
-import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.effects.systems.RandomBlockEffectSystem;
 import org.orecruncher.dsurround.effects.systems.SteamEffectSystem;
 import org.orecruncher.dsurround.effects.systems.WaterfallEffectSystem;
-import org.orecruncher.dsurround.eventing.BlockUpdateEvent;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -15,6 +15,8 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scanner.ScanContext;
 import org.orecruncher.dsurround.processing.scanner.SystemsScanner;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
+
+import java.util.Collection;
 
 public class AreaBlockEffects extends AbstractClientHandler {
 
@@ -77,17 +79,17 @@ public class AreaBlockEffects extends AbstractClientHandler {
         this.effectSystems = null;
     }
 
-    private void clear(AssetLibraryEvent.ReloadEvent reloadEvent) {
+    private void clear() {
         if (this.effectSystems != null)
             this.effectSystems.resetFullScan();
     }
 
-    private void blockUpdates(BlockUpdateEvent event) {
+    private void blockUpdates(Collection<BlockPos> blockPositions) {
         // Need to pump the updates through to the effect system. The cuboid scanner
         // will handle the details for filtering and applying updates via blockScan().
-        this.blockUpdateCount = event.updates().size();
+        this.blockUpdateCount = blockPositions.size();
         if (this.effectSystems != null)
-            this.effectSystems.onBlockUpdates(event.updates());
+            this.effectSystems.onBlockUpdates(blockPositions);
     }
 
     @Override

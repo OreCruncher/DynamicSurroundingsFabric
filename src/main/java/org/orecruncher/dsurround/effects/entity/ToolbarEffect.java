@@ -32,7 +32,7 @@ public class ToolbarEffect extends EntityEffectBase {
                 this.itemLibrary.getItemEquipSound(currentStack).ifPresent(factory -> {
                     SoundInstance instance;
                     if (info.isCurrentPlayer(player))
-                        instance = factory.createAtEntity(player);
+                        instance = factory.attachToEntity(player);
                     else
                         instance = factory.createAtLocation(player);
                     this.playSound(instance);

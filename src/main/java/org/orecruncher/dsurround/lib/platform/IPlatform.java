@@ -2,6 +2,8 @@ package org.orecruncher.dsurround.lib.platform;
 
 import net.minecraft.client.KeyMapping;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.config.ConfigurationData;
+import org.orecruncher.dsurround.lib.config.IScreenFactory;
 import org.orecruncher.dsurround.lib.version.SemanticVersion;
 
 import java.io.IOException;
@@ -10,7 +12,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 public interface IPlatform {
 
@@ -43,7 +44,7 @@ public interface IPlatform {
      * @return Path to the mod's configuration directory.
      */
     default Path getConfigPath(final String modId) {
-        var configDir =this.getConfigPath();
+        var configDir = this.getConfigPath();
         var configPath = configDir.resolve(Objects.requireNonNull(modId));
 
         if (Files.notExists(configPath))
@@ -57,10 +58,15 @@ public interface IPlatform {
         return configPath;
     }
 
-    /**
-     * @return all paths from the available mods that match the given internal path
-     */
-    Set<Path> getResourcePaths(String pathPrefix);
-
     KeyMapping registerKeyBinding(String translationKey, int code, String category);
+
+    /**
+     * Obtains a list of file paths corresponding to the resource file requested
+     */
+    Collection<Path> findResourcePaths(String file);
+
+    /**
+     * Obtains a mod configuration screen factory for generating configuration screens
+     */
+    Optional<IScreenFactory<?>> getModConfigScreenFactory(Class<? extends ConfigurationData> configClass);
 }

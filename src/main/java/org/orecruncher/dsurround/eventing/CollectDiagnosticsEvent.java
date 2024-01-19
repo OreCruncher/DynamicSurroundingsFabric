@@ -46,6 +46,10 @@ public final class CollectDiagnosticsEvent {
         this.getSectionText(panel).add(text);
     }
 
+    public void clear() {
+        this.data.forEach((key, value) -> value.clear());
+    }
+
     public Collection<String> getSectionText(Section section) {
         return this.data.computeIfAbsent(section, ignored -> new ObjectArray<>());
     }

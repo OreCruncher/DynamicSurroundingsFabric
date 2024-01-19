@@ -5,15 +5,14 @@ import org.orecruncher.dsurround.lib.events.EventPhases;
 import org.orecruncher.dsurround.lib.events.IEvent;
 import org.orecruncher.dsurround.lib.events.IPhasedEvent;
 
-import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
+import java.util.Collection;
+import java.util.function.Function;
 
 public final class EventFactoryImpl {
     private EventFactoryImpl() {
     }
 
-    public static <TEntityType> IPhasedEvent<TEntityType> createPhasedEvent(BiConsumer<TEntityType, List<Consumer<TEntityType>>> callbackProcessor, EventPhases phasedOrdering) {
+    public static <THandler> IPhasedEvent<THandler> createPhasedEvent(Function<Collection<THandler>, THandler> callbackProcessor, EventPhases phasedOrdering) {
         Preconditions.checkNotNull(callbackProcessor, "Callback processor must be provided");
         Preconditions.checkNotNull(phasedOrdering, "Phased ordering must be provided");
 
@@ -21,7 +20,7 @@ public final class EventFactoryImpl {
         return new PhasedEvent<>(phasedOrdering.getPhases(), callbackProcessor);
     }
 
-    public static <TEntityType> IEvent<TEntityType> createEvent(BiConsumer<TEntityType, List<Consumer<TEntityType>>> callbackProcessor) {
+    public static <THandler> IEvent<THandler> createEvent(Function<Collection<THandler>, THandler> callbackProcessor) {
         Preconditions.checkNotNull(callbackProcessor, "Callback handler must be provided");
 
         return new Event<>(callbackProcessor);

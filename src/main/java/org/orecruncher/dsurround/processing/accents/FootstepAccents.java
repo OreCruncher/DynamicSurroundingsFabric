@@ -4,8 +4,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
+import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
@@ -15,15 +17,20 @@ public class FootstepAccents {
 
     public FootstepAccents(Configuration config, IItemLibrary itemLibrary) {
         this.providers.add(new ArmorAccents(config, itemLibrary));
-        this.providers.add(new WaterySurfaceAccent(config));
         this.providers.add(new FloorSqueakAccent(config));
+
+        // Only register these providers if Presence Footsteps is not installed
+        if (!Library.getPlatform().isModLoaded(Constants.MOD_PRESENCE_FOOTSTEPS)) {
+            this.providers.add(new WaterySurfaceAccent(config));
+            this.providers.add(new LeavesAccent(config));
+        }
     }
 
-    public void provide(final LivingEntity entity, final BlockPos pos, final BlockState blockState, final ObjectArray<ISoundFactory> in) {
+    public void collect(final LivingEntity entity, final BlockPos pos, final BlockState blockState, final ObjectArray<ISoundFactory> in) {
         var isWaterLogged = blockState.getBlock() instanceof SimpleWaterloggedBlock && !blockState.getFluidState().isEmpty();
         this.providers.forEach(provider -> {
             if (provider.isEnabled())
-                provider.provide(entity, pos, blockState, isWaterLogged, in);
+                provider.collect(entity, pos, blockState, isWaterLogged, in);
         });
     }
 }

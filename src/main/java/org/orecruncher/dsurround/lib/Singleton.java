@@ -4,27 +4,35 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-public final class Singleton<T> {
+public class Singleton<T> implements Supplier<T> {
 
-    private static final Object NO_INIT = new Object();
+    protected static final Object NO_INIT = new Object();
 
     private final Supplier<T> factory;
     @SuppressWarnings("unchecked")
-    private volatile T instance = (T) NO_INIT;
+    protected volatile T value = (T) NO_INIT;
 
     public Singleton(final Supplier<T> factory) {
         this.factory = factory;
     }
 
+    /**
+     * Initializes the instance with a predetermined value
+     */
+    public Singleton(T instance) {
+        this.factory = () -> { throw new RuntimeException("Should never get here"); };
+        this.value = instance;
+    }
+
     @Nullable
     public T get() {
-        T result = this.instance;
+        T result = this.value;
 
         if (result == NO_INIT)
             synchronized (this) {
-                result = this.instance;
+                result = this.value;
                 if (result == NO_INIT)
-                    this.instance = result = this.factory.get();
+                    this.value = result = this.factory.get();
             }
         return result;
     }

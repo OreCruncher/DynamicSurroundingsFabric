@@ -2,17 +2,18 @@ package org.orecruncher.dsurround.processing;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
-import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
-import org.orecruncher.dsurround.lib.platform.events.ClientState;
+import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.threading.IClientTasking;
@@ -24,6 +25,7 @@ import org.orecruncher.dsurround.processing.scanner.VillageScanner;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
+@Cacheable
 public class Handlers {
 
     private final Configuration config;
@@ -59,16 +61,16 @@ public class Handlers {
 
     private void init() {
 
-        // If the user disabled the startup sound just flag it as having
+        // If the user disabled the startup sound flag it as having
         // been performed.
         this.startupSoundPlayed = !this.config.otherOptions.playRandomSoundOnStartup;
 
-        register(Scanners.class);           // Must be first
-        register(PotionParticleSuppressionHandler.class);
-        register(EntityEffectHandler.class);
-        register(BiomeSoundHandler.class);
-        register(AreaBlockEffects.class);
-        register(StepAccentGenerator.class);
+        this.register(Scanners.class);           // Must be first
+        this.register(PotionParticleSuppressionHandler.class);
+        this.register(EntityEffectHandler.class);
+        this.register(BiomeSoundHandler.class);
+        this.register(AreaBlockEffects.class);
+        this.register(StepAccentGenerator.class);
 
         ClientState.TICK_END.register(this::tick);
         ClientState.ON_CONNECT.register(this::onConnect);
@@ -82,11 +84,10 @@ public class Handlers {
             this.tasking.execute(() -> {
                 this.logger.info("Client connecting...");
                 if (this.isConnected) {
-                    this.logger.warn("Attempt to initialize EffectManager when it is already initialized");
-                    onDisconnect(client);
+                    this.logger.warn("Attempt to connect when already connected; disconnecting first");
+                    this.onDisconnect(client);
                 }
-                for (final AbstractClientHandler h : this.effectHandlers)
-                    h.connect0();
+                this.effectHandlers.forEach(AbstractClientHandler::connect0);
                 this.isConnected = true;
             });
         } catch (Exception ex) {
@@ -99,8 +100,7 @@ public class Handlers {
             this.tasking.execute(() -> {
                 this.logger.info("Client disconnecting...");
                 this.isConnected = false;
-                for (final AbstractClientHandler h : this.effectHandlers)
-                    h.disconnect0();
+                this.effectHandlers.forEach(AbstractClientHandler::disconnect0);
             });
         } catch (Exception ex) {
             this.logger.error(ex, "Unable to perform client disconnect");

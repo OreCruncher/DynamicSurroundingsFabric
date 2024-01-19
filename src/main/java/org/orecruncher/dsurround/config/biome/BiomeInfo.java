@@ -3,14 +3,13 @@ package org.orecruncher.dsurround.config.biome;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.level.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.config.SoundEventType;
-import org.orecruncher.dsurround.config.biome.biometraits.BiomeTrait;
+import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
@@ -22,7 +21,6 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
-import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -33,6 +31,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     public static final int DEFAULT_ADDITIONAL_SOUND_CHANCE = 1000 / 4;
     public static final Script DEFAULT_SOUND_CHANCE = new Script(String.valueOf(1D / DEFAULT_ADDITIONAL_SOUND_CHANCE));
     private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+    private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
     private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
     private final int version;
@@ -47,6 +46,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private final boolean isRiver;
     private final boolean isOcean;
     private final boolean isDeepOcean;
+    private final boolean isCave;
     private final IConditionEvaluator conditionEvaluator;
     private TextColor fogColor;
     private Script additionalSoundChance = DEFAULT_SOUND_CHANCE;
@@ -64,9 +64,10 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         this.biome = Optional.ofNullable(biome);
 
         this.traits = traits;
-        this.isRiver = this.traits.contains("RIVER");
-        this.isOcean = this.traits.contains("OCEAN");
-        this.isDeepOcean = this.isOcean && this.traits.contains("DEEP");
+        this.isRiver = this.traits.contains(BiomeTrait.RIVER);
+        this.isOcean = this.traits.contains(BiomeTrait.OCEAN);
+        this.isDeepOcean = this.isOcean && this.traits.contains(BiomeTrait.DEEP);
+        this.isCave = this.traits.contains(BiomeTrait.CAVES);
         this.conditionEvaluator = ContainerManager.resolve(IConditionEvaluator.class);
     }
 
@@ -84,6 +85,10 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
     public boolean isDeepOcean() {
         return this.isDeepOcean;
+    }
+
+    public boolean isCave() {
+        return this.isCave;
     }
 
     public ResourceLocation getBiomeId() {
@@ -163,7 +168,6 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
                 }
             }
             case MUSIC -> sourceList = this.musicSounds;
-            case LOOP -> sourceList = null;
         }
 
         if (sourceList == null || sourceList.isEmpty())
@@ -189,20 +193,18 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         entry.additionalSoundChance().ifPresent(this::setAdditionalSoundChance);
         entry.moodSoundChance().ifPresent(this::setMoodSoundChance);
 
+        // Merge in any additional traits
+        if (!entry.traits().isEmpty()) {
+            this.traits.mergeTraits(entry.traits());
+        }
+
         if (entry.clearSounds()) {
             addComment("> Sound Clear");
             clearSounds();
         }
 
-        var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
-
         for (final AcousticConfig sr : entry.acoustics()) {
-            final SoundEvent acoustic = soundLibrary.getSound(sr.soundEventId());
-            var factory = SoundFactoryBuilder.create(acoustic)
-                    .category(sr.category())
-                    .volumeRange(sr.minVolume(), sr.maxVolume())
-                    .pitchRange(sr.minPitch(), sr.maxPitch())
-                    .build();
+            var factory = SOUND_LIBRARY.getSoundFactoryOrDefault(sr.factory());
 
             switch (sr.type()) {
                 case LOOP -> {

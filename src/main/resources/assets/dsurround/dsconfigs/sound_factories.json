@@ -1,0 +1,299 @@
+[
+  {
+    "location": "dsurround:toolbar.none.equip",
+    "soundEvent": "dsurround:item.utility.equip",
+    "category": "PLAYER",
+    "volume": 0.3
+  },
+  {
+    "location": "dsurround:toolbar.tool.equip",
+    "soundEvent": "dsurround:item.tool.equip",
+    "category": "PLAYER",
+    "volume": 0.5,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:toolbar.tool.swing",
+    "soundEvent":"dsurround:item.tool.swing",
+    "category": "PLAYER",
+    "volume": 0.5,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:toolbar.sword.equip",
+    "soundEvent": "dsurround:item.sword.equip",
+    "category": "PLAYER",
+    "volume": 0.5,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:toolbar.sword.swing",
+    "soundEvent": "dsurround:item.sword.swing",
+    "category": "PLAYER",
+    "volume": 0.5,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:toolbar.shield.equip",
+    "soundEvent": "dsurround:item.shield.equip",
+    "category": "PLAYER",
+    "volume": 0.25,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:toolbar.shield.swing",
+    "soundEvent": "dsurround:item.shield.swing",
+    "category": "PLAYER",
+    "volume": 0.25,
+    "pitch": {
+      "min": 0.4,
+      "max": 0.6
+    }
+  },
+  {
+    "location": "dsurround:toolbar.axe.equip",
+    "soundEvent": "dsurround:item.blunt.equip",
+    "category": "PLAYER",
+    "volume": 0.5,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:toolbar.axe.swing",
+    "soundEvent": "dsurround:item.blunt.swing",
+    "category": "PLAYER",
+    "volume": 0.5,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:toolbar.bow.equip",
+    "soundEvent": "dsurround:item.bow.equip",
+    "category": "PLAYER",
+    "volume": 0.5,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:toolbar.bow.swing",
+    "soundEvent": "dsurround:item.tool.swing",
+    "category": "PLAYER",
+    "volume": 0.5,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:toolbar.crossbow.equip",
+    "soundEvent": "dsurround:item.bow.equip",
+    "category": "PLAYER",
+    "volume": 0.5,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:toolbar.crossbow.swing",
+    "soundEvent": "dsurround:item.blunt.swing",
+    "category": "PLAYER",
+    "volume": 0.5,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:toolbar.potion.equip",
+    "soundEvent": "dsurround:item.potion.equip",
+    "category": "PLAYER",
+    "volume": 0.8,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:toolbar.potion.swing",
+    "soundEvent": "dsurround:item.potion.equip",
+    "category": "PLAYER",
+    "volume": 1.0,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:toolbar.book.equip",
+    "soundEvent": "dsurround:pageflip",
+    "category": "PLAYER",
+    "volume": 1.0,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:toolbar.book.swing",
+    "soundEvent": "dsurround:pageflipheavy",
+    "category": "PLAYER",
+    "volume": 1.0,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:fire_ambient",
+    "soundEvent": "minecraft:block.fire.ambient"
+  },
+  {
+    "location": "dsurround:brush_step/brush",
+    "soundEvent": "dsurround:footsteps.brush_through",
+    "category": "PLAYER",
+    "volume": 0.3,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:brush_step/straw",
+    "soundEvent": "dsurround:footsteps.leaves_through",
+    "category": "PLAYER",
+    "volume": 0.3,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:footstep/floorsqueak",
+    "soundEvent": "dsurround:footsteps.floor_squeak",
+    "category": "PLAYER",
+    "volume": 0.3,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:footstep/leaves",
+    "soundEvent": "dsurround:footsteps.leaves_through",
+    "category": "PLAYER",
+    "volume": 0.3,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:footstep/wetsurface",
+    "soundEvent": "dsurround:footsteps.water_through",
+    "volume": 0.3,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:thunder",
+    "soundEvent": "dsurround:thunder",
+    "category": "WEATHER",
+    "volume": 10000
+  },
+  {
+    "location": "dsurround:bow_pull",
+    "soundEvent": "dsurround:item.bow.pull",
+    "pitch": {
+      "min": 0.9,
+      "max": 1.1
+    }
+  },
+  {
+    "location": "dsurround:waterfalls/0",
+    "soundEvent": "dsurround:waterfall.0",
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:waterfalls/1",
+    "soundEvent": "dsurround:waterfall.1",
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:waterfalls/2",
+    "soundEvent": "dsurround:waterfall.2",
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:waterfalls/3",
+    "soundEvent": "dsurround:waterfall.3",
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:waterfalls/4",
+    "soundEvent": "dsurround:waterfall.4",
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:waterfalls/5",
+    "soundEvent": "dsurround:waterfall.5",
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:soulsand.laughter",
+    "soundEvent": "dsurround:soulsand.laughter",
+    "pitch": {
+      "min": 0.6,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:netherbrick.breathing",
+    "soundEvent": "dsurround:netherbrick.breathing",
+    "pitch": {
+      "min": 0.6,
+      "max": 1.2
+    }
+  }
+]

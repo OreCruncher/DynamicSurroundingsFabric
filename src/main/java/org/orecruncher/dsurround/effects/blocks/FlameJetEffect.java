@@ -4,18 +4,15 @@ import net.minecraft.client.particle.FlameParticle;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.minecraft.sounds.SoundEvents;
-import org.orecruncher.dsurround.sound.ISoundFactory;
-import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
+import org.orecruncher.dsurround.Constants;
 
 import java.util.Optional;
 
 public class FlameJetEffect extends AbstractParticleEmitterEffect {
 
-    private static final ISoundFactory FIRE_AMBIENT = SoundFactoryBuilder
-            .create(SoundEvents.FIRE_AMBIENT)
-            .build();
+    private static final ResourceLocation FIRE_AMBIENT = new ResourceLocation(Constants.MOD_ID, "fire_ambient");
 
     protected final boolean isLava;
     protected final SimpleParticleType particleType;
@@ -34,8 +31,11 @@ public class FlameJetEffect extends AbstractParticleEmitterEffect {
         if (!this.soundFired) {
             this.soundFired = true;
             if (this.strength > 1) {
-                var soundInstance = FIRE_AMBIENT.createAtLocation(getPos());
-                AUDIO_PLAYER.play(soundInstance);
+                SOUND_LIBRARY.getSoundFactory(FIRE_AMBIENT)
+                        .ifPresent(f -> {
+                            var soundInstance = f.createAtLocation(getPos());
+                            AUDIO_PLAYER.play(soundInstance);
+                        });
             }
         }
     }

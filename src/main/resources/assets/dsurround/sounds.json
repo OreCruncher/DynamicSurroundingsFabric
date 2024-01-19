@@ -248,6 +248,21 @@
 			}
 		]
 	},
+	"biome.forest.pine": {
+		"credits": [
+			{
+				"name": "Nord_Odal_Nyhus_04_juni_2011_open_forest_birds_insects_wind_through_large_pines.wav",
+				"author": "nfsgit",
+				"license": "Creative Commons 0"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround:ambient/outside/pine_forest",
+				"stream": true
+			}
+		]
+	},
 	"biome.beach": {
 		"credits": [
 			{
@@ -1106,6 +1121,19 @@
 			"dsurround:footsteps/brush/brush_through7",
 			"dsurround:footsteps/brush/brush_through8",
 			"dsurround:footsteps/brush/brush_through9"
+		]
+	},
+	"footsteps.leaves_through": {
+		"category": "player",
+		"subtitle": "dsurround.sound.caption.footsteps.leaves_through",
+		"sounds": [
+			"dsurround:footsteps/leaves/leaves_through1",
+			"dsurround:footsteps/leaves/leaves_through2",
+			"dsurround:footsteps/leaves/leaves_through3",
+			"dsurround:footsteps/leaves/leaves_through4",
+			"dsurround:footsteps/leaves/leaves_through5",
+			"dsurround:footsteps/leaves/leaves_through6",
+			"dsurround:footsteps/leaves/leaves_through7"
 		]
 	},
 	"silence": {

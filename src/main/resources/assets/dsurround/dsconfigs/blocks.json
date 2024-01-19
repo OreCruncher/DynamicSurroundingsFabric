@@ -1,0 +1,95 @@
+[
+  {
+    "blocks": [
+      "minecraft:nether_wart[age=3]"
+    ],
+    "effects": [
+      {
+        "effect": "fire_jet",
+        "spawnChance": "0.005"
+      }
+    ]
+  },
+  {
+    "blocks": [
+      "minecraft:lava_cauldron"
+    ],
+    "effects": [
+      {
+        "effect": "fire_jet",
+        "spawnChance": "0.03"
+      }
+    ]
+  },
+  {
+    "blocks": [
+      "minecraft:lava"
+    ],
+    "effects": [
+      {
+        "effect": "fire_jet",
+        "spawnChance": "0.0005"
+      }
+    ]
+  },
+  {
+    "blocks": [
+      "minecraft:water"
+    ],
+    "effects": [
+      {
+        "effect": "bubble_column",
+        "spawnChance": "0.0005"
+      }
+    ]
+  },
+  {
+    "blocks": [
+      "#minecraft:ice"
+    ],
+    "soundChance": "0.0001",
+    "acoustics": [
+      {
+        "factory": "dsurround:ice"
+      }
+    ]
+  },
+  {
+    "blocks": [
+      "minecraft:soul_sand"
+    ],
+    "soundChance": "0.000125",
+    "acoustics": [
+      {
+        "factory": "dsurround:soulsand.laughter",
+        "conditions": "dim.getId() == 'minecraft:the_nether'"
+      }
+    ]
+  },
+  {
+    "blocks": [
+      "minecraft:nether_bricks",
+      "minecraft:nether_brick_fence",
+      "minecraft:nether_brick_stairs"
+    ],
+    "soundChance": "0.000125",
+    "acoustics": [
+      {
+        "factory": "netherbrick.breathing",
+        "conditions": "dim.getId() == 'minecraft:the_nether'"
+      }
+    ]
+  },
+  {
+    "blocks": [
+      "#dsurround:effects/fireflies"
+    ],
+    "effects": [
+      {
+        "effect": "firefly",
+        "conditions": "weather.isNotRaining() && (diurnal.isNight() || diurnal.isSunset()) && !(HOT || weather.canWaterFreeze())",
+        "spawnChance": "0.05"
+      }
+    ]
+  }
+]

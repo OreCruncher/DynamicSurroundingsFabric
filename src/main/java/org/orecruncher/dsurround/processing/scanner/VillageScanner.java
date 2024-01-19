@@ -7,7 +7,7 @@ import net.minecraft.world.phys.AABB;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 
-public class VillageScanner {
+public class VillageScanner extends AbstractScanner {
 
     private static final double VILLAGE_RANGE = 64;
     private static final int SCAN_INTERVAL = 20;

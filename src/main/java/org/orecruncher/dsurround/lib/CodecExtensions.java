@@ -1,16 +1,11 @@
 package org.orecruncher.dsurround.lib;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mojang.serialization.*;
-import com.mojang.serialization.codecs.ListCodec;
-import net.minecraft.util.GsonHelper;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.lib.block.BlockStateMatcher;
 import org.orecruncher.dsurround.lib.block.MatchOnBlockTag;
 
-import java.io.StringReader;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -31,20 +26,9 @@ public interface CodecExtensions<A> extends Codec<A> {
     }
 
     static <A> Optional<A> deserialize(String content, Codec<A> codec) {
-        var reader = new StringReader(content);
-        Dynamic<JsonElement> dynamic;
-        if (codec instanceof ListCodec) {
-            JsonArray jsonArray = GsonHelper.parseArray(reader);
-            dynamic = new Dynamic<>(JsonOps.INSTANCE, jsonArray);
-        } else if (codec instanceof MapCodec) {
-            // Not sure if there is anything special yet...
-            JsonObject jsonObject = GsonHelper.parse(reader);
-            dynamic = new Dynamic<>(JsonOps.INSTANCE, jsonObject);
-        } else {
-            JsonObject jsonObject = GsonHelper.parse(reader);
-            dynamic = new Dynamic<>(JsonOps.INSTANCE, jsonObject);
-        }
         try {
+            var jsonElement = JsonParser.parseString(content);
+            var dynamic = new Dynamic<>(JsonOps.INSTANCE, jsonElement);
             DataResult<A> result = codec.parse(dynamic);
             return result.resultOrPartial(Library.getLogger()::warn);
         } catch (Throwable t) {

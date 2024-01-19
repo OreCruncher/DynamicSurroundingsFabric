@@ -14,7 +14,7 @@ public record VersionInformation(Map<SemanticVersion, Map<SemanticVersion, Strin
     private static final Codec<Map<SemanticVersion, Map<SemanticVersion, String>>> MAJOR_VERSION_RELEASES = Codec.unboundedMap(SemanticVersion.CODEC, CODEC_RELEASES).stable();
     private static final Codec<Map<SemanticVersion, SemanticVersion>> RECOMMENDATION = Codec.unboundedMap(SemanticVersion.CODEC, SemanticVersion.CODEC).stable();
 
-    public static Codec<VersionInformation> CODEC = RecordCodecBuilder.create((instance) ->
+    public static final Codec<VersionInformation> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
                 MAJOR_VERSION_RELEASES.fieldOf("releases").forGetter(VersionInformation::releases),
                 RECOMMENDATION.fieldOf("recommend").forGetter(VersionInformation::recommended)

@@ -59,6 +59,10 @@ public class DumpCommandHandler {
         return handle("tags", tagLibrary::dump);
     }
 
+    public static Component dumpDIRegistrations() {
+        return handle("diregistrations", ContainerManager::dumpRegistrations);
+    }
+
     private static Component handle(final String operation, final Supplier<Stream<String>> supplier) {
 
         final String fileName = operation + ".txt";

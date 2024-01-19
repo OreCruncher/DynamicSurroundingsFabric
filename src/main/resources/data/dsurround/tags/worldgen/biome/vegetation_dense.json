@@ -8,6 +8,10 @@
     {
       "id": "#forge:is_dense",
       "required": false
+    },
+    {
+      "id": "#forge:is_dense/overworld",
+      "required": false
     }
   ]
 }

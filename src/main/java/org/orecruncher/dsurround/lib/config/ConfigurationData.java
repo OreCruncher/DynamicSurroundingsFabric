@@ -30,8 +30,8 @@ public abstract class ConfigurationData {
 
     transient final Path configFilePath;
 
-    protected ConfigurationData(Path configFilePath) {
-        this.configFilePath = configFilePath;
+    protected ConfigurationData() {
+        this.configFilePath = computePath(this.getClass());
     }
 
     @SuppressWarnings("unchecked")
@@ -52,8 +52,20 @@ public abstract class ConfigurationData {
         return spec;
     }
 
+    private static Path computePath(Class<?> clazz) {
+        var configFolderAnnotation = clazz.getAnnotation(ConfigPlacement.class);
+        if (configFolderAnnotation == null)
+            throw new RuntimeException("Configuration class must have a ConfigFolder annotation");
+        return Library.getPlatform()
+                .getConfigPath(configFolderAnnotation.folderName())
+                .resolve(configFolderAnnotation.fileName() + ".json");
+    }
+
     private static <T extends ConfigurationData> T computeConfiguration(Class<T> clazz) {
         try {
+            // Construct the path to the configuration folder
+            var configFolderPath = computePath(clazz);
+
             // We need to construct a new instance to capture the specification. Once that is done, we can load
             // from disk if present.
             var ignored = getSpecification(clazz);
@@ -62,8 +74,8 @@ public abstract class ConfigurationData {
             // persisted and the user can edit manually.
             T config = ConfigProcessor.createPrototype(clazz).orElseThrow();
             try {
-                if (Files.exists(config.configFilePath)) {
-                    try (BufferedReader reader = Files.newBufferedReader(config.configFilePath)) {
+                if (Files.exists(configFolderPath)) {
+                    try (BufferedReader reader = Files.newBufferedReader(configFolderPath)) {
                         config = GSON.fromJson(reader, clazz);
                     }
                 }
@@ -107,7 +119,7 @@ public abstract class ConfigurationData {
         } catch (Throwable t) {
             Library.getLogger().error(t, "Unable to save configuration %s", t.getMessage());
         } finally {
-            CONFIG_CHANGED.raise(new ConfigChangedEvent(this));
+            CONFIG_CHANGED.raise().onChange(this);
         }
     }
 
@@ -115,6 +127,17 @@ public abstract class ConfigurationData {
      * Hook to provide processing after the configuration is loaded from the disk
      */
     public void postLoad() {
+    }
+
+    /**
+     * Defines the folder within the config directory that option state will be saved. All configuration
+     * instances need this annotation.
+     */
+    @Target({ElementType.TYPE})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface ConfigPlacement {
+        String folderName();
+        String fileName();
     }
 
     /**
@@ -222,8 +245,14 @@ public abstract class ConfigurationData {
         Class<? extends Enum<?>> value();
     }
 
-    public static final IEvent<ConfigChangedEvent> CONFIG_CHANGED = EventingFactory.createEvent();
+    public static final IEvent<IConfigChangedEvent> CONFIG_CHANGED = EventingFactory.createEvent(callbacks -> config -> {
+        for (var callback : callbacks) {
+            callback.onChange(config);
+        }
+    });
 
-    public record ConfigChangedEvent(ConfigurationData config){
-    };
+    @FunctionalInterface
+    public interface IConfigChangedEvent {
+        void onChange(ConfigurationData config);
+    }
 }

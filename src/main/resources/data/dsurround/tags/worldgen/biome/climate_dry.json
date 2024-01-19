@@ -8,6 +8,18 @@
     {
       "id": "#forge:is_dry",
       "required": false
+    },
+    {
+      "id": "#forge:is_dry/end",
+      "required": false
+    },
+    {
+      "id": "#forge:is_dry/nether",
+      "required": false
+    },
+    {
+      "id": "#forge:is_dry/overworld",
+      "required": false
     }
   ]
 }

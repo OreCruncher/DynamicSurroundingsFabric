@@ -7,7 +7,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.Constants;
-import org.orecruncher.dsurround.config.Configuration;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.gui.sound.ConfigSoundInstance;
 import org.orecruncher.dsurround.lib.system.ITickCount;
@@ -22,43 +22,38 @@ import java.util.Set;
  */
 public final class SoundInstanceHandler {
 
-    private static final ISoundLibrary soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
-    private static final IAudioPlayer audioPlayer = ContainerManager.resolve(IAudioPlayer.class);
-    private static final ITickCount tickCount = ContainerManager.resolve(ITickCount.class);
+    private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
+    private static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
+    private static final ITickCount TICK_COUNT = ContainerManager.resolve(ITickCount.class);
     private static final Configuration.SoundSystem SOUND_SYSTEM_CONFIG = ContainerManager.resolve(Configuration.SoundSystem.class);
     private static final Configuration.ThunderStorms THUNDERSTORM_CONFIG = ContainerManager.resolve(Configuration.ThunderStorms.class);
 
-    private static final Object2LongOpenHashMap<ResourceLocation> soundCull = new Object2LongOpenHashMap<>(32);
-    private static final Set<ResourceLocation> thunderSounds = new HashSet<>();
-    private static final ISoundFactory THUNDER_SOUND;
+    private static final Object2LongOpenHashMap<ResourceLocation> SOUND_CULL = new Object2LongOpenHashMap<>(32);
+    private static final Set<ResourceLocation> THUNDER_SOUNDS = new HashSet<>();
+    private static final ResourceLocation THUNDER_SOUND_FACTORY = new ResourceLocation(Constants.MOD_ID, "thunder");
 
     static {
-        thunderSounds.add(SoundEvents.LIGHTNING_BOLT_THUNDER.getLocation());
-
-        THUNDER_SOUND = SoundFactoryBuilder.create(new ResourceLocation(Constants.MOD_ID, "thunder"))
-                .category(SoundSource.WEATHER)
-                .volume(10000)
-                .build();
+        THUNDER_SOUNDS.add(SoundEvents.LIGHTNING_BOLT_THUNDER.getLocation());
     }
 
     private static boolean isSoundBlocked(final ResourceLocation id) {
-        return soundLibrary.isBlocked(id);
+        return SOUND_LIBRARY.isBlocked(id);
     }
 
     private static boolean isSoundCulled(final ResourceLocation id) {
-        return soundLibrary.isCulled(id);
+        return SOUND_LIBRARY.isCulled(id);
     }
 
     private static boolean isSoundCulledLogical(final ResourceLocation sound) {
         int cullInterval = SOUND_SYSTEM_CONFIG.cullInterval;
         if (cullInterval > 0 && isSoundCulled(sound)) {
-            final long lastOccurrence = soundCull.getLong(Objects.requireNonNull(sound));
-            final long currentTick = tickCount.getTickCount();
+            final long lastOccurrence = SOUND_CULL.getLong(Objects.requireNonNull(sound));
+            final long currentTick = TICK_COUNT.getTickCount();
             if ((currentTick - lastOccurrence) < cullInterval) {
                 return true;
             } else {
                 // Set when it happened and fall through for remapping and stuff
-                soundCull.put(sound, currentTick);
+                SOUND_CULL.put(sound, currentTick);
             }
         }
         return false;
@@ -80,12 +75,14 @@ public final class SoundInstanceHandler {
 
         final ResourceLocation id = theSound.getLocation();
 
-        if (THUNDERSTORM_CONFIG.replaceThunderSounds && thunderSounds.contains(id)) {
+        if (THUNDERSTORM_CONFIG.replaceThunderSounds && THUNDER_SOUNDS.contains(id)) {
             // Yeah - a bit reentrant but it should be good
-            var sound = THUNDER_SOUND.createAtLocation(
-                    new Vec3(theSound.getX(), theSound.getY(), theSound.getZ()));
-            audioPlayer.play(sound);
-            return true;
+            var soundFactory = SOUND_LIBRARY.getSoundFactory(THUNDER_SOUND_FACTORY);
+            if (soundFactory.isPresent()) {
+                var sound = soundFactory.get().createAtLocation(new Vec3(theSound.getX(), theSound.getY(), theSound.getZ()));
+                AUDIO_PLAYER.play(sound);
+                return true;
+            }
         }
 
         return isSoundBlocked(id) || isSoundCulledLogical(id);

@@ -4,6 +4,10 @@
     {
       "id": "#c:forest",
       "required": false
+    },
+    {
+      "id": "biomesoplenty:old_growth_woodland",
+      "required": false
     }
   ]
 }

@@ -45,6 +45,7 @@ public class ViewerPlugin implements IDiagnosticPlugin {
         data.add(state.toString());
 
         this.processTags(state.getBlockHolder(), data);
+        this.processTags(state.getFluidState().holder(), data);
 
         var info = this.blockLibrary.getBlockInfo(state);
         var wallOfText = info.toString();

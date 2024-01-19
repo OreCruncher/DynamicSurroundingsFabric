@@ -11,6 +11,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidState;
 
 import java.util.Set;
 import java.util.stream.Stream;
@@ -24,6 +26,7 @@ public interface ITagLibrary extends ILibrary {
     }
     boolean is(TagKey<Biome> tagKey, Biome entry);
     boolean is(TagKey<EntityType<?>> tagKey, EntityType<?> entry);
+    boolean is(TagKey<Fluid> tagKey, FluidState entry);
 
     <T> String asString(Stream<TagKey<T>> tagStream);
     <T> Stream<Pair<TagKey<T>, Set<T>>> getEntriesByTag(ResourceKey<? extends Registry<T>> registry);

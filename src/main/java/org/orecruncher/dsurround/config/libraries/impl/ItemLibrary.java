@@ -11,7 +11,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.*;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.ItemClassType;
-import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
@@ -41,7 +40,7 @@ public class ItemLibrary implements IItemLibrary {
     }
 
     @Override
-    public void reload(AssetLibraryEvent.ReloadEvent event) {
+    public void reload() {
         this.itemEquipFactories.clear();
         this.itemSwingFactories.clear();
         this.itemArmorStepFactories.clear();
@@ -67,7 +66,7 @@ public class ItemLibrary implements IItemLibrary {
     public Optional<ISoundFactory> getEquipableStepAccentSound(ItemStack stack) {
         if (stack.isEmpty())
             return Optional.empty();
-        return Optional.ofNullable(this.itemArmorStepFactories.computeIfAbsent(stack.getItem(), k -> resolveEquipStepSound(stack)));
+        return Optional.ofNullable(this.itemArmorStepFactories.computeIfAbsent(stack.getItem(), k -> resolveEquipableStepSound(stack)));
     }
 
     @Override
@@ -76,12 +75,12 @@ public class ItemLibrary implements IItemLibrary {
         return itemRegistry.stream().map(kvp -> formatItemOutput(kvp.getKey().location(), kvp.getValue())).sorted();
     }
 
-    private static @Nullable ISoundFactory resolveEquipStepSound(ItemStack stack) {
+    private static @Nullable ISoundFactory resolveEquipableStepSound(ItemStack stack) {
         var sound = getEquipableSoundEvent(stack);
         if (sound != null)
             return SoundFactoryBuilder
                     .create(sound)
-                    .category(SoundSource.PLAYERS).volume(0.07F).pitchRange(0.8F, 1F).build();
+                    .category(SoundSource.PLAYERS).volume(0.07F).pitch(0.8F, 1F).build();
         return null;
     }
 
@@ -94,7 +93,7 @@ public class ItemLibrary implements IItemLibrary {
             if (itemEquipSound != null)
                 return SoundFactoryBuilder
                         .create(itemEquipSound)
-                        .category(SoundSource.PLAYERS).volume(0.5F).pitchRange(0.8F, 1.2F).build();
+                        .category(SoundSource.PLAYERS).volume(0.5F).pitch(0.8F, 1.2F).build();
             return defaultSoundFactory.get();
         }
 
