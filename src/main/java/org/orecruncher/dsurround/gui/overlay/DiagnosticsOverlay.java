@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
@@ -82,7 +83,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         this.showHud = false;
 
         this.plugins.add(new ClientProfilerPlugin());
-        this.plugins.add(new ViewerPlugin(ContainerManager.resolve(IBlockLibrary.class), ContainerManager.resolve(ITagLibrary.class), ContainerManager.resolve(IEntityEffectLibrary.class)));
+        this.plugins.add(new ViewerPlugin(ContainerManager.resolve(Configuration.Logging.class), ContainerManager.resolve(IBlockLibrary.class), ContainerManager.resolve(ITagLibrary.class), ContainerManager.resolve(IEntityEffectLibrary.class)));
         this.plugins.add(new RuntimeDiagnosticsPlugin(ContainerManager.resolve(IConditionEvaluator.class)));
         this.plugins.add(new SoundEngineDiagnosticsPlugin());
     }

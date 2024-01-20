@@ -10,6 +10,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
@@ -20,17 +21,29 @@ import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Objects;
+import java.util.*;
 
 public class ViewerPlugin implements IDiagnosticPlugin {
 
+    // Mod packs have a lot of tags. We are only interested in
+    // tags for the various frameworks and ourselves.
+    private static final Map<String, ChatFormatting> TAG_COLORS = new HashMap<>();
+
+    static {
+        TAG_COLORS.put(Constants.MOD_ID, ChatFormatting.GOLD);
+        TAG_COLORS.put("minecraft", ChatFormatting.LIGHT_PURPLE);
+        TAG_COLORS.put("forge", ChatFormatting.AQUA);
+        TAG_COLORS.put("fabric", ChatFormatting.YELLOW);
+        TAG_COLORS.put("c", ChatFormatting.YELLOW);
+    }
+
+    private final Configuration.Logging config;
     private final IBlockLibrary blockLibrary;
     private final ITagLibrary tagLibrary;
     private final IEntityEffectLibrary entityEffectLibrary;
 
-    public ViewerPlugin(IBlockLibrary blockLibrary, ITagLibrary tagLibrary, IEntityEffectLibrary entityEffectLibrary) {
+    public ViewerPlugin(Configuration.Logging config, IBlockLibrary blockLibrary, ITagLibrary tagLibrary, IEntityEffectLibrary entityEffectLibrary) {
+        this.config = config;
         this.blockLibrary = blockLibrary;
         this.tagLibrary = tagLibrary;
         this.entityEffectLibrary = entityEffectLibrary;
@@ -78,15 +91,17 @@ public class ViewerPlugin implements IDiagnosticPlugin {
     }
 
     private <T> void processTags(Holder<T> holder, Collection<String> data) {
-        this.tagLibrary.streamTags(holder)
-                .map(tag -> {
-                    var txt = "#" + tag.location();
-                    if (Objects.equals(tag.location().getNamespace(), Constants.MOD_ID))
-                        txt = ChatFormatting.GOLD + txt;
-                    return txt;
-                })
-                .sorted()
-                .forEach(data::add);
+        var query = this.tagLibrary.streamTags(holder);
+
+        if (this.config.filteredTagView)
+            query = query.filter(tag -> TAG_COLORS.containsKey(tag.location().getNamespace()));
+
+        query.map(tag -> {
+            var formatting = TAG_COLORS.getOrDefault(tag.location().getNamespace(), ChatFormatting.GRAY);
+            return formatting + "#" + tag.location();
+        })
+        .sorted()
+        .forEach(data::add);
     }
 
     public void onCollect(CollectDiagnosticsEvent event) {
