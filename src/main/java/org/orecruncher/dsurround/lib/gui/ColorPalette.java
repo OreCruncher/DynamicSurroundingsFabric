@@ -73,6 +73,7 @@ public final class ColorPalette {
     public static final TextColor ORCHID = of(218,112,214);
     public static final TextColor PALE_BROWN = of(152,118,84);
     public static final TextColor DARK_VIOLET = of(148,0,211);
+    public static final TextColor ANTIQUE_WHITE = of(250,235,215);
 
     public static int getRed(int rgb) {
         return (rgb >> 16) & 0xFF;

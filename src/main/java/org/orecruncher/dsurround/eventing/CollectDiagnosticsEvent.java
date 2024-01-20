@@ -18,6 +18,7 @@ public final class CollectDiagnosticsEvent {
         BlockView,
         FluidView,
         EntityView,
+        HeldItem,
         Survey,
         Misc;
 

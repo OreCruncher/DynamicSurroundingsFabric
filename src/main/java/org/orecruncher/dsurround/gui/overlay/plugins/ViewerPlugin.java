@@ -5,8 +5,10 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -90,6 +92,14 @@ public class ViewerPlugin implements IDiagnosticPlugin {
         }
     }
 
+    private void processHeldItem(ItemStack stack, Collection<String> data) {
+        if (stack.isEmpty())
+            return;
+        var holder = stack.getItemHolder();
+        holder.unwrapKey().ifPresent(key -> data.add(key.location().toString()));
+        this.processTags(holder, data);
+    }
+
     private <T> void processTags(Holder<T> holder, Collection<String> data) {
         var query = this.tagLibrary.streamTags(holder);
 
@@ -109,6 +119,14 @@ public class ViewerPlugin implements IDiagnosticPlugin {
         Entity entity = GameUtils.getMC().getCameraEntity();
         if (entity == null)
             return;
+
+        if (entity instanceof LivingEntity le) {
+            var stack = le.getItemInHand(InteractionHand.MAIN_HAND);
+            if (!stack.isEmpty()) {
+                var panelText = event.getSectionText(CollectDiagnosticsEvent.Section.HeldItem);
+                this.processHeldItem(stack, panelText);
+            }
+        }
 
         var blockHit = (BlockHitResult)entity.pick(20.0D, 0.0F, false);
         var fluidHit = (BlockHitResult)entity.pick(20.0D, 0.0F, true);
