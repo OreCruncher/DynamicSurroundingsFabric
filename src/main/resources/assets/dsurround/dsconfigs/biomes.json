@@ -1,7 +1,16 @@
 [
   {
-    "biomeSelector": "!MOUNTAIN && ((WASTELAND && !SWAMP && !COLD) || HILLS)",
-    "_comment": "Wind for Hills/Wasteland",
+    "biomeSelector": "WINDSWEPT",
+    "_comment": "Wind for Windswept",
+    "acoustics": [
+      {
+        "factory": "biome.wind"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "!MOUNTAIN && (WASTELAND && !SWAMP && !COLD)",
+    "_comment": "Wind for Wasteland",
     "acoustics": [
       {
         "factory": "biome.wind.hills"
@@ -18,7 +27,7 @@
     ]
   },
   {
-    "biomeSelector": "DESERT && !(HILLS || MOUNTAIN || LUSH)",
+    "biomeSelector": "DESERT && !(WINDSWEPT || MOUNTAIN || LUSH)",
     "_comment": "Desert Wind",
     "acoustics": [
       {

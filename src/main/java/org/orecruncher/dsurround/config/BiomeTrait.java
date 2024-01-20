@@ -56,7 +56,6 @@ public enum BiomeTrait {
     MAGICAL("MAGICAL"),
     PLATEAU("PLATEAU"),
     MOUNTAIN("MOUNTAIN"),
-    HILLS("HILLS"),
     SANDY("SANDY"),
     SNOWY("SNOWY"),
     WASTELAND("WASTELAND"),
@@ -76,50 +75,12 @@ public enum BiomeTrait {
     private static final Map<String, BiomeTrait> mapper = new HashMap<>();
 
     static {
-        register(BiomeTrait.NONE); // stone_shore why?
-        register(BiomeTrait.TAIGA);
-        register(BiomeTrait.EXTREME_HILLS);
-        register(BiomeTrait.JUNGLE);
-        register(BiomeTrait.MESA);
-        register(BiomeTrait.PLAINS);
-        register(BiomeTrait.SAVANNA);
-        register(BiomeTrait.ICY);
-        register(BiomeTrait.THEEND);
-        register(BiomeTrait.BEACH);
-        register(BiomeTrait.FOREST);
-        register(BiomeTrait.OCEAN);
-        register(BiomeTrait.DESERT);
-        register(BiomeTrait.RIVER);
-        register(BiomeTrait.SWAMP);
-        register(BiomeTrait.MUSHROOM);
-        register(BiomeTrait.NETHER);
-        register(BiomeTrait.UNDERGROUND);
-        register(BiomeTrait.WATER);
-        register(BiomeTrait.WET);
-        register(BiomeTrait.DRY);
-        register(BiomeTrait.HOT);
-        register(BiomeTrait.COLD);
-        register(BiomeTrait.TEMPERATE);
-        register(BiomeTrait.SPARSE);
-        register(BiomeTrait.DENSE);
-        register(BiomeTrait.CONIFEROUS);
-        register(BiomeTrait.DECIDUOUS);
-        register(BiomeTrait.SPOOKY);
-        register(BiomeTrait.DEAD);
-        register(BiomeTrait.MAGICAL);
-        register(BiomeTrait.PLATEAU);
-        register(BiomeTrait.MOUNTAIN);
-        register(BiomeTrait.HILLS);
-        register(BiomeTrait.SANDY);
-        register(BiomeTrait.SNOWY);
-        register(BiomeTrait.WASTELAND);
-        register(BiomeTrait.VOID);
-        register(BiomeTrait.OVERWORLD);
-        register(BiomeTrait.DEEP);
-        register(BiomeTrait.WINDSWEPT);
-        register(BiomeTrait.FLORAL);
-        register(BiomeTrait.BADLANDS);
-        register(BiomeTrait.CAVES);
+
+        for(var trait : values()) {
+            if (trait == UNKNOWN)
+                continue;
+            register(trait);
+        }
     }
 
     private final String name;
