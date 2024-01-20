@@ -23,7 +23,7 @@ public class MixinIngameHud {
         this.dsurround_overlayManager = ContainerManager.resolve(OverlayManager.class);
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;renderEffects(Lnet/minecraft/client/gui/GuiGraphics;)V", shift = At.Shift.AFTER))
+    @Inject(method = "render", at = @At(value = "RETURN"))
     public void dsurround_render(GuiGraphics guiGraphics, float f, CallbackInfo ci) {
         this.dsurround_overlayManager.render(guiGraphics, f);
     }
