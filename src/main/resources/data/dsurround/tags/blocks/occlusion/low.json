@@ -9,7 +9,6 @@
       "required": false
     },
     "#minecraft:beehives",
-    "#minecraft:leaves",
     "minecraft:chest",
     "minecraft:dried_kelp_block"
   ]

@@ -1,9 +1,5 @@
 {
   "values": [
-    "#minecraft:wool_carpets",
-    "#minecraft:wool",
-    "#minecraft:logs",
-    "#minecraft:trapdoors",
     "minecraft:hay_block",
     "minecraft:gravel"
   ]

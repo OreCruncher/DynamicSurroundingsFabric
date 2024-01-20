@@ -4,7 +4,6 @@
       "id": "#c:glass_panes",
       "required": false
     },
-    "#minecraft:ice",
     "#minecraft:impermeable",
     "minecraft:water",
     "#minecraft:planks",
