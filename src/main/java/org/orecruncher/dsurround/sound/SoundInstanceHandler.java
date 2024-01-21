@@ -10,6 +10,7 @@ import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.gui.sound.ConfigSoundInstance;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 
@@ -99,10 +100,12 @@ public final class SoundInstanceHandler {
     public static boolean inRange(final Vec3 listener, final SoundInstance sound, final int pad) {
         // Do not cancel if:
         // - The sound is global. Distance is not a factor.
-        // - It is repeatable.  Player can move into range.
         // - Weather related (thunder, lightning strike)
-        if (sound.isRelative() || sound.getAttenuation() == SoundInstance.Attenuation.NONE || sound.isLooping() || sound.getSource() == SoundSource.WEATHER)
+        if (sound.isRelative() || sound.getAttenuation() == SoundInstance.Attenuation.NONE || sound.getSource() == SoundSource.WEATHER)
             return true;
+
+        // Make sure a sound is assigned so that the volume check can work
+        sound.resolve(GameUtils.getSoundManager());
 
         // If it is a loud sound, let it through
         if (sound.getVolume() > 1F)

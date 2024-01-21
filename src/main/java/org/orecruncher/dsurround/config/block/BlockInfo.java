@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.config.block;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.biome.AcousticEntry;
@@ -25,6 +24,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class BlockInfo {
+
+    private static final IConditionEvaluator CONDITION_EVALUATOR = ContainerManager.resolve(IConditionEvaluator.class);
 
     private static class Occlusion {
         public static final float NONE = 0;
@@ -54,14 +55,9 @@ public class BlockInfo {
     private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
     private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
-    // Lazy init on add
-    @Nullable
-    protected ObjectArray<AcousticEntry> sounds;
-    @Nullable
-    protected ObjectArray<IBlockEffectProducer> blockEffects;
-
     protected final int version;
-    protected final IConditionEvaluator conditionEvaluator;
+    protected Collection<AcousticEntry> sounds = new ObjectArray<>();
+    protected Collection<IBlockEffectProducer> blockEffects = new ObjectArray<>();
 
     protected Script soundChance = new Script("0.01");
     protected float soundReflectivity = Reflectance.DEFAULT;
@@ -69,12 +65,10 @@ public class BlockInfo {
 
     public BlockInfo(int version) {
         this.version = version;
-        this.conditionEvaluator = null;
     }
 
-    public BlockInfo(int version, BlockState state, IConditionEvaluator conditionEvaluator) {
+    public BlockInfo(int version, BlockState state) {
         this.version = version;
-        this.conditionEvaluator = conditionEvaluator;
         this.soundOcclusion = getSoundOcclusionSetting(state);
         this.soundReflectivity = getSoundReflectionSetting(state);
     }
@@ -99,14 +93,10 @@ public class BlockInfo {
     }
 
     private void addToSounds(AcousticEntry entry) {
-        if (this.sounds == null)
-            this.sounds = new ObjectArray<>(4);
         this.sounds.add(entry);
     }
 
     private void addToBlockEffects(IBlockEffectProducer effect) {
-        if (this.blockEffects == null)
-            this.blockEffects = new ObjectArray<>(2);
         this.blockEffects.add(effect);
     }
 
@@ -141,7 +131,7 @@ public class BlockInfo {
 
     public Optional<ISoundFactory> getSoundToPlay(final IRandomizer random) {
         if (this.sounds != null) {
-            var chance = this.conditionEvaluator.eval(this.soundChance);
+            var chance = CONDITION_EVALUATOR.eval(this.soundChance);
             if (chance instanceof Double c && random.nextDouble() < c) {
                 var candidates = this.sounds.stream().filter(AcousticEntry::matches);
                 return WeightTable.makeSelection(candidates);
@@ -151,21 +141,15 @@ public class BlockInfo {
     }
 
     public Collection<IBlockEffectProducer> getEffectProducers() {
-        return this.blockEffects == null ? ImmutableList.of() : this.blockEffects;
+        return this.blockEffects;
     }
 
     public void trim() {
-        if (this.sounds != null) {
-            if (this.sounds.isEmpty())
-                this.sounds = null;
-            else
-                this.sounds.trim();
+        if (this.sounds.isEmpty()) {
+            this.sounds = ImmutableList.of();
         }
-        if (this.blockEffects != null) {
-            if (blockEffects.isEmpty())
-                this.blockEffects = null;
-            else
-                this.blockEffects.trim();
+        if (this.blockEffects.isEmpty()) {
+            this.blockEffects = ImmutableList.of();
         }
     }
 
@@ -342,14 +326,14 @@ public class BlockInfo {
                 .append(this.soundOcclusion)
                 .append("\n");
 
-        if (this.sounds != null) {
+        if (!this.sounds.isEmpty()) {
             builder.append("sound chance: ").append(this.soundChance);
             builder.append("; sounds [\n");
             builder.append(this.sounds.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n]\n");
         }
 
-        if (this.blockEffects != null) {
+        if (!this.blockEffects.isEmpty()) {
             builder.append("random effects [\n");
             builder.append(
                     this.blockEffects.stream().map(c -> "    " + c.toString()).collect(Collectors.joining("\n")));

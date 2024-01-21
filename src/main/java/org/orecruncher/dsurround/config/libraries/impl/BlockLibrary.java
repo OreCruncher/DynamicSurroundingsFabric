@@ -17,7 +17,6 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
-import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.mixinutils.IBlockStateExtended;
 
 import java.util.*;
@@ -39,16 +38,14 @@ public class BlockLibrary implements IBlockLibrary {
 
     private final IModLog logger;
     private final IMinecraftDirectories directories;
-    private final IConditionEvaluator conditionEvaluator;
     private final ITagLibrary tagLibrary;
 
     private final Collection<BlockConfigRule> blockConfigs = new ObjectArray<>();
     private int version = 0;
 
-    public BlockLibrary(IModLog logger, IMinecraftDirectories directories, IConditionEvaluator conditionEvaluator, ITagLibrary tagLibrary) {
+    public BlockLibrary(IModLog logger, IMinecraftDirectories directories, ITagLibrary tagLibrary) {
         this.logger = logger;
         this.directories = directories;
-        this.conditionEvaluator = conditionEvaluator;
         this.tagLibrary = tagLibrary;
     }
 
@@ -80,7 +77,7 @@ public class BlockLibrary implements IBlockLibrary {
         }
 
         // OK - need to build out info for the block.
-        info = new BlockInfo(this.version, state, this.conditionEvaluator);
+        info = new BlockInfo(this.version, state);
         this.blockConfigs.stream()
                 .filter(c -> c.match(state))
                 .forEach(info::update);
