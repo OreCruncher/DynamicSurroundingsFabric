@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.eventing;
 
+import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.math.ITimer;
 
@@ -37,13 +38,17 @@ public final class CollectDiagnosticsEvent {
         }
     }
 
-    private final Map<Section, ObjectArray<String>> data = new EnumMap<>(Section.class);
+    private final Map<Section, Collection<Component>> data = new EnumMap<>(Section.class);
 
     public void add(ITimer timer) {
         this.add(Section.Timers, timer.toString());
     }
 
     public void add(Section panel, String text) {
+        this.add(panel, Component.literal(text));
+    }
+
+    public void add(Section panel, Component text) {
         this.getSectionText(panel).add(text);
     }
 
@@ -51,7 +56,7 @@ public final class CollectDiagnosticsEvent {
         this.data.forEach((key, value) -> value.clear());
     }
 
-    public Collection<String> getSectionText(Section section) {
+    public Collection<Component> getSectionText(Section section) {
         return this.data.computeIfAbsent(section, ignored -> new ObjectArray<>());
     }
 }

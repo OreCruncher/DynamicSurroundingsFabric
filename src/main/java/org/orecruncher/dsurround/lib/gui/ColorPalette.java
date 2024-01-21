@@ -74,6 +74,8 @@ public final class ColorPalette {
     public static final TextColor PALE_BROWN = of(152,118,84);
     public static final TextColor DARK_VIOLET = of(148,0,211);
     public static final TextColor ANTIQUE_WHITE = of(250,235,215);
+    public static final TextColor PEARLY_PURPLE = of(183,104,162);
+    public static final TextColor FRESH_AIR = of(166,231,255);
 
     public static int getRed(int rgb) {
         return (rgb >> 16) & 0xFF;

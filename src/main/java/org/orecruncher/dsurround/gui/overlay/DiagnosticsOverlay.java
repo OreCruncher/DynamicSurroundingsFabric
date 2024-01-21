@@ -76,13 +76,14 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     private final ObjectArray<Component> left = new ObjectArray<>(64);
     private final ObjectArray<Component> right = new ObjectArray<>(64);
     private boolean showHud;
-    private boolean enableCollection = false;
+    private boolean enableCollection;
 
     public DiagnosticsOverlay(ModInformation modInformation, IPlatform platform) {
         this.platform = platform;
         var platformName = platform.getPlatformName();
         this.branding = "%s (%s)".formatted(modInformation.getBranding(), platformName);
         this.showHud = false;
+        this.enableCollection = false;
 
         this.plugins.add(new ClientProfilerPlugin());
         this.plugins.add(new ViewerPlugin(ContainerManager.resolve(Configuration.Logging.class), ContainerManager.resolve(IBlockLibrary.class), ContainerManager.resolve(ITagLibrary.class), ContainerManager.resolve(IEntityEffectLibrary.class)));
@@ -118,7 +119,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
 
             ClientEventHooks.COLLECT_DIAGNOSTICS.raise().onCollect(this.reusableEvent);
 
-            this.reusableEvent.add(diagnostics);
+            this.reusableEvent.add(this.diagnostics);
 
             this.left.clear();
             this.right.clear();
@@ -146,8 +147,12 @@ public class DiagnosticsOverlay extends AbstractOverlay {
                     result.add(Component.literal(p.name()).withStyle(style.withUnderlined(true)));
                 }
 
-                for (var d : data)
-                    result.add(Component.literal(d).withStyle(style));
+                for (var d : data) {
+                    if (d.getStyle().isEmpty())
+                        result.add(d.copy().withStyle(style));
+                    else
+                        result.add(d);
+                }
             }
         }
     }

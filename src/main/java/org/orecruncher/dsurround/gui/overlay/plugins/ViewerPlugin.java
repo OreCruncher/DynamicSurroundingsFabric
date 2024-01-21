@@ -1,10 +1,13 @@
 package org.orecruncher.dsurround.gui.overlay.plugins;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import joptsimple.internal.Strings;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -20,7 +23,9 @@ import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
+import org.orecruncher.dsurround.lib.Comparers;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 
 import java.util.*;
@@ -29,14 +34,15 @@ public class ViewerPlugin implements IDiagnosticPlugin {
 
     // Mod packs have a lot of tags. We are only interested in
     // tags for the various frameworks and ourselves.
-    private static final Map<String, ChatFormatting> TAG_COLORS = new HashMap<>();
+    private static final Object2ObjectOpenHashMap<String, Style> TAG_STYLES = new Object2ObjectOpenHashMap<>();
 
     static {
-        TAG_COLORS.put(Constants.MOD_ID, ChatFormatting.GOLD);
-        TAG_COLORS.put("minecraft", ChatFormatting.LIGHT_PURPLE);
-        TAG_COLORS.put("forge", ChatFormatting.AQUA);
-        TAG_COLORS.put("fabric", ChatFormatting.YELLOW);
-        TAG_COLORS.put("c", ChatFormatting.YELLOW);
+        TAG_STYLES.defaultReturnValue(Style.EMPTY.withColor(ColorPalette.GRAY));
+        TAG_STYLES.put(Constants.MOD_ID, Style.EMPTY.withColor(ColorPalette.GOLD));
+        TAG_STYLES.put("minecraft", Style.EMPTY.withColor(ColorPalette.FRESH_AIR));
+        TAG_STYLES.put("forge", Style.EMPTY.withColor(ColorPalette.AQUAMARINE));
+        TAG_STYLES.put("fabric", Style.EMPTY.withColor(ColorPalette.CORNSILK));
+        TAG_STYLES.put("c", Style.EMPTY.withColor(ColorPalette.CORNSILK));
     }
 
     private final Configuration.Logging config;
@@ -52,27 +58,31 @@ public class ViewerPlugin implements IDiagnosticPlugin {
         ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect);
     }
 
-    private void processBlockHitResult(Level world, BlockHitResult result, Collection<String> data) {
+    private void processBlockHitResult(Level world, BlockHitResult result, Collection<Component> data) {
         if (result.getType() != HitResult.Type.BLOCK)
             return;
 
         var state = world.getBlockState(result.getBlockPos());
-        data.add(state.toString());
+        data.add(Component.literal(state.toString()));
 
         this.processTags(state.getBlockHolder(), data);
-        this.processTags(state.getFluidState().holder(), data);
+        if (!state.getFluidState().isEmpty()) {
+            data.add(Component.literal("Fluid Tags"));
+            this.processTags(state.getFluidState().holder(), data);
+        }
 
         var info = this.blockLibrary.getBlockInfo(state);
         var wallOfText = info.toString();
         Arrays.stream(wallOfText.split("\n"))
             .map(l -> l.replaceAll("[\\[\\]]", "").strip())
             .filter(s -> !Strings.isNullOrEmpty(s))
+            .map(Component::literal)
             .forEach(data::add);
     }
 
-    private void processEntityHitResult(Entity entity, Collection<String> data) {
+    private void processEntityHitResult(Entity entity, Collection<Component> data) {
 
-        data.add(String.valueOf(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType())));
+        data.add(Component.literal(String.valueOf(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()))));
 
         var holderResult = RegistryUtils.getRegistryEntry(Registries.ENTITY_TYPE, entity.getType());
         if (holderResult.isEmpty())
@@ -83,35 +93,36 @@ public class ViewerPlugin implements IDiagnosticPlugin {
         if (entity instanceof LivingEntity le) {
             var info = this.entityEffectLibrary.getEntityEffectInfo(le);
             if (info.isDefault()) {
-                data.add("Default Effects");
+                data.add(Component.literal("Default Effects"));
             } else {
-                info.getEffects().forEach(effect -> data.add(effect.toString()));
+                info.getEffects().forEach(effect -> data.add(Component.literal(effect.toString())));
             }
         } else {
-            data.add("Not a LivingEntity");
+            data.add(Component.literal("Not a LivingEntity"));
         }
     }
 
-    private void processHeldItem(ItemStack stack, Collection<String> data) {
+    private void processHeldItem(ItemStack stack, Collection<Component> data) {
         if (stack.isEmpty())
             return;
         var holder = stack.getItemHolder();
-        holder.unwrapKey().ifPresent(key -> data.add(key.location().toString()));
+        holder.unwrapKey().ifPresent(key -> data.add(Component.literal(key.location().toString())));
         this.processTags(holder, data);
     }
 
-    private <T> void processTags(Holder<T> holder, Collection<String> data) {
-        var query = this.tagLibrary.streamTags(holder);
+    private <T> void processTags(Holder<T> holder, Collection<Component> data) {
+        var query = this.tagLibrary.streamTags(holder)
+                .map(TagKey::location);
 
         if (this.config.filteredTagView)
-            query = query.filter(tag -> TAG_COLORS.containsKey(tag.location().getNamespace()));
+            query = query.filter(loc -> TAG_STYLES.containsKey(loc.getNamespace()));
 
-        query.map(tag -> {
-            var formatting = TAG_COLORS.getOrDefault(tag.location().getNamespace(), ChatFormatting.GRAY);
-            return formatting + "#" + tag.location();
-        })
-        .sorted()
-        .forEach(data::add);
+        query.sorted(Comparers.IDENTIFIER_NATURAL_COMPARABLE)
+            .map(l -> {
+                var formatting = TAG_STYLES.get(l.getNamespace());
+                return Component.literal("#" + l).withStyle(formatting);
+            })
+            .forEach(data::add);
     }
 
     public void onCollect(CollectDiagnosticsEvent event) {

@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.processing.scanner;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.Configuration;
@@ -108,12 +109,12 @@ public class SystemsScanner extends CuboidScanner {
         this.processIfEnabled(false, system -> system.blockUnscan(world, state, pos));
     }
 
-    public void gatherDiagnostics(Collection<String> output) {
+    public void gatherDiagnostics(Collection<Component> output) {
         this.systems.forEach(system -> {
             var text = system.gatherDiagnostics();
             if (!system.isEnabled())
                 text += " (disabled)";
-            output.add(text);
+            output.add(Component.literal(text));
         });
     }
 }

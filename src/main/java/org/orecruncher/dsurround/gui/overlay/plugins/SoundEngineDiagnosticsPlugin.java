@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.gui.overlay.plugins;
 
+import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
@@ -24,7 +25,7 @@ public class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
         MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) soundManager;
         MixinSoundEngineAccessor accessors = (MixinSoundEngineAccessor) manager.dsurround_getSoundSystem();
         var sources = accessors.dsurround_getSources();
-        var str = soundManager.getDebugString();
+        var str = Component.literal(soundManager.getDebugString());
         var panelText = event.getSectionText(CollectDiagnosticsEvent.Section.Sounds);
         panelText.add(str);
 
@@ -35,9 +36,10 @@ public class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
                     .entrySet().stream()
                     .map(e -> String.format(FMT_DBG_SOUND, e.getKey().toString(), e.getValue()))
                     .sorted()
+                    .map(Component::literal)
                     .forEach(panelText::add);
         } else {
-            panelText.add("No sounds playing");
+            panelText.add(Component.literal("No sounds playing"));
         }
     }
 }
