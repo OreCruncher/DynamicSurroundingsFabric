@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.gui.overlay.plugins;
 
+import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
@@ -31,10 +32,10 @@ public class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
 
         if (!sources.isEmpty()) {
             accessors.dsurround_getSources().keySet().stream()
-                    .map(s -> s.getSound().getLocation())
+                    .map(SoundInstance::getLocation)
                     .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
                     .entrySet().stream()
-                    .map(e -> String.format(FMT_DBG_SOUND, e.getKey().toString(), e.getValue()))
+                    .map(e -> FMT_DBG_SOUND.formatted(e.getKey(), e.getValue()))
                     .sorted()
                     .map(Component::literal)
                     .forEach(panelText::add);

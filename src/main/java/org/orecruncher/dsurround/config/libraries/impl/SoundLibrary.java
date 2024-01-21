@@ -179,6 +179,7 @@ public final class SoundLibrary implements ISoundLibrary {
 
     @Override
     public void saveIndividualSoundConfigs(Collection<IndividualSoundConfigEntry> configs) {
+        this.blockedSounds.clear();
         this.soundConfiguration = configs.stream()
                 .filter(IndividualSoundConfigEntry::isNotDefault)
                 .collect(Collectors.toList());
@@ -220,6 +221,7 @@ public final class SoundLibrary implements ISoundLibrary {
 
     private void loadSoundConfiguration() {
         this.soundConfiguration.clear();
+        this.blockedSounds.clear();
 
         // Check to see if it exists on the disk, and if so, load it up. Otherwise, save it so the defaults are
         // persisted and the user can edit manually.
@@ -258,6 +260,9 @@ public final class SoundLibrary implements ISoundLibrary {
         this.addSoundConfig("minecraft:entity.experience_orb.pickup", 100, false, false, true);
         this.addSoundConfig("minecraft:entity.chicken.egg", 100, false, false, true);
         this.addSoundConfig("minecraft:ambient.underwater.exit", 100, false, false, true);
+
+        // Since we have waterfall sounds
+        this.addSoundConfig("minecraft:block.water.ambient", 100, true, false, false);
     }
 
     private void addSoundConfig(final String id, int volumeScale, boolean block, boolean cull, boolean startup) {

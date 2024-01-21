@@ -212,6 +212,9 @@ public class BlockInfo {
             result = Reflectance.MEDIUM;
         else if (TAG_LIBRARY.is(BlockTags.SAPLINGS, state))
             result = Reflectance.NONE;
+        else if (TAG_LIBRARY.is(BlockTags.STONE_ORE_REPLACEABLES, state))
+            // Assume stone equivalent
+            result = Occlusion.MAX;
         else if (TAG_LIBRARY.is(BlockTags.DAMPENS_VIBRATIONS, state))
             result = Reflectance.VIBRATION;
         else if (TAG_LIBRARY.is(BlockTags.SWORD_EFFICIENT, state))
@@ -296,6 +299,9 @@ public class BlockInfo {
             result = Occlusion.MEDIUM;
         else if (TAG_LIBRARY.is(BlockTags.SAPLINGS, state))
             result = Occlusion.NONE;
+        else if (TAG_LIBRARY.is(BlockTags.STONE_ORE_REPLACEABLES, state))
+            // Assume stone equivalent
+            result = Occlusion.HIGH;
         else if (TAG_LIBRARY.is(BlockTags.OCCLUDES_VIBRATION_SIGNALS, state))
             result = Occlusion.VIBRATION;
         else if (TAG_LIBRARY.is(BlockTags.SWORD_EFFICIENT, state))
