@@ -14,7 +14,6 @@ import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 import org.orecruncher.dsurround.mixinutils.IBlockStateExtended;
@@ -54,8 +53,8 @@ public class BlockLibrary implements IBlockLibrary {
 
         this.blockConfigs.clear();
 
-        final Collection<IResourceAccessor> accessors = ResourceUtils.findResources(this.directories.getModDataDirectory().toFile(), FILE_NAME);
-        IResourceAccessor.process(accessors, accessor -> accessor.as(CODEC).ifPresent(this.blockConfigs::addAll));
+        var findResults = ResourceUtils.findModResources(CODEC, FILE_NAME);
+        findResults.forEach(result -> this.blockConfigs.addAll(result.resourceContent()));
 
         this.version++;
 

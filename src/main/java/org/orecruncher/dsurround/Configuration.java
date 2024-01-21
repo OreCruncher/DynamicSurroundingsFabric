@@ -52,6 +52,7 @@ public class Configuration extends ConfigurationData {
     public static class Flags {
         public static final int AUDIO_PLAYER = 0x1;
         public static final int BASIC_SOUND_PLAY = 0x2;
+        public static final int RESOURCE_PARSING = 0x4;
     }
 
     public static class Logging {
