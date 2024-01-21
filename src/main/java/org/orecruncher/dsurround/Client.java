@@ -65,6 +65,7 @@ public final class Client {
         // Register core services
         ContainerManager.getRootContainer()
                 .registerSingleton(Config)
+                .registerSingleton(Config.logging)
                 .registerSingleton(Config.soundSystem)
                 .registerSingleton(Config.enhancedSounds)
                 .registerSingleton(Config.thunderStorms)

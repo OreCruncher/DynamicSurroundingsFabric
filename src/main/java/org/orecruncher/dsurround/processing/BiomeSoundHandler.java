@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.processing;
 
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.Configuration;
@@ -162,6 +163,6 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
         var panelText = event.getSectionText(CollectDiagnosticsEvent.Section.Emitters);
-        this.emitters.forEach(backgroundAcousticEmitter -> panelText.add(backgroundAcousticEmitter.toString()));
+        this.emitters.forEach(backgroundAcousticEmitter -> panelText.add(Component.literal(backgroundAcousticEmitter.toString())));
     }
 }

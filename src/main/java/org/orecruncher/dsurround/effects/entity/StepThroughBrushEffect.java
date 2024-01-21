@@ -2,7 +2,6 @@ package org.orecruncher.dsurround.effects.entity;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
@@ -12,8 +11,6 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.system.ITickCount;
-import org.orecruncher.dsurround.sound.ISoundFactory;
-import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 import org.orecruncher.dsurround.mixinutils.ILivingEntityExtended;
 

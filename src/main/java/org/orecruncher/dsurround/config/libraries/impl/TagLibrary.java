@@ -83,7 +83,7 @@ public class TagLibrary implements ITagLibrary {
             return false;
         if (entry.is(tagKey))
             return true;
-        return this.isInCache(tagKey, entry);
+        return this.isInCache(tagKey, entry.getType());
     }
 
     @Override

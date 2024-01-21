@@ -15,7 +15,6 @@ import org.orecruncher.dsurround.lib.Guard;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
@@ -60,8 +59,8 @@ public final class BiomeLibrary implements IBiomeLibrary {
         this.biomeConfigs.clear();
         this.biomeConditionEvaluator.reset();
 
-        var accessors = ResourceUtils.findResources(this.directories.getModDataDirectory().toFile(), FILE_NAME);
-        IResourceAccessor.process(accessors, accessor -> accessor.as(CODEC).ifPresent(this.biomeConfigs::addAll));
+        var findResults = ResourceUtils.findModResources(CODEC, FILE_NAME);
+        findResults.forEach(result -> this.biomeConfigs.addAll(result.resourceContent()));
 
         this.version++;
 

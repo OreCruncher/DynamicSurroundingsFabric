@@ -97,10 +97,6 @@ public class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
             results.add(BiomeTrait.FOREST);
         }
 
-        if (TAG_LIBRARY.is(BiomeTags.WINDSWEPT, biome)) {
-            results.add(BiomeTrait.EXTREME_HILLS);
-        }
-
         return results;
     }
 }

@@ -18,7 +18,7 @@ import org.orecruncher.dsurround.lib.CodecExtensions;
 import org.orecruncher.dsurround.lib.Comparers;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.random.Randomizer;
-import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
+import org.orecruncher.dsurround.lib.resources.DiscoveredResource;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 import org.orecruncher.dsurround.sound.ISoundFactory;
@@ -50,7 +50,6 @@ public final class SoundLibrary implements ISoundLibrary {
     private static final SoundEvent MISSING = SoundEvent.createVariableRangeEvent(MISSING_RESOURCE);
 
     private final IModLog logger;
-    private final IMinecraftDirectories directories;
     private final Path soundConfigPath;
 
     private final Object2ObjectOpenHashMap<ResourceLocation, SoundEvent> myRegistry = new Object2ObjectOpenHashMap<>();
@@ -64,7 +63,6 @@ public final class SoundLibrary implements ISoundLibrary {
 
     public SoundLibrary(IModLog logger, IMinecraftDirectories directories) {
         this.logger = logger;
-        this.directories = directories;
         this.myRegistry.defaultReturnValue(SoundLibrary.MISSING);
         this.soundMetadata.defaultReturnValue(new SoundMetadata());
         this.soundConfigPath = directories.getModConfigDirectory().resolve(SOUND_CONFIG_FILE);
@@ -95,11 +93,12 @@ public final class SoundLibrary implements ISoundLibrary {
         // Gather resource pack sound files and process them to ensure metadata is collected.
         // Resource pack sounds generally replace existing registration, but this allows for new
         // sounds to be added client side.
-        ResourceUtils.findResources(SOUNDS_JSON).forEach(this::registerSoundFile);
+        var soundFiles = ResourceUtils.findResources(SOUND_FILE_CODEC, SOUNDS_JSON);
+        soundFiles.forEach(this::registerSoundFile);
 
         // Gather the sound factory definitions. We scan the local data directory as well.
-        var filePath = this.directories.getModDataDirectory().toFile();
-        ResourceUtils.findResources(filePath, FACTORY_JSON).forEach(this::registerSoundFactoryFile);
+        var findResults = ResourceUtils.findModResources(FACTORY_FILE_CODEC, FACTORY_JSON);
+        findResults.forEach(this::registerSoundFactories);
 
         this.logger.info("Number of SoundEvents cached: %d", this.myRegistry.size());
         this.logger.info("Number of factories cached: %d", this.soundFactories.size());
@@ -179,6 +178,7 @@ public final class SoundLibrary implements ISoundLibrary {
 
     @Override
     public void saveIndividualSoundConfigs(Collection<IndividualSoundConfigEntry> configs) {
+        this.blockedSounds.clear();
         this.soundConfiguration = configs.stream()
                 .filter(IndividualSoundConfigEntry::isNotDefault)
                 .collect(Collectors.toList());
@@ -186,40 +186,30 @@ public final class SoundLibrary implements ISoundLibrary {
         this.save();
     }
 
-    private void registerSoundFile(IResourceAccessor soundFile) {
-        var result = soundFile.as(SOUND_FILE_CODEC);
-        if (result.isPresent()) {
-            ResourceLocation resource = soundFile.location();
-            var sf = result.get();
-            this.logger.info("Processing %s", resource);
-            sf.forEach((key, value) -> {
-                // We want to register the sound regardless of having metadata.
-                final ResourceLocation loc = new ResourceLocation(resource.getNamespace(), key);
-                if (!this.myRegistry.containsKey(loc)) {
-                    this.myRegistry.put(loc, SoundEvent.createVariableRangeEvent(loc));
-                }
-                if (!value.isDefault()) {
-                    final SoundMetadata data = new SoundMetadata(value);
-                    this.soundMetadata.put(loc, data);
-                }
-            });
-            this.logger.info("%d entries processed", sf.size());
-        }
+    private void registerSoundFile(DiscoveredResource<Map<String, SoundMetadataConfig>> soundFile) {
+        var result = soundFile.resourceContent();
+        result.forEach((key, value) -> {
+            // We want to register the sound regardless of having metadata.
+            final ResourceLocation loc = new ResourceLocation(soundFile.namespace(), key);
+            if (!this.myRegistry.containsKey(loc)) {
+                this.myRegistry.put(loc, SoundEvent.createVariableRangeEvent(loc));
+            }
+            if (!value.isDefault()) {
+                final SoundMetadata data = new SoundMetadata(value);
+                this.soundMetadata.put(loc, data);
+            }
+        });
+        this.logger.info("%d sound entries processed", result.size());
     }
 
-    private void registerSoundFactoryFile(IResourceAccessor factoryFile) {
-        var result = factoryFile.as(FACTORY_FILE_CODEC);
-        if (result.isPresent()) {
-            ResourceLocation resource = factoryFile.location();
-            var ff = result.get();
-            this.logger.info("Processing %s", resource);
-            ff.forEach(f -> this.soundFactories.put(f.getLocation(), f));
-            this.logger.info("%d entries processed", ff.size());
-        }
+    private void registerSoundFactories(DiscoveredResource<List<SoundFactory>> factories) {
+        factories.resourceContent().forEach(factory -> this.soundFactories.put(factory.getLocation(), factory));
+        this.logger.info("%d factory entries processed", factories.resourceContent().size());
     }
 
     private void loadSoundConfiguration() {
         this.soundConfiguration.clear();
+        this.blockedSounds.clear();
 
         // Check to see if it exists on the disk, and if so, load it up. Otherwise, save it so the defaults are
         // persisted and the user can edit manually.
@@ -258,6 +248,9 @@ public final class SoundLibrary implements ISoundLibrary {
         this.addSoundConfig("minecraft:entity.experience_orb.pickup", 100, false, false, true);
         this.addSoundConfig("minecraft:entity.chicken.egg", 100, false, false, true);
         this.addSoundConfig("minecraft:ambient.underwater.exit", 100, false, false, true);
+
+        // Since we have waterfall sounds
+        this.addSoundConfig("minecraft:block.water.ambient", 100, true, false, false);
     }
 
     private void addSoundConfig(final String id, int volumeScale, boolean block, boolean cull, boolean startup) {

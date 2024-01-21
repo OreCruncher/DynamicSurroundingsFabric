@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.processing;
 
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
@@ -63,10 +64,11 @@ public class Scanners extends AbstractClientHandler {
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
         var panelText = event.getSectionText(CollectDiagnosticsEvent.Section.Survey);
-        panelText.add("ceiling coverage: %.2f".formatted(this.ceilingScanner.getCoverageRatio()));
+        panelText.add(Component.literal("ceiling coverage: %.2f".formatted(this.ceilingScanner.getCoverageRatio())));
         this.biomeScanner.getBiomes().reference2IntEntrySet().stream()
                 .map(kvp -> "%s [%d]".formatted(kvp.getKey().getBiomeId(), kvp.getIntValue()))
                 .sorted()
+                .map(Component::literal)
                 .forEach(panelText::add);
     }
 }

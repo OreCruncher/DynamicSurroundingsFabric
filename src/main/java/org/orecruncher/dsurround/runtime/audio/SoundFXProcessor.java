@@ -5,6 +5,7 @@ import com.mojang.blaze3d.audio.SoundBuffer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.ChannelAccess;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.Client;
@@ -148,7 +149,7 @@ public final class SoundFXProcessor {
     }
 
     /**
-     * Callback hook from an injection.  Will be invoked by the sound processing thread when checking status which
+     * Callback hook from an injection.  Will be invoked by the sound processing thread when checking status, which
      * essentially is a "tick".
      *
      * @param source SoundSource being ticked
@@ -247,7 +248,7 @@ public final class SoundFXProcessor {
             final String msg = soundProcessor.getDiagnosticString() + " " + diagnosticString;
             event.add(CollectDiagnosticsEvent.Section.Systems, msg);
         } else {
-            event.getSectionText(CollectDiagnosticsEvent.Section.Systems).add("Enhanced sound processing disabled");
+            event.getSectionText(CollectDiagnosticsEvent.Section.Systems).add(Component.literal("Enhanced sound processing disabled"));
         }
     }
 }

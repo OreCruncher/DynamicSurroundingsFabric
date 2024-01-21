@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.config.biome;
 
+import com.google.common.collect.ImmutableList;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
@@ -33,25 +34,25 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
     private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
     private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
+    private static final IConditionEvaluator CONDITION_EVALUATOR = ContainerManager.resolve(IConditionEvaluator.class);
 
     private final int version;
     private final ResourceLocation biomeId;
     private final String biomeName;
     private final Optional<Biome> biome;
-    private final ObjectArray<AcousticEntry> loopSounds = new ObjectArray<>();
-    private final ObjectArray<AcousticEntry> moodSounds = new ObjectArray<>();
-    private final ObjectArray<AcousticEntry> additionalSounds = new ObjectArray<>();
-    private final ObjectArray<AcousticEntry> musicSounds = new ObjectArray<>();
     private final BiomeTraits traits;
     private final boolean isRiver;
     private final boolean isOcean;
     private final boolean isDeepOcean;
     private final boolean isCave;
-    private final IConditionEvaluator conditionEvaluator;
+    private Collection<AcousticEntry> loopSounds = new ObjectArray<>();
+    private Collection<AcousticEntry> moodSounds = new ObjectArray<>();
+    private Collection<AcousticEntry> additionalSounds = new ObjectArray<>();
+    private Collection<AcousticEntry> musicSounds = new ObjectArray<>();
+    private Collection<String> comments = new ObjectArray<>();
     private TextColor fogColor;
     private Script additionalSoundChance = DEFAULT_SOUND_CHANCE;
     private Script moodSoundChance = DEFAULT_SOUND_CHANCE;
-    private ObjectArray<String> comments;
 
     public BiomeInfo(final int version, final ResourceLocation id, final String name, BiomeTraits traits) {
         this(version, id, name, traits, null);
@@ -68,7 +69,6 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         this.isOcean = this.traits.contains(BiomeTrait.OCEAN);
         this.isDeepOcean = this.isOcean && this.traits.contains(BiomeTrait.DEEP);
         this.isCave = this.traits.contains(BiomeTrait.CAVES);
-        this.conditionEvaluator = ContainerManager.resolve(IConditionEvaluator.class);
     }
 
     public int getVersion() {
@@ -97,8 +97,6 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
     void addComment(final String comment) {
         if (!StringUtils.isEmpty(comment)) {
-            if (this.comments == null)
-                this.comments = new ObjectArray<>();
             this.comments.add(comment);
         }
     }
@@ -115,10 +113,6 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         this.fogColor = color;
     }
 
-    public boolean getHasFog() {
-        return this.fogColor != null;
-    }
-
     void setAdditionalSoundChance(final Script chance) {
         this.additionalSoundChance = chance;
     }
@@ -131,38 +125,32 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         return this.traits;
     }
 
-    public boolean hasTrait(BiomeTrait trait) {
-        return this.traits.contains(trait);
-    }
-
     public boolean hasTrait(String trait) {
         return this.traits.contains(trait);
     }
 
     @Override
     public Collection<ISoundFactory> findBiomeSoundMatches() {
-        ObjectArray<ISoundFactory> results = new ObjectArray<>();
-        for (final AcousticEntry sound : this.loopSounds) {
-            if (sound.matches())
-                results.add(sound.getAcoustic());
-        }
-        return results;
+        return this.loopSounds.stream()
+                .filter(AcousticEntry::matches)
+                .map(AcousticEntry::getAcoustic)
+                .collect(Collectors.toList());
     }
 
     @Override
     public Optional<ISoundFactory> getExtraSound(final SoundEventType type, final IRandomizer random) {
 
-        ObjectArray<AcousticEntry> sourceList = null;
+        Collection<AcousticEntry> sourceList = null;
 
         switch (type) {
             case ADDITION -> {
-                var chance = this.conditionEvaluator.eval(this.additionalSoundChance);
+                var chance = CONDITION_EVALUATOR.eval(this.additionalSoundChance);
                 if (chance instanceof Double c) {
                     sourceList = random.nextDouble() < c ? this.additionalSounds : null;
                 }
             }
             case MOOD -> {
-                var chance = this.conditionEvaluator.eval(this.moodSoundChance);
+                var chance = CONDITION_EVALUATOR.eval(this.moodSoundChance);
                 if (chance instanceof Double c) {
                     sourceList = random.nextDouble() < c ? this.moodSounds : null;
                 }
@@ -228,12 +216,16 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     }
 
     public void trim() {
-        this.loopSounds.trim();
-        this.additionalSounds.trim();
-        this.moodSounds.trim();
-        this.musicSounds.trim();
-        if (this.comments != null)
-            this.comments.trim();
+        if (this.loopSounds.isEmpty())
+            this.loopSounds = ImmutableList.of();
+        if (this.moodSounds.isEmpty())
+            this.moodSounds = ImmutableList.of();
+        if (this.additionalSounds.isEmpty())
+            this.additionalSounds = ImmutableList.of();
+        if (this.musicSounds.isEmpty())
+            this.musicSounds = ImmutableList.of();
+        if (this.comments.isEmpty())
+            this.comments = ImmutableList.of();
     }
 
     @Override
@@ -283,7 +275,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
             builder.append("\n]");
         }
 
-        if (this.comments != null && !this.comments.isEmpty()) {
+        if (!this.comments.isEmpty()) {
             builder.append("\ncomments:\n");
             builder.append(this.comments.stream().map(c -> indent + c).collect(Collectors.joining("\n")));
             builder.append('\n');
