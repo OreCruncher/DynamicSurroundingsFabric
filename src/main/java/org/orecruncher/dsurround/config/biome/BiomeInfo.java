@@ -125,6 +125,11 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         return this.traits;
     }
 
+    public void mergeTraits(BiomeConfigRule configRule) {
+        this.traits.mergeTraits(configRule.traits());
+        configRule.comment().ifPresent(this::addComment);
+    }
+
     public boolean hasTrait(String trait) {
         return this.traits.contains(trait);
     }
@@ -181,10 +186,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         entry.additionalSoundChance().ifPresent(this::setAdditionalSoundChance);
         entry.moodSoundChance().ifPresent(this::setMoodSoundChance);
 
-        // Merge in any additional traits
-        if (!entry.traits().isEmpty()) {
-            this.traits.mergeTraits(entry.traits());
-        }
+        // NOTE: We do not merge in traits here - it has already
+        // been done prior to this point.
 
         if (entry.clearSounds()) {
             addComment("> Sound Clear");
