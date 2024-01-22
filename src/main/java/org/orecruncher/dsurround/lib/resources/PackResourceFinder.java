@@ -24,10 +24,6 @@ public class PackResourceFinder<T> extends AbstractResourceFinder<T> {
         Collection<DiscoveredResource<T>> results = new ObjectArray<>();
         var tagFilePath = "%s/%s/%s/%s".formatted(this.packResourcePath, resource.getNamespace(), this.pathPrefix, resource.getPath());
 
-        if (this.pathPrefix.contains("fluid")) {
-            int x = 0;
-        }
-
         if (!tagFilePath.endsWith(".json"))
             tagFilePath = tagFilePath + ".json";
 

@@ -3,11 +3,12 @@ package org.orecruncher.dsurround.lib.resources;
 import com.mojang.serialization.Codec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.tags.TagFile;
 import net.minecraft.tags.TagKey;
 import net.minecraft.tags.TagManager;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
@@ -21,10 +22,14 @@ public interface IResourceFinder<T> {
         return Library.getPlatform();
     }
 
+    default ResourceManager getResourceManager() {
+        return GameUtils.getResourceManager();
+    }
+
     default Collection<DiscoveredResource<T>> find(String resourcePath) {
         Collection<DiscoveredResource<T>> results = new ObjectArray<>();
-        var modList = this.getPlatform().getModIdList(true);
-        for (var namespace : modList)
+        var namespaceList = this.getResourceManager().getNamespaces();
+        for (var namespace : namespaceList)
             results.addAll(this.find(new ResourceLocation(namespace, resourcePath)));
         return results;
     }
