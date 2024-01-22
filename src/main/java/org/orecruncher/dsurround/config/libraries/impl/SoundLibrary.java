@@ -1,15 +1,12 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
-import com.google.gson.GsonBuilder;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.UnboundedMapCodec;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.util.GsonHelper;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
@@ -285,14 +282,9 @@ public final class SoundLibrary implements ISoundLibrary {
 
     private void save() {
         try {
-            var result = SOUND_CONFIG_CODEC.encode(this.soundConfiguration, JsonOps.INSTANCE, JsonOps.INSTANCE.empty()).result();
+            var result = CodecExtensions.serialize(SOUND_CONFIG_CODEC, this.soundConfiguration);
             if (result.isPresent()) {
-                var content = GsonHelper.convertToJsonArray(result.get(), "soundconfig");
-                var gson = new GsonBuilder()
-                        .setPrettyPrinting()
-                        .create();
-                var output = gson.toJson(content);
-                Files.writeString(this.soundConfigPath, output, CREATE, WRITE, TRUNCATE_EXISTING);
+                Files.writeString(this.soundConfigPath, result.get(), CREATE, WRITE, TRUNCATE_EXISTING);
             }
         } catch (Throwable t) {
             this.logger.error(t, "Unable to save sound configuration %s!", SOUND_CONFIG_FILE);

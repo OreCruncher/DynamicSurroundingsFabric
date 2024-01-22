@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.lib;
 
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.*;
 import net.minecraft.world.level.block.state.BlockState;
@@ -13,6 +14,7 @@ import java.util.function.Function;
  * Extensions to the Codec serialization framework.
  */
 public interface CodecExtensions<A> extends Codec<A> {
+
     /**
      * Checks that a string is a valid format specification for BlockState
      */
@@ -33,6 +35,24 @@ public interface CodecExtensions<A> extends Codec<A> {
             return result.resultOrPartial(Library.LOGGER::warn);
         } catch (Throwable t) {
             Library.LOGGER.error(t, "Unable to parse input");
+        }
+
+        return Optional.empty();
+    }
+
+    static <A> Optional<String> serialize(Codec<A> codec, A entity) {
+        try {
+            // Not intended for high volume. If such a case arises, the builder
+            // can be created statically and reused.
+            return codec.encode(entity, JsonOps.INSTANCE, JsonOps.INSTANCE.empty()).result()
+                    .map(je ->
+                            new GsonBuilder()
+                                    .setPrettyPrinting()
+                                    .create()
+                                    .toJson(je)
+                    );
+        } catch (Throwable t) {
+            Library.LOGGER.error(t, "Unable to serialize entity");
         }
 
         return Optional.empty();
