@@ -74,7 +74,7 @@ public enum EntityEffectType {
         ITEM_SWING.setConfigProvider(() -> config.enableSwingEffect);
 
         // Do not do brush step effects if Presence Footsteps is installed
-        if (Library.getPlatform().isModLoaded(Constants.MOD_PRESENCE_FOOTSTEPS))
+        if (Library.PLATFORM.isModLoaded(Constants.MOD_PRESENCE_FOOTSTEPS))
             BRUSH_STEP.setConfigProvider(() -> false);
         else
             BRUSH_STEP.setConfigProvider(() -> config.enableBrushStepEffect);

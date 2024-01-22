@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  */
 public class BlockStateProperties {
 
-    private static final IModLog LOGGER = Library.getLogger();
+    private static final IModLog LOGGER = Library.LOGGER;
 
     public static final BlockStateProperties NONE = new BlockStateProperties();
 

@@ -35,19 +35,19 @@ public class Randomizer {
 
     private static IRandomizer getRandomizer() {
         try {
-            Library.getLogger().info("Creating RandomGenerator '%s'", JavaRandomizer.XOROSHIRO_128_PLUS_PLUS);
+            Library.LOGGER.info("Creating RandomGenerator '%s'", JavaRandomizer.XOROSHIRO_128_PLUS_PLUS);
             return new JavaRandomizer(JavaRandomizer.XOROSHIRO_128_PLUS_PLUS);
         } catch (Exception ex) {
-            Library.getLogger().error(ex, "Unable to create randomizer!");
-            Library.getLogger().info("RandomGenerator factories available:");
+            Library.LOGGER.error(ex, "Unable to create randomizer!");
+            Library.LOGGER.info("RandomGenerator factories available:");
 
             RandomGeneratorFactory.all()
                     .map(RandomGeneratorFactory::name)
                     .sorted()
-                    .forEach(Library.getLogger()::info);
+                    .forEach(Library.LOGGER::info);
         }
 
-        Library.getLogger().info("Falling back to Minecraft randomizer");
+        Library.LOGGER.info("Falling back to Minecraft randomizer");
         return new MinecraftRandomizer();
     }
 }

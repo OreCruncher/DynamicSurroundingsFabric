@@ -96,7 +96,7 @@ public class DependencyContainer implements IServiceContainer {
             this.checkForResolverSuitability(clazz);
             return this.registerFactory(clazz, new Lazy<>(() -> this.createFactory(clazz).get()));
         } catch (Throwable ex) {
-            Library.getLogger().error(ex, "Unable to register singleton %s", clazz.getName());
+            Library.LOGGER.error(ex, "Unable to register singleton %s", clazz.getName());
             throw ex;
         }
     }
@@ -118,7 +118,7 @@ public class DependencyContainer implements IServiceContainer {
             this.checkForResolverSuitability(desiredClass);
             return this.registerFactory(clazz, new Lazy<>(() -> this.createFactory(desiredClass).get()));
         } catch (Throwable ex) {
-            Library.getLogger().error(ex, "Unable to register singleton %s using class %s", clazz.getName(), desiredClass.getName());
+            Library.LOGGER.error(ex, "Unable to register singleton %s using class %s", clazz.getName(), desiredClass.getName());
             throw ex;
         }
     }
@@ -143,7 +143,7 @@ public class DependencyContainer implements IServiceContainer {
             }
             return this;
         } catch (Throwable ex) {
-            Library.getLogger().error(ex, "Unable to register factor for class %s", clazz.getName());
+            Library.LOGGER.error(ex, "Unable to register factor for class %s", clazz.getName());
             throw ex;
         }
     }
@@ -182,7 +182,7 @@ public class DependencyContainer implements IServiceContainer {
 
             return result;
         } catch (Throwable ex) {
-            Library.getLogger().error(ex, "Unable to resolve class %s", clazz.getName());
+            Library.LOGGER.error(ex, "Unable to resolve class %s", clazz.getName());
             throw ex;
         }
     }

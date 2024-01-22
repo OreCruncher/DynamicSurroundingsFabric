@@ -5,7 +5,6 @@ import com.terraformersmc.modmenu.api.ModMenuApi;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.platform.Services;
 
 /**
  * Hook for ModMenu to get a hold of our configuration screen
@@ -14,8 +13,8 @@ public class ModConfigMenu implements ModMenuApi {
 
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        Library.getLogger().info("ModMenu calling to get config screen");
-        var factory = Services.PLATFORM.getModConfigScreenFactory(Configuration.class);
+        Library.LOGGER.info("ModMenu calling to get config screen");
+        var factory = Library.PLATFORM.getModConfigScreenFactory(Configuration.class);
         if (factory.isPresent()) {
             var f = factory.get();
             return screen -> f.create(GameUtils.getMC(), screen);

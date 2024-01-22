@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  */
 public final class LibraryFunctions {
 
-    private static final IPlatform PLATFORM = Library.getPlatform();
+    private static final IPlatform PLATFORM = Library.PLATFORM;
 
     public Object iif(final boolean flag, @Nullable final Object trueResult, @Nullable final Object falseResult) {
         return flag ? trueResult : falseResult;

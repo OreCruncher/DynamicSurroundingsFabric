@@ -38,8 +38,8 @@ public final class Client {
 
     public Client() {
         // Bootstrap library functions
-        this.logger = Library.getLogger();
-        Library.initialize(Constants.MOD_ID);
+        this.logger = Library.LOGGER;
+        Library.initialize();
     }
 
     public void initializeClient() {

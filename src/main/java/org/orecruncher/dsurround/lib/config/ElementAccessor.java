@@ -24,7 +24,7 @@ public class ElementAccessor<T> {
         try {
             return (T) this.field.get(instance);
         } catch (Throwable t) {
-            Library.getLogger().error(t, "Error obtaining value instance");
+            Library.LOGGER.error(t, "Error obtaining value instance");
         }
         return null;
     }
@@ -33,7 +33,7 @@ public class ElementAccessor<T> {
         try {
             this.field.set(instance, val);
         } catch (Throwable t) {
-            Library.getLogger().error(t, "Error setting value instance");
+            Library.LOGGER.error(t, "Error setting value instance");
         }
     }
 }

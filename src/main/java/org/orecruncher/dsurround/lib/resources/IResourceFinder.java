@@ -19,7 +19,7 @@ import java.util.Collection;
 public interface IResourceFinder<T> {
 
     default IPlatform getPlatform() {
-        return Library.getPlatform();
+        return Library.PLATFORM;
     }
 
     default ResourceManager getResourceManager() {

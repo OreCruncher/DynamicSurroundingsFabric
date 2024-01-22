@@ -30,9 +30,9 @@ public interface CodecExtensions<A> extends Codec<A> {
             var jsonElement = JsonParser.parseString(content);
             var dynamic = new Dynamic<>(JsonOps.INSTANCE, jsonElement);
             DataResult<A> result = codec.parse(dynamic);
-            return result.resultOrPartial(Library.getLogger()::warn);
+            return result.resultOrPartial(Library.LOGGER::warn);
         } catch (Throwable t) {
-            Library.getLogger().error(t, "Unable to parse input");
+            Library.LOGGER.error(t, "Unable to parse input");
         }
 
         return Optional.empty();

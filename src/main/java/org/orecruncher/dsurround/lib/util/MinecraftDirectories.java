@@ -42,7 +42,7 @@ public final class MinecraftDirectories implements IMinecraftDirectories {
         try {
             Files.createDirectories(path);
         } catch (final Throwable t) {
-            Library.getLogger().error(t, "Unable to create data path %s", path.toString());
+            Library.LOGGER.error(t, "Unable to create data path %s", path.toString());
         }
     }
 }

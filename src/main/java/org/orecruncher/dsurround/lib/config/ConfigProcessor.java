@@ -17,7 +17,7 @@ public class ConfigProcessor {
             ctor.setAccessible(true);
             return Optional.of(ctor.newInstance());
         } catch (Exception ex) {
-            Library.getLogger().error(ex, "Unable to create prototype for %s", clazz.getName());
+            Library.LOGGER.error(ex, "Unable to create prototype for %s", clazz.getName());
         }
         return Optional.empty();
     }
@@ -36,7 +36,7 @@ public class ConfigProcessor {
             Optional<T> prototype = createPrototype(clazz);
             return prototype.map(p -> new GenerationContext<T>(clazz, translationRoot).generateLevel(p));
         } catch (Throwable t) {
-            Library.getLogger().error(t, "Unable to generate accessors for %s", clazz.getName());
+            Library.LOGGER.error(t, "Unable to generate accessors for %s", clazz.getName());
         }
 
         return Optional.empty();
