@@ -38,7 +38,7 @@ public class TagLibrary implements ITagLibrary {
     public TagLibrary(IModLog logger) {
         this.logger = logger;
         this.tagCache = new Reference2ObjectOpenHashMap<>();
-        this.tagLoader = new ClientTagLoader(this.logger, tag -> ModTags.getModTags().contains(tag));
+        this.tagLoader = new ClientTagLoader(this.logger);
     }
 
     @Override
@@ -88,7 +88,24 @@ public class TagLibrary implements ITagLibrary {
 
     @Override
     public Stream<String> dump() {
-        return Stream.of();
+        return this.tagCache.entrySet().stream()
+                .map(kvp -> {
+                    var builder = new StringBuilder();
+
+                    builder.append("Tag: ").append(kvp.getKey().toString());
+                    var td = kvp.getValue();
+
+                    if (td.isEmpty()) {
+                        // Makes it easier to spot in the logs
+                        builder.append("\n*** EMPTY ***");
+                    } else {
+                        this.formatHelper(builder, "Members", td);
+                    }
+
+                    builder.append("\n");
+                    return builder.toString();
+                })
+                .sorted();
     }
 
     @Override
@@ -128,6 +145,20 @@ public class TagLibrary implements ITagLibrary {
     }
 
     private boolean isInCache(TagKey<?> tagKey, Object entry) {
+        if (!ModTags.getModTags().contains(tagKey))
+            return false;
         return this.tagCache.computeIfAbsent(tagKey, this.tagLoader::getMembers).contains(entry);
+    }
+
+    private void formatHelper(StringBuilder builder, String entryName, Collection<?> data) {
+        builder.append("\n").append(entryName).append(" ");
+        if (data.isEmpty())
+            builder.append("NONE");
+        else {
+            builder.append("[");
+            for (var e : data)
+                builder.append("\n  ").append(e.toString());
+            builder.append("\n]");
+        }
     }
 }

@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.lib.resources;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
@@ -12,28 +11,19 @@ import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import java.util.*;
-import java.util.function.Predicate;
 
 @SuppressWarnings("unused")
 public class ClientTagLoader {
 
     private final IModLog logger;
     private final Map<TagKey<?>, TagData<?>> tagCache = new Reference2ObjectOpenHashMap<>();
-    private final Predicate<TagKey<?>> filter;
 
     public ClientTagLoader(IModLog logger) {
-        this(logger, tagKey -> true);
-    }
-
-    public ClientTagLoader(IModLog logger, Predicate<TagKey<?>> filter) {
         this.logger = logger;
-        this.filter = filter;
     }
 
     public <T> Collection<T> getMembers(TagKey<T> tagKey) {
-        if (this.filter.test(tagKey))
-            return this.getTagData(tagKey, new HashSet<>()).members();
-        return ImmutableList.of();
+        return this.getTagData(tagKey, new HashSet<>()).members();
     }
 
     public void clear() {
