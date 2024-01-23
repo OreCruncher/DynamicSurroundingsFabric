@@ -27,7 +27,7 @@ class FloorSqueakAccent  implements IFootstepAccentProvider {
         if (isWaterLogged)
             return;
 
-        if (state.is(BlockEffectTags.FLOOR_SQUEAKS)) {
+        if (FootstepAccents.TAG_LIBRARY.is(BlockEffectTags.FLOOR_SQUEAKS, state)) {
             // 1 in 10 chance of a squeak
             if (Randomizer.current().nextInt(10) == 0) {
                 SOUND_LIBRARY.getSoundFactory(FLOOR_SQUEAK)
