@@ -1,0 +1,37 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "biomesoplenty:sea_oats",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:barley",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:orange_maple_leaf_pile",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:red_maple_leaf_pile",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:yellow_maple_leaf_pile",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:cattail",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:reed",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:eyebulb",
+      "required": false
+    }
+  ]
+}

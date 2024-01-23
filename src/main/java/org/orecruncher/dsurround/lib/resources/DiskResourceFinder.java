@@ -2,6 +2,8 @@ package org.orecruncher.dsurround.lib.resources;
 
 import com.mojang.serialization.Codec;
 import net.minecraft.resources.ResourceLocation;
+import org.orecruncher.dsurround.lib.CodecExtensions;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 
 import java.nio.file.Files;
@@ -21,25 +23,33 @@ public class DiskResourceFinder<T> extends AbstractResourceFinder<T> {
     }
 
     @Override
-    public Collection<DiscoveredResource<T>> find(ResourceLocation resource) {
-        Collection<DiscoveredResource<T>> result = new ObjectArray<>();
-        try {
-            // Make sure we are looking for a json file. Sometimes the resource will not have
-            // an extension.
-            var fileName = resource.getPath();
-            if (!fileName.endsWith(".json"))
-                fileName = fileName + ".json";
+    public Collection<DiscoveredResource<T>> find(ResourceLocation location) {
+        return this.find(location.getPath());
+    }
 
-            var filePath = Paths.get(this.diskLocation.toString(), resource.getNamespace(), this.pathPrefix, fileName);
+    @Override
+    public Collection<DiscoveredResource<T>> find(String assetPath) {
+        Collection<DiscoveredResource<T>> result = new ObjectArray<>();
+
+        var fileName = assetPath;
+        if (!fileName.endsWith(".json"))
+            fileName = fileName + ".json";
+
+        var resourceManager = GameUtils.getResourceManager();
+        var namespaces = resourceManager.getNamespaces();
+
+        for (var namespace : namespaces) {
+            var location = new ResourceLocation(namespace, assetPath);
+            var filePath = Paths.get(this.diskLocation.toString(), namespace, this.pathPrefix, fileName);
             if (Files.exists(filePath)) {
                 LOGGER.debug(RESOURCE_PARSING, "Processing %s file from disk", filePath.toString());
-                var content = Files.readString(filePath);
-                this.decode(resource, content).ifPresentOrElse(
-                        r -> result.add(new DiscoveredResource<>(resource.getNamespace(), r)),
-                        () -> LOGGER.warn("Unable to parse file %s", resource));
+                try {
+                    var content = Files.readString(filePath);
+                    CodecExtensions.deserialize(content, this.decoder).ifPresent(e -> result.add(new DiscoveredResource<>(namespace, e)));
+                } catch (Throwable t) {
+                    LOGGER.error(t, "Unable to read resource stream for path %s", location);
+                }
             }
-        } catch (Throwable t) {
-            LOGGER.error(t, "Unable to read resource stream for path %s", resource);
         }
 
         return result;

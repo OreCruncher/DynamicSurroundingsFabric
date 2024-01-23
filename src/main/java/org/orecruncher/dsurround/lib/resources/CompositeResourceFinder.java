@@ -20,6 +20,14 @@ public class CompositeResourceFinder<T> implements IResourceFinder<T> {
     }
 
     @Override
+    public Collection<DiscoveredResource<T>> find(String assetPath) {
+        Collection<DiscoveredResource<T>> results = new ObjectArray<>();
+        for (var finder : this.finders)
+            results.addAll(finder.find(assetPath));
+        return results;
+    }
+
+    @Override
     public Collection<DiscoveredResource<T>> find(ResourceLocation resource) {
         Collection<DiscoveredResource<T>> results = new ObjectArray<>();
         for (var finder : this.finders)

@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.lib.resources;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.server.packs.PackType;
 import net.minecraft.tags.TagFile;
 import net.minecraft.tags.TagKey;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -35,8 +34,7 @@ public final class ResourceUtils {
      */
     public static <T> Collection<DiscoveredResource<T>> findModResources(Codec<T> codec, final String assetPath) {
         var finder = IResourceFinder.createFinderForModConfiguration(codec, MINECRAFT_DIRECTORIES.getModDataDirectory(), "");
-        var result = finder.find(assetPath);
-        return result;
+        return finder.find(assetPath);
     }
 
     /**
@@ -51,9 +49,8 @@ public final class ResourceUtils {
      * @return Collection of accessors to retrieve resource configurations.
      */
     public static <T> Collection<DiscoveredResource<T>> findResources(Codec<T> codec, String assetPath) {
-        var finder = IResourceFinder.createFinderForType(PackType.CLIENT_RESOURCES, codec, "");
-        var result = finder.find(assetPath);
-        return result;
+        var finder = IResourceFinder.createClientFinder(codec, "");
+        return finder.find(assetPath);
     }
 
     /**

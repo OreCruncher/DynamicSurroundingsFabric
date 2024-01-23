@@ -1,9 +1,5 @@
 {
   "values": [
-    "minecraft:lily_pad",
-    {
-      "id": "biomesoplenty:huge_lily_pad",
-      "required": false
-    }
+    "minecraft:lily_pad"
   ]
 }

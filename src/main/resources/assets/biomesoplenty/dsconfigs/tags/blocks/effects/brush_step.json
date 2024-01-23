@@ -1,0 +1,32 @@
+{
+  "values": [
+    {
+      "id": "biomesoplenty:dune_grass",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:bush",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:high_grass_plant",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:willow_vine",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:spanish_moss_plant",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:watergrass",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:flesh_tendons_strand",
+      "required": false
+    }
+  ]
+}
