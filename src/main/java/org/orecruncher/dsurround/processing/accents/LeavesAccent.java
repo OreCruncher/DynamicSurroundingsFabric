@@ -26,7 +26,7 @@ public class LeavesAccent implements IFootstepAccentProvider {
         if (isWaterLogged)
             return;
 
-        if (state.is(BlockEffectTags.LEAVES_STEP)) {
+        if (FootstepAccents.TAG_LIBRARY.is(BlockEffectTags.LEAVES_STEP, state)) {
             SOUND_LIBRARY.getSoundFactory(LEAVES_FACTORY)
                             .ifPresent(acoustics::add);
         }

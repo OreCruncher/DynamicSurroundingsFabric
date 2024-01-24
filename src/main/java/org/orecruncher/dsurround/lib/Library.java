@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.lib;
 
-import com.google.common.base.Preconditions;
-import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
@@ -23,43 +21,34 @@ import org.orecruncher.dsurround.lib.util.MinecraftDirectories;
  */
 public final class Library {
 
-    private static final IModLog LOGGER = new ModLog(Constants.MOD_ID);
+    public static final String MOD_ID = Constants.MOD_ID;
+    public static final IModLog LOGGER = new ModLog(MOD_ID);
+    public static final IPlatform PLATFORM = Services.PLATFORM;
 
     /**
      * Initializes key functionality of library logic during startup.
      */
-    public static void initialize(String modId) {
+    public static void initialize() {
         LOGGER.info("Library initializing");
-        Preconditions.checkNotNull(modId);
 
         // Do this first so the rest of the library can get dependencies
-        configureServiceDependencies(modId);
+        configureServiceDependencies();
 
         // Hook server lifecycle so logs get emitted
         ClientState.STARTED.register((ignore -> LOGGER.info("Client starting")), HandlerPriority.VERY_HIGH);
         ClientState.STOPPING.register(ignore -> LOGGER.info("Client stopping"), HandlerPriority.VERY_HIGH);
     }
 
-    @NotNull
-    public static IModLog getLogger() {
-        return LOGGER;
-    }
-
-    @NotNull
-    public static IPlatform getPlatform() {
-        return Services.PLATFORM;
-    }
-
-    private static void configureServiceDependencies(String modId) {
-        var modInfo = Services.PLATFORM.getModInformation(modId)
+    private static void configureServiceDependencies() {
+        var modInfo = PLATFORM.getModInformation(MOD_ID)
                 .orElseThrow(() -> {
-                    LOGGER.warn("Unable to acquire mod information for %s!", modId);
+                    LOGGER.warn("Unable to acquire mod information for %s!", MOD_ID);
                     return new RuntimeException("Unable to acquire mod information!");
                 });
 
         ContainerManager
                 .getRootContainer()
-                .registerSingleton(IPlatform.class, Services.PLATFORM)
+                .registerSingleton(IPlatform.class, PLATFORM)
                 .registerSingleton(IModLog.class, LOGGER)
                 .registerSingleton(ModInformation.class, modInfo)
                 .registerSingleton(ISystemClock.class, SystemClock.class)

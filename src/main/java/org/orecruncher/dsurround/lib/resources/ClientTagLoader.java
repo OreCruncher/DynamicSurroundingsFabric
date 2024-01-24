@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.lib.resources;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
@@ -12,28 +11,21 @@ import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import java.util.*;
-import java.util.function.Predicate;
+
+import static org.orecruncher.dsurround.Configuration.Flags.RESOURCE_LOADING;
 
 @SuppressWarnings("unused")
 public class ClientTagLoader {
 
     private final IModLog logger;
     private final Map<TagKey<?>, TagData<?>> tagCache = new Reference2ObjectOpenHashMap<>();
-    private final Predicate<TagKey<?>> filter;
 
     public ClientTagLoader(IModLog logger) {
-        this(logger, tagKey -> true);
-    }
-
-    public ClientTagLoader(IModLog logger, Predicate<TagKey<?>> filter) {
         this.logger = logger;
-        this.filter = filter;
     }
 
     public <T> Collection<T> getMembers(TagKey<T> tagKey) {
-        if (this.filter.test(tagKey))
-            return this.getTagData(tagKey, new HashSet<>()).members();
-        return ImmutableList.of();
+        return this.getTagData(tagKey, new HashSet<>()).members();
     }
 
     public void clear() {
@@ -46,15 +38,20 @@ public class ClientTagLoader {
         // tag cache.
         var data = this.tagCache.get(tagKey);
         if (data == null) {
-            // If we already visited, there is a recursion happening. Return an empty
+            // If we already visited, there is a circular reference. Return an empty
             // tag set. This tag is already being processed up the recursion stack,
             // so we can prune.
-            if (visited.contains(tagKey))
+            if (visited.contains(tagKey)) {
+                this.logger.debug(RESOURCE_LOADING, "%s - Previously encountered; skipping", tagKey);
                 return TagData.empty();
+            }
             visited.add(tagKey);
-            this.logger.debug("Loading tag files for %s", tagKey.toString());
+            this.logger.debug(RESOURCE_LOADING, "%s - Loading tag files", tagKey);
             data = this.loadTagData(tagKey, visited);
+            this.logger.debug(RESOURCE_LOADING, "%s - Caching results; total of %d members", tagKey, data.members().size());
             this.tagCache.put(tagKey, data);
+        } else {
+            this.logger.debug(RESOURCE_LOADING, "%s - Already in cache; total of %d members", tagKey, data.members().size());
         }
         return TagData.cast(data);
     }
@@ -66,8 +63,10 @@ public class ClientTagLoader {
         var tagFiles = ResourceUtils.findClientTagFiles(tagKey);
 
         for (var tagFile : tagFiles) {
-            if (tagFile.replace())
+            if (tagFile.replace()) {
+                this.logger.debug(RESOURCE_LOADING, "%s - Replacing content of tags", tagKey);
                 entries.clear();
+            }
             entries.addAll(tagFile.entries());
         }
 
@@ -75,8 +74,11 @@ public class ClientTagLoader {
             // This could be legitimately possible. However, if there is a typo in the json, like
             // c:glass_pane vs. c:glass_panes, it could result in an empty scan.  Ask me how I
             // know.
+            this.logger.debug(RESOURCE_LOADING, "%s - Tag file is empty", tagKey);
             return TagData.empty();
         }
+
+        this.logger.debug(RESOURCE_LOADING, "%s - %d entries found", tagKey, entries.size());
 
         Set<ResourceLocation> completeIds = new HashSet<>();
         Set<ResourceLocation> immediateChildIds = new HashSet<>();
@@ -97,7 +99,10 @@ public class ClientTagLoader {
                     TagKey<?> tag = TagKey.create(tagKey.registry(), id);
                     immediateChildTags.add(tag);
                     // This will trigger recursion to generate a complete list of IDs
-                    return getTagData(tag, visited).completeIds();
+                    ClientTagLoader.this.logger.debug(RESOURCE_LOADING, "%s - Recurse %s", tagKey, tag);
+                    var result = getTagData(tag, visited).completeIds();
+                    ClientTagLoader.this.logger.debug(RESOURCE_LOADING, "%s - Completed recursion %s", tagKey, tag);
+                    return result;
                 }
             }, completeIds::add);
         }
@@ -112,6 +117,8 @@ public class ClientTagLoader {
             var rk = ResourceKey.create(tagKey.registry(), id);
             registry.getOptional(rk).ifPresent(instances::add);
         }
+
+        this.logger.debug(RESOURCE_LOADING, "%s - %d direct instances", tagKey, instances.size());
 
         return new TagData<>(
                 new ReferenceOpenHashSet<>(instances),

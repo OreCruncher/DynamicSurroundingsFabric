@@ -20,7 +20,7 @@ public class KeyBindings {
     public static final KeyMapping diagnosticHud;
 
     static {
-        var platform = Library.getPlatform();
+        var platform = Library.PLATFORM;
 
         var modMenuKey = platform.isModLoaded("modmenu") ? InputConstants.UNKNOWN.getValue() : InputConstants.KEY_EQUALS;
         modConfigurationMenu = platform.registerKeyBinding(
@@ -52,7 +52,7 @@ public class KeyBindings {
             if (factory.isPresent()) {
                 GameUtils.setScreen(factory.get().create(GameUtils.getMC(), null));
             } else {
-                Library.getLogger().info("Configuration GUI libraries not present");
+                Library.LOGGER.info("Configuration GUI libraries not present");
             }
         }
 

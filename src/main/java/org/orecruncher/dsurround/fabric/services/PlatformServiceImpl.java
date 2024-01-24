@@ -41,7 +41,7 @@ public class PlatformServiceImpl implements IPlatform {
                 var result = new ModInformation(modId, displayName, version, updateURL, curseForgeLink, modrinthLink);
                 return Optional.of(result);
             } catch(Exception ex) {
-                Library.getLogger().error(ex, "What?");
+                Library.LOGGER.error(ex, "What?");
             }
         }
         return Optional.empty();

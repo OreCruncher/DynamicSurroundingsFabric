@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.processing;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
@@ -95,7 +96,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
         var panelText = event.getSectionText(CollectDiagnosticsEvent.Section.Systems);
-        panelText.add("Block Updates: %d".formatted(this.blockUpdateCount));
+        panelText.add(Component.literal("Block Updates: %d".formatted(this.blockUpdateCount)));
         if (this.effectSystems != null)
             this.effectSystems.gatherDiagnostics(panelText);
     }

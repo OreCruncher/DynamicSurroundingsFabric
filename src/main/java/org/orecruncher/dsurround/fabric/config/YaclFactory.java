@@ -54,7 +54,7 @@ public class YaclFactory extends AbstractConfigScreenFactory {
                     try {
                         this.configData.save();
                     } catch (Throwable t) {
-                        Library.getLogger().error(t, "Unable to save configuration");
+                        Library.LOGGER.error(t, "Unable to save configuration");
                     }
                 })
                 .build()

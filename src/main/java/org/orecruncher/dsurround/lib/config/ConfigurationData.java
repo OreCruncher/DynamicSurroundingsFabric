@@ -56,7 +56,7 @@ public abstract class ConfigurationData {
         var configFolderAnnotation = clazz.getAnnotation(ConfigPlacement.class);
         if (configFolderAnnotation == null)
             throw new RuntimeException("Configuration class must have a ConfigFolder annotation");
-        return Library.getPlatform()
+        return Library.PLATFORM
                 .getConfigPath(configFolderAnnotation.folderName())
                 .resolve(configFolderAnnotation.fileName() + ".json");
     }
@@ -80,7 +80,7 @@ public abstract class ConfigurationData {
                     }
                 }
             } catch (Throwable t) {
-                Library.getLogger().error(t, "Unable to handle configuration");
+                Library.LOGGER.error(t, "Unable to handle configuration");
             }
 
             if (config == null) {
@@ -97,7 +97,7 @@ public abstract class ConfigurationData {
 
             return config;
         } catch (Throwable t) {
-            Library.getLogger().error(t, "Unable to handle configuration");
+            Library.LOGGER.error(t, "Unable to handle configuration");
         }
 
         return null;
@@ -117,7 +117,7 @@ public abstract class ConfigurationData {
                 GSON.toJson(this, writer);
             }
         } catch (Throwable t) {
-            Library.getLogger().error(t, "Unable to save configuration %s", t.getMessage());
+            Library.LOGGER.error(t, "Unable to save configuration %s", t.getMessage());
         } finally {
             CONFIG_CHANGED.raise().onChange(this);
         }

@@ -1,0 +1,9 @@
+[
+  {
+    "biomeSelector": "biome.id == 'biomesoplenty:old_growth_woodland'",
+    "_comment": "Add forest trait",
+    "traits": [
+      "FOREST"
+    ]
+  }
+]

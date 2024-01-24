@@ -51,7 +51,7 @@ public interface IPlatform {
             try {
                 Files.createDirectory(configPath);
             } catch (final IOException ex) {
-                Library.getLogger().error(ex, "Unable to create directory path %s", configPath.toString());
+                Library.LOGGER.error(ex, "Unable to create directory path %s", configPath.toString());
                 configPath = configDir;
             }
 

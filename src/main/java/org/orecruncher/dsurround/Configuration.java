@@ -52,6 +52,7 @@ public class Configuration extends ConfigurationData {
     public static class Flags {
         public static final int AUDIO_PLAYER = 0x1;
         public static final int BASIC_SOUND_PLAY = 0x2;
+        public static final int RESOURCE_LOADING = 0x4;
     }
 
     public static class Logging {
@@ -67,6 +68,10 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable chat window notification of newer updates available")
         public boolean enableModUpdateChatMessage = true;
+
+        @Property
+        @Comment("Enable/disable filtering display of tags in the diagnostics overlay")
+        public boolean filteredTagView = true;
     }
 
     public static class SoundSystem {

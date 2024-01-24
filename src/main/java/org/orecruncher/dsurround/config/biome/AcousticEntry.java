@@ -10,12 +10,12 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 
 public class AcousticEntry implements WeightTable.IItem<ISoundFactory> {
 
+    private static final IConditionEvaluator CONDITION_EVALUATOR = ContainerManager.resolve(IConditionEvaluator.class);
     private static final int DEFAULT_WEIGHT = 10;
 
     private final int weight;
     private final ISoundFactory acoustic;
     private final Script conditions;
-    private final IConditionEvaluator conditionEvaluator;
 
     public AcousticEntry(final ISoundFactory acoustic, @Nullable final Script condition) {
         this(acoustic, condition, DEFAULT_WEIGHT);
@@ -25,7 +25,6 @@ public class AcousticEntry implements WeightTable.IItem<ISoundFactory> {
         this.acoustic = acoustic;
         this.weight = weight;
         this.conditions = condition != null ? condition : Script.TRUE;
-        this.conditionEvaluator = ContainerManager.resolve(IConditionEvaluator.class);
     }
 
     @Override
@@ -47,7 +46,7 @@ public class AcousticEntry implements WeightTable.IItem<ISoundFactory> {
     }
 
     public boolean matches() {
-        return this.conditions == Script.TRUE || this.conditionEvaluator.check(this.conditions);
+        return this.conditions == Script.TRUE || CONDITION_EVALUATOR.check(this.conditions);
     }
 
     protected Script getConditionsForLogging() {

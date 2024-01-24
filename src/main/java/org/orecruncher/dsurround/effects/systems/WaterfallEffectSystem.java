@@ -326,6 +326,9 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
                 default -> this.particleLimit / 2;
             };
 
+            if (count < 4)
+                return count;
+
             var x = count / 2;
             return RANDOM.nextInt(count - x) + x;
         }

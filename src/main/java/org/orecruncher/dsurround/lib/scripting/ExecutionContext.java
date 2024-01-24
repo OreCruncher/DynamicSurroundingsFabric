@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public final class ExecutionContext implements IVariableAccess {
 
-    private static final IModLog LOGGER = Library.getLogger();
+    private static final IModLog LOGGER = Library.LOGGER;
 
     private final String contextName;
     private final ScriptEngine engine;

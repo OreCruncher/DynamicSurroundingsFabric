@@ -9,7 +9,6 @@ import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.resources.IResourceAccessor;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 
@@ -37,8 +36,8 @@ public final class DimensionLibrary implements IDimensionLibrary {
         this.configs.clear();
         this.dimensionRules.clear();
 
-        final Collection<IResourceAccessor> accessors = ResourceUtils.findResources(this.directories.getModDataDirectory().toFile(), FILE_NAME);
-        IResourceAccessor.process(accessors, accessor -> accessor.as(CODEC).ifPresent(this.dimensionRules::addAll));
+        var findResults = ResourceUtils.findModResources(CODEC, FILE_NAME);
+        findResults.forEach(result -> this.dimensionRules.addAll(result.resourceContent()));
 
         this.version++;
 

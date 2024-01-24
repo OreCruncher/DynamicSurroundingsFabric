@@ -4,7 +4,6 @@
       "id": "#c:glass_blocks",
       "required": false
     },
-    "#minecraft:terracotta",
     "minecraft:dripstone_block",
     "minecraft:pointed_dripstone",
     "minecraft:copper_door"

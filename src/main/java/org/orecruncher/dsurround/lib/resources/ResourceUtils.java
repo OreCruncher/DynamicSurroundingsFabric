@@ -1,37 +1,18 @@
 package org.orecruncher.dsurround.lib.resources;
 
-import com.google.gson.JsonParser;
-import com.mojang.serialization.Dynamic;
-import com.mojang.serialization.JsonOps;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.resources.Resource;
-import net.minecraft.server.packs.resources.ResourceManager;
+import com.mojang.serialization.Codec;
 import net.minecraft.tags.TagFile;
 import net.minecraft.tags.TagKey;
-import net.minecraft.tags.TagManager;
-import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.platform.IPlatform;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 
-import java.io.File;
-import java.nio.file.Files;
 import java.util.*;
-import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 public final class ResourceUtils {
 
-    /**
-     * Name of the resource container where Dynamic Surrounding's configuration jsons can be located in other mod
-     * assets.
-     */
-    public static final String CONFIG_RESOURCE_CONTAINER_NAME = "dsconfigs";
-
-    static final IModLog LOGGER = Library.getLogger();
-    private static final IPlatform PLATFORM = Library.getPlatform();
+    private static final IMinecraftDirectories MINECRAFT_DIRECTORIES = ContainerManager.resolve(IMinecraftDirectories.class);
 
     /**
      * <p>
@@ -48,14 +29,12 @@ public final class ResourceUtils {
      * within will be loaded if "minecraft" mod is loaded (which is always the case).
      * (Example: .minecraft/assetPath/dsurround/configs/minecraft/*.json)
      * </p>
-     * @param diskPath Location on disk where external configs can be cached
      * @param assetPath Path to the asset that is of interest
      * @return A collection of resource accessors that match the assetPath criteria
      */
-    public static Collection<IResourceAccessor> findResources(final File diskPath, final String assetPath) {
-        var packResources = new ArrayList<>(collectFromResourcePacks(assetPath));
-        packResources.addAll(collectFromDisk(diskPath, assetPath));
-        return packResources;
+    public static <T> Collection<DiscoveredResource<T>> findModResources(Codec<T> codec, final String assetPath) {
+        var finder = IResourceFinder.createFinderForModConfiguration(codec, MINECRAFT_DIRECTORIES.getModDataDirectory(), "");
+        return finder.find(assetPath);
     }
 
     /**
@@ -69,8 +48,9 @@ public final class ResourceUtils {
      * @param assetPath The path of the asset to find within the various resource locations
      * @return Collection of accessors to retrieve resource configurations.
      */
-    public static Collection<IResourceAccessor> findResources(String assetPath) {
-        return findResources(GameUtils.getResourceManager(), assetPath, location -> PLATFORM.isModLoaded(location.getNamespace()));
+    public static <T> Collection<DiscoveredResource<T>> findResources(Codec<T> codec, String assetPath) {
+        var finder = IResourceFinder.createClientFinder(codec, "");
+        return finder.find(assetPath);
     }
 
     /**
@@ -82,71 +62,8 @@ public final class ResourceUtils {
      * @return Collection of TagFile instances that were found
      */
     public static Collection<TagFile> findClientTagFiles(TagKey<?> tagKey) {
-
-        final Collection<TagFile> results = new ObjectArray<>();
-
-        var tagIdentifier = tagKey.location();
-        var tagType = TagManager.getTagDir(tagKey.registry());
-        var tagFilePath = "%s/%s/%s/%s.json".formatted(PackType.SERVER_DATA.getDirectory(), tagIdentifier.getNamespace(), tagType, tagIdentifier.getPath());
-
-        for (var path : PLATFORM.findResourcePaths(tagFilePath)) {
-            try (var tagReader = Files.newBufferedReader(path)) {
-                var jsonElement = JsonParser.parseReader(tagReader);
-                TagFile.CODEC.parse(new Dynamic<>(JsonOps.INSTANCE, jsonElement))
-                        .result().ifPresentOrElse(results::add, () -> LOGGER.warn("Unable to parse tag file %s", path));
-            } catch (Throwable t) {
-                LOGGER.error(t, "Unable to read tag file %s", path.toString());
-            }
-        }
-
-        return results;
-    }
-
-    private static Collection<IResourceAccessor> collectFromResourcePacks(final String assetPath) {
-        return findResources("%s/%s".formatted(CONFIG_RESOURCE_CONTAINER_NAME, assetPath));
-    }
-
-    private static Collection<IResourceAccessor> collectFromDisk(File diskPath, final String assetPath) {
-        Map<ResourceLocation, IResourceAccessor> result = new HashMap<>();
-        var loadedMods = PLATFORM.getModIdList(true);
-        for (var mod : loadedMods) {
-            ResourceLocation location = new ResourceLocation(mod, assetPath);
-            IResourceAccessor accessor = IResourceAccessor.createExternalResource(diskPath, location);
-            if (accessor.exists())
-                result.put(location, accessor);
-        }
-
-        return result.values();
-    }
-
-    private static Collection<IResourceAccessor> findResources(ResourceManager resourceManager, String assetPath) {
-        return findResources(resourceManager, assetPath, location -> true);
-    }
-
-    private static Collection<IResourceAccessor> findResources(ResourceManager resourceManager, String assetPath, Predicate<ResourceLocation> locationFilter) {
-
-        var results = new HashMap<ResourceLocation, Collection<IResourceAccessor>>();
-        var namespaces = resourceManager.getNamespaces();
-
-        for (var namespace : namespaces) {
-            var location = new ResourceLocation(namespace, assetPath);
-            if (!locationFilter.test(location))
-                continue;
-            List<Resource> list = resourceManager.getResourceStack(location);
-            if (!list.isEmpty()) {
-                var resultList = results.computeIfAbsent(location, i -> new ObjectArray<>());
-                for (var resource : list) {
-                    try (var inputStream = resource.open()) {
-                        var asset = inputStream.readAllBytes();
-                        IResourceAccessor accessor = IResourceAccessor.createRawBytes(location, asset);
-                        resultList.add(accessor);
-                    } catch (Throwable t) {
-                        LOGGER.error(t, "Unable to read resource stream for path %s", location);
-                    }
-                }
-            }
-        }
-
-        return results.values().stream().flatMap(Collection::stream).toList();
+        var finder = IResourceFinder.createFinderForTag(tagKey, MINECRAFT_DIRECTORIES.getModDataDirectory());
+        var result = finder.find(tagKey.location());
+        return result.stream().map(DiscoveredResource::resourceContent).collect(Collectors.toList());
     }
 }

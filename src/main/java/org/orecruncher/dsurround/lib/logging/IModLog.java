@@ -6,6 +6,10 @@ import java.util.function.Supplier;
 
 public interface IModLog {
 
+    boolean isDebugging();
+
+    boolean isTracing(int mask);
+
     default void info(final String msg, @Nullable final Object... parms) {
     }
 
@@ -31,7 +35,8 @@ public interface IModLog {
     }
 
     default void debug(final int mask, final Supplier<String> message) {
-        debug(message.get());
+        if (this.isTracing(mask))
+            debug(message.get());
     }
 
     default void error(final Throwable e, final String msg, @Nullable final Object... parms) {

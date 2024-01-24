@@ -1,8 +1,6 @@
 {
   "replace": false,
   "values": [
-    "minecraft:sugar_cane",
-    "minecraft:dead_bush",
     {
       "id": "biomesoplenty:sea_oats",
       "required": false

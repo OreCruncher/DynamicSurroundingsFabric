@@ -23,7 +23,7 @@ abstract class AbstractClientCommand {
             ctx.getSource().sendFeedback(result);
             return 0;
         } catch(Exception ex) {
-            Library.getLogger().error(ex, "Unable to execute command %s", ctx.getCommand().toString());
+            Library.LOGGER.error(ex, "Unable to execute command %s", ctx.getCommand().toString());
             ctx.getSource().sendFeedback(Component.literal(ex.getMessage()));
             return 1;
         }

@@ -19,6 +19,7 @@ public final class BiomeTraits {
     }
 
     private final Set<BiomeTrait> traits;
+    private boolean updatedByMerge;
 
     BiomeTraits(Collection<BiomeTrait> traits) {
         this.traits = new HashSet<>(traits);
@@ -39,7 +40,9 @@ public final class BiomeTraits {
     }
 
     public void mergeTraits(Collection<BiomeTrait> traits) {
+        int count = this.traits.size();
         this.traits.addAll(traits);
+        this.updatedByMerge = this.updatedByMerge || count != this.traits.size();
     }
 
     public boolean contains(String trait) {
@@ -61,6 +64,7 @@ public final class BiomeTraits {
                 .map(BiomeTrait::getName)
                 .collect(Collectors.joining(", "));
 
-        return String.format("[%s]", temp);
+        var fmt = this.updatedByMerge ? "*[%s]" : "[%s]";
+        return fmt.formatted(temp);
     }
 }

@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
@@ -44,6 +45,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Environment, ColorPalette.AQUAMARINE);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Emitters, ColorPalette.SEASHELL);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Sounds, ColorPalette.APRICOT);
+        COLOR_MAP.put(CollectDiagnosticsEvent.Section.HeldItem, ColorPalette.ANTIQUE_WHITE);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.BlockView, ColorPalette.BRASS);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.FluidView, ColorPalette.TURQUOISE);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.EntityView, ColorPalette.RASPBERRY);
@@ -59,6 +61,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Timers);
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Survey);
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Misc);
+        RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.HeldItem);
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.BlockView);
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.FluidView);
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.EntityView);
@@ -73,16 +76,17 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     private final ObjectArray<Component> left = new ObjectArray<>(64);
     private final ObjectArray<Component> right = new ObjectArray<>(64);
     private boolean showHud;
-    private boolean enableCollection = false;
+    private boolean enableCollection;
 
     public DiagnosticsOverlay(ModInformation modInformation, IPlatform platform) {
         this.platform = platform;
         var platformName = platform.getPlatformName();
         this.branding = "%s (%s)".formatted(modInformation.getBranding(), platformName);
         this.showHud = false;
+        this.enableCollection = false;
 
         this.plugins.add(new ClientProfilerPlugin());
-        this.plugins.add(new ViewerPlugin(ContainerManager.resolve(IBlockLibrary.class), ContainerManager.resolve(ITagLibrary.class), ContainerManager.resolve(IEntityEffectLibrary.class)));
+        this.plugins.add(new ViewerPlugin(ContainerManager.resolve(Configuration.Logging.class), ContainerManager.resolve(IBlockLibrary.class), ContainerManager.resolve(ITagLibrary.class), ContainerManager.resolve(IEntityEffectLibrary.class)));
         this.plugins.add(new RuntimeDiagnosticsPlugin(ContainerManager.resolve(IConditionEvaluator.class)));
         this.plugins.add(new SoundEngineDiagnosticsPlugin());
     }
@@ -115,7 +119,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
 
             ClientEventHooks.COLLECT_DIAGNOSTICS.raise().onCollect(this.reusableEvent);
 
-            this.reusableEvent.add(diagnostics);
+            this.reusableEvent.add(this.diagnostics);
 
             this.left.clear();
             this.right.clear();
@@ -143,8 +147,12 @@ public class DiagnosticsOverlay extends AbstractOverlay {
                     result.add(Component.literal(p.name()).withStyle(style.withUnderlined(true)));
                 }
 
-                for (var d : data)
-                    result.add(Component.literal(d).withStyle(style));
+                for (var d : data) {
+                    if (d.getStyle().isEmpty())
+                        result.add(d.copy().withStyle(style));
+                    else
+                        result.add(d);
+                }
             }
         }
     }

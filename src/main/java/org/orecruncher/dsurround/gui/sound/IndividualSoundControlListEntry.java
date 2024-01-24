@@ -34,7 +34,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
 
     private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
     private static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
-    private static final IPlatform PLATFORM = Library.getPlatform();
+    private static final IPlatform PLATFORM = Library.PLATFORM;
 
     private static final int BUTTON_WIDTH = 60;
     private static final int TOOLTIP_WIDTH = 300;

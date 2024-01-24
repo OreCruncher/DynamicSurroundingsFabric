@@ -38,14 +38,25 @@ public final class Client {
 
     public Client() {
         // Bootstrap library functions
-        this.logger = Library.getLogger();
-        Library.initialize(Constants.MOD_ID);
+        this.logger = Library.LOGGER;
+        Library.initialize();
     }
 
     public void initializeClient() {
         this.logger.info("Client initializing...");
 
-        // Hook the config load event so set we can set the debug flags on logging
+        // Setup debug trace on the logger. It's not guaranteed that we
+        // are the first obtaining the log file, so we can't rely
+        // on the event hook.  (ModMenu can trigger this when it looks for
+        // the hook in our mod before we had a chance to initialize.)
+        Config = ConfigurationData.getConfig(Configuration.class);
+        if (this.logger instanceof ModLog ml) {
+            ml.setDebug(Config.logging.enableDebugLogging);
+            ml.setTraceMask(Config.logging.traceMask);
+        }
+
+        // Hook the config load event so set we can set the debug flags when
+        // the config changes.
         Configuration.CONFIG_CHANGED.register(cfg -> {
             if (cfg instanceof Configuration config) {
                 if (this.logger instanceof ModLog ml) {
@@ -57,14 +68,13 @@ public final class Client {
 
         Handlers.registerHandlers();
 
-        Config = ConfigurationData.getConfig(Configuration.class);
-
         ClientState.STARTED.register(this::onComplete, HandlerPriority.VERY_HIGH);
         ClientState.ON_CONNECT.register(this::onConnect, HandlerPriority.LOW);
 
         // Register core services
         ContainerManager.getRootContainer()
                 .registerSingleton(Config)
+                .registerSingleton(Config.logging)
                 .registerSingleton(Config.soundSystem)
                 .registerSingleton(Config.enhancedSounds)
                 .registerSingleton(Config.thunderStorms)
