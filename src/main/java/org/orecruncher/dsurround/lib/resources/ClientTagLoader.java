@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagEntry;
 import net.minecraft.tags.TagKey;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import java.util.*;
@@ -58,57 +59,60 @@ public class ClientTagLoader {
 
     // This is based on TagLoader. Inspiration from Fabric client tag API.
     private <T> TagData<T> loadTagData(TagKey<T> tagKey, Set<TagKey<?>> visited) {
-        Set<TagEntry> entries = new HashSet<>();
 
-        var tagFiles = ResourceUtils.findClientTagFiles(tagKey);
+        Set<ResourceLocation> completeIds = new HashSet<>();
 
-        for (var tagFile : tagFiles) {
-            if (tagFile.replace()) {
-                this.logger.debug(RESOURCE_LOADING, "%s - Replacing content of tags", tagKey);
-                entries.clear();
+        // If this not a mod tag, we need to scan registries. Minecraft should have already scanned
+        // and baked everything outside our mod.
+        if (!tagKey.location().getNamespace().equals(Library.MOD_ID)) {
+            this.logger.debug(RESOURCE_LOADING, "%s - Not a mod tag; scanning registries", tagKey);
+            var registry = RegistryUtils.getRegistry(tagKey.registry()).orElseThrow();
+            var entities = registry.holders()
+                    .filter(h -> h.is(tagKey))
+                    .map(h -> h.unwrapKey().get().location())
+                    .toList();
+            completeIds.addAll(entities);
+        } else {
+            // We never replace tag info, so we ignore and just merge in with what
+            // has been discovered.
+            Set<TagEntry> entries = new HashSet<>();
+            var tagFiles = ResourceUtils.findClientTagFiles(tagKey);
+            tagFiles.forEach(tf -> entries.addAll(tf.entries()));
+
+            if (!entries.isEmpty()) {
+                this.logger.debug(RESOURCE_LOADING, "%s - %d entries found", tagKey, entries.size());
+
+                var lookup = new TagEntry.Lookup<ResourceLocation>() {
+                    @Nullable
+                    @Override
+                    public ResourceLocation element(ResourceLocation id) {
+                        return id;
+                    }
+                    @Nullable
+                    @Override
+                    public Collection<ResourceLocation> tag(ResourceLocation id) {
+                        TagKey<?> tag = TagKey.create(tagKey.registry(), id);
+                        // This will trigger recursion to generate a complete list of IDs
+                        ClientTagLoader.this.logger.debug(RESOURCE_LOADING, "%s - Recurse %s", tagKey, tag);
+                        var result = ClientTagLoader.this.getTagData(tag, visited).completeIds();
+                        ClientTagLoader.this.logger.debug(RESOURCE_LOADING, "%s - Completed recursion %s", tagKey, tag);
+                        return result;
+                    }
+                };
+
+                for (TagEntry tagEntry : entries) {
+                    tagEntry.build(lookup, completeIds::add);
+                }
             }
-            entries.addAll(tagFile.entries());
         }
 
-        if (entries.isEmpty()) {
+        if (completeIds.isEmpty()) {
             // This could be legitimately possible. However, if there is a typo in the json, like
             // c:glass_pane vs. c:glass_panes, it could result in an empty scan.  Ask me how I
             // know.
-            this.logger.debug(RESOURCE_LOADING, "%s - Tag file is empty", tagKey);
+            this.logger.debug(RESOURCE_LOADING, "%s - Tag is empty", tagKey);
             return TagData.empty();
         }
-
-        this.logger.debug(RESOURCE_LOADING, "%s - %d entries found", tagKey, entries.size());
-
-        Set<ResourceLocation> completeIds = new HashSet<>();
-        Set<ResourceLocation> immediateChildIds = new HashSet<>();
-        Set<TagKey<?>> immediateChildTags = new HashSet<>();
-
-        for (TagEntry tagEntry : entries) {
-            tagEntry.build(new TagEntry.Lookup<>() {
-                @Nullable
-                @Override
-                public ResourceLocation element(ResourceLocation id) {
-                    immediateChildIds.add(id);
-                    return id;
-                }
-
-                @Nullable
-                @Override
-                public Collection<ResourceLocation> tag(ResourceLocation id) {
-                    TagKey<?> tag = TagKey.create(tagKey.registry(), id);
-                    immediateChildTags.add(tag);
-                    // This will trigger recursion to generate a complete list of IDs
-                    ClientTagLoader.this.logger.debug(RESOURCE_LOADING, "%s - Recurse %s", tagKey, tag);
-                    var result = getTagData(tag, visited).completeIds();
-                    ClientTagLoader.this.logger.debug(RESOURCE_LOADING, "%s - Completed recursion %s", tagKey, tag);
-                    return result;
-                }
-            }, completeIds::add);
-        }
-
-        // Make sure the current tag is not in the immediate list
-        immediateChildTags.remove(tagKey);
 
         // Manifest the completeId list into object instances for identity lookup
         var registry = RegistryUtils.getRegistry(tagKey.registry()).orElseThrow();
@@ -122,17 +126,13 @@ public class ClientTagLoader {
 
         return new TagData<>(
                 new ReferenceOpenHashSet<>(instances),
-                ImmutableSet.copyOf(completeIds),
-                ImmutableSet.copyOf(immediateChildTags),
-                ImmutableSet.copyOf(immediateChildIds));
+                ImmutableSet.copyOf(completeIds));
     }
 
     private record TagData<T>(
             Set<T> members,
-            Set<ResourceLocation> completeIds,
-            Set<TagKey<?>> immediateChildTags,
-            Set<ResourceLocation> immediateChildIds) {
-        private static final TagData<?> EMPTY = new TagData<>(ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of());
+            Set<ResourceLocation> completeIds) {
+        private static final TagData<?> EMPTY = new TagData<>(ImmutableSet.of(), ImmutableSet.of());
 
         public static <T> TagData<T> empty() {
             return cast(EMPTY);
