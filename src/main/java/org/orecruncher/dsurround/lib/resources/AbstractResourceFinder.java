@@ -8,7 +8,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import java.util.Optional;
 
-import static org.orecruncher.dsurround.Configuration.Flags.RESOURCE_PARSING;
+import static org.orecruncher.dsurround.Configuration.Flags.RESOURCE_LOADING;
 
 public abstract class AbstractResourceFinder<T> implements IResourceFinder<T> {
 
@@ -23,7 +23,13 @@ public abstract class AbstractResourceFinder<T> implements IResourceFinder<T> {
     }
 
     protected Optional<T> decode(ResourceLocation location, String content) {
-        LOGGER.debug(RESOURCE_PARSING, "Parsing resource %s", location);
-        return CodecExtensions.deserialize(content, this.decoder);
+        LOGGER.debug(RESOURCE_LOADING, "[%s] - Decoding resource", location);
+        var result = CodecExtensions.deserialize(content, this.decoder);
+        if (LOGGER.isTracing(RESOURCE_LOADING))
+            if (result.isPresent())
+                LOGGER.debug(RESOURCE_LOADING, "[%s] - Content successfully decoded", location);
+            else
+                LOGGER.debug(RESOURCE_LOADING, "[%s] - No content", location);
+        return result;
     }
 }

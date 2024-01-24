@@ -9,7 +9,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import java.nio.file.Files;
 import java.util.Collection;
 
-import static org.orecruncher.dsurround.Configuration.Flags.RESOURCE_PARSING;
+import static org.orecruncher.dsurround.Configuration.Flags.RESOURCE_LOADING;
 
 public class ServerResourceFinder<T> extends AbstractResourceFinder<T> {
     protected ServerResourceFinder(Codec<T> decoder, String pathPrefix) {
@@ -30,14 +30,13 @@ public class ServerResourceFinder<T> extends AbstractResourceFinder<T> {
             tagFilePath = tagFilePath + ".json";
 
         for (var path : this.getPlatform().findResourcePaths(tagFilePath)) {
-            LOGGER.debug(RESOURCE_PARSING, "Processing %s from resource pack", path.toString());
+            LOGGER.debug(RESOURCE_LOADING, "[%s] - Processing %s", resource, path.toString());
             try {
                 var content = Files.readString(path);
-                this.decode(resource, content).ifPresentOrElse(
-                        r -> results.add(new DiscoveredResource<>(resource.getNamespace(), r)),
-                        () -> LOGGER.warn("Unable to parse file %s", resource));
+                this.decode(resource, content).ifPresent(r -> results.add(new DiscoveredResource<>(resource.getNamespace(), r)));
+                LOGGER.debug(RESOURCE_LOADING, "[%s] - Completed decode of %s", resource, path);
             } catch (Throwable t) {
-                LOGGER.error(t, "Unable to read file %s", path.toString());
+                LOGGER.error(t, "[%s] - Unable to read %s", resource, path.toString());
             }
         }
 

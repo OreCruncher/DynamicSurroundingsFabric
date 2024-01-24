@@ -44,6 +44,10 @@ public final class ModLog implements IModLog {
         return this.debugging;
     }
 
+    public boolean isTracing(int mask) {
+        return this.isDebugging() && (this.traceMask & mask) != 0;
+    }
+
     @Override
     public void info(final String msg, @Nullable final Object... params) {
         outputLines(this.logger::info, msg, params);

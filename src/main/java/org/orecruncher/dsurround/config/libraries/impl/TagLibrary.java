@@ -17,6 +17,7 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
+import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ClientTagLoader;
@@ -39,6 +40,10 @@ public class TagLibrary implements ITagLibrary {
         this.logger = logger;
         this.tagCache = new Reference2ObjectOpenHashMap<>();
         this.tagLoader = new ClientTagLoader(this.logger);
+
+        // Need to clear the tag caches on disconnect. It's possible that
+        // cached biome information will change with the next connection.
+        ClientState.ON_DISCONNECT.register(client -> this.reload());
     }
 
     @Override
