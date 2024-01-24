@@ -1,0 +1,12 @@
+{
+    "values": [
+        {
+            "id": "#natures_spirit:is_alpine",
+            "required": false
+        },
+        {
+            "id": "#natures_spirit:is_highlands",
+            "required": false
+        }
+    ]
+}
