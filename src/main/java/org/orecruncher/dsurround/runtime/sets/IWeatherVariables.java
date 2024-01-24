@@ -56,20 +56,21 @@ public interface IWeatherVariables {
     float getTemperature();
 
     /**
+     * Gets the current season
+     */
+    String getSeason();
+
+    /**
      * Indicates if the temperature at the player location is cold enough to show frost breath, etc.
      *
      * @return true if the current temperature conditions are frosty, false otherwise
      */
-    default boolean isFrosty() {
-        return getTemperature() < 0.2;
-    }
+    boolean isFrosty();
 
     /**
      * Indicaets if the temperature at the player location is cold enough for water to freeze.
      *
      * @return true if the current temperature allows water freezing, false otherwise.
      */
-    default boolean canWaterFreeze() {
-        return getTemperature() < 0.15;
-    }
+    boolean canWaterFreeze();
 }

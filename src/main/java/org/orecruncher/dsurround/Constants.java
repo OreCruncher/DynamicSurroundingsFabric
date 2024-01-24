@@ -28,6 +28,7 @@ public final class Constants {
     public static final String CLOTH_CONFIG = "cloth-config";
     public static final String YACL = "yet_another_config_lib_v3";
     public static final String SINYTRA_CONNECTOR = "connectormod";
+    public static final String SERENE_SEASONS = "sereneseasons";
 
     /**
      * Collection of MOD IDs that are of interest.  Ease of iteration.
@@ -46,7 +47,8 @@ public final class Constants {
                 MOD_SOUND_PHYSICS_REMASTERED,
                 CLOTH_CONFIG,
                 YACL,
-                SINYTRA_CONNECTOR);
+                SINYTRA_CONNECTOR,
+                SERENE_SEASONS);
 
         BLOCKS_TO_IGNORE.add(Blocks.VOID_AIR);
         BLOCKS_TO_IGNORE.add(Blocks.CAVE_AIR);
