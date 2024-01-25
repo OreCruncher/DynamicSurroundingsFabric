@@ -134,6 +134,13 @@ public class Configuration extends ConfigurationData {
     }
 
     public static class SoundOptions {
+
+        @Property
+        @Slider
+        @IntegerRange(min = 0, max = 400)
+        @Comment("Ambient sounds played by the mod will be multiplied by this factor")
+        public int ambientVolumeScaling = 100;
+
         @Property
         @Comment("Enables replacement of thunder sounds with Dynamic Surroundings' version")
         public boolean replaceThunderSounds = true;
