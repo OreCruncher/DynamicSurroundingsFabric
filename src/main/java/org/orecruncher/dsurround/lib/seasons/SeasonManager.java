@@ -16,6 +16,6 @@ public class SeasonManager {
             HANDLER = new VanillaSeasons();
         }
 
-        Library.LOGGER.info("Season information provider: %s", HANDLER.getProviderName());
+        Library.LOGGER.info("Season provider: %s", HANDLER.getProviderName());
     }
 }

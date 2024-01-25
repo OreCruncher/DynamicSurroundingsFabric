@@ -8,6 +8,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.scripting.Script;
+import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
 import java.util.List;
@@ -26,9 +27,11 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
 
     private final MinecraftClock clock = new MinecraftClock();
     private final IConditionEvaluator conditionEvaluator;
+    private final ISeasonalInformation seasonalInformation;
 
-    public RuntimeDiagnosticsPlugin(IConditionEvaluator conditionEvaluator) {
+    public RuntimeDiagnosticsPlugin(IConditionEvaluator conditionEvaluator, ISeasonalInformation seasonalInformation) {
         this.conditionEvaluator = conditionEvaluator;
+        this.seasonalInformation = seasonalInformation;
         ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect, HandlerPriority.HIGH);
     }
 
@@ -37,6 +40,10 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
             var world = GameUtils.getWorld().orElseThrow();
             this.clock.update(world);
             event.add(CollectDiagnosticsEvent.Section.Header, this.clock.getFormattedTime());
+
+            var seasonInfo = this.seasonalInformation.getCurrentSeasonTranslated(world).orElse("UNKNOWN");
+            var seasonText = "Season: %s (%s)".formatted(seasonInfo, this.seasonalInformation.getProviderName());
+            event.add(CollectDiagnosticsEvent.Section.Header, seasonText);
 
             for (String script : scripts) {
                 Object result = this.conditionEvaluator.eval(new Script(script));

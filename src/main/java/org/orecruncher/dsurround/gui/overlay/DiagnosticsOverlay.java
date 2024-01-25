@@ -20,6 +20,7 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
+import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
 import java.util.EnumMap;
@@ -34,6 +35,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     private static final int BACKGROUND_COLOR = 0x90505050;     // Very dark gray with alpha
     private static final int FOREGROUND_COLOR = 0x00E0E0E0;     // Very light gray
 
+    private static final Style SPECIAL_MOD_STYLE = Style.EMPTY.withColor(ColorPalette.BRASS).withItalic(true);
     private static final Map<CollectDiagnosticsEvent.Section, TextColor> COLOR_MAP = new EnumMap<>(CollectDiagnosticsEvent.Section.class);
     private static final ObjectArray<CollectDiagnosticsEvent.Section> RIGHT_SIDE_LAYOUT = new ObjectArray<>();
     private static final ObjectArray<CollectDiagnosticsEvent.Section> LEFT_SIDE_LAYOUT = new ObjectArray<>();
@@ -86,8 +88,14 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         this.enableCollection = false;
 
         this.plugins.add(new ClientProfilerPlugin());
-        this.plugins.add(new ViewerPlugin(ContainerManager.resolve(Configuration.Logging.class), ContainerManager.resolve(IBlockLibrary.class), ContainerManager.resolve(ITagLibrary.class), ContainerManager.resolve(IEntityEffectLibrary.class)));
-        this.plugins.add(new RuntimeDiagnosticsPlugin(ContainerManager.resolve(IConditionEvaluator.class)));
+        this.plugins.add(new ViewerPlugin(
+                ContainerManager.resolve(Configuration.Logging.class),
+                ContainerManager.resolve(IBlockLibrary.class),
+                ContainerManager.resolve(ITagLibrary.class),
+                ContainerManager.resolve(IEntityEffectLibrary.class)));
+        this.plugins.add(new RuntimeDiagnosticsPlugin(
+                ContainerManager.resolve(IConditionEvaluator.class),
+                ContainerManager.resolve(ISeasonalInformation.class)));
         this.plugins.add(new SoundEngineDiagnosticsPlugin());
     }
 
@@ -115,7 +123,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
             // Check for any special mods and add indicators
             for (var modId : Constants.SPECIAL_MODS)
                 if (this.platform.isModLoaded(modId))
-                    this.reusableEvent.add(CollectDiagnosticsEvent.Section.Header, "INSTALLED: " + modId);
+                    this.reusableEvent.add(CollectDiagnosticsEvent.Section.Header, Component.literal("MOD: " + modId).withStyle(SPECIAL_MOD_STYLE));
 
             ClientEventHooks.COLLECT_DIAGNOSTICS.raise().onCollect(this.reusableEvent);
 

@@ -15,7 +15,13 @@ public class VanillaSeasons implements ISeasonalInformation {
     }
 
     @Override
-    public Optional<String> getCurrentSeason() {
+    public Optional<String> getCurrentSeason(Level world) {
+        // Vanilla doesn't have seasons, so...
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<String> getCurrentSeasonTranslated(Level world) {
         // Vanilla doesn't have seasons, so...
         return Optional.empty();
     }

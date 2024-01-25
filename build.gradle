@@ -17,6 +17,10 @@ repositories {
     maven { url "https://maven.shedaniel.me/" }
     maven { url "https://maven.terraformersmc.com/" }
     maven { url 'https://maven.isxander.dev/releases' }
+    maven {
+        name = "Forge"
+        url = "https://maven.minecraftforge.net"
+    }
 }
 
 loom {
@@ -54,6 +58,10 @@ dependencies {
         exclude(group: "net.fabricmc.fabric-api")
     }
     modImplementation("dev.isxander.yacl:yet-another-config-lib-fabric:${project.yacl_version}")
+
+    modImplementation "com.github.glitchfiend:GlitchCore-fabric:${minecraft_version}-${glitchcore_version}"
+    modImplementation "com.github.glitchfiend:SereneSeasons-fabric:${minecraft_version}-${serene_seasons_version}"
+    modImplementation "com.github.glitchfiend:BiomesOPlenty-fabric:${minecraft_version}-${bop_version}"
 }
 
 processResources {

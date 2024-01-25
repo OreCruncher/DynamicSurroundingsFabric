@@ -17,7 +17,12 @@ public interface ISeasonalInformation {
     /**
      * Gets the name of the current season, if any
      */
-    Optional<String> getCurrentSeason();
+    Optional<String> getCurrentSeason(Level world);
+
+    /**
+     * Gets the translated season name from the provider resources.
+     */
+    Optional<String> getCurrentSeasonTranslated(Level world);
 
     /**
      * Gets the temperature at the specified block location taking into account any seasonal variance.
@@ -47,6 +52,13 @@ public interface ISeasonalInformation {
     }
 
     /**
+     * Gets the possible precipitation that can occur in the biome at the specified position.
+     */
+    default Biome.Precipitation getPrecipitationAt(Level world, BlockPos blockPos) {
+        return world.getBiome(blockPos).value().getPrecipitationAt(blockPos);
+    }
+
+    /**
      * Gets the active precipitation occurring at the specified position.
      */
     default Biome.Precipitation getActivePrecipitation(Level world, BlockPos pos) {
@@ -55,10 +67,8 @@ public interface ISeasonalInformation {
             return Biome.Precipitation.NONE;
         }
 
-        final Biome biome = world.getBiome(pos).value();
-
         // If the biome has no rain...
-        if (biome.getPrecipitationAt(pos) == Biome.Precipitation.NONE)
+        if (this.getPrecipitationAt(world, pos) == Biome.Precipitation.NONE)
             return Biome.Precipitation.NONE;
 
         // Is there a block above that is blocking the rainfall?

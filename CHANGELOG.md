@@ -1,3 +1,22 @@
+> ### DynamicSurroundings-Fabric-1.20.4-0.3.0
+**Requirements**
+* JAVA 17+ (I am using Adoptium https://adoptium.net/)
+* Fabric Loader >=0.15.1
+* Fabric API >=0.91.2+1.20.4
+* 100% client side; no server side deployment needed
+
+**What's New**
+* Support for Serene Seasons. Seasonal changes will affect temperature-dependent effects (like frost breath and some biome sounds).
+
+**Changes**
+* Reworked the internal tagging for items, blocks, and biomes. The mod no longer declares tags in /data. The mod's tag configuration has been moved into client side resources. (I have my own tag scanning code for loading tag information as the mod is 100% client side.)
+* Adding resource support for Biomes O'Plenty, Nature's Spirit, Profundis, and Promenade.
+
+**Fixes**
+* Minimal particle settings can cause mod to crash with waterfall effects.
+* Disconnecting and reconnecting can result in the loss of biome sound effects.
+* Footstep sound effects would not play when connected to a remote server.
+
 > ### DynamicSurroundings-Fabric-1.20.4-0.2.2
 **Requirements**
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)
