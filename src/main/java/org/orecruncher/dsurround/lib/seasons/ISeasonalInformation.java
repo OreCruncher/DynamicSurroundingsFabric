@@ -34,14 +34,14 @@ public interface ISeasonalInformation {
      * is cold, the frost breath effect can be produced.
      */
     default boolean isColdTemperature(Level world, BlockPos blockPos) {
-        return this.getTemperature(world, blockPos) <= 0.2F;
+        return this.getTemperature(world, blockPos) < 0.2F;
     }
 
     /**
      * Indicates whether the temperature at the given position is considered cold enough for snow.
      */
     default boolean isSnowTemperature(Level world, BlockPos blockPos) {
-        return this.getTemperature(world, blockPos) <= 0.15F;
+        return this.getTemperature(world, blockPos) < 0.15F;
     }
 
     /**
