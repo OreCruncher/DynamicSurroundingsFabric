@@ -5,11 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
-import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
-import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
-import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
-import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.gui.overlay.plugins.*;
@@ -20,8 +16,6 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
-import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
-import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -71,9 +65,9 @@ public class DiagnosticsOverlay extends AbstractOverlay {
 
     private final IPlatform platform;
     private final LoggingTimerEMA diagnostics = new LoggingTimerEMA("Diagnostics");
+    private final LoggingTimerEMA rendering = new LoggingTimerEMA("Diagnostics Render");
     private final String branding;
     private final ObjectArray<IDiagnosticPlugin> plugins = new ObjectArray<>();
-
     private final CollectDiagnosticsEvent reusableEvent = new CollectDiagnosticsEvent();
     private final ObjectArray<Component> left = new ObjectArray<>(64);
     private final ObjectArray<Component> right = new ObjectArray<>(64);
@@ -87,16 +81,12 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         this.showHud = false;
         this.enableCollection = false;
 
-        this.plugins.add(new ClientProfilerPlugin());
-        this.plugins.add(new ViewerPlugin(
-                ContainerManager.resolve(Configuration.Logging.class),
-                ContainerManager.resolve(IBlockLibrary.class),
-                ContainerManager.resolve(ITagLibrary.class),
-                ContainerManager.resolve(IEntityEffectLibrary.class)));
-        this.plugins.add(new RuntimeDiagnosticsPlugin(
-                ContainerManager.resolve(IConditionEvaluator.class),
-                ContainerManager.resolve(ISeasonalInformation.class)));
-        this.plugins.add(new SoundEngineDiagnosticsPlugin());
+        // DiagnosticsOverlay is a singleton that makes the following similar to
+        // a singleton.
+        this.plugins.add(ContainerManager.resolve(ClientProfilerPlugin.class));
+        this.plugins.add(ContainerManager.resolve(ViewerPlugin.class));
+        this.plugins.add(ContainerManager.resolve(RuntimeDiagnosticsPlugin.class));
+        this.plugins.add(ContainerManager.resolve(SoundEngineDiagnosticsPlugin.class));
     }
 
     public void toggleCollection() {
@@ -125,9 +115,10 @@ public class DiagnosticsOverlay extends AbstractOverlay {
                 if (this.platform.isModLoaded(modId))
                     this.reusableEvent.add(CollectDiagnosticsEvent.Section.Header, Component.literal("MOD: " + modId).withStyle(SPECIAL_MOD_STYLE));
 
-            ClientEventHooks.COLLECT_DIAGNOSTICS.raise().onCollect(this.reusableEvent);
-
             this.reusableEvent.add(this.diagnostics);
+            this.reusableEvent.add(this.rendering);
+
+            ClientEventHooks.COLLECT_DIAGNOSTICS.raise().onCollect(this.reusableEvent);
 
             this.left.clear();
             this.right.clear();
@@ -168,8 +159,10 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     @Override
     public void render(GuiGraphics context, float partialTick) {
         if (this.showHud) {
+            this.rendering.begin();
             this.drawText(context, this.left, true);
             this.drawText(context, this.right, false);
+            this.rendering.end();
         }
     }
 

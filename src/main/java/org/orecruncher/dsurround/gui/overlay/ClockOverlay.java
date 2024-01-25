@@ -29,10 +29,10 @@ public class ClockOverlay extends AbstractOverlay {
     private final Configuration config;
     private final MinecraftClock clock;
     private final ColorGradient gradient;
+    private final ObjectArray<String> clockDisplay = new ObjectArray<>(2);
     private boolean showClock;
     private int renderWidth;
     private int renderHeight;
-    private ObjectArray<String> clockDisplay = new ObjectArray<>(2);
     private int color;
 
     public ClockOverlay(Configuration config, ITagLibrary tagLibrary, ISeasonalInformation seasonalInformation) {
@@ -57,7 +57,7 @@ public class ClockOverlay extends AbstractOverlay {
 
             this.clockDisplay.clear();
             this.clockDisplay.add(this.clock.getFormattedTime());
-            this.seasonalInformation.getCurrentSeasonTranslated(player.level()).ifPresent(s -> this.clockDisplay.add(s));
+            this.seasonalInformation.getCurrentSeasonTranslated(player.level()).ifPresent(this.clockDisplay::add);
 
             var textRender = GameUtils.getTextRenderer();
             this.renderWidth = textRender.width(this.clockDisplay.get(0));
@@ -82,7 +82,7 @@ public class ClockOverlay extends AbstractOverlay {
     }
 
     private boolean doShowClock(ItemStack stack) {
-        return !stack.isEmpty() && this.tagLibrary.is(ItemEffectTags.CLOCKS, stack);
+        return this.tagLibrary.is(ItemEffectTags.CLOCKS, stack);
     }
 
     private boolean doShowClock(Entity entity) {
