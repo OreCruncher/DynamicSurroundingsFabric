@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
+import net.minecraft.util.FormattedCharSequence;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
@@ -19,7 +20,6 @@ import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Objects;
 
 /***
  * Our debug and diagnostics overlay.  Derived from DebugHud.
@@ -69,8 +69,8 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     private final String branding;
     private final ObjectArray<IDiagnosticPlugin> plugins = new ObjectArray<>();
     private final CollectDiagnosticsEvent reusableEvent = new CollectDiagnosticsEvent();
-    private final ObjectArray<Component> left = new ObjectArray<>(64);
-    private final ObjectArray<Component> right = new ObjectArray<>(64);
+    private final ObjectArray<FormattedCharSequence> left = new ObjectArray<>(64);
+    private final ObjectArray<FormattedCharSequence> right = new ObjectArray<>(64);
     private boolean showHud;
     private boolean enableCollection;
 
@@ -130,27 +130,28 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         }
     }
 
-    private static void processOutput(ObjectArray<CollectDiagnosticsEvent.Section> sections, CollectDiagnosticsEvent event, ObjectArray<Component> result) {
+    private static void processOutput(ObjectArray<CollectDiagnosticsEvent.Section> sections, CollectDiagnosticsEvent event, ObjectArray<FormattedCharSequence> result) {
         boolean addBlankLine = false;
         for (var p : sections) {
             var data = event.getSectionText(p);
             if (!data.isEmpty()) {
                 if (addBlankLine)
-                    result.add(Component.empty());
+                    result.add(null);
                 else
                     addBlankLine = true;
 
                 var style = Style.EMPTY.withColor(COLOR_MAP.get(p));
 
                 if (p.addHeader()) {
-                    result.add(Component.literal(p.name()).withStyle(style.withUnderlined(true)));
+                    var t = Component.literal(p.name()).withStyle(style.withUnderlined(true)).getVisualOrderText();
+                    result.add(t);
                 }
 
                 for (var d : data) {
                     if (d.getStyle().isEmpty())
-                        result.add(d.copy().withStyle(style));
+                        result.add(d.copy().withStyle(style).getVisualOrderText());
                     else
-                        result.add(d);
+                        result.add(d.getVisualOrderText());
                 }
             }
         }
@@ -170,17 +171,17 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         return GameUtils.isInGame() && GameUtils.getMC().getDebugOverlay().showDebugScreen();
     }
 
-    private void drawText(GuiGraphics context, ObjectArray<Component> text, boolean left) {
+    private void drawText(GuiGraphics context, ObjectArray<FormattedCharSequence> text, boolean left) {
         var textRenderer = GameUtils.getTextRenderer();
         int m;
         int l;
         int k;
-        Component component;
+        FormattedCharSequence component;
         int j;
         int i = textRenderer.lineHeight;
         for (j = 0; j < text.size(); ++j) {
             component = text.get(j);
-            if (Objects.equals(component, Component.empty()))
+            if (component == null)
                 continue;
             k = textRenderer.width(component);
             l = left ? 2 : context.guiWidth() - 2 - k;
