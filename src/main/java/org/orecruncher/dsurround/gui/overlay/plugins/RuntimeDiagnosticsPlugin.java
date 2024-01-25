@@ -45,6 +45,9 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
             var seasonText = "Season: %s (%s)".formatted(seasonInfo, this.seasonalInformation.getProviderName());
             event.add(CollectDiagnosticsEvent.Section.Header, seasonText);
 
+            var particleLoad = "Particle Manager: %s".formatted(GameUtils.getParticleManager().countParticles());
+            event.add(CollectDiagnosticsEvent.Section.Systems, particleLoad);
+
             for (String script : scripts) {
                 Object result = this.conditionEvaluator.eval(new Script(script));
                 event.add(CollectDiagnosticsEvent.Section.Environment, result.toString());

@@ -64,8 +64,8 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     }
 
     private final IPlatform platform;
-    private final LoggingTimerEMA diagnostics = new LoggingTimerEMA("Diagnostics");
-    private final LoggingTimerEMA rendering = new LoggingTimerEMA("Diagnostics Render");
+    private final LoggingTimerEMA diagnostics = new LoggingTimerEMA("Collect Diagnostic");
+    private final LoggingTimerEMA rendering = new LoggingTimerEMA("Render Diagnostic");
     private final String branding;
     private final ObjectArray<IDiagnosticPlugin> plugins = new ObjectArray<>();
     private final CollectDiagnosticsEvent reusableEvent = new CollectDiagnosticsEvent();
@@ -102,10 +102,10 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         // We only want to take the processing hit if the debug overlay is activated
         if (this.showHud) {
 
+            this.diagnostics.begin();
+
             // Perform tick on the plugins
             this.plugins.forEach(p -> p.tick(client));
-
-            this.diagnostics.begin();
 
             this.reusableEvent.clear();
             this.reusableEvent.add(CollectDiagnosticsEvent.Section.Header, this.branding);
