@@ -27,7 +27,7 @@ public final class SoundInstanceHandler {
     private static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
     private static final ITickCount TICK_COUNT = ContainerManager.resolve(ITickCount.class);
     private static final Configuration.SoundSystem SOUND_SYSTEM_CONFIG = ContainerManager.resolve(Configuration.SoundSystem.class);
-    private static final Configuration.ThunderStorms THUNDERSTORM_CONFIG = ContainerManager.resolve(Configuration.ThunderStorms.class);
+    private static final Configuration.SoundOptions THUNDERSTORM_CONFIG = ContainerManager.resolve(Configuration.SoundOptions.class);
 
     private static final Object2LongOpenHashMap<ResourceLocation> SOUND_CULL = new Object2LongOpenHashMap<>(32);
     private static final Set<ResourceLocation> THUNDER_SOUNDS = new HashSet<>();

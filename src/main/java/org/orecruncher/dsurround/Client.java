@@ -77,7 +77,7 @@ public final class Client {
                 .registerSingleton(Config.logging)
                 .registerSingleton(Config.soundSystem)
                 .registerSingleton(Config.enhancedSounds)
-                .registerSingleton(Config.thunderStorms)
+                .registerSingleton(Config.soundOptions)
                 .registerSingleton(Config.blockEffects)
                 .registerSingleton(Config.entityEffects)
                 .registerSingleton(Config.footstepAccents)

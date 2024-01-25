@@ -22,8 +22,8 @@ public class Configuration extends ConfigurationData {
     public final EnhancedSounds enhancedSounds = new EnhancedSounds();
 
     @Property
-    @Comment("Configuration options for thunder storms")
-    public final ThunderStorms thunderStorms = new ThunderStorms();
+    @Comment("Configuration options for sounds in general")
+    public final SoundOptions soundOptions = new SoundOptions();
 
     @Property
     @Comment("Configuration options for block effects")
@@ -133,10 +133,14 @@ public class Configuration extends ConfigurationData {
         public int reverbRayTraceDistance = 256;
     }
 
-    public static class ThunderStorms {
+    public static class SoundOptions {
         @Property
         @Comment("Enables replacement of thunder sounds with Dynamic Surroundings' version")
         public boolean replaceThunderSounds = true;
+
+        @Property
+        @Comment("Enables playing sounds that are considered scary")
+        public boolean allowScarySounds = true;
     }
 
     public static class BlockEffects {

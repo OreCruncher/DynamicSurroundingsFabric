@@ -151,7 +151,7 @@
     "acoustics": [
       {
         "factory": "wolf",
-        "conditions": "weather.isNotRaining() && diurnal.isNight()",
+        "conditions": "weather.isNotRaining() && diurnal.isNight() && global.allowScary()",
         "type": "mood"
       }
     ]
@@ -361,7 +361,7 @@
     "acoustics": [
       {
         "factory": "monstergrowl",
-        "conditions": "diurnal.isNight()",
+        "conditions": "diurnal.isNight() && global.allowScary()",
         "type": "mood",
         "weight": 10
       }
@@ -392,7 +392,7 @@
       },
       {
         "factory": "monstergrowl",
-        "conditions": "diurnal.isNight()",
+        "conditions": "diurnal.isNight() && global.allowScary()",
         "type": "mood",
         "weight": 10
       }
