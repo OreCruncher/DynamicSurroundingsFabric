@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
@@ -168,6 +169,11 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
         var candidates = sourceList.stream().filter(AcousticEntry::matches);
         return WeightTable.makeSelection(candidates);
+    }
+
+    @Override
+    public Optional<Music> getBackgroundMusic(IRandomizer random) {
+        return this.getExtraSound(SoundEventType.MUSIC, random).map(ISoundFactory::createAsMusic);
     }
 
     void clearSounds() {

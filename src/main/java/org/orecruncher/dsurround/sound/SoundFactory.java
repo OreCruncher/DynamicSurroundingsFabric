@@ -7,7 +7,9 @@ import net.minecraft.client.resources.sounds.EntityBoundSoundInstance;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.valueproviders.ConstantFloat;
@@ -109,6 +111,12 @@ public record SoundFactory(
                 position.y(),
                 position.z(),
                 this.global);
+    }
+
+    @Override
+    public Music createAsMusic(int minDelay, int maxDelay, boolean replaceCurrent) {
+        var holder = Holder.direct(this.soundEvent);
+        return new Music(holder, minDelay, maxDelay, replaceCurrent);
     }
 
     private float getVolume() {

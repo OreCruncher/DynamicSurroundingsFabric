@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.config.biome;
 
+import net.minecraft.sounds.Music;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.sound.ISoundFactory;
@@ -25,4 +26,9 @@ public interface IBiomeSoundProvider {
      * @return SoundEvent that matches crtieria, if any
      */
     Optional<ISoundFactory> getExtraSound(SoundEventType type, IRandomizer random);
+
+    /**
+     * Creates a Music instance to be used with Minecraft's music manager
+     */
+    Optional<Music> getBackgroundMusic(IRandomizer randomizer);
 }

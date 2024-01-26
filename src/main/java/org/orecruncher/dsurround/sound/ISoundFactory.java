@@ -4,6 +4,7 @@ import net.minecraft.client.resources.sounds.EntityBoundSoundInstance;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.Music;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.lib.math.MathStuff;
@@ -89,5 +90,14 @@ public interface ISoundFactory {
      * factory settings.
      */
     SimpleSoundInstance createAtLocation(Vec3 position, float volumeScale);
+
+    /**
+     * Creates a Music instance to be used with Minecraft's music manager
+     */
+    Music createAsMusic(int minDelay, int maxDelay, boolean replaceCurrent);
+
+    default Music createAsMusic() {
+        return this.createAsMusic(6000, 24000, false);
+    }
 
 }
