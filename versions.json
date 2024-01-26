@@ -2,6 +2,7 @@
   "downloadLocation": "https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings-fabric-edition/files",
   "releases": {
     "1.20.4": {
+      "0.3.0": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CHANGELOG.md#dynamicsurroundings-fabric-1204-030",
       "0.2.2": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CHANGELOG.md#dynamicsurroundings-fabric-1204-022",
       "0.2.1": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CHANGELOG.md#dynamicsurroundings-fabric-1204-021",
       "0.2.0": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CHANGELOG.md#dynamicsurroundings-fabric-1204-020",
@@ -12,6 +13,7 @@
       "0.0.6": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CHANGELOG.md#dynamicsurroundings-fabric-1204-006"
     },
     "1.20.1": {
+      "0.3.0": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/MC/fabric/1.20.1/CHANGELOG.md#dynamicsurroundings-fabric-1201-030",
       "0.2.2": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/MC/fabric/1.20.1/CHANGELOG.md#dynamicsurroundings-fabric-1201-022"
     },
     "1.17.1": {
