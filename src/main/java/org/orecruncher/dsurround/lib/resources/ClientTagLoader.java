@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagEntry;
 import net.minecraft.tags.TagKey;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
@@ -27,6 +28,10 @@ public class ClientTagLoader {
 
     public <T> Collection<T> getMembers(TagKey<T> tagKey) {
         return this.getTagData(tagKey, new HashSet<>()).members();
+    }
+
+    public <T> Collection<ResourceLocation> getCompleteIds(TagKey<T> tagKey) {
+        return this.getTagData(tagKey, new HashSet<>()).completeIds();
     }
 
     public void clear() {
@@ -62,10 +67,10 @@ public class ClientTagLoader {
 
         Set<ResourceLocation> completeIds = new HashSet<>();
 
-        // If this not a mod tag, we need to scan registries. Minecraft should have already scanned
-        // and baked everything outside our mod.
-        if (!tagKey.location().getNamespace().equals(Library.MOD_ID)) {
-            this.logger.debug(RESOURCE_LOADING, "%s - Not a mod tag; scanning registries", tagKey);
+        // If we can take a shortcut by looking up tag membership in the registries, do so. It's
+        // faster than scanning resources directly.
+        if (this.takeShortcutLookup(tagKey)) {
+            this.logger.debug(RESOURCE_LOADING, "%s - Shortcut lookup; scanning registries", tagKey);
             var registry = RegistryUtils.getRegistry(tagKey.registry()).orElseThrow();
             var entities = registry.holders()
                     .filter(h -> h.is(tagKey))
@@ -127,6 +132,18 @@ public class ClientTagLoader {
         return new TagData<>(
                 new ReferenceOpenHashSet<>(instances),
                 ImmutableSet.copyOf(completeIds));
+    }
+
+    private boolean takeShortcutLookup(TagKey<?> tagKey) {
+        var namespace = tagKey.location().getNamespace();
+        // If it's a mod tag, we have to look in local resources.
+        if (namespace.equals(Library.MOD_ID))
+            return false;
+        // If there is a single player world being hosted, it means that the local
+        // registries are intact and a tag lookup can be taken. Otherwise, the client is
+        // connected to a remote server. If it is a Minecraft tag, we can obtain the
+        // information from the registry. Otherwise, do the crawl.
+        return GameUtils.getMC().getSingleplayerServer() != null || namespace.equals("minecraft");
     }
 
     private record TagData<T>(

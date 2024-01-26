@@ -6,6 +6,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.*;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
@@ -104,7 +105,7 @@ public class TagLibrary implements ITagLibrary {
                         // Makes it easier to spot in the logs
                         builder.append("\n*** EMPTY ***");
                     } else {
-                        this.formatHelper(builder, "Members", td);
+                        this.formatHelper(builder, "Members", this.tagLoader.getCompleteIds(kvp.getKey()));
                     }
 
                     builder.append("\n");
@@ -155,7 +156,7 @@ public class TagLibrary implements ITagLibrary {
         return this.tagCache.computeIfAbsent(tagKey, this.tagLoader::getMembers).contains(entry);
     }
 
-    private void formatHelper(StringBuilder builder, String entryName, Collection<?> data) {
+    private void formatHelper(StringBuilder builder, String entryName, Collection<ResourceLocation> data) {
         builder.append("\n").append(entryName).append(" ");
         if (data.isEmpty())
             builder.append("NONE");
