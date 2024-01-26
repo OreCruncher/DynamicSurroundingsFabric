@@ -7,6 +7,8 @@ import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.platform.*;
 import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
+import org.orecruncher.dsurround.lib.seasons.SeasonManager;
 import org.orecruncher.dsurround.lib.system.ISystemClock;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.system.SystemClock;
@@ -54,6 +56,7 @@ public final class Library {
                 .registerSingleton(ISystemClock.class, SystemClock.class)
                 .registerSingleton(IMinecraftDirectories.class, MinecraftDirectories.class)
                 .registerSingleton(IClientTasking.class, ClientTasking.class)
-                .registerSingleton(ITickCount.class, TickCounter.class);
+                .registerSingleton(ITickCount.class, TickCounter.class)
+                .registerSingleton(ISeasonalInformation.class, SeasonManager.HANDLER);
     }
 }

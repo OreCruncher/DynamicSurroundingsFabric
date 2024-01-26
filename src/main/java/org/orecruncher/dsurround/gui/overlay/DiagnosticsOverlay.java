@@ -5,11 +5,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
-import org.orecruncher.dsurround.Configuration;
+import net.minecraft.util.FormattedCharSequence;
 import org.orecruncher.dsurround.Constants;
-import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
-import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
-import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.gui.overlay.plugins.*;
@@ -20,11 +17,9 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
-import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Objects;
 
 /***
  * Our debug and diagnostics overlay.  Derived from DebugHud.
@@ -34,6 +29,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     private static final int BACKGROUND_COLOR = 0x90505050;     // Very dark gray with alpha
     private static final int FOREGROUND_COLOR = 0x00E0E0E0;     // Very light gray
 
+    private static final Style SPECIAL_MOD_STYLE = Style.EMPTY.withColor(ColorPalette.BRASS).withItalic(true);
     private static final Map<CollectDiagnosticsEvent.Section, TextColor> COLOR_MAP = new EnumMap<>(CollectDiagnosticsEvent.Section.class);
     private static final ObjectArray<CollectDiagnosticsEvent.Section> RIGHT_SIDE_LAYOUT = new ObjectArray<>();
     private static final ObjectArray<CollectDiagnosticsEvent.Section> LEFT_SIDE_LAYOUT = new ObjectArray<>();
@@ -68,13 +64,13 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     }
 
     private final IPlatform platform;
-    private final LoggingTimerEMA diagnostics = new LoggingTimerEMA("Diagnostics");
+    private final LoggingTimerEMA diagnostics = new LoggingTimerEMA("Collect Diagnostic");
+    private final LoggingTimerEMA rendering = new LoggingTimerEMA("Render Diagnostic");
     private final String branding;
     private final ObjectArray<IDiagnosticPlugin> plugins = new ObjectArray<>();
-
     private final CollectDiagnosticsEvent reusableEvent = new CollectDiagnosticsEvent();
-    private final ObjectArray<Component> left = new ObjectArray<>(64);
-    private final ObjectArray<Component> right = new ObjectArray<>(64);
+    private final ObjectArray<FormattedCharSequence> left = new ObjectArray<>(64);
+    private final ObjectArray<FormattedCharSequence> right = new ObjectArray<>(64);
     private boolean showHud;
     private boolean enableCollection;
 
@@ -85,10 +81,12 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         this.showHud = false;
         this.enableCollection = false;
 
-        this.plugins.add(new ClientProfilerPlugin());
-        this.plugins.add(new ViewerPlugin(ContainerManager.resolve(Configuration.Logging.class), ContainerManager.resolve(IBlockLibrary.class), ContainerManager.resolve(ITagLibrary.class), ContainerManager.resolve(IEntityEffectLibrary.class)));
-        this.plugins.add(new RuntimeDiagnosticsPlugin(ContainerManager.resolve(IConditionEvaluator.class)));
-        this.plugins.add(new SoundEngineDiagnosticsPlugin());
+        // DiagnosticsOverlay is a singleton that makes the following similar to
+        // a singleton.
+        this.plugins.add(ContainerManager.resolve(ClientProfilerPlugin.class));
+        this.plugins.add(ContainerManager.resolve(ViewerPlugin.class));
+        this.plugins.add(ContainerManager.resolve(RuntimeDiagnosticsPlugin.class));
+        this.plugins.add(ContainerManager.resolve(SoundEngineDiagnosticsPlugin.class));
     }
 
     public void toggleCollection() {
@@ -104,10 +102,10 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         // We only want to take the processing hit if the debug overlay is activated
         if (this.showHud) {
 
+            this.diagnostics.begin();
+
             // Perform tick on the plugins
             this.plugins.forEach(p -> p.tick(client));
-
-            this.diagnostics.begin();
 
             this.reusableEvent.clear();
             this.reusableEvent.add(CollectDiagnosticsEvent.Section.Header, this.branding);
@@ -115,11 +113,12 @@ public class DiagnosticsOverlay extends AbstractOverlay {
             // Check for any special mods and add indicators
             for (var modId : Constants.SPECIAL_MODS)
                 if (this.platform.isModLoaded(modId))
-                    this.reusableEvent.add(CollectDiagnosticsEvent.Section.Header, "INSTALLED: " + modId);
-
-            ClientEventHooks.COLLECT_DIAGNOSTICS.raise().onCollect(this.reusableEvent);
+                    this.reusableEvent.add(CollectDiagnosticsEvent.Section.Header, Component.literal("MOD: " + modId).withStyle(SPECIAL_MOD_STYLE));
 
             this.reusableEvent.add(this.diagnostics);
+            this.reusableEvent.add(this.rendering);
+
+            ClientEventHooks.COLLECT_DIAGNOSTICS.raise().onCollect(this.reusableEvent);
 
             this.left.clear();
             this.right.clear();
@@ -131,27 +130,28 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         }
     }
 
-    private static void processOutput(ObjectArray<CollectDiagnosticsEvent.Section> sections, CollectDiagnosticsEvent event, ObjectArray<Component> result) {
+    private static void processOutput(ObjectArray<CollectDiagnosticsEvent.Section> sections, CollectDiagnosticsEvent event, ObjectArray<FormattedCharSequence> result) {
         boolean addBlankLine = false;
         for (var p : sections) {
             var data = event.getSectionText(p);
             if (!data.isEmpty()) {
                 if (addBlankLine)
-                    result.add(Component.empty());
+                    result.add(null);
                 else
                     addBlankLine = true;
 
                 var style = Style.EMPTY.withColor(COLOR_MAP.get(p));
 
                 if (p.addHeader()) {
-                    result.add(Component.literal(p.name()).withStyle(style.withUnderlined(true)));
+                    var t = Component.literal(p.name()).withStyle(style.withUnderlined(true)).getVisualOrderText();
+                    result.add(t);
                 }
 
                 for (var d : data) {
                     if (d.getStyle().isEmpty())
-                        result.add(d.copy().withStyle(style));
+                        result.add(d.copy().withStyle(style).getVisualOrderText());
                     else
-                        result.add(d);
+                        result.add(d.getVisualOrderText());
                 }
             }
         }
@@ -160,8 +160,10 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     @Override
     public void render(GuiGraphics context, float partialTick) {
         if (this.showHud) {
+            this.rendering.begin();
             this.drawText(context, this.left, true);
             this.drawText(context, this.right, false);
+            this.rendering.end();
         }
     }
 
@@ -169,17 +171,17 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         return GameUtils.isInGame() && GameUtils.getMC().getDebugOverlay().showDebugScreen();
     }
 
-    private void drawText(GuiGraphics context, ObjectArray<Component> text, boolean left) {
+    private void drawText(GuiGraphics context, ObjectArray<FormattedCharSequence> text, boolean left) {
         var textRenderer = GameUtils.getTextRenderer();
         int m;
         int l;
         int k;
-        Component component;
+        FormattedCharSequence component;
         int j;
         int i = textRenderer.lineHeight;
         for (j = 0; j < text.size(); ++j) {
             component = text.get(j);
-            if (Objects.equals(component, Component.empty()))
+            if (component == null)
                 continue;
             k = textRenderer.width(component);
             l = left ? 2 : context.guiWidth() - 2 - k;

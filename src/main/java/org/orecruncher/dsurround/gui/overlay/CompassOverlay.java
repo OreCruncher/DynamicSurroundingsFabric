@@ -58,7 +58,7 @@ public class CompassOverlay extends AbstractOverlay {
     }
 
     private boolean doShowCompass(ItemStack stack) {
-        return !stack.isEmpty() && this.tagLibrary.is(ItemEffectTags.COMPASSES, stack);
+        return this.tagLibrary.is(ItemEffectTags.COMPASSES, stack);
     }
 
     @Override

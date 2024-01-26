@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.config.libraries;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundMetadata;
@@ -20,7 +21,7 @@ public interface ISoundLibrary extends ILibrary {
 
     boolean isBlocked(final ResourceLocation id);
     boolean isCulled(final ResourceLocation id);
-    float getVolumeScale(final ResourceLocation id);
+    float getVolumeScale(SoundSource category, ResourceLocation id);
     Optional<SoundEvent> getRandomStartupSound();
     Collection<IndividualSoundConfigEntry> getIndividualSoundConfigs();
     void saveIndividualSoundConfigs(Collection<IndividualSoundConfigEntry> configs);

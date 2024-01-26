@@ -11,18 +11,12 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 /**
  * Special hook into the Minecraft SoundSystem.  This logic scales the volume of a sound
- * based on configuration information.  This allows tuning of sound volumes on a per
- * sound basis.
+ * based on configuration information.  This allows tuning of sound volumes on a per-sound
+ * basis.
  */
 public final class SoundVolumeEvaluator {
 
     private static final ISoundLibrary soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
-
-    private static float getCategoryVolumeScale(final SoundInstance sound) {
-        // Master category already controlled by master gain so ignore
-        final SoundSource category = sound.getSource();
-        return category == SoundSource.MASTER ? 1F : GameUtils.getGameSettings().getSoundSourceVolume(category);
-    }
 
     /**
      * This guy is hooked by a Mixin to replace getClampedVolume() in Minecraft code.
@@ -35,12 +29,15 @@ public final class SoundVolumeEvaluator {
         // Config sounds are played from the config menu.  Do not scale volume
         // with category adjustments.
         if (!(sound instanceof ConfigSoundInstance)) {
-            volume *= getCategoryVolumeScale(sound);
+            // Scale the volume based on Minecraft's volume scaling selections.
+            final SoundSource category = sound.getSource();
+            var categoryFactor =  category == SoundSource.MASTER ? 1F : GameUtils.getGameSettings().getSoundSourceVolume(category);
+            volume *= categoryFactor;
 
-            var volumeScale = soundLibrary.getVolumeScale(sound.getLocation());
-            if (volumeScale != 0f) {
-                volume *= volumeScale;
-            }
+            // Further scale based on the sound's configuration within the mod data set. It's possible that this
+            // could result in a sound volume of 0.
+            var volumeScale = soundLibrary.getVolumeScale(category, sound.getLocation());
+            volume *= volumeScale;
         }
 
         return Mth.clamp(volume, 0, 1F);

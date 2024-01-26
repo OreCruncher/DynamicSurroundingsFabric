@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.runtime;
 
 import net.minecraft.client.Minecraft;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -25,6 +26,7 @@ public final class ConditionEvaluator implements IConditionEvaluator {
         this.context.add(new PlayerVariables());
         this.context.add(new WeatherVariables());
         this.context.add(new EnvironmentState(ContainerManager.resolve(Scanners.class)));
+        this.context.add(new GlobalVariables(ContainerManager.resolve(Configuration.class)));
 
         ClientState.TICK_START.register(this::tick, HandlerPriority.VERY_HIGH);
     }

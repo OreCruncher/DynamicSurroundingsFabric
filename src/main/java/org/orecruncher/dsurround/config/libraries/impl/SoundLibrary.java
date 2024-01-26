@@ -7,12 +7,15 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.CodecExtensions;
 import org.orecruncher.dsurround.lib.Comparers;
+import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.resources.DiscoveredResource;
@@ -47,6 +50,7 @@ public final class SoundLibrary implements ISoundLibrary {
     private static final SoundEvent MISSING = SoundEvent.createVariableRangeEvent(MISSING_RESOURCE);
 
     private final IModLog logger;
+    private final Configuration config;
     private final Path soundConfigPath;
 
     private final Object2ObjectOpenHashMap<ResourceLocation, SoundEvent> myRegistry = new Object2ObjectOpenHashMap<>();
@@ -58,8 +62,9 @@ public final class SoundLibrary implements ISoundLibrary {
     private final List<ResourceLocation> startupSounds = new ArrayList<>();
     private List<IndividualSoundConfigEntry> soundConfiguration = new ArrayList<>();
 
-    public SoundLibrary(IModLog logger, IMinecraftDirectories directories) {
+    public SoundLibrary(Configuration config, IModLog logger, IMinecraftDirectories directories) {
         this.logger = logger;
+        this.config = config;
         this.myRegistry.defaultReturnValue(SoundLibrary.MISSING);
         this.soundMetadata.defaultReturnValue(new SoundMetadata());
         this.soundConfigPath = directories.getModConfigDirectory().resolve(SOUND_CONFIG_FILE);
@@ -147,13 +152,23 @@ public final class SoundLibrary implements ISoundLibrary {
     }
 
     @Override
-    public float getVolumeScale(final ResourceLocation sound) {
+    public float getVolumeScale(SoundSource category, ResourceLocation sound) {
+        // Assume scaling of 1F. Basically, it would leave the volume alone.
+        var scale = 1F;
+
         IndividualSoundConfigEntry entry = this.individualSoundConfiguration.get(Objects.requireNonNull(sound));
+
+        // If there is an override from the sound config information, use that.
         if (entry != null && entry.isNotDefault()) {
-            return entry.volumeScale / 100f;
+            scale = entry.volumeScale / 100F;
         }
 
-        return 0f;
+        // For the mod Ambient sounds, it is further scaled by user configuration.
+        if (category == SoundSource.AMBIENT && sound.getNamespace().equals(Library.MOD_ID))
+            scale *= this.config.soundOptions.ambientVolumeScaling / 100F;
+
+        // All done!
+        return scale;
     }
 
     @Override
