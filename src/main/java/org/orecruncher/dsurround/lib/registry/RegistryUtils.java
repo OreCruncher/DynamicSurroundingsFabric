@@ -18,12 +18,12 @@ public class RegistryUtils {
                 .or(() -> (Optional<Registry<T>>) BuiltInRegistries.REGISTRY.getOptional(registryKey.location()));
     }
 
-    public static <T> Optional<Holder<T>> getRegistryEntry(ResourceKey<Registry<T>> registryKey, T instance) {
+    public static <T> Optional<Holder.Reference<T>> getRegistryEntry(ResourceKey<Registry<T>> registryKey, T instance) {
         return getRegistry(registryKey)
                 .flatMap(r -> r.getHolder(r.getId(instance)));
     }
 
-    public static <T> Optional<Holder<T>> getRegistryEntry(ResourceKey<Registry<T>> registryKey, ResourceLocation location) {
+    public static <T> Optional<Holder.Reference<T>> getRegistryEntry(ResourceKey<Registry<T>> registryKey, ResourceLocation location) {
         ResourceKey<T> rk = ResourceKey.create(registryKey, location);
         return getRegistry(registryKey)
                 .flatMap(registry -> registry.getHolder(rk));
