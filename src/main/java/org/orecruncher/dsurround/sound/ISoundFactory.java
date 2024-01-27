@@ -94,10 +94,6 @@ public interface ISoundFactory {
     /**
      * Creates a Music instance to be used with Minecraft's music manager
      */
-    Music createAsMusic(int minDelay, int maxDelay, boolean replaceCurrent);
-
-    default Music createAsMusic() {
-        return this.createAsMusic(3000, 12000, false);
-    }
+    Music createAsMusic();
 
 }

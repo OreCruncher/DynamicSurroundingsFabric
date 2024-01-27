@@ -107,7 +107,8 @@
 				"type": "event",
 				"name": "dsurround:biome.wind",
 				"volume": 0.2,
-				"pitch": 1.5
+				"pitch": 1.5,
+				"stream": true
 			}
 		]
 	},
@@ -123,7 +124,8 @@
 		"sounds": [
 			{
 				"type": "event",
-				"name": "dsurround:biome.wind"
+				"name": "dsurround:biome.wind",
+				"stream": true
 			}
 		]
 	},
@@ -138,7 +140,8 @@
 		],
 		"sounds": [
 			{
-				"name": "dsurround:ambient/outside/desert_wind"
+				"name": "dsurround:ambient/outside/desert_wind",
+				"stream": true
 			}
 		]
 	},
@@ -153,7 +156,8 @@
 		],
 		"sounds": [
 			{
-				"name": "dsurround:ambient/outside/arctic_wind"
+				"name": "dsurround:ambient/outside/arctic_wind",
+				"stream": true
 			}
 		]
 	},
@@ -306,7 +310,8 @@
 			{
 				"type": "event",
 				"name": "dsurround:biome.ocean",
-				"pitch": 0.7
+				"pitch": 0.7,
+				"stream": true
 			}
 		]
 	},

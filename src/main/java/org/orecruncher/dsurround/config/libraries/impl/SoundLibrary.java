@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import org.orecruncher.dsurround.Configuration;
@@ -137,10 +138,15 @@ public final class SoundLibrary implements ISoundLibrary {
         return Optional.ofNullable(this.soundFactories.get(factoryLocation));
     }
 
+    @Override
     public ISoundFactory getSoundFactoryOrDefault(ResourceLocation factoryLocation) {
         return this.soundFactories.computeIfAbsent(factoryLocation, loc -> SoundFactoryBuilder.create(loc).build());
     }
 
+    @Override
+    public ISoundFactory getSoundFactoryForMusic(Music music) {
+        return this.soundFactories.computeIfAbsent(music.getEvent().value().getLocation(), loc -> SoundFactoryBuilder.create(music).build());
+    }
 
     @Override
     public boolean isBlocked(final ResourceLocation sound) {

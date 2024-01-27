@@ -77,8 +77,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         if (biome != null) {
             var accessor = (IBiomeExtended)(Object)biome;
             accessor.dsurround_getSpecialEffects().getBackgroundMusic()
-                .map(m -> m.getEvent().value()).ifPresent(se -> {
-                    var factory = SOUND_LIBRARY.getSoundFactoryOrDefault(se.getLocation());
+                .ifPresent(m -> {
+                    var factory = SOUND_LIBRARY.getSoundFactoryForMusic(m);
                     var entry = new AcousticEntry(factory, null);
                     this.musicSounds.add(entry);
                 });

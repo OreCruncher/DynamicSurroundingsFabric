@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.config.libraries;
 
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
@@ -18,6 +19,7 @@ public interface ISoundLibrary extends ILibrary {
     SoundMetadata getSoundMetadata(final ResourceLocation sound);
     Optional<ISoundFactory> getSoundFactory(ResourceLocation factoryLocation);
     ISoundFactory getSoundFactoryOrDefault(ResourceLocation factoryLocation);
+    ISoundFactory getSoundFactoryForMusic(Music music);
 
     boolean isBlocked(final ResourceLocation id);
     boolean isCulled(final ResourceLocation id);
