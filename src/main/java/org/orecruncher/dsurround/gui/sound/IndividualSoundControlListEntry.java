@@ -3,9 +3,7 @@ package org.orecruncher.dsurround.gui.sound;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.ContainerObjectSelectionList;
+import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.network.chat.Component;
@@ -13,6 +11,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -49,9 +48,9 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private static final Style STYLE_HELP = Style.EMPTY.withItalic(true).withColor(ColorPalette.KEY_LIME);
 
     private static final Component CULL_ON = Component.translatable("dsurround.text.soundconfig.cull").withStyle(STYLE_TOGGLE_ON);
-    private static final Component CULL_OFF = Component.translatable("dsurround.text.soundconfig.nocull");
+    private static final Component CULL_OFF = Component.translatable("dsurround.text.soundconfig.cull");
     private static final Component BLOCK_ON = Component.translatable("dsurround.text.soundconfig.block").withStyle(STYLE_TOGGLE_ON);
-    private static final Component BLOCK_OFF = Component.translatable("dsurround.text.soundconfig.noblock");
+    private static final Component BLOCK_OFF = Component.translatable("dsurround.text.soundconfig.block");
     private static final Component PLAY = Component.translatable("dsurround.text.soundconfig.play");
     private static final Component STOP = Component.translatable("dsurround.text.soundconfig.stop").withColor(ColorPalette.RED.getValue());
     private static final FormattedCharSequence VANILLA_CREDIT = Component.translatable("dsurround.text.soundconfig.vanilla").getVisualOrderText();
@@ -59,14 +58,13 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private static final Collection<Component> PLAY_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.play.help", TOOLTIP_WIDTH, STYLE_HELP);
     private static final Collection<Component> CULL_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.cull.help", TOOLTIP_WIDTH, STYLE_HELP);
     private static final Collection<Component> BLOCK_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.block.help", TOOLTIP_WIDTH, STYLE_HELP);
-
     private static final int CONTROL_SPACING = 3;
 
     private final IndividualSoundConfigEntry config;
     private final VolumeSliderControl volume;
-    private final Button blockButton;
-    private final Button cullButton;
-    private final Button playButton;
+    private final Checkbox blockButton;
+    private final Checkbox cullButton;
+    private final @Nullable SoundPlayButton playButton;
 
     private final List<AbstractWidget> children = new ArrayList<>();
     private final List<FormattedCharSequence> cachedToolTip = new ArrayList<>();
@@ -78,21 +76,24 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         this.volume = new VolumeSliderControl(this, 0, 0);
         this.children.add(this.volume);
 
-        this.blockButton = Button.builder(this.config.block ? BLOCK_ON : BLOCK_OFF, this::toggleBlock)
-            .size(BUTTON_WIDTH, 0)
+        this.blockButton = Checkbox.builder(data.block ? BLOCK_ON : BLOCK_OFF, GameUtils.getTextRenderer())
+            .selected(data.block)
+            .onValueChange(this::toggleBlock)
             .build();
         this.children.add(this.blockButton);
 
-        this.cullButton = Button.builder(this.config.cull ? CULL_ON : CULL_OFF, this::toggleCull)
-            .size(BUTTON_WIDTH, 0)
+        this.cullButton = Checkbox.builder(this.config.cull ? CULL_ON : CULL_OFF, GameUtils.getTextRenderer())
+            .selected(data.cull)
+            .onValueChange(this::toggleCull)
             .build();
         this.children.add(this.cullButton);
 
-        this.playButton = SilentButton.from(Button.builder(PLAY, this::play)
-            .size(BUTTON_WIDTH, 0)
-            .build());
-        this.playButton.active = enablePlay;
-        this.children.add(this.playButton);
+        if (enablePlay) {
+            this.playButton = new SoundPlayButton(0, 0, this::play, Component.empty());
+            this.children.add(this.playButton);
+        } else {
+            this.playButton = null;
+        }
     }
 
     public void mouseMoved(double mouseX, double mouseY) {
@@ -165,10 +166,12 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         this.volume.setHeight(rowHeight);
         rightMargin -= this.volume.getWidth() + CONTROL_SPACING;
 
-        this.playButton.setX(rightMargin - this.playButton.getWidth());
-        this.playButton.setY(rowTop);
-        this.playButton.setHeight(rowHeight);
-        rightMargin -= this.playButton.getWidth() + CONTROL_SPACING;
+        if (this.playButton != null) {
+            this.playButton.setX(rightMargin - this.playButton.getWidth());
+            this.playButton.setY(rowTop);
+            this.playButton.setHeight(rowHeight);
+            rightMargin -= this.playButton.getWidth() + CONTROL_SPACING;
+        }
 
         this.blockButton.setX(rightMargin - this.blockButton.getWidth());
         this.blockButton.setY(rowTop);
@@ -183,24 +186,26 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
             w.render(context, mouseX, mouseY, partialTick_);
     }
 
-    protected void toggleBlock(final Button button) {
-        this.config.block = !this.config.block;
-        button.setMessage(this.config.block ? BLOCK_ON : BLOCK_OFF);
+    protected void toggleBlock(Checkbox button, boolean state) {
+        this.config.block = state;
+        button.setMessage(state ? BLOCK_ON : BLOCK_OFF);
     }
 
-    protected void toggleCull(final Button button) {
-        this.config.cull = !this.config.cull;
-        button.setMessage(this.config.cull ? CULL_ON : CULL_OFF);
+    protected void toggleCull(Checkbox button, boolean state) {
+        this.config.cull = state;
+        button.setMessage(state ? CULL_ON : CULL_OFF);
     }
 
     protected void play(final Button button) {
-        if (this.soundPlay == null) {
-            this.soundPlay = this.playSound(this.config);
-            button.setMessage(STOP);
-        } else {
-            AUDIO_PLAYER.stop(this.soundPlay);
-            this.soundPlay = null;
-            button.setMessage(PLAY);
+        if (button instanceof SoundPlayButton sp) {
+            if (this.soundPlay == null) {
+                this.soundPlay = this.playSound(this.config);
+                sp.play();
+            } else {
+                AUDIO_PLAYER.stop(this.soundPlay);
+                this.soundPlay = null;
+                sp.stop();
+            }
         }
     }
 
@@ -219,10 +224,10 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     }
 
     public void tick() {
-        if (this.soundPlay != null) {
+        if (this.soundPlay != null && this.playButton != null) {
             if (!AUDIO_PLAYER.isPlaying(this.soundPlay)) {
                 this.soundPlay = null;
-                this.playButton.setMessage(PLAY);
+                this.playButton.stop();
             }
         }
     }
@@ -274,7 +279,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
             toAppend = BLOCK_HELP;
         } else if (this.cullButton.isMouseOver(mouseX, mouseY)) {
             toAppend = CULL_HELP;
-        } else if (this.playButton.isMouseOver(mouseX, mouseY)) {
+        } else if (this.playButton != null && this.playButton.isMouseOver(mouseX, mouseY)) {
             toAppend = PLAY_HELP;
         }
 
