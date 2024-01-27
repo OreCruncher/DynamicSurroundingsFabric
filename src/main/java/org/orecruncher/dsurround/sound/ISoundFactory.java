@@ -97,7 +97,7 @@ public interface ISoundFactory {
     Music createAsMusic(int minDelay, int maxDelay, boolean replaceCurrent);
 
     default Music createAsMusic() {
-        return this.createAsMusic(6000, 24000, false);
+        return this.createAsMusic(3000, 12000, false);
     }
 
 }

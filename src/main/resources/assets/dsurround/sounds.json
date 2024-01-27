@@ -1136,6 +1136,19 @@
 			"dsurround:footsteps/leaves/leaves_through7"
 		]
 	},
+	"music.wintersong": {
+		"category": "music",
+		"credits": [
+			{
+				"name": "Wintersong",
+				"author": "Alexander Nakarada",
+				"license": "Creative Commons CC BY 4.0"
+			}
+		],
+		"sounds": [
+			"dsurround:music/wintersong"
+		]
+	},
 	"silence": {
 		"sounds": [
 			"dsurround:ambient/silence"

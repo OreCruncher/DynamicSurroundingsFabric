@@ -29,7 +29,8 @@ public abstract class MixinSoundOptionsScreen extends Screen {
         var buttonText = Component.translatable("dsurround.text.config.soundconfiguration").withStyle(style);
         var textWidth = GameUtils.getTextRenderer().width(buttonText) + 10;
         this.addRenderableWidget(Button.builder(buttonText, (button) -> {
-                    var screen = new IndividualSoundControlScreen(this, true);
+                    var enablePlayButtons = GameUtils.getMC().level == null || GameUtils.isSinglePlayer();
+                    var screen = new IndividualSoundControlScreen(this, enablePlayButtons);
                     this.minecraft.setScreen(screen);
                 })
                 .tooltip(toolTip)

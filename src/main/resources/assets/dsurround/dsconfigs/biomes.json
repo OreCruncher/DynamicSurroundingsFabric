@@ -484,5 +484,15 @@
         "type": "addition"
       }
     ]
+  },
+  {
+    "biomeSelector": "TAIGA && SNOWY",
+    "_comment": "Music for Snowy Taiga",
+    "acoustics": [
+      {
+        "factory": "dsurround:music.wintersong",
+        "type": "music"
+      }
+    ]
   }
 ]

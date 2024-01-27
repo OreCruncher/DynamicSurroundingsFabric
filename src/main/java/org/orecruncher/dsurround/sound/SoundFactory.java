@@ -20,6 +20,8 @@ import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.IdentityUtils;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.orecruncher.dsurround.sound.SoundCodecHelpers.SOUND_PROPERTY_RANGE;
@@ -47,6 +49,8 @@ public record SoundFactory(
                     Codec.BOOL.optionalFieldOf("global", false).forGetter(SoundFactory::global),
                     SoundCodecHelpers.ATTENUATION_CODEC.optionalFieldOf("attenuation", SoundInstance.Attenuation.LINEAR).forGetter(SoundFactory::attenuation)
             ).apply(instance, SoundFactory::new));
+
+    private static final Map<SoundEvent, Music> MUSIC_MAP = new HashMap<>();
 
     @Override
     public ResourceLocation getLocation() {
@@ -115,8 +119,10 @@ public record SoundFactory(
 
     @Override
     public Music createAsMusic(int minDelay, int maxDelay, boolean replaceCurrent) {
-        var holder = Holder.direct(this.soundEvent);
-        return new Music(holder, minDelay, maxDelay, replaceCurrent);
+        return MUSIC_MAP.computeIfAbsent(this.soundEvent, key -> {
+            var holder = Holder.direct(key);
+            return new Music(holder, minDelay, maxDelay, replaceCurrent);
+        });
     }
 
     private float getVolume() {

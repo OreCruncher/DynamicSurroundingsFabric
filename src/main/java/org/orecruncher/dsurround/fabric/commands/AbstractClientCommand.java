@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.fabric.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.commands.CommandBuildContext;
@@ -8,6 +9,8 @@ import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.lib.Library;
 
 import java.util.function.Supplier;
+
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
 abstract class AbstractClientCommand {
 
@@ -27,5 +30,9 @@ abstract class AbstractClientCommand {
             ctx.getSource().sendFeedback(Component.literal(ex.getMessage()));
             return 1;
         }
+    }
+
+    protected LiteralArgumentBuilder<FabricClientCommandSource> subCommand(String command, Supplier<Component> supplier) {
+        return literal(command).executes(ctx -> this.execute(ctx, supplier));
     }
 }

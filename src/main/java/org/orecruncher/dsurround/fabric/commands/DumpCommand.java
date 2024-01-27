@@ -1,13 +1,9 @@
 package org.orecruncher.dsurround.fabric.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.commands.CommandBuildContext;
-import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.commands.DumpCommandHandler;
-
-import java.util.function.Supplier;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
@@ -32,7 +28,7 @@ class DumpCommand extends AbstractClientCommand {
                 .then(subCommand(SOUNDS, DumpCommandHandler::dumpSounds))
                 .then(subCommand(DIMENSIONS, DumpCommandHandler::dumpDimensions))
                 .then(subCommand(BLOCKS, () -> DumpCommandHandler.dumpBlocks(false))
-                        .then(subCommand(NOSTATES, () -> DumpCommandHandler.dumpBlocks(false))))
+                        .then(subCommand(NOSTATES, () -> DumpCommandHandler.dumpBlocks(true))))
                 .then(subCommand(BLOCKSBYTAG, DumpCommandHandler::dumpBlocksByTag))
                 .then(subCommand(BLOCKCONFIGRULES, DumpCommandHandler::dumpBlockConfigRules))
                 .then(subCommand(BLOCKSTATES, DumpCommandHandler::dumpBlockState))
@@ -40,9 +36,5 @@ class DumpCommand extends AbstractClientCommand {
                 .then(subCommand(TAGS, DumpCommandHandler::dumpTags))
                 .then(subCommand(DIREGISTRATIONS, DumpCommandHandler::dumpDIRegistrations))
         );
-    }
-
-    private LiteralArgumentBuilder<FabricClientCommandSource> subCommand(String command, Supplier<Component> supplier) {
-        return literal(command).executes(ctx -> this.execute(ctx, supplier));
     }
 }

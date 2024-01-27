@@ -9,6 +9,7 @@ import org.orecruncher.dsurround.lib.MinecraftClock;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
+import org.orecruncher.dsurround.mixinutils.IMusicManager;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
 import java.util.List;
@@ -47,6 +48,9 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
 
             var particleLoad = "Particle Manager: %s".formatted(GameUtils.getParticleManager().countParticles());
             event.add(CollectDiagnosticsEvent.Section.Systems, particleLoad);
+
+            var musicManager = ((IMusicManager)(GameUtils.getMC().getMusicManager())).dsurround_getDiagnosticText();
+            event.add(CollectDiagnosticsEvent.Section.Systems, musicManager);
 
             for (String script : scripts) {
                 Object result = this.conditionEvaluator.eval(new Script(script));

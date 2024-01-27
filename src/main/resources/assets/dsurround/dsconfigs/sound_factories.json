@@ -295,5 +295,10 @@
       "min": 0.6,
       "max": 1.2
     }
+  },
+  {
+    "location": "dsurround:music.wintersong",
+    "soundEvent": "dsurround:music.wintersong",
+    "category": "MUSIC"
   }
 ]
