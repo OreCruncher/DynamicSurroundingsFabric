@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.mixins.core;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
@@ -13,6 +11,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -29,6 +28,15 @@ public abstract class MixinBiome implements IBiomeExtended {
     @Final
     @Shadow
     private Biome.ClimateSettings climateSettings;
+
+    @Final
+    @Shadow
+    private BiomeSpecialEffects specialEffects;
+
+    @Override
+    public BiomeSpecialEffects dsurround_getSpecialEffects() {
+        return this.specialEffects;
+    };
 
     @Override
     public BiomeInfo dsurround_getInfo() {
@@ -63,14 +71,16 @@ public abstract class MixinBiome implements IBiomeExtended {
     }
 
     /**
-     * Hook obtaining background music for the biome. If there is a biome sound already configured
-     * via a data pack, use that. Otherwise, make a selection based on our configuration.
+     * Check the biome configuration for a background soundtrack for the biome. If one is present,
+     * return it. Otherwise, let Minecraft do its thing.
+     *
+     * NOTE: If a biome has been configured with a background sound via data pack, it is folded into
+     * the selection weight table.
      */
-    @WrapOperation(method = "getBackgroundMusic()Ljava/util/Optional;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/biome/BiomeSpecialEffects;getBackgroundMusic()Ljava/util/Optional;"))
-    private Optional<Music> dsurround_getBackgroundMusic(BiomeSpecialEffects instance, Operation<Optional<Music>> original) {
-        var result = original.call(instance);
+    @Inject(method = "getBackgroundMusic()Ljava/util/Optional;", at = @At("HEAD"), cancellable = true)
+    private void dsurround_getBackgroundMusic(CallbackInfoReturnable<Optional<Music>> cir) {
+        var result = this.dsurround_info.getBackgroundMusic(Randomizer.current());
         if (result.isPresent())
-            return result;
-        return this.dsurround_info.getBackgroundMusic(Randomizer.current());
+            cir.setReturnValue(result);
     }
 }

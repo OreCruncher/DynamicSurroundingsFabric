@@ -21,6 +21,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.Script;
+import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
@@ -70,6 +71,18 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         this.isOcean = this.traits.contains(BiomeTrait.OCEAN);
         this.isDeepOcean = this.isOcean && this.traits.contains(BiomeTrait.DEEP);
         this.isCave = this.traits.contains(BiomeTrait.CAVES);
+
+        // Check to see if the biome has a soundtrack. If so, add it to
+        // the music list.
+        if (biome != null) {
+            var accessor = (IBiomeExtended)(Object)biome;
+            accessor.dsurround_getSpecialEffects().getBackgroundMusic()
+                .map(m -> m.getEvent().value()).ifPresent(se -> {
+                    var factory = SOUND_LIBRARY.getSoundFactoryOrDefault(se.getLocation());
+                    var entry = new AcousticEntry(factory, null);
+                    this.musicSounds.add(entry);
+                });
+        }
     }
 
     public int getVersion() {

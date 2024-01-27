@@ -130,7 +130,8 @@ public final class Client {
         }, HandlerPriority.VERY_HIGH);
 
         // Make the libraries load their data. Priority determines the sequence.
-        AssetLibraryEvent.reload();
+        // Reload listener in the plaform module will trigger the load
+        //AssetLibraryEvent.reload();
 
         // Force instantiation of the core Handler.  This should cause the rest
         // of the dependencies to be initialized.
