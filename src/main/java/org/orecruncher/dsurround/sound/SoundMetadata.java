@@ -3,6 +3,8 @@ package org.orecruncher.dsurround.sound;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
 
 import java.util.ArrayList;
@@ -14,15 +16,29 @@ public final class SoundMetadata {
     private final Component title;
     private final Component subTitle;
     private final List<Credit> credits;
+    private final SoundSource category;
+    private final boolean isDefault;
 
     public SoundMetadata() {
         this.title = Component.empty();
         this.subTitle = Component.empty();
         this.credits = ImmutableList.of();
+        this.category = SoundSource.AMBIENT;
+        this.isDefault = true;
     }
 
-    public SoundMetadata(final SoundMetadataConfig cfg) {
+    public SoundMetadata(ResourceLocation location) {
+        this.title = Component.empty();
+        this.subTitle = Component.empty();
+        this.credits = ImmutableList.of();
+        this.isDefault = false;
+        this.category = this.estimateSoundSource(location);
+    }
+
+    public SoundMetadata(ResourceLocation location, SoundMetadataConfig cfg) {
         Objects.requireNonNull(cfg);
+
+        this.isDefault = false;
 
         this.title = cfg.title().map(Component::translatable).orElse(Component.empty());
         this.subTitle = cfg.subtitle().map(Component::translatable).orElse(Component.empty());
@@ -40,6 +56,27 @@ public final class SoundMetadata {
             }
             this.credits = ImmutableList.copyOf(temp);
         }
+
+        this.category = cfg.category().orElseGet(() -> this.estimateSoundSource(location));
+    }
+
+    public boolean isDefault() {
+        return this.isDefault;
+    }
+
+    private SoundSource estimateSoundSource(ResourceLocation location) {
+        var path = location.getPath();
+        if (path.startsWith("music"))
+            return SoundSource.MUSIC;
+        if (path.startsWith("block"))
+            return SoundSource.BLOCKS;
+        if (path.startsWith("entity"))
+            return SoundSource.HOSTILE;
+        if (path.startsWith("weather"))
+            return SoundSource.WEATHER;
+        if (path.startsWith("ambient"))
+            return SoundSource.AMBIENT;
+        return SoundSource.AMBIENT;
     }
 
     public record Credit(Component name, Component author, Component license) {
@@ -71,5 +108,12 @@ public final class SoundMetadata {
      */
     public List<Credit> getCredits() {
         return this.credits;
+    }
+
+    /**
+     * Gets the sound category that has been configured or estimated from the location ID.
+     */
+    public SoundSource getCategory() {
+        return this.category;
     }
 }

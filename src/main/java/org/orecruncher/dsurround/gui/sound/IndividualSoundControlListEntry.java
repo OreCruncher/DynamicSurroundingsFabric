@@ -19,7 +19,6 @@ import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.gui.GuiHelpers;
-import org.orecruncher.dsurround.lib.gui.SilentButton;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.SoundMetadata;
@@ -35,11 +34,11 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
     private static final IPlatform PLATFORM = Library.PLATFORM;
 
-    private static final int BUTTON_WIDTH = 60;
     private static final int TOOLTIP_WIDTH = 300;
 
     private static final Style STYLE_MOD_NAME = Style.EMPTY.withColor(ColorPalette.GOLD);
     private static final Style STYLE_ID = Style.EMPTY.withColor(ColorPalette.SLATEGRAY);
+    private static final Style STYLE_CATEGORY = Style.EMPTY.withColor(ColorPalette.FRESH_AIR);
     private static final Style STYLE_SUBTITLE = Style.EMPTY.withColor(ColorPalette.APRICOT).withItalic(true);
     private static final Style STYLE_CREDIT_NAME = Style.EMPTY.withColor(ColorPalette.GREEN);
     private static final Style STYLE_CREDIT_AUTHOR = Style.EMPTY.withColor(ColorPalette.WHITE);
@@ -47,12 +46,6 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private static final Style STYLE_TOGGLE_ON = Style.EMPTY.withColor(ColorPalette.GREEN);
     private static final Style STYLE_HELP = Style.EMPTY.withItalic(true).withColor(ColorPalette.KEY_LIME);
 
-    private static final Component CULL_ON = Component.translatable("dsurround.text.soundconfig.cull").withStyle(STYLE_TOGGLE_ON);
-    private static final Component CULL_OFF = Component.translatable("dsurround.text.soundconfig.cull");
-    private static final Component BLOCK_ON = Component.translatable("dsurround.text.soundconfig.block").withStyle(STYLE_TOGGLE_ON);
-    private static final Component BLOCK_OFF = Component.translatable("dsurround.text.soundconfig.block");
-    private static final Component PLAY = Component.translatable("dsurround.text.soundconfig.play");
-    private static final Component STOP = Component.translatable("dsurround.text.soundconfig.stop").withColor(ColorPalette.RED.getValue());
     private static final FormattedCharSequence VANILLA_CREDIT = Component.translatable("dsurround.text.soundconfig.vanilla").getVisualOrderText();
     private static final Collection<Component> VOLUME_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.volume.help", TOOLTIP_WIDTH, STYLE_HELP);
     private static final Collection<Component> PLAY_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.play.help", TOOLTIP_WIDTH, STYLE_HELP);
@@ -62,8 +55,8 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
 
     private final IndividualSoundConfigEntry config;
     private final VolumeSliderControl volume;
-    private final Checkbox blockButton;
-    private final Checkbox cullButton;
+    private final BlockButton blockButton;
+    private final CullButton cullButton;
     private final @Nullable SoundPlayButton playButton;
 
     private final List<AbstractWidget> children = new ArrayList<>();
@@ -76,24 +69,26 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         this.volume = new VolumeSliderControl(this, 0, 0);
         this.children.add(this.volume);
 
-        this.blockButton = Checkbox.builder(data.block ? BLOCK_ON : BLOCK_OFF, GameUtils.getTextRenderer())
-            .selected(data.block)
-            .onValueChange(this::toggleBlock)
-            .build();
+        this.blockButton = new BlockButton(this.config.block, this::toggleBlock);
         this.children.add(this.blockButton);
 
-        this.cullButton = Checkbox.builder(this.config.cull ? CULL_ON : CULL_OFF, GameUtils.getTextRenderer())
-            .selected(data.cull)
-            .onValueChange(this::toggleCull)
-            .build();
+        this.cullButton = new CullButton(this.config.cull, this::toggleCull);
         this.children.add(this.cullButton);
 
         if (enablePlay) {
-            this.playButton = new SoundPlayButton(0, 0, this::play, Component.empty());
+            this.playButton = new SoundPlayButton(this::play);
             this.children.add(this.playButton);
         } else {
             this.playButton = null;
         }
+    }
+
+    public int getWidth() {
+        int width = GameUtils.getTextRenderer().width(this.config.soundEventId.toString());
+        width += this.cullButton.getWidth() + this.blockButton.getWidth() + this.volume.getWidth() + 4 * CONTROL_SPACING;
+        if (this.playButton != null)
+            width += this.playButton.getWidth() + CONTROL_SPACING;
+        return width;
     }
 
     public void mouseMoved(double mouseX, double mouseY) {
@@ -186,14 +181,15 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
             w.render(context, mouseX, mouseY, partialTick_);
     }
 
-    protected void toggleBlock(Checkbox button, boolean state) {
-        this.config.block = state;
-        button.setMessage(state ? BLOCK_ON : BLOCK_OFF);
+    protected void toggleBlock(Button button) {
+        if (button instanceof BlockButton bb) {
+            this.config.block = bb.toggle();
+        }
     }
 
-    protected void toggleCull(Checkbox button, boolean state) {
-        this.config.cull = state;
-        button.setMessage(state ? CULL_ON : CULL_OFF);
+    protected void toggleCull(Button button) {
+        if (button instanceof CullButton cb)
+            this.config.cull = cb.toggle();
     }
 
     protected void play(final Button button) {
@@ -210,7 +206,8 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     }
 
     protected ConfigSoundInstance playSound(IndividualSoundConfigEntry entry) {
-        ConfigSoundInstance sound = new ConfigSoundInstance(entry.soundEventId, entry.volumeScale);
+        var metadata = SOUND_LIBRARY.getSoundMetadata(entry.soundEventId);
+        ConfigSoundInstance sound = ConfigSoundInstance.create(entry.soundEventId, metadata.getCategory(), () -> entry.volumeScale / 100F);
         AUDIO_PLAYER.play(sound);
         return sound;
     }
@@ -251,6 +248,9 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
             if (metadata != null) {
                 if (!metadata.getTitle().equals(Component.empty()))
                     this.cachedToolTip.add(metadata.getTitle().getVisualOrderText());
+
+                this.cachedToolTip.add(Component.literal(metadata.getCategory().toString()).withStyle(STYLE_CATEGORY).getVisualOrderText());
+
                 if (!metadata.getSubTitle().equals(Component.empty())) {
                     this.cachedToolTip.add(metadata.getSubTitle().copy().withStyle(STYLE_SUBTITLE).getVisualOrderText());
                 }

@@ -27,7 +27,7 @@
     "core.MixinEntityArrow",
     "core.MixinIngameHud",
     "core.MixinLivingEntity",
-    "core.MixinMusicManager",
+    "audio.MixinMusicManager",
     "core.MixinParticleManager",
     "core.MixinRainSplashParticle",
     "core.MixinRaycastContextAccessor",

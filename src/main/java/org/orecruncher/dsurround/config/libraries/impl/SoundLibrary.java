@@ -128,7 +128,8 @@ public final class SoundLibrary implements ISoundLibrary {
 
     @Override
     public SoundMetadata getSoundMetadata(final ResourceLocation sound) {
-        return this.soundMetadata.get(Objects.requireNonNull(sound));
+        var result = this.soundMetadata.get(Objects.requireNonNull(sound));
+        return result.isDefault() ? new SoundMetadata(sound) : result;
     }
 
     @Override
@@ -207,7 +208,7 @@ public final class SoundLibrary implements ISoundLibrary {
                 this.myRegistry.put(loc, SoundEvent.createVariableRangeEvent(loc));
             }
             if (!value.isDefault()) {
-                final SoundMetadata data = new SoundMetadata(value);
+                final SoundMetadata data = new SoundMetadata(loc, value);
                 this.soundMetadata.put(loc, data);
             }
         });

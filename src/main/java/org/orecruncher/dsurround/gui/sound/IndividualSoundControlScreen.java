@@ -10,6 +10,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public class IndividualSoundControlScreen extends Screen {
 
@@ -37,15 +38,21 @@ public class IndividualSoundControlScreen extends Screen {
 
     protected final Screen parent;
     protected final boolean enablePlay;
+    protected final Consumer<IndividualSoundControlScreen> onClose;
     protected EditBox searchField;
     protected IndividualSoundControlList soundConfigList;
     protected Button save;
     protected Button cancel;
 
     public IndividualSoundControlScreen(final Screen parent, final boolean enablePlay) {
+        this(parent, enablePlay, (ignore) ->{});
+    }
+
+    public IndividualSoundControlScreen(final Screen parent, final boolean enablePlay, Consumer<IndividualSoundControlScreen> onClose) {
         super(Component.translatable("dsurround.text.keybind.individualSoundConfig"));
         this.parent = parent;
         this.enablePlay = enablePlay;
+        this.onClose = onClose;
     }
 
     @Override
@@ -159,5 +166,11 @@ public class IndividualSoundControlScreen extends Screen {
         // Just discard - no processing
         this.onClose();
         this.closeScreen();
+    }
+
+    @Override
+    public void onClose() {
+        this.onClose.accept(this);
+        super.onClose();
     }
 }
