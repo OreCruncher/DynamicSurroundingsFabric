@@ -1,0 +1,22 @@
+[
+  {
+    "biomeSelector": "TAIGA && SNOWY",
+    "_comment": "Music for Snowy Taiga",
+    "acoustics": [
+      {
+        "factory": "dsurround_ex:music.wintersong",
+        "type": "music"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "DESERT && !COLD",
+    "_comment": "Music for Deserts",
+    "acoustics": [
+      {
+        "factory": "dsurround_ex:music.vopna",
+        "type": "music"
+      }
+    ]
+  }
+]

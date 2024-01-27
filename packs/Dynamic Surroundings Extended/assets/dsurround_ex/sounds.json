@@ -1,0 +1,34 @@
+{
+	"music.wintersong": {
+		"category": "music",
+		"credits": [
+			{
+				"name": "Wintersong",
+				"author": "Alexander Nakarada (https://creatorchords.com)",
+				"license": "Creative Commons CC BY 4.0"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround_ex:music/wintersong",
+				"stream": true
+			}
+		]
+	},
+	"music.vopna": {
+		"category": "music",
+		"credits": [
+			{
+				"name": "Vopna",
+				"author": "Alexander Nakarada (https://creatorchords.com)",
+				"license": "Creative Commons CC BY 4.0"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround_ex:music/vopna",
+				"stream": true
+			}
+		]
+	}
+}

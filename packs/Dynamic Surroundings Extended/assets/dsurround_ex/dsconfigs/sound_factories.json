@@ -1,0 +1,12 @@
+[
+  {
+    "location": "dsurround_ex:music.wintersong",
+    "soundEvent": "dsurround_ex:music.wintersong",
+    "category": "MUSIC"
+  },
+  {
+    "location": "dsurround_ex:music.vopna",
+    "soundEvent": "dsurround_ex:music.vopna",
+    "category": "MUSIC"
+  }
+]
