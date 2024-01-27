@@ -16,16 +16,18 @@ import org.orecruncher.dsurround.runtime.audio.SoundFXProcessor;
 import org.orecruncher.dsurround.sound.SoundInstanceHandler;
 import org.orecruncher.dsurround.sound.SoundVolumeEvaluator;
 import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.concurrent.CompletableFuture;
 
 @Mixin(SoundEngine.class)
-public class MixinSoundEngine {
+public abstract class MixinSoundEngine {
 
     @Final
     @Shadow
@@ -66,17 +68,32 @@ public class MixinSoundEngine {
     }
 
     /**
-     * @author OreCruncher
-     * @reason Replacing algorithm for adjusting volume using other external factors
+     * Update the volume based on current settings and environment.
      */
-    @Overwrite()
-    private float calculateVolume(SoundInstance sound) {
-        return SoundVolumeEvaluator.getAdjustedVolume(sound);
+    @Inject(method = "calculateVolume(Lnet/minecraft/client/resources/sounds/SoundInstance;)F", at = @At("HEAD"), cancellable = true)
+    private void dsurround_calculateVolume(SoundInstance soundInstance, CallbackInfoReturnable<Float> cir) {
+        try {
+            var result = SoundVolumeEvaluator.getAdjustedVolume(soundInstance);
+            cir.setReturnValue(result);
+        } catch (Throwable ex) {
+            // Something went wrong. Since the call was not canceled, it will continue with the existing implementation.
+            MixinHelpers.LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, "Error calculating sound volume: %s", ex);
+        }
     }
 
+    /**
+     * The call is redirected at the point of invocation because the SoundInstance reference is needed.
+     */
     @Redirect(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/SoundEngine;calculateVolume(FLnet/minecraft/sounds/SoundSource;)F"))
     private float dsurround_playGetAdjustedVolume(SoundEngine instance, float f, SoundSource soundSource, SoundInstance sound) {
-        return SoundVolumeEvaluator.getAdjustedVolume(sound);
+        try {
+            return SoundVolumeEvaluator.getAdjustedVolume(sound);
+        } catch (Throwable ex) {
+            MixinHelpers.LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, "Error calculating sound volume: %s", ex);
+        }
+
+        // If we get here, something went wrong. Use the Minecraft implementation.
+        return this.callCalculateVolume(f, soundSource);
     }
 
     @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;<init>(DDD)V"), locals = LocalCapture.CAPTURE_FAILEXCEPTION, cancellable = true)
@@ -89,4 +106,7 @@ public class MixinSoundEngine {
             }
         }
     }
+
+    @Invoker
+    public abstract float callCalculateVolume(float ignore1, SoundSource ignore2);
 }
