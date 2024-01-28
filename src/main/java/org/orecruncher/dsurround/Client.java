@@ -40,14 +40,19 @@ public final class Client {
     public Client() {
         // Bootstrap library functions
         this.logger = Library.LOGGER;
+
+        this.logger.info("[%s] Bootstrapping", Constants.MOD_ID);
+
         Library.initialize();
 
-        // Register the Minecraft sound manager. Avoids issue with ModernUI and their dinger
+        // Register the Minecraft sound manager using a factory. Avoids issue with ModernUI and their dinger.
         ContainerManager.getRootContainer().registerFactory(SoundManager.class, GameUtils::getSoundManager);
+
+        this.logger.info("[%s] Boostrap completed", Constants.MOD_ID);
     }
 
     public void initializeClient() {
-        this.logger.info("Client initializing...");
+        this.logger.info("[%s] Client initializing", Constants.MOD_ID);
 
         // Setup debug trace on the logger. It's not guaranteed that we
         // are the first obtaining the log file, so we can't rely
@@ -107,11 +112,13 @@ public final class Client {
             this.versionInfo = CompletableFuture.completedFuture(Optional.empty());
 
         KeyBindings.register();
+
+        this.logger.info("[%s] Client initialization complete", Constants.MOD_ID);
     }
 
     public void onComplete(Minecraft client) {
 
-        this.logger.info("Finalizing initialization...");
+        this.logger.info("[%s] Completing initialization", Constants.MOD_ID);
         var container = ContainerManager.getRootContainer();
 
         // Register and initialize our libraries. Handlers will be reloaded in priority order.
@@ -139,7 +146,7 @@ public final class Client {
         // Minecraft environment.
         ParticleSheets.register();
 
-        this.logger.info("Done!");
+        this.logger.info("[%s] Finalization complete", Constants.MOD_ID);
     }
 
     private void onConnect(Minecraft minecraftClient) {
