@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.sounds.SoundManager;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
 import org.orecruncher.dsurround.effects.particles.ParticleSheets;
@@ -40,6 +41,9 @@ public final class Client {
         // Bootstrap library functions
         this.logger = Library.LOGGER;
         Library.initialize();
+
+        // Register the Minecraft sound manager. Avoids issue with ModernUI and their dinger
+        ContainerManager.getRootContainer().registerFactory(SoundManager.class, GameUtils::getSoundManager);
     }
 
     public void initializeClient() {
@@ -109,9 +113,6 @@ public final class Client {
 
         this.logger.info("Finalizing initialization...");
         var container = ContainerManager.getRootContainer();
-
-        // Register the Minecraft sound manager
-        container.registerSingleton(GameUtils.getSoundManager());
 
         // Register and initialize our libraries. Handlers will be reloaded in priority order.
         // Leave normal to very low priority for other things in the mod that would need such
