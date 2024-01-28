@@ -126,14 +126,10 @@ public final class Client {
 
         ClientState.TAG_SYNC.register(event -> {
             this.logger.info("Tag sync event received - reloading libraries");
-            AssetLibraryEvent.reload();
+            AssetLibraryEvent.RELOAD.raise().onReload(IReloadEvent.Scope.TAGS);
         }, HandlerPriority.VERY_HIGH);
 
-        // Make the libraries load their data. Priority determines the sequence.
-        // Reload listener in the plaform module will trigger the load
-        //AssetLibraryEvent.reload();
-
-        // Force instantiation of the core Handler.  This should cause the rest
+        // Force instantiation of the core Handler. This should cause the rest
         // of the dependencies to be initialized.
         container.resolve(Handlers.class);
 

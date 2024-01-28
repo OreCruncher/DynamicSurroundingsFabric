@@ -9,6 +9,7 @@ final class Stopwatch implements IStopwatch {
 
     Stopwatch(ISystemClock clock) {
         this._systemClock = clock;
+        this.reset();
     }
 
     @Override

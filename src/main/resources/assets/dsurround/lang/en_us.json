@@ -87,6 +87,8 @@
   "dsurround.config.soundOptions.replaceThunderSounds.tooltip": "Enables replacement of thunder sounds with Dynamic Surroundings' version",
   "dsurround.config.soundOptions.allowScarySounds": "Allow playing scary sounds",
   "dsurround.config.soundOptions.allowScarySounds.tooltip": "Enables playing scary sounds. Scary can be subjective. It is up to mod pack authors to implement properly within the configuration. Disliked sounds also be blocked using the in-game sound configuration menu.",
+  "dsurround.config.soundOptions.playBiomeMusicWhileCreative": "Play biome music while creative",
+  "dsurround.config.soundOptions.playBiomeMusicWhileCreative.tooltip": "Enables playing configured biome background music when in creative mode. Normally while in creative mode, Minecraft's situational music selector will automatically pick creative music rather than biome background music.",
   "dsurround.config.blockEffects": "Block Effect Options",
   "dsurround.config.blockEffects.tooltip": "Configuration options for block effects",
   "dsurround.config.blockEffects.blockEffectRange": "Block Effect Range",

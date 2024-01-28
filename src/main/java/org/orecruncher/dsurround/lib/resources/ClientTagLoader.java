@@ -7,6 +7,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagEntry;
 import net.minecraft.tags.TagKey;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
@@ -88,14 +89,13 @@ public class ClientTagLoader {
                 this.logger.debug(RESOURCE_LOADING, "%s - %d entries found", tagKey, entries.size());
 
                 var lookup = new TagEntry.Lookup<ResourceLocation>() {
-                    @Nullable
                     @Override
-                    public ResourceLocation element(ResourceLocation id) {
+                    public @NotNull ResourceLocation element(@NotNull ResourceLocation id) {
                         return id;
                     }
                     @Nullable
                     @Override
-                    public Collection<ResourceLocation> tag(ResourceLocation id) {
+                    public Collection<ResourceLocation> tag(@NotNull ResourceLocation id) {
                         TagKey<?> tag = TagKey.create(tagKey.registry(), id);
                         // This will trigger recursion to generate a complete list of IDs
                         ClientTagLoader.this.logger.debug(RESOURCE_LOADING, "%s - Recurse %s", tagKey, tag);

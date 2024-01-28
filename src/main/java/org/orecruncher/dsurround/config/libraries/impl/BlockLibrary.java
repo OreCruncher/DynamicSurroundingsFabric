@@ -10,6 +10,7 @@ import net.minecraft.world.level.block.state.StateHolder;
 import org.orecruncher.dsurround.config.block.BlockInfo;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
+import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -49,7 +50,7 @@ public class BlockLibrary implements IBlockLibrary {
     }
 
     @Override
-    public void reload() {
+    public void reload(IReloadEvent.Scope scope) {
 
         this.blockConfigs.clear();
 

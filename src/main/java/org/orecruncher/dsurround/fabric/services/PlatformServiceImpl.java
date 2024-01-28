@@ -11,6 +11,7 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
+import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.fabric.config.ClothAPIFactory;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
@@ -37,8 +38,8 @@ public class PlatformServiceImpl implements IPlatform {
 
             @Override
             public void onResourceManagerReload(@NotNull ResourceManager ignore) {
-                Library.LOGGER.info("Resource pack reload - resetting configuration caches");
-                AssetLibraryEvent.reload();
+                Library.LOGGER.info("Resource reload - resetting configuration caches");
+                AssetLibraryEvent.RELOAD.raise().onReload(IReloadEvent.Scope.RESOURCES);
             }
         });
     }

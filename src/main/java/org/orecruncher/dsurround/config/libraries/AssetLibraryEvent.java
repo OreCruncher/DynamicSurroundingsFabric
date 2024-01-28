@@ -11,31 +11,22 @@ import org.orecruncher.dsurround.lib.events.IPhasedEvent;
 public class AssetLibraryEvent {
 
     private static final Configuration CONFIG = ContainerManager.resolve(Configuration.class);
-    public static final IPhasedEvent<IReloadEvent> RELOAD = EventingFactory.createPrioritizedEvent(callbacks -> () -> {
+    public static final IPhasedEvent<IReloadEvent> RELOAD = EventingFactory.createPrioritizedEvent(callbacks -> scope -> {
         for (var callback : callbacks) {
-            callback.onReload();
+            callback.onReload(scope);
         }
     });
-
-    public static void reload() {
-        RELOAD.raise().onReload();
-    }
 
     static {
         RELOAD.register(AssetLibraryEvent::afterReload, HandlerPriority.VERY_LOW);
     }
 
-    private static void afterReload() {
+    private static void afterReload(IReloadEvent.Scope scope) {
         // Only want to send a message if debug logging is enabled
         if (CONFIG.logging.enableDebugLogging) {
             var msg = Component.translatable("dsurround.text.reloadassets", Component.translatable("dsurround.modname"));
-            var player = GameUtils.getPlayer();
-            player.ifPresent( p -> p.sendSystemMessage(msg));
+            GameUtils.getPlayer().ifPresent(p -> p.sendSystemMessage(msg));
         }
     }
 
-    @FunctionalInterface
-    public interface IReloadEvent {
-        void onReload();
-    }
 }

@@ -6,6 +6,7 @@ import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
+import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.effects.systems.RandomBlockEffectSystem;
 import org.orecruncher.dsurround.effects.systems.SteamEffectSystem;
 import org.orecruncher.dsurround.effects.systems.WaterfallEffectSystem;
@@ -80,7 +81,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
         this.effectSystems = null;
     }
 
-    private void clear() {
+    private void clear(IReloadEvent.Scope scope) {
         if (this.effectSystems != null)
             this.effectSystems.resetFullScan();
     }

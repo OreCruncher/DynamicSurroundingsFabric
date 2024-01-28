@@ -148,6 +148,10 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enables playing sounds that are considered scary")
         public boolean allowScarySounds = true;
+
+        @Property
+        @Comment("Enables playing biome background music while in creative")
+        public boolean playBiomeMusicWhileCreative = false;
     }
 
     public static class BlockEffects {
