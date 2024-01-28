@@ -9,8 +9,9 @@ import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
+import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.processing.Scanners;
-import org.orecruncher.dsurround.runtime.sets.*;
+import org.orecruncher.dsurround.runtime.sets.impl.*;
 
 import java.util.Optional;
 
@@ -24,9 +25,10 @@ public final class ConditionEvaluator implements IConditionEvaluator {
         this.context.add(new DimensionVariables());
         this.context.add(new DiurnalVariables());
         this.context.add(new PlayerVariables());
-        this.context.add(new WeatherVariables());
+        this.context.add(new WeatherVariables(ContainerManager.resolve(ISeasonalInformation.class)));
         this.context.add(new EnvironmentState(ContainerManager.resolve(Scanners.class)));
         this.context.add(new GlobalVariables(ContainerManager.resolve(Configuration.class)));
+        this.context.add(new SeasonVariables(ContainerManager.resolve(ISeasonalInformation.class)));
 
         ClientState.TICK_START.register(this::tick, HandlerPriority.VERY_HIGH);
     }

@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.runtime.sets;
+package org.orecruncher.dsurround.runtime.sets.impl;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.dimension.DimensionType;
@@ -8,6 +8,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
+import org.orecruncher.dsurround.runtime.sets.IDimensionVariables;
 
 public class DimensionVariables extends VariableSet<IDimensionVariables> implements IDimensionVariables {
 

@@ -6,7 +6,7 @@ import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.runtime.sets.BiomeVariables;
+import org.orecruncher.dsurround.runtime.sets.impl.BiomeVariables;
 
 import java.util.Optional;
 

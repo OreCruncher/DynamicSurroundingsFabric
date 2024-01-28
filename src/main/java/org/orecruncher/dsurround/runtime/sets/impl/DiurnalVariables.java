@@ -1,9 +1,10 @@
-package org.orecruncher.dsurround.runtime.sets;
+package org.orecruncher.dsurround.runtime.sets.impl;
 
 import org.orecruncher.dsurround.lib.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
+import org.orecruncher.dsurround.runtime.sets.IDiurnalVariables;
 
 public class DiurnalVariables extends VariableSet<IDiurnalVariables> implements IDiurnalVariables {
 

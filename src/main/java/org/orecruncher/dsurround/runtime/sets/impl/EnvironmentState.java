@@ -1,7 +1,8 @@
-package org.orecruncher.dsurround.runtime.sets;
+package org.orecruncher.dsurround.runtime.sets.impl;
 
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.processing.Scanners;
+import org.orecruncher.dsurround.runtime.sets.IEnvironmentState;
 
 public class EnvironmentState extends VariableSet<IEnvironmentState> implements IEnvironmentState {
 
