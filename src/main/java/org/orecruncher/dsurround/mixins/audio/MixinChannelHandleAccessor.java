@@ -19,7 +19,6 @@ public abstract class MixinChannelHandleAccessor implements IChannelHandle {
 
     @Inject(method = "release()V", at = @At("HEAD"))
     private void dsurround_release(CallbackInfo ci) {
-        var self = (ChannelAccess.ChannelHandle)(Object)this;
         try {
             SoundFXProcessor.stopSoundPlay(this.dsurround_getSource());
         } catch (Throwable t) {

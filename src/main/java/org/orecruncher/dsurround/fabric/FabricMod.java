@@ -22,7 +22,9 @@ public final class FabricMod implements ClientModInitializer {
         // Boot the mod
         this.client.initializeClient();
 
-        // Fabric specific registrations
-        ClientCommandRegistrationCallback.EVENT.register(Commands::register);
+        // Fabric specific registrations. Need to figure out how to handle Config because
+        // this method is bleh.
+        if (Client.Config.logging.registerCommands)
+            ClientCommandRegistrationCallback.EVENT.register(Commands::register);
     }
 }

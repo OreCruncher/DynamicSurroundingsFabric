@@ -72,6 +72,11 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable filtering display of tags in the diagnostics overlay")
         public boolean filteredTagView = true;
+
+        @Property
+        @RestartRequired
+        @Comment("Enable/disable registration of client side commands")
+        public boolean registerCommands = true;
     }
 
     public static class SoundSystem {

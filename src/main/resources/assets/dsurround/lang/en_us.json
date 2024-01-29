@@ -71,6 +71,8 @@
   "dsurround.config.logging.enableModUpdateChatMessage.tooltip": "Enable/disable chat window notification when newer mod versions are available",
   "dsurround.config.logging.filteredTagView": "Filter Tag View",
   "dsurround.config.logging.filteredTagView.tooltip": "Enable/disable filtering of tags in the diagnostic overlay. If enabled, tag listings will be filtered to only those belonging to loader frameworks as well as Minecraft and this mod. If disabled, all tags will be shown.",
+  "dsurround.config.logging.registerCommands": "Register client side commands",
+  "dsurround.config.logging.registerCommands.tooltip": "Enable/disable registration of client side commands. Disabling may provide broadest level of support when using the mod with other loaders, such as Quilt.",
   "dsurround.config.soundSystem": "Sound System",
   "dsurround.config.soundSystem.tooltip": "Configuration options for modifying Minecraft's Sound System behavior",
   "dsurround.config.soundSystem.streamingChannels": "Number of Streaming Sound Channels",
