@@ -32,10 +32,11 @@ public record SoundMetadataConfig(Optional<String> title, Optional<String> subti
         return this.title.isEmpty() && this.subtitle.isEmpty() && this.credits.isEmpty() && this.category.isEmpty();
     }
 
-    public record CreditEntry(String name, String author, String license) {
+    public record CreditEntry(String name, String author, Optional<String> website, String license) {
         public static final Codec<CreditEntry> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
                 Codec.STRING.fieldOf("name").forGetter(CreditEntry::name),
                 Codec.STRING.fieldOf("author").forGetter(CreditEntry::author),
+                Codec.STRING.optionalFieldOf("website").forGetter(CreditEntry::website),
                 Codec.STRING.fieldOf("license").forGetter(CreditEntry::license))
                 .apply(instance, CreditEntry::new));
     }

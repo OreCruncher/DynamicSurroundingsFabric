@@ -1,33 +1,96 @@
 {
 	"music.wintersong": {
+		"title": "Wintersong",
 		"category": "music",
 		"credits": [
 			{
 				"name": "Wintersong",
-				"author": "Alexander Nakarada (https://creatorchords.com)",
+				"author": "Alexander Nakarada",
+				"website": "https://creatorchords.com",
 				"license": "Creative Commons CC BY 4.0"
 			}
 		],
 		"sounds": [
 			{
 				"name": "dsurround_ex:music/wintersong",
-				"stream": true
+				"stream": true,
+				"volume": 0.5
 			}
 		]
 	},
 	"music.vopna": {
+		"title": "Vopna",
 		"category": "music",
 		"credits": [
 			{
 				"name": "Vopna",
-				"author": "Alexander Nakarada (https://creatorchords.com)",
+				"author": "Alexander Nakarada",
+				"website": "https://creatorchords.com",
 				"license": "Creative Commons CC BY 4.0"
 			}
 		],
 		"sounds": [
 			{
 				"name": "dsurround_ex:music/vopna",
-				"stream": true
+				"stream": true,
+				"volume": 0.5
+			}
+		]
+	},
+	"music.wonderful_fairytail": {
+		"title": "Wonderful Fairytail",
+		"category": "music",
+		"credits": [
+			{
+				"name": "Wonderful Fairytail",
+				"author": "AudioCoffee",
+				"website": "https://www.audiocoffee.net",
+				"license": "Creative Commons CC BY-SA 3.0"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround_ex:music/wonderful_fairytail",
+				"stream": true,
+				"volume": 0.3
+			}
+		]
+	},
+	"music.enchanted": {
+		"title": "Enchanted",
+		"category": "music",
+		"credits": [
+			{
+				"name": "Enchanted",
+				"author": "Keys of Moon",
+				"website": "https://soundcloud.com/keysofmoon",
+				"license": "Creative Commons CC BY 4.0"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround_ex:music/enchanted",
+				"stream": true,
+				"volume": 0.5
+			}
+		]
+	},
+	"music.gjallar": {
+		"title": "Gjallar",
+		"category": "music",
+		"credits": [
+			{
+				"name": "Gjallar",
+				"author": "Alexander Nakarada",
+				"website": "https://creatorchords.com",
+				"license": "Creative Commons CC BY 4.0"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround_ex:music/gjallar",
+				"stream": true,
+				"volume": 0.5
 			}
 		]
 	}

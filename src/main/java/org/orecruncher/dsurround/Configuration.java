@@ -152,6 +152,10 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enables playing biome background music while in creative")
         public boolean playBiomeMusicWhileCreative = false;
+
+        @Property
+        @Comment("Enables display of toast messages for credited music")
+        public boolean displayToastMessagesForMusic = true;
     }
 
     public static class BlockEffects {

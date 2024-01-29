@@ -1,20 +1,50 @@
 [
   {
-    "biomeSelector": "TAIGA && SNOWY",
-    "_comment": "Music for Snowy Taiga",
+    "biomeSelector": "OVERWORLD && (TAIGA || CONIFEROUS) && (COLD || SNOWY)",
+    "_comment": "Music for Taiga",
     "acoustics": [
       {
-        "factory": "dsurround_ex:music.wintersong",
+        "factory": "dsurround_ex:music/wintersong",
         "type": "music"
       }
     ]
   },
   {
-    "biomeSelector": "DESERT && !COLD",
+    "biomeSelector": "OVERWORLD && DESERT && !COLD",
     "_comment": "Music for Deserts",
     "acoustics": [
       {
-        "factory": "dsurround_ex:music.vopna",
+        "factory": "dsurround_ex:music/vopna",
+        "type": "music"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "OVERWORLD && OCEAN",
+    "_comment": "Music for Oceans",
+    "acoustics": [
+      {
+        "factory": "dsurround_ex:music/wonderful_fairytail",
+        "type": "music"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "OVERWORLD && FLORAL",
+    "_comment": "Music for Floral Biomes",
+    "acoustics": [
+      {
+        "factory": "dsurround_ex:music/enchanted",
+        "type": "music"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "OVERWORLD && MOUNTAIN && !FLORAL",
+    "_comment": "Music for Mountain Biomes",
+    "acoustics": [
+      {
+        "factory": "dsurround_ex:music/gjallar",
         "type": "music"
       }
     ]

@@ -89,6 +89,8 @@
   "dsurround.config.soundOptions.allowScarySounds.tooltip": "Enables playing scary sounds. Scary can be subjective. It is up to mod pack authors to implement properly within the configuration. Disliked sounds also be blocked using the in-game sound configuration menu.",
   "dsurround.config.soundOptions.playBiomeMusicWhileCreative": "Play biome music while creative",
   "dsurround.config.soundOptions.playBiomeMusicWhileCreative.tooltip": "Enables playing configured biome background music when in creative mode. Normally while in creative mode, Minecraft's situational music selector will automatically pick creative music rather than biome background music.",
+  "dsurround.config.soundOptions.displayToastMessagesForMusic": "Display music toast messages",
+  "dsurround.config.soundOptions.displayToastMessagesForMusic.tooltip": "Enables the display of toast notifications for music that has a requirement for attribution. Please see the CREDITS.md file on Github for details.",
   "dsurround.config.blockEffects": "Block Effect Options",
   "dsurround.config.blockEffects.tooltip": "Configuration options for block effects",
   "dsurround.config.blockEffects.blockEffectRange": "Block Effect Range",
@@ -186,5 +188,7 @@
   "dsurround.text.keybind.individualSoundConfig": "Individual Sound Configuration",
   "dsurround.text.keybind.diagnosticHud": "Diagnostic Overlay",
   "dsurround.text.reloadassets": "[%1$s\u00a7r] \u00a7aReloaded configurations",
-  "dsurround.text.seasons.spring": "Spring"
+  "dsurround.text.seasons.spring": "Spring",
+  "dsurround.text.toast.music.title": "Music \"%1$s\"",
+  "dsurround.text.toast.music.author": "by %1$s"
 }

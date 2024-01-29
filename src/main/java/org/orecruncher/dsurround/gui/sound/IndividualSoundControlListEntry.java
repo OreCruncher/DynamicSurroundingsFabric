@@ -43,7 +43,6 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private static final Style STYLE_CREDIT_NAME = Style.EMPTY.withColor(ColorPalette.GREEN);
     private static final Style STYLE_CREDIT_AUTHOR = Style.EMPTY.withColor(ColorPalette.WHITE);
     private static final Style STYLE_CREDIT_LICENSE = Style.EMPTY.withItalic(true).withColor(ColorPalette.MC_DARKAQUA);
-    private static final Style STYLE_TOGGLE_ON = Style.EMPTY.withColor(ColorPalette.GREEN);
     private static final Style STYLE_HELP = Style.EMPTY.withItalic(true).withColor(ColorPalette.KEY_LIME);
 
     private static final FormattedCharSequence VANILLA_CREDIT = Component.translatable("dsurround.text.soundconfig.vanilla").getVisualOrderText();
@@ -260,6 +259,9 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
                         this.cachedToolTip.add(Component.empty().getVisualOrderText());
                         this.cachedToolTip.add(credit.name().copy().withStyle(STYLE_CREDIT_NAME).getVisualOrderText());
                         this.cachedToolTip.add(credit.author().copy().withStyle(STYLE_CREDIT_AUTHOR).getVisualOrderText());
+                        if (credit.webSite().isPresent()) {
+                            this.cachedToolTip.add(credit.webSite().get().copy().withStyle(STYLE_CREDIT_AUTHOR).getVisualOrderText());
+                        }
                         this.cachedToolTip.add(credit.license().copy().withStyle(STYLE_CREDIT_LICENSE).getVisualOrderText());
                     }
                 }

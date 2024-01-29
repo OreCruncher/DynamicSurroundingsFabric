@@ -2,7 +2,9 @@ package org.orecruncher.dsurround.mixins.audio;
 
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.MusicManager;
+import net.minecraft.sounds.Music;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.gui.sound.SoundToast;
 import org.orecruncher.dsurround.mixinutils.IMusicManager;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.spongepowered.asm.mixin.Mixin;
@@ -36,7 +38,7 @@ public class MixinMusicManager implements IMusicManager {
 
     @Override
     public void dsurround_reset() {
-        MusicManager self = (MusicManager)(Object)this;
+        MusicManager self = (MusicManager) (Object) this;
         self.stopPlaying();
         this.nextSongDelay = 100;
         this.dsurround_pauseTicking = false;
@@ -44,7 +46,7 @@ public class MixinMusicManager implements IMusicManager {
 
     @Override
     public void dsurround_setPaused(boolean flag) {
-        var self = (MusicManager)(Object)this;
+        var self = (MusicManager) (Object) this;
         if (flag) {
             MixinHelpers.LOGGER.info("Stopping MusicManager");
             this.dsurround_pauseTicking = true;
@@ -60,5 +62,11 @@ public class MixinMusicManager implements IMusicManager {
     public void dsurround_pauseTickCheck(CallbackInfo ci) {
         if (this.dsurround_pauseTicking)
             ci.cancel();
+    }
+
+    @Inject(method = "startPlaying(Lnet/minecraft/sounds/Music;)V", at = @At("RETURN"))
+    public void dsurround_startPlaying(Music music, CallbackInfo ci) {
+        if (MixinHelpers.soundOptions.displayToastMessagesForMusic)
+            SoundToast.create(music);
     }
 }

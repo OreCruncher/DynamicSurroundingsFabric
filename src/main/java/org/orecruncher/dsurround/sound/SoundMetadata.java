@@ -10,6 +10,7 @@ import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class SoundMetadata {
 
@@ -50,8 +51,9 @@ public final class SoundMetadata {
             for (var entry : cfg.credits()) {
                 var name = Component.nullToEmpty(ChatFormatting.stripFormatting(entry.name()));
                 var author = Component.nullToEmpty(ChatFormatting.stripFormatting(entry.author()));
+                var webSite = entry.website().map(website -> Component.nullToEmpty(ChatFormatting.stripFormatting(website)));
                 var license = Component.nullToEmpty(ChatFormatting.stripFormatting(entry.license()));
-                var creditEntry = new Credit(name, author, license);
+                var creditEntry = new Credit(name, author, webSite, license);
                 temp.add(creditEntry);
             }
             this.credits = ImmutableList.copyOf(temp);
@@ -79,7 +81,7 @@ public final class SoundMetadata {
         return SoundSource.AMBIENT;
     }
 
-    public record Credit(Component name, Component author, Component license) {
+    public record Credit(Component name, Component author, Optional<Component> webSite, Component license) {
 
     }
 
