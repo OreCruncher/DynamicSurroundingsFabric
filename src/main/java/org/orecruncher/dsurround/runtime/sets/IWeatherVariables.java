@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.runtime.sets;
 
+@SuppressWarnings("unused")
 public interface IWeatherVariables {
 
     /**
@@ -54,11 +55,6 @@ public interface IWeatherVariables {
      * @return the temperature
      */
     float getTemperature();
-
-    /**
-     * Gets the current season
-     */
-    String getSeason();
 
     /**
      * Indicates if the temperature at the player location is cold enough to show frost breath, etc.

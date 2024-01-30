@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.runtime.sets;
+package org.orecruncher.dsurround.runtime.sets.impl;
 
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.BiomeTrait;
@@ -9,6 +9,7 @@ import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
+import org.orecruncher.dsurround.runtime.sets.IBiomeVariables;
 
 public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBiomeVariables {
 

@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 import java.util.*;
@@ -21,8 +22,8 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
 
     private final Screen parent;
     private final boolean enablePlay;
-    private final int width;
     private final ISoundLibrary soundLibrary;
+    private int width;
     private List<IndividualSoundConfigEntry> source;
     private String lastSearchText = null;
 
@@ -36,8 +37,10 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
         this.width = slotWidth;
 
         // Things like resizing will cause reconstruction and this preserves the existing state
-        if (oldList != null)
+        if (oldList != null) {
             this.source = oldList.source;
+            this.calculateRowWidth();
+        }
 
         // Initialize the first pass
         this.setSearchFilter(filter);
@@ -67,8 +70,10 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
         this.clearEntries();
 
         // Load up sources if needed
-        if (this.source == null)
+        if (this.source == null) {
             this.source = new ArrayList<>(this.getSortedSoundConfigurations());
+            this.calculateRowWidth();
+        }
 
         // Get the filter string.  It's a simple contents check.
         final Predicate<IndividualSoundConfigEntry> process;
@@ -87,6 +92,8 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
                 this.addEntry(entry);
             }
         }
+
+        this.calculateRowWidth();
 
         if (first != null)
             this.ensureVisible(first);
@@ -137,5 +144,12 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
         }
 
         return map.values().stream().sorted(IndividualSoundConfigEntry::compareTo).collect(Collectors.toList());
+    }
+
+    protected void calculateRowWidth() {
+        if (!this.children().isEmpty()) {
+            var width = this.children().stream().map(IndividualSoundControlListEntry::getWidth).max(Integer::compareTo);
+            width.ifPresent(w -> this.width = w);
+        }
     }
 }

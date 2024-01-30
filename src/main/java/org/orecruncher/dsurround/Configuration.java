@@ -72,6 +72,11 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable filtering display of tags in the diagnostics overlay")
         public boolean filteredTagView = true;
+
+        @Property
+        @RestartRequired
+        @Comment("Enable/disable registration of client side commands")
+        public boolean registerCommands = true;
     }
 
     public static class SoundSystem {
@@ -148,6 +153,14 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enables playing sounds that are considered scary")
         public boolean allowScarySounds = true;
+
+        @Property
+        @Comment("Enables playing biome background music while in creative")
+        public boolean playBiomeMusicWhileCreative = false;
+
+        @Property
+        @Comment("Enables display of toast messages for credited music")
+        public boolean displayToastMessagesForMusic = true;
     }
 
     public static class BlockEffects {

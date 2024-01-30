@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.sound;
 
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.valueproviders.ConstantFloat;
@@ -21,6 +22,10 @@ public final class SoundFactoryBuilder {
     int repeatDelay = 0;
     boolean global = false;
     SoundInstance.Attenuation attenuation;
+
+    int musicMinDelay = SoundFactory.MusicSettings.DEFAULT.minDelay();
+    int musicMaxDelay = SoundFactory.MusicSettings.DEFAULT.maxDelay();
+    boolean musicReplaceMusic = SoundFactory.MusicSettings.DEFAULT.replaceCurrentMusic();
 
     SoundFactoryBuilder(SoundEvent soundEvent) {
         this.soundEvent = soundEvent;
@@ -85,6 +90,21 @@ public final class SoundFactoryBuilder {
         return this;
     }
 
+    public SoundFactoryBuilder setMusicMinDelay(int delay) {
+        this.musicMinDelay = delay;
+        return this;
+    }
+
+    public SoundFactoryBuilder setMusicMaxDelay(int delay) {
+        this.musicMaxDelay = delay;
+        return this;
+    }
+
+    public SoundFactoryBuilder setMusicReplaceCurrentMusic(boolean flag) {
+        this.musicReplaceMusic = flag;
+        return this;
+    }
+
     public ISoundFactory build() {
         return SoundFactory.from(this);
     }
@@ -101,6 +121,13 @@ public final class SoundFactoryBuilder {
 
     public static SoundFactoryBuilder create(SoundEvent soundEvent) {
         return new SoundFactoryBuilder(soundEvent);
+    }
+
+    public static SoundFactoryBuilder create(Music music) {
+        return new SoundFactoryBuilder(music.getEvent().value())
+                .setMusicMinDelay(music.getMinDelay())
+                .setMusicMaxDelay(music.getMaxDelay())
+                .setMusicReplaceCurrentMusic(music.replaceCurrentMusic());
     }
 
 }

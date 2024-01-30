@@ -25,6 +25,34 @@ public interface ISeasonalInformation {
     Optional<String> getCurrentSeasonTranslated(Level world);
 
     /**
+     * Indicates if the current season is considered Spring.
+     */
+    default boolean isSpring(Level world) {
+        return true;
+    }
+
+    /**
+     * Indicates if the current season is considered Summer.
+     */
+    default boolean isSummer(Level world) {
+        return false;
+    }
+
+    /**
+     * Indicates if the current season is considered Autumn/Fall.
+     */
+    default boolean isAutumn(Level world) {
+        return false;
+    }
+
+    /**
+     * Indicates if the current season is considered Winter.
+     */
+    default boolean isWinter(Level world) {
+        return false;
+    }
+
+    /**
      * Gets the temperature at the specified block location taking into account any seasonal variance.
      */
     float getTemperature(Level world, BlockPos blockPos);

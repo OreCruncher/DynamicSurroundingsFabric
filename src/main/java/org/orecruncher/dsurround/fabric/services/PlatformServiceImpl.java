@@ -1,9 +1,17 @@
 package org.orecruncher.dsurround.fabric.services;
 
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.ResourceManager;
+import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
+import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.fabric.config.ClothAPIFactory;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
@@ -20,6 +28,21 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class PlatformServiceImpl implements IPlatform {
+
+    static {
+        ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
+            @Override
+            public ResourceLocation getFabricId() {
+                return new ResourceLocation(Constants.MOD_ID, "client_resource_listener");
+            }
+
+            @Override
+            public void onResourceManagerReload(@NotNull ResourceManager ignore) {
+                Library.LOGGER.info("Resource reload - resetting configuration caches");
+                AssetLibraryEvent.RELOAD.raise().onReload(IReloadEvent.Scope.RESOURCES);
+            }
+        });
+    }
 
     @Override
     public String getPlatformName() {

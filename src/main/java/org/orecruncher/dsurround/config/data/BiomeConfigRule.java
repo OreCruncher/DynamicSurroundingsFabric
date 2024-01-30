@@ -13,8 +13,9 @@ import java.util.Optional;
 public record BiomeConfigRule(
         Script biomeSelector,
         Optional<String> comment,
+        int priority,
         List<BiomeTrait> traits,
-        Boolean clearSounds,
+        boolean clearSounds,
         Optional<TextColor> fogColor,
         Optional<Script> additionalSoundChance,
         Optional<Script> moodSoundChance,
@@ -23,6 +24,7 @@ public record BiomeConfigRule(
         public static final Codec<BiomeConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
                         Script.CODEC.fieldOf("biomeSelector").forGetter(BiomeConfigRule::biomeSelector),
                         Codec.STRING.optionalFieldOf("_comment").forGetter(BiomeConfigRule::comment),
+                        Codec.INT.optionalFieldOf("priority", 0).forGetter(BiomeConfigRule::priority),
                         Codec.list(BiomeTrait.CODEC).optionalFieldOf("traits", ImmutableList.of()).forGetter(BiomeConfigRule::traits),
                         Codec.BOOL.optionalFieldOf("clearSounds", false).forGetter(BiomeConfigRule::clearSounds),
                         TextColor.CODEC.optionalFieldOf("fogColor").forGetter(BiomeConfigRule::fogColor),

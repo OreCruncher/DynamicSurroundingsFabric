@@ -1,16 +1,16 @@
-package org.orecruncher.dsurround.runtime.sets;
+package org.orecruncher.dsurround.runtime.sets.impl;
 
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
+import org.orecruncher.dsurround.runtime.sets.IWeatherVariables;
 
 public class WeatherVariables extends VariableSet<IWeatherVariables> implements IWeatherVariables {
 
-    private static final ISeasonalInformation SEASONAL_INFORMATION = ContainerManager.resolve(ISeasonalInformation.class);
+    private final ISeasonalInformation seasonalInformation;
 
-    private String season;
     private float temperature;
     private boolean isRaining;
     private boolean isThundering;
@@ -19,8 +19,9 @@ public class WeatherVariables extends VariableSet<IWeatherVariables> implements 
     private boolean isFrosty;
     private boolean canWaterFreeze;
 
-    public WeatherVariables() {
+    public WeatherVariables(ISeasonalInformation seasonalInformation) {
         super("weather");
+        this.seasonalInformation = seasonalInformation;
     }
 
     @Override
@@ -37,17 +38,15 @@ public class WeatherVariables extends VariableSet<IWeatherVariables> implements 
             this.thunderIntensity = world.getThunderLevel(1F);
             this.isRaining = world.isRaining();
             this.isThundering = world.isThundering();
-            this.temperature = SEASONAL_INFORMATION.getTemperature(world, player.blockPosition());
-            this.season = SEASONAL_INFORMATION.getCurrentSeason(world).orElse("NONE");
-            this.isFrosty = SEASONAL_INFORMATION.isColdTemperature(world, player.blockPosition());
-            this.canWaterFreeze = SEASONAL_INFORMATION.isSnowTemperature(world, player.blockPosition());
+            this.temperature = this.seasonalInformation.getTemperature(world, player.blockPosition());
+            this.isFrosty = this.seasonalInformation.isColdTemperature(world, player.blockPosition());
+            this.canWaterFreeze = this.seasonalInformation.isSnowTemperature(world, player.blockPosition());
         } else {
             this.rainIntensity = 0F;
             this.thunderIntensity = 0F;
             this.isRaining = false;
             this.isThundering = false;
             this.temperature = 0;
-            this.season = "NONE";
             this.isFrosty = false;
             this.canWaterFreeze = false;
         }
@@ -86,10 +85,5 @@ public class WeatherVariables extends VariableSet<IWeatherVariables> implements 
     @Override
     public boolean canWaterFreeze() {
         return this.canWaterFreeze;
-    }
-
-    @Override
-    public String getSeason() {
-        return this.season;
     }
 }

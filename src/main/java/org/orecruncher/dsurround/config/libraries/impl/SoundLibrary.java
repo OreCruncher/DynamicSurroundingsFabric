@@ -6,12 +6,14 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
+import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.CodecExtensions;
 import org.orecruncher.dsurround.lib.Comparers;
@@ -80,7 +82,9 @@ public final class SoundLibrary implements ISoundLibrary {
     }
 
     @Override
-    public void reload() {
+    public void reload(IReloadEvent.Scope scope) {
+        if (scope == IReloadEvent.Scope.TAGS)
+            return;
 
         // Forget cached data and reload
         this.myRegistry.clear();
@@ -128,7 +132,8 @@ public final class SoundLibrary implements ISoundLibrary {
 
     @Override
     public SoundMetadata getSoundMetadata(final ResourceLocation sound) {
-        return this.soundMetadata.get(Objects.requireNonNull(sound));
+        var result = this.soundMetadata.get(Objects.requireNonNull(sound));
+        return result.isDefault() ? new SoundMetadata(sound) : result;
     }
 
     @Override
@@ -136,10 +141,15 @@ public final class SoundLibrary implements ISoundLibrary {
         return Optional.ofNullable(this.soundFactories.get(factoryLocation));
     }
 
+    @Override
     public ISoundFactory getSoundFactoryOrDefault(ResourceLocation factoryLocation) {
         return this.soundFactories.computeIfAbsent(factoryLocation, loc -> SoundFactoryBuilder.create(loc).build());
     }
 
+    @Override
+    public ISoundFactory getSoundFactoryForMusic(Music music) {
+        return this.soundFactories.computeIfAbsent(music.getEvent().value().getLocation(), loc -> SoundFactoryBuilder.create(music).build());
+    }
 
     @Override
     public boolean isBlocked(final ResourceLocation sound) {
@@ -163,7 +173,7 @@ public final class SoundLibrary implements ISoundLibrary {
             scale = entry.volumeScale / 100F;
         }
 
-        // For the mod Ambient sounds, it is further scaled by user configuration.
+        // For ambient sounds from the mod, it is further scaled by user configuration.
         if (category == SoundSource.AMBIENT && sound.getNamespace().equals(Library.MOD_ID))
             scale *= this.config.soundOptions.ambientVolumeScaling / 100F;
 
@@ -207,16 +217,16 @@ public final class SoundLibrary implements ISoundLibrary {
                 this.myRegistry.put(loc, SoundEvent.createVariableRangeEvent(loc));
             }
             if (!value.isDefault()) {
-                final SoundMetadata data = new SoundMetadata(value);
+                final SoundMetadata data = new SoundMetadata(loc, value);
                 this.soundMetadata.put(loc, data);
             }
         });
-        this.logger.info("%d sound entries processed", result.size());
+        this.logger.debug("Registered %d sounds for namespace %s", soundFile.resourceContent().size(), soundFile.namespace());
     }
 
     private void registerSoundFactories(DiscoveredResource<List<SoundFactory>> factories) {
         factories.resourceContent().forEach(factory -> this.soundFactories.put(factory.getLocation(), factory));
-        this.logger.info("%d factory entries processed", factories.resourceContent().size());
+        this.logger.debug("Registered %d sound factories for namespace %s", factories.resourceContent().size(), factories.namespace());
     }
 
     private void loadSoundConfiguration() {

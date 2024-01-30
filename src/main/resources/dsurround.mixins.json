@@ -27,9 +27,11 @@
     "core.MixinEntityArrow",
     "core.MixinIngameHud",
     "core.MixinLivingEntity",
+    "audio.MixinMusicManager",
     "core.MixinParticleManager",
     "core.MixinRainSplashParticle",
     "core.MixinRaycastContextAccessor",
+    "core.MixinSoundOptionsScreen",
     "core.MixinWorld",
     "events.MixinClientPacketListener",
     "events.MixinMinecraftClient"

@@ -1,7 +1,8 @@
-package org.orecruncher.dsurround.runtime.sets;
+package org.orecruncher.dsurround.runtime.sets.impl;
 
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
+import org.orecruncher.dsurround.runtime.sets.IGlobalVariables;
 
 public class GlobalVariables  extends VariableSet<IGlobalVariables> implements IGlobalVariables {
 

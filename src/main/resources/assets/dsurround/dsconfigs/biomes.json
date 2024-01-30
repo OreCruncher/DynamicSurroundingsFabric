@@ -60,6 +60,7 @@
   {
     "biomeSelector": "JUNGLE",
     "_comment": "Basic Jungle and Tropical",
+    "priority": 100,
     "clearSounds": true,
     "acoustics": [
       {
@@ -71,6 +72,7 @@
   {
     "biomeSelector": "SAVANNA",
     "_comment": "Basic Savanna",
+    "priority": 100,
     "clearSounds": true,
     "acoustics": [
       {
@@ -202,6 +204,7 @@
   {
     "biomeSelector": "OCEAN && DEEP && !ICY",
     "_comment": "Deep Ocean explicit set",
+    "priority": 100,
     "clearSounds": true,
     "acoustics": [
       {
@@ -212,6 +215,7 @@
   {
     "biomeSelector": "biome.id == 'minecraft:deep_frozen_ocean'",
     "_comment": "Deep Frozen Ocean explicit set",
+    "priority": 100,
     "clearSounds": true
   },
   {
@@ -333,6 +337,7 @@
   {
     "biomeSelector": "THE_END || biome.name == 'The Void'",
     "_comment": "It's The End!",
+    "priority": 100,
     "clearSounds": true
   },
   {

@@ -7,7 +7,9 @@ import net.minecraft.client.resources.sounds.EntityBoundSoundInstance;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.valueproviders.ConstantFloat;
@@ -18,6 +20,8 @@ import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.IdentityUtils;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.orecruncher.dsurround.sound.SoundCodecHelpers.SOUND_PROPERTY_RANGE;
@@ -31,7 +35,8 @@ public record SoundFactory(
         boolean isRepeatable,
         int repeatDelay,
         boolean global,
-        SoundInstance.Attenuation attenuation) implements Comparable<ISoundFactory>, ISoundFactory {
+        SoundInstance.Attenuation attenuation,
+        MusicSettings musicSettings) implements Comparable<ISoundFactory>, ISoundFactory {
 
     public static final Codec<SoundFactory> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
@@ -43,8 +48,11 @@ public record SoundFactory(
                     Codec.BOOL.optionalFieldOf("isRepeatable", false).forGetter(SoundFactory::isRepeatable),
                     Codec.INT.optionalFieldOf("repeatDelay", 0).forGetter(SoundFactory::repeatDelay),
                     Codec.BOOL.optionalFieldOf("global", false).forGetter(SoundFactory::global),
-                    SoundCodecHelpers.ATTENUATION_CODEC.optionalFieldOf("attenuation", SoundInstance.Attenuation.LINEAR).forGetter(SoundFactory::attenuation)
+                    SoundCodecHelpers.ATTENUATION_CODEC.optionalFieldOf("attenuation", SoundInstance.Attenuation.LINEAR).forGetter(SoundFactory::attenuation),
+                    MusicSettings.CODEC.optionalFieldOf("music", MusicSettings.DEFAULT).forGetter(SoundFactory::musicSettings)
             ).apply(instance, SoundFactory::new));
+
+    private static final Map<SoundEvent, Music> MUSIC_MAP = new HashMap<>();
 
     @Override
     public ResourceLocation getLocation() {
@@ -111,6 +119,14 @@ public record SoundFactory(
                 this.global);
     }
 
+    @Override
+    public Music createAsMusic() {
+        return MUSIC_MAP.computeIfAbsent(this.soundEvent, key -> {
+            var holder = Holder.direct(key);
+            return new Music(holder, this.musicSettings.minDelay, this.musicSettings.maxDelay, this.musicSettings.replaceCurrentMusic);
+        });
+    }
+
     private float getVolume() {
         return this.volume.sample(Randomizer.current());
     }
@@ -154,6 +170,18 @@ public record SoundFactory(
                 builder.isRepeatable,
                 builder.repeatDelay,
                 builder.global,
-                builder.attenuation);
+                builder.attenuation,
+                new MusicSettings(builder.musicMinDelay, builder.musicMaxDelay, builder.musicReplaceMusic));
+    }
+
+    public record MusicSettings(int minDelay, int maxDelay, boolean replaceCurrentMusic) {
+        public static final MusicSettings DEFAULT = new MusicSettings(6000, 24000, false);
+
+        public static final Codec<MusicSettings> CODEC = RecordCodecBuilder.create((instance) ->
+                instance.group(
+                        Codec.INT.optionalFieldOf("min_delay", DEFAULT.minDelay()).forGetter(MusicSettings::minDelay),
+                        Codec.INT.optionalFieldOf("max_delay", DEFAULT.maxDelay()).forGetter(MusicSettings::maxDelay),
+                        Codec.BOOL.optionalFieldOf("replace_current_music", DEFAULT.replaceCurrentMusic()).forGetter(MusicSettings::replaceCurrentMusic)
+                ).apply(instance, MusicSettings::new));
     }
 }

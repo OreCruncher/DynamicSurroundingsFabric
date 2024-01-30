@@ -1,3 +1,24 @@
+> ### DynamicSurroundings-Fabric-1.20.4-0.3.1
+**Requirements**
+* JAVA 17+ (I am using Adoptium https://adoptium.net/)
+* Fabric Loader >=0.15.1
+* Fabric API >=0.91.2+1.20.4
+* 100% client side; no server side deployment needed
+
+**What's New**
+* Added a button to Minecraft's Sound Configuration Options screen for accessing the Individual Sound Configuration menu of the mod. It can be found in the lower left corner of the screen.
+* Added option to enable playing of other situational music (as in biome background music) rather than creative music when the player is in creative mode. It is off by default and needs to be enabled. Makes testing resource/mod packs easier.
+* Added a client side command /dsmm to force a reset of Minecraft's music manager. This will clear any music being played and set the timers so that a new selection will be made within a few seconds.
+* Added option to disable client side command registration. Useful when trying to run under Quilt, or if a pack developer just wants to disable as a default.
+
+**Changes**
+* Reworked the display of the individual sound configuration UI. The goal is to slim things down so the information fits on smaller displays. WIP - the icons suck.
+* Preload tag cache when connecting to a world. Before, the mod would load entries into the cache in a lazy fashion, and as a result, the player would experience a lag-stutters when faulted in.
+* Delay processing resource packs/external configurations until later in the startup process.
+
+**Fixes**
+* Startup crash when ModernUI is installed with its "ding at startup" enabled.
+
 > ### DynamicSurroundings-Fabric-1.20.4-0.3.0
 **Requirements**
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)

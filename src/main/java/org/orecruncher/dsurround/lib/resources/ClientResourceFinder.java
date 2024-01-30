@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.Codec;
 import net.minecraft.resources.ResourceLocation;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 
 import java.nio.charset.Charset;
@@ -45,13 +44,6 @@ public class ClientResourceFinder<T> extends AbstractResourceFinder<T> {
 
         LOGGER.debug(RESOURCE_LOADING, "[%s] - %d entries found", assetPath, assets.size());
         for (var kvp : assets.entrySet()) {
-            // It's possible that a mod is not loaded though the namespace is present
-            // in a resource pack. We need to skip those.
-            if (!Library.PLATFORM.isModLoaded(kvp.getKey().getNamespace())) {
-                LOGGER.debug(RESOURCE_LOADING, "[%s] - Skipping %s as the mod is not loaded", assetPath, kvp.getKey());
-                continue;
-            }
-
             LOGGER.debug(RESOURCE_LOADING, "[%s] - Processing %s", assetPath, kvp.getKey());
             var resultList = results.computeIfAbsent(kvp.getKey(), i -> new ObjectArray<>());
 

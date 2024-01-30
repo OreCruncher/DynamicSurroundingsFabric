@@ -11,6 +11,7 @@ import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
+import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.lib.Guard;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -20,6 +21,7 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
 import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +53,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
     }
 
     @Override
-    public void reload() {
+    public void reload(IReloadEvent.Scope scope) {
         // Wipe out the internal biome cache.  These will be reset.
         this.internalBiomes.clear();
         this.biomeConfigs.clear();
@@ -60,12 +62,16 @@ public final class BiomeLibrary implements IBiomeLibrary {
         var findResults = ResourceUtils.findModResources(CODEC, FILE_NAME);
         findResults.forEach(result -> this.biomeConfigs.addAll(result.resourceContent()));
 
+        // Ensure they are in priority order where the least is towards the beginning
+        // of the list.
+        this.biomeConfigs.sort(Comparator.comparingInt(BiomeConfigRule::priority));
+
         this.version++;
 
         for (var b : SyntheticBiome.values())
             initializeSyntheticBiome(b);
 
-        this.logger.info("%d biome configs loaded; version is now %d", biomeConfigs.size(), version);
+        this.logger.info("%d biome configs loaded; version is now %d", this.biomeConfigs.size(), this.version);
     }
 
     private void initializeSyntheticBiome(SyntheticBiome biome) {

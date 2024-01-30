@@ -1,0 +1,62 @@
+[
+  {
+    "location": "dsurround_ex:music/wintersong",
+    "soundEvent": "dsurround_ex:music.wintersong",
+    "category": "MUSIC",
+    "music": {
+      "min_delay": 3000,
+      "max_delay": 12000,
+      "replace_current_music": false
+    }
+  },
+  {
+    "location": "dsurround_ex:music/vopna",
+    "soundEvent": "dsurround_ex:music.vopna",
+    "category": "MUSIC",
+    "music": {
+      "min_delay": 3000,
+      "max_delay": 12000,
+      "replace_current_music": false
+    }
+  },
+  {
+    "location": "dsurround_ex:music/wonderful_fairytail",
+    "soundEvent": "dsurround_ex:music.wonderful_fairytail",
+    "category": "MUSIC",
+    "music": {
+      "min_delay": 3000,
+      "max_delay": 12000,
+      "replace_current_music": false
+    }
+  },
+  {
+    "location": "dsurround_ex:music/enchanted",
+    "soundEvent": "dsurround_ex:music.enchanted",
+    "category": "MUSIC",
+    "music": {
+      "min_delay": 3000,
+      "max_delay": 12000,
+      "replace_current_music": false
+    }
+  },
+  {
+    "location": "dsurround_ex:music/gjallar",
+    "soundEvent": "dsurround_ex:music.gjallar",
+    "category": "MUSIC",
+    "music": {
+      "min_delay": 3000,
+      "max_delay": 12000,
+      "replace_current_music": false
+    }
+  },
+  {
+    "location": "dsurround_ex:music/annas_theme",
+    "soundEvent": "dsurround_ex:music.annas_theme",
+    "category": "MUSIC",
+    "music": {
+      "min_delay": 3000,
+      "max_delay": 12000,
+      "replace_current_music": false
+    }
+  }
+]

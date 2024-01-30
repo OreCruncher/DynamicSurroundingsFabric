@@ -7,6 +7,7 @@ import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.config.data.DimensionConfigRule;
 import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
+import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtils;
@@ -32,7 +33,10 @@ public final class DimensionLibrary implements IDimensionLibrary {
     }
 
     @Override
-    public void reload() {
+    public void reload(IReloadEvent.Scope scope) {
+        if (scope == IReloadEvent.Scope.TAGS)
+            return;
+        
         this.configs.clear();
         this.dimensionRules.clear();
 

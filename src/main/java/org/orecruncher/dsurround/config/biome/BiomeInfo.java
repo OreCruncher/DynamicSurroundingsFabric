@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
@@ -20,6 +21,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.Script;
+import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
@@ -69,6 +71,18 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         this.isOcean = this.traits.contains(BiomeTrait.OCEAN);
         this.isDeepOcean = this.isOcean && this.traits.contains(BiomeTrait.DEEP);
         this.isCave = this.traits.contains(BiomeTrait.CAVES);
+
+        // Check to see if the biome has a soundtrack. If so, add it to
+        // the music list.
+        if (biome != null) {
+            var accessor = (IBiomeExtended)(Object)biome;
+            accessor.dsurround_getSpecialEffects().getBackgroundMusic()
+                .ifPresent(m -> {
+                    var factory = SOUND_LIBRARY.getSoundFactoryForMusic(m);
+                    var entry = new AcousticEntry(factory, null);
+                    this.musicSounds.add(entry);
+                });
+        }
     }
 
     public int getVersion() {
@@ -168,6 +182,11 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
         var candidates = sourceList.stream().filter(AcousticEntry::matches);
         return WeightTable.makeSelection(candidates);
+    }
+
+    @Override
+    public Optional<Music> getBackgroundMusic(IRandomizer random) {
+        return this.getExtraSound(SoundEventType.MUSIC, random).map(ISoundFactory::createAsMusic);
     }
 
     void clearSounds() {

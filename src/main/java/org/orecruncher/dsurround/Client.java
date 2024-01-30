@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.sounds.SoundManager;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
 import org.orecruncher.dsurround.effects.particles.ParticleSheets;
@@ -39,11 +40,19 @@ public final class Client {
     public Client() {
         // Bootstrap library functions
         this.logger = Library.LOGGER;
+
+        this.logger.info("[%s] Bootstrapping", Constants.MOD_ID);
+
         Library.initialize();
+
+        // Register the Minecraft sound manager using a factory. Avoids issue with ModernUI and their dinger.
+        ContainerManager.getRootContainer().registerFactory(SoundManager.class, GameUtils::getSoundManager);
+
+        this.logger.info("[%s] Boostrap completed", Constants.MOD_ID);
     }
 
     public void initializeClient() {
-        this.logger.info("Client initializing...");
+        this.logger.info("[%s] Client initializing", Constants.MOD_ID);
 
         // Setup debug trace on the logger. It's not guaranteed that we
         // are the first obtaining the log file, so we can't rely
@@ -103,15 +112,14 @@ public final class Client {
             this.versionInfo = CompletableFuture.completedFuture(Optional.empty());
 
         KeyBindings.register();
+
+        this.logger.info("[%s] Client initialization complete", Constants.MOD_ID);
     }
 
     public void onComplete(Minecraft client) {
 
-        this.logger.info("Finalizing initialization...");
+        this.logger.info("[%s] Completing initialization", Constants.MOD_ID);
         var container = ContainerManager.getRootContainer();
-
-        // Register the Minecraft sound manager
-        container.registerSingleton(GameUtils.getSoundManager());
 
         // Register and initialize our libraries. Handlers will be reloaded in priority order.
         // Leave normal to very low priority for other things in the mod that would need such
@@ -126,13 +134,10 @@ public final class Client {
 
         ClientState.TAG_SYNC.register(event -> {
             this.logger.info("Tag sync event received - reloading libraries");
-            AssetLibraryEvent.reload();
+            AssetLibraryEvent.RELOAD.raise().onReload(IReloadEvent.Scope.TAGS);
         }, HandlerPriority.VERY_HIGH);
 
-        // Make the libraries load their data. Priority determines the sequence.
-        AssetLibraryEvent.reload();
-
-        // Force instantiation of the core Handler.  This should cause the rest
+        // Force instantiation of the core Handler. This should cause the rest
         // of the dependencies to be initialized.
         container.resolve(Handlers.class);
 
@@ -141,7 +146,7 @@ public final class Client {
         // Minecraft environment.
         ParticleSheets.register();
 
-        this.logger.info("Done!");
+        this.logger.info("[%s] Finalization complete", Constants.MOD_ID);
     }
 
     private void onConnect(Minecraft minecraftClient) {

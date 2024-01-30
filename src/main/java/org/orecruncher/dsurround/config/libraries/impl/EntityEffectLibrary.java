@@ -5,6 +5,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.config.EntityEffectType;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
+import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -30,7 +31,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
     }
 
     @Override
-    public void reload() {
+    public void reload(IReloadEvent.Scope scope) {
         this.entityEffects.clear();
         this.version++;
         this.defaultInfo = EntityEffectInfo.createDefault(this.version);

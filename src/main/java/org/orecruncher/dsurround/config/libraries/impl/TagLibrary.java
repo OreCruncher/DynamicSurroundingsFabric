@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.config.libraries.impl;
 
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
@@ -17,14 +18,19 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.ClientState;
+import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ClientTagLoader;
+import org.orecruncher.dsurround.lib.system.IStopwatch;
+import org.orecruncher.dsurround.lib.system.ISystemClock;
 import org.orecruncher.dsurround.tags.ModTags;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,18 +39,23 @@ import static java.util.stream.Collectors.*;
 public class TagLibrary implements ITagLibrary {
 
     private final IModLog logger;
+    private final ISystemClock systemClock;
 
     private final Map<TagKey<?>, Collection<?>> tagCache;
     private final ClientTagLoader tagLoader;
 
-    public TagLibrary(IModLog logger) {
+    private boolean isConnected;
+
+    public TagLibrary(IModLog logger, ISystemClock systemClock) {
         this.logger = logger;
+        this.systemClock = systemClock;
         this.tagCache = new Reference2ObjectOpenHashMap<>();
         this.tagLoader = new ClientTagLoader(this.logger);
 
         // Need to clear the tag caches on disconnect. It's possible that
         // cached biome information will change with the next connection.
-        ClientState.ON_DISCONNECT.register(client -> this.reload());
+        ClientState.ON_CONNECT.register(this::onConnect);
+        ClientState.ON_DISCONNECT.register(this::onDisconnect);
     }
 
     @Override
@@ -115,10 +126,13 @@ public class TagLibrary implements ITagLibrary {
     }
 
     @Override
-    public void reload() {
-        this.logger.info("Clearing tag cache; %d elements were present", this.tagCache.size());
-        this.tagCache.clear();
-        this.tagLoader.clear();
+    public void reload(IReloadEvent.Scope scope) {
+        this.logger.info("Tag cache has %d elements", this.tagCache.size());
+
+        // If we are connected to a server, and we get a reload something triggered it
+        // like a /dsreload, resource pack change, etc.
+        if (this.isConnected)
+            this.initializeTagCache();
     }
 
     @Override
@@ -148,6 +162,29 @@ public class TagLibrary implements ITagLibrary {
                 tags.add((TagKey<T>) kvp.getKey());
         }
         return tags.stream();
+    }
+
+    private void onConnect(Minecraft client) {
+        this.isConnected = true;
+        this.initializeTagCache();
+    }
+
+    private void onDisconnect(Minecraft client) {
+        this.isConnected = false;
+        this.tagCache.clear();
+        this.tagLoader.clear();
+    }
+
+    private void initializeTagCache() {
+        // Bootstrap the tag cache. We do this by zipping through our tags
+        // and forcing the cache to initialize.
+        var stopwatch = this.systemClock.getStopwatch();
+        this.logger.info("Repopulating tag cache");
+        this.tagCache.clear();
+        this.tagLoader.clear();
+        for (var tagKey : ModTags.getModTags())
+            this.tagCache.computeIfAbsent(tagKey, this.tagLoader::getMembers);
+        this.logger.info("Tag cache initialization complete; %d tags cached, %dmillis", this.tagCache.size(), stopwatch.elapsed(TimeUnit.MILLISECONDS));
     }
 
     private boolean isInCache(TagKey<?> tagKey, Object entry) {

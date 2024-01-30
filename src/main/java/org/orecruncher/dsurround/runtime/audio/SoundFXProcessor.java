@@ -18,7 +18,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.threading.Worker;
-import org.orecruncher.dsurround.mixins.audio.MixinChannelHandleAccessor;
+import org.orecruncher.dsurround.mixinutils.IChannelHandle;
 import org.orecruncher.dsurround.runtime.audio.effects.Effects;
 import org.orecruncher.dsurround.mixinutils.ISourceContext;
 
@@ -123,7 +123,7 @@ public final class SoundFXProcessor {
         if (shouldIgnoreSound(sound))
             return;
 
-        ISourceContext source = (ISourceContext)(((MixinChannelHandleAccessor) entry).dsurround_getSource());
+        ISourceContext source = (ISourceContext)(((IChannelHandle) entry).dsurround_getSource());
         assert source != null;
         int id = source.dsurround_getId();
         if (id > 0) {
@@ -168,7 +168,7 @@ public final class SoundFXProcessor {
     public static void stopSoundPlay(final Channel source) {
         var sourceContext = (ISourceContext) source;
         var data = sourceContext.dsurround_getData();
-        data.ifPresent(sc -> sources[sc.getId()] = null);
+        data.ifPresent(sc -> sources[sc.getId() - 1] = null);
     }
 
     /**

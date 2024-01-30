@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.runtime.sets;
+package org.orecruncher.dsurround.runtime.sets.impl;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -7,6 +7,7 @@ import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
+import org.orecruncher.dsurround.runtime.sets.IPlayerVariables;
 
 public class PlayerVariables extends VariableSet<IPlayerVariables> implements IPlayerVariables {
 
