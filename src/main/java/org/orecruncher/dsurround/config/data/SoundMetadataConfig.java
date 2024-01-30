@@ -17,10 +17,10 @@ public record SoundMetadataConfig(Optional<String> title, Optional<String> subti
     private static final Map<String, SoundSource> SOUND_SOURCE_BY_NAME = Arrays.stream(SoundSource.values()).collect(Collectors.toMap(SoundSource::getName, (category) -> category));
     public static final Codec<SoundSource> SOUND_SOURCE_CODEC = Codec.STRING.comapFlatMap(DataResult.partialGet(SOUND_SOURCE_BY_NAME::get, () -> "unknown sound category type"), SoundSource::getName);
     public static final Codec<SoundMetadataConfig> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
-            Codec.STRING.optionalFieldOf("title").forGetter(SoundMetadataConfig::title),
+            Codec.STRING.optionalFieldOf("ds_title").forGetter(SoundMetadataConfig::title),
             Codec.STRING.optionalFieldOf("subtitle").forGetter(SoundMetadataConfig::subtitle),
-            SOUND_SOURCE_CODEC.optionalFieldOf("category").forGetter(SoundMetadataConfig::category),
-            Codec.list(CreditEntry.CODEC).optionalFieldOf("credits", ImmutableList.of()).forGetter(SoundMetadataConfig::credits))
+            SOUND_SOURCE_CODEC.optionalFieldOf("ds_category").forGetter(SoundMetadataConfig::category),
+            Codec.list(CreditEntry.CODEC).optionalFieldOf("ds_credits", ImmutableList.of()).forGetter(SoundMetadataConfig::credits))
             .apply(instance, SoundMetadataConfig::new));
 
     /**

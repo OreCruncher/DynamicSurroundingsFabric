@@ -1,35 +1,35 @@
 {
 	"thunder": {
 		"subtitle": "dsurround.sound.caption.thunder",
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Thunder 1",
 				"author": "Yoyodaman234",
+				"website": "https://www.freesound.org/people/Yoyodaman234",
 				"license": "Creative Commons 0"
 			},
 			{
 				"name": "Donner1.wav",
 				"author": "swuing",
+				"website": "https://www.freesound.org/people/swuing",
 				"license": "Attribution"
 			},
 			{
-				"name": "Thunder - 1",
+				"name": "Thunder - 1 / Thunder - 2",
 				"author": "bone666138",
-				"license": "Attribution"
-			},
-			{
-				"name": "Thunder - 2",
-				"author": "bone666138",
+				"website": "https://www.freesound.org/people/bone666138",
 				"license": "Attribution"
 			},
 			{
 				"name": "Distant Thunder.wav",
 				"author": "sarson",
+				"website": "https://www.freesound.org/people/sarson",
 				"license": "Creative Commons 0"
 			},
 			{
 				"name": "NM-Mejor-Lado-Thunder-01.wav",
 				"author": "aaronstar",
+				"website": "https://www.freesound.org/people/aaronstar",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -79,10 +79,11 @@
 	},
 	"biome.wind": {
 		"subtitle": "dsurround.sound.caption.wind",
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Wind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
 				"author": "felix.blume",
+				"website": "https://www.freesound.org/people/felix.blume",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -95,10 +96,11 @@
 	},
 	"biome.wind.hills": {
 		"subtitle": "dsurround.sound.caption.wind",
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Wind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
 				"author": "felix.blume",
+				"website": "https://www.freesound.org/people/felix.blume",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -114,10 +116,11 @@
 	},
 	"biome.wind.mountains": {
 		"subtitle": "dsurround.sound.caption.wind",
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Wind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
 				"author": "felix.blume",
+				"website": "https://www.freesound.org/people/felix.blume",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -131,10 +134,11 @@
 	},
 	"biome.wind.desert": {
 		"subtitle": "dsurround.sound.caption.wind",
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "desertwind1FINAL.wav",
 				"author": "nageor",
+				"website": "https://www.freesound.org/people/nageor",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -147,10 +151,11 @@
 	},
 	"biome.wind.arctic": {
 		"subtitle": "dsurround.sound.caption.wind",
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Howling Wind Ambience",
 				"author": "DBlover",
+				"website": "https://www.freesound.org/people/DBlover",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -162,10 +167,11 @@
 		]
 	},
 	"biome.savanna.day": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "MerlothPark_morning_ambiance.wav",
 				"author": "reinsamba",
+				"website": "https://www.freesound.org/people/reinsamba",
 				"license": "Attribution"
 			}
 		],
@@ -177,10 +183,11 @@
 		]
 	},
 	"biome.savanna.night": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "MerlothPark_crickets2.WAV",
 				"author": "reinsamba",
+				"website": "https://www.freesound.org/people/reinsamba",
 				"license": "Attribution"
 			}
 		],
@@ -192,10 +199,11 @@
 		]
 	},
 	"biome.crickets": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Soft, Chilled Crickets Field Recording",
 				"author": "rayjensen",
+				"website": "https://www.freesound.org/people/rayjensen",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -215,10 +223,11 @@
 		]
 	},
 	"biome.plains": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Calm Morning Outdoor Ambiance",
 				"author": "blouhond",
+				"website": "https://www.freesound.org/people/blouhond",
 				"license": "Attribution"
 			}
 		],
@@ -230,10 +239,11 @@
 		]
 	},
 	"biome.forest": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "001_forrest.wav",
 				"author": "joepsporck",
+				"website": "https://www.freesound.org/people/joepsporck",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -253,10 +263,11 @@
 		]
 	},
 	"biome.forest.pine": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Nord_Odal_Nyhus_04_juni_2011_open_forest_birds_insects_wind_through_large_pines.wav",
 				"author": "nfsgit",
+				"website": "https://www.freesound.org/people/nfsgit",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -268,10 +279,11 @@
 		]
 	},
 	"biome.beach": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Fiji Beach (Stereo)128kbps.mp3",
 				"author": "c97059890",
+				"website": "https://www.freesound.org/people/c97059890",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -283,10 +295,11 @@
 		]
 	},
 	"biome.ocean": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "ocean waves surround me.wav",
 				"author": "bohitomi",
+				"website": "https://www.freesound.org/people/bohitomi",
 				"license": "Attribution"
 			}
 		],
@@ -299,10 +312,11 @@
 		]
 	},
 	"biome.ocean.deep": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "ocean waves surround me.wav",
 				"author": "bohitomi",
+				"website": "https://www.freesound.org/people/bohitomi",
 				"license": "Attribution"
 			}
 		],
@@ -316,10 +330,11 @@
 		]
 	},
 	"biome.river": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "underwater ambience.wav",
 				"author": "AlienXXX",
+				"website": "https://freesound.org/people/AlienXXX",
 				"license": "Attribution"
 			}
 		],
@@ -331,10 +346,11 @@
 		]
 	},
 	"biome.bog": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "rbh Mpls Bog birds.wav",
 				"author": "RHumphries",
+				"website": "https://freesound.org/people/RHumphries",
 				"license": "Attribution"
 			}
 		],
@@ -425,10 +441,11 @@
 	},
 	"crow": {
 		"subtitle": "dsurround.sound.caption.crow",
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "ANML_M_Ext_Crow_Calls_Single1.wav",
 				"author": "conleec",
+				"website": "https://www.freesound.org/people/conleec",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -501,15 +518,17 @@
 	},
 	"rockfall": {
 		"subtitle": "dsurround.sound.caption.rockfall",
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Rocks falling over rocks, over a steep hill, like a cliff.flac",
 				"author": "gfrog",
+				"website": "https://www.freesound.org/people/gfrog",
 				"license": "Creative Commons 0"
 			},
 			{
 				"name": "Rocks.wav",
 				"author": "adamgryu",
+				"website": "https://www.freesound.org/people/adamgryu",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -521,15 +540,17 @@
 	},
 	"bigrockfall": {
 		"subtitle": "dsurround.sound.caption.rockfall",
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Rockfall in mine.wav",
 				"author": "Benboncan",
+				"website": "https://www.freesound.org/people/Benboncan",
 				"license": "Attribution"
 			},
 			{
 				"name": "Rocks.wav",
 				"author": "adamgryu",
+				"website": "https://www.freesound.org/people/adamgryu",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -563,10 +584,11 @@
 	},
 	"waterdrips": {
 		"subtitle": "dsurround.sound.caption.waterdrop",
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Dripping, Very Fast, A.wav",
 				"author": "InspectorJ",
+				"website": "https://www.freesound.org/people/InspectorJ",
 				"license": "Attribution"
 			}
 		],
@@ -592,10 +614,11 @@
 	},
 	"coyote": {
 		"subtitle": "dsurround.sound.caption.howling",
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "coyote barks and howls",
 				"author": "dkaufman",
+				"website": "https://www.freesound.org/people/dkaufman",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -630,10 +653,11 @@
 		]
 	},
 	"biome.ocean.deep.under": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "underwater ambience.wav",
 				"author": "AlienXXX",
+				"website": "https://www.freesound.org/people/AlienXXX",
 				"license": "Attribution"
 			}
 		],
@@ -645,10 +669,11 @@
 		]
 	},
 	"biome.ocean.under": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "underwater ambience.wav",
 				"author": "AlienXXX",
+				"website": "https://www.freesound.org/people/AlienXXX",
 				"license": "Attribution"
 			}
 		],
@@ -668,10 +693,11 @@
 		]
 	},
 	"biome.water.under": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "UnderwaterDrowning01.wav",
 				"author": "Abolla",
+				"website": "https://www.freesound.org/people/Abolla",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -818,10 +844,11 @@
 		]
 	},
 	"waterfall.0": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Waterfall Winspit Dorset.wav",
 				"author": "genghis attenborough",
+				"website": "https://www.freesound.org/people/genghis%20attenborough",
 				"license": "Attribution Noncommercial"
 			}
 		],
@@ -834,10 +861,11 @@
 		]
 	},
 	"waterfall.1": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Running-water-mountain-stream.mp3",
 				"author": "Alexander",
+				"website": "https://orangefreesounds.com/running-water-sound-mountain-stream",
 				"license": "Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)"
 			}
 		],
@@ -850,10 +878,11 @@
 		]
 	},
 	"waterfall.2": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Waterfall",
 				"author": "Orpheuz",
+				"website": "https://www.freesound.org/people/Orpheuz",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -866,10 +895,11 @@
 		]
 	},
 	"waterfall.3": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Small Waterfall at the Mill",
 				"author": "willstepp",
+				"website": "https://www.freesound.org/people/willstepp",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -882,10 +912,11 @@
 		]
 	},
 	"waterfall.4": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Waterfall, Large, A.wav",
 				"author": "InspectorJ",
+				"website": "https://www.freesound.org/people/InspectorJ",
 				"license": "Attribution"
 			}
 		],
@@ -898,10 +929,11 @@
 		]
 	},
 	"waterfall.5": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Waterfall, Small, B.wav",
 				"author": "InspectorJ",
+				"website": "https://www.freesound.org/people/InspectorJ",
 				"license": "Attribution"
 			}
 		],
@@ -915,10 +947,11 @@
 	},
 	"biome.village.rooster": {
 		"subtitle": "dsurround.sound.caption.rooster",
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Village ambience rooster and light birds with wind .wav",
 				"author": "Ramston",
+				"website": "https://www.freesound.org/people/Ramston",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -930,10 +963,11 @@
 	},
 	"biome.village.anvil": {
 		"subtitle": "dsurround.sound.caption.anvil",
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Anvil",
 				"author": "MrAuralization",
+				"website": "https://www.freesound.org/people/MrAuralization",
 				"license": "Attribution"
 			}
 		],
@@ -950,10 +984,11 @@
 	},
 	"biome.village.dogbark": {
 		"subtitle": "dsurround.sound.caption.dog",
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Dogs Barking",
 				"author": "darranambler",
+				"website": "https://www.freesound.org/people/darranambler",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -967,10 +1002,11 @@
 		]
 	},
 	"dimension.nether": {
-		"credits": [
+		"ds_credits": [
 			{
 				"name": "Creepy Dungeon Ambiance",
 				"author": "DrMinky",
+				"website": "https://www.freesound.org/people/DrMinky",
 				"license": "Attribution"
 			}
 		],
@@ -1077,7 +1113,7 @@
 		]
 	},
 	"footsteps.water_through": {
-		"category": "player",
+		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.water_through",
 		"sounds": [
 			"dsurround:footsteps/water/water_through1",
@@ -1094,7 +1130,7 @@
 		]
 	},
 	"footsteps.floor_squeak": {
-		"category": "player",
+		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.floor_squeak",
 		"sounds": [
 			{
@@ -1112,7 +1148,7 @@
 		]
 	},
 	"footsteps.brush_through": {
-		"category": "player",
+		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.brush_through",
 		"sounds": [
 			"dsurround:footsteps/brush/brush_through1",
@@ -1129,7 +1165,7 @@
 		]
 	},
 	"footsteps.leaves_through": {
-		"category": "player",
+		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.leaves_through",
 		"sounds": [
 			"dsurround:footsteps/leaves/leaves_through1",

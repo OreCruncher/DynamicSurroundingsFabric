@@ -1,8 +1,8 @@
 {
 	"music.wintersong": {
-		"title": "Wintersong",
-		"category": "music",
-		"credits": [
+		"ds_title": "Wintersong",
+		"ds_category": "music",
+		"ds_credits": [
 			{
 				"name": "Wintersong",
 				"author": "Alexander Nakarada",
@@ -19,9 +19,9 @@
 		]
 	},
 	"music.vopna": {
-		"title": "Vopna",
-		"category": "music",
-		"credits": [
+		"ds_title": "Vopna",
+		"ds_category": "music",
+		"ds_credits": [
 			{
 				"name": "Vopna",
 				"author": "Alexander Nakarada",
@@ -38,9 +38,9 @@
 		]
 	},
 	"music.wonderful_fairytail": {
-		"title": "Wonderful Fairytail",
-		"category": "music",
-		"credits": [
+		"ds_title": "Wonderful Fairytail",
+		"ds_category": "music",
+		"ds_credits": [
 			{
 				"name": "Wonderful Fairytail",
 				"author": "AudioCoffee",
@@ -57,9 +57,9 @@
 		]
 	},
 	"music.enchanted": {
-		"title": "Enchanted",
-		"category": "music",
-		"credits": [
+		"ds_title": "Enchanted",
+		"ds_category": "music",
+		"ds_credits": [
 			{
 				"name": "Enchanted",
 				"author": "Keys of Moon",
@@ -76,9 +76,9 @@
 		]
 	},
 	"music.gjallar": {
-		"title": "Gjallar",
-		"category": "music",
-		"credits": [
+		"ds_title": "Gjallar",
+		"ds_category": "music",
+		"ds_credits": [
 			{
 				"name": "Gjallar",
 				"author": "Alexander Nakarada",
