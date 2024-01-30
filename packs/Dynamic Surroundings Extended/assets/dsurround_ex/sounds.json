@@ -52,7 +52,7 @@
 			{
 				"name": "dsurround_ex:music/wonderful_fairytail",
 				"stream": true,
-				"volume": 0.3
+				"volume": 0.4
 			}
 		]
 	},
@@ -89,6 +89,25 @@
 		"sounds": [
 			{
 				"name": "dsurround_ex:music/gjallar",
+				"stream": true,
+				"volume": 0.5
+			}
+		]
+	},
+	"music.annas_theme": {
+		"ds_title": "Anna's Theme",
+		"ds_category": "music",
+		"ds_credits": [
+			{
+				"name": "Anna's Theme",
+				"author": "Scott Buckley",
+				"website": "https://www.scottbuckley.com.au",
+				"license": "Attribution 4.0 International (CC BY 4.0)"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround_ex:music/annas_theme",
 				"stream": true,
 				"volume": 0.5
 			}

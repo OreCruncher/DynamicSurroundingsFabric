@@ -48,5 +48,15 @@
         "type": "music"
       }
     ]
+  },
+  {
+    "biomeSelector": "OVERWORLD && SPOOKY",
+    "_comment": "Music for Spooky Biomes",
+    "acoustics": [
+      {
+        "factory": "dsurround_ex:music/annas_theme",
+        "type": "music"
+      }
+    ]
   }
 ]
