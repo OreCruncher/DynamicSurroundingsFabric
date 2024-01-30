@@ -1,8 +1,8 @@
-> ### DynamicSurroundings-Fabric-1.20.4-0.3.1
+> ### DynamicSurroundings-Fabric-1.20.1-0.3.1
 **Requirements**
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)
-* Fabric Loader >=0.15.1
-* Fabric API >=0.91.2+1.20.4
+* Fabric Loader >=0.14.22
+* Fabric API >=0.91.0+1.20.1
 * 100% client side; no server side deployment needed
 
 **What's New**
@@ -19,6 +19,7 @@
 **Fixes**
 * Startup crash when ModernUI is installed with its "ding at startup" enabled.> ### DynamicSurroundings-Fabric-1.20.1-0.3.0
 
+> ### DynamicSurroundings-Fabric-1.20.1-0.3.1
 **Requirements**
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)
 * Fabric Loader >=0.14.22

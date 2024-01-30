@@ -134,7 +134,7 @@ public class IndividualSoundControlScreen extends Screen {
 
     public void render(final GuiGraphics context, int mouseX, int mouseY, float partialTicks) {
         if (this.parent == null)
-            this.renderTransparentBackground(context);
+            this.renderBackground(context);
         else
             this.renderDirtBackground(context);
 

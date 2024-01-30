@@ -9,8 +9,8 @@ import org.orecruncher.dsurround.lib.gui.ToggleButton;
 public class SoundPlayButton extends ToggleButton {
 
     // These are 20x20 sprites
-    private static final ResourceLocation PLAY_SYMBOL = new ResourceLocation(Library.MOD_ID, "controls/play");
-    private static final ResourceLocation STOP_SYMBOL = new ResourceLocation(Library.MOD_ID, "controls/stop");
+    private static final ResourceLocation PLAY_SYMBOL = new ResourceLocation(Library.MOD_ID, "textures/gui/sprites/controls/play.png");
+    private static final ResourceLocation STOP_SYMBOL = new ResourceLocation(Library.MOD_ID, "textures/gui/sprites/controls/stop.png");
 
     public SoundPlayButton(OnPress onPress) {
         super(false, STOP_SYMBOL, PLAY_SYMBOL, onPress);

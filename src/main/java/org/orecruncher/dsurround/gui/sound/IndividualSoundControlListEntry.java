@@ -163,7 +163,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         if (this.playButton != null) {
             this.playButton.setX(rightMargin - this.playButton.getWidth());
             this.playButton.setY(rowTop);
-            this.playButton.setHeight(rowHeight);
+            this.playButton.height = rowHeight;
             rightMargin -= this.playButton.getWidth() + CONTROL_SPACING;
         }
 
