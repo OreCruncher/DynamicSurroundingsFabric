@@ -17,9 +17,9 @@
 * Delay processing resource packs/external configurations until later in the startup process.
 
 **Fixes**
-* Startup crash when ModernUI is installed with its "ding at startup" enabled.> ### DynamicSurroundings-Fabric-1.20.1-0.3.0
+* Startup crash when ModernUI is installed with its "ding at startup" enabled.
 
-> ### DynamicSurroundings-Fabric-1.20.1-0.3.1
+> ### DynamicSurroundings-Fabric-1.20.1-0.3.0
 **Requirements**
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)
 * Fabric Loader >=0.14.22
