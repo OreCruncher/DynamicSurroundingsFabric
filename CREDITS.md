@@ -92,7 +92,7 @@ whether LPs can be monetized on the various streaming services.
 *dsurround:biome.ocean / dsurround:biome.ocean.deep / dsurround:biome.ocean.deep.under*
 
 <ul>
-    <li>S: <a href="https://freesound.org/people/bohitomi/sounds/240219/">ocean waves surround me.wav</a> by <a href="https://www.freesound.org/people/DBlover/">bohitomi</a> | License: Attribution</li>
+    <li>S: <a href="https://freesound.org/people/bohitomi/sounds/240219/">ocean waves surround me.wav</a> by <a href="https://www.freesound.org/people/bohitomi/">bohitomi</a> | License: Attribution</li>
 </ul>
 
 *dsurround:biome.river / dsurround:biome.ocean.under*
