@@ -42,11 +42,13 @@ public class ItemLibrary implements IItemLibrary {
 
     @Override
     public void reload(IReloadEvent.Scope scope) {
-        this.itemEquipFactories.clear();
-        this.itemSwingFactories.clear();
-        this.itemArmorStepFactories.clear();
-        this.version++;
-        this.logger.info("Item library configured; version is now %d", version);
+        if (scope != IReloadEvent.Scope.RESOURCES) {
+            this.version++;
+            this.itemEquipFactories.clear();
+            this.itemSwingFactories.clear();
+            this.itemArmorStepFactories.clear();
+            this.logger.info("[ItemLibrary] Configured; version is now %d", this.version);
+        }
     }
 
     @Override

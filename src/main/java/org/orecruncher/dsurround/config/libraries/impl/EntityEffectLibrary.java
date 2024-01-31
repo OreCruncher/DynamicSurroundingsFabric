@@ -32,10 +32,17 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
 
     @Override
     public void reload(IReloadEvent.Scope scope) {
-        this.entityEffects.clear();
+
         this.version++;
+
+        if (scope == IReloadEvent.Scope.TAGS) {
+            this.logger.info("[EntityEffectLibrary] received tag update notification; version is now %d", this.version);
+            return;
+        }
+
+        this.entityEffects.clear();
         this.defaultInfo = EntityEffectInfo.createDefault(this.version);
-        this.logger.info("Entity effects configured; version is now %d", this.version);
+        this.logger.info("[EntityEffectLibrary] Configured; version is now %d", this.version);
     }
 
     @Override

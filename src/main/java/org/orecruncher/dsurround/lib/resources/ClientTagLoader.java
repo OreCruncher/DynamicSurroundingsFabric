@@ -66,18 +66,24 @@ public class ClientTagLoader {
     // This is based on TagLoader. Inspiration from Fabric client tag API.
     private <T> TagData<T> loadTagData(TagKey<T> tagKey, Set<TagKey<?>> visited) {
 
-        Set<ResourceLocation> completeIds = new HashSet<>();
+        var completeIds = new HashSet<ResourceLocation>();
+        var instances = new ArrayList<T>();
 
         // If we can take a shortcut by looking up tag membership in the registries, do so. It's
         // faster than scanning resources directly.
         if (this.takeShortcutLookup(tagKey)) {
             this.logger.debug(RESOURCE_LOADING, "%s - Shortcut lookup; scanning registries", tagKey);
             var registry = RegistryUtils.getRegistry(tagKey.registry()).orElseThrow();
-            var entities = registry.holders()
-                    .filter(h -> h.is(tagKey))
-                    .map(h -> h.unwrapKey().get().location())
-                    .toList();
-            completeIds.addAll(entities);
+            var holderSet = registry.getTag(tagKey);
+            if (holderSet.isPresent()) {
+                for (var holder : holderSet.get()) {
+                    var key = holder.unwrapKey();
+                    if (key.isPresent()) {
+                        instances.add(holder.value());
+                        completeIds.add(key.get().location());
+                    }
+                }
+            }
         } else {
             // We never replace tag info, so we ignore and just merge in with what
             // has been discovered.
@@ -119,12 +125,13 @@ public class ClientTagLoader {
             return TagData.empty();
         }
 
-        // Manifest the completeId list into object instances for identity lookup
-        var registry = RegistryUtils.getRegistry(tagKey.registry()).orElseThrow();
-        var instances = new ArrayList<T>();
-        for (var id : completeIds) {
-            var rk = ResourceKey.create(tagKey.registry(), id);
-            registry.getOptional(rk).ifPresent(instances::add);
+        // If we get here, we have complete IDs but no instances. Means we have to find them.
+        if (instances.isEmpty()) {
+            var registry = RegistryUtils.getRegistry(tagKey.registry()).orElseThrow();
+            for (var id : completeIds) {
+                var rk = ResourceKey.create(tagKey.registry(), id);
+                registry.getOptional(rk).ifPresent(instances::add);
+            }
         }
 
         this.logger.debug(RESOURCE_LOADING, "%s - %d direct instances", tagKey, instances.size());

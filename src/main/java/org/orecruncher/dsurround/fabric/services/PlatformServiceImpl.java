@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.fabric.services;
 
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.event.lifecycle.v1.CommonLifecycleEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.fabricmc.loader.api.FabricLoader;
@@ -12,7 +13,9 @@ import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IReloadEvent;
+import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.fabric.config.ClothAPIFactory;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.config.IScreenFactory;
@@ -35,20 +38,28 @@ public class PlatformServiceImpl implements IPlatform {
         this.lookupHelper = new ServerResourceLookupHelper();
 
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
+
+            private final ResourceLocation id = new ResourceLocation(Constants.MOD_ID, "client_resource_listener");
             @Override
             public ResourceLocation getFabricId() {
-                return new ResourceLocation(Constants.MOD_ID, "client_resource_listener");
+                return this.id;
             }
 
             @Override
             public void onResourceManagerReload(@NotNull ResourceManager ignore) {
-                Library.LOGGER.info("Resource reload - resetting configuration caches");
-                AssetLibraryEvent.RELOAD.raise().onReload(IReloadEvent.Scope.RESOURCES);
-                Library.LOGGER.info("Refreshing lookup helper");
-                PlatformServiceImpl.this.lookupHelper.refresh(PlatformServiceImpl.this);
+                if (GameUtils.getMC().isSameThread()) {
+                    Library.LOGGER.info("Refreshing lookup helper");
+                    PlatformServiceImpl.this.lookupHelper.refresh(PlatformServiceImpl.this);
+                    Library.LOGGER.info("Resource reload - resetting configuration caches");
+                    AssetLibraryEvent.RELOAD.raise().onReload(IReloadEvent.Scope.RESOURCES);
+                }
             }
         });
 
+        CommonLifecycleEvents.TAGS_LOADED.register((registry, client) -> {
+            if (client)
+                ClientState.TAG_SYNC.raise().onTagSync(registry);
+        });
     }
 
     @Override

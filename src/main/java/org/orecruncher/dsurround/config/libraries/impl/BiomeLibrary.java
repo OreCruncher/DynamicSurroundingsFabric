@@ -54,6 +54,14 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
     @Override
     public void reload(IReloadEvent.Scope scope) {
+
+        this.version++;
+
+        if (scope == IReloadEvent.Scope.TAGS) {
+            this.logger.info("[BiomeLibrary] received tag update notification; version is now %d", this.version);
+            return;
+        }
+
         // Wipe out the internal biome cache.  These will be reset.
         this.internalBiomes.clear();
         this.biomeConfigs.clear();
@@ -66,12 +74,10 @@ public final class BiomeLibrary implements IBiomeLibrary {
         // of the list.
         this.biomeConfigs.sort(Comparator.comparingInt(BiomeConfigRule::priority));
 
-        this.version++;
-
         for (var b : SyntheticBiome.values())
             initializeSyntheticBiome(b);
 
-        this.logger.info("%d biome configs loaded; version is now %d", this.biomeConfigs.size(), this.version);
+        this.logger.info("[BiomeLibrary] %d biome configs loaded; version is now %d", this.biomeConfigs.size(), this.version);
     }
 
     private void initializeSyntheticBiome(SyntheticBiome biome) {

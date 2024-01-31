@@ -52,14 +52,19 @@ public class BlockLibrary implements IBlockLibrary {
     @Override
     public void reload(IReloadEvent.Scope scope) {
 
+        this.version++;
+
+        if (scope == IReloadEvent.Scope.TAGS) {
+            this.logger.info("[BlockLibrary] received tag update notification; version is now %d", this.version);
+            return;
+        }
+
         this.blockConfigs.clear();
 
         var findResults = ResourceUtils.findModResources(CODEC, FILE_NAME);
         findResults.forEach(result -> this.blockConfigs.addAll(result.resourceContent()));
 
-        this.version++;
-
-        this.logger.info("%d block configs loaded; version is now %d", blockConfigs.size(), version);
+        this.logger.info("[BlockLibrary] %d block configs loaded; version is now %d", blockConfigs.size(), version);
     }
 
     @Override

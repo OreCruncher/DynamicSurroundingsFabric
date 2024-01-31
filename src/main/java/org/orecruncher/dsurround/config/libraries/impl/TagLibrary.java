@@ -21,11 +21,9 @@ import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.ClientState;
-import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ClientTagLoader;
-import org.orecruncher.dsurround.lib.system.IStopwatch;
 import org.orecruncher.dsurround.lib.system.ISystemClock;
 import org.orecruncher.dsurround.tags.ModTags;
 
@@ -127,7 +125,10 @@ public class TagLibrary implements ITagLibrary {
 
     @Override
     public void reload(IReloadEvent.Scope scope) {
-        this.logger.info("Tag cache has %d elements", this.tagCache.size());
+        if (scope == IReloadEvent.Scope.RESOURCES)
+            return;
+
+        this.logger.info("[TagLibrary] Cache has %d elements", this.tagCache.size());
 
         // If we are connected to a server, and we get a reload something triggered it
         // like a /dsreload, resource pack change, etc.
@@ -166,13 +167,10 @@ public class TagLibrary implements ITagLibrary {
 
     private void onConnect(Minecraft client) {
         this.isConnected = true;
-        this.initializeTagCache();
     }
 
     private void onDisconnect(Minecraft client) {
         this.isConnected = false;
-        this.tagCache.clear();
-        this.tagLoader.clear();
     }
 
     private void initializeTagCache() {
