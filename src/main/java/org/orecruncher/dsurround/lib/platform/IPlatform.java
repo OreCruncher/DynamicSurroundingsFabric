@@ -9,9 +9,7 @@ import org.orecruncher.dsurround.lib.version.SemanticVersion;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public interface IPlatform {
 
@@ -60,10 +58,12 @@ public interface IPlatform {
 
     KeyMapping registerKeyBinding(String translationKey, int code, String category);
 
+    Collection<Path> findResourcePaths(String fileNamePattern);
+
     /**
-     * Obtains a list of file paths corresponding to the resource file requested
+     * Gets all the root paths for each loaded mod.
      */
-    Collection<Path> findResourcePaths(String file);
+    Map<String, List<Path>> getResourceRootPaths();
 
     /**
      * Obtains a mod configuration screen factory for generating configuration screens
