@@ -19,17 +19,21 @@ import org.orecruncher.dsurround.lib.config.IScreenFactory;
 import org.orecruncher.dsurround.fabric.config.YaclFactory;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
+import org.orecruncher.dsurround.lib.resources.ServerResourceLookupHelper;
 import org.orecruncher.dsurround.lib.version.SemanticVersion;
 
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class PlatformServiceImpl implements IPlatform {
 
-    static {
+    private final ServerResourceLookupHelper lookupHelper;
+
+    public PlatformServiceImpl() {
+
+        this.lookupHelper = new ServerResourceLookupHelper();
+
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
             @Override
             public ResourceLocation getFabricId() {
@@ -40,8 +44,11 @@ public class PlatformServiceImpl implements IPlatform {
             public void onResourceManagerReload(@NotNull ResourceManager ignore) {
                 Library.LOGGER.info("Resource reload - resetting configuration caches");
                 AssetLibraryEvent.RELOAD.raise().onReload(IReloadEvent.Scope.RESOURCES);
+                Library.LOGGER.info("Refreshing lookup helper");
+                PlatformServiceImpl.this.lookupHelper.refresh(PlatformServiceImpl.this);
             }
         });
+
     }
 
     @Override
@@ -115,13 +122,15 @@ public class PlatformServiceImpl implements IPlatform {
     }
 
     @Override
-    public  Collection<Path> findResourcePaths(String file) {
-        Collection<Path> result = new HashSet<>();
+    public Collection<Path> findResourcePaths(String fileNamePattern) {
+        return this.lookupHelper.findResourcePaths(fileNamePattern);
+    }
 
-        for (var mod : FabricLoader.getInstance().getAllMods()) {
-            mod.findPath(file).ifPresent(result::add);
-        }
-
+    @Override
+    public Map<String, List<Path>> getResourceRootPaths() {
+        var result = new HashMap<String, List<Path>>();
+        FabricLoader.getInstance().getAllMods()
+                .forEach(mod -> result.put(mod.getMetadata().getId(), mod.getRootPaths()));
         return result;
     }
 
