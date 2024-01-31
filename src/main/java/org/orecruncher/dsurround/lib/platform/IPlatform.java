@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.lib.platform;
 
 import net.minecraft.client.KeyMapping;
+import net.minecraft.server.packs.PackType;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.config.IScreenFactory;
@@ -63,7 +64,7 @@ public interface IPlatform {
     /**
      * Gets all the root paths for each loaded mod.
      */
-    Map<String, List<Path>> getResourceRootPaths();
+    Collection<Path> getResourceRootPaths(PackType packType);
 
     /**
      * Obtains a mod configuration screen factory for generating configuration screens

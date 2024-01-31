@@ -1,30 +1,42 @@
 package org.orecruncher.dsurround.lib.resources;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagEntry;
 import net.minecraft.tags.TagKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
+import org.orecruncher.dsurround.lib.system.ISystemClock;
+
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.orecruncher.dsurround.Configuration.Flags.RESOURCE_LOADING;
 
 @SuppressWarnings("unused")
 public class ClientTagLoader {
 
+    private final ResourceUtilities resourceUtilities;
     private final IModLog logger;
-    private final Map<TagKey<?>, TagData<?>> tagCache = new Reference2ObjectOpenHashMap<>();
+    private final ISystemClock systemClock;
+    private final Map<TagKey<?>, TagData<?>> tagCache = new Reference2ObjectOpenHashMap<>(256);
 
-    public ClientTagLoader(IModLog logger) {
+    private boolean isVanilla;
+
+    public ClientTagLoader(ResourceUtilities resourceUtilities, IModLog logger, ISystemClock systemClock) {
+        this.resourceUtilities = resourceUtilities;
         this.logger = logger;
+        this.systemClock = systemClock;
+        this.isVanilla = false;
     }
 
     public <T> Collection<T> getMembers(TagKey<T> tagKey) {
@@ -37,6 +49,10 @@ public class ClientTagLoader {
 
     public void clear() {
         this.tagCache.clear();
+    }
+
+    public void setVanilla(boolean flag) {
+        this.isVanilla = flag;
     }
 
     private <T> TagData<T> getTagData(TagKey<T> tagKey, Set<TagKey<?>> visited) {
@@ -71,24 +87,27 @@ public class ClientTagLoader {
 
         // If we can take a shortcut by looking up tag membership in the registries, do so. It's
         // faster than scanning resources directly.
-        if (this.takeShortcutLookup(tagKey)) {
-            this.logger.debug(RESOURCE_LOADING, "%s - Shortcut lookup; scanning registries", tagKey);
-            var registry = RegistryUtils.getRegistry(tagKey.registry()).orElseThrow();
-            var holderSet = registry.getTag(tagKey);
-            if (holderSet.isPresent()) {
-                for (var holder : holderSet.get()) {
-                    var key = holder.unwrapKey();
-                    if (key.isPresent()) {
-                        instances.add(holder.value());
-                        completeIds.add(key.get().location());
-                    }
+        var registry = RegistryUtils.getRegistry(tagKey.registry()).orElseThrow();
+        var holderSet = this.shortcutLookup(tagKey, registry);
+        if (holderSet.isPresent()) {
+            var data = holderSet.get();
+            this.logger.debug(RESOURCE_LOADING, "%s - Shortcut lookup", tagKey);
+            for (var holder : data) {
+                var key = holder.unwrapKey();
+                if (key.isPresent()) {
+                    instances.add(holder.value());
+                    completeIds.add(key.get().location());
                 }
             }
         } else {
             // We never replace tag info, so we ignore and just merge in with what
             // has been discovered.
             Set<TagEntry> entries = new HashSet<>();
-            var tagFiles = ResourceUtils.findClientTagFiles(tagKey);
+
+            var stopwatch = this.systemClock.getStopwatch();
+            var tagFiles = this.resourceUtilities.findClientTagFiles(tagKey);
+            this.logger.debug(RESOURCE_LOADING, "[%s] Find client tags took %dmillis", tagKey, stopwatch.elapsed(TimeUnit.MILLISECONDS));
+
             tagFiles.forEach(tf -> entries.addAll(tf.entries()));
 
             if (!entries.isEmpty()) {
@@ -127,7 +146,6 @@ public class ClientTagLoader {
 
         // If we get here, we have complete IDs but no instances. Means we have to find them.
         if (instances.isEmpty()) {
-            var registry = RegistryUtils.getRegistry(tagKey.registry()).orElseThrow();
             for (var id : completeIds) {
                 var rk = ResourceKey.create(tagKey.registry(), id);
                 registry.getOptional(rk).ifPresent(instances::add);
@@ -141,32 +159,20 @@ public class ClientTagLoader {
                 ImmutableSet.copyOf(completeIds));
     }
 
-    private boolean takeShortcutLookup(TagKey<?> tagKey) {
+    private <T> Optional<Iterable<Holder<T>>> shortcutLookup(TagKey<T> tagKey, Registry<T> registry) {
         var namespace = tagKey.location().getNamespace();
-
-        // If it's a mod tag, we have to look in local resources.
+        // If its one of our tags, we always do the long lookup. They aren't really tags.
         if (namespace.equals(Library.MOD_ID))
-            return false;
-
-        // If the server is running on the local system, we can take shortcuts
-        if (GameUtils.getMC().getSingleplayerServer() != null)
-            return true;
-
-        // If the tag namespace is Minecraft, take a shortcut
-        if (namespace.equals("minecraft"))
-            return true;
-
-        // Get the connection. Not sure how it can get null while the game is running
-        // but check any ways.
-        var connection = GameUtils.getMC().getConnection();
-        if (connection == null)
-            return false;
-
-        // Check the server brand. If either fabric or forge, we can take a shortcut as the
-        // forge and c tags we want are baked in. The other known value is "vanilla", and in that
-        //  case, we cannot take a shortcut.
-        var brand = connection.serverBrand();
-        return brand != null && (brand.equalsIgnoreCase("fabric") || brand.equalsIgnoreCase("forge"));
+            return Optional.empty();
+        // If the tag is present in the registry, use that info - it would have been
+        // synchronized.
+        var holderSet = registry.getTag(tagKey);
+        if (holderSet.isPresent())
+            return Optional.of(holderSet.get());
+        // This is the tricky part. If we are connected to a Vanilla server, we need to do the slow
+        // crawl because Vanilla doesn't know about forge and c tags. Otherwise, assume its empty
+        // because it should have been processed by tag sync.
+        return this.isVanilla ? Optional.empty() : Optional.of(ImmutableList.of());
     }
 
     private record TagData<T>(

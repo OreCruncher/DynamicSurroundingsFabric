@@ -1,5 +1,7 @@
 package org.orecruncher.dsurround.config.libraries;
 
+import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
+
 @FunctionalInterface
 public interface IReloadEvent {
 
@@ -12,5 +14,5 @@ public interface IReloadEvent {
         ALL
     }
 
-    void onReload(Scope scope);
+    void onReload(ResourceUtilities resourceUtilities, Scope scope);
 }

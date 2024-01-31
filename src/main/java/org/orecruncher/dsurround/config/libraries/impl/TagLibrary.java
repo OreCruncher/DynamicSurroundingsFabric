@@ -24,6 +24,7 @@ import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ClientTagLoader;
+import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.system.ISystemClock;
 import org.orecruncher.dsurround.tags.ModTags;
 
@@ -40,7 +41,7 @@ public class TagLibrary implements ITagLibrary {
     private final ISystemClock systemClock;
 
     private final Map<TagKey<?>, Collection<?>> tagCache;
-    private final ClientTagLoader tagLoader;
+    private ClientTagLoader tagLoader;
 
     private boolean isConnected;
 
@@ -48,7 +49,6 @@ public class TagLibrary implements ITagLibrary {
         this.logger = logger;
         this.systemClock = systemClock;
         this.tagCache = new Reference2ObjectOpenHashMap<>();
-        this.tagLoader = new ClientTagLoader(this.logger);
 
         // Need to clear the tag caches on disconnect. It's possible that
         // cached biome information will change with the next connection.
@@ -124,7 +124,10 @@ public class TagLibrary implements ITagLibrary {
     }
 
     @Override
-    public void reload(IReloadEvent.Scope scope) {
+    public void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
+        if (resourceUtilities != null)
+            this.tagLoader = new ClientTagLoader(resourceUtilities, this.logger, this.systemClock);
+
         if (scope == IReloadEvent.Scope.RESOURCES)
             return;
 
@@ -167,6 +170,7 @@ public class TagLibrary implements ITagLibrary {
 
     private void onConnect(Minecraft client) {
         this.isConnected = true;
+        this.initializeTagCache();
     }
 
     private void onDisconnect(Minecraft client) {
@@ -174,6 +178,9 @@ public class TagLibrary implements ITagLibrary {
     }
 
     private void initializeTagCache() {
+        if (this.tagLoader == null)
+            return;
+
         // Bootstrap the tag cache. We do this by zipping through our tags
         // and forcing the cache to initialize.
         var stopwatch = this.systemClock.getStopwatch();

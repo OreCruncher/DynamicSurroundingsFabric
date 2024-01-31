@@ -19,10 +19,10 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.config.IScreenFactory;
-import org.orecruncher.dsurround.fabric.config.YaclFactory;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
-import org.orecruncher.dsurround.lib.resources.ServerResourceLookupHelper;
+import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
+import org.orecruncher.dsurround.lib.resources.ResourceLookupHelper;
 import org.orecruncher.dsurround.lib.version.SemanticVersion;
 
 import java.nio.file.Path;
@@ -31,11 +31,11 @@ import java.util.stream.Collectors;
 
 public class PlatformServiceImpl implements IPlatform {
 
-    private final ServerResourceLookupHelper lookupHelper;
+    private final ResourceLookupHelper lookupHelper;
 
     public PlatformServiceImpl() {
 
-        this.lookupHelper = new ServerResourceLookupHelper();
+        this.lookupHelper = new ResourceLookupHelper(PackType.SERVER_DATA);
 
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
 
@@ -46,12 +46,14 @@ public class PlatformServiceImpl implements IPlatform {
             }
 
             @Override
-            public void onResourceManagerReload(@NotNull ResourceManager ignore) {
+            public void onResourceManagerReload(@NotNull ResourceManager resourceManager) {
                 if (GameUtils.getMC().isSameThread()) {
                     Library.LOGGER.info("Refreshing lookup helper");
                     PlatformServiceImpl.this.lookupHelper.refresh(PlatformServiceImpl.this);
+
                     Library.LOGGER.info("Resource reload - resetting configuration caches");
-                    AssetLibraryEvent.RELOAD.raise().onReload(IReloadEvent.Scope.RESOURCES);
+                    var resourceUtilities = ResourceUtilities.createForResourceManager(resourceManager);
+                    AssetLibraryEvent.RELOAD.raise().onReload(resourceUtilities, IReloadEvent.Scope.RESOURCES);
                 }
             }
         });
@@ -138,11 +140,14 @@ public class PlatformServiceImpl implements IPlatform {
     }
 
     @Override
-    public Map<String, List<Path>> getResourceRootPaths() {
-        var result = new HashMap<String, List<Path>>();
-        FabricLoader.getInstance().getAllMods()
-                .forEach(mod -> result.put(mod.getMetadata().getId(), mod.getRootPaths()));
-        return result;
+    public Collection<Path> getResourceRootPaths(PackType packType) {
+        var pathPrefix = packType.getDirectory();
+        return FabricLoader.getInstance().getAllMods()
+                .stream()
+                .map(mod -> mod.findPath(pathPrefix))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .toList();
     }
 
     @Override
@@ -150,8 +155,6 @@ public class PlatformServiceImpl implements IPlatform {
         IScreenFactory<?> result = null;
         if (this.isModLoaded(Constants.CLOTH_CONFIG))
             result = ClothAPIFactory.createDefaultConfigScreen(configClass);
-        else if (this.isModLoaded(Constants.YACL))
-            result = YaclFactory.createDefaultConfigScreen(configClass);
         return Optional.ofNullable(result);
     }
 }

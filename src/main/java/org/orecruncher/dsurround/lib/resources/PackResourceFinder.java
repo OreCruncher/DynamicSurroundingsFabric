@@ -11,8 +11,9 @@ import java.util.Collection;
 
 import static org.orecruncher.dsurround.Configuration.Flags.RESOURCE_LOADING;
 
-public class ServerResourceFinder<T> extends AbstractResourceFinder<T> {
-    protected ServerResourceFinder(Codec<T> decoder, String pathPrefix) {
+public class PackResourceFinder<T> extends AbstractResourceFinder<T> {
+
+    protected PackResourceFinder(PackType packType, Codec<T> decoder, String pathPrefix) {
         super(decoder, pathPrefix);
     }
 
@@ -24,7 +25,7 @@ public class ServerResourceFinder<T> extends AbstractResourceFinder<T> {
     @Override
     public Collection<DiscoveredResource<T>> find(ResourceLocation resource) {
         Collection<DiscoveredResource<T>> results = new ObjectArray<>();
-        var tagFilePath = "%s/%s/%s/%s".formatted(PackType.SERVER_DATA.getDirectory(), resource.getNamespace(), this.pathPrefix, resource.getPath());
+        var tagFilePath = resource.getPath();
 
         if (!tagFilePath.endsWith(".json"))
             tagFilePath = tagFilePath + ".json";

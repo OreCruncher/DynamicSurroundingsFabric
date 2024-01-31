@@ -7,13 +7,14 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.EventingFactory;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.events.IPhasedEvent;
+import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 
 public class AssetLibraryEvent {
 
     private static final Configuration CONFIG = ContainerManager.resolve(Configuration.class);
-    public static final IPhasedEvent<IReloadEvent> RELOAD = EventingFactory.createPrioritizedEvent(callbacks -> scope -> {
+    public static final IPhasedEvent<IReloadEvent> RELOAD = EventingFactory.createPrioritizedEvent(callbacks -> (resourceUtilities, scope) ->  {
         for (var callback : callbacks) {
-            callback.onReload(scope);
+            callback.onReload(resourceUtilities, scope);
         }
     });
 
@@ -21,7 +22,7 @@ public class AssetLibraryEvent {
         RELOAD.register(AssetLibraryEvent::afterReload, HandlerPriority.VERY_LOW);
     }
 
-    private static void afterReload(IReloadEvent.Scope scope) {
+    private static void afterReload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
         // Only want to send a message if debug logging is enabled
         if (CONFIG.logging.enableDebugLogging) {
             var msg = Component.translatable("dsurround.text.reloadassets", Component.translatable("dsurround.modname"));

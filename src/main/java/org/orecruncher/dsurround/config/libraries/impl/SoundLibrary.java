@@ -21,7 +21,7 @@ import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.resources.DiscoveredResource;
-import org.orecruncher.dsurround.lib.resources.ResourceUtils;
+import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactory;
@@ -82,7 +82,7 @@ public final class SoundLibrary implements ISoundLibrary {
     }
 
     @Override
-    public void reload(IReloadEvent.Scope scope) {
+    public void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
         if (scope == IReloadEvent.Scope.TAGS)
             return;
 
@@ -99,11 +99,11 @@ public final class SoundLibrary implements ISoundLibrary {
         // Gather resource pack sound files and process them to ensure metadata is collected.
         // Resource pack sounds generally replace existing registration, but this allows for new
         // sounds to be added client side.
-        var soundFiles = ResourceUtils.findResources(SOUND_FILE_CODEC, SOUNDS_JSON);
+        var soundFiles = resourceUtilities.findResources(SOUND_FILE_CODEC, SOUNDS_JSON);
         soundFiles.forEach(this::registerSoundFile);
 
         // Gather the sound factory definitions. We scan the local data directory as well.
-        var findResults = ResourceUtils.findModResources(FACTORY_FILE_CODEC, FACTORY_JSON);
+        var findResults = resourceUtilities.findModResources(FACTORY_FILE_CODEC, FACTORY_JSON);
         findResults.forEach(this::registerSoundFactories);
 
         this.logger.info("Number of SoundEvents cached: %d", this.myRegistry.size());

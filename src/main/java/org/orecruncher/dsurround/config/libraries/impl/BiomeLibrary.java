@@ -16,7 +16,7 @@ import org.orecruncher.dsurround.lib.Guard;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.resources.ResourceUtils;
+import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
 import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
@@ -53,7 +53,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
     }
 
     @Override
-    public void reload(IReloadEvent.Scope scope) {
+    public void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
 
         this.version++;
 
@@ -67,7 +67,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
         this.biomeConfigs.clear();
         this.biomeConditionEvaluator.reset();
 
-        var findResults = ResourceUtils.findModResources(CODEC, FILE_NAME);
+        var findResults = resourceUtilities.findModResources(CODEC, FILE_NAME);
         findResults.forEach(result -> this.biomeConfigs.addAll(result.resourceContent()));
 
         // Ensure they are in priority order where the least is towards the beginning

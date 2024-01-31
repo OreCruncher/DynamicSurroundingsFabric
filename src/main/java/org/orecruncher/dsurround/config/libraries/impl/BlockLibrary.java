@@ -15,7 +15,7 @@ import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.resources.ResourceUtils;
+import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 import org.orecruncher.dsurround.mixinutils.IBlockStateExtended;
 
@@ -50,7 +50,7 @@ public class BlockLibrary implements IBlockLibrary {
     }
 
     @Override
-    public void reload(IReloadEvent.Scope scope) {
+    public void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
 
         this.version++;
 
@@ -61,7 +61,7 @@ public class BlockLibrary implements IBlockLibrary {
 
         this.blockConfigs.clear();
 
-        var findResults = ResourceUtils.findModResources(CODEC, FILE_NAME);
+        var findResults = resourceUtilities.findModResources(CODEC, FILE_NAME);
         findResults.forEach(result -> this.blockConfigs.addAll(result.resourceContent()));
 
         this.logger.info("[BlockLibrary] %d block configs loaded; version is now %d", blockConfigs.size(), version);
