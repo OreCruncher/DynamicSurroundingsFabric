@@ -143,14 +143,30 @@ public class ClientTagLoader {
 
     private boolean takeShortcutLookup(TagKey<?> tagKey) {
         var namespace = tagKey.location().getNamespace();
+
         // If it's a mod tag, we have to look in local resources.
         if (namespace.equals(Library.MOD_ID))
             return false;
-        // If there is a single player world being hosted, it means that the local
-        // registries are intact and a tag lookup can be taken. Otherwise, the client is
-        // connected to a remote server. If it is a Minecraft tag, we can obtain the
-        // information from the registry. Otherwise, do the crawl.
-        return GameUtils.getMC().getSingleplayerServer() != null || namespace.equals("minecraft");
+
+        // If the server is running on the local system, we can take shortcuts
+        if (GameUtils.getMC().getSingleplayerServer() != null)
+            return true;
+
+        // If the tag namespace is Minecraft, take a shortcut
+        if (namespace.equals("minecraft"))
+            return true;
+
+        // Get the connection. Not sure how it can get null while the game is running
+        // but check any ways.
+        var connection = GameUtils.getMC().getConnection();
+        if (connection == null)
+            return false;
+
+        // Check the server brand. If either fabric or forge, we can take a shortcut as the
+        // forge and c tags we want are baked in. The other known value is "vanilla", and in that
+        //  case, we cannot take a shortcut.
+        var brand = connection.serverBrand();
+        return brand != null && (brand.equalsIgnoreCase("fabric") || brand.equalsIgnoreCase("forge"));
     }
 
     private record TagData<T>(
