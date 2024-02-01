@@ -1,18 +1,11 @@
 package org.orecruncher.dsurround.lib.resources;
 
-import net.minecraft.resources.ResourceLocation;
-import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.platform.IPlatform;
+import com.mojang.serialization.Codec;
 
 import java.util.Collection;
 
-public interface IResourceFinder<T> {
+public interface IResourceFinder {
 
-    default IPlatform getPlatform() {
-        return Library.PLATFORM;
-    }
+    <T> Collection<DiscoveredResource<T>> find(Codec<T> codec, String path);
 
-    Collection<DiscoveredResource<T>> find(String assetPath);
-
-    Collection<DiscoveredResource<T>> find(ResourceLocation resource);
 }

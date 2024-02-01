@@ -1,32 +1,34 @@
 package org.orecruncher.dsurround.lib.resources;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.tags.TagFile;
 import net.minecraft.tags.TagKey;
 import net.minecraft.tags.TagManager;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 public final class ResourceUtilities {
 
     private final IModLog logger;
-    private final IMinecraftDirectories minecraftDirectories;
-    private final ResourceManager resourceManager;
+    private final ModConfigResourceFinder modConfigHelper;
+    private final DiskResourceFinder diskResourceHelper;
+    private final ClientResourceFinder resourceFinder;
+    private final ServerResourceFinder packResourceFinder;
 
-    public ResourceUtilities(IMinecraftDirectories minecraftDirectories, IModLog modLog, ResourceManager resourceManager) {
+    ResourceUtilities(IModLog modLog, IMinecraftDirectories minecraftDirectories, IPlatform platform, ResourceManager resourceManager) {
         this.logger = modLog;
-        this.minecraftDirectories = minecraftDirectories;
-        this.resourceManager = resourceManager;
+        this.modConfigHelper = new ModConfigResourceFinder(this.logger, resourceManager, "dsconfigs");
+        this.diskResourceHelper = new DiskResourceFinder(this.logger, platform, minecraftDirectories.getModDataDirectory());
+        this.resourceFinder = new ClientResourceFinder(this.logger, resourceManager);
+        this.packResourceFinder = new ServerResourceFinder(this.logger, platform);
     }
 
     /**
@@ -48,11 +50,10 @@ public final class ResourceUtilities {
      * @return A collection of resource accessors that match the assetPath criteria
      */
     public <T> Collection<DiscoveredResource<T>> findModResources(Codec<T> codec, final String assetPath) {
-        var packFinder = new ClientResourceFinder<>(this.resourceManager, codec, "dsconfigs");
-        //var packFinder = new PackResourceFinder<>(PackType.CLIENT_RESOURCES, codec, "dsconfigs");
-        var diskFinder = new DiskResourceFinder<>(codec, "", this.minecraftDirectories.getModDataDirectory());
-        var finder = new CompositeResourceFinder<>(packFinder, diskFinder);
-        return finder.find(assetPath);
+        var result = new ObjectArray<DiscoveredResource<T>>();
+        result.addAll(this.modConfigHelper.find(codec, assetPath));
+        result.addAll(this.diskResourceHelper.find(codec, assetPath));
+        return result;
     }
 
     /**
@@ -67,9 +68,7 @@ public final class ResourceUtilities {
      * @return Collection of accessors to retrieve resource configurations.
      */
     public <T> Collection<DiscoveredResource<T>> findResources(Codec<T> codec, String assetPath) {
-        //var finder = new PackResourceFinder<>(PackType.CLIENT_RESOURCES, codec, "");
-        var finder = new ClientResourceFinder<>(this.resourceManager, codec, "");
-        return finder.find(assetPath);
+        return this.resourceFinder.find(codec, assetPath);
     }
 
     /**
@@ -81,14 +80,14 @@ public final class ResourceUtilities {
      * @return Collection of TagFile instances that were found
      */
     public Collection<TagFile> findClientTagFiles(TagKey<?> tagKey) {
-        Collection<IResourceFinder<TagFile>> finders = new ObjectArray<>(3);
-        var tagFolder = TagManager.getTagDir(tagKey.registry());
-        finders.add(new PackResourceFinder<>(PackType.SERVER_DATA, TagFile.CODEC, tagFolder));
-        finders.add(new ClientResourceFinder<>(this.resourceManager, TagFile.CODEC, "dsconfigs/" + tagFolder));
-        finders.add(new DiskResourceFinder<>(TagFile.CODEC, tagFolder, this.minecraftDirectories.getModDataDirectory()));
-        var finder = new CompositeResourceFinder<>(finders);
-        var result = finder.find(tagKey.location());
-        return result.stream().map(DiscoveredResource::resourceContent).collect(Collectors.toList());
+        var result = new ObjectArray<DiscoveredResource<TagFile>>();
+        var tagDir = TagManager.getTagDir(tagKey.registry());
+        var tagFolder = "%s/%s".formatted(tagDir, tagKey.location().getPath());
+        var tagFolderPack = "%s:%s".formatted(tagKey.location().getNamespace(), tagFolder);
+        result.addAll(this.packResourceFinder.find(TagFile.CODEC, tagFolderPack));
+        result.addAll(this.modConfigHelper.find(TagFile.CODEC, tagFolder));
+        result.addAll(this.diskResourceHelper.find(TagFile.CODEC, tagFolder));
+        return result.stream().map(DiscoveredResource::resourceContent).toList();
     }
 
     public static ResourceUtilities createForCurrentState() {
@@ -96,7 +95,9 @@ public final class ResourceUtilities {
     }
 
     public static ResourceUtilities createForResourceManager(ResourceManager resourceManager) {
+        var logger = ContainerManager.resolve(IModLog.class);
         var directories = ContainerManager.resolve(IMinecraftDirectories.class);
-        return new ResourceUtilities(directories, Library.LOGGER, resourceManager);
+        var platform = ContainerManager.resolve(IPlatform.class);
+        return new ResourceUtilities(logger, directories, platform, resourceManager);
     }
 }
