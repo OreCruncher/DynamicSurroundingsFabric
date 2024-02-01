@@ -14,6 +14,7 @@ import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.scanner.ScanContext;
 import org.orecruncher.dsurround.processing.scanner.SystemsScanner;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
@@ -81,7 +82,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
         this.effectSystems = null;
     }
 
-    private void clear(IReloadEvent.Scope scope) {
+    private void clear(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
         if (this.effectSystems != null)
             this.effectSystems.resetFullScan();
     }

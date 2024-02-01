@@ -16,6 +16,7 @@ import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
@@ -41,7 +42,7 @@ public class ItemLibrary implements IItemLibrary {
     }
 
     @Override
-    public void reload(IReloadEvent.Scope scope) {
+    public void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
         if (scope != IReloadEvent.Scope.RESOURCES) {
             this.version++;
             this.itemEquipFactories.clear();

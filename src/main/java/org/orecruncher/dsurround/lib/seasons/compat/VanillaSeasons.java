@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.locale.Language;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.config.libraries.IReloadEvent;
+import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 
 import java.util.Optional;
@@ -33,7 +34,7 @@ public class VanillaSeasons extends AbstractSeasonProvider {
     }
 
     @Override
-    protected void reloadResources(IReloadEvent.Scope scope) {
+    protected void reloadResources(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
         if (scope == IReloadEvent.Scope.TAGS)
             return;
         this.currentSeasonString = Language.getInstance().getOrDefault("dsurround.text.seasons.spring");

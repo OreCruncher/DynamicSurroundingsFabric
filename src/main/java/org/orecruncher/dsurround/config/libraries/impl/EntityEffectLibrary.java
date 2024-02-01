@@ -9,6 +9,7 @@ import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.tags.EntityEffectTags;
 import org.orecruncher.dsurround.mixinutils.ILivingEntityExtended;
 
@@ -31,7 +32,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
     }
 
     @Override
-    public void reload(IReloadEvent.Scope scope) {
+    public void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
 
         this.version++;
 

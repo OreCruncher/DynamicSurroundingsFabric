@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.lib.seasons.compat;
 
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IReloadEvent;
+import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 
 public abstract class AbstractSeasonProvider implements ISeasonalInformation {
@@ -18,5 +19,5 @@ public abstract class AbstractSeasonProvider implements ISeasonalInformation {
         return this.providerName;
     }
 
-    protected abstract void reloadResources(IReloadEvent.Scope scope);
+    protected abstract void reloadResources(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope);
 }

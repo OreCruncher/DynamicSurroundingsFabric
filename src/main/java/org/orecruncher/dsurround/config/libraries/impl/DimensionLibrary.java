@@ -10,7 +10,7 @@ import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.resources.ResourceUtils;
+import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.util.IMinecraftDirectories;
 
 import java.util.*;
@@ -33,7 +33,7 @@ public final class DimensionLibrary implements IDimensionLibrary {
     }
 
     @Override
-    public void reload(IReloadEvent.Scope scope) {
+    public void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
 
         this.version++;
 
@@ -45,7 +45,7 @@ public final class DimensionLibrary implements IDimensionLibrary {
         this.configs.clear();
         this.dimensionRules.clear();
 
-        var findResults = ResourceUtils.findModResources(CODEC, FILE_NAME);
+        var findResults = resourceUtilities.findModResources(CODEC, FILE_NAME);
         findResults.forEach(result -> this.dimensionRules.addAll(result.resourceContent()));
 
         this.logger.info("[DimensionLibrary] %d dimension rules loaded; version is now %d", this.dimensionRules.size(), this.version);

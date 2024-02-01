@@ -15,6 +15,7 @@ import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.eventing.ClientState;
+import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.version.IVersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionResult;
@@ -134,7 +135,8 @@ public final class Client {
 
         ClientState.TAG_SYNC.register(event -> {
             this.logger.info("Tag sync event received - reloading libraries");
-            AssetLibraryEvent.RELOAD.raise().onReload(IReloadEvent.Scope.TAGS);
+            var resourceUtilities = ResourceUtilities.createForCurrentState();
+            AssetLibraryEvent.RELOAD.raise().onReload(resourceUtilities, IReloadEvent.Scope.TAGS);
         }, HandlerPriority.VERY_HIGH);
 
         // Force instantiation of the core Handler. This should cause the rest

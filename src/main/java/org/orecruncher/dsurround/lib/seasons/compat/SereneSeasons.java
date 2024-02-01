@@ -5,6 +5,7 @@ import net.minecraft.locale.Language;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.libraries.IReloadEvent;
+import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 import sereneseasons.season.SeasonHooks;
@@ -71,7 +72,7 @@ public class SereneSeasons extends AbstractSeasonProvider {
     }
 
     @Override
-    protected void reloadResources(IReloadEvent.Scope scope) {
+    protected void reloadResources(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
         if (scope == IReloadEvent.Scope.TAGS)
             return;
         for (var subSeason : Season.SubSeason.values())
