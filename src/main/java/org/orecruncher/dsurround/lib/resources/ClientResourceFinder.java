@@ -35,8 +35,6 @@ public class ClientResourceFinder extends AbstractResourceFinder {
             return ImmutableList.of();
         }
 
-        var x = this.resourceManager.listResourceStacks("dsconfigs", location -> true);
-
         this.logger.debug(RESOURCE_LOADING, "[%s] - %d entries found", assetPath, assets.size());
         for (var kvp : assets.entrySet()) {
             this.logger.debug(RESOURCE_LOADING, "[%s] - Processing %s", assetPath, kvp.getKey());
