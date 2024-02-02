@@ -5,6 +5,7 @@
     "minecraft:piglin",
     "#minecraft:raiders",
     "#minecraft:skeletons",
-    "#minecraft:zombies"
+    "minecraft:zombie",
+    "minecraft:husk"
   ]
 }

@@ -168,7 +168,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     }
 
     private boolean isDebugHudEnabled() {
-        return GameUtils.isInGame() && GameUtils.getMC().getDebugOverlay().showDebugScreen();
+        return GameUtils.isInGame() && GameUtils.getMC().options.renderDebug;
     }
 
     private void drawText(GuiGraphics context, ObjectArray<FormattedCharSequence> text, boolean left) {

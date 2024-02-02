@@ -16,8 +16,8 @@ public class IndividualSoundControlScreen extends Screen {
 
     private static final int TOP_OFFSET = 10;
     private static final int BOTTOM_OFFSET = 15;
-    private static final int HEADER_HEIGHT = 40;
-    private static final int FOOTER_HEIGHT = 80;
+    private static final int HEADER_HEIGHT = 35;
+    private static final int FOOTER_HEIGHT = 50;
 
     private static final int SEARCH_BAR_WIDTH = 200;
     private static final int SEARCH_BAR_HEIGHT = 20;
@@ -79,8 +79,9 @@ public class IndividualSoundControlScreen extends Screen {
                 this,
                 GameUtils.getMC(),
                 this.width,
-                bottomY,
+                this.height,
                 topY,
+                bottomY,
                 SELECTION_WIDTH,
                 SELECTION_HEIGHT,
                 this.enablePlay,
@@ -133,7 +134,7 @@ public class IndividualSoundControlScreen extends Screen {
 
     public void render(final GuiGraphics context, int mouseX, int mouseY, float partialTicks) {
         if (this.parent == null)
-            this.renderTransparentBackground(context);
+            this.renderBackground(context);
         else
             this.renderDirtBackground(context);
 

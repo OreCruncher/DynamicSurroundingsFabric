@@ -170,8 +170,8 @@ public abstract class ConfigElement<T> {
 
     public static class BooleanValue extends PropertyValue<Boolean> {
 
-        private static final Component YES = Component.translatable("gui.yes").withColor(ColorPalette.GREEN.getValue());
-        private static final Component NO = Component.translatable("gui.no").withColor(ColorPalette.RED.getValue());
+        private static final Component YES = Component.translatable("gui.yes").withStyle(Style.EMPTY.withColor(ColorPalette.GREEN));
+        private static final Component NO = Component.translatable("gui.no").withStyle(Style.EMPTY.withColor(ColorPalette.RED));
 
         BooleanValue(Object instance, String translationKey, Field field) {
             super(instance, translationKey, field);

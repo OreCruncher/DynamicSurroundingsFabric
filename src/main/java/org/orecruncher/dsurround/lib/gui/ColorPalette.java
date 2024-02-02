@@ -4,6 +4,8 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.util.Mth;
 
+import java.util.Objects;
+
 @SuppressWarnings("unused")
 public final class ColorPalette {
     // Branding colors
@@ -92,7 +94,7 @@ public final class ColorPalette {
     }
 
     private static TextColor of(String formatColor) {
-        return TextColor.parseColor(formatColor).getOrThrow(false, (msg)-> {});
+        return Objects.requireNonNull(TextColor.parseColor(formatColor));
     }
 
     private static TextColor of(int red, int green, int blue) {

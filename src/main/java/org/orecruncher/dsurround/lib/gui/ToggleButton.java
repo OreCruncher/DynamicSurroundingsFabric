@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.lib.gui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
@@ -32,7 +33,9 @@ public abstract class ToggleButton extends Button {
     @Override
     public void renderWidget(GuiGraphics guiGraphics, int i, int j, float f) {
         ResourceLocation resourceLocation = this.getSpriteToRender();
-        guiGraphics.blitSprite(resourceLocation, this.getX(), this.getY(), this.width, this.height);
+
+        RenderSystem.enableDepthTest();
+        guiGraphics.blit(resourceLocation, this.getX(), this.getY(), 0, 0, this.width, this.height, 20, 20);
     }
 
     private ResourceLocation getSpriteToRender() {

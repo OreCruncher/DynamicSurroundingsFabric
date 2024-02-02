@@ -171,9 +171,9 @@ public class TagLibrary implements ITagLibrary {
     private void onConnect(Minecraft client) {
         this.isConnected = true;
         var isVanilla = true;
-        var connection = client.getConnection();
-        if (connection != null) {
-            var brand = connection.serverBrand();
+        var player = client.player;
+        if (player != null) {
+            var brand = player.getServerBrand();
             isVanilla = "vanilla".equals(brand) || brand == null;
         }
         this.tagLoader.setVanilla(isVanilla);
