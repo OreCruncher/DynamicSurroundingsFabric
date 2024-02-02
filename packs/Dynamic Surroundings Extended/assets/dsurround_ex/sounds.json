@@ -112,5 +112,23 @@
 				"volume": 0.5
 			}
 		]
+	},
+	"music.moonlight_sonata": {
+		"ds_title": "Moonlight Sonata",
+		"ds_category": "music",
+		"ds_credits": [
+			{
+				"name": "Moonlight Sonata",
+				"author": "Ludwig van Beethoven, played by Alexander Blu",
+				"website": "https://orangefreesounds.com/moonlight-sonata-piano/",
+				"license": "Open Source Audio"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround_ex:music/moonlight_sonata",
+				"stream": true
+			}
+		]
 	}
 }
