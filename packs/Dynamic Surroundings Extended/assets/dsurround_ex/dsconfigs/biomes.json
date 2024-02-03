@@ -69,5 +69,27 @@
         "type": "music"
       }
     ]
+  },
+  {
+    "biomeSelector": "OVERWORLD && (FOREST || PLAINS) && !MOUNTAIN",
+    "_comment": "Music for Daytime",
+    "acoustics": [
+      {
+        "factory": "dsurround_ex:music/cannon_in_dmajor",
+        "conditions": "diurnal.isDay()",
+        "type": "music"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "OVERWORLD",
+    "_comment": "Music for Villages",
+    "acoustics": [
+      {
+        "factory": "dsurround_ex:music/the_britons",
+        "conditions": "state.isInVillage() && (diurnal.isDay() || diurnal.isSunrise())",
+        "type": "music"
+      }
+    ]
   }
 ]

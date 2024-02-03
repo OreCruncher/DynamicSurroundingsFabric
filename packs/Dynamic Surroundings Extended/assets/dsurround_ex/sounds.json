@@ -130,5 +130,42 @@
 				"stream": true
 			}
 		]
+	},
+	"music.cannon_in_dmajor": {
+		"ds_title": "Cannon in D Major",
+		"ds_category": "music",
+		"ds_credits": [
+			{
+				"name": "Cannon in D Major",
+				"author": "Johann Pachelbel",
+				"website": "https://archive.org/details/PachelbelCanonInDMajor",
+				"license": "Attribution-No Derivative Works 3.0"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround_ex:music/cannon_in_dmajor",
+				"stream": true
+			}
+		]
+	},
+	"music.the_britons": {
+		"ds_title": "The Britons",
+		"ds_category": "music",
+		"ds_credits": [
+			{
+				"name": "The Britons",
+				"author": "kmacleod",
+				"website": "https://pixabay.com/users/kmacleod-3979860",
+				"license": "Pixbay Content License"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround_ex:music/the_britons",
+				"stream": true,
+				"volume": 0.5
+			}
+		]
 	}
 }

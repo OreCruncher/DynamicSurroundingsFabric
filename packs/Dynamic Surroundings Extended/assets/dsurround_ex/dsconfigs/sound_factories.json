@@ -68,5 +68,25 @@
       "max_delay": 12000,
       "replace_current_music": false
     }
+  },
+  {
+    "location": "dsurround_ex:music/cannon_in_dmajor",
+    "soundEvent": "dsurround_ex:music.cannon_in_dmajor",
+    "category": "MUSIC",
+    "music": {
+      "min_delay": 3000,
+      "max_delay": 12000,
+      "replace_current_music": false
+    }
+  },
+  {
+    "location": "dsurround_ex:music/the_britons",
+    "soundEvent": "dsurround_ex:music.the_britons",
+    "category": "MUSIC",
+    "music": {
+      "min_delay": 3000,
+      "max_delay": 12000,
+      "replace_current_music": false
+    }
   }
 ]

@@ -4,7 +4,7 @@ domain or have Creative Common restrictions.  These restrictions may impact
 whether LPs can be monetized on the various streaming services.
 
 ##### Modifications (if any):
-* Sounds converted to OGG format
+* Sounds converted to OGG format as necessary
 
 ##### Credits
 
@@ -43,3 +43,22 @@ whether LPs can be monetized on the various streaming services.
 <ul>
     <li><a href="https://www.chosic.com/download-audio/27877/">Anna's Theme</a> by <a href="https://www.scottbuckley.com.au">Scott Buckley</a>; Music promoted by <a href="https://www.chosic.com/free-music/all/">https://www.chosic.com/free-music/all/</a> | License: Attribution 4.0 International (CC BY 4.0)</li>
 </ul>
+
+*dsurround_ex:music.moonlight_sonata*
+
+<ul>
+    <li><a href="https://www.chosic.com/download-audio/27877/">Moonlight Sonata</a> by <a href="https://orangefreesounds.com/moonlight-sonata-piano/">Ludwig van Beethoven, played by Alexander Blu</a> | License: Open Source Audio</li>
+</ul>
+
+*dsurround_ex:music.cannon_in_dmajor*
+
+<ul>
+    <li><a href="https://archive.org/details/PachelbelCanonInDMajor">Cannon in D Major</a> by Johann Pachelbel | License: Attribution-No Derivative Works 3.0</li>
+</ul>
+
+*dsurround_ex:music.the_britons*
+
+<ul>
+    <li><a href="https://pixabay.com/music/acoustic-group-the-britons-127687/">The Britons</a> by <a href="https://pixabay.com/users/kmacleod-3979860">kmacleod via Pixbay</a> | License: Pixbay Content License</li>
+</ul>
+
