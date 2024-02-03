@@ -29,6 +29,7 @@ public final class Constants {
     public static final String YACL = "yet_another_config_lib_v3";
     public static final String SINYTRA_CONNECTOR = "connectormod";
     public static final String SERENE_SEASONS = "sereneseasons";
+    public static final String QUILTED_LOADER = "quilt_loader";
 
     /**
      * Collection of MOD IDs that are of interest.  Ease of iteration.
@@ -48,7 +49,8 @@ public final class Constants {
                 CLOTH_CONFIG,
                 YACL,
                 SINYTRA_CONNECTOR,
-                SERENE_SEASONS);
+                SERENE_SEASONS,
+                QUILTED_LOADER);
 
         BLOCKS_TO_IGNORE.add(Blocks.VOID_AIR);
         BLOCKS_TO_IGNORE.add(Blocks.CAVE_AIR);
