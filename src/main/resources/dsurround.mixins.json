@@ -39,5 +39,6 @@
   "server": [],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "plugin": "org.orecruncher.dsurround.mixins.MixinPlugin"
 }
