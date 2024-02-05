@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.sound;
 
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
+import net.minecraft.client.resources.sounds.ElytraOnPlayerSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
@@ -102,6 +103,11 @@ public final class SoundInstanceHandler {
         // - The sound is global. Distance is not a factor.
         // - Weather related (thunder, lightning strike)
         if (sound.isRelative() || sound.getAttenuation() == SoundInstance.Attenuation.NONE || sound.getSource() == SoundSource.WEATHER)
+            return true;
+
+        // Do not cancel if it is the elytra flying sound. Due to the derpy implementation, the location of the
+        // sound is at Origin after construction. Could mixin the class to correct, but this is safer.
+        if (sound instanceof ElytraOnPlayerSoundInstance)
             return true;
 
         // Make sure a sound is assigned so that the volume check can work
