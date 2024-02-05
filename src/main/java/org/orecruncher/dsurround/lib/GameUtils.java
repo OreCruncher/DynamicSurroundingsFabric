@@ -92,4 +92,15 @@ public final class GameUtils {
     public static Minecraft getMC() {
         return Objects.requireNonNull(Minecraft.getInstance());
     }
+
+    public static Optional<String> getServerBrand() {
+        var connection = getMC().getConnection();
+        if (connection != null)
+            return Optional.ofNullable(connection.serverBrand());
+        return Optional.empty();
+    }
+
+    public static MinecraftServerType getServerType() {
+        return getServerBrand().map(MinecraftServerType::fromBrand).orElse(MinecraftServerType.VANILLA);
+    }
 }

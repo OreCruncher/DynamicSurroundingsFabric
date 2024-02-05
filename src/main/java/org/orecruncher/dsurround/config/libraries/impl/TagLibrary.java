@@ -21,6 +21,7 @@ import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.ClientState;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ClientTagLoader;
@@ -40,7 +41,7 @@ public class TagLibrary implements ITagLibrary {
     private final IModLog logger;
     private final ISystemClock systemClock;
 
-    private final Map<TagKey<?>, Collection<?>> tagCache;
+    private final Map<TagKey<?>, Collection<ResourceLocation>> tagCache;
     private ClientTagLoader tagLoader;
 
     private boolean isConnected;
@@ -60,12 +61,12 @@ public class TagLibrary implements ITagLibrary {
     public boolean is(TagKey<Block> tagKey, BlockState entry) {
         // For our purposes, blocks that are ignored will not have the
         // tags we are interested in.
-        var block = entry.getBlock();
         if (Constants.BLOCKS_TO_IGNORE.contains(entry.getBlock()))
             return false;
         if (entry.is(tagKey))
             return true;
-        return this.isInCache(tagKey, block);
+        var location = entry.getBlockHolder().unwrapKey().orElseThrow().location();
+        return this.isInCache(tagKey, location);
     }
 
     @Override
@@ -74,22 +75,34 @@ public class TagLibrary implements ITagLibrary {
             return false;
         if (entry.is(tagKey))
             return true;
-        return this.isInCache(tagKey, entry.getItem());
+        var location = entry.getItemHolder().unwrapKey().orElseThrow().location();
+        return this.isInCache(tagKey, location);
     }
 
     @Override
     public boolean is(TagKey<Biome> tagKey, Biome entry) {
         var registryEntry = RegistryUtils.getRegistryEntry(Registries.BIOME, entry);
-        if (registryEntry.isPresent() && registryEntry.get().is(tagKey))
-            return true;
-        return this.isInCache(tagKey, entry);
+        if (registryEntry.isPresent()) {
+            var e = registryEntry.get();
+            if (e.is(tagKey))
+                return true;
+            var location = e.key().location();
+            return this.isInCache(tagKey, location);
+        }
+        return false;
     }
 
     @Override
     public boolean is(TagKey<EntityType<?>> tagKey, EntityType<?> entry) {
         if (entry.is(tagKey))
             return true;
-        return this.isInCache(tagKey, entry);
+
+        var registryEntry = RegistryUtils.getRegistryEntry(Registries.ENTITY_TYPE, entry);
+        if (registryEntry.isPresent()) {
+            var location = registryEntry.get().key().location();
+            return this.isInCache(tagKey, location);
+        }
+        return false;
     }
 
     @Override
@@ -98,7 +111,13 @@ public class TagLibrary implements ITagLibrary {
             return false;
         if (entry.is(tagKey))
             return true;
-        return this.isInCache(tagKey, entry.getType());
+
+        var registryEntry = RegistryUtils.getRegistryEntry(Registries.FLUID, entry.getType());
+        if (registryEntry.isPresent()) {
+            var location = registryEntry.get().key().location();
+            return this.isInCache(tagKey, location);
+        }
+        return false;
     }
 
     @Override
@@ -159,10 +178,10 @@ public class TagLibrary implements ITagLibrary {
     @Override
     @SuppressWarnings("unchecked")
     public <T> Stream<TagKey<T>> streamTags(Holder<T> registryEntry) {
-        T entry = registryEntry.value();
+        var location = registryEntry.unwrapKey().orElseThrow().location();
         Set<TagKey<T>> tags = registryEntry.tags().collect(toSet());
         for (var kvp : this.tagCache.entrySet()) {
-            if (kvp.getValue().contains(entry))
+            if (kvp.getValue().contains(location))
                 tags.add((TagKey<T>) kvp.getKey());
         }
         return tags.stream();
@@ -170,13 +189,7 @@ public class TagLibrary implements ITagLibrary {
 
     private void onConnect(Minecraft client) {
         this.isConnected = true;
-        var isVanilla = true;
-        var connection = client.getConnection();
-        if (connection != null) {
-            var brand = connection.serverBrand();
-            isVanilla = "vanilla".equals(brand) || brand == null;
-        }
-        this.tagLoader.setVanilla(isVanilla);
+        this.tagLoader.setServerType(GameUtils.getServerType());
         this.initializeTagCache();
     }
 
@@ -199,7 +212,7 @@ public class TagLibrary implements ITagLibrary {
         this.logger.info("Tag cache initialization complete; %d tags cached, %dmillis", this.tagCache.size(), stopwatch.elapsed(TimeUnit.MILLISECONDS));
     }
 
-    private boolean isInCache(TagKey<?> tagKey, Object entry) {
+    private boolean isInCache(TagKey<?> tagKey, ResourceLocation entry) {
         if (!ModTags.getModTags().contains(tagKey))
             return false;
         return this.tagCache.computeIfAbsent(tagKey, this.tagLoader::getMembers).contains(entry);

@@ -3,16 +3,15 @@ package org.orecruncher.dsurround.lib.resources;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagEntry;
 import net.minecraft.tags.TagKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.MinecraftServerType;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.system.ISystemClock;
@@ -30,29 +29,29 @@ public class ClientTagLoader {
     private final ISystemClock systemClock;
     private final Map<TagKey<?>, TagData<?>> tagCache = new Reference2ObjectOpenHashMap<>(256);
 
-    private boolean isVanilla;
+    private MinecraftServerType serverType;
 
     public ClientTagLoader(ResourceUtilities resourceUtilities, IModLog logger, ISystemClock systemClock) {
         this.resourceUtilities = resourceUtilities;
         this.logger = logger;
         this.systemClock = systemClock;
-        this.isVanilla = false;
+        this.serverType = MinecraftServerType.VANILLA;
     }
 
-    public <T> Collection<T> getMembers(TagKey<T> tagKey) {
+    public Collection<ResourceLocation> getMembers(TagKey<?> tagKey) {
         return this.getTagData(tagKey, new HashSet<>()).members();
     }
 
     public <T> Collection<ResourceLocation> getCompleteIds(TagKey<T> tagKey) {
-        return this.getTagData(tagKey, new HashSet<>()).completeIds();
+        return this.getTagData(tagKey, new HashSet<>()).members();
     }
 
     public void clear() {
         this.tagCache.clear();
     }
 
-    public void setVanilla(boolean flag) {
-        this.isVanilla = flag;
+    public void setServerType(MinecraftServerType serverType) {
+        this.serverType = serverType;
     }
 
     private <T> TagData<T> getTagData(TagKey<T> tagKey, Set<TagKey<?>> visited) {
@@ -83,7 +82,6 @@ public class ClientTagLoader {
     private <T> TagData<T> loadTagData(TagKey<T> tagKey, Set<TagKey<?>> visited) {
 
         var completeIds = new HashSet<ResourceLocation>();
-        var instances = new ArrayList<T>();
 
         // If we can take a shortcut by looking up tag membership in the registries, do so. It's
         // faster than scanning resources directly.
@@ -94,10 +92,7 @@ public class ClientTagLoader {
             this.logger.debug(RESOURCE_LOADING, "%s - Shortcut lookup", tagKey);
             for (var holder : data) {
                 var key = holder.unwrapKey();
-                if (key.isPresent()) {
-                    instances.add(holder.value());
-                    completeIds.add(key.get().location());
-                }
+                key.ifPresent(tResourceKey -> completeIds.add(tResourceKey.location()));
             }
         } else {
             // We never replace tag info, so we ignore and just merge in with what
@@ -124,7 +119,7 @@ public class ClientTagLoader {
                         TagKey<?> tag = TagKey.create(tagKey.registry(), id);
                         // This will trigger recursion to generate a complete list of IDs
                         ClientTagLoader.this.logger.debug(RESOURCE_LOADING, "%s - Recurse %s", tagKey, tag);
-                        var result = ClientTagLoader.this.getTagData(tag, visited).completeIds();
+                        var result = ClientTagLoader.this.getTagData(tag, visited).members();
                         ClientTagLoader.this.logger.debug(RESOURCE_LOADING, "%s - Completed recursion %s", tagKey, tag);
                         return result;
                     }
@@ -144,19 +139,9 @@ public class ClientTagLoader {
             return TagData.empty();
         }
 
-        // If we get here, we have complete IDs but no instances. Means we have to find them.
-        if (instances.isEmpty()) {
-            for (var id : completeIds) {
-                var rk = ResourceKey.create(tagKey.registry(), id);
-                registry.getOptional(rk).ifPresent(instances::add);
-            }
-        }
+        this.logger.debug(RESOURCE_LOADING, "%s - %d direct instances", tagKey, completeIds.size());
 
-        this.logger.debug(RESOURCE_LOADING, "%s - %d direct instances", tagKey, instances.size());
-
-        return new TagData<>(
-                new ReferenceOpenHashSet<>(instances),
-                ImmutableSet.copyOf(completeIds));
+        return new TagData<>(ImmutableSet.copyOf(completeIds));
     }
 
     private <T> Optional<Iterable<Holder<T>>> shortcutLookup(TagKey<T> tagKey, Registry<T> registry) {
@@ -164,21 +149,20 @@ public class ClientTagLoader {
         // If its one of our tags, we always do the long lookup. They aren't really tags.
         if (namespace.equals(Library.MOD_ID))
             return Optional.empty();
-        // If the tag is present in the registry, use that info - it would have been
-        // synchronized.
-        var holderSet = registry.getTag(tagKey);
-        if (holderSet.isPresent())
-            return Optional.of(holderSet.get());
-        // This is the tricky part. If we are connected to a Vanilla server, we need to do the slow
-        // crawl because Vanilla doesn't know about forge and c tags. Otherwise, assume its empty
-        // because it should have been processed by tag sync.
-        return this.isVanilla ? Optional.empty() : Optional.of(ImmutableList.of());
+        // If it is a modded server, or the namespace is minecraft, tag information should be
+        // present in the local registries.
+        if (this.serverType.isModded() || "minecraft".equals(namespace)) {
+            var holderSet = registry.getTag(tagKey);
+            if (holderSet.isPresent())
+                return Optional.of(holderSet.get());
+            return Optional.of(ImmutableList.of());
+        }
+        // We are not connected to a modded server. Do a slow scan.
+        return Optional.empty();
     }
 
-    private record TagData<T>(
-            Set<T> members,
-            Set<ResourceLocation> completeIds) {
-        private static final TagData<?> EMPTY = new TagData<>(ImmutableSet.of(), ImmutableSet.of());
+    private record TagData<T>(Set<ResourceLocation> members) {
+        private static final TagData<?> EMPTY = new TagData<>(ImmutableSet.of());
 
         public static <T> TagData<T> empty() {
             return cast(EMPTY);
