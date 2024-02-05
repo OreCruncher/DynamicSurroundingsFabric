@@ -8,11 +8,11 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleEngine;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.world.entity.player.Player;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -23,7 +23,7 @@ public final class GameUtils {
     }
 
     // Client methods
-    public static Optional<Player> getPlayer() {
+    public static Optional<LocalPlayer> getPlayer() {
         return Optional.ofNullable(getMC().player);
     }
 
@@ -94,10 +94,7 @@ public final class GameUtils {
     }
 
     public static Optional<String> getServerBrand() {
-        var connection = getMC().getConnection();
-        if (connection != null)
-            return Optional.ofNullable(connection.serverBrand());
-        return Optional.empty();
+        return getPlayer().map(LocalPlayer::getServerBrand);
     }
 
     public static MinecraftServerType getServerType() {
