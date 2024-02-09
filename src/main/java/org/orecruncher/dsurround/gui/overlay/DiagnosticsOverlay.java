@@ -73,6 +73,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     private final ObjectArray<FormattedCharSequence> right = new ObjectArray<>(64);
     private boolean showHud;
     private boolean enableCollection;
+    private String serverBranding;
 
     public DiagnosticsOverlay(ModInformation modInformation, IPlatform platform) {
         this.platform = platform;
@@ -109,6 +110,9 @@ public class DiagnosticsOverlay extends AbstractOverlay {
 
             this.reusableEvent.clear();
             this.reusableEvent.add(CollectDiagnosticsEvent.Section.Header, this.branding);
+
+            var serverBrand = GameUtils.getServerBrand();
+            serverBrand.ifPresent(brand -> this.reusableEvent.add(CollectDiagnosticsEvent.Section.Header, "Server Brand: %s".formatted(brand)));
 
             // Check for any special mods and add indicators
             for (var modId : Constants.SPECIAL_MODS)
