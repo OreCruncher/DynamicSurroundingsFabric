@@ -9,8 +9,9 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.PackType;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
@@ -25,10 +26,7 @@ import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.SoundMetadata;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class IndividualSoundControlListEntry extends ContainerObjectSelectionList.Entry<IndividualSoundControlListEntry> implements AutoCloseable {
 
@@ -250,7 +248,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         // Cache the static part of the tooltip if needed
         if (this.cachedToolTip.isEmpty()) {
             ResourceLocation id = this.config.soundEventId;
-            PLATFORM.getModDisplayName(id.getNamespace())
+            this.resolveDisplayName(id.getNamespace())
                     .ifPresent(name -> {
                         FormattedCharSequence modName = FormattedCharSequence.forward(Objects.requireNonNull(ChatFormatting.stripFormatting(name)), STYLE_MOD_NAME);
                         this.cachedToolTip.add(modName);
@@ -309,6 +307,18 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         }
 
         return generatedTip;
+    }
+
+    private Optional<String> resolveDisplayName(String namespace) {
+        var displayName = PLATFORM.getModDisplayName(namespace);
+        if (displayName.isPresent())
+            return displayName;
+
+        // Could be a resource pack
+        return GameUtils.getResourceManager().listPacks()
+                .filter(pack -> pack.getNamespaces(PackType.CLIENT_RESOURCES).contains(namespace))
+                .map(PackResources::packId)
+                .findAny();
     }
 
     /**
