@@ -1,3 +1,17 @@
+> ### DynamicSurroundings-Fabric-1.20.4-0.3.2
+**Requirements**
+* JAVA 17+ (I am using Adoptium https://adoptium.net/)
+* Fabric Loader >=0.15.1
+* Fabric API >=0.91.2+1.20.4
+* 100% client side; no server side deployment needed
+
+**Changes**
+* Detect Quilt loader at runtime and automatically disable client command registration if present.
+
+**Fixes**
+* Biome sounds will play correctly when connected to a Paper branded server.
+* Fix playing the elytra flying sound.
+
 > ### DynamicSurroundings-Fabric-1.20.4-0.3.1
 **Requirements**
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)
