@@ -6,10 +6,11 @@
 * 100% client side; no server side deployment needed
 
 **Changes**
-* Detect Quilt loader at runtime and disable client command registration.
+* Detect Quilt loader at runtime and automatically disable client command registration if present.
 
 **Fixes**
 * Biome sounds will play correctly when connected to a Paper branded server.
+* Fix playing the elytra flying sound.
 
 > ### DynamicSurroundings-Fabric-1.20.1-0.3.1
 **Requirements**
