@@ -18,6 +18,6 @@ public class MixinClientPacketListener {
      */
     @Inject(method = "handleLogin(Lnet/minecraft/network/protocol/game/ClientboundLoginPacket;)V", at = @At("RETURN"))
     public void dsurround_handleJoin(ClientboundLoginPacket clientboundLoginPacket, CallbackInfo ci) {
-        ClientState.ON_CONNECT.raise().onConnect(GameUtils.getMC());
+        //ClientState.ON_CONNECT.raise().onConnect(GameUtils.getMC());
     }
 }

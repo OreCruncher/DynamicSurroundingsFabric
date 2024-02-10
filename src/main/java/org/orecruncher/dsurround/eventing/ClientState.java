@@ -2,7 +2,10 @@ package org.orecruncher.dsurround.eventing;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.RegistryAccess;
+import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.events.EventingFactory;
+import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.events.IPhasedEvent;
 
 /**
@@ -74,6 +77,28 @@ public final class ClientState {
     });
 
     private ClientState() {
+    }
+
+
+    static {
+        TICK_START.register(ClientState::connectionDetector, HandlerPriority.VERY_HIGH);
+    }
+
+    private static boolean isConnected = false;
+    private static void connectionDetector(Minecraft client) {
+        if(isConnected) {
+            if (GameUtils.getPlayer().isEmpty()) {
+                isConnected = false;
+                Library.LOGGER.info("Disconnect detected");
+                ON_DISCONNECT.raise().onDisconnect(client);
+            }
+        } else {
+            if (GameUtils.getPlayer().isPresent()) {
+                isConnected = true;
+                Library.LOGGER.info("Connect detected");
+                ON_CONNECT.raise().onConnect(client);
+            }
+        }
     }
 
     @FunctionalInterface

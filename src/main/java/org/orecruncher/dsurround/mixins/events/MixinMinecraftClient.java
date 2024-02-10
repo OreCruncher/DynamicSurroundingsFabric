@@ -46,7 +46,7 @@ public abstract class MixinMinecraftClient {
     @Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;)V", at = @At("RETURN"))
     private void dsurround_leave(Screen screen, CallbackInfo ci) {
         var self = (Minecraft) (Object) this;
-        ClientState.ON_DISCONNECT.raise().onDisconnect(self);
+        //ClientState.ON_DISCONNECT.raise().onDisconnect(self);
     }
 
     /**

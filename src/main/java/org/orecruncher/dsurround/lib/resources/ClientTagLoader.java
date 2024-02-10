@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagEntry;
 import net.minecraft.tags.TagKey;
@@ -24,14 +23,15 @@ import static org.orecruncher.dsurround.Configuration.Flags.RESOURCE_LOADING;
 @SuppressWarnings("unused")
 public class ClientTagLoader {
 
-    private final ResourceUtilities resourceUtilities;
     private final IModLog logger;
     private final ISystemClock systemClock;
     private final Map<TagKey<?>, TagData<?>> tagCache = new Reference2ObjectOpenHashMap<>(256);
 
     private MinecraftServerType serverType;
+    @NotNull
+    private ResourceUtilities resourceUtilities;
 
-    public ClientTagLoader(ResourceUtilities resourceUtilities, IModLog logger, ISystemClock systemClock) {
+    public ClientTagLoader(@NotNull ResourceUtilities resourceUtilities, IModLog logger, ISystemClock systemClock) {
         this.resourceUtilities = resourceUtilities;
         this.logger = logger;
         this.systemClock = systemClock;
@@ -47,11 +47,23 @@ public class ClientTagLoader {
     }
 
     public void clear() {
+        this.logger.debug(RESOURCE_LOADING, "Clearing client tag loader");
         this.tagCache.clear();
     }
 
+    public void setResourceUtilities(ResourceUtilities resourceUtilities) {
+        if (this.resourceUtilities != resourceUtilities) {
+            this.resourceUtilities = resourceUtilities;
+            this.clear();
+        }
+    }
+
     public void setServerType(MinecraftServerType serverType) {
-        this.serverType = serverType;
+        // If the server type is changing, clear the cache
+        if (this.serverType != serverType) {
+            this.clear();
+            this.serverType = serverType;
+        }
     }
 
     private <T> TagData<T> getTagData(TagKey<T> tagKey, Set<TagKey<?>> visited) {
@@ -85,8 +97,7 @@ public class ClientTagLoader {
 
         // If we can take a shortcut by looking up tag membership in the registries, do so. It's
         // faster than scanning resources directly.
-        var registry = RegistryUtils.getRegistry(tagKey.registry()).orElseThrow();
-        var holderSet = this.shortcutLookup(tagKey, registry);
+        var holderSet = this.shortcutLookup(tagKey);
         if (holderSet.isPresent()) {
             var data = holderSet.get();
             this.logger.debug(RESOURCE_LOADING, "%s - Shortcut lookup", tagKey);
@@ -113,6 +124,7 @@ public class ClientTagLoader {
                     public @NotNull ResourceLocation element(@NotNull ResourceLocation id) {
                         return id;
                     }
+
                     @Nullable
                     @Override
                     public Collection<ResourceLocation> tag(@NotNull ResourceLocation id) {
@@ -144,7 +156,7 @@ public class ClientTagLoader {
         return new TagData<>(ImmutableSet.copyOf(completeIds));
     }
 
-    private <T> Optional<Iterable<Holder<T>>> shortcutLookup(TagKey<T> tagKey, Registry<T> registry) {
+    private <T> Optional<Iterable<Holder<T>>> shortcutLookup(TagKey<T> tagKey) {
         var namespace = tagKey.location().getNamespace();
         // If its one of our tags, we always do the long lookup. They aren't really tags.
         if (namespace.equals(Library.MOD_ID))
@@ -152,7 +164,12 @@ public class ClientTagLoader {
         // If it is a modded server, or the namespace is minecraft, tag information should be
         // present in the local registries.
         if (this.serverType.isModded() || "minecraft".equals(namespace)) {
-            var holderSet = registry.getTag(tagKey);
+            // If for some reason the registry cannot be found, do a slow scan. I have seen this with
+            // BungeeCord when a player transitions between servers.
+            var registry = RegistryUtils.getRegistry(tagKey.registry());
+            if (registry.isEmpty())
+                return Optional.empty();
+            var holderSet = registry.get().getTag(tagKey);
             if (holderSet.isPresent())
                 return Optional.of(holderSet.get());
             return Optional.of(ImmutableList.of());
@@ -170,7 +187,7 @@ public class ClientTagLoader {
 
         @SuppressWarnings("unchecked")
         public static <T> TagData<T> cast(TagData<?> tagData) {
-            return (TagData<T>)tagData;
+            return (TagData<T>) tagData;
         }
     }
 }
