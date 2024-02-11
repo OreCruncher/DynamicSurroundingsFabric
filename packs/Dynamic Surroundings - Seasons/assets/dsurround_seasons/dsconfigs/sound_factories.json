@@ -1,0 +1,42 @@
+[
+  {
+    "location": "dsurround_seasons:music/season/spring",
+    "soundEvent": "dsurround_seasons:music.season.spring",
+    "category": "MUSIC",
+    "music": {
+      "min_delay": 3000,
+      "max_delay": 12000,
+      "replace_current_music": false
+    }
+  },
+  {
+    "location": "dsurround_seasons:music/season/summer",
+    "soundEvent": "dsurround_seasons:music.season.summer",
+    "category": "MUSIC",
+    "music": {
+      "min_delay": 3000,
+      "max_delay": 12000,
+      "replace_current_music": false
+    }
+  },
+  {
+    "location": "dsurround_seasons:music/season/autumn",
+    "soundEvent": "dsurround_seasons:music.season.autumn",
+    "category": "MUSIC",
+    "music": {
+      "min_delay": 3000,
+      "max_delay": 12000,
+      "replace_current_music": false
+    }
+  },
+  {
+    "location": "dsurround_seasons:music/season/winter",
+    "soundEvent": "dsurround_seasons:music.season.winter",
+    "category": "MUSIC",
+    "music": {
+      "min_delay": 3000,
+      "max_delay": 12000,
+      "replace_current_music": false
+    }
+  }
+]

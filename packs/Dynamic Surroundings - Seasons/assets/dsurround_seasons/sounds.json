@@ -1,0 +1,118 @@
+{
+	"music.season.spring": {
+		"ds_title": "The Four Seasons - Spring",
+		"ds_category": "music",
+		"ds_credits": [
+			{
+				"name": "The Four Seasons Concerto No. 1 in E Major",
+				"author": "Vivaldi, arranged by Jerzey Kulik",
+				"website": "https://archive.org/details/ETitleA.Vivaldi-TheFourSeasons",
+				"license": "Open Source Audio"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround_seasons:music/spring1",
+				"stream": true,
+				"volume": 0.5
+			},
+			{
+				"name": "dsurround_seasons:music/spring2",
+				"stream": true,
+				"volume": 0.5
+			},
+			{
+				"name": "dsurround_seasons:music/spring3",
+				"stream": true,
+				"volume": 0.5
+			}
+		]
+	},
+	"music.season.summer": {
+		"ds_title": "The Four Seasons - Summer",
+		"ds_category": "music",
+		"ds_credits": [
+			{
+				"name": "The Four Seasons Concerto No. 2 in G Minor",
+				"author": "Vivaldi, arranged by Jerzey Kulik",
+				"website": "https://archive.org/details/ETitleA.Vivaldi-TheFourSeasons",
+				"license": "Open Source Audio"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround_seasons:music/summer1",
+				"stream": true,
+				"volume": 0.5
+			},
+			{
+				"name": "dsurround_seasons:music/summer2",
+				"stream": true,
+				"volume": 0.5
+			},
+			{
+				"name": "dsurround_seasons:music/summer3",
+				"stream": true,
+				"volume": 0.5
+			}
+		]
+	},
+	"music.season.autumn": {
+		"ds_title": "The Four Seasons - Autumn",
+		"ds_category": "music",
+		"ds_credits": [
+			{
+				"name": "The Four Seasons Concerto No. 3 in F Major",
+				"author": "Vivaldi, arranged by Jerzey Kulik",
+				"website": "https://archive.org/details/ETitleA.Vivaldi-TheFourSeasons",
+				"license": "Open Source Audio"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround_seasons:music/autumn1",
+				"stream": true,
+				"volume": 0.5
+			},
+			{
+				"name": "dsurround_seasons:music/autumn2",
+				"stream": true,
+				"volume": 0.5
+			},
+			{
+				"name": "dsurround_seasons:music/autumn3",
+				"stream": true,
+				"volume": 0.5
+			}
+		]
+	},
+	"music.season.winter": {
+		"ds_title": "The Four Seasons - Winter",
+		"ds_category": "music",
+		"ds_credits": [
+			{
+				"name": "The Four Seasons Concerto No. 4 in F Minor",
+				"author": "Vivaldi, arranged by Jerzey Kulik",
+				"website": "https://archive.org/details/ETitleA.Vivaldi-TheFourSeasons",
+				"license": "Open Source Audio"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround_seasons:music/winter1",
+				"stream": true,
+				"volume": 0.5
+			},
+			{
+				"name": "dsurround_seasons:music/winter2",
+				"stream": true,
+				"volume": 0.5
+			},
+			{
+				"name": "dsurround_seasons:music/winter3",
+				"stream": true,
+				"volume": 0.5
+			}
+		]
+	}
+}

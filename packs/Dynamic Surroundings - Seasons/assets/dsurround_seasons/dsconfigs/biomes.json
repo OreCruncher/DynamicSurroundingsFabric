@@ -1,0 +1,28 @@
+[
+  {
+    "biomeSelector": "OVERWORLD && (FOREST || PLAINS)",
+    "_comment": "Music for Seasons",
+    "acoustics": [
+      {
+        "factory": "dsurround_seasons:music/season/spring",
+        "type": "music",
+        "conditions": "season.isSpring()"
+      },
+      {
+        "factory": "dsurround_seasons:music/season/summer",
+        "type": "music",
+        "conditions": "season.isSummer()"
+      },
+      {
+        "factory": "dsurround_seasons:music/season/autumn",
+        "type": "music",
+        "conditions": "season.isAutumn()"
+      },
+      {
+        "factory": "dsurround_seasons:music/season/winter",
+        "type": "music",
+        "conditions": "season.isWinter()"
+      }
+    ]
+  }
+]
