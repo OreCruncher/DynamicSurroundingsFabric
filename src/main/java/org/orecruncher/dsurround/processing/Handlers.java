@@ -82,7 +82,7 @@ public class Handlers {
     private void onConnect(Minecraft client) {
         try {
             this.tasking.execute(() -> {
-                this.logger.info("Client connecting...");
+                this.logger.info("Handlers connecting...");
                 if (this.isConnected) {
                     this.logger.warn("Attempt to connect when already connected; disconnecting first");
                     this.onDisconnect(client);
