@@ -2,7 +2,6 @@ package org.orecruncher.dsurround.eventing;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.RegistryAccess;
-import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.events.EventingFactory;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
@@ -81,21 +80,28 @@ public final class ClientState {
 
 
     static {
+        // Connection detection is the first thing that processes, period.
         TICK_START.register(ClientState::connectionDetector, HandlerPriority.VERY_HIGH);
     }
 
     private static boolean isConnected = false;
     private static void connectionDetector(Minecraft client) {
-        if(isConnected) {
-            if (GameUtils.getPlayer().isEmpty()) {
+        // Basically, the logic will toggle isConnected based on whether a player instance
+        // is present in the Minecraft client instance. Since this is a 100% client side,
+        // the presence of the player instance can be used as a signal as to when the
+        // client successfully connects to a server. If the player instance goes away, such
+        // as a disconnect or a BungeeCord server transfer, the disconnect event will be fired
+        // so dependent logic can clean up.
+        if (isConnected) {
+            if (client.player == null) {
                 isConnected = false;
-                Library.LOGGER.info("Disconnect detected");
+                Library.LOGGER.info("Player instance no longer present");
                 ON_DISCONNECT.raise().onDisconnect(client);
             }
         } else {
-            if (GameUtils.getPlayer().isPresent()) {
+            if (client.player != null) {
                 isConnected = true;
-                Library.LOGGER.info("Connect detected");
+                Library.LOGGER.info("Player instance is now present");
                 ON_CONNECT.raise().onConnect(client);
             }
         }
