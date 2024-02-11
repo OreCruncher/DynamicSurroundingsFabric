@@ -44,13 +44,9 @@ public class AreaBlockEffects extends AbstractClientHandler {
     @Override
     public void process(final Player player) {
         this.blockUpdateCount = 0;
-        if (!this.isConnected)
-            return;
 
-        // TODO: Reports that this reduces some crashes.  Not sure how since the connected
-        // would prevent this logic from executing because it sets the isConnected
-        // flag.
-        if (player == null)
+        // Possible that a client connected to a server, but is being transferred (BungeeCord)
+        if (!this.isConnected || !GameUtils.isInGame())
             return;
 
         if (this.effectSystems != null)
@@ -77,13 +73,13 @@ public class AreaBlockEffects extends AbstractClientHandler {
     @Override
     public void onDisconnect() {
         this.isConnected = false;
-
         this.locus = null;
         this.effectSystems = null;
     }
 
     private void clear(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
-        if (this.effectSystems != null)
+        // Possible that a client connected to a server, but is being transferred (BungeeCord)
+        if (this.effectSystems != null && GameUtils.isInGame())
             this.effectSystems.resetFullScan();
     }
 
@@ -91,7 +87,8 @@ public class AreaBlockEffects extends AbstractClientHandler {
         // Need to pump the updates through to the effect system. The cuboid scanner
         // will handle the details for filtering and applying updates via blockScan().
         this.blockUpdateCount = blockPositions.size();
-        if (this.effectSystems != null)
+        // Possible that a client connected to a server, but is being transferred (BungeeCord)
+        if (this.effectSystems != null && GameUtils.isInGame())
             this.effectSystems.onBlockUpdates(blockPositions);
     }
 

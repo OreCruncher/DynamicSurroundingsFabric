@@ -33,7 +33,6 @@
     "core.MixinRaycastContextAccessor",
     "core.MixinSoundOptionsScreen",
     "core.MixinWorld",
-    "events.MixinClientPacketListener",
     "events.MixinMinecraftClient"
   ],
   "server": [],

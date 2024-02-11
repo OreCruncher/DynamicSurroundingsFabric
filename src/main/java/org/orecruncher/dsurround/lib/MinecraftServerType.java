@@ -5,7 +5,7 @@ public enum MinecraftServerType {
     PAPER(false),
     FABRIC(true),
     FORGE(true),
-    OTHER_MODDED(true);
+    OTHER(false);
 
     private final boolean isModded;
 
@@ -27,6 +27,6 @@ public enum MinecraftServerType {
             return FORGE;
         if ("fabric".equals(brand))
             return FABRIC;
-        return OTHER_MODDED;
+        return OTHER;
     }
 }

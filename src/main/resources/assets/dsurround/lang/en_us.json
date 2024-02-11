@@ -80,7 +80,7 @@
   "dsurround.config.soundSystem.cullInterval": "Sound Culling Interval",
   "dsurround.config.soundSystem.cullInterval.tooltip": "Ticks between culled sound events (0 to disable culling)",
   "dsurround.config.soundSystem.enableSoundPruning": "Sound Pruning",
-  "dsurround.config.soundSystem.enableSoundPruning.tooltip": "Enables/disables cancellation of sound that a player will not hear. Does not apply to global, repeatable, or WEATHER sounds.",
+  "dsurround.config.soundSystem.enableSoundPruning.tooltip": "Enables/disables cancellation of sound that a player will not hear. Does not apply to global, non-attenuated, or WEATHER sounds.",
   "dsurround.config.soundOptions": "Sound Options",
   "dsurround.config.soundOptions.tooltip": "Options for defining how Dynamic Surroundings generate sound effects",
   "dsurround.config.soundOptions.ambientVolumeScaling": "Ambient sound scaling factor",
