@@ -6,8 +6,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.NotNull;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 
 public class BackgroundSoundLoop extends AbstractTickableSoundInstance {
 
@@ -19,7 +19,7 @@ public class BackgroundSoundLoop extends AbstractTickableSoundInstance {
     private boolean isFading;
 
     public BackgroundSoundLoop(SoundEvent soundEvent) {
-        super(soundEvent, SoundSource.AMBIENT, RandomSource.create());
+        super(soundEvent, SoundSource.AMBIENT, Randomizer.current());
         this.scale = INITIAL_SCALE;
         this.target = 1F;
         this.isFading = false;
@@ -30,7 +30,7 @@ public class BackgroundSoundLoop extends AbstractTickableSoundInstance {
     }
 
     public BackgroundSoundLoop(SoundEvent soundEvent, BlockPos pos) {
-        super(soundEvent, SoundSource.AMBIENT, RandomSource.create());
+        super(soundEvent, SoundSource.AMBIENT, Randomizer.current());
         this.scale = INITIAL_SCALE;
         this.target = 1F;
         this.isFading = false;
