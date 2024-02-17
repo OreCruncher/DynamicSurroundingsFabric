@@ -1,3 +1,14 @@
+> ### DynamicSurroundings-Fabric-1.20.4-0.3.3
+**Requirements**
+* JAVA 17+ (I am using Adoptium https://adoptium.net/)
+* Fabric Loader >=0.15.1
+* Fabric API >=0.91.2+1.20.4
+* 100% client side; no server side deployment needed
+
+**Fixes**
+* Better support for BungeeCord server operations, specifically server transfer
+* Fix concurrent access exception on randomizer instances
+
 > ### DynamicSurroundings-Fabric-1.20.4-0.3.2
 **Requirements**
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)
