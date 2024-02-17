@@ -40,9 +40,8 @@ public class TagLibrary implements ITagLibrary {
 
     private final IModLog logger;
     private final ISystemClock systemClock;
-
     private final Map<TagKey<?>, Collection<ResourceLocation>> tagCache;
-    private ClientTagLoader tagLoader;
+    private final ClientTagLoader tagLoader;
 
     private boolean isConnected;
 
@@ -50,6 +49,7 @@ public class TagLibrary implements ITagLibrary {
         this.logger = logger;
         this.systemClock = systemClock;
         this.tagCache = new Reference2ObjectOpenHashMap<>();
+        this.tagLoader = new ClientTagLoader(ResourceUtilities.createForCurrentState(), this.logger, this.systemClock);
 
         // Need to clear the tag caches on disconnect. It's possible that
         // cached biome information will change with the next connection.
@@ -144,11 +144,7 @@ public class TagLibrary implements ITagLibrary {
 
     @Override
     public void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
-        if (resourceUtilities != null)
-            this.tagLoader = new ClientTagLoader(resourceUtilities, this.logger, this.systemClock);
-
-        if (scope == IReloadEvent.Scope.RESOURCES)
-            return;
+        this.tagLoader.setResourceUtilities(resourceUtilities);
 
         this.logger.info("[TagLibrary] Cache has %d elements", this.tagCache.size());
 
@@ -198,9 +194,6 @@ public class TagLibrary implements ITagLibrary {
     }
 
     private void initializeTagCache() {
-        if (this.tagLoader == null)
-            return;
-
         // Bootstrap the tag cache. We do this by zipping through our tags
         // and forcing the cache to initialize.
         var stopwatch = this.systemClock.getStopwatch();

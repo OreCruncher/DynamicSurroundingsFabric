@@ -6,7 +6,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.EXTEfx;
-import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.runtime.audio.effects.Effects;
 import org.orecruncher.dsurround.runtime.audio.effects.LowPassData;
@@ -15,9 +14,6 @@ import org.orecruncher.dsurround.runtime.audio.effects.SourcePropertyFloat;
 import java.util.concurrent.Callable;
 
 public final class SourceContext implements Callable<Void> {
-
-    // Randomizer used to distribute updates across an interval
-    private static final IRandomizer RANDOM = Randomizer.create();
 
     // Frequency of sound effect updates in thread schedule ticks.  Works out to be 3 times a second.
     private static final int UPDATE_FEQUENCY_TICKS = 7;
@@ -156,7 +152,7 @@ public final class SourceContext implements Callable<Void> {
     public void exec() {
         this.captureState();
         this.updateImpl();
-        this.updateCount = RANDOM.nextInt(UPDATE_FEQUENCY_TICKS);
+        this.updateCount = Randomizer.current().nextInt(UPDATE_FEQUENCY_TICKS);
         this.tick();
     }
 

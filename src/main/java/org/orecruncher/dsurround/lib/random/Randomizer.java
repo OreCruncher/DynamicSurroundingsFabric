@@ -1,5 +1,8 @@
 package org.orecruncher.dsurround.lib.random;
 
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.levelgen.PositionalRandomFactory;
+import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.Library;
 
 import java.util.function.Supplier;
@@ -11,26 +14,73 @@ import java.util.random.RandomGeneratorFactory;
  * the number of randoms generated per tick, I sweat these details.
  */
 @SuppressWarnings("unused")
-public class Randomizer {
+public final class Randomizer implements IRandomizer {
     private static final Supplier<IRandomizer> DEFAULT_RANDOMIZER = Randomizer::getRandomizer;
-    private static final ThreadLocal<IRandomizer> SHARED = ThreadLocal.withInitial(DEFAULT_RANDOMIZER);
-
+    private static final ThreadLocal<IRandomizer> THREAD_LOCAL = ThreadLocal.withInitial(DEFAULT_RANDOMIZER);
     /**
-     * Instantiates a new instance of the default randomizer.
+     * Reusable instance that wraps a ThreadLocal. Guards against multiple threads trying to utilize the same
+     * concrete randomizer.
      */
-    public static IRandomizer create() {
-        return DEFAULT_RANDOMIZER.get();
-    }
+    private static final IRandomizer SHARED = new Randomizer();
 
     /**
      * Returns a shared instance of the default randomizer.
      */
     public static IRandomizer current() {
-        return SHARED.get();
+        return SHARED;
     }
 
     private Randomizer() {
+    }
 
+    @Override
+    public @NotNull RandomSource fork() {
+        return THREAD_LOCAL.get().fork();
+    }
+
+    @Override
+    public @NotNull PositionalRandomFactory forkPositional() {
+        return THREAD_LOCAL.get().forkPositional();
+    }
+
+    @Override
+    public void setSeed(long l) {
+        THREAD_LOCAL.get().setSeed(l);
+    }
+
+    @Override
+    public int nextInt() {
+        return THREAD_LOCAL.get().nextInt();
+    }
+
+    @Override
+    public int nextInt(int i) {
+        return THREAD_LOCAL.get().nextInt(i);
+    }
+
+    @Override
+    public long nextLong() {
+        return THREAD_LOCAL.get().nextLong();
+    }
+
+    @Override
+    public boolean nextBoolean() {
+        return THREAD_LOCAL.get().nextBoolean();
+    }
+
+    @Override
+    public float nextFloat() {
+        return THREAD_LOCAL.get().nextFloat();
+    }
+
+    @Override
+    public double nextDouble() {
+        return THREAD_LOCAL.get().nextDouble();
+    }
+
+    @Override
+    public double nextGaussian() {
+        return THREAD_LOCAL.get().nextGaussian();
     }
 
     private static IRandomizer getRandomizer() {

@@ -110,6 +110,11 @@ public final class SoundInstanceHandler {
         if (sound instanceof ElytraOnPlayerSoundInstance)
             return true;
 
+        // If for some reason the sound is at origin let it through. Some mods submit sound instances attached to a
+        // location, but do not initialize the location until it starts ticking.
+        if (sound.getX() == 0 && sound.getY() == 0 && sound.getZ() == 0)
+            return true;
+
         // Make sure a sound is assigned so that the volume check can work
         sound.resolve(GameUtils.getSoundManager());
 
@@ -117,7 +122,7 @@ public final class SoundInstanceHandler {
         if (sound.getVolume() > 1F)
             return true;
 
-        // Get the max distance of the sound range.  Pad is added because a player may move into hearing
+        // Get the max sound range. Pad is added because a player may move into hearing
         // range before the sound terminates.
         int distSq = sound.getSound().getAttenuationDistance() + pad;
         distSq *= distSq;
