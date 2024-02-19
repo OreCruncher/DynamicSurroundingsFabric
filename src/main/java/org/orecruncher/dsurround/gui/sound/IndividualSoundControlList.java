@@ -7,10 +7,10 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
-import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 import java.util.*;
@@ -51,6 +51,11 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
     @Override
     public int getRowWidth() {
         return this.width;
+    }
+
+    public void setRowWidth(int width) {
+        this.width = width - 40; // 40 for scrollbar
+        this.children().forEach(c -> c.setWidth(this.width));
     }
 
     @Override
@@ -123,7 +128,7 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
     }
 
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput builder) {
+    protected void updateWidgetNarration(@NotNull NarrationElementOutput builder) {
         // Narrate my shiny metal...
     }
 

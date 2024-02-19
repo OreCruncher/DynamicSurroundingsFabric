@@ -9,6 +9,8 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.PackType;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,14 +21,12 @@ import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.gui.GuiHelpers;
+import org.orecruncher.dsurround.lib.gui.TextWidget;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.SoundMetadata;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class IndividualSoundControlListEntry extends ContainerObjectSelectionList.Entry<IndividualSoundControlListEntry> implements AutoCloseable {
 
@@ -53,6 +53,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private static final int CONTROL_SPACING = 3;
 
     private final IndividualSoundConfigEntry config;
+    private final TextWidget label;
     private final VolumeSliderControl volume;
     private final BlockButton blockButton;
     private final CullButton cullButton;
@@ -65,6 +66,10 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
 
     public IndividualSoundControlListEntry(final IndividualSoundConfigEntry data, final boolean enablePlay) {
         this.config = data;
+
+        this.label = new TextWidget(0, 0, 200, GameUtils.getTextRenderer().lineHeight, Component.literal(data.soundEventId.toString()), GameUtils.getTextRenderer());
+        this.children.add(this.label);
+
         this.volume = new VolumeSliderControl(this, 0, 0);
         this.children.add(this.volume);
 
@@ -83,11 +88,21 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     }
 
     public int getWidth() {
-        int width = GameUtils.getTextRenderer().width(this.config.soundEventId.toString());
+        int width = this.label.getWidth();
         width += this.cullButton.getWidth() + this.blockButton.getWidth() + this.volume.getWidth() + 4 * CONTROL_SPACING;
         if (this.playButton != null)
             width += this.playButton.getWidth() + CONTROL_SPACING;
         return width;
+    }
+
+    public void setWidth(int width) {
+        var fixedWidth = this.cullButton.getWidth() + this.blockButton.getWidth() + this.volume.getWidth() + 4 * CONTROL_SPACING;
+        if (this.playButton != null)
+            fixedWidth += this.playButton.getWidth() + CONTROL_SPACING;
+        width -= fixedWidth;
+        if (width < 100)
+            width = 100;
+        this.label.setWidth(width);
     }
 
     public void mouseMoved(double mouseX, double mouseY) {
@@ -147,11 +162,12 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     }
 
     @Override
-    public void render(final GuiGraphics context, int index, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTick_) {
+    public void render(final @NotNull GuiGraphics context, int index, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTick_) {
         final var font = GameUtils.getTextRenderer();
         final int labelY = rowTop + (rowHeight - font.lineHeight) / 2;
-        final String text = this.config.soundEventIdProjected;
-        context.drawString(font, text, rowLeft, labelY, ColorPalette.MC_WHITE.getValue(), false);
+
+        this.label.setX(rowLeft);
+        this.label.setY(labelY);
 
         // Need to position the other controls appropriately
         int rightMargin = rowLeft + rowWidth;
@@ -232,7 +248,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         // Cache the static part of the tooltip if needed
         if (this.cachedToolTip.isEmpty()) {
             ResourceLocation id = this.config.soundEventId;
-            PLATFORM.getModDisplayName(id.getNamespace())
+            this.resolveDisplayName(id.getNamespace())
                     .ifPresent(name -> {
                         FormattedCharSequence modName = FormattedCharSequence.forward(Objects.requireNonNull(ChatFormatting.stripFormatting(name)), STYLE_MOD_NAME);
                         this.cachedToolTip.add(modName);
@@ -291,6 +307,18 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         }
 
         return generatedTip;
+    }
+
+    private Optional<String> resolveDisplayName(String namespace) {
+        var displayName = PLATFORM.getModDisplayName(namespace);
+        if (displayName.isPresent())
+            return displayName;
+
+        // Could be a resource pack
+        return GameUtils.getResourceManager().listPacks()
+                .filter(pack -> pack.getNamespaces(PackType.CLIENT_RESOURCES).contains(namespace))
+                .map(PackResources::packId)
+                .findAny();
     }
 
     /**

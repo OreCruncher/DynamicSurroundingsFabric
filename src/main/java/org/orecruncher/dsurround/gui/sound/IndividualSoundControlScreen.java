@@ -6,6 +6,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
@@ -132,6 +133,8 @@ public class IndividualSoundControlScreen extends Screen {
     }
 
     public void render(final GuiGraphics context, int mouseX, int mouseY, float partialTicks) {
+        var renderWidth = Mth.clamp(context.guiWidth() - 20, 200, SELECTION_WIDTH);
+        this.soundConfigList.setRowWidth(renderWidth);
         if (this.parent == null)
             this.renderTransparentBackground(context);
         else

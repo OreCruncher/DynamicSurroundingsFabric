@@ -2,8 +2,8 @@ package org.orecruncher.dsurround.lib.scripting;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import javax.script.*;
@@ -11,19 +11,19 @@ import java.util.Optional;
 
 public final class ExecutionContext implements IVariableAccess {
 
-    private static final IModLog LOGGER = Library.LOGGER;
-
+    private final IModLog logger;
     private final String contextName;
     private final ScriptEngine engine;
     private final ObjectArray<VariableSet<?>> variables = new ObjectArray<>(8);
 
-    public ExecutionContext(final String contextName) {
+    public ExecutionContext(final String contextName, IModLog logger) {
+        this.logger = logger;
         this.contextName = contextName;
         this.engine = ScriptEngineLoader.getEngine().orElseThrow(() -> new RuntimeException("Unable to load a JavaScript engine!"));
-        this.put("lib", new LibraryFunctions());
+        this.put("lib", ContainerManager.resolve(LibraryFunctions.class));
 
         ScriptEngineFactory factory = this.engine.getFactory();
-        LOGGER.info("[%s] JavaScript engine: %s (%s)", this.contextName, factory.getEngineName(),
+        this.logger.info("[%s] JavaScript engine: %s (%s)", this.contextName, factory.getEngineName(),
                 factory.getEngineVersion());
     }
 
@@ -66,7 +66,7 @@ public final class ExecutionContext implements IVariableAccess {
             final Object result = func.eval();
             return Optional.ofNullable(result);
         } catch (final Throwable t) {
-            LOGGER.error(t, "Error execution script: %s", script.asString());
+            this.logger.error(t, "Error execution script: %s", script.asString());
             return Optional.of("ERROR? " + t.getMessage());
         }
     }
@@ -76,7 +76,7 @@ public final class ExecutionContext implements IVariableAccess {
         try {
             return ((Compilable) this.engine).compile(source);
         } catch (final Throwable t) {
-            LOGGER.error(t, "Error compiling script: %s", source);
+            this.logger.error(t, "Error compiling script: %s", source);
             return makeErrorFunction(t);
         }
     }
