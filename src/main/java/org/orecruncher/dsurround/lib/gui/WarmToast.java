@@ -73,11 +73,7 @@ public class WarmToast  implements Toast {
 
         int i = this.width();
         if (i == 160 && this.messageLines.size() <= 1) {
-<<<<<<< HEAD
-            guiGraphics.blit(this.backgroundSprite, 0, 0, 0, 0, i, this.height());
-=======
-            guiGraphics.blitSprite(this.profile.sprite, 0, 0, i, this.height());
->>>>>>> 6915e84 (Improve individual sound configuration UI for smaller displays (#77))
+            guiGraphics.blit(this.profile.sprite, 0, 0, 0, 0, i, this.height());
         } else {
             int renderHeight = this.height();
             int lineRenderCount = Math.min(4, renderHeight - 28);
@@ -108,23 +104,13 @@ public class WarmToast  implements Toast {
     private void renderBackgroundRow(GuiGraphics guiGraphics, int i, int j, int k, int l) {
         int m = j == 0 ? 20 : 5;
         int n = Math.min(60, i - m);
-<<<<<<< HEAD
-        guiGraphics.blit(this.backgroundSprite, 0, k, 0, 0 + j, m, l);
+        guiGraphics.blit(this.profile.sprite, 0, k, 0, 0 + j, m, l);
 
         for(int o = m; o < i - n; o += 64) {
-            guiGraphics.blit(this.backgroundSprite, o, k, 32, 0 + j, Math.min(64, i - o - n), l);
+            guiGraphics.blit(this.profile.sprite, o, k, 32, 0 + j, Math.min(64, i - o - n), l);
         }
 
-        guiGraphics.blit(this.backgroundSprite, i - n, k, 160 - n, 0 + j, n, l);
-=======
-        guiGraphics.blitSprite(this.profile.sprite, 160, 32, 0, j, 0, k, m, l);
-
-        for(int o = m; o < i - n; o += 64) {
-            guiGraphics.blitSprite(this.profile.sprite, 160, 32, 32, j, o, k, Math.min(64, i - o - n), l);
-        }
-
-        guiGraphics.blitSprite(this.profile.sprite, 160, 32, 160 - n, j, i - n, k, n, l);
->>>>>>> 6915e84 (Improve individual sound configuration UI for smaller displays (#77))
+        guiGraphics.blit(this.profile.sprite, i - n, k, 160 - n, 0 + j, n, l);
     }
 
     private static ImmutableList<FormattedCharSequence> nullToEmpty(@Nullable Component component) {
