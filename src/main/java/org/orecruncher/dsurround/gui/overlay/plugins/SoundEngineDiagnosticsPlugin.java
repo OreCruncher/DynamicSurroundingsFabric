@@ -2,11 +2,13 @@ package org.orecruncher.dsurround.gui.overlay.plugins;
 
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundSource;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
+import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundEngineAccessor;
 
@@ -23,11 +25,21 @@ public class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
 
     public void onCollect(CollectDiagnosticsEvent event) {
         var soundManager = GameUtils.getSoundManager();
+        var panelText = event.getSectionText(CollectDiagnosticsEvent.Section.Sounds);
+
+        // Check the sound source volume settings because they can disable sounds
+        for (var category : SoundSource.values()) {
+            var volumeSettings = GameUtils.getGameSettings().getSoundSourceVolume(category);
+            if (Float.compare(volumeSettings, 0F) == 0) {
+                var text = Component.literal("%s is OFF".formatted(category.name())).withColor(ColorPalette.RED.getValue());
+                panelText.add(text);
+            }
+        }
+
         MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) soundManager;
         MixinSoundEngineAccessor accessors = (MixinSoundEngineAccessor) manager.dsurround_getSoundSystem();
         var sources = accessors.dsurround_getSources();
         var str = Component.literal(soundManager.getDebugString());
-        var panelText = event.getSectionText(CollectDiagnosticsEvent.Section.Sounds);
         panelText.add(str);
 
         if (!sources.isEmpty()) {
