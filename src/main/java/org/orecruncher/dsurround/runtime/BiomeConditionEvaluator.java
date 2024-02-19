@@ -18,7 +18,7 @@ public class BiomeConditionEvaluator {
 
     public BiomeConditionEvaluator(IBiomeLibrary biomeLibrary, IModLog logger) {
         this.logger = logger;
-        this.context = new ExecutionContext("BiomeConditions");
+        this.context = new ExecutionContext("BiomeConditions", logger);
         this.biomeVariables = new BiomeVariables(biomeLibrary);
         this.context.add(this.biomeVariables);
     }

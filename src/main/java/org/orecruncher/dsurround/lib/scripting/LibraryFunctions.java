@@ -1,8 +1,7 @@
 package org.orecruncher.dsurround.lib.scripting;
 
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 import org.orecruncher.dsurround.lib.system.ISystemClock;
 
@@ -14,10 +13,16 @@ import java.util.regex.Pattern;
  * Library functions exposed via the JavaScript engine.  They are not directly used by code.
  */
 @SuppressWarnings("unused")
+@Cacheable
 public final class LibraryFunctions {
 
-    private static final IPlatform PLATFORM = Library.PLATFORM;
-    private static final ISystemClock SYSTEM_CLOCK = ContainerManager.resolve(ISystemClock.class);
+    private final IPlatform platform;
+    private final ISystemClock systemClock;
+
+    public LibraryFunctions(IPlatform platform, ISystemClock systemClock) {
+        this.platform = platform;
+        this.systemClock = systemClock;
+    }
 
     public Object iif(final boolean flag, @Nullable final Object trueResult, @Nullable final Object falseResult) {
         return flag ? trueResult : falseResult;
@@ -43,13 +48,13 @@ public final class LibraryFunctions {
     }
 
     public boolean isModLoaded(final String mod) {
-        return PLATFORM.isModLoaded(mod);
+        return this.platform.isModLoaded(mod);
     }
 
     public boolean isCurrentDateInRangeOf(int month, int day, int dayRange) {
         try {
             // Get the current Utc time. Assume the test date is the same year.
-            var theNow = LocalDate.ofInstant(SYSTEM_CLOCK.getUtcNow(), ZoneOffset.UTC);
+            var theNow = LocalDate.ofInstant(this.systemClock.getUtcNow(), ZoneOffset.UTC);
             var testDate = LocalDate.of(theNow.getYear(), month, day);
 
             // If the test date is before the time window, it means the range is in the future
