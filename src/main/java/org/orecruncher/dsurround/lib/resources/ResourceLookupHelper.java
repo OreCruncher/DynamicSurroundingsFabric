@@ -1,6 +1,8 @@
 package org.orecruncher.dsurround.lib.resources;
 
+import com.google.common.collect.ImmutableList;
 import net.minecraft.server.packs.PackType;
+import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.platform.IPlatform;
 
 import java.nio.file.Files;
@@ -16,6 +18,7 @@ public class ResourceLookupHelper {
 
     public ResourceLookupHelper(PackType packType) {
         this.packType = packType;
+        this.rootPaths = ImmutableList.of();
     }
 
     public void refresh(IPlatform platform) {
@@ -23,6 +26,9 @@ public class ResourceLookupHelper {
     }
 
     public Collection<Path> findResourcePaths(String fileNamePattern) {
+        if (this.rootPaths.isEmpty())
+            Library.LOGGER.warn("No root paths defined for ResourceLookupHelper");
+
         return this.rootPaths.stream()
                 .map(path -> this.findPath(fileNamePattern, path))
                 .filter(Optional::isPresent)
