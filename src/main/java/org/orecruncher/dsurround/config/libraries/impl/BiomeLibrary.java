@@ -40,7 +40,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
     private final Map<SyntheticBiome, BiomeInfo> internalBiomes = new EnumMap<>(SyntheticBiome.class);
 
     // Cached list of biome config rules.  Need to hold onto them
-    // because they may be needed to handle dynamic biome load.
+    // because they may be needed to handle a dynamic biome load.
     private final ObjectArray<BiomeConfigRule> biomeConfigs = new ObjectArray<>(64);
 
     // Current version of the configs that are loaded.  Used to detect when
