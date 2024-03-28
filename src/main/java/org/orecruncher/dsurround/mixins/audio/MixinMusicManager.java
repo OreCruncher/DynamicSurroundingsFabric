@@ -66,7 +66,7 @@ public class MixinMusicManager implements IMusicManager {
 
     @Inject(method = "startPlaying(Lnet/minecraft/sounds/Music;)V", at = @At("RETURN"))
     public void dsurround_startPlaying(Music music, CallbackInfo ci) {
-        MixinHelpers.LOGGER.info("Play Music: %s", music.getEvent().value());
+        MixinHelpers.LOGGER.debug("Play Music: %s", music.getEvent().value());
         if (MixinHelpers.soundOptions.displayToastMessagesForMusic)
             SoundToast.create(music);
     }
