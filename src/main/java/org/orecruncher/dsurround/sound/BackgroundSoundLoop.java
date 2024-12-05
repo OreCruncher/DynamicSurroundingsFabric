@@ -72,7 +72,12 @@ public class BackgroundSoundLoop extends AbstractTickableSoundInstance {
 
     @Override
     public float getVolume() {
-        return super.getVolume() * this.scale;
+        // Possible that the sound was not yet assigned.  Seen issues when exiting worlds.
+        if (this.sound != null) {
+            return super.getVolume() * this.scale;
+        } else {
+            return 0F;
+        }
     }
 
     public void setScaleTarget(float target) {
