@@ -1,0 +1,10 @@
+accessWidener v2 named
+
+# For sound GUI
+accessible class net/minecraft/client/gui/components/OptionsList$Entry
+
+# For Biome weather accessible
+accessible class net/minecraft/world/level/biome/Biome$ClimateSettings
+
+# Get at client side loaded chunks
+accessible class net/minecraft/client/multiplayer/ClientChunkCache$Storage

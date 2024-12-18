@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#c:is_tree/coniferous",
+      "required": false
+    },
+    {
+      "id": "#forge:is_coniferous",
+      "required": false
+    }
+  ]
+}

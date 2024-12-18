@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#c:is_underground",
+      "required": false
+    },
+    {
+      "id": "#forge:is_underground",
+      "required": false
+    }
+  ]
+}

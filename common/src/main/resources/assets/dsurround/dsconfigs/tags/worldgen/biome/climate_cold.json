@@ -1,0 +1,29 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#c:is_cold",
+      "required": false
+    },
+    {
+      "id": "#c:is_cold/overworld",
+      "required": false
+    },
+    {
+      "id": "#c:is_cold/end",
+      "required": false
+    },
+    {
+      "id": "#forge:is_cold",
+      "required": false
+    },
+    {
+      "id": "#forge:is_cold/overworld",
+      "required": false
+    },
+    {
+      "id": "#forge:is_cold/end",
+      "required": false
+    }
+  ]
+}

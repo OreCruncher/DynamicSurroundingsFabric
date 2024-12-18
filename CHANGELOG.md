@@ -1,3 +1,20 @@
+> ### DynamicSurroundings-1.21.1-0.4.0
+**All Loaders**
+* JAVA 21+
+* Architectury 13.0.8+ **<===== LOOK HERE**
+
+**Fabric**
+* Fabric Loader >= 0.16.9
+* Fabric API >= 0.110.0+1.21.
+
+**NeoForge**
+* NeoForge 21.1.84+
+
+**What's New**
+* Support for Minecraft 1.21.1. I do not plan on supporting prior versions. I will work on releasing later versions for 1.21.x if there is enough demand.
+* Mod versions for both Fabric and NeoForge. To achieve this, I am using the mod Architectury.
+* No plans to support Forge. Once Architectury supports Forge, I will update.
+
 > ### DynamicSurroundings-Fabric-1.20.4-0.3.3
 **Requirements**
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)
