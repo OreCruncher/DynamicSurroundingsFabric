@@ -73,10 +73,8 @@ public class BackgroundSoundLoop extends AbstractTickableSoundInstance {
     @Override
     public float getVolume() {
         // Possible that the sound was not yet assigned.  Seen issues when exiting worlds.
-        if (this.sound != null) {
-            return super.getVolume() * this.scale;
-        }
-        return 0F;
+        //noinspection ConstantValue
+        return this.sound == null ? 0F : super.getVolume() * this.scale;
     }
 
     public void setScaleTarget(float target) {
@@ -102,6 +100,7 @@ public class BackgroundSoundLoop extends AbstractTickableSoundInstance {
                 .addValue(this.getSource().getName());
 
         // Possible that the sound was not yet assigned.  Seen issues when exiting worlds.
+        //noinspection ConstantValue
         if (this.sound != null) {
             temp.add("v", getVolume())
                     .add("ev", SoundVolumeEvaluator.getAdjustedVolume(this))

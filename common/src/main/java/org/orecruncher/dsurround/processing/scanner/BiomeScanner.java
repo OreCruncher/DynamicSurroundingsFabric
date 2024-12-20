@@ -11,7 +11,6 @@ import org.orecruncher.dsurround.config.SyntheticBiome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.logging.IModLog;
 
 public final class BiomeScanner extends AbstractScanner {
 
@@ -33,16 +32,14 @@ public final class BiomeScanner extends AbstractScanner {
     private Reference2IntOpenHashMap<BiomeInfo> weights = new Reference2IntOpenHashMap<>(8);
     private Biome surveyedBiome = null;
     private BlockPos surveyedPosition = BlockPos.ZERO;
-    private final IModLog logger;
     private final IBiomeLibrary biomeLibrary;
     private final IDimensionLibrary dimensionLibrary;
     private final CeilingScanner ceilingScanner;
 
-    public BiomeScanner(IBiomeLibrary biomeLibrary, IDimensionLibrary dimensionLibrary, CeilingScanner ceilingScanner, IModLog logger) {
+    public BiomeScanner(IBiomeLibrary biomeLibrary, IDimensionLibrary dimensionLibrary, CeilingScanner ceilingScanner) {
         this.biomeLibrary = biomeLibrary;
         this.dimensionLibrary = dimensionLibrary;
         this.ceilingScanner = ceilingScanner;
-        this.logger = logger;
     }
 
     public BiomeInfo playerLogicBiomeInfo() {

@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.eventing.handlers;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.ClientState;
@@ -14,8 +15,16 @@ import java.util.Set;
 public class BlockUpdateHandler {
 
     private static final Set<BlockPos> updatedPositions = new HashSet<>(16);
+    private static final Set<BlockPos> expandedPositions = new HashSet<>(48);
+    private static final Vec3i[] offsets = new Vec3i[27];
 
     static {
+        int x = 0;
+        for (int i = -1; i < 2; i++)
+            for (int j = -1; j < 2; j++)
+                for (int k = -1; k < 2; k++)
+                    offsets[x++] = new Vec3i(i, j, k);
+
         ClientState.TICK_END.register(BlockUpdateHandler::tick);
     }
 
@@ -47,16 +56,13 @@ public class BlockUpdateHandler {
         // of a block may affect how the adjacent blocks are handled. Can't rely on
         // neighbor state changes since the effects the mod produces are virtual
         // and do not exist server side.
-        Set<BlockPos> updates = new HashSet<>();
-        for (final BlockPos center : updatedPositions) {
-            for (int i = -1; i < 2; i++)
-                for (int j = -1; j < 2; j++)
-                    for (int k = -1; k < 2; k++)
-                        updates.add(center.offset(i, j, k));
-        }
+        expandedPositions.clear();
+        for (final BlockPos center : updatedPositions)
+            for (final Vec3i offset : offsets)
+                expandedPositions.add(center.offset(offset));
 
         // Have to clear for the next run
         updatedPositions.clear();
-        return Optional.of(updates);
+        return Optional.of(expandedPositions);
     }
 }

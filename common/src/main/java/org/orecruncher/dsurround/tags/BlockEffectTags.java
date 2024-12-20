@@ -13,6 +13,7 @@ public class BlockEffectTags {
 
     static final Collection<TagKey<Block>> TAGS = new HashSet<>();
 
+    @SuppressWarnings("unused")
     public static final TagKey<Block> FIREFLIES = of("fireflies");
     public static final TagKey<Block> FLOOR_SQUEAKS = of("floor_squeaks");
     public static final TagKey<Block> BRUSH_STEP = of("brush_step");

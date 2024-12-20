@@ -90,8 +90,6 @@ public final class Client {
     public void initializeClient() {
         this.logger.info("[%s] Client initializing", Constants.MOD_ID);
 
-        // Fabric specific registrations. Need to figure out how to handle Config because
-        // this method is bleh.
         if (Client.Config.logging.registerCommands) {
             if (!Platform.isModLoaded(Constants.QUILTED_LOADER))
                 ClientCommandRegistrationEvent.EVENT.register(Commands::register);

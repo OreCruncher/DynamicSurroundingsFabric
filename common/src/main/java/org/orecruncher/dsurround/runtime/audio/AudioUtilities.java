@@ -91,6 +91,7 @@ public final class AudioUtilities {
 
             // Depending on call context, the sound property may be null
             var underlyingSound = sound.getSound();
+            //noinspection ConstantValue
             if (underlyingSound != null) {
                 sb.append(String.format(", v: %.4f(%.4f)", sound.getVolume(), accessor.dsurround_getRawVolume()));
                 sb.append(String.format(", p: %.4f(%.4f)", sound.getPitch(), accessor.dsurround_getRawPitch()));
@@ -104,6 +105,7 @@ public final class AudioUtilities {
                 var listener = getSoundListener();
                 var distance = Math.sqrt(listener.getTransform().position().distanceToSqr(sound.getX(), sound.getY(), sound.getZ()));
                 sb.append(String.format(", distance: %.1f", distance));
+                //noinspection ConstantValue
                 if (underlyingSound != null)
                     sb.append(" (").append(underlyingSound.getAttenuationDistance()).append(")");
             }
@@ -157,6 +159,7 @@ public final class AudioUtilities {
         }
     }
 
+    @SuppressWarnings("DataFlowIssue")
     public static boolean doEnhancedSounds() {
         return advancedProcessingEnabled.get();
     }

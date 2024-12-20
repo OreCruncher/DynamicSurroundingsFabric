@@ -16,18 +16,16 @@ import java.util.*;
 @SuppressWarnings("unused")
 public final class ResourceUtilities {
 
-    private final IModLog logger;
     private final ModConfigResourceFinder modConfigHelper;
     private final DiskResourceFinder diskResourceHelper;
     private final ClientResourceFinder resourceFinder;
     private final ServerResourceFinder packResourceFinder;
 
     ResourceUtilities(IModLog modLog, IMinecraftDirectories minecraftDirectories, ResourceManager resourceManager) {
-        this.logger = modLog;
-        this.modConfigHelper = new ModConfigResourceFinder(this.logger, resourceManager, "dsconfigs");
-        this.diskResourceHelper = new DiskResourceFinder(this.logger, minecraftDirectories.getModDataDirectory());
-        this.resourceFinder = new ClientResourceFinder(this.logger, resourceManager);
-        this.packResourceFinder = new ServerResourceFinder(this.logger);
+        this.modConfigHelper = new ModConfigResourceFinder(modLog, resourceManager, "dsconfigs");
+        this.diskResourceHelper = new DiskResourceFinder(modLog, minecraftDirectories.getModDataDirectory());
+        this.resourceFinder = new ClientResourceFinder(modLog, resourceManager);
+        this.packResourceFinder = new ServerResourceFinder(modLog);
     }
 
     /**

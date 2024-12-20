@@ -13,7 +13,6 @@ public final class OcclusionTags {
 
     static final Collection<TagKey<Block>> TAGS = new HashSet<>();
 
-
     public static final TagKey<Block> NONE = of("none");
     public static final TagKey<Block> VERY_LOW = of("very_low");
     public static final TagKey<Block> LOW = of("low");

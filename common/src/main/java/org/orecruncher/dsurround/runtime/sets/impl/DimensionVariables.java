@@ -1,18 +1,13 @@
 package org.orecruncher.dsurround.runtime.sets.impl;
 
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.dimension.DimensionType;
-import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.world.WorldUtils;
 import org.orecruncher.dsurround.runtime.sets.IDimensionVariables;
 
 public class DimensionVariables extends VariableSet<IDimensionVariables> implements IDimensionVariables {
-
-    private static final IDimensionLibrary DIMENSION_LIBRARY = ContainerManager.resolve(IDimensionLibrary.class);
 
     private String id;
     private String name;
