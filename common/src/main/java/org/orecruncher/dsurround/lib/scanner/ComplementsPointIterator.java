@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.lib.scanner;
 
+import net.minecraft.core.BlockBox;
 import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,7 +10,7 @@ public class ComplementsPointIterator implements IPointIterator {
     protected int activeSegment = 0;
     protected BlockPos peeked = null;
 
-    public ComplementsPointIterator(final Cuboid volume, final Cuboid intersect) {
+    public ComplementsPointIterator(final BlockBox volume, final BlockBox intersect) {
         // This function makes some important assumptions about volume and
         // intersect:
         // 1) Intersect is completely contained within volume
@@ -28,10 +29,10 @@ public class ComplementsPointIterator implements IPointIterator {
         // ComplementsPointIterator(newVolume,intersect);
         //
 
-        final BlockPos vmax = volume.maximum();
-        final BlockPos imax = intersect.maximum();
-        final BlockPos vmin = volume.minimum();
-        final BlockPos imin = intersect.minimum();
+        final BlockPos vmax = volume.max();
+        final BlockPos imax = intersect.max();
+        final BlockPos vmin = volume.min();
+        final BlockPos imin = intersect.min();
 
         if (vmax.getX() != imax.getX() || vmin.getX() != imin.getX()) {
             if (vmax.getX() > imax.getX())

@@ -1,85 +1,47 @@
 package org.orecruncher.dsurround.lib.scanner;
 
+import net.minecraft.core.BlockBox;
 import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
 public final class Cuboid {
 
-    private final int minX;
-    private final int minY;
-    private final int minZ;
-    private final int maxX;
-    private final int maxY;
-    private final int maxZ;
-
-    public Cuboid(final BlockPos[] points) {
-        this(points[0], points[1]);
+    public static BlockBox of(BlockPos[] points) {
+        return of(points[0], points[1]);
     }
 
-    public Cuboid(final BlockPos vx1, final BlockPos vx2) {
-        this(Math.min(vx1.getX(), vx2.getX()),
-                Math.min(vx1.getY(), vx2.getY()),
-                Math.min(vx1.getZ(), vx2.getZ()),
-                Math.max(vx1.getX(), vx2.getX()),
-                Math.max(vx1.getY(), vx2.getY()),
-                Math.max(vx1.getZ(), vx2.getZ()));
+    public static BlockBox of(BlockPos pos1, BlockPos pos2) {
+        return BlockBox.of(pos1, pos2);
     }
 
-    public Cuboid(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
-        this.minX = minX;
-        this.minY = minY;
-        this.minZ = minZ;
-        this.maxX = maxX;
-        this.maxY = maxY;
-        this.maxZ = maxZ;
-    }
-
-    public boolean contains(final BlockPos p) {
-        return p.getX() >= this.minX && p.getX() <= this.maxX
-                && p.getY() >= this.minY && p.getY() <= this.maxY
-                && p.getZ() >= this.minZ && p.getZ() <= this.maxZ;
-    }
-
-    public BlockPos maximum() {
-        return new BlockPos(this.maxX, this.maxY, this.maxZ);
-    }
-
-    public BlockPos minimum() {
-        return new BlockPos(this.minX, this.minY, this.minZ);
-    }
-
-    public long volume() {
-        var x = Math.abs(this.maxX - this.minX);
-        var y = Math.abs(this.maxY - this.minY);
-        var z = Math.abs(this.maxZ - this.minZ);
-        return (long) x * y * z;
-    }
-
-    public boolean intersects(Cuboid o) {
-        return this.minX <= o.maxX
-                && this.maxX >= o.minX
-                && this.minY <= o.maxY
-                && this.maxY >= o.minY
-                && this.minZ <= o.maxZ
-                && this.maxZ >= o.minZ;
+    public static boolean intersects(BlockBox box1, BlockBox box2) {
+        var meMin = box1.min();
+        var meMax = box1.max();
+        var oMin = box2.min();
+        var oMax = box2.max();
+        return meMin.getX() <= oMax.getX()
+                && meMax.getX() >= oMin.getX()
+                && meMin.getY() <= oMax.getY()
+                && meMax.getY() >= oMin.getY()
+                && meMin.getZ() <= oMax.getZ()
+                && meMax.getZ() >= oMin.getZ();
     }
 
     @Nullable
-    public Cuboid intersection(Cuboid o) {
-        if (this.intersects(o)) {
-            int minX = Math.max(this.minX, o.minX);
-            int minY = Math.max(this.minY, o.minY);
-            int minZ = Math.max(this.minZ, o.minZ);
-            int maxX = Math.min(this.maxX, o.maxX);
-            int maxY = Math.min(this.maxY, o.maxY);
-            int maxZ = Math.min(this.maxZ, o.maxZ);
-            return new Cuboid(minX, minY, minZ, maxX, maxY, maxZ);
+    public static BlockBox intersection(BlockBox box1, BlockBox box2) {
+        if (intersects(box1, box2)) {
+            var meMin = box1.min();
+            var meMax = box1.max();
+            var oMin = box2.min();
+            var oMax = box2.max();
+            int minX = Math.max(meMin.getX(), oMin.getX());
+            int minY = Math.max(meMin.getY(), oMin.getY());
+            int minZ = Math.max(meMin.getZ(), oMin.getZ());
+            int maxX = Math.min(meMax.getX(), oMax.getX());
+            int maxY = Math.min(meMax.getY(), oMax.getY());
+            int maxZ = Math.min(meMax.getZ(), oMax.getZ());
+            return new BlockBox(new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ));
         }
         return null;
-    }
-
-    @Override
-    public String toString() {
-        return "Cuboid{min=(%d,%d,%d),max=(%d,%d,%d),volume=%d}".formatted(this.minX, this.minY, this.minZ, this.maxX, this.maxY, this.maxZ, this.volume());
     }
 }

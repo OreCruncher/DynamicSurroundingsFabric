@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.lib.scanner;
 
+import net.minecraft.core.BlockBox;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
@@ -14,7 +15,7 @@ public abstract class CuboidScanner extends Scanner {
 
     // Iteration variables
     protected boolean scanFinished = false;
-    protected Cuboid activeCuboid;
+    protected BlockBox activeCuboid;
     protected CuboidPointIterator fullRange;
 
     // State of last tick
@@ -39,9 +40,9 @@ public abstract class CuboidScanner extends Scanner {
         return new BlockPos[]{min, max};
     }
 
-    protected Cuboid getVolumeFor(final BlockPos pos) {
+    protected BlockBox getVolumeFor(final BlockPos pos) {
         final BlockPos[] points = getMinMaxPointsForVolume(pos);
-        return new Cuboid(points);
+        return Cuboid.of(points);
     }
 
     @Override
@@ -59,7 +60,7 @@ public abstract class CuboidScanner extends Scanner {
         this.scanFinished = false;
 
         final BlockPos[] points = getMinMaxPointsForVolume(this.lastPos);
-        this.activeCuboid = new Cuboid(points);
+        this.activeCuboid = Cuboid.of(points);
         this.fullRange = new CuboidPointIterator(points);
     }
 
@@ -83,14 +84,14 @@ public abstract class CuboidScanner extends Scanner {
                 super.tick();
         } else {
             // The player moved.
-            final Cuboid oldVolume = this.activeCuboid != null ? this.activeCuboid : getVolumeFor(this.lastPos);
-            final Cuboid newVolume = getVolumeFor(playerPos);
-            final Cuboid intersect = oldVolume.intersection(newVolume);
+            final BlockBox oldVolume = this.activeCuboid != null ? this.activeCuboid : getVolumeFor(this.lastPos);
+            final BlockBox newVolume = getVolumeFor(playerPos);
+            final BlockBox intersect = Cuboid.intersection(oldVolume, newVolume);
 
             // If there is no intersection, it means the player moved
             // enough of a distance in the last tick to make it a new
-            // area. Otherwise, if there is a sufficiently large
-            // change to the scan area dump and restart.
+            // area, otherwise, if there is a large enough change to
+            // the scan area dump and restart.
             if (intersect == null) {
                 this.locus.getLogger().debug("[%s] no intersection: %s, %s", this.name, oldVolume.toString(), newVolume.toString());
                 resetFullScan();
@@ -107,7 +108,7 @@ public abstract class CuboidScanner extends Scanner {
                     // The existing scan hasn't completed, but now we
                     // have a delta set. Finish out scanning the
                     // old volume, and once that is locked, then a
-                    // subsequent tick will do a delta update to get
+                    // later tick will do a delta update to get
                     // the new blocks.
                     super.tick();
                 }
@@ -130,8 +131,8 @@ public abstract class CuboidScanner extends Scanner {
 
     }
 
-    protected void updateScan(final Cuboid newVolume, final Cuboid oldVolume,
-                              final Cuboid intersect) {
+    protected void updateScan(final BlockBox newVolume, final BlockBox oldVolume,
+                              final BlockBox intersect) {
 
         var provider = this.locus.getWorld();
 
