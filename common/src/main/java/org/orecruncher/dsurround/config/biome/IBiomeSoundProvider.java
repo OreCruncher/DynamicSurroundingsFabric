@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface IBiomeSoundProvider {
 
     /**
-     * Gets a collection of SoundEvents that match the existing conditions within game.
+     * Gets a collection of SoundEvents that match the existing conditions within the game.
      *
      * @return Collection of matching SoundEvents.
      */
@@ -23,7 +23,7 @@ public interface IBiomeSoundProvider {
      *
      * @param type   Type of SoundEvent to retrieve
      * @param random Randomizer to use
-     * @return SoundEvent that matches crtieria, if any
+     * @return SoundEvent that matches the criteria, if any
      */
     Optional<ISoundFactory> getExtraSound(SoundEventType type, IRandomizer random);
 

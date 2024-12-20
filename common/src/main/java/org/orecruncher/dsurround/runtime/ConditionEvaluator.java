@@ -38,7 +38,7 @@ public final class ConditionEvaluator implements IConditionEvaluator {
 
     public boolean check(final Script conditions) {
         final Object result = eval(conditions);
-        return result instanceof Boolean && (boolean) result;
+        return result instanceof Boolean b && b;
     }
 
     public Object eval(final Script conditions) {

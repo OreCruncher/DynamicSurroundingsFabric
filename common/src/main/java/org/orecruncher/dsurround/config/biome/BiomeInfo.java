@@ -7,6 +7,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
@@ -159,6 +160,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     @Override
     public Optional<ISoundFactory> getExtraSound(final SoundEventType type, final IRandomizer random) {
 
+        @Nullable
         Collection<AcousticEntry> sourceList = null;
 
         switch (type) {
