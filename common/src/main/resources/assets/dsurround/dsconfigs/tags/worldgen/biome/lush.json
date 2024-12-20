@@ -2,6 +2,10 @@
   "replace": false,
   "values": [
     {
+      "id": "#c:is_lush",
+      "required": false
+    },
+    {
       "id": "#forge:is_lush",
       "required": false
     }

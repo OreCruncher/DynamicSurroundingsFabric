@@ -2,6 +2,10 @@
   "replace": false,
   "values": [
     {
+      "id": "#c:beach",
+      "required": false
+    },
+    {
       "id": "#c:is_beach",
       "required": false
     }
