@@ -96,8 +96,8 @@ public abstract class MixinSoundEngine {
         return this.callCalculateVolume(f, soundSource);
     }
 
-    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;<init>(DDD)V"), locals = LocalCapture.CAPTURE_FAILEXCEPTION, cancellable = true)
-    private void dsurround_soundRangeCheck(SoundInstance soundInstance, CallbackInfo ci, WeighedSoundEvents weighedSoundEvents, ResourceLocation resourceLocation, Sound sound, float f, float g, SoundSource soundSource, float h, float i, SoundInstance.Attenuation attenuation, boolean bl) {
+    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;<init>(DDD)V"), cancellable = true)
+    private void dsurround_soundRangeCheck(SoundInstance soundInstance, CallbackInfo ci) {
         if (MixinHelpers.soundSystemConfig.enableSoundPruning) {
             // If not in range of the listener, cancel.
             if (!SoundInstanceHandler.inRange(AudioUtilities.getSoundListener().getTransform().position(), soundInstance, 4)) {
