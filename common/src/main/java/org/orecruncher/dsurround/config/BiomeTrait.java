@@ -24,9 +24,8 @@ public enum BiomeTrait {
     // Biome categories as traits
     NONE("none"),
     TAIGA("taiga"),
-    EXTREME_HILLS("extreme_hills"),
+    HILLS("hills"),
     JUNGLE("jungle"),
-    MESA("mesa"),
     PLAINS("plains"),
     SAVANNA("savanna"),
     ICY("icy"),

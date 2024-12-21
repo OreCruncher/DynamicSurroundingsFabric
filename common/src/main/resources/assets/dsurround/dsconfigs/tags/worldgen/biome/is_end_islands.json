@@ -2,7 +2,7 @@
   "replace": false,
   "values": [
     {
-      "id": "#c:is_end",
+      "id": "c:is_outer_end_island",
       "required": false
     }
   ]

@@ -17,58 +17,58 @@ public class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
     private static final Map<TagKey<Biome>, BiomeTrait> tagToTraitMap = new HashMap<>();
 
     static {
-        tagToTraitMap.put(BiomeTags.IN_OVERWORLD, BiomeTrait.OVERWORLD);
-        tagToTraitMap.put(BiomeTags.IN_THE_END, BiomeTrait.THEEND);
-        tagToTraitMap.put(BiomeTags.IN_NETHER, BiomeTrait.NETHER);
-        tagToTraitMap.put(BiomeTags.TAIGA, BiomeTrait.TAIGA);
-        tagToTraitMap.put(BiomeTags.EXTREME_HILLS, BiomeTrait.EXTREME_HILLS);
-        tagToTraitMap.put(BiomeTags.WINDSWEPT, BiomeTrait.WINDSWEPT);
-        tagToTraitMap.put(BiomeTags.JUNGLE, BiomeTrait.JUNGLE);
-        tagToTraitMap.put(BiomeTags.LUSH, BiomeTrait.LUSH);
-        tagToTraitMap.put(BiomeTags.MESA, BiomeTrait.MESA);
-        tagToTraitMap.put(BiomeTags.MAGICAL, BiomeTrait.MAGICAL);
-        tagToTraitMap.put(BiomeTags.PLAINS, BiomeTrait.PLAINS);
-        tagToTraitMap.put(BiomeTags.SAVANNA, BiomeTrait.SAVANNA);
-        tagToTraitMap.put(BiomeTags.ICY, BiomeTrait.ICY);
-        tagToTraitMap.put(BiomeTags.BEACH, BiomeTrait.BEACH);
-        tagToTraitMap.put(BiomeTags.FOREST, BiomeTrait.FOREST);
-        tagToTraitMap.put(BiomeTags.BIRCH_FOREST, BiomeTrait.FOREST);
-        tagToTraitMap.put(BiomeTags.OCEAN, BiomeTrait.OCEAN);
-        tagToTraitMap.put(BiomeTags.DESERT, BiomeTrait.DESERT);
-        tagToTraitMap.put(BiomeTags.RARE, BiomeTrait.RARE);
-        tagToTraitMap.put(BiomeTags.RIVER, BiomeTrait.RIVER);
-        tagToTraitMap.put(BiomeTags.SANDY, BiomeTrait.SANDY);
-        tagToTraitMap.put(BiomeTags.SWAMP, BiomeTrait.SWAMP);
-        tagToTraitMap.put(BiomeTags.MUSHROOM, BiomeTrait.MUSHROOM);
-        tagToTraitMap.put(BiomeTags.UNDERGROUND, BiomeTrait.UNDERGROUND);
-        tagToTraitMap.put(BiomeTags.MOUNTAIN, BiomeTrait.MOUNTAIN);
+        tagToTraitMap.put(BiomeTags.IS_OVERWORLD, BiomeTrait.OVERWORLD);
+        tagToTraitMap.put(BiomeTags.IS_THE_END, BiomeTrait.THEEND);
+        tagToTraitMap.put(BiomeTags.IS_NETHER, BiomeTrait.NETHER);
+        tagToTraitMap.put(BiomeTags.IS_TAIGA, BiomeTrait.TAIGA);
+        tagToTraitMap.put(BiomeTags.IS_HILL, BiomeTrait.HILLS);
+        tagToTraitMap.put(BiomeTags.IS_WINDSWEPT, BiomeTrait.WINDSWEPT);
+        tagToTraitMap.put(BiomeTags.IS_JUNGLE, BiomeTrait.JUNGLE);
+        tagToTraitMap.put(BiomeTags.IS_LUSH, BiomeTrait.LUSH);
+        tagToTraitMap.put(BiomeTags.IS_PLATEAU, BiomeTrait.PLATEAU);
+        tagToTraitMap.put(BiomeTags.IS_MAGICAL, BiomeTrait.MAGICAL);
+        tagToTraitMap.put(BiomeTags.IS_PLAINS, BiomeTrait.PLAINS);
+        tagToTraitMap.put(BiomeTags.IS_SAVANNA, BiomeTrait.SAVANNA);
+        tagToTraitMap.put(BiomeTags.IS_ICY, BiomeTrait.ICY);
+        tagToTraitMap.put(BiomeTags.IS_BEACH, BiomeTrait.BEACH);
+        tagToTraitMap.put(BiomeTags.IS_FOREST, BiomeTrait.FOREST);
+        tagToTraitMap.put(BiomeTags.IS_BIRCH_FOREST, BiomeTrait.FOREST);
+        tagToTraitMap.put(BiomeTags.IS_OCEAN, BiomeTrait.OCEAN);
+        tagToTraitMap.put(BiomeTags.IS_DESERT, BiomeTrait.DESERT);
+        tagToTraitMap.put(BiomeTags.IS_RARE, BiomeTrait.RARE);
+        tagToTraitMap.put(BiomeTags.IS_RIVER, BiomeTrait.RIVER);
+        tagToTraitMap.put(BiomeTags.IS_SANDY, BiomeTrait.SANDY);
+        tagToTraitMap.put(BiomeTags.IS_SWAMP, BiomeTrait.SWAMP);
+        tagToTraitMap.put(BiomeTags.IS_MUSHROOM, BiomeTrait.MUSHROOM);
+        tagToTraitMap.put(BiomeTags.IS_UNDERGROUND, BiomeTrait.UNDERGROUND);
+        tagToTraitMap.put(BiomeTags.IS_MOUNTAIN, BiomeTrait.MOUNTAIN);
         tagToTraitMap.put(BiomeTags.CLIMATE_HOT, BiomeTrait.HOT);
         tagToTraitMap.put(BiomeTags.CLIMATE_TEMPERATE, BiomeTrait.TEMPERATE);
         tagToTraitMap.put(BiomeTags.CLIMATE_COLD, BiomeTrait.COLD);
         tagToTraitMap.put(BiomeTags.CLIMATE_DRY, BiomeTrait.DRY);
         tagToTraitMap.put(BiomeTags.CLIMATE_WET, BiomeTrait.WET);
-        tagToTraitMap.put(BiomeTags.VEGETATION_SPARSE, BiomeTrait.SPARSE);
-        tagToTraitMap.put(BiomeTags.VEGETATION_DENSE, BiomeTrait.DENSE);
-        tagToTraitMap.put(BiomeTags.TREE_CONIFEROUS, BiomeTrait.CONIFEROUS);
-        tagToTraitMap.put(BiomeTags.TREE_SAVANNA, BiomeTrait.SAVANNA);
-        tagToTraitMap.put(BiomeTags.TREE_JUNGLE, BiomeTrait.JUNGLE);
-        tagToTraitMap.put(BiomeTags.TREE_DECIDUOUS, BiomeTrait.DECIDUOUS);
-        tagToTraitMap.put(BiomeTags.VOID, BiomeTrait.VOID);
-        tagToTraitMap.put(BiomeTags.MOUNTAIN_PEAK, BiomeTrait.MOUNTAIN);
-        tagToTraitMap.put(BiomeTags.MOUNTAIN_SLOPE, BiomeTrait.MOUNTAIN);
-        tagToTraitMap.put(BiomeTags.AQUATIC, BiomeTrait.WATER);
-        tagToTraitMap.put(BiomeTags.WASTELAND, BiomeTrait.WASTELAND);
-        tagToTraitMap.put(BiomeTags.DEAD, BiomeTrait.DEAD);
-        tagToTraitMap.put(BiomeTags.FLORAL, BiomeTrait.FLORAL);
-        tagToTraitMap.put(BiomeTags.SNOWY, BiomeTrait.SNOWY);
-        tagToTraitMap.put(BiomeTags.SPOOKY, BiomeTrait.SPOOKY);
-        tagToTraitMap.put(BiomeTags.BADLANDS, BiomeTrait.BADLANDS);
-        tagToTraitMap.put(BiomeTags.CAVES, BiomeTrait.CAVES);
-        tagToTraitMap.put(BiomeTags.END_ISLANDS, BiomeTrait.THEEND);
-        tagToTraitMap.put(BiomeTags.NETHER_FORESTS, BiomeTrait.NETHER);
-        tagToTraitMap.put(BiomeTags.SNOWY_PLAINS, BiomeTrait.SNOWY);
-        tagToTraitMap.put(BiomeTags.STONY_SHORES, BiomeTrait.BEACH);
-        tagToTraitMap.put(BiomeTags.SHALLOW_OCEAN, BiomeTrait.OCEAN);
+        tagToTraitMap.put(BiomeTags.IS_VEGETATION_SPARSE, BiomeTrait.SPARSE);
+        tagToTraitMap.put(BiomeTags.IS_VEGETATION_DENSE, BiomeTrait.DENSE);
+        tagToTraitMap.put(BiomeTags.IS_TREE_CONIFEROUS, BiomeTrait.CONIFEROUS);
+        tagToTraitMap.put(BiomeTags.IS_TREE_SAVANNA, BiomeTrait.SAVANNA);
+        tagToTraitMap.put(BiomeTags.IS_TREE_JUNGLE, BiomeTrait.JUNGLE);
+        tagToTraitMap.put(BiomeTags.IS_TREE_DECIDUOUS, BiomeTrait.DECIDUOUS);
+        tagToTraitMap.put(BiomeTags.IS_VOID, BiomeTrait.VOID);
+        tagToTraitMap.put(BiomeTags.IS_MOUNTAIN_PEAK, BiomeTrait.MOUNTAIN);
+        tagToTraitMap.put(BiomeTags.IS_MOUNTAIN_SLOPE, BiomeTrait.MOUNTAIN);
+        tagToTraitMap.put(BiomeTags.IS_AQUATIC, BiomeTrait.WATER);
+        tagToTraitMap.put(BiomeTags.IS_WASTELAND, BiomeTrait.WASTELAND);
+        tagToTraitMap.put(BiomeTags.IS_DEAD, BiomeTrait.DEAD);
+        tagToTraitMap.put(BiomeTags.IS_FLORAL, BiomeTrait.FLORAL);
+        tagToTraitMap.put(BiomeTags.IS_SNOWY, BiomeTrait.SNOWY);
+        tagToTraitMap.put(BiomeTags.IS_SPOOKY, BiomeTrait.SPOOKY);
+        tagToTraitMap.put(BiomeTags.IS_BADLANDS, BiomeTrait.BADLANDS);
+        tagToTraitMap.put(BiomeTags.IS_CAVE, BiomeTrait.CAVES);
+        tagToTraitMap.put(BiomeTags.IS_END_ISLANDS, BiomeTrait.THEEND);
+        tagToTraitMap.put(BiomeTags.IS_NETHER_FOREST, BiomeTrait.NETHER);
+        tagToTraitMap.put(BiomeTags.IS_SNOWY_PLAINS, BiomeTrait.SNOWY);
+        tagToTraitMap.put(BiomeTags.IS_STONY_SHORES, BiomeTrait.BEACH);
+        tagToTraitMap.put(BiomeTags.IS_SHALLOW_OCEAN, BiomeTrait.OCEAN);
     }
 
     @Override
@@ -82,17 +82,17 @@ public class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
                 results.add(tagEntry.getValue());
 
         // Check for compounds
-        if (TAG_LIBRARY.is(BiomeTags.AQUATIC_ICY, biome)) {
+        if (TAG_LIBRARY.is(BiomeTags.IS_AQUATIC_ICY, biome)) {
             results.add(BiomeTrait.WATER);
             results.add(BiomeTrait.COLD);
         }
 
-        if (TAG_LIBRARY.is(BiomeTags.DEEP_OCEAN, biome)) {
+        if (TAG_LIBRARY.is(BiomeTags.IS_DEEP_OCEAN, biome)) {
             results.add(BiomeTrait.OCEAN);
             results.add(BiomeTrait.DEEP);
         }
 
-        if (TAG_LIBRARY.is(BiomeTags.FLOWER_FORESTS, biome)) {
+        if (TAG_LIBRARY.is(BiomeTags.IS_FLOWER_FOREST, biome)) {
             results.add(BiomeTrait.FLORAL);
             results.add(BiomeTrait.FOREST);
         }

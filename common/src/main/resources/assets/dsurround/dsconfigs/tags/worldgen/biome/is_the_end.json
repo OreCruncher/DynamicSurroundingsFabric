@@ -4,6 +4,10 @@
     {
       "id": "#c:is_the_end",
       "required": false
+    },
+    {
+      "id": "#c:is_end",
+      "required": false
     }
   ]
 }

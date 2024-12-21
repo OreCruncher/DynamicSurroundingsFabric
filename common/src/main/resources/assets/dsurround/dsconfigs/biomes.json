@@ -248,7 +248,7 @@
     "fogColor": "#808080"
   },
   {
-    "biomeSelector": "biome.getRainfall() < 0.1 && (DESERT || MESA || (WASTELAND && !(COLD || SNOWY || SWAMP)))",
+    "biomeSelector": "biome.getRainfall() < 0.1 && (DESERT || (WASTELAND && !(COLD || SNOWY || SWAMP)))",
     "_comment": "Dust for desert like biomes",
     "fogColor": "#FFEA97"
   },
@@ -371,11 +371,6 @@
         "weight": 10
       }
     ]
-  },
-  {
-    "biomeSelector": "MESA",
-    "_comment": "Mesa dust color specific override",
-    "fogColor": "#D77D2F"
   },
   {
     "biomeSelector": "@underground",
