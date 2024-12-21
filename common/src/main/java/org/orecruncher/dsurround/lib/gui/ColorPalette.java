@@ -75,6 +75,9 @@ public final class ColorPalette {
     public static final TextColor PEARLY_PURPLE = of(183,104,162);
     public static final TextColor FRESH_AIR = of(166,231,255);
 
+    public static final TextColor LEMON = of(254, 251, 1);
+    public static final TextColor ELECTRIC_GREEN = of(0, 237, 1);
+
     public static int getRed(int rgb) {
         return (rgb >> 16) & 0xFF;
     }

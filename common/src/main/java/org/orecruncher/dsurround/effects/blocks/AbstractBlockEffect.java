@@ -49,8 +49,8 @@ public abstract class AbstractBlockEffect implements IBlockEffect {
     }
 
     /**
-     * Creates a particle effect but does not queue.  Allows for the particle to be manipulated prior to handing
-     * it to the particle manager.
+     * Creates a particle effect but does not queue. Allows for the particle state to be changed before
+     * adding it to the particle manager.
      */
     public <T extends ParticleOptions> Optional<Particle> createParticle(T parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
         var pm = GameUtils.getParticleManager();
