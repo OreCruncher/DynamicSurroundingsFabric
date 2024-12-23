@@ -1,8 +1,8 @@
 > # Dynamic Surroundings for Fabric and NeoForge
 A Minecraft Mod that alters the fabric of Minecraft experience by weaving a tapestry of sound and visual effects.
 
-<a href="https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings-fabric-edition"><img src="http://cf.way2muchnoise.eu/versions/535715.svg" alt="CurseForge Project"/></a>
-<a href="https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings-fabric-edition"><img src="http://cf.way2muchnoise.eu/full_535715_downloads.svg" alt="CurseForge Project"/></a>
+<a href="https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings"><img src="http://cf.way2muchnoise.eu/versions/238891.svg" alt="CurseForge Project"/></a>
+<a href="https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings"><img src="http://cf.way2muchnoise.eu/full_238891_downloads.svg" alt="CurseForge Project"/></a>
 <a href="https://modrinth.com/mod/dynamicsurroundingsfabric"><img src="https://img.shields.io/badge/Mod-rinth-brightgreen" alt="Modrinth"></a>
 
 This mod is a successor to the Forge-based Dynamic Surroundings series.
