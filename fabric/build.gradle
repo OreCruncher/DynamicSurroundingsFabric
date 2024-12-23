@@ -7,6 +7,10 @@ architectury {
     fabric()
 }
 
+loom {
+    accessWidenerPath = project(":common").loom.accessWidenerPath
+}
+
 configurations {
     common {
         canBeResolved = true
@@ -54,6 +58,7 @@ dependencies {
 processResources {
     var expandProps = [
             version: project.version,
+            mod_id: rootProject.name,
             mod_name: rootProject.mod_name,
             mod_description: rootProject.mod_description,
             mod_author: rootProject.mod_author,
@@ -70,10 +75,12 @@ processResources {
 }
 
 shadowJar {
+    exclude "architectury.common.json"
     configurations = [project.configurations.shadowBundle]
     archiveClassifier = 'dev-shadow'
 }
 
 remapJar {
     inputFile.set shadowJar.archiveFile
+    injectAccessWidener = true
 }

@@ -8,3 +8,6 @@ accessible class net/minecraft/world/level/biome/Biome$ClimateSettings
 
 # Get at client side loaded chunks
 accessible class net/minecraft/client/multiplayer/ClientChunkCache$Storage
+
+# Access formatter when dumping biome information
+accessible method net/minecraft/network/chat/TextColor formatValue ()Ljava/lang/String;

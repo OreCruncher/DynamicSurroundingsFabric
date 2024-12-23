@@ -5,7 +5,7 @@ displayURL="${mod_homepage_url}"
 license = "${mod_license}"
 
 [[mods]]
-modId = "dsurround"
+modId = "${mod_id}"
 version = "${version}"
 displayName = "${mod_name}"
 authors = "${mod_author}"
@@ -14,21 +14,21 @@ ${mod_description}
 '''
 logoFile = "assets/dsurround/icon.png"
 
-[[dependencies.dsurround]]
+[[dependencies.${mod_id}]]
 modId = "neoforge"
 type = "required"
 versionRange = "[21.1,)"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.dsurround]]
+[[dependencies.${mod_id}]]
 modId = "minecraft"
 type = "required"
 versionRange = "[1.21.1,)"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.dsurround]]
+[[dependencies.${mod_id}]]
 modId = "architectury"
 type = "required"
 versionRange = "[13.0.8,)"

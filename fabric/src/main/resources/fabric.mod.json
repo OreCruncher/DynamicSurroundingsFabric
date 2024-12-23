@@ -13,7 +13,6 @@
   },
   "license": "${mod_license}",
   "icon": "assets/dsurround/icon.png",
-  "accessWidener": "dsurround.accesswidener",
   "environment": "client",
   "entrypoints": {
     "client": [
