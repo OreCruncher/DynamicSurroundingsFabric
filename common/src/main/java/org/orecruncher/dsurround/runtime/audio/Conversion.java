@@ -9,6 +9,7 @@ import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+@SuppressWarnings("unused")
 public final class Conversion {
 
     /**
@@ -44,7 +45,7 @@ public final class Conversion {
         if (bits != 8 && bits != 16)
             return;
 
-        // Do the conversion.  Essentially it averages the values in the source buffer based on the sample size.
+        // Do the conversion.  Essentially, it averages the values in the source buffer based on the sample size.
         boolean bigendian = format.isBigEndian();
         final AudioFormat monoformat = new AudioFormat(
                 format.getEncoding(),
@@ -83,27 +84,21 @@ public final class Conversion {
         source.limit(sourceLength >> 1);
     }
 
-    private static class MonoStream implements AudioStream {
-
-        private final AudioStream source;
-
-        public MonoStream( final AudioStream source) {
-            this.source = source;
-        }
+    private record MonoStream(AudioStream source) implements AudioStream {
 
         @Override
-        public @NotNull AudioFormat getFormat() {
-            return this.source.getFormat();
-        }
+            public @NotNull AudioFormat getFormat() {
+                return this.source.getFormat();
+            }
 
-        @Override
-        public @NotNull ByteBuffer read(int i) throws IOException {
-            return this.source.read(i);
-        }
+            @Override
+            public @NotNull ByteBuffer read(int i) throws IOException {
+                return this.source.read(i);
+            }
 
-        @Override
-        public void close() throws IOException {
-            this.source.close();
+            @Override
+            public void close() throws IOException {
+                this.source.close();
+            }
         }
-    }
 }

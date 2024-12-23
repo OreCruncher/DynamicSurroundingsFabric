@@ -72,6 +72,8 @@ public final class SoundMetadata {
             return SoundSource.MUSIC;
         if (path.startsWith("block"))
             return SoundSource.BLOCKS;
+        if (path.startsWith("entity") && path.endsWith("step"))
+            return SoundSource.NEUTRAL;
         if (path.startsWith("entity"))
             return SoundSource.HOSTILE;
         if (path.startsWith("weather"))

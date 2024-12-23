@@ -88,7 +88,7 @@
       {
         "effect": "firefly",
         "conditions": "weather.isNotRaining() && (diurnal.isNight() || diurnal.isSunset()) && !(HOT || weather.canWaterFreeze())",
-        "spawnChance": "lib.iif(lib.isModLoaded('biomesoplenty'), 0.025, 0.05)"
+        "spawnChance": "0.035"
       }
     ]
   }

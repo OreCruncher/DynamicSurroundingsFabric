@@ -11,9 +11,18 @@
 * NeoForge 21.1.84+
 
 **What's New**
-* Support for Minecraft 1.21.1. I do not plan on supporting prior versions. I will work on releasing later versions for 1.21.x if there is enough demand.
-* Mod versions for both Fabric and NeoForge. To achieve this, I am using the mod Architectury.
-* No plans to support Forge. Once Architectury supports Forge, I will update.
+* Mod versions for both Fabric and NeoForge. To achieve this, I am using the mod Architectury. Architectury is a required dependent.
+* Support for Minecraft 1.21.1. No plans to support prior versions. Support for later versions based on availability of Fabric and NeoForge.
+* Forge support is dependent on Architectury. Once Architectury supports Forge, I will update.
+
+**Changes**
+* Removed player particle suppression. Mojang changed how effects are associated with a player and made my hack incompatible.
+* Changed firefly particle speed, sizing, etc. to be less "energetic."
+* Removed dimension sound for The End. On the balance, people disliked more than liked.
+
+**Fixes**
+* Occasional incorrect access to randomizer associated with the render thread.
+* Fixup tagging for flower forest biome.
 
 > ### DynamicSurroundings-Fabric-1.20.4-0.3.3
 **Requirements**

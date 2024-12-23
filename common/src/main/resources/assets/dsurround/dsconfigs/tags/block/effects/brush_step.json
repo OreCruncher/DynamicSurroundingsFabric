@@ -1,6 +1,7 @@
 {
   "values": [
     "#minecraft:tall_flowers",
+    "#minecraft:saplings",
     "minecraft:tall_grass",
     "minecraft:large_fern",
     "minecraft:vine",
@@ -8,6 +9,10 @@
     "minecraft:twisting_vines",
     "minecraft:cave_vines_plant",
     "minecraft:tall_seagrass",
-    "minecraft:kelp_plant"
+    "minecraft:kelp_plant",
+    {
+      "id": "#c:saplings",
+      "required": false
+    }
   ]
 }

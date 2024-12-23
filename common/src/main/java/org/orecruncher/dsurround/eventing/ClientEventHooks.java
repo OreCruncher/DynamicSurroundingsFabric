@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.eventing;
 
-import dev.architectury.event.events.client.ClientTickEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;

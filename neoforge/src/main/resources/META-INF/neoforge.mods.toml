@@ -1,15 +1,16 @@
 modLoader = "javafml"
 loaderVersion = "[4,)"
-issueTrackerURL = "https://github.com/OreCruncher/DynamicSurroundingsFabric/issues"
-license = "MIT"
+issueTrackerURL = "${mod_issues_url}"
+displayURL="${mod_homepage_url}"
+license = "${mod_license}"
 
 [[mods]]
 modId = "dsurround"
 version = "${version}"
-displayName = "Dynamic Surroundings"
-authors = "OreCruncher"
+displayName = "${mod_name}"
+authors = "${mod_author}"
 description = '''
-Alters the fabric of Minecraft experience by weaving a tapestry of sound and visual effects
+${mod_description}
 '''
 logoFile = "assets/dsurround/icon.png"
 

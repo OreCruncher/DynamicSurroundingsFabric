@@ -42,7 +42,8 @@
       {
         "factory": "biome.wind.desert",
         "conditions": "weather.isRaining()"
-      },      {
+      },
+      {
         "factory": "biome.crickets",
         "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isNight()"
       }
@@ -471,13 +472,9 @@
   },
   {
     "biomeSelector": "@player",
-    "_comment": "Player explicit set for The End",
+    "_comment": "Player explicit set",
     "additionalSoundChance": "0.009",
     "acoustics": [
-      {
-        "factory": "dimension.theend",
-        "conditions": "dim.getId() == 'minecraft:the_end'"
-      },
       {
         "factory": "player.tummy",
         "conditions": "player.getFoodLevel() <= 4 || player.hasEffect('minecraft:hunger')",

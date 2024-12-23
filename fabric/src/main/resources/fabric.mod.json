@@ -2,16 +2,16 @@
   "schemaVersion": 1,
   "id": "dsurround",
   "version": "${version}",
-  "name": "Dynamic Surroundings",
-  "description": "Alters the fabric of Minecraft experience by weaving a tapestry of sound and visual effects",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
   "authors": [
-    "OreCruncher"
+    "${mod_author}"
   ],
   "contact": {
-    "homepage": "https://github.com/OreCruncher/DynamicSurroundingsFabric",
-    "issues": "https://github.com/OreCruncher/DynamicSurroundingsFabric/issues"
+    "issues": "${mod_issues_url}",
+    "homepage": "${mod_homepage_url}"
   },
-  "license": "MIT",
+  "license": "${mod_license}",
   "icon": "assets/dsurround/icon.png",
   "accessWidener": "dsurround.accesswidener",
   "environment": "client",
@@ -34,8 +34,7 @@
     "fabric-api": "*"
   },
   "suggests": {
-    "cloth-config": ">=13.0.121",
-    "yet_another_config_lib_v3": ">=3.3.1+1.20.4"
+    "cloth-config": ">=13.0.121"
   },
   "custom": {
     "modmenu": {
