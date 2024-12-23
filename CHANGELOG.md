@@ -1,3 +1,31 @@
+> ### DynamicSurroundings-1.21.1-0.4.0
+**All Loaders**
+* JAVA 21+
+* Architectury 13.0.8+ **<===== LOOK HERE**
+
+**Fabric**
+* Fabric Loader >= 0.16.9
+* Fabric API >= 0.110.0+1.21.
+
+**NeoForge**
+* NeoForge 21.1.84+
+
+**What's New**
+* Mod versions for both Fabric and NeoForge. To achieve this, I am using the mod Architectury. Architectury is a required dependent.
+* Forge support is dependent on Architectury. Once Architectury supports Forge, I will update.
+* Support for Minecraft 1.21.1. No plans to support prior versions. Support for later versions based on availability of Fabric and NeoForge.
+* Both Fabric and NeoForge versions support connection to Vanilla servers.
+
+**Changes**
+* Removed player particle suppression. Mojang changed how effects are associated with a player and made my hack incompatible.
+* Changed firefly particle speed, sizing, etc. to be less "energetic."
+* Removed dimension sound for The End. On the balance, people disliked more than liked.
+
+**Fixes**
+* Occasional incorrect access to randomizer associated with the render thread.
+* Fixup tagging for flower forest biome.
+* Disable rain ripple effect if the mod Particle Rain is installed.
+
 > ### DynamicSurroundings-Fabric-1.20.4-0.3.3
 **Requirements**
 * JAVA 17+ (I am using Adoptium https://adoptium.net/)

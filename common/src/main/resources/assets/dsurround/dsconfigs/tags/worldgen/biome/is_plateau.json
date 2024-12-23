@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#c:mesa",
+      "required": false
+    },
+    {
+      "id": "#c:is_plateau",
+      "required": false
+    },
+    {
+      "id": "#forge:is_plateau",
+      "required": false
+    }
+  ]
+}

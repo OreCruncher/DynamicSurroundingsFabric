@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#c:is_rare",
+      "required": false
+    },    {
+      "id": "#forge:is_rare",
+      "required": false
+    }
+  ]
+}

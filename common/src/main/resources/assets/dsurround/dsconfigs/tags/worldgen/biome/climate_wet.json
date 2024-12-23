@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#c:is_wet",
+      "required": false
+    },
+    {
+      "id": "#c:is_wet/overworld",
+      "required": false
+    },
+    {
+      "id": "#forge:is_wet",
+      "required": false
+    },
+    {
+      "id": "#forge:is_wet/overworld",
+      "required": false
+    }
+  ]
+}

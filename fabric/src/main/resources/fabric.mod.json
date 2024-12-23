@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "id": "dsurround",
+  "version": "${version}",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
+  "authors": [
+    "${mod_author}"
+  ],
+  "contact": {
+    "issues": "${mod_issues_url}",
+    "homepage": "${mod_homepage_url}"
+  },
+  "license": "${mod_license}",
+  "icon": "assets/dsurround/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "org.orecruncher.fabric.FabricMod"
+    ],
+    "modmenu": [
+      "org.orecruncher.fabric.ModConfigMenu"
+    ]
+  },
+  "mixins": [
+    "dsurround.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.9",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "architectury": ">=13.0.8",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "cloth-config": ">=13.0.121"
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "dsurround.mod.link.sources": "https://github.com/OreCruncher/DynamicSurroundingsFabric",
+        "dsurround.mod.link.credits": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CREDITS.md",
+        "dsurround.mod.link.nashorn": "https://github.com/openjdk/nashorn"
+      }
+    }
+  }
+}

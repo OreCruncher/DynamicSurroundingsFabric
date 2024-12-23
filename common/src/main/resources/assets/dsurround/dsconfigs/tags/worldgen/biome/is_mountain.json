@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#c:is_mountain",
+      "required": false
+    },
+    {
+      "id": "#forge:is_mountain",
+      "required": false
+    }
+  ]
+}

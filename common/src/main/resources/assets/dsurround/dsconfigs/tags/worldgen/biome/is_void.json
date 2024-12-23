@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#c:is_void",
+      "required": false
+    },
+    {
+      "id": "#forge:is_void",
+      "required": false
+    }
+  ]
+}

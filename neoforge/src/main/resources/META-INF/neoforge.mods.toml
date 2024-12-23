@@ -1,0 +1,39 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+issueTrackerURL = "${mod_issues_url}"
+displayURL="${mod_homepage_url}"
+license = "${mod_license}"
+
+[[mods]]
+modId = "${mod_id}"
+version = "${version}"
+displayName = "${mod_name}"
+authors = "${mod_author}"
+description = '''
+${mod_description}
+'''
+logoFile = "assets/dsurround/icon.png"
+
+[[dependencies.${mod_id}]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.${mod_id}]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.${mod_id}]]
+modId = "architectury"
+type = "required"
+versionRange = "[13.0.8,)"
+ordering = "AFTER"
+side = "CLIENT"
+
+[[mixins]]
+config = "dsurround.mixins.json"

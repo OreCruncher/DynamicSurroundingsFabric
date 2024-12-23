@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:sugar_cane",
+    "minecraft:dead_bush",
+    "minecraft:big_dripleaf_stem",
+    "minecraft:hay_block"
+  ]
+}

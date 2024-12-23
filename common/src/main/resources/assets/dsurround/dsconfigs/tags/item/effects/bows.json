@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "#c:tools/bows",
+      "required": false
+    },
+    {
+      "id": "#forge:tools/bows",
+      "required": false
+    }
+  ]
+}

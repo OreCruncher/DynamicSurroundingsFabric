@@ -1,9 +1,0 @@
-{
-  "replace": false,
-  "values": [
-    {
-      "id": "#forge:is_rare",
-      "required": false
-    }
-  ]
-}

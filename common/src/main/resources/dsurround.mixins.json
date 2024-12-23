@@ -1,0 +1,43 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "org.orecruncher.dsurround.mixins",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+  ],
+  "client": [
+    "audio.MixinChannelHandleAccessor",
+    "audio.MixinSoundBuffer",
+    "audio.MixinSoundEngine",
+    "audio.MixinSoundEngineAccessor",
+    "audio.MixinSoundEvent",
+    "audio.MixinSoundLibrary",
+    "audio.MixinSoundManagerAccessor",
+    "audio.MixinSource",
+    "core.MixinAbstractSoundInstance",
+    "core.MixinBiome",
+    "core.MixinBlockState",
+    "core.MixinButtonWidget",
+    "core.MixinClientChunkManager",
+    "core.MixinClientChunkMap",
+    "core.MixinClientWorld",
+    "core.MixinClientWorldProperties",
+    "core.MixinClothAbstractConfigEntry",
+    "core.MixinEntity",
+    "core.MixinEntityArrow",
+    "core.MixinIngameHud",
+    "core.MixinLivingEntity",
+    "audio.MixinMusicManager",
+    "core.MixinParticleManager",
+    "core.MixinRainSplashParticle",
+    "core.MixinRaycastContextAccessor",
+    "core.MixinSoundOptionsScreen",
+    "core.MixinTagCollector",
+    "core.MixinWorld",
+    "events.MixinMinecraftClient"
+  ],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
