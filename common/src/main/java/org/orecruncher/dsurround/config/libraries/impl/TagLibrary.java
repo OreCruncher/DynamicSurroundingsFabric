@@ -22,6 +22,7 @@ import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ClientTagLoader;
@@ -46,10 +47,10 @@ public class TagLibrary implements ITagLibrary {
     private boolean isConnected;
 
     public TagLibrary(IModLog logger, ISystemClock systemClock) {
-        this.logger = logger;
+        this.logger = ModLog.createChild(logger, "TagLibrary");
         this.systemClock = systemClock;
         this.tagCache = new Reference2ObjectOpenHashMap<>();
-        this.tagLoader = new ClientTagLoader(ResourceUtilities.createForCurrentState(), this.logger, this.systemClock);
+        this.tagLoader = new ClientTagLoader(ResourceUtilities.createForCurrentState(), logger, this.systemClock);
 
         // Need to clear the tag caches on disconnect. It's possible that
         // cached biome information will change with the next connection.

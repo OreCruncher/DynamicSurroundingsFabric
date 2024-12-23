@@ -13,12 +13,26 @@ public final class ModLog implements IModLog {
 
     private static final Pattern REGEX_SPLIT = Pattern.compile("\\n");
 
-    private final Logger logger;
-    private boolean debugging;
-    private int traceMask;
+    private static boolean debugging;
+    private static int traceMask;
 
-    public ModLog(String modId) {
-        this.logger = LoggerFactory.getLogger(Objects.requireNonNull(modId));
+    private final Logger logger;
+
+    ModLog(Logger logger) {
+        this.logger = logger;
+    }
+
+    public static IModLog create(String modId) {
+        var logger = LoggerFactory.getLogger(Objects.requireNonNull(modId));
+        return new ModLog(logger);
+    }
+
+    public static IModLog createChild(IModLog parent, String childName) {
+        if (parent instanceof ModLog ml) {
+            var child = ml.logger.getName() + "/" + childName;
+            return create(child);
+        }
+        throw new RuntimeException("parent is not an instance of ModLog");
     }
 
     private static void outputLines(final Consumer<String> out, final String format, @Nullable final Object... params) {
@@ -29,23 +43,23 @@ public final class ModLog implements IModLog {
     }
 
     public void setDebug(final boolean flag) {
-        this.debugging = flag;
+        debugging = flag;
     }
 
     public void setTraceMask(final int mask) {
-        this.traceMask = mask;
+        traceMask = mask;
     }
 
     public boolean testTrace(final int mask) {
-        return (this.traceMask & mask) != 0;
+        return (traceMask & mask) != 0;
     }
 
     public boolean isDebugging() {
-        return this.debugging;
+        return debugging;
     }
 
     public boolean isTracing(int mask) {
-        return this.isDebugging() && (this.traceMask & mask) != 0;
+        return this.isDebugging() && (traceMask & mask) != 0;
     }
 
     @Override

@@ -10,6 +10,7 @@ import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.platform.IMinecraftDirectories;
 
@@ -28,7 +29,7 @@ public final class DimensionLibrary implements IDimensionLibrary {
     private int version = 0;
 
     public DimensionLibrary(IModLog logger, IMinecraftDirectories directories) {
-        this.logger = logger;
+        this.logger = ModLog.createChild(logger, "DimensionLibrary");
         this.directories = directories;
     }
 

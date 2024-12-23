@@ -23,7 +23,7 @@ import org.orecruncher.dsurround.lib.platform.IMinecraftDirectories;
 public final class Library {
 
     public static final String MOD_ID = Constants.MOD_ID;
-    public static final IModLog LOGGER = new ModLog(MOD_ID);
+    public static final IModLog LOGGER = ModLog.create(MOD_ID);
 
     /**
      * Initializes key functionality of library logic during startup.

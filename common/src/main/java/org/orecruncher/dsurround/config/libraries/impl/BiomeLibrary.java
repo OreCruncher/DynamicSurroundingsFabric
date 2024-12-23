@@ -13,6 +13,7 @@ import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.lib.Guard;
+import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -48,7 +49,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
     private int version = 0;
 
     public BiomeLibrary(IModLog logger) {
-        this.logger = logger;
+        this.logger = ModLog.createChild(logger, "BiomeLibrary");
         this.biomeConditionEvaluator = new BiomeConditionEvaluator(this, logger);
     }
 

@@ -12,6 +12,7 @@ import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
+import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -44,7 +45,7 @@ public class BlockLibrary implements IBlockLibrary {
     private int version = 0;
 
     public BlockLibrary(IModLog logger, IMinecraftDirectories directories, ITagLibrary tagLibrary) {
-        this.logger = logger;
+        this.logger = ModLog.createChild(logger, "BlockLibrary");
         this.directories = directories;
         this.tagLibrary = tagLibrary;
     }

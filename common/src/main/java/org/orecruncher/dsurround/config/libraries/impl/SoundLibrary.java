@@ -19,6 +19,7 @@ import org.orecruncher.dsurround.lib.CodecExtensions;
 import org.orecruncher.dsurround.lib.Comparers;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.resources.DiscoveredResource;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
@@ -65,7 +66,7 @@ public final class SoundLibrary implements ISoundLibrary {
     private List<IndividualSoundConfigEntry> soundConfiguration = new ArrayList<>();
 
     public SoundLibrary(Configuration config, IModLog logger, IMinecraftDirectories directories) {
-        this.logger = logger;
+        this.logger = ModLog.createChild(logger, "SoundLibrary");
         this.config = config;
         this.myRegistry.defaultReturnValue(SoundLibrary.MISSING);
         this.soundMetadata.defaultReturnValue(new SoundMetadata());

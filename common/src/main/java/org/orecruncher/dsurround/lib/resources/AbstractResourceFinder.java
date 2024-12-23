@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import net.minecraft.resources.ResourceLocation;
 import org.orecruncher.dsurround.lib.CodecExtensions;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.logging.ModLog;
 
 import java.util.Optional;
 
@@ -14,7 +15,7 @@ public abstract class AbstractResourceFinder implements IResourceFinder {
     protected final IModLog logger;
 
     protected AbstractResourceFinder(IModLog logger) {
-        this.logger = logger;
+        this.logger = ModLog.createChild(logger, "ResourceFinder");
     }
 
     protected <T> Optional<T> decode(ResourceLocation location, String content, Codec<T> decoder) {

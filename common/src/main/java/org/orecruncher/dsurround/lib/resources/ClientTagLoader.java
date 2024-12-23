@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.MinecraftServerType;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.system.ISystemClock;
 
@@ -33,7 +34,7 @@ public class ClientTagLoader {
 
     public ClientTagLoader(@NotNull ResourceUtilities resourceUtilities, IModLog logger, ISystemClock systemClock) {
         this.resourceUtilities = resourceUtilities;
-        this.logger = logger;
+        this.logger = ModLog.createChild(logger, "ClientTagLoader");
         this.systemClock = systemClock;
         this.serverType = MinecraftServerType.VANILLA;
     }

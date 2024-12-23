@@ -15,6 +15,7 @@ import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
+import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.WeightTable;
@@ -34,7 +35,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
     public static final int DEFAULT_ADDITIONAL_SOUND_CHANCE = 1000 / 4;
     public static final Script DEFAULT_SOUND_CHANCE = new Script(String.valueOf(1D / DEFAULT_ADDITIONAL_SOUND_CHANCE));
-    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+    private static final IModLog LOGGER = ModLog.createChild(ContainerManager.resolve(IModLog.class), "BiomeInfo");
     private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
     private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
     private static final IConditionEvaluator CONDITION_EVALUATOR = ContainerManager.resolve(IConditionEvaluator.class);

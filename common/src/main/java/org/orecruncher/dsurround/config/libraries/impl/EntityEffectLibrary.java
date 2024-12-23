@@ -9,6 +9,7 @@ import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.tags.EntityEffectTags;
 import org.orecruncher.dsurround.mixinutils.ILivingEntityExtended;
@@ -28,7 +29,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
 
     public EntityEffectLibrary(ITagLibrary tagLibrary, IModLog logger) {
         this.tagLibrary = tagLibrary;
-        this.logger = logger;
+        this.logger = ModLog.createChild(logger, "EntityEffectLibrary");
     }
 
     @Override

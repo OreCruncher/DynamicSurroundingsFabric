@@ -30,8 +30,9 @@ import org.orecruncher.dsurround.lib.version.VersionResult;
 import org.orecruncher.dsurround.processing.Handlers;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
+import org.orecruncher.dsurround.sound.AudioPlayerDebug;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
-import org.orecruncher.dsurround.sound.MinecraftAudioPlayer;
+import org.orecruncher.dsurround.sound.AudioPlayer;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -128,8 +129,13 @@ public final class Client {
                 .registerSingleton(IBlockLibrary.class, BlockLibrary.class)
                 .registerSingleton(IItemLibrary.class, ItemLibrary.class)
                 .registerSingleton(IEntityEffectLibrary.class, EntityEffectLibrary.class)
-                .registerSingleton(IAudioPlayer.class, MinecraftAudioPlayer.class)
                 .registerSingleton(OverlayManager.class);
+
+        // Depending on debug settings, enable the appropriate player
+        if (this.logger.isDebugging())
+            ContainerManager.getRootContainer().registerSingleton(IAudioPlayer.class, AudioPlayerDebug.class);
+        else
+            ContainerManager.getRootContainer().registerSingleton(IAudioPlayer.class, AudioPlayer.class);
 
         // Kick off version checking if configured.  This should run in parallel with initialization.
         if (Config.logging.enableModUpdateChatMessage)

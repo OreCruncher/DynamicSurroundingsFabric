@@ -21,14 +21,14 @@ public class DiskResourceFinder extends AbstractResourceFinder {
     public DiskResourceFinder(IModLog logger, Path diskLocation) {
         super(logger);
 
-        // Enumerate the folders on disk and validate against loaded mods.
+        // List the folders on disk and validate against loaded mods.
         try (var directoryList = Files.newDirectoryStream(diskLocation, Files::isDirectory)) {
             directoryList.forEach(p -> {
                 var modNamespace = p.getFileName().toString();
                 if (Platform.isModLoaded(modNamespace))
                     this.namespacesOnDisk.add(p);
             });
-        } catch (Throwable t) {
+        } catch (Throwable ignored) {
         }
     }
 

@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.runtime.sets;
 
+@SuppressWarnings("unused")
 public interface IPlayerVariables {
 
     boolean isCreative();
@@ -10,7 +11,7 @@ public interface IPlayerVariables {
 
     boolean isFlying();
 
-    boolean isSprintnig();
+    boolean isSprinting();
 
     boolean isInLava();
 

@@ -17,7 +17,7 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
     private boolean isCreative;
     private boolean isBurning;
     private boolean isFlying;
-    private boolean isSprintnig;
+    private boolean isSprinting;
     private boolean isInLava;
     private boolean isInvisible;
     private boolean isInWater;
@@ -49,7 +49,7 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
             this.isCreative = player.isCreative();
             this.isBurning = player.isOnFire();
             this.isFlying = player.getAbilities().flying;
-            this.isSprintnig = player.isSprinting();
+            this.isSprinting = player.isSprinting();
             this.isInLava = player.isInLava();
             this.isInvisible = player.isInvisible();
             this.isInWater = player.isUnderWater();
@@ -74,7 +74,7 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
             this.isCreative = false;
             this.isBurning = false;
             this.isFlying = false;
-            this.isSprintnig = false;
+            this.isSprinting = false;
             this.isInLava = false;
             this.isInvisible = false;
             this.isInWater = false;
@@ -121,8 +121,8 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
     }
 
     @Override
-    public boolean isSprintnig() {
-        return this.isSprintnig;
+    public boolean isSprinting() {
+        return this.isSprinting;
     }
 
     @Override
