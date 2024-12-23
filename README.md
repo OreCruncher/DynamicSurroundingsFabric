@@ -60,6 +60,7 @@ Starting with Minecraft 1.21.1, Dynamic Surroundings is supported on Fabric and 
 * Various "DS" client side commands for dumping configuration information.  (I currently use these while developing. I do plan to document at some point for general use.)
 * Custom debug HUD that can be accessed by key bind.  Moves the Dynamic Surroundings clutter out of the traditional F3 display.
 * Compatibility with Serene Seasons - variations in seasons and temperatures can influence effects.
+* Dynamic Surroundings is compatible when connecting to a Vanilla servers. Both Fabric and NeoForge loaders can do this.
 
 ## Embedded Jars
 * Fabric version has OpenJDK Nashorn JavaScript Engine 15.4 (https://github.com/openjdk/nashorn)

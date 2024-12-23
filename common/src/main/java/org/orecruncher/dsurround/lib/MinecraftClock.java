@@ -5,6 +5,7 @@ import net.minecraft.world.level.Level;
 
 import java.text.DecimalFormat;
 
+@SuppressWarnings("unused")
 public class MinecraftClock {
 
     private static final String AM = "dsurround.format.AM";

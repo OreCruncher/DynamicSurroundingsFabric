@@ -12,8 +12,9 @@
 
 **What's New**
 * Mod versions for both Fabric and NeoForge. To achieve this, I am using the mod Architectury. Architectury is a required dependent.
-* Support for Minecraft 1.21.1. No plans to support prior versions. Support for later versions based on availability of Fabric and NeoForge.
 * Forge support is dependent on Architectury. Once Architectury supports Forge, I will update.
+* Support for Minecraft 1.21.1. No plans to support prior versions. Support for later versions based on availability of Fabric and NeoForge.
+* Both Fabric and NeoForge versions support connection to Vanilla servers.
 
 **Changes**
 * Removed player particle suppression. Mojang changed how effects are associated with a player and made my hack incompatible.
@@ -23,6 +24,7 @@
 **Fixes**
 * Occasional incorrect access to randomizer associated with the render thread.
 * Fixup tagging for flower forest biome.
+* Disable rain ripple effect if the mod Particle Rain is installed.
 
 > ### DynamicSurroundings-Fabric-1.20.4-0.3.3
 **Requirements**

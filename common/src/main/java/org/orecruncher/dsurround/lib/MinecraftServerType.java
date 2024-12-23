@@ -5,6 +5,7 @@ public enum MinecraftServerType {
     PAPER(false),
     FABRIC(true),
     FORGE(true),
+    NEOFORGE(true),
     OTHER(false);
 
     private final boolean isModded;
@@ -19,14 +20,13 @@ public enum MinecraftServerType {
 
     public static MinecraftServerType fromBrand(String serverBrand) {
         var brand = serverBrand.toLowerCase();
-        if ("vanilla".equals(brand))
-            return VANILLA;
-        if ("paper".equals(brand))
-            return PAPER;
-        if ("forge".equals(brand))
-            return FORGE;
-        if ("fabric".equals(brand))
-            return FABRIC;
-        return OTHER;
+        return switch (brand) {
+            case "vanilla" -> VANILLA;
+            case "paper" -> PAPER;
+            case "forge" -> FORGE;
+            case "fabric" -> FABRIC;
+            case "neoforge" -> NEOFORGE;
+            default -> OTHER;
+        };
     }
 }
