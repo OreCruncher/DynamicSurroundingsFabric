@@ -9,7 +9,7 @@ import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
-public class EntityEffectHandler  extends AbstractClientHandler {
+public class EntityEffectHandler extends AbstractClientHandler {
 
     private final IEntityEffectLibrary entityEffectLibrary;
     private int entityCount;

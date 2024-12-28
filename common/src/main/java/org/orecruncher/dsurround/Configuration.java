@@ -301,12 +301,6 @@ public class Configuration extends ConfigurationData {
         public boolean enableMorningFog = true;
 
         @Property
-        @IntegerRange(min = 1, max = 100)
-        @Slider
-        @Comment("Chance for morning fog percentage")
-        public int morningFogChance = 80;
-
-        @Property
         @Comment("Enable/disable biome fog effect")
         public boolean enableBiomeFog = true;
 

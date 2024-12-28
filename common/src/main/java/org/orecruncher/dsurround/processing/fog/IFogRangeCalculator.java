@@ -33,4 +33,9 @@ public interface IFogRangeCalculator {
      * to do with the time, if anything.
      */
     void tick();
+
+    /**
+     * Called when the client disconnects from the server
+     */
+    void disconnect();
 }

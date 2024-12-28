@@ -4,7 +4,6 @@ import net.minecraft.client.renderer.FogRenderer;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -28,11 +27,6 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
         this.calculators.add(new BiomeFogRangeCalculator(biomeLibrary, this.fogOptions));
         this.calculators.add(new MorningFogRangeCalculator(seasonInfo, this.fogOptions));
         this.calculators.add(new WeatherFogRangeCalculator(this.fogOptions));
-
-        ClientState.TICK_START.register(client -> {
-            if (GameUtils.isInGame())
-                this.tick();
-        });
     }
 
     @Override
@@ -75,6 +69,12 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
 
     @Override
     public void tick() {
-        this.calculators.forEach(IFogRangeCalculator::tick);
+        if (GameUtils.isInGame())
+            this.calculators.forEach(IFogRangeCalculator::tick);
+    }
+
+    @Override
+    public void disconnect() {
+        this.calculators.forEach(IFogRangeCalculator::disconnect);
     }
 }

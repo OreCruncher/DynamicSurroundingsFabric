@@ -1,15 +1,21 @@
 package org.orecruncher.dsurround.processing.fog;
 
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
-import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
+import org.orecruncher.dsurround.mixinutils.IClientWorld;
 
 public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
+
+    private static final FogDensity[] SPRING_FOG = {FogDensity.MEDIUM, FogDensity.HEAVY, FogDensity.NORMAL, FogDensity.NORMAL};
+    private static final FogDensity[] SUMMER_FOG = {FogDensity.LIGHT, FogDensity.NONE, FogDensity.LIGHT, FogDensity.NONE};
+    private static final FogDensity[] AUTUMN_FOG = {FogDensity.NORMAL, FogDensity.MEDIUM, FogDensity.HEAVY, FogDensity.MEDIUM};
+    private static final FogDensity[] WINTER_FOG = {FogDensity.MEDIUM, FogDensity.LIGHT, FogDensity.NORMAL, FogDensity.NORMAL};
 
     protected final ISeasonalInformation seasonInfo;
     protected final MinecraftClock clock;
@@ -52,17 +58,22 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
     @Override
     public void tick() {
         // Determine if fog is going to be done this Minecraft day
+        GameUtils.getWorld().ifPresent(this.clock::update);
         final int day = this.clock.getDay();
         if (this.fogDay != day) {
-            final int morningFogChance = this.fogOptions.morningFogChance; //Config.CLIENT.fog.morningFogChance.get();
             this.fogDay = day;
-            final boolean doFog = this.isFogAllowed() && (morningFogChance == 100 || Randomizer.current().nextInt(100) <= morningFogChance);
-            this.type = doFog ? getFogType() : FogDensity.NONE;
+            this.type = this.isFogAllowed() ? getFogType(this.fogDay) : FogDensity.NONE;
         }
     }
 
+    @Override
+    public void disconnect() {
+        this.fogDay = -1;
+        this.type = FogDensity.NONE;
+    }
+
     private boolean isFogAllowed() {
-        return GameUtils.getWorld().map(w ->w.dimensionType().natural()).orElse(false);
+        return GameUtils.getWorld().map(w -> w.dimensionType().natural()).orElse(false);
     }
 
     private float getCelestialAngleDegrees() {
@@ -70,16 +81,25 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
     }
 
     @NotNull
-    protected FogDensity getFogType() {
+    protected FogDensity getFogType(int day) {
         var clientLevel = GameUtils.getWorld().orElseThrow();
+        var idx = this.generateIndex(clientLevel, day);
         if (this.seasonInfo.isSpring(clientLevel))
-            return FogDensity.HEAVY;
+            return SPRING_FOG[idx];
         if (this.seasonInfo.isSummer(clientLevel))
-            return FogDensity.NONE;
+            return SUMMER_FOG[idx];
         if (this.seasonInfo.isAutumn(clientLevel))
-            return FogDensity.MEDIUM;
+            return AUTUMN_FOG[idx];
         if (this.seasonInfo.isWinter(clientLevel))
-            return FogDensity.LIGHT;
+            return WINTER_FOG[idx];
+        // Shouldn't get here, but...
         return FogDensity.NORMAL;
+    }
+
+    private int generateIndex(ClientLevel clientLevel, int day) {
+        // Generate an index using the world seed and day rather than
+        // a random.
+        var worldSeed = ((IClientWorld) clientLevel).dsurround_getWorldSeed();
+        return (int) ((worldSeed + day * 134775813) & 3);
     }
 }

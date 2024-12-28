@@ -35,4 +35,8 @@ public abstract class VanillaFogRangeCalculator implements IFogRangeCalculator {
     public void tick() {
 
     }
+
+    public void disconnect() {
+
+    }
 }

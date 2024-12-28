@@ -177,8 +177,6 @@
   "dsurround.config.fogOptions.enableFogEffects.tooltip": "Enable/disable all fog effects",
   "dsurround.config.fogOptions.enableMorningFog": "Morning fog effect",
   "dsurround.config.fogOptions.enableMorningFog.tooltip": "Enable/disable morning fog effect",
-  "dsurround.config.fogOptions.morningFogChance": "Morning fog chance percent",
-  "dsurround.config.fogOptions.morningFogChance.tooltip": "Daily chance that morning fog will generate",
   "dsurround.config.fogOptions.enableBiomeFog": "Biome fog effect",
   "dsurround.config.fogOptions.enableBiomeFog.tooltip": "Enable/disable biome fog effect. Fog color and intensity is determined by biome configuration.",
   "dsurround.config.fogOptions.enableWeatherFog": "Weather fog effect",

@@ -18,6 +18,7 @@ public class BiomeFogRangeCalculator extends VanillaFogRangeCalculator {
 
     private final IBiomeLibrary biomeLibrary;
 
+    private BlockPos lastBlockPos;
     private float activeScale;
     private float targetScale;
 
@@ -25,6 +26,7 @@ public class BiomeFogRangeCalculator extends VanillaFogRangeCalculator {
         super("BiomeFogRangeCalculator", fogOptions);
         this.biomeLibrary = biomeLibrary;
         this.activeScale = this.targetScale = 0F;
+        this.lastBlockPos = BlockPos.ZERO;
     }
 
     @Override
@@ -61,7 +63,18 @@ public class BiomeFogRangeCalculator extends VanillaFogRangeCalculator {
 
     @Override
     public void tick() {
-        this.targetScale = this.sampleArea(GameUtils.getPlayer().map(Entity::getOnPos).orElseThrow(), 6);
+        // Only need to sample if the player moves position
+        var currentPosition = GameUtils.getPlayer().map(Entity::getOnPos).orElseThrow();
+        if (this.lastBlockPos.equals(currentPosition))
+            return;
+        this.lastBlockPos = currentPosition;
+        this.targetScale = this.sampleArea(currentPosition, 6);
+    }
+
+    @Override
+    public void disconnect() {
+        this.activeScale = this.targetScale = 0F;
+        this.lastBlockPos = BlockPos.ZERO;
     }
 
     private float sampleArea(BlockPos pos, int range) {

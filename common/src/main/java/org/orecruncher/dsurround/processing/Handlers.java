@@ -70,6 +70,7 @@ public class Handlers {
         this.register(BiomeSoundHandler.class);
         this.register(AreaBlockEffects.class);
         this.register(StepAccentGenerator.class);
+        this.register(FogHandler.class);
 
         ClientState.TICK_END.register(this::tick);
         ClientState.ON_CONNECT.register(this::onConnect);
@@ -177,6 +178,7 @@ public class Handlers {
             .registerSingleton(AreaBlockEffects.class)
             .registerSingleton(FootstepAccents.class)
             .registerSingleton(StepAccentGenerator.class)
+            .registerSingleton(FogHandler.class)
             .registerSingleton(Handlers.class);
     }
 }
