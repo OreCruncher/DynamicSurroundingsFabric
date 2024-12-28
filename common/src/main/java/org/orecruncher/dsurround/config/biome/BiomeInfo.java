@@ -24,6 +24,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
+import org.orecruncher.dsurround.processing.fog.FogDensity;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
@@ -55,6 +56,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private Collection<AcousticEntry> musicSounds = new ObjectArray<>();
     private Collection<String> comments = new ObjectArray<>();
     private TextColor fogColor;
+    private FogDensity fogDensity;
     private Script additionalSoundChance = DEFAULT_SOUND_CHANCE;
     private Script moodSoundChance = DEFAULT_SOUND_CHANCE;
 
@@ -73,6 +75,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         this.isOcean = this.traits.contains(BiomeTrait.OCEAN);
         this.isDeepOcean = this.isOcean && this.traits.contains(BiomeTrait.DEEP);
         this.isCave = this.traits.contains(BiomeTrait.CAVES);
+
+        this.fogDensity = FogDensity.NONE;
 
         // Check to see if the biome has a soundtrack. If so, add it to
         // the music list.
@@ -127,6 +131,14 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
     void setFogColor(final TextColor color) {
         this.fogColor = color;
+    }
+
+    public FogDensity getFogDensity() {
+        return this.fogDensity;
+    }
+
+    public void setFogDensity(final FogDensity density) {
+        this.fogDensity = density;
     }
 
     void setAdditionalSoundChance(final Script chance) {
@@ -205,6 +217,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
         entry.comment().ifPresent(this::addComment);
         entry.fogColor().ifPresent(this::setFogColor);
+        entry.fogDensity().ifPresent(this::setFogDensity);
         entry.additionalSoundChance().ifPresent(this::setAdditionalSoundChance);
         entry.moodSoundChance().ifPresent(this::setMoodSoundChance);
 

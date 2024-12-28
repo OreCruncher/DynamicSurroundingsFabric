@@ -7,6 +7,7 @@
   ],
   "client": [
     "audio.MixinChannelHandleAccessor",
+    "audio.MixinMusicManager",
     "audio.MixinSoundBuffer",
     "audio.MixinSoundEngine",
     "audio.MixinSoundEngineAccessor",
@@ -25,9 +26,9 @@
     "core.MixinClothAbstractConfigEntry",
     "core.MixinEntity",
     "core.MixinEntityArrow",
+    "core.MixinFogRenderer",
     "core.MixinIngameHud",
     "core.MixinLivingEntity",
-    "audio.MixinMusicManager",
     "core.MixinParticleManager",
     "core.MixinRainSplashParticle",
     "core.MixinRaycastContextAccessor",

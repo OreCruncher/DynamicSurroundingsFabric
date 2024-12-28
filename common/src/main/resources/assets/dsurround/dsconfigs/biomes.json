@@ -182,7 +182,8 @@
   {
     "biomeSelector": "lib.oneof(biome.id, 'minecraft:frozen_ocean', 'minecraft:deep_frozen_ocean')",
     "_comment": "Frozen Ocean/Deep Frozen Ocean explicit set",
-    "fogColor": "#DCDBDF"
+    "fogColor": "#DCDBDF",
+    "fogDensity": "normal"
   },
   {
     "biomeSelector": "RIVER && !(SNOWY || DRY || OCEAN)",
@@ -222,7 +223,8 @@
   {
     "biomeSelector": "SWAMP && !FOREST",
     "_comment": "Basic Swamp Fog",
-    "fogColor": "#406040"
+    "fogColor": "#406040",
+    "fogDensity": "medium"
   },
   {
     "biomeSelector": "SWAMP && !(FOREST || DEAD || COLD)",
@@ -246,7 +248,8 @@
         "conditions": "!weather.canWaterFreeze() && diurnal.isNight()"
       }
     ],
-    "fogColor": "#808080"
+    "fogColor": "#808080",
+    "fogDensity": "medium"
   },
   {
     "biomeSelector": "biome.getRainfall() < 0.1 && (DESERT || (WASTELAND && !(COLD || SNOWY || SWAMP)))",
@@ -340,6 +343,11 @@
     "_comment": "It's The End!",
     "priority": 100,
     "clearSounds": true
+  },
+  {
+    "biomeSelector": "SPOOKY",
+    "_comment": "Fog density for spooky biomes",
+    "fogDensity": "heavy"
   },
   {
     "biomeSelector": "UNDERGROUND",

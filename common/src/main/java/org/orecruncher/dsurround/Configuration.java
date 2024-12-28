@@ -46,6 +46,10 @@ public class Configuration extends ConfigurationData {
     public final CompassAndClockOptions compassAndClockOptions = new CompassAndClockOptions();
 
     @Property
+    @Comment("Configuration options for fog effects")
+    public final FogOptions fogOptions = new FogOptions();
+
+    @Property
     @Comment("Configuration options for other things")
     public final OtherOptions otherOptions = new OtherOptions();
 
@@ -285,6 +289,30 @@ public class Configuration extends ConfigurationData {
         @Comment("Scales the display by the specified amount")
         @DoubleRange(min = 0.5D, max = 4D)
         public double scale = 1D;
+    }
+
+    public static class FogOptions {
+        @Property
+        @Comment("Enable/disable fog effects")
+        public boolean enableFogEffects = true;
+
+        @Property
+        @Comment("Enable/disable morning fog effect")
+        public boolean enableMorningFog = true;
+
+        @Property
+        @IntegerRange(min = 1, max = 100)
+        @Slider
+        @Comment("Chance for morning fog percentage")
+        public int morningFogChance = 80;
+
+        @Property
+        @Comment("Enable/disable biome fog effect")
+        public boolean enableBiomeFog = true;
+
+        @Property
+        @Comment("Enable/disable weather fog effect")
+        public boolean enableWeatherFog = true;
     }
 
     public static class OtherOptions {
