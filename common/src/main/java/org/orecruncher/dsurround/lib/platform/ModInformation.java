@@ -118,10 +118,15 @@ public final class ModInformation implements IMinecraftDirectories {
     }
 
     public static Optional<String> getModDisplayName(String modId) {
-        var container = Platform.getMod(modId);
+        try {
+            // This will throw if it there isn't a mod with the ID loaded. This differs
+            // from Fabric behavior getting mod information.
+            var container = Platform.getMod(modId);
 
-        if (container != null) {
-            return Optional.of(container.getName());
+            if (container != null)
+                return Optional.of(container.getName());
+
+        } catch (Throwable ignore) {
         }
         return Optional.empty();
     }

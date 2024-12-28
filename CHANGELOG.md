@@ -1,3 +1,24 @@
+> ### DynamicSurroundings-1.21.1-0.4.1
+**All Loaders**
+* JAVA 21+
+* Architectury 13.0.8+
+
+**Fabric**
+* Fabric Loader >= 0.16.9
+* Fabric API >= 0.110.0+1.21.
+
+**NeoForge**
+* NeoForge 21.1.84+
+
+**What's New**
+* Fog effects - Several different types of fog
+  * Morning fog Occurs early in the AM and eventually burns off
+  * Weather fog when raining
+  * Biome fog rendered in the fog color of the biome
+
+**Fixes**
+* Individual Sound Configuration menu crash when rendering sounds from resource pack.
+
 > ### DynamicSurroundings-1.21.1-0.4.0
 **All Loaders**
 * JAVA 21+

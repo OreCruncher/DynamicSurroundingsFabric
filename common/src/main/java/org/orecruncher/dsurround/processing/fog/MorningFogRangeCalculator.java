@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.processing.fog;
 
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
@@ -8,14 +7,45 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
-import org.orecruncher.dsurround.mixinutils.IClientWorld;
+import org.orecruncher.dsurround.lib.WeightTable;
+
+import java.util.List;
 
 public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
 
-    private static final FogDensity[] SPRING_FOG = {FogDensity.MEDIUM, FogDensity.HEAVY, FogDensity.NORMAL, FogDensity.NORMAL};
-    private static final FogDensity[] SUMMER_FOG = {FogDensity.LIGHT, FogDensity.NONE, FogDensity.LIGHT, FogDensity.NONE};
-    private static final FogDensity[] AUTUMN_FOG = {FogDensity.NORMAL, FogDensity.MEDIUM, FogDensity.HEAVY, FogDensity.MEDIUM};
-    private static final FogDensity[] WINTER_FOG = {FogDensity.MEDIUM, FogDensity.LIGHT, FogDensity.NORMAL, FogDensity.NORMAL};
+    private record FogDensityEntry(int weight, FogDensity density) implements WeightTable.IItem<FogDensity> {
+        @Override
+        public int getWeight() {
+            return this.weight();
+        }
+        @Override
+        public FogDensity getItem() {
+            return this.density();
+        }
+    }
+
+    private static final FogDensityEntry[] SPRING_FOG = {
+            new FogDensityEntry(30, FogDensity.NORMAL),
+            new FogDensityEntry(20, FogDensity.MEDIUM),
+            new FogDensityEntry(10, FogDensity.HEAVY)
+    };
+
+    private static final FogDensityEntry[] SUMMER_FOG = {
+            new FogDensityEntry(20, FogDensity.LIGHT),
+            new FogDensityEntry(10, FogDensity.NONE)
+    };
+
+    private static final FogDensityEntry[] AUTUMN_FOG = {
+            new FogDensityEntry(10, FogDensity.NORMAL),
+            new FogDensityEntry(20, FogDensity.MEDIUM),
+            new FogDensityEntry(10, FogDensity.HEAVY)
+    };
+
+    private static final FogDensityEntry[] WINTER_FOG = {
+            new FogDensityEntry(20, FogDensity.LIGHT),
+            new FogDensityEntry(20, FogDensity.NORMAL),
+            new FogDensityEntry(10, FogDensity.MEDIUM)
+    };
 
     protected final ISeasonalInformation seasonInfo;
     protected final MinecraftClock clock;
@@ -62,7 +92,7 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
         final int day = this.clock.getDay();
         if (this.fogDay != day) {
             this.fogDay = day;
-            this.type = this.isFogAllowed() ? getFogType(this.fogDay) : FogDensity.NONE;
+            this.type = this.isFogAllowed() ? getFogType() : FogDensity.NONE;
         }
     }
 
@@ -81,25 +111,21 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
     }
 
     @NotNull
-    protected FogDensity getFogType(int day) {
+    protected FogDensity getFogType() {
+        FogDensityEntry[] selections;
         var clientLevel = GameUtils.getWorld().orElseThrow();
-        var idx = this.generateIndex(clientLevel, day);
         if (this.seasonInfo.isSpring(clientLevel))
-            return SPRING_FOG[idx];
-        if (this.seasonInfo.isSummer(clientLevel))
-            return SUMMER_FOG[idx];
-        if (this.seasonInfo.isAutumn(clientLevel))
-            return AUTUMN_FOG[idx];
-        if (this.seasonInfo.isWinter(clientLevel))
-            return WINTER_FOG[idx];
-        // Shouldn't get here, but...
-        return FogDensity.NORMAL;
-    }
+            selections = SPRING_FOG;
+        else if (this.seasonInfo.isSummer(clientLevel))
+            selections = SUMMER_FOG;
+        else if (this.seasonInfo.isAutumn(clientLevel))
+            selections = AUTUMN_FOG;
+        else if (this.seasonInfo.isWinter(clientLevel))
+            selections = WINTER_FOG;
+        else
+            // Shouldn't get here, but...
+            return FogDensity.NONE;
 
-    private int generateIndex(ClientLevel clientLevel, int day) {
-        // Generate an index using the world seed and day rather than
-        // a random.
-        var worldSeed = ((IClientWorld) clientLevel).dsurround_getWorldSeed();
-        return (int) ((worldSeed + day * 134775813) & 3);
+        return WeightTable.makeSelection(List.of(selections)).orElseThrow();
     }
 }

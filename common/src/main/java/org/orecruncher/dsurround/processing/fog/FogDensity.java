@@ -58,7 +58,7 @@ public enum FogDensity {
     }
 
     private static class Constants {
-        public static final float START = 277F;
+        public static final float START = 270F;
         public static final float END = 317F;
         public static final float RESERVE = 10F;
     }
