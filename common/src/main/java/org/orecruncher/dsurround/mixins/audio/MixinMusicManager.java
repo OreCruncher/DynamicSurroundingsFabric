@@ -37,11 +37,17 @@ public class MixinMusicManager implements IMusicManager {
     }
 
     @Override
-    public void dsurround_reset() {
-        MusicManager self = (MusicManager) (Object) this;
-        self.stopPlaying();
-        this.nextSongDelay = 100;
-        this.dsurround_pauseTicking = false;
+    public void dsurround_doCommand(String command) {
+        if ("reset".equals(command)) {
+            MusicManager self = (MusicManager) (Object) this;
+            self.stopPlaying();
+            this.nextSongDelay = 100;
+            this.dsurround_pauseTicking = false;
+        } else if ("pause".equals(command)) {
+            this.dsurround_setPaused(true);
+        } else if ("unpause".equals(command)) {
+            this.dsurround_setPaused(false);
+        }
     }
 
     @Override

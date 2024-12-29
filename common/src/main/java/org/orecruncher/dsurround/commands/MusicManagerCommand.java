@@ -8,10 +8,14 @@ import org.orecruncher.dsurround.commands.handlers.MusicManagerCommandHandler;
 public class MusicManagerCommand extends AbstractClientCommand {
     private static final String COMMAND = "dsmm";
     private static final String RESET = "reset";
+    private static final String PAUSE = "pause";
+    private static final String UNPAUSE = "unpause";
 
     @Override
     public void register(CommandDispatcher<ClientCommandRegistrationEvent.ClientCommandSourceStack> dispatcher, CommandBuildContext registryAccess) {
         dispatcher.register(ClientCommandRegistrationEvent.literal(COMMAND)
-                .then(subCommand(RESET, MusicManagerCommandHandler::reset)));
+                .then(subCommand(RESET, MusicManagerCommandHandler::reset))
+                .then(subCommand(PAUSE, MusicManagerCommandHandler::pause))
+                .then(subCommand(UNPAUSE, MusicManagerCommandHandler::unpause)));
     }
 }
