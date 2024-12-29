@@ -507,6 +507,22 @@
 			}
 		]
 	},
+	"turtledove": {
+		"subtitle": "dsurround.sound.caption.turtledove",
+		"ds_credits": [
+			{
+				"name": "turtledove sounds",
+				"author": "csengeri",
+				"website": "https://www.freesound.org/people/csengeri",
+				"license": "Creative Commons 0"
+			}
+		],
+		"sounds": [
+			"dsurround:ambient/birds/turtledove1",
+			"dsurround:ambient/birds/turtledove2",
+			"dsurround:ambient/birds/turtledove3"
+		]
+	},
 	"biome.underground": {
 		"sounds": [
 			{

@@ -339,6 +339,17 @@
     ]
   },
   {
+    "biomeSelector" : "(FOREST || CONIFEROUS || DECIDUOUS) && !(SWAMP || WASTELAND || JUNGLE || DEAD || NETHER || THE_END)",
+    "_comment": "Turtledove",
+    "acoustics": [
+      {
+        "factory": "turtledove",
+        "conditions": "weather.isNotRaining() && !diurnal.isNight()",
+        "type": "mood"
+      }
+    ]
+  },
+  {
     "biomeSelector": "THE_END || biome.name == 'The Void'",
     "_comment": "It's The End!",
     "priority": 100,

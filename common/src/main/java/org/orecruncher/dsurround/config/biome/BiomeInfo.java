@@ -34,8 +34,7 @@ import java.util.stream.Collectors;
 
 public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvider {
 
-    public static final int DEFAULT_ADDITIONAL_SOUND_CHANCE = 1000 / 4;
-    public static final Script DEFAULT_SOUND_CHANCE = new Script(String.valueOf(1D / DEFAULT_ADDITIONAL_SOUND_CHANCE));
+    public static final Script DEFAULT_SOUND_CHANCE = new Script("0.008");
     private static final IModLog LOGGER = ModLog.createChild(ContainerManager.resolve(IModLog.class), "BiomeInfo");
     private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
     private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
