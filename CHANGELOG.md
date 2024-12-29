@@ -15,6 +15,8 @@
   * Morning fog Occurs early in the AM and eventually burns off
   * Weather fog when raining
   * Biome fog rendered in the fog color of the biome
+* Turtledove sound effect for most forests
+* Silent forest biome sound for forests that are snowy/cold (like snowy taiga). It's fairly quite - light wind blowing through.
 
 **Fixes**
 * Individual Sound Configuration menu crash when rendering sounds from resource pack.

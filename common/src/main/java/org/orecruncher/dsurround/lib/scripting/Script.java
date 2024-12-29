@@ -50,4 +50,17 @@ public class Script {
     public String toString() {
         return this.script;
     }
+
+    @Override
+    public int hashCode() {
+        return this.script.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Script s) {
+            return s.script.equals(this.script);
+        }
+        return false;
+    }
 }

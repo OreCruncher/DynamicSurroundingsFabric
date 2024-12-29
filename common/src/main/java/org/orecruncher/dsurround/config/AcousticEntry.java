@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.config.biome;
+package org.orecruncher.dsurround.config;
 
 import com.google.common.base.MoreObjects;
 import org.jetbrains.annotations.Nullable;
@@ -51,6 +51,19 @@ public class AcousticEntry implements WeightTable.IItem<ISoundFactory> {
 
     protected Script getConditionsForLogging() {
         return getConditions();
+    }
+
+    @Override
+    public int hashCode() {
+        return this.conditions.hashCode() * 31 + this.acoustic.getLocation().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof AcousticEntry ae) {
+            return ae.conditions.equals(this.conditions) && ae.acoustic.getLocation().equals(this.acoustic.getLocation());
+        }
+        return false;
     }
 
     public String toString() {

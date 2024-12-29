@@ -278,6 +278,22 @@
 			}
 		]
 	},
+	"biome.forest.silent": {
+		"ds_credits": [
+			{
+				"name": "Silent forest",
+				"author": "ZHRØ",
+				"website": "https://freesound.org/people/ZHR%C3%98",
+				"license": "Creative Commons 0"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround:ambient/outside/silent_forest",
+				"stream": true
+			}
+		]
+	},
 	"biome.beach": {
 		"ds_credits": [
 			{

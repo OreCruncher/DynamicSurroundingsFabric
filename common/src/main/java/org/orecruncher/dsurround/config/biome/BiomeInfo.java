@@ -8,6 +8,8 @@ import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.config.AcousticEntry;
+import org.orecruncher.dsurround.config.AcousticEntryCollection;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
@@ -49,10 +51,10 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private final boolean isOcean;
     private final boolean isDeepOcean;
     private final boolean isCave;
-    private Collection<AcousticEntry> loopSounds = new ObjectArray<>();
-    private Collection<AcousticEntry> moodSounds = new ObjectArray<>();
-    private Collection<AcousticEntry> additionalSounds = new ObjectArray<>();
-    private Collection<AcousticEntry> musicSounds = new ObjectArray<>();
+    private Collection<AcousticEntry> loopSounds = new AcousticEntryCollection();
+    private Collection<AcousticEntry> moodSounds = new AcousticEntryCollection();
+    private Collection<AcousticEntry> additionalSounds = new AcousticEntryCollection();
+    private Collection<AcousticEntry> musicSounds = new AcousticEntryCollection();
     private Collection<String> comments = new ObjectArray<>();
     private TextColor fogColor;
     private FogDensity fogDensity;
@@ -231,23 +233,32 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         for (final AcousticConfig sr : entry.acoustics()) {
             var factory = SOUND_LIBRARY.getSoundFactoryOrDefault(sr.factory());
 
+            Collection<AcousticEntry> targetCollection = null;
+            AcousticEntry acousticEntry = null;
+
             switch (sr.type()) {
                 case LOOP -> {
-                    final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions());
-                    this.loopSounds.add(acousticEntry);
+                    acousticEntry = new AcousticEntry(factory, sr.conditions());
+                    targetCollection = this.loopSounds;
                 }
                 case MUSIC, MOOD, ADDITION -> {
                     final int weight = sr.weight();
-                    final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions(), weight);
+                    acousticEntry = new AcousticEntry(factory, sr.conditions(), weight);
 
                     if (sr.type() == SoundEventType.ADDITION)
-                        this.additionalSounds.add(acousticEntry);
+                        targetCollection = this.additionalSounds;
                     else if (sr.type() == SoundEventType.MOOD)
-                        this.moodSounds.add(acousticEntry);
+                        targetCollection = this.moodSounds;
                     else
-                        this.musicSounds.add(acousticEntry);
+                        targetCollection = this.musicSounds;
                 }
-                default -> LOGGER.warn("Unknown SoundEventType %s", sr.type());
+                default -> LOGGER.warn("[%s] Unknown SoundEventType %s", this.getBiomeName(), sr.type());
+            }
+
+            // Add if we have a target collection and it is not present
+            if (targetCollection != null) {
+                if (!targetCollection.add(acousticEntry))
+                    LOGGER.warn("[%s] Duplicate acoustic entry: %s", this.getBiomeName(), sr.toString());
             }
         }
     }
@@ -281,8 +292,10 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         builder.append("\nTags: ").append(tags);
         builder.append("\n").append(getTraits().toString());
 
+        builder.append("\nfogDensity: ").append(this.fogDensity.getName());
+
         if (this.fogColor != null) {
-            builder.append("\nfogColor: ").append(this.fogColor.formatValue());
+            builder.append(", fogColor: ").append(this.fogColor.formatValue());
         }
 
         if (!this.loopSounds.isEmpty()) {

@@ -3,15 +3,18 @@ package org.orecruncher.dsurround.config.block;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
+import org.orecruncher.dsurround.config.AcousticEntryCollection;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
-import org.orecruncher.dsurround.config.biome.AcousticEntry;
+import org.orecruncher.dsurround.config.AcousticEntry;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
@@ -25,6 +28,7 @@ import java.util.stream.Collectors;
 
 public class BlockInfo {
 
+    private static final IModLog LOGGER = ModLog.createChild(ContainerManager.resolve(IModLog.class), "BlockInfo");
     private static final IConditionEvaluator CONDITION_EVALUATOR = ContainerManager.resolve(IConditionEvaluator.class);
 
     private static class Occlusion {
@@ -56,7 +60,7 @@ public class BlockInfo {
     private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
     protected final int version;
-    protected Collection<AcousticEntry> sounds = new ObjectArray<>();
+    protected Collection<AcousticEntry> sounds = new AcousticEntryCollection();
     protected Collection<IBlockEffectProducer> blockEffects = new ObjectArray<>();
 
     protected Script soundChance = new Script("0.01");
@@ -92,10 +96,6 @@ public class BlockInfo {
         return this.soundOcclusion;
     }
 
-    private void addToSounds(AcousticEntry entry) {
-        this.sounds.add(entry);
-    }
-
     private void addToBlockEffects(IBlockEffectProducer effect) {
         this.blockEffects.add(effect);
     }
@@ -111,7 +111,8 @@ public class BlockInfo {
         for (final AcousticConfig sr : config.acoustics()) {
             var factory = SOUND_LIBRARY.getSoundFactoryOrDefault(sr.factory());
             final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions(), sr.weight());
-            this.addToSounds(acousticEntry);
+            if (!this.sounds.add(acousticEntry))
+                LOGGER.warn("[BlockInfo] Duplicate acoustic entry: %s", sr.toString());
         }
 
         for (var e : config.effects()) {

@@ -350,6 +350,16 @@
     ]
   },
   {
+    "biomeSelector" : "(FOREST || CONIFEROUS || DECIDUOUS) && (SNOWY || COLD)",
+    "_comment": "Silent forest",
+    "acoustics": [
+      {
+        "factory": "biome.forest.silent",
+        "conditions": "weather.isNotRaining() && !diurnal.isNight()"
+      }
+    ]
+  },
+  {
     "biomeSelector": "THE_END || biome.name == 'The Void'",
     "_comment": "It's The End!",
     "priority": 100,
