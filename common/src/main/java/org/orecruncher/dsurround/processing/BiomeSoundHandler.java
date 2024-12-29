@@ -148,7 +148,7 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
 
         // Any sounds left in the list are new and need an emitter created.
         this.workMap.forEach((fx, volume) -> {
-            final BiomeSoundEmitter e = new BiomeSoundEmitter(fx);
+            final BiomeSoundEmitter e = new BiomeSoundEmitter(this.logger, this.audioPlayer, fx);
             e.setVolumeScale(volume);
             this.emitters.add(e);
         });
