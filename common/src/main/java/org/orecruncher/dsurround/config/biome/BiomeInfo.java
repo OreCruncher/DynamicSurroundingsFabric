@@ -8,6 +8,8 @@ import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.config.AcousticEntry;
+import org.orecruncher.dsurround.config.AcousticEntryCollection;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
@@ -24,6 +26,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
+import org.orecruncher.dsurround.processing.fog.FogDensity;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
@@ -33,8 +36,7 @@ import java.util.stream.Collectors;
 
 public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvider {
 
-    public static final int DEFAULT_ADDITIONAL_SOUND_CHANCE = 1000 / 4;
-    public static final Script DEFAULT_SOUND_CHANCE = new Script(String.valueOf(1D / DEFAULT_ADDITIONAL_SOUND_CHANCE));
+    public static final Script DEFAULT_SOUND_CHANCE = new Script("0.008");
     private static final IModLog LOGGER = ModLog.createChild(ContainerManager.resolve(IModLog.class), "BiomeInfo");
     private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
     private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
@@ -49,12 +51,13 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private final boolean isOcean;
     private final boolean isDeepOcean;
     private final boolean isCave;
-    private Collection<AcousticEntry> loopSounds = new ObjectArray<>();
-    private Collection<AcousticEntry> moodSounds = new ObjectArray<>();
-    private Collection<AcousticEntry> additionalSounds = new ObjectArray<>();
-    private Collection<AcousticEntry> musicSounds = new ObjectArray<>();
+    private Collection<AcousticEntry> loopSounds = new AcousticEntryCollection();
+    private Collection<AcousticEntry> moodSounds = new AcousticEntryCollection();
+    private Collection<AcousticEntry> additionalSounds = new AcousticEntryCollection();
+    private Collection<AcousticEntry> musicSounds = new AcousticEntryCollection();
     private Collection<String> comments = new ObjectArray<>();
     private TextColor fogColor;
+    private FogDensity fogDensity;
     private Script additionalSoundChance = DEFAULT_SOUND_CHANCE;
     private Script moodSoundChance = DEFAULT_SOUND_CHANCE;
 
@@ -73,6 +76,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         this.isOcean = this.traits.contains(BiomeTrait.OCEAN);
         this.isDeepOcean = this.isOcean && this.traits.contains(BiomeTrait.DEEP);
         this.isCave = this.traits.contains(BiomeTrait.CAVES);
+
+        this.fogDensity = FogDensity.NONE;
 
         // Check to see if the biome has a soundtrack. If so, add it to
         // the music list.
@@ -127,6 +132,14 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
     void setFogColor(final TextColor color) {
         this.fogColor = color;
+    }
+
+    public FogDensity getFogDensity() {
+        return this.fogDensity;
+    }
+
+    public void setFogDensity(final FogDensity density) {
+        this.fogDensity = density;
     }
 
     void setAdditionalSoundChance(final Script chance) {
@@ -205,6 +218,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
         entry.comment().ifPresent(this::addComment);
         entry.fogColor().ifPresent(this::setFogColor);
+        entry.fogDensity().ifPresent(this::setFogDensity);
         entry.additionalSoundChance().ifPresent(this::setAdditionalSoundChance);
         entry.moodSoundChance().ifPresent(this::setMoodSoundChance);
 
@@ -219,23 +233,32 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         for (final AcousticConfig sr : entry.acoustics()) {
             var factory = SOUND_LIBRARY.getSoundFactoryOrDefault(sr.factory());
 
+            Collection<AcousticEntry> targetCollection = null;
+            AcousticEntry acousticEntry = null;
+
             switch (sr.type()) {
                 case LOOP -> {
-                    final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions());
-                    this.loopSounds.add(acousticEntry);
+                    acousticEntry = new AcousticEntry(factory, sr.conditions());
+                    targetCollection = this.loopSounds;
                 }
                 case MUSIC, MOOD, ADDITION -> {
                     final int weight = sr.weight();
-                    final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions(), weight);
+                    acousticEntry = new AcousticEntry(factory, sr.conditions(), weight);
 
                     if (sr.type() == SoundEventType.ADDITION)
-                        this.additionalSounds.add(acousticEntry);
+                        targetCollection = this.additionalSounds;
                     else if (sr.type() == SoundEventType.MOOD)
-                        this.moodSounds.add(acousticEntry);
+                        targetCollection = this.moodSounds;
                     else
-                        this.musicSounds.add(acousticEntry);
+                        targetCollection = this.musicSounds;
                 }
-                default -> LOGGER.warn("Unknown SoundEventType %s", sr.type());
+                default -> LOGGER.warn("[%s] Unknown SoundEventType %s", this.getBiomeName(), sr.type());
+            }
+
+            // Add if we have a target collection and it is not present
+            if (targetCollection != null) {
+                if (!targetCollection.add(acousticEntry))
+                    LOGGER.warn("[%s] Duplicate acoustic entry: %s", this.getBiomeName(), sr.toString());
             }
         }
     }
@@ -269,14 +292,18 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         builder.append("\nTags: ").append(tags);
         builder.append("\n").append(getTraits().toString());
 
+        builder.append("\nfogDensity: ").append(this.fogDensity.getName());
+
         if (this.fogColor != null) {
-            builder.append("\nfogColor: ").append(this.fogColor.formatValue());
+            builder.append(", fogColor: ").append(this.fogColor.formatValue());
         }
 
         if (!this.loopSounds.isEmpty()) {
             builder.append("\nLOOP sounds [\n");
             builder.append(this.loopSounds.stream().map(c -> indent + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n]");
+        } else {
+            builder.append("\nLOOP sounds [NONE]");
         }
 
         if (!this.musicSounds.isEmpty()) {

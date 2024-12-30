@@ -9,5 +9,8 @@ accessible class net/minecraft/world/level/biome/Biome$ClimateSettings
 # Get at client side loaded chunks
 accessible class net/minecraft/client/multiplayer/ClientChunkCache$Storage
 
+# Get at fog data
+accessible class net/minecraft/client/renderer/FogRenderer$FogData
+
 # Access formatter when dumping biome information
 accessible method net/minecraft/network/chat/TextColor formatValue ()Ljava/lang/String;

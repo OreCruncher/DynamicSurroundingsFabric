@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.processing;
 
-import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.sound.BackgroundSoundLoop;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
@@ -8,22 +7,23 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 
 public final class BiomeSoundEmitter {
 
-    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
-    private static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
-
+    private final IModLog logger;
+    private final IAudioPlayer audioPlayer;
     private final ISoundFactory soundEvent;
     private final BackgroundSoundLoop acousticSource;
 
     private boolean done = false;
 
-    public BiomeSoundEmitter(final ISoundFactory event) {
+    public BiomeSoundEmitter(final IModLog logger, final IAudioPlayer audioPlayer, final ISoundFactory event) {
+        this.logger = logger;
+        this.audioPlayer = audioPlayer;
         this.soundEvent = event;
         this.acousticSource = event.createBackgroundSoundLoop();
     }
 
     public void tick() {
 
-        boolean isPlaying = AUDIO_PLAYER.isPlaying(this.acousticSource);
+        boolean isPlaying = this.audioPlayer.isPlaying(this.acousticSource);
 
         // If the current sound is playing and the sound is fading, terminate the sound.
         if (isPlaying) {
@@ -39,7 +39,7 @@ public final class BiomeSoundEmitter {
         }
 
         // Play the sound if needed
-        AUDIO_PLAYER.play(this.acousticSource);
+        this.audioPlayer.play(this.acousticSource);
     }
 
     public void setVolumeScale(final float scale) {
@@ -47,7 +47,7 @@ public final class BiomeSoundEmitter {
     }
 
     public void fadeOut() {
-        LOGGER.debug("FADE OUT: %s", this.acousticSource.toString());
+        this.logger.debug("FADE OUT: %s", this.acousticSource.toString());
         this.acousticSource.fadeOut();
     }
 
@@ -56,7 +56,7 @@ public final class BiomeSoundEmitter {
     }
 
     public void fadeIn() {
-        LOGGER.debug("FADE IN: %s", this.acousticSource.toString());
+        this.logger.debug("FADE IN: %s", this.acousticSource.toString());
         this.acousticSource.fadeIn();
     }
 
@@ -65,7 +65,7 @@ public final class BiomeSoundEmitter {
     }
 
     public void stop() {
-        AUDIO_PLAYER.stop(this.acousticSource);
+        this.audioPlayer.stop(this.acousticSource);
         this.done = true;
     }
 

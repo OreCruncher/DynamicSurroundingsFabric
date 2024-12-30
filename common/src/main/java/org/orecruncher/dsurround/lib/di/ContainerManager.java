@@ -28,7 +28,7 @@ public final class ContainerManager {
     }
 
     /**
-     * Obtains the root container.
+     * Gets the root container.
      */
     @NotNull
     public static IServiceContainer getRootContainer() {

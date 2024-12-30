@@ -171,7 +171,7 @@ public class DependencyContainer implements IServiceContainer {
             // Get the factory result
             var result = factory.get();
 
-            // If the class is not annotated with cacheable, register the factory so subsequent
+            // If the class is not annotated with cacheable, register the factory so later
             // resolves will be pre-staged.  Otherwise, register the new class instance
             // as it will be a singleton.
             if (!clazz.isAnnotationPresent(Cacheable.class)) {

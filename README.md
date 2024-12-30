@@ -1,9 +1,15 @@
 > # Dynamic Surroundings for Fabric and NeoForge
 A Minecraft Mod that alters the fabric of Minecraft experience by weaving a tapestry of sound and visual effects.
 
-<a href="https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings"><img src="http://cf.way2muchnoise.eu/versions/238891.svg" alt="CurseForge Project"/></a>
-<a href="https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings"><img src="http://cf.way2muchnoise.eu/full_238891_downloads.svg" alt="CurseForge Project"/></a>
-<a href="https://modrinth.com/mod/dynamicsurroundingsfabric"><img src="https://img.shields.io/badge/Mod-rinth-brightgreen" alt="Modrinth"></a>
+ <div style="text-align: center;">
+    <a href="https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings"><img src="http://cf.way2muchnoise.eu/versions/238891.svg" alt="CurseForge Project"/></a>
+    <a href="https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings"><img src="http://cf.way2muchnoise.eu/full_238891_downloads.svg" alt="CurseForge Project"/></a>
+ </div>
+
+ <div style="text-align: center;">
+    <a href="https://modrinth.com/mod/dynamicsurroundingsfabric"><img src="https://img.shields.io/modrinth/game-versions/H7fshfpD?style=flat&label=Available%20for&color=%2300AF5C" alt="Modrinth"></a>
+    <a href="https://modrinth.com/mod/dynamicsurroundingsfabric"><img src="https://img.shields.io/modrinth/dt/H7fshfpD?style=flat&logo=modrinth&label=downloads" alt="Modrinth"></a>
+ </div>
 
 This mod is a successor to the Forge-based Dynamic Surroundings series.
 Though a lot of the functionality is similar, the ultimate feature set will be different.
@@ -14,6 +20,10 @@ I expect this trend to continue.
 The mod is 100% client side. You can add to any mod pack, whether you play standalone or multiplayer.
 
 Starting with Minecraft 1.21.1, Dynamic Surroundings is supported on Fabric and NeoForge.
+
+Online documentation: https://dynamic-surroundings.readthedocs.io/en/latest/index.html
+
+Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
 
 ### Minecraft 1.21.1 Requirements
 * JAVA 21+

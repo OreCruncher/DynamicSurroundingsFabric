@@ -27,8 +27,8 @@
     ]
   },
   {
-    "biomeSelector": "DESERT && !(WINDSWEPT || MOUNTAIN || LUSH)",
-    "_comment": "Desert Wind",
+    "biomeSelector": "(DESERT || BADLANDS) && !(WINDSWEPT || MOUNTAIN || LUSH)",
+    "_comment": "Desert/Badlands Wind",
     "acoustics": [
       {
         "factory": "biome.wind.desert"
@@ -182,7 +182,8 @@
   {
     "biomeSelector": "lib.oneof(biome.id, 'minecraft:frozen_ocean', 'minecraft:deep_frozen_ocean')",
     "_comment": "Frozen Ocean/Deep Frozen Ocean explicit set",
-    "fogColor": "#DCDBDF"
+    "fogColor": "#DCDBDF",
+    "fogDensity": "normal"
   },
   {
     "biomeSelector": "RIVER && !(SNOWY || DRY || OCEAN)",
@@ -222,7 +223,8 @@
   {
     "biomeSelector": "SWAMP && !FOREST",
     "_comment": "Basic Swamp Fog",
-    "fogColor": "#406040"
+    "fogColor": "#406040",
+    "fogDensity": "medium"
   },
   {
     "biomeSelector": "SWAMP && !(FOREST || DEAD || COLD)",
@@ -246,7 +248,8 @@
         "conditions": "!weather.canWaterFreeze() && diurnal.isNight()"
       }
     ],
-    "fogColor": "#808080"
+    "fogColor": "#808080",
+    "fogDensity": "medium"
   },
   {
     "biomeSelector": "biome.getRainfall() < 0.1 && (DESERT || (WASTELAND && !(COLD || SNOWY || SWAMP)))",
@@ -336,10 +339,36 @@
     ]
   },
   {
+    "biomeSelector" : "(FOREST || CONIFEROUS || DECIDUOUS) && !(SWAMP || WASTELAND || JUNGLE || DEAD || NETHER || THE_END)",
+    "_comment": "Turtledove",
+    "acoustics": [
+      {
+        "factory": "turtledove",
+        "conditions": "weather.isNotRaining() && !diurnal.isNight()",
+        "type": "mood"
+      }
+    ]
+  },
+  {
+    "biomeSelector" : "(FOREST || CONIFEROUS || DECIDUOUS) && (SNOWY || COLD)",
+    "_comment": "Silent forest",
+    "acoustics": [
+      {
+        "factory": "biome.forest.silent",
+        "conditions": "weather.isNotRaining() && !diurnal.isNight()"
+      }
+    ]
+  },
+  {
     "biomeSelector": "THE_END || biome.name == 'The Void'",
     "_comment": "It's The End!",
     "priority": 100,
     "clearSounds": true
+  },
+  {
+    "biomeSelector": "SPOOKY",
+    "_comment": "Fog density for spooky biomes",
+    "fogDensity": "heavy"
   },
   {
     "biomeSelector": "UNDERGROUND",
@@ -372,6 +401,11 @@
         "weight": 10
       }
     ]
+  },
+  {
+    "biomeSelector": "BADLANDS",
+    "_comment": "Badlands dust color specific override",
+    "fogColor": "#D77D2F"
   },
   {
     "biomeSelector": "@underground",

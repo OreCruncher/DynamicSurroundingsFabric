@@ -203,3 +203,15 @@ whether LPs can be monetized on the various streaming services.
 <ul> 
      <li>S: <a href="https://www.freesound.org/people/reinsamba/sounds/58237/">MerlothPark_morning_ambiance.wav</a> by <a href="https://www.freesound.org/people/reinsamba/">reinsamba</a> | License: Attribution</li> 
 </ul>
+
+*dsurround:turtledove*
+
+<ul>
+     <li>S: <a href="https://freesound.org/people/csengeri/sounds/351726/">turtledove sounds</a> by <a href="https://freesound.org/people/csengeri/">csengeri</a> | License: Creative Commons 0</li>
+</ul>
+
+*dsurround:biome.forest.silent*
+
+<ul>
+    <li>S: <a href="https://freesound.org/people/ZHR%C3%98/sounds/753418/">Silent forest</a> by <a href="https://freesound.org/people/ZHR%C3%98/">ZHRØ</a> | License: Creative Commons 0</li>
+</ul>

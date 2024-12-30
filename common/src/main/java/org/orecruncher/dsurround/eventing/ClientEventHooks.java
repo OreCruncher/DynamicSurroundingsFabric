@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.eventing;
 
+import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -36,6 +37,14 @@ public final class ClientEventHooks {
         }
     });
 
+    /** Fired when fog is about to be rendered.
+     */
+    public static final IPhasedEvent<IFogRender> FOG_RENDER_EVENT = EventingFactory.createPrioritizedEvent(callbacks -> (data, renderDistance, partialTick) -> {
+        for (var callback : callbacks) {
+            callback.onRenderFog(data, renderDistance, partialTick);
+        }
+    });
+
     @FunctionalInterface
     public interface IBlockUpdates {
         void onBlockUpdates(Collection<BlockPos> blockPositions);
@@ -49,6 +58,11 @@ public final class ClientEventHooks {
     @FunctionalInterface
     public interface IEntityStep {
         void onStep(Entity entity, BlockPos stepPosition, BlockState blockState);
+    }
+
+    @FunctionalInterface
+    public interface IFogRender {
+        void onRenderFog(FogRenderer.FogData data, float renderDistance, float partialTick);
     }
 
 }

@@ -278,6 +278,22 @@
 			}
 		]
 	},
+	"biome.forest.silent": {
+		"ds_credits": [
+			{
+				"name": "Silent forest",
+				"author": "ZHRØ",
+				"website": "https://freesound.org/people/ZHR%C3%98",
+				"license": "Creative Commons 0"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround:ambient/outside/silent_forest",
+				"stream": true
+			}
+		]
+	},
 	"biome.beach": {
 		"ds_credits": [
 			{
@@ -505,6 +521,22 @@
 			{
 				"name": "dsurround:ambient/birds/nightingale4"
 			}
+		]
+	},
+	"turtledove": {
+		"subtitle": "dsurround.sound.caption.turtledove",
+		"ds_credits": [
+			{
+				"name": "turtledove sounds",
+				"author": "csengeri",
+				"website": "https://www.freesound.org/people/csengeri",
+				"license": "Creative Commons 0"
+			}
+		],
+		"sounds": [
+			"dsurround:ambient/birds/turtledove1",
+			"dsurround:ambient/birds/turtledove2",
+			"dsurround:ambient/birds/turtledove3"
 		]
 	},
 	"biome.underground": {
@@ -804,6 +836,16 @@
 			"dsurround:ambient/book/pageflipheavy1",
 			"dsurround:ambient/book/pageflipheavy2",
 			"dsurround:ambient/book/pageflipheavy3"
+		]
+	},
+	"electricarc": {
+		"subtitle": "dsurround.sound.caption.electricarc",
+		"sounds": [
+			"dsurround:ambient/electricity/electricarc1",
+			"dsurround:ambient/electricity/electricarc2",
+			"dsurround:ambient/electricity/electricarc3",
+			"dsurround:ambient/electricity/electricarc4",
+			"dsurround:ambient/electricity/electricarc5"
 		]
 	},
 	"bookshelf": {

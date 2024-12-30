@@ -12,7 +12,6 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
-import org.orecruncher.dsurround.lib.platform.IMinecraftDirectories;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -23,14 +22,12 @@ public final class DimensionLibrary implements IDimensionLibrary {
     private static final Codec<List<DimensionConfigRule>> CODEC = Codec.list(DimensionConfigRule.CODEC);
 
     private final IModLog logger;
-    private final IMinecraftDirectories directories;
     private final ObjectArray<DimensionConfigRule> dimensionRules = new ObjectArray<>();
     private final Map<ResourceKey<Level>, DimensionInfo> configs = new Object2ObjectOpenHashMap<>();
     private int version = 0;
 
-    public DimensionLibrary(IModLog logger, IMinecraftDirectories directories) {
+    public DimensionLibrary(IModLog logger) {
         this.logger = ModLog.createChild(logger, "DimensionLibrary");
-        this.directories = directories;
     }
 
     @Override

@@ -4,7 +4,7 @@ public interface IMusicManager {
 
     String dsurround_getDiagnosticText();
 
-    void dsurround_reset();
+    void dsurround_doCommand(String command);
 
     void dsurround_setPaused(boolean flag);
 }
