@@ -11,13 +11,13 @@
 * NeoForge 21.1.84+
 
 **What's New**
+* Added capability to pause/unpause music manager using the /dsmm command.
 * Fog effects - Several different types of fog
   * Morning fog Occurs early in the AM and eventually burns off
   * Weather fog when raining
   * Biome fog rendered in the fog color of the biome
 * Turtledove sound effect for most forests
 * Silent forest biome sound for forests that are snowy/cold (like snowy taiga). It's fairly quiet - light wind blowing through.
-* Added capability to pause/unpause music manager using the /dsmm command.
 * Powered redstone has a chance of emitting an electric arc sound effect.
 
 **Fixes**

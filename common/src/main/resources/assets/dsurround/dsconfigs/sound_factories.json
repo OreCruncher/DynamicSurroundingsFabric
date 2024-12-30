@@ -299,7 +299,7 @@
   {
     "location": "dsurround:redstone/electricarc/high",
     "soundEvent": "dsurround:electricarc",
-    "volume": 0.3,
+    "volume": 0.15,
     "pitch": {
       "min": 1.0,
       "max": 1.2
@@ -308,7 +308,7 @@
   {
     "location": "dsurround:redstone/electricarc/medium",
     "soundEvent": "dsurround:electricarc",
-    "volume": 0.2,
+    "volume": 0.1,
     "pitch": {
       "min": 1.0,
       "max": 1.2
@@ -317,7 +317,7 @@
   {
     "location": "dsurround:redstone/electricarc/low",
     "soundEvent": "dsurround:electricarc",
-    "volume": 0.10,
+    "volume": 0.05,
     "pitch": {
       "min": 1.0,
       "max": 1.2
