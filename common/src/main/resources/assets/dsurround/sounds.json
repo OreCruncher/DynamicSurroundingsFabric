@@ -838,6 +838,16 @@
 			"dsurround:ambient/book/pageflipheavy3"
 		]
 	},
+	"electricarc": {
+		"subtitle": "dsurround.sound.caption.electricarc",
+		"sounds": [
+			"dsurround:ambient/electricity/electricarc1",
+			"dsurround:ambient/electricity/electricarc2",
+			"dsurround:ambient/electricity/electricarc3",
+			"dsurround:ambient/electricity/electricarc4",
+			"dsurround:ambient/electricity/electricarc5"
+		]
+	},
 	"bookshelf": {
 		"subtitle": "dsurround.sound.caption.pageflip",
 		"sounds": [

@@ -82,6 +82,48 @@
   },
   {
     "blocks": [
+      "minecraft:redstone_torch[lit=true]",
+      "minecraft:repeater[powered=true]",
+      "minecraft:comparator[powered=true]",
+      "minecraft:redstone_wire[power=15]",
+      "minecraft:redstone_wire[power=14]",
+      "minecraft:redstone_wire[power=13]"
+    ],
+    "soundChance": "0.015",
+    "acoustics": [
+      {
+        "factory": "dsurround:redstone/electricarc/high"
+      }
+    ]
+  },
+  {
+    "blocks": [
+      "minecraft:redstone_wire[power=12]",
+      "minecraft:redstone_wire[power=11]",
+      "minecraft:redstone_wire[power=10]"
+    ],
+    "soundChance": "0.015",
+    "acoustics": [
+      {
+        "factory": "dsurround:redstone/electricarc/medium"
+      }
+    ]
+  },
+  {
+    "blocks": [
+      "minecraft:redstone_wire[power=9]",
+      "minecraft:redstone_wire[power=8]",
+      "minecraft:redstone_wire[power=7]"
+    ],
+    "soundChance": "0.015",
+    "acoustics": [
+      {
+        "factory": "dsurround:redstone/electricarc/low"
+      }
+    ]
+  },
+  {
+    "blocks": [
       "#dsurround:effects/fireflies"
     ],
     "effects": [

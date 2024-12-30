@@ -16,10 +16,13 @@
   * Weather fog when raining
   * Biome fog rendered in the fog color of the biome
 * Turtledove sound effect for most forests
-* Silent forest biome sound for forests that are snowy/cold (like snowy taiga). It's fairly quite - light wind blowing through.
+* Silent forest biome sound for forests that are snowy/cold (like snowy taiga). It's fairly quiet - light wind blowing through.
+* Added capability to pause/unpause music manager using the /dsmm command.
+* Powered redstone has a chance of emitting an electric arc sound effect.
 
 **Fixes**
 * Individual Sound Configuration menu crash when rendering sounds from resource pack.
+* Badlands have sound again. (Mesa -> Badlands transition had some challenges.)
 
 > ### DynamicSurroundings-1.21.1-0.4.0
 **All Loaders**

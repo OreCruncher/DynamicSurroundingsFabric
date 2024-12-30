@@ -302,6 +302,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
             builder.append("\nLOOP sounds [\n");
             builder.append(this.loopSounds.stream().map(c -> indent + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n]");
+        } else {
+            builder.append("\nLOOP sounds [NONE]");
         }
 
         if (!this.musicSounds.isEmpty()) {

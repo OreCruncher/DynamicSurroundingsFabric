@@ -62,6 +62,7 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
         }
 
         var result = new FogRenderer.FogData(data.mode);
+        result.shape = data.shape;
         result.start = start;
         result.end = end;
         return result;

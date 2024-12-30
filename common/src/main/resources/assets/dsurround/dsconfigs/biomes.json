@@ -27,8 +27,8 @@
     ]
   },
   {
-    "biomeSelector": "DESERT && !(WINDSWEPT || MOUNTAIN || LUSH)",
-    "_comment": "Desert Wind",
+    "biomeSelector": "(DESERT || BADLANDS) && !(WINDSWEPT || MOUNTAIN || LUSH)",
+    "_comment": "Desert/Badlands Wind",
     "acoustics": [
       {
         "factory": "biome.wind.desert"
@@ -401,6 +401,11 @@
         "weight": 10
       }
     ]
+  },
+  {
+    "biomeSelector": "BADLANDS",
+    "_comment": "Badlands dust color specific override",
+    "fogColor": "#D77D2F"
   },
   {
     "biomeSelector": "@underground",
