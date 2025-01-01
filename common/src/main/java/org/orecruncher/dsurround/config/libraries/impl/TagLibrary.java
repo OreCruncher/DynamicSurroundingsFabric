@@ -66,7 +66,7 @@ public class TagLibrary implements ITagLibrary {
             return false;
         if (entry.is(tagKey))
             return true;
-        var location = entry.getBlockHolder().unwrapKey().orElseThrow().location();
+        var location = resolveLocation(entry.getBlockHolder());
         return this.isInCache(tagKey, location);
     }
 
@@ -76,7 +76,7 @@ public class TagLibrary implements ITagLibrary {
             return false;
         if (entry.is(tagKey))
             return true;
-        var location = entry.getItemHolder().unwrapKey().orElseThrow().location();
+        var location = resolveLocation(entry.getItemHolder());
         return this.isInCache(tagKey, location);
     }
 
@@ -87,7 +87,7 @@ public class TagLibrary implements ITagLibrary {
             var e = registryEntry.get();
             if (e.is(tagKey))
                 return true;
-            var location = e.key().location();
+            var location = resolveLocation(e);
             return this.isInCache(tagKey, location);
         }
         return false;
@@ -100,10 +100,14 @@ public class TagLibrary implements ITagLibrary {
 
         var registryEntry = RegistryUtils.getRegistryEntry(Registries.ENTITY_TYPE, entry);
         if (registryEntry.isPresent()) {
-            var location = registryEntry.get().key().location();
+            var location = resolveLocation(entry.arch$holder());
             return this.isInCache(tagKey, location);
         }
         return false;
+    }
+
+    public static ResourceLocation resolveLocation(Holder<?> holder) {
+        return holder.unwrapKey().map(ResourceKey::location).orElseThrow();
     }
 
     @Override
@@ -115,7 +119,7 @@ public class TagLibrary implements ITagLibrary {
 
         var registryEntry = RegistryUtils.getRegistryEntry(Registries.FLUID, entry.getType());
         if (registryEntry.isPresent()) {
-            var location = registryEntry.get().key().location();
+            var location = resolveLocation(entry.holder());
             return this.isInCache(tagKey, location);
         }
         return false;
@@ -166,7 +170,7 @@ public class TagLibrary implements ITagLibrary {
     @Override
     public <T> Stream<Pair<TagKey<T>, Set<T>>> getEntriesByTag(ResourceKey<? extends Registry<T>> registryKey) {
         var registry = RegistryUtils.getRegistry(registryKey).orElseThrow();
-        return registry.holders()
+        return registry.listElements()
                 .flatMap(e -> this.streamTags(e).map(tag -> Pair.of(tag, e.value())))
                 .collect(groupingBy(Pair::key, mapping(Pair::value, toSet())))
                 .entrySet().stream().map(e -> Pair.of(e.getKey(), e.getValue()));

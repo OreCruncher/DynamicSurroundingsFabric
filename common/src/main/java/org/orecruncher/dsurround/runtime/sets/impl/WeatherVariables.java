@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.runtime.sets.impl;
 
+import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
@@ -10,6 +11,7 @@ import org.orecruncher.dsurround.runtime.sets.IWeatherVariables;
 public class WeatherVariables extends VariableSet<IWeatherVariables> implements IWeatherVariables {
 
     private final ISeasonalInformation seasonalInformation;
+    private final IDimensionLibrary dimensionLibrary;
 
     private float temperature;
     private boolean isRaining;
@@ -19,9 +21,10 @@ public class WeatherVariables extends VariableSet<IWeatherVariables> implements 
     private boolean isFrosty;
     private boolean canWaterFreeze;
 
-    public WeatherVariables(ISeasonalInformation seasonalInformation) {
+    public WeatherVariables(ISeasonalInformation seasonalInformation, IDimensionLibrary dimensionLibrary) {
         super("weather");
         this.seasonalInformation = seasonalInformation;
+        this.dimensionLibrary = dimensionLibrary;
     }
 
     @Override
@@ -34,13 +37,14 @@ public class WeatherVariables extends VariableSet<IWeatherVariables> implements 
         if (GameUtils.isInGame()) {
             final var player = GameUtils.getPlayer().orElseThrow();
             final var world = player.level();
+            final var seaLevel = this.dimensionLibrary.getData(world).getSeaLevel();
             this.rainIntensity = world.getRainLevel(1F);
             this.thunderIntensity = world.getThunderLevel(1F);
             this.isRaining = world.isRaining();
             this.isThundering = world.isThundering();
-            this.temperature = this.seasonalInformation.getTemperature(world, player.blockPosition());
-            this.isFrosty = this.seasonalInformation.isColdTemperature(world, player.blockPosition());
-            this.canWaterFreeze = this.seasonalInformation.isSnowTemperature(world, player.blockPosition());
+            this.temperature = this.seasonalInformation.getTemperature(world, player.blockPosition(), seaLevel);
+            this.isFrosty = this.seasonalInformation.isColdTemperature(world, player.blockPosition(), seaLevel);
+            this.canWaterFreeze = this.seasonalInformation.isSnowTemperature(world, player.blockPosition(), seaLevel);
         } else {
             this.rainIntensity = 0F;
             this.thunderIntensity = 0F;

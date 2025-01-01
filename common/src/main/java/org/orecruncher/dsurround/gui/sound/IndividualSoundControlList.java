@@ -59,7 +59,7 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
     }
 
     @Override
-    protected int getScrollbarPosition() {
+    protected int scrollBarX() {
         return (this.parent.width + this.getRowWidth()) / 2 + 20;
     }
 

@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.effects.particles.FrostBreathParticle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -15,6 +16,7 @@ import org.orecruncher.dsurround.lib.world.WorldUtils;
 public class BreathEffect extends EntityEffectBase {
 
     private static final ISeasonalInformation SEASONAL_INFORMATION = ContainerManager.resolve(ISeasonalInformation.class);
+    private static final IDimensionLibrary DIMENSION_LIBRARY = ContainerManager.resolve(IDimensionLibrary.class);
 
     private final ITickCount tickCount;
     private int seed;
@@ -84,7 +86,7 @@ public class BreathEffect extends EntityEffectBase {
     protected boolean showFrostBreath(final LivingEntity entity, final BlockState headBlock, final BlockPos pos) {
         if (headBlock.isAir()) {
             final Level world = entity.level();
-            return SEASONAL_INFORMATION.isColdTemperature(world, pos);
+            return SEASONAL_INFORMATION.isColdTemperature(world, pos, DIMENSION_LIBRARY.getData(world).getSeaLevel());
         }
         return false;
     }

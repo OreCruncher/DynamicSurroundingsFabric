@@ -15,12 +15,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
+import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.lib.math.ReusableRaycastContext;
 import org.orecruncher.dsurround.lib.math.ReusableRaycastIterator;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
-import org.orecruncher.dsurround.lib.world.WorldUtils;
 import org.orecruncher.dsurround.runtime.audio.effects.Effects;
 import org.orecruncher.dsurround.runtime.audio.effects.LowPassData;
 import org.orecruncher.dsurround.runtime.audio.effects.SourcePropertyFloat;
@@ -30,6 +30,7 @@ public final class SoundFXUtils {
 
     private static final IBlockLibrary BLOCK_LIBRARY = ContainerManager.resolve(IBlockLibrary.class);
     private static final ISeasonalInformation SEASONAL_INFORMATION = ContainerManager.resolve(ISeasonalInformation.class);
+    private static final IDimensionLibrary DIMENSION_LIBRARY = ContainerManager.resolve(IDimensionLibrary.class);
     private static final Configuration.EnhancedSounds CONFIG = ContainerManager.resolve(Configuration.EnhancedSounds.class);
 
     /**
@@ -77,7 +78,7 @@ public final class SoundFXUtils {
 
         // Would have been cool to have a direction vec as a 3d as well as 3i.
         for (final Direction d : Direction.values()) {
-            SURFACE_DIRECTION_NORMALS[d.ordinal()] = Vec3.atLowerCornerOf(d.getNormal());
+            SURFACE_DIRECTION_NORMALS[d.ordinal()] = Vec3.atLowerCornerOf(d.getUnitVec3i());
         }
 
         // Pre-calculate the known vectors that will be projected off a sound source when casting about to establish
@@ -351,10 +352,12 @@ public final class SoundFXUtils {
         final BlockPos mid = BlockPos.containing(MathStuff.addScaled(pt1, pt2, 0.5F));
         final BlockPos high = BlockPos.containing(pt2);
 
+        var seaLevel = DIMENSION_LIBRARY.getData(ctx.world).getSeaLevel();
+
         // Determine the precipitation type at each point
-        final Biome.Precipitation rt1 = SEASONAL_INFORMATION.getActivePrecipitation(ctx.world, low);
-        final Biome.Precipitation rt2 = SEASONAL_INFORMATION.getActivePrecipitation(ctx.world, mid);
-        final Biome.Precipitation rt3 = SEASONAL_INFORMATION.getActivePrecipitation(ctx.world, high);
+        final Biome.Precipitation rt1 = SEASONAL_INFORMATION.getActivePrecipitation(ctx.world, low, seaLevel);
+        final Biome.Precipitation rt2 = SEASONAL_INFORMATION.getActivePrecipitation(ctx.world, mid, seaLevel);
+        final Biome.Precipitation rt3 = SEASONAL_INFORMATION.getActivePrecipitation(ctx.world, high, seaLevel);
 
         // Calculate the impact of weather on dampening
         float factor = calcFactor(rt1, 0.25F);

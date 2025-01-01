@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.processing;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.Configuration;
@@ -38,9 +37,8 @@ public class FogHandler extends AbstractClientHandler {
     private void renderFog(FogRenderer.FogData data, float renderDistance, float partialTick) {
         if (this.fogCalculator.enabled()) {
             this.lastData = this.fogCalculator.render(data, renderDistance, partialTick);
-            RenderSystem.setShaderFogStart(this.lastData.start);
-            RenderSystem.setShaderFogEnd(this.lastData.end);
-            RenderSystem.setShaderFogShape(this.lastData.shape);
+            data.start = this.lastData.start;
+            data.end = this.lastData.end;
         }
     }
 

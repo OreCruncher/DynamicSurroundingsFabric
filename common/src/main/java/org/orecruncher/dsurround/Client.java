@@ -9,7 +9,7 @@ import net.minecraft.server.packs.PackType;
 import org.orecruncher.dsurround.commands.Commands;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
-import org.orecruncher.dsurround.effects.particles.ParticleSheets;
+import org.orecruncher.dsurround.effects.particles.Particles;
 import org.orecruncher.dsurround.gui.overlay.OverlayManager;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -76,6 +76,11 @@ public final class Client {
                 }
             }
         });
+
+        // Make sure our particle sheets get registered otherwise they will not render.
+        // These sheets are purely client side - they have to be manhandled into the
+        // Minecraft environment.
+        Particles.register();
     }
 
     public void construct() {
@@ -180,11 +185,6 @@ public final class Client {
         // of the dependencies to be initialized.
         container.resolve(Handlers.class);
 
-        // Make sure our particle sheets get registered otherwise they will not render.
-        // These sheets are purely client side - they have to be manhandled into the
-        // Minecraft environment.
-        ParticleSheets.register();
-
         this.logger.info("[%s] Finalization complete", Constants.MOD_ID);
     }
 
@@ -196,7 +196,7 @@ public final class Client {
                 var result = versionQueryResult.get();
                 this.logger.info("Update to %s version %s is available", result.displayName(), result.version());
                 var player = GameUtils.getPlayer();
-                player.ifPresent(p -> p.sendSystemMessage(result.getChatText()));
+                player.ifPresent(p -> p.displayClientMessage(result.getChatText(), false));
             } else if(Config.logging.enableModUpdateChatMessage) {
                 this.logger.info("The mod version is current");
             }

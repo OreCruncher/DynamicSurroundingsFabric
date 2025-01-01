@@ -1,14 +1,15 @@
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.resources.ResourceLocation;
-import org.orecruncher.dsurround.Constants;
-import org.orecruncher.dsurround.effects.particles.ParticleSheets;
+import dev.architectury.registry.registries.RegistrySupplier;
+import net.minecraft.core.particles.ParticleType;
+import net.minecraft.core.particles.SimpleParticleType;
+import org.orecruncher.dsurround.effects.particles.Particles;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
 public enum WaterRippleStyle {
 
-    NONE (ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "none")),
-    PIXELATED_CIRCLE(ParticleSheets.TEXTURE_WATER_RIPPLE_PIXELATED_CIRCLE) {
+    NONE(null),
+    PIXELATED_CIRCLE(Particles.WATER_RIPPLE_PIXELATED) {
         private final int FRAMES = 7;
         private final float DELTA = 1F / this.FRAMES;
         private final int MAX_AGE = this.FRAMES * 2;
@@ -34,14 +35,14 @@ public enum WaterRippleStyle {
         }
     };
 
-    private final ResourceLocation resource;
+    private final RegistrySupplier<SimpleParticleType> particleTypeRegistrySupplier;
 
-    WaterRippleStyle(final ResourceLocation texture) {
-        this.resource = texture;
+    WaterRippleStyle(RegistrySupplier<SimpleParticleType> particleTypeSupplier) {
+        this.particleTypeRegistrySupplier = particleTypeSupplier;
     }
 
-    public ResourceLocation getTexture() {
-        return this.resource;
+    public ParticleType<SimpleParticleType> getParticleType() {
+        return this.particleTypeRegistrySupplier.get();
     }
 
     public float getU1(final int age) {

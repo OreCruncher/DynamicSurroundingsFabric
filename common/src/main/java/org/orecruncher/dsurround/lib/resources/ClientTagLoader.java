@@ -122,7 +122,7 @@ public class ClientTagLoader {
 
                 var lookup = new TagEntry.Lookup<ResourceLocation>() {
                     @Override
-                    public @NotNull ResourceLocation element(@NotNull ResourceLocation id) {
+                    public @NotNull ResourceLocation element(@NotNull ResourceLocation id, boolean required) {
                         return id;
                     }
 
@@ -170,7 +170,7 @@ public class ClientTagLoader {
             var registry = RegistryUtils.getRegistry(tagKey.registry());
             if (registry.isEmpty())
                 return Optional.empty();
-            var holderSet = registry.get().getTag(tagKey);
+            var holderSet = registry.get().get(tagKey);
             if (holderSet.isPresent())
                 return Optional.of(holderSet.get());
             return Optional.of(ImmutableList.of());

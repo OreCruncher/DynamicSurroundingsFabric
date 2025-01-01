@@ -66,14 +66,14 @@ public class SereneSeasons extends AbstractSeasonProvider {
     }
 
     @Override
-    public Biome.Precipitation getPrecipitationAt(Level world, BlockPos blockPos) {
+    public Biome.Precipitation getPrecipitationAt(Level world, BlockPos blockPos, int seaLevel) {
         var biome = world.getBiome(blockPos);
-        return SeasonHooks.getPrecipitationAtSeasonal(world, biome, blockPos);
+        return SeasonHooks.getPrecipitationAtSeasonal(world, biome, blockPos, seaLevel);
     }
 
     @Override
-    public float getTemperature(Level world, BlockPos blockPos) {
+    public float getTemperature(Level world, BlockPos blockPos, int seaLevel) {
         var biome = world.getBiome(blockPos);
-        return SeasonHooks.getBiomeTemperature(world, biome, blockPos);
+        return SeasonHooks.getBiomeTemperature(world, biome, blockPos, seaLevel);
     }
 }

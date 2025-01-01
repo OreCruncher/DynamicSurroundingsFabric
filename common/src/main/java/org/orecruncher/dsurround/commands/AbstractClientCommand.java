@@ -21,11 +21,11 @@ abstract class AbstractClientCommand {
     protected int execute(CommandContext<ClientCommandRegistrationEvent.ClientCommandSourceStack> ctx, Supplier<Component> commandHandler) {
         try {
             var result = commandHandler.get();
-            ctx.getSource().arch$getPlayer().sendSystemMessage(result);
+            ctx.getSource().arch$getPlayer().displayClientMessage(result, false);
             return 0;
         } catch(Exception ex) {
             Library.LOGGER.error(ex, "Unable to execute command %s", ctx.getCommand().toString());
-            ctx.getSource().arch$getPlayer().sendSystemMessage(Component.literal(ex.getMessage()));
+            ctx.getSource().arch$getPlayer().displayClientMessage(Component.literal(ex.getMessage()), false);
             return 1;
         }
     }

@@ -7,13 +7,16 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 
 class WaterySurfaceAccent implements IFootstepAccentProvider {
 
     private static final ResourceLocation WETSURFACE_FACTORY = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "footstep/wetsurface");
+    private static final IDimensionLibrary DIMENSION_LIBRARY = ContainerManager.resolve(IDimensionLibrary.class);
 
     private final Configuration config;
 
@@ -42,7 +45,7 @@ class WaterySurfaceAccent implements IFootstepAccentProvider {
 
             if (!addAcoustic && world.isRainingAt(up)) {
                 // Get the precipitation type at the location
-                var precipitation = world.getBiome(up).value().getPrecipitationAt(up);
+                var precipitation = world.getBiome(up).value().getPrecipitationAt(up, DIMENSION_LIBRARY.getData(world).getSeaLevel());
                 addAcoustic = precipitation == Biome.Precipitation.RAIN;
             }
         }

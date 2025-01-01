@@ -49,7 +49,7 @@ public class IndividualSoundConfigEntry implements Comparable<IndividualSoundCon
     }
 
     public static IndividualSoundConfigEntry createDefault(final SoundEvent event) {
-        return new IndividualSoundConfigEntry(event.getLocation());
+        return new IndividualSoundConfigEntry(event.location());
     }
 
     public static IndividualSoundConfigEntry from(IndividualSoundConfigEntry source) {

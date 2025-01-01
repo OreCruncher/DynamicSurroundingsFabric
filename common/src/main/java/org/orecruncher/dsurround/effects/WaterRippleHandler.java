@@ -7,6 +7,7 @@ import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
+import org.orecruncher.dsurround.effects.particles.Particles;
 import org.orecruncher.dsurround.effects.particles.WaterRippleParticle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -26,10 +27,9 @@ public class WaterRippleHandler {
     }
 
     private static void addWaterRipple(ClientLevel world, double x, double y, double z) {
-        var ripple = new WaterRippleParticle(
-                CONFIG.waterRippleStyle,
-                world, x, y, z);
-        GameUtils.getParticleManager().add(ripple);
+        GameUtils.getParticleManager().createParticle(Particles.WATER_RIPPLE_PIXELATED.get(),x, y, z, 0, 0, 0);
+        //var ripple = new WaterRippleParticle(CONFIG.waterRippleStyle, world, x, y, z);
+        //GameUtils.getParticleManager().add(ripple);
     }
 
     public static void createRippleParticle(ClientLevel world, Particle particle, Vec3 position) {

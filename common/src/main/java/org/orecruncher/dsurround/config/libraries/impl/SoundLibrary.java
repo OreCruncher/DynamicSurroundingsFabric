@@ -78,7 +78,7 @@ public final class SoundLibrary implements ISoundLibrary {
     @Override
     public Stream<String> dump() {
         return this.myRegistry.values().stream()
-                .sorted((c1, c2) -> Comparers.IDENTIFIER_NATURAL_COMPARABLE.compare(c1.getLocation(), c2.getLocation()))
+                .sorted((c1, c2) -> Comparers.IDENTIFIER_NATURAL_COMPARABLE.compare(c1.location(), c2.location()))
                 .map(Object::toString);
     }
 
@@ -95,7 +95,7 @@ public final class SoundLibrary implements ISoundLibrary {
 
         // Initializes the internal sound registry once all the other mods have
         // registered their sounds.
-        BuiltInRegistries.SOUND_EVENT.forEach(se -> this.myRegistry.put(se.getLocation(), se));
+        BuiltInRegistries.SOUND_EVENT.forEach(se -> this.myRegistry.put(se.location(), se));
 
         // Gather resource pack sound files and process them to ensure metadata is collected.
         // Resource pack sounds generally replace existing registration, but this allows for new
@@ -149,7 +149,7 @@ public final class SoundLibrary implements ISoundLibrary {
 
     @Override
     public ISoundFactory getSoundFactoryForMusic(Music music) {
-        return this.soundFactories.computeIfAbsent(music.getEvent().value().getLocation(), loc -> SoundFactoryBuilder.create(music).build());
+        return this.soundFactories.computeIfAbsent(music.getEvent().value().location(), loc -> SoundFactoryBuilder.create(music).build());
     }
 
     @Override

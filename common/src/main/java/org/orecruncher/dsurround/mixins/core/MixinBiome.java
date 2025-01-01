@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.mixins.core;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.Music;
+import net.minecraft.util.random.SimpleWeightedRandomList;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSpecialEffects;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
@@ -53,7 +54,7 @@ public abstract class MixinBiome implements IBiomeExtended {
     }
 
     @Invoker("getTemperature")
-    public abstract float dsurround_getTemperature(BlockPos pos);
+    public abstract float dsurround_getTemperature(BlockPos pos, int seaLevel);
 
     /**
      * Obtain fog color from Dynamic Surroundings' config if available.
@@ -77,14 +78,19 @@ public abstract class MixinBiome implements IBiomeExtended {
      * the selection weight table.
      */
     @Inject(method = "getBackgroundMusic()Ljava/util/Optional;", at = @At("HEAD"), cancellable = true)
-    private void dsurround_getBackgroundMusic(CallbackInfoReturnable<Optional<Music>> cir) {
+    private void dsurround_getBackgroundMusic(CallbackInfoReturnable<Optional<SimpleWeightedRandomList<Music>>> cir) {
         if (this.dsurround_info == null) {
             // Can be null after things like a teleport
             cir.setReturnValue(Optional.empty());
         } else {
+            // DS logic will have made a choice, so we need to wrap in a single entry
+            // weighted list to keep the API happy.
             var result = this.dsurround_info.getBackgroundMusic(Randomizer.current());
-            if (result.isPresent())
-                cir.setReturnValue(result);
+            if (result.isPresent()) {
+                var list = new SimpleWeightedRandomList.Builder<Music>()
+                        .add(result.get()).build();
+                cir.setReturnValue(Optional.of(list));
+            }
         }
     }
 }

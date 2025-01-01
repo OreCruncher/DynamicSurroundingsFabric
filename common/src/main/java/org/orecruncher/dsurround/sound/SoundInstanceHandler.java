@@ -38,7 +38,7 @@ public final class SoundInstanceHandler {
     private static final ResourceLocation THUNDER_SOUND_FACTORY = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "thunder");
 
     static {
-        THUNDER_SOUNDS.add(SoundEvents.LIGHTNING_BOLT_THUNDER.getLocation());
+        THUNDER_SOUNDS.add(SoundEvents.LIGHTNING_BOLT_THUNDER.location());
     }
 
     private static boolean isSoundBlocked(final ResourceLocation id) {

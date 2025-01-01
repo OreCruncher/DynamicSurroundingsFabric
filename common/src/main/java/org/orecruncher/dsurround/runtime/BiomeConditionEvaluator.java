@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.runtime;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
+import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
@@ -16,10 +17,10 @@ public class BiomeConditionEvaluator {
     private final BiomeVariables biomeVariables;
     private final ExecutionContext context;
 
-    public BiomeConditionEvaluator(IBiomeLibrary biomeLibrary, IModLog logger) {
+    public BiomeConditionEvaluator(IBiomeLibrary biomeLibrary, IDimensionLibrary dimensionLibrary, IModLog logger) {
         this.logger = logger;
         this.context = new ExecutionContext("BiomeConditions", logger);
-        this.biomeVariables = new BiomeVariables(biomeLibrary);
+        this.biomeVariables = new BiomeVariables(biomeLibrary, dimensionLibrary);
         this.context.add(this.biomeVariables);
     }
 

@@ -11,7 +11,7 @@ public interface IBiomeExtended {
 
     void dsurround_setInfo(BiomeInfo info);
 
-    float dsurround_getTemperature(BlockPos pos);
+    float dsurround_getTemperature(BlockPos pos, int seaLevel);
 
     Biome.ClimateSettings dsurround_getWeather();
 

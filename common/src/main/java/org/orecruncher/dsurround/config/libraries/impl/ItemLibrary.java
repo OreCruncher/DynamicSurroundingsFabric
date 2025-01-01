@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.config.libraries.impl;
 
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
@@ -107,13 +108,13 @@ public class ItemLibrary implements IItemLibrary {
 
     @Nullable
     private static SoundEvent getEquipableSoundEvent(ItemStack stack) {
-        var item = stack.getItem();
         SoundEvent itemEquipSound = null;
 
-        if (item instanceof Equipable equipment)
-            itemEquipSound = equipment.getEquipSound().value();
-        else if (item instanceof ArmorItem armor)
-            itemEquipSound = armor.getEquipSound().value();
+        if (stack.has(DataComponents.EQUIPPABLE)) {
+            var equippable = stack.getComponents().get(DataComponents.EQUIPPABLE);
+            if (equippable != null)
+                itemEquipSound = equippable.equipSound().value();
+        }
 
         return itemEquipSound;
     }
@@ -125,11 +126,7 @@ public class ItemLibrary implements IItemLibrary {
         if (itemEquipSound != null)
             return itemEquipSound;
 
-        var item = stack.getItem();
-
-        if (item instanceof ElytraItem elytraItem)
-            itemEquipSound = elytraItem.getEquipSound().value();
-        else if (this.tagLibrary.is(ItemTags.LAVA_BUCKETS, stack))
+        if (this.tagLibrary.is(ItemTags.LAVA_BUCKETS, stack))
             itemEquipSound = SoundEvents.BUCKET_FILL_LAVA;
         else if (this.tagLibrary.is(ItemTags.WATER_BUCKETS, stack))
             itemEquipSound = SoundEvents.BUCKET_FILL;

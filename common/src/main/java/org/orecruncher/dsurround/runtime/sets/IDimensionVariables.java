@@ -10,4 +10,6 @@ public interface IDimensionVariables {
     boolean hasSky();
 
     boolean isSuperFlat();
+
+    int getSeaLevel();
 }

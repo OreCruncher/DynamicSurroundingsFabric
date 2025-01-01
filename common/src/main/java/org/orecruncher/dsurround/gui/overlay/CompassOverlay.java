@@ -105,8 +105,8 @@ public class CompassOverlay extends AbstractOverlay {
     }
 
     void drawTexturedQuad(PoseStack stack, ResourceLocation texture, float x1, float x2, float y1, float y2, float z, float u1, float u2, float v1, float v2) {
-        RenderSystem.setShaderTexture(0, texture);
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        //RenderSystem.setShaderTexture(0, texture);
+        //RenderSystem.setShader(GameRenderer::getPositionTexShader);
         Matrix4f matrix4f = stack.last().pose();
         BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         bufferBuilder.addVertex(matrix4f, x1, y1, z).setUv(u1, v1);

@@ -27,7 +27,7 @@ public abstract class ItemTypeMatcher implements IMatcher<Item> {
                 return DataResult.success(new ItemTypeMatcher.MatchOnItemTag(tagKey));
             } else if (itemId.contains(":")) {
                 var item = BuiltInRegistries.ITEM.get(id);
-                return DataResult.success(new ItemTypeMatcher.MatchOnItem(item));
+                return DataResult.success(new ItemTypeMatcher.MatchOnItem(item.get().value()));
             }
 
             return DataResult.error(() -> String.format("Unknown item class(s) %s", itemId));

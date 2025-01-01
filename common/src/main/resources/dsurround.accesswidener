@@ -14,3 +14,6 @@ accessible class net/minecraft/client/renderer/FogRenderer$FogData
 
 # Access formatter when dumping biome information
 accessible method net/minecraft/network/chat/TextColor formatValue ()Ljava/lang/String;
+
+# For generating particle definitions
+accessible method net/minecraft/core/particles/SimpleParticleType <init> (Z)V

@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.mixins.audio;
 
 import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.sounds.MusicInfo;
 import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.sounds.Music;
 import org.jetbrains.annotations.Nullable;
@@ -70,9 +71,9 @@ public class MixinMusicManager implements IMusicManager {
             ci.cancel();
     }
 
-    @Inject(method = "startPlaying(Lnet/minecraft/sounds/Music;)V", at = @At("RETURN"))
-    public void dsurround_startPlaying(Music music, CallbackInfo ci) {
+    @Inject(method = "startPlaying(Lnet/minecraft/client/sounds/MusicInfo;)V", at = @At("RETURN"))
+    public void dsurround_startPlaying(MusicInfo music, CallbackInfo ci) {
         if (MixinHelpers.soundOptions.displayToastMessagesForMusic)
-            SoundToast.create(music);
+            SoundToast.create(music.music());
     }
 }

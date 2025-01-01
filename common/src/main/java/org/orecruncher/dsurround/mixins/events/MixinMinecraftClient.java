@@ -47,7 +47,7 @@ public abstract class MixinMinecraftClient {
      * Situational music is for playing music at in The End after a boss fight, while submerged underwater, or
      * if a biome has a background sound configured.
      */
-    @WrapOperation(method = "getSituationalMusic()Lnet/minecraft/sounds/Music;", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getAbilities()Lnet/minecraft/world/entity/player/Abilities;"))
+    @WrapOperation(method = "getSituationalMusic()Lnet/minecraft/client/sounds/MusicInfo;", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getAbilities()Lnet/minecraft/world/entity/player/Abilities;"))
     private Abilities dsurround_instabuildCheck(LocalPlayer instance, Operation<Abilities> original) {
         if (MixinHelpers.soundOptions.playBiomeMusicWhileCreative) {
             if (this.dsurround_cachedAbilities == null) {

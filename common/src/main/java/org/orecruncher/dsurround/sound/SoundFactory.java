@@ -56,7 +56,7 @@ public record SoundFactory(
 
     @Override
     public ResourceLocation getLocation() {
-        return this.location.orElse(this.soundEvent.getLocation());
+        return this.location.orElse(this.soundEvent.location());
     }
 
     @Override
@@ -76,7 +76,7 @@ public record SoundFactory(
     @Override
     public SimpleSoundInstance createAsAdditional() {
         return new SimpleSoundInstance(
-                this.soundEvent.getLocation(),
+                this.soundEvent.location(),
                 this.category,
                 this.getVolume(),
                 this.getPitch(),
@@ -105,7 +105,7 @@ public record SoundFactory(
     @Override
     public SimpleSoundInstance createAtLocation(Vec3 position, float volumeScale) {
         return new SimpleSoundInstance(
-                this.soundEvent.getLocation(),
+                this.soundEvent.location(),
                 this.category,
                 this.getVolume() * volumeScale,
                 this.getPitch(),
@@ -156,7 +156,7 @@ public record SoundFactory(
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("location", this.getLocation())
-                .add("soundEvent", this.soundEvent.getLocation())
+                .add("soundEvent", this.soundEvent.location())
                 .toString();
     }
 

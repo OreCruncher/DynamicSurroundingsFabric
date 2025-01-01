@@ -108,7 +108,7 @@ public class ClockOverlay extends AbstractOverlay {
 
         // Don't use renderTooltip. It uses a Z which pushes the rendering to the top of the Z stack and can
         // and can interfere with renders.
-        TooltipRenderUtil.renderTooltipBackground(context, x - this.renderWidth / 2, y, this.renderWidth, this.renderHeight, 0);
+        TooltipRenderUtil.renderTooltipBackground(context, x - this.renderWidth / 2, y, this.renderWidth, this.renderHeight, 0, null);
         context.drawCenteredString(textRender, this.clockDisplay.get(0), x, y, this.color);
         if (this.clockDisplay.size() == 2)
             context.drawCenteredString(textRender, this.clockDisplay.get(1), x, y + textRender.lineHeight, this.color);

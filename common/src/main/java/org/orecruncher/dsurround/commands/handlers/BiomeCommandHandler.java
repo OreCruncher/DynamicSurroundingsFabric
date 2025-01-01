@@ -13,11 +13,11 @@ public class BiomeCommandHandler {
     public static Component execute(ResourceLocation biomeIdentifier, String script) {
         return GameUtils.getRegistryManager()
                 .map(rm -> {
-                    var biome = rm.registry(Registries.BIOME).map(r -> r.get(biomeIdentifier));
+                    var biome = rm.lookup(Registries.BIOME).map(r -> r.get(biomeIdentifier));
                     if (biome.isEmpty()) {
                         return Component.translatable("dsurround.command.dsbiome.failure.unknown_biome", biomeIdentifier.toString());
                     }
-                    var result = ContainerManager.resolve(IBiomeLibrary.class).eval(biome.get(), new Script(script));
+                    var result = ContainerManager.resolve(IBiomeLibrary.class).eval(biome.get().get().value(), new Script(script));
                     return Component.literal(result.toString());
                 })
                 .orElse(Component.literal("Unable to locate registry manager"));

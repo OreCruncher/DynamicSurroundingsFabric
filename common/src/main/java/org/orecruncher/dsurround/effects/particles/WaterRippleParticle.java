@@ -3,17 +3,18 @@ package org.orecruncher.dsurround.effects.particles;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.particle.ParticleRenderType;
-import net.minecraft.client.particle.TextureSheetParticle;
+import net.minecraft.client.particle.*;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
-public class WaterRippleParticle extends TextureSheetParticle {
+public class WaterRippleParticle extends SimpleAnimatedParticle {
 
     private static final float TEX_SIZE_HALF = 0.5F;
     private static final int BLOCKS_FROM_FADE = 5;
@@ -29,8 +30,8 @@ public class WaterRippleParticle extends TextureSheetParticle {
     private float texV2;
     private final float defaultColorAlpha;
 
-    public WaterRippleParticle(WaterRippleStyle rippleStyle, ClientLevel world, double x, double y, double z) {
-        super(world, x, y, z, 0.0, 0.0, 0.0);
+    WaterRippleParticle(WaterRippleStyle rippleStyle, ClientLevel world, double x, double y, double z, SpriteSet spriteSet) {
+        super(world, x, y, z, spriteSet, 0);
 
         this.rippleStyle = rippleStyle;
         this.lifetime = rippleStyle.getMaxAge();
@@ -71,7 +72,7 @@ public class WaterRippleParticle extends TextureSheetParticle {
 
     @Override
     public @NotNull ParticleRenderType getRenderType() {
-        return ParticleSheets.RIPPLE_RENDER;
+        return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
     }
 
     @Override
@@ -151,6 +152,22 @@ public class WaterRippleParticle extends TextureSheetParticle {
             this.texU2 = this.rippleStyle.getU2(this.age);
             this.texV1 = this.rippleStyle.getV1(this.age);
             this.texV2 = this.rippleStyle.getV2(this.age);
+
+            this.setSpriteFromAge(this.sprites);
+        }
+    }
+
+    public static class Provider implements ParticleProvider<SimpleParticleType> {
+
+        private final SpriteSet sprites;
+
+        public Provider(SpriteSet spriteSet) {
+            this.sprites = spriteSet;
+        }
+
+        @Override
+        public @Nullable Particle createParticle(@NotNull SimpleParticleType particleOptions, @NotNull ClientLevel clientLevel, double x, double y, double z, double g, double h, double i) {
+            return new WaterRippleParticle(WaterRippleStyle.PIXELATED_CIRCLE, clientLevel, x, y, z, this.sprites);
         }
     }
 }

@@ -33,7 +33,7 @@
     "core.MixinRainSplashParticle",
     "core.MixinRaycastContextAccessor",
     "core.MixinSoundOptionsScreen",
-    "core.MixinTagCollector",
+    "core.MixinRegistryDataCollector",
     "core.MixinWorld",
     "events.MixinMinecraftClient"
   ],

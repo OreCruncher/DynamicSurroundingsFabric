@@ -85,9 +85,12 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
             var accessor = (IBiomeExtended)(Object)biome;
             accessor.dsurround_getSpecialEffects().getBackgroundMusic()
                 .ifPresent(m -> {
-                    var factory = SOUND_LIBRARY.getSoundFactoryForMusic(m);
-                    var entry = new AcousticEntry(factory, null);
-                    this.musicSounds.add(entry);
+                    for (var e : m.unwrap()) {
+                        var factory = SOUND_LIBRARY.getSoundFactoryForMusic(e.data());
+                        // Multiply the weight by 10 - Minecraft has a weight of 1.
+                        var entry = new AcousticEntry(factory, null, e.weight().asInt() * 10);
+                        this.musicSounds.add(entry);
+                    }
                 });
         }
     }

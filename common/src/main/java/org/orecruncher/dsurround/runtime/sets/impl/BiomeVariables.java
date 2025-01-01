@@ -4,6 +4,7 @@ import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
+import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
@@ -14,19 +15,25 @@ import org.orecruncher.dsurround.runtime.sets.IBiomeVariables;
 public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBiomeVariables {
 
     private final IBiomeLibrary biomeLibrary;
+    private final IDimensionLibrary dimensionLibrary;
 
-    private final Lazy<String> precipitationType = new Lazy<>(() -> {
-        var pos = GameUtils.getPlayer().orElseThrow().blockPosition();
-        return this.biome.getPrecipitationAt(pos).name();
-    });
+    private final Lazy<String> precipitationType;
     private final Lazy<String> id = new Lazy<>(() -> this.info.getBiomeId().toString());
 
     private Biome biome;
     private BiomeInfo info;
 
-    public BiomeVariables(IBiomeLibrary biomeLibrary) {
+    public BiomeVariables(IBiomeLibrary biomeLibrary, IDimensionLibrary dimensionLibrary) {
         super("biome");
         this.biomeLibrary = biomeLibrary;
+        this.dimensionLibrary = dimensionLibrary;
+
+        this.precipitationType = new Lazy<>(() -> {
+            var player = GameUtils.getPlayer().orElseThrow();
+            var pos = player.blockPosition();
+            var seaLevel = this.dimensionLibrary.getData(player.level()).getSeaLevel();
+            return this.biome.getPrecipitationAt(pos, seaLevel).name();
+        });
     }
 
     @Override

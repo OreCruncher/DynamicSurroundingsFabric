@@ -11,6 +11,7 @@ import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
+import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.lib.Guard;
 import org.orecruncher.dsurround.lib.logging.ModLog;
@@ -48,9 +49,9 @@ public final class BiomeLibrary implements IBiomeLibrary {
     // configs changed and cached biome info needs a refresh.
     private int version = 0;
 
-    public BiomeLibrary(IModLog logger) {
+    public BiomeLibrary(IDimensionLibrary dimensionLibrary, IModLog logger) {
         this.logger = ModLog.createChild(logger, "BiomeLibrary");
-        this.biomeConditionEvaluator = new BiomeConditionEvaluator(this, logger);
+        this.biomeConditionEvaluator = new BiomeConditionEvaluator(this, dimensionLibrary, logger);
     }
 
     @Override

@@ -7,7 +7,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.phys.HitResult;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 
@@ -68,7 +68,7 @@ public class ItemSwingEffect extends EntityEffectBase {
             return false;
         }
         Item item = entity.getUseItem().getItem();
-        return item.getUseAnimation(entity.getUseItem()) == UseAnim.BLOCK;
+        return item.getUseAnimation(entity.getUseItem()) == ItemUseAnimation.BLOCK;
     }
 
     protected static boolean freeSwing(LivingEntity entity) {

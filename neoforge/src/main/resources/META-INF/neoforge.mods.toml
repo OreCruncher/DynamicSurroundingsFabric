@@ -17,21 +17,21 @@ logoFile = "assets/dsurround/icon.png"
 [[dependencies.${mod_id}]]
 modId = "neoforge"
 type = "required"
-versionRange = "[21.1,)"
+versionRange = "[21.4,)"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.${mod_id}]]
 modId = "minecraft"
 type = "required"
-versionRange = "[1.21.1,)"
+versionRange = "[1.21.4,)"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.${mod_id}]]
 modId = "architectury"
 type = "required"
-versionRange = "[13.0.8,)"
+versionRange = "[17.0.1,)"
 ordering = "AFTER"
 side = "CLIENT"
 

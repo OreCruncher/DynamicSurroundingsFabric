@@ -74,7 +74,7 @@ final class BlockStateParser {
             throw new BlockStateParseException(String.format("Invalid block name '%s' for entry '%s'", temp, blockName));
         }
 
-        final Block block = BuiltInRegistries.BLOCK.get(resource);
+        final Block block = BuiltInRegistries.BLOCK.getValue(resource);
         if (block == Blocks.AIR && !"minecraft:air".equals(temp)) {
             throw new BlockStateParseException(String.format("Unknown block '%s' for entry '%s'", temp, blockName));
         }

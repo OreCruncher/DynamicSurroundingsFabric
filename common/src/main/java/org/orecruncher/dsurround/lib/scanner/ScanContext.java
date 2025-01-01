@@ -46,6 +46,6 @@ public final class ScanContext {
 
     public int clampHeight(int y) {
         var world = this.getWorld();
-        return Mth.clamp(y, world.getMinBuildHeight(), world.getMaxBuildHeight());
+        return Mth.clamp(y, world.getMinY(), world.getMaxY());
     }
 }

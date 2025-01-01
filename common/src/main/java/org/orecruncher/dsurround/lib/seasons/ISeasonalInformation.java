@@ -56,21 +56,21 @@ public interface ISeasonalInformation {
     /**
      * Gets the temperature at the specified block location taking into account any seasonal variance.
      */
-    float getTemperature(Level world, BlockPos blockPos);
+    float getTemperature(Level world, BlockPos blockPos, int seaLevel);
 
     /**
      * Indicates whether the temperature at the given position is considered cold. For example, if the temp
      * is cold, the frost breath effect can be produced.
      */
-    default boolean isColdTemperature(Level world, BlockPos blockPos) {
-        return this.getTemperature(world, blockPos) < 0.2F;
+    default boolean isColdTemperature(Level world, BlockPos blockPos, int seaLevel) {
+        return this.getTemperature(world, blockPos, seaLevel) < 0.2F;
     }
 
     /**
      * Indicates whether the temperature at the given position is considered cold enough for snow.
      */
-    default boolean isSnowTemperature(Level world, BlockPos blockPos) {
-        return this.getTemperature(world, blockPos) < 0.15F;
+    default boolean isSnowTemperature(Level world, BlockPos blockPos, int seaLevel) {
+        return this.getTemperature(world, blockPos, seaLevel) < 0.15F;
     }
 
     /**
@@ -83,21 +83,21 @@ public interface ISeasonalInformation {
     /**
      * Gets the possible precipitation that can occur in the biome at the specified position.
      */
-    default Biome.Precipitation getPrecipitationAt(Level world, BlockPos blockPos) {
-        return world.getBiome(blockPos).value().getPrecipitationAt(blockPos);
+    default Biome.Precipitation getPrecipitationAt(Level world, BlockPos blockPos, int seaLevel) {
+        return world.getBiome(blockPos).value().getPrecipitationAt(blockPos, seaLevel);
     }
 
     /**
      * Gets the active precipitation occurring at the specified position.
      */
-    default Biome.Precipitation getActivePrecipitation(Level world, BlockPos pos) {
+    default Biome.Precipitation getActivePrecipitation(Level world, BlockPos pos, int seaLevel) {
         if (!world.isRaining()) {
             // Not currently raining
             return Biome.Precipitation.NONE;
         }
 
         // If the biome has no rain...
-        if (this.getPrecipitationAt(world, pos) == Biome.Precipitation.NONE)
+        if (this.getPrecipitationAt(world, pos, seaLevel) == Biome.Precipitation.NONE)
             return Biome.Precipitation.NONE;
 
         // Is there a block above that is blocking the rainfall?
@@ -107,6 +107,6 @@ public interface ISeasonalInformation {
         }
 
         // Use the temperature of the biome to get whether it is raining or snowing
-        return this.isSnowTemperature(world, pos) ? Biome.Precipitation.SNOW : Biome.Precipitation.RAIN;
+        return this.isSnowTemperature(world, pos, seaLevel) ? Biome.Precipitation.SNOW : Biome.Precipitation.RAIN;
     }
 }
