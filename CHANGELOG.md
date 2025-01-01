@@ -1,3 +1,19 @@
+> ### DynamicSurroundings-1.21.1-0.4.2
+**All Loaders**
+* JAVA 21+
+* Architectury 13.0.8+
+
+**Fabric**
+* Fabric Loader >= 0.16.9
+* Fabric API >= 0.110.0+1.21.
+
+**NeoForge**
+* NeoForge 21.1.84+
+
+**Fixes**
+* Disabling fog effect actually works
+* Compatibility with Nostalgia Tweaks world fog effect
+
 > ### DynamicSurroundings-1.21.1-0.4.1
 **All Loaders**
 * JAVA 21+

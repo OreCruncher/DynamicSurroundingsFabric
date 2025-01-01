@@ -37,13 +37,13 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
 
     @Override
     public boolean enabled() {
-        return true;
+        return this.fogOptions.enableFogEffects;
     }
 
     @NotNull
     public FogRenderer.FogData render(@NotNull final FogRenderer.FogData data, float renderDistance, float partialTick) {
 
-        if (!this.fogOptions.enableFogEffects)
+        if (!this.enabled())
             return data;
 
         float start = data.start;

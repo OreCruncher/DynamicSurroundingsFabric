@@ -46,6 +46,9 @@ public class FogHandler extends AbstractClientHandler {
 
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
-        event.add(CollectDiagnosticsEvent.Section.Systems, "Fog: %f/%f, %s, %s".formatted(this.lastData.start, this.lastData.end, this.lastData.shape, this.lastData.mode));
+        if (this.fogCalculator.enabled())
+            event.add(CollectDiagnosticsEvent.Section.Systems, "Fog: %f/%f, %s, %s".formatted(this.lastData.start, this.lastData.end, this.lastData.shape, this.lastData.mode));
+        else
+            event.add(CollectDiagnosticsEvent.Section.Systems, "Fog: DISABLED");
     }
 }
