@@ -23,7 +23,8 @@
     ]
   },
   "mixins": [
-    "dsurround.mixins.json"
+    "dsurround.mixins.json",
+    "dsurround.mixins.fabric.json"
   ],
   "depends": {
     "fabricloader": ">=0.16.9",

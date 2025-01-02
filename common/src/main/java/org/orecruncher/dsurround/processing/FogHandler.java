@@ -41,14 +41,18 @@ public class FogHandler extends AbstractClientHandler {
             RenderSystem.setShaderFogStart(this.lastData.start);
             RenderSystem.setShaderFogEnd(this.lastData.end);
             RenderSystem.setShaderFogShape(this.lastData.shape);
+        } else {
+            // Preserve for diagnostic trace even though action was not taken
+            this.lastData = data;
         }
     }
 
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
-        if (this.fogCalculator.enabled())
-            event.add(CollectDiagnosticsEvent.Section.Systems, "Fog: %f/%f, %s, %s".formatted(this.lastData.start, this.lastData.end, this.lastData.shape, this.lastData.mode));
-        else
-            event.add(CollectDiagnosticsEvent.Section.Systems, "Fog: DISABLED");
+        var text = "Fog: %f/%f, %s, %s ".formatted(this.lastData.start, this.lastData.end, this.lastData.shape, this.lastData.mode);
+        var disabledText = this.fogCalculator.getDisabledText();
+        if (disabledText.isPresent())
+            text += disabledText.get();
+        event.add(CollectDiagnosticsEvent.Section.Systems, text);
     }
 }

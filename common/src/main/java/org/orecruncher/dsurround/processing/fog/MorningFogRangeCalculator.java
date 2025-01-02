@@ -2,50 +2,37 @@ package org.orecruncher.dsurround.processing.fog;
 
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.util.Mth;
+import net.minecraft.util.random.WeightedEntry;
+import net.minecraft.util.random.WeightedRandom;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
-import org.orecruncher.dsurround.lib.WeightTable;
 
 import java.util.List;
 
 public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
 
-    private record FogDensityEntry(int weight, FogDensity density) implements WeightTable.IItem<FogDensity> {
-        @Override
-        public int getWeight() {
-            return this.weight();
-        }
-        @Override
-        public FogDensity getItem() {
-            return this.density();
-        }
-    }
+    private static final List<WeightedEntry.Wrapper<FogDensity>> SPRING_FOG = List.of(
+            WeightedEntry.wrap(FogDensity.NORMAL, 30),
+            WeightedEntry.wrap(FogDensity.MEDIUM, 20),
+            WeightedEntry.wrap(FogDensity.HEAVY, 10));
 
-    private static final FogDensityEntry[] SPRING_FOG = {
-            new FogDensityEntry(30, FogDensity.NORMAL),
-            new FogDensityEntry(20, FogDensity.MEDIUM),
-            new FogDensityEntry(10, FogDensity.HEAVY)
-    };
+    private static final List<WeightedEntry.Wrapper<FogDensity>> SUMMER_FOG = List.of(
+            WeightedEntry.wrap(FogDensity.LIGHT, 20),
+            WeightedEntry.wrap(FogDensity.NONE, 10));
 
-    private static final FogDensityEntry[] SUMMER_FOG = {
-            new FogDensityEntry(20, FogDensity.LIGHT),
-            new FogDensityEntry(10, FogDensity.NONE)
-    };
+    private static final List<WeightedEntry.Wrapper<FogDensity>> AUTUMN_FOG = List.of(
+            WeightedEntry.wrap(FogDensity.NORMAL, 10),
+            WeightedEntry.wrap(FogDensity.MEDIUM, 20),
+            WeightedEntry.wrap(FogDensity.HEAVY, 10));
 
-    private static final FogDensityEntry[] AUTUMN_FOG = {
-            new FogDensityEntry(10, FogDensity.NORMAL),
-            new FogDensityEntry(20, FogDensity.MEDIUM),
-            new FogDensityEntry(10, FogDensity.HEAVY)
-    };
-
-    private static final FogDensityEntry[] WINTER_FOG = {
-            new FogDensityEntry(20, FogDensity.LIGHT),
-            new FogDensityEntry(20, FogDensity.NORMAL),
-            new FogDensityEntry(10, FogDensity.MEDIUM)
-    };
+    private static final List<WeightedEntry.Wrapper<FogDensity>> WINTER_FOG = List.of(
+            WeightedEntry.wrap(FogDensity.LIGHT, 20),
+            WeightedEntry.wrap(FogDensity.NORMAL, 20),
+            WeightedEntry.wrap(FogDensity.MEDIUM, 10));
 
     protected final ISeasonalInformation seasonInfo;
     protected final MinecraftClock clock;
@@ -53,7 +40,7 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
     protected FogDensity type = FogDensity.NONE;
 
     public MorningFogRangeCalculator(ISeasonalInformation seasonInfo, Configuration.FogOptions fogOptions) {
-        super("MorningFogRangeCalculator", fogOptions);
+        super("Morning", fogOptions);
         this.seasonInfo = seasonInfo;
         this.clock = new MinecraftClock();
     }
@@ -112,7 +99,7 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
 
     @NotNull
     protected FogDensity getFogType() {
-        FogDensityEntry[] selections;
+        List<WeightedEntry.Wrapper<FogDensity>> selections;
         var clientLevel = GameUtils.getWorld().orElseThrow();
         if (this.seasonInfo.isSpring(clientLevel))
             selections = SPRING_FOG;
@@ -126,6 +113,8 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
             // Shouldn't get here, but...
             return FogDensity.NONE;
 
-        return WeightTable.makeSelection(List.of(selections)).orElseThrow();
+        var totalWeight = WeightedRandom.getTotalWeight(selections);
+        var targetWeight = Randomizer.current().nextInt(totalWeight);
+        return WeightedRandom.getWeightedItem(selections, targetWeight).map(WeightedEntry.Wrapper::data).orElseThrow();
     }
 }

@@ -71,11 +71,11 @@ public class ObjectArray<T> implements Collection<T> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public boolean removeIf(final Predicate<? super T> pred) {
+    public boolean removeIf(@NotNull final Predicate<? super T> filter) {
         boolean result = false;
         for (int i = this.insertionIdx - 1; i >= 0; i--) {
             final T t = (T) this.data[i];
-            if (pred.test(t)) {
+            if (filter.test(t)) {
                 result = true;
                 this.remove0(i);
             }
@@ -117,7 +117,7 @@ public class ObjectArray<T> implements Collection<T> {
         return result;
     }
 
-    @SuppressWarnings({"unchecked", "hiding"})
+    @SuppressWarnings({"unchecked", "TypeParameterHidesVisibleType"})
     @Override
     public <T> T @NotNull [] toArray(final T[] a) {
         // From ArrayList impl
@@ -173,7 +173,7 @@ public class ObjectArray<T> implements Collection<T> {
     }
 
     @Override
-    public boolean retainAll(final Collection<?> c) {
+    public boolean retainAll(@NotNull final Collection<?> c) {
         return this.removeIf(entry -> !c.contains(entry));
     }
 

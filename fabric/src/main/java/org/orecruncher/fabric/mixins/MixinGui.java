@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.mixins.core;
+package org.orecruncher.fabric.mixins;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;

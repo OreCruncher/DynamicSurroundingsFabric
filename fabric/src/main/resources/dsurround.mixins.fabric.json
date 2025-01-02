@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "org.orecruncher.fabric.mixins",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+  ],
+  "client": [
+    "MixinGui"
+  ],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

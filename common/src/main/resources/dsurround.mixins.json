@@ -27,7 +27,6 @@
     "core.MixinEntity",
     "core.MixinEntityArrow",
     "core.MixinFogRenderer",
-    "core.MixinGui",
     "core.MixinLivingEntity",
     "core.MixinParticleManager",
     "core.MixinRainSplashParticle",

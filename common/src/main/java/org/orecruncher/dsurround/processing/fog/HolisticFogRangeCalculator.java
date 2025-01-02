@@ -11,6 +11,9 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 public class HolisticFogRangeCalculator implements IFogRangeCalculator {
 
     protected final IModLog logger;
@@ -77,5 +80,19 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
     @Override
     public void disconnect() {
         this.calculators.forEach(IFogRangeCalculator::disconnect);
+    }
+
+    public Optional<String> getDisabledText() {
+        if (!this.enabled()) {
+            return Optional.of("(ALL DISABLED)");
+        }
+
+        var result = this.calculators.stream().filter(e -> !e.enabled()).map(IFogRangeCalculator::getName).collect(Collectors.joining(", "));
+
+        if (result.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of("(DISABLED: " + result + ")");
     }
 }
