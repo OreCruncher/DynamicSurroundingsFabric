@@ -9,7 +9,6 @@ import net.minecraft.server.packs.PackType;
 import org.orecruncher.dsurround.commands.Commands;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
-import org.orecruncher.dsurround.effects.particles.ParticleSheets;
 import org.orecruncher.dsurround.gui.overlay.OverlayManager;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -179,11 +178,6 @@ public final class Client {
         // Force instantiation of the core Handler. This should cause the rest
         // of the dependencies to be initialized.
         container.resolve(Handlers.class);
-
-        // Make sure our particle sheets get registered otherwise they will not render.
-        // These sheets are purely client side - they have to be manhandled into the
-        // Minecraft environment.
-        ParticleSheets.register();
 
         this.logger.info("[%s] Finalization complete", Constants.MOD_ID);
     }
