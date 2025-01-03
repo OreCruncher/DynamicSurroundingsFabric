@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.effects;
 
-import dev.architectury.event.events.client.ClientLifecycleEvent;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
@@ -18,17 +17,11 @@ public class WaterRippleHandler {
     private static final Configuration.BlockEffects CONFIG = ContainerManager.resolve(Configuration.BlockEffects.class);
     private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
-    private static final ParticleRenderCollection.Helper<WaterRippleParticle> rippleHelper = new ParticleRenderCollection.Helper<>(() -> CONFIG.waterRippleStyle.getTexture());
+    private static final ParticleRenderCollection.Helper<WaterRippleParticle> rippleHelper =
+            new ParticleRenderCollection.Helper<>("WaterRipples", () -> CONFIG.waterRippleStyle.getTexture());
 
     // Fudge factor because the height algo is off.
     private static final double LIQUID_HEIGHT_ADJUST = (1D / 9D) + 0.1D;
-
-    static {
-        // Register the load to clear out particle collections from manager
-        ClientLifecycleEvent.CLIENT_LEVEL_LOAD.register(state -> {
-            rippleHelper.clear();
-        });
-    }
 
     private static boolean doRipples() {
         return CONFIG.waterRippleStyle != WaterRippleStyle.NONE;
@@ -36,7 +29,7 @@ public class WaterRippleHandler {
 
     private static void addWaterRipple(ClientLevel world, double x, double y, double z) {
         var ripple = new WaterRippleParticle(CONFIG.waterRippleStyle, world, x, y, z);
-        rippleHelper.get().add(ripple);
+        rippleHelper.add(ripple);
     }
 
     public static void createRippleParticle(ClientLevel world, Particle particle, Vec3 position) {
