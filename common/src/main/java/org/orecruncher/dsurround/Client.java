@@ -23,6 +23,8 @@ import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.registry.ReloadListener;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
+import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
+import org.orecruncher.dsurround.lib.seasons.SeasonManager;
 import org.orecruncher.dsurround.lib.version.IVersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionResult;
@@ -127,6 +129,8 @@ public final class Client {
                 .registerSingleton(ISoundLibrary.class, SoundLibrary.class)
                 .registerSingleton(IBiomeLibrary.class, BiomeLibrary.class)
                 .registerSingleton(IDimensionLibrary.class, DimensionLibrary.class)
+                .registerSingleton(IDimensionInformation.class, DimensionInformation.class)
+                .registerFactory(ISeasonalInformation.class, () -> SeasonManager.HANDLER)
                 .registerSingleton(IBlockLibrary.class, BlockLibrary.class)
                 .registerSingleton(IItemLibrary.class, ItemLibrary.class)
                 .registerSingleton(IEntityEffectLibrary.class, EntityEffectLibrary.class)

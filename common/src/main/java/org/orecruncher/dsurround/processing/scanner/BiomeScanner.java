@@ -2,14 +2,14 @@ package org.orecruncher.dsurround.processing.scanner;
 
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
+import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
 import org.orecruncher.dsurround.config.SyntheticBiome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
-import org.orecruncher.dsurround.config.dimension.DimensionInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
 
 public final class BiomeScanner extends AbstractScanner {
@@ -22,7 +22,7 @@ public final class BiomeScanner extends AbstractScanner {
     private static final int SURVEY_VERTICAL_OFFSET = SURVEY_VERTICAL_DIMENSION / 4 - 1;
     private static final int MAX_SURVEY_VOLUME = SURVEY_HORIZONTAL_DIMENSION * SURVEY_HORIZONTAL_DIMENSION * SURVEY_VERTICAL_DIMENSION;
 
-    private DimensionInfo surveyedDimension;
+    private ResourceLocation surveyedDimension;
     private boolean isUnderWater;
     private BiomeInfo logicalBiomeInfo;
 
@@ -33,12 +33,12 @@ public final class BiomeScanner extends AbstractScanner {
     private Biome surveyedBiome = null;
     private BlockPos surveyedPosition = BlockPos.ZERO;
     private final IBiomeLibrary biomeLibrary;
-    private final IDimensionLibrary dimensionLibrary;
+    private final IDimensionInformation dimensionInformation;
     private final CeilingScanner ceilingScanner;
 
-    public BiomeScanner(IBiomeLibrary biomeLibrary, IDimensionLibrary dimensionLibrary, CeilingScanner ceilingScanner) {
+    public BiomeScanner(IBiomeLibrary biomeLibrary, IDimensionInformation dimensionInformation, CeilingScanner ceilingScanner) {
         this.biomeLibrary = biomeLibrary;
-        this.dimensionLibrary = dimensionLibrary;
+        this.dimensionInformation = dimensionInformation;
         this.ceilingScanner = ceilingScanner;
     }
 
@@ -46,7 +46,7 @@ public final class BiomeScanner extends AbstractScanner {
         return this.logicalBiomeInfo;
     }
 
-    public DimensionInfo getDimInfo() {
+    public ResourceLocation getDimInfo() {
         return this.surveyedDimension;
     }
 
@@ -63,17 +63,16 @@ public final class BiomeScanner extends AbstractScanner {
         var world = player.level();
         var position = player.blockPosition();
 
-        var dimensionInfo = this.dimensionLibrary.getData(world);
         var biomes = world.getBiomeManager();
         var playerBiome = biomes.getBiome(position);
 
         if (this.surveyedBiome != playerBiome.value()
-                || !this.surveyedDimension.equals(dimensionInfo)
+                || !this.surveyedDimension.equals(this.dimensionInformation.name())
                 || !this.surveyedPosition.equals(position)) {
 
             this.surveyedBiome = playerBiome.value();
             this.surveyedPosition = position;
-            this.surveyedDimension = dimensionInfo;
+            this.surveyedDimension = this.dimensionInformation.name();
 
             this.weights = new Reference2IntOpenHashMap<>(8);
 
@@ -97,7 +96,7 @@ public final class BiomeScanner extends AbstractScanner {
                 return;
             }
 
-            this.logicalBiomeInfo = this.resolveBiome(dimensionInfo, biomes, position);
+            this.logicalBiomeInfo = this.resolveBiome(biomes, position);
 
             for (int z = 0; z < SURVEY_HORIZONTAL_DIMENSION; z++) {
                 var dZ = z - SURVEY_HORIZONTAL_OFFSET + this.surveyedPosition.getZ();
@@ -108,7 +107,7 @@ public final class BiomeScanner extends AbstractScanner {
                     for (int y = 0; y < SURVEY_VERTICAL_DIMENSION; y++) {
                         var dY = y - SURVEY_VERTICAL_OFFSET + this.surveyedPosition.getY();
                         this.mutable.setY(dY);
-                        var info = this.resolveBiome(dimensionInfo, biomes, this.mutable);
+                        var info = this.resolveBiome(biomes, this.mutable);
                         this.weights.addTo(info, 1);
                     }
                 }
@@ -117,7 +116,7 @@ public final class BiomeScanner extends AbstractScanner {
         }
     }
 
-    private BiomeInfo resolveBiome(DimensionInfo dimInfo, BiomeManager access, BlockPos pos) {
+    private BiomeInfo resolveBiome(BiomeManager access, BlockPos pos) {
 
         // Get the biome at the specified position
         var biome = access.getBiome(pos).value();
@@ -130,24 +129,24 @@ public final class BiomeScanner extends AbstractScanner {
 
         // Are we simulating underground? This is done by checking the Y level.
         var y = pos.getY();
-        if (y < (dimInfo.getSeaLevel() - UNDERGROUND_THRESHOLD_OFFSET)) {
+        if (y < (this.dimensionInformation.seaLevel() - UNDERGROUND_THRESHOLD_OFFSET)) {
             return this.biomeLibrary.getBiomeInfo(SyntheticBiome.UNDERGROUND);
         }
 
-        // Inside check overrides everything else. Some dimensions are always out side
+        // Inside check overrides everything else. Some dimensions are always outside,
         // so those are excluded (like the nether).
-        if (!dimInfo.alwaysOutside() && this.ceilingScanner.isReallyInside()) {
+        if (!this.dimensionInformation.alwaysOutside() && this.ceilingScanner.isReallyInside()) {
             // If it's not underground, and we are inside, return INSIDE
             return this.biomeLibrary.getBiomeInfo(SyntheticBiome.INSIDE);
         }
 
         // Are we really up in the sky
-        if (y >= dimInfo.getSpaceHeight()) {
+        if (y >= this.dimensionInformation.getSpaceHeight()) {
             return this.biomeLibrary.getBiomeInfo(SyntheticBiome.SPACE);
         }
 
         // Up in the clouds
-        if (y >= dimInfo.getCloudHeight()) {
+        if (y >= this.dimensionInformation.getCloudHeight()) {
             return this.biomeLibrary.getBiomeInfo(SyntheticBiome.CLOUDS);
         }
 

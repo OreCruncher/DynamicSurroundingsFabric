@@ -100,14 +100,13 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
     @NotNull
     protected FogDensity getFogType() {
         List<WeightedEntry.Wrapper<FogDensity>> selections;
-        var clientLevel = GameUtils.getWorld().orElseThrow();
-        if (this.seasonInfo.isSpring(clientLevel))
+        if (this.seasonInfo.isSpring())
             selections = SPRING_FOG;
-        else if (this.seasonInfo.isSummer(clientLevel))
+        else if (this.seasonInfo.isSummer())
             selections = SUMMER_FOG;
-        else if (this.seasonInfo.isAutumn(clientLevel))
+        else if (this.seasonInfo.isAutumn())
             selections = AUTUMN_FOG;
-        else if (this.seasonInfo.isWinter(clientLevel))
+        else if (this.seasonInfo.isWinter())
             selections = WINTER_FOG;
         else
             // Shouldn't get here, but...

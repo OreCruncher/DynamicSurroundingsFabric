@@ -8,7 +8,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
-import org.orecruncher.dsurround.config.dimension.DimensionInfo;
+import org.orecruncher.dsurround.config.DimensionInfo;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;

@@ -38,9 +38,9 @@ public class WeatherVariables extends VariableSet<IWeatherVariables> implements 
             this.thunderIntensity = world.getThunderLevel(1F);
             this.isRaining = world.isRaining();
             this.isThundering = world.isThundering();
-            this.temperature = this.seasonalInformation.getTemperature(world, player.blockPosition());
-            this.isFrosty = this.seasonalInformation.isColdTemperature(world, player.blockPosition());
-            this.canWaterFreeze = this.seasonalInformation.isSnowTemperature(world, player.blockPosition());
+            this.temperature = this.seasonalInformation.getTemperature(player.blockPosition());
+            this.isFrosty = this.seasonalInformation.isColdTemperature(player.blockPosition());
+            this.canWaterFreeze = this.seasonalInformation.isSnowTemperature(player.blockPosition());
         } else {
             this.rainIntensity = 0F;
             this.thunderIntensity = 0F;
