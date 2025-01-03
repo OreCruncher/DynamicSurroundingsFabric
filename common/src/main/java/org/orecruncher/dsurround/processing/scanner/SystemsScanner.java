@@ -8,7 +8,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IEffectSystem;
-import org.orecruncher.dsurround.lib.BlockPosUtil;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.Cacheable;
