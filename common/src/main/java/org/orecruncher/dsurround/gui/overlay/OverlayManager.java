@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.gui.overlay;
 
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -21,7 +22,8 @@ public class OverlayManager {
         ClientState.TICK_END.register(this::tick);
     }
 
-    public void render(GuiGraphics context, float partialTick) {
+    public void render(GuiGraphics context, DeltaTracker deltaTracker) {
+        var partialTick = deltaTracker.getGameTimeDeltaTicks();
         this.overlays.forEach(overlay -> overlay.render(context, partialTick));
     }
 

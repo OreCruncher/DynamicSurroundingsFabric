@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.processing.scanner;
 
+import net.minecraft.core.BlockBox;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
@@ -7,7 +8,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IEffectSystem;
-import org.orecruncher.dsurround.lib.BlockPosUtil;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.Cacheable;
@@ -64,26 +64,25 @@ public class SystemsScanner extends CuboidScanner {
         final boolean sittingStill = this.lastPos.equals(current);
         this.lastPos = current;
 
-        Predicate<IBlockEffect> pred;
+        Predicate<IBlockEffect> filter;
 
         if (!sittingStill) {
             var range = this.config.blockEffects.blockEffectRange;
-            var minPoint = current.offset(-range, -range, -range);
-            var maxPoint = current.offset(range, range, range);
+            var blockBox = BlockBox.of(current.offset(-range, -range, -range), current.offset(range, range, range));
 
-            pred = system -> {
-                if (!BlockPosUtil.contains(system.getPos(), minPoint, maxPoint)) {
-                    system.remove();
-                } else {
+            filter = system -> {
+                if (blockBox.contains(system.getPos())) {
                     system.tick();
+                } else {
+                    system.remove();
                 }
                 return system.isDone();
             };
         } else {
-            pred = EFFECT_PREDICATE;
+            filter = EFFECT_PREDICATE;
         }
 
-        this.processIfEnabled(true, system -> system.tick(pred));
+        this.processIfEnabled(true, system -> system.tick(filter));
     }
 
     protected void processIfEnabled(boolean clearSystems, Consumer<IEffectSystem> systemConsumer) {

@@ -71,7 +71,7 @@ public class WaterRippleParticle extends TextureSheetParticle {
 
     @Override
     public @NotNull ParticleRenderType getRenderType() {
-        return ParticleSheets.RIPPLE_RENDER;
+        return ParticleRenderType.CUSTOM;
     }
 
     @Override
@@ -101,6 +101,7 @@ public class WaterRippleParticle extends TextureSheetParticle {
 
     @Override
     public void render(VertexConsumer vertexConsumer, Camera camera, float tickDelta) {
+
         Vec3 vec3d = camera.getPosition();
         float X = (float)(Mth.lerp(tickDelta, this.xo, this.x) - vec3d.x());
         float Y = (float)(Mth.lerp(tickDelta, this.yo, this.y) - vec3d.y());

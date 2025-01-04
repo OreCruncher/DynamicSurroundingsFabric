@@ -43,7 +43,7 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
             this.clock.update(world);
             event.add(CollectDiagnosticsEvent.Section.Header, this.clock.getFormattedTime());
 
-            var seasonInfo = this.seasonalInformation.getCurrentSeasonTranslated(world).orElse(Component.literal("UNKNOWN"));
+            var seasonInfo = this.seasonalInformation.getCurrentSeasonTranslated().orElse(Component.literal("UNKNOWN"));
             var seasonText = Component.translatable("Season: %s (%s)", seasonInfo, this.seasonalInformation.getProviderName());
             event.add(CollectDiagnosticsEvent.Section.Header, seasonText);
 

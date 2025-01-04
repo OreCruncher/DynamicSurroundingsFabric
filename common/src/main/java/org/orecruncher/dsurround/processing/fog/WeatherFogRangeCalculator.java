@@ -11,7 +11,7 @@ public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
     protected static final float END_IMPACT = 0.4F;
 
     protected WeatherFogRangeCalculator(Configuration.FogOptions fogOptions) {
-        super("WeatherFogRangeCalculator", fogOptions);
+        super("Weather", fogOptions);
     }
 
     @Override

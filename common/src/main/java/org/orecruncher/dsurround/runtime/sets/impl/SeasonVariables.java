@@ -28,11 +28,10 @@ public class SeasonVariables extends VariableSet<ISeasonVariables> implements IS
     @Override
     public void update(IVariableAccess variableAccess) {
         if (GameUtils.isInGame()) {
-            var world = GameUtils.getWorld().orElseThrow();
-            this.isSpring = this.seasonalInformation.isSpring(world);
-            this.isSummer = this.seasonalInformation.isSummer(world);
-            this.isAutumn = this.seasonalInformation.isAutumn(world);
-            this.isWinter = this.seasonalInformation.isWinter(world);
+            this.isSpring = this.seasonalInformation.isSpring();
+            this.isSummer = this.seasonalInformation.isSummer();
+            this.isAutumn = this.seasonalInformation.isAutumn();
+            this.isWinter = this.seasonalInformation.isWinter();
         } else {
             this.isSpring = false;
             this.isSummer = false;

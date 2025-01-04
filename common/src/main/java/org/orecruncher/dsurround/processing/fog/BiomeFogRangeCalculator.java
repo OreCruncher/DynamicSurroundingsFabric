@@ -23,7 +23,7 @@ public class BiomeFogRangeCalculator extends VanillaFogRangeCalculator {
     private float targetScale;
 
     public BiomeFogRangeCalculator(IBiomeLibrary biomeLibrary, Configuration.FogOptions fogOptions) {
-        super("BiomeFogRangeCalculator", fogOptions);
+        super("Biome", fogOptions);
         this.biomeLibrary = biomeLibrary;
         this.activeScale = this.targetScale = 0F;
         this.lastBlockPos = BlockPos.ZERO;

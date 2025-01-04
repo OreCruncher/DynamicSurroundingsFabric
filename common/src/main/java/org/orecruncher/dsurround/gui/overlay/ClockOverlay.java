@@ -58,7 +58,7 @@ public class ClockOverlay extends AbstractOverlay {
 
             this.clockDisplay.clear();
             this.clockDisplay.add(this.clock.getFormattedTime());
-            this.seasonalInformation.getCurrentSeasonTranslated(player.level()).ifPresent(this.clockDisplay::add);
+            this.seasonalInformation.getCurrentSeasonTranslated().ifPresent(this.clockDisplay::add);
 
             var textRender = GameUtils.getTextRenderer();
             this.renderWidth = textRender.width(this.clockDisplay.get(0));

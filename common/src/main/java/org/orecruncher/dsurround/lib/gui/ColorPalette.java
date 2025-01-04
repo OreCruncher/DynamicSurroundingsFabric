@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.lib.gui;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.TextColor;
+import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 
 @SuppressWarnings("unused")
@@ -74,20 +75,21 @@ public final class ColorPalette {
     public static final TextColor ANTIQUE_WHITE = of(250,235,215);
     public static final TextColor PEARLY_PURPLE = of(183,104,162);
     public static final TextColor FRESH_AIR = of(166,231,255);
+    public static final TextColor HOT_PINK = of("#ff69b4");
 
     public static final TextColor LEMON = of(254, 251, 1);
     public static final TextColor ELECTRIC_GREEN = of(0, 237, 1);
 
     public static int getRed(int rgb) {
-        return (rgb >> 16) & 0xFF;
+        return FastColor.ARGB32.red(rgb);
     }
 
     public static int getGreen(int rgb) {
-        return (rgb >> 8) & 0xFF;
+        return FastColor.ARGB32.green(rgb);
     }
 
     public static int getBlue(int rgb) {
-        return rgb & 0xFF;
+        return FastColor.ARGB32.blue(rgb);
     }
 
     private static TextColor of(ChatFormatting formatColor) {
@@ -98,14 +100,16 @@ public final class ColorPalette {
         return TextColor.parseColor(formatColor).getOrThrow();
     }
 
+    private static TextColor of(int rgb) {
+        return TextColor.fromRgb(rgb);
+    }
+
     private static TextColor of(int red, int green, int blue) {
-        return TextColor.fromRgb(toRGB(red, green, blue));
+        return of(toRGB(red, green, blue));
     }
 
     static int toRGB(int red, int green, int blue) {
-        return ((red & 0xFF) << 16) |
-                ((green & 0xFF) << 8)  |
-                ((blue & 0xFF));
+        return FastColor.ARGB32.color(red, green, blue);
     }
 
     public static TextColor lerp(float scale, TextColor start, TextColor end) {
@@ -116,9 +120,9 @@ public final class ColorPalette {
         var endGreen = getGreen(end.getValue());
         var endBlue = getBlue(end.getValue());
 
-        var red = (int)Mth.lerp(scale, startRed, endRed);
-        var green = (int)Mth.lerp(scale, startGreen, endGreen);
-        var blue = (int)Mth.lerp(scale, startBlue, endBlue);
+        var red = Mth.lerpInt(scale, startRed, endRed);
+        var green = Mth.lerpInt(scale, startGreen, endGreen);
+        var blue = Mth.lerpInt(scale, startBlue, endBlue);
 
         return of(red, green, blue);
     }

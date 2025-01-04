@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.lib.seasons;
 import dev.architectury.platform.Platform;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.seasons.compat.SereneSeasons;
 import org.orecruncher.dsurround.lib.seasons.compat.VanillaSeasons;
 
@@ -12,9 +13,9 @@ public class SeasonManager {
 
     static {
         if (Platform.isModLoaded(Constants.SERENE_SEASONS)) {
-            HANDLER = new SereneSeasons();
+            HANDLER = ContainerManager.resolve(SereneSeasons.class);
         } else {
-            HANDLER = new VanillaSeasons();
+            HANDLER = ContainerManager.resolve(VanillaSeasons.class);
         }
 
         Library.LOGGER.info("Season provider: %s", HANDLER.getProviderName());

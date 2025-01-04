@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.config.dimension;
+package org.orecruncher.dsurround.config;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;

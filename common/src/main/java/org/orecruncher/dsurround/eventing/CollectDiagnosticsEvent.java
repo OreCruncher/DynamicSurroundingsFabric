@@ -12,6 +12,7 @@ public final class CollectDiagnosticsEvent {
     public enum Section {
         Header(false),
         Systems,
+        Particles,
         Timers(false),
         Environment(false),
         Emitters,

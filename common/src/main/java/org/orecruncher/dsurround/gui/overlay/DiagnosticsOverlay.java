@@ -37,6 +37,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     static {
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Header, ColorPalette.PUMPKIN_ORANGE);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Systems, ColorPalette.GREEN);
+        COLOR_MAP.put(CollectDiagnosticsEvent.Section.Particles, ColorPalette.HOT_PINK);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Timers, ColorPalette.KEY_LIME);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Environment, ColorPalette.AQUAMARINE);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Emitters, ColorPalette.SEASHELL);
@@ -51,6 +52,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         LEFT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Header);
         LEFT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Environment);
         LEFT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Systems);
+        LEFT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Particles);
         LEFT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Emitters);
         LEFT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Sounds);
 

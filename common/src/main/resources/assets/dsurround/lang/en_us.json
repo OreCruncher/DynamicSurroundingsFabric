@@ -128,6 +128,8 @@
   "dsurround.config.entityEffects.enableBreathEffect.tooltip": "Enable/disable breath effect in cold biomes",
   "dsurround.config.entityEffects.enablePlayerToolbarEffect": "Player Toolbar Effects",
   "dsurround.config.entityEffects.enablePlayerToolbarEffect.tooltip": "Enable/disable player toolbar sound effects",
+  "dsurround.config.entityEffects.enableToolbarBlockSounds": "Player Toolbar Block Sounds",
+  "dsurround.config.entityEffects.enableToolbarBlockSounds.tooltip": "Enable/disable sound effects for blocks on the toolbar",
   "dsurround.config.entityEffects.enableSwingEffect": "Item Swing Effects",
   "dsurround.config.entityEffects.enableSwingEffect.tooltip": "Enable/disable item swing sound effects from players and mobs",
   "dsurround.config.entityEffects.enableBrushStepEffect": "Brush Step Effect",

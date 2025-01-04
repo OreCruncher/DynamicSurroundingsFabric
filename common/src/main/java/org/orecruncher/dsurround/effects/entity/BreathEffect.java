@@ -2,7 +2,6 @@ package org.orecruncher.dsurround.effects.entity;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.effects.particles.FrostBreathParticle;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -10,7 +9,6 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.random.MurmurHash3;
-import org.orecruncher.dsurround.lib.world.WorldUtils;
 
 public class BreathEffect extends EntityEffectBase {
 
@@ -83,8 +81,7 @@ public class BreathEffect extends EntityEffectBase {
 
     protected boolean showFrostBreath(final LivingEntity entity, final BlockState headBlock, final BlockPos pos) {
         if (headBlock.isAir()) {
-            final Level world = entity.level();
-            return SEASONAL_INFORMATION.isColdTemperature(world, pos);
+            return SEASONAL_INFORMATION.isColdTemperature(pos);
         }
         return false;
     }

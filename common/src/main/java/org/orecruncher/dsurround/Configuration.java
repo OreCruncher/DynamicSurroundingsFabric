@@ -234,6 +234,11 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @RestartRequired(client = false)
+        @Comment("Enable/disable sound effects for blocks on the toolbar")
+        public boolean enableToolbarBlockSounds = true;
+
+        @Property
+        @RestartRequired(client = false)
         @Comment("Enable/disable item swing sound effects from players and mobs")
         public boolean enableSwingEffect = true;
 

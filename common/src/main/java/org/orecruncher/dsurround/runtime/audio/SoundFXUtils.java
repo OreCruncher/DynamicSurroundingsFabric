@@ -20,7 +20,6 @@ import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.lib.math.ReusableRaycastContext;
 import org.orecruncher.dsurround.lib.math.ReusableRaycastIterator;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
-import org.orecruncher.dsurround.lib.world.WorldUtils;
 import org.orecruncher.dsurround.runtime.audio.effects.Effects;
 import org.orecruncher.dsurround.runtime.audio.effects.LowPassData;
 import org.orecruncher.dsurround.runtime.audio.effects.SourcePropertyFloat;
@@ -352,9 +351,9 @@ public final class SoundFXUtils {
         final BlockPos high = BlockPos.containing(pt2);
 
         // Determine the precipitation type at each point
-        final Biome.Precipitation rt1 = SEASONAL_INFORMATION.getActivePrecipitation(ctx.world, low);
-        final Biome.Precipitation rt2 = SEASONAL_INFORMATION.getActivePrecipitation(ctx.world, mid);
-        final Biome.Precipitation rt3 = SEASONAL_INFORMATION.getActivePrecipitation(ctx.world, high);
+        final Biome.Precipitation rt1 = SEASONAL_INFORMATION.getActivePrecipitation(low);
+        final Biome.Precipitation rt2 = SEASONAL_INFORMATION.getActivePrecipitation(mid);
+        final Biome.Precipitation rt3 = SEASONAL_INFORMATION.getActivePrecipitation(high);
 
         // Calculate the impact of weather on dampening
         float factor = calcFactor(rt1, 0.25F);
