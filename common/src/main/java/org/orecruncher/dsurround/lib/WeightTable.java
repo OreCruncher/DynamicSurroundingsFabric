@@ -29,13 +29,7 @@ public class WeightTable {
         if (selections.size() == 1)
             return Optional.of(selections.getFirst().data());
 
-        int totalWeight = WeightedRandom.getTotalWeight(selections);
-
-        if (totalWeight == 0)
-            return Optional.empty();
-
-        int targetWeight = randomizer.nextInt(totalWeight);
-        return WeightedRandom.getWeightedItem(selections, targetWeight).map(IItem::data);
+        return WeightedRandom.getRandomItem(randomizer, selections).map(IItem::data);
     }
 
     public interface IItem<T> extends WeightedEntry {

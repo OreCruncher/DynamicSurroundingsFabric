@@ -112,8 +112,9 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
             // Shouldn't get here, but...
             return FogDensity.NONE;
 
-        var totalWeight = WeightedRandom.getTotalWeight(selections);
-        var targetWeight = Randomizer.current().nextInt(totalWeight);
-        return WeightedRandom.getWeightedItem(selections, targetWeight).map(WeightedEntry.Wrapper::data).orElseThrow();
+        return WeightedRandom
+                .getRandomItem(Randomizer.current(), selections)
+                .map(WeightedEntry.Wrapper::data)
+                .orElseThrow();
     }
 }
