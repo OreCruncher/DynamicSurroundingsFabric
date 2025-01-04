@@ -10,9 +10,15 @@
 **NeoForge**
 * NeoForge 21.1.84+
 
+**What's New**
+* Toolbar sounds will play the "block place" sound for block items. This can be turned off in settings.
+
+**Changes**
+* Do not tint biome fog if biome fog effect is disabled.
+
 **Fixes**
 * Disabling fog effect actually works
-* Compatibility with Nostalgia Tweaks world fog effect
+* Compatibility with Nostalgia Tweaks and Distant Horizons world fog effect
 
 > ### DynamicSurroundings-1.21.1-0.4.1
 **All Loaders**
