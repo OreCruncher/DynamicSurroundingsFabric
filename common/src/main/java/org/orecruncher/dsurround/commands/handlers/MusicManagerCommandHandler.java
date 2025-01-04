@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.commands.handlers;
 
 import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.mixinutils.IMusicManager;
 
 public class MusicManagerCommandHandler {
@@ -30,6 +31,15 @@ public class MusicManagerCommandHandler {
             return Component.translatable("dsurround.command.dsmm.pause.success");
         } catch (Throwable t) {
             return Component.translatable("dsurround.command.dsmm.pause.failure", t.getMessage());
+        }
+    }
+
+    public static Component whatsPlaying() {
+        try {
+            var result = ((IMusicManager)(GameUtils.getMC().getMusicManager())).dsurround_whatsPlaying();
+            return Component.translatable("dsurround.command.dsmm.whatsplaying.success", result);
+        } catch (Throwable t) {
+            return Component.translatable("dsurround.command.dsmm.whatsplaying.failure", t.getMessage());
         }
     }
 }

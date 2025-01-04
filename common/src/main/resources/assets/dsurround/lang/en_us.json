@@ -60,6 +60,8 @@
   "dsurround.command.dsmm.pause.failure": "Unable to pause the Music Manager: %1$s",
   "dsurround.command.dsmm.unpause.success": "Music Manager was unpaused",
   "dsurround.command.dsmm.unpause.failure": "Unable to unpause the Music Manager: %1$s",
+  "dsurround.command.dsmm.whatsplaying.success": "\u00a72Playing\u00a7r: %1$s",
+  "dsurround.command.dsmm.whatsplaying.failure": "Unable to determine what the Music Manager is playing: %1$s",
   "dsurround.config.title": "Dynamic Surroundings Configuration Options",
   "dsurround.config.tooltip.clientRestartRequired": "CLIENT restart required",
   "dsurround.config.tooltip.worldRestartRequired": "WORLD restart required",
@@ -209,5 +211,7 @@
   "dsurround.text.reloadassets": "[%1$s\u00a7r] \u00a7aReloaded configurations",
   "dsurround.text.seasons.spring": "Spring",
   "dsurround.text.toast.music.title": "Music \"%1$s\"",
-  "dsurround.text.toast.music.author": "by %1$s"
+  "dsurround.text.toast.music.author": "by %1$s",
+  "dsurround.text.musicmanager.nothing": "No music is playing",
+  "dsurround.text.musicmanager.playing": "%1$s by %2$s (%3$s)"
 }
