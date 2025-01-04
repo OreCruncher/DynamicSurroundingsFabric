@@ -129,7 +129,7 @@ public class ItemLibrary implements IItemLibrary {
             Item item = stack.getItem();
             if (item instanceof BlockItem blockItem) {
                 var soundType = blockItem.getBlock().defaultBlockState().getSoundType();
-                itemEquipSound = soundType.getPlaceSound();
+                itemEquipSound = soundType.getStepSound();
             }
         }
 

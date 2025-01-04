@@ -235,7 +235,7 @@ public class Configuration extends ConfigurationData {
         @Property
         @RestartRequired(client = false)
         @Comment("Enable/disable sound effects for blocks on the toolbar")
-        public boolean enableToolbarBlockSounds = true;
+        public boolean enableToolbarBlockSounds = false;
 
         @Property
         @RestartRequired(client = false)

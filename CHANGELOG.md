@@ -11,7 +11,8 @@
 * NeoForge 21.1.84+
 
 **What's New**
-* Toolbar sounds will play the "block place" sound for block items. This can be turned off in settings.
+* Toolbar sounds will play the "block step" sound for block items. It is off by default, and can be turned on in settings.
+* Added whatsplaying subcommand to /dsmm. Will report on the music that is playing in the Music Manager.
 
 **Changes**
 * Do not tint biome fog if biome fog effect is disabled.
