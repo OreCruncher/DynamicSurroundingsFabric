@@ -63,7 +63,7 @@ public abstract class MixinBiome implements IBiomeExtended {
      */
     @Inject(method = "getFogColor()I", at = @At("HEAD"), cancellable = true)
     public void dsurround_getFogColor(CallbackInfoReturnable<Integer> cir) {
-        if (MixinHelpers.fogOptions.enableBiomeFog) {
+        if (MixinHelpers.fogOptions.enableFogEffects && MixinHelpers.fogOptions.enableBiomeFog) {
             if (this.dsurround_info != null) {
                 var color = this.dsurround_info.getFogColor();
                 if (color != null)

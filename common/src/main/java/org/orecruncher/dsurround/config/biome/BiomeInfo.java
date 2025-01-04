@@ -21,7 +21,6 @@ import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
-import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -52,10 +51,10 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private final boolean isOcean;
     private final boolean isDeepOcean;
     private final boolean isCave;
-    private Collection<AcousticEntry> loopSounds = new AcousticEntryCollection();
-    private Collection<AcousticEntry> moodSounds = new AcousticEntryCollection();
-    private Collection<AcousticEntry> additionalSounds = new AcousticEntryCollection();
-    private Collection<AcousticEntry> musicSounds = new AcousticEntryCollection();
+    private AcousticEntryCollection loopSounds = new AcousticEntryCollection();
+    private AcousticEntryCollection moodSounds = new AcousticEntryCollection();
+    private AcousticEntryCollection additionalSounds = new AcousticEntryCollection();
+    private AcousticEntryCollection musicSounds = new AcousticEntryCollection();
     private Collection<String> comments = new ObjectArray<>();
     private TextColor fogColor;
     private FogDensity fogDensity;
@@ -166,8 +165,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
     @Override
     public Collection<ISoundFactory> findBiomeSoundMatches() {
-        return this.loopSounds.stream()
-                .filter(AcousticEntry::matches)
+        return this.loopSounds
+                .findMatches()
                 .map(AcousticEntry::getAcoustic)
                 .collect(Collectors.toList());
     }
@@ -176,7 +175,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     public Optional<ISoundFactory> getExtraSound(final SoundEventType type, final IRandomizer random) {
 
         @Nullable
-        Collection<AcousticEntry> sourceList = null;
+        AcousticEntryCollection sourceList = null;
 
         switch (type) {
             case ADDITION -> {
@@ -194,11 +193,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
             case MUSIC -> sourceList = this.musicSounds;
         }
 
-        if (sourceList == null || sourceList.isEmpty())
-            return Optional.empty();
-
-        var candidates = sourceList.stream().filter(AcousticEntry::matches);
-        return WeightTable.makeSelection(candidates);
+        return sourceList == null ? Optional.empty() : sourceList.makeSelection();
     }
 
     @Override
@@ -266,13 +261,13 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
     public void trim() {
         if (this.loopSounds.isEmpty())
-            this.loopSounds = ImmutableList.of();
+            this.loopSounds = AcousticEntryCollection.EMPTY;
         if (this.moodSounds.isEmpty())
-            this.moodSounds = ImmutableList.of();
+            this.moodSounds = AcousticEntryCollection.EMPTY;
         if (this.additionalSounds.isEmpty())
-            this.additionalSounds = ImmutableList.of();
+            this.additionalSounds = AcousticEntryCollection.EMPTY;
         if (this.musicSounds.isEmpty())
-            this.musicSounds = ImmutableList.of();
+            this.musicSounds = AcousticEntryCollection.EMPTY;
         if (this.comments.isEmpty())
             this.comments = ImmutableList.of();
     }

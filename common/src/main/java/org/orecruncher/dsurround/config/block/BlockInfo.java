@@ -10,7 +10,6 @@ import org.orecruncher.dsurround.config.AcousticEntry;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
-import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -60,7 +59,7 @@ public class BlockInfo {
     private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
     protected final int version;
-    protected Collection<AcousticEntry> sounds = new AcousticEntryCollection();
+    protected AcousticEntryCollection sounds = new AcousticEntryCollection();
     protected Collection<IBlockEffectProducer> blockEffects = new ObjectArray<>();
 
     protected Script soundChance = new Script("0.01");
@@ -100,7 +99,6 @@ public class BlockInfo {
         this.blockEffects.add(effect);
     }
 
-    // TODO: Eliminate duplicates
     public void update(BlockConfigRule config) {
         // Reset of a block clears all registries
         if (config.clearSounds())
@@ -134,8 +132,7 @@ public class BlockInfo {
         if (this.sounds != null) {
             var chance = CONDITION_EVALUATOR.eval(this.soundChance);
             if (chance instanceof Double c && random.nextDouble() < c) {
-                var candidates = this.sounds.stream().filter(AcousticEntry::matches);
-                return WeightTable.makeSelection(candidates);
+                return this.sounds.makeSelection();
             }
         }
         return Optional.empty();
@@ -147,7 +144,7 @@ public class BlockInfo {
 
     public void trim() {
         if (this.sounds.isEmpty()) {
-            this.sounds = ImmutableList.of();
+            this.sounds = AcousticEntryCollection.EMPTY;
         }
         if (this.blockEffects.isEmpty()) {
             this.blockEffects = ImmutableList.of();

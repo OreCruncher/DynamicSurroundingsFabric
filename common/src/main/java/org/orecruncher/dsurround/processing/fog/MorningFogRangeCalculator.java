@@ -2,8 +2,7 @@ package org.orecruncher.dsurround.processing.fog;
 
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.util.Mth;
-import net.minecraft.util.random.WeightedEntry;
-import net.minecraft.util.random.WeightedRandom;
+import net.minecraft.util.random.SimpleWeightedRandomList;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -11,28 +10,30 @@ import org.orecruncher.dsurround.lib.MinecraftClock;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 
-import java.util.List;
-
 public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
 
-    private static final List<WeightedEntry.Wrapper<FogDensity>> SPRING_FOG = List.of(
-            WeightedEntry.wrap(FogDensity.NORMAL, 30),
-            WeightedEntry.wrap(FogDensity.MEDIUM, 20),
-            WeightedEntry.wrap(FogDensity.HEAVY, 10));
+    private static final SimpleWeightedRandomList<FogDensity> SPRING_FOG = new SimpleWeightedRandomList.Builder<FogDensity>()
+            .add(FogDensity.NORMAL, 30)
+            .add(FogDensity.MEDIUM, 20)
+            .add(FogDensity.HEAVY, 10)
+            .build();
 
-    private static final List<WeightedEntry.Wrapper<FogDensity>> SUMMER_FOG = List.of(
-            WeightedEntry.wrap(FogDensity.LIGHT, 20),
-            WeightedEntry.wrap(FogDensity.NONE, 10));
+    private static final SimpleWeightedRandomList<FogDensity> SUMMER_FOG = new SimpleWeightedRandomList.Builder<FogDensity>()
+            .add(FogDensity.LIGHT, 20)
+            .add(FogDensity.NONE, 10)
+            .build();
 
-    private static final List<WeightedEntry.Wrapper<FogDensity>> AUTUMN_FOG = List.of(
-            WeightedEntry.wrap(FogDensity.NORMAL, 10),
-            WeightedEntry.wrap(FogDensity.MEDIUM, 20),
-            WeightedEntry.wrap(FogDensity.HEAVY, 10));
+    private static final SimpleWeightedRandomList<FogDensity> AUTUMN_FOG = new SimpleWeightedRandomList.Builder<FogDensity>()
+            .add(FogDensity.NORMAL, 10)
+            .add(FogDensity.MEDIUM, 20)
+            .add(FogDensity.HEAVY, 10)
+            .build();
 
-    private static final List<WeightedEntry.Wrapper<FogDensity>> WINTER_FOG = List.of(
-            WeightedEntry.wrap(FogDensity.LIGHT, 20),
-            WeightedEntry.wrap(FogDensity.NORMAL, 20),
-            WeightedEntry.wrap(FogDensity.MEDIUM, 10));
+    private static final SimpleWeightedRandomList<FogDensity> WINTER_FOG = new SimpleWeightedRandomList.Builder<FogDensity>()
+            .add(FogDensity.LIGHT, 20)
+            .add(FogDensity.NORMAL, 20)
+            .add(FogDensity.MEDIUM, 10)
+            .build();
 
     protected final ISeasonalInformation seasonInfo;
     protected final MinecraftClock clock;
@@ -99,7 +100,7 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
 
     @NotNull
     protected FogDensity getFogType() {
-        List<WeightedEntry.Wrapper<FogDensity>> selections;
+        SimpleWeightedRandomList<FogDensity> selections;
         if (this.seasonInfo.isSpring())
             selections = SPRING_FOG;
         else if (this.seasonInfo.isSummer())
@@ -112,9 +113,6 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
             // Shouldn't get here, but...
             return FogDensity.NONE;
 
-        return WeightedRandom
-                .getRandomItem(Randomizer.current(), selections)
-                .map(WeightedEntry.Wrapper::data)
-                .orElseThrow();
+        return selections.getRandomValue(Randomizer.current()).orElseThrow();
     }
 }
