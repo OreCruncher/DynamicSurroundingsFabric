@@ -80,6 +80,17 @@ public final class SoundInstanceHandler {
 
         final ResourceLocation id = theSound.getLocation();
 
+        return isSoundBlocked(id) || isSoundCulledLogical(id);
+    }
+
+    /**
+     * Remaps the sound to a different one and queues to the sound engine.
+     *
+     * @param theSound The sound that is being played
+     * @return True if the sound was remapped, false otherwise
+     */
+    public static boolean remapSoundPlay(final SoundInstance theSound) {
+        final ResourceLocation id = theSound.getLocation();
         if (THUNDERSTORM_CONFIG.replaceThunderSounds && THUNDER_SOUNDS.contains(id)) {
             // Yeah - a bit reentrant but it should be good
             var soundFactory = SOUND_LIBRARY.getSoundFactory(THUNDER_SOUND_FACTORY);
@@ -89,8 +100,7 @@ public final class SoundInstanceHandler {
                 return true;
             }
         }
-
-        return isSoundBlocked(id) || isSoundCulledLogical(id);
+        return false;
     }
 
     /**
