@@ -13,6 +13,11 @@ import org.orecruncher.dsurround.lib.IdentityUtils;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Sound mapping configuration rule. The order of the rules is important as they are processed sequentially. For
+ * mappings that have more than one rule, the default is placed as the last entry without any BlockState
+ * specifications.
+ */
 public record SoundMappingConfigRule(ResourceLocation soundEvent, List<MappingRule> rules) {
 
     public static final Codec<SoundMappingConfigRule> CODEC = RecordCodecBuilder.create((instance) ->
@@ -45,8 +50,10 @@ public record SoundMappingConfigRule(ResourceLocation soundEvent, List<MappingRu
             public Optional<ResourceLocation> findMatch(@Nullable BlockState state) {
                 if (this.blocks.isEmpty())
                     return Optional.of(this.factory);
+                // Since the rules have BlockState matching if a null state is provided
+                // return empty - nothing could be matched.
                 if (state == null)
-                    throw new RuntimeException("BlockState needs to be specified in order to match blockstate rules");
+                    return Optional.empty();
                 for( var rule : this.blocks) {
                     if (rule.match(state))
                         return Optional.of(this.factory);

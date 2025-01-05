@@ -13,10 +13,11 @@
 **What's New**
 * Toolbar sounds will play the "block step" sound for block items. It is off by default, and can be turned on in settings.
 * Added whatsplaying subcommand to /dsmm. Will report on the music that is playing in the Music Manager.
-* Work in Progress: Brought back a variety of block step sounds. Dynamic Surroundings will perform remapping of sound plays to get an updated sound. This is not intended to be full-featured as with prior step simulations.
+* Work in Progress: Brought back a variety of block step sounds. Dynamic Surroundings will perform remapping of sound plays to get an updated sound. This is not intended to be full-featured as with prior step simulations. Can be disabled in the configuration (Sound Options -> Sound Remapping).
 
 **Changes**
 * Do not tint biome fog if biome fog effect is disabled.
+* Internal modifications and restructure to facilitate porting to MC 1.21.4. Mojang started its refactor for how component data is encoded, not to mention the always welcome "find out what was renamed and where it was moved to" game.
 
 **Fixes**
 * Disabling fog effect actually works

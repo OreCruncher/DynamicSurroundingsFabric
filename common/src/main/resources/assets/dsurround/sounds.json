@@ -1314,6 +1314,16 @@
 			"dsurround:footsteps/muffledice/muffledice_walk9"
 		]
 	},
+	"footsteps.organic": {
+		"ds_category": "player",
+		"subtitle": "dsurround.sound.caption.footsteps.organic",
+		"sounds": [
+			"dsurround:footsteps/organic/organic_walk1",
+			"dsurround:footsteps/organic/organic_walk2",
+			"dsurround:footsteps/organic/organic_walk3",
+			"dsurround:footsteps/organic/organic_walk4"
+		]
+	},
 	"footsteps.sand": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.sand",

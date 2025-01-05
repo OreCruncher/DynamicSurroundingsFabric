@@ -1,8 +1,10 @@
 package org.orecruncher.dsurround.config.block;
 
 import com.google.common.collect.ImmutableList;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.AcousticEntryCollection;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
@@ -59,6 +61,8 @@ public class BlockInfo {
     private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
     protected final int version;
+    @Nullable
+    protected final ResourceLocation stepSound;
     protected AcousticEntryCollection sounds = new AcousticEntryCollection();
     protected Collection<IBlockEffectProducer> blockEffects = new ObjectArray<>();
 
@@ -68,12 +72,14 @@ public class BlockInfo {
 
     public BlockInfo(int version) {
         this.version = version;
+        this.stepSound = null;
     }
 
     public BlockInfo(int version, BlockState state) {
         this.version = version;
         this.soundOcclusion = getSoundOcclusionSetting(state);
         this.soundReflectivity = getSoundReflectionSetting(state);
+        this.stepSound = state.getSoundType().getStepSound().getLocation();
     }
 
     public boolean isDefault() {
@@ -329,6 +335,10 @@ public class BlockInfo {
                 .append("; occlusion: ")
                 .append(this.soundOcclusion)
                 .append("\n");
+
+        if (this.stepSound != null) {
+            builder.append("step sound: ").append(this.stepSound).append("\n");
+        }
 
         if (!this.sounds.isEmpty()) {
             builder.append("sound chance: ").append(this.soundChance);
