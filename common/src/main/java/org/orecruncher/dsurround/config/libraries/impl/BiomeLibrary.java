@@ -42,7 +42,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
     // Cached list of biome config rules.  Need to hold onto them
     // because they may be needed to handle a dynamic biome load.
-    private final ObjectArray<BiomeConfigRule> biomeConfigs = new ObjectArray<>(64);
+    private final ObjectArray<BiomeConfigRule> biomeConfigs = new ObjectArray<>(128);
 
     // Current version of the configs that are loaded.  Used to detect when
     // configs changed and cached biome info needs a refresh.

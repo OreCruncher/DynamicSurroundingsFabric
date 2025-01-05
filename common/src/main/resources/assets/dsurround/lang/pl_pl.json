@@ -137,8 +137,6 @@
   "dsurround.config.footstepAccents.enableWetSurfaceAccents.tooltip": "Włącza/wyłącza akcenty dla deszczu or blocks are waterlogged",
   "dsurround.config.footstepAccents.enableFloorSqueaks": "Skrzypienie podłogi",
   "dsurround.config.footstepAccents.enableFloorSqueaks.tooltip": "Włącza/wyłącza akcenty dla gracza chodzącego po skrzypiących blokach",
-  "dsurround.config.footstepAccents.enableLeafAccents": "Akcenty liściastych powierzchni",
-  "dsurround.config.footstepAccents.enableLeafAccents.tooltip": "Włącza/wyłącza akcenty dla gracza chodzącego po liściastych blokach",
   "dsurround.config.particleTweaks": "Ulepszenia cząsteczek",
   "dsurround.config.particleTweaks.tooltip": "Opcje konfiguracji dla ulepszenia zachowania cząsteczek",
   "dsurround.config.particleTweaks.suppressPlayerParticles": "Wygaś efekty mikstur gracza",

@@ -26,7 +26,6 @@ public class FootstepAccents {
         // Only register these providers if Presence Footsteps is not installed
         if (!Platform.isModLoaded(Constants.MOD_PRESENCE_FOOTSTEPS)) {
             this.providers.add(new WaterySurfaceAccent(config));
-            this.providers.add(new LeavesAccent(config));
         }
     }
 
