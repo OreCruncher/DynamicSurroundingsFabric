@@ -28,4 +28,9 @@ public interface IDimensionInformation {
      * The veritical Y level where clouds are expected to be
      */
     int getCloudHeight();
+
+    /**
+     * Indicates whether the compass should "wobble" making the bearing unreadable
+     */
+    boolean getCompassWobble();
 }

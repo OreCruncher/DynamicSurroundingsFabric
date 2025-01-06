@@ -19,6 +19,7 @@ public class DimensionInfo {
     protected int spaceHeight;
     protected boolean alwaysOutside = false;
     protected boolean playBiomeSounds = true;
+    protected boolean compassWobble = false;
 
     DimensionInfo() {
         this.name = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "no_dimension");
@@ -37,6 +38,8 @@ public class DimensionInfo {
         // Force sea level based on known world types that give heartburn
         if (this.isFlatWorld)
             this.seaLevel = 0;
+
+        this.compassWobble = !world.dimensionType().natural();
     }
 
     public void update(DimensionConfigRule config) {
@@ -48,6 +51,8 @@ public class DimensionInfo {
             config.cloudHeight().ifPresentOrElse(
                     v -> this.cloudHeight = v,
                     () -> this.cloudHeight = this.skyHeight / 2);
+
+            config.compassWobble().ifPresent(v -> this.compassWobble = v);
 
             this.spaceHeight = this.skyHeight + SPACE_HEIGHT_OFFSET;
         }
@@ -83,6 +88,10 @@ public class DimensionInfo {
 
     public boolean isFlatWorld() {
         return this.isFlatWorld;
+    }
+
+    public boolean getCompassWobble() {
+        return this.compassWobble;
     }
 
 }

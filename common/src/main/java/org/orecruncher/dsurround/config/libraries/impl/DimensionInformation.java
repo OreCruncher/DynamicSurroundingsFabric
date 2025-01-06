@@ -48,6 +48,10 @@ public class DimensionInformation implements IDimensionInformation {
         return this.getInfo().getCloudHeight();
     }
 
+    public boolean getCompassWobble() {
+        return this.getInfo().getCompassWobble();
+    }
+
     private DimensionInfo getInfo() {
         if (this.info == null)
             this.info = this.dimensionLibrary.getData(this.level());
