@@ -18,7 +18,7 @@ public record SoundMapping(ResourceLocation soundEvent, ObjectArray<Mapping> rul
     }
 
     public boolean isBlockStateNeeded() {
-        return !this.rules.isEmpty() && !this.rules.getFirst().blocks.isEmpty();
+        return !this.rules.isEmpty() && !this.rules.getFirst().isDefaultRule();
     }
 
     public Optional<ResourceLocation> findMatch(@Nullable BlockState state) {
@@ -36,23 +36,42 @@ public record SoundMapping(ResourceLocation soundEvent, ObjectArray<Mapping> rul
             throw new RuntimeException("Unable to merge sound mapping rule - factories do not match");
 
         for (var rule : mapping.rules()) {
+            var mapped = Mapping.of(rule);
+
+            // Find the first applicable rule that matches the factory that is needed.
+            // It's possible to have multiple rules with the same factory. It can occur when
+            // merging two different rule definitions where one has the factory as a default
+            // and the other has block matchers.
             var existingRule = this.rules.stream().filter(r -> r.factory().equals(rule.factory())).findFirst();
             if (existingRule.isPresent()) {
-                // Need to add block matcher definitions
-                existingRule.get().merge(rule);
+                // If it is a default rule, we do not want to merge. Instead, we
+                // insert prior. We need to preserve the existing rule as default.
+                if (existingRule.get().isDefaultRule()) {
+                    this.insertBeforeDefaultRule(mapped);
+                } else {
+                    // Need to add block matcher definitions
+                    existingRule.get().merge(mapped);
+                }
             } else {
                 // Need to add the rule. If the last rule in the collection is all matches, we need
-                // to insert prior. Otherwise, we can append.
+                // to insert prior. Otherwise, we append.
                 var last = this.rules.getLast();
-                if (last.blocks().isEmpty()) {
-                    this.rules.remove(last);
-                    this.rules.add(Mapping.of(rule));
-                    this.rules.add(last);
+                if (last.isDefaultRule()) {
+                    this.insertBeforeDefaultRule(mapped);
                 } else {
-                    rules.add(Mapping.of(rule));
+                    this.rules.add(mapped);
                 }
             }
         }
+    }
+
+    private void insertBeforeDefaultRule(Mapping mapping) {
+        var last = this.rules.getLast();
+        if (!last.isDefaultRule())
+            throw new RuntimeException("Last rule in sound mapping configuration is not default");
+        this.rules.remove(last);
+        this.rules.add(mapping);
+        this.rules.add(last);
     }
 
     public record Mapping(ObjectArray<IMatcher<BlockState>> blocks, ResourceLocation factory) {
@@ -64,7 +83,7 @@ public record SoundMapping(ResourceLocation soundEvent, ObjectArray<Mapping> rul
         }
 
         public Optional<ResourceLocation> findMatch(@Nullable BlockState state) {
-            if (this.blocks.isEmpty())
+            if (this.isDefaultRule())
                 return Optional.of(this.factory);
             // Since the rules have BlockState matching if a null state is provided
             // return empty - nothing could be matched.
@@ -77,7 +96,11 @@ public record SoundMapping(ResourceLocation soundEvent, ObjectArray<Mapping> rul
             return Optional.empty();
         }
 
-        public void merge(SoundMappingConfigRule.MappingRule rule) {
+        public boolean isDefaultRule() {
+            return this.blocks.isEmpty();
+        }
+
+        public void merge(Mapping rule) {
             if (!this.factory.equals(rule.factory()))
                 throw new RuntimeException("Unable to add mapping rule - factories do not match");
             this.blocks.addAll(rule.blocks());

@@ -114,7 +114,8 @@
           "minecraft:mushroom_stem",
           "minecraft:pumpkin",
           "minecraft:carved_pumpkin",
-          "minecraft:melon"
+          "minecraft:melon",
+          "minecraft:cocoa"
         ],
         "factory": "dsurround:footsteps.organic"
       },
@@ -134,6 +135,22 @@
       },
       {
         "factory": "dsurround:footsteps.metalbox"
+      }
+    ]
+  },
+  {
+    "soundEvent": "minecraft:block.ladder.step",
+    "rules": [
+      {
+        "factory": "dsurround:footsteps/ladder"
+      }
+    ]
+  },
+  {
+    "soundEvent": "minecraft:block.wool.step",
+    "rules": [
+      {
+        "factory": "dsurround:footsteps.rug"
       }
     ]
   }

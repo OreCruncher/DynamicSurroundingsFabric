@@ -1441,6 +1441,23 @@
 			"dsurround:footsteps/metalbar/metalbar_walk9"
 		]
 	},
+	"footsteps.rug": {
+		"ds_category": "player",
+		"subtitle": "dsurround.sound.caption.footsteps.rug",
+		"sounds": [
+			"dsurround:footsteps/rug/rug_walk1",
+			"dsurround:footsteps/rug/rug_walk10",
+			"dsurround:footsteps/rug/rug_walk11",
+			"dsurround:footsteps/rug/rug_walk2",
+			"dsurround:footsteps/rug/rug_walk3",
+			"dsurround:footsteps/rug/rug_walk4",
+			"dsurround:footsteps/rug/rug_walk5",
+			"dsurround:footsteps/rug/rug_walk6",
+			"dsurround:footsteps/rug/rug_walk7",
+			"dsurround:footsteps/rug/rug_walk8",
+			"dsurround:footsteps/rug/rug_walk9"
+		]
+	},
 	"silence": {
 		"sounds": [
 			"dsurround:ambient/silence"
