@@ -18,6 +18,12 @@
         "factory": "dsurround:footsteps.leaves_through"
       },
       {
+        "blocks": [
+          "minecraft:dirt_path"
+        ],
+        "factory": "dsurround:footsteps/dirt_path"
+      },
+      {
         "factory": "dsurround:footsteps.grass"
       }
     ]
@@ -49,6 +55,12 @@
   {
     "soundEvent": "minecraft:block.stone.step",
     "rules": [
+      {
+        "blocks": [
+          "#minecraft:cauldrons"
+        ],
+        "factory": "dsurround:footsteps.metalbox"
+      },
       {
         "factory": "dsurround:footsteps.stone"
       }

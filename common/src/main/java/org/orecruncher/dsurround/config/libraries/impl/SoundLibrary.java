@@ -257,7 +257,7 @@ public final class SoundLibrary implements ISoundLibrary {
             BlockState blockState = null;
             if (mappingRule.isBlockStateNeeded()) {
                 var level = GameUtils.getWorld().orElseThrow();
-                var pos = BlockPos.containing(soundInstance.getX(), soundInstance.getY(), soundInstance.getZ()).below();
+                var pos = BlockPos.containing(soundInstance.getX(), soundInstance.getY() + 0.25D, soundInstance.getZ()).below();
                 blockState = level.getBlockState(pos);
 
                 // If the blockstate is air or not solid, it means we are hanging at a block edge. Scan around looking for
