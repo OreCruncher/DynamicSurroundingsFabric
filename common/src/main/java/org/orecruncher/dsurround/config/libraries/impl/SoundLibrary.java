@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.Music;
@@ -19,6 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
+import org.orecruncher.dsurround.config.SoundMapping;
 import org.orecruncher.dsurround.config.data.SoundMappingConfigRule;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
 import org.orecruncher.dsurround.config.libraries.IReloadEvent;
@@ -66,6 +68,7 @@ public final class SoundLibrary implements ISoundLibrary {
 
     private static final ResourceLocation THUNDER_SOUND = SoundEvents.LIGHTNING_BOLT_THUNDER.getLocation();
     private static final Set<String> SOUND_REMAP_BLOCKED_MOBS = ImmutableSet.of("creeper");
+    private static final BlockPos.MutableBlockPos MUTABLE_BLOCK_POS = new BlockPos.MutableBlockPos();
 
     private final IModLog logger;
     private final Configuration config;
@@ -78,7 +81,7 @@ public final class SoundLibrary implements ISoundLibrary {
     private final Set<ResourceLocation> blockedSounds = new ObjectOpenHashSet<>();
     private final Set<ResourceLocation> culledSounds = new ObjectOpenHashSet<>();
     private final List<ResourceLocation> startupSounds = new ArrayList<>();
-    private final Map<ResourceLocation, SoundMappingConfigRule> soundRemappings = new Object2ObjectOpenHashMap<>();
+    private final Map<ResourceLocation, SoundMapping> soundRemappings = new Object2ObjectOpenHashMap<>();
     private List<IndividualSoundConfigEntry> soundConfiguration = new ArrayList<>();
 
     public SoundLibrary(Configuration config, IModLog logger, IMinecraftDirectories directories) {
@@ -260,17 +263,13 @@ public final class SoundLibrary implements ISoundLibrary {
                 var pos = BlockPos.containing(soundInstance.getX(), soundInstance.getY() + 0.25D, soundInstance.getZ()).below();
                 blockState = level.getBlockState(pos);
 
-                // If the blockstate is air or not solid, it means we are hanging at a block edge. Scan around looking for
+                // If the BlockState is air or not solid, it means we are hanging at a block edge. Scan around looking for
                 // something that is solid. It's not perfect, but it's 90% down the center.
                 if (blockState.isAir() || !blockState.isSolid()) {
-                    blockState = level.getBlockState(pos.north());
-                    if (blockState.isAir() || !blockState.isSolid()) {
-                        blockState = level.getBlockState(pos.south());
-                        if (blockState.isAir() || !blockState.isSolid()) {
-                            blockState = level.getBlockState(pos.east());
-                            if (blockState.isAir() || !blockState.isSolid())
-                                blockState = level.getBlockState(pos.west());
-                        }
+                    for (var dir : Direction.Plane.HORIZONTAL) {
+                        blockState = level.getBlockState(MUTABLE_BLOCK_POS.setWithOffset(pos, dir));
+                        if (!blockState.isAir() && blockState.isSolid())
+                            break;
                     }
                 }
             }
@@ -331,7 +330,15 @@ public final class SoundLibrary implements ISoundLibrary {
     }
 
     private void registerSoundRemappings(DiscoveredResource<List<SoundMappingConfigRule>> mappings) {
-        mappings.resourceContent().forEach(mapping -> this.soundRemappings.put(mapping.soundEvent(), mapping));
+        for (var mapping : mappings.resourceContent()) {
+            if (!this.soundRemappings.containsKey(mapping.soundEvent())) {
+                this.soundRemappings.put(mapping.soundEvent(), SoundMapping.of(mapping));
+            } else {
+                // Need to merge rules
+                var existingMapping = this.soundRemappings.get(mapping.soundEvent());
+                existingMapping.merge(mapping);
+            }
+        }
         this.logger.debug("Registered %d sound remappings", mappings.resourceContent().size());
     }
 

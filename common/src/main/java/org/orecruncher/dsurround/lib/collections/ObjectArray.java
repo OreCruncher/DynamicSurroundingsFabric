@@ -62,6 +62,10 @@ public class ObjectArray<T> implements Collection<T> {
         return this.get(0);
     }
 
+    public T getLast() {
+        return this.get(this.size() - 1);
+    }
+
     private void remove0(final int idx) {
         final Object m = this.data[--this.insertionIdx];
         this.data[this.insertionIdx] = null;
