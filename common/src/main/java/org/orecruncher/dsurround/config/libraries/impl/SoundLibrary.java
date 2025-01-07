@@ -15,7 +15,6 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
@@ -282,7 +281,7 @@ public final class SoundLibrary implements ISoundLibrary {
                 // Need to force a sound to be selected so we can get the volume
                 soundInstance.resolve(GameUtils.getSoundManager());
                 var volumeScale = soundInstance.getVolume();
-                return Optional.of(soundFactory.get().createAtLocation(new Vec3(soundInstance.getX(), soundInstance.getY(), soundInstance.getZ()), volumeScale));
+                return Optional.of(soundFactory.get().createAtLocation(soundInstance.getX(), soundInstance.getY(), soundInstance.getZ(), volumeScale));
             }
         }
 
@@ -302,8 +301,7 @@ public final class SoundLibrary implements ISoundLibrary {
             var mobType = path.substring(7, path.indexOf('.', 7));
             if (!SOUND_REMAP_BLOCKED_MOBS.contains(mobType)) {
                 var level = GameUtils.getWorld().orElseThrow();
-                var position = new Vec3(soundInstance.getX(), soundInstance.getY(), soundInstance.getZ());
-                var pos = BlockPos.containing(position).below();
+                var pos = BlockPos.containing(soundInstance.getX(), soundInstance.getY(), soundInstance.getZ()).below();
                 soundLocation = level.getBlockState(pos).getSoundType().getStepSound().getLocation();
                 this.logger.debug("Mob sound remapping from %s to %s", soundInstance.getLocation(), soundLocation);
                 return soundLocation;

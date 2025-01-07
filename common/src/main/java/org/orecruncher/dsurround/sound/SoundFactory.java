@@ -103,7 +103,7 @@ public record SoundFactory(
     }
 
     @Override
-    public SimpleSoundInstance createAtLocation(Vec3 position, float volumeScale) {
+    public SimpleSoundInstance createAtLocation(double posX, double posY, double posZ, float volumeScale) {
         return new SimpleSoundInstance(
                 this.soundEvent.getLocation(),
                 this.category,
@@ -113,9 +113,9 @@ public record SoundFactory(
                 this.isRepeatable,
                 this.repeatDelay,
                 this.attenuation,
-                position.x(),
-                position.y(),
-                position.z(),
+                posX,
+                posY,
+                posZ,
                 this.global);
     }
 
