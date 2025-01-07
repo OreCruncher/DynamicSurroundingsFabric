@@ -7,6 +7,7 @@ import net.minecraft.world.level.biome.BiomeSpecialEffects;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
+import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -56,16 +57,18 @@ public abstract class MixinBiome implements IBiomeExtended {
     public abstract float dsurround_getTemperature(BlockPos pos);
 
     /**
-     * Obtain fog color from Dynamic Surroundings' config if available.
+     * Get fog color from Dynamic Surroundings' config if available.
      *
      * @param cir Mixin callback result
      */
     @Inject(method = "getFogColor()I", at = @At("HEAD"), cancellable = true)
     public void dsurround_getFogColor(CallbackInfoReturnable<Integer> cir) {
-        if (this.dsurround_info != null) {
-            var color = this.dsurround_info.getFogColor();
-            if (color != null)
-                cir.setReturnValue(color.getValue());
+        if (MixinHelpers.fogOptions.enableFogEffects && MixinHelpers.fogOptions.enableBiomeFog) {
+            if (this.dsurround_info != null) {
+                var color = this.dsurround_info.getFogColor();
+                if (color != null)
+                    cir.setReturnValue(color.getValue());
+            }
         }
     }
 

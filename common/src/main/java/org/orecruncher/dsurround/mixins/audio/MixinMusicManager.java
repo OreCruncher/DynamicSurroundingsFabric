@@ -2,9 +2,11 @@ package org.orecruncher.dsurround.mixins.audio;
 
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.MusicManager;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.Music;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.gui.sound.SoundToast;
+import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.mixinutils.IMusicManager;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.spongepowered.asm.mixin.Mixin;
@@ -62,6 +64,21 @@ public class MixinMusicManager implements IMusicManager {
             this.nextSongDelay = 100;
             this.dsurround_pauseTicking = false;
         }
+    }
+
+    @Override
+    public Component dsurround_whatsPlaying() {
+        if (this.currentMusic == null)
+            return Component.translatable("dsurround.text.musicmanager.nothing");
+
+        // Lookup meta information
+        var metaData = MixinHelpers.SOUND_LIBRARY.getSoundMetadata(this.currentMusic.getLocation());
+        if (metaData == null || Component.empty().equals(metaData.getTitle()))
+            return Component.literal(this.currentMusic.getLocation().toString());
+
+        var title = metaData.getTitle().copy().withColor(ColorPalette.PUMPKIN_ORANGE.getValue());
+        var author = metaData.getCredits().get(0).author().copy().withColor(ColorPalette.WHEAT.getValue());
+        return Component.translatable("dsurround.text.musicmanager.playing", title, author, Component.translationArg(this.currentMusic.getLocation()));
     }
 
     @Inject(method = "tick()V", at = @At("HEAD"), cancellable = true)

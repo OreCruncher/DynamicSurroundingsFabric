@@ -1,0 +1,13 @@
+[
+  {
+    "soundEvent": "minecraft:block.wood.step",
+    "rules": [
+      {
+        "blocks": [
+          "biomesoplenty:glowshroom_block"
+        ],
+        "factory": "dsurround:footsteps.organic"
+      }
+    ]
+  }
+]

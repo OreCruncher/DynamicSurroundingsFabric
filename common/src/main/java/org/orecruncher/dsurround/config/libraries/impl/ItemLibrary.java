@@ -10,6 +10,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.*;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.ItemClassType;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 import org.orecruncher.dsurround.config.libraries.IReloadEvent;
@@ -32,14 +33,16 @@ public class ItemLibrary implements IItemLibrary {
 
     private final ITagLibrary tagLibrary;
     private final IModLog logger;
+    private final Configuration config;
     private final Reference2ObjectOpenHashMap<Item, ISoundFactory> itemEquipFactories = new Reference2ObjectOpenHashMap<>();
     private final Reference2ObjectOpenHashMap<Item, ISoundFactory> itemSwingFactories = new Reference2ObjectOpenHashMap<>();
     private final Reference2ObjectOpenHashMap<Item, ISoundFactory> itemArmorStepFactories = new Reference2ObjectOpenHashMap<>();
     private int version;
 
-    public ItemLibrary(ITagLibrary tagLibrary, IModLog logger) {
+    public ItemLibrary(ITagLibrary tagLibrary, Configuration config, IModLog logger) {
         this.tagLibrary = tagLibrary;
         this.logger = ModLog.createChild(logger, "ItemLibrary");
+        this.config = config;
     }
 
     @Override
@@ -98,7 +101,7 @@ public class ItemLibrary implements IItemLibrary {
             if (itemEquipSound != null)
                 return SoundFactoryBuilder
                         .create(itemEquipSound)
-                        .category(SoundSource.PLAYERS).volume(0.5F).pitch(0.8F, 1.2F).build();
+                        .category(SoundSource.PLAYERS).volume(0.25F).pitch(0.8F, 1.2F).build();
             return defaultSoundFactory.get();
         }
 
@@ -107,29 +110,33 @@ public class ItemLibrary implements IItemLibrary {
 
     @Nullable
     private static SoundEvent getEquipableSoundEvent(ItemStack stack) {
-        var item = stack.getItem();
         SoundEvent itemEquipSound = null;
-
-        if (item instanceof Equipable equipment)
-            itemEquipSound = equipment.getEquipSound().value();
-        else if (item instanceof ArmorItem armor)
-            itemEquipSound = armor.getEquipSound().value();
-
+        var equipable = Equipable.get(stack);
+        if (equipable != null) {
+            itemEquipSound = equipable.getEquipSound().value();
+        }
         return itemEquipSound;
     }
 
     @Nullable
     private SoundEvent getSoundEvent(ItemStack stack) {
-        // Look for special Equipment and ArmorItem types since they may have built in equip sounds
+        // Look for special Equipment and ArmorItem types since they may have built in equipped sounds
         SoundEvent itemEquipSound = getEquipableSoundEvent(stack);
         if (itemEquipSound != null)
             return itemEquipSound;
 
-        var item = stack.getItem();
+        if (this.config.entityEffects.enableToolbarBlockSounds) {
+            Item item = stack.getItem();
+            if (item instanceof BlockItem blockItem) {
+                var soundType = blockItem.getBlock().defaultBlockState().getSoundType();
+                itemEquipSound = soundType.getStepSound();
+            }
+        }
 
-        if (item instanceof ElytraItem elytraItem)
-            itemEquipSound = elytraItem.getEquipSound().value();
-        else if (this.tagLibrary.is(ItemTags.LAVA_BUCKETS, stack))
+        if (itemEquipSound != null)
+            return itemEquipSound;
+
+        if (this.tagLibrary.is(ItemTags.LAVA_BUCKETS, stack))
             itemEquipSound = SoundEvents.BUCKET_FILL_LAVA;
         else if (this.tagLibrary.is(ItemTags.WATER_BUCKETS, stack))
             itemEquipSound = SoundEvents.BUCKET_FILL;

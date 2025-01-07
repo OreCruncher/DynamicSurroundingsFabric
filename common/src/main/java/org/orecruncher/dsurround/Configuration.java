@@ -165,6 +165,10 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enables display of toast messages for credited music")
         public boolean displayToastMessagesForMusic = true;
+
+        @Property
+        @Comment("Enables sound remapping when sounds are played")
+        public boolean remapSounds = true;
     }
 
     public static class BlockEffects {
@@ -234,6 +238,11 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @RestartRequired(client = false)
+        @Comment("Enable/disable sound effects for blocks on the toolbar")
+        public boolean enableToolbarBlockSounds = false;
+
+        @Property
+        @RestartRequired(client = false)
         @Comment("Enable/disable item swing sound effects from players and mobs")
         public boolean enableSwingEffect = true;
 
@@ -259,10 +268,6 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable accents when the player is walking on squeaky blocks")
         public boolean enableFloorSqueaks = true;
-
-        @Property
-        @Comment("Enable/disable accents for when the player is walking on leafy blocks")
-        public boolean enableLeafAccents = true;
     }
 
     public static class ParticleTweaks {

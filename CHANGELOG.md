@@ -1,3 +1,29 @@
+> ### DynamicSurroundings-1.21.1-0.4.2
+**All Loaders**
+* JAVA 21+
+* Architectury 13.0.8+
+
+**Fabric**
+* Fabric Loader >= 0.16.9
+* Fabric API >= 0.110.0+1.21.
+
+**NeoForge**
+* NeoForge 21.1.84+
+
+**What's New**
+* Experimental: Toolbar sounds will play the "block step" sound for block items. It is off by default, and can be turned on in settings.
+* Added whatsplaying subcommand to /dsmm. Will report on the music that is playing in the Music Manager.
+* Work in Progress: Brought back a variety of block step sounds. Dynamic Surroundings will perform remapping of sound plays to get an updated sound, which is entirely different from the prior implementation. This is not intended to be full-featured as with prior step simulations. Can be disabled in the configuration (Sound Options -> Sound Remapping).
+
+**Changes**
+* Do not tint biome fog if biome fog effect is disabled.
+* Compass overlay will spin wildly if the dimension is not natural, like the Nether. This mirrors vanilla compass behavior.
+* Internal modifications and restructure to facilitate porting to MC 1.21.4. Mojang started its refactor for how component data is encoded, not to mention the always welcome "find out what was renamed and where it was moved to" game.
+
+**Fixes**
+* Disabling fog effect actually works
+* Compatibility with Nostalgia Tweaks and Distant Horizons world fog effect
+
 > ### DynamicSurroundings-1.21.1-0.4.1
 **All Loaders**
 * JAVA 21+

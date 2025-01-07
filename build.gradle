@@ -58,6 +58,14 @@ subprojects {
         it.options.release = 21
     }
 
+    tasks.register('copyJarToMain', Copy) {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        if (project.name != "common" && project.name != "stubs") {
+            from remapJar
+            into "../build/libs"
+        }
+    }
+
     // Configure Maven publishing.
     publishing {
         publications {

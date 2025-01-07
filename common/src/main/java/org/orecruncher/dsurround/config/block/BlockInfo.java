@@ -1,8 +1,10 @@
 package org.orecruncher.dsurround.config.block;
 
 import com.google.common.collect.ImmutableList;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.AcousticEntryCollection;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
@@ -10,7 +12,6 @@ import org.orecruncher.dsurround.config.AcousticEntry;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
-import org.orecruncher.dsurround.lib.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -60,7 +61,9 @@ public class BlockInfo {
     private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
     protected final int version;
-    protected Collection<AcousticEntry> sounds = new AcousticEntryCollection();
+    @Nullable
+    protected final ResourceLocation stepSound;
+    protected AcousticEntryCollection sounds = new AcousticEntryCollection();
     protected Collection<IBlockEffectProducer> blockEffects = new ObjectArray<>();
 
     protected Script soundChance = new Script("0.01");
@@ -69,12 +72,14 @@ public class BlockInfo {
 
     public BlockInfo(int version) {
         this.version = version;
+        this.stepSound = null;
     }
 
     public BlockInfo(int version, BlockState state) {
         this.version = version;
         this.soundOcclusion = getSoundOcclusionSetting(state);
         this.soundReflectivity = getSoundReflectionSetting(state);
+        this.stepSound = state.getSoundType().getStepSound().getLocation();
     }
 
     public boolean isDefault() {
@@ -100,7 +105,6 @@ public class BlockInfo {
         this.blockEffects.add(effect);
     }
 
-    // TODO: Eliminate duplicates
     public void update(BlockConfigRule config) {
         // Reset of a block clears all registries
         if (config.clearSounds())
@@ -134,8 +138,7 @@ public class BlockInfo {
         if (this.sounds != null) {
             var chance = CONDITION_EVALUATOR.eval(this.soundChance);
             if (chance instanceof Double c && random.nextDouble() < c) {
-                var candidates = this.sounds.stream().filter(AcousticEntry::matches);
-                return WeightTable.makeSelection(candidates);
+                return this.sounds.makeSelection();
             }
         }
         return Optional.empty();
@@ -147,7 +150,7 @@ public class BlockInfo {
 
     public void trim() {
         if (this.sounds.isEmpty()) {
-            this.sounds = ImmutableList.of();
+            this.sounds = AcousticEntryCollection.EMPTY;
         }
         if (this.blockEffects.isEmpty()) {
             this.blockEffects = ImmutableList.of();
@@ -332,6 +335,10 @@ public class BlockInfo {
                 .append("; occlusion: ")
                 .append(this.soundOcclusion)
                 .append("\n");
+
+        if (this.stepSound != null) {
+            builder.append("step sound: ").append(this.stepSound).append("\n");
+        }
 
         if (!this.sounds.isEmpty()) {
             builder.append("sound chance: ").append(this.soundChance);

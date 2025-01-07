@@ -60,7 +60,11 @@ public abstract class MixinSoundEngine {
     @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At("HEAD"), cancellable = true)
     private void dsurround_play(SoundInstance sound, CallbackInfo ci) {
         try {
+            // Check to see if the sound is blocked or being culled
             if (SoundInstanceHandler.shouldBlockSoundPlay(sound))
+                ci.cancel();
+            // Attempt a remapping if configured to do so
+            if (SoundInstanceHandler.remapSoundPlay(sound))
                 ci.cancel();
         } catch (final Exception t) {
             MixinHelpers.LOGGER.error(t, "Error in dsurround_play()!");

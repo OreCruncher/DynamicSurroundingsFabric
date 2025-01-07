@@ -2,50 +2,38 @@ package org.orecruncher.dsurround.processing.fog;
 
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.util.Mth;
+import net.minecraft.util.random.SimpleWeightedRandomList;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
-import org.orecruncher.dsurround.lib.WeightTable;
-
-import java.util.List;
 
 public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
 
-    private record FogDensityEntry(int weight, FogDensity density) implements WeightTable.IItem<FogDensity> {
-        @Override
-        public int getWeight() {
-            return this.weight();
-        }
-        @Override
-        public FogDensity getItem() {
-            return this.density();
-        }
-    }
+    private static final SimpleWeightedRandomList<FogDensity> SPRING_FOG = new SimpleWeightedRandomList.Builder<FogDensity>()
+            .add(FogDensity.NORMAL, 30)
+            .add(FogDensity.MEDIUM, 20)
+            .add(FogDensity.HEAVY, 10)
+            .build();
 
-    private static final FogDensityEntry[] SPRING_FOG = {
-            new FogDensityEntry(30, FogDensity.NORMAL),
-            new FogDensityEntry(20, FogDensity.MEDIUM),
-            new FogDensityEntry(10, FogDensity.HEAVY)
-    };
+    private static final SimpleWeightedRandomList<FogDensity> SUMMER_FOG = new SimpleWeightedRandomList.Builder<FogDensity>()
+            .add(FogDensity.LIGHT, 20)
+            .add(FogDensity.NONE, 10)
+            .build();
 
-    private static final FogDensityEntry[] SUMMER_FOG = {
-            new FogDensityEntry(20, FogDensity.LIGHT),
-            new FogDensityEntry(10, FogDensity.NONE)
-    };
+    private static final SimpleWeightedRandomList<FogDensity> AUTUMN_FOG = new SimpleWeightedRandomList.Builder<FogDensity>()
+            .add(FogDensity.NORMAL, 10)
+            .add(FogDensity.MEDIUM, 20)
+            .add(FogDensity.HEAVY, 10)
+            .build();
 
-    private static final FogDensityEntry[] AUTUMN_FOG = {
-            new FogDensityEntry(10, FogDensity.NORMAL),
-            new FogDensityEntry(20, FogDensity.MEDIUM),
-            new FogDensityEntry(10, FogDensity.HEAVY)
-    };
-
-    private static final FogDensityEntry[] WINTER_FOG = {
-            new FogDensityEntry(20, FogDensity.LIGHT),
-            new FogDensityEntry(20, FogDensity.NORMAL),
-            new FogDensityEntry(10, FogDensity.MEDIUM)
-    };
+    private static final SimpleWeightedRandomList<FogDensity> WINTER_FOG = new SimpleWeightedRandomList.Builder<FogDensity>()
+            .add(FogDensity.LIGHT, 20)
+            .add(FogDensity.NORMAL, 20)
+            .add(FogDensity.MEDIUM, 10)
+            .build();
 
     protected final ISeasonalInformation seasonInfo;
     protected final MinecraftClock clock;
@@ -53,7 +41,7 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
     protected FogDensity type = FogDensity.NONE;
 
     public MorningFogRangeCalculator(ISeasonalInformation seasonInfo, Configuration.FogOptions fogOptions) {
-        super("MorningFogRangeCalculator", fogOptions);
+        super("Morning", fogOptions);
         this.seasonInfo = seasonInfo;
         this.clock = new MinecraftClock();
     }
@@ -112,20 +100,19 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
 
     @NotNull
     protected FogDensity getFogType() {
-        FogDensityEntry[] selections;
-        var clientLevel = GameUtils.getWorld().orElseThrow();
-        if (this.seasonInfo.isSpring(clientLevel))
+        SimpleWeightedRandomList<FogDensity> selections;
+        if (this.seasonInfo.isSpring())
             selections = SPRING_FOG;
-        else if (this.seasonInfo.isSummer(clientLevel))
+        else if (this.seasonInfo.isSummer())
             selections = SUMMER_FOG;
-        else if (this.seasonInfo.isAutumn(clientLevel))
+        else if (this.seasonInfo.isAutumn())
             selections = AUTUMN_FOG;
-        else if (this.seasonInfo.isWinter(clientLevel))
+        else if (this.seasonInfo.isWinter())
             selections = WINTER_FOG;
         else
             // Shouldn't get here, but...
             return FogDensity.NONE;
 
-        return WeightTable.makeSelection(List.of(selections)).orElseThrow();
+        return selections.getRandomValue(Randomizer.current()).orElseThrow();
     }
 }

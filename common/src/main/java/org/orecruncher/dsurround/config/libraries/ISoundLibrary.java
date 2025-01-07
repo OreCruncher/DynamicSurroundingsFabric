@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.config.libraries;
 
+import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
@@ -21,6 +22,7 @@ public interface ISoundLibrary extends ILibrary {
     ISoundFactory getSoundFactoryOrDefault(ResourceLocation factoryLocation);
     ISoundFactory getSoundFactoryForMusic(Music music);
 
+    Optional<SoundInstance> remapSound(SoundInstance soundInstance);
     boolean isBlocked(final ResourceLocation id);
     boolean isCulled(final ResourceLocation id);
     float getVolumeScale(SoundSource category, ResourceLocation id);

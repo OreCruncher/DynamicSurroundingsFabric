@@ -5,9 +5,7 @@ import net.minecraft.client.resources.sounds.ElytraOnPlayerSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.phys.Vec3;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.gui.sound.ConfigSoundInstance;
@@ -17,9 +15,7 @@ import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.threading.IClientTasking;
 
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * Handles sound block and culling.
@@ -31,15 +27,8 @@ public final class SoundInstanceHandler {
     private static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
     private static final ITickCount TICK_COUNT = ContainerManager.resolve(ITickCount.class);
     private static final Configuration.SoundSystem SOUND_SYSTEM_CONFIG = ContainerManager.resolve(Configuration.SoundSystem.class);
-    private static final Configuration.SoundOptions THUNDERSTORM_CONFIG = ContainerManager.resolve(Configuration.SoundOptions.class);
 
     private static final Object2LongOpenHashMap<ResourceLocation> SOUND_CULL = new Object2LongOpenHashMap<>(32);
-    private static final Set<ResourceLocation> THUNDER_SOUNDS = new HashSet<>();
-    private static final ResourceLocation THUNDER_SOUND_FACTORY = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "thunder");
-
-    static {
-        THUNDER_SOUNDS.add(SoundEvents.LIGHTNING_BOLT_THUNDER.getLocation());
-    }
 
     private static boolean isSoundBlocked(final ResourceLocation id) {
         return SOUND_LIBRARY.isBlocked(id);
@@ -79,18 +68,22 @@ public final class SoundInstanceHandler {
             return false;
 
         final ResourceLocation id = theSound.getLocation();
-
-        if (THUNDERSTORM_CONFIG.replaceThunderSounds && THUNDER_SOUNDS.contains(id)) {
-            // Yeah - a bit reentrant but it should be good
-            var soundFactory = SOUND_LIBRARY.getSoundFactory(THUNDER_SOUND_FACTORY);
-            if (soundFactory.isPresent()) {
-                var sound = soundFactory.get().createAtLocation(new Vec3(theSound.getX(), theSound.getY(), theSound.getZ()));
-                AUDIO_PLAYER.play(sound);
-                return true;
-            }
-        }
-
         return isSoundBlocked(id) || isSoundCulledLogical(id);
+    }
+
+    /**
+     * Remaps the sound to a different one and queues to the sound engine.
+     *
+     * @param theSound The sound that is being played
+     * @return True if the sound was remapped, false otherwise
+     */
+    public static boolean remapSoundPlay(final SoundInstance theSound) {
+        return SOUND_LIBRARY.remapSound(theSound)
+                .map(s -> {
+                    AUDIO_PLAYER.play(s);
+                    return true;
+                })
+                .orElse(false);
     }
 
     /**

@@ -72,6 +72,10 @@ processResources {
     filesMatching('fabric.mod.json') {
         expand expandProps
     }
+
+    into('/') {
+        from("$projectDir/../CREDITS.md")
+    }
 }
 
 shadowJar {

@@ -137,8 +137,6 @@
   "dsurround.config.footstepAccents.enableWetSurfaceAccents.tooltip": "启用/禁用 当下雨或方块被浸泡时的效果",
   "dsurround.config.footstepAccents.enableFloorSqueaks": "地板吱吱声",
   "dsurround.config.footstepAccents.enableFloorSqueaks.tooltip": "启用/禁用 当玩家走在吱吱作响的方块上的效果",
-  "dsurround.config.footstepAccents.enableLeafAccents": "叶子覆盖表面效果",
-  "dsurround.config.footstepAccents.enableLeafAccents.tooltip": "启用/禁用 当玩家行走在叶子方块上时的效果",
   "dsurround.config.particleTweaks": "粒子调整",
   "dsurround.config.particleTweaks.tooltip": "用于微调粒子行为的配置选项",
   "dsurround.config.particleTweaks.suppressPlayerParticles": "抑制玩家药水效果",

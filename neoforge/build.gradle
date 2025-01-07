@@ -71,6 +71,10 @@ processResources {
     filesMatching('META-INF/neoforge.mods.toml') {
         expand expandProps
     }
+
+    into('/') {
+        from("$projectDir/../CREDITS.md")
+    }
 }
 
 shadowJar {

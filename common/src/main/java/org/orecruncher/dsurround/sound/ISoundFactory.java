@@ -9,6 +9,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.lib.math.MathStuff;
 
+@SuppressWarnings("unused")
 public interface ISoundFactory {
 
     /**
@@ -89,7 +90,16 @@ public interface ISoundFactory {
      * This sound instance is not attached.  The properties of the sound instance are defined by the underlying
      * factory settings.
      */
-    SimpleSoundInstance createAtLocation(Vec3 position, float volumeScale);
+    default SimpleSoundInstance createAtLocation(Vec3 position, float volumeScale) {
+        return this.createAtLocation(position.x(), position.y(), position.z(), volumeScale);
+    }
+
+    /**
+     * Creates a sound instance at the specified location. The provided factor scales the sound volume.
+     * This sound instance is not attached.  The properties of the sound instance are defined by the underlying
+     * factory settings.
+     */
+    SimpleSoundInstance createAtLocation(double posX, double posY, double posZ, float volumeScale);
 
     /**
      * Creates a Music instance to be used with Minecraft's music manager
