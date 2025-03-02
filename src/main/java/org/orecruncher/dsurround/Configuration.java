@@ -226,12 +226,12 @@ public class Configuration extends ConfigurationData {
         @Property
         @RestartRequired(client = false)
         @Comment("Enable/disable player toolbar sound effects")
-        public boolean enablePlayerToolbarEffect = false;
+        public boolean enablePlayerToolbarEffect = true;
 
         @Property
         @RestartRequired(client = false)
         @Comment("Enable/disable item swing sound effects from players and mobs")
-        public boolean enableSwingEffect = false;
+        public boolean enableSwingEffect = true;
 
         @Property
         @RestartRequired(client = false)
@@ -276,11 +276,11 @@ public class Configuration extends ConfigurationData {
     public static class CompassAndClockOptions {
         @Property
         @Comment("Enable/disable display of the clock display when holding a clock item")
-        public boolean enableClock = false;
+        public boolean enableClock = true;
 
         @Property
         @Comment("Enable/disable display of the compass display when holding a compass item")
-        public boolean enableCompass = false;
+        public boolean enableCompass = true;
 
         @Property
         @Comment("Style of compass rendering")
