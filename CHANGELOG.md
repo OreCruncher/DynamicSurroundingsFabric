@@ -16,6 +16,7 @@
 **Fixes**
 * Added missing sound subtitles for remapped step sounds.
 * Defensive code for mods that create fake worlds as part of their feature set (The Aether).
+* Changed randomizer to use Xorisho from the Minecraft library, and added thread safety checks. This should mitigate potential issues (or at least take Dynamic Surroundings out of the equation) with other mods performing cross-thread random number generation.
 
 > ### DynamicSurroundings-1.21.1-0.4.2
 **All Loaders**

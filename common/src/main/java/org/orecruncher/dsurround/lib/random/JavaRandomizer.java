@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.lib.random;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.LegacyRandomSource;
 import net.minecraft.world.level.levelgen.PositionalRandomFactory;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.random.RandomGenerator;
@@ -12,6 +13,7 @@ import java.util.random.RandomGeneratorFactory;
  * Implementation of IRandomizer that wraps a Java RandomGenerator
  */
 @SuppressWarnings("unused")
+@ApiStatus.Obsolete(since = "Replaced in favor of the Xoroshiro implementation in Minecraft")
 final class JavaRandomizer implements IRandomizer {
 
     // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/random/package-summary.html

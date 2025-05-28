@@ -2,14 +2,19 @@ package org.orecruncher.dsurround.lib.random;
 
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.PositionalRandomFactory;
+import net.minecraft.world.level.levelgen.RandomSupport;
+import net.minecraft.world.level.levelgen.XoroshiroRandomSource;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Implementation of IRandomizer that uses the Xoroshiro random classes in Minecraft.
+ */
 class MinecraftRandomizer implements IRandomizer {
 
     private final RandomSource source;
 
     public MinecraftRandomizer() {
-        this(RandomSource.create());
+        this(new XoroshiroRandomSource(RandomSupport.generateUniqueSeed()));
     }
 
     public MinecraftRandomizer(RandomSource source) {
