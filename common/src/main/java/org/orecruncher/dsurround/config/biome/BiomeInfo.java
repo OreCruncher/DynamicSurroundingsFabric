@@ -212,6 +212,14 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
     public void update(final BiomeConfigRule entry) {
 
+        // If configured, reset the fog color. This will only reset the
+        // Dynamic Surrounding fog color - the underlying fog color from
+        // data packs will still apply.
+        if (entry.resetFogColor()) {
+            addComment("> Reset Fog");
+            this.setFogColor(null);
+        }
+
         entry.comment().ifPresent(this::addComment);
         entry.fogColor().ifPresent(this::setFogColor);
         entry.fogDensity().ifPresent(this::setFogDensity);

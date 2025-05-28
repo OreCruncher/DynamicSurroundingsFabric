@@ -1,3 +1,21 @@
+> ### DynamicSurroundings-1.21.1-0.4.3
+**All Loaders**
+* JAVA 21+
+* Architectury 13.0.8+
+
+**Fabric**
+* Fabric Loader >= 0.16.9
+* Fabric API >= 0.110.0+1.21.
+
+**NeoForge**
+* NeoForge 21.1.84+
+
+**What's New**
+* Biome configuration setting to reset fog color for biomes.
+
+**Fixes**
+* Added missing sound subtitles for remapped step sounds.
+
 > ### DynamicSurroundings-1.21.1-0.4.2
 **All Loaders**
 * JAVA 21+
