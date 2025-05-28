@@ -15,6 +15,7 @@
 
 **Fixes**
 * Added missing sound subtitles for remapped step sounds.
+* Defensive code for mods that create fake worlds as part of their feature set (The Aether).
 
 > ### DynamicSurroundings-1.21.1-0.4.2
 **All Loaders**
