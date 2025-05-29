@@ -155,6 +155,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     }
 
     public void mergeTraits(BiomeConfigRule configRule) {
+        if (configRule.clearTraits())
+            this.traits.clearTraits();
         this.traits.mergeTraits(configRule.traits());
         configRule.comment().ifPresent(this::addComment);
     }

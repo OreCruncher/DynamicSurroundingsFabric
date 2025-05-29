@@ -17,8 +17,10 @@ public class ItemEffectTags {
     public static final TagKey<Item> BOOKS = of("books");
     public static final TagKey<Item> BOWS = of("bows");
     public static final TagKey<Item> CROSSBOWS = of("crossbows");
+    public static final TagKey<Item> MACES = of("maces");
     public static final TagKey<Item> POTIONS = of("potions");
     public static final TagKey<Item> SHIELDS = of("shields");
+    public static final TagKey<Item> SPEARS = of("spears");
     public static final TagKey<Item> SWORDS = of("swords");
     public static final TagKey<Item> TOOLS = of("tools");
     public static final TagKey<Item> COMPASSES = of("compasses");

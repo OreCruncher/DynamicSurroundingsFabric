@@ -1,4 +1,7 @@
 > ### DynamicSurroundings-1.21.1-0.4.3
+
+Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html)
+
 **All Loaders**
 * JAVA 21+
 * Architectury 13.0.8+
@@ -12,11 +15,13 @@
 
 **What's New**
 * Biome configuration setting to reset fog color for biomes.
+* Biome configuration setting to clear existing traits before applying new ones.
+* Trident and Mace toolbar sound effects.
 
 **Fixes**
-* Added missing sound subtitles for remapped step sounds.
+* Added missing sound subtitles for mapped step sounds.
 * Defensive code for mods that create fake worlds as part of their feature set (The Aether).
-* Changed randomizer to use Xorisho from the Minecraft library, and added thread safety checks. This should mitigate potential issues (or at least take Dynamic Surroundings out of the equation) with other mods performing cross-thread random number generation.
+* Changed randomizer to use Xoroshiro from the Minecraft library (rather than JDK), and added thread safety checks. This should mitigate potential issues (or at least take Dynamic Surroundings out of the equation) with other mods performing cross-thread random number generation.
 
 > ### DynamicSurroundings-1.21.1-0.4.2
 **All Loaders**

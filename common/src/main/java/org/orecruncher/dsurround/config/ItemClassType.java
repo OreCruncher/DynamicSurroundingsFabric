@@ -23,7 +23,9 @@ public enum ItemClassType {
     BOW("bow"),
     CROSSBOW("crossbow"),
     POTION("potion"),
-    BOOK("book");
+    BOOK("book"),
+    SPEAR("spear"),
+    MACE("mace");
 
     private static final Map<String, ItemClassType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(ItemClassType::getName, (category) -> category));
     public static final Codec<ItemClassType> CODEC = Codec.STRING.comapFlatMap(DataResult.partialGet(BY_NAME::get, () -> "unknown item class type"), d -> d.name);

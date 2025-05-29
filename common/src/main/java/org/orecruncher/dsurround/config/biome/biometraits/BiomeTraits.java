@@ -39,6 +39,10 @@ public final class BiomeTraits {
         return new BiomeTraits(List.of(traits));
     }
 
+    public void clearTraits() {
+        this.traits.clear();
+    }
+
     public void mergeTraits(Collection<BiomeTrait> traits) {
         int count = this.traits.size();
         this.traits.addAll(traits);
