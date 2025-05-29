@@ -66,7 +66,7 @@ public final class SoundLibrary implements ISoundLibrary {
     private static final SoundEvent MISSING = SoundEvent.createVariableRangeEvent(MISSING_RESOURCE);
 
     private static final ResourceLocation THUNDER_SOUND = SoundEvents.LIGHTNING_BOLT_THUNDER.getLocation();
-    private static final Set<String> SOUND_REMAP_BLOCKED_MOBS = ImmutableSet.of("creeper");
+    private static final Set<String> SOUND_MAPPING_BLOCKED_MOBS = ImmutableSet.of("creeper");
     private static final BlockPos.MutableBlockPos MUTABLE_BLOCK_POS = new BlockPos.MutableBlockPos();
 
     private final IModLog logger;
@@ -80,7 +80,7 @@ public final class SoundLibrary implements ISoundLibrary {
     private final Set<ResourceLocation> blockedSounds = new ObjectOpenHashSet<>();
     private final Set<ResourceLocation> culledSounds = new ObjectOpenHashSet<>();
     private final List<ResourceLocation> startupSounds = new ArrayList<>();
-    private final Map<ResourceLocation, SoundMapping> soundRemappings = new Object2ObjectOpenHashMap<>();
+    private final Map<ResourceLocation, SoundMapping> soundMappings = new Object2ObjectOpenHashMap<>();
     private List<IndividualSoundConfigEntry> soundConfiguration = new ArrayList<>();
 
     public SoundLibrary(Configuration config, IModLog logger, IMinecraftDirectories directories) {
@@ -109,7 +109,7 @@ public final class SoundLibrary implements ISoundLibrary {
         this.myRegistry.clear();
         this.soundMetadata.clear();
         this.soundFactories.clear();
-        this.soundRemappings.clear();
+        this.soundMappings.clear();
         this.loadSoundConfiguration();
 
         // Initializes the internal sound registry once all the other mods have
@@ -126,13 +126,13 @@ public final class SoundLibrary implements ISoundLibrary {
         var findResults = resourceUtilities.findModResources(FACTORY_FILE_CODEC, FACTORY_JSON);
         findResults.forEach(this::registerSoundFactories);
 
-
+        // Load sound mapping information
         var soundMappings = resourceUtilities.findModResources(SOUND_MAPPING_CODEC, SOUND_MAPPING_JSON);
-        soundMappings.forEach(this::registerSoundRemappings);
+        soundMappings.forEach(this::registerSoundMappings);
 
         this.logger.info("Number of SoundEvents cached: %d", this.myRegistry.size());
         this.logger.info("Number of factories cached: %d", this.soundFactories.size());
-        this.logger.info("Number of sound remappings cached: %d", this.soundRemappings.size());
+        this.logger.info("Number of sound mappings cached: %d", this.soundMappings.size());
     }
 
     @Override
@@ -234,7 +234,7 @@ public final class SoundLibrary implements ISoundLibrary {
     }
 
     @Override
-    public Optional<SoundInstance> remapSound(SoundInstance soundInstance) {
+    public Optional<SoundInstance> mapSound(SoundInstance soundInstance) {
 
         // Sounds played from the sound config menu are not remapped
         if (soundInstance instanceof ConfigSoundInstance)
@@ -251,7 +251,7 @@ public final class SoundLibrary implements ISoundLibrary {
             return Optional.empty();
         }
 
-        var mappingRule = this.soundRemappings.get(soundLocation);
+        var mappingRule = this.soundMappings.get(soundLocation);
 
         if (mappingRule != null) {
             // Get the BlockState of the block below the sound location if needed
@@ -293,13 +293,13 @@ public final class SoundLibrary implements ISoundLibrary {
      * sound similar to what happens with the player.
      */
     @Nullable
-    private ResourceLocation remapMobStepSound(SoundInstance soundInstance) {
+    private ResourceLocation mapMobStepSound(SoundInstance soundInstance) {
         var soundLocation = soundInstance.getLocation();
         var path = soundLocation.getPath();
         if (path.startsWith("entity.") && path.endsWith("step")) {
             // Get the mob this sound is for. We do not want to convert mobs like creepers.
             var mobType = path.substring(7, path.indexOf('.', 7));
-            if (!SOUND_REMAP_BLOCKED_MOBS.contains(mobType)) {
+            if (!SOUND_MAPPING_BLOCKED_MOBS.contains(mobType)) {
                 var level = GameUtils.getWorld().orElseThrow();
                 var pos = BlockPos.containing(soundInstance.getX(), soundInstance.getY(), soundInstance.getZ()).below();
                 soundLocation = level.getBlockState(pos).getSoundType().getStepSound().getLocation();
@@ -327,17 +327,17 @@ public final class SoundLibrary implements ISoundLibrary {
         this.logger.debug("Registered %d sounds for namespace %s", soundFile.resourceContent().size(), soundFile.namespace());
     }
 
-    private void registerSoundRemappings(DiscoveredResource<List<SoundMappingConfigRule>> mappings) {
+    private void registerSoundMappings(DiscoveredResource<List<SoundMappingConfigRule>> mappings) {
         for (var mapping : mappings.resourceContent()) {
-            if (!this.soundRemappings.containsKey(mapping.soundEvent())) {
-                this.soundRemappings.put(mapping.soundEvent(), SoundMapping.of(mapping));
+            if (!this.soundMappings.containsKey(mapping.soundEvent())) {
+                this.soundMappings.put(mapping.soundEvent(), SoundMapping.of(mapping));
             } else {
                 // Need to merge rules
-                var existingMapping = this.soundRemappings.get(mapping.soundEvent());
+                var existingMapping = this.soundMappings.get(mapping.soundEvent());
                 existingMapping.merge(mapping);
             }
         }
-        this.logger.debug("Registered %d sound remappings for namespace %s", mappings.resourceContent().size(), mappings.namespace());
+        this.logger.debug("Registered %d sound mappings for namespace %s", mappings.resourceContent().size(), mappings.namespace());
     }
 
     private void registerSoundFactories(DiscoveredResource<List<SoundFactory>> factories) {

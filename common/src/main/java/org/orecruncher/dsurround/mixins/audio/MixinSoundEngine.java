@@ -64,7 +64,7 @@ public abstract class MixinSoundEngine {
             if (SoundInstanceHandler.shouldBlockSoundPlay(sound))
                 ci.cancel();
             // Attempt a remapping if configured to do so
-            if (SoundInstanceHandler.remapSoundPlay(sound))
+            else if (SoundInstanceHandler.remapSoundPlay(sound))
                 ci.cancel();
         } catch (final Exception t) {
             MixinHelpers.LOGGER.error(t, "Error in dsurround_play()!");
