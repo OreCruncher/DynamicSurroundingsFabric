@@ -14,6 +14,10 @@
       "required": false
     },
     {
+      "id": "#c:is_cold/nether",
+      "required": false
+    },
+    {
       "id": "#forge:is_cold",
       "required": false
     },
@@ -23,6 +27,10 @@
     },
     {
       "id": "#forge:is_cold/end",
+      "required": false
+    },
+    {
+      "id": "#forge:is_cold/nether",
       "required": false
     }
   ]

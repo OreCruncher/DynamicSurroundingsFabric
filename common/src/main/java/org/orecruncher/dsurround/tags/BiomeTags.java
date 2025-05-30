@@ -5,6 +5,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.config.BiomeTrait;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -73,5 +74,10 @@ public class BiomeTags {
         var tagKey = TagKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, id));
         TAGS.add(tagKey);
         return tagKey;
+    }
+
+    static {
+        for (var entry : BiomeTrait.values())
+            TAGS.add(entry.getBiomeTag());
     }
 }

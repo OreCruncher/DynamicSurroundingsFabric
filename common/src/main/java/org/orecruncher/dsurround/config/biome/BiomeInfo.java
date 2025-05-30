@@ -74,8 +74,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         this.traits = traits;
         this.isRiver = this.traits.contains(BiomeTrait.RIVER);
         this.isOcean = this.traits.contains(BiomeTrait.OCEAN);
-        this.isDeepOcean = this.isOcean && this.traits.contains(BiomeTrait.DEEP);
-        this.isCave = this.traits.contains(BiomeTrait.CAVES);
+        this.isDeepOcean = this.traits.contains(BiomeTrait.DEEP_OCEAN);
+        this.isCave = this.traits.contains(BiomeTrait.CAVE);
 
         this.fogDensity = FogDensity.NONE;
 

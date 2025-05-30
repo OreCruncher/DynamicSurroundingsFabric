@@ -204,7 +204,7 @@
     ]
   },
   {
-    "biomeSelector": "OCEAN && DEEP && !ICY",
+    "biomeSelector": "DEEP_OCEAN",
     "_comment": "Deep Ocean explicit set",
     "priority": 100,
     "clearSounds": true,
@@ -257,7 +257,7 @@
     "fogColor": "#FFEA97"
   },
   {
-    "biomeSelector": "!(UNDERGROUND || OCEAN || RIVER || NETHER || THE_END || MUSHROOM) && !(SNOWY || SWAMP || JUNGLE || BEACH || WASTELAND || WET)",
+    "biomeSelector": "!(UNDERGROUND || OCEAN || RIVER || NETHER || END || MUSHROOM) && !(SNOWY || SWAMP || JUNGLE || BEACH || WASTELAND || WET)",
     "_comment": "Coyote",
     "acoustics": [
       {
@@ -268,7 +268,7 @@
     ]
   },
   {
-    "biomeSelector": "!(UNDERGROUND || OCEAN || RIVER || NETHER || THE_END || SNOWY || JUNGLE || HOT || BEACH)",
+    "biomeSelector": "!(UNDERGROUND || OCEAN || RIVER || NETHER || END || SNOWY || JUNGLE || HOT || BEACH)",
     "_comment": "Crow",
     "acoustics": [
       {
@@ -279,7 +279,7 @@
     ]
   },
   {
-    "biomeSelector": "!(UNDERGROUND || OCEAN || RIVER || NETHER || THE_END || DRY || JUNGLE || HOT || BEACH || SWAMP || WASTELAND)",
+    "biomeSelector": "!(UNDERGROUND || OCEAN || RIVER || NETHER || END || DRY || JUNGLE || HOT || BEACH || SWAMP || WASTELAND)",
     "_comment": "Owl",
     "acoustics": [
       {
@@ -306,7 +306,7 @@
     ]
   },
   {
-    "biomeSelector": "FOREST && !(THE_END || NETHER || OCEAN || RIVER)",
+    "biomeSelector": "FOREST && !(END || NETHER || OCEAN || RIVER)",
     "_comment": "Woodpecker",
     "acoustics": [
       {
@@ -317,7 +317,7 @@
     ]
   },
   {
-    "biomeSelector": "!(UNDERGROUND || MUSHROOM || DEAD || SWAMP || JUNGLE || WASTELAND || OCEAN || SNOWY || NETHER || THE_END)",
+    "biomeSelector": "!(UNDERGROUND || MUSHROOM || DEAD || SWAMP || JUNGLE || WASTELAND || OCEAN || SNOWY || NETHER || END)",
     "_comment": "Raptors",
     "acoustics": [
       {
@@ -339,7 +339,7 @@
     ]
   },
   {
-    "biomeSelector" : "(FOREST || CONIFEROUS || DECIDUOUS) && !(SWAMP || WASTELAND || JUNGLE || DEAD || NETHER || THE_END)",
+    "biomeSelector" : "(FOREST || CONIFEROUS || DECIDUOUS) && !(SWAMP || WASTELAND || JUNGLE || DEAD || NETHER || END)",
     "_comment": "Turtledove",
     "acoustics": [
       {
@@ -360,7 +360,7 @@
     ]
   },
   {
-    "biomeSelector": "THE_END || biome.name == 'The Void'",
+    "biomeSelector": "END || biome.name == 'The Void'",
     "_comment": "It's The End!",
     "priority": 100,
     "clearSounds": true
@@ -372,7 +372,7 @@
   },
   {
     "biomeSelector": "UNDERGROUND",
-    "_comment": "Caves and being underground",
+    "_comment": "Cave and being underground",
     "acoustics": [
       {
         "factory": "biome.underground",
@@ -391,7 +391,7 @@
     ]
   },
   {
-    "biomeSelector": "UNDERGROUND && !CAVES",
+    "biomeSelector": "UNDERGROUND && !CAVE",
     "_comment": "Underground and not in a cave",
     "acoustics": [
       {

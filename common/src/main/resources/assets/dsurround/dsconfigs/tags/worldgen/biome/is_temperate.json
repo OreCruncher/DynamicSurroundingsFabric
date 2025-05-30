@@ -8,6 +8,14 @@
     {
       "id": "#c:is_temperate/overworld",
       "required": false
+    },
+    {
+      "id": "#c:is_temperate/nether",
+      "required": false
+    },
+    {
+      "id": "#c:is_temperate/end",
+      "required": false
     }
   ]
 }

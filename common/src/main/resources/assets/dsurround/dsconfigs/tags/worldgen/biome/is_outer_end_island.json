@@ -4,6 +4,10 @@
     {
       "id": "c:is_outer_end_island",
       "required": false
+    },
+    {
+      "id": "#c:end_islands",
+      "required": false
     }
   ]
 }
