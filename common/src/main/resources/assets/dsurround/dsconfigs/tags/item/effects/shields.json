@@ -1,16 +1,5 @@
 {
   "values": [
-    {
-      "id": "#c:tools/shields",
-      "required": false
-    },
-    {
-      "id": "#c:tools/shield",
-      "required": false
-    },
-    {
-      "id": "#forge:tools/shields",
-      "required": false
-    }
+    "#dsurround:effects/is_shield"
   ]
 }

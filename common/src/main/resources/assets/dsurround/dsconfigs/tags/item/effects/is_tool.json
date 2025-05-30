@@ -1,0 +1,20 @@
+{
+  "values": [
+    {
+      "id": "#minecraft:hoes",
+      "required": false
+    },
+    {
+      "id": "#minecraft:shovels",
+      "required": false
+    },
+    {
+      "id": "#c:tools/fishing_rods",
+      "required": false
+    },
+    {
+      "id": "#forge:tools/fishing_rods",
+      "required": false
+    }
+  ]
+}

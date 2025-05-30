@@ -1,16 +1,5 @@
 {
   "values": [
-    {
-      "id": "#c:tools/bows",
-      "required": false
-    },
-    {
-      "id": "#c:tools/bow",
-      "required": false
-    },
-    {
-      "id": "#forge:tools/bows",
-      "required": false
-    }
+    "#dsurround:effects/is_bow"
   ]
 }
