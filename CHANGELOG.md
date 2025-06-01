@@ -1,6 +1,6 @@
 > ### DynamicSurroundings-1.21.1-0.4.3
 
-Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html)
+Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
 
 **All Loaders**
 * JAVA 21+
@@ -18,11 +18,14 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Biome configuration setting to clear existing traits before applying new ones.
 * Trident and Mace toolbar sound effects.
 
+**Changes**
+* Updated Dynamic Surroundings tag names to match the conventional tag naming scheme (ex., "dsurround:is_axe" rather than "dsurround:axes"). Old tag names will continue to work though dependencies should be updated to use the new naming scheme.
+
 **Fixes**
 * Added missing sound subtitles for mapped step sounds.
 * Fixed underground sounds playing with superflat worlds.
-* Defensive code for mods that create fake worlds as part of their feature set (The Aether).
-* Changed randomizer to use Xoroshiro from the Minecraft library (rather than JDK), and added thread safety checks. This should mitigate potential issues (or at least take Dynamic Surroundings out of the equation) with other mods performing cross-thread random number generation.
+* Defensive code for mods that create fake worlds as part of their feature set (The Aether's "quick join" for example).
+* Changed randomizer to use Xoroshiro from the Minecraft library (rather than JDK), and added thread safety checks. This should mitigate potential issues (or at least take Dynamic Surroundings out of the equation) with other mods performing cross-thread random number generation as well as Java runtimes that do not support Xoroshiro natively.
 
 > ### DynamicSurroundings-1.21.1-0.4.2
 **All Loaders**
