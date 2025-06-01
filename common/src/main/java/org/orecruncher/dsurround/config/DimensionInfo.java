@@ -37,7 +37,7 @@ public class DimensionInfo {
 
         // Force sea level based on known world types that give heartburn
         if (this.isFlatWorld)
-            this.seaLevel = 0;
+            this.seaLevel = -60;
 
         this.compassWobble = !world.dimensionType().natural();
     }

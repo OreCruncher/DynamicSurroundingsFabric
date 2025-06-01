@@ -20,6 +20,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 
 **Fixes**
 * Added missing sound subtitles for mapped step sounds.
+* Fixed underground sounds playing with superflat worlds.
 * Defensive code for mods that create fake worlds as part of their feature set (The Aether).
 * Changed randomizer to use Xoroshiro from the Minecraft library (rather than JDK), and added thread safety checks. This should mitigate potential issues (or at least take Dynamic Surroundings out of the equation) with other mods performing cross-thread random number generation.
 
