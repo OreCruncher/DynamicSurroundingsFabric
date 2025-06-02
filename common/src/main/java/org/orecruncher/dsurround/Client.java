@@ -9,6 +9,7 @@ import net.minecraft.server.packs.PackType;
 import org.orecruncher.dsurround.commands.Commands;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
+import org.orecruncher.dsurround.effects.particles.ParticleUtils;
 import org.orecruncher.dsurround.gui.overlay.OverlayManager;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -149,6 +150,9 @@ public final class Client {
             this.versionInfo = CompletableFuture.completedFuture(Optional.empty());
 
         KeyBindings.register();
+
+        // Register custom particle handling components
+        ParticleUtils.register();
 
         this.logger.info("[%s] Client initialization complete", Constants.MOD_ID);
     }

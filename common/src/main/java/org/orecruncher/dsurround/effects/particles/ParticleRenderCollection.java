@@ -47,7 +47,7 @@ public final class ParticleRenderCollection<TParticle extends TextureSheetPartic
     @Override
     public ParticleRenderType getRenderType() {
         // Can't use NO_RENDER as the ParticleEngine will not attempt to render
-        return ParticleRenderType.CUSTOM;
+        return ParticleUtils.DSURROUND_CUSTOM;
     }
 
     @Override
@@ -66,16 +66,12 @@ public final class ParticleRenderCollection<TParticle extends TextureSheetPartic
     public void render(@NotNull VertexConsumer vertexConsumer, @NotNull Camera camera, float tickDelta) {
         if (this.particles.isEmpty())
             return;
-
-        RenderSystem.setShaderTexture(0, this.textureSupplier.get());
         this.setup.accept(camera);
         this.particles.forEach(p -> p.render(vertexConsumer, camera, tickDelta));
     }
 
     private void standardSetup(@NotNull Camera camera) {
-        RenderSystem.depthMask(true);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShaderTexture(0, this.textureSupplier.get());
     }
 
     public void add(@NotNull TParticle particle) {

@@ -71,7 +71,7 @@ public class WaterRippleParticle extends TextureSheetParticle {
 
     @Override
     public @NotNull ParticleRenderType getRenderType() {
-        return ParticleRenderType.CUSTOM;
+        return ParticleUtils.DSURROUND_CUSTOM;
     }
 
     @Override
