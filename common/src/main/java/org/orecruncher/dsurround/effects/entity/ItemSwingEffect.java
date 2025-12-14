@@ -9,6 +9,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 
 public class ItemSwingEffect extends EntityEffectBase {
@@ -89,6 +92,11 @@ public class ItemSwingEffect extends EntityEffectBase {
 
     protected static HitResult rayTraceBlock(final LivingEntity entity) {
         double range = getReach(entity);
-        return entity.pick(range, 1F, true);
+		
+		try {
+			return entity.pick(range, 1F, true);
+		} catch (NullPointerException e) {
+			return new BlockHitResult(entity.getEyePosition(1.0F), Direction.UP, BlockPos.ZERO, false);
+		}
     }
 }
