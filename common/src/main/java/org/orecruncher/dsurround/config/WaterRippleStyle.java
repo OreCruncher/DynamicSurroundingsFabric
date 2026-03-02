@@ -7,7 +7,7 @@ import org.orecruncher.dsurround.lib.random.Randomizer;
 public enum WaterRippleStyle {
 
     NONE("none"),
-    PIXELATED_CIRCLE("textures/particles/pixel_ripples.png") {
+    PIXELATED_CIRCLE("textures/particle/pixel_ripples.png") {
         private final int FRAMES = 7;
         private final float DELTA = 1F / this.FRAMES;
         private final int MAX_AGE = this.FRAMES * 2;
