@@ -447,7 +447,7 @@
     "_comment": "Under Deep Ocean explicit set",
     "acoustics": [
       {
-        "factory": "biome.ocean.deep"
+        "factory": "biome.ocean.deep.under"
       },
       {
         "factory": "whale",
