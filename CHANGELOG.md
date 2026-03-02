@@ -27,7 +27,8 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Defensive code for mods that create fake worlds as part of their feature set (The Aether's "quick join" for example).
 * Changed randomizer to use Xoroshiro from the Minecraft library (rather than JDK), and added thread safety checks. This should mitigate potential issues (or at least take Dynamic Surroundings out of the equation) with other mods performing cross-thread random number generation as well as Java runtimes that do not support Xoroshiro natively.
 * Fix rain ripple rendering issue when picking up items (it would flicker to black and back). This would show up frequently when fishing in the rain and picking up drops.
-* Fix null pointer exception with Cobblemon when player utilizes an item while mounted (thanks Memori!)
+* Fix null pointer exception with Cobblemon when player utilizes an item while mounted (thanks Memori!).
+* Fix incorrect biome sound playing when underwater in Deep Ocean biome.
 
 > ### DynamicSurroundings-1.21.1-0.4.2
 **All Loaders**
