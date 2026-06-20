@@ -1,10 +1,6 @@
 package org.orecruncher.dsurround.lib.scripting;
 
 import com.mojang.serialization.Codec;
-import org.jetbrains.annotations.Nullable;
-
-import javax.script.CompiledScript;
-import java.util.Optional;
 
 public class Script {
 
@@ -16,31 +12,14 @@ public class Script {
     public static final Script TRUE = new Script("true");
 
     private final String script;
-    private CompiledScript compiledScript;
 
     public Script(String script) {
         this.script = script;
     }
 
     /**
-     * Retrieves the result of a previous compilation if present.
-     * @return Compiled script, if any.
-     */
-    Optional<CompiledScript> getCompiledScript() {
-        return Optional.ofNullable(this.compiledScript);
-    }
-
-    /**
-     * Sets the state of the script with the result of a previous compilation.
-     * @param compiled Compiled script to cache
-     */
-    void setCompiledScript(@Nullable CompiledScript compiled) {
-        this.compiledScript = compiled;
-    }
-
-    /**
-     * Obtains the string version of the script for compilation
-     * @return The script to be compiled.
+     * Obtains the string version of the script for evaluation.
+     * @return The script to evaluate.
      */
     public String asString() {
         return this.script;

@@ -1,13 +1,13 @@
 package org.orecruncher.dsurround.config.libraries;
 
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public interface IDimensionInformation {
     /**
      * The resource location ID of the dimension
      */
-    ResourceLocation name();
+    Identifier name();
     /**
      * The client level for the dimension
      */

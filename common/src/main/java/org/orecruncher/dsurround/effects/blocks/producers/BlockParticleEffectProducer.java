@@ -32,7 +32,9 @@ public class BlockParticleEffectProducer extends BlockEffectProducer {
     }
 
     protected void addParticle(final Particle particle) {
-        GameUtils.getParticleManager().add(particle);
+        if (particle != null) {
+            GameUtils.getParticleManager().add(particle);
+        }
     }
 
     @FunctionalInterface

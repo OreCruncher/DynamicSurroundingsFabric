@@ -4,6 +4,18 @@
     {
       "id": "#c:is_mountain/slope",
       "required": false
+    },
+    {
+      "id": "minecraft:meadow",
+      "required": false
+    },
+    {
+      "id": "minecraft:grove",
+      "required": false
+    },
+    {
+      "id": "minecraft:snowy_slopes",
+      "required": false
     }
   ]
 }

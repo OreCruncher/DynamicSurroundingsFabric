@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.resources;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -16,7 +16,7 @@ import static org.orecruncher.dsurround.Configuration.Flags.RESOURCE_LOADING;
 
 public class ModConfigResourceFinder extends AbstractResourceFinder {
 
-    private final Map<ResourceLocation, List<Resource>> resources;
+    private final Map<Identifier, List<Resource>> resources;
 
     public ModConfigResourceFinder(IModLog logger, ResourceManager resourceManager, String configPath) {
         super(logger);

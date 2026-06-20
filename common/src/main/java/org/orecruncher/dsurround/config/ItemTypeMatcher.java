@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.config;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.TagKey;
@@ -26,8 +27,9 @@ public abstract class ItemTypeMatcher implements IMatcher<Item> {
                 var tagKey = TagKey.create(Registries.ITEM, id);
                 return DataResult.success(new ItemTypeMatcher.MatchOnItemTag(tagKey));
             } else if (itemId.contains(":")) {
-                var item = BuiltInRegistries.ITEM.get(id);
-                return DataResult.success(new ItemTypeMatcher.MatchOnItem(item));
+                var item = BuiltInRegistries.ITEM.get(id).map(Holder.Reference::value);
+                return item.<DataResult<IMatcher<Item>>>map(value -> DataResult.success(new ItemTypeMatcher.MatchOnItem(value)))
+                        .orElseGet(() -> DataResult.error(() -> String.format("Unknown item id %s", itemId)));
             }
 
             return DataResult.error(() -> String.format("Unknown item class(s) %s", itemId));

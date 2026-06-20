@@ -1,3 +1,112 @@
+### DynamicSurroundings-26.2-0.4.5+26.2
+**All Loaders**
+* Minecraft 26.2
+* JAVA 25+
+* Architectury 21.0.2+
+* 100% client side; no server side deployment needed
+
+**Fabric**
+* Fabric Loader >= 0.19.3
+* Fabric API >= 0.152.2+26.2
+* Cloth Config >= 26.2.155 recommended for the configuration UI
+* Mod Menu >= 20.0.0-beta.1 recommended for the in-game configuration entry
+
+**NeoForge**
+* NeoForge >= 26.2.0.1-beta
+* Cloth Config >= 26.2.155 recommended for the configuration UI
+
+**What's New**
+* Added explicit Minecraft 26.2 Sulfur Caves biome coverage across tags, direct biome id fallback traits, fog metadata, and generated biome traits.
+* Added a biome-name fallback analyzer so new vanilla and modded biome ids still receive reasonable Dynamic Surroundings traits when convention tags are unavailable.
+* Added remaps for Minecraft 26.2 potent sulfur geyser sounds to Dynamic Surroundings waterfall-style ambience.
+
+**Changes**
+* Updated Fabric API metadata to 0.152.2+26.2 and resource-pack metadata to the Minecraft 26.2 pack format.
+* Enhanced sound processing and occlusion are enabled by default from configuration and no longer require `-Ddsurround.enableEnhancedAudio=true`.
+* Dynamic Surroundings still automatically disables its enhanced audio processor when Sound Physics Remastered is present to avoid double reverb or occlusion processing.
+
+**Fixes**
+* Improved waterfall validation so visible falling water columns in cave and spring formations are not rejected because their source block lacks a full support face.
+* Fixed reverb bounce calculations when users choose fewer than four bounce passes in the enhanced sound settings.
+
+### DynamicSurroundings-26.2-0.4.4+26.2
+**All Loaders**
+* Minecraft 26.2
+* JAVA 25+
+* Architectury 21.0.2+
+* 100% client side; no server side deployment needed
+
+**Fabric**
+* Fabric Loader >= 0.19.3
+* Fabric API >= 0.152.1+26.2
+* Cloth Config >= 26.2.155 recommended for the configuration UI
+* Mod Menu >= 20.0.0-beta.1 recommended for the in-game configuration entry
+
+**NeoForge**
+* NeoForge >= 26.2.0.1-beta
+* Cloth Config >= 26.2.155 recommended for the configuration UI
+
+**Fixes**
+* Fixed waterfall sound detection for waterlogged or partial water source holders, including slabs, stairs, and other non-liquid blocks that contain water.
+* Waterfall sources can now be detected when a falling water column is fed from an adjacent waterlogged block instead of a full water source block directly above the impact point.
+* Improved waterfall strength calculation for waterlogged source holders so short drops still produce an audible waterfall loop.
+
+### DynamicSurroundings-26.2-0.4.3+26.2
+**All Loaders**
+* Minecraft 26.2
+* JAVA 25+
+* Architectury 21.0.2+
+* 100% client side; no server side deployment needed
+
+**Fabric**
+* Fabric Loader >= 0.19.3
+* Fabric API >= 0.152.1+26.2
+* Cloth Config >= 26.2.155 recommended for the configuration UI
+* Mod Menu >= 20.0.0-beta.1 recommended for the in-game configuration entry
+
+**NeoForge**
+* NeoForge >= 26.2.0.1-beta
+* Cloth Config >= 26.2.155 recommended for the configuration UI
+
+**Fixes**
+* Fixed missing biome ambience in plains, sunflower plains, savannas, savanna plateaus, windswept savannas, and other vanilla biome categories when convention biome tags are unavailable or not resolved by the client-side tag loader.
+* Restored nested convention-tag resolution for client-side Dynamic Surroundings biome tags by scanning active registry holders instead of depending on removed 26.x registry tag helper methods.
+* Added direct vanilla biome ID fallbacks across the Dynamic Surroundings biome tag files for forests, oceans, rivers, caves, mountain biomes, Nether biomes, End biomes, and other vanilla categories.
+* Corrected stale convention tag references for outer End islands and Nether forests.
+
+### DynamicSurroundings-26.2-0.4.2+26.2
+**All Loaders**
+* Minecraft 26.2
+* JAVA 25+
+* Architectury 21.0.2+
+* 100% client side; no server side deployment needed
+
+**Fabric**
+* Fabric Loader >= 0.19.3
+* Fabric API >= 0.152.1+26.2
+* Cloth Config >= 26.2.155 recommended for the configuration UI
+* Mod Menu >= 20.0.0-beta.1 recommended for the in-game configuration entry
+
+**NeoForge**
+* NeoForge >= 26.2.0.1-beta
+* Cloth Config >= 26.2.155 recommended for the configuration UI
+
+**What's New**
+* Added explicit Minecraft 26.2 labeling to README, changelog, Gradle mod metadata, generated jar naming, and in-game mod metadata.
+* Added 26.2-specific Fabric and NeoForge dependency requirements so users can identify the correct build before installing.
+
+**Changes**
+* Ported the project to Minecraft 26.2 / Java 25 and updated Fabric API, Fabric Loader, Architectury, Cloth Config, Mod Menu, and NeoForge dependency ranges.
+* Removed the embedded Nashorn/ASM runtime from the 26.2 build; configuration predicates now use the internal expression evaluator.
+* Enhanced OpenAL audio processing is disabled by default for safer startup on large Fabric modpacks. It can be re-enabled with `-Ddsurround.enableEnhancedAudio=true`.
+* Optional GlitchFiend integrations are temporarily disabled until matching 26.2 artifacts are available upstream.
+
+**Fixes**
+* Restored Dynamic Surroundings water ripple, firefly, frost breath, and underwater bubble particles for Minecraft 26.2.
+* Fixed Mod Menu configuration screen registration and fallback behavior.
+* Fixed Minecraft 26.2 runtime crashes caused by biome temperature invokers and particle sprite-set accessors.
+* Fixed startup/classloader conflicts with Sodium, Iris, Lithium, and MixinExtras by avoiding Nashorn/ASM/loader classes in the final mod jar.
+
 > ### DynamicSurroundings-1.21.1-0.4.2
 **All Loaders**
 * JAVA 21+

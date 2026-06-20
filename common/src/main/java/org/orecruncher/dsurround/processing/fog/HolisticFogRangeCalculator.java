@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.processing.fog;
 
-import net.minecraft.client.renderer.FogRenderer;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
@@ -44,7 +43,7 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
     }
 
     @NotNull
-    public FogRenderer.FogData render(@NotNull final FogRenderer.FogData data, float renderDistance, float partialTick) {
+    public FogData render(@NotNull final FogData data, float renderDistance, float partialTick) {
 
         if (!this.enabled())
             return data;
@@ -54,7 +53,7 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
 
         for (final IFogRangeCalculator calc : this.calculators) {
             if (calc.enabled()) {
-                final FogRenderer.FogData result = calc.render(data, renderDistance, partialTick);
+                final FogData result = calc.render(data, renderDistance, partialTick);
                 if (result.start > result.end || result.start < 0 || result.end < 0) {
                     this.logger.warn("Fog calculator '%s' reporting invalid fog range (start %f, end %f); ignored", calc.getName(), result.start, result.end);
                 } else {
@@ -64,7 +63,7 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
             }
         }
 
-        var result = new FogRenderer.FogData(data.mode);
+        var result = new FogData(data.mode);
         result.shape = data.shape;
         result.start = start;
         result.end = end;

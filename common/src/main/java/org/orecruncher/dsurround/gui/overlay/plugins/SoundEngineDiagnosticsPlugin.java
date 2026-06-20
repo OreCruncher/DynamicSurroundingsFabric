@@ -14,6 +14,7 @@ import org.orecruncher.dsurround.mixins.audio.MixinSoundEngineAccessor;
 
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.orecruncher.dsurround.lib.McCompat;
 
 public class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
 
@@ -39,12 +40,12 @@ public class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
         MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) soundManager;
         MixinSoundEngineAccessor accessors = (MixinSoundEngineAccessor) manager.dsurround_getSoundSystem();
         var sources = accessors.dsurround_getSources();
-        var str = Component.literal(soundManager.getDebugString());
+        var str = Component.literal(McCompat.soundManagerDebugString(soundManager));
         panelText.add(str);
 
         if (!sources.isEmpty()) {
             accessors.dsurround_getSources().keySet().stream()
-                    .map(SoundInstance::getLocation)
+                    .map(SoundInstance::getIdentifier)
                     .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
                     .entrySet().stream()
                     .map(e -> FMT_DBG_SOUND.formatted(e.getKey(), e.getValue()))

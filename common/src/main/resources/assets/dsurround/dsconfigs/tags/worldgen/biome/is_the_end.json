@@ -8,6 +8,26 @@
     {
       "id": "#c:is_end",
       "required": false
+    },
+    {
+      "id": "minecraft:the_end",
+      "required": false
+    },
+    {
+      "id": "minecraft:end_highlands",
+      "required": false
+    },
+    {
+      "id": "minecraft:end_midlands",
+      "required": false
+    },
+    {
+      "id": "minecraft:small_end_islands",
+      "required": false
+    },
+    {
+      "id": "minecraft:end_barrens",
+      "required": false
     }
   ]
 }

@@ -8,6 +8,18 @@
     {
       "id": "#forge:is_plains",
       "required": false
+    },
+    {
+      "id": "minecraft:plains",
+      "required": false
+    },
+    {
+      "id": "minecraft:sunflower_plains",
+      "required": false
+    },
+    {
+      "id": "minecraft:meadow",
+      "required": false
     }
   ]
 }

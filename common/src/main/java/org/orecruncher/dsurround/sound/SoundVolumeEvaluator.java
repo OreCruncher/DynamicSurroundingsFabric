@@ -36,7 +36,7 @@ public final class SoundVolumeEvaluator {
         if (!(sound instanceof ConfigSoundInstance)) {
             // Further scale based on the sound's configuration within the mod data set. It's possible that this
             // could result in a sound volume of 0.
-            var volumeScale = SOUND_LIBRARY.getVolumeScale(category, sound.getLocation());
+            var volumeScale = SOUND_LIBRARY.getVolumeScale(category, sound.getIdentifier());
             volume *= volumeScale;
         }
 

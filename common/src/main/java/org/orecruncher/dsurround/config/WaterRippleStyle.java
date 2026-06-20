@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
@@ -33,13 +33,13 @@ public enum WaterRippleStyle {
         }
     };
 
-    private final ResourceLocation resource;
+    private final Identifier resource;
 
     WaterRippleStyle(final String texture) {
-        this.resource = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, texture);
+        this.resource = Identifier.fromNamespaceAndPath(Constants.MOD_ID, texture);
     }
 
-    public ResourceLocation getTexture() {
+    public Identifier getTexture() {
         return this.resource;
     }
 

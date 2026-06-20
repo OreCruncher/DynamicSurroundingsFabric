@@ -65,10 +65,10 @@ public class ViewerPlugin implements IDiagnosticPlugin {
         var state = world.getBlockState(result.getBlockPos());
         data.add(Component.literal(state.toString()));
 
-        this.processTags(state.getBlockHolder(), data);
+        RegistryUtils.getRegistryEntry(Registries.BLOCK, state.getBlock()).ifPresent(holder -> this.processTags(holder, data));
         if (!state.getFluidState().isEmpty()) {
             data.add(Component.literal("Fluid Tags"));
-            this.processTags(state.getFluidState().holder(), data);
+            this.processTags(state.getFluidState().typeHolder(), data);
         }
 
         var info = this.blockLibrary.getBlockInfo(state);
@@ -105,9 +105,10 @@ public class ViewerPlugin implements IDiagnosticPlugin {
     private void processHeldItem(ItemStack stack, Collection<Component> data) {
         if (stack.isEmpty())
             return;
-        var holder = stack.getItemHolder();
-        holder.unwrapKey().ifPresent(key -> data.add(Component.literal(key.location().toString())));
-        this.processTags(holder, data);
+        RegistryUtils.getRegistryEntry(Registries.ITEM, stack.getItem()).ifPresent(holder -> {
+            holder.unwrapKey().ifPresent(key -> data.add(Component.literal(key.identifier().toString())));
+            this.processTags(holder, data);
+        });
     }
 
     private <T> void processTags(Holder<T> holder, Collection<Component> data) {

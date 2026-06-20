@@ -8,6 +8,10 @@
     {
       "id": "#forge:is_desert",
       "required": false
+    },
+    {
+      "id": "minecraft:desert",
+      "required": false
     }
   ]
 }

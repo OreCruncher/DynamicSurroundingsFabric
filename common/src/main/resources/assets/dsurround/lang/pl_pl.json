@@ -9,7 +9,7 @@
   "dsurround.mod.link.sources": "Repozytorium kodu źródłowego",
   "dsurround.mod.link.credits": "Zasługi i wzmianki zasobów dzwiękowych",
   "dsurround.mod.link.clothapi": "Osadzone: Cloth API (Fabric)",
-  "dsurround.mod.link.nashorn": "Osadzone: OpenJDK Nashorn JavaScript Engine",
+  "dsurround.mod.link.evaluator": "Wbudowany ewaluator wyrażeń",
   "dsurround.sound.caption.ice": "Lód kruszy się",
   "dsurround.sound.caption.wind": "Wiatr wieje",
   "dsurround.sound.caption.soulsand": "Maniakalny smiech",

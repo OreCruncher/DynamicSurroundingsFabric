@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.lib.scanner;
 
 import net.minecraft.core.BlockBox;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
@@ -20,7 +20,7 @@ public abstract class CuboidScanner extends Scanner {
 
     // State of last tick
     protected BlockPos lastPos = BlockPos.ZERO;
-    protected ResourceLocation lastReference = ResourceLocation.parse("dsurround:aintnothin");
+    protected Identifier lastReference = Identifier.parse("dsurround:aintnothin");
 
     protected CuboidScanner(final ScanContext locus, final String name, final int range) {
         super(locus, name, range);

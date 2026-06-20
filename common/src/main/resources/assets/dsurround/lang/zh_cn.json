@@ -9,7 +9,7 @@
   "dsurround.mod.link.sources": "源代码存储库",
   "dsurround.mod.link.credits": "声音资源致谢和归属",
   "dsurround.mod.link.clothapi": "内置：Cloth API（Fabric）",
-  "dsurround.mod.link.nashorn": "内置：OpenJDK Nashorn JavaScript 引擎",
+  "dsurround.mod.link.evaluator": "内置表达式求值器",
   "dsurround.sound.caption.ice": "冰裂",
   "dsurround.sound.caption.wind": "刮风",
   "dsurround.sound.caption.soulsand": "狂笑",

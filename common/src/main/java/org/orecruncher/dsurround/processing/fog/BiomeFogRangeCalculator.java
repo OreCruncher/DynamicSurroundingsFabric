@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.processing.fog;
 
-import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
@@ -36,7 +35,7 @@ public class BiomeFogRangeCalculator extends VanillaFogRangeCalculator {
 
     @Override
     @NotNull
-    public FogRenderer.FogData render(@NotNull final FogRenderer.FogData data, float renderDistance, float partialTick) {
+    public FogData render(@NotNull final FogData data, float renderDistance, float partialTick) {
 
         // Adjust the scale in the right direction
         if (Float.compare(this.activeScale, this.targetScale) != 0) {
@@ -55,7 +54,7 @@ public class BiomeFogRangeCalculator extends VanillaFogRangeCalculator {
             return data;
 
         var scale = 1F - this.activeScale;
-        var result = new FogRenderer.FogData(data.mode);
+        var result = new FogData(data.mode);
         result.end = data.end * scale;
         result.start = data.start * scale * scale;
         return result;

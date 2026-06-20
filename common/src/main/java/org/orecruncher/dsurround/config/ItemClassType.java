@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
@@ -29,13 +29,13 @@ public enum ItemClassType {
     public static final Codec<ItemClassType> CODEC = Codec.STRING.comapFlatMap(DataResult.partialGet(BY_NAME::get, () -> "unknown item class type"), d -> d.name);
 
     private final String name;
-    private final ResourceLocation toolBarSound;
-    private final ResourceLocation swingSound;
+    private final Identifier toolBarSound;
+    private final Identifier swingSound;
 
     ItemClassType(String name) {
         this.name = name;
-        this.toolBarSound = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "toolbar." + name + ".equip");
-        this.swingSound = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "toolbar." + name + ".swing");
+        this.toolBarSound = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "toolbar." + name + ".equip");
+        this.swingSound = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "toolbar." + name + ".swing");
     }
 
     private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);

@@ -7,7 +7,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.*;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
@@ -41,7 +41,7 @@ public class TagLibrary implements ITagLibrary {
 
     private final IModLog logger;
     private final ISystemClock systemClock;
-    private final Map<TagKey<?>, Collection<ResourceLocation>> tagCache;
+    private final Map<TagKey<?>, Collection<Identifier>> tagCache;
     private final ClientTagLoader tagLoader;
 
     private boolean isConnected;
@@ -66,8 +66,9 @@ public class TagLibrary implements ITagLibrary {
             return false;
         if (entry.is(tagKey))
             return true;
-        var location = entry.getBlockHolder().unwrapKey().orElseThrow().location();
-        return this.isInCache(tagKey, location);
+        var location = RegistryUtils.getRegistryEntry(Registries.BLOCK, entry.getBlock())
+                .flatMap(holder -> holder.unwrapKey().map(ResourceKey::identifier));
+        return location.map(id -> this.isInCache(tagKey, id)).orElse(false);
     }
 
     @Override
@@ -76,8 +77,9 @@ public class TagLibrary implements ITagLibrary {
             return false;
         if (entry.is(tagKey))
             return true;
-        var location = entry.getItemHolder().unwrapKey().orElseThrow().location();
-        return this.isInCache(tagKey, location);
+        var location = RegistryUtils.getRegistryEntry(Registries.ITEM, entry.getItem())
+                .flatMap(holder -> holder.unwrapKey().map(ResourceKey::identifier));
+        return location.map(id -> this.isInCache(tagKey, id)).orElse(false);
     }
 
     @Override
@@ -87,7 +89,7 @@ public class TagLibrary implements ITagLibrary {
             var e = registryEntry.get();
             if (e.is(tagKey))
                 return true;
-            var location = e.key().location();
+            var location = e.key().identifier();
             return this.isInCache(tagKey, location);
         }
         return false;
@@ -95,12 +97,12 @@ public class TagLibrary implements ITagLibrary {
 
     @Override
     public boolean is(TagKey<EntityType<?>> tagKey, EntityType<?> entry) {
-        if (entry.is(tagKey))
-            return true;
-
         var registryEntry = RegistryUtils.getRegistryEntry(Registries.ENTITY_TYPE, entry);
         if (registryEntry.isPresent()) {
-            var location = registryEntry.get().key().location();
+            var holder = registryEntry.get();
+            if (holder.is(tagKey))
+                return true;
+            var location = holder.key().identifier();
             return this.isInCache(tagKey, location);
         }
         return false;
@@ -115,7 +117,7 @@ public class TagLibrary implements ITagLibrary {
 
         var registryEntry = RegistryUtils.getRegistryEntry(Registries.FLUID, entry.getType());
         if (registryEntry.isPresent()) {
-            var location = registryEntry.get().key().location();
+            var location = registryEntry.get().key().identifier();
             return this.isInCache(tagKey, location);
         }
         return false;
@@ -166,16 +168,17 @@ public class TagLibrary implements ITagLibrary {
     @Override
     public <T> Stream<Pair<TagKey<T>, Set<T>>> getEntriesByTag(ResourceKey<? extends Registry<T>> registryKey) {
         var registry = RegistryUtils.getRegistry(registryKey).orElseThrow();
-        return registry.holders()
-                .flatMap(e -> this.streamTags(e).map(tag -> Pair.of(tag, e.value())))
-                .collect(groupingBy(Pair::key, mapping(Pair::value, toSet())))
-                .entrySet().stream().map(e -> Pair.of(e.getKey(), e.getValue()));
+        Map<TagKey<T>, Set<T>> entries = new Reference2ObjectOpenHashMap<>();
+        registry.entrySet().forEach(kvp -> RegistryUtils.getRegistryEntry(registryKey, kvp.getValue())
+                .ifPresent(holder -> this.streamTags(holder)
+                        .forEach(tag -> entries.computeIfAbsent(tag, ignored -> new HashSet<>()).add(kvp.getValue()))));
+        return entries.entrySet().stream().map(e -> Pair.of(e.getKey(), e.getValue()));
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <T> Stream<TagKey<T>> streamTags(Holder<T> registryEntry) {
-        var location = registryEntry.unwrapKey().orElseThrow().location();
+        var location = registryEntry.unwrapKey().orElseThrow().identifier();
         Set<TagKey<T>> tags = registryEntry.tags().collect(toSet());
         for (var kvp : this.tagCache.entrySet()) {
             if (kvp.getValue().contains(location))
@@ -206,13 +209,13 @@ public class TagLibrary implements ITagLibrary {
         this.logger.info("Tag cache initialization complete; %d tags cached, %dmillis", this.tagCache.size(), stopwatch.elapsed(TimeUnit.MILLISECONDS));
     }
 
-    private boolean isInCache(TagKey<?> tagKey, ResourceLocation entry) {
+    private boolean isInCache(TagKey<?> tagKey, Identifier entry) {
         if (!ModTags.getModTags().contains(tagKey))
             return false;
         return this.tagCache.computeIfAbsent(tagKey, this.tagLoader::getMembers).contains(entry);
     }
 
-    private void formatHelper(StringBuilder builder, String entryName, Collection<ResourceLocation> data) {
+    private void formatHelper(StringBuilder builder, String entryName, Collection<Identifier> data) {
         builder.append("\n").append(entryName).append(" ");
         if (data.isEmpty())
             builder.append("NONE");

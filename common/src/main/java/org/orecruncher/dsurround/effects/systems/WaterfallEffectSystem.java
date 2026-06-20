@@ -3,15 +3,15 @@ package org.orecruncher.dsurround.effects.systems;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import net.minecraft.client.ParticleStatus;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SupportType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FlowingFluid;
@@ -54,14 +54,14 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     static {
         var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
 
-        var factory = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/0")).orElseThrow();
+        var factory = soundLibrary.getSoundFactory(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/0")).orElseThrow();
         Arrays.fill(ACOUSTICS, factory);
 
-        ACOUSTICS[2] = ACOUSTICS[3] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/1")).orElseThrow();
-        ACOUSTICS[4] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/2")).orElseThrow();
-        ACOUSTICS[5] = ACOUSTICS[6] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/3")).orElseThrow();
-        ACOUSTICS[7] = ACOUSTICS[8] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/4")).orElseThrow();
-        ACOUSTICS[9] = ACOUSTICS[10] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/5")).orElseThrow();
+        ACOUSTICS[2] = ACOUSTICS[3] = soundLibrary.getSoundFactory(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/1")).orElseThrow();
+        ACOUSTICS[4] = soundLibrary.getSoundFactory(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/2")).orElseThrow();
+        ACOUSTICS[5] = ACOUSTICS[6] = soundLibrary.getSoundFactory(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/3")).orElseThrow();
+        ACOUSTICS[7] = ACOUSTICS[8] = soundLibrary.getSoundFactory(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/4")).orElseThrow();
+        ACOUSTICS[9] = ACOUSTICS[10] = soundLibrary.getSoundFactory(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/5")).orElseThrow();
     }
 
     // Keep track of sound plays outside the effect.
@@ -198,7 +198,11 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     }
 
     private static boolean shouldPlaySoundFilter(Level world, IBlockEffect effect) {
-        return TAG_LIBRARY.is(FluidTags.WATERFALL_SOUND, world.getFluidState(effect.getPos()));
+        var pos = effect.getPos();
+        var fluidState = world.getFluidState(pos);
+        return TAG_LIBRARY.is(FluidTags.WATERFALL_SOUND, fluidState)
+                || isFallingWater(fluidState)
+                || hasFallingWaterNearSource(world, pos);
     }
 
     @Override
@@ -236,6 +240,9 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     @NotNull
     private static WaterfallEffect createWaterfallEffect(Level world, BlockState state, BlockPos pos) {
         var strength = BlockEffectUtils.countVerticalBlocks(world, pos, HAS_FLUID, 1);
+        if (isWaterInNonLiquidBlock(world, pos)) {
+            strength = Math.max(strength, BlockEffectUtils.countVerticalBlocks(world, pos, HAS_FLUID, -1));
+        }
         final float height = state.getFluidState().getHeight(world, pos) + 0.1F;
         return new WaterfallEffect(strength, world, pos, height);
     }
@@ -245,8 +252,21 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     }
 
     private static boolean isValidWaterfallSource(Level world, BlockPos pos) {
-        if (world.getFluidState(pos.above()).isEmpty())
+        if (!hasWaterfallFeed(world, pos))
             return false;
+
+        // Waterlogged/partial source holders, such as slabs and stairs, are not represented as a
+        // plain water block. They can still feed a visible falling water column, so allow the
+        // source holder itself to anchor the waterfall effect when a falling water block is nearby.
+        if (isWaterInNonLiquidBlock(world, pos) && hasFallingWaterNearSource(world, pos))
+            return true;
+
+        // Some 26.2 cave and spring formations place falling water beside or below a source block
+        // without giving the source a full solid face underneath. Treat the visible falling column
+        // as the authoritative signal so biome-specific terrain does not suppress waterfall audio.
+        if (hasFallingWaterNearSource(world, pos))
+            return true;
+
         if (isUnboundedLiquid(world, pos)) {
             var downPos = pos.below();
             if (world.getBlockState(downPos).isFaceSturdy(world, downPos, Direction.UP, SupportType.FULL))
@@ -254,6 +274,52 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
             return isBoundedLiquid(world, pos);
         }
         return false;
+    }
+
+    private static boolean hasWaterfallFeed(Level world, BlockPos pos) {
+        if (isWaterfallSourceFluid(world.getFluidState(pos.above())))
+            return true;
+
+        return hasAdjacentWaterloggedFeed(world, pos);
+    }
+
+    private static boolean hasAdjacentWaterloggedFeed(Level world, BlockPos pos) {
+        var above = pos.above();
+        for (final Vec3i cardinalOffset : CARDINAL_OFFSETS) {
+            var sourcePos = above.offset(cardinalOffset);
+            if (isWaterInNonLiquidBlock(world, sourcePos))
+                return true;
+        }
+        return false;
+    }
+
+    private static boolean isWaterInNonLiquidBlock(Level world, BlockPos pos) {
+        var state = world.getBlockState(pos);
+        return state.getBlock() != Blocks.WATER && isWaterfallSourceFluid(state.getFluidState());
+    }
+
+    private static boolean isWaterfallSourceFluid(FluidState fluidState) {
+        return TAG_LIBRARY.is(FluidTags.WATERFALL_SOURCE, fluidState);
+    }
+
+    private static boolean hasFallingWaterNearSource(Level world, BlockPos pos) {
+        if (isFallingWater(world.getFluidState(pos.below())))
+            return true;
+
+        for (final Vec3i cardinalOffset : CARDINAL_OFFSETS) {
+            if (isFallingWater(world.getFluidState(pos.offset(cardinalOffset))))
+                return true;
+            if (isFallingWater(world.getFluidState(pos.offset(cardinalOffset).below())))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static boolean isFallingWater(FluidState fluidState) {
+        return isWaterfallSourceFluid(fluidState)
+                && fluidState.hasProperty(FlowingFluid.FALLING)
+                && Boolean.TRUE.equals(fluidState.getValue(FlowingFluid.FALLING));
     }
 
     private static boolean isUnboundedLiquid(final Level provider, final BlockPos pos) {
@@ -319,12 +385,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
         }
 
         private int getSplashParticleSpawnCount() {
-            ParticleStatus state = GameUtils.getGameSettings().particles().get();
-            var count = switch (state) {
-                case MINIMAL -> 0;
-                case ALL -> this.particleLimit;
-                default -> this.particleLimit / 2;
-            };
+            int count = this.particleLimit / 2;
 
             if (count < 4)
                 return count;

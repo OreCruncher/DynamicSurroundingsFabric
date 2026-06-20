@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.lib.block;
 
 import com.google.common.collect.ImmutableMap;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import org.apache.commons.lang3.StringUtils;
@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import net.minecraft.core.Holder;
 
 /**
  * Utility functions for parsing and handling string based block names.  Handles things like properties, both fully
@@ -69,12 +70,14 @@ final class BlockStateParser {
             }
         }
 
-        final ResourceLocation resource = ResourceLocation.tryParse(temp);
+        final Identifier resource = Identifier.tryParse(temp);
         if (temp == null) {
             throw new BlockStateParseException(String.format("Invalid block name '%s' for entry '%s'", temp, blockName));
         }
 
-        final Block block = BuiltInRegistries.BLOCK.get(resource);
+        final Block block = BuiltInRegistries.BLOCK.get(resource)
+                .map(Holder::value)
+                .orElse(Blocks.AIR);
         if (block == Blocks.AIR && !"minecraft:air".equals(temp)) {
             throw new BlockStateParseException(String.format("Unknown block '%s' for entry '%s'", temp, blockName));
         }

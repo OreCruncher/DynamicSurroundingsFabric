@@ -1,6 +1,6 @@
 package org.orecruncher.neoforge;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -38,7 +38,7 @@ public final class NeoForgeMod {
     public void onRegisterGuiLayersEvent(RegisterGuiLayersEvent event) {
         // Add the overlay manager to the render layers of Gui
         OverlayManager dsurround_overlayManager = ContainerManager.resolve(OverlayManager.class);
-        event.registerBelowAll(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "layer/overlaymanager"), dsurround_overlayManager::render);
+        event.registerBelowAll(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "layer/overlaymanager"), dsurround_overlayManager::render);
     }
 
     @SubscribeEvent

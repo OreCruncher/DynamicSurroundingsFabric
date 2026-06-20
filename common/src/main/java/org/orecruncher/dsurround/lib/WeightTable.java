@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.lib;
 
-import net.minecraft.util.random.WeightedEntry;
-import net.minecraft.util.random.WeightedRandom;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
@@ -27,12 +25,29 @@ public class WeightTable {
             return Optional.empty();
 
         if (selections.size() == 1)
-            return Optional.of(selections.getFirst().data());
+            return Optional.ofNullable(selections.getFirst().data());
 
-        return WeightedRandom.getRandomItem(randomizer, selections).map(IItem::data);
+        int totalWeight = 0;
+        for (var selection : selections) {
+            totalWeight += Math.max(0, selection.getWeight().asInt());
+        }
+
+        if (totalWeight <= 0)
+            return Optional.empty();
+
+        int target = randomizer.nextInt(totalWeight);
+        for (var selection : selections) {
+            int weight = Math.max(0, selection.getWeight().asInt());
+            if (target < weight)
+                return Optional.ofNullable(selection.data());
+            target -= weight;
+        }
+
+        return Optional.empty();
     }
 
-    public interface IItem<T> extends WeightedEntry {
+    public interface IItem<T> {
+        WeightValue getWeight();
         T data();
     }
 }

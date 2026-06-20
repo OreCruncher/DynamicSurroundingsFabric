@@ -4,6 +4,18 @@
     {
       "id": "#c:is_mountain/peak",
       "required": false
+    },
+    {
+      "id": "minecraft:jagged_peaks",
+      "required": false
+    },
+    {
+      "id": "minecraft:frozen_peaks",
+      "required": false
+    },
+    {
+      "id": "minecraft:stony_peaks",
+      "required": false
     }
   ]
 }

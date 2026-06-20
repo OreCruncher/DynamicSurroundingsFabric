@@ -4,10 +4,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.vehicle.Boat;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.phys.HitResult;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 
@@ -27,9 +24,6 @@ public class ItemSwingEffect extends EntityEffectBase {
 
         final LivingEntity entity = info.getEntity();
 
-        // Boats are strange - ignore them for now
-        if (entity.getVehicle() instanceof Boat)
-            return;
 
         // Don't use entity.isBlocking() - it has a 5 tick delay which would cause the
         // animation and the sound play to be out of sync.
@@ -64,11 +58,7 @@ public class ItemSwingEffect extends EntityEffectBase {
     }
 
     protected static boolean looksToBeBlocking(LivingEntity entity) {
-        if (!entity.isUsingItem() || entity.getUseItem().isEmpty()) {
-            return false;
-        }
-        Item item = entity.getUseItem().getItem();
-        return item.getUseAnimation(entity.getUseItem()) == UseAnim.BLOCK;
+        return entity.isBlocking();
     }
 
     protected static boolean freeSwing(LivingEntity entity) {

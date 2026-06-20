@@ -8,7 +8,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -27,7 +27,7 @@ import java.util.Optional;
 import static org.orecruncher.dsurround.sound.SoundCodecHelpers.SOUND_PROPERTY_RANGE;
 
 public record SoundFactory(
-        Optional<ResourceLocation> location,
+        Optional<Identifier> location,
         SoundEvent soundEvent,
         FloatProvider volume,
         FloatProvider pitch,
@@ -55,8 +55,8 @@ public record SoundFactory(
     private static final Map<SoundEvent, Music> MUSIC_MAP = new HashMap<>();
 
     @Override
-    public ResourceLocation getLocation() {
-        return this.location.orElse(this.soundEvent.getLocation());
+    public Identifier getLocation() {
+        return this.location.orElse(this.soundEvent.location());
     }
 
     @Override
@@ -76,7 +76,7 @@ public record SoundFactory(
     @Override
     public SimpleSoundInstance createAsAdditional() {
         return new SimpleSoundInstance(
-                this.soundEvent.getLocation(),
+                this.soundEvent.location(),
                 this.category,
                 this.getVolume(),
                 this.getPitch(),
@@ -105,7 +105,7 @@ public record SoundFactory(
     @Override
     public SimpleSoundInstance createAtLocation(double posX, double posY, double posZ, float volumeScale) {
         return new SimpleSoundInstance(
-                this.soundEvent.getLocation(),
+                this.soundEvent.location(),
                 this.category,
                 this.getVolume() * volumeScale,
                 this.getPitch(),
@@ -156,7 +156,7 @@ public record SoundFactory(
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("location", this.getLocation())
-                .add("soundEvent", this.soundEvent.getLocation())
+                .add("soundEvent", this.soundEvent.location())
                 .toString();
     }
 

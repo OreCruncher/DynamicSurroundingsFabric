@@ -1,4 +1,4 @@
-accessWidener v2 named
+classTweaker v1 official
 
 # For sound GUI
 accessible class net/minecraft/client/gui/components/OptionsList$Entry
@@ -10,7 +10,6 @@ accessible class net/minecraft/world/level/biome/Biome$ClimateSettings
 accessible class net/minecraft/client/multiplayer/ClientChunkCache$Storage
 
 # Get at fog data
-accessible class net/minecraft/client/renderer/FogRenderer$FogData
 
 # Access formatter when dumping biome information
 accessible method net/minecraft/network/chat/TextColor formatValue ()Ljava/lang/String;

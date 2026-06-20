@@ -1,7 +1,11 @@
 package org.orecruncher.dsurround.config.block;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
@@ -59,10 +63,11 @@ public class BlockInfo {
 
     private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
     private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
+    private static final TagKey<Block> SAPLINGS_TAG = TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("minecraft", "saplings"));
 
     protected final int version;
     @Nullable
-    protected final ResourceLocation stepSound;
+    protected final Identifier stepSound;
     protected AcousticEntryCollection sounds = new AcousticEntryCollection();
     protected Collection<IBlockEffectProducer> blockEffects = new ObjectArray<>();
 
@@ -79,7 +84,7 @@ public class BlockInfo {
         this.version = version;
         this.soundOcclusion = getSoundOcclusionSetting(state);
         this.soundReflectivity = getSoundReflectionSetting(state);
-        this.stepSound = state.getSoundType().getStepSound().getLocation();
+        this.stepSound = state.getSoundType().getStepSound().location();
     }
 
     public boolean isDefault() {
@@ -214,7 +219,7 @@ public class BlockInfo {
             result = Reflectance.NONE;
         else if (TAG_LIBRARY.is(BlockTags.CAULDRONS, state))
             result = Reflectance.MEDIUM;
-        else if (TAG_LIBRARY.is(BlockTags.SAPLINGS, state))
+        else if (TAG_LIBRARY.is(SAPLINGS_TAG, state))
             result = Reflectance.NONE;
         else if (TAG_LIBRARY.is(BlockTags.STONE_ORE_REPLACEABLES, state))
             // Assume stone equivalent
@@ -225,7 +230,7 @@ public class BlockInfo {
             result = Reflectance.NONE;
 
         if (result == null) {
-            var pathString = state.getBlockHolder().unwrapKey().map(k -> k.location().getPath()).orElse(null);
+            var pathString = getBlockPath(state);
             if (pathString != null) {
                 if (pathString.contains("panes") || pathString.contains("wall"))
                     result = Reflectance.LOW;
@@ -242,6 +247,11 @@ public class BlockInfo {
             result = Reflectance.DEFAULT;
 
         return result;
+    }
+
+    private static String getBlockPath(BlockState state) {
+        Identifier id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+        return id != null ? id.getPath() : null;
     }
 
     private static float getSoundOcclusionSetting(BlockState state) {
@@ -301,7 +311,7 @@ public class BlockInfo {
             result = Occlusion.NONE;
         else if (TAG_LIBRARY.is(BlockTags.CAULDRONS, state))
             result = Occlusion.MEDIUM;
-        else if (TAG_LIBRARY.is(BlockTags.SAPLINGS, state))
+        else if (TAG_LIBRARY.is(SAPLINGS_TAG, state))
             result = Occlusion.NONE;
         else if (TAG_LIBRARY.is(BlockTags.STONE_ORE_REPLACEABLES, state))
             // Assume stone equivalent
@@ -312,7 +322,7 @@ public class BlockInfo {
             result = Occlusion.NONE;
 
         if (result == null) {
-            var pathString = state.getBlockHolder().unwrapKey().map(k -> k.location().getPath()).orElse(null);
+            var pathString = getBlockPath(state);
             if (pathString != null) {
                 if (pathString.contains("chest") || pathString.contains("glass"))
                     result = Occlusion.LOW;

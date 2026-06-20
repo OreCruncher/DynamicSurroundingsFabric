@@ -32,6 +32,62 @@
     {
       "id": "#forge:is_dry/overworld",
       "required": false
+    },
+    {
+      "id": "minecraft:desert",
+      "required": false
+    },
+    {
+      "id": "minecraft:savanna",
+      "required": false
+    },
+    {
+      "id": "minecraft:savanna_plateau",
+      "required": false
+    },
+    {
+      "id": "minecraft:windswept_savanna",
+      "required": false
+    },
+    {
+      "id": "minecraft:badlands",
+      "required": false
+    },
+    {
+      "id": "minecraft:eroded_badlands",
+      "required": false
+    },
+    {
+      "id": "minecraft:wooded_badlands",
+      "required": false
+    },
+    {
+      "id": "minecraft:nether_wastes",
+      "required": false
+    },
+    {
+      "id": "minecraft:soul_sand_valley",
+      "required": false
+    },
+    {
+      "id": "minecraft:basalt_deltas",
+      "required": false
+    },
+    {
+      "id": "minecraft:the_end",
+      "required": false
+    },
+    {
+      "id": "minecraft:small_end_islands",
+      "required": false
+    },
+    {
+      "id": "minecraft:end_barrens",
+      "required": false
+    },
+    {
+      "id": "minecraft:sulfur_caves",
+      "required": false
     }
   ]
 }

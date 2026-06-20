@@ -42,7 +42,9 @@ public interface IEntityEffect {
      * Helper method to add a particle to the particle system
      */
     default void addParticle(Particle particle) {
-        GameUtils.getParticleManager().add(particle);
+        if (particle != null) {
+            GameUtils.getParticleManager().add(particle);
+        }
     }
 
 }

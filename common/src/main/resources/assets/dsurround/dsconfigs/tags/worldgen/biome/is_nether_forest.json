@@ -2,7 +2,15 @@
   "replace": false,
   "values": [
     {
-      "id": "#c:is_nether_forests",
+      "id": "#c:is_nether_forest",
+      "required": false
+    },
+    {
+      "id": "minecraft:crimson_forest",
+      "required": false
+    },
+    {
+      "id": "minecraft:warped_forest",
       "required": false
     }
   ]

@@ -3,9 +3,9 @@ package org.orecruncher.dsurround.config.biome;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.Music;
-import net.minecraft.util.random.Weight;
+import org.orecruncher.dsurround.lib.WeightValue;
 import net.minecraft.world.level.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -25,7 +25,6 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 import org.orecruncher.dsurround.processing.fog.FogDensity;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
@@ -43,7 +42,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private static final IConditionEvaluator CONDITION_EVALUATOR = ContainerManager.resolve(IConditionEvaluator.class);
 
     private final int version;
-    private final ResourceLocation biomeId;
+    private final Identifier biomeId;
     private final String biomeName;
     private final Optional<Biome> biome;
     private final BiomeTraits traits;
@@ -61,11 +60,11 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private Script additionalSoundChance = DEFAULT_SOUND_CHANCE;
     private Script moodSoundChance = DEFAULT_SOUND_CHANCE;
 
-    public BiomeInfo(final int version, final ResourceLocation id, final String name, BiomeTraits traits) {
+    public BiomeInfo(final int version, final Identifier id, final String name, BiomeTraits traits) {
         this(version, id, name, traits, null);
     }
 
-    public BiomeInfo(final int version, final ResourceLocation id, final String name, BiomeTraits traits, Biome biome) {
+    public BiomeInfo(final int version, final Identifier id, final String name, BiomeTraits traits, Biome biome) {
         this.version = version;
         this.biomeId = id;
         this.biomeName = name;
@@ -79,17 +78,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
         this.fogDensity = FogDensity.NONE;
 
-        // Check to see if the biome has a soundtrack. If so, add it to
-        // the music list.
-        if (biome != null) {
-            var accessor = (IBiomeExtended)(Object)biome;
-            accessor.dsurround_getSpecialEffects().getBackgroundMusic()
-                .ifPresent(m -> {
-                    var factory = SOUND_LIBRARY.getSoundFactoryForMusic(m);
-                    var entry = new AcousticEntry(factory, null);
-                    this.musicSounds.add(entry);
-                });
-        }
+        // Vanilla biome background music folding is temporarily skipped in the 26.2 port.
     }
 
     public int getVersion() {
@@ -112,7 +101,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         return this.isCave;
     }
 
-    public ResourceLocation getBiomeId() {
+    public Identifier getBiomeId() {
         return this.biomeId;
     }
 
@@ -238,7 +227,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
                     targetCollection = this.loopSounds;
                 }
                 case MUSIC, MOOD, ADDITION -> {
-                    final Weight weight = sr.weight();
+                    final WeightValue weight = sr.weight();
                     acousticEntry = new AcousticEntry(factory, sr.conditions(), weight);
 
                     if (sr.type() == SoundEventType.ADDITION)

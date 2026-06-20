@@ -2,12 +2,14 @@ package org.orecruncher.dsurround.lib.gui;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.toasts.Toast;
-import net.minecraft.client.gui.components.toasts.ToastComponent;
+import net.minecraft.client.gui.components.toasts.ToastManager;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,7 +18,7 @@ import java.util.List;
 
 @SuppressWarnings("unused")
 public class WarmToast  implements Toast {
-    private static final Profile DEFAULT_PROFILE = new Profile(ResourceLocation.withDefaultNamespace("toast/advancement"), 5000, ColorPalette.GOLD, ColorPalette.WHITE);
+    private static final Profile DEFAULT_PROFILE = new Profile(Identifier.withDefaultNamespace("toast/advancement"), 5000, ColorPalette.GOLD, ColorPalette.WHITE);
 
     private static final int MAX_LINE_SIZE = 200;
     private static final int MIN_LINE_SIZE = 100;
@@ -28,7 +30,8 @@ public class WarmToast  implements Toast {
     private Component title;
     private List<FormattedCharSequence> messageLines;
     private long lastChanged;
-    private boolean changed;
+    private boolean changed = true;
+    private Visibility wantedVisibility = Visibility.SHOW;
     private final int width;
 
     public static WarmToast multiline(Minecraft minecraft, Component title, Component body) {
@@ -65,15 +68,28 @@ public class WarmToast  implements Toast {
         this.changed = true;
     }
 
-    public @NotNull Toast.Visibility render(@NotNull GuiGraphics guiGraphics, @NotNull ToastComponent toastComponent, long lastChanged) {
+    @Override
+    public @NotNull Visibility getWantedVisibility() {
+        return this.wantedVisibility;
+    }
+
+    @Override
+    public void update(@NotNull ToastManager toastManager, long fullyVisibleForMs) {
         if (this.changed) {
-            this.lastChanged = lastChanged;
+            this.lastChanged = fullyVisibleForMs;
             this.changed = false;
         }
 
+        double d = (double)this.profile.displayTime * toastManager.getNotificationDisplayTimeMultiplier();
+        long o = fullyVisibleForMs - this.lastChanged;
+        this.wantedVisibility = (double)o < d ? Visibility.SHOW : Visibility.HIDE;
+    }
+
+    @Override
+    public void extractRenderState(@NotNull GuiGraphicsExtractor guiGraphics, @NotNull Font font, long fullyVisibleForMs) {
         int i = this.width();
         if (i == 160 && this.messageLines.size() <= 1) {
-            guiGraphics.blitSprite(this.profile.sprite, 0, 0, i, this.height());
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, this.profile.sprite, 0, 0, i, this.height());
         } else {
             int renderHeight = this.height();
             int lineRenderCount = Math.min(4, renderHeight - 28);
@@ -87,37 +103,34 @@ public class WarmToast  implements Toast {
         }
 
         if (this.messageLines.isEmpty()) {
-            guiGraphics.drawString(toastComponent.getMinecraft().font, this.title, 18, LINE_SPACING, this.profile.titleColor.getValue(), false);
+            guiGraphics.text(font, this.title, 18, LINE_SPACING, ColorPalette.opaque(this.profile.titleColor), false);
         } else {
-            guiGraphics.drawString(toastComponent.getMinecraft().font, this.title, 18, 7, this.profile.titleColor.getValue(), false);
+            guiGraphics.text(font, this.title, 18, 7, ColorPalette.opaque(this.profile.titleColor), false);
 
             for(int j = 0; j < this.messageLines.size(); ++j) {
-                guiGraphics.drawString(toastComponent.getMinecraft().font, this.messageLines.get(j), 18, 18 + j * LINE_SPACING, this.profile.bodyColor.getValue(), false);
+                guiGraphics.text(font, this.messageLines.get(j), 18, 18 + j * LINE_SPACING, ColorPalette.opaque(this.profile.bodyColor), false);
             }
         }
 
-        double d = (double)this.profile.displayTime * toastComponent.getNotificationDisplayTimeMultiplier();
-        long o = lastChanged - this.lastChanged;
-        return (double)o < d ? Visibility.SHOW : Visibility.HIDE;
     }
 
-    private void renderBackgroundRow(GuiGraphics guiGraphics, int i, int j, int k, int l) {
+    private void renderBackgroundRow(GuiGraphicsExtractor guiGraphics, int i, int j, int k, int l) {
         int m = j == 0 ? 20 : 5;
         int n = Math.min(60, i - m);
-        guiGraphics.blitSprite(this.profile.sprite, 160, 32, 0, j, 0, k, m, l);
+        guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, this.profile.sprite, 160, 32, 0, j, 0, k, m, l);
 
         for(int o = m; o < i - n; o += 64) {
-            guiGraphics.blitSprite(this.profile.sprite, 160, 32, 32, j, o, k, Math.min(64, i - o - n), l);
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, this.profile.sprite, 160, 32, 32, j, o, k, Math.min(64, i - o - n), l);
         }
 
-        guiGraphics.blitSprite(this.profile.sprite, 160, 32, 160 - n, j, i - n, k, n, l);
+        guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, this.profile.sprite, 160, 32, 160 - n, j, i - n, k, n, l);
     }
 
     private static ImmutableList<FormattedCharSequence> nullToEmpty(@Nullable Component component) {
         return component == null ? ImmutableList.of() : ImmutableList.of(component.getVisualOrderText());
     }
 
-    public record Profile(ResourceLocation sprite, int displayTime, TextColor titleColor, TextColor bodyColor) {
+    public record Profile(Identifier sprite, int displayTime, TextColor titleColor, TextColor bodyColor) {
 
     }
 }

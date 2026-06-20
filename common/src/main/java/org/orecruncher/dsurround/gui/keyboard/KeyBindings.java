@@ -15,8 +15,13 @@ import org.orecruncher.dsurround.lib.config.IConfigScreenFactoryProvider;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
+import net.minecraft.resources.Identifier;
 
 public class KeyBindings {
+
+    private static final KeyMapping.Category DSURROUND_CATEGORY = KeyMapping.Category.register(
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "keybinds")
+    );
 
     public static final KeyMapping modConfigurationMenu;
     public static final KeyMapping individualSoundConfigBinding;
@@ -41,7 +46,7 @@ public class KeyBindings {
     }
 
     private static KeyMapping registerKeyBinding(String translationKey, int code, String category) {
-        var mapping = new KeyMapping(translationKey, code, category);
+        var mapping = new KeyMapping(translationKey, code, DSURROUND_CATEGORY);
         KeyMappingRegistry.register(mapping);
         return mapping;
     }

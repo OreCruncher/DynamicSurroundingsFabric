@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.BiomeTrait;
@@ -72,7 +72,7 @@ public class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
     }
 
     @Override
-    public Collection<BiomeTrait> evaluate(ResourceLocation id, Biome biome) {
+    public Collection<BiomeTrait> evaluate(Identifier id, Biome biome) {
         Set<BiomeTrait> results = new HashSet<>();
 
         // Have to do it this way so that the client side tagging has a chance.  When connecting to

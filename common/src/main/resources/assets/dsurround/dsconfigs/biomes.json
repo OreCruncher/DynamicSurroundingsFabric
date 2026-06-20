@@ -1,5 +1,21 @@
 [
   {
+    "biomeSelector": "biome.id == 'minecraft:sulfur_caves'",
+    "_comment": "Minecraft 26.2 Sulfur Caves explicit set",
+    "priority": -25,
+    "traits": [
+      "OVERWORLD",
+      "UNDERGROUND",
+      "CAVES",
+      "HOT",
+      "DRY",
+      "WASTELAND",
+      "RARE"
+    ],
+    "fogColor": "#B99A30",
+    "fogDensity": "medium"
+  },
+  {
     "biomeSelector": "WINDSWEPT",
     "_comment": "Wind for Windswept",
     "acoustics": [
@@ -339,7 +355,7 @@
     ]
   },
   {
-    "biomeSelector" : "(FOREST || CONIFEROUS || DECIDUOUS) && !(SWAMP || WASTELAND || JUNGLE || DEAD || NETHER || THE_END)",
+    "biomeSelector": "(FOREST || CONIFEROUS || DECIDUOUS) && !(SWAMP || WASTELAND || JUNGLE || DEAD || NETHER || THE_END)",
     "_comment": "Turtledove",
     "acoustics": [
       {
@@ -350,7 +366,7 @@
     ]
   },
   {
-    "biomeSelector" : "(FOREST || CONIFEROUS || DECIDUOUS) && (SNOWY || COLD)",
+    "biomeSelector": "(FOREST || CONIFEROUS || DECIDUOUS) && (SNOWY || COLD)",
     "_comment": "Silent forest",
     "acoustics": [
       {

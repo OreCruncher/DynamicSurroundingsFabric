@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.data.SoundMappingConfigRule;
@@ -9,7 +9,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 
 import java.util.Optional;
 
-public record SoundMapping(ResourceLocation soundEvent, ObjectArray<Mapping> rules) {
+public record SoundMapping(Identifier soundEvent, ObjectArray<Mapping> rules) {
 
     public static SoundMapping of(SoundMappingConfigRule rule) {
         ObjectArray<Mapping> mappings = new ObjectArray<>(rule.rules().size());
@@ -21,8 +21,8 @@ public record SoundMapping(ResourceLocation soundEvent, ObjectArray<Mapping> rul
         return !this.rules.isEmpty() && !this.rules.getFirst().isDefaultRule();
     }
 
-    public Optional<ResourceLocation> findMatch(@Nullable BlockState state) {
-        Optional<ResourceLocation> factory = Optional.empty();
+    public Optional<Identifier> findMatch(@Nullable BlockState state) {
+        Optional<Identifier> factory = Optional.empty();
         for (var rule : this.rules) {
             factory = rule.findMatch(state);
             if (factory.isPresent())
@@ -74,7 +74,7 @@ public record SoundMapping(ResourceLocation soundEvent, ObjectArray<Mapping> rul
         this.rules.add(last);
     }
 
-    public record Mapping(ObjectArray<IMatcher<BlockState>> blocks, ResourceLocation factory) {
+    public record Mapping(ObjectArray<IMatcher<BlockState>> blocks, Identifier factory) {
 
         public static Mapping of(SoundMappingConfigRule.MappingRule mappingRule) {
             ObjectArray<IMatcher<BlockState>> blocks = new ObjectArray<>(mappingRule.blocks().size());
@@ -82,7 +82,7 @@ public record SoundMapping(ResourceLocation soundEvent, ObjectArray<Mapping> rul
             return new Mapping(blocks, mappingRule.factory());
         }
 
-        public Optional<ResourceLocation> findMatch(@Nullable BlockState state) {
+        public Optional<Identifier> findMatch(@Nullable BlockState state) {
             if (this.isDefaultRule())
                 return Optional.of(this.factory);
             // Since the rules have BlockState matching if a null state is provided

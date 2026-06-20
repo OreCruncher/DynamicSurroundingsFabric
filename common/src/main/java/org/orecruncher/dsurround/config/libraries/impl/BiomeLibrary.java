@@ -4,7 +4,7 @@ import com.mojang.serialization.Codec;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.locale.Language;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.SyntheticBiome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
@@ -12,6 +12,7 @@ import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.libraries.IReloadEvent;
+import org.orecruncher.dsurround.lib.BiomeCompat;
 import org.orecruncher.dsurround.lib.Guard;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
@@ -20,7 +21,6 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
-import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -102,12 +102,12 @@ public final class BiomeLibrary implements IBiomeLibrary {
     public BiomeInfo getBiomeInfo(Biome biome) {
         // check the cached property on the biome and return the info
         // that is there.
-        var info = ((IBiomeExtended) (Object) biome).dsurround_getInfo();
+        var info = BiomeCompat.getInfo(biome);
         if (info != null && info.getVersion() == this.version)
             return info;
 
         // Not set or something changed.  Need a refresh.
-        ResourceLocation id;
+        Identifier id;
         String name;
 
         // Pull from cached data if we have it, otherwise lookup
@@ -126,7 +126,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
         // Build out the info object and store into the biome.  We need to do that
         // so that when applying configs, the script engine can find it.
         final var result = new BiomeInfo(this.version, id, name, traits, biome);
-        ((IBiomeExtended) (Object) biome).dsurround_setInfo(result);
+        BiomeCompat.setInfo(biome, result);
 
         // Collect any trait changes into the trait collection before applying
         // general rules as these traits can influence decisions.
@@ -190,13 +190,13 @@ public final class BiomeLibrary implements IBiomeLibrary {
                 .filter(filter);
     }
 
-    private static ResourceLocation getBiomeId(Biome biome) {
+    private static Identifier getBiomeId(Biome biome) {
         return RegistryUtils.getRegistryEntry(Registries.BIOME, biome)
-                .map(holder -> holder.unwrapKey().orElseThrow().location()).orElseThrow();
+                .map(holder -> holder.unwrapKey().orElseThrow().identifier()).orElseThrow();
     }
 
     @Override
-    public String getBiomeName(ResourceLocation id) {
+    public String getBiomeName(Identifier id) {
         final String fmt = String.format("biome.%s.%s", id.getNamespace(), id.getPath());
         return Language.getInstance().getOrDefault(fmt);
     }

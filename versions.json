@@ -32,12 +32,19 @@
       "0.0.2": "Second Alpha",
       "0.0.3": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CHANGELOG.md#dynamicsurroundings-fabric-1171-003",
       "0.0.4": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CHANGELOG.md#dynamicsurroundings-fabric-1171-004"
+    },
+    "26.2": {
+      "0.4.2+26.2": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CHANGELOG.md#dynamicsurroundings-262-042262",
+      "0.4.3+26.2": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CHANGELOG.md#dynamicsurroundings-262-043262",
+      "0.4.4+26.2": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CHANGELOG.md#dynamicsurroundings-262-044262",
+      "0.4.5+26.2": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CHANGELOG.md#dynamicsurroundings-262-045262"
     }
   },
   "recommend": {
     "1.21.1": "0.4.2",
     "1.20.4": "0.3.3",
     "1.20.1": "0.3.3",
-    "1.17.1": "0.0.4"
+    "1.17.1": "0.0.4",
+    "26.2": "0.4.5+26.2"
   }
 }

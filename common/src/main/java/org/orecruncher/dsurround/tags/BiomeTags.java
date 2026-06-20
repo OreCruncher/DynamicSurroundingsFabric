@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.tags;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.Constants;
@@ -70,7 +70,7 @@ public class BiomeTags {
     public static final TagKey<Biome> IS_WINDSWEPT = of("is_windswept");
 
     private static TagKey<Biome> of(String id) {
-        var tagKey = TagKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, id));
+        var tagKey = TagKey.create(Registries.BIOME, Identifier.fromNamespaceAndPath(Constants.MOD_ID, id));
         TAGS.add(tagKey);
         return tagKey;
     }

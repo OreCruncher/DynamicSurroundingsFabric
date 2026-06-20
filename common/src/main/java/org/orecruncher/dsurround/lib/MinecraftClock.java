@@ -30,7 +30,7 @@ public class MinecraftClock {
 
     public void update(final Level world) {
 
-        long time = world.getDayTime();
+        long time = McCompat.worldDayTime(world);
         this.day = (int) (time / 24000);
         time -= this.day * 24000L;
         this.day++; // It's day 1, not 0 :)

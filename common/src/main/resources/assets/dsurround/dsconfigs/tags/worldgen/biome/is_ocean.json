@@ -4,6 +4,42 @@
     {
       "id": "#c:is_ocean",
       "required": false
+    },
+    {
+      "id": "minecraft:ocean",
+      "required": false
+    },
+    {
+      "id": "minecraft:deep_ocean",
+      "required": false
+    },
+    {
+      "id": "minecraft:cold_ocean",
+      "required": false
+    },
+    {
+      "id": "minecraft:deep_cold_ocean",
+      "required": false
+    },
+    {
+      "id": "minecraft:frozen_ocean",
+      "required": false
+    },
+    {
+      "id": "minecraft:deep_frozen_ocean",
+      "required": false
+    },
+    {
+      "id": "minecraft:lukewarm_ocean",
+      "required": false
+    },
+    {
+      "id": "minecraft:deep_lukewarm_ocean",
+      "required": false
+    },
+    {
+      "id": "minecraft:warm_ocean",
+      "required": false
     }
   ]
 }

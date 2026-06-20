@@ -1,9 +1,11 @@
 package org.orecruncher.dsurround.gui.sound;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
@@ -71,7 +73,7 @@ public class IndividualSoundControlScreen extends Screen {
                 Component.empty());
 
         this.searchField.setResponder((filter) -> this.soundConfigList.setSearchFilter(() -> filter));
-        this.addWidget(this.searchField);
+        this.addRenderableWidget(this.searchField);
 
         // Set up the list control
         final int topY = TOP_OFFSET + HEADER_HEIGHT + SELECTION_HEIGHT_OFFSET;
@@ -88,7 +90,7 @@ public class IndividualSoundControlScreen extends Screen {
                 () -> this.searchField.getValue(),
                 this.soundConfigList);
 
-        this.addWidget(this.soundConfigList);
+        this.addRenderableWidget(this.soundConfigList);
 
         // Set the control buttons at the bottom
         final int controlMargin = (this.width - CONTROL_WIDTH) / 2;
@@ -98,13 +100,13 @@ public class IndividualSoundControlScreen extends Screen {
                 .size(BUTTON_WIDTH, BUTTON_HEIGHT)
                 .pos(controlMargin, controlHeight)
                 .build();
-        this.addWidget(this.save);
+        this.addRenderableWidget(this.save);
 
         this.cancel = Button.builder(CANCEL, this::cancel)
                 .size(BUTTON_WIDTH, BUTTON_HEIGHT)
                 .pos(controlMargin + BUTTON_WIDTH + BUTTON_SPACING, controlHeight)
                 .build();
-        this.addWidget(this.cancel);
+        this.addRenderableWidget(this.cancel);
 
         this.setFocused(this.searchField);
     }
@@ -120,38 +122,34 @@ public class IndividualSoundControlScreen extends Screen {
             GameUtils.getSoundManager().tick(false);
     }
 
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return super.keyPressed(keyCode, scanCode, modifiers) || this.searchField.keyPressed(keyCode, scanCode, modifiers);
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        return super.keyPressed(event) || this.searchField.keyPressed(event);
     }
 
     public void closeScreen() {
         GameUtils.setScreen(this.parent);
     }
 
-    public boolean charTyped(char codePoint, int modifiers) {
-        return this.searchField.charTyped(codePoint, modifiers);
+    @Override
+    public boolean charTyped(CharacterEvent event) {
+        return this.searchField.charTyped(event);
     }
 
-    public void render(final GuiGraphics context, int mouseX, int mouseY, float partialTicks) {
+    @Override
+    public void extractRenderState(final GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTicks) {
         var renderWidth = Mth.clamp(context.guiWidth() - 20, 200, SELECTION_WIDTH);
         this.soundConfigList.setRowWidth(renderWidth);
-        if (this.parent == null)
-            this.renderTransparentBackground(context);
-        else
-            this.renderMenuBackground(context);
 
-        context.drawCenteredString(this.font, this.title, this.width / 2, TOP_OFFSET, ColorPalette.MC_WHITE.getValue());
+        super.extractRenderState(context, mouseX, mouseY, partialTicks);
 
-        this.soundConfigList.render(context, mouseX, mouseY, partialTicks);
-        this.searchField.render(context, mouseX, mouseY, partialTicks);
-        this.save.render(context, mouseX, mouseY, partialTicks);
-        this.cancel.render(context, mouseX, mouseY, partialTicks);
+        context.centeredText(this.font, this.title, this.width / 2, TOP_OFFSET, ColorPalette.opaque(ColorPalette.MC_WHITE));
 
         if (this.soundConfigList.isMouseOver(mouseX, mouseY)) {
             final IndividualSoundControlListEntry entry = this.soundConfigList.getEntryAt(mouseX, mouseY);
             if (entry != null) {
                 final List<FormattedCharSequence> toolTip = entry.getToolTip(mouseX, mouseY);
-                context.renderTooltip(this.font, toolTip, mouseX, mouseY + TOOLTIP_Y_OFFSET);
+                context.setTooltipForNextFrame(this.font, toolTip, mouseX, mouseY + TOOLTIP_Y_OFFSET);
             }
         }
     }

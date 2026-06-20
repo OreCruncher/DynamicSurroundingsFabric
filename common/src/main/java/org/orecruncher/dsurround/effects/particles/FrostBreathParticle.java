@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.effects.particles;
 
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.particle.ParticleRenderType;
+import net.minecraft.client.particle.Particle;
+import net.minecraft.client.particle.SingleQuadParticle;
 import net.minecraft.client.particle.SpriteSet;
-import net.minecraft.client.particle.TextureSheetParticle;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
@@ -12,17 +12,36 @@ import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
-public class FrostBreathParticle extends TextureSheetParticle {
+public class FrostBreathParticle extends SingleQuadParticle {
 
     private final SpriteSet spriteProvider;
 
-    public FrostBreathParticle(LivingEntity entity) {
-        super((ClientLevel) entity.level(), 0, 0, 0, 0.0, 0.0, 0.0);
-        
+    public static Particle create(LivingEntity entity) {
+        SpriteSet spriteProvider = ParticleUtils.getSpriteProvider(ParticleTypes.CLOUD);
+        if (spriteProvider != null) {
+            return new FrostBreathParticle(entity, spriteProvider);
+        }
+
+        // Fallback to a vanilla cloud if the custom particle constructor cannot safely obtain sprites.
+        final Vec3 origin = ParticleUtils.getBreathOrigin(entity);
+        final Vec3 trajectory = ParticleUtils.getLookTrajectory(entity);
+        return ParticleUtils.createParticle(
+                ParticleTypes.CLOUD,
+                origin.x,
+                origin.y,
+                origin.z,
+                trajectory.x * 0.01D,
+                trajectory.y * 0.01D,
+                trajectory.z * 0.01D
+        );
+    }
+
+    private FrostBreathParticle(LivingEntity entity, SpriteSet spriteProvider) {
+        super((ClientLevel) entity.level(), 0, 0, 0, 0.0, 0.0, 0.0, spriteProvider.get(0, 1));
+
         final IRandomizer rand = Randomizer.current();
 
-        // Reuse the cloud sheet
-        this.spriteProvider = ParticleUtils.getSpriteProvider(ParticleTypes.CLOUD);
+        this.spriteProvider = spriteProvider;
         final Vec3 origin = ParticleUtils.getBreathOrigin(entity);
         final Vec3 trajectory = ParticleUtils.getLookTrajectory(entity);
 
@@ -36,7 +55,7 @@ public class FrostBreathParticle extends TextureSheetParticle {
         this.zd = trajectory.z * 0.01D;
 
         this.setAlpha(0.2F);
-        float f1 = 1.0F - (float) (rand.nextDouble() * (double) 0.3F);
+        float f1 = 1.0F - (float) (rand.nextDouble() * 0.3F);
         this.rCol = f1;
         this.gCol = f1;
         this.bCol = f1;
@@ -48,11 +67,12 @@ public class FrostBreathParticle extends TextureSheetParticle {
     }
 
     @Override
-    public @NotNull ParticleRenderType getRenderType() {
-        return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
+    protected @NotNull Layer getLayer() {
+        return SingleQuadParticle.Layer.TRANSLUCENT;
     }
 
-    public float getSize(float tickDelta) {
+    @Override
+    public float getQuadSize(float tickDelta) {
         return this.quadSize * Mth.clamp(((float)this.age + tickDelta) / (float)this.lifetime * 32.0F, 0.0F, 1.0F);
     }
 
@@ -74,5 +94,11 @@ public class FrostBreathParticle extends TextureSheetParticle {
                 this.zd *= 0.7F;
             }
         }
+    }
+
+
+    @Override
+    public int getLightCoords(float partialTick) {
+        return 15728880;
     }
 }

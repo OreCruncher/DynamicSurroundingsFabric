@@ -24,6 +24,7 @@ import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
 import org.orecruncher.dsurround.processing.scanner.VillageScanner;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
+import org.orecruncher.dsurround.lib.McCompat;
 
 @Cacheable
 public class Handlers {
@@ -141,7 +142,7 @@ public class Handlers {
 
     private void handleStartupSound() {
         var client = GameUtils.getMC();
-        if (client.getOverlay() != null)
+        if (McCompat.hasOverlay(client))
             return;
 
         this.startupSoundPlayed = true;

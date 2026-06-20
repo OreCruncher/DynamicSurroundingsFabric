@@ -1,54 +1,81 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.particle.ParticleRenderType;
-import net.minecraft.client.particle.TextureSheetParticle;
+import net.minecraft.client.particle.Particle;
+import net.minecraft.client.particle.SingleQuadParticle;
+import net.minecraft.client.particle.SpriteSet;
+import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.util.Mth;
-import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
-public class WaterRippleParticle extends TextureSheetParticle {
+/**
+ * Dynamic Surroundings water ripple rendered with 26.x atlas-backed particle sprites.
+ */
+public class WaterRippleParticle extends SingleQuadParticle {
 
-    private static final float TEX_SIZE_HALF = 0.5F;
     private static final int BLOCKS_FROM_FADE = 5;
     private static final int MAX_BLOCKS_FADE = 12;
 
     private final WaterRippleStyle rippleStyle;
-
+    private final SpriteSet spriteProvider;
     private final float growthRate;
-    private final float scaledWidth;
-    private float texU1;
-    private float texU2;
-    private float texV1;
-    private float texV2;
     private final float defaultColorAlpha;
 
-    public WaterRippleParticle(WaterRippleStyle rippleStyle, ClientLevel world, double x, double y, double z) {
-        super(world, x, y, z, 0.0, 0.0, 0.0);
+    public static Particle create(WaterRippleStyle rippleStyle, ClientLevel world, double x, double y, double z) {
+        SpriteSet spriteProvider = spriteProviderFor(rippleStyle);
+        if (spriteProvider != null) {
+            return new WaterRippleParticle(rippleStyle, world, x, y, z, spriteProvider);
+        }
+
+        // Last-resort fallback.  This should rarely be used because DS ripple SpriteSets are captured
+        // during Fabric particle provider registration, but it avoids crashing worlds if resource reload
+        // order changes.
+        return ParticleUtils.createParticle(ParticleTypes.SPLASH, x, y, z, 0D, 0D, 0D);
+    }
+
+    private static SpriteSet spriteProviderFor(WaterRippleStyle rippleStyle) {
+        var sprites = ParticleUtils.getSpriteProvider(DsurroundParticleTypes.forRippleStyle(rippleStyle));
+        if (sprites == null) {
+            sprites = ParticleUtils.getSpriteProvider(ParticleTypes.FISHING);
+        }
+        if (sprites == null) {
+            sprites = ParticleUtils.getSpriteProvider(ParticleTypes.SPLASH);
+        }
+        return sprites;
+    }
+
+    private WaterRippleParticle(WaterRippleStyle rippleStyle, ClientLevel world, double x, double y, double z, SpriteSet spriteProvider) {
+        super(world, x, y, z, 0.0, 0.0, 0.0, spriteProvider.first());
 
         this.rippleStyle = rippleStyle;
+        this.spriteProvider = spriteProvider;
         this.lifetime = rippleStyle.getMaxAge();
 
         if (rippleStyle.doScaling()) {
             this.growthRate = this.lifetime / 500F;
             this.quadSize = this.growthRate;
-            this.scaledWidth = this.quadSize * TEX_SIZE_HALF;
         } else {
             this.growthRate = 0F;
             this.quadSize = 1F;
-            this.scaledWidth = 0.5F;
         }
 
         this.y -= 0.2D;
+        this.xd = 0.0D;
+        this.yd = 0.0D;
+        this.zd = 0.0D;
+        this.gravity = 0.0F;
+        this.hasPhysics = false;
 
-        var player = GameUtils.getPlayer().orElseThrow();
-        var cameraPos = BlockPos.containing(player.getEyePosition(1.0f));
+        var player = GameUtils.getPlayer().orElse(null);
+        var cameraPos = player != null ? BlockPos.containing(player.getEyePosition(1.0f)) : BlockPos.containing(x, y, z);
         var position = BlockPos.containing(this.x, this.y, this.z);
 
         var colorRgb = this.level.getBiome(position).value().getWaterColor();
@@ -62,16 +89,18 @@ public class WaterRippleParticle extends TextureSheetParticle {
                 MAX_BLOCKS_FADE
         );
         this.alpha = this.defaultColorAlpha = 0.60F * (MAX_BLOCKS_FADE - distance) / MAX_BLOCKS_FADE;
-
-        this.texU1 = rippleStyle.getU1(this.age);
-        this.texU2 = rippleStyle.getU2(this.age);
-        this.texV1 = rippleStyle.getV1(this.age);
-        this.texV2 = rippleStyle.getV2(this.age);
+        this.setSpriteFromAge(this.spriteProvider);
     }
 
     @Override
-    public @NotNull ParticleRenderType getRenderType() {
-        return ParticleRenderType.CUSTOM;
+    protected @NotNull Layer getLayer() {
+        return SingleQuadParticle.Layer.TRANSLUCENT;
+    }
+
+    @Override
+    public void extract(QuadParticleRenderState state, Camera camera, float partialTick) {
+        var rotation = new Quaternionf().lookAlong(new Vector3f(0, 1, 0), new Vector3f(0, 0, 1)).normalize();
+        this.extractRotatedQuad(state, camera, rotation, partialTick);
     }
 
     @Override
@@ -80,55 +109,8 @@ public class WaterRippleParticle extends TextureSheetParticle {
     }
 
     @Override
-    protected float getU0() {
-        return this.texU1;
-    }
-
-    @Override
-    protected float getU1() {
-        return this.texU2;
-    }
-
-    @Override
-    protected float getV0() {
-        return this.texV1;
-    }
-
-    @Override
-    protected float getV1() {
-        return this.texV2;
-    }
-
-    @Override
-    public void render(VertexConsumer vertexConsumer, Camera camera, float tickDelta) {
-
-        Vec3 vec3d = camera.getPosition();
-        float X = (float)(Mth.lerp(tickDelta, this.xo, this.x) - vec3d.x());
-        float Y = (float)(Mth.lerp(tickDelta, this.yo, this.y) - vec3d.y());
-        float Z = (float)(Mth.lerp(tickDelta, this.zo, this.z) - vec3d.z());
-
-        int p = this.getLightColor(tickDelta);
-
-        vertexConsumer
-                .addVertex(-this.scaledWidth + X, Y, this.scaledWidth + Z)
-                .setUv(this.texU2, this.texV2)
-                .setColor(this.rCol, this.gCol, this.bCol, this.alpha)
-                .setLight(p);
-        vertexConsumer
-                .addVertex(this.scaledWidth + X, Y, this.scaledWidth + Z)
-                .setUv( this.texU2, this.texV1)
-                .setColor(this.rCol, this.gCol, this.bCol, this.alpha)
-                .setLight(p);
-        vertexConsumer
-                .addVertex(this.scaledWidth + X, Y, -this.scaledWidth + Z)
-                .setUv( this.texU1, this.texV1)
-                .setColor(this.rCol, this.gCol, this.bCol, this.alpha)
-                .setLight(p);
-        vertexConsumer
-                .addVertex(-this.scaledWidth + X, Y, -this.scaledWidth + Z)
-                .setUv(this.texU1, this.texV2)
-                .setColor(this.rCol, this.gCol, this.bCol, this.alpha)
-                .setLight(p);
+    public int getLightCoords(float partialTick) {
+        return 15728880;
     }
 
     @Override
@@ -139,19 +121,17 @@ public class WaterRippleParticle extends TextureSheetParticle {
 
         if (this.age++ >= this.lifetime) {
             this.remove();
-        } else {
-            if (this.rippleStyle.doScaling()) {
-                this.quadSize += this.growthRate;
-            }
-
-            if (this.rippleStyle.doAlpha()) {
-                this.alpha = this.defaultColorAlpha * (float) (this.lifetime - this.age)/this.lifetime;
-            }
-
-            this.texU1 = this.rippleStyle.getU1(this.age);
-            this.texU2 = this.rippleStyle.getU2(this.age);
-            this.texV1 = this.rippleStyle.getV1(this.age);
-            this.texV2 = this.rippleStyle.getV2(this.age);
+            return;
         }
+
+        if (this.rippleStyle.doScaling()) {
+            this.quadSize += this.growthRate;
+        }
+
+        if (this.rippleStyle.doAlpha()) {
+            this.alpha = this.defaultColorAlpha * (float) (this.lifetime - this.age) / this.lifetime;
+        }
+
+        this.setSpriteFromAge(this.spriteProvider);
     }
 }

@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -15,6 +15,7 @@ public final class BiomeTraits {
 
     static {
         traitAnalyzer.add(new BiomeTagAnalyzer());
+        traitAnalyzer.add(new BiomeNameFallbackAnalyzer());
         traitAnalyzer.add(new BiomeMysticalAnalyzer());
     }
 
@@ -25,7 +26,7 @@ public final class BiomeTraits {
         this.traits = new HashSet<>(traits);
     }
 
-    public static BiomeTraits createFrom(ResourceLocation id, Biome biome) {
+    public static BiomeTraits createFrom(Identifier id, Biome biome) {
         var traits = traitAnalyzer
                 .stream()
                 .map(analyzer -> analyzer.evaluate(id, biome))

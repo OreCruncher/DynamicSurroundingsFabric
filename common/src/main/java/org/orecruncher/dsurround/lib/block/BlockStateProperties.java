@@ -27,7 +27,9 @@ public class BlockStateProperties {
     }
 
     public BlockStateProperties(final BlockState state) {
-        this(state.getValues());
+        this(state.getValues().collect(Collectors.toMap(
+                value -> value.property(),
+                value -> (Comparable<?>) value.value())));
     }
 
     public BlockStateProperties(final Map<Property<?>, Comparable<?>> props) {

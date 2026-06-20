@@ -43,7 +43,7 @@ public enum DayCycle {
         if (world.dimensionType().hasCeiling() || !world.dimensionType().hasSkyLight())
             return DayCycle.NO_SKY;
 
-        final float angleDegrees = world.getTimeOfDay(0) * 360F;
+        final float angleDegrees = McCompat.worldTimeOfDay(world, 0F) * 360F;
 
         if (angleDegrees > DAYTIME_THRESHOLD)
             return DayCycle.DAYTIME;
@@ -57,7 +57,7 @@ public enum DayCycle {
     }
 
     public static float getMoonSize(final Level world) {
-        return world.getMoonBrightness();
+        return McCompat.worldMoonBrightness(world);
     }
 
     public String getFormattedName() {

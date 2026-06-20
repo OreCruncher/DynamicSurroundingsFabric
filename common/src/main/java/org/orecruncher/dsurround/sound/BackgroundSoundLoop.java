@@ -96,7 +96,7 @@ public class BackgroundSoundLoop extends AbstractTickableSoundInstance {
     @Override
     public @NotNull String toString() {
         var temp = MoreObjects.toStringHelper(this)
-                .addValue(this.getLocation().toString())
+                .addValue(this.getIdentifier().toString())
                 .addValue(this.getSource().getName());
 
         // Possible that the sound was not yet assigned.  Seen issues when exiting worlds.

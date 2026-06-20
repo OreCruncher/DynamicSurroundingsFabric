@@ -1,10 +1,9 @@
 {
-  "required": true,
+  "required": false,
   "minVersion": "0.8",
   "package": "org.orecruncher.dsurround.mixins",
-  "compatibilityLevel": "JAVA_21",
-  "mixins": [
-  ],
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [],
   "client": [
     "audio.MixinChannelHandleAccessor",
     "audio.MixinMusicManager",
@@ -25,19 +24,15 @@
     "core.MixinClientWorldProperties",
     "core.MixinClothAbstractConfigEntry",
     "core.MixinEntity",
-    "core.MixinEntityArrow",
-    "core.MixinFogRenderer",
     "core.MixinLivingEntity",
-    "core.MixinParticleManager",
     "core.MixinRainSplashParticle",
     "core.MixinRaycastContextAccessor",
     "core.MixinSoundOptionsScreen",
-    "core.MixinTagCollector",
     "core.MixinWorld",
     "events.MixinMinecraftClient"
   ],
   "server": [],
   "injectors": {
-    "defaultRequire": 1
+    "defaultRequire": 0
   }
 }

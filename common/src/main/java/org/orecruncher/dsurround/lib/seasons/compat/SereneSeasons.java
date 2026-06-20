@@ -1,90 +1,39 @@
 package org.orecruncher.dsurround.lib.seasons.compat;
 
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.level.biome.Biome;
-import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
-import sereneseasons.api.season.Season;
-import sereneseasons.api.season.SeasonHelper;
-import sereneseasons.season.SeasonHooks;
+import org.orecruncher.dsurround.lib.BiomeCompat;
 
-import java.util.Locale;
 import java.util.Optional;
 
+/**
+ * Temporary 26.2-compatible placeholder for the Serene Seasons integration.
+ *
+ * <p>The Serene Seasons API artifacts used by the 1.21.1 build were not
+ * available for Minecraft 26.2 when this port was prepared. Keeping this class
+ * free of Serene Seasons imports lets the base mod compile and run on 26.2.
+ * Reintroduce the API-backed implementation once the upstream 26.2 dependency
+ * is published.</p>
+ */
 public class SereneSeasons extends AbstractSeasonProvider {
 
-    // Cache for previously computed data
-    private Season.SubSeason subSeason;
-    private Season.TropicalSeason tropicalSeason;
-    private Component computed;
-
-    private final IDimensionInformation dimensionInformation;
-
-    public SereneSeasons(IDimensionInformation dimensionInformation) {
-        super("Serene Seasons");
-        this.dimensionInformation = dimensionInformation;
+    public SereneSeasons() {
+        super("Serene Seasons (disabled in 26.2 port)");
     }
 
     @Override
     public Optional<Component> getCurrentSeason() {
-        var helper = SeasonHelper.getSeasonState(this.level());
-        var subSeason = helper.getSubSeason();
-        return Optional.of(Component.literal(subSeason.toString()));
+        return Optional.empty();
     }
 
     @Override
     public Optional<Component> getCurrentSeasonTranslated() {
-        var helper = SeasonHelper.getSeasonState(this.level());
-        if (this.subSeason != helper.getSubSeason() || this.tropicalSeason != helper.getTropicalSeason()) {
-            var subSeasonKey = "desc.sereneseasons." + helper.getSeason().toString().toLowerCase(Locale.ROOT);
-            var tropicalSeasonKey = "desc.sereneseasons." + helper.getTropicalSeason().toString().toLowerCase(Locale.ROOT);
-            var subSeason = Component.translatable(subSeasonKey);
-            var tropicalSeason = Component.translatable(tropicalSeasonKey);
-            this.computed = Component.translatable("%s (%s)", subSeason, tropicalSeason);
-            this.subSeason = helper.getSubSeason();
-            this.tropicalSeason = helper.getTropicalSeason();
-        }
-
-        return Optional.of(this.computed);
-    }
-
-    public boolean isSpring() {
-        var helper = SeasonHelper.getSeasonState(this.level());
-        return helper.getSeason() == Season.SPRING;
-    }
-
-    public  boolean isSummer() {
-        var helper = SeasonHelper.getSeasonState(this.level());
-        return helper.getSeason() == Season.SUMMER;
-    }
-
-    public  boolean isAutumn() {
-        var helper = SeasonHelper.getSeasonState(this.level());
-        return helper.getSeason() == Season.AUTUMN;
-    }
-
-    public  boolean isWinter() {
-        var helper = SeasonHelper.getSeasonState(this.level());
-        return helper.getSeason() == Season.WINTER;
-    }
-
-    @Override
-    public Biome.Precipitation getPrecipitationAt(BlockPos blockPos) {
-        var level = this.level();
-        var biome = level.getBiome(blockPos);
-        return SeasonHooks.getPrecipitationAtSeasonal(level, biome, blockPos);
+        return Optional.empty();
     }
 
     @Override
     public float getTemperature(BlockPos blockPos) {
-        var level = this.level();
-        var biome = level.getBiome(blockPos);
-        return SeasonHooks.getBiomeTemperature(level, biome, blockPos);
-    }
-
-    @Override
-    public ClientLevel level() {
-        return this.dimensionInformation.level();
+        var biome = this.level().getBiome(blockPos).value();
+        return BiomeCompat.getTemperature(biome, blockPos);
     }
 }

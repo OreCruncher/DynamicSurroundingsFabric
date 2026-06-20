@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.lib.seasons.compat;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
+import org.orecruncher.dsurround.lib.BiomeCompat;
 
 import java.util.Optional;
 
@@ -25,6 +25,6 @@ public class VanillaSeasons extends AbstractSeasonProvider {
     @Override
     public float getTemperature(BlockPos blockPos) {
         var biome = this.level().getBiome(blockPos).value();
-        return ((IBiomeExtended)(Object)biome).dsurround_getTemperature(blockPos);
+        return BiomeCompat.getTemperature(biome, blockPos);
     }
 }

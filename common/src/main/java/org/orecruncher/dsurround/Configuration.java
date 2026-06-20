@@ -71,7 +71,7 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @Comment("Enable/disable chat window notification of newer updates available")
-        public boolean enableModUpdateChatMessage = true;
+        public boolean enableModUpdateChatMessage = false;
 
         @Property
         @Comment("Enable/disable filtering display of tags in the diagnostics overlay")
@@ -121,7 +121,7 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @Comment("Enable/disable sound occlusion processing (sound muffling behind blocks)")
-        public boolean enableOcclusionProcessing = false;
+        public boolean enableOcclusionProcessing = true;
 
         @Property
         @IntegerRange(min = 16, max = 64)

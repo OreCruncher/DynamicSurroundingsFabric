@@ -11,6 +11,11 @@ A Minecraft Mod that alters the fabric of Minecraft experience by weaving a tape
     <a href="https://modrinth.com/mod/dynamicsurroundingsfabric"><img src="https://img.shields.io/modrinth/dt/H7fshfpD?style=flat&logo=modrinth&label=downloads" alt="Modrinth"></a>
  </div>
 
+ <div style="text-align: center;">
+    <img src="https://img.shields.io/badge/Minecraft-26.2-00AF5C?style=flat" alt="Minecraft 26.2"/>
+    <img src="https://img.shields.io/badge/Java-25%2B-orange?style=flat" alt="Java 25+"/>
+ </div>
+
 This mod is a successor to the Forge-based Dynamic Surroundings series.
 Though a lot of the functionality is similar, the ultimate feature set will be different.
 My focus is on extending the Vanilla aspect of gameplay rather than introducing anything radical.
@@ -19,11 +24,28 @@ I expect this trend to continue.
 
 The mod is 100% client side. You can add to any mod pack, whether you play standalone or multiplayer.
 
+This build is clearly labeled for **Minecraft 26.2** in the mod version, generated jar name, and in-game mod metadata. Use the `0.4.5+26.2` builds only with Minecraft 26.2 profiles.
+
 Starting with Minecraft 1.21.1, Dynamic Surroundings is supported on Fabric and NeoForge.
 
 Online documentation: https://dynamic-surroundings.readthedocs.io/en/latest/index.html
 
 Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
+
+### Minecraft 26.2 Requirements
+* JAVA 25+
+* Architectury 21.0.2+
+* 100% client side; no server side deployment needed
+
+**Fabric**
+* Fabric Loader >= 0.19.3
+* Fabric API >= 0.152.2+26.2
+* Cloth Config >= 26.2.155 is recommended for the configuration UI
+* Mod Menu >= 20.0.0-beta.1 is recommended for the in-game configuration entry
+
+**NeoForge**
+* NeoForge >= 26.2.0.1-beta
+* Cloth Config >= 26.2.155 is recommended for the configuration UI
 
 ### Minecraft 1.21.1 Requirements
 * JAVA 21+
@@ -59,13 +81,14 @@ Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
 * Having a wander [(YouTube)](https://youtu.be/GbwaGX3JWeM)
 
 ## Features
-* Enhanced Sound processing - performs calculations in the background, adding a reverb effect to spacial sounds.
+* Enhanced sound processing - performs calculations in the background, adding reverb and occlusion to spatial sounds. It is enabled by configuration by default in the 26.2 build and automatically disables if Sound Physics Remastered is loaded to avoid double processing.
 * Individual Sound Control - Set key bind and activate in-game.  Use this feature to block, cull, and control the volume at which sounds play.  And as a bonus, you can play the sound to hear it.
 * Biome sounds - Atmospheric sounds that play based on biomes in the area.  Seamless blending of sounds as the player moves throughout the world.
+    * The Minecraft 26.2 build includes direct fallback coverage for vanilla biomes such as plains, sunflower plains, savannas, oceans, rivers, forests, caves, Sulfur Caves, and Nether/End biomes so ambience is not dependent on convention-tag availability.
     * This does not replace the Minecraft feature of a singular biome background sound.  Currently, the various biomes in the Nether use this capability. Dynamic Surroundings does not provide sound configurations for that dimension.
 * Hot block effects such as flame jets over lava, and steam where water hits a hot block.
     * Hot blocks are things Lava, Magma, campfires, and a cauldron containing lava.
-* Waterfall sound and visual effect - will trigger when flowing water is detected nearby.
+* Waterfall sound and visual effect - will trigger when flowing water is detected nearby, including waterlogged source holders and 26.2 cave spring layouts. New 26.2 sulfur geyser sounds are remapped into Dynamic Surroundings waterfall-style ambience when Minecraft emits them.
 * Replace Minecraft's thunder sound with improved versions.
 * Various "DS" client side commands for dumping configuration information.  (I currently use these while developing. I do plan to document at some point for general use.)
 * Custom debug HUD that can be accessed by key bind.  Moves the Dynamic Surroundings clutter out of the traditional F3 display.
@@ -73,7 +96,7 @@ Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
 * Dynamic Surroundings is compatible when connecting to a Vanilla servers. Both Fabric and NeoForge loaders can do this.
 
 ## Embedded Jars
-* Fabric version has OpenJDK Nashorn JavaScript Engine 15.4 (https://github.com/openjdk/nashorn)
+* The Minecraft 26.2 port does not embed OpenJDK Nashorn or ASM. Configuration predicates are handled by Dynamic Surroundings' internal expression evaluator to avoid loader classpath conflicts.
 
 ## FAQ 
 * Will there be updates for the Forge loaders?

@@ -4,6 +4,18 @@
     {
       "id": "#c:is_tree/jungle",
       "required": false
+    },
+    {
+      "id": "minecraft:jungle",
+      "required": false
+    },
+    {
+      "id": "minecraft:sparse_jungle",
+      "required": false
+    },
+    {
+      "id": "minecraft:bamboo_jungle",
+      "required": false
     }
   ]
 }

@@ -2,12 +2,12 @@ package org.orecruncher.dsurround.config.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Optional;
 
 public record DimensionConfigRule(
-        ResourceLocation dimensionId,
+        Identifier dimensionId,
         Optional<Integer> seaLevel,
         Optional<Integer> skyHeight,
         Optional<Integer> cloudHeight,
@@ -16,7 +16,7 @@ public record DimensionConfigRule(
         Optional<Boolean> compassWobble) {
 
     public static final Codec<DimensionConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
-                ResourceLocation.CODEC.fieldOf("dimId").forGetter(DimensionConfigRule::dimensionId),
+                Identifier.CODEC.fieldOf("dimId").forGetter(DimensionConfigRule::dimensionId),
                 Codec.INT.optionalFieldOf("seaLevel").forGetter(DimensionConfigRule::seaLevel),
                 Codec.INT.optionalFieldOf("skyHeight").forGetter(DimensionConfigRule::skyHeight),
                 Codec.INT.optionalFieldOf("cloudHeight").forGetter(DimensionConfigRule::cloudHeight),

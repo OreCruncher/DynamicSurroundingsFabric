@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.tags;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import org.orecruncher.dsurround.Constants;
@@ -26,7 +26,7 @@ public class ItemEffectTags {
     public static final TagKey<Item> CLOCKS = of("clocks");
 
     private static TagKey<Item> of(String id) {
-        var tagKey = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "effects/" + id));
+        var tagKey = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "effects/" + id));
         TAGS.add(tagKey);
         return tagKey;
     }

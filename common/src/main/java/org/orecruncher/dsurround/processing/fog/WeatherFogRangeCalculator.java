@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.processing.fog;
 
-import net.minecraft.client.renderer.FogRenderer;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -21,12 +20,12 @@ public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
 
     @Override
     @NotNull
-    public FogRenderer.FogData render(@NotNull final FogRenderer.FogData data, float renderDistance, float partialTick) {
+    public FogData render(@NotNull final FogData data, float renderDistance, float partialTick) {
         float rainStr = GameUtils.getWorld().map(w -> w.getRainLevel(partialTick)).orElseThrow();
         if (rainStr > 0) {
             final float startScale = 1F - (START_IMPACT * rainStr);
             final float endScale = 1F - (END_IMPACT * rainStr);
-            var result = new FogRenderer.FogData(data.mode);
+            var result = new FogData(data.mode);
             result.start = data.start * startScale;
             result.end = data.end * endScale;
             return result;

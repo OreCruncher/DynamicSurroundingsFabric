@@ -5,6 +5,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.runtime.sets.IDiurnalVariables;
+import org.orecruncher.dsurround.lib.McCompat;
 
 public class DiurnalVariables extends VariableSet<IDiurnalVariables> implements IDiurnalVariables {
 
@@ -34,7 +35,7 @@ public class DiurnalVariables extends VariableSet<IDiurnalVariables> implements 
             this.isSunrise = cycle == DayCycle.SUNRISE;
             this.isSunset = cycle == DayCycle.SUNSET;
             this.moonPhaseFactor = DayCycle.getMoonSize(world);
-            this.celestialAngle = world.getTimeOfDay(1F);
+            this.celestialAngle = McCompat.worldTimeOfDay(world, 1F);
         } else {
             this.isDay = false;
             this.isNight = false;

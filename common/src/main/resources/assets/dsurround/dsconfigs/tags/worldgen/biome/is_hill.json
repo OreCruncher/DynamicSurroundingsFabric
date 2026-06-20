@@ -4,6 +4,22 @@
     {
       "id": "#c:is_hill",
       "required": false
+    },
+    {
+      "id": "minecraft:windswept_hills",
+      "required": false
+    },
+    {
+      "id": "minecraft:windswept_gravelly_hills",
+      "required": false
+    },
+    {
+      "id": "minecraft:windswept_forest",
+      "required": false
+    },
+    {
+      "id": "minecraft:windswept_savanna",
+      "required": false
     }
   ]
 }

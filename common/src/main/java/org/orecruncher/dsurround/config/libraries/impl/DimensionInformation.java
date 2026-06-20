@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.config.libraries.impl;
 
 import dev.architectury.event.events.client.ClientLifecycleEvent;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.config.DimensionInfo;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
@@ -24,7 +24,7 @@ public class DimensionInformation implements IDimensionInformation {
         AssetLibraryEvent.RELOAD.register((x, y) -> this.info = null, HandlerPriority.HIGH);
     }
 
-    public ResourceLocation name() {
+    public Identifier name() {
         return this.getInfo().getName();
     }
 

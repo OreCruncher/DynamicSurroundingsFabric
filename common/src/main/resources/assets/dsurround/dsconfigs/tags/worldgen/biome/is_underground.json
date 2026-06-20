@@ -8,6 +8,22 @@
     {
       "id": "#forge:is_underground",
       "required": false
+    },
+    {
+      "id": "minecraft:dripstone_caves",
+      "required": false
+    },
+    {
+      "id": "minecraft:lush_caves",
+      "required": false
+    },
+    {
+      "id": "minecraft:deep_dark",
+      "required": false
+    },
+    {
+      "id": "minecraft:sulfur_caves",
+      "required": false
     }
   ]
 }

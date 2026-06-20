@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.sound;
 import net.minecraft.client.resources.sounds.EntityBoundSoundInstance;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.Music;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
@@ -15,7 +15,7 @@ public interface ISoundFactory {
     /**
      * Gets the resource location of this sound factory instance.
      */
-    ResourceLocation getLocation();
+    Identifier getLocation();
 
     /**
      * Creates an attenuated sound instance that is attached to the entity and will move as

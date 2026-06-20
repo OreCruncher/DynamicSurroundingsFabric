@@ -85,7 +85,7 @@ public interface ISeasonalInformation {
      * Gets the possible precipitation that can occur in the biome at the specified position.
      */
     default Biome.Precipitation getPrecipitationAt(BlockPos blockPos) {
-        return this.level().getBiome(blockPos).value().getPrecipitationAt(blockPos);
+        return this.level().getBiome(blockPos).value().getPrecipitationAt(blockPos, this.level().getSeaLevel());
     }
 
     /**

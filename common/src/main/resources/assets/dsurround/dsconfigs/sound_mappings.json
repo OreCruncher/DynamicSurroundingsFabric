@@ -153,5 +153,23 @@
         "factory": "dsurround:footsteps.rug"
       }
     ]
+  },
+  {
+    "soundEvent": "minecraft:block.potent_sulfur.geyser_continuous_eruption",
+    "_comment": "Minecraft 26.2 sulfur geyser ambience support",
+    "rules": [
+      {
+        "factory": "dsurround:waterfalls/2"
+      }
+    ]
+  },
+  {
+    "soundEvent": "minecraft:block.potent_sulfur.geyser_continuous_eruption_active",
+    "_comment": "Minecraft 26.2 active sulfur geyser ambience support",
+    "rules": [
+      {
+        "factory": "dsurround:waterfalls/3"
+      }
+    ]
   }
 ]

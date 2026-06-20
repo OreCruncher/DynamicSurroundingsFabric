@@ -1,10 +1,11 @@
 package org.orecruncher.dsurround.lib.gui;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractStringWidget;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+import net.minecraft.client.gui.ActiveTextCollector;
 
 public class TextWidget extends AbstractStringWidget {
 
@@ -13,14 +14,24 @@ public class TextWidget extends AbstractStringWidget {
     }
 
     @Override
-    protected void renderWidget(@NotNull GuiGraphics guiGraphics, int i, int j, float f) {
+    public void visitLines(@NotNull ActiveTextCollector output) {
+        // Text is extracted directly below so the widget can apply clipping.
+    }
+
+    @Override
+    public void extractWidgetRenderState(@NotNull GuiGraphicsExtractor guiGraphics, int i, int j, float f) {
         int y = getY();
 
         int nameWidth = this.getFont().width(this.getMessage());
         if (nameWidth > getWidth()) {
-            renderScrollingString(guiGraphics, this.getFont(), this.getMessage(), getX(), y, getX() + getWidth(), y + this.getFont().lineHeight, -1);
+            guiGraphics.enableScissor(getX(), y, getX() + getWidth(), y + this.getFont().lineHeight);
+            try {
+                guiGraphics.text(this.getFont(), this.getMessage(), getX(), y, 0xFFFFFFFF, false);
+            } finally {
+                guiGraphics.disableScissor();
+            }
         } else {
-            guiGraphics.drawString(this.getFont(), this.getMessage(), getX(), y, 0xFFFFFF);
+            guiGraphics.text(this.getFont(), this.getMessage(), getX(), y, 0xFFFFFFFF, false);
         }
     }
 }

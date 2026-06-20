@@ -4,6 +4,22 @@
     {
       "id": "#c:is_floral",
       "required": false
+    },
+    {
+      "id": "minecraft:flower_forest",
+      "required": false
+    },
+    {
+      "id": "minecraft:meadow",
+      "required": false
+    },
+    {
+      "id": "minecraft:cherry_grove",
+      "required": false
+    },
+    {
+      "id": "minecraft:sunflower_plains",
+      "required": false
     }
   ]
 }

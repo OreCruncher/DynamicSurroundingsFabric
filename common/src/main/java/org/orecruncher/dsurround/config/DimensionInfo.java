@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.data.DimensionConfigRule;
@@ -12,7 +12,7 @@ public class DimensionInfo {
     private static final int SPACE_HEIGHT_OFFSET = 32;
     protected final boolean isFlatWorld;
     // Attributes about the dimension. This information is loaded from local configs.
-    protected ResourceLocation name;
+    protected Identifier name;
     protected int seaLevel;
     protected int skyHeight;
     protected int cloudHeight;
@@ -22,13 +22,13 @@ public class DimensionInfo {
     protected boolean compassWobble = false;
 
     DimensionInfo() {
-        this.name = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "no_dimension");
+        this.name = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "no_dimension");
         this.isFlatWorld = false;
     }
 
     public DimensionInfo(final Level world) {
         // Attributes that come from the world object itself. Set now because the config may override.
-        this.name = world.dimension().location();
+        this.name = world.dimension().identifier();
         this.seaLevel = world.getSeaLevel();
         this.skyHeight = world.getHeight();
         this.cloudHeight = this.skyHeight;
@@ -39,7 +39,7 @@ public class DimensionInfo {
         if (this.isFlatWorld)
             this.seaLevel = 0;
 
-        this.compassWobble = !world.dimensionType().natural();
+        this.compassWobble = world.dimension() != Level.OVERWORLD;
     }
 
     public void update(DimensionConfigRule config) {
@@ -58,7 +58,7 @@ public class DimensionInfo {
         }
     }
 
-    public ResourceLocation getName() {
+    public Identifier getName() {
         return this.name;
     }
 

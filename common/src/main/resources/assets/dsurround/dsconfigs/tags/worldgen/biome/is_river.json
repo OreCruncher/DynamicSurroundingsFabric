@@ -4,6 +4,14 @@
     {
       "id": "#c:is_river",
       "required": false
+    },
+    {
+      "id": "minecraft:river",
+      "required": false
+    },
+    {
+      "id": "minecraft:frozen_river",
+      "required": false
     }
   ]
 }

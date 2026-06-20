@@ -31,7 +31,7 @@ public class MixinMusicManager implements IMusicManager {
     public String dsurround_getDiagnosticText() {
         String playingSound = "Nothing playing";
         if (this.currentMusic != null)
-            playingSound = this.currentMusic.getLocation().toString();
+            playingSound = this.currentMusic.getIdentifier().toString();
         var result = "Music Manager: %d (%s)".formatted(this.nextSongDelay, playingSound);
         if (this.dsurround_pauseTicking)
             result += " (PAUSED)";
@@ -72,13 +72,13 @@ public class MixinMusicManager implements IMusicManager {
             return Component.translatable("dsurround.text.musicmanager.nothing");
 
         // Lookup meta information
-        var metaData = MixinHelpers.SOUND_LIBRARY.getSoundMetadata(this.currentMusic.getLocation());
+        var metaData = MixinHelpers.SOUND_LIBRARY.getSoundMetadata(this.currentMusic.getIdentifier());
         if (metaData == null || Component.empty().equals(metaData.getTitle()))
-            return Component.literal(this.currentMusic.getLocation().toString());
+            return Component.literal(this.currentMusic.getIdentifier().toString());
 
         var title = metaData.getTitle().copy().withColor(ColorPalette.PUMPKIN_ORANGE.getValue());
         var author = metaData.getCredits().get(0).author().copy().withColor(ColorPalette.WHEAT.getValue());
-        return Component.translatable("dsurround.text.musicmanager.playing", title, author, Component.translationArg(this.currentMusic.getLocation()));
+        return Component.translatable("dsurround.text.musicmanager.playing", title, author, Component.translationArg(this.currentMusic.getIdentifier()));
     }
 
     @Inject(method = "tick()V", at = @At("HEAD"), cancellable = true)

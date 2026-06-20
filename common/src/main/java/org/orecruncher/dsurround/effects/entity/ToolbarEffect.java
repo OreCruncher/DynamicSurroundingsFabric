@@ -4,6 +4,7 @@ import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
+import org.orecruncher.dsurround.lib.McCompat;
 
 public class ToolbarEffect extends EntityEffectBase {
 
@@ -24,10 +25,11 @@ public class ToolbarEffect extends EntityEffectBase {
         var inventory = player.getInventory();
 
         // First time through we want to not trigger the equip sound
+        int selected = McCompat.selectedHotbarSlot(inventory);
         if (this.lastSlot == -1) {
-            this.lastSlot = inventory.selected;
-        } else if (this.lastSlot != inventory.selected) {
-            final ItemStack currentStack = inventory.getItem(inventory.selected);
+            this.lastSlot = selected;
+        } else if (this.lastSlot != selected) {
+            final ItemStack currentStack = inventory.getItem(selected);
             if (!currentStack.isEmpty() & !player.isSpectator()) {
                 this.itemLibrary.getItemEquipSound(currentStack).ifPresent(factory -> {
                     SoundInstance instance;
@@ -38,7 +40,7 @@ public class ToolbarEffect extends EntityEffectBase {
                     this.playSound(instance);
                 });
             }
-            this.lastSlot = inventory.selected;
+            this.lastSlot = selected;
         }
     }
 }

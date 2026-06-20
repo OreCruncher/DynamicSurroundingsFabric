@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.tags;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import org.orecruncher.dsurround.Constants;
@@ -22,7 +22,7 @@ public class ReflectanceTags {
     public static final TagKey<Block> MAX = of("max");
 
     private static TagKey<Block> of(String id) {
-        var tagKey = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "reflectance/" + id));
+        var tagKey = TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "reflectance/" + id));
         TAGS.add(tagKey);
         return tagKey;
     }

@@ -2,7 +2,23 @@
   "replace": false,
   "values": [
     {
-      "id": "c:is_outer_end_island",
+      "id": "#c:is_outer_end_island",
+      "required": false
+    },
+    {
+      "id": "minecraft:end_highlands",
+      "required": false
+    },
+    {
+      "id": "minecraft:end_midlands",
+      "required": false
+    },
+    {
+      "id": "minecraft:small_end_islands",
+      "required": false
+    },
+    {
+      "id": "minecraft:end_barrens",
       "required": false
     }
   ]

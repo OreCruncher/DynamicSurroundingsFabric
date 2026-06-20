@@ -4,6 +4,10 @@
     {
       "id": "#c:is_flower_forest",
       "required": false
+    },
+    {
+      "id": "minecraft:flower_forest",
+      "required": false
     }
   ]
 }

@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.lib.resources;
 import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.Codec;
 import dev.architectury.platform.Platform;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
@@ -52,7 +52,7 @@ public class DiskResourceFinder extends AbstractResourceFinder {
             if (Files.exists(filePath)) {
                 this.logger.debug(RESOURCE_LOADING, "[%s] - Processing %s file from disk", assetPath, filePath.toString());
                 var namespace = path.getFileName().toString();
-                var location = ResourceLocation.fromNamespaceAndPath(namespace, assetPath);
+                var location = Identifier.fromNamespaceAndPath(namespace, assetPath);
                 try {
                     var content = Files.readString(filePath);
                     this.decode(location, content, codec).ifPresent(e -> result.add(new DiscoveredResource<>(namespace, e)));

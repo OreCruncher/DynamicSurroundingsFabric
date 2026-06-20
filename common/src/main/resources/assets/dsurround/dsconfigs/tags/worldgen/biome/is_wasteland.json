@@ -8,6 +8,34 @@
     {
       "id": "#forge:is_wasteland",
       "required": false
+    },
+    {
+      "id": "minecraft:badlands",
+      "required": false
+    },
+    {
+      "id": "minecraft:eroded_badlands",
+      "required": false
+    },
+    {
+      "id": "minecraft:wooded_badlands",
+      "required": false
+    },
+    {
+      "id": "minecraft:nether_wastes",
+      "required": false
+    },
+    {
+      "id": "minecraft:soul_sand_valley",
+      "required": false
+    },
+    {
+      "id": "minecraft:basalt_deltas",
+      "required": false
+    },
+    {
+      "id": "minecraft:sulfur_caves",
+      "required": false
     }
   ]
 }

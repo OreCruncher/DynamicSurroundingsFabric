@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.mixins.core;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSpecialEffects;
@@ -12,7 +11,6 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -53,8 +51,6 @@ public abstract class MixinBiome implements IBiomeExtended {
         return this.climateSettings;
     }
 
-    @Invoker("getTemperature")
-    public abstract float dsurround_getTemperature(BlockPos pos);
 
     /**
      * Get fog color from Dynamic Surroundings' config if available.

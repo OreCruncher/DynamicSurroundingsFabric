@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.effects.entity;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
@@ -17,8 +17,8 @@ import org.orecruncher.dsurround.mixinutils.ILivingEntityExtended;
 public class StepThroughBrushEffect extends EntityEffectBase {
 
     private static final long BRUSH_INTERVAL = 2;
-    private static final ResourceLocation BRUSH_SOUND = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "brush_step/brush");
-    private static final ResourceLocation STRAW_SOUND = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "brush_step/straw");
+    private static final Identifier BRUSH_SOUND = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "brush_step/brush");
+    private static final Identifier STRAW_SOUND = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "brush_step/straw");
 
     private final ITickCount tickCount;
     private final ITagLibrary tagLibrary;
@@ -48,7 +48,7 @@ public class StepThroughBrushEffect extends EntityEffectBase {
         }
     }
 
-    private boolean process(TagKey<Block> effectTag, ResourceLocation factory, Level world, BlockPos blockPos) {
+    private boolean process(TagKey<Block> effectTag, Identifier factory, Level world, BlockPos blockPos) {
         var block = world.getBlockState(blockPos);
         if (this.tagLibrary.is(effectTag, block)) {
             this.playSoundEffect(blockPos, factory, getVolumeScaling(world, blockPos, block));
@@ -78,7 +78,7 @@ public class StepThroughBrushEffect extends EntityEffectBase {
         return ((ILivingEntityExtended)entity).dsurround_isJumping();
     }
 
-    private void playSoundEffect(BlockPos pos, ResourceLocation factory, float volumeScale) {
+    private void playSoundEffect(BlockPos pos, Identifier factory, float volumeScale) {
        SOUND_LIBRARY.getSoundFactory(factory)
                .ifPresent(f -> {
                    var soundInstance = f.createAtLocation(pos, volumeScale);

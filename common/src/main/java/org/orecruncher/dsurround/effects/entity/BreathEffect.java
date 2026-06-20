@@ -2,13 +2,16 @@ package org.orecruncher.dsurround.effects.entity;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.effects.particles.FrostBreathParticle;
+import org.orecruncher.dsurround.effects.particles.ParticleUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.random.MurmurHash3;
+import org.orecruncher.dsurround.lib.McCompat;
 
 public class BreathEffect extends EntityEffectBase {
 
@@ -46,12 +49,12 @@ public class BreathEffect extends EntityEffectBase {
             if (air > 0) {
                 final int interval = c % 3;
                 if (interval == 0) {
-                    createBubbleParticle(false);
+                    createBubbleParticle(entity, false);
                 }
             } else if (air == 0) {
                 // Need to generate a bunch of bubbles due to drowning
                 for (int i = 0; i < 8; i++) {
-                    createBubbleParticle(true);
+                    createBubbleParticle(entity, true);
                 }
             }
         } else {
@@ -66,7 +69,7 @@ public class BreathEffect extends EntityEffectBase {
         final var player = GameUtils.getPlayer().orElseThrow();
         var settings = GameUtils.getGameSettings();
         if (entity.getId() == player.getId()) {
-            return !(player.isSpectator() || settings.hideGui);
+            return !(player.isSpectator() || McCompat.optionsHideGui(settings));
         }
         return !entity.isInvisibleTo(player) && player.hasLineOfSight(entity);
     }
@@ -86,14 +89,21 @@ public class BreathEffect extends EntityEffectBase {
         return false;
     }
 
-    protected void createBubbleParticle(boolean isDrowning) {
-        //final BubbleBreathParticle p = new BubbleBreathParticle(getEntity(), isDrowning);
-        //addParticle(p);
+    protected void createBubbleParticle(LivingEntity entity, boolean isDrowning) {
+        var origin = ParticleUtils.getBreathOrigin(entity);
+        var rand = org.orecruncher.dsurround.lib.random.Randomizer.current();
+        var spread = isDrowning ? 0.10D : 0.035D;
+        var x = origin.x + (rand.nextDouble() - rand.nextDouble()) * spread;
+        var y = origin.y + (rand.nextDouble() - rand.nextDouble()) * spread;
+        var z = origin.z + (rand.nextDouble() - rand.nextDouble()) * spread;
+        var dx = (rand.nextDouble() - rand.nextDouble()) * 0.01D;
+        var dy = 0.02D + rand.nextDouble() * (isDrowning ? 0.05D : 0.02D);
+        var dz = (rand.nextDouble() - rand.nextDouble()) * 0.01D;
+        ParticleUtils.addParticle(ParticleUtils.createParticle(ParticleTypes.BUBBLE, x, y, z, dx, dy, dz));
     }
 
     protected void createFrostParticle(LivingEntity entity) {
-        var particle = new FrostBreathParticle(entity);
-        this.addParticle(particle);
+        ParticleUtils.addParticle(FrostBreathParticle.create(entity));
     }
 
 }

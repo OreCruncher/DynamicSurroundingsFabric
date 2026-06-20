@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.processing.accents;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
@@ -13,7 +13,7 @@ import org.orecruncher.dsurround.tags.BlockEffectTags;
 
 class WaterySurfaceAccent implements IFootstepAccentProvider {
 
-    private static final ResourceLocation WETSURFACE_FACTORY = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "footstep/wetsurface");
+    private static final Identifier WETSURFACE_FACTORY = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "footstep/wetsurface");
 
     private final Configuration config;
 
@@ -42,7 +42,7 @@ class WaterySurfaceAccent implements IFootstepAccentProvider {
 
             if (!addAcoustic && world.isRainingAt(up)) {
                 // Get the precipitation type at the location
-                var precipitation = world.getBiome(up).value().getPrecipitationAt(up);
+                var precipitation = world.getBiome(up).value().getPrecipitationAt(up, world.getSeaLevel());
                 addAcoustic = precipitation == Biome.Precipitation.RAIN;
             }
         }

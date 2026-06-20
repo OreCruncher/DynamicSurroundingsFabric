@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.tags;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import org.orecruncher.dsurround.Constants;
@@ -20,7 +20,7 @@ public class EntityEffectTags {
     public static final TagKey<EntityType<?>> BRUSH_STEP = of ("brush_step");
 
     private static TagKey<EntityType<?>> of(String id) {
-        var tagKey = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "effects/" + id));
+        var tagKey = TagKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "effects/" + id));
         TAGS.add(tagKey);
         return tagKey;
     }

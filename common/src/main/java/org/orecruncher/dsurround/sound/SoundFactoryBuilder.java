@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.sound;
 
 import net.minecraft.client.resources.sounds.SoundInstance;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -10,6 +10,7 @@ import net.minecraft.util.valueproviders.FloatProvider;
 import net.minecraft.util.valueproviders.UniformFloat;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.McCompat;
 
 @SuppressWarnings("unused")
 public final class SoundFactoryBuilder {
@@ -114,7 +115,7 @@ public final class SoundFactoryBuilder {
         return create(se);
     }
 
-    public static SoundFactoryBuilder create(ResourceLocation soundEventId) {
+    public static SoundFactoryBuilder create(Identifier soundEventId) {
         var se = ContainerManager.resolve(ISoundLibrary.class).getSound(soundEventId);
         return create(se);
     }
@@ -124,10 +125,10 @@ public final class SoundFactoryBuilder {
     }
 
     public static SoundFactoryBuilder create(Music music) {
-        return new SoundFactoryBuilder(music.getEvent().value())
-                .setMusicMinDelay(music.getMinDelay())
-                .setMusicMaxDelay(music.getMaxDelay())
-                .setMusicReplaceCurrentMusic(music.replaceCurrentMusic());
+        return new SoundFactoryBuilder(McCompat.musicSoundEvent(music))
+                .setMusicMinDelay(McCompat.musicMinDelay(music, SoundFactory.MusicSettings.DEFAULT.minDelay()))
+                .setMusicMaxDelay(McCompat.musicMaxDelay(music, SoundFactory.MusicSettings.DEFAULT.maxDelay()))
+                .setMusicReplaceCurrentMusic(McCompat.musicReplaceCurrentMusic(music, SoundFactory.MusicSettings.DEFAULT.replaceCurrentMusic()));
     }
 
 }

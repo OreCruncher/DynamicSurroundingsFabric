@@ -8,6 +8,10 @@
     {
       "id": "#forge:is_mushroom",
       "required": false
+    },
+    {
+      "id": "minecraft:mushroom_fields",
+      "required": false
     }
   ]
 }

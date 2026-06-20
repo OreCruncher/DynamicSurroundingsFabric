@@ -1,12 +1,13 @@
 package org.orecruncher.dsurround.lib.scanner;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import java.util.function.Supplier;
+import org.orecruncher.dsurround.lib.McCompat;
 
 public final class ScanContext {
 
@@ -36,7 +37,7 @@ public final class ScanContext {
         return this.logger;
     }
 
-    public ResourceLocation getWorldReference() {
+    public Identifier getWorldReference() {
         return this.getWorld().dimension().registry();
     }
 
@@ -46,6 +47,6 @@ public final class ScanContext {
 
     public int clampHeight(int y) {
         var world = this.getWorld();
-        return Mth.clamp(y, world.getMinBuildHeight(), world.getMaxBuildHeight());
+        return Mth.clamp(y, McCompat.worldMinBuildHeight(world), McCompat.worldMaxBuildHeight(world));
     }
 }

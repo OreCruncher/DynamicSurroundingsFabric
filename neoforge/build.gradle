@@ -1,5 +1,5 @@
 plugins {
-    id 'com.github.johnrengelman.shadow'
+    id 'com.gradleup.shadow'
 }
 
 architectury {
@@ -39,17 +39,24 @@ dependencies {
     neoForge "net.neoforged:neoforge:$rootProject.neoforge_version"
 
     // Architectury API. This is optional, and you can comment it out if you don't need it.
-    modImplementation "dev.architectury:architectury-neoforge:$rootProject.architectury_api_version"
+    implementation "dev.architectury:architectury-neoforge:$rootProject.architectury_api_version"
 
-    common(project(path: ':common', configuration: 'namedElements')) { transitive false }
-    shadowBundle project(path: ':common', configuration: 'transformProductionNeoForge')
+    common(project(path: ':common')) { transitive false }
+    shadowBundle(project(path: ':common')) {
+        transitive = false
+    }
 
-    modImplementation "com.github.glitchfiend:TerraBlender-neoforge:${minecraft_version}-${rootProject.terrablender_version}"
-    modImplementation "com.github.glitchfiend:GlitchCore-neoforge:${minecraft_version}-${rootProject.glitchcore_version}"
-    modImplementation "com.github.glitchfiend:SereneSeasons-neoforge:${minecraft_version}-${rootProject.serene_seasons_version}"
-    modImplementation "com.github.glitchfiend:BiomesOPlenty-neoforge:${minecraft_version}-${rootProject.bop_version}"
+    // Nashorn is intentionally not bundled. Dynamic Surroundings config predicates
+    // are evaluated by the internal expression evaluator in the common project.
 
-    modApi("me.shedaniel.cloth:cloth-config-neoforge:${rootProject.clothapi_version}") {
+    // Optional GlitchFiend integrations are disabled for the 26.2 port until matching
+    // 26.2 artifacts are available upstream.
+    // implementation "com.github.glitchfiend:TerraBlender-neoforge:${minecraft_version}-${rootProject.terrablender_version}"
+    // implementation "com.github.glitchfiend:GlitchCore-neoforge:${minecraft_version}-${rootProject.glitchcore_version}"
+    // runtimeOnly "com.github.glitchfiend:SereneSeasons-neoforge:${minecraft_version}-${rootProject.serene_seasons_version}"
+    // runtimeOnly "com.github.glitchfiend:BiomesOPlenty-neoforge:${minecraft_version}-${rootProject.bop_version}"
+
+    api("me.shedaniel.cloth:cloth-config-neoforge:${rootProject.clothapi_version}") {
         exclude(group: "net.fabricmc.fabric-api")
     }
 }
@@ -78,11 +85,19 @@ processResources {
 }
 
 shadowJar {
+    exclude "module-info.class"
+    exclude "META-INF/versions/**/module-info.class"
+    // Safety guard: loader/mixin infrastructure belongs to the platform, not to this mod jar.
+    exclude "net/fabricmc/loader/**"
+    exclude "net/fabricmc/api/**"
+    exclude "org/spongepowered/**"
     configurations = [project.configurations.shadowBundle]
+
     archiveClassifier = 'dev-shadow'
 }
 
-remapJar {
-    inputFile.set shadowJar.archiveFile
-    atAccessWideners.add("dsurround.accesswidener")
+jar {
+    dependsOn shadowJar
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from { zipTree(shadowJar.archiveFile.get().asFile) }
 }

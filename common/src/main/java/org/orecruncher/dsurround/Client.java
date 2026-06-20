@@ -6,9 +6,11 @@ import dev.architectury.registry.ReloadListenerRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.server.packs.PackType;
+import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.commands.Commands;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
+import org.orecruncher.dsurround.effects.particles.DsurroundParticleTypes;
 import org.orecruncher.dsurround.gui.overlay.OverlayManager;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -29,7 +31,6 @@ import org.orecruncher.dsurround.lib.version.IVersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionResult;
 import org.orecruncher.dsurround.processing.Handlers;
-import org.orecruncher.dsurround.processing.fog.HolisticFogRangeCalculator;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.AudioPlayerDebug;
@@ -38,6 +39,7 @@ import org.orecruncher.dsurround.sound.AudioPlayer;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public final class Client {
 
@@ -83,6 +85,7 @@ public final class Client {
         this.logger.info("[%s] Bootstrapping", Constants.MOD_ID);
 
         Library.initialize();
+        DsurroundParticleTypes.initialize();
 
         // Register the Minecraft sound manager using a factory. Avoids issue with ModernUI and their dinger.
         ContainerManager.getRootContainer().registerFactory(SoundManager.class, GameUtils::getSoundManager);
@@ -101,7 +104,7 @@ public final class Client {
         }
 
         // Register the resource listener
-        ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new ReloadListener());
+        ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new ReloadListener(), Identifier.fromNamespaceAndPath(Constants.MOD_ID, "reload_listener"));
 
         // Do the handlers
         Handlers.registerHandlers();
@@ -142,11 +145,17 @@ public final class Client {
         else
             ContainerManager.getRootContainer().registerSingleton(IAudioPlayer.class, AudioPlayer.class);
 
-        // Kick off version checking if configured.  This should run in parallel with initialization.
-        if (Config.logging.enableModUpdateChatMessage)
-            this.versionInfo = CompletableFuture.supplyAsync(ContainerManager.resolve(IVersionChecker.class)::getUpdateText);
-        else
+        // Kick off version checking if configured. Keep it strictly non-blocking;
+        // some launchers/proxies/firewalls can leave URL reads pending long enough
+        // to look like the client froze when joining a world.
+        if (Config.logging.enableModUpdateChatMessage) {
+            this.versionInfo = CompletableFuture
+                    .supplyAsync(ContainerManager.resolve(IVersionChecker.class)::getUpdateText)
+                    .completeOnTimeout(Optional.empty(), 5, TimeUnit.SECONDS)
+                    .exceptionally(t -> Optional.empty());
+        } else {
             this.versionInfo = CompletableFuture.completedFuture(Optional.empty());
+        }
 
         KeyBindings.register();
 
@@ -175,9 +184,7 @@ public final class Client {
             AssetLibraryEvent.RELOAD.raise().onReload(resourceUtilities, IReloadEvent.Scope.TAGS);
         }, HandlerPriority.VERY_HIGH);
 
-        // Add our fog handler
-        container.registerSingleton(HolisticFogRangeCalculator.class);
-        ContainerManager.resolve(HolisticFogRangeCalculator.class);
+        // Fog range rewriting is disabled in this initial 26.2 compatibility patch.
 
         // Force instantiation of the core Handler. This should cause the rest
         // of the dependencies to be initialized.
@@ -189,7 +196,12 @@ public final class Client {
     private void onConnect(Minecraft minecraftClient) {
         // Display version information when joining a game and when a chat window is available.
         try {
-            var versionQueryResult = this.versionInfo.get();
+            if (this.versionInfo == null || !this.versionInfo.isDone()) {
+                this.logger.debug("Version check still pending; skipping join-time update notice");
+                return;
+            }
+
+            var versionQueryResult = this.versionInfo.getNow(Optional.empty());
             if (versionQueryResult.isPresent()) {
                 var result = versionQueryResult.get();
                 this.logger.info("Update to %s version %s is available", result.displayName(), result.version());

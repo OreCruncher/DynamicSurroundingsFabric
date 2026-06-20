@@ -28,8 +28,8 @@ public class DimensionVariables extends VariableSet<IDimensionVariables> impleme
         if (GameUtils.isInGame()) {
             var world = GameUtils.getWorld().orElseThrow();
             final DimensionType dim = world.dimensionType();
-            this.id = world.dimension().location().toString();
-            this.name = world.dimension().location().getPath();
+            this.id = world.dimension().identifier().toString();
+            this.name = world.dimension().identifier().getPath();
             this.hasSky = dim.hasSkyLight();
             this.isSuperFlat = WorldUtils.isSuperFlat(world);
         } else {

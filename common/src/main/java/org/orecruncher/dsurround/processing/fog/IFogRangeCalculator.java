@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.processing.fog;
 
-import net.minecraft.client.renderer.FogRenderer;
 import org.jetbrains.annotations.NotNull;
 
 public interface IFogRangeCalculator {
@@ -26,7 +25,7 @@ public interface IFogRangeCalculator {
      * @return The fog data instance passed in
      */
     @NotNull
-    FogRenderer.FogData render(@NotNull final FogRenderer.FogData data, float renderDistance, float partialTick);
+    FogData render(@NotNull final FogData data, float renderDistance, float partialTick);
 
     /**
      * Called once every client side tick. Up to the calculator to figure out what

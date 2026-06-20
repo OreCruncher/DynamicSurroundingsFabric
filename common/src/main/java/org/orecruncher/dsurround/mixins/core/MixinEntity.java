@@ -27,7 +27,7 @@ public abstract class MixinEntity {
     @Inject(method = "walkingStepSound(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("TAIL"))
     public void dsurround_playStepSound(BlockPos pos, BlockState state, CallbackInfo ci) {
         // Only want to enable eventing if accents are enabled
-        if (MixinHelpers.footstepAccentsConfig.enableAccents && this.level.isClientSide) {
+        if (MixinHelpers.footstepAccentsConfig.enableAccents && this.level.isClientSide()) {
             var self = (Entity) ((Object) this);
 
             // Is the entity in range?  If not, avoid generating an event

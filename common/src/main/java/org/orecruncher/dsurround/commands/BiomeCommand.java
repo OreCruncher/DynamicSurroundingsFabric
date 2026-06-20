@@ -33,10 +33,10 @@ class BiomeCommand extends AbstractClientCommand {
         Holder.Reference<Biome> reference = ctx.getArgument(BIOME_PARAMETER, Holder.Reference.class);
         ResourceKey<Biome> registryKey = reference.key();
         if (!registryKey.isFor(Registries.BIOME)) {
-            throw ERROR_INVALID_RESOURCE_TYPE.create(registryKey.location(), registryKey.registry(), Registries.BIOME.registry());
+            throw ERROR_INVALID_RESOURCE_TYPE.create(registryKey.identifier(), registryKey.registry(), Registries.BIOME.registry());
         }
 
         var script = ctx.getArgument(SCRIPT_PARAMETER, MessageArgument.Message.class);
-        return this.execute(ctx, () -> BiomeCommandHandler.execute(registryKey.location(), script.text()));
+        return this.execute(ctx, () -> BiomeCommandHandler.execute(registryKey.identifier(), script.text()));
     }
 }

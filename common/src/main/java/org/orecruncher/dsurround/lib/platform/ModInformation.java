@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
+import org.orecruncher.dsurround.lib.McCompat;
 
 public final class ModInformation implements IMinecraftDirectories {
 
@@ -82,7 +83,7 @@ public final class ModInformation implements IMinecraftDirectories {
     }
 
     public String getBranding() {
-        return String.format("%s %s-%s", this.displayName, SharedConstants.getCurrentVersion().getName(), this.version);
+        return String.format("%s %s-%s", this.displayName, McCompat.worldVersionName(SharedConstants.getCurrentVersion()), this.version);
     }
 
     public static Optional<ModInformation> getModInformation(String modId) {

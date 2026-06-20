@@ -45,6 +45,7 @@ public final class AudioUtilities {
         return false;
     });
 
+    private static volatile boolean enhancedSoundsRuntimeDisabled;
     private static int MAX_SOUNDS = 0;
 
     static {
@@ -84,7 +85,7 @@ public final class AudioUtilities {
 
             MixinAbstractSoundInstance accessor = (MixinAbstractSoundInstance) sound;
             sb.append(sound.getClass().getSimpleName()).append("{");
-            sb.append(sound.getLocation());
+            sb.append(sound.getIdentifier());
             sb.append(", ").append(sound.getSource().getName());
             sb.append(", ").append(sound.getAttenuation());
             sb.append(String.format(", (%.2f,%.2f,%.2f)", sound.getX(), sound.getY(), sound.getZ()));
@@ -161,7 +162,17 @@ public final class AudioUtilities {
 
     @SuppressWarnings("DataFlowIssue")
     public static boolean doEnhancedSounds() {
-        return advancedProcessingEnabled.get();
+        // The enhanced audio processor is controlled by configuration and only auto-disables
+        // when another sound-physics implementation is present or the OpenAL context cannot
+        // provide the EFX capabilities needed by Dynamic Surroundings.
+        return !enhancedSoundsRuntimeDisabled && advancedProcessingEnabled.get();
+    }
+
+    public static void disableEnhancedSounds(String reason) {
+        if (!enhancedSoundsRuntimeDisabled) {
+            LOGGER.warn("Enhanced sound processing is disabled: %s", reason);
+        }
+        enhancedSoundsRuntimeDisabled = true;
     }
 
     public static void deinitialize(final Library ignore) {

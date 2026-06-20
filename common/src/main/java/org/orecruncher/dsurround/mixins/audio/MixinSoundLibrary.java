@@ -40,19 +40,28 @@ public class MixinSoundLibrary implements ISoundEngine {
     @WrapOperation(method = "init(Ljava/lang/String;Z)V", at = @At(value = "INVOKE", target = "Lorg/lwjgl/openal/ALC10;alcCreateContext(JLjava/nio/IntBuffer;)J", remap = false))
     private long dsurround_buildCapabilities(long deviceHandle, IntBuffer attrList, Operation<Long> original) {
         if (AudioUtilities.doEnhancedSounds()) {
-            // Buffer should have been resized by the constant modification above
+            // Buffer should have been resized by the constant modification above.
             attrList.clear();
-            // From the original code
+            // From the original code.
             attrList.put(SOFTOutputLimiter.ALC_OUTPUT_LIMITER_SOFT).put(ALC10.ALC_TRUE);
-            // Increase sends channels
+            // Increase send channels for EFX reverb and occlusion processing.
             attrList.put(EXTEfx.ALC_MAX_AUXILIARY_SENDS).put(4);
-            // Done!
             attrList.put(0);
             attrList.flip();
-            return ALC10.alcCreateContext(deviceHandle, attrList);
-        } else {
-            return original.call(deviceHandle, attrList);
+
+            long context = ALC10.alcCreateContext(deviceHandle, attrList);
+            if (context != 0L) {
+                return context;
+            }
+
+            AudioUtilities.disableEnhancedSounds("OpenAL rejected the EFX context; falling back to vanilla audio");
+            attrList.clear();
+            attrList.put(SOFTOutputLimiter.ALC_OUTPUT_LIMITER_SOFT).put(ALC10.ALC_TRUE);
+            attrList.put(0);
+            attrList.flip();
         }
+
+        return original.call(deviceHandle, attrList);
     }
 
     /**

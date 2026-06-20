@@ -76,7 +76,7 @@ public final class SoundFXUtils {
 
         // Would have been cool to have a direction vec as a 3d as well as 3i.
         for (final Direction d : Direction.values()) {
-            SURFACE_DIRECTION_NORMALS[d.ordinal()] = Vec3.atLowerCornerOf(d.getNormal());
+            SURFACE_DIRECTION_NORMALS[d.ordinal()] = new Vec3(d.getStepX(), d.getStepY(), d.getStepZ());
         }
 
         // Pre-calculate the known vectors that will be projected off a sound source when casting about to establish
@@ -218,10 +218,9 @@ public final class SoundFXUtils {
             }
         }
 
-        bounceRatio[0] = bounceRatio[0] / REVERB_RAYS;
-        bounceRatio[1] = bounceRatio[1] / REVERB_RAYS;
-        bounceRatio[2] = bounceRatio[2] / REVERB_RAYS;
-        bounceRatio[3] = bounceRatio[3] / REVERB_RAYS;
+        final float bounceRatio1 = bounceRatioAt(bounceRatio, 1);
+        final float bounceRatio2 = bounceRatioAt(bounceRatio, 2);
+        final float bounceRatio3 = bounceRatioAt(bounceRatio, 3);
 
         sharedAirspace *= RECIP_TOTAL_RAYS * 64F;
 
@@ -243,9 +242,9 @@ public final class SoundFXUtils {
 
         float directGain = (float) MathStuff.pow(directCutoff, 0.1);
 
-        sendGain1 *= bounceRatio[1];
-        sendGain2 *= (float) MathStuff.pow(bounceRatio[2], 3.0);
-        sendGain3 *= (float) MathStuff.pow(bounceRatio[3], 4.0);
+        sendGain1 *= bounceRatio1;
+        sendGain2 *= (float) MathStuff.pow(bounceRatio2, 3.0);
+        sendGain3 *= (float) MathStuff.pow(bounceRatio3, 4.0);
 
         sendGain0 = MathStuff.clamp1(sendGain0);
         sendGain1 = MathStuff.clamp1(sendGain1);
@@ -295,6 +294,13 @@ public final class SoundFXUtils {
             prop.setValue(airAbsorptionFactor);
             prop.setProcess(true);
         }
+    }
+
+    private static float bounceRatioAt(float[] bounceRatio, int index) {
+        if (index >= bounceRatio.length) {
+            return 0F;
+        }
+        return bounceRatio[index] / REVERB_RAYS;
     }
 
     private void clearSettings() {

@@ -61,6 +61,6 @@ public abstract class MixinSoundOptionsScreen extends OptionsSubScreen {
                         musicManager.dsurround_setPaused(false);
                 });
 
-        this.minecraft.setScreen(screen);
+        GameUtils.setScreen(screen);
     }
 }

@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.gui.overlay;
 
 import dev.architectury.platform.Platform;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
@@ -27,7 +27,7 @@ import java.util.Map;
 public class DiagnosticsOverlay extends AbstractOverlay {
 
     private static final int BACKGROUND_COLOR = 0x90505050;     // Very dark gray with alpha
-    private static final int FOREGROUND_COLOR = 0x00E0E0E0;     // Very light gray
+    private static final int FOREGROUND_COLOR = 0xFFE0E0E0;     // Very light gray
 
     private static final Style SPECIAL_MOD_STYLE = Style.EMPTY.withColor(ColorPalette.BRASS).withItalic(true);
     private static final Map<CollectDiagnosticsEvent.Section, TextColor> COLOR_MAP = new EnumMap<>(CollectDiagnosticsEvent.Section.class);
@@ -162,7 +162,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     }
 
     @Override
-    public void render(GuiGraphics context, float partialTick) {
+    public void render(GuiGraphicsExtractor context, float partialTick) {
         if (this.showHud) {
             this.rendering.begin();
             this.drawText(context, this.left, true);
@@ -175,7 +175,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         return GameUtils.isInGame() && GameUtils.getMC().getDebugOverlay().showDebugScreen();
     }
 
-    private void drawText(GuiGraphics context, ObjectArray<FormattedCharSequence> text, boolean left) {
+    private void drawText(GuiGraphicsExtractor context, ObjectArray<FormattedCharSequence> text, boolean left) {
         var textRenderer = GameUtils.getTextRenderer();
         int m;
         int l;
@@ -191,7 +191,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
             l = left ? 2 : context.guiWidth() - 2 - k;
             m = 2 + i * j;
             context.fill(l - 1, m - 1, l + k + 1, m + i - 1, BACKGROUND_COLOR);
-            context.drawString(textRenderer, component, l, m, FOREGROUND_COLOR, false);
+            context.text(textRenderer, component, l, m, FOREGROUND_COLOR, false);
         }
     }
 }

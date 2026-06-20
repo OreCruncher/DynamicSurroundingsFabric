@@ -4,7 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -28,7 +28,7 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
     private String lastSearchText = null;
 
     public IndividualSoundControlList(final Screen parent, final Minecraft mcIn, int widthIn, int heightIn, int topIn, int slotWidth, int slotHeightIn, boolean enablePlay, final Supplier<String> filter, @Nullable final IndividualSoundControlList oldList) {
-        super(mcIn, widthIn, heightIn, topIn, slotHeightIn);
+        super(mcIn, widthIn, heightIn - topIn, topIn, slotHeightIn);
 
         this.soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
 
@@ -56,11 +56,6 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
     public void setRowWidth(int width) {
         this.width = width - 40; // 40 for scrollbar
         this.children().forEach(c -> c.setWidth(this.width));
-    }
-
-    @Override
-    protected int getScrollbarPosition() {
-        return (this.parent.width + this.getRowWidth()) / 2 + 20;
     }
 
     public void setSearchFilter(final Supplier<String> filterBy) {
@@ -101,12 +96,15 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
         this.calculateRowWidth();
 
         if (first != null)
-            this.ensureVisible(first);
+            this.setScrollAmount(0);
     }
 
     @Nullable
     public IndividualSoundControlListEntry getEntryAt(final int mouseX, final int mouseY) {
-        return this.getEntryAtPosition(mouseX, mouseY);
+        return this.getChildAt(mouseX, mouseY)
+                .filter(IndividualSoundControlListEntry.class::isInstance)
+                .map(IndividualSoundControlListEntry.class::cast)
+                .orElse(null);
     }
 
     public void tick() {
@@ -134,7 +132,7 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
 
     protected Collection<IndividualSoundConfigEntry> getSortedSoundConfigurations() {
 
-        final Map<ResourceLocation, IndividualSoundConfigEntry> map = new HashMap<>();
+        final Map<Identifier, IndividualSoundConfigEntry> map = new HashMap<>();
 
         // Get a list of all registered sounds.  We don't use the vanilla registries since
         // we will have more sounds than are registered.

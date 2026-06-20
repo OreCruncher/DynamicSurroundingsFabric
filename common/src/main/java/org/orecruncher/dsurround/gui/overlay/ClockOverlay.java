@@ -1,8 +1,7 @@
 package org.orecruncher.dsurround.gui.overlay;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.ItemFrame;
@@ -16,6 +15,7 @@ import org.orecruncher.dsurround.lib.gui.ColorGradient;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
+import org.orecruncher.dsurround.lib.McCompat;
 
 public class ClockOverlay extends AbstractOverlay {
 
@@ -70,7 +70,7 @@ public class ClockOverlay extends AbstractOverlay {
             // Calculate the color this tick
             var world = player.level();
             // 0 is noon, 180 is midnight. Need to normalize so that midnight 0.
-            var angleDegrees = world.getTimeOfDay(1F)* 360F + 180;
+            var angleDegrees = McCompat.worldTimeOfDay(world, 1F) * 360F + 180;
             // Wrap
             if (angleDegrees >= 360)
                 angleDegrees -= 360;
@@ -78,7 +78,7 @@ public class ClockOverlay extends AbstractOverlay {
             if (angleDegrees >= 180)
                 angleDegrees = 360 - angleDegrees;
 
-            this.color = this.gradient.getRGBColor(angleDegrees);
+            this.color = ColorPalette.opaque(this.gradient.getRGBColor(angleDegrees));
         }
     }
 
@@ -95,7 +95,7 @@ public class ClockOverlay extends AbstractOverlay {
     }
 
     @Override
-    public void render(GuiGraphics context, float partialTick) {
+    public void render(GuiGraphicsExtractor context, float partialTick) {
         if (!this.showClock)
             return;
 
@@ -106,11 +106,10 @@ public class ClockOverlay extends AbstractOverlay {
         if (this.clockDisplay.size() == 2)
             y -= textRender.lineHeight / 2;
 
-        // Don't use renderTooltip. It uses a Z which pushes the rendering to the top of the Z stack and can
-        // and can interfere with renders.
-        TooltipRenderUtil.renderTooltipBackground(context, x - this.renderWidth / 2, y, this.renderWidth, this.renderHeight, 0);
-        context.drawCenteredString(textRender, this.clockDisplay.get(0), x, y, this.color);
+        // Avoid the deferred tooltip layer here; the clock should stay in the normal HUD layer.
+        context.fill(x - this.renderWidth / 2 - 3, y - 3, x + this.renderWidth / 2 + 3, y + this.renderHeight + 3, 0x90000000);
+        context.centeredText(textRender, this.clockDisplay.get(0), x, y, this.color);
         if (this.clockDisplay.size() == 2)
-            context.drawCenteredString(textRender, this.clockDisplay.get(1), x, y + textRender.lineHeight, this.color);
+            context.centeredText(textRender, this.clockDisplay.get(1), x, y + textRender.lineHeight, this.color);
     }
 }

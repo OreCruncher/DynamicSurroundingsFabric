@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
@@ -33,12 +33,12 @@ public enum SyntheticBiome {
     }
 
     private final String name;
-    private final ResourceLocation id;
+    private final Identifier id;
     private final BiomeTraits traits;
 
     SyntheticBiome(String name, BiomeTrait... traits) {
         this.name = name;
-        this.id = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, String.format("synthetic_biome/%s", name));
+        this.id = Identifier.fromNamespaceAndPath(Constants.MOD_ID, String.format("synthetic_biome/%s", name));
         traits = Arrays.copyOf(traits, traits.length + 1);
         traits[traits.length - 1] = BiomeTrait.SYNTHETIC;
         this.traits = BiomeTraits.from(traits);
@@ -53,7 +53,7 @@ public enum SyntheticBiome {
         return this.name;
     }
 
-    public ResourceLocation getId() {
+    public Identifier getId() {
         return this.id;
     }
 
