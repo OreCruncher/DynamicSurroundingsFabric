@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.runtime.audio;
 
+import com.google.common.base.Suppliers;
 import com.mojang.blaze3d.audio.Library;
 import com.mojang.blaze3d.audio.Listener;
 import dev.architectury.platform.Platform;
@@ -23,7 +24,7 @@ import org.orecruncher.dsurround.mixinutils.ISoundEngine;
 import java.util.function.Supplier;
 
 public final class AudioUtilities {
-    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+    private static final Supplier<IModLog> LOGGER = Suppliers.memoize(() -> ContainerManager.resolve(IModLog.class));
 
     // If these mods are present, enhanced sound processing will be disabled.
     private static final ObjectArray<String> autoDisabledBecauseOf = new ObjectArray<>();
@@ -35,7 +36,7 @@ public final class AudioUtilities {
             // Next check to see if any present mods are in our exclusion list
             for (var modId : autoDisabledBecauseOf) {
                 if (Platform.isModLoaded(modId)) {
-                    LOGGER.warn("Enhanced sound processing is auto disabled due to the presence of the mod \"%s\"", modId);
+                    LOGGER.get().warn("Enhanced sound processing is auto disabled due to the presence of the mod \"%s\"", modId);
                     return false;
                 }
             }
@@ -136,7 +137,7 @@ public final class AudioUtilities {
             if (doEnhancedSounds())
                 SoundFXProcessor.initialize();
             else
-                LOGGER.warn("Enhanced sound processing is disabled");
+                LOGGER.get().warn("Enhanced sound processing is disabled");
 
             final String vendor = AL10.alGetString(AL10.AL_VENDOR);
             final String version = AL10.alGetString(AL10.AL_VERSION);
@@ -146,16 +147,16 @@ public final class AudioUtilities {
             final int frequency = ALC11.alcGetInteger(devicePointer, ALC11.ALC_FREQUENCY);
             final int auxSendsConfigured = ALC11.alcGetInteger(devicePointer, EXTEfx.ALC_MAX_AUXILIARY_SENDS);
 
-            LOGGER.info("Vendor: %s", vendor);
-            LOGGER.info("Version: %s", version);
-            LOGGER.info("Renderer: %s", renderer);
-            LOGGER.info("Frequency: %d", frequency);
-            LOGGER.info("AuxSends: %d", auxSendsConfigured);
-            LOGGER.info("Extensions: %s", extensions);
+            LOGGER.get().info("Vendor: %s", vendor);
+            LOGGER.get().info("Version: %s", version);
+            LOGGER.get().info("Renderer: %s", renderer);
+            LOGGER.get().info("Frequency: %d", frequency);
+            LOGGER.get().info("AuxSends: %d", auxSendsConfigured);
+            LOGGER.get().info("Extensions: %s", extensions);
 
         } catch (final Throwable t) {
-            LOGGER.warn(t.getMessage());
-            LOGGER.warn("OpenAL special effects for sounds will not be available");
+            LOGGER.get().warn(t.getMessage());
+            LOGGER.get().warn("OpenAL special effects for sounds will not be available");
         }
     }
 
@@ -176,7 +177,7 @@ public final class AudioUtilities {
      * @param sound Sound that is being queued into the audio engine
      */
     public static void onSoundPlay(final SoundInstance sound) {
-        LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> "PLAYING: " + debugString(sound));
+        LOGGER.get().debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> "PLAYING: " + debugString(sound));
     }
 
     /**
@@ -198,7 +199,7 @@ public final class AudioUtilities {
             if (msg == null)
                 msg = "NONE";
 
-            LOGGER.warn(String.format("OpenAL Error: %s [%s]", errorName, msg));
+            LOGGER.get().warn(String.format("OpenAL Error: %s [%s]", errorName, msg));
         }
         return error;
     }
