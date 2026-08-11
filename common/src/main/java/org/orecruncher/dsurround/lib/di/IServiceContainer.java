@@ -92,6 +92,14 @@ public interface IServiceContainer {
     <T> T resolve(Class<T> clazz);
 
     /**
+     * Returns a T instance that will lazily resolve the specified interface
+     * @param clazz Type the object reference will be identified as
+     * @param <T>   Type of object to represent the instance as
+     * @return Reference to a T instance
+     */
+    <T> T memoize(Class<T> clazz);
+
+    /**
      * Creates a child container with the specified name.
      *
      * @param name Name of the container to create

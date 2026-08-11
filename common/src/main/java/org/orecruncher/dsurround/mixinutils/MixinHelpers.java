@@ -11,7 +11,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
  * here for mixin access.
  */
 public class MixinHelpers {
-    public static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+    public static final IModLog LOGGER = ContainerManager.memoize(IModLog.class);
     public static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
     public static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
     public static final Configuration.SoundSystem soundSystemConfig = ContainerManager.resolve(Configuration.SoundSystem.class);

@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.runtime.audio;
 
+import com.google.common.base.Suppliers;
 import com.mojang.blaze3d.audio.Library;
 import com.mojang.blaze3d.audio.Listener;
 import dev.architectury.platform.Platform;
@@ -11,7 +12,6 @@ import org.lwjgl.openal.*;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -23,12 +23,12 @@ import org.orecruncher.dsurround.mixinutils.ISoundEngine;
 import java.util.function.Supplier;
 
 public final class AudioUtilities {
-    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+    private static final IModLog LOGGER = ContainerManager.memoize(IModLog.class);
 
     // If these mods are present, enhanced sound processing will be disabled.
     private static final ObjectArray<String> autoDisabledBecauseOf = new ObjectArray<>();
 
-    private static final Lazy<Boolean> advancedProcessingEnabled = new Lazy<>(() -> {
+    private static final Supplier<Boolean> advancedProcessingEnabled = Suppliers.memoize(() -> {
         // First check general settings
         var config = ContainerManager.resolve(Configuration.EnhancedSounds.class);
         if (config.enableEnhancedSounds) {

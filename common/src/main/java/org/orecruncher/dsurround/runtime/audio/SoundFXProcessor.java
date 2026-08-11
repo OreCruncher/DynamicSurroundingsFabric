@@ -27,7 +27,7 @@ import java.util.concurrent.*;
 
 public final class SoundFXProcessor {
 
-    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+    private static final IModLog LOGGER = ContainerManager.memoize(IModLog.class);
     private static final int SOUND_PROCESS_ITERATION = 1000 / 20;   // Match MC client tick rate
 
     static boolean isAvailable;
