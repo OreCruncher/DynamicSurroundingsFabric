@@ -21,7 +21,7 @@ public class MixinWorld {
         // The World is AutoClosable and tooling thinks this is a leak...
         var world = ((Level) (Object) this);
         if (world.isClientSide()) {
-            BlockUpdateHandler.blockPositionUpdate(pos, oldBlock, newBlock);
+            BlockUpdateHandler.blockPositionUpdate(world, pos, oldBlock, newBlock);
         }
     }
 }
