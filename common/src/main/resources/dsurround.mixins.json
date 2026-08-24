@@ -17,7 +17,6 @@
     "audio.MixinSource",
     "core.MixinAbstractSoundInstance",
     "core.MixinBiome",
-    "core.MixinBlockState",
     "core.MixinButtonWidget",
     "core.MixinClientChunkManager",
     "core.MixinClientChunkMap",

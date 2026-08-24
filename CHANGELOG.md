@@ -30,6 +30,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Fix null pointer exception with Cobblemon when the player utilizes an item while mounted (thanks Memori!).
 * Fix incorrect biome sound playing when underwater in Deep Ocean biome.
 * Fix sporadic null pointer exceptions when logging due to modpack mod load order and mixin wild west dependencies (thanks SylvanSerenity!).
+* Reworked block update handling and added defensive code to ensure proper client side thread handling.
 
 > ### DynamicSurroundings-1.21.1-0.4.2
 **All Loaders**

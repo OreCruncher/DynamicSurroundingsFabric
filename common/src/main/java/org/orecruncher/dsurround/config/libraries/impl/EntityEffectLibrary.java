@@ -1,5 +1,7 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
+import it.unimi.dsi.fastutil.ints.AbstractIntSet;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.*;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -12,7 +14,6 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.tags.EntityEffectTags;
-import org.orecruncher.dsurround.mixinutils.ILivingEntityExtended;
 
 import java.util.Optional;
 import java.util.Set;
@@ -23,7 +24,10 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
 
     private final ITagLibrary tagLibrary;
     private final IModLog logger;
+
     private final Reference2ObjectOpenHashMap<EntityType<?>, Set<EntityEffectType>> entityEffects = new Reference2ObjectOpenHashMap<>();
+    private final Int2ObjectOpenHashMap<EntityEffectInfo> entityInfoCache = new Int2ObjectOpenHashMap<>(128);
+
     private EntityEffectInfo defaultInfo;
     private int version;
 
@@ -54,20 +58,22 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
 
     @Override
     public boolean doesEntityEffectInfoExist(LivingEntity entity) {
-        ILivingEntityExtended accessor = (ILivingEntityExtended) entity;
-        return accessor.dsurround_getEffectInfo() != null;
+        return this.entityInfoCache.containsKey(entity.getId());
     }
 
     @Override
-    public void clearEntityEffectInfo(LivingEntity entity) {
-        ILivingEntityExtended accessor = (ILivingEntityExtended) entity;
-        accessor.dsurround_setEffectInfo(null);
+    public void cleanCache(AbstractIntSet entitiesToRetain) {
+        for (var kvp : this.entityInfoCache.int2ObjectEntrySet()) {
+            if (!entitiesToRetain.contains(kvp.getIntKey())) {
+                kvp.getValue().deactivate();
+                this.entityInfoCache.remove(kvp.getIntKey());
+            }
+        }
     }
 
     @Override
     public EntityEffectInfo getEntityEffectInfo(LivingEntity entity) {
-        ILivingEntityExtended accessor = (ILivingEntityExtended) entity;
-        var info = accessor.dsurround_getEffectInfo();
+        var info = this.entityInfoCache.get(entity.getId());
 
         if (info != null && info.getVersion() == this.version)
             return info;
@@ -94,7 +100,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
         else
             info = this.defaultInfo;
 
-        accessor.dsurround_setEffectInfo(info);
+        this.entityInfoCache.put(entity.getId(), info);
 
         // Initialize the attached effects before returning.
         // Usually, the next step in processing would be

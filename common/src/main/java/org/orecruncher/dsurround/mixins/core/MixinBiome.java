@@ -4,14 +4,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSpecialEffects;
-import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -21,9 +19,6 @@ import java.util.Optional;
 
 @Mixin(Biome.class)
 public abstract class MixinBiome implements IBiomeExtended {
-
-    @Unique
-    private BiomeInfo dsurround_info;
 
     @Final
     @Shadow
@@ -37,16 +32,6 @@ public abstract class MixinBiome implements IBiomeExtended {
     public BiomeSpecialEffects dsurround_getSpecialEffects() {
         return this.specialEffects;
     };
-
-    @Override
-    public BiomeInfo dsurround_getInfo() {
-        return this.dsurround_info;
-    }
-
-    @Override
-    public void dsurround_setInfo(BiomeInfo info) {
-        this.dsurround_info = info;
-    }
 
     @Override
     public Biome.ClimateSettings dsurround_getWeather() {
@@ -64,8 +49,9 @@ public abstract class MixinBiome implements IBiomeExtended {
     @Inject(method = "getFogColor()I", at = @At("HEAD"), cancellable = true)
     public void dsurround_getFogColor(CallbackInfoReturnable<Integer> cir) {
         if (MixinHelpers.fogOptions.enableFogEffects && MixinHelpers.fogOptions.enableBiomeFog) {
-            if (this.dsurround_info != null) {
-                var color = this.dsurround_info.getFogColor();
+            var info = MixinHelpers.BIOME_LIBRARY.getBiomeInfo((Biome)((Object)this));
+            if (info != null) {
+                var color = info.getFogColor();
                 if (color != null)
                     cir.setReturnValue(color.getValue());
             }
@@ -81,11 +67,12 @@ public abstract class MixinBiome implements IBiomeExtended {
      */
     @Inject(method = "getBackgroundMusic()Ljava/util/Optional;", at = @At("HEAD"), cancellable = true)
     private void dsurround_getBackgroundMusic(CallbackInfoReturnable<Optional<Music>> cir) {
-        if (this.dsurround_info == null) {
+        var info = MixinHelpers.BIOME_LIBRARY.getBiomeInfo((Biome)((Object)this));
+        if (info == null) {
             // Can be null after things like a teleport
             cir.setReturnValue(Optional.empty());
         } else {
-            var result = this.dsurround_info.getBackgroundMusic(Randomizer.current());
+            var result = info.getBackgroundMusic(Randomizer.current());
             if (result.isPresent())
                 cir.setReturnValue(result);
         }

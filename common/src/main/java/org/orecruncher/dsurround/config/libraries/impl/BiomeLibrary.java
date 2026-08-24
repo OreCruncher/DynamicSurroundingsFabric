@@ -22,10 +22,7 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
 import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 
-import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -38,7 +35,9 @@ public final class BiomeLibrary implements IBiomeLibrary {
     private final IModLog logger;
     private final BiomeConditionEvaluator biomeConditionEvaluator;
 
+    // Mapping of biomes to their respective data
     private final Map<SyntheticBiome, BiomeInfo> internalBiomes = new EnumMap<>(SyntheticBiome.class);
+    private final Map<Biome, BiomeInfo> biomes = new WeakHashMap<>(128);
 
     // Cached list of biome config rules.  Need to hold onto them
     // because they may be needed to handle a dynamic biome load.
@@ -65,6 +64,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
         // Wipe out the internal biome cache.  These will be reset.
         this.internalBiomes.clear();
+        this.biomes.clear();
         this.biomeConfigs.clear();
         this.biomeConditionEvaluator.reset();
 
@@ -100,9 +100,8 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
     @Override
     public BiomeInfo getBiomeInfo(Biome biome) {
-        // check the cached property on the biome and return the info
-        // that is there.
-        var info = ((IBiomeExtended) (Object) biome).dsurround_getInfo();
+
+        var info = this.biomes.get(biome);
         if (info != null && info.getVersion() == this.version)
             return info;
 
@@ -126,7 +125,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
         // Build out the info object and store into the biome.  We need to do that
         // so that when applying configs, the script engine can find it.
         final var result = new BiomeInfo(this.version, id, name, traits, biome);
-        ((IBiomeExtended) (Object) biome).dsurround_setInfo(result);
+        this.biomes.put(biome, result);
 
         // Collect any trait changes into the trait collection before applying
         // general rules as these traits can influence decisions.

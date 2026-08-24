@@ -17,8 +17,6 @@ import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
-import org.orecruncher.dsurround.lib.platform.IMinecraftDirectories;
-import org.orecruncher.dsurround.mixinutils.IBlockStateExtended;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -38,15 +36,16 @@ public class BlockLibrary implements IBlockLibrary {
     };
 
     private final IModLog logger;
-    private final IMinecraftDirectories directories;
     private final ITagLibrary tagLibrary;
+
+    // Cache of block states and their associated data
+    private final Map<BlockState, BlockInfo> blocks = new WeakHashMap<>(32 * 1024);
 
     private final Collection<BlockConfigRule> blockConfigs = new ObjectArray<>();
     private int version = 0;
 
-    public BlockLibrary(IModLog logger, IMinecraftDirectories directories, ITagLibrary tagLibrary) {
+    public BlockLibrary(IModLog logger, ITagLibrary tagLibrary) {
         this.logger = ModLog.createChild(logger, "BlockLibrary");
-        this.directories = directories;
         this.tagLibrary = tagLibrary;
     }
 
@@ -60,6 +59,7 @@ public class BlockLibrary implements IBlockLibrary {
             return;
         }
 
+        this.blocks.clear();
         this.blockConfigs.clear();
 
         var findResults = resourceUtilities.findModResources(CODEC, FILE_NAME);
@@ -70,13 +70,13 @@ public class BlockLibrary implements IBlockLibrary {
 
     @Override
     public BlockInfo getBlockInfoWeak(BlockState state) {
-        var info = ((IBlockStateExtended) state).dsurround_getBlockInfo();
+        var info = this.blocks.get(state);
         return info != null ? info : DEFAULT;
     }
 
     @Override
     public BlockInfo getBlockInfo(BlockState state) {
-        var info = ((IBlockStateExtended) state).dsurround_getBlockInfo();
+        var info = this.blocks.get(state);
         if (info != null) {
             if (info.getVersion() == this.version || info == DEFAULT)
                 return info;
@@ -95,8 +95,7 @@ public class BlockLibrary implements IBlockLibrary {
         else
             info.trim();
 
-        ((IBlockStateExtended) state).dsurround_setBlockInfo(info);
-
+        this.blocks.put(state, info);
         return info;
     }
 
