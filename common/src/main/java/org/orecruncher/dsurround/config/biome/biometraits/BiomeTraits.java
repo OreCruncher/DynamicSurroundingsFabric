@@ -15,42 +15,44 @@ public final class BiomeTraits {
 
     static {
         traitAnalyzer.add(new BiomeTagAnalyzer());
-        traitAnalyzer.add(new BiomeMysticalAnalyzer());
+        traitAnalyzer.add(new BiomeNameFallbackAnalyzer());
+        traitAnalyzer.add(new BiomeTraitAnalyzer());
     }
 
     private final Set<BiomeTrait> traits;
     private boolean updatedByMerge;
 
-    BiomeTraits(Collection<BiomeTrait> traits) {
-        this.traits = new HashSet<>(traits);
+    BiomeTraits(Set<BiomeTrait> set) {
+        this.traits = set;
     }
 
-    public static BiomeTraits createFrom(ResourceLocation id, Biome biome) {
-        var traits = traitAnalyzer
-                .stream()
-                .map(analyzer -> analyzer.evaluate(id, biome))
-                .flatMap(Collection::stream)
-                .distinct()
-                .collect(Collectors.toList());
+    public static BiomeTraits from(ResourceLocation id, Biome biome) {
+        EnumSet<BiomeTrait> traits = EnumSet.noneOf(BiomeTrait.class);
+        for (var analyzer : traitAnalyzer)
+            analyzer.analyze(id, biome, traits);
         return new BiomeTraits(traits);
     }
 
-    public static BiomeTraits from(BiomeTrait... traits) {
-        return new BiomeTraits(List.of(traits));
+    public static BiomeTraits of(BiomeTrait... traits) {
+        return of(Arrays.asList(traits));
     }
 
-    public void clearTraits() {
+    public static BiomeTraits of(Collection<BiomeTrait> traits) {
+        return new BiomeTraits(EnumSet.copyOf(traits));
+    }
+
+    public void clear() {
         this.traits.clear();
     }
 
-    public void mergeTraits(Collection<BiomeTrait> traits) {
+    public void merge(Collection<BiomeTrait> traits) {
         int count = this.traits.size();
         this.traits.addAll(traits);
         this.updatedByMerge = this.updatedByMerge || count != this.traits.size();
     }
 
     public boolean contains(String trait) {
-        return contains(BiomeTrait.of(trait));
+        return this.traits.contains(BiomeTrait.of(trait));
     }
 
     public boolean contains(BiomeTrait trait) {

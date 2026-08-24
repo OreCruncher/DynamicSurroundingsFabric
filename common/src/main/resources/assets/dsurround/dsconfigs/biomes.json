@@ -139,7 +139,7 @@
     ]
   },
   {
-    "biomeSelector": "FOREST && COLD && !(SWAMP || SNOWY || DEAD || DENSE)",
+    "biomeSelector": "FOREST && COLD && !(SWAMP || SNOWY || DEAD || DENSE_VEGETATION)",
     "_comment": "Simple Forest",
     "acoustics": [
       {

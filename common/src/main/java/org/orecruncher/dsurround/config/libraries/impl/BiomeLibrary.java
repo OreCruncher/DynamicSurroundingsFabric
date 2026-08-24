@@ -20,7 +20,6 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
-import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 
 import java.util.*;
 import java.util.function.Function;
@@ -120,7 +119,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
         // Regenerate the traits.  Something about the biome may have changed
         // which could ripple into traits.
-        BiomeTraits traits = BiomeTraits.createFrom(id, biome);
+        BiomeTraits traits = BiomeTraits.from(id, biome);
 
         // Build out the info object and store into the biome.  We need to do that
         // so that when applying configs, the script engine can find it.

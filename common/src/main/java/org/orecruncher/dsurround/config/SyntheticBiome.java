@@ -41,7 +41,7 @@ public enum SyntheticBiome {
         this.id = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, String.format("synthetic_biome/%s", name));
         traits = Arrays.copyOf(traits, traits.length + 1);
         traits[traits.length - 1] = BiomeTrait.SYNTHETIC;
-        this.traits = BiomeTraits.from(traits);
+        this.traits = BiomeTraits.of(traits);
     }
 
     @Nullable

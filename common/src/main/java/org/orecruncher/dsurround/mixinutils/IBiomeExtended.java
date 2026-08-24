@@ -11,5 +11,4 @@ public interface IBiomeExtended {
     Biome.ClimateSettings dsurround_getWeather();
 
     BiomeSpecialEffects dsurround_getSpecialEffects();
-
 }
