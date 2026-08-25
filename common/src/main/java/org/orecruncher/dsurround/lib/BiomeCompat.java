@@ -102,7 +102,7 @@ public final class BiomeCompat {
         return effects instanceof BiomeSpecialEffects specialEffects ? specialEffects : null;
     }
 
-    private static IBiomeExtended asExtended(Biome biome) {
+    public static IBiomeExtended asExtended(Biome biome) {
         // The 26.x Biome class is not statically related to our mixin interface at
         // compile time.  Cast through Object so javac allows the runtime mixin
         // interface check.
