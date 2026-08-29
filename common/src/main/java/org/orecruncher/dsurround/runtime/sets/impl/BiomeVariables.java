@@ -4,11 +4,11 @@ import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
+import org.orecruncher.dsurround.lib.BiomeCompat;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
-import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 import org.orecruncher.dsurround.runtime.sets.IBiomeVariables;
 
 public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBiomeVariables {
@@ -86,7 +86,7 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
 
     @Override
     public float getRainfall() {
-        return ((IBiomeExtended)((Object)this.biome)).dsurround_getWeather().downfall();
+        return BiomeCompat.getDownfall(this.biome);
     }
 
     @Override

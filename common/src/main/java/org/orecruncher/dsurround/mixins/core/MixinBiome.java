@@ -5,6 +5,7 @@ import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSpecialEffects;
 import org.orecruncher.dsurround.lib.random.Randomizer;
+import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.spongepowered.asm.mixin.Final;
@@ -49,12 +50,15 @@ public abstract class MixinBiome implements IBiomeExtended {
     @Inject(method = "getFogColor()I", at = @At("HEAD"), cancellable = true)
     public void dsurround_getFogColor(CallbackInfoReturnable<Integer> cir) {
         if (MixinHelpers.fogOptions.enableFogEffects && MixinHelpers.fogOptions.enableBiomeFog) {
-            var info = MixinHelpers.BIOME_LIBRARY.getBiomeInfo((Biome)((Object)this));
-            if (info != null) {
-                var color = info.getFogColor();
-                if (color != null)
-                    cir.setReturnValue(color.getValue());
-            }
+            Optional<Biome> biome = ReflectionHelper.cast(this);
+            biome.ifPresent(b -> {
+                var info = MixinHelpers.BIOME_LIBRARY.getBiomeInfo(b);
+                if (info != null) {
+                    var color = info.getFogColor();
+                    if (color != null)
+                        cir.setReturnValue(color.getValue());
+                }
+            });
         }
     }
 
@@ -67,14 +71,17 @@ public abstract class MixinBiome implements IBiomeExtended {
      */
     @Inject(method = "getBackgroundMusic()Ljava/util/Optional;", at = @At("HEAD"), cancellable = true)
     private void dsurround_getBackgroundMusic(CallbackInfoReturnable<Optional<Music>> cir) {
-        var info = MixinHelpers.BIOME_LIBRARY.getBiomeInfo((Biome)((Object)this));
-        if (info == null) {
-            // Can be null after things like a teleport
-            cir.setReturnValue(Optional.empty());
-        } else {
-            var result = info.getBackgroundMusic(Randomizer.current());
-            if (result.isPresent())
-                cir.setReturnValue(result);
-        }
+        Optional<Biome> biome = ReflectionHelper.cast(this);
+        biome.ifPresent(b -> {
+            var info = MixinHelpers.BIOME_LIBRARY.getBiomeInfo(b);
+            if (info == null) {
+                // Can be null after things like a teleport
+                cir.setReturnValue(Optional.empty());
+            } else {
+                var result = info.getBackgroundMusic(Randomizer.current());
+                if (result.isPresent())
+                    cir.setReturnValue(result);
+            }
+        });
     }
 }

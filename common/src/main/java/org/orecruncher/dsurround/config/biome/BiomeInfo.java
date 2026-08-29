@@ -6,6 +6,7 @@ import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeSpecialEffects;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.AcousticEntry;
@@ -26,7 +27,6 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.lib.weighted.WeightValue;
-import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 import org.orecruncher.dsurround.processing.fog.FogDensity;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
@@ -84,8 +84,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         // Check to see if the biome has a soundtrack. If so, add it to
         // the music list.
         if (biome != null) {
-            var accessor = BiomeCompat.asExtended(biome);
-            accessor.dsurround_getSpecialEffects().getBackgroundMusic()
+            BiomeCompat.getSpecialEffects(biome)
+                .flatMap(BiomeSpecialEffects::getBackgroundMusic)
                 .ifPresent(m -> {
                     var factory = SOUND_LIBRARY.getSoundFactoryForMusic(m);
                     var entry = new AcousticEntry(factory, null);

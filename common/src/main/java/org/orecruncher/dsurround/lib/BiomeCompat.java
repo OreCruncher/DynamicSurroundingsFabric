@@ -1,209 +1,154 @@
 package org.orecruncher.dsurround.lib;
 
+import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSpecialEffects;
+import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
- * Runtime-safe accessors for biome data used by Dynamic Surroundings.
+ * Runtime-safe accessors for biome data used by Dynamic Surroundings. Routines will prefer mixin IBiomeExtended, but
+ * if there is a runtime error of some sort (like linking), they will fall back to using reflection to access the various
+ * properties in Biome.
 **/
 public final class BiomeCompat {
+
+    private static final float DEFAULT_TEMP = 0.5F;
+    private static final float DEFAULT_DOWNFALL = 0.0F;
+
+    private static BiFunction<Biome, BlockPos, Float> biomeTemp;
+    private static Function<Biome, Float> biomeDownfall;
+    private static Function<Biome, Optional<BiomeSpecialEffects>> biomeSpecialEffects;
 
     private BiomeCompat() {
     }
 
-    public static float getTemperature(Biome biome, BlockPos pos) {
+    public static float getTemperature(Biome biome, @Nullable BlockPos pos) {
         if (biome == null) {
-            return 0.5F;
+            return DEFAULT_TEMP;
         }
 
-        if (pos != null) {
-            var exact = invoke(biome, "getTemperature", new Class<?>[]{BlockPos.class}, pos)
-                    .or(() -> invoke(biome, "temperature", new Class<?>[]{BlockPos.class}, pos));
-            if (exact.isPresent()) {
-                return asFloat(exact.get(), 0.5F);
-            }
-        }
-
-        try {
+        if (pos == null)
             return biome.getBaseTemperature();
-        } catch (LinkageError | RuntimeException ignored) {
-            // Continue with reflective climate-settings access below.
+
+        if (biomeTemp != null) {
+            return biomeTemp.apply(biome, pos);
         }
 
-        Object climate = invokeAny(biome, "getModifiedClimateSettings", "getClimateSettings", "climateSettings")
-                .or(() -> readField(biome, "climateSettings", "modifiedClimateSettings", "weather", "climate"))
-                .orElse(null);
-        if (climate != null) {
-            var temperature = invokeAny(climate, "temperature", "getTemperature")
-                    .or(() -> readField(climate, "temperature"));
-            if (temperature.isPresent()) {
-                return asFloat(temperature.get(), 0.5F);
-            }
-        }
+        Pair<BiFunction<Biome, BlockPos, Float>, Float> choice = ReflectionHelper.choose(
+                "Biome::getTemperature",
+                biome,
+                pos,
+                (b, p) -> {
+                    var extended = asExtended(biome);
+                    return extended.map(iBiomeExtended -> iBiomeExtended.dsurround_getTemperature(pos)).orElseThrow();
+                },
+                (b, p) -> {
+                    var method = ReflectionHelper.findMethod(Biome.class, "getTemperature", BlockPos.class);
+                    if (method.isPresent()) {
+                        try {
+                            var result = ReflectionHelper.<Float>cast(method.get().invoke(biome, pos));
+                            if (result.isPresent()) {
+                                return result.get();
+                            }
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    throw new RuntimeException("Method '%s' not present".formatted("getTemperature"));
+                },
+                (b, p) -> b.getBaseTemperature(),
+                (b, p) -> DEFAULT_TEMP
+        );
 
-        return 0.5F;
+        biomeTemp = choice.first();
+        return choice.second();
     }
 
-    public static float getDownfall(Biome biome) {
+    public static float getDownfall(@Nullable Biome biome) {
         if (biome == null) {
-            return 0.0F;
+            return DEFAULT_DOWNFALL;
         }
 
-        var ext = asExtended(biome);
-        if (ext != null) {
-            try {
-                var weather = ext.dsurround_getWeather();
-                if (weather != null) {
-                    return weather.downfall();
-                }
-            } catch (LinkageError | RuntimeException ignored) {
-                // Fall back to public/reflected climate settings below.
-            }
+        // Use the last method that worked
+        if (biomeDownfall != null) {
+            return biomeDownfall.apply(biome);
         }
 
-        Object climate = invokeAny(biome, "getModifiedClimateSettings", "getClimateSettings", "climateSettings")
-                .or(() -> readField(biome, "climateSettings", "modifiedClimateSettings", "weather", "climate"))
-                .orElse(null);
-        if (climate != null) {
-            var downfall = invokeAny(climate, "downfall", "getDownfall")
-                    .or(() -> readField(climate, "downfall"));
-            if (downfall.isPresent()) {
-                return asFloat(downfall.get(), 0.0F);
-            }
-        }
+        Pair<Function<Biome, Float>, Float> choice = ReflectionHelper.choose(
+                "Biome::climateSettings",
+                biome,
+                b -> {
+                    var extended = asExtended(biome);
+                    return extended.map(iBiomeExtended -> iBiomeExtended.dsurround_getWeather().downfall()).orElseThrow();
+                },
+                b -> {
+                    var field = ReflectionHelper.findField(Biome.class, "climateSettings");
+                    if (field.isPresent()) {
+                        try {
+                            var settings = ReflectionHelper.<Biome.ClimateSettings>cast(field.get().get(biome));
+                            if (settings.isPresent()) {
+                                return settings.get().downfall();
+                            }
+                            throw new RuntimeException("Field '%s' not present".formatted("climateSettings"));
+                        } catch (IllegalAccessException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    throw new RuntimeException("Field '%s' is not present".formatted("climateSettings"));
+                },
+                b -> DEFAULT_DOWNFALL
+        );
 
-        return 0.0F;
+        biomeDownfall = choice.first();
+        return choice.second();
     }
 
-    public static BiomeSpecialEffects getSpecialEffects(Biome biome) {
+    public static Optional<BiomeSpecialEffects> getSpecialEffects(Biome biome) {
         if (biome == null) {
-            return null;
+            return Optional.empty();
         }
 
-        var ext = asExtended(biome);
-        if (ext != null) {
-            try {
-                return ext.dsurround_getSpecialEffects();
-            } catch (LinkageError | RuntimeException ignored) {
-                // Fall through to public/reflected access.
-            }
+        if (biomeSpecialEffects != null) {
+            return biomeSpecialEffects.apply(biome);
         }
 
-        Object effects = invokeAny(biome, "getModifiedSpecialEffects", "getSpecialEffects", "specialEffects")
-                .or(() -> readField(biome, "specialEffects", "effects"))
-                .orElse(null);
-        return effects instanceof BiomeSpecialEffects specialEffects ? specialEffects : null;
+        Pair<Function<Biome, Optional<BiomeSpecialEffects>>, Optional<BiomeSpecialEffects>> choice = ReflectionHelper.choose(
+                "Biome::getSpecialEffects",
+                biome,
+                b -> {
+                    var extended = asExtended(biome);
+                    return extended.map(IBiomeExtended::dsurround_getSpecialEffects);
+                },
+                b -> {
+                    var field = ReflectionHelper.findField(Biome.class, "specialEffects");
+                    if (field.isPresent()) {
+                        try {
+                            return ReflectionHelper.cast(field.get().get(b));
+                        } catch (IllegalAccessException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    throw new RuntimeException("Field '%s' is not present".formatted("specialEffects"));
+                },
+                b -> Optional.empty()
+        );
+
+        biomeSpecialEffects = choice.first();
+        return choice.second();
     }
 
-    public static IBiomeExtended asExtended(Biome biome) {
+    private static Optional<IBiomeExtended> asExtended(Biome biome) {
         // The 26.x Biome class is not statically related to our mixin interface at
         // compile time.  Cast through Object so javac allows the runtime mixin
         // interface check.
-        Object mixedBiome = biome;
-        return mixedBiome instanceof IBiomeExtended ext ? ext : null;
-    }
-
-    private static Optional<Object> invokeAny(Object target, String... names) {
-        if (target == null) {
-            return Optional.empty();
-        }
-        for (String name : names) {
-            var method = findMethod(target.getClass(), name);
-            if (method == null || method.getParameterCount() != 0) {
-                continue;
-            }
-            try {
-                method.setAccessible(true);
-                return Optional.ofNullable(method.invoke(target));
-            } catch (IllegalAccessException | InvocationTargetException | LinkageError | RuntimeException ignored) {
-                // Try next method.
-            }
-        }
-        return Optional.empty();
-    }
-
-    private static Optional<Object> invoke(Object target, String name, Class<?>[] parameters, Object... args) {
-        if (target == null) {
-            return Optional.empty();
-        }
-        var method = findMethod(target.getClass(), name, parameters);
-        if (method == null) {
-            return Optional.empty();
-        }
-        try {
-            method.setAccessible(true);
-            return Optional.ofNullable(method.invoke(target, args));
-        } catch (IllegalAccessException | InvocationTargetException | LinkageError | RuntimeException ignored) {
-            return Optional.empty();
-        }
-    }
-
-    private static Optional<Object> readField(Object target, String... names) {
-        if (target == null) {
-            return Optional.empty();
-        }
-        for (String name : names) {
-            var field = findField(target.getClass(), name);
-            if (field == null) {
-                continue;
-            }
-            try {
-                field.setAccessible(true);
-                return Optional.ofNullable(field.get(target));
-            } catch (IllegalAccessException | LinkageError | RuntimeException ignored) {
-                // Try next field.
-            }
-        }
-        return Optional.empty();
-    }
-
-    private static Method findMethod(Class<?> type, String name, Class<?>... parameterTypes) {
-        for (Class<?> current = type; current != null; current = current.getSuperclass()) {
-            try {
-                return current.getDeclaredMethod(name, parameterTypes);
-            } catch (NoSuchMethodException ignored) {
-                // Keep walking.
-            }
-        }
-        for (Class<?> iface : type.getInterfaces()) {
-            try {
-                return iface.getDeclaredMethod(name, parameterTypes);
-            } catch (NoSuchMethodException ignored) {
-                // Keep trying.
-            }
-        }
-        return null;
-    }
-
-    private static Field findField(Class<?> type, String name) {
-        for (Class<?> current = type; current != null; current = current.getSuperclass()) {
-            try {
-                return current.getDeclaredField(name);
-            } catch (NoSuchFieldException ignored) {
-                // Keep walking.
-            }
-        }
-        return null;
-    }
-
-    private static float asFloat(Object value, float fallback) {
-        if (value == null) {
-            return fallback;
-        }
-        if (value instanceof Number n) {
-            return n.floatValue();
-        }
-        try {
-            return Float.parseFloat(String.valueOf(value));
-        } catch (NumberFormatException ignored) {
-            return fallback;
-        }
+        return ReflectionHelper.cast(biome);
     }
 }
