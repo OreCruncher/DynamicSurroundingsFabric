@@ -15,11 +15,13 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixins.core.MixinAbstractSoundInstance;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundEngineAccessor;
 import org.orecruncher.dsurround.mixinutils.ISoundEngine;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public final class AudioUtilities {
@@ -82,7 +84,6 @@ public final class AudioUtilities {
             var sb = builder.get();
             sb.setLength(0);
 
-            MixinAbstractSoundInstance accessor = (MixinAbstractSoundInstance) sound;
             sb.append(sound.getClass().getSimpleName()).append("{");
             sb.append(sound.getLocation());
             sb.append(", ").append(sound.getSource().getName());
@@ -93,8 +94,11 @@ public final class AudioUtilities {
             var underlyingSound = sound.getSound();
             //noinspection ConstantValue
             if (underlyingSound != null) {
-                sb.append(String.format(", v: %.4f(%.4f)", sound.getVolume(), accessor.dsurround_getRawVolume()));
-                sb.append(String.format(", p: %.4f(%.4f)", sound.getPitch(), accessor.dsurround_getRawPitch()));
+                Optional<MixinAbstractSoundInstance> accessor = ReflectionHelper.cast(sound);
+                accessor.ifPresent(a -> {
+                    sb.append(String.format(", v: %.4f(%.4f)", sound.getVolume(), a.dsurround_getRawVolume()));
+                    sb.append(String.format(", p: %.4f(%.4f)", sound.getPitch(), a.dsurround_getRawPitch()));
+                });
                 sb.append(", s: ").append(sound.getSound().shouldStream());
             }
 

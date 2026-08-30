@@ -4,10 +4,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.eventing.handlers.BlockUpdateHandler;
+import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Optional;
 
 @Mixin(Level.class)
 public class MixinWorld {
@@ -19,9 +22,11 @@ public class MixinWorld {
     @Inject(method = "onBlockStateChange(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("HEAD"))
     public void dsurround_onBlockChanged(BlockPos pos, BlockState oldBlock, BlockState newBlock, CallbackInfo ci) {
         // The World is AutoClosable and tooling thinks this is a leak...
-        var world = ((Level) (Object) this);
-        if (world.isClientSide()) {
-            BlockUpdateHandler.blockPositionUpdate(world, pos, oldBlock, newBlock);
-        }
+        Optional<Level> self = ReflectionHelper.cast(this);
+        self.ifPresent(level -> {
+            if (level.isClientSide()) {
+                BlockUpdateHandler.blockPositionUpdate(self.get(), pos, oldBlock, newBlock);
+            }
+        });
     }
 }

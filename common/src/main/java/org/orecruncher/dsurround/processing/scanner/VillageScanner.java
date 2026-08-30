@@ -5,7 +5,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BellBlockEntity;
 import net.minecraft.world.phys.AABB;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.world.WorldUtils;
+import org.orecruncher.dsurround.lib.compat.WorldCompat;
 
 public class VillageScanner extends AbstractScanner {
 
@@ -32,8 +32,7 @@ public class VillageScanner extends AbstractScanner {
 
             if (!villagerEntities.isEmpty()) {
                 // We have villagers.  Now find a bell!
-                var bell = WorldUtils.getLoadedBlockEntities(world, blockEntity -> blockEntity instanceof BellBlockEntity && blockEntity.getBlockPos().closerToCenterThan(playerEyes, VILLAGE_RANGE));
-                this.isInVillage = !bell.isEmpty();
+                this.isInVillage = WorldCompat.doesBlockEntityExist(world, blockEntity -> blockEntity instanceof BellBlockEntity && blockEntity.getBlockPos().closerToCenterThan(playerEyes, VILLAGE_RANGE));;
             }
         }
     }

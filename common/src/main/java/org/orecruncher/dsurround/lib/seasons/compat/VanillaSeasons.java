@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.lib.seasons.compat;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import org.orecruncher.dsurround.lib.BiomeCompat;
+import org.orecruncher.dsurround.lib.compat.BiomeCompat;
 
 import java.util.Optional;
 

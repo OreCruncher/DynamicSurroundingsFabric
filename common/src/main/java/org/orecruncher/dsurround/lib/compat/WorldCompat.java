@@ -1,21 +1,23 @@
-package org.orecruncher.dsurround.lib.world;
+package org.orecruncher.dsurround.lib.compat;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.storage.LevelData;
+import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixins.core.MixinClientWorldProperties;
 import org.orecruncher.dsurround.mixinutils.IClientWorld;
 
-import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class WorldUtils {
+public class WorldCompat {
     public static boolean isSuperFlat(final Level world) {
         final LevelData info = world.getLevelData();
-        return info instanceof MixinClientWorldProperties && ((MixinClientWorldProperties) info).dsurround_isFlatWorld();
+        return ReflectionHelper.<MixinClientWorldProperties>cast(info)
+                .map(MixinClientWorldProperties::dsurround_isFlatWorld)
+                .orElse(false);
     }
 
     public static BlockPos getTopSolidOrLiquidBlock(final Level world, final BlockPos pos) {
@@ -26,12 +28,12 @@ public class WorldUtils {
         return world.getHeight(Heightmap.Types.MOTION_BLOCKING, pos.getX(), pos.getZ());
     }
 
-    public static List<BlockEntity> getLoadedBlockEntities(Level world, Predicate<BlockEntity> predicate) {
-        var accessor = (IClientWorld) world;
-        return accessor.dsurround_getLoadedChunks()
-                .flatMap(chunk -> chunk.getBlockEntities().values().stream())
-                .filter(predicate)
-                .collect(Collectors.toList());
+    public static boolean doesBlockEntityExist(Level world, Predicate<BlockEntity> predicate) {
+        return ReflectionHelper.<IClientWorld>cast(world)
+                .map(IClientWorld::dsurround_getLoadedChunks)
+                .orElse(Stream.empty())
+                .flatMap(lc -> lc.getBlockEntities().values().stream())
+                .anyMatch(predicate);
     }
 
     public static boolean isChunkLoaded(Level world, BlockPos pos) {

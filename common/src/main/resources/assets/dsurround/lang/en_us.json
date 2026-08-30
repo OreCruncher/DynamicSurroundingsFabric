@@ -78,6 +78,7 @@
   "dsurround.command.dsmm.unpause.failure": "Unable to unpause the Music Manager: %1$s",
   "dsurround.command.dsmm.whatsplaying.success": "\u00a72Playing\u00a7r: %1$s",
   "dsurround.command.dsmm.whatsplaying.failure": "Unable to determine what the Music Manager is playing: %1$s",
+  "dsurround.command.dsmm.notpresent": "Music Manager not present (mixin failure?)",
   "dsurround.config.title": "Dynamic Surroundings Configuration Options",
   "dsurround.config.tooltip.clientRestartRequired": "CLIENT restart required",
   "dsurround.config.tooltip.worldRestartRequired": "WORLD restart required",

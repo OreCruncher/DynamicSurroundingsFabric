@@ -17,7 +17,7 @@ import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.threading.IClientTasking;
-import org.orecruncher.dsurround.lib.world.WorldUtils;
+import org.orecruncher.dsurround.lib.compat.WorldCompat;
 import org.orecruncher.dsurround.processing.accents.FootstepAccents;
 import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
@@ -117,7 +117,7 @@ public class Handlers {
     protected boolean isPlayerChunkLoaded() {
         var player = GameUtils.getPlayer().orElseThrow();
         var pos = player.blockPosition();
-        return WorldUtils.isChunkLoaded(player.level(), pos);
+        return WorldCompat.isChunkLoaded(player.level(), pos);
     }
 
     public void tick(Minecraft client) {

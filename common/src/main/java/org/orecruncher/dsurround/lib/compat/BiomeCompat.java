@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib;
+package org.orecruncher.dsurround.lib.compat;
 
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.core.BlockPos;
