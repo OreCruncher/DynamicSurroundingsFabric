@@ -5,15 +5,13 @@ import it.unimi.dsi.fastutil.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.collections.ListMap;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -21,24 +19,31 @@ import java.util.function.Supplier;
 public final class ReflectionHelper {
 
     private static final Supplier<IModLog> LOGGER = Suppliers.memoize(() -> ModLog.createChild(Library.LOGGER, "ReflectionHelper"));
-    private static final Map<Class<?>, CacheData>  cacheData = new IdentityHashMap<>();
+    private static final Map<Class<?>, CacheData>  cacheData = new IdentityHashMap<>(8);
 
     public static Optional<Method> findMethod(Class<?> type, String name, Class<?>... parameterTypes) {
         return findMethod(type, new String[]{name}, parameterTypes);
     }
 
     public static Optional<Method> findMethod(@NotNull Class<?> type, @NotNull String[] names, @Nullable Class<?>... parameterTypes) {
+        Objects.requireNonNull(type, "type");
+        if (names == null || names.length == 0)
+            return Optional.empty();
+
+        // Prefer the first name in the list for caching. It's possible that a method was identified previously by
+        // obfuscated name rather than mapped name.
+        var preferredName = names[0];
+
         var data = getCacheData(type);
-        // Prefer the first name in the request list for looking in the cache
-        if (data.methods.containsKey(names[0])) {
-            return Optional.ofNullable(data.methods.get(names[0]));
+        if (data.methods.containsKey(preferredName)) {
+            return Optional.ofNullable(data.methods.get(preferredName));
         }
 
         for (String name : names) {
             for (Class<?> current = type; current != null; current = current.getSuperclass()) {
                 var result = resolveMethod(current, name, parameterTypes);
                 if (result != null) {
-                    data.methods.put(names[0], result);
+                    data.methods.put(preferredName, result);
                     return Optional.of(result);
                 }
             }
@@ -48,13 +53,13 @@ public final class ReflectionHelper {
             for (Class<?> xface : type.getInterfaces()) {
                 var result = resolveMethod(xface, name, parameterTypes);
                 if (result != null) {
-                    data.methods.put(names[0], result);
+                    data.methods.put(preferredName, result);
                     return Optional.of(result);
                 }
             }
         }
 
-        data.methods.put(names[0], null);
+        data.methods.put(preferredName, null);
         return Optional.empty();
     }
 
@@ -63,23 +68,30 @@ public final class ReflectionHelper {
     }
 
     public static Optional<Field> findField(Class<?> type, String[] names) {
+        Objects.requireNonNull(type, "type");
+        if (names == null || names.length == 0)
+            return Optional.empty();
+
+        // Prefer the first name in the list for caching. It's possible that a field was identified previously by
+        // obfuscated name rather than mapped name.
+        var preferredName = names[0];
+
         var data = getCacheData(type);
-        // Prefer the first name in the request list for looking in the cache
-        if (data.fields.containsKey(names[0])) {
-            return Optional.ofNullable(data.fields.get(names[0]));
+        if (data.fields.containsKey(preferredName)) {
+            return Optional.ofNullable(data.fields.get(preferredName));
         }
 
         for (String name : names) {
             for (Class<?> current = type; current != null; current = current.getSuperclass()) {
                 var result = resolveField(current, name);
                 if (result != null) {
-                    data.fields.put(names[0], result);
+                    data.fields.put(preferredName, result);
                     return Optional.of(result);
                 }
             }
         }
 
-        data.fields.put(names[0], null);
+        data.fields.put(preferredName, null);
         return Optional.empty();
     }
 
@@ -185,8 +197,8 @@ public final class ReflectionHelper {
 
         public CacheData(Class<?> clazz) {
             this.clazz = clazz;
-            this.methods = new HashMap<>();
-            this.fields = new HashMap<>();
+            this.methods = new ListMap<>();
+            this.fields = new ListMap<>();
         }
     }
 }
