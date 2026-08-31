@@ -16,6 +16,7 @@ import java.util.function.BiFunction;
  * if there is a runtime error of some sort (like linking), they will fall back to using reflection to access the various
  * properties in Biome.
 **/
+@Deprecated
 public final class BiomeCompat {
 
     private static final float DEFAULT_TEMP = 0.5F;

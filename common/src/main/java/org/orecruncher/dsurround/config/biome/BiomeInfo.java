@@ -20,7 +20,6 @@ import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
-import org.orecruncher.dsurround.lib.compat.BiomeCompat;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
@@ -85,10 +84,12 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
         this.fogDensity = FogDensity.NONE;
 
-        // Check to see if the biome has a soundtrack. If so, add it to
-        // the music list.
+        // Fetch biome properties if a Biome is provided, and perform
+        // other necessary dependent work.
         if (this.biome != null) {
             this.properties = BiomeHooks.getBiomeProperties(this.biome);
+
+            // Add background track to the list of possible plays for the biome
             this.properties.getEffectsProperties()
                             .getBackgroundMusic()
                                     .ifPresent(m -> {
@@ -160,9 +161,9 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     }
 
     public float getTemperature(@Nullable BlockPos pos) {
-        if (pos == null)
+        if (this.biome == null || pos == null)
             return this.getBaseTemperature();
-        return BiomeCompat.getTemperature(this.biome, pos);
+        return this.biome.getTemperature(pos);
     }
 
     void setAdditionalSoundChance(final Script chance) {
