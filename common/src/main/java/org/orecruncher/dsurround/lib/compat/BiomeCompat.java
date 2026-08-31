@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.lib.compat;
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.BiomeSpecialEffects;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
@@ -11,7 +10,6 @@ import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * Runtime-safe accessors for biome data used by Dynamic Surroundings. Routines will prefer mixin IBiomeExtended, but
@@ -21,11 +19,8 @@ import java.util.function.Function;
 public final class BiomeCompat {
 
     private static final float DEFAULT_TEMP = 0.5F;
-    private static final float DEFAULT_DOWNFALL = 0.0F;
 
     private static BiFunction<Biome, BlockPos, Float> biomeTemp;
-    private static Function<Biome, Float> biomeDownfall;
-    private static Function<Biome, Optional<BiomeSpecialEffects>> biomeSpecialEffects;
 
     private BiomeCompat() {
     }
@@ -69,79 +64,6 @@ public final class BiomeCompat {
         );
 
         biomeTemp = choice.first();
-        return choice.second();
-    }
-
-    public static float getDownfall(@Nullable Biome biome) {
-        if (biome == null) {
-            return DEFAULT_DOWNFALL;
-        }
-
-        // Use the last method that worked
-        if (biomeDownfall != null) {
-            return biomeDownfall.apply(biome);
-        }
-
-        Pair<Function<Biome, Float>, Float> choice = ReflectionHelper.choose(
-                "Biome::climateSettings",
-                biome,
-                b -> {
-                    var extended = asExtended(biome);
-                    return extended.map(iBiomeExtended -> iBiomeExtended.dsurround_getWeather().downfall()).orElseThrow();
-                },
-                b -> {
-                    var field = ReflectionHelper.findField(Biome.class, "climateSettings");
-                    if (field.isPresent()) {
-                        try {
-                            var settings = ReflectionHelper.cast(field.get().get(biome), Biome.ClimateSettings.class);
-                            if (settings.isPresent()) {
-                                return settings.get().downfall();
-                            }
-                            throw new RuntimeException("Field '%s' not present".formatted("climateSettings"));
-                        } catch (IllegalAccessException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                    throw new RuntimeException("Field '%s' is not present".formatted("climateSettings"));
-                },
-                b -> DEFAULT_DOWNFALL
-        );
-
-        biomeDownfall = choice.first();
-        return choice.second();
-    }
-
-    public static Optional<BiomeSpecialEffects> getSpecialEffects(Biome biome) {
-        if (biome == null) {
-            return Optional.empty();
-        }
-
-        if (biomeSpecialEffects != null) {
-            return biomeSpecialEffects.apply(biome);
-        }
-
-        Pair<Function<Biome, Optional<BiomeSpecialEffects>>, Optional<BiomeSpecialEffects>> choice = ReflectionHelper.choose(
-                "Biome::getSpecialEffects",
-                biome,
-                b -> {
-                    var extended = asExtended(biome);
-                    return extended.map(IBiomeExtended::dsurround_getSpecialEffects);
-                },
-                b -> {
-                    var field = ReflectionHelper.findField(Biome.class, "specialEffects");
-                    if (field.isPresent()) {
-                        try {
-                            return ReflectionHelper.cast(field.get().get(b),  BiomeSpecialEffects.class);
-                        } catch (IllegalAccessException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                    throw new RuntimeException("Field '%s' is not present".formatted("specialEffects"));
-                },
-                b -> Optional.empty()
-        );
-
-        biomeSpecialEffects = choice.first();
         return choice.second();
     }
 

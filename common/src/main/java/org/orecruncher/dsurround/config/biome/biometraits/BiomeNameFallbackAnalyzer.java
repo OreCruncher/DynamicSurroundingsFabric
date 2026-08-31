@@ -1,10 +1,10 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
+import dev.architectury.hooks.level.biome.BiomeHooks;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.BiomeTrait;
-import org.orecruncher.dsurround.lib.compat.BiomeCompat;
 
 import java.util.*;
 
@@ -206,8 +206,11 @@ public class BiomeNameFallbackAnalyzer implements IBiomeTraitAnalyzer {
     }
 
     private static void addClimateTraits(Biome biome, Set<BiomeTrait> results) {
-        float temperature = BiomeCompat.getTemperature(biome, null);
-        float downfall = BiomeCompat.getDownfall(biome);
+        // Initialization of BiomeInfo depends on this routine. We need to use the
+        // biome property information directly.
+        var properties = BiomeHooks.getBiomeProperties(biome);
+        float downfall = properties.getClimateProperties().getDownfall();
+        float temperature = properties.getClimateProperties().getTemperature();
 
         if (temperature <= 0.15F) {
             results.add(COLD);

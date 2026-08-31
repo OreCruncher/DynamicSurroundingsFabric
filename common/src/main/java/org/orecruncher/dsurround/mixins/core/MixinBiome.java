@@ -3,14 +3,11 @@ package org.orecruncher.dsurround.mixins.core;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.BiomeSpecialEffects;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,24 +17,6 @@ import java.util.Optional;
 
 @Mixin(Biome.class)
 public abstract class MixinBiome implements IBiomeExtended {
-
-    @Final
-    @Shadow
-    private Biome.ClimateSettings climateSettings;
-
-    @Final
-    @Shadow
-    private BiomeSpecialEffects specialEffects;
-
-    @Override
-    public BiomeSpecialEffects dsurround_getSpecialEffects() {
-        return this.specialEffects;
-    };
-
-    @Override
-    public Biome.ClimateSettings dsurround_getWeather() {
-        return this.climateSettings;
-    }
 
     @Invoker("getTemperature")
     public abstract float dsurround_getTemperature(BlockPos pos);

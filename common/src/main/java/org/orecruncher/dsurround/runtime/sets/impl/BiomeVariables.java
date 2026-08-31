@@ -86,7 +86,7 @@ public class BiomeVariables extends VariableSet<IBiomeVariables> implements IBio
 
     @Override
     public float getRainfall() {
-        return BiomeCompat.getDownfall(this.biome);
+        return this.info.getDownfall();
     }
 
     @Override

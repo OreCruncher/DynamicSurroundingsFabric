@@ -1,12 +1,14 @@
 package org.orecruncher.dsurround.config.biome;
 
 import com.google.common.collect.ImmutableList;
+import dev.architectury.hooks.level.biome.BiomeHooks;
+import dev.architectury.hooks.level.biome.BiomeProperties;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.BiomeSpecialEffects;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.AcousticEntry;
@@ -48,6 +50,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private final String biomeName;
     @Nullable
     private final Biome biome;
+    @Nullable
+    private final BiomeProperties properties;
     private final BiomeTraits traits;
     private final boolean isRiver;
     private final boolean isOcean;
@@ -83,14 +87,17 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
         // Check to see if the biome has a soundtrack. If so, add it to
         // the music list.
-        if (biome != null) {
-            BiomeCompat.getSpecialEffects(biome)
-                .flatMap(BiomeSpecialEffects::getBackgroundMusic)
-                .ifPresent(m -> {
-                    var factory = SOUND_LIBRARY.getSoundFactoryForMusic(m);
-                    var entry = new AcousticEntry(factory, null);
-                    this.musicSounds.add(entry);
-                });
+        if (this.biome != null) {
+            this.properties = BiomeHooks.getBiomeProperties(this.biome);
+            this.properties.getEffectsProperties()
+                            .getBackgroundMusic()
+                                    .ifPresent(m -> {
+                                        var factory = SOUND_LIBRARY.getSoundFactoryForMusic(m);
+                                        var entry = new AcousticEntry(factory, null);
+                                        this.musicSounds.add(entry);
+                                    });
+        } else {
+            this.properties = null;
         }
     }
 
@@ -142,6 +149,20 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
     public void setFogDensity(final FogDensity density) {
         this.fogDensity = density;
+    }
+
+    public float getDownfall() {
+        return this.properties != null ? this.properties.getClimateProperties().getDownfall() : 0.0F;
+    }
+
+    public float getBaseTemperature() {
+        return this.properties != null ? this.properties.getClimateProperties().getTemperature() : 0.5F;
+    }
+
+    public float getTemperature(@Nullable BlockPos pos) {
+        if (pos == null)
+            return this.getBaseTemperature();
+        return BiomeCompat.getTemperature(this.biome, pos);
     }
 
     void setAdditionalSoundChance(final Script chance) {
