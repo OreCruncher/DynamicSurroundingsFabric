@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.mixins.events;
 
+import com.google.common.base.Suppliers;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.Minecraft;
@@ -13,11 +14,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.function.Supplier;
+
 @Mixin(Minecraft.class)
 public abstract class MixinMinecraftClient {
 
     @Unique
-    private Abilities dsurround_cachedAbilities;
+    private final Supplier<Abilities> dsurround_cachedAbilities = Suppliers.memoize(Abilities::new);
 
     @Inject(method = "tick()V", at = @At("HEAD"))
     private void dsurround_tickStart(CallbackInfo info) {
@@ -50,10 +53,7 @@ public abstract class MixinMinecraftClient {
     @WrapOperation(method = "getSituationalMusic()Lnet/minecraft/sounds/Music;", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getAbilities()Lnet/minecraft/world/entity/player/Abilities;"))
     private Abilities dsurround_instabuildCheck(LocalPlayer instance, Operation<Abilities> original) {
         if (MixinHelpers.soundOptions.playBiomeMusicWhileCreative) {
-            if (this.dsurround_cachedAbilities == null) {
-                this.dsurround_cachedAbilities = new Abilities();
-            }
-            return this.dsurround_cachedAbilities;
+            return this.dsurround_cachedAbilities.get();
         }
         return original.call(instance);
     }

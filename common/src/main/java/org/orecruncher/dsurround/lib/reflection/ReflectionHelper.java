@@ -2,8 +2,11 @@ package org.orecruncher.dsurround.lib.reflection;
 
 import com.google.common.base.Suppliers;
 import it.unimi.dsi.fastutil.Pair;
+import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.annotation.NonnullByDefault;
+import net.minecraft.ReportedException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.system.NonnullDefault;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.collections.ListMap;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -110,9 +113,11 @@ public final class ReflectionHelper {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> Optional<T> cast(@Nullable Object value) {
+    public static <T> Optional<T> cast(@Nullable Object value, @NotNull Class<T> desiredType) {
         try {
-            return Optional.ofNullable((T) value);
+            if (desiredType.isInstance(value)) {
+                return Optional.of((T) value);
+            }
         } catch (LinkageError | RuntimeException ignored) {
         }
         return Optional.empty();

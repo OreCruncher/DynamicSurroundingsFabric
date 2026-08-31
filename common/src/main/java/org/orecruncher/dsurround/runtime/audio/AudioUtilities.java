@@ -21,7 +21,6 @@ import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;
 import org.orecruncher.dsurround.mixins.audio.MixinSoundEngineAccessor;
 import org.orecruncher.dsurround.mixinutils.ISoundEngine;
 
-import java.util.Optional;
 import java.util.function.Supplier;
 
 public final class AudioUtilities {
@@ -94,7 +93,7 @@ public final class AudioUtilities {
             var underlyingSound = sound.getSound();
             //noinspection ConstantValue
             if (underlyingSound != null) {
-                Optional<MixinAbstractSoundInstance> accessor = ReflectionHelper.cast(sound);
+                var accessor = ReflectionHelper.cast(sound, MixinAbstractSoundInstance.class);
                 accessor.ifPresent(a -> {
                     sb.append(String.format(", v: %.4f(%.4f)", sound.getVolume(), a.dsurround_getRawVolume()));
                     sb.append(String.format(", p: %.4f(%.4f)", sound.getPitch(), a.dsurround_getRawPitch()));

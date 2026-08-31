@@ -51,7 +51,7 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
             var particleLoad = "Particle Manager: %s".formatted(GameUtils.getParticleManager().countParticles());
             event.add(CollectDiagnosticsEvent.Section.Systems, particleLoad);
 
-            ReflectionHelper.<IMusicManager>cast(GameUtils.getMC().getMusicManager())
+            ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), IMusicManager.class)
                     .ifPresentOrElse(
                             mm -> event.add(CollectDiagnosticsEvent.Section.Systems, mm.dsurround_getDiagnosticText()),
                             ()-> event.add(CollectDiagnosticsEvent.Section.Systems, Component.literal("MusicManager unavailable")));

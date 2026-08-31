@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 public class WorldCompat {
     public static boolean isSuperFlat(final Level world) {
         final LevelData info = world.getLevelData();
-        return ReflectionHelper.<MixinClientWorldProperties>cast(info)
+        return ReflectionHelper.cast(info, MixinClientWorldProperties.class)
                 .map(MixinClientWorldProperties::dsurround_isFlatWorld)
                 .orElse(false);
     }
@@ -29,7 +29,7 @@ public class WorldCompat {
     }
 
     public static boolean doesBlockEntityExist(Level world, Predicate<BlockEntity> predicate) {
-        return ReflectionHelper.<IClientWorld>cast(world)
+        return ReflectionHelper.cast(world, IClientWorld.class)
                 .map(IClientWorld::dsurround_getLoadedChunks)
                 .orElse(Stream.empty())
                 .flatMap(lc -> lc.getBlockEntities().values().stream())

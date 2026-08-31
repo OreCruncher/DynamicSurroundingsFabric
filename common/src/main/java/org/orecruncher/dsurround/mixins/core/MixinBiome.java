@@ -50,7 +50,7 @@ public abstract class MixinBiome implements IBiomeExtended {
     @Inject(method = "getFogColor()I", at = @At("HEAD"), cancellable = true)
     public void dsurround_getFogColor(CallbackInfoReturnable<Integer> cir) {
         if (MixinHelpers.fogOptions.enableFogEffects && MixinHelpers.fogOptions.enableBiomeFog) {
-            Optional<Biome> biome = ReflectionHelper.cast(this);
+            var biome = ReflectionHelper.cast(this, Biome.class);
             biome.ifPresent(b -> {
                 var info = MixinHelpers.BIOME_LIBRARY.getBiomeInfo(b);
                 if (info != null) {
@@ -71,7 +71,7 @@ public abstract class MixinBiome implements IBiomeExtended {
      */
     @Inject(method = "getBackgroundMusic()Ljava/util/Optional;", at = @At("HEAD"), cancellable = true)
     private void dsurround_getBackgroundMusic(CallbackInfoReturnable<Optional<Music>> cir) {
-        Optional<Biome> biome = ReflectionHelper.cast(this);
+        var biome = ReflectionHelper.cast(this, Biome.class);
         biome.ifPresent(b -> {
             var info = MixinHelpers.BIOME_LIBRARY.getBiomeInfo(b);
             if (info == null) {

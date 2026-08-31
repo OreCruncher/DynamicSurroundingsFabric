@@ -10,8 +10,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Optional;
-
 @Mixin(Level.class)
 public class MixinWorld {
 
@@ -22,7 +20,7 @@ public class MixinWorld {
     @Inject(method = "onBlockStateChange(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("HEAD"))
     public void dsurround_onBlockChanged(BlockPos pos, BlockState oldBlock, BlockState newBlock, CallbackInfo ci) {
         // The World is AutoClosable and tooling thinks this is a leak...
-        Optional<Level> self = ReflectionHelper.cast(this);
+        var self = ReflectionHelper.cast(this, Level.class);
         self.ifPresent(level -> {
             if (level.isClientSide()) {
                 BlockUpdateHandler.blockPositionUpdate(self.get(), pos, oldBlock, newBlock);

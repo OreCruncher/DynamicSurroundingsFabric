@@ -35,9 +35,9 @@ public final class BiomeCompat {
             return DEFAULT_TEMP;
         }
 
-        if (pos == null)
+        if (pos == null) {
             return biome.getBaseTemperature();
-
+        }
         if (biomeTemp != null) {
             return biomeTemp.apply(biome, pos);
         }
@@ -54,7 +54,7 @@ public final class BiomeCompat {
                     var method = ReflectionHelper.findMethod(Biome.class, "getTemperature", BlockPos.class);
                     if (method.isPresent()) {
                         try {
-                            var result = ReflectionHelper.<Float>cast(method.get().invoke(biome, pos));
+                            var result = ReflectionHelper.cast(method.get().invoke(biome, pos), Float.class);
                             if (result.isPresent()) {
                                 return result.get();
                             }
@@ -93,7 +93,7 @@ public final class BiomeCompat {
                     var field = ReflectionHelper.findField(Biome.class, "climateSettings");
                     if (field.isPresent()) {
                         try {
-                            var settings = ReflectionHelper.<Biome.ClimateSettings>cast(field.get().get(biome));
+                            var settings = ReflectionHelper.cast(field.get().get(biome), Biome.ClimateSettings.class);
                             if (settings.isPresent()) {
                                 return settings.get().downfall();
                             }
@@ -131,7 +131,7 @@ public final class BiomeCompat {
                     var field = ReflectionHelper.findField(Biome.class, "specialEffects");
                     if (field.isPresent()) {
                         try {
-                            return ReflectionHelper.cast(field.get().get(b));
+                            return ReflectionHelper.cast(field.get().get(b),  BiomeSpecialEffects.class);
                         } catch (IllegalAccessException e) {
                             throw new RuntimeException(e);
                         }
@@ -146,9 +146,6 @@ public final class BiomeCompat {
     }
 
     private static Optional<IBiomeExtended> asExtended(Biome biome) {
-        // The 26.x Biome class is not statically related to our mixin interface at
-        // compile time.  Cast through Object so javac allows the runtime mixin
-        // interface check.
-        return ReflectionHelper.cast(biome);
+        return ReflectionHelper.cast(biome, IBiomeExtended.class);
     }
 }

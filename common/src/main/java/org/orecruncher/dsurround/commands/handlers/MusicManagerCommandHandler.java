@@ -6,8 +6,6 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixinutils.IMusicManager;
 
-import java.util.Optional;
-
 public class MusicManagerCommandHandler {
 
     public static Component reset() {
@@ -24,7 +22,7 @@ public class MusicManagerCommandHandler {
 
     public static Component whatsPlaying() {
         try {
-            Optional<IMusicManager> mm = ReflectionHelper.cast(GameUtils.getMC().getMusicManager());
+            var mm = ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), IMusicManager.class);
             if (mm.isPresent()) {
                 var result =mm.get().dsurround_whatsPlaying();
                 return Component.translatable("dsurround.command.dsmm.whatsplaying.success", result);
@@ -38,7 +36,7 @@ public class MusicManagerCommandHandler {
 
     private static Component execute(MusicManager musicManager, String command) {
         try {
-            Optional<IMusicManager> mm = ReflectionHelper.cast(musicManager);
+            var mm = ReflectionHelper.cast(musicManager, IMusicManager.class);
             if (mm.isPresent()) {
                 mm.get().dsurround_doCommand(command);
                 return Component.translatable("dsurround.command.dsmm." + command + ".success", command);

@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.Unique;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 @Mixin(ClientLevel.class)
@@ -24,9 +23,9 @@ public class MixinClientWorld implements IClientWorld {
 
     @Unique
     public Stream<LevelChunk> dsurround_getLoadedChunks() {
-        Optional<MixinClientChunkManager> manager = ReflectionHelper.cast(this.chunkSource);
+        var manager = ReflectionHelper.cast(this.chunkSource, MixinClientChunkManager.class);
         if (manager.isPresent()) {
-            Optional<MixinClientChunkMap> chunkMap = ReflectionHelper.cast(manager.get().dsurround_getClientChunkMap());
+            var chunkMap = ReflectionHelper.cast(manager.get().dsurround_getClientChunkMap(), MixinClientChunkMap.class);
             if (chunkMap.isPresent()) {
                 var chunks = chunkMap.get().dsurround_getChunks();
                 List<LevelChunk> resultChunks = new ArrayList<>();

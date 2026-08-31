@@ -14,8 +14,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Optional;
-
 @Mixin(Entity.class)
 public abstract class MixinEntity {
 
@@ -26,7 +24,7 @@ public abstract class MixinEntity {
     public void dsurround_playStepSound(BlockPos pos, BlockState state, CallbackInfo ci) {
         // Only want to enable eventing if accents are enabled
         if (MixinHelpers.footstepAccentsConfig.enableAccents) {
-            Optional<Entity> self = ReflectionHelper.cast(this);
+            var self = ReflectionHelper.cast(this, Entity.class);
             self.ifPresent(entity -> {
                 if (entity.level().isClientSide()) {
                     // Is the entity in range?  If not, avoid generating an event
