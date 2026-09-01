@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinFogRenderer {
 
     @Inject(method = "setupFog(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/FogRenderer$FogMode;FZF)V", at = @At("RETURN"))
-    private static void dsurround_renderFog(Camera camera, FogRenderer.FogMode fogMode, float f, boolean bl, float g, CallbackInfo ci, @Local FogType fogType, @Local FogRenderer.FogData fogData) {
+    private static void dsurround$renderFog(Camera camera, FogRenderer.FogMode fogMode, float f, boolean bl, float g, CallbackInfo ci, @Local FogType fogType, @Local FogRenderer.FogData fogData) {
 
         if (fogData.mode != FogRenderer.FogMode.FOG_TERRAIN || fogType != FogType.NONE)
             return;

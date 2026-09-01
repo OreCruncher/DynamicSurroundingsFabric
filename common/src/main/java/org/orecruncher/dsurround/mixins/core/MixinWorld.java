@@ -18,7 +18,7 @@ public class MixinWorld {
      * a world that is client side.  Server side is a don't care.
      */
     @Inject(method = "onBlockStateChange(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("HEAD"))
-    public void dsurround_onBlockChanged(BlockPos pos, BlockState oldBlock, BlockState newBlock, CallbackInfo ci) {
+    public void dsurround$onBlockChanged(BlockPos pos, BlockState oldBlock, BlockState newBlock, CallbackInfo ci) {
         // The World is AutoClosable and tooling thinks this is a leak...
         var self = ReflectionHelper.cast(this, Level.class);
         self.ifPresent(level -> {

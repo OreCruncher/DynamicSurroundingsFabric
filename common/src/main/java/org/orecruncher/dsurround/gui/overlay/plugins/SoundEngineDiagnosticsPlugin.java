@@ -9,8 +9,6 @@ import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
-import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;
-import org.orecruncher.dsurround.mixins.audio.MixinSoundEngineAccessor;
 
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -36,14 +34,12 @@ public class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
             }
         }
 
-        MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) soundManager;
-        MixinSoundEngineAccessor accessors = (MixinSoundEngineAccessor) manager.dsurround_getSoundSystem();
-        var sources = accessors.dsurround_getSources();
+        var sources = soundManager.soundEngine.instanceToChannel;
         var str = Component.literal(soundManager.getDebugString());
         panelText.add(str);
 
         if (!sources.isEmpty()) {
-            accessors.dsurround_getSources().keySet().stream()
+            sources.keySet().stream()
                     .map(SoundInstance::getLocation)
                     .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
                     .entrySet().stream()

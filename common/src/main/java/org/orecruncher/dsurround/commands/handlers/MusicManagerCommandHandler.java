@@ -24,7 +24,7 @@ public class MusicManagerCommandHandler {
         try {
             var mm = ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), IMusicManager.class);
             if (mm.isPresent()) {
-                var result =mm.get().dsurround_whatsPlaying();
+                var result =mm.get().dsurround$whatsPlaying();
                 return Component.translatable("dsurround.command.dsmm.whatsplaying.success", result);
             } else {
                 return Component.translatable("dsurround.command.dsmm.notpresent");
@@ -38,7 +38,7 @@ public class MusicManagerCommandHandler {
         try {
             var mm = ReflectionHelper.cast(musicManager, IMusicManager.class);
             if (mm.isPresent()) {
-                mm.get().dsurround_doCommand(command);
+                mm.get().dsurround$doCommand(command);
                 return Component.translatable("dsurround.command.dsmm." + command + ".success", command);
             } else {
                 return Component.translatable("dsurround.command.dsmm.notpresent");

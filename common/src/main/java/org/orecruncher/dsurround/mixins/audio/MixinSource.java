@@ -19,7 +19,7 @@ public class MixinSource {
      * @param ci Ignored
      */
     @Inject(method = "play()V", at = @At("HEAD"))
-    public void dsurround_onSourcePlay(CallbackInfo ci) {
+    public void dsurround$onSourcePlay(CallbackInfo ci) {
         try {
             ReflectionHelper.cast(this, Channel.class)
                 .ifPresent(SoundFXProcessor::onSourcePlay);
@@ -34,7 +34,7 @@ public class MixinSource {
      * @param ci Ignored
      */
     @Inject(method = "updateStream()V", at = @At("HEAD"))
-    public void dsurround_onSourceTick(CallbackInfo ci) {
+    public void dsurround$onSourceTick(CallbackInfo ci) {
         try {
             ReflectionHelper.cast(this, Channel.class)
                 .ifPresent(SoundFXProcessor::tick);
@@ -48,7 +48,7 @@ public class MixinSource {
      * @param ci Ignored
      */
     @Inject(method = "stop()V", at = @At("HEAD"))
-    public void dsurround_onSourceStop(CallbackInfo ci) {
+    public void dsurround$onSourceStop(CallbackInfo ci) {
         try {
             ReflectionHelper.cast(this, Channel.class)
                 .ifPresent(SoundFXProcessor::stopSoundPlay);
@@ -65,7 +65,7 @@ public class MixinSource {
      * @param ci Call will always be canceled.
      */
     @Inject(method = "attachStaticBuffer(Lcom/mojang/blaze3d/audio/SoundBuffer;)V", at = @At("HEAD"))
-    public void dsurround_monoConversion(SoundBuffer soundBuffer, CallbackInfo ci) {
+    public void dsurround$monoConversion(SoundBuffer soundBuffer, CallbackInfo ci) {
         try {
             // The buffer is modified in place, meaning that it is not reallocated.
             ReflectionHelper.cast(this, Channel.class)

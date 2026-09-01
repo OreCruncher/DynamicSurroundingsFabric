@@ -25,3 +25,9 @@ accessible field net/minecraft/client/multiplayer/ClientLevel$ClientLevelData is
 # Access information related to sounds
 accessible field com/mojang/blaze3d/audio/Channel source I
 accessible field net/minecraft/client/sounds/ChannelAccess$ChannelHandle channel Lcom/mojang/blaze3d/audio/Channel;
+accessible field net/minecraft/client/sounds/SoundManager soundEngine Lnet/minecraft/client/sounds/SoundEngine;
+accessible field net/minecraft/client/sounds/SoundEngine instanceToChannel Ljava/util/Map;
+accessible field net/minecraft/client/sounds/SoundEngine listener Lcom/mojang/blaze3d/audio/Listener;
+
+# Particle related
+accessible field net/minecraft/client/particle/ParticleEngine spriteSets Ljava/util/Map;

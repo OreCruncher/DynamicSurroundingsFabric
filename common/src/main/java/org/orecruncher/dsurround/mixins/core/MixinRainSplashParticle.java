@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinRainSplashParticle {
 
     @Inject(method = "createParticle(Lnet/minecraft/core/particles/SimpleParticleType;Lnet/minecraft/client/multiplayer/ClientLevel;DDDDDD)Lnet/minecraft/client/particle/Particle;", at = @At("RETURN"))
-    public void dsurround_makeParticle(SimpleParticleType defaultParticleType, ClientLevel clientWorld, double x, double y, double z, double g, double h, double i, CallbackInfoReturnable<Particle> cir) {
+    public void dsurround$makeParticle(SimpleParticleType defaultParticleType, ClientLevel clientWorld, double x, double y, double z, double g, double h, double i, CallbackInfoReturnable<Particle> cir) {
         // Do not want to do rain splashes if particle rain is installed
         if (!Platform.isModLoaded(Constants.MOD_PARTICLE_RAIN))
             WaterRippleHandler.createRippleParticle(clientWorld, cir.getReturnValue(), new Vec3(x, y, z));

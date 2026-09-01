@@ -53,7 +53,7 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
 
             ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), IMusicManager.class)
                     .ifPresentOrElse(
-                            mm -> event.add(CollectDiagnosticsEvent.Section.Systems, mm.dsurround_getDiagnosticText()),
+                            mm -> event.add(CollectDiagnosticsEvent.Section.Systems, mm.dsurround$getDiagnosticText()),
                             ()-> event.add(CollectDiagnosticsEvent.Section.Systems, Component.literal("MusicManager unavailable")));
 
             for (String script : scripts) {

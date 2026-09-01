@@ -25,49 +25,49 @@ public class MixinMusicManager implements IMusicManager {
     private int nextSongDelay;
 
     @Unique
-    private boolean dsurround_pauseTicking;
+    private boolean dsurround$pauseTicking;
 
     @Override
-    public String dsurround_getDiagnosticText() {
+    public String dsurround$getDiagnosticText() {
         String playingSound = "Nothing playing";
         if (this.currentMusic != null)
             playingSound = this.currentMusic.getLocation().toString();
         var result = "Music Manager: %d (%s)".formatted(this.nextSongDelay, playingSound);
-        if (this.dsurround_pauseTicking)
+        if (this.dsurround$pauseTicking)
             result += " (PAUSED)";
         return result;
     }
 
     @Override
-    public void dsurround_doCommand(String command) {
+    public void dsurround$doCommand(String command) {
         if ("reset".equals(command)) {
             MusicManager self = (MusicManager) (Object) this;
             self.stopPlaying();
             this.nextSongDelay = 100;
-            this.dsurround_pauseTicking = false;
+            this.dsurround$pauseTicking = false;
         } else if ("pause".equals(command)) {
-            this.dsurround_setPaused(true);
+            this.dsurround$setPaused(true);
         } else if ("unpause".equals(command)) {
-            this.dsurround_setPaused(false);
+            this.dsurround$setPaused(false);
         }
     }
 
     @Override
-    public void dsurround_setPaused(boolean flag) {
+    public void dsurround$setPaused(boolean flag) {
         var self = (MusicManager) (Object) this;
         if (flag) {
             MixinHelpers.LOGGER.info("Stopping MusicManager");
-            this.dsurround_pauseTicking = true;
+            this.dsurround$pauseTicking = true;
             self.stopPlaying();
         } else {
             MixinHelpers.LOGGER.info("Starting MusicManager");
             this.nextSongDelay = 100;
-            this.dsurround_pauseTicking = false;
+            this.dsurround$pauseTicking = false;
         }
     }
 
     @Override
-    public Component dsurround_whatsPlaying() {
+    public Component dsurround$whatsPlaying() {
         if (this.currentMusic == null)
             return Component.translatable("dsurround.text.musicmanager.nothing");
 
@@ -82,13 +82,13 @@ public class MixinMusicManager implements IMusicManager {
     }
 
     @Inject(method = "tick()V", at = @At("HEAD"), cancellable = true)
-    public void dsurround_pauseTickCheck(CallbackInfo ci) {
-        if (this.dsurround_pauseTicking)
+    public void dsurround$pauseTickCheck(CallbackInfo ci) {
+        if (this.dsurround$pauseTicking)
             ci.cancel();
     }
 
     @Inject(method = "startPlaying(Lnet/minecraft/sounds/Music;)V", at = @At("RETURN"))
-    public void dsurround_startPlaying(Music music, CallbackInfo ci) {
+    public void dsurround$startPlaying(Music music, CallbackInfo ci) {
         if (MixinHelpers.soundOptions.displayToastMessagesForMusic)
             SoundToast.create(music);
     }

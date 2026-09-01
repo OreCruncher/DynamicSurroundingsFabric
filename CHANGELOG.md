@@ -21,6 +21,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 **Changes**
 * Updated Dynamic Surroundings tag names to match the conventional tag naming scheme (ex., "dsurround:is_axe" rather than "dsurround:axes"). Old tag names will continue to work though dependencies should be updated to use the new naming scheme.
 * Updated biome trait detection which should improve "out of the box" experience with modded biomes.
+* A bunch of changes related to mixin with the goal of simplifying and reduce chances of mixin related failures.
 
 **Fixes**
 * Added missing sound subtitles for mapped step sounds.

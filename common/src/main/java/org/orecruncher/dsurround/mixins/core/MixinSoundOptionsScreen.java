@@ -27,14 +27,14 @@ public abstract class MixinSoundOptionsScreen extends OptionsSubScreen {
     }
 
     @Inject(method = "addOptions()V", at = @At("RETURN"))
-    public void dsurround_addSoundConfigButton(CallbackInfo ci) {
+    public void dsurround$addSoundConfigButton(CallbackInfo ci) {
         // This will add a button in the lower left corner of the sound options menu
         var toolTip = Tooltip.create(Component.translatable("dsurround.text.config.soundconfiguration.tooltip"));
         var style = Style.EMPTY.withColor(ColorPalette.GOLD);
         var buttonText = Component.translatable("dsurround.text.config.soundconfiguration").withStyle(style);
         var textWidth = GameUtils.getTextRenderer().width(buttonText) + 10;
 
-        var buttonToAdd = Button.builder(buttonText, this::dsurround_onPress)
+        var buttonToAdd = Button.builder(buttonText, this::dsurround$onPress)
                 .tooltip(toolTip)
                 .bounds(5, this.height - 27, textWidth, 20).build();
 
@@ -42,7 +42,7 @@ public abstract class MixinSoundOptionsScreen extends OptionsSubScreen {
     }
 
     @Unique
-    private void dsurround_onPress(Button button) {
+    private void dsurround$onPress(Button button) {
         if (this.minecraft == null)
             return;
 
@@ -51,7 +51,7 @@ public abstract class MixinSoundOptionsScreen extends OptionsSubScreen {
                     var enablePlayButtons = this.minecraft.level == null || GameUtils.isSinglePlayer();
 
                     if (enablePlayButtons) {
-                        musicManager.dsurround_setPaused(true);
+                        musicManager.dsurround$setPaused(true);
                     }
 
                     var screen = new IndividualSoundControlScreen(
@@ -61,7 +61,7 @@ public abstract class MixinSoundOptionsScreen extends OptionsSubScreen {
                                 // Stop any sounds left hanging for whatever reason, and restart the MusicManager
                                 GameUtils.getSoundManager().stop();
                                 if (enablePlayButtons)
-                                    musicManager.dsurround_setPaused(false);
+                                    musicManager.dsurround$setPaused(false);
                             });
 
                     GameUtils.setScreen(screen);

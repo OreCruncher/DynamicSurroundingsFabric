@@ -22,12 +22,12 @@ public class MixinClientWorld implements IClientWorld {
     private ClientChunkCache chunkSource;
 
     @Unique
-    public Stream<LevelChunk> dsurround_getLoadedChunks() {
+    public Stream<LevelChunk> dsurround$getLoadedChunks() {
         var manager = ReflectionHelper.cast(this.chunkSource, MixinClientChunkManager.class);
         if (manager.isPresent()) {
-            var chunkMap = ReflectionHelper.cast(manager.get().dsurround_getClientChunkMap(), MixinClientChunkMap.class);
+            var chunkMap = ReflectionHelper.cast(manager.get().dsurround$getClientChunkMap(), MixinClientChunkMap.class);
             if (chunkMap.isPresent()) {
-                var chunks = chunkMap.get().dsurround_getChunks();
+                var chunks = chunkMap.get().dsurround$getChunks();
                 List<LevelChunk> resultChunks = new ArrayList<>();
                 for (int i = 0; i < chunks.length(); i++) {
                     var chunk = chunks.get(i);

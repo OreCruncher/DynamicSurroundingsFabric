@@ -75,7 +75,7 @@ public class StepThroughBrushEffect extends EntityEffectBase {
             return false;
         if (entity.xxa != 0 || entity.zza != 0 || entity.yya != 0)
             return true;
-        return ((ILivingEntityExtended)entity).dsurround_isJumping();
+        return ((ILivingEntityExtended)entity).dsurround$isJumping();
     }
 
     private void playSoundEffect(BlockPos pos, ResourceLocation factory, float volumeScale) {

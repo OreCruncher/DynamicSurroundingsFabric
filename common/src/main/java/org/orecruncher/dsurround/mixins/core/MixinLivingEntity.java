@@ -12,7 +12,7 @@ public class MixinLivingEntity implements ILivingEntityExtended {
     protected boolean jumping;
 
     @Override
-    public boolean dsurround_isJumping() {
+    public boolean dsurround$isJumping() {
         return this.jumping;
     }
 }

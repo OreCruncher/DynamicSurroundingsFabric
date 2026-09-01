@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinChannelHandleAccessor {
 
     @Inject(method = "release()V", at = @At("HEAD"))
-    private void dsurround_release(CallbackInfo ci) {
+    private void dsurround$release(CallbackInfo ci) {
         try {
             ReflectionHelper.cast(this, ChannelAccess.ChannelHandle.class)
                     .ifPresent( c -> {

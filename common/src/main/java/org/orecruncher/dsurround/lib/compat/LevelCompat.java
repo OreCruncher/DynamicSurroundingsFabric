@@ -28,7 +28,7 @@ public class LevelCompat {
 
     public static boolean doesBlockEntityExist(Level level, Predicate<BlockEntity> predicate) {
         return ReflectionHelper.cast(level, IClientWorld.class)
-                .map(IClientWorld::dsurround_getLoadedChunks)
+                .map(IClientWorld::dsurround$getLoadedChunks)
                 .orElse(Stream.empty())
                 .flatMap(lc -> lc.getBlockEntities().values().stream())
                 .anyMatch(predicate);

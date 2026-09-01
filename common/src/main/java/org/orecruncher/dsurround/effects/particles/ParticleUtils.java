@@ -21,7 +21,6 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.random.Randomizer;
-import org.orecruncher.dsurround.mixins.core.MixinParticleManager;
 
 import java.util.ArrayList;
 
@@ -33,7 +32,7 @@ public final class ParticleUtils {
         var id = RegistryUtils.getRegistry(Registries.PARTICLE_TYPE)
                 .map(r -> r.getResourceKey(particleType).map(ResourceKey::location))
                 .orElseThrow();
-        return ((MixinParticleManager) GameUtils.getParticleManager()).dsurround_getSpriteAwareFactories().get(id.get());
+        return GameUtils.getParticleManager().spriteSets.get(id.get());
     }
 
     public static Vec3 getBreathOrigin(final LivingEntity entity) {

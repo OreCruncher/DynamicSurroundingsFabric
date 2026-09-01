@@ -8,5 +8,5 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface MixinClientChunkManager {
 
     @Accessor("storage")
-    ClientChunkCache.Storage dsurround_getClientChunkMap();
+    ClientChunkCache.Storage dsurround$getClientChunkMap();
 }

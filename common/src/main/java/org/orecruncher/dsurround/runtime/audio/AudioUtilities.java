@@ -17,8 +17,6 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixins.core.MixinAbstractSoundInstance;
-import org.orecruncher.dsurround.mixins.audio.MixinSoundManagerAccessor;
-import org.orecruncher.dsurround.mixins.audio.MixinSoundEngineAccessor;
 import org.orecruncher.dsurround.mixinutils.ISoundEngine;
 
 import java.util.function.Supplier;
@@ -57,13 +55,11 @@ public final class AudioUtilities {
     }
 
     public static SoundEngine getSoundSystem() {
-        var soundManager = GameUtils.getSoundManager();
-        MixinSoundManagerAccessor manager = (MixinSoundManagerAccessor) soundManager;
-        return manager.dsurround_getSoundSystem();
+        return GameUtils.getSoundManager().soundEngine;
     }
 
     public static Listener getSoundListener() {
-        return ((MixinSoundEngineAccessor)getSoundSystem()).dsurround_getListener();
+        return getSoundSystem().listener;
     }
 
     /**
@@ -95,8 +91,8 @@ public final class AudioUtilities {
             if (underlyingSound != null) {
                 var accessor = ReflectionHelper.cast(sound, MixinAbstractSoundInstance.class);
                 accessor.ifPresent(a -> {
-                    sb.append(String.format(", v: %.4f(%.4f)", sound.getVolume(), a.dsurround_getRawVolume()));
-                    sb.append(String.format(", p: %.4f(%.4f)", sound.getPitch(), a.dsurround_getRawPitch()));
+                    sb.append(String.format(", v: %.4f(%.4f)", sound.getVolume(), a.dsurround$getRawVolume()));
+                    sb.append(String.format(", p: %.4f(%.4f)", sound.getPitch(), a.dsurround$getRawPitch()));
                 });
                 sb.append(", s: ").append(sound.getSound().shouldStream());
             }
@@ -130,7 +126,7 @@ public final class AudioUtilities {
 
         try {
 
-            long devicePointer = ((ISoundEngine) soundEngine).dsurround_getDevicePointer();
+            long devicePointer = ((ISoundEngine) soundEngine).dsurround$getDevicePointer();
 
             // Calculate the number of source slots available
             MAX_SOUNDS = ALC11.alcGetInteger(devicePointer, ALC11.ALC_MONO_SOURCES);

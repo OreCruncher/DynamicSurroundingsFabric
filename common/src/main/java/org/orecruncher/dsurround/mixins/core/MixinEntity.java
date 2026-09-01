@@ -21,7 +21,7 @@ public abstract class MixinEntity {
     private static final double DSURROUND_MAX_ACCENT_RANGE = 16.0 * 16.0;
 
     @Inject(method = "walkingStepSound(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("TAIL"))
-    public void dsurround_playStepSound(BlockPos pos, BlockState state, CallbackInfo ci) {
+    public void dsurround$playStepSound(BlockPos pos, BlockState state, CallbackInfo ci) {
         // Only want to enable eventing if accents are enabled
         if (MixinHelpers.footstepAccentsConfig.enableAccents) {
             var self = ReflectionHelper.cast(this, Entity.class);

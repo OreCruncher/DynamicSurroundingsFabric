@@ -10,7 +10,6 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
-import org.orecruncher.dsurround.mixins.core.MixinParticleManager;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 import java.util.Optional;
@@ -54,8 +53,7 @@ public abstract class AbstractBlockEffect implements IBlockEffect {
      */
     public <T extends ParticleOptions> Optional<Particle> createParticle(T parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
         var pm = GameUtils.getParticleManager();
-        var t = (MixinParticleManager) pm;
-        return Optional.ofNullable(t.dsurround_createParticle(parameters, x, y, z, velocityX, velocityY, velocityZ));
+        return Optional.ofNullable(pm.createParticle(parameters, x, y, z, velocityX, velocityY, velocityZ));
     }
 
     public boolean isDone() {

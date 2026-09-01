@@ -22,7 +22,7 @@ public class MixinSoundLibrary implements ISoundEngine {
     @Shadow
     private long currentDevice;
 
-    public long dsurround_getDevicePointer() {
+    public long dsurround$getDevicePointer() {
         return this.currentDevice;
     }
 
@@ -30,7 +30,7 @@ public class MixinSoundLibrary implements ISoundEngine {
      * This will resize the capability buffer to accommodate additional settings
      */
     @ModifyConstant(method = "init(Ljava/lang/String;Z)V", constant = @Constant(intValue = 3))
-    private int dsurround_modifyIntBufferSize(int size) {
+    private int dsurround$modifyIntBufferSize(int size) {
         return AudioUtilities.doEnhancedSounds() ? 5 : 3;
     }
 
@@ -38,7 +38,7 @@ public class MixinSoundLibrary implements ISoundEngine {
      * Rewrite the capability buffer.  We only do this if advanced processing is enabled.
      */
     @WrapOperation(method = "init(Ljava/lang/String;Z)V", at = @At(value = "INVOKE", target = "Lorg/lwjgl/openal/ALC10;alcCreateContext(JLjava/nio/IntBuffer;)J", remap = false))
-    private long dsurround_buildCapabilities(long deviceHandle, IntBuffer attrList, Operation<Long> original) {
+    private long dsurround$buildCapabilities(long deviceHandle, IntBuffer attrList, Operation<Long> original) {
         if (AudioUtilities.doEnhancedSounds()) {
             // Buffer should have been resized by the constant modification above
             attrList.clear();
@@ -63,7 +63,7 @@ public class MixinSoundLibrary implements ISoundEngine {
      * @return The quantity of streaming sounds (should be at least 8)
      */
     @ModifyConstant(method = "init(Ljava/lang/String;Z)V", constant = @Constant(intValue = 8))
-    public int dsurround_initialize(int v) {
+    public int dsurround$initialize(int v) {
         var config = ContainerManager.resolve(Configuration.SoundSystem.class);
         return config.streamingChannels;
     }
