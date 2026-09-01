@@ -3,8 +3,8 @@ package org.orecruncher.dsurround.commands.handlers;
 import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
 import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
-import org.orecruncher.dsurround.mixinutils.IMusicManager;
 
 public class MusicManagerCommandHandler {
 
@@ -22,9 +22,9 @@ public class MusicManagerCommandHandler {
 
     public static Component whatsPlaying() {
         try {
-            var mm = ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), IMusicManager.class);
+            var mm = ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.class);
             if (mm.isPresent()) {
-                var result =mm.get().dsurround$whatsPlaying();
+                var result =mm.get().whatsPlaying();
                 return Component.translatable("dsurround.command.dsmm.whatsplaying.success", result);
             } else {
                 return Component.translatable("dsurround.command.dsmm.notpresent");
@@ -36,9 +36,9 @@ public class MusicManagerCommandHandler {
 
     private static Component execute(MusicManager musicManager, String command) {
         try {
-            var mm = ReflectionHelper.cast(musicManager, IMusicManager.class);
+            var mm = ReflectionHelper.cast(musicManager, DSurroundMusicManager.class);
             if (mm.isPresent()) {
-                mm.get().dsurround$doCommand(command);
+                mm.get().doCommand(command);
                 return Component.translatable("dsurround.command.dsmm." + command + ".success", command);
             } else {
                 return Component.translatable("dsurround.command.dsmm.notpresent");

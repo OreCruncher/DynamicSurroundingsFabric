@@ -11,8 +11,8 @@ import net.minecraft.network.chat.Style;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
+import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
 import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
-import org.orecruncher.dsurround.mixinutils.IMusicManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -46,12 +46,12 @@ public abstract class MixinSoundOptionsScreen extends OptionsSubScreen {
         if (this.minecraft == null)
             return;
 
-        ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), IMusicManager.class)
+        ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.class)
                 .ifPresent(musicManager -> {
                     var enablePlayButtons = this.minecraft.level == null || GameUtils.isSinglePlayer();
 
                     if (enablePlayButtons) {
-                        musicManager.dsurround$setPaused(true);
+                        musicManager.setPaused(true);
                     }
 
                     var screen = new IndividualSoundControlScreen(
@@ -61,7 +61,7 @@ public abstract class MixinSoundOptionsScreen extends OptionsSubScreen {
                                 // Stop any sounds left hanging for whatever reason, and restart the MusicManager
                                 GameUtils.getSoundManager().stop();
                                 if (enablePlayButtons)
-                                    musicManager.dsurround$setPaused(false);
+                                    musicManager.setPaused(false);
                             });
 
                     GameUtils.setScreen(screen);

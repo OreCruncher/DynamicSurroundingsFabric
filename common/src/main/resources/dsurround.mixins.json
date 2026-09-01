@@ -7,7 +7,6 @@
   ],
   "client": [
     "audio.MixinChannelHandleAccessor",
-    "audio.MixinMusicManager",
     "audio.MixinSoundBuffer",
     "audio.MixinSoundEngine",
     "audio.MixinSoundEvent",
@@ -28,7 +27,7 @@
     "core.MixinSoundOptionsScreen",
     "core.MixinTagCollector",
     "core.MixinWorld",
-    "events.MixinMinecraftClient"
+    "core.MixinMinecraftClient"
   ],
   "server": [],
   "injectors": {

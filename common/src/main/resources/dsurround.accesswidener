@@ -31,3 +31,9 @@ accessible field net/minecraft/client/sounds/SoundEngine listener Lcom/mojang/bl
 
 # Particle related
 accessible field net/minecraft/client/particle/ParticleEngine spriteSets Ljava/util/Map;
+
+# MusicManager
+accessible field net/minecraft/client/sounds/MusicManager currentMusic Lnet/minecraft/client/resources/sounds/SoundInstance;
+accessible field net/minecraft/client/sounds/MusicManager nextSongDelay I
+accessible field net/minecraft/client/Minecraft musicManager Lnet/minecraft/client/sounds/MusicManager;
+mutable field net/minecraft/client/Minecraft musicManager Lnet/minecraft/client/sounds/MusicManager;
