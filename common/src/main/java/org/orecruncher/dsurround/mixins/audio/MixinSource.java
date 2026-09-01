@@ -2,45 +2,16 @@ package org.orecruncher.dsurround.mixins.audio;
 
 import com.mojang.blaze3d.audio.Channel;
 import com.mojang.blaze3d.audio.SoundBuffer;
-import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.orecruncher.dsurround.runtime.audio.SoundFXProcessor;
-import org.orecruncher.dsurround.runtime.audio.SourceContext;
-import org.orecruncher.dsurround.mixinutils.ISourceContext;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Optional;
-
 @Mixin(Channel.class)
-public class MixinSource implements ISourceContext {
-
-    @Unique
-    private SourceContext dsurround_data = null;
-
-    @Shadow
-    @Final
-    private int source;
-
-    @Override
-    public int dsurround_getId() {
-        return this.source;
-    }
-
-    @Override
-    public Optional<SourceContext> dsurround_getData() {
-        return Optional.ofNullable(this.dsurround_data);
-    }
-
-    @Override
-    public void dsurround_setData(@Nullable SourceContext data) {
-        this.dsurround_data = data;
-    }
+public class MixinSource {
 
     /**
      * Called when the sound is ticked by the sound engine. This will set the sound effect properties for the sound
@@ -50,7 +21,8 @@ public class MixinSource implements ISourceContext {
     @Inject(method = "play()V", at = @At("HEAD"))
     public void dsurround_onSourcePlay(CallbackInfo ci) {
         try {
-            SoundFXProcessor.onSourcePlay((Channel) ((Object) this));
+            ReflectionHelper.cast(this, Channel.class)
+                .ifPresent(SoundFXProcessor::onSourcePlay);
         } catch(final Throwable t) {
             MixinHelpers.LOGGER.error(t, "Error in dsurround_onSourcePlay()!");
         }
@@ -64,7 +36,8 @@ public class MixinSource implements ISourceContext {
     @Inject(method = "updateStream()V", at = @At("HEAD"))
     public void dsurround_onSourceTick(CallbackInfo ci) {
         try {
-            SoundFXProcessor.tick((Channel) ((Object) this));
+            ReflectionHelper.cast(this, Channel.class)
+                .ifPresent(SoundFXProcessor::tick);
         } catch(final Throwable t) {
             MixinHelpers.LOGGER.error(t, "Error in dsurround_onSourceTick()!");
         }
@@ -77,7 +50,8 @@ public class MixinSource implements ISourceContext {
     @Inject(method = "stop()V", at = @At("HEAD"))
     public void dsurround_onSourceStop(CallbackInfo ci) {
         try {
-            SoundFXProcessor.stopSoundPlay((Channel) ((Object) this));
+            ReflectionHelper.cast(this, Channel.class)
+                .ifPresent(SoundFXProcessor::stopSoundPlay);
         } catch(final Throwable t) {
             MixinHelpers.LOGGER.error(t, "Error in dsurround_onSourceStop()!");
         }
@@ -88,14 +62,14 @@ public class MixinSource implements ISourceContext {
      * attenuation and is not mono, it will be converted to mono format.  Non-mono sounds will be played in the sound engine
      * as if they are non-linear because it cannot convert non-mono sounds for 3D environmental play.
      * @param soundBuffer Buffer to convert to mono if needed.
-     * @param ci Call will always be cancelled.
+     * @param ci Call will always be canceled.
      */
     @Inject(method = "attachStaticBuffer(Lcom/mojang/blaze3d/audio/SoundBuffer;)V", at = @At("HEAD"))
     public void dsurround_monoConversion(SoundBuffer soundBuffer, CallbackInfo ci) {
         try {
             // The buffer is modified in place, meaning that it is not reallocated.
-            var src = (Channel) ((Object) this);
-            SoundFXProcessor.doMonoConversion(src, soundBuffer);
+            ReflectionHelper.cast(this, Channel.class)
+                .ifPresent(c -> SoundFXProcessor.doMonoConversion(c, soundBuffer));
         } catch(final Throwable t) {
             MixinHelpers.LOGGER.error(t, "Error in dsurround_monoConversion()!");
         }

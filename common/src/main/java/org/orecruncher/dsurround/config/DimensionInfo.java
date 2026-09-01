@@ -4,7 +4,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.data.DimensionConfigRule;
-import org.orecruncher.dsurround.lib.compat.WorldCompat;
+import org.orecruncher.dsurround.lib.compat.LevelCompat;
 
 public class DimensionInfo {
 
@@ -33,7 +33,7 @@ public class DimensionInfo {
         this.skyHeight = world.getHeight();
         this.cloudHeight = this.skyHeight;
         this.spaceHeight = this.skyHeight + SPACE_HEIGHT_OFFSET;
-        this.isFlatWorld = WorldCompat.isSuperFlat(world);
+        this.isFlatWorld = LevelCompat.isSuperFlat(world);
 
         // Force sea level based on known world types that give heartburn
         if (this.isFlatWorld)

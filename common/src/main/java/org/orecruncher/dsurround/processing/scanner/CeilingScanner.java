@@ -13,7 +13,7 @@ import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.compat.WorldCompat;
+import org.orecruncher.dsurround.lib.compat.LevelCompat;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -118,7 +118,7 @@ public final class CeilingScanner extends AbstractScanner {
             final int playerHeight = Math.max(playerPos.getY() + 1, 0);
 
             // Get the precipitation height
-            this.working.setY(WorldCompat.getPrecipitationHeight(world, this.working));
+            this.working.setY(LevelCompat.getPrecipitationHeight(world, this.working));
 
             // Scan down looking for blocks that are considered "cover"
             while (this.working.getY() > playerHeight) {

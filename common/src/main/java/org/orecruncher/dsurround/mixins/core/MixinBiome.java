@@ -1,14 +1,11 @@
 package org.orecruncher.dsurround.mixins.core;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
-import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -16,10 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Optional;
 
 @Mixin(Biome.class)
-public abstract class MixinBiome implements IBiomeExtended {
-
-    @Invoker("getTemperature")
-    public abstract float dsurround_getTemperature(BlockPos pos);
+public abstract class MixinBiome {
 
     /**
      * Get fog color from Dynamic Surroundings' config if available.

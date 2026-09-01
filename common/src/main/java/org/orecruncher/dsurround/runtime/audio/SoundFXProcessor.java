@@ -18,9 +18,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.threading.Worker;
-import org.orecruncher.dsurround.mixinutils.IChannelHandle;
 import org.orecruncher.dsurround.runtime.audio.effects.Effects;
-import org.orecruncher.dsurround.mixinutils.ISourceContext;
 
 import java.util.Arrays;
 import java.util.concurrent.*;
@@ -31,8 +29,11 @@ public final class SoundFXProcessor {
     private static final int SOUND_PROCESS_ITERATION = 1000 / 20;   // Match MC client tick rate
 
     static boolean isAvailable;
+
     // Sparse array to hold references to the SoundContexts of playing sounds
     private static SourceContext[] sources;
+    private static final Object sourcesLock = new Object();
+
     private static Worker soundProcessor;
     private static String diagnosticString = StringUtils.EMPTY;
 
@@ -117,20 +118,18 @@ public final class SoundFXProcessor {
      */
     public static void onSoundPlay(final SoundInstance sound, final ChannelAccess.ChannelHandle entry) {
 
-        if (!isAvailable())
+        if (!isAvailable() || shouldIgnoreSound(sound))
             return;
 
-        if (shouldIgnoreSound(sound))
-            return;
-
-        ISourceContext source = (ISourceContext)(((IChannelHandle) entry).dsurround_getSource());
-        assert source != null;
-        int id = source.dsurround_getId();
+        assert entry.channel != null;
+        int id = entry.channel.source;
         if (id > 0) {
             final SourceContext ctx = new SourceContext(id);
             ctx.attachSound(sound);
             ctx.enable();
-            source.dsurround_setData(ctx);
+            synchronized (sourcesLock) {
+                sources[id - 1] = ctx;
+            }
         }
     }
 
@@ -139,13 +138,16 @@ public final class SoundFXProcessor {
      * before the sound instance is processed.
      */
     public static void onSourcePlay(final Channel source) {
-        var context = (ISourceContext) source;
-        var data = context.dsurround_getData();
-        data.ifPresent(ctx -> {
-            var id = ctx.getId();
-            ctx.exec();
-            sources[id - 1] = ctx;
-        });
+        if (!isAvailable())
+            return;
+
+        SourceContext context = null;
+        synchronized (sourcesLock) {
+            context = sources[source.source - 1];
+        }
+        if (context != null) {
+            context.exec();
+        }
     }
 
     /**
@@ -155,9 +157,16 @@ public final class SoundFXProcessor {
      * @param source SoundSource being ticked
      */
     public static void tick(final Channel source) {
-        var src = (ISourceContext) source;
-        var data = src.dsurround_getData();
-        data.ifPresent(SourceContext::tick);
+        if (!isAvailable())
+            return;
+
+        SourceContext context = null;
+        synchronized (sourcesLock) {
+            context = sources[source.source - 1];
+        }
+        if (context != null) {
+            context.tick();
+        }
     }
 
     /**
@@ -166,9 +175,12 @@ public final class SoundFXProcessor {
      * @param source The sound source that is stopping
      */
     public static void stopSoundPlay(final Channel source) {
-        var sourceContext = (ISourceContext) source;
-        var data = sourceContext.dsurround_getData();
-        data.ifPresent(sc -> sources[sc.getId() - 1] = null);
+        if (!isAvailable())
+            return;
+
+        synchronized (sourcesLock) {
+            sources[source.source - 1] = null;
+        }
     }
 
     /**
@@ -184,15 +196,19 @@ public final class SoundFXProcessor {
     public static void doMonoConversion(final Channel source, final SoundBuffer buffer) {
 
         // If disabled, return
-        if (!Client.Config.enhancedSounds.enableMonoConversion)
+        if (!isAvailable() || !Client.Config.enhancedSounds.enableMonoConversion)
             return;
 
-        var data = ((ISourceContext) source).dsurround_getData();
-        data.ifPresent(ctx -> {
-            var s = ctx.getSound();
+        SourceContext sourceContext = null;
+        synchronized (sourcesLock) {
+            sourceContext = sources[source.source - 1];
+        }
+
+        if (sourceContext != null) {
+            var s = sourceContext.getSound();
             if (s != null && s.getAttenuation() != SoundInstance.Attenuation.NONE && !s.isRelative())
                 Conversion.convert(buffer);
-        });
+        }
     }
 
     /**

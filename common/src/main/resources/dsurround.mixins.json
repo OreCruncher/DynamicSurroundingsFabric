@@ -20,7 +20,6 @@
     "core.MixinClientChunkManager",
     "core.MixinClientChunkMap",
     "core.MixinClientWorld",
-    "core.MixinClientWorldProperties",
     "core.MixinClothAbstractConfigEntry",
     "core.MixinEntity",
     "core.MixinEntityArrow",

@@ -18,3 +18,10 @@ accessible method net/minecraft/network/chat/TextColor formatValue ()Ljava/lang/
 # Access to particle render ordering list
 accessible field net/minecraft/client/particle/ParticleEngine RENDER_ORDER Ljava/util/List;
 mutable field net/minecraft/client/particle/ParticleEngine RENDER_ORDER Ljava/util/List;
+
+# So we know if it is super flat
+accessible field net/minecraft/client/multiplayer/ClientLevel$ClientLevelData isFlat Z
+
+# Access information related to sounds
+accessible field com/mojang/blaze3d/audio/Channel source I
+accessible field net/minecraft/client/sounds/ChannelAccess$ChannelHandle channel Lcom/mojang/blaze3d/audio/Channel;
