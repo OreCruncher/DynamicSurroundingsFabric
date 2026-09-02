@@ -17,7 +17,6 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixins.core.MixinAbstractSoundInstance;
-import org.orecruncher.dsurround.mixinutils.ISoundEngine;
 
 import java.util.function.Supplier;
 
@@ -120,13 +119,13 @@ public final class AudioUtilities {
      * This method is invoked via the MixinSoundSystem injection.  It will be called when the sound system
      * is initialized, and it gives an opportunity to set up special effects processing.
      *
-     * @param soundEngine The sound system instance being initialized
+     * @param soundLibrary The sound system instance being initialized
      */
-    public static void initialize(final Library soundEngine) {
+    public static void initialize(final Library soundLibrary) {
 
         try {
 
-            long devicePointer = ((ISoundEngine) soundEngine).dsurround$getDevicePointer();
+            long devicePointer = soundLibrary.currentDevice;
 
             // Calculate the number of source slots available
             MAX_SOUNDS = ALC11.alcGetInteger(devicePointer, ALC11.ALC_MONO_SOURCES);

@@ -19,7 +19,7 @@ public class MixinClientWorld implements IClientWorld {
 
     @Final
     @Shadow
-    private ClientChunkCache chunkSource;
+    public ClientChunkCache chunkSource;
 
     @Unique
     public Stream<LevelChunk> dsurround$getLoadedChunks() {

@@ -12,7 +12,6 @@ import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
-import org.orecruncher.dsurround.mixinutils.ILivingEntityExtended;
 
 public class StepThroughBrushEffect extends EntityEffectBase {
 
@@ -75,7 +74,7 @@ public class StepThroughBrushEffect extends EntityEffectBase {
             return false;
         if (entity.xxa != 0 || entity.zza != 0 || entity.yya != 0)
             return true;
-        return ((ILivingEntityExtended)entity).dsurround$isJumping();
+        return entity.jumping;
     }
 
     private void playSoundEffect(BlockPos pos, ResourceLocation factory, float volumeScale) {
