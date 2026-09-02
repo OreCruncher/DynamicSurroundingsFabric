@@ -64,8 +64,8 @@ public class BiomeTags {
     public static final TagKey<Biome> IS_TREE_JUNGLE = of("is_tree_jungle");
     public static final TagKey<Biome> IS_TREE_SAVANNA = of("is_tree_savanna");
     public static final TagKey<Biome> IS_UNDERGROUND = of("is_underground");
-    public static final TagKey<Biome> IS_VEGETATION_DENSE = of("is_vegetation_dense");
-    public static final TagKey<Biome> IS_VEGETATION_SPARSE = of("is_vegetation_sparse");
+    public static final TagKey<Biome> IS_DENSE_VEGETATION = of("is_dense_vegetation");
+    public static final TagKey<Biome> IS_SPARSE_VEGETATION = of("is_sparse_vegetation");
     public static final TagKey<Biome> IS_VOID = of("is_void");
     public static final TagKey<Biome> IS_WASTELAND = of("is_wasteland");
     public static final TagKey<Biome> IS_WINDSWEPT = of("is_windswept");

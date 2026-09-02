@@ -9,15 +9,15 @@ import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 public class MusicManagerCommandHandler {
 
     public static Component reset() {
-        return execute(GameUtils.getMC().getMusicManager(), "reset");
+        return execute(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.Commands.RESET);
     }
 
     public static Component unpause() {
-        return execute(GameUtils.getMC().getMusicManager(), "unpause");
+        return execute(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.Commands.UNPAUSE);
     }
 
     public static Component pause() {
-        return execute(GameUtils.getMC().getMusicManager(), "pause");
+        return execute(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.Commands.PAUSE);
     }
 
     public static Component whatsPlaying() {
@@ -34,7 +34,7 @@ public class MusicManagerCommandHandler {
         }
     }
 
-    private static Component execute(MusicManager musicManager, String command) {
+    private static Component execute(MusicManager musicManager, DSurroundMusicManager.Commands command) {
         try {
             var mm = ReflectionHelper.cast(musicManager, DSurroundMusicManager.class);
             if (mm.isPresent()) {

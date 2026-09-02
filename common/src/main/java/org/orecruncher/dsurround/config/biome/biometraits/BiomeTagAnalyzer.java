@@ -10,7 +10,10 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 import java.util.*;
 
-public class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
+/**
+ * Generates biome traits for a biome based on the biome tags that have been applied by various asset packs.
+ */
+public final class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
 
     private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
@@ -19,6 +22,11 @@ public class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
     static {
         for (var entry : BiomeTrait.values())
             tagToTraitMap.put(entry.getBiomeTag(), entry);
+    }
+
+    @Override
+    public String name() {
+        return "BiomeTagAnalyzer";
     }
 
     @Override

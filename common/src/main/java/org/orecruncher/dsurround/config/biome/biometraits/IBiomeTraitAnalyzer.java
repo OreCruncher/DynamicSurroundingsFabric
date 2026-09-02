@@ -8,5 +8,6 @@ import org.orecruncher.dsurround.config.BiomeTrait;
 import java.util.Set;
 
 public interface IBiomeTraitAnalyzer {
+    String name();
     void analyze(@NotNull ResourceLocation id, @NotNull Biome biome, @NotNull Set<BiomeTrait> resultCollection);
 }

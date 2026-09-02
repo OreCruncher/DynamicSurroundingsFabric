@@ -252,7 +252,7 @@
     "fogDensity": "medium"
   },
   {
-    "biomeSelector": "biome.getRainfall() < 0.1 && (DESERT || (WASTELAND && !(COLD || SNOWY || SWAMP)))",
+    "biomeSelector": "!(NETHER || END) && biome.getRainfall() < 0.1 && (DESERT || (WASTELAND && !(COLD || SNOWY || SWAMP)))",
     "_comment": "Dust for desert like biomes",
     "fogColor": "#FFEA97"
   },
@@ -366,7 +366,7 @@
     "clearSounds": true
   },
   {
-    "biomeSelector": "SPOOKY",
+    "biomeSelector": "SPOOKY && !(NETHER || END)",
     "_comment": "Fog density for spooky biomes",
     "fogDensity": "heavy"
   },
@@ -391,7 +391,7 @@
     ]
   },
   {
-    "biomeSelector": "UNDERGROUND && !CAVE",
+    "biomeSelector": "UNDERGROUND && !(CAVE || NETHER || END)",
     "_comment": "Underground and not in a cave",
     "acoustics": [
       {

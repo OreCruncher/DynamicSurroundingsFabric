@@ -12,7 +12,7 @@ import static java.util.Map.entry;
 import static org.orecruncher.dsurround.config.BiomeTrait.*;
 
 /**
- * Supplements tag based biome detection with stable id and climate based fallbacks.
+ * Generates biome traits for a biome based on the biome ID
  */
 public class BiomeNameFallbackAnalyzer implements IBiomeTraitAnalyzer {
 
@@ -86,16 +86,24 @@ public class BiomeNameFallbackAnalyzer implements IBiomeTraitAnalyzer {
     );
 
     @Override
+    public String name() {
+        return "BiomeNameFallbackAnalyzer";
+    }
+
+    @Override
     public void analyze(@NotNull ResourceLocation id, @NotNull Biome biome, @NotNull Set<BiomeTrait> resultCollection) {
         String path = id.getPath().toLowerCase(Locale.ROOT);
 
+        // If it is a vanilla biome it should be in our map
         if ("minecraft".equals(id.getNamespace())) {
             var vanillaTraits = VANILLA_TRAITS.get(path);
             if (vanillaTraits != null) {
                 resultCollection.addAll(vanillaTraits);
+                return;
             }
         }
 
+        // Only do the following analysis if it was not found in the map
         addNameBasedTraits(path, resultCollection);
         addClimateTraits(biome, resultCollection);
     }

@@ -54,9 +54,8 @@ public final class DSurroundMusicManager extends MusicManager {
         return super.isPlayingMusic(music);
     }
 
-    public void doCommand(String command) {
-        var cmd = Commands.of(command);
-        switch (cmd) {
+    public void doCommand(Commands command) {
+        switch (command) {
             case PAUSE -> this.setPaused(true);
             case RESET -> {
                 this.stopPlaying();
@@ -108,6 +107,10 @@ public final class DSurroundMusicManager extends MusicManager {
         RESET,
         PAUSE,
         UNPAUSE;
+
+        public String commandName() {
+            return this.name().toLowerCase();
+        }
 
         public static Commands of(String name) {
             return Commands.valueOf(name.toUpperCase());

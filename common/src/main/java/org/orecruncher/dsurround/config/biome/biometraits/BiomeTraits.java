@@ -4,6 +4,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -11,12 +13,14 @@ import java.util.stream.Collectors;
 
 public final class BiomeTraits {
 
+    private static final IModLog LOGGER = ContainerManager.memoize(IModLog.class);
     private static final ObjectArray<IBiomeTraitAnalyzer> traitAnalyzer = new ObjectArray<>(4);
 
     static {
         traitAnalyzer.add(new BiomeTagAnalyzer());
         traitAnalyzer.add(new BiomeNameFallbackAnalyzer());
         traitAnalyzer.add(new BiomeTraitAnalyzer());
+        traitAnalyzer.add(new BiomeTraitCleanup());
     }
 
     private final Set<BiomeTrait> traits;
@@ -28,8 +32,12 @@ public final class BiomeTraits {
 
     public static BiomeTraits from(ResourceLocation id, Biome biome) {
         EnumSet<BiomeTrait> traits = EnumSet.noneOf(BiomeTrait.class);
-        for (var analyzer : traitAnalyzer)
+        for (var analyzer : traitAnalyzer) {
+            int before = traits.size();
             analyzer.analyze(id, biome, traits);
+            int after = traits.size();
+            LOGGER.debug("[%s] %s: %d traits (%d delta)", analyzer.name(), id, after, after - before);
+        }
         return new BiomeTraits(traits);
     }
 
