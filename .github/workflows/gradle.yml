@@ -9,6 +9,11 @@ name: Java CI with Gradle
 
 on: [push, pull_request, workflow_dispatch]
 
+# Node20 being deprecated. 24 will eventually become the default, but until then
+# shut up action.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
 
