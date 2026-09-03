@@ -1,38 +1,39 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.particle.ParticleEngine;
-import net.minecraft.client.particle.ParticleRenderType;
+import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.SpriteSet;
-import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
-import java.util.ArrayList;
+import java.util.Optional;
 
 public final class ParticleUtils {
 
     private static final IRandomizer RANDOM = Randomizer.current();
 
     public static SpriteSet getSpriteProvider(ParticleType<?> particleType) {
-        var id = RegistryUtils.getRegistry(Registries.PARTICLE_TYPE)
-                .map(r -> r.getResourceKey(particleType).map(ResourceKey::location))
-                .orElseThrow();
-        return GameUtils.getParticleManager().spriteSets.get(id.get());
+
+        var registered = DSurroundParticleSpriteSets.get(particleType);
+        if (registered.isPresent())
+            return registered.get();
+
+        var spriteSet = getSpriteProviderFromEngine(particleType);
+        if (spriteSet.isPresent()) {
+            DSurroundParticleSpriteSets.register(particleType, spriteSet.get());
+            return spriteSet.get();
+        }
+
+        return null;
     }
 
     public static Vec3 getBreathOrigin(final LivingEntity entity) {
@@ -48,6 +49,25 @@ public final class ParticleUtils {
                 .normalize();
     }
 
+    public static <T extends ParticleOptions> Particle createParticle(T parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
+        return GameUtils.getParticleManager().createParticle(parameters, x, y, z, velocityX, velocityY, velocityZ);
+    }
+
+    private static Optional<SpriteSet> getSpriteProviderFromEngine(ParticleType<?> particleType) {
+        var id = getParticleId(particleType);
+        if (id.isPresent()) {
+            var engineSpriteSets = GameUtils.getParticleManager().spriteSets;
+            return Optional.ofNullable(engineSpriteSets.get(id.get()));
+        }
+
+        return Optional.empty();
+    }
+
+    private static Optional<ResourceLocation> getParticleId(ParticleType<?> particleType) {
+        return RegistryUtils.getRegistry(Registries.PARTICLE_TYPE)
+                .flatMap(registry -> registry.getResourceKey(particleType).map(ResourceKey::location));
+    }
+
     /*
      * Use some corrective lenses because the MC routine just doesn't lower the
      * height enough for our rendering purpose.
@@ -60,33 +80,6 @@ public final class ParticleUtils {
         return y;
     }
 
-    /*
-     * Custom particle rendering. It is expected that each particle collection that renders
-     * will bind the appropriate texture sheet rather than using the shared Minecraft sheet.
-     */
-    public static final ParticleRenderType DSURROUND_CUSTOM = new ParticleRenderType() {
-        public BufferBuilder begin(Tesselator tesselator, @NotNull TextureManager textureManager) {
-            RenderSystem.depthMask(true);
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            return tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
-        }
-
-        public String toString() {
-            return "DSURROUND_CUSTOM_PARTICLE";
-        }
-    };
-
     public static void register() {
-        // Add our custom particle render to the render order list in the ParticleEngine. We insert right before
-        // CUSTOM.
-        ArrayList<ParticleRenderType> newList = new ArrayList<>();
-        for (var entry : ParticleEngine.RENDER_ORDER) {
-            if (entry == ParticleRenderType.CUSTOM) {
-                newList.add(DSURROUND_CUSTOM);
-            }
-            newList.add(entry);
-        }
-        ParticleEngine.RENDER_ORDER = ImmutableList.copyOf(newList);
     }
 }

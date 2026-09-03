@@ -17,8 +17,7 @@ public class WaterRippleHandler {
     private static final Configuration.BlockEffects CONFIG = ContainerManager.resolve(Configuration.BlockEffects.class);
     private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
-    private static final ParticleRenderCollection.Helper<WaterRippleParticle> rippleHelper =
-            new ParticleRenderCollection.Helper<>("WaterRipples", () -> CONFIG.waterRippleStyle.getTexture());
+    private static final ParticleRenderCollection.Helper rippleHelper = ParticleRenderCollection.createHelper("WaterRipples");
 
     // Fudge factor because the height algo is off.
     private static final double LIQUID_HEIGHT_ADJUST = (1D / 9D) + 0.1D;
@@ -28,7 +27,7 @@ public class WaterRippleHandler {
     }
 
     private static void addWaterRipple(ClientLevel world, double x, double y, double z) {
-        var ripple = new WaterRippleParticle(CONFIG.waterRippleStyle, world, x, y, z);
+        var ripple = WaterRippleParticle.create(CONFIG.waterRippleStyle, world, x, y, z);
         rippleHelper.add(ripple);
     }
 

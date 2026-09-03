@@ -21,6 +21,8 @@
     "core.MixinEntity",
     "core.MixinEntityArrow",
     "core.MixinFogRenderer",
+    "core.MixinParticleEngine",
+    "core.MixinParticleTypes",
     "core.MixinRainSplashParticle",
     "core.MixinRaycastContextAccessor",
     "core.MixinSoundOptionsScreen",
