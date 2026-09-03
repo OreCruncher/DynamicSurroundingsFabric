@@ -21,8 +21,8 @@ public class MixinParticleTypes {
 
     @Inject(method = "<clinit>", at = @At("HEAD"))
     private static void dsurround$staticHook(CallbackInfo ci) {
-        DSurroundParticleTypes.WATER_RIPPLE = dsurround$register(Constants.asResource("water_ripple").toString(), false);
-        DSurroundParticleTypes.WATER_RIPPLE_PIXELATED = dsurround$register(Constants.asResource("water_ripple_pixelated").toString(), false);
+        DSurroundParticleTypes.WATER_RIPPLE = dsurround$register(Constants.asId("water_ripple").toString(), false);
+        DSurroundParticleTypes.WATER_RIPPLE_PIXELATED = dsurround$register(Constants.asId("water_ripple_pixelated").toString(), false);
     }
 
     @Invoker("register")

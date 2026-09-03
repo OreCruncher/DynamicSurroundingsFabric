@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public class FlameJetEffect extends AbstractParticleEmitterEffect {
 
-    private static final ResourceLocation FIRE_AMBIENT = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "fire_ambient");
+    private static final ResourceLocation FIRE_AMBIENT = Constants.asId("fire_ambient");
 
     protected final boolean isLava;
     protected final SimpleParticleType particleType;

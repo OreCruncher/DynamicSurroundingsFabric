@@ -195,7 +195,7 @@
     ]
   },
   {
-    "biomeSelector": "OCEAN",
+    "biomeSelector": "OCEAN || SHALLOW_OCEAN",
     "_comment": "Ocean background",
     "acoustics": [
       {
@@ -257,7 +257,7 @@
     "fogColor": "#FFEA97"
   },
   {
-    "biomeSelector": "!(UNDERGROUND || OCEAN || RIVER || NETHER || END || MUSHROOM) && !(SNOWY || SWAMP || JUNGLE || BEACH || WASTELAND || WET)",
+    "biomeSelector": "!(UNDERGROUND || OCEAN || SHALLOW_OCEAN || RIVER || NETHER || END || MUSHROOM) && !(SNOWY || SWAMP || JUNGLE || BEACH || WASTELAND || WET)",
     "_comment": "Coyote",
     "acoustics": [
       {
@@ -268,7 +268,7 @@
     ]
   },
   {
-    "biomeSelector": "!(UNDERGROUND || OCEAN || RIVER || NETHER || END || SNOWY || JUNGLE || HOT || BEACH)",
+    "biomeSelector": "!(UNDERGROUND || OCEAN || SHALLOW_OCEAN || RIVER || NETHER || END || SNOWY || JUNGLE || HOT || BEACH)",
     "_comment": "Crow",
     "acoustics": [
       {
@@ -279,7 +279,7 @@
     ]
   },
   {
-    "biomeSelector": "!(UNDERGROUND || OCEAN || RIVER || NETHER || END || DRY || JUNGLE || HOT || BEACH || SWAMP || WASTELAND)",
+    "biomeSelector": "!(UNDERGROUND || OCEAN || SHALLOW_OCEAN || RIVER || NETHER || END || DRY || JUNGLE || HOT || BEACH || SWAMP || WASTELAND)",
     "_comment": "Owl",
     "acoustics": [
       {
@@ -290,7 +290,7 @@
     ]
   },
   {
-    "biomeSelector": "FOREST && !(HOT || SWAMP || DEAD || COLD || OCEAN || WASTELAND || JUNGLE)",
+    "biomeSelector": "FOREST && !(HOT || SWAMP || DEAD || COLD || OCEAN || SHALLOW_OCEAN || WASTELAND || JUNGLE)",
     "_comment": "Birds",
     "acoustics": [
       {
@@ -306,7 +306,7 @@
     ]
   },
   {
-    "biomeSelector": "FOREST && !(END || NETHER || OCEAN || RIVER)",
+    "biomeSelector": "FOREST && !(END || NETHER || OCEAN || SHALLOW_OCEAN || RIVER)",
     "_comment": "Woodpecker",
     "acoustics": [
       {
@@ -317,7 +317,7 @@
     ]
   },
   {
-    "biomeSelector": "!(UNDERGROUND || MUSHROOM || DEAD || SWAMP || JUNGLE || WASTELAND || OCEAN || SNOWY || NETHER || END)",
+    "biomeSelector": "!(UNDERGROUND || MUSHROOM || DEAD || SWAMP || JUNGLE || WASTELAND || OCEAN || SHALLOW_OCEAN || SNOWY || NETHER || END)",
     "_comment": "Raptors",
     "acoustics": [
       {

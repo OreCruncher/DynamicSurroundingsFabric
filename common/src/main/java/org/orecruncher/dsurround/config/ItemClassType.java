@@ -36,8 +36,8 @@ public enum ItemClassType {
 
     ItemClassType(String name) {
         this.name = name;
-        this.toolBarSound = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "toolbar." + name + ".equip");
-        this.swingSound = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "toolbar." + name + ".swing");
+        this.toolBarSound = Constants.asId("toolbar." + name + ".equip");
+        this.swingSound = Constants.asId("toolbar." + name + ".swing");
     }
 
     private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);

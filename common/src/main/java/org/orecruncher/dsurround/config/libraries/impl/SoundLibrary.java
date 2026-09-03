@@ -62,7 +62,7 @@ public final class SoundLibrary implements ISoundLibrary {
     private static final Codec<List<IndividualSoundConfigEntry>> SOUND_CONFIG_CODEC = Codec.list(IndividualSoundConfigEntry.CODEC);
     private static final Codec<List<SoundMappingConfigRule>> SOUND_MAPPING_CODEC = Codec.list(SoundMappingConfigRule.CODEC);
 
-    private static final ResourceLocation MISSING_RESOURCE = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "missing_sound");
+    private static final ResourceLocation MISSING_RESOURCE = Constants.asId("missing_sound");
     private static final SoundEvent MISSING = SoundEvent.createVariableRangeEvent(MISSING_RESOURCE);
 
     private static final ResourceLocation THUNDER_SOUND = SoundEvents.LIGHTNING_BOLT_THUNDER.getLocation();

@@ -16,8 +16,8 @@ import org.orecruncher.dsurround.tags.BlockEffectTags;
 public class StepThroughBrushEffect extends EntityEffectBase {
 
     private static final long BRUSH_INTERVAL = 2;
-    private static final ResourceLocation BRUSH_SOUND = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "brush_step/brush");
-    private static final ResourceLocation STRAW_SOUND = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "brush_step/straw");
+    private static final ResourceLocation BRUSH_SOUND = Constants.asId("brush_step/brush");
+    private static final ResourceLocation STRAW_SOUND = Constants.asId("brush_step/straw");
 
     private final ITickCount tickCount;
     private final ITagLibrary tagLibrary;

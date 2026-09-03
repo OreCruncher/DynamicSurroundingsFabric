@@ -65,7 +65,7 @@ public final class Constants {
         BLOCKS_TO_IGNORE.add(Blocks.COMMAND_BLOCK);
     }
 
-    public static ResourceLocation asResource(String name) {
+    public static ResourceLocation asId(String name) {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, name);
     }
 }

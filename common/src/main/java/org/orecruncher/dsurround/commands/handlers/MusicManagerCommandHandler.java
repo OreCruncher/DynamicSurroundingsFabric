@@ -39,12 +39,12 @@ public class MusicManagerCommandHandler {
             var mm = ReflectionHelper.cast(musicManager, DSurroundMusicManager.class);
             if (mm.isPresent()) {
                 mm.get().doCommand(command);
-                return Component.translatable("dsurround.command.dsmm." + command + ".success", command);
+                return Component.translatable("dsurround.command.dsmm." + command.commandName() + ".success", command);
             } else {
                 return Component.translatable("dsurround.command.dsmm.notpresent");
             }
         } catch (Throwable t) {
-            return Component.translatable("dsurround.command.dsmm." + command + ".failure", t.getMessage());
+            return Component.translatable("dsurround.command.dsmm." + command.commandName() + ".failure", t.getMessage());
         }
     }
 }

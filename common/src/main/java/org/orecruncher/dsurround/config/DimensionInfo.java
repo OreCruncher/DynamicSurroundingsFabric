@@ -22,7 +22,7 @@ public class DimensionInfo {
     protected boolean compassWobble = false;
 
     DimensionInfo() {
-        this.name = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "no_dimension");
+        this.name = Constants.asId("no_dimension");
         this.isFlatWorld = false;
     }
 

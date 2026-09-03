@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.config;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.Constants;
@@ -107,7 +106,7 @@ public enum BiomeTrait {
 
     BiomeTrait(String name) {
         this.name = name.toUpperCase();
-        this.biomeTag = TagKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "is_" + name.toLowerCase()));
+        this.biomeTag = TagKey.create(Registries.BIOME, Constants.asId("is_" + name.toLowerCase()));
     }
 
     public static BiomeTrait of(String name) {

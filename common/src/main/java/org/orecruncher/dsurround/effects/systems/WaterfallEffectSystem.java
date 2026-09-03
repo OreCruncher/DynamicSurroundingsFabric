@@ -9,7 +9,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.SupportType;
@@ -54,14 +53,14 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     static {
         var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
 
-        var factory = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/0")).orElseThrow();
+        var factory = soundLibrary.getSoundFactory(Constants.asId("waterfalls/0")).orElseThrow();
         Arrays.fill(ACOUSTICS, factory);
 
-        ACOUSTICS[2] = ACOUSTICS[3] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/1")).orElseThrow();
-        ACOUSTICS[4] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/2")).orElseThrow();
-        ACOUSTICS[5] = ACOUSTICS[6] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/3")).orElseThrow();
-        ACOUSTICS[7] = ACOUSTICS[8] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/4")).orElseThrow();
-        ACOUSTICS[9] = ACOUSTICS[10] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/5")).orElseThrow();
+        ACOUSTICS[2] = ACOUSTICS[3] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/1")).orElseThrow();
+        ACOUSTICS[4] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/2")).orElseThrow();
+        ACOUSTICS[5] = ACOUSTICS[6] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/3")).orElseThrow();
+        ACOUSTICS[7] = ACOUSTICS[8] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/4")).orElseThrow();
+        ACOUSTICS[9] = ACOUSTICS[10] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/5")).orElseThrow();
     }
 
     // Keep track of sound plays outside the effect.
