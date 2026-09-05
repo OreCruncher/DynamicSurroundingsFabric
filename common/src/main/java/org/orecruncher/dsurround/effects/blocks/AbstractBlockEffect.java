@@ -12,6 +12,7 @@ import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
+import java.util.Collection;
 import java.util.Optional;
 
 public abstract class AbstractBlockEffect implements IBlockEffect {
@@ -45,6 +46,20 @@ public abstract class AbstractBlockEffect implements IBlockEffect {
      */
     public void addParticle(final Particle particle) {
         GameUtils.getParticleManager().add(particle);
+    }
+
+    /**
+     * Adds a collection of particles to the particle system
+     * @param particles Collection of particles to add
+     */
+    public void addParticles(final Collection<Particle> particles) {
+        if (particles == null || particles.isEmpty()) {
+            return;
+        }
+
+        for (final Particle particle : particles) {
+            this.addParticle(particle);
+        }
     }
 
     /**

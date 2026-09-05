@@ -65,4 +65,9 @@ public final class Guard {
                 throw t;
         }
     }
+
+    public static void assertOnClientThread() {
+        if (!GameUtils.getMC().isSameThread())
+            throw new RuntimeException("Operation being performed on non-client thread");
+    }
 }

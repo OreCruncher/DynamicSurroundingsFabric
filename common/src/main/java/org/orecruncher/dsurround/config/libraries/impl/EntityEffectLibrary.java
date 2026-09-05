@@ -10,6 +10,7 @@ import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
 import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
+import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
@@ -38,7 +39,6 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
 
     @Override
     public void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
-
         this.version++;
 
         if (scope == IReloadEvent.Scope.TAGS) {
@@ -63,11 +63,17 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
 
     @Override
     public void cleanCache(AbstractIntSet entitiesToRetain) {
+        ObjectArray<Integer> toRemove = new ObjectArray<>(8);
         for (var kvp : this.entityInfoCache.int2ObjectEntrySet()) {
             if (!entitiesToRetain.contains(kvp.getIntKey())) {
                 kvp.getValue().deactivate();
-                this.entityInfoCache.remove(kvp.getIntKey());
+                toRemove.add(kvp.getIntKey());
             }
+        }
+
+        // Work around issue in the underlying Int2ObjectOpenHashMap instance
+        for (int key : toRemove) {
+            this.entityInfoCache.remove(key);
         }
     }
 

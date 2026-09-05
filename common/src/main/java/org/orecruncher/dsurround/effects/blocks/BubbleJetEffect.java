@@ -4,7 +4,7 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.level.Level;
 
-import java.util.Optional;
+import java.util.*;
 
 public class BubbleJetEffect extends AbstractParticleEmitterEffect {
 
@@ -13,7 +13,9 @@ public class BubbleJetEffect extends AbstractParticleEmitterEffect {
     }
 
     @Override
-    protected Optional<Particle> produceParticle() {
-        return this.createParticle(ParticleTypes.BUBBLE, this.posX, this.posY, this.posZ, 0, 0.5D + this.strength / 10D, 0D);
+    protected Collection<Particle> produceParticles() {
+        return this.createParticle(ParticleTypes.BUBBLE, this.posX, this.posY, this.posZ, 0, 0.5D + this.strength / 10D, 0D)
+                .map(List::of)
+                .orElse(List.of());
     }
 }

@@ -8,7 +8,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.Constants;
 
-import java.util.Optional;
+import java.util.Collection;
+import java.util.List;
 
 public class FlameJetEffect extends AbstractParticleEmitterEffect {
 
@@ -41,7 +42,7 @@ public class FlameJetEffect extends AbstractParticleEmitterEffect {
     }
 
     @Override
-    protected Optional<Particle> produceParticle() {
+    protected Collection<Particle> produceParticles() {
         double speedY = this.isLava ? 0 : this.strength / 10.0D;
         float scale = this.strength;
         double x = this.posX;
@@ -58,12 +59,13 @@ public class FlameJetEffect extends AbstractParticleEmitterEffect {
 
         var particle = this.createParticle(this.particleType, x, this.posY, z, 0, speedY, 0D);
         float finalScale = scale;
-        particle.ifPresent(p -> {
-            if (p instanceof FlameParticle) {
-                p.scale(finalScale);
-            }
-        });
-
-        return particle;
+        return particle.map(
+                        p -> {
+                            if (p instanceof FlameParticle) {
+                                p.scale(finalScale);
+                            }
+                            return List.of(p);
+                        })
+                .orElse(List.of());
     }
 }

@@ -23,6 +23,7 @@ public class MixinParticleTypes {
     private static void dsurround$staticHook(CallbackInfo ci) {
         DSurroundParticleTypes.WATER_RIPPLE = dsurround$register(Constants.asId("water_ripple").toString(), false);
         DSurroundParticleTypes.WATER_RIPPLE_PIXELATED = dsurround$register(Constants.asId("water_ripple_pixelated").toString(), false);
+        DSurroundParticleTypes.WATERFALL_CASCADE = dsurround$register(Constants.asId("waterfall_cascade").toString(), false);
     }
 
     @Invoker("register")
