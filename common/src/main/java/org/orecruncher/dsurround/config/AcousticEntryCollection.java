@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.util.random.SimpleWeightedRandomList;
-import org.orecruncher.dsurround.lib.WeightTable;
+import org.orecruncher.dsurround.lib.weighted.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.sound.ISoundFactory;
@@ -9,7 +8,6 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-@SuppressWarnings("unused")
 public class AcousticEntryCollection extends ObjectArray<AcousticEntry> {
 
     public static final AcousticEntryCollection EMPTY;
@@ -28,10 +26,6 @@ public class AcousticEntryCollection extends ObjectArray<AcousticEntry> {
             public Optional<ISoundFactory> makeSelection() {
                 return Optional.empty();
             }
-            @Override
-            public SimpleWeightedRandomList<ISoundFactory> matchesAsWeightedList() {
-                return SimpleWeightedRandomList.empty();
-            }
         };
         EMPTY.trim();
     }
@@ -49,16 +43,6 @@ public class AcousticEntryCollection extends ObjectArray<AcousticEntry> {
      */
     public Stream<AcousticEntry> findMatches() {
         return this.stream().filter(AcousticEntry::matches);
-    }
-
-    /**
-     * Creates a SimpleWeightedRandomList based on valid candidates from within
-     * the collection.
-     */
-    public SimpleWeightedRandomList<ISoundFactory> matchesAsWeightedList() {
-        var builder = new SimpleWeightedRandomList.Builder<ISoundFactory>();
-        this.findMatches().forEach(m -> builder.add(m.getAcoustic(), m.getWeight().asInt()));
-        return builder.build();
     }
 
     /**

@@ -6,7 +6,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
-import org.orecruncher.dsurround.lib.world.WorldUtils;
+import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.runtime.sets.IPlayerVariables;
 
 public class PlayerVariables extends VariableSet<IPlayerVariables> implements IPlayerVariables {
@@ -67,7 +67,7 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
 
             this.isSuffocating = !player.isCreative() && player.getAirSupply() < 0;
             this.canRainOn = world.canSeeSky(player.blockPosition().offset(0, 2, 0));
-            this.canSeeSky = this.canRainOn && WorldUtils.getTopSolidOrLiquidBlock(world, player.blockPosition()).getY() <= player.blockPosition().getY();
+            this.canSeeSky = this.canRainOn && LevelCompat.getTopSolidOrLiquidBlock(world, player.blockPosition()).getY() <= player.blockPosition().getY();
 
         } else {
 

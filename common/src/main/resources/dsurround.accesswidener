@@ -3,10 +3,11 @@ accessWidener v2 named
 # For sound GUI
 accessible class net/minecraft/client/gui/components/OptionsList$Entry
 
-# For Biome weather accessible
-accessible class net/minecraft/world/level/biome/Biome$ClimateSettings
+# Get temperature at a specific block location within a biome
+accessible method net/minecraft/world/level/biome/Biome	getTemperature	(Lnet/minecraft/core/BlockPos;)F
 
-# Get at client side loaded chunks
+# To access client side chunk information
+accessible field net/minecraft/client/multiplayer/ClientLevel chunkSource Lnet/minecraft/client/multiplayer/ClientChunkCache;
 accessible class net/minecraft/client/multiplayer/ClientChunkCache$Storage
 
 # Get at fog data
@@ -14,3 +15,27 @@ accessible class net/minecraft/client/renderer/FogRenderer$FogData
 
 # Access formatter when dumping biome information
 accessible method net/minecraft/network/chat/TextColor formatValue ()Ljava/lang/String;
+
+# Access to particle data
+accessible field net/minecraft/client/particle/ParticleEngine spriteSets Ljava/util/Map;
+accessible class net/minecraft/client/particle/ParticleEngine$SpriteParticleRegistration
+
+# So we know if it is super flat
+accessible field net/minecraft/client/multiplayer/ClientLevel$ClientLevelData isFlat Z
+
+# Access information related to sounds
+accessible field com/mojang/blaze3d/audio/Channel source I
+accessible field net/minecraft/client/sounds/ChannelAccess$ChannelHandle channel Lcom/mojang/blaze3d/audio/Channel;
+accessible field net/minecraft/client/sounds/SoundManager soundEngine Lnet/minecraft/client/sounds/SoundEngine;
+accessible field net/minecraft/client/sounds/SoundEngine instanceToChannel Ljava/util/Map;
+accessible field net/minecraft/client/sounds/SoundEngine listener Lcom/mojang/blaze3d/audio/Listener;
+accessible field com/mojang/blaze3d/audio/Library currentDevice J
+
+# MusicManager
+accessible field net/minecraft/client/sounds/MusicManager currentMusic Lnet/minecraft/client/resources/sounds/SoundInstance;
+accessible field net/minecraft/client/sounds/MusicManager nextSongDelay I
+accessible field net/minecraft/client/Minecraft musicManager Lnet/minecraft/client/sounds/MusicManager;
+mutable field net/minecraft/client/Minecraft musicManager Lnet/minecraft/client/sounds/MusicManager;
+
+# To detect jumping
+accessible field net/minecraft/world/entity/LivingEntity jumping Z

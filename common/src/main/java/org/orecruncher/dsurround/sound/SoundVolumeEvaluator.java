@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.gui.sound.ConfigSoundInstance;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -21,13 +22,13 @@ public final class SoundVolumeEvaluator {
     /**
      * This guy is hooked by a Mixin to replace getClampedVolume() in Minecraft code.
      */
-    public static float getAdjustedVolume(final SoundInstance sound) {
+    public static float getAdjustedVolume(final SoundInstance sound, @Nullable SoundSource soundSource) {
         Preconditions.checkNotNull(sound);
 
         float volume = sound.getVolume();
 
         // Scale the volume based on Minecraft's volume scaling selections.
-        final SoundSource category = sound.getSource();
+        final SoundSource category = soundSource != null ? soundSource : sound.getSource();
         var categoryFactor =  category == SoundSource.MASTER ? 1F : GameUtils.getGameSettings().getSoundSourceVolume(category);
         volume *= categoryFactor;
 

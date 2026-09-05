@@ -12,13 +12,12 @@ import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
-import org.orecruncher.dsurround.mixinutils.ILivingEntityExtended;
 
 public class StepThroughBrushEffect extends EntityEffectBase {
 
     private static final long BRUSH_INTERVAL = 2;
-    private static final ResourceLocation BRUSH_SOUND = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "brush_step/brush");
-    private static final ResourceLocation STRAW_SOUND = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "brush_step/straw");
+    private static final ResourceLocation BRUSH_SOUND = Constants.asId("brush_step/brush");
+    private static final ResourceLocation STRAW_SOUND = Constants.asId("brush_step/straw");
 
     private final ITickCount tickCount;
     private final ITagLibrary tagLibrary;
@@ -75,7 +74,7 @@ public class StepThroughBrushEffect extends EntityEffectBase {
             return false;
         if (entity.xxa != 0 || entity.zza != 0 || entity.yya != 0)
             return true;
-        return ((ILivingEntityExtended)entity).dsurround_isJumping();
+        return entity.jumping;
     }
 
     private void playSoundEffect(BlockPos pos, ResourceLocation factory, float volumeScale) {

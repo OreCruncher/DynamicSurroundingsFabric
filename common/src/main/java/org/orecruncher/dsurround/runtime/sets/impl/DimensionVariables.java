@@ -4,7 +4,7 @@ import net.minecraft.world.level.dimension.DimensionType;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
-import org.orecruncher.dsurround.lib.world.WorldUtils;
+import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.runtime.sets.IDimensionVariables;
 
 public class DimensionVariables extends VariableSet<IDimensionVariables> implements IDimensionVariables {
@@ -31,7 +31,7 @@ public class DimensionVariables extends VariableSet<IDimensionVariables> impleme
             this.id = world.dimension().location().toString();
             this.name = world.dimension().location().getPath();
             this.hasSky = dim.hasSkyLight();
-            this.isSuperFlat = WorldUtils.isSuperFlat(world);
+            this.isSuperFlat = LevelCompat.isSuperFlat(world);
         } else {
             this.id = "UNKNOWN";
             this.name = "UNKNOWN";

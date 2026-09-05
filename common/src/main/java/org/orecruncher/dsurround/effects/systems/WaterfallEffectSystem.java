@@ -4,18 +4,20 @@ import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.client.ParticleStatus;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.SupportType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.Configuration;
@@ -24,14 +26,17 @@ import org.orecruncher.dsurround.effects.BlockEffectUtils;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IEffectSystem;
 import org.orecruncher.dsurround.effects.blocks.AbstractParticleEmitterEffect;
+import org.orecruncher.dsurround.effects.particles.WaterfallCascade;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.sound.*;
 import org.orecruncher.dsurround.tags.FluidTags;
 
 import java.util.Arrays;
-import java.util.Optional;
+import java.util.Collection;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -54,14 +59,14 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     static {
         var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
 
-        var factory = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/0")).orElseThrow();
+        var factory = soundLibrary.getSoundFactory(Constants.asId("waterfalls/0")).orElseThrow();
         Arrays.fill(ACOUSTICS, factory);
 
-        ACOUSTICS[2] = ACOUSTICS[3] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/1")).orElseThrow();
-        ACOUSTICS[4] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/2")).orElseThrow();
-        ACOUSTICS[5] = ACOUSTICS[6] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/3")).orElseThrow();
-        ACOUSTICS[7] = ACOUSTICS[8] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/4")).orElseThrow();
-        ACOUSTICS[9] = ACOUSTICS[10] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/5")).orElseThrow();
+        ACOUSTICS[2] = ACOUSTICS[3] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/1")).orElseThrow();
+        ACOUSTICS[4] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/2")).orElseThrow();
+        ACOUSTICS[5] = ACOUSTICS[6] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/3")).orElseThrow();
+        ACOUSTICS[7] = ACOUSTICS[8] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/4")).orElseThrow();
+        ACOUSTICS[9] = ACOUSTICS[10] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/5")).orElseThrow();
     }
 
     // Keep track of sound plays outside the effect.
@@ -298,13 +303,13 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
 
         private static final Configuration.BlockEffects CONFIG = ContainerManager.resolve(Configuration.BlockEffects.class);
 
-        protected int particleLimit;
         protected final double deltaY;
+        protected int particleLimit;
 
         public WaterfallEffect(final int strength, final Level world, final BlockPos loc, final double dY) {
             super(strength, world, loc.getX() + 0.5D, loc.getY() + 0.5D, loc.getZ() + 0.5D, 4);
             this.deltaY = loc.getY() + dY;
-            setSpawnCount((int) (strength * 2.5F));
+            this.setSpawnCount((int) (strength * 2.5F));
         }
 
         public void setSpawnCount(final int limit) {
@@ -337,33 +342,64 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
         protected void handleParticles() {
             if (!CONFIG.enableWaterfallParticles)
                 return;
-
-            for (int i = 0; i <= this.getSplashParticleSpawnCount(); i++) {
-                this.produceParticle().ifPresent(this::addParticle);
-            }
+            super.handleParticles();
         }
 
+        private static final float CASCADE_RADIUS = 0.708F; // RMS with a little fudge for Z fighting
+
         @Override
-        protected Optional<Particle> produceParticle() {
-            final double xOffset = RANDOM.nextFloat(-1.0F, 1.0F);
-            final double zOffset = RANDOM.nextFloat(-1.0F, 1.0F);
+        protected Collection<Particle> produceParticles() {
 
-            final double motionStr = (this.strength + 1) / 20D;
-            final double motionX = xOffset * motionStr;
-            final double motionZ = zOffset * motionStr;
-            final double motionY = 0.1D + RANDOM.nextFloat() * motionStr;
+            var particles = new ObjectArray<Particle>();
 
-            var posX = this.posX + xOffset;
-            var posZ = this.posZ + zOffset;
+            var particleCount = this.getSplashParticleSpawnCount();
+            for (int i = 0; i <= particleCount; i++) {
+                final double xOffset = RANDOM.nextFloat(-1.0F, 1.0F);
+                final double zOffset = RANDOM.nextFloat(-1.0F, 1.0F);
 
-            var particle = this.createParticle(ParticleTypes.SPLASH, posX, this.deltaY, posZ, motionX, motionY, motionZ);
+                final double motionStr = (this.strength + 1) / 20D;
+                final double motionX = xOffset * motionStr;
+                final double motionZ = zOffset * motionStr;
+                final double motionY = 0.1D + RANDOM.nextFloat() * motionStr;
 
-            particle.ifPresent(p -> {
-                p.setParticleSpeed(motionX, motionY, motionZ);
-                p.setLifetime(p.getLifetime() * 2);
-            });
+                var posX = this.posX + xOffset;
+                var posZ = this.posZ + zOffset;
 
-            return particle;
+                var particle = this.createParticle(ParticleTypes.SPLASH, posX, this.deltaY, posZ, motionX, motionY, motionZ);
+
+                particle.ifPresent(p -> {
+                    p.setParticleSpeed(motionX, motionY, motionZ);
+                    p.setLifetime(p.getLifetime() * 2);
+                    particles.add(p);
+                });
+
+            }
+
+            if (this.strength > 1) {
+                // The cascade effect should be a billboard particle along the sight vector between the player
+                // and the system instance.
+
+                // Get a normal vector from the system position to the eye position of the player
+                var level = GameUtils.getPlayer().map(Entity::level).orElseThrow();
+                Vec3 systemPosition = new Vec3(this.posX, this.deltaY, this.posZ);
+                Vec3 playerEyePosition = GameUtils.getPlayer().map(Entity::getEyePosition).orElseThrow();
+                Vec3 normal = playerEyePosition
+                        .subtract(systemPosition)
+                        .normalize();
+
+                // Need to perturb it a bit by randomly selecting a small angle off the normal. This avoids
+                // near 100% overlap of multiple particle spawns for the system.
+                var perturbed = MathStuff.jitterNormalFast(normal, 10, RANDOM);
+
+                // Generate a position along the vector where the particle is to spawn
+                Vec3 particlePosition = perturbed
+                        .scale(CASCADE_RADIUS)
+                        .add(systemPosition);
+                var cascadeParticle = WaterfallCascade.create((ClientLevel) level, particlePosition.x, particlePosition.y, particlePosition.z, this.strength);
+                particles.add(cascadeParticle);
+            }
+
+            return particles;
         }
     }
 }

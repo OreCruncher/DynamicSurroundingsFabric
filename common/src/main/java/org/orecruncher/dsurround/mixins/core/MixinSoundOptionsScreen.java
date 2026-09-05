@@ -11,7 +11,8 @@ import net.minecraft.network.chat.Style;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
-import org.orecruncher.dsurround.mixinutils.IMusicManager;
+import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
+import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,14 +27,14 @@ public abstract class MixinSoundOptionsScreen extends OptionsSubScreen {
     }
 
     @Inject(method = "addOptions()V", at = @At("RETURN"))
-    public void dsurround_addSoundConfigButton(CallbackInfo ci) {
+    public void dsurround$addSoundConfigButton(CallbackInfo ci) {
         // This will add a button in the lower left corner of the sound options menu
         var toolTip = Tooltip.create(Component.translatable("dsurround.text.config.soundconfiguration.tooltip"));
         var style = Style.EMPTY.withColor(ColorPalette.GOLD);
         var buttonText = Component.translatable("dsurround.text.config.soundconfiguration").withStyle(style);
         var textWidth = GameUtils.getTextRenderer().width(buttonText) + 10;
 
-        var buttonToAdd = Button.builder(buttonText, this::dsurround_onPress)
+        var buttonToAdd = Button.builder(buttonText, this::dsurround$onPress)
                 .tooltip(toolTip)
                 .bounds(5, this.height - 27, textWidth, 20).build();
 
@@ -41,26 +42,29 @@ public abstract class MixinSoundOptionsScreen extends OptionsSubScreen {
     }
 
     @Unique
-    private void dsurround_onPress(Button button) {
-        var enablePlayButtons = GameUtils.getMC().level == null || GameUtils.isSinglePlayer();
+    private void dsurround$onPress(Button button) {
+        if (this.minecraft == null)
+            return;
 
-        // If play buttons are enabled, we need to prevent the MusicManager from
-        // ticking.
-        var musicManager = (IMusicManager)GameUtils.getMC().getMusicManager();
-        if (enablePlayButtons) {
-            musicManager.dsurround_setPaused(true);
-        }
+        ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.class)
+                .ifPresent(musicManager -> {
+                    var enablePlayButtons = this.minecraft.level == null || GameUtils.isSinglePlayer();
 
-        var screen = new IndividualSoundControlScreen(
-                this,
-                enablePlayButtons,
-                ignore -> {
-                    // Stop any sounds left hanging for whatever reason, and restart the MusicManager
-                    GameUtils.getSoundManager().stop();
-                    if (enablePlayButtons)
-                        musicManager.dsurround_setPaused(false);
+                    if (enablePlayButtons) {
+                        musicManager.setPaused(true);
+                    }
+
+                    var screen = new IndividualSoundControlScreen(
+                            this,
+                            enablePlayButtons,
+                            ignore -> {
+                                // Stop any sounds left hanging for whatever reason, and restart the MusicManager
+                                GameUtils.getSoundManager().stop();
+                                if (enablePlayButtons)
+                                    musicManager.setPaused(false);
+                            });
+
+                    GameUtils.setScreen(screen);
                 });
-
-        this.minecraft.setScreen(screen);
     }
 }

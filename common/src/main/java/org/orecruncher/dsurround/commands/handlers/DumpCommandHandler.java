@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 
 public class DumpCommandHandler {
 
-    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+    private static final IModLog LOGGER = ContainerManager.memoize(IModLog.class);
     private static final IMinecraftDirectories directories = ContainerManager.resolve(IMinecraftDirectories.class);
     private static final IBiomeLibrary biomeLibrary = ContainerManager.resolve(IBiomeLibrary.class);
     private static final ISoundLibrary soundLibrary = ContainerManager.resolve(ISoundLibrary.class);

@@ -4,6 +4,7 @@ import net.minecraft.ChatFormatting;
 import org.orecruncher.dsurround.lib.CodecExtensions;
 
 import java.io.InputStream;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
@@ -32,9 +33,14 @@ public class VersionChecker implements IVersionChecker {
     private Optional<String> getVersionData() {
         return this.modInfo.getUpdateUrl()
                 .map(url -> {
-                    try (InputStream in = url.openStream()) {
-                        byte[] bytes = in.readAllBytes();
-                        return new String(bytes, StandardCharsets.UTF_8);
+                    try {
+                        URLConnection connection = url.openConnection();
+                        connection.setConnectTimeout(2500);
+                        connection.setReadTimeout(2500);
+                        try (InputStream in = connection.getInputStream()) {
+                            byte[] bytes = in.readAllBytes();
+                            return new String(bytes, StandardCharsets.UTF_8);
+                        }
                     } catch (Throwable t) {
                         this.logger.error(t, "Unable to fetch version information from %s", this.modInfo.getUpdateUrl());
                     }

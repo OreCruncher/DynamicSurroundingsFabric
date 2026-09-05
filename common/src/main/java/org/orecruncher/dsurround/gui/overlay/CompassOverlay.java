@@ -29,7 +29,7 @@ public class CompassOverlay extends AbstractOverlay {
     private static final float BAND_HEIGHT = 12F * 2;
     private static final float TEXTURE_SIZE_F = (float)TEXTURE_SIZE;
     private static final int HALF_TEXTURE_SIZE = TEXTURE_SIZE / 2;
-    private static final ResourceLocation COMPASS_TEXTURE = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/compass.png");
+    private static final ResourceLocation COMPASS_TEXTURE = Constants.asId("textures/compass.png");
 
     private final ITagLibrary tagLibrary;
     private final IDimensionInformation dimensionInformation;

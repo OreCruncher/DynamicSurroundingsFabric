@@ -13,7 +13,7 @@ import org.orecruncher.dsurround.tags.BlockEffectTags;
 
 class WaterySurfaceAccent implements IFootstepAccentProvider {
 
-    private static final ResourceLocation WETSURFACE_FACTORY = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "footstep/wetsurface");
+    private static final ResourceLocation WETSURFACE_FACTORY = Constants.asId("footstep/wetsurface");
 
     private final Configuration config;
 

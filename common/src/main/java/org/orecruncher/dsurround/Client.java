@@ -9,6 +9,7 @@ import net.minecraft.server.packs.PackType;
 import org.orecruncher.dsurround.commands.Commands;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
+import org.orecruncher.dsurround.effects.particles.ParticleUtils;
 import org.orecruncher.dsurround.gui.overlay.OverlayManager;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -38,6 +39,7 @@ import org.orecruncher.dsurround.sound.AudioPlayer;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public final class Client {
 
@@ -143,12 +145,19 @@ public final class Client {
             ContainerManager.getRootContainer().registerSingleton(IAudioPlayer.class, AudioPlayer.class);
 
         // Kick off version checking if configured.  This should run in parallel with initialization.
-        if (Config.logging.enableModUpdateChatMessage)
-            this.versionInfo = CompletableFuture.supplyAsync(ContainerManager.resolve(IVersionChecker.class)::getUpdateText);
-        else
+        if (Config.logging.enableModUpdateChatMessage) {
+            this.versionInfo = CompletableFuture
+                    .supplyAsync(ContainerManager.resolve(IVersionChecker.class)::getUpdateText)
+                    .completeOnTimeout(Optional.empty(), 5, TimeUnit.SECONDS)
+                    .exceptionally(t -> Optional.empty());
+        } else {
             this.versionInfo = CompletableFuture.completedFuture(Optional.empty());
+        }
 
         KeyBindings.register();
+
+        // Register custom particle handling components
+        ParticleUtils.register();
 
         this.logger.info("[%s] Client initialization complete", Constants.MOD_ID);
     }
@@ -189,6 +198,11 @@ public final class Client {
     private void onConnect(Minecraft minecraftClient) {
         // Display version information when joining a game and when a chat window is available.
         try {
+            if (this.versionInfo == null || !this.versionInfo.isDone()) {
+                this.logger.debug("Version check still pending; skipping join-time update notice");
+                return;
+            }
+
             var versionQueryResult = this.versionInfo.get();
             if (versionQueryResult.isPresent()) {
                 var result = versionQueryResult.get();

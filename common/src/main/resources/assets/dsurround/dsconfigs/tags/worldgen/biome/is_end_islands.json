@@ -1,9 +1,0 @@
-{
-  "replace": false,
-  "values": [
-    {
-      "id": "c:is_outer_end_island",
-      "required": false
-    }
-  ]
-}

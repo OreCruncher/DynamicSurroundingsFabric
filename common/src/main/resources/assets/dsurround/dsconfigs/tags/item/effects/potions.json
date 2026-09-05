@@ -1,8 +1,5 @@
 {
   "values": [
-    {
-      "id": "#c:potions",
-      "required": false
-    }
+    "#dsurround:effects/is_potion"
   ]
 }

@@ -1,3 +1,40 @@
+> ### DynamicSurroundings-1.21.1-0.4.3
+
+Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
+
+**All Loaders**
+* JAVA 21+
+* Architectury 13.0.8+
+
+**Fabric**
+* Fabric Loader >= 0.16.9
+* Fabric API >= 0.110.0+1.21.
+
+**NeoForge**
+* NeoForge 21.1.84+
+
+**What's New**
+* Biome configuration setting to reset fog color for biomes.
+* Biome configuration setting to clear existing traits before applying new ones.
+* Trident and Mace toolbar sound effects.
+* Waterfall cascade effect. Simulates turbulence and misting when water hits a surface. WIP - current implementation is passable. :)
+
+**Changes**
+* Updated Dynamic Surroundings tag names to match the conventional tag naming scheme (ex., "dsurround:is_axe" rather than "dsurround:axes"). Old tag names will continue to work though dependencies should be updated to use the new naming scheme.
+* Updated biome trait detection which should improve "out of the box" experience with modded biomes.
+* A bunch of changes related to mixin with the goal of simplifying and reduce chances of mixin related failures.
+
+**Fixes**
+* Added missing sound subtitles for mapped step sounds.
+* Fixed underground sounds playing with superflat worlds.
+* Defensive code for mods that create fake worlds as part of their feature set (The Aether's "quick join" for example).
+* Changed randomizer to use Xoroshiro from the Minecraft library (rather than JDK), and added thread safety checks. This should mitigate potential issues (or at least take Dynamic Surroundings out of the equation) with other mods performing cross-thread random number generation as well as Java runtimes that do not support Xoroshiro natively.
+* Fix rain ripple rendering issue when picking up items (it would flicker to black and back). This would show up frequently when fishing in the rain and picking up drops.
+* Fix null pointer exception with Cobblemon when the player utilizes an item while mounted (thanks Memori!).
+* Fix incorrect biome sound playing when underwater in Deep Ocean biome.
+* Fix sporadic null pointer exceptions when logging due to modpack mod load order and mixin wild west dependencies (thanks SylvanSerenity!).
+* Reworked block update handling and added defensive code to ensure proper client side thread handling.
+
 > ### DynamicSurroundings-1.21.1-0.4.2
 **All Loaders**
 * JAVA 21+

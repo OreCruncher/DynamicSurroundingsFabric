@@ -1,6 +1,8 @@
 package org.orecruncher.dsurround.lib.math;
 
+import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
 public class MathStuff {
@@ -18,6 +20,42 @@ public class MathStuff {
     public static Vec3 normalize(Vec3 vec) {
         double len = Math.sqrt((vec.x * vec.x) + (vec.y * vec.y) * (vec.z * vec.z));
         return new Vec3(vec.x / len, vec.y / len, vec.z / len);
+    }
+
+    public static float tan(float x) {
+        return Mth.sin(x) / Mth.cos(x);
+    }
+
+
+    /**
+     * Fast Method: Projects a random disk displacement onto the tangent plane and re-normalizes.
+     * Suitable for small angles (e.g., < 10 degrees).
+     *
+     * (Thanks Google Gemini!)
+     *
+     * @param normal Unit vector to perturb (must be normalized)
+     * @param maxDegrees Maximum angular deviation in degrees
+     * @return Unit vector with jitter applied
+     */
+    public static Vec3 jitterNormalFast(Vec3 normal, float maxDegrees, IRandomizer randomizer) {
+        float maxRadians = maxDegrees * Mth.DEG_TO_RAD;
+
+        // 1. Build orthonormal basis (T, B) on the tangent plane
+        Vec3 helper = (Math.abs(normal.x) > 0.9)
+                ? new Vec3(0, 1, 0)
+                : new Vec3(1, 0, 0);
+        Vec3 T = helper.cross(normal).normalize();
+        Vec3 B = normal.cross(T);
+
+        // 2. Uniform sample inside a disk on the tangent plane
+        float r = tan(maxRadians) * Mth.sqrt(randomizer.nextFloat());
+        float phi = randomizer.nextFloat() * Mth.TWO_PI;
+
+        // 3. Compute offset vector on the tangent plane
+        Vec3 offset = T.scale(r * Mth.cos(phi)).add(B.scale(r * Mth.sin(phi)));
+
+        // 4. Add offset to original normal and re-normalize
+        return normal.add(offset).normalize();
     }
 
     public static Vec3 randomPoint(final int minRange, final int maxRange) {
@@ -100,4 +138,13 @@ public class MathStuff {
         return num <= 0 ? 0F : Math.min(num, 1F);
     }
 
+    /**
+     * Wraps the integer value until it fits within the desired window (0 - scale)
+     * @param value
+     * @param size
+     * @return
+     */
+    public static int wrap(int value, int size) {
+        return ((value % size) + size) % size;
+    }
 }

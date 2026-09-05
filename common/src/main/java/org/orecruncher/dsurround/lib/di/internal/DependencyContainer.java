@@ -1,15 +1,13 @@
 package org.orecruncher.dsurround.lib.di.internal;
 
+import com.google.common.base.Suppliers;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.Singleton;
 import org.orecruncher.dsurround.lib.di.*;
-import org.orecruncher.dsurround.lib.Lazy;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -21,7 +19,7 @@ import java.util.stream.Stream;
  * so brain power may be required.
  */
 @SuppressWarnings("unused")
-public class DependencyContainer implements IServiceContainer {
+public final class DependencyContainer implements IServiceContainer {
 
     private final Map<Class<?>, Supplier<?>> _resolvers;
     private final String _name;
@@ -90,11 +88,12 @@ public class DependencyContainer implements IServiceContainer {
      * @param <T>          Type of object to represent the instance as
      * @return Reference to the SimpleDIContainer for fluent declarations
      */
+    @Override
     public <T> DependencyContainer registerSingleton(Class<T> clazz) {
         try {
             this.checkForKeySuitability(clazz);
             this.checkForResolverSuitability(clazz);
-            return this.registerFactory(clazz, new Lazy<>(() -> this.createFactory(clazz).get()));
+            return this.registerFactory(clazz, Suppliers.memoize(() -> this.createFactory(clazz).get()));
         } catch (Throwable ex) {
             Library.LOGGER.error(ex, "Unable to register singleton %s", clazz.getName());
             throw ex;
@@ -116,7 +115,7 @@ public class DependencyContainer implements IServiceContainer {
         try {
             this.checkForKeySuitability(clazz);
             this.checkForResolverSuitability(desiredClass);
-            return this.registerFactory(clazz, new Lazy<>(() -> this.createFactory(desiredClass).get()));
+            return this.registerFactory(clazz, Suppliers.memoize(() -> this.createFactory(desiredClass).get()));
         } catch (Throwable ex) {
             Library.LOGGER.error(ex, "Unable to register singleton %s using class %s", clazz.getName(), desiredClass.getName());
             throw ex;
@@ -185,6 +184,31 @@ public class DependencyContainer implements IServiceContainer {
             Library.LOGGER.error(ex, "Unable to resolve class %s", clazz.getName());
             throw ex;
         }
+    }
+
+    /**
+     * Returns a Supplier that will lazily resolve the specified interface
+     * @param clazz Type the object reference will be identified as
+     * @param <T>   Type of object to represent the instance as
+     * @return Reference to a Supplier that will resolve and cache the object instance
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T memoize(Class<T> clazz) {
+
+        Supplier<T> memo = Suppliers.memoize(() -> this.resolve(clazz));
+
+        InvocationHandler handler = new InvocationHandler() {
+            @NotNull
+            private final Supplier<T> target = memo;
+
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                return method.invoke(this.target.get(), args);
+            }
+        };
+
+        return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[]{clazz}, handler);
     }
 
     /**

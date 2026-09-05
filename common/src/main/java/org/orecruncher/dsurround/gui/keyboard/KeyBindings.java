@@ -16,62 +16,59 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
-public class KeyBindings {
+import java.util.IdentityHashMap;
+import java.util.Map;
 
-    public static final KeyMapping modConfigurationMenu;
-    public static final KeyMapping individualSoundConfigBinding;
-    public static final KeyMapping diagnosticHud;
+public final class KeyBindings {
 
-    static {
-        var modMenuKey = Platform.isModLoaded(Constants.MODMENU) ? InputConstants.UNKNOWN.getValue() : InputConstants.KEY_EQUALS;
-        modConfigurationMenu = registerKeyBinding(
-                "dsurround.text.keybind.modConfigurationMenu",
-                modMenuKey,
-                "dsurround.text.keybind.section");
-
-        individualSoundConfigBinding = registerKeyBinding(
-                "dsurround.text.keybind.individualSoundConfig",
-                InputConstants.UNKNOWN.getValue(),
-                "dsurround.text.keybind.section");
-
-        diagnosticHud = registerKeyBinding(
-                "dsurround.text.keybind.diagnosticHud",
-                InputConstants.UNKNOWN.getValue(),
-                "dsurround.text.keybind.section");
-    }
-
-    private static KeyMapping registerKeyBinding(String translationKey, int code, String category) {
-        var mapping = new KeyMapping(translationKey, code, category);
-        KeyMappingRegistry.register(mapping);
-        return mapping;
-    }
+    private static final Map<KeyMapping, Runnable> keyPressHandlers = new IdentityHashMap<>();
 
     public static void register() {
+        var modMenuKey = Platform.isModLoaded(Constants.MODMENU) ? InputConstants.UNKNOWN.getValue() : InputConstants.KEY_EQUALS;
+
+        registerKeyBinding(
+                "modConfigurationMenu",
+                modMenuKey,
+                () -> ContainerManager.resolve(IConfigScreenFactoryProvider.class)
+                        .getModConfigScreenFactory(Configuration.class)
+                        .ifPresentOrElse(
+                                f -> f.create(null),
+                                () -> Library.LOGGER.info("Configuration GUI libraries not present")
+                        )
+        );
+
+        registerKeyBinding(
+                "individualSoundConfig",
+                InputConstants.UNKNOWN.getValue(),
+                () -> {
+                    final boolean singlePlayer = GameUtils.isSinglePlayer();
+                    GameUtils.setScreen(new IndividualSoundControlScreen(null, singlePlayer));
+                    if (singlePlayer)
+                        ContainerManager.resolve(IAudioPlayer.class).stopAll();
+                }
+        );
+
+        registerKeyBinding(
+                "diagnosticHud",
+                InputConstants.UNKNOWN.getValue(),
+                () -> ContainerManager.resolve(DiagnosticsOverlay.class).toggleCollection()
+        );
+
         ClientState.TICK_END.register(KeyBindings::handleMenuKeyPress);
+    }
+
+    private static void registerKeyBinding(String translationKey, int code, Runnable handler) {
+        var mapping = new KeyMapping("dsurround.text.keybind." + translationKey, code, "dsurround.text.keybind.section");
+        KeyMappingRegistry.register(mapping);
+        keyPressHandlers.put(mapping, handler);
     }
 
     private static void handleMenuKeyPress(Minecraft client) {
         if (GameUtils.getCurrentScreen().isPresent() || GameUtils.getPlayer().isEmpty())
             return;
 
-        if (modConfigurationMenu.consumeClick()) {
-            var provider = ContainerManager.resolve(IConfigScreenFactoryProvider.class);
-            var factory = provider.getModConfigScreenFactory(Configuration.class);
-            if (factory.isPresent()) {
-                GameUtils.setScreen(factory.get().create(null));
-            } else {
-                Library.LOGGER.info("Configuration GUI libraries not present");
-            }
-        }
-
-        if (diagnosticHud.consumeClick())
-            ContainerManager.resolve(DiagnosticsOverlay.class).toggleCollection();
-
-        if (individualSoundConfigBinding.consumeClick()) {
-            final boolean singlePlayer = GameUtils.isSinglePlayer();
-            GameUtils.setScreen(new IndividualSoundControlScreen(null, singlePlayer));
-            if (singlePlayer)
-                ContainerManager.resolve(IAudioPlayer.class).stopAll();
-        }
+        for (var kvp : keyPressHandlers.entrySet())
+            if (kvp.getKey().consumeClick())
+                kvp.getValue().run();
     }
 }

@@ -1,8 +1,5 @@
 {
   "values": [
-    {
-      "id": "#c:buckets/lava",
-      "required": false
-    }
+    "#dsurround:is_lava_bucket"
   ]
 }

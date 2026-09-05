@@ -4,7 +4,7 @@
     "_comment": "Missing traits for Amethyst Caves",
     "traits": [
       "OVERWORLD",
-      "CAVES",
+      "CAVE",
       "UNDERGROUND"
     ]
   },
@@ -13,7 +13,7 @@
     "_comment": "Missing traits for Arid Caves",
     "traits": [
       "OVERWORLD",
-      "CAVES",
+      "CAVE",
       "UNDERGROUND",
       "DRY"
     ]
@@ -23,7 +23,7 @@
     "_comment": "Missing traits for Black Caves",
     "traits": [
       "OVERWORLD",
-      "CAVES",
+      "CAVE",
       "UNDERGROUND"
     ]
   },
@@ -32,7 +32,7 @@
     "_comment": "Missing traits for Floral Lush Caves",
     "traits": [
       "OVERWORLD",
-      "CAVES",
+      "CAVE",
       "UNDERGROUND",
       "WET"
     ]
@@ -42,7 +42,7 @@
     "_comment": "Missing traits for Frozen Caves",
     "traits": [
       "OVERWORLD",
-      "CAVES",
+      "CAVE",
       "UNDERGROUND",
       "ICY"
     ]
@@ -52,7 +52,7 @@
     "_comment": "Missing traits for Molten Caves",
     "traits": [
       "OVERWORLD",
-      "CAVES",
+      "CAVE",
       "UNDERGROUND",
       "HOT"
     ]
@@ -62,7 +62,7 @@
     "_comment": "Missing traits for Mushroom Caves",
     "traits": [
       "OVERWORLD",
-      "CAVES",
+      "CAVE",
       "UNDERGROUND"
     ]
   },
@@ -71,7 +71,7 @@
     "_comment": "Missing traits for Dirt Caves",
     "traits": [
       "OVERWORLD",
-      "CAVES",
+      "CAVE",
       "UNDERGROUND"
     ]
   }

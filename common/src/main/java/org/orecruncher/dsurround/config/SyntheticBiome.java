@@ -19,10 +19,10 @@ public enum SyntheticBiome {
     VILLAGE("village", BiomeTrait.VILLAGE),
     CLOUDS("clouds", BiomeTrait.CLOUDS),
     SPACE("space", BiomeTrait.SPACE),
-    UNDER_WATER("under_water", BiomeTrait.UNDER_WATER),
-    UNDER_RIVER("under_river", BiomeTrait.UNDER_RIVER),
-    UNDER_OCEAN("under_ocean", BiomeTrait.UNDER_OCEAN),
-    UNDER_DEEP_OCEAN("under_deep_ocean", BiomeTrait.UNDER_OCEAN, BiomeTrait.DEEP);
+    UNDER_WATER("under_water", BiomeTrait.UNDER_WATER, BiomeTrait.AQUATIC),
+    UNDER_RIVER("under_river", BiomeTrait.UNDER_RIVER, BiomeTrait.AQUATIC),
+    UNDER_OCEAN("under_ocean", BiomeTrait.UNDER_OCEAN, BiomeTrait.OCEAN),
+    UNDER_DEEP_OCEAN("under_deep_ocean", BiomeTrait.UNDER_OCEAN, BiomeTrait.DEEP_OCEAN);
 
     private static final Map<String, SyntheticBiome> lookup = new HashMap<>();
 
@@ -38,10 +38,10 @@ public enum SyntheticBiome {
 
     SyntheticBiome(String name, BiomeTrait... traits) {
         this.name = name;
-        this.id = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, String.format("synthetic_biome/%s", name));
+        this.id = Constants.asId(String.format("synthetic_biome/%s", name));
         traits = Arrays.copyOf(traits, traits.length + 1);
         traits[traits.length - 1] = BiomeTrait.SYNTHETIC;
-        this.traits = BiomeTraits.from(traits);
+        this.traits = BiomeTraits.of(traits);
     }
 
     @Nullable

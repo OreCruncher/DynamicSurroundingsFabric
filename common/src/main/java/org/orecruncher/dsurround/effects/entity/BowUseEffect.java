@@ -7,7 +7,7 @@ import org.orecruncher.dsurround.tags.ItemEffectTags;
 
 public class BowUseEffect extends EntityEffectBase {
 
-    private static final ResourceLocation BOW_PULL_FACTORY = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "bow_pull");
+    private static final ResourceLocation BOW_PULL_FACTORY = Constants.asId("bow_pull");
 
     protected ItemStack lastActiveStack = ItemStack.EMPTY;
 

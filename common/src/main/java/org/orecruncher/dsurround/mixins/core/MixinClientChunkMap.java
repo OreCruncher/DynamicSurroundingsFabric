@@ -11,5 +11,5 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 public interface MixinClientChunkMap {
 
     @Accessor("chunks")
-    AtomicReferenceArray<LevelChunk> dsurround_getChunks();
+    AtomicReferenceArray<LevelChunk> dsurround$getChunks();
 }

@@ -12,7 +12,8 @@ import org.orecruncher.dsurround.effects.blocks.AbstractParticleEmitterEffect;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 
-import java.util.Optional;
+import java.util.Collection;
+import java.util.List;
 
 import static org.orecruncher.dsurround.effects.BlockEffectUtils.*;
 
@@ -90,21 +91,23 @@ public class SteamEffectSystem extends AbstractEffectSystem implements IEffectSy
         }
 
         @Override
-        protected Optional<Particle> produceParticle() {
+        protected Collection<Particle> produceParticles() {
             final double VERTICAL_SPEED = 0.08D;
             final double JITTER = 0.4D;
             var isSolid = this.world.getBlockState(this.getPos()).getFluidState().isEmpty();
             var x = RANDOM.triangle(this.posX, JITTER);
             var z = RANDOM.triangle(this.posZ, JITTER);
             var particle = this.createParticle(ParticleTypes.CLOUD, x, this.posY, z, 0, VERTICAL_SPEED, 0D);
-            particle.ifPresent(p -> {
-                p.setLifetime(p.getLifetime() * 2);
-                if (isSolid) {
-                    p.scale(0.5F);
-                    p.setParticleSpeed(0, VERTICAL_SPEED / 2, 0);
-                }
-            });
-            return particle;
+            return particle.map(
+                    p -> {
+                    p.setLifetime(p.getLifetime() * 2);
+                    if (isSolid) {
+                        p.scale(0.5F);
+                        p.setParticleSpeed(0, VERTICAL_SPEED / 2, 0);
+                    }
+                    return List.of(p);
+                })
+           .orElse(List.of());
         }
     }
 }

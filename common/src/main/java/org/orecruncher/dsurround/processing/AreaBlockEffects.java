@@ -28,6 +28,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
     protected ScanContext locus;
     protected SystemsScanner effectSystems;
     protected int blockUpdateCount;
+    protected int maxUpdateCount;
     private boolean isConnected = false;
 
     public AreaBlockEffects(IBlockLibrary blockLibrary, IAudioPlayer audioPlayer, Configuration config, IModLog logger) {
@@ -86,7 +87,9 @@ public class AreaBlockEffects extends AbstractClientHandler {
     private void blockUpdates(Collection<BlockPos> blockPositions) {
         // Need to pump the updates through to the effect system. The cuboid scanner
         // will handle the details for filtering and applying updates via blockScan().
-        this.blockUpdateCount = blockPositions.size();
+        var count = blockPositions.size();
+        this.maxUpdateCount = Math.max(count, this.maxUpdateCount);
+        this.blockUpdateCount = count;
         // Possible that a client connected to a server, but is being transferred (BungeeCord)
         if (this.effectSystems != null && GameUtils.isInGame())
             this.effectSystems.onBlockUpdates(blockPositions);
@@ -95,7 +98,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
         var panelText = event.getSectionText(CollectDiagnosticsEvent.Section.Systems);
-        panelText.add(Component.literal("Block Updates: %d".formatted(this.blockUpdateCount)));
+        panelText.add(Component.literal("Block Updates: %d (max: %d)".formatted(this.blockUpdateCount, this.maxUpdateCount)));
         if (this.effectSystems != null)
             this.effectSystems.gatherDiagnostics(panelText);
     }

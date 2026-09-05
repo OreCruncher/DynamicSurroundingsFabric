@@ -1,12 +1,5 @@
 {
   "values": [
-    {
-      "id": "#minecraft:swords",
-      "required": false
-    },
-    {
-      "id": "#c:swords",
-      "required": false
-    }
+    "#dsurround:effects/is_sword"
   ]
 }

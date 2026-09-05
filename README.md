@@ -19,9 +19,9 @@ I expect this trend to continue.
 
 The mod is 100% client side. You can add to any mod pack, whether you play standalone or multiplayer.
 
-Starting with Minecraft 1.21.1, Dynamic Surroundings is supported on Fabric and NeoForge.
+NeoForge is supported, in addition to Fabric, with versions 1.21.1+.
 
-Online documentation: https://dynamic-surroundings.readthedocs.io/en/latest/index.html
+Online documentation: https://dynamic-surroundings.readthedocs.io/en/latest/index.html. This documentation is comprehensive and covers settings for players as well as modpack/resource pack authors.
 
 Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
 
@@ -51,7 +51,7 @@ Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
 ## Recommended Additions
 * For Config UI support, Cloth Config API [(CurseForge)](https://www.curseforge.com/minecraft/mc-mods/cloth-config) or [(Modrinth)](https://modrinth.com/mod/cloth-config) is supported. If not present, the in-game mod configuration pages will not be available.
 * On Fabric, Mod Menu [(Modrinth)](https://modrinth.com/mod/modmenu) to get in-game mod configuration menu listings.
-* Presence Footsteps [(Modrinth)](https://modrinth.com/mod/presence-footsteps) for footstep acoustics
+* Presence Footsteps [(Modrinth)](https://modrinth.com/mod/presence-footsteps) for detailed footstep acoustics.
 
 ## Videos
 * Steam, Fire Jets, and Waterfalls [(YouTube)](https://youtu.be/guMuLeG3lck)
@@ -63,10 +63,11 @@ Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
 * Individual Sound Control - Set key bind and activate in-game.  Use this feature to block, cull, and control the volume at which sounds play.  And as a bonus, you can play the sound to hear it.
 * Biome sounds - Atmospheric sounds that play based on biomes in the area.  Seamless blending of sounds as the player moves throughout the world.
     * This does not replace the Minecraft feature of a singular biome background sound.  Currently, the various biomes in the Nether use this capability. Dynamic Surroundings does not provide sound configurations for that dimension.
+* Sound instance remapping - Changes the resource location ID of a played sound instance using rules. For example, block step sounds can be remapped to different sounds that are more suitable.
+* Replace Minecraft's thunder sound with improved versions.
 * Hot block effects such as flame jets over lava, and steam where water hits a hot block.
     * Hot blocks are things Lava, Magma, campfires, and a cauldron containing lava.
 * Waterfall sound and visual effect - will trigger when flowing water is detected nearby.
-* Replace Minecraft's thunder sound with improved versions.
 * Various "DS" client side commands for dumping configuration information.  (I currently use these while developing. I do plan to document at some point for general use.)
 * Custom debug HUD that can be accessed by key bind.  Moves the Dynamic Surroundings clutter out of the traditional F3 display.
 * Compatibility with Serene Seasons - variations in seasons and temperatures can influence effects.
@@ -81,15 +82,10 @@ Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
 
 ## What's Being Dropped
 * Aurora.  Good at turning a computer into a space heater, and I do not know enough about shaders to improve.
-* Specialized fog effects.  Minecraft has made some improvements in this area, and I expect it to continue.  I don't want to be in a position of overriding (or managing the problem) of when Microsoft adds more dynamic content.
 * Weather effects.  Again, there have been improvements to Minecraft.  I may add some additional processing around weather, but I do not expect to make major changes.
-* Footstep sound effects. Trimmed to reduce sound fatigue. There are some effects that were preserved, such as walking through brush and low-key armor sounds. If you are looking for that old experience, I recommend the mod Presence Footsteps.
 * Player particle suppression. Mojang changed how player particle effects are handled and there isn't a clean way to suppress.
 
 As I indicated, these features are not planned.  Based on time commitments, I may change my mind. :) 
-
-## Planned Features
-* Making the config system publicly available so that pack authors can configure things.  This is possible with this release, but I may change things.  Besides, it has to be documented so that someone would know what to do.
 
 > # License
 The MIT License (MIT)

@@ -93,10 +93,19 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
             // The following will look at the PLAYER and VILLAGE biomes, two artificial biomes
             // that are used to configure effects.
             final ObjectArray<ISoundFactory> playerSounds = new ObjectArray<>();
+
+            // Defensive code in case biome information is not obtained for PLAYER or VILLAGE. This is an
+            // attempt at compatibility with The Aether mod.
             final BiomeInfo internalPlayerBiomeInfo = this.biomeLibrary.getBiomeInfo(SyntheticBiome.PLAYER);
+            if (internalPlayerBiomeInfo != null) {
+                playerSounds.addAll(internalPlayerBiomeInfo.findBiomeSoundMatches());
+            }
+
             final BiomeInfo internalVillageBiomeInfo = this.biomeLibrary.getBiomeInfo(SyntheticBiome.VILLAGE);
-            playerSounds.addAll(internalPlayerBiomeInfo.findBiomeSoundMatches());
-            playerSounds.addAll(internalVillageBiomeInfo.findBiomeSoundMatches());
+            if (internalVillageBiomeInfo != null) {
+                playerSounds.addAll(internalVillageBiomeInfo.findBiomeSoundMatches());
+            }
+
             playerSounds.forEach(fx -> this.workMap.put(fx, 1.0F));
 
             // This will cause extra spot sounds to play, like birds chirping, wolves growling, etc.
@@ -114,6 +123,10 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
     }
 
     private void handleAddOnSounds(Player player, BiomeInfo info) {
+        // Defensive code for fake worlds
+        if (player == null || info == null)
+            return;
+
         info.getExtraSound(SoundEventType.MOOD, RANDOM).ifPresent(s -> {
             var instance = s.createAsMood(player, MOOD_SOUND_MIN_RANGE, MOOD_SOUND_MAX_RANGE);
             this.audioPlayer.play(instance);

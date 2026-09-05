@@ -1,11 +1,13 @@
 package org.orecruncher.dsurround.config.biome;
 
 import com.google.common.collect.ImmutableList;
+import dev.architectury.hooks.level.biome.BiomeHooks;
+import dev.architectury.hooks.level.biome.BiomeProperties;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.Music;
-import net.minecraft.util.random.Weight;
 import net.minecraft.world.level.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -25,7 +27,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.mixinutils.IBiomeExtended;
+import org.orecruncher.dsurround.lib.weighted.WeightValue;
 import org.orecruncher.dsurround.processing.fog.FogDensity;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
@@ -45,7 +47,10 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private final int version;
     private final ResourceLocation biomeId;
     private final String biomeName;
-    private final Optional<Biome> biome;
+    @Nullable
+    private final Biome biome;
+    @Nullable
+    private final BiomeProperties properties;
     private final BiomeTraits traits;
     private final boolean isRiver;
     private final boolean isOcean;
@@ -65,30 +70,35 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         this(version, id, name, traits, null);
     }
 
-    public BiomeInfo(final int version, final ResourceLocation id, final String name, BiomeTraits traits, Biome biome) {
+    public BiomeInfo(final int version, final ResourceLocation id, final String name, BiomeTraits traits, @Nullable Biome biome) {
         this.version = version;
         this.biomeId = id;
         this.biomeName = name;
-        this.biome = Optional.ofNullable(biome);
+        this.biome = biome;
 
         this.traits = traits;
         this.isRiver = this.traits.contains(BiomeTrait.RIVER);
         this.isOcean = this.traits.contains(BiomeTrait.OCEAN);
-        this.isDeepOcean = this.isOcean && this.traits.contains(BiomeTrait.DEEP);
-        this.isCave = this.traits.contains(BiomeTrait.CAVES);
+        this.isDeepOcean = this.traits.contains(BiomeTrait.DEEP_OCEAN);
+        this.isCave = this.traits.contains(BiomeTrait.CAVE);
 
         this.fogDensity = FogDensity.NONE;
 
-        // Check to see if the biome has a soundtrack. If so, add it to
-        // the music list.
-        if (biome != null) {
-            var accessor = (IBiomeExtended)(Object)biome;
-            accessor.dsurround_getSpecialEffects().getBackgroundMusic()
-                .ifPresent(m -> {
-                    var factory = SOUND_LIBRARY.getSoundFactoryForMusic(m);
-                    var entry = new AcousticEntry(factory, null);
-                    this.musicSounds.add(entry);
-                });
+        // Fetch biome properties if a Biome is provided, and perform
+        // other necessary dependent work.
+        if (this.biome != null) {
+            this.properties = BiomeHooks.getBiomeProperties(this.biome);
+
+            // Add background track to the list of possible plays for the biome
+            this.properties.getEffectsProperties()
+                            .getBackgroundMusic()
+                                    .ifPresent(m -> {
+                                        var factory = SOUND_LIBRARY.getSoundFactoryForMusic(m);
+                                        var entry = new AcousticEntry(factory, null);
+                                        this.musicSounds.add(entry);
+                                    });
+        } else {
+            this.properties = null;
         }
     }
 
@@ -142,6 +152,20 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         this.fogDensity = density;
     }
 
+    public float getDownfall() {
+        return this.properties != null ? this.properties.getClimateProperties().getDownfall() : 0.0F;
+    }
+
+    public float getBaseTemperature() {
+        return this.properties != null ? this.properties.getClimateProperties().getTemperature() : 0.5F;
+    }
+
+    public float getTemperature(@Nullable BlockPos pos) {
+        if (this.biome == null || pos == null)
+            return this.getBaseTemperature();
+        return this.biome.getTemperature(pos);
+    }
+
     void setAdditionalSoundChance(final Script chance) {
         this.additionalSoundChance = chance;
     }
@@ -155,7 +179,9 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     }
 
     public void mergeTraits(BiomeConfigRule configRule) {
-        this.traits.mergeTraits(configRule.traits());
+        if (configRule.clearTraits())
+            this.traits.clear();
+        this.traits.merge(configRule.traits());
         configRule.comment().ifPresent(this::addComment);
     }
 
@@ -212,6 +238,14 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
     public void update(final BiomeConfigRule entry) {
 
+        // If configured, reset the fog color. This will only reset the
+        // Dynamic Surrounding fog color - the underlying fog color from
+        // data packs will still apply.
+        if (entry.resetFogColor()) {
+            addComment("> Reset Fog");
+            this.setFogColor(null);
+        }
+
         entry.comment().ifPresent(this::addComment);
         entry.fogColor().ifPresent(this::setFogColor);
         entry.fogDensity().ifPresent(this::setFogDensity);
@@ -238,7 +272,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
                     targetCollection = this.loopSounds;
                 }
                 case MUSIC, MOOD, ADDITION -> {
-                    final Weight weight = sr.weight();
+                    final WeightValue weight = sr.weight();
                     acousticEntry = new AcousticEntry(factory, sr.conditions(), weight);
 
                     if (sr.type() == SoundEventType.ADDITION)
@@ -276,7 +310,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     public String toString() {
         final String indent = "    ";
 
-        var tags = this.biome.map(b -> {
+        var tags = Optional.ofNullable(this.biome).map(b -> {
                     var holder = RegistryUtils.getRegistryEntry(Registries.BIOME, b);
                     if (holder.isEmpty())
                         return "null";
