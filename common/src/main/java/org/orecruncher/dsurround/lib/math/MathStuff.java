@@ -37,17 +37,16 @@ public class MathStuff {
      * @param maxDegrees Maximum angular deviation in degrees
      * @return Unit vector with jitter applied
      */
+    private static final Vec3 V1 = new Vec3(0, 1, 0);
+    private static final Vec3 V2 = new Vec3(1, 0, 0);
     public static Vec3 jitterNormalFast(Vec3 normal, float maxDegrees, IRandomizer randomizer) {
-        float maxRadians = maxDegrees * Mth.DEG_TO_RAD;
-
         // 1. Build orthonormal basis (T, B) on the tangent plane
-        Vec3 helper = (Math.abs(normal.x) > 0.9)
-                ? new Vec3(0, 1, 0)
-                : new Vec3(1, 0, 0);
+        Vec3 helper = (Math.abs(normal.x) > 0.9) ? V1 : V2;
         Vec3 T = helper.cross(normal).normalize();
         Vec3 B = normal.cross(T);
 
         // 2. Uniform sample inside a disk on the tangent plane
+        float maxRadians = maxDegrees * Mth.DEG_TO_RAD;
         float r = tan(maxRadians) * Mth.sqrt(randomizer.nextFloat());
         float phi = randomizer.nextFloat() * Mth.TWO_PI;
 

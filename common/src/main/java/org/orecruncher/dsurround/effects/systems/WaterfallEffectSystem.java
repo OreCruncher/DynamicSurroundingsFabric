@@ -11,7 +11,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.SupportType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -376,15 +375,13 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
             }
 
             if (this.strength > 1) {
-                // The cascade effect should be a billboard particle along the sight vector between the player
+                // The cascade effect is a billboard particle along the sight vector between the player
                 // and the system instance.
 
                 // Get a normal vector from the system position to the eye position of the player
-                var level = GameUtils.getPlayer().map(Entity::level).orElseThrow();
-                Vec3 systemPosition = new Vec3(this.posX, this.deltaY, this.posZ);
-                Vec3 playerEyePosition = GameUtils.getPlayer().map(Entity::getEyePosition).orElseThrow();
-                Vec3 normal = playerEyePosition
-                        .subtract(systemPosition)
+                var player = GameUtils.getPlayer().orElseThrow();
+                Vec3 normal = player.getEyePosition()
+                        .subtract(this.posX, this.deltaY, this.posZ)
                         .normalize();
 
                 // Need to perturb it a bit by randomly selecting a small angle off the normal. This avoids
@@ -394,8 +391,8 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
                 // Generate a position along the vector where the particle is to spawn
                 Vec3 particlePosition = perturbed
                         .scale(CASCADE_RADIUS)
-                        .add(systemPosition);
-                var cascadeParticle = WaterfallCascade.create((ClientLevel) level, particlePosition.x, particlePosition.y, particlePosition.z, this.strength);
+                        .add(this.posX, this.deltaY, this.posZ);
+                var cascadeParticle = WaterfallCascade.create((ClientLevel) player.level(), particlePosition.x, particlePosition.y, particlePosition.z, this.strength);
                 particles.add(cascadeParticle);
             }
 
