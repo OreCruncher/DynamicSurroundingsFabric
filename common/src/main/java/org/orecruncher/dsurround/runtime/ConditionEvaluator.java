@@ -8,9 +8,7 @@ import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.runtime.sets.impl.*;
-
-import java.util.Optional;
+import org.orecruncher.dsurround.runtime.variables.*;
 
 public final class ConditionEvaluator implements IConditionEvaluator {
 
@@ -42,7 +40,6 @@ public final class ConditionEvaluator implements IConditionEvaluator {
     }
 
     public Object eval(final Script conditions) {
-        final Optional<Object> result = this.context.eval(conditions);
-        return result.orElse(false);
+        return this.context.eval(conditions).orElse(false);
     }
 }

@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.lib.scripting;
 
 import com.mojang.serialization.Codec;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.lib.scripting.engine.ExpressionTree;
 
 import javax.script.CompiledScript;
 import java.util.Optional;
@@ -16,7 +17,7 @@ public class Script {
     public static final Script TRUE = new Script("true");
 
     private final String script;
-    private CompiledScript compiledScript;
+    private ExpressionTree compiledScript;
 
     public Script(String script) {
         this.script = script;
@@ -26,7 +27,7 @@ public class Script {
      * Retrieves the result of a previous compilation if present.
      * @return Compiled script, if any.
      */
-    Optional<CompiledScript> getCompiledScript() {
+    Optional<ExpressionTree> getCompiledScript() {
         return Optional.ofNullable(this.compiledScript);
     }
 
@@ -34,7 +35,7 @@ public class Script {
      * Sets the state of the script with the result of a previous compilation.
      * @param compiled Compiled script to cache
      */
-    void setCompiledScript(@Nullable CompiledScript compiled) {
+    void setCompiledScript(@Nullable ExpressionTree compiled) {
         this.compiledScript = compiled;
     }
 

@@ -1,13 +1,12 @@
-package org.orecruncher.dsurround.runtime.sets.impl;
+package org.orecruncher.dsurround.runtime.variables;
 
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
+import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
-import org.orecruncher.dsurround.runtime.sets.IWeatherVariables;
 
-public class WeatherVariables extends VariableSet<IWeatherVariables> implements IWeatherVariables {
+public class WeatherVariables extends VariableSet {
 
     private final ISeasonalInformation seasonalInformation;
 
@@ -22,11 +21,6 @@ public class WeatherVariables extends VariableSet<IWeatherVariables> implements 
     public WeatherVariables(ISeasonalInformation seasonalInformation) {
         super("weather");
         this.seasonalInformation = seasonalInformation;
-    }
-
-    @Override
-    public IWeatherVariables getInterface() {
-        return this;
     }
 
     @Override
@@ -53,37 +47,14 @@ public class WeatherVariables extends VariableSet<IWeatherVariables> implements 
     }
 
     @Override
-    public boolean isRaining() {
-        return this.isRaining;
-    }
-
-    @Override
-    public boolean isThundering() {
-        return this.isThundering;
-    }
-
-    @Override
-    public float getRainIntensity() {
-        return this.rainIntensity;
-    }
-
-    @Override
-    public float getThunderIntensity() {
-        return this.thunderIntensity;
-    }
-
-    @Override
-    public float getTemperature() {
-        return this.temperature;
-    }
-
-    @Override
-    public boolean isFrosty() {
-        return this.isFrosty;
-    }
-
-    @Override
-    public boolean canWaterFreeze() {
-        return this.canWaterFreeze;
+    public void configure(IConfigureDefinition config) {
+        config.defineFunction(id("isRaining"), 0, l -> this.isRaining);
+        config.defineFunction(id("isNotRaining"), 0, l -> !this.isRaining);
+        config.defineFunction(id("isThundering"), 0, l -> this.isThundering);
+        config.defineFunction(id("getRainIntensity"), 0, l -> this.rainIntensity);
+        config.defineFunction(id("getThunderIntensity"), 0, l -> this.thunderIntensity);
+        config.defineFunction(id("getTemperature"), 0, l -> this.temperature);
+        config.defineFunction(id("isFrosty"), 0, l -> this.isFrosty);
+        config.defineFunction(id("canWaterFreeze"), 0, l -> this.canWaterFreeze);
     }
 }

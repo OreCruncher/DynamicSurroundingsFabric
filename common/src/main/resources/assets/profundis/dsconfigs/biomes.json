@@ -1,6 +1,6 @@
 [
   {
-    "biomeSelector": "biome.id == 'profundis:amethyst_caves'",
+    "biomeSelector": "biome.getId() == 'profundis:amethyst_caves'",
     "_comment": "Missing traits for Amethyst Caves",
     "traits": [
       "OVERWORLD",
@@ -9,7 +9,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.id == 'profundis:arid_caves'",
+    "biomeSelector": "biome.getId() == 'profundis:arid_caves'",
     "_comment": "Missing traits for Arid Caves",
     "traits": [
       "OVERWORLD",
@@ -19,7 +19,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.id == 'profundis:black_caves'",
+    "biomeSelector": "biome.getId() == 'profundis:black_caves'",
     "_comment": "Missing traits for Black Caves",
     "traits": [
       "OVERWORLD",
@@ -28,7 +28,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.id == 'profundis:floral_lush_caves'",
+    "biomeSelector": "biome.getId() == 'profundis:floral_lush_caves'",
     "_comment": "Missing traits for Floral Lush Caves",
     "traits": [
       "OVERWORLD",
@@ -38,7 +38,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.id == 'profundis:frozen_caves'",
+    "biomeSelector": "biome.getId() == 'profundis:frozen_caves'",
     "_comment": "Missing traits for Frozen Caves",
     "traits": [
       "OVERWORLD",
@@ -48,7 +48,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.id == 'profundis:molten_caves'",
+    "biomeSelector": "biome.getId() == 'profundis:molten_caves'",
     "_comment": "Missing traits for Molten Caves",
     "traits": [
       "OVERWORLD",
@@ -58,7 +58,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.id == 'profundis:mushroom_caves'",
+    "biomeSelector": "biome.getId() == 'profundis:mushroom_caves'",
     "_comment": "Missing traits for Mushroom Caves",
     "traits": [
       "OVERWORLD",
@@ -67,7 +67,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.id == 'profundis:dirt_caves'",
+    "biomeSelector": "biome.getId() == 'profundis:dirt_caves'",
     "_comment": "Missing traits for Dirt Caves",
     "traits": [
       "OVERWORLD",

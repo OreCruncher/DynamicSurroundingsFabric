@@ -1,6 +1,6 @@
 [
     {
-        "biomeSelector": "biome.id == 'promenade:dark_amaranth_forest'",
+        "biomeSelector": "biome.getId() == 'promenade:dark_amaranth_forest'",
         "_comment": "Missing traits for Dark Amaranth Forest",
         "traits": [
           "END"

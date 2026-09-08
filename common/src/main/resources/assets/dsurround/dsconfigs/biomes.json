@@ -101,7 +101,7 @@
     ]
   },
   {
-    "biomeSelector": "FOREST && !(DEAD || WASTELAND || SWAMP || SPOOKY) && lib.isBetween(biome.temperature, 0.2, 1.0)",
+    "biomeSelector": "FOREST && !(DEAD || WASTELAND || SWAMP || SPOOKY) && lib.isBetween(biome.getTemperature(), 0.2, 1.0)",
     "_comment": "Basic Forest w/Crickets",
     "acoustics": [
       {
@@ -125,7 +125,7 @@
     ]
   },
   {
-    "biomeSelector": "FOREST && SPOOKY && !(DEAD || WASTELAND || SWAMP || JUNGLE) && lib.isBetween(biome.temperature, 0.2, 1.0)",
+    "biomeSelector": "FOREST && SPOOKY && !(DEAD || WASTELAND || SWAMP || JUNGLE) && lib.isBetween(biome.getTemperature(), 0.2, 1.0)",
     "_comment": "Deep Forest w/Crickets",
     "acoustics": [
       {
@@ -180,7 +180,7 @@
     ]
   },
   {
-    "biomeSelector": "lib.oneof(biome.id, 'minecraft:frozen_ocean', 'minecraft:deep_frozen_ocean')",
+    "biomeSelector": "lib.oneof(biome.getId(), 'minecraft:frozen_ocean', 'minecraft:deep_frozen_ocean')",
     "_comment": "Frozen Ocean/Deep Frozen Ocean explicit set",
     "fogColor": "#DCDBDF",
     "fogDensity": "normal"
@@ -215,7 +215,7 @@
     ]
   },
   {
-    "biomeSelector": "biome.id == 'minecraft:deep_frozen_ocean'",
+    "biomeSelector": "biome.getId() == 'minecraft:deep_frozen_ocean'",
     "_comment": "Deep Frozen Ocean explicit set",
     "priority": 100,
     "clearSounds": true
@@ -360,7 +360,7 @@
     ]
   },
   {
-    "biomeSelector": "END || biome.name == 'The Void'",
+    "biomeSelector": "END || biome.getName() == 'The Void'",
     "_comment": "It's The End!",
     "priority": 100,
     "clearSounds": true

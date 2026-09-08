@@ -1,20 +1,18 @@
 package org.orecruncher.dsurround.lib.scripting;
 
 import dev.architectury.platform.Platform;
-import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.system.ISystemClock;
 
 import java.time.*;
-import java.util.Objects;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
  * Library functions exposed via the JavaScript engine.  They are not directly used by code.
  */
-@SuppressWarnings("unused")
 @Cacheable
-public final class LibraryFunctions {
+public final class LibraryFunctions implements IConfigureScripting {
 
     private final ISystemClock systemClock;
 
@@ -22,35 +20,51 @@ public final class LibraryFunctions {
         this.systemClock = systemClock;
     }
 
-    public Object iif(final boolean flag, @Nullable final Object trueResult, @Nullable final Object falseResult) {
-        return flag ? trueResult : falseResult;
+
+    @Override
+    public void configure(IConfigureDefinition config) {
+        config.defineFunction("lib.iif", 3, this::iif);
+        config.defineFunction("lib.match", 2, this::match);
+        config.defineFunction("lib.oneof", -2, this::oneof);
+        config.defineFunction("lib.isBetween", 3, this::isBetween);
+        config.defineFunction("lib.isModLoaded", 1, this::isModLoaded);
+        config.defineFunction("lib.isCurrentDateInRangeOf", 3, this::isCurrentDateInRangeOf);
     }
 
-    public boolean match(final String pattern, final String subject) {
-        Objects.requireNonNull(pattern);
-        Objects.requireNonNull(subject);
-        return Pattern.matches(pattern, subject);
+    private Object iif(final List<Object> args) {
+        var flag = args.getFirst() instanceof Boolean b && b;
+        return flag ? args.get(1) : args.get(2);
     }
 
-    public boolean oneof(final Object testee, final Object... possibles) {
-        Objects.requireNonNull(testee);
-        Objects.requireNonNull(possibles);
-        for (final Object obj : possibles)
-            if (testee.equals(obj))
+    private boolean match(final List<Object> args) {
+        return Pattern.matches(args.get(0).toString(), args.get(1).toString());
+    }
+
+    private boolean oneof(final List<Object> args) {
+        var testee = args.getFirst();
+        for (int i = 1; i < args.size(); i++)
+            if (testee.equals(args.get(i)))
                 return true;
         return false;
     }
 
-    public boolean isBetween(final double value, final double min, final double max) {
+    private boolean isBetween(final List<Object> args) {
+        var value = ((Number)args.getFirst()).doubleValue();
+        var min = ((Number)args.get(1)).doubleValue();
+        var max = ((Number)args.get(2)).doubleValue();
         return value >= min && value <= max;
     }
 
-    public boolean isModLoaded(final String mod) {
-        return Platform.isModLoaded(mod);
+    private boolean isModLoaded(final List<Object> args) {
+        return Platform.isModLoaded(args.getFirst().toString());
     }
 
-    public boolean isCurrentDateInRangeOf(int month, int day, int dayRange) {
+    private boolean isCurrentDateInRangeOf(final List<Object> args) {
         try {
+            var month = (int)args.get(0);
+            var day = (int)args.get(1);
+            var dayRange = (int)args.get(2);
+
             // Get the current Utc time. Assume the test date is the same year.
             var theNow = LocalDate.ofInstant(this.systemClock.getUtcNow(), ZoneOffset.UTC);
             var testDate = LocalDate.of(theNow.getYear(), month, day);

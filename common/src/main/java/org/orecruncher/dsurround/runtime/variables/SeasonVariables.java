@@ -1,12 +1,12 @@
-package org.orecruncher.dsurround.runtime.sets.impl;
+package org.orecruncher.dsurround.runtime.variables;
 
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
+import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
-import org.orecruncher.dsurround.runtime.sets.ISeasonVariables;
 
-public class SeasonVariables extends VariableSet<ISeasonVariables> implements ISeasonVariables {
+public class SeasonVariables extends VariableSet {
 
     private final ISeasonalInformation seasonalInformation;
 
@@ -18,11 +18,6 @@ public class SeasonVariables extends VariableSet<ISeasonVariables> implements IS
     public SeasonVariables(ISeasonalInformation seasonalInformation) {
         super("season");
         this.seasonalInformation = seasonalInformation;
-    }
-
-    @Override
-    public ISeasonVariables getInterface() {
-        return this;
     }
 
     @Override
@@ -41,22 +36,10 @@ public class SeasonVariables extends VariableSet<ISeasonVariables> implements IS
     }
 
     @Override
-    public boolean isSpring() {
-        return this.isSpring;
-    }
-
-    @Override
-    public boolean isSummer() {
-        return this.isSummer;
-    }
-
-    @Override
-    public boolean isAutumn() {
-        return this.isAutumn;
-    }
-
-    @Override
-    public boolean isWinter() {
-        return this.isWinter;
+    public void configure(IConfigureDefinition config) {
+        config.defineFunction(id("isSpring"), 0, l -> this.isSpring);
+        config.defineFunction(id("isSummer"), 0, l -> this.isSummer);
+        config.defineFunction(id("isAutumn"), 0, l -> this.isAutumn);
+        config.defineFunction(id("isWinter"), 0, l -> this.isWinter);
     }
 }

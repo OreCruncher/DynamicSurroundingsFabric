@@ -1,12 +1,12 @@
-package org.orecruncher.dsurround.runtime.sets.impl;
+package org.orecruncher.dsurround.runtime.variables;
 
 import org.orecruncher.dsurround.lib.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
-import org.orecruncher.dsurround.runtime.sets.IDiurnalVariables;
+import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 
-public class DiurnalVariables extends VariableSet<IDiurnalVariables> implements IDiurnalVariables {
+public class DiurnalVariables extends VariableSet {
 
     private float moonPhaseFactor;
     private float celestialAngle;
@@ -17,11 +17,6 @@ public class DiurnalVariables extends VariableSet<IDiurnalVariables> implements 
 
     public DiurnalVariables() {
         super("diurnal");
-    }
-
-    @Override
-    public IDiurnalVariables getInterface() {
-        return this;
     }
 
     public void update(IVariableAccess variableAccess) {
@@ -46,32 +41,12 @@ public class DiurnalVariables extends VariableSet<IDiurnalVariables> implements 
     }
 
     @Override
-    public boolean isDay() {
-        return this.isDay;
-    }
-
-    @Override
-    public boolean isNight() {
-        return this.isNight;
-    }
-
-    @Override
-    public boolean isSunrise() {
-        return this.isSunrise;
-    }
-
-    @Override
-    public boolean isSunset() {
-        return this.isSunset;
-    }
-
-    @Override
-    public float getMoonPhaseFactor() {
-        return this.moonPhaseFactor;
-    }
-
-    @Override
-    public float getCelestialAngle() {
-        return this.celestialAngle;
+    public void configure(IConfigureDefinition config) {
+        config.defineFunction(id("isDay"), 0, l -> this.isDay);
+        config.defineFunction(id("isNight"), 0, l -> this.isNight);
+        config.defineFunction(id("isSunrise"), 0, l -> this.isSunrise);
+        config.defineFunction(id("isSunset"), 0, l -> this.isSunset);
+        config.defineFunction(id("getMoonPhaseFactor"), 0, l -> this.moonPhaseFactor);
+        config.defineFunction(id("getCelestialAngle"), 0, l -> this.celestialAngle);
     }
 }

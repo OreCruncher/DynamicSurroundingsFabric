@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.runtime.sets.impl;
+package org.orecruncher.dsurround.runtime.variables;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -7,9 +7,9 @@ import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
-import org.orecruncher.dsurround.runtime.sets.IPlayerVariables;
+import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 
-public class PlayerVariables extends VariableSet<IPlayerVariables> implements IPlayerVariables {
+public class PlayerVariables extends VariableSet {
 
     private boolean isSuffocating;
     private boolean canSeeSky;
@@ -96,117 +96,32 @@ public class PlayerVariables extends VariableSet<IPlayerVariables> implements IP
     }
 
     @Override
-    public IPlayerVariables getInterface() {
-        return this;
+    public void configure(IConfigureDefinition config) {
+        config.defineFunction(id("isCreative"), 0, l -> this.isCreative);
+        config.defineFunction(id("isBurning"), 0, l -> this.isBurning);
+        config.defineFunction(id("isSuffocating"), 0, l -> this.isSuffocating);
+        config.defineFunction(id("isFlying"), 0, l -> this.isFlying);
+        config.defineFunction(id("isSprinting"), 0, l -> this.isSprinting);
+        config.defineFunction(id("isInLava"), 0, l -> this.isInLava);
+        config.defineFunction(id("isInvisible"), 0, l -> this.isInvisible);
+        config.defineFunction(id("isInWater"), 0, l -> this.isInWater);
+        config.defineFunction(id("isMoving"), 0, l -> this.isMoving);
+        config.defineFunction(id("isWet"), 0, l -> this.isWet);
+        config.defineFunction(id("isRiding"), 0, l -> this.isRiding);
+        config.defineFunction(id("isOnGround"), 0, l -> this.isOnGround);
+        config.defineFunction(id("canRainOn"), 0, l -> this.canRainOn);
+        config.defineFunction(id("canSeeSky"), 0, l -> this.canSeeSky);
+        config.defineFunction(id("getHealth"), 0, l -> this.health);
+        config.defineFunction(id("getMaxHealth"), 0, l -> this.maxHealth);
+        config.defineFunction(id("getFoodLevel"), 0, l -> this.foodLevel);
+        config.defineFunction(id("getFoodSaturationLevel"), 0, l -> this.foodSaturationLevel);
+        config.defineFunction(id("getX"), 0, l -> this.x);
+        config.defineFunction(id("getY"), 0, l -> this.y);
+        config.defineFunction(id("getZ"), 0, l -> this.z);
+        config.defineFunction(id("hasEffect"), 1, l -> this.hasEffect((String)l.getFirst()));
     }
 
-    @Override
-    public boolean isCreative() {
-        return this.isCreative;
-    }
-
-    @Override
-    public boolean isBurning() {
-        return this.isBurning;
-    }
-
-    @Override
-    public boolean isSuffocating() {
-        return this.isSuffocating;
-    }
-
-    @Override
-    public boolean isFlying() {
-        return this.isFlying;
-    }
-
-    @Override
-    public boolean isSprinting() {
-        return this.isSprinting;
-    }
-
-    @Override
-    public boolean isInLava() {
-        return this.isInLava;
-    }
-
-    @Override
-    public boolean isInvisible() {
-        return this.isInvisible;
-    }
-
-    @Override
-    public boolean isInWater() {
-        return this.isInWater;
-    }
-
-    @Override
-    public boolean isMoving() {
-        return this.isMoving;
-    }
-
-    @Override
-    public boolean isWet() {
-        return this.isWet;
-    }
-
-    @Override
-    public boolean isRiding() {
-        return this.isRiding;
-    }
-
-    @Override
-    public boolean isOnGround() {
-        return this.isOnGround;
-    }
-
-    @Override
-    public boolean canRainOn() {
-        return this.canRainOn;
-    }
-
-    @Override
-    public boolean canSeeSky() {
-        return this.canSeeSky;
-    }
-
-    @Override
-    public float getHealth() {
-        return this.health;
-    }
-
-    @Override
-    public float getMaxHealth() {
-        return this.maxHealth;
-    }
-
-    @Override
-    public float getFoodLevel() {
-        return this.foodLevel;
-    }
-
-    @Override
-    public float getFoodSaturationLevel() {
-        return this.foodSaturationLevel;
-    }
-
-    @Override
-    public double getX() {
-        return this.x;
-    }
-
-    @Override
-    public double getY() {
-        return this.y;
-    }
-
-    @Override
-    public double getZ() {
-        return this.z;
-    }
-
-    @Override
-    public boolean hasEffect(String effect) {
+    private boolean hasEffect(String effect) {
         try {
             var id = ResourceLocation.parse(effect);
             var r = RegistryUtils.getRegistryEntry(Registries.MOB_EFFECT, id).orElseThrow();

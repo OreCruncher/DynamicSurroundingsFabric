@@ -1,13 +1,13 @@
-package org.orecruncher.dsurround.runtime.sets.impl;
+package org.orecruncher.dsurround.runtime.variables;
 
 import net.minecraft.world.level.dimension.DimensionType;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
-import org.orecruncher.dsurround.runtime.sets.IDimensionVariables;
+import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 
-public class DimensionVariables extends VariableSet<IDimensionVariables> implements IDimensionVariables {
+public class DimensionVariables extends VariableSet {
 
     private String id;
     private String name;
@@ -16,11 +16,6 @@ public class DimensionVariables extends VariableSet<IDimensionVariables> impleme
 
     public DimensionVariables() {
         super("dim");
-    }
-
-    @Override
-    public IDimensionVariables getInterface() {
-        return this;
     }
 
     @Override
@@ -41,22 +36,10 @@ public class DimensionVariables extends VariableSet<IDimensionVariables> impleme
     }
 
     @Override
-    public String getId() {
-        return this.id;
-    }
-
-    @Override
-    public String getDimName() {
-        return this.name;
-    }
-
-    @Override
-    public boolean hasSky() {
-        return this.hasSky;
-    }
-
-    @Override
-    public boolean isSuperFlat() {
-        return this.isSuperFlat;
+    public void configure(IConfigureDefinition config) {
+        config.defineFunction(id("getId"), 0, l -> this.id);
+        config.defineFunction(id("getDimName"), 0, l -> this.name);
+        config.defineFunction(id("hasSky"), 0, l -> this.hasSky);
+        config.defineFunction(id("isSuperFlat"), 0, l -> this.isSuperFlat);
     }
 }
