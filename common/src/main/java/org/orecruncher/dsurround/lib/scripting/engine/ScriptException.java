@@ -2,63 +2,72 @@ package org.orecruncher.dsurround.lib.scripting.engine;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.lib.StringUtils;
 
-public class ScriptException extends RuntimeException {
+public final class ScriptException extends RuntimeException {
 
     final int lineNumber;
     final int position;
 
-    ScriptException(@NotNull String message) {
-        super(message);
-        this.lineNumber = -1;
-        this.position = -1;
-    }
-
-    ScriptException(@NotNull String message, @NotNull Throwable cause) {
-        super(message, cause);
-        this.lineNumber = -1;
-        this.position = -1;
-    }
-
-    ScriptException(@NotNull String message, int lineNumber, int position) {
+    private ScriptException(@NotNull String message, int lineNumber, int position) {
         super(message);
         this.lineNumber = lineNumber;
         this.position = position;
     }
 
-    ScriptException(@NotNull String message, @NotNull Throwable throwable, int lineNumber, int position) {
+    private ScriptException(@NotNull String message, @NotNull Throwable throwable, int lineNumber, int position) {
         super(message, throwable);
         this.lineNumber = lineNumber;
         this.position = position;
     }
 
-    public int getLineNumber() {
-        return this.lineNumber;
+    public String getMessageForLogging() {
+        return this.getMessageForLogging(null);
     }
 
-    public int getPosition() {
-        return this.position;
+    public String getMessageForLogging(@Nullable String script) {
+        if (script != null && this.position != -1) {
+            var locus = StringUtils.truncateWithCarat(script, this.position);
+            return "Script error: %s\n%s\n%s".formatted(this.getMessage(), locus.text(), locus.caratLine());
+        }
+        return "Script error: %s".formatted(this.getMessage());
     }
 
-    static void error(Token token, String message) {
-        error(token.line(), token.position(), message);
+    public Expression asExpression() {
+        var msg = this.getMessageForLogging();
+        return new Expression(null) {
+            @Override
+            public Object eval() {
+                return msg;
+            }
+        };
     }
 
-    static void error(String message) {
-        error(-1, -1, message);
+    public Expression asExpression(@Nullable String script) {
+        var msg = this.getMessageForLogging(script);
+        return new Expression(null) {
+            @Override
+            public Object eval() {
+                return msg;
+            }
+        };
     }
 
-    static void error(int line, int position, String message) {
+    static void throwException(Token token, String message) throws ScriptException {
+        throwException(token.line(), token.position(), message);
+    }
+
+    static void throwException(String message) throws ScriptException {
+        throwException(-1, -1, message);
+    }
+
+    static void throwException(int line, int position, String message) throws ScriptException  {
         report(line, position, message, null);
-    }
-
-    static void error(int line, int position, String message, Throwable cause) {
-        report(line, position, message, cause);
     }
 
     private static void report(int line, int position, String message, @Nullable Throwable throwable) {
         // Add 1 to position since it is 0 based.
-        var text = String.format("[line %d, pos %d] Error: %s", line, position + 1, message);
+        var text = String.format("(%d, %d) %s", line, position + 1, message);
         if (throwable != null) {
             throw new ScriptException(text, throwable, line, position);
         }

@@ -3,10 +3,9 @@ package org.orecruncher.dsurround.lib.scripting.engine;
 import org.orecruncher.dsurround.lib.scripting.IScriptFunction;
 import org.orecruncher.dsurround.lib.scripting.IScriptVariable;
 
-import java.util.ArrayList;
 import java.util.List;
 
-abstract class Expression {
+public abstract class Expression {
 
     final Environment environment;
 
@@ -36,40 +35,15 @@ abstract class Expression {
                 case EQUAL_EQUAL:
                     return this::isEqual;
                 case GREATER:
-                    return (l, r) -> {
-                        var leftValue = this.left.eval();
-                        var rightValue = this.right.eval();
-                        this.checkNumberOperands(this.operator, leftValue, rightValue);
-                        return ((Number) leftValue).doubleValue() > ((Number) rightValue).doubleValue();
-                    };
+                    return (l, r) -> this.toDouble(l.eval(), true) > this.toDouble(r.eval(), false);
                 case GREATER_EQUAL:
-                    return (l, r) -> {
-                        var leftValue = this.left.eval();
-                        var rightValue = this.right.eval();
-                        this.checkNumberOperands(this.operator, leftValue, rightValue);
-                        return ((Number) leftValue).doubleValue() >= ((Number) rightValue).doubleValue();
-                    };
+                    return (l, r) -> this.toDouble(l.eval(), true) >= this.toDouble(r.eval(), false);
                 case LESS:
-                    return (l, r) -> {
-                        var leftValue = this.left.eval();
-                        var rightValue = this.right.eval();
-                        this.checkNumberOperands(this.operator, leftValue, rightValue);
-                        return ((Number) leftValue).doubleValue() < ((Number) rightValue).doubleValue();
-                    };
+                    return (l, r) -> this.toDouble(l.eval(), true) < this.toDouble(r.eval(), false);
                 case LESS_EQUAL:
-                    return (l, r) -> {
-                        var leftValue = this.left.eval();
-                        var rightValue = this.right.eval();
-                        this.checkNumberOperands(this.operator, leftValue, rightValue);
-                        return ((Number) leftValue).doubleValue() <= ((Number) rightValue).doubleValue();
-                    };
+                    return (l, r) -> this.toDouble(l.eval(), true) <= this.toDouble(r.eval(), false);
                 case MINUS:
-                    return (l, r) -> {
-                        var leftValue = this.left.eval();
-                        var rightValue = this.right.eval();
-                        this.checkNumberOperands(this.operator, leftValue, rightValue);
-                        return ((Number) leftValue).doubleValue() - ((Number) rightValue).doubleValue();
-                    };
+                    return (l, r) -> this.toDouble(l.eval(), true) - this.toDouble(r.eval(), false);
                 case PLUS:
                     return (l, r) -> {
                         var leftValue = l.eval();
@@ -78,36 +52,28 @@ abstract class Expression {
                             return ((Number) leftValue).doubleValue() + ((Number) rightValue).doubleValue();
                         }
 
-                        // Assume some sort of disjoint types. Convert to strings and
-                        // concatenate.
-                        return leftValue.toString() + rightValue.toString();
+                        if (leftValue instanceof String || rightValue instanceof String) {
+                            return leftValue.toString() + rightValue.toString();
+                        }
+                        ScriptException.throwException(this.operator, "Incompatible operands for operator '%s'".formatted(operator.lexeme()));
+                        return null;
                     };
                 case SLASH:
-                    return (l, r) -> {
-                        var leftValue = l.eval();
-                        var rightValue = r.eval();
-                        this.checkNumberOperands(this.operator, leftValue, rightValue);
-                        return ((Number) leftValue).doubleValue() / ((Number) rightValue).doubleValue();
-                    };
+                    return (l, r) -> this.toDouble(l.eval(), true) / this.toDouble(r.eval(), false);
                 case STAR:
-                    return (l, r) -> {
-                        var leftValue = l.eval();
-                        var rightValue = r.eval();
-                        this.checkNumberOperands(this.operator, leftValue, rightValue);
-                        return ((Number) leftValue).doubleValue() * ((Number) rightValue).doubleValue();
-                    };
+                    return (l, r) -> this.toDouble(l.eval(), true) * this.toDouble(r.eval(), false);
                 case CONDITIONAL_OR:
-                    return (l, r) -> (Boolean) l.eval() || (Boolean) r.eval();
+                    return (l, r) -> this.toBoolean(l.eval(), true) || this.toBoolean(r.eval(), false);
                 case CONDITIONAL_AND:
-                    return (l, r) -> (Boolean) l.eval() && (Boolean) r.eval();
+                    return (l, r) -> this.toBoolean(l.eval(), true) && this.toBoolean(r.eval(), false);
             }
 
-            ScriptException.error(this.operator, "Unknown operator type '%s'".formatted(this.operator.lexeme()));
+            ScriptException.throwException(this.operator, "Unknown operator type '%s'".formatted(this.operator.lexeme()));
             return null;
         }
 
         @Override
-        Object eval() {
+        public Object eval() {
             return this.function.eval(this.left, this.right);
         }
 
@@ -120,40 +86,52 @@ abstract class Expression {
             return a.equals(b);
         }
 
-        private void checkNumberOperands(Token operator, Object left, Object right) {
-            if (left instanceof Number && right instanceof Number)
-                return;
-            ScriptException.error(operator, "Operands must be numbers");
+        private double toDouble(Object value, boolean leftOperand) {
+            try {
+                return ScriptHelpers.toDouble(value);
+            } catch(Throwable ignored){}
+            ScriptException.throwException(this.operator, "%s operand must be a number or value that converts to a number".formatted(leftOperand ? "Left" : "Right"));
+            return 0D;
+        }
+
+        private boolean toBoolean(Object value, boolean leftOperand) {
+            try {
+                return ScriptHelpers.toBoolean(value);
+            } catch (Throwable ignored) {}
+            ScriptException.throwException(this.operator, "%s operand must be a boolean or value that converts to a boolean".formatted(leftOperand ? "Left" : "Right"));
+            return false;
         }
     }
 
     static final class Call extends Expression {
 
+        final static Expression[] NO_ARGUMENTS = new Expression[0];
+        final static Object[] NO_VALUES = new Object[0];
+
         final Token token;
-        final List<Expression> arguments;
-        final List<Object> values;
         final IScriptFunction function;
+        final Expression[] arguments;
+        final Object[] values;
 
         Call(Environment environment, Token token, List<Expression> arguments) {
             super(environment);
             this.token = token;
             if (arguments.isEmpty()) {
-                this.arguments = List.of();
-                this.values = List.of();
+                this.arguments = NO_ARGUMENTS;
+                this.values = NO_VALUES;
             } else {
-                this.arguments = arguments;
-                this.values = new ArrayList<>(arguments.size());
+                this.arguments = arguments.toArray(new Expression[0]);
+                this.values = new Object[this.arguments.length];
             }
             this.function = this.environment.getFunctionHandler(token);
         }
 
         @Override
-        Object eval() {
+        public Object eval() {
             // Get the data for the call
-            if (!this.arguments.isEmpty()) {
-                this.values.clear();
-                for (Expression argument : this.arguments) {
-                    this.values.add(argument.eval());
+            if (this.arguments.length > 0) {
+                for (int i = 0; i < this.arguments.length; i++) {
+                    this.values[i] = this.arguments[i].eval();
                 }
             }
             return this.function.evaluate(this.values);
@@ -183,7 +161,7 @@ abstract class Expression {
         }
 
         @Override
-        Object eval() {
+        public Object eval() {
             return this.value;
         }
     }
@@ -200,7 +178,7 @@ abstract class Expression {
         }
 
         @Override
-        Object eval() {
+        public Object eval() {
             var value = this.right.eval();
             return !((Boolean)value);
         }
@@ -218,12 +196,21 @@ abstract class Expression {
         }
 
         @Override
-        Object eval() {
+        public Object eval() {
             return this.variable.getValue();
         }
     }
 
-    abstract Object eval();
+    public abstract Object eval();
+
+    static boolean isLiteral(Token token) {
+        var type = token.type();
+        return type == TokenType.NUMBER || type == TokenType.STRING || type == TokenType.TRUE || type == TokenType.FALSE;
+    }
+
+    static boolean isIdentifier(Token token) {
+        return token.type() == TokenType.IDENTIFIER;
+    }
 
     @FunctionalInterface
     interface IOperationHandler {

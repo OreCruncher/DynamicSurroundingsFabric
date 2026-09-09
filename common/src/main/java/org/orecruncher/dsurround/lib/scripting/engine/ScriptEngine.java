@@ -14,15 +14,17 @@ public class ScriptEngine implements IConfigureDefinition {
         this.compiler = new Compiler(this.environment);
         var libraryFunctions = ContainerManager.resolve(LibraryFunctions.class);
         libraryFunctions.configure(this);
+        var mathFunctions = new MathFunctions();
+        mathFunctions.configure(this);
     }
 
     /**
      * Compiles the script into a syntax tree that can be used for evaluation. This result should be cached
      * for performance.
      * @param script The script compile
-     * @return A scriptlet use to execute the script logic and obtain a value
+     * @return An expression tree use to execute the script logic and obtain a value
      */
-    public ExpressionTree compile(String script) {
+    public Expression compile(String script) {
         return this.compiler.compile(script);
     }
 

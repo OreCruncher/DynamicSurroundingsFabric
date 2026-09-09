@@ -2,10 +2,10 @@ package org.orecruncher.dsurround.lib.scripting;
 
 import dev.architectury.platform.Platform;
 import org.orecruncher.dsurround.lib.di.Cacheable;
+import org.orecruncher.dsurround.lib.scripting.engine.ScriptHelpers;
 import org.orecruncher.dsurround.lib.system.ISystemClock;
 
 import java.time.*;
-import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -30,39 +30,39 @@ public final class LibraryFunctions implements IConfigureScripting {
         config.defineFunction("lib.isCurrentDateInRangeOf", 3, this::isCurrentDateInRangeOf);
     }
 
-    private Object iif(final List<Object> args) {
-        var flag = args.getFirst() instanceof Boolean b && b;
-        return flag ? args.get(1) : args.get(2);
+    private Object iif(final Object[] args) {
+        var flag = ScriptHelpers.toBoolean(args[0]);
+        return flag ? args[1] : args[2];
     }
 
-    private boolean match(final List<Object> args) {
-        return Pattern.matches(args.get(0).toString(), args.get(1).toString());
+    private boolean match(final Object[] args) {
+        return Pattern.matches(args[0].toString(), args[1].toString());
     }
 
-    private boolean oneof(final List<Object> args) {
-        var testee = args.getFirst();
-        for (int i = 1; i < args.size(); i++)
-            if (testee.equals(args.get(i)))
+    private boolean oneof(final Object[] args) {
+        var testee = args[0];
+        for (int i = 1; i < args.length; i++)
+            if (testee.equals(args[i]))
                 return true;
         return false;
     }
 
-    private boolean isBetween(final List<Object> args) {
-        var value = ((Number)args.getFirst()).doubleValue();
-        var min = ((Number)args.get(1)).doubleValue();
-        var max = ((Number)args.get(2)).doubleValue();
+    private boolean isBetween(final Object[] args) {
+        var value = ScriptHelpers.toDouble(args[0]);
+        var min = ScriptHelpers.toDouble(args[1]);
+        var max = ScriptHelpers.toDouble(args[2]);
         return value >= min && value <= max;
     }
 
-    private boolean isModLoaded(final List<Object> args) {
-        return Platform.isModLoaded(args.getFirst().toString());
+    private boolean isModLoaded(final Object[] args) {
+        return Platform.isModLoaded(args[0].toString());
     }
 
-    private boolean isCurrentDateInRangeOf(final List<Object> args) {
+    private boolean isCurrentDateInRangeOf(final Object[] args) {
         try {
-            var month = (int)args.get(0);
-            var day = (int)args.get(1);
-            var dayRange = (int)args.get(2);
+            var month = ScriptHelpers.toInteger(args[0]);
+            var day = ScriptHelpers.toInteger(args[1]);
+            var dayRange = ScriptHelpers.toInteger(args[2]);
 
             // Get the current Utc time. Assume the test date is the same year.
             var theNow = LocalDate.ofInstant(this.systemClock.getUtcNow(), ZoneOffset.UTC);

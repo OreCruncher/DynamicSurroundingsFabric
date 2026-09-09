@@ -1,11 +1,11 @@
 package org.orecruncher.dsurround.lib.scripting;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.orecruncher.dsurround.lib.StringUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.scripting.engine.ExpressionTree;
+import org.orecruncher.dsurround.lib.scripting.engine.Expression;
 import org.orecruncher.dsurround.lib.scripting.engine.ScriptEngine;
 import org.orecruncher.dsurround.lib.scripting.engine.ScriptException;
+import org.orecruncher.dsurround.lib.scripting.engine.ScriptHelpers;
 
 import java.util.*;
 
@@ -15,7 +15,7 @@ public final class ExecutionContext implements IVariableAccess {
     private final String contextName;
     private final ScriptEngine engine;
     private final Set<VariableSet> variables = new HashSet<>(8);
-    private final Map<ScriptIdentifier, ExpressionTree> expressions = new HashMap<>(32);
+    private final Map<ScriptIdentifier, Expression> expressions = new HashMap<>(32);
 
     public ExecutionContext(final String contextName, IModLog logger) {
         this.logger = logger;
@@ -50,29 +50,31 @@ public final class ExecutionContext implements IVariableAccess {
     }
 
     public boolean check(final Script script) {
-        final Optional<Object> result = this.eval(script);
-        if (result.isPresent())
-            return "true".equalsIgnoreCase(result.toString());
-        return false;
+        return ScriptHelpers.toBoolean(this.eval(script));
     }
 
     public Optional<Object> eval(final Script script) {
-        var cached = script.getCompiledScript();
-        var func = cached.orElseGet(() -> {
-            var compiled = makeExpressionTree(script.asString());
-            script.setCompiledScript(compiled);
-            return compiled;
-        });
-
         try {
-            return func.eval();
+            var cached = script.getCompiledScript();
+            var func = cached.orElseGet(() -> {
+                var compiled = generateExpression(script.asString());
+                script.setCompiledScript(compiled);
+                return compiled;
+            });
+
+            return Optional.of(func.eval());
+
+        } catch (final ScriptException e) {
+            var msg = e.getMessageForLogging(script.asString());
+            this.logger.error(e, msg);
+            return Optional.of(e.getMessage());
         } catch (final Throwable t) {
             this.logger.error(t, "Error execution script: %s", script.asString());
             return Optional.of("ERROR? " + t.getMessage());
         }
     }
 
-    private ExpressionTree makeExpressionTree(final String script) {
+    private Expression generateExpression(final String script) {
         try {
             var scriptIdentifier = ScriptIdentifier.from(script);
             var cached = this.expressions.get(scriptIdentifier);
@@ -82,18 +84,17 @@ public final class ExecutionContext implements IVariableAccess {
             }
             return cached;
         } catch (ScriptException e) {
-            var locus = StringUtils.truncateWithCarat(script, e.getPosition(), 50);
-            var msg = "Error parsing script: %s\n%s\n%s".formatted(e.getMessage(), locus.text(), locus.caratLine());
+            var  msg = e.getMessageForLogging(script);
             this.logger.error(e, msg);
-            return makeErrorFunction(e);
+            return e.asExpression();
         } catch (final Throwable t) {
             this.logger.error(t, "Error compiling script: %s", t.getMessage());
             return makeErrorFunction(t);
         }
     }
 
-    private ExpressionTree makeErrorFunction(Throwable t) {
+    private Expression makeErrorFunction(Throwable t) {
         String s = String.format("\"%s\"", StringEscapeUtils.escapeJava(t.getMessage()));
-        return makeExpressionTree(s);
+        return generateExpression(s);
     }
 }

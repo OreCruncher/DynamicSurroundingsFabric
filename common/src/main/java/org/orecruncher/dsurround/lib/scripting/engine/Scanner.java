@@ -6,19 +6,11 @@ import static org.orecruncher.dsurround.lib.scripting.engine.TokenType.*;
 
 class Scanner {
 
-    private static final Map<String, TokenType> KEYWORDS;
-
     private final String source;
     private final List<Token> tokens = new ArrayList<>();
     private int start = 0;
     private int current = 0;
     private int line = 1;
-
-    static {
-        KEYWORDS = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        KEYWORDS.put("false", FALSE);
-        KEYWORDS.put("true", TRUE);
-    }
 
     Scanner(String source) {
         this.source = source;
@@ -76,13 +68,13 @@ class Scanner {
                 break;
             case '|':
                 if (!this.match('|')) {
-                    ScriptException.error(this.line, this.current, "Unexpected character '%c'".formatted(this.peek()));
+                    ScriptException.throwException(this.line, this.current, "Unexpected character '%c'".formatted(this.peek()));
                 }
                 this.addToken(CONDITIONAL_OR);
                 break;
             case '&':
                 if (!this.match('&')) {
-                    ScriptException.error(this.line, this.current, "Unexpected character '%c'".formatted(this.peek()));
+                    ScriptException.throwException(this.line, this.current, "Unexpected character '%c'".formatted(this.peek()));
                 }
                 this.addToken(CONDITIONAL_AND);
                 break;
@@ -120,7 +112,7 @@ class Scanner {
                 } else if (this.isAlpha(c)) {
                     this.identifier();
                 } else {
-                    ScriptException.error(this.line, this.current,"Unexpected character.");
+                    ScriptException.throwException(this.line, this.current,"Unexpected character.");
                 }
                 break;
         }
@@ -137,9 +129,9 @@ class Scanner {
                     this.advance();
                 } else {
                     if (peeked == '\0')
-                        ScriptException.error(this.line, this.current,"Unexpected end of line");
+                        ScriptException.throwException(this.line, this.current,"Unexpected end of line");
                     else
-                        ScriptException.error(this.line, this.current, "Unexpected character '%c'".formatted(peeked));
+                        ScriptException.throwException(this.line, this.current, "Unexpected character '%c'".formatted(peeked));
                 }
             } else if (peeked == '.') {
                 afterDot = true;
@@ -154,7 +146,7 @@ class Scanner {
         // See if the identifier is a reserved word.
         String text = this.source.substring(this.start, this.current);
 
-        TokenType type = KEYWORDS.get(text);
+        TokenType type = Definitions.KEYWORDS.get(text);
         if (type == null)
             type = IDENTIFIER;
         this.addToken(type);
@@ -183,7 +175,7 @@ class Scanner {
 
         // Unterminated string.
         if (this.isAtEnd()) {
-            ScriptException.error(this.line, this.current, "Unterminated string.");
+            ScriptException.throwException(this.line, this.current, "Unterminated string.");
             return;
         }
 

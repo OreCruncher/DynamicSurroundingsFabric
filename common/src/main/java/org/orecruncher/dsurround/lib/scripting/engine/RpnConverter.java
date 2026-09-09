@@ -34,7 +34,7 @@ record RpnConverter(Environment environment) {
                     output.add(new RpnToken(operatorStack.pop()));
                 }
                 if (operatorStack.isEmpty() || argCounts.isEmpty()) {
-                    ScriptException.error(token, "Comma outside of valid function parameters");
+                    ScriptException.throwException(token, "Comma outside of valid function parameters");
                 }
                 // Increment argument counter for the active function
                 argCounts.push(argCounts.pop() + 1);
@@ -42,16 +42,16 @@ record RpnConverter(Environment environment) {
             // 4. Left Parenthesis '('
             else if (token.type() == TokenType.LEFT_PAREN) {
                 // If there was no previous token, or if it was an operator or identifier (function)
-                if (prevToken == null || this.environment.isFunction(prevToken) || this.environment.isOperator(prevToken) || prevToken.type() == TokenType.LEFT_PAREN) {
+                if (prevToken == null || this.environment.isFunction(prevToken) || Definitions.isOperator(prevToken) || prevToken.type() == TokenType.LEFT_PAREN) {
                     operatorStack.push(token);
                 } else {
-                    ScriptException.error(token, "Unexpected '(' (undefined function/typo?)");
+                    ScriptException.throwException(token, "Unexpected '(' (undefined function/typo?)");
                 }
             }
             // 5. Right Parenthesis ')'
             else if (token.type() == TokenType.RIGHT_PAREN) {
                 if (prevToken == null) {
-                    ScriptException.error(token, "Mismatched parenthesis");
+                    ScriptException.throwException(token, "Mismatched parenthesis");
                 }
 
                 // Edge case: zero-argument function call fn()
@@ -69,7 +69,7 @@ record RpnConverter(Environment environment) {
                 }
 
                 if (operatorStack.isEmpty()) {
-                    ScriptException.error(token, "Mismatched parenthesis: missing '('");
+                    ScriptException.throwException(token, "Mismatched parenthesis: missing '('");
                 }
                 operatorStack.pop(); // Discard '('
 
@@ -81,13 +81,13 @@ record RpnConverter(Environment environment) {
                 }
             }
             // 6. Unary/Binary Operators
-            else if (this.environment.isOperator(token)) {
-                int currPrec = this.environment.PRECEDENCE.get(token.type());
-                boolean isRightAssoc = this.environment.RIGHT_ASSOCIATIVE.contains(token.type());
+            else if (Definitions.isOperator(token)) {
+                int currPrec = Definitions.PRECEDENCE.get(token.type());
+                boolean isRightAssoc = Definitions.RIGHT_ASSOCIATIVE.contains(token.type());
 
-                while (!operatorStack.isEmpty() && this.environment.PRECEDENCE.containsKey(operatorStack.peek().type())) {
+                while (!operatorStack.isEmpty() && Definitions.PRECEDENCE.containsKey(operatorStack.peek().type())) {
                     Token topOp = operatorStack.peek();
-                    int topPrec = this.environment.PRECEDENCE.get(topOp.type());
+                    int topPrec = Definitions.PRECEDENCE.get(topOp.type());
 
                     if ((!isRightAssoc && topPrec >= currPrec) || (isRightAssoc && topPrec > currPrec)) {
                         output.add(new RpnToken(operatorStack.pop()));
@@ -97,7 +97,7 @@ record RpnConverter(Environment environment) {
                 }
                 operatorStack.push(token);
             } else {
-                ScriptException.error(token, "Unrecognized token: " + token);
+                ScriptException.throwException(token, "Unrecognized token: " + token);
             }
 
             prevToken = token;
@@ -107,7 +107,7 @@ record RpnConverter(Environment environment) {
         while (!operatorStack.isEmpty()) {
             Token op = operatorStack.pop();
             if (op.type() == TokenType.LEFT_PAREN || op.type() == TokenType.RIGHT_PAREN) {
-                ScriptException.error(op, "Mismatched parentheses");
+                ScriptException.throwException(op, "Mismatched parentheses");
             }
             output.add(new RpnToken(op));
         }
@@ -117,8 +117,8 @@ record RpnConverter(Environment environment) {
 
     private boolean isOperand(Token token) {
         return !this.environment.isFunction(token) &&
-                !this.environment.isBinaryOperator(token) &&
-                !this.environment.isUnaryOperator(token) &&
+                !Definitions.isBinaryOperator(token) &&
+                !Definitions.isUnaryOperator(token) &&
                 token.type() != TokenType.LEFT_PAREN &&
                 token.type() != TokenType.RIGHT_PAREN &&
                 token.type() != TokenType.COMMA;

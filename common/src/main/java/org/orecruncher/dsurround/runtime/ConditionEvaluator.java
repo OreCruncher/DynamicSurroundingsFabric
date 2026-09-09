@@ -2,7 +2,6 @@ package org.orecruncher.dsurround.runtime;
 
 import net.minecraft.client.Minecraft;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.StringUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.eventing.ClientState;
@@ -10,6 +9,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.lib.scripting.engine.ScriptException;
+import org.orecruncher.dsurround.lib.scripting.engine.ScriptHelpers;
 import org.orecruncher.dsurround.runtime.variables.*;
 
 public final class ConditionEvaluator implements IConditionEvaluator {
@@ -39,17 +39,16 @@ public final class ConditionEvaluator implements IConditionEvaluator {
     }
 
     public boolean check(final Script conditions) {
-        final Object result = this.eval(conditions);
-        return result instanceof Boolean b && b;
+        return ScriptHelpers.toBoolean(this.eval(conditions));
     }
 
     public Object eval(final Script conditions) {
         try {
             return this.context.eval(conditions).orElse(false);
         } catch(ScriptException e) {
-            var locus = StringUtils.truncateWithCarat(conditions.asString(), e.getPosition());
-            var msg = "Script execution error: %s\n%s\n%s".formatted(e.getMessage(), locus.text(), locus.caratLine());
+            var msg = e.getMessageForLogging(conditions.asString());
             this.logger.error(e, msg);
+            return msg;
         } catch(Throwable t) {
             this.logger.error(t, "Unable to evaluate script");
         }

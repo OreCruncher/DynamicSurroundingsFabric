@@ -10,8 +10,6 @@ import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 
-import java.util.List;
-
 public class BiomeVariables extends VariableSet {
 
     private final IBiomeLibrary biomeLibrary;
@@ -65,7 +63,7 @@ public class BiomeVariables extends VariableSet {
         config.defineFunction(id("getTemperature"), 0, l -> this.biome.getBaseTemperature());
         config.defineFunction(id("getPrecipitationType"), 0, l -> this.precipitationType.get());
         config.defineFunction(id("getTraits"), 0, l -> this.info.getTraits().toString());
-        config.defineFunction(id("is"), 1, l -> this.is(l.getFirst()));
+        config.defineFunction(id("is"), 1, l -> this.is(l[0]));
         config.defineFunction(id("isAllOf"), -1, this::isAllOf);
         config.defineFunction(id("isOneOf"), -1, this::isOneOf);
 
@@ -73,18 +71,18 @@ public class BiomeVariables extends VariableSet {
             config.defineVariable(trait.getName(), () -> this.hasTrait(trait));
     }
 
-    private boolean is(Object o) {
+    private boolean is(final Object o) {
         return this.info != null && this.info.hasTrait(o.toString());
     }
 
-    private boolean isAllOf(List<Object> trait) {
+    private boolean isAllOf(final Object[] trait) {
         for (var t : trait)
             if (!this.is(t))
                 return false;
         return true;
     }
 
-    private boolean isOneOf(List<Object> trait) {
+    private boolean isOneOf(final Object[] trait) {
         for (var t : trait)
             if (this.is(t))
                 return true;
