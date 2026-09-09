@@ -14,7 +14,7 @@ abstract class Expression {
         this.environment = environment;
     }
 
-    static class Binary extends Expression {
+    static final class Binary extends Expression {
 
         final Expression left;
         final Token operator;
@@ -127,7 +127,7 @@ abstract class Expression {
         }
     }
 
-    static class Call extends Expression {
+    static final class Call extends Expression {
 
         final Token token;
         final List<Expression> arguments;
@@ -160,7 +160,7 @@ abstract class Expression {
         }
     }
 
-    static class Literal extends Expression {
+    static final class Literal extends Expression {
 
         final Token token;
         final Object value;
@@ -188,7 +188,7 @@ abstract class Expression {
         }
     }
 
-    static class Unary extends Expression {
+    static final class Unary extends Expression {
 
         final Token operator;
         final Expression right;
@@ -206,7 +206,7 @@ abstract class Expression {
         }
     }
 
-    static class Variable extends Expression {
+    static final class Variable extends Expression {
 
         final Token name;
         final IScriptVariable variable;

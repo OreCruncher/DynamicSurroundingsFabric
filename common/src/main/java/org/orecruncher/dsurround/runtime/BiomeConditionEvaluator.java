@@ -3,12 +3,14 @@ package org.orecruncher.dsurround.runtime;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
+import org.orecruncher.dsurround.lib.StringUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
+import org.orecruncher.dsurround.lib.scripting.engine.ScriptException;
 import org.orecruncher.dsurround.runtime.variables.BiomeVariables;
 
-public class BiomeConditionEvaluator {
+public final class BiomeConditionEvaluator {
 
     private final IModLog logger;
     private final BiomeVariables biomeVariables;
@@ -41,6 +43,10 @@ public class BiomeConditionEvaluator {
             else
                 this.biomeVariables.setBiome(biome, info, this.context);
             return this.context.eval(conditions).orElse(false);
+        } catch (ScriptException e) {
+            var locus = StringUtils.truncateWithCarat(conditions.asString(), e.getPosition());
+            var msg = "Script execution error: %s\n%s\n%s".formatted(e.getMessage(), locus.text(), locus.caratLine());
+            this.logger.error(e, msg);
         } catch (Throwable t) {
             this.logger.error(t, "Unable to evaluate script");
         }

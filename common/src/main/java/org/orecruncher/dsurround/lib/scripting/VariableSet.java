@@ -25,7 +25,7 @@ public abstract class VariableSet implements IConfigureScripting {
     }
 
     protected String id(String functionName) {
-        return this.setName + '.' + functionName;
+        return this.setName + "." + functionName;
     }
 
     /**

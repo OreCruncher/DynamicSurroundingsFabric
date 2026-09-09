@@ -7,14 +7,13 @@ import org.orecruncher.dsurround.lib.scripting.*;
 public class ScriptEngine implements IConfigureDefinition {
 
     final Environment environment;
-    final LibraryFunctions libraryFunctions;
     final Compiler compiler;
 
     public ScriptEngine() {
-        this.libraryFunctions = ContainerManager.resolve(LibraryFunctions.class);
         this.environment = new Environment();
         this.compiler = new Compiler(this.environment);
-        this.libraryFunctions.configure(this);
+        var libraryFunctions = ContainerManager.resolve(LibraryFunctions.class);
+        libraryFunctions.configure(this);
     }
 
     /**

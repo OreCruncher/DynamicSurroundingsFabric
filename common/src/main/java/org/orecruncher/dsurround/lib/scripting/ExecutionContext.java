@@ -1,10 +1,11 @@
 package org.orecruncher.dsurround.lib.scripting;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.StringUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.engine.ExpressionTree;
 import org.orecruncher.dsurround.lib.scripting.engine.ScriptEngine;
+import org.orecruncher.dsurround.lib.scripting.engine.ScriptException;
 
 import java.util.*;
 
@@ -20,8 +21,6 @@ public final class ExecutionContext implements IVariableAccess {
         this.logger = logger;
         this.contextName = contextName;
         this.engine = new ScriptEngine();
-        var libraryFunctions = ContainerManager.resolve(LibraryFunctions.class);
-        this.configureScripting(libraryFunctions);
         this.logger.info("[%s] Configured", this.contextName);
     }
 
@@ -82,8 +81,13 @@ public final class ExecutionContext implements IVariableAccess {
                 this.expressions.put(scriptIdentifier, cached);
             }
             return cached;
+        } catch (ScriptException e) {
+            var locus = StringUtils.truncateWithCarat(script, e.getPosition(), 50);
+            var msg = "Error parsing script: %s\n%s\n%s".formatted(e.getMessage(), locus.text(), locus.caratLine());
+            this.logger.error(e, msg);
+            return makeErrorFunction(e);
         } catch (final Throwable t) {
-            this.logger.error(t, "Error compiling script: %s", script);
+            this.logger.error(t, "Error compiling script: %s", t.getMessage());
             return makeErrorFunction(t);
         }
     }

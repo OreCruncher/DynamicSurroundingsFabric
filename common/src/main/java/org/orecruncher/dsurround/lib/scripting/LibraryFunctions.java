@@ -20,7 +20,6 @@ public final class LibraryFunctions implements IConfigureScripting {
         this.systemClock = systemClock;
     }
 
-
     @Override
     public void configure(IConfigureDefinition config) {
         config.defineFunction("lib.iif", 3, this::iif);

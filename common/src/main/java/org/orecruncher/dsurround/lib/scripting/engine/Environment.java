@@ -23,19 +23,19 @@ class Environment {
     }
 
     void initializePrecedenceTable() {
-        PRECEDENCE.put(TokenType.CONDITIONAL_OR, 1);
-        PRECEDENCE.put(TokenType.CONDITIONAL_AND, 2);
-        PRECEDENCE.put(TokenType.EQUAL_EQUAL, 5);
-        PRECEDENCE.put(TokenType.NOT_EQUAL, 5);
-        PRECEDENCE.put(TokenType.GREATER, 6);
-        PRECEDENCE.put(TokenType.GREATER_EQUAL, 6);
-        PRECEDENCE.put(TokenType.LESS, 6);
-        PRECEDENCE.put(TokenType.LESS_EQUAL, 6);
-        PRECEDENCE.put(TokenType.PLUS, 7);
-        PRECEDENCE.put(TokenType.MINUS, 7);
-        PRECEDENCE.put(TokenType.STAR, 8);
-        PRECEDENCE.put(TokenType.SLASH, 8);
-        PRECEDENCE.put(TokenType.NOT,9);
+        this.PRECEDENCE.put(TokenType.CONDITIONAL_OR, 1);
+        this.PRECEDENCE.put(TokenType.CONDITIONAL_AND, 2);
+        this.PRECEDENCE.put(TokenType.EQUAL_EQUAL, 5);
+        this.PRECEDENCE.put(TokenType.NOT_EQUAL, 5);
+        this.PRECEDENCE.put(TokenType.GREATER, 6);
+        this.PRECEDENCE.put(TokenType.GREATER_EQUAL, 6);
+        this.PRECEDENCE.put(TokenType.LESS, 6);
+        this.PRECEDENCE.put(TokenType.LESS_EQUAL, 6);
+        this.PRECEDENCE.put(TokenType.PLUS, 7);
+        this.PRECEDENCE.put(TokenType.MINUS, 7);
+        this.PRECEDENCE.put(TokenType.STAR, 8);
+        this.PRECEDENCE.put(TokenType.SLASH, 8);
+        this.PRECEDENCE.put(TokenType.NOT,9);
     }
 
     void initializeRightAssociativityTable() {
@@ -43,9 +43,9 @@ class Environment {
     }
 
     void initializeOperators() {
-        UNARY_OPERATORS.add(TokenType.NOT);
+        this.UNARY_OPERATORS.add(TokenType.NOT);
 
-        BINARY_OPERATORS.addAll(
+        this.BINARY_OPERATORS.addAll(
                 List.of(TokenType.CONDITIONAL_OR,
                         TokenType.CONDITIONAL_AND,
                         TokenType.EQUAL_EQUAL,
@@ -65,23 +65,23 @@ class Environment {
     }
 
     boolean isFunction(Token token) {
-        return FUNCTIONS.containsKey(token.lexeme());
+        return this.FUNCTIONS.containsKey(token.lexeme());
     }
 
     boolean isBinaryOperator(Token token) {
-        return BINARY_OPERATORS.contains(token.type());
+        return this.BINARY_OPERATORS.contains(token.type());
     }
 
     boolean isUnaryOperator(Token token) {
-        return UNARY_OPERATORS.contains(token.type());
+        return this.UNARY_OPERATORS.contains(token.type());
     }
 
     boolean isOperator(Token token) {
-        return isBinaryOperator(token) || isUnaryOperator(token);
+        return this.isBinaryOperator(token) || this.isUnaryOperator(token);
     }
 
     IScriptFunction getFunctionHandler(Token token ) {
-        var functionDefinition = FUNCTIONS.get(token.lexeme());
+        var functionDefinition = this.FUNCTIONS.get(token.lexeme());
         if (functionDefinition != null)
             return functionDefinition.handler;
         ScriptException.error(token, "Unable to locate function handler for '%s'".formatted(token.lexeme()));
@@ -89,7 +89,7 @@ class Environment {
     }
 
     IScriptVariable getVariable(Token token) {
-        var variableHandler = GLOBALS.get(token.lexeme());
+        var variableHandler = this.GLOBALS.get(token.lexeme());
         if (variableHandler != null)
             return variableHandler.handler;
         ScriptException.error(token, "Unable to locate variable '%s'".formatted(token.lexeme()));
@@ -97,11 +97,15 @@ class Environment {
     }
 
     void defineFunction(String name, int arity, IScriptFunction handler) {
-        FUNCTIONS.put(name, FunctionDefinition.from(name, arity, handler));
+        if (this.FUNCTIONS.containsKey(name))
+            throw new RuntimeException("Function already defined for name '%s'".formatted(name));
+        this.FUNCTIONS.put(name, FunctionDefinition.from(name, arity, handler));
     }
 
     void defineVariable(String name, IScriptVariable handler) {
-        GLOBALS.put(name, ScriptVariable.from(name, handler));
+        if (this.GLOBALS.containsKey(name))
+            throw new RuntimeException("Variable already defined for name '%s'".formatted(name));
+        this.GLOBALS.put(name, ScriptVariable.from(name, handler));
     }
 
     record FunctionDefinition(String name, int arity, IScriptFunction handler){

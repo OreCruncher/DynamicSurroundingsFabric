@@ -45,7 +45,7 @@ record RpnConverter(Environment environment) {
                 if (prevToken == null || this.environment.isFunction(prevToken) || this.environment.isOperator(prevToken) || prevToken.type() == TokenType.LEFT_PAREN) {
                     operatorStack.push(token);
                 } else {
-                    ScriptException.error(token, "Unexpected '('");
+                    ScriptException.error(token, "Unexpected '(' (undefined function/typo?)");
                 }
             }
             // 5. Right Parenthesis ')'

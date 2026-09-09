@@ -40,9 +40,6 @@ dependencies {
     common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
     shadowBundle project(path: ':common', configuration: 'transformProductionFabric')
 
-    implementation "org.openjdk.nashorn:nashorn-core:${rootProject.nashorn_version}"
-    include("org.openjdk.nashorn:nashorn-core:${rootProject.nashorn_version}")
-
     modImplementation "com.github.glitchfiend:TerraBlender-fabric:${minecraft_version}-${rootProject.terrablender_version}"
     modImplementation "com.github.glitchfiend:GlitchCore-fabric:${minecraft_version}-${rootProject.glitchcore_version}"
     modImplementation "com.github.glitchfiend:SereneSeasons-fabric:${minecraft_version}-${rootProject.serene_seasons_version}"
