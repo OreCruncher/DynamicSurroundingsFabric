@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.client.ParticleStatus;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -16,7 +15,6 @@ import net.minecraft.world.level.block.SupportType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.Configuration;
@@ -30,7 +28,6 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.sound.*;
 import org.orecruncher.dsurround.tags.FluidTags;
 
@@ -344,8 +341,6 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
             super.handleParticles();
         }
 
-        private static final float CASCADE_RADIUS = 0.708F; // RMS with a little fudge for Z fighting
-
         @Override
         protected Collection<Particle> produceParticles() {
 
@@ -375,24 +370,11 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
             }
 
             if (this.strength > 1) {
-                // The cascade effect is a billboard particle along the sight vector between the player
-                // and the system instance.
-
-                // Get a normal vector from the system position to the eye position of the player
-                var player = GameUtils.getPlayer().orElseThrow();
-                Vec3 normal = player.getEyePosition()
-                        .subtract(this.posX, this.deltaY, this.posZ)
-                        .normalize();
-
-                // Need to perturb it a bit by randomly selecting a small angle off the normal. This avoids
-                // near 100% overlap of multiple particle spawns for the system.
-                var perturbed = MathStuff.jitterNormalFast(normal, 10, RANDOM);
-
-                // Generate a position along the vector where the particle is to spawn
-                Vec3 particlePosition = perturbed
-                        .scale(CASCADE_RADIUS)
-                        .add(this.posX, this.deltaY, this.posZ);
-                var cascadeParticle = WaterfallCascade.create((ClientLevel) player.level(), particlePosition.x, particlePosition.y, particlePosition.z, this.strength);
+                final double xOffset = RANDOM.nextFloat(-0.15F, 0.15F);
+                final double zOffset = RANDOM.nextFloat(-0.15F, 0.15F);
+                final double yOffset = RANDOM.nextFloat(-0.5F, 0.5F);
+                var level = GameUtils.getMC().level;
+                var cascadeParticle = WaterfallCascade.create(level, this.posX + xOffset, this.deltaY + yOffset, this.posZ + zOffset, this.strength);
                 particles.add(cascadeParticle);
             }
 
