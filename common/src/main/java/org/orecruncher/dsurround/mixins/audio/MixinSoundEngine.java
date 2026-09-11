@@ -31,7 +31,7 @@ public abstract class MixinSoundEngine {
 
     @Final
     @Shadow
-    private Library library;
+    public Library library;
 
     // A bit of hackery to work around the fact that NeoForge does not like mixin Redirect. When a sound is played
     // the reference is cached so that later on in processing it can be used to calculate the sound volume based
