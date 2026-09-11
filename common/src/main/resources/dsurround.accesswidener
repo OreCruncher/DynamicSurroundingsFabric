@@ -30,6 +30,8 @@ accessible field net/minecraft/client/sounds/SoundManager soundEngine Lnet/minec
 accessible field net/minecraft/client/sounds/SoundEngine instanceToChannel Ljava/util/Map;
 accessible field net/minecraft/client/sounds/SoundEngine listener Lcom/mojang/blaze3d/audio/Listener;
 accessible field com/mojang/blaze3d/audio/Library currentDevice J
+accessible field net/minecraft/client/sounds/SoundEngine library Lcom/mojang/blaze3d/audio/Library;
+accessible field net/minecraft/client/sounds/SoundEngine loaded Z
 
 # MusicManager
 accessible field net/minecraft/client/sounds/MusicManager currentMusic Lnet/minecraft/client/resources/sounds/SoundInstance;

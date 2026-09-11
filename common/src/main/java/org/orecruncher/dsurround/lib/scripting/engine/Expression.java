@@ -77,8 +77,12 @@ public abstract class Expression {
             return this.function.eval(this.left, this.right);
         }
 
+        @Override
+        public String toString() {
+            return "OPERATOR %s".formatted(this.operator.lexeme());
+        }
+
         private boolean isEqual(Object a, Object b) {
-            // nil is only equal to nil.
             if (a == null && b == null)
                 return true;
             if (a == null)
@@ -136,6 +140,11 @@ public abstract class Expression {
             }
             return this.function.evaluate(this.values);
         }
+
+        @Override
+        public String toString() {
+            return "CALL %s(%d)".formatted(this.token.lexeme(), this.arguments.length);
+        }
     }
 
     static final class Literal extends Expression {
@@ -154,15 +163,14 @@ public abstract class Expression {
                 this.value = token.literal();
         }
 
-        Literal(Environment environment, String value) {
-            super(environment);
-            this.token = null;
-            this.value = value;
-        }
-
         @Override
         public Object eval() {
             return this.value;
+        }
+
+        @Override
+        public String toString() {
+            return "LITERAL %s".formatted(this.token.lexeme());
         }
     }
 
@@ -179,8 +187,12 @@ public abstract class Expression {
 
         @Override
         public Object eval() {
-            var value = this.right.eval();
-            return !((Boolean)value);
+            return !ScriptHelpers.toBoolean(this.right.eval());
+        }
+
+        @Override
+        public String toString() {
+            return "UNARY %s".formatted(this.operator.lexeme());
         }
     }
 
@@ -198,6 +210,11 @@ public abstract class Expression {
         @Override
         public Object eval() {
             return this.variable.getValue();
+        }
+
+        @Override
+        public String toString() {
+            return "VARIABLE %s".formatted(this.name.lexeme());
         }
     }
 

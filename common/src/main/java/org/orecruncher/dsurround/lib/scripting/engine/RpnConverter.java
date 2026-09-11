@@ -8,6 +8,12 @@ record RpnConverter(Environment environment) {
      * Converts a list of infix tokens to an RPN list.
      */
     public List<RpnToken> infixToRpn(List<Token> tokens) {
+        var rpn = this.toRpn(tokens);
+        this.validate(rpn);
+        return rpn;
+    }
+
+    private List<RpnToken> toRpn(List<Token> tokens) {
         List<RpnToken> output = new ArrayList<>();
         Deque<Token> operatorStack = new ArrayDeque<>();
         Deque<Integer> argCounts = new ArrayDeque<>();
@@ -42,7 +48,7 @@ record RpnConverter(Environment environment) {
             // 4. Left Parenthesis '('
             else if (token.type() == TokenType.LEFT_PAREN) {
                 // If there was no previous token, or if it was an operator or identifier (function)
-                if (prevToken == null || this.environment.isFunction(prevToken) || Definitions.isOperator(prevToken) || prevToken.type() == TokenType.LEFT_PAREN) {
+                if (prevToken == null || prevToken.type().isOperator() || prevToken.type() == TokenType.LEFT_PAREN || this.environment.isFunction(prevToken)) {
                     operatorStack.push(token);
                 } else {
                     ScriptException.throwException(token, "Unexpected '(' (undefined function/typo?)");
@@ -80,14 +86,17 @@ record RpnConverter(Environment environment) {
                     output.add(new RpnToken(fnName, count));
                 }
             }
-            // 6. Unary/Binary Operators
-            else if (Definitions.isOperator(token)) {
-                int currPrec = Definitions.PRECEDENCE.get(token.type());
-                boolean isRightAssoc = Definitions.RIGHT_ASSOCIATIVE.contains(token.type());
+            // 6. Operators
+            else if (token.type().isOperator()) {
+                if (token.type().isUnary() && prevToken != null && prevToken.type() != TokenType.LEFT_PAREN && !prevToken.type().isOperator()) {
+                    ScriptException.throwException(token, "Unexpected character '%s'".formatted(token.lexeme()));
+                }
+                int currPrec = token.type().getPrecedence();
+                boolean isRightAssoc = token.type().isRightAssociative();
 
-                while (!operatorStack.isEmpty() && Definitions.PRECEDENCE.containsKey(operatorStack.peek().type())) {
+                while (!operatorStack.isEmpty() && operatorStack.peek().type().getPrecedence() != TokenType.NO_PRECEDENCE) {
                     Token topOp = operatorStack.peek();
-                    int topPrec = Definitions.PRECEDENCE.get(topOp.type());
+                    int topPrec = topOp.type().getPrecedence();
 
                     if ((!isRightAssoc && topPrec >= currPrec) || (isRightAssoc && topPrec > currPrec)) {
                         output.add(new RpnToken(operatorStack.pop()));
@@ -97,7 +106,7 @@ record RpnConverter(Environment environment) {
                 }
                 operatorStack.push(token);
             } else {
-                ScriptException.throwException(token, "Unrecognized token: " + token);
+                ScriptException.throwException(token, "Unrecognized token: %s".formatted(token));
             }
 
             prevToken = token;
@@ -117,11 +126,46 @@ record RpnConverter(Environment environment) {
 
     private boolean isOperand(Token token) {
         return !this.environment.isFunction(token) &&
-                !Definitions.isBinaryOperator(token) &&
-                !Definitions.isUnaryOperator(token) &&
+                !token.type().isBinary() &&
+                !token.type().isUnary() &&
                 token.type() != TokenType.LEFT_PAREN &&
                 token.type() != TokenType.RIGHT_PAREN &&
                 token.type() != TokenType.COMMA;
+    }
+
+    private void validate(List<RpnToken> tokens) {
+        int stackDepth = 0;
+
+        for (RpnToken token : tokens) {
+            // Case 1: Function call
+            if (token.isFunction) {
+                if (stackDepth < token.argCount) {
+                    ScriptException.throwException(token.value, "Expected %d operands, but found %d".formatted(token.argCount, stackDepth));
+                }
+                stackDepth -= (token.argCount - 1);
+            }
+            // Case 2: Unary Operator
+            else if (token.value.type().isUnary()) {
+                if (stackDepth < 1) {
+                    ScriptException.throwException(token.value, "Insufficient operands for unary operator");
+                }
+            }
+            // Case 3: Binary Operator
+            else if (token.value.type().isBinary()) {
+                if (stackDepth < 2) {
+                    ScriptException.throwException(token.value, "Expected 2 operands, but found %d".formatted(stackDepth));
+                }
+                stackDepth--;
+            }
+            // Case 4: Operand
+            else {
+                stackDepth++;
+            }
+        }
+
+        if (stackDepth != 1) {
+            ScriptException.throwException("Malformed expression: %d items remain on stack instead of 1".formatted(stackDepth));
+        }
     }
 
     // Helper class to represent function tokens with argument counts

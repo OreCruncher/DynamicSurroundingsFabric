@@ -11,7 +11,7 @@ public class ScriptHelpers {
                 return "true".equalsIgnoreCase(s);
             }
             if (value instanceof Number n) {
-                return !n.equals(0);
+                return n.doubleValue() != 0;
             }
             if (value == null)
                 return false;

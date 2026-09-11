@@ -57,7 +57,7 @@ public final class ExecutionContext implements IVariableAccess {
         try {
             var cached = script.getCompiledScript();
             var func = cached.orElseGet(() -> {
-                var compiled = generateExpression(script.asString());
+                var compiled = this.generateExpression(script.asString());
                 script.setCompiledScript(compiled);
                 return compiled;
             });

@@ -48,9 +48,6 @@ class Scanner {
             case '+':
                 this.addToken(PLUS);
                 break;
-            case ';':
-                this.addToken(SEMICOLON);
-                break;
             case '*':
                 this.addToken(STAR);
                 break;
@@ -58,7 +55,10 @@ class Scanner {
                 this.addToken(this.match('=') ? NOT_EQUAL : NOT);
                 break;
             case '=':
-                this.addToken(this.match('=') ? EQUAL_EQUAL : EQUAL);
+                if (!this.match('=')) {
+                    ScriptException.throwException(this.line, this.current, "Unexpected character '%c'".formatted(this.peek()));
+                }
+                this.addToken(EQUAL_EQUAL);
                 break;
             case '<':
                 this.addToken(this.match('=') ? LESS_EQUAL : LESS);
