@@ -6,9 +6,9 @@ public class MathFunctions implements IConfigureScripting {
     @Override
     public void configure(IConfigureDefinition setup) {
 
-        setup.defineVariable("math.pi", () -> Math.PI);
-        setup.defineVariable("math.tau", () -> Math.TAU);
-        setup.defineVariable("math.e", () -> Math.E);
+        setup.defineVariable("math.pi", ConstantVariable.of(Math.PI));
+        setup.defineVariable("math.tau", ConstantVariable.of(Math.TAU));
+        setup.defineVariable("math.e", ConstantVariable.of(Math.E));
 
         setup.defineFunction("math.cos", 1, l -> Math.cos(toDouble(l[0])));
         setup.defineFunction("math.sin", 1, l -> Math.sin(toDouble(l[0])));
@@ -22,6 +22,8 @@ public class MathFunctions implements IConfigureScripting {
 
         setup.defineFunction("math.sqrt", 1, l -> Math.sqrt(toDouble(l[0])));
         setup.defineFunction("math.round", 1,  l -> Math.round(toDouble(l[0])));
+
+        setup.defineFunction("math.random", 0, l -> Math.random());
     }
 
     private static double toDouble(Object l) {

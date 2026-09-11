@@ -29,51 +29,42 @@ public abstract class Expression {
         }
 
         private IOperationHandler getFunction() {
-            switch (this.operator.type()) {
-                case NOT_EQUAL:
-                    return (l, r) -> !this.isEqual(l, r);
-                case EQUAL_EQUAL:
-                    return this::isEqual;
-                case GREATER:
-                    return (l, r) -> this.toDouble(l.eval(), true) > this.toDouble(r.eval(), false);
-                case GREATER_EQUAL:
-                    return (l, r) -> this.toDouble(l.eval(), true) >= this.toDouble(r.eval(), false);
-                case LESS:
-                    return (l, r) -> this.toDouble(l.eval(), true) < this.toDouble(r.eval(), false);
-                case LESS_EQUAL:
-                    return (l, r) -> this.toDouble(l.eval(), true) <= this.toDouble(r.eval(), false);
-                case MINUS:
-                    return (l, r) -> this.toDouble(l.eval(), true) - this.toDouble(r.eval(), false);
-                case PLUS:
-                    return (l, r) -> {
-                        var leftValue = l.eval();
-                        var rightValue = r.eval();
-                        if (leftValue instanceof Number && rightValue instanceof Number) {
-                            return ((Number) leftValue).doubleValue() + ((Number) rightValue).doubleValue();
-                        }
+            return switch (this.operator.type()) {
+                case NOT_EQUAL -> (l, r) -> !this.isEqual(l.eval(), r.eval());
+                case EQUAL_EQUAL -> (l, r) -> this.isEqual(l.eval(), r.eval());
+                case GREATER -> (l, r) -> this.toDouble(l.eval(), true) > this.toDouble(r.eval(), false);
+                case GREATER_EQUAL -> (l, r) -> this.toDouble(l.eval(), true) >= this.toDouble(r.eval(), false);
+                case LESS -> (l, r) -> this.toDouble(l.eval(), true) < this.toDouble(r.eval(), false);
+                case LESS_EQUAL -> (l, r) -> this.toDouble(l.eval(), true) <= this.toDouble(r.eval(), false);
+                case MINUS -> (l, r) -> this.toDouble(l.eval(), true) - this.toDouble(r.eval(), false);
+                case PLUS -> (l, r) -> {
+                    var leftValue = l.eval();
+                    var rightValue = r.eval();
+                    if (leftValue instanceof Number && rightValue instanceof Number) {
+                        return ((Number) leftValue).doubleValue() + ((Number) rightValue).doubleValue();
+                    }
 
-                        if (leftValue instanceof String || rightValue instanceof String) {
-                            return leftValue.toString() + rightValue.toString();
-                        }
-                        ScriptException.throwException(this.operator, "Incompatible operands for operator '%s'".formatted(operator.lexeme()));
-                        return null;
-                    };
-                case SLASH:
-                    return (l, r) -> this.toDouble(l.eval(), true) / this.toDouble(r.eval(), false);
-                case STAR:
-                    return (l, r) -> this.toDouble(l.eval(), true) * this.toDouble(r.eval(), false);
-                case CONDITIONAL_OR:
-                    return (l, r) -> this.toBoolean(l.eval(), true) || this.toBoolean(r.eval(), false);
-                case CONDITIONAL_AND:
-                    return (l, r) -> this.toBoolean(l.eval(), true) && this.toBoolean(r.eval(), false);
-            }
-
-            ScriptException.throwException(this.operator, "Unknown operator type '%s'".formatted(this.operator.lexeme()));
-            return null;
+                    if (leftValue instanceof String || rightValue instanceof String) {
+                        return leftValue.toString() + rightValue.toString();
+                    }
+                    ScriptException.throwException(this.operator, "Incompatible operands for operator '%s'".formatted(operator.lexeme()));
+                    return null;
+                };
+                case SLASH -> (l, r) -> this.toDouble(l.eval(), true) / this.toDouble(r.eval(), false);
+                case STAR -> (l, r) -> this.toDouble(l.eval(), true) * this.toDouble(r.eval(), false);
+                case CONDITIONAL_OR -> (l, r) -> this.toBoolean(l.eval(), true) || this.toBoolean(r.eval(), false);
+                case CONDITIONAL_AND -> (l, r) -> this.toBoolean(l.eval(), true) && this.toBoolean(r.eval(), false);
+                default -> {
+                    ScriptException.throwException(this.operator, "Unknown operator type '%s'".formatted(this.operator.lexeme()));
+                    yield null;
+                }
+            };
         }
 
         @Override
         public Object eval() {
+            // Defer evaluation of operands. Depending on the operand both may not need to be
+            // evaluated (such as &&).
             return this.function.eval(this.left, this.right);
         }
 

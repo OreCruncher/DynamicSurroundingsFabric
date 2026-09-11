@@ -13,11 +13,13 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
+import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 @Environment(EnvType.CLIENT)
 public final class DSurroundMusicManager extends MusicManager {
 
     private static final IModLog LOGGER = ModLog.createChild(ContainerManager.resolve(IModLog.class), "MusicManager");
+    private static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
 
     private boolean pauseTicking;
 
@@ -27,7 +29,7 @@ public final class DSurroundMusicManager extends MusicManager {
 
     @Override
     public void tick() {
-        if (!this.pauseTicking) {
+        if (!this.pauseTicking && AUDIO_PLAYER.isSoundSystemAvailable()) {
             super.tick();
         }
     }
@@ -63,7 +65,8 @@ public final class DSurroundMusicManager extends MusicManager {
                 this.pauseTicking = false;
             }
             case UNPAUSE -> this.setPaused(false);
-            default -> {}
+            default -> {
+            }
         }
     }
 
@@ -80,13 +83,19 @@ public final class DSurroundMusicManager extends MusicManager {
     }
 
     public Component whatsPlaying() {
-        if (this.currentMusic == null)
+        if (!AUDIO_PLAYER.isSoundSystemAvailable()) {
+            return Component.translatable("dsurround.text.musicmanager.unavailable");
+        }
+
+        if (this.currentMusic == null) {
             return Component.translatable("dsurround.text.musicmanager.nothing");
+        }
 
         // Lookup meta information
         var metaData = MixinHelpers.SOUND_LIBRARY.getSoundMetadata(this.currentMusic.getLocation());
-        if (metaData == null || Component.empty().equals(metaData.getTitle()))
+        if (metaData == null || Component.empty().equals(metaData.getTitle())) {
             return Component.literal(this.currentMusic.getLocation().toString());
+        }
 
         var title = metaData.getTitle().copy().withColor(ColorPalette.PUMPKIN_ORANGE.getValue());
         var author = metaData.getCredits().get(0).author().copy().withColor(ColorPalette.WHEAT.getValue());
@@ -94,13 +103,17 @@ public final class DSurroundMusicManager extends MusicManager {
     }
 
     public String getDiagnosticText() {
-        String playingSound = "Nothing playing";
-        if (this.currentMusic != null)
-            playingSound = this.currentMusic.getLocation().toString();
-        var result = "Music Manager: %d (%s)".formatted(this.nextSongDelay, playingSound);
-        if (this.pauseTicking)
-            result += " (PAUSED)";
-        return result;
+        String result = "Nothing playing";
+        if (!AUDIO_PLAYER.isSoundSystemAvailable()) {
+            result = "Audio system not available";
+        } else {
+            if (this.currentMusic != null)
+                result = this.currentMusic.getLocation().toString();
+            result = "%d (%s)".formatted(this.nextSongDelay, result);
+            if (this.pauseTicking)
+                result += " (PAUSED)";
+        }
+        return "Music Manager: " + result;
     }
 
     public enum Commands {

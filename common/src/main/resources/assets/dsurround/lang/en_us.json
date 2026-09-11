@@ -230,5 +230,6 @@
   "dsurround.text.toast.music.title": "Music \"%1$s\"",
   "dsurround.text.toast.music.author": "by %1$s",
   "dsurround.text.musicmanager.nothing": "No music is playing",
-  "dsurround.text.musicmanager.playing": "%1$s by %2$s (%3$s)"
+  "dsurround.text.musicmanager.playing": "%1$s by %2$s (%3$s)",
+  "dsurround.text.musicmanager.unavailable": "Sound system is unavailable"
 }

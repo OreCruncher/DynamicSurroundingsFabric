@@ -1,13 +1,13 @@
 package org.orecruncher.dsurround.lib.scripting.engine;
 
 import com.google.common.collect.ImmutableList;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 import java.util.List;
 
 public class ScriptTest {
 
     private static final List<String> scripts = ImmutableList.of(
+            "math.tau == 2*math.pi",
             //"!!!test1",
             //"!!!!test1",
             //"(diurnal.getCelestialAngle()*360)",
