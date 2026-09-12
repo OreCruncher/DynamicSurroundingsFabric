@@ -10,9 +10,9 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
-import org.orecruncher.dsurround.mixins.core.MixinParticleManager;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
+import java.util.Collection;
 import java.util.Optional;
 
 public abstract class AbstractBlockEffect implements IBlockEffect {
@@ -49,13 +49,26 @@ public abstract class AbstractBlockEffect implements IBlockEffect {
     }
 
     /**
+     * Adds a collection of particles to the particle system
+     * @param particles Collection of particles to add
+     */
+    public void addParticles(final Collection<Particle> particles) {
+        if (particles == null || particles.isEmpty()) {
+            return;
+        }
+
+        for (final Particle particle : particles) {
+            this.addParticle(particle);
+        }
+    }
+
+    /**
      * Creates a particle effect but does not queue. Allows for the particle state to be changed before
      * adding it to the particle manager.
      */
     public <T extends ParticleOptions> Optional<Particle> createParticle(T parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
         var pm = GameUtils.getParticleManager();
-        var t = (MixinParticleManager) pm;
-        return Optional.ofNullable(t.dsurround_createParticle(parameters, x, y, z, velocityX, velocityY, velocityZ));
+        return Optional.ofNullable(pm.createParticle(parameters, x, y, z, velocityX, velocityY, velocityZ));
     }
 
     public boolean isDone() {

@@ -11,20 +11,20 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface MixinRaycastContextAccessor {
 
     @Accessor("from")
-    Vec3 dsurround_getStartPoint();
+    Vec3 dsurround$getStartPoint();
 
     @Accessor("from")
     @Mutable
-    void dsurround_setStartPoint(Vec3 point);
+    void dsurround$setStartPoint(Vec3 point);
 
     @Accessor("to")
-    Vec3 dsurround_getEndPoint();
+    Vec3 dsurround$getEndPoint();
 
     @Accessor("to")
     @Mutable
-    void dsurround_setEndPoint(Vec3 point);
+    void dsurround$setEndPoint(Vec3 point);
 
     @Accessor("collisionContext")
     @Mutable
-    void dsurround_setShapeContext(CollisionContext context);
+    void dsurround$setShapeContext(CollisionContext context);
 }

@@ -1,14 +1,12 @@
 package org.orecruncher.dsurround.lib.scripting;
 
 /**
- * A VariableSet is used to insert instances into the JavaScript runtime environment so that scripts can access game
+ * A VariableSet is used to insert instances into the scripting runtime environment so that scripts can access game
  * and mod data safely.  For example, data related to the player can be encapsulated into a player data variable set,
  * and have that data updated once per tick.  This ticking allows for the calculation and caching of values that are
  * expensive to calculate and reused repeatedly through the tick.
- *
- * @param <T>
  */
-public abstract class VariableSet<T> {
+public abstract class VariableSet implements IConfigureScripting {
 
 
     private final String setName;
@@ -26,13 +24,14 @@ public abstract class VariableSet<T> {
 
     }
 
+    protected String id(String functionName) {
+        return this.setName + "." + functionName;
+    }
+
     /**
-     * Produces a class instance that will be inserted into the JavaScript runtime so that scripts can access.  The
-     * class should only have accessors on the interface and avoid state changing methods.
-     *
-     * @return Instance that can be registered with the JavaScript engine
+     * Called by the scripting system to configure any functions or variables to be injected into the
+     * scripting environment.
+     * @param config
      */
-
-    public abstract T getInterface();
-
+    public abstract void configure(IConfigureDefinition config);
 }

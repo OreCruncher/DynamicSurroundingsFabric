@@ -155,12 +155,16 @@ public class ItemLibrary implements IItemLibrary {
             return ItemClassType.BOOK;
         if (this.tagLibrary.is(ItemEffectTags.BOWS, stack))
             return ItemClassType.BOW;
+        if (this.tagLibrary.is(ItemEffectTags.MACES, stack))
+            return ItemClassType.MACE;
         if (this.tagLibrary.is(ItemEffectTags.POTIONS, stack))
             return ItemClassType.POTION;
         if (this.tagLibrary.is(ItemEffectTags.CROSSBOWS, stack))
             return ItemClassType.CROSSBOW;
         if (this.tagLibrary.is(ItemEffectTags.SHIELDS, stack))
             return ItemClassType.SHIELD;
+        if (this.tagLibrary.is(ItemEffectTags.SPEARS, stack))
+            return ItemClassType.SPEAR;
         if (this.tagLibrary.is(ItemEffectTags.SWORDS, stack))
             return ItemClassType.SWORD;
         if (this.tagLibrary.is(ItemEffectTags.TOOLS, stack))

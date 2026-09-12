@@ -9,28 +9,19 @@ import org.lwjgl.openal.SOFTOutputLimiter;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
-import org.orecruncher.dsurround.mixinutils.ISoundEngine;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 
 import java.nio.IntBuffer;
 
 @Mixin(Library.class)
-public class MixinSoundLibrary implements ISoundEngine {
-
-    @Shadow
-    private long currentDevice;
-
-    public long dsurround_getDevicePointer() {
-        return this.currentDevice;
-    }
+public class MixinSoundLibrary {
 
     /**
      * This will resize the capability buffer to accommodate additional settings
      */
     @ModifyConstant(method = "init(Ljava/lang/String;Z)V", constant = @Constant(intValue = 3))
-    private int dsurround_modifyIntBufferSize(int size) {
+    private int dsurround$modifyIntBufferSize(int size) {
         return AudioUtilities.doEnhancedSounds() ? 5 : 3;
     }
 
@@ -38,7 +29,7 @@ public class MixinSoundLibrary implements ISoundEngine {
      * Rewrite the capability buffer.  We only do this if advanced processing is enabled.
      */
     @WrapOperation(method = "init(Ljava/lang/String;Z)V", at = @At(value = "INVOKE", target = "Lorg/lwjgl/openal/ALC10;alcCreateContext(JLjava/nio/IntBuffer;)J", remap = false))
-    private long dsurround_buildCapabilities(long deviceHandle, IntBuffer attrList, Operation<Long> original) {
+    private long dsurround$buildCapabilities(long deviceHandle, IntBuffer attrList, Operation<Long> original) {
         if (AudioUtilities.doEnhancedSounds()) {
             // Buffer should have been resized by the constant modification above
             attrList.clear();
@@ -63,7 +54,7 @@ public class MixinSoundLibrary implements ISoundEngine {
      * @return The quantity of streaming sounds (should be at least 8)
      */
     @ModifyConstant(method = "init(Ljava/lang/String;Z)V", constant = @Constant(intValue = 8))
-    public int dsurround_initialize(int v) {
+    public int dsurround$initialize(int v) {
         var config = ContainerManager.resolve(Configuration.SoundSystem.class);
         return config.streamingChannels;
     }

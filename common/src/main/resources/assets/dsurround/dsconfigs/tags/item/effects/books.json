@@ -1,8 +1,5 @@
 {
   "values": [
-    {
-      "id": "#c:bookshelves",
-      "required": false
-    }
+    "#dsurround:effects/is_book"
   ]
 }

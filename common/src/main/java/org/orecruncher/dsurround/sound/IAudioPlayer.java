@@ -11,4 +11,6 @@ public interface IAudioPlayer {
     void stopAll();
 
     boolean isPlaying(SoundInstance sound);
+
+    boolean isSoundSystemAvailable();
 }

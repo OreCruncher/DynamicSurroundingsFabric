@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.processing;
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
@@ -41,9 +42,14 @@ public class EntityEffectHandler extends AbstractClientHandler {
         // Get living entities in the world. Since the API does some fancy tracking of entities, we create a box
         // larger than the normal range size.
         var worldBox = AABB.unitCubeFromLowerCorner(player.getEyePosition()).inflate(this.scanRange());
-        var loadedEntities = world.getEntitiesOfClass(LivingEntity.class, worldBox);
+        var entitiesInRange = world.getEntitiesOfClass(LivingEntity.class, worldBox);
 
-        for (var entity : loadedEntities) {
+        // This will collect the list of entity IDs that we want to
+        // keep track of. Entities not in this set can be removed from
+        // the cache.
+        IntOpenHashSet tickedEntities = new IntOpenHashSet();
+
+        for (var entity : entitiesInRange) {
             this.entityCount++;
             var hasInfo = this.entityEffectLibrary.doesEntityEffectInfoExist(entity);
             var inRange = entity.closerThan(player, this.effectRange());
@@ -61,16 +67,17 @@ public class EntityEffectHandler extends AbstractClientHandler {
 
             if (info != null) {
                 if (inRange && info.isAlive() && !entity.isSpectator()) {
+                    tickedEntities.add(entity.getId());
                     if (!info.isDefault()) {
                         this.entityEffectsTicked++;
                         info.tick();
                     }
-                } else {
-                    info.deactivate();
-                    this.entityEffectLibrary.clearEntityEffectInfo(entity);
                 }
             }
         }
+
+        // Need to remove entities that were not ticked from the cache
+        this.entityEffectLibrary.cleanCache(tickedEntities);
     }
 
     @Override

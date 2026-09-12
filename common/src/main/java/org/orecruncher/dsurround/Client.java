@@ -38,6 +38,7 @@ import org.orecruncher.dsurround.sound.AudioPlayer;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public final class Client {
 
@@ -69,7 +70,7 @@ public final class Client {
 
         // Hook the config load event so set we can set the debug flags when
         // the config changes.
-        Configuration.CONFIG_CHANGED.register(cfg -> {
+        Configuration.CONFIG_CHANGED_EVENT.register(cfg -> {
             if (cfg instanceof Configuration config) {
                 if (this.logger instanceof ModLog ml) {
                     ml.setDebug(config.logging.enableDebugLogging);
@@ -101,13 +102,13 @@ public final class Client {
         }
 
         // Register the resource listener
-        ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new ReloadListener());
+        ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new ReloadListener(), Constants.asId("reload_listener"));
 
         // Do the handlers
         Handlers.registerHandlers();
 
-        ClientState.STARTED.register(this::onComplete, HandlerPriority.VERY_HIGH);
-        ClientState.ON_CONNECT.register(this::onConnect, HandlerPriority.LOW);
+        ClientState.CLIENT_START_EVENT.register(this::onComplete, HandlerPriority.VERY_HIGH);
+        ClientState.CLIENT_CONNECT_EVENT.register(this::onConnect, HandlerPriority.LOW);
 
         // Register core services
         ContainerManager.getRootContainer()
@@ -130,6 +131,7 @@ public final class Client {
                 .registerSingleton(IBiomeLibrary.class, BiomeLibrary.class)
                 .registerSingleton(IDimensionLibrary.class, DimensionLibrary.class)
                 .registerSingleton(IDimensionInformation.class, DimensionInformation.class)
+                // SeasonManager deferred as HANDLER is not initialized at this time
                 .registerFactory(ISeasonalInformation.class, () -> SeasonManager.HANDLER)
                 .registerSingleton(IBlockLibrary.class, BlockLibrary.class)
                 .registerSingleton(IItemLibrary.class, ItemLibrary.class)
@@ -143,10 +145,14 @@ public final class Client {
             ContainerManager.getRootContainer().registerSingleton(IAudioPlayer.class, AudioPlayer.class);
 
         // Kick off version checking if configured.  This should run in parallel with initialization.
-        if (Config.logging.enableModUpdateChatMessage)
-            this.versionInfo = CompletableFuture.supplyAsync(ContainerManager.resolve(IVersionChecker.class)::getUpdateText);
-        else
+        if (Config.logging.enableModUpdateChatMessage) {
+            this.versionInfo = CompletableFuture
+                    .supplyAsync(ContainerManager.resolve(IVersionChecker.class)::getUpdateText)
+                    .completeOnTimeout(Optional.empty(), 5, TimeUnit.SECONDS)
+                    .exceptionally(t -> Optional.empty());
+        } else {
             this.versionInfo = CompletableFuture.completedFuture(Optional.empty());
+        }
 
         KeyBindings.register();
 
@@ -169,10 +175,10 @@ public final class Client {
         AssetLibraryEvent.RELOAD.register(container.resolve(IEntityEffectLibrary.class)::reload, HandlerPriority.HIGH);
         AssetLibraryEvent.RELOAD.register(container.resolve(IDimensionLibrary.class)::reload, HandlerPriority.HIGH);
 
-        ClientState.TAG_SYNC.register(event -> {
+        ClientState.TAG_SYNC_EVENT.register(event -> {
             this.logger.info("Tag sync event received - reloading libraries");
             var resourceUtilities = ResourceUtilities.createForCurrentState();
-            AssetLibraryEvent.RELOAD.raise().onReload(resourceUtilities, IReloadEvent.Scope.TAGS);
+            AssetLibraryEvent.RELOAD.invoker().onReload(resourceUtilities, IReloadEvent.Scope.TAGS);
         }, HandlerPriority.VERY_HIGH);
 
         // Add our fog handler
@@ -189,6 +195,11 @@ public final class Client {
     private void onConnect(Minecraft minecraftClient) {
         // Display version information when joining a game and when a chat window is available.
         try {
+            if (this.versionInfo == null || !this.versionInfo.isDone()) {
+                this.logger.debug("Version check still pending; skipping join-time update notice");
+                return;
+            }
+
             var versionQueryResult = this.versionInfo.get();
             if (versionQueryResult.isPresent()) {
                 var result = versionQueryResult.get();

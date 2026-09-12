@@ -2,10 +2,8 @@ package org.orecruncher.dsurround.effects.blocks;
 
 import net.minecraft.client.particle.Particle;
 import net.minecraft.world.level.Level;
-import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
 
-import java.util.Optional;
+import java.util.Collection;
 
 public abstract class AbstractParticleEmitterEffect extends AbstractBlockEffect {
 
@@ -55,11 +53,11 @@ public abstract class AbstractParticleEmitterEffect extends AbstractBlockEffect 
     }
 
     protected void handleParticles() {
-        this.produceParticle().ifPresent(this::addParticle);
+        this.addParticles(this.produceParticles());
     }
 
     /*
      * Override in derived class to provide particle for the jet.
      */
-    protected abstract Optional<Particle> produceParticle();
+    protected abstract Collection<Particle> produceParticles();
 }

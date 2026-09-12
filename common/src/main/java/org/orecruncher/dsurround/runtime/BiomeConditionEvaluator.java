@@ -6,11 +6,11 @@ import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.runtime.sets.impl.BiomeVariables;
+import org.orecruncher.dsurround.lib.scripting.engine.ScriptException;
+import org.orecruncher.dsurround.lib.scripting.engine.ScriptHelpers;
+import org.orecruncher.dsurround.runtime.variables.BiomeVariables;
 
-import java.util.Optional;
-
-public class BiomeConditionEvaluator {
+public final class BiomeConditionEvaluator {
 
     private final IModLog logger;
     private final BiomeVariables biomeVariables;
@@ -28,8 +28,7 @@ public class BiomeConditionEvaluator {
     }
 
     public boolean check(Biome biome, BiomeInfo info, final Script conditions) {
-        final Object result = this.eval(biome, info, conditions);
-        return result instanceof Boolean && (boolean) result;
+        return ScriptHelpers.toBoolean(this.eval(biome, info, conditions));
     }
 
     public Object eval(Biome biome, final Script conditions) {
@@ -42,8 +41,10 @@ public class BiomeConditionEvaluator {
                 this.biomeVariables.setBiome(biome, this.context);
             else
                 this.biomeVariables.setBiome(biome, info, this.context);
-            final Optional<Object> result = this.context.eval(conditions);
-            return result.orElse(false);
+            return this.context.eval(conditions).orElse(false);
+        } catch (ScriptException e) {
+            var msg = e.getMessageForLogging(conditions.asString());
+            this.logger.error(e, msg);
         } catch (Throwable t) {
             this.logger.error(t, "Unable to evaluate script");
         }

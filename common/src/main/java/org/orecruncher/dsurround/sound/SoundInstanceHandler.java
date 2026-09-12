@@ -78,7 +78,7 @@ public final class SoundInstanceHandler {
      * @return True if the sound was remapped, false otherwise
      */
     public static boolean remapSoundPlay(final SoundInstance theSound) {
-        return SOUND_LIBRARY.remapSound(theSound)
+        return SOUND_LIBRARY.mapSound(theSound)
                 .map(s -> {
                     AUDIO_PLAYER.play(s);
                     return true;

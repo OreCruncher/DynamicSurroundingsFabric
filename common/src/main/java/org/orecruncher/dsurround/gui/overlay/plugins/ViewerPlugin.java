@@ -55,7 +55,7 @@ public class ViewerPlugin implements IDiagnosticPlugin {
         this.blockLibrary = blockLibrary;
         this.tagLibrary = tagLibrary;
         this.entityEffectLibrary = entityEffectLibrary;
-        ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect);
+        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.register(this::onCollect);
     }
 
     private void processBlockHitResult(Level world, BlockHitResult result, Collection<Component> data) {

@@ -17,7 +17,7 @@ import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.threading.IClientTasking;
-import org.orecruncher.dsurround.lib.world.WorldUtils;
+import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.processing.accents.FootstepAccents;
 import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
@@ -72,11 +72,11 @@ public class Handlers {
         this.register(StepAccentGenerator.class);
         this.register(FogHandler.class);
 
-        ClientState.TICK_END.register(this::tick);
-        ClientState.ON_CONNECT.register(this::onConnect);
-        ClientState.ON_DISCONNECT.register(this::onDisconnect);
+        ClientState.CLIENT_TICK_END_EVENT.register(this::tick);
+        ClientState.CLIENT_CONNECT_EVENT.register(this::onConnect);
+        ClientState.CLIENT_DISCONNECT_EVENT.register(this::onDisconnect);
 
-        ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::gatherDiagnostics, HandlerPriority.HIGH);
+        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.register(this::gatherDiagnostics, HandlerPriority.HIGH);
     }
 
     private void onConnect(Minecraft client) {
@@ -117,7 +117,7 @@ public class Handlers {
     protected boolean isPlayerChunkLoaded() {
         var player = GameUtils.getPlayer().orElseThrow();
         var pos = player.blockPosition();
-        return WorldUtils.isChunkLoaded(player.level(), pos);
+        return LevelCompat.isChunkLoaded(player.level(), pos);
     }
 
     public void tick(Minecraft client) {

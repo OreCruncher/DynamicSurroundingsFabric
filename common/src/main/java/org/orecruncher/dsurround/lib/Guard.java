@@ -9,7 +9,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
  */
 public final class Guard {
 
-    private static final IModLog LOGGER = ContainerManager.resolve(IModLog.class);
+    private static final IModLog LOGGER = ContainerManager.memoize(IModLog.class);
 
     /**
      * Executes the Runnable.  Exceptions are logged to the mod's logger and then suppressed.
@@ -64,5 +64,10 @@ public final class Guard {
             if (rethrow)
                 throw t;
         }
+    }
+
+    public static void assertOnClientThread() {
+        if (!GameUtils.getMC().isSameThread())
+            throw new RuntimeException("Operation being performed on non-client thread");
     }
 }

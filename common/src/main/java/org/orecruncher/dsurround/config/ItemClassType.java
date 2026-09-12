@@ -23,7 +23,9 @@ public enum ItemClassType {
     BOW("bow"),
     CROSSBOW("crossbow"),
     POTION("potion"),
-    BOOK("book");
+    BOOK("book"),
+    SPEAR("spear"),
+    MACE("mace");
 
     private static final Map<String, ItemClassType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(ItemClassType::getName, (category) -> category));
     public static final Codec<ItemClassType> CODEC = Codec.STRING.comapFlatMap(DataResult.partialGet(BY_NAME::get, () -> "unknown item class type"), d -> d.name);
@@ -34,8 +36,8 @@ public enum ItemClassType {
 
     ItemClassType(String name) {
         this.name = name;
-        this.toolBarSound = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "toolbar." + name + ".equip");
-        this.swingSound = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "toolbar." + name + ".swing");
+        this.toolBarSound = Constants.asId("toolbar." + name + ".equip");
+        this.swingSound = Constants.asId("toolbar." + name + ".swing");
     }
 
     private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);

@@ -19,7 +19,7 @@ public class OverlayManager {
         this.overlays.add(ContainerManager.resolve(CompassOverlay.class));
         this.overlays.add(ContainerManager.resolve(ClockOverlay.class));
 
-        ClientState.TICK_END.register(this::tick);
+        ClientState.CLIENT_TICK_END_EVENT.register(this::tick);
     }
 
     public void render(GuiGraphics context, DeltaTracker deltaTracker) {

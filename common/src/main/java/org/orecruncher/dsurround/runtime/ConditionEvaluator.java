@@ -8,15 +8,17 @@ import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.runtime.sets.impl.*;
-
-import java.util.Optional;
+import org.orecruncher.dsurround.lib.scripting.engine.ScriptException;
+import org.orecruncher.dsurround.lib.scripting.engine.ScriptHelpers;
+import org.orecruncher.dsurround.runtime.variables.*;
 
 public final class ConditionEvaluator implements IConditionEvaluator {
 
+    private final IModLog logger;
     private final ExecutionContext context;
 
     public ConditionEvaluator(IModLog logger) {
+        this.logger = logger;
         this.context = new ExecutionContext("Conditions", logger);
         this.context.add(ContainerManager.resolve(BiomeVariables.class));
         this.context.add(ContainerManager.resolve(DimensionVariables.class));
@@ -27,7 +29,7 @@ public final class ConditionEvaluator implements IConditionEvaluator {
         this.context.add(ContainerManager.resolve(GlobalVariables.class));
         this.context.add(ContainerManager.resolve(SeasonVariables.class));
 
-        ClientState.TICK_START.register(this::tick, HandlerPriority.VERY_HIGH);
+        ClientState.CLIENT_TICK_START_EVENT.register(this::tick, HandlerPriority.VERY_HIGH);
     }
 
     public void tick(Minecraft client) {
@@ -37,12 +39,19 @@ public final class ConditionEvaluator implements IConditionEvaluator {
     }
 
     public boolean check(final Script conditions) {
-        final Object result = eval(conditions);
-        return result instanceof Boolean b && b;
+        return ScriptHelpers.toBoolean(this.eval(conditions));
     }
 
     public Object eval(final Script conditions) {
-        final Optional<Object> result = this.context.eval(conditions);
-        return result.orElse(false);
+        try {
+            return this.context.eval(conditions).orElse(false);
+        } catch(ScriptException e) {
+            var msg = e.getMessageForLogging(conditions.asString());
+            this.logger.error(e, msg);
+            return msg;
+        } catch(Throwable t) {
+            this.logger.error(t, "Unable to evaluate script");
+        }
+        return false;
     }
 }
