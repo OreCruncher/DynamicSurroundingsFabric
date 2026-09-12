@@ -19,11 +19,11 @@ public class ReloadListener implements ResourceManagerReloadListener {
     public void onResourceManagerReload(@NotNull ResourceManager resourceManager) {
         if (GameUtils.getMC().isSameThread()) {
             Library.LOGGER.info("ReloadListener - raising notification");
-            ClientState.RESOURCE_RELOAD.raise().onResourceReload(resourceManager);
+            ClientState.RESOURCE_RELOAD_EVENT.invoker().onResourceReload(resourceManager);
 
             Library.LOGGER.info("ReloadListener - resetting configuration caches");
             var resourceUtilities = ResourceUtilities.createForResourceManager(resourceManager);
-            AssetLibraryEvent.RELOAD.raise().onReload(resourceUtilities, IReloadEvent.Scope.RESOURCES);
+            AssetLibraryEvent.RELOAD.invoker().onReload(resourceUtilities, IReloadEvent.Scope.RESOURCES);
         }
     }
 }

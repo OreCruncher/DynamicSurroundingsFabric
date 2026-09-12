@@ -18,7 +18,7 @@ public class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
     private static final String FMT_DBG_SOUND = "%s: %d";
 
     public SoundEngineDiagnosticsPlugin() {
-        ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect, HandlerPriority.LOW);
+        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.register(this::onCollect, HandlerPriority.LOW);
     }
 
     public void onCollect(CollectDiagnosticsEvent event) {

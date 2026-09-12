@@ -79,7 +79,4 @@ public final class ParticleUtils {
         }
         return y;
     }
-
-    public static void register() {
-    }
 }

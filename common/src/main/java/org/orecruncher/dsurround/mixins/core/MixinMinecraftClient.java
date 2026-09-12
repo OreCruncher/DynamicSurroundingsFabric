@@ -7,7 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.main.GameConfig;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Abilities;
-import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
 import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
@@ -30,30 +29,6 @@ public class MixinMinecraftClient {
 
     @Unique
     private final Supplier<Abilities> dsurround$cachedAbilities = Suppliers.memoize(Abilities::new);
-
-    @Inject(method = "tick()V", at = @At("HEAD"))
-    private void dsurround$tickStart(CallbackInfo info) {
-        ReflectionHelper.cast(this, Minecraft.class)
-                .ifPresent(minecraft -> ClientState.TICK_START.raise().onTickStart(minecraft));
-    }
-
-    @Inject(method = "tick()V", at = @At("RETURN"))
-    private void dsurround$tickEnd(CallbackInfo info) {
-        ReflectionHelper.cast(this, Minecraft.class)
-                .ifPresent(minecraft -> ClientState.TICK_END.raise().onTickEnd(minecraft));
-    }
-
-    @Inject(method = "destroy()V", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;info(Ljava/lang/String;)V", shift = At.Shift.AFTER, remap = false))
-    private void dsurround$stopping(CallbackInfo ci) {
-        ReflectionHelper.cast(this, Minecraft.class)
-                .ifPresent(minecraft -> ClientState.STOPPING.raise().onStopping(minecraft));
-    }
-
-    @Inject(method = "run()V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;gameThread:Ljava/lang/Thread;", shift = At.Shift.AFTER, ordinal = 0))
-    private void dsurround$starting(CallbackInfo ci) {
-        ReflectionHelper.cast(this, Minecraft.class)
-                .ifPresent(minecraft -> ClientState.STARTED.raise().onStart(minecraft));
-    }
 
     /**
      * Hooks getting player abilities when checking whether to play situational music or the standard

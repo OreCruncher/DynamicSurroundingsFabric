@@ -29,6 +29,6 @@ public class MixinFogRenderer {
         data.end = RenderSystem.getShaderFogEnd();
         data.shape = RenderSystem.getShaderFogShape();
 
-        ClientEventHooks.FOG_RENDER_EVENT.raise().onRenderFog(data, f, g);
+        ClientEventHooks.FOG_RENDER_EVENT.invoker().onRenderFog(data, f, g);
     }
 }

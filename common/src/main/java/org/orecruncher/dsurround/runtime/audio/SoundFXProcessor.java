@@ -51,8 +51,8 @@ public final class SoundFXProcessor {
     private static WorldContext worldContext = new WorldContext();
 
     static {
-        ClientEventHooks.COLLECT_DIAGNOSTICS.register(SoundFXProcessor::onGatherText);
-        ClientState.TICK_START.register(SoundFXProcessor::clientTick);
+        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.register(SoundFXProcessor::onGatherText);
+        ClientState.CLIENT_TICK_START_EVENT.register(SoundFXProcessor::clientTick);
     }
 
     public static WorldContext getWorldContext() {

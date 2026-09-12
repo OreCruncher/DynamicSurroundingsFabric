@@ -29,7 +29,7 @@ public final class ConditionEvaluator implements IConditionEvaluator {
         this.context.add(ContainerManager.resolve(GlobalVariables.class));
         this.context.add(ContainerManager.resolve(SeasonVariables.class));
 
-        ClientState.TICK_START.register(this::tick, HandlerPriority.VERY_HIGH);
+        ClientState.CLIENT_TICK_START_EVENT.register(this::tick, HandlerPriority.VERY_HIGH);
     }
 
     public void tick(Minecraft client) {

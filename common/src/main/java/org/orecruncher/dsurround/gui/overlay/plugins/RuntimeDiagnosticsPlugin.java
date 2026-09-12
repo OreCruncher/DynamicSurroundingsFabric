@@ -38,7 +38,7 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
     public RuntimeDiagnosticsPlugin(IConditionEvaluator conditionEvaluator, ISeasonalInformation seasonalInformation) {
         this.conditionEvaluator = conditionEvaluator;
         this.seasonalInformation = seasonalInformation;
-        ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect, HandlerPriority.HIGH);
+        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.register(this::onCollect, HandlerPriority.HIGH);
     }
 
     public void onCollect(CollectDiagnosticsEvent event) {

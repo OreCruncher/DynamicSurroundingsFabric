@@ -72,11 +72,11 @@ public class Handlers {
         this.register(StepAccentGenerator.class);
         this.register(FogHandler.class);
 
-        ClientState.TICK_END.register(this::tick);
-        ClientState.ON_CONNECT.register(this::onConnect);
-        ClientState.ON_DISCONNECT.register(this::onDisconnect);
+        ClientState.CLIENT_TICK_END_EVENT.register(this::tick);
+        ClientState.CLIENT_CONNECT_EVENT.register(this::onConnect);
+        ClientState.CLIENT_DISCONNECT_EVENT.register(this::onDisconnect);
 
-        ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::gatherDiagnostics, HandlerPriority.HIGH);
+        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.register(this::gatherDiagnostics, HandlerPriority.HIGH);
     }
 
     private void onConnect(Minecraft client) {

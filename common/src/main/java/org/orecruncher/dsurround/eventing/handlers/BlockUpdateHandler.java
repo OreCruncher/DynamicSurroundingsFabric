@@ -28,7 +28,7 @@ public class BlockUpdateHandler {
     private static final LongSet updatedPositions = new LongOpenHashSet(4 * 1024);
 
     static {
-        ClientState.TICK_END.register(BlockUpdateHandler::tick);
+        ClientState.CLIENT_TICK_END_EVENT.register(BlockUpdateHandler::tick);
     }
 
     /**
@@ -71,7 +71,7 @@ public class BlockUpdateHandler {
      */
     private static void tick(Minecraft ignored) {
         var updates = expand();
-        updates.ifPresent(positions -> ClientEventHooks.BLOCK_UPDATE.raise().onBlockUpdates(positions));
+        updates.ifPresent(positions -> ClientEventHooks.BLOCK_UPDATES_EVENT.invoker().onBlockUpdates(positions));
     }
 
     private static void addPosition(BlockPos pos) {

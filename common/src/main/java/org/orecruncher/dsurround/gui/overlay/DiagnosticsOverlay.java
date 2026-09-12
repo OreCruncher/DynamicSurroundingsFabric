@@ -122,7 +122,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
             this.reusableEvent.add(this.diagnostics);
             this.reusableEvent.add(this.rendering);
 
-            ClientEventHooks.COLLECT_DIAGNOSTICS.raise().onCollect(this.reusableEvent);
+            ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.invoker().onCollect(this.reusableEvent);
 
             this.left.clear();
             this.right.clear();

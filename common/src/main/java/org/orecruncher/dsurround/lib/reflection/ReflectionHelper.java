@@ -2,11 +2,8 @@ package org.orecruncher.dsurround.lib.reflection;
 
 import com.google.common.base.Suppliers;
 import it.unimi.dsi.fastutil.Pair;
-import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.annotation.NonnullByDefault;
-import net.minecraft.ReportedException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.system.NonnullDefault;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.collections.ListMap;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -14,6 +11,7 @@ import org.orecruncher.dsurround.lib.logging.ModLog;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -23,6 +21,47 @@ public final class ReflectionHelper {
 
     private static final Supplier<IModLog> LOGGER = Suppliers.memoize(() -> ModLog.createChild(Library.LOGGER, "ReflectionHelper"));
     private static final Map<Class<?>, CacheData>  cacheData = new IdentityHashMap<>(8);
+
+    /**
+     * Finds a Single Abstract method on a functional interface. Interfaces with multiple methods defined will
+     * cause an exception to be thrown.
+     *
+     * @param interfaceClass Functional interface where the SAM method is to be discovered
+     * @return SAM method on the specified interface
+     */
+    public static Method findSamMethod(Class<?> interfaceClass) {
+        if (!interfaceClass.isInterface()) {
+            throw new IllegalArgumentException("Provided type is not an interface: " + interfaceClass.getName());
+        }
+
+        Method samMethod = null;
+
+        // getMethods() returns all public methods, including inherited ones from superinterfaces
+        for (Method m : interfaceClass.getMethods()) {
+            int mods = m.getModifiers();
+
+            // Check if method is abstract, not static, not a default interface method,
+            // and not a standard java.lang.Object method (like toString or equals)
+            if (Modifier.isAbstract(mods)
+                    && !Modifier.isStatic(mods)
+                    && !m.isDefault()
+                    && !isObjectMethod(m)) {
+
+                if (samMethod != null) {
+                    throw new IllegalStateException(
+                            "Multiple abstract methods found. Interface is not a valid SAM type: " + interfaceClass.getName()
+                    );
+                }
+                samMethod = m;
+            }
+        }
+
+        if (samMethod == null) {
+            throw new IllegalArgumentException("No abstract method found on interface: " + interfaceClass.getName());
+        }
+
+        return samMethod;
+    }
 
     public static Optional<Method> findMethod(Class<?> type, String name, Class<?>... parameterTypes) {
         return findMethod(type, new String[]{name}, parameterTypes);
@@ -184,6 +223,15 @@ public final class ReflectionHelper {
         } catch (LinkageError | RuntimeException | NoSuchFieldException ignored) {
         }
         return null;
+    }
+
+    private static boolean isObjectMethod(Method m) {
+        try {
+            Object.class.getMethod(m.getName(), m.getParameterTypes());
+            return true;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
     }
 
     private static CacheData getCacheData(Class<?> clazz) {

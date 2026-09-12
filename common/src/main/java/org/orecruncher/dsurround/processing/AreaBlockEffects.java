@@ -36,7 +36,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
 
         this.blockLibrary = blockLibrary;
         this.audioPlayer = audioPlayer;
-        ClientEventHooks.BLOCK_UPDATE.register(this::blockUpdates);
+        ClientEventHooks.BLOCK_UPDATES_EVENT.register(this::blockUpdates);
 
         // Whenever things reload need to rescan the area
         AssetLibraryEvent.RELOAD.register(this::clear);

@@ -11,8 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(TagCollector.class)
 public class MixinTagCollector {
     @Inject(method = "updateTags(Lnet/minecraft/core/RegistryAccess;Z)V", at = @At("TAIL"))
-    private void dsurround$tagsUpdated(RegistryAccess registryManager, boolean local, CallbackInfo ci) {
+    private void dsurround$tagsUpdated(RegistryAccess registryAccess, boolean local, CallbackInfo ci) {
         if (local)
-            ClientState.TAG_SYNC.raise().onTagSync(registryManager);
+            ClientState.TAG_SYNC_EVENT.invoker().onTagSync(registryAccess);
     }
 }

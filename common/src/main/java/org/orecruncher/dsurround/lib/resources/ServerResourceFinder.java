@@ -19,7 +19,7 @@ public class ServerResourceFinder extends AbstractResourceFinder {
 
     static {
         lookupHelper = new ResourceLookupHelper(PackType.SERVER_DATA);
-        ClientState.RESOURCE_RELOAD.register(rm -> lookupHelper.refresh(), HandlerPriority.VERY_HIGH);
+        ClientState.RESOURCE_RELOAD_EVENT.register(rm -> lookupHelper.refresh(), HandlerPriority.VERY_HIGH);
     }
 
     protected ServerResourceFinder(IModLog logger) {

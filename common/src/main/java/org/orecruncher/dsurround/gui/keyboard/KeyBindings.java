@@ -54,7 +54,7 @@ public final class KeyBindings {
                 () -> ContainerManager.resolve(DiagnosticsOverlay.class).toggleCollection()
         );
 
-        ClientState.TICK_END.register(KeyBindings::handleMenuKeyPress);
+        ClientState.CLIENT_TICK_END_EVENT.register(KeyBindings::handleMenuKeyPress);
     }
 
     private static void registerKeyBinding(String translationKey, int code, Runnable handler) {

@@ -33,8 +33,8 @@ public final class Library {
         configureServiceDependencies();
 
         // Hook server lifecycle so logs get emitted
-        ClientState.STARTED.register((ignore -> LOGGER.info("Client starting")), HandlerPriority.VERY_HIGH);
-        ClientState.STOPPING.register(ignore -> LOGGER.info("Client stopping"), HandlerPriority.VERY_HIGH);
+        ClientState.CLIENT_START_EVENT.register((ignore -> LOGGER.info("Client starting")), HandlerPriority.VERY_HIGH);
+        ClientState.CLIENT_STOP_EVENT.register(ignore -> LOGGER.info("Client stopping"), HandlerPriority.VERY_HIGH);
     }
 
     private static void configureServiceDependencies() {

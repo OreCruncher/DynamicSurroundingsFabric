@@ -10,9 +10,9 @@ public interface IEvent<THandler> {
     void register(THandler handler);
 
     /**
-     * Raises an event passing in the entity to each callback handler.
+     * Obtains an invoker to be used for raising the event
      *
-     * @return Handler to perform the necessary processing
+     * @return Invoker to perform the necessary processing
      */
-    THandler raise();
+    THandler invoker();
 }
