@@ -164,13 +164,35 @@ record Compiler(Environment environment) {
                 }
             }
             break;
+            case NEG: {
+                // Optimize negation of a numeric constant
+                if (right instanceof Expression.Literal l) {
+                    // Should be a number; negate the constant
+                    if (l.token.type() != TokenType.NUMBER) {
+                        ScriptException.throwException(l.token, "Number expected");
+                    }
+                    var n = -ScriptHelpers.toDouble(l.value);
+                    var newToken = Token.from(TokenType.NUMBER, Double.toString(n), n, l.token.line(), l.token.position());
+                    return new Expression.Literal(this.environment, newToken);
+                }
+
+                // Optimize multiple NEG operations as they can cancel each other out
+                if (right instanceof Expression.Unary u) {
+                    if (u.operator.type() == TokenType.NEG) {
+                        // Basically we can promote the operand of the target canceling the NEG operations
+                        // out
+                        return u.right;
+                    }
+                }
+            }
+            break;
         }
         return new Expression.Unary(this.environment, operator, right);
     }
 
     Expression compile(String script) {
-        var scanner = new Scanner(script);
-        var tokens = scanner.scanTokens();
+        var scanner = new Lexer(script);
+        var tokens = scanner.getTokens();
         var rpnTokens = new RpnConverter(this.environment).infixToRpn(tokens);
         return translate(rpnTokens);
     }

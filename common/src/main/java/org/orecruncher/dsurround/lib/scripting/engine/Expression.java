@@ -18,7 +18,7 @@ public abstract class Expression {
         final Expression left;
         final Token operator;
         final Expression right;
-        final IOperationHandler function;
+        final IBinaryOperationHandler function;
 
         Binary(Environment environment, Expression left, Token operator, Expression right) {
             super(environment);
@@ -28,7 +28,7 @@ public abstract class Expression {
             this.function = this.getFunction();
         }
 
-        private IOperationHandler getFunction() {
+        private IBinaryOperationHandler getFunction() {
             return switch (this.operator.type()) {
                 case NOT_EQUAL -> (l, r) -> !this.isEqual(l.eval(), r.eval());
                 case EQUAL_EQUAL -> (l, r) -> this.isEqual(l.eval(), r.eval());
@@ -55,7 +55,7 @@ public abstract class Expression {
                 case CONDITIONAL_OR -> (l, r) -> this.toBoolean(l.eval(), true) || this.toBoolean(r.eval(), false);
                 case CONDITIONAL_AND -> (l, r) -> this.toBoolean(l.eval(), true) && this.toBoolean(r.eval(), false);
                 default -> {
-                    ScriptException.throwException(this.operator, "Unknown operator type '%s'".formatted(this.operator.lexeme()));
+                    ScriptException.throwException(this.operator, "Unknown binary operator type '%s'".formatted(this.operator.lexeme()));
                     yield null;
                 }
             };
@@ -169,21 +169,34 @@ public abstract class Expression {
 
         final Token operator;
         final Expression right;
+        final IUnaryOperationHandler function;
 
         Unary(Environment environment, Token operator, Expression right) {
             super(environment);
             this.operator = operator;
             this.right = right;
+            this.function = this.getFunction();
         }
 
         @Override
         public Object eval() {
-            return !ScriptHelpers.toBoolean(this.right.eval());
+            return this.function.eval(this.right);
         }
 
         @Override
         public String toString() {
             return "UNARY %s".formatted(this.operator.lexeme());
+        }
+
+        private IUnaryOperationHandler getFunction() {
+            return switch (this.operator.type()) {
+                case NOT -> o -> !ScriptHelpers.toBoolean(o.eval());
+                case NEG -> o -> -ScriptHelpers.toDouble(o.eval());
+                default -> {
+                    ScriptException.throwException(this.operator, "Unknown unary operator type '%s'".formatted(this.operator.lexeme()));
+                    yield null;
+                }
+            };
         }
     }
 
@@ -221,7 +234,12 @@ public abstract class Expression {
     }
 
     @FunctionalInterface
-    interface IOperationHandler {
+    interface IBinaryOperationHandler {
         Object eval(Expression expr1, Expression expr2);
+    }
+
+    @FunctionalInterface
+    interface IUnaryOperationHandler {
+        Object eval(Expression expr1);
     }
 }

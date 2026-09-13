@@ -4,7 +4,7 @@ import java.util.*;
 
 import static org.orecruncher.dsurround.lib.scripting.engine.TokenType.*;
 
-class Scanner {
+class Lexer {
 
     private final String source;
     private final List<Token> tokens = new ArrayList<>();
@@ -12,11 +12,11 @@ class Scanner {
     private int current = 0;
     private int line = 1;
 
-    Scanner(String source) {
+    Lexer(String source) {
         this.source = source;
     }
 
-    public List<Token> scanTokens() {
+    public List<Token> getTokens() {
         while (!this.isAtEnd()) {
             // We are at the beginning of the next lexeme.
             this.start = this.current;
@@ -29,6 +29,7 @@ class Scanner {
 
     private void scanToken() {
         char c = advance();
+        Token lastToken = this.tokens.isEmpty() ? null : this.tokens.getLast();
         switch (c) {
             case '(':
                 this.addToken(LEFT_PAREN);
@@ -43,10 +44,19 @@ class Scanner {
                 this.addToken(DOT);
                 break;
             case '-':
-                this.addToken(MINUS);
+                // Need to disambiguate between the binary operator and the prefix operator for negation
+                if (lastToken == null || lastToken.type().isOperator() || lastToken.type() == LEFT_PAREN) {
+                    this.addToken(NEG);
+                } else {
+                    this.addToken(PLUS);
+                }
                 break;
             case '+':
-                this.addToken(PLUS);
+                // Similar rule to negation, but the + sign is dropped because a number without a negative
+                // prefix is assumed to be positive.
+                if (!(lastToken == null || lastToken.type().isOperator() || lastToken.type() == LEFT_PAREN)) {
+                    this.addToken(PLUS);
+                }
                 break;
             case '*':
                 this.addToken(STAR);
@@ -163,7 +173,11 @@ class Scanner {
             while (this.isDigit(this.peek()));
         }
 
-        this.addToken(NUMBER, Double.parseDouble(this.source.substring(this.start, this.current)));
+        try {
+            this.addToken(NUMBER, Double.parseDouble(this.source.substring(this.start, this.current)));
+        } catch (final NumberFormatException e) {
+            ScriptException.throwException(this.line, this.start, "Invalid numeric constant");
+        }
     }
 
     private void string(char closingChar) {
@@ -175,7 +189,7 @@ class Scanner {
 
         // Unterminated string.
         if (this.isAtEnd()) {
-            ScriptException.throwException(this.line, this.current, "Unterminated string.");
+            ScriptException.throwException(this.line, this.current, "Unterminated string");
             return;
         }
 

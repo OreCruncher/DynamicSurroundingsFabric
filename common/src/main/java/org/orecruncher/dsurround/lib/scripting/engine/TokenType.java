@@ -23,6 +23,7 @@ enum TokenType {
 
     // Unary operators
     NOT(9, true, true, false),
+    NEG(9, true, true, false),
 
     // Literals
     IDENTIFIER,

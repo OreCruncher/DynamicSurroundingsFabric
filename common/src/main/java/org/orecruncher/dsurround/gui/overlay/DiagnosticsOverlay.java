@@ -1,5 +1,7 @@
 package org.orecruncher.dsurround.gui.overlay;
 
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import dev.architectury.platform.Platform;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -19,7 +21,9 @@ import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /***
  * Our debug and diagnostics overlay.  Derived from DebugHud.
@@ -33,6 +37,14 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     private static final Map<CollectDiagnosticsEvent.Section, TextColor> COLOR_MAP = new EnumMap<>(CollectDiagnosticsEvent.Section.class);
     private static final ObjectArray<CollectDiagnosticsEvent.Section> RIGHT_SIDE_LAYOUT = new ObjectArray<>();
     private static final ObjectArray<CollectDiagnosticsEvent.Section> LEFT_SIDE_LAYOUT = new ObjectArray<>();
+
+    private static final Supplier<List<Component>> SPECIAL_MODS_INSTALLED = Suppliers.memoize(() -> {
+        var builder = ImmutableList.<Component>builder();
+        for (var modId : Constants.SPECIAL_MODS)
+            if (Platform.isModLoaded(modId))
+                builder.add(Component.literal("MOD: " + modId).withStyle(SPECIAL_MOD_STYLE));
+        return builder.build();
+    });
 
     static {
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Header, ColorPalette.PUMPKIN_ORANGE);
@@ -74,7 +86,6 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     private final ObjectArray<FormattedCharSequence> right = new ObjectArray<>(64);
     private boolean showHud;
     private boolean enableCollection;
-    private String serverBranding;
 
     public DiagnosticsOverlay(ModInformation modInformation) {
         var platformName = Platform.isFabric() ? "Fabric" : "NeoForge";
@@ -96,14 +107,14 @@ public class DiagnosticsOverlay extends AbstractOverlay {
 
     @Override
     public void tick(Minecraft client) {
+        this.diagnostics.begin();
+
         // Only want to render if configured to do so and when the regular
         // diagnostic menu is not showing
         this.showHud = this.enableCollection && !this.isDebugHudEnabled();
 
         // We only want to take the processing hit if the debug overlay is activated
         if (this.showHud) {
-
-            this.diagnostics.begin();
 
             // Perform tick on the plugins
             this.plugins.forEach(p -> p.tick(client));
@@ -114,10 +125,9 @@ public class DiagnosticsOverlay extends AbstractOverlay {
             var serverBrand = GameUtils.getServerBrand();
             serverBrand.ifPresent(brand -> this.reusableEvent.add(CollectDiagnosticsEvent.Section.Header, "Server Brand: %s".formatted(brand)));
 
-            // Check for any special mods and add indicators
-            for (var modId : Constants.SPECIAL_MODS)
-                if (Platform.isModLoaded(modId))
-                    this.reusableEvent.add(CollectDiagnosticsEvent.Section.Header, Component.literal("MOD: " + modId).withStyle(SPECIAL_MOD_STYLE));
+            // Add any special mod indicators
+            for (var mod : SPECIAL_MODS_INSTALLED.get())
+                this.reusableEvent.add(CollectDiagnosticsEvent.Section.Header, mod);
 
             this.reusableEvent.add(this.diagnostics);
             this.reusableEvent.add(this.rendering);
@@ -129,9 +139,9 @@ public class DiagnosticsOverlay extends AbstractOverlay {
 
             processOutput(LEFT_SIDE_LAYOUT, this.reusableEvent, this.left);
             processOutput(RIGHT_SIDE_LAYOUT, this.reusableEvent, this.right);
-
-            this.diagnostics.end();
         }
+
+        this.diagnostics.end();
     }
 
     private static void processOutput(ObjectArray<CollectDiagnosticsEvent.Section> sections, CollectDiagnosticsEvent event, ObjectArray<FormattedCharSequence> result) {
@@ -163,12 +173,12 @@ public class DiagnosticsOverlay extends AbstractOverlay {
 
     @Override
     public void render(GuiGraphics context, float partialTick) {
+        this.rendering.begin();
         if (this.showHud) {
-            this.rendering.begin();
             this.drawText(context, this.left, true);
             this.drawText(context, this.right, false);
-            this.rendering.end();
         }
+        this.rendering.end();
     }
 
     private boolean isDebugHudEnabled() {
