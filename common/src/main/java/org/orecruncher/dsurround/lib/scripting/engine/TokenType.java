@@ -42,10 +42,20 @@ enum TokenType {
     private final boolean isUnary;
     private final boolean isBinary;
 
+    /**
+     * Default CTOR that is not an operator of some sort.
+     */
     TokenType() {
         this(-1, false, false, false);
     }
 
+    /**
+     * CTOR for tokens that are an operator
+     * @param precedence Precedence of the operator as compared to its peers. Lower number mean less precedence.
+     * @param rightAssociative The operator is right associative (operates on the operand to the right)
+     * @param isUnary The operator takes a single operand.
+     * @param isBinary The operator takes two operands.
+     */
     TokenType(final int precedence, boolean rightAssociative, boolean isUnary, boolean isBinary) {
         this.precedence = precedence;
         this.rightAssociative = rightAssociative;
@@ -61,11 +71,11 @@ enum TokenType {
         return this.rightAssociative;
     }
 
-    public boolean isUnary() {
+    public boolean isUnaryOperator() {
         return this.isUnary;
     }
 
-    public boolean isBinary() {
+    public boolean isBinaryOperator() {
         return this.isBinary;
     }
 

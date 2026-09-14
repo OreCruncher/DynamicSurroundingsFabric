@@ -88,7 +88,7 @@ record RpnConverter(Environment environment) {
             }
             // 6. Operators
             else if (token.type().isOperator()) {
-                if (token.type().isUnary() && prevToken != null && prevToken.type() != TokenType.LEFT_PAREN && !prevToken.type().isOperator()) {
+                if (token.type().isUnaryOperator() && prevToken != null && prevToken.type() != TokenType.LEFT_PAREN && !prevToken.type().isOperator()) {
                     ScriptException.throwException(token, "Unexpected character '%s'".formatted(token.lexeme()));
                 }
                 int currPrec = token.type().getPrecedence();
@@ -126,8 +126,8 @@ record RpnConverter(Environment environment) {
 
     private boolean isOperand(Token token) {
         return !this.environment.isFunction(token) &&
-                !token.type().isBinary() &&
-                !token.type().isUnary() &&
+                !token.type().isBinaryOperator() &&
+                !token.type().isUnaryOperator() &&
                 token.type() != TokenType.LEFT_PAREN &&
                 token.type() != TokenType.RIGHT_PAREN &&
                 token.type() != TokenType.COMMA;
@@ -145,13 +145,13 @@ record RpnConverter(Environment environment) {
                 stackDepth -= (token.argCount - 1);
             }
             // Case 2: Unary Operator
-            else if (token.value.type().isUnary()) {
+            else if (token.value.type().isUnaryOperator()) {
                 if (stackDepth < 1) {
                     ScriptException.throwException(token.value, "Insufficient operands for unary operator");
                 }
             }
             // Case 3: Binary Operator
-            else if (token.value.type().isBinary()) {
+            else if (token.value.type().isBinaryOperator()) {
                 if (stackDepth < 2) {
                     ScriptException.throwException(token.value, "Expected 2 operands, but found %d".formatted(stackDepth));
                 }

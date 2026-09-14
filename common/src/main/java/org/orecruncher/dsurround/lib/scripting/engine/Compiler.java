@@ -23,7 +23,7 @@ record Compiler(Environment environment) {
                 Collections.reverse(children);
 
                 stack.push(new Expression.Call(this.environment, token.value, children));
-            } else if (token.value.type().isBinary()) {
+            } else if (token.value.type().isBinaryOperator()) {
                 if (stack.size() < 2) {
                     ScriptException.throwException(token.value, "Insufficient operands for binary operator '%s'".formatted(token.value.lexeme()));
                 }
@@ -32,7 +32,7 @@ record Compiler(Environment environment) {
                 Expression result = this.optimizeBinaryOperation(left, token.value, right);
 
                 stack.push(result);
-            } else if (token.value.type().isUnary()) {
+            } else if (token.value.type().isUnaryOperator()) {
                 if (stack.isEmpty()) {
                     ScriptException.throwException(token.value, "Insufficient operands for unary operator '%s'".formatted(token.value.lexeme()));
                 }
@@ -48,7 +48,7 @@ record Compiler(Environment environment) {
         }
 
         if (stack.size() != 1) {
-            ScriptException.throwException("Extra unused tokens remain on stack.");
+            ScriptException.throwException("Extra unused tokens remain on stack");
         }
 
         return stack.pop();
@@ -59,16 +59,12 @@ record Compiler(Environment environment) {
             case STAR: {
                 // Optimize for multiplying by 0. Result will be zero, so we can just return
                 // the appropriate operand.
-                if (left instanceof Expression.Literal l) {
-                    if (l.value instanceof Number number && number.doubleValue() == 0) {
-                        return l;
-                    }
+                if (left instanceof Expression.Literal l && l.value instanceof Number number && number.doubleValue() == 0) {
+                    return l;
                 }
 
-                if (right instanceof Expression.Literal r) {
-                    if (r.value instanceof Number number && number.doubleValue() == 0) {
-                        return r;
-                    }
+                if (right instanceof Expression.Literal r && r.value instanceof Number number && number.doubleValue() == 0) {
+                    return r;
                 }
             }
             break;
@@ -91,14 +87,12 @@ record Compiler(Environment environment) {
                 }
 
                 // What if both are false
-                if (left instanceof Expression.Literal l) {
-                    if (right instanceof Expression.Literal r) {
-                        var lv = ScriptHelpers.toBoolean(l.value);
-                        var rv = ScriptHelpers.toBoolean(r.value);
-                        if (!(lv || rv)) {
-                            var newToken = Token.from(TokenType.FALSE, "FALSE", Boolean.FALSE, operator.line(), operator.position());
-                            return new Expression.Literal(this.environment, newToken);
-                        }
+                if (left instanceof Expression.Literal l &&  right instanceof Expression.Literal r) {
+                    var lv = ScriptHelpers.toBoolean(l.value);
+                    var rv = ScriptHelpers.toBoolean(r.value);
+                    if (!(lv || rv)) {
+                        var newToken = Token.from(TokenType.FALSE, "FALSE", Boolean.FALSE, operator.line(), operator.position());
+                        return new Expression.Literal(this.environment, newToken);
                     }
                 }
             }
@@ -122,14 +116,12 @@ record Compiler(Environment environment) {
                 }
 
                 // What if both are true
-                if (left instanceof Expression.Literal l) {
-                    if (right instanceof Expression.Literal r) {
-                        var lv = ScriptHelpers.toBoolean(l.value);
-                        var rv = ScriptHelpers.toBoolean(r.value);
-                        if (lv && rv) {
-                            var newToken = Token.from(TokenType.TRUE, "TRUE", Boolean.TRUE, operator.line(), operator.position());
-                            return new Expression.Literal(this.environment, newToken);
-                        }
+                if (left instanceof Expression.Literal l && right instanceof Expression.Literal r) {
+                    var lv = ScriptHelpers.toBoolean(l.value);
+                    var rv = ScriptHelpers.toBoolean(r.value);
+                    if (lv && rv) {
+                        var newToken = Token.from(TokenType.TRUE, "TRUE", Boolean.TRUE, operator.line(), operator.position());
+                        return new Expression.Literal(this.environment, newToken);
                     }
                 }
             }
@@ -155,12 +147,10 @@ record Compiler(Environment environment) {
                 }
 
                 // Optimize multiple NOT operations as they can cancel each other out
-                if (right instanceof Expression.Unary u) {
-                    if (u.operator.type() == TokenType.NOT) {
-                        // Basically we can promote the operand of the target canceling the NOT operations
-                        // out
-                        return u.right;
-                    }
+                if (right instanceof Expression.Unary u && u.operator.type() == TokenType.NOT) {
+                    // Basically we can promote the operand of the target canceling the NOT operations
+                    // out
+                    return u.right;
                 }
             }
             break;
@@ -177,12 +167,10 @@ record Compiler(Environment environment) {
                 }
 
                 // Optimize multiple NEG operations as they can cancel each other out
-                if (right instanceof Expression.Unary u) {
-                    if (u.operator.type() == TokenType.NEG) {
-                        // Basically we can promote the operand of the target canceling the NEG operations
-                        // out
-                        return u.right;
-                    }
+                if (right instanceof Expression.Unary u && u.operator.type() == TokenType.NEG) {
+                    // Basically we can promote the operand of the target canceling the NEG operations
+                    // out
+                    return u.right;
                 }
             }
             break;
@@ -191,9 +179,9 @@ record Compiler(Environment environment) {
     }
 
     Expression compile(String script) {
-        var scanner = new Lexer(script);
-        var tokens = scanner.getTokens();
+        var lexer = new Lexer(script);
+        var tokens = lexer.getTokens();
         var rpnTokens = new RpnConverter(this.environment).infixToRpn(tokens);
-        return translate(rpnTokens);
+        return this.translate(rpnTokens);
     }
 }

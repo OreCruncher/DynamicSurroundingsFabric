@@ -40,8 +40,8 @@ public abstract class Expression {
                 case PLUS -> (l, r) -> {
                     var leftValue = l.eval();
                     var rightValue = r.eval();
-                    if (leftValue instanceof Number && rightValue instanceof Number) {
-                        return ((Number) leftValue).doubleValue() + ((Number) rightValue).doubleValue();
+                    if (leftValue instanceof Number n1 && rightValue instanceof Number n2) {
+                        return n1.doubleValue() + n2.doubleValue();
                     }
 
                     if (leftValue instanceof String || rightValue instanceof String) {
@@ -64,7 +64,7 @@ public abstract class Expression {
         @Override
         public Object eval() {
             // Defer evaluation of operands. Depending on the operand both may not need to be
-            // evaluated (such as &&).
+            // evaluated (such as && or lib.oneOf).
             return this.function.eval(this.left, this.right);
         }
 
@@ -100,8 +100,8 @@ public abstract class Expression {
 
     static final class Call extends Expression {
 
-        final static Expression[] NO_ARGUMENTS = new Expression[0];
-        final static Object[] NO_VALUES = new Object[0];
+        final static Expression[] NO_ARGUMENTS = {};
+        final static Object[] NO_VALUES = {};
 
         final Token token;
         final IScriptFunction function;
@@ -123,11 +123,8 @@ public abstract class Expression {
 
         @Override
         public Object eval() {
-            // Get the data for the call
-            if (this.arguments.length > 0) {
-                for (int i = 0; i < this.arguments.length; i++) {
-                    this.values[i] = this.arguments[i].eval();
-                }
+            for (int i = 0; i < this.arguments.length; i++) {
+                this.values[i] = this.arguments[i].eval();
             }
             return this.function.evaluate(this.values);
         }
