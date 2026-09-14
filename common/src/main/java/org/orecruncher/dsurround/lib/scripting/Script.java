@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.lib.scripting;
 
+import com.google.common.base.Preconditions;
 import com.mojang.serialization.Codec;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.scripting.engine.Expression;
@@ -19,6 +20,7 @@ public class Script {
     private Expression compiledScript;
 
     public Script(String script) {
+        Preconditions.checkNotNull(script);
         this.script = script;
     }
 

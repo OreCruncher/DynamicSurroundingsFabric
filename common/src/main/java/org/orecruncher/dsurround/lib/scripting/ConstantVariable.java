@@ -1,12 +1,9 @@
 package org.orecruncher.dsurround.lib.scripting;
 
-public class ConstantVariable<T> implements IScriptVariable {
+import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
 
-    final T value;
-
-    ConstantVariable(T value) {
-        this.value = value;
-    }
+public record ConstantVariable<T>(T value) implements IScriptVariable {
 
     @Override
     public Object getValue() {
@@ -14,11 +11,12 @@ public class ConstantVariable<T> implements IScriptVariable {
     }
 
     @Override
-    public String toString() {
+    public @NotNull String toString() {
         return "Constant %s".formatted(this.value.toString());
     }
 
     public static <T> ConstantVariable<T> of(T value) {
+        Preconditions.checkNotNull(value);
         return new ConstantVariable<>(value);
     }
 

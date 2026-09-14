@@ -2,7 +2,6 @@ package org.orecruncher.dsurround.runtime.variables;
 
 import org.orecruncher.dsurround.lib.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 
@@ -19,7 +18,8 @@ public class DiurnalVariables extends VariableSet {
         super("diurnal");
     }
 
-    public void update(IVariableAccess variableAccess) {
+    @Override
+    public void tick() {
 
         if (GameUtils.isInGame()) {
             var world = GameUtils.getWorld().orElseThrow();
@@ -42,11 +42,11 @@ public class DiurnalVariables extends VariableSet {
 
     @Override
     public void configure(IConfigureDefinition config) {
-        config.defineFunction(id("isDay"), 0, l -> this.isDay);
-        config.defineFunction(id("isNight"), 0, l -> this.isNight);
-        config.defineFunction(id("isSunrise"), 0, l -> this.isSunrise);
-        config.defineFunction(id("isSunset"), 0, l -> this.isSunset);
-        config.defineFunction(id("getMoonPhaseFactor"), 0, l -> this.moonPhaseFactor);
-        config.defineFunction(id("getCelestialAngle"), 0, l -> this.celestialAngle);
+        config.defineFunction(id("isDay"), l -> this.isDay);
+        config.defineFunction(id("isNight"), l -> this.isNight);
+        config.defineFunction(id("isSunrise"), l -> this.isSunrise);
+        config.defineFunction(id("isSunset"), l -> this.isSunset);
+        config.defineFunction(id("getMoonPhaseFactor"), l -> this.moonPhaseFactor);
+        config.defineFunction(id("getCelestialAngle"), l -> this.celestialAngle);
     }
 }

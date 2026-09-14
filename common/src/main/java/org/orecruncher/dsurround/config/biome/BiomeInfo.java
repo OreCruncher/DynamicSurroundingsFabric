@@ -189,6 +189,10 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         return this.traits.contains(trait);
     }
 
+    public boolean hasTrait(BiomeTrait trait) {
+        return this.traits.contains(trait);
+    }
+
     @Override
     public Collection<ISoundFactory> findBiomeSoundMatches() {
         return this.loopSounds

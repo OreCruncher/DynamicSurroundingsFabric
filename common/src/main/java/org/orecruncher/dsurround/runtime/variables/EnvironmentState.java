@@ -15,8 +15,8 @@ public class EnvironmentState extends VariableSet {
 
     @Override
     public void configure(IConfigureDefinition config) {
-        config.defineFunction(id("isInVillage"), 0, l -> this.scanner.isInVillage());
-        config.defineFunction(id("isInside"), 0, l -> this.scanner.isInside());
-        config.defineFunction(id("isUnderwater"), 0, l -> this.scanner.isUnderwater());
+        config.defineFunction(id("isInVillage"), l -> this.scanner.isInVillage());
+        config.defineFunction(id("isInside"), l -> this.scanner.isInside());
+        config.defineFunction(id("isUnderwater"), l -> this.scanner.isUnderwater());
     }
 }

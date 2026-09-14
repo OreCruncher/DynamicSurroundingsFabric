@@ -2,9 +2,12 @@ package org.orecruncher.dsurround.lib.scripting;
 
 import org.orecruncher.dsurround.lib.scripting.engine.ScriptHelpers;
 
-public class MathFunctions implements IConfigureScripting {
-    @Override
-    public void configure(IConfigureDefinition setup) {
+/**
+ * Core math functions that are automatically defined for the Script Engine when it is initialized
+ */
+public final class MathFunctions {
+
+    public static void configure(IConfigureDefinition setup) {
 
         setup.defineVariable("math.pi", ConstantVariable.of(Math.PI));
         setup.defineVariable("math.tau", ConstantVariable.of(Math.TAU));
@@ -21,9 +24,10 @@ public class MathFunctions implements IConfigureScripting {
         setup.defineFunction("math.exp", 1, l -> Math.exp(toDouble(l[0])));
 
         setup.defineFunction("math.sqrt", 1, l -> Math.sqrt(toDouble(l[0])));
-        setup.defineFunction("math.round", 1,  l -> Math.round(toDouble(l[0])));
+        setup.defineFunction("math.round", 1, l -> (double) Math.round(toDouble(l[0])));
+        setup.defineFunction("math.abs", 1, l -> Math.abs(toDouble(l[0])));
 
-        setup.defineFunction("math.random", 0, l -> Math.random());
+        setup.defineFunction("math.random", l -> Math.random());
     }
 
     private static double toDouble(Object l) {

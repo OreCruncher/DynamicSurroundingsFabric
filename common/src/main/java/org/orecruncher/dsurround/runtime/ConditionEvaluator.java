@@ -20,6 +20,7 @@ public final class ConditionEvaluator implements IConditionEvaluator {
     public ConditionEvaluator(IModLog logger) {
         this.logger = logger;
         this.context = new ExecutionContext("Conditions", logger);
+        this.context.configureScripting(ContainerManager.resolve(PlatformFunctions.class));
         this.context.add(ContainerManager.resolve(BiomeVariables.class));
         this.context.add(ContainerManager.resolve(DimensionVariables.class));
         this.context.add(ContainerManager.resolve(DiurnalVariables.class));
@@ -35,7 +36,7 @@ public final class ConditionEvaluator implements IConditionEvaluator {
     public void tick(Minecraft client) {
         // Only want to tick while in game and the GUI is not paused.
         if (GameUtils.isInGame() && !client.isPaused())
-            this.context.update();
+            this.context.tick();
     }
 
     public boolean check(final Script conditions) {

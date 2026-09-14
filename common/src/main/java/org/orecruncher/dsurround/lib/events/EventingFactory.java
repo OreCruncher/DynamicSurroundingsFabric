@@ -1,10 +1,9 @@
 package org.orecruncher.dsurround.lib.events;
 
 import org.jetbrains.annotations.NotNull;
-import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
+import org.orecruncher.dsurround.lib.reflection.HandleCache;
+import org.orecruncher.dsurround.lib.reflection.IMethodCallHandler;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -62,8 +61,7 @@ public final class EventingFactory {
     @SuppressWarnings("unchecked")
     private static <IHandler> Function<List<IHandler>, IHandler> createProxy(Class<IHandler> clazz) {
         try {
-            var method = ReflectionHelper.findSamMethod(clazz);
-            var methodHandle = MethodHandles.lookup().unreflect(method);
+            var methodHandle = HandleCache.forFunctionalInterface(clazz);
             return listeners -> {
                 // If there is only one listener it can be directly accessed.
                 if (listeners.size() == 1) {
@@ -100,13 +98,11 @@ public final class EventingFactory {
     }
 
     private record EventLoop<IHandler>(String name, List<IHandler> listeners,
-                                       MethodHandle methodHandle) implements InvocationHandler {
+                                       IMethodCallHandler methodHandle) implements InvocationHandler {
         @Override
-        public Object invoke(Object proxy, Method ignored, Object[] args) throws Throwable {
+        public Object invoke(Object proxy, Method ignored, Object[] args) {
             for (var handler : this.listeners)
-                // It is slightly faster to do it this way than to pre-create an array of bound
-                // method handles. Not sure why.
-                this.methodHandle.bindTo(handler).invokeWithArguments(args);
+                this.methodHandle.invoke(handler, args);
             return null;
         }
 

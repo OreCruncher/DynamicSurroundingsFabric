@@ -4,7 +4,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
-import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
@@ -38,7 +37,7 @@ public class PlayerVariables extends VariableSet {
     }
 
     @Override
-    public void update(IVariableAccess variableAccess) {
+    public void tick() {
 
         if (GameUtils.isInGame()) {
             final var player = GameUtils.getPlayer().orElseThrow();
@@ -97,28 +96,28 @@ public class PlayerVariables extends VariableSet {
 
     @Override
     public void configure(IConfigureDefinition config) {
-        config.defineFunction(id("isCreative"), 0, l -> this.isCreative);
-        config.defineFunction(id("isBurning"), 0, l -> this.isBurning);
-        config.defineFunction(id("isSuffocating"), 0, l -> this.isSuffocating);
-        config.defineFunction(id("isFlying"), 0, l -> this.isFlying);
-        config.defineFunction(id("isSprinting"), 0, l -> this.isSprinting);
-        config.defineFunction(id("isInLava"), 0, l -> this.isInLava);
-        config.defineFunction(id("isInvisible"), 0, l -> this.isInvisible);
-        config.defineFunction(id("isInWater"), 0, l -> this.isInWater);
-        config.defineFunction(id("isMoving"), 0, l -> this.isMoving);
-        config.defineFunction(id("isWet"), 0, l -> this.isWet);
-        config.defineFunction(id("isRiding"), 0, l -> this.isRiding);
-        config.defineFunction(id("isOnGround"), 0, l -> this.isOnGround);
-        config.defineFunction(id("canRainOn"), 0, l -> this.canRainOn);
-        config.defineFunction(id("canSeeSky"), 0, l -> this.canSeeSky);
-        config.defineFunction(id("getHealth"), 0, l -> this.health);
-        config.defineFunction(id("getMaxHealth"), 0, l -> this.maxHealth);
-        config.defineFunction(id("getFoodLevel"), 0, l -> this.foodLevel);
-        config.defineFunction(id("getFoodSaturationLevel"), 0, l -> this.foodSaturationLevel);
-        config.defineFunction(id("getX"), 0, l -> this.x);
-        config.defineFunction(id("getY"), 0, l -> this.y);
-        config.defineFunction(id("getZ"), 0, l -> this.z);
-        config.defineFunction(id("hasEffect"), 1, l -> this.hasEffect(l[0].toString()));
+        config.defineFunction(id("isCreative"), l -> this.isCreative);
+        config.defineFunction(id("isBurning"), l -> this.isBurning);
+        config.defineFunction(id("isSuffocating"), l -> this.isSuffocating);
+        config.defineFunction(id("isFlying"), l -> this.isFlying);
+        config.defineFunction(id("isSprinting"), l -> this.isSprinting);
+        config.defineFunction(id("isInLava"), l -> this.isInLava);
+        config.defineFunction(id("isInvisible"), l -> this.isInvisible);
+        config.defineFunction(id("isInWater"), l -> this.isInWater);
+        config.defineFunction(id("isMoving"), l -> this.isMoving);
+        config.defineFunction(id("isWet"), l -> this.isWet);
+        config.defineFunction(id("isRiding"), l -> this.isRiding);
+        config.defineFunction(id("isOnGround"), l -> this.isOnGround);
+        config.defineFunction(id("canRainOn"), l -> this.canRainOn);
+        config.defineFunction(id("canSeeSky"), l -> this.canSeeSky);
+        config.defineFunction(id("getHealth"), l -> this.health);
+        config.defineFunction(id("getMaxHealth"), l -> this.maxHealth);
+        config.defineFunction(id("getFoodLevel"), l -> this.foodLevel);
+        config.defineFunction(id("getFoodSaturationLevel"), l -> this.foodSaturationLevel);
+        config.defineFunction(id("getX"), l -> this.x);
+        config.defineFunction(id("getY"), l -> this.y);
+        config.defineFunction(id("getZ"), l -> this.z);
+        config.defineFunction(id("hasEffect"), l -> this.hasEffect(l[0].toString()));
     }
 
     private boolean hasEffect(String effect) {

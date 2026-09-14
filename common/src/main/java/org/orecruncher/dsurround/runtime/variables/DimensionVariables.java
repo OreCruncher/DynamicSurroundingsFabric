@@ -2,7 +2,6 @@ package org.orecruncher.dsurround.runtime.variables;
 
 import net.minecraft.world.level.dimension.DimensionType;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
@@ -19,7 +18,7 @@ public class DimensionVariables extends VariableSet {
     }
 
     @Override
-    public void update(IVariableAccess variableAccess) {
+    public void tick() {
         if (GameUtils.isInGame()) {
             var world = GameUtils.getWorld().orElseThrow();
             final DimensionType dim = world.dimensionType();
@@ -37,9 +36,9 @@ public class DimensionVariables extends VariableSet {
 
     @Override
     public void configure(IConfigureDefinition config) {
-        config.defineFunction(id("getId"), 0, l -> this.id);
-        config.defineFunction(id("getDimName"), 0, l -> this.name);
-        config.defineFunction(id("hasSky"), 0, l -> this.hasSky);
-        config.defineFunction(id("isSuperFlat"), 0, l -> this.isSuperFlat);
+        config.defineFunction(id("getId"), l -> this.id);
+        config.defineFunction(id("getDimName"), l -> this.name);
+        config.defineFunction(id("hasSky"), l -> this.hasSky);
+        config.defineFunction(id("isSuperFlat"), l -> this.isSuperFlat);
     }
 }

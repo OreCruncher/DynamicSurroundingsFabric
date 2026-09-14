@@ -1,10 +1,10 @@
 package org.orecruncher.dsurround.lib.scripting.engine;
 
+import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.scripting.*;
 
-public class ScriptEngine implements IConfigureDefinition {
+public final class ScriptEngine implements IConfigureDefinition {
 
     final Environment environment;
     final Compiler compiler;
@@ -12,42 +12,32 @@ public class ScriptEngine implements IConfigureDefinition {
     public ScriptEngine() {
         this.environment = new Environment();
         this.compiler = new Compiler(this.environment);
-        var libraryFunctions = ContainerManager.resolve(LibraryFunctions.class);
-        libraryFunctions.configure(this);
-        var mathFunctions = new MathFunctions();
-        mathFunctions.configure(this);
+        LibraryFunctions.configure(this);
+        MathFunctions.configure(this);
     }
 
     /**
-     * Compiles the script into a syntax tree that can be used for evaluation. This result should be cached
+     * Compiles the script into a syntax tree that can be used for evaluation. Expression instances should be cached
      * for performance.
      * @param script The script compile
      * @return An expression tree use to execute the script logic and obtain a value
      */
     public Expression compile(String script) {
+        Preconditions.checkNotNull(script);
         return this.compiler.compile(script);
     }
 
-    /**
-     * Defines a variable reference with an associated delegate that retrieves the value
-     * as needed. Once defined the variable does not need further updates as any changes
-     * are captured by using the delegate.
-     * @param variableName Name of the variable to set
-     * @param delegate The delegate use to retrieve the current variable state.
-     */
     @Override
-    public void defineVariable(String variableName, @NotNull IScriptVariable delegate) {
-        this.environment.defineVariable(variableName, delegate);
+    public void defineVariable(@NotNull String name, @NotNull IScriptVariable delegate) {
+        Preconditions.checkNotNull(name);
+        Preconditions.checkNotNull(delegate);
+        this.environment.defineVariable(name, delegate);
     }
 
-    /**
-     * Defines a function reference with associate delegate that implements the function.
-     * @param name Name of the function
-     * @param arity The number of parameters the function expects. A negative value indicates a variable number of parameters but with a certain minimum required.
-     * @param delegate The delegate to use when executing the function
-     */
     @Override
-    public void defineFunction(String name, int arity, @NotNull IScriptFunction delegate) {
+    public void defineFunction(@NotNull String name, int arity, @NotNull IScriptFunction delegate) {
+        Preconditions.checkNotNull(name);
+        Preconditions.checkNotNull(delegate);
         this.environment.defineFunction(name, arity, delegate);
     }
 

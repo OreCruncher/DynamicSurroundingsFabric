@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.runtime;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
@@ -21,10 +22,11 @@ public final class BiomeConditionEvaluator {
         this.context = new ExecutionContext("BiomeConditions", logger);
         this.biomeVariables = new BiomeVariables(biomeLibrary);
         this.context.add(this.biomeVariables);
+        this.context.configureScripting(ContainerManager.resolve(PlatformFunctions.class));
     }
 
     public void reset() {
-        this.biomeVariables.setBiome(null, null, this.context);
+        this.biomeVariables.setBiome(null, null);
     }
 
     public boolean check(Biome biome, BiomeInfo info, final Script conditions) {
@@ -38,9 +40,9 @@ public final class BiomeConditionEvaluator {
     public Object eval(Biome biome, BiomeInfo info, final Script conditions) {
         try {
             if (info == null)
-                this.biomeVariables.setBiome(biome, this.context);
+                this.biomeVariables.setBiome(biome);
             else
-                this.biomeVariables.setBiome(biome, info, this.context);
+                this.biomeVariables.setBiome(biome, info);
             return this.context.eval(conditions).orElse(false);
         } catch (ScriptException e) {
             var msg = e.getMessageForLogging(conditions.asString());

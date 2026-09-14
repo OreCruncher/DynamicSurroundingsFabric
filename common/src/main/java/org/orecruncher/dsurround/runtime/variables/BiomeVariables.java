@@ -6,7 +6,6 @@ import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Lazy;
-import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 
@@ -29,25 +28,25 @@ public class BiomeVariables extends VariableSet {
     }
 
     @Override
-    public void update(IVariableAccess variableAccess) {
+    public void tick() {
         Biome newBiome = null;
         if (GameUtils.isInGame()) {
             var player = GameUtils.getPlayer().orElseThrow();
             newBiome = player.level().getBiome(player.getOnPos()).value();
         }
-        this.setBiome(newBiome, variableAccess);
+        this.setBiome(newBiome);
     }
 
-    public void setBiome(final Biome biome, IVariableAccess variableAccess) {
+    public void setBiome(final Biome biome) {
         if (biome != null) {
             BiomeInfo info = this.biomeLibrary.getBiomeInfo(biome);
-            this.setBiome(biome, info, variableAccess);
+            this.setBiome(biome, info);
         } else {
-            this.setBiome(null, null, variableAccess);
+            this.setBiome(null, null);
         }
     }
 
-    public void setBiome(final Biome biome, final BiomeInfo info, IVariableAccess variableAccess) {
+    public void setBiome(final Biome biome, final BiomeInfo info) {
         this.biome = biome;
         this.info = info;
         this.id.reset();
@@ -56,13 +55,13 @@ public class BiomeVariables extends VariableSet {
 
     @Override
     public void configure(IConfigureDefinition config) {
-        config.defineFunction(id("getModId"), 0, l -> this.info.getBiomeId().getNamespace());
-        config.defineFunction(id("getId"), 0, l -> this.id.get());
-        config.defineFunction(id("getName"), 0, l -> this.info.getBiomeName());
-        config.defineFunction(id("getRainfall"), 0, l -> this.info.getDownfall());
-        config.defineFunction(id("getTemperature"), 0, l -> this.biome.getBaseTemperature());
-        config.defineFunction(id("getPrecipitationType"), 0, l -> this.precipitationType.get());
-        config.defineFunction(id("getTraits"), 0, l -> this.info.getTraits().toString());
+        config.defineFunction(id("getModId"), l -> this.info.getBiomeId().getNamespace());
+        config.defineFunction(id("getId"), l -> this.id.get());
+        config.defineFunction(id("getName"), l -> this.info.getBiomeName());
+        config.defineFunction(id("getRainfall"), l -> this.info.getDownfall());
+        config.defineFunction(id("getTemperature"), l -> this.biome.getBaseTemperature());
+        config.defineFunction(id("getPrecipitationType"), l -> this.precipitationType.get());
+        config.defineFunction(id("getTraits"), l -> this.info.getTraits().toString());
         config.defineFunction(id("is"), 1, l -> this.is(l[0]));
         config.defineFunction(id("isAllOf"), -1, this::isAllOf);
         config.defineFunction(id("isOneOf"), -1, this::isOneOf);
@@ -90,6 +89,6 @@ public class BiomeVariables extends VariableSet {
     }
 
     private boolean hasTrait(BiomeTrait trait) {
-        return this.info != null && this.info.getTraits().contains(trait);
+        return this.info != null && this.info.hasTrait(trait);
     }
 }

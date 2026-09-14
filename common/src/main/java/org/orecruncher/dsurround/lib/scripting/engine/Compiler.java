@@ -126,6 +126,15 @@ record Compiler(Environment environment) {
                 }
             }
             break;
+            case PLUS: {
+                // Check for concatenating two strings
+                if (left instanceof Expression.Literal l && l.token.type() == TokenType.STRING && right instanceof Expression.Literal r && r.token.type() == TokenType.STRING) {
+                    var result = l.value.toString() + r.value.toString();
+                    var newToken = Token.from(TokenType.STRING, result, result, operator.line(), operator.position());
+                    return new Expression.Literal(this.environment, newToken);
+                }
+            }
+            break;
         }
         return new Expression.Binary(this.environment, left, operator, right);
     }

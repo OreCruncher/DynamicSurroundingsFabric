@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.runtime.variables;
 
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.scripting.IVariableAccess;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
@@ -21,7 +20,7 @@ public class SeasonVariables extends VariableSet {
     }
 
     @Override
-    public void update(IVariableAccess variableAccess) {
+    public void tick() {
         if (GameUtils.isInGame()) {
             this.isSpring = this.seasonalInformation.isSpring();
             this.isSummer = this.seasonalInformation.isSummer();
@@ -37,9 +36,9 @@ public class SeasonVariables extends VariableSet {
 
     @Override
     public void configure(IConfigureDefinition config) {
-        config.defineFunction(id("isSpring"), 0, l -> this.isSpring);
-        config.defineFunction(id("isSummer"), 0, l -> this.isSummer);
-        config.defineFunction(id("isAutumn"), 0, l -> this.isAutumn);
-        config.defineFunction(id("isWinter"), 0, l -> this.isWinter);
+        config.defineFunction(id("isSpring"), l -> this.isSpring);
+        config.defineFunction(id("isSummer"), l -> this.isSummer);
+        config.defineFunction(id("isAutumn"), l -> this.isAutumn);
+        config.defineFunction(id("isWinter"), l -> this.isWinter);
     }
 }

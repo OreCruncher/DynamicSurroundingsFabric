@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.lib.scripting;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.engine.Expression;
@@ -9,7 +10,7 @@ import org.orecruncher.dsurround.lib.scripting.engine.ScriptHelpers;
 
 import java.util.*;
 
-public final class ExecutionContext implements IVariableAccess {
+public final class ExecutionContext {
 
     private final IModLog logger;
     private final String contextName;
@@ -25,6 +26,7 @@ public final class ExecutionContext implements IVariableAccess {
     }
 
     public void add(final VariableSet varSet) {
+        Preconditions.checkNotNull(varSet);
         if (this.variables.contains(varSet))
             throw new IllegalStateException(String.format("Variable set '%s' already defined!", varSet.getSetName()));
 
@@ -32,21 +34,16 @@ public final class ExecutionContext implements IVariableAccess {
         this.configureScripting(varSet);
     }
 
-    private void configureScripting(IConfigureScripting config) {
+    public void configureScripting(IConfigureScripting config) {
         config.configure(this.engine);
-    }
-
-    @Override
-    public void put(String variableName, IScriptVariable value) {
-        this.engine.defineVariable(variableName, value);
     }
 
     public String getName() {
         return this.contextName;
     }
 
-    public void update() {
-        this.variables.forEach(s -> s.update(this));
+    public void tick() {
+        this.variables.forEach(VariableSet::tick);
     }
 
     public boolean check(final Script script) {
@@ -54,6 +51,7 @@ public final class ExecutionContext implements IVariableAccess {
     }
 
     public Optional<Object> eval(final Script script) {
+        Preconditions.checkNotNull(script);
         try {
             var cached = script.getCompiledScript();
             var func = cached.orElseGet(() -> {

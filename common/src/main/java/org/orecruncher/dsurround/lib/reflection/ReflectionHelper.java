@@ -1,11 +1,11 @@
 package org.orecruncher.dsurround.lib.reflection;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import it.unimi.dsi.fastutil.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.collections.ListMap;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 
@@ -20,7 +20,6 @@ import java.util.function.Supplier;
 public final class ReflectionHelper {
 
     private static final Supplier<IModLog> LOGGER = Suppliers.memoize(() -> ModLog.createChild(Library.LOGGER, "ReflectionHelper"));
-    private static final Map<Class<?>, CacheData>  cacheData = new IdentityHashMap<>(8);
 
     /**
      * Finds a Single Abstract method on a functional interface. Interfaces with multiple methods defined will
@@ -29,7 +28,9 @@ public final class ReflectionHelper {
      * @param interfaceClass Functional interface where the SAM method is to be discovered
      * @return SAM method on the specified interface
      */
-    public static Method findSamMethod(Class<?> interfaceClass) {
+    static Method findSamMethod(Class<?> interfaceClass) {
+        Preconditions.checkNotNull(interfaceClass);
+
         if (!interfaceClass.isInterface()) {
             throw new IllegalArgumentException("Provided type is not an interface: " + interfaceClass.getName());
         }
@@ -63,29 +64,17 @@ public final class ReflectionHelper {
         return samMethod;
     }
 
-    public static Optional<Method> findMethod(Class<?> type, String name, Class<?>... parameterTypes) {
-        return findMethod(type, new String[]{name}, parameterTypes);
-    }
+    static Optional<Method> findMethod(@NotNull Class<?> type, @NotNull String[] names, @Nullable Class<?>... parameterTypes) {
+        Preconditions.checkNotNull(type);
+        Preconditions.checkNotNull(names);
 
-    public static Optional<Method> findMethod(@NotNull Class<?> type, @NotNull String[] names, @Nullable Class<?>... parameterTypes) {
-        Objects.requireNonNull(type, "type");
-        if (names == null || names.length == 0)
+        if (names.length == 0)
             return Optional.empty();
-
-        // Prefer the first name in the list for caching. It's possible that a method was identified previously by
-        // obfuscated name rather than mapped name.
-        var preferredName = names[0];
-
-        var data = getCacheData(type);
-        if (data.methods.containsKey(preferredName)) {
-            return Optional.ofNullable(data.methods.get(preferredName));
-        }
 
         for (String name : names) {
             for (Class<?> current = type; current != null; current = current.getSuperclass()) {
                 var result = resolveMethod(current, name, parameterTypes);
                 if (result != null) {
-                    data.methods.put(preferredName, result);
                     return Optional.of(result);
                 }
             }
@@ -95,45 +84,27 @@ public final class ReflectionHelper {
             for (Class<?> xface : type.getInterfaces()) {
                 var result = resolveMethod(xface, name, parameterTypes);
                 if (result != null) {
-                    data.methods.put(preferredName, result);
                     return Optional.of(result);
                 }
             }
         }
 
-        data.methods.put(preferredName, null);
         return Optional.empty();
     }
 
-    public static Optional<Field> findField(Class<?> type, String name) {
-        return findField(type, new String[]{name});
-    }
-
-    public static Optional<Field> findField(Class<?> type, String[] names) {
-        Objects.requireNonNull(type, "type");
-        if (names == null || names.length == 0)
-            return Optional.empty();
-
-        // Prefer the first name in the list for caching. It's possible that a field was identified previously by
-        // obfuscated name rather than mapped name.
-        var preferredName = names[0];
-
-        var data = getCacheData(type);
-        if (data.fields.containsKey(preferredName)) {
-            return Optional.ofNullable(data.fields.get(preferredName));
-        }
+    static Optional<Field> findField(Class<?> type, String[] names) {
+        Preconditions.checkNotNull(type);
+        Preconditions.checkNotNull(names);
 
         for (String name : names) {
             for (Class<?> current = type; current != null; current = current.getSuperclass()) {
                 var result = resolveField(current, name);
                 if (result != null) {
-                    data.fields.put(preferredName, result);
                     return Optional.of(result);
                 }
             }
         }
 
-        data.fields.put(preferredName, null);
         return Optional.empty();
     }
 
@@ -234,24 +205,4 @@ public final class ReflectionHelper {
         }
     }
 
-    private static CacheData getCacheData(Class<?> clazz) {
-        var data = cacheData.get(clazz);
-        if (data == null) {
-            data = new CacheData(clazz);
-            cacheData.put(clazz, data);
-        }
-        return data;
-    }
-
-    private static class CacheData {
-        public final Class<?> clazz;
-        public final Map<String, Method> methods;
-        public final Map<String, Field> fields;
-
-        public CacheData(Class<?> clazz) {
-            this.clazz = clazz;
-            this.methods = new ListMap<>();
-            this.fields = new ListMap<>();
-        }
-    }
 }
