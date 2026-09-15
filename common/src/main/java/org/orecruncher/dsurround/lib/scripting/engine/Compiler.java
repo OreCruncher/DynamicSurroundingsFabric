@@ -9,12 +9,12 @@ record Compiler(Environment environment) {
 
         // Iterate through the tokens generating a syntax tree
         for (var token : tokens) {
-            if (token.isFunction) {
+            if (token.isFunction()) {
                 List<Expression> children = new ArrayList<>();
                 // Pop N arguments off the stack (popped in reverse order)
-                for (int i = 0; i < token.argCount; i++) {
+                for (int i = 0; i < token.argCount(); i++) {
                     if (stack.isEmpty()) {
-                        ScriptException.throwException(token.value, "Insufficient operands for function '%s'".formatted(token.value.lexeme()));
+                        ScriptException.throwException(token.token(), "Insufficient operands for function '%s'".formatted(token.token().lexeme()));
                     }
                     children.add(stack.pop());
                 }
@@ -22,28 +22,28 @@ record Compiler(Environment environment) {
                 // Reverse to restore original argument ordering
                 Collections.reverse(children);
 
-                stack.push(new Expression.Call(this.environment, token.value, children));
-            } else if (token.value.type().isBinaryOperator()) {
+                stack.push(new Expression.Call(this.environment, token.token(), children));
+            } else if (token.token().type().isBinaryOperator()) {
                 if (stack.size() < 2) {
-                    ScriptException.throwException(token.value, "Insufficient operands for binary operator '%s'".formatted(token.value.lexeme()));
+                    ScriptException.throwException(token.token(), "Insufficient operands for binary operator '%s'".formatted(token.token().lexeme()));
                 }
                 Expression right = stack.pop();
                 Expression left = stack.pop();
-                Expression result = this.optimizeBinaryOperation(left, token.value, right);
+                Expression result = this.optimizeBinaryOperation(left, token.token(), right);
 
                 stack.push(result);
-            } else if (token.value.type().isUnaryOperator()) {
+            } else if (token.token().type().isUnaryOperator()) {
                 if (stack.isEmpty()) {
-                    ScriptException.throwException(token.value, "Insufficient operands for unary operator '%s'".formatted(token.value.lexeme()));
+                    ScriptException.throwException(token.token(), "Insufficient operands for unary operator '%s'".formatted(token.token().lexeme()));
                 }
                 Expression right = stack.pop();
-                var result = this.optimizeUnaryOperation(token.value, right);
+                var result = this.optimizeUnaryOperation(token.token(), right);
 
                 stack.push(result);
-            } else if (Expression.isIdentifier(token.value)) {
-                stack.push(new Expression.Variable(this.environment, token.value));
-            } else if (Expression.isLiteral(token.value)) {
-                stack.push(new Expression.Literal(this.environment, token.value));
+            } else if (Expression.isIdentifier(token.token())) {
+                stack.push(new Expression.Variable(this.environment, token.token()));
+            } else if (Expression.isLiteral(token.token())) {
+                stack.push(new Expression.Literal(this.environment, token.token()));
             }
         }
 
@@ -127,11 +127,24 @@ record Compiler(Environment environment) {
             }
             break;
             case PLUS: {
-                // Check for concatenating two strings
-                if (left instanceof Expression.Literal l && l.token.type() == TokenType.STRING && right instanceof Expression.Literal r && r.token.type() == TokenType.STRING) {
-                    var result = l.value.toString() + r.value.toString();
-                    var newToken = Token.from(TokenType.STRING, result, result, operator.line(), operator.position());
-                    return new Expression.Literal(this.environment, newToken);
+                // If both operands are literals see if the expression can be reduced
+                if (left instanceof Expression.Literal l && right instanceof Expression.Literal r) {
+                    // If numbers are involved
+                    if (l.token.type() == TokenType.NUMBER && r.token.type() == TokenType.NUMBER) {
+                        if (l.eval().equals(0.0)) {
+                            return right;
+                        } else if (r.eval().equals(0.0)) {
+                            return left;
+                        }
+                    }
+
+                    // If strings are involved
+                    if (l.token.type() == TokenType.STRING || r.token.type() == TokenType.STRING) {
+                        // We do some concatenation
+                        var result = l.eval().toString() + r.eval().toString();
+                        var newToken = Token.from(TokenType.STRING, result, result, operator.line(), operator.position());
+                        return new Expression.Literal(this.environment, newToken);
+                    }
                 }
             }
             break;

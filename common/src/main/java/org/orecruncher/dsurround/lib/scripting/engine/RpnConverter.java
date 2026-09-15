@@ -1,5 +1,7 @@
 package org.orecruncher.dsurround.lib.scripting.engine;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.*;
 
 record RpnConverter(Environment environment) {
@@ -14,6 +16,11 @@ record RpnConverter(Environment environment) {
     }
 
     private List<RpnToken> toRpn(List<Token> tokens) {
+
+        if (tokens.size() < 2) {
+            ScriptException.throwException("Empty script");
+        }
+
         List<RpnToken> output = new ArrayList<>();
         Deque<Token> operatorStack = new ArrayDeque<>();
         Deque<Integer> argCounts = new ArrayDeque<>();
@@ -27,7 +34,7 @@ record RpnConverter(Environment environment) {
 
             // 1. Numbers / Variables
             if (isOperand(token)) {
-                output.add(new RpnToken(token));
+                output.add(RpnToken.of(token));
             }
             // 2. Function Identifier
             else if (this.environment.isFunction(token)) {
@@ -37,7 +44,7 @@ record RpnConverter(Environment environment) {
             // 3. Argument Separator ','
             else if (token.type() == TokenType.COMMA) {
                 while (!operatorStack.isEmpty() && operatorStack.peek().type() != TokenType.LEFT_PAREN) {
-                    output.add(new RpnToken(operatorStack.pop()));
+                    output.add(RpnToken.of(operatorStack.pop()));
                 }
                 if (operatorStack.isEmpty() || argCounts.isEmpty()) {
                     ScriptException.throwException(token, "Comma outside of valid function parameters");
@@ -71,7 +78,7 @@ record RpnConverter(Environment environment) {
                 }
 
                 while (!operatorStack.isEmpty() && operatorStack.peek().type() != TokenType.LEFT_PAREN) {
-                    output.add(new RpnToken(operatorStack.pop()));
+                    output.add(RpnToken.of(operatorStack.pop()));
                 }
 
                 if (operatorStack.isEmpty()) {
@@ -83,7 +90,7 @@ record RpnConverter(Environment environment) {
                 if (!operatorStack.isEmpty() && this.environment.isFunction(operatorStack.peek())) {
                     Token fnName = operatorStack.pop();
                     int count = argCounts.pop();
-                    output.add(new RpnToken(fnName, count));
+                    output.add(RpnToken.of(fnName, count));
                 }
             }
             // 6. Operators
@@ -99,7 +106,7 @@ record RpnConverter(Environment environment) {
                     int topPrec = topOp.type().getPrecedence();
 
                     if ((!isRightAssoc && topPrec >= currPrec) || (isRightAssoc && topPrec > currPrec)) {
-                        output.add(new RpnToken(operatorStack.pop()));
+                        output.add(RpnToken.of(operatorStack.pop()));
                     } else {
                         break;
                     }
@@ -118,7 +125,11 @@ record RpnConverter(Environment environment) {
             if (op.type() == TokenType.LEFT_PAREN || op.type() == TokenType.RIGHT_PAREN) {
                 ScriptException.throwException(op, "Mismatched parentheses");
             }
-            output.add(new RpnToken(op));
+            output.add(RpnToken.of(op));
+        }
+
+        if (output.isEmpty()) {
+            ScriptException.throwException("Logic not detected in script");
         }
 
         return output;
@@ -140,20 +151,20 @@ record RpnConverter(Environment environment) {
             // Case 1: Function call
             if (token.isFunction) {
                 if (stackDepth < token.argCount) {
-                    ScriptException.throwException(token.value, "Expected %d operands, but found %d".formatted(token.argCount, stackDepth));
+                    ScriptException.throwException(token.token(), "Expected %d operands, but found %d".formatted(token.argCount, stackDepth));
                 }
                 stackDepth -= (token.argCount - 1);
             }
             // Case 2: Unary Operator
-            else if (token.value.type().isUnaryOperator()) {
+            else if (token.token().type().isUnaryOperator()) {
                 if (stackDepth < 1) {
-                    ScriptException.throwException(token.value, "Insufficient operands for unary operator");
+                    ScriptException.throwException(token.token(), "Insufficient operands for unary operator");
                 }
             }
             // Case 3: Binary Operator
-            else if (token.value.type().isBinaryOperator()) {
+            else if (token.token().type().isBinaryOperator()) {
                 if (stackDepth < 2) {
-                    ScriptException.throwException(token.value, "Expected 2 operands, but found %d".formatted(stackDepth));
+                    ScriptException.throwException(token.token(), "Expected 2 operands, but found %d".formatted(stackDepth));
                 }
                 stackDepth--;
             }
@@ -169,26 +180,19 @@ record RpnConverter(Environment environment) {
     }
 
     // Helper class to represent function tokens with argument counts
-    static class RpnToken {
-        public Token value;
-        public int argCount;
-        public boolean isFunction;
-
-        public RpnToken(Token value) {
-            this.value = value;
-            this.isFunction = false;
-            this.argCount = 0;
-        }
-
-        public RpnToken(Token value, int argCount) {
-            this.value = value;
-            this.argCount = argCount;
-            this.isFunction = true;
-        }
+    record RpnToken(Token token, int argCount, boolean isFunction) {
 
         @Override
-        public String toString() {
-            return this.isFunction ? (this.value.lexeme() + ":" + this.argCount) : this.value.lexeme();
+        public @NotNull String toString() {
+            return this.isFunction ? (this.token.lexeme() + ":" + this.argCount) : this.token.lexeme();
+        }
+
+        public static RpnToken of(Token token) {
+            return new RpnToken(token, 0, false);
+        }
+
+        public static RpnToken of(Token token, int argCount) {
+            return new RpnToken(token, argCount, true);
         }
     }
 }

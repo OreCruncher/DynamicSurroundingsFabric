@@ -1,9 +1,12 @@
 package org.orecruncher.dsurround.lib.scripting.engine;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.*;
 
 import static org.orecruncher.dsurround.lib.scripting.engine.TokenType.*;
 
+@VisibleForTesting
 class Lexer {
 
     private final String source;
@@ -41,6 +44,9 @@ class Lexer {
                 this.addToken(COMMA);
                 break;
             case '.':
+                if (lastToken == null || lastToken.type() != TokenType.STRING) {
+                    ScriptException.throwException(this.line, this.current, "Unexpected character '.'");
+                }
                 this.addToken(DOT);
                 break;
             case '-':
@@ -48,7 +54,7 @@ class Lexer {
                 if (lastToken == null || lastToken.type().isOperator() || lastToken.type() == LEFT_PAREN) {
                     this.addToken(NEG);
                 } else {
-                    this.addToken(PLUS);
+                    this.addToken(MINUS);
                 }
                 break;
             case '+':
@@ -122,7 +128,7 @@ class Lexer {
                 } else if (this.isAlpha(c)) {
                     this.identifier();
                 } else {
-                    ScriptException.throwException(this.line, this.current,"Unexpected character.");
+                    ScriptException.throwException(this.line, this.current,"Unexpected character '%c'".formatted(c));
                 }
                 break;
         }

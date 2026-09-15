@@ -2,10 +2,10 @@ package org.orecruncher.dsurround.lib.reflection;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
-import it.unimi.dsi.fastutil.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.collections.Pair;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 
