@@ -22,7 +22,7 @@ public class ReusableRaycastContext extends ClipContext {
         this(world, start, end, shapeType, fluidHandling, GameUtils.getPlayer().orElseThrow());
 
         // Override the shape context that was passed into the ctor
-        this.accessor.dsurround_setShapeContext(CollisionContext.empty());
+        this.accessor.dsurround$setShapeContext(CollisionContext.empty());
     }
 
     public ReusableRaycastContext(Level world, Vec3 start, Vec3 end, ClipContext.Block shapeType, ClipContext.Fluid fluidHandling, Entity entity) {
@@ -46,18 +46,18 @@ public class ReusableRaycastContext extends ClipContext {
     }
 
     public Vec3 getStart() {
-        return this.accessor.dsurround_getStartPoint();
+        return this.accessor.dsurround$getStartPoint();
     }
 
     void setStart(Vec3 point) {
-        this.accessor.dsurround_setStartPoint(point);
+        this.accessor.dsurround$setStartPoint(point);
     }
 
     public Vec3 getEnd() {
-        return this.accessor.dsurround_getEndPoint();
+        return this.accessor.dsurround$getEndPoint();
     }
 
     void setEnd(Vec3 point) {
-        this.accessor.dsurround_setEndPoint(point);
+        this.accessor.dsurround$setEndPoint(point);
     }
 }

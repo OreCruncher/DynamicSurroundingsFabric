@@ -17,7 +17,7 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
 
-public class ClockOverlay extends AbstractOverlay {
+public final class ClockOverlay extends AbstractOverlay {
 
     /**
      * Offset from the bottom of the screen for writing display text. 68 is the offset for the

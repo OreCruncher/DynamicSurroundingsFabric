@@ -92,7 +92,7 @@ public class BreathEffect extends EntityEffectBase {
     }
 
     protected void createFrostParticle(LivingEntity entity) {
-        var particle = new FrostBreathParticle(entity);
+        var particle = FrostBreathParticle.create(entity);
         this.addParticle(particle);
     }
 

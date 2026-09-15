@@ -2,12 +2,15 @@ package org.orecruncher.dsurround.effects.entity;
 
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 
@@ -72,8 +75,17 @@ public class ItemSwingEffect extends EntityEffectBase {
     }
 
     protected static boolean freeSwing(LivingEntity entity) {
-        var result = rayTraceBlock(entity);
-        return result.getType() == HitResult.Type.MISS;
+        // Memori - Addresses Cobblemon incompatibility when player on mount
+        // https://github.com/OreCruncher/DynamicSurroundingsFabric/issues/170
+        //
+        // NOTE: Handled differently than the PR. This change will return false if there is any
+        // type of exception thrown from the Entity code.
+        try {
+            var result = rayTraceBlock(entity);
+            return result.getType() == HitResult.Type.MISS;
+        } catch (Exception t) {
+            return false;
+        }
     }
 
     protected static double getReach(final LivingEntity entity) {

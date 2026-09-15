@@ -9,7 +9,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.SupportType;
@@ -24,14 +23,16 @@ import org.orecruncher.dsurround.effects.BlockEffectUtils;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IEffectSystem;
 import org.orecruncher.dsurround.effects.blocks.AbstractParticleEmitterEffect;
+import org.orecruncher.dsurround.effects.particles.WaterfallCascade;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.sound.*;
 import org.orecruncher.dsurround.tags.FluidTags;
 
 import java.util.Arrays;
-import java.util.Optional;
+import java.util.Collection;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -54,14 +55,14 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     static {
         var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
 
-        var factory = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/0")).orElseThrow();
+        var factory = soundLibrary.getSoundFactory(Constants.asId("waterfalls/0")).orElseThrow();
         Arrays.fill(ACOUSTICS, factory);
 
-        ACOUSTICS[2] = ACOUSTICS[3] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/1")).orElseThrow();
-        ACOUSTICS[4] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/2")).orElseThrow();
-        ACOUSTICS[5] = ACOUSTICS[6] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/3")).orElseThrow();
-        ACOUSTICS[7] = ACOUSTICS[8] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/4")).orElseThrow();
-        ACOUSTICS[9] = ACOUSTICS[10] = soundLibrary.getSoundFactory(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "waterfalls/5")).orElseThrow();
+        ACOUSTICS[2] = ACOUSTICS[3] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/1")).orElseThrow();
+        ACOUSTICS[4] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/2")).orElseThrow();
+        ACOUSTICS[5] = ACOUSTICS[6] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/3")).orElseThrow();
+        ACOUSTICS[7] = ACOUSTICS[8] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/4")).orElseThrow();
+        ACOUSTICS[9] = ACOUSTICS[10] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/5")).orElseThrow();
     }
 
     // Keep track of sound plays outside the effect.
@@ -298,13 +299,13 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
 
         private static final Configuration.BlockEffects CONFIG = ContainerManager.resolve(Configuration.BlockEffects.class);
 
-        protected int particleLimit;
         protected final double deltaY;
+        protected int particleLimit;
 
         public WaterfallEffect(final int strength, final Level world, final BlockPos loc, final double dY) {
             super(strength, world, loc.getX() + 0.5D, loc.getY() + 0.5D, loc.getZ() + 0.5D, 4);
             this.deltaY = loc.getY() + dY;
-            setSpawnCount((int) (strength * 2.5F));
+            this.setSpawnCount((int) (strength * 2.5F));
         }
 
         public void setSpawnCount(final int limit) {
@@ -337,33 +338,47 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
         protected void handleParticles() {
             if (!CONFIG.enableWaterfallParticles)
                 return;
-
-            for (int i = 0; i <= this.getSplashParticleSpawnCount(); i++) {
-                this.produceParticle().ifPresent(this::addParticle);
-            }
+            super.handleParticles();
         }
 
         @Override
-        protected Optional<Particle> produceParticle() {
-            final double xOffset = RANDOM.nextFloat(-1.0F, 1.0F);
-            final double zOffset = RANDOM.nextFloat(-1.0F, 1.0F);
+        protected Collection<Particle> produceParticles() {
 
-            final double motionStr = (this.strength + 1) / 20D;
-            final double motionX = xOffset * motionStr;
-            final double motionZ = zOffset * motionStr;
-            final double motionY = 0.1D + RANDOM.nextFloat() * motionStr;
+            var particles = new ObjectArray<Particle>();
 
-            var posX = this.posX + xOffset;
-            var posZ = this.posZ + zOffset;
+            var particleCount = this.getSplashParticleSpawnCount();
+            for (int i = 0; i <= particleCount; i++) {
+                final double xOffset = RANDOM.nextFloat(-1.0F, 1.0F);
+                final double zOffset = RANDOM.nextFloat(-1.0F, 1.0F);
 
-            var particle = this.createParticle(ParticleTypes.SPLASH, posX, this.deltaY, posZ, motionX, motionY, motionZ);
+                final double motionStr = (this.strength + 1) / 20D;
+                final double motionX = xOffset * motionStr;
+                final double motionZ = zOffset * motionStr;
+                final double motionY = 0.1D + RANDOM.nextFloat() * motionStr;
 
-            particle.ifPresent(p -> {
-                p.setParticleSpeed(motionX, motionY, motionZ);
-                p.setLifetime(p.getLifetime() * 2);
-            });
+                var posX = this.posX + xOffset;
+                var posZ = this.posZ + zOffset;
 
-            return particle;
+                var particle = this.createParticle(ParticleTypes.SPLASH, posX, this.deltaY, posZ, motionX, motionY, motionZ);
+
+                particle.ifPresent(p -> {
+                    p.setParticleSpeed(motionX, motionY, motionZ);
+                    p.setLifetime(p.getLifetime() * 2);
+                    particles.add(p);
+                });
+
+            }
+
+            if (this.strength > 1) {
+                final double xOffset = RANDOM.nextFloat(-0.15F, 0.15F);
+                final double zOffset = RANDOM.nextFloat(-0.15F, 0.15F);
+                final double yOffset = RANDOM.nextFloat(-0.5F, 0.5F);
+                var level = GameUtils.getMC().level;
+                var cascadeParticle = WaterfallCascade.create(level, this.posX + xOffset, this.deltaY + yOffset, this.posZ + zOffset, this.strength);
+                particles.add(cascadeParticle);
+            }
+
+            return particles;
         }
     }
 }

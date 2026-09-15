@@ -1,8 +1,5 @@
 {
   "values": [
-    {
-      "id": "#c:buckets/milk",
-      "required": false
-    }
+    "#dsurround:is_milk_bucket"
   ]
 }

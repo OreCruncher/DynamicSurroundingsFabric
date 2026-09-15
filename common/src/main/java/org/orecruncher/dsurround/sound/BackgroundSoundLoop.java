@@ -103,7 +103,7 @@ public class BackgroundSoundLoop extends AbstractTickableSoundInstance {
         //noinspection ConstantValue
         if (this.sound != null) {
             temp.add("v", getVolume())
-                    .add("ev", SoundVolumeEvaluator.getAdjustedVolume(this))
+                    .add("ev", SoundVolumeEvaluator.getAdjustedVolume(this, null))
                     .add("p", getPitch());
         }
 

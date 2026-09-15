@@ -1,8 +1,5 @@
 {
   "values": [
-    {
-      "id": "#c:buckets/water",
-      "required": false
-    }
+    "#dsurround:is_water_bucket"
   ]
 }

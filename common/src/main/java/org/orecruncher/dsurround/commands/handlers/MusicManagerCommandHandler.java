@@ -1,45 +1,50 @@
 package org.orecruncher.dsurround.commands.handlers;
 
+import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.config.ConfigurationData;
-import org.orecruncher.dsurround.mixinutils.IMusicManager;
+import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
+import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 
 public class MusicManagerCommandHandler {
 
     public static Component reset() {
-        try {
-            ((IMusicManager)(GameUtils.getMC().getMusicManager())).dsurround_doCommand("reset");
-            return Component.translatable("dsurround.command.dsmm.reset.success");
-        } catch (Throwable t) {
-            return Component.translatable("dsurround.command.dsmm.reset.failure", t.getMessage());
-        }
+        return execute(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.Commands.RESET);
     }
 
     public static Component unpause() {
-        try {
-            ((IMusicManager)(GameUtils.getMC().getMusicManager())).dsurround_doCommand("unpause");
-            return Component.translatable("dsurround.command.dsmm.unpause.success");
-        } catch (Throwable t) {
-            return Component.translatable("dsurround.command.dsmm.unpause.failure", t.getMessage());
-        }
+        return execute(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.Commands.UNPAUSE);
     }
 
     public static Component pause() {
-        try {
-            ((IMusicManager)(GameUtils.getMC().getMusicManager())).dsurround_doCommand("pause");
-            return Component.translatable("dsurround.command.dsmm.pause.success");
-        } catch (Throwable t) {
-            return Component.translatable("dsurround.command.dsmm.pause.failure", t.getMessage());
-        }
+        return execute(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.Commands.PAUSE);
     }
 
     public static Component whatsPlaying() {
         try {
-            var result = ((IMusicManager)(GameUtils.getMC().getMusicManager())).dsurround_whatsPlaying();
-            return Component.translatable("dsurround.command.dsmm.whatsplaying.success", result);
+            var mm = ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.class);
+            if (mm.isPresent()) {
+                var result =mm.get().whatsPlaying();
+                return Component.translatable("dsurround.command.dsmm.whatsplaying.success", result);
+            } else {
+                return Component.translatable("dsurround.command.dsmm.notpresent");
+            }
         } catch (Throwable t) {
             return Component.translatable("dsurround.command.dsmm.whatsplaying.failure", t.getMessage());
+        }
+    }
+
+    private static Component execute(MusicManager musicManager, DSurroundMusicManager.Commands command) {
+        try {
+            var mm = ReflectionHelper.cast(musicManager, DSurroundMusicManager.class);
+            if (mm.isPresent()) {
+                mm.get().doCommand(command);
+                return Component.translatable("dsurround.command.dsmm." + command.commandName() + ".success", command);
+            } else {
+                return Component.translatable("dsurround.command.dsmm.notpresent");
+            }
+        } catch (Throwable t) {
+            return Component.translatable("dsurround.command.dsmm." + command.commandName() + ".failure", t.getMessage());
         }
     }
 }

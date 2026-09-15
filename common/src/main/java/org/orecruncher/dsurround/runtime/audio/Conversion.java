@@ -34,7 +34,7 @@ public final class Conversion {
     public static void convert(final SoundBuffer buffer) {
 
         MixinSoundBuffer accessor = (MixinSoundBuffer) buffer;
-        final AudioFormat format = accessor.dsurround_getFormat();
+        final AudioFormat format = accessor.dsurround$getFormat();
 
         // If it is already mono return original buffer
         if (format.getChannels() == 1)
@@ -56,7 +56,7 @@ public final class Conversion {
                 format.getFrameRate(),
                 bigendian);
 
-        final ByteBuffer source = accessor.dsurround_getSample();
+        final ByteBuffer source = accessor.dsurround$getSample();
         if (source == null) {
             return;
         }
@@ -79,7 +79,7 @@ public final class Conversion {
         }
 
         // Patch up the old object
-        accessor.dsurround_setFormat(monoformat);
+        accessor.dsurround$setFormat(monoformat);
         source.rewind();
         source.limit(sourceLength >> 1);
     }

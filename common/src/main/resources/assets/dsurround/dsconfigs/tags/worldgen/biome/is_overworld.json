@@ -4,6 +4,10 @@
     {
       "id": "#c:is_overworld",
       "required": false
+    },
+    {
+      "id": "#c:in_the_overworld",
+      "required": false
     }
   ]
 }

@@ -1,13 +1,13 @@
 [
   {
-    "biomeSelector": "lib.oneof(biome.id, 'biomesoplenty:old_growth_woodland', 'biomesoplenty:origin_valley')",
+    "biomeSelector": "lib.oneof(biome.getId(), 'biomesoplenty:old_growth_woodland', 'biomesoplenty:origin_valley')",
     "_comment": "Add forest trait",
     "traits": [
       "FOREST"
     ]
   },
   {
-    "biomeSelector": "biome.id == 'biomesoplenty:wintry_origin_valley'",
+    "biomeSelector": "biome.getId() == 'biomesoplenty:wintry_origin_valley'",
     "_comment": "Add Wintry Origin Valley traits",
     "traits": [
       "FOREST",

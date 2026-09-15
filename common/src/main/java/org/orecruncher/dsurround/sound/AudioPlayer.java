@@ -13,7 +13,8 @@ public class AudioPlayer implements IAudioPlayer {
 
     @Override
     public void play(SoundInstance sound) {
-        this.manager.play(sound);
+        if (this.isSoundSystemAvailable())
+            this.manager.play(sound);
     }
 
     @Override
@@ -29,5 +30,10 @@ public class AudioPlayer implements IAudioPlayer {
     @Override
     public boolean isPlaying(SoundInstance sound) {
         return this.manager.isActive(sound);
+    }
+
+    @Override
+    public boolean isSoundSystemAvailable() {
+        return this.manager.soundEngine.loaded && !this.manager.soundEngine.library.isCurrentDeviceDisconnected();
     }
 }

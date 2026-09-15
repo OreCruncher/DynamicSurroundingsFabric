@@ -4,6 +4,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -11,42 +13,54 @@ import java.util.stream.Collectors;
 
 public final class BiomeTraits {
 
+    private static final IModLog LOGGER = ContainerManager.memoize(IModLog.class);
     private static final ObjectArray<IBiomeTraitAnalyzer> traitAnalyzer = new ObjectArray<>(4);
 
     static {
         traitAnalyzer.add(new BiomeTagAnalyzer());
-        traitAnalyzer.add(new BiomeMysticalAnalyzer());
+        traitAnalyzer.add(new BiomeNameFallbackAnalyzer());
+        traitAnalyzer.add(new BiomeTraitAnalyzer());
+        traitAnalyzer.add(new BiomeTraitCleanup());
     }
 
     private final Set<BiomeTrait> traits;
     private boolean updatedByMerge;
 
-    BiomeTraits(Collection<BiomeTrait> traits) {
-        this.traits = new HashSet<>(traits);
+    BiomeTraits(Set<BiomeTrait> set) {
+        this.traits = set;
     }
 
-    public static BiomeTraits createFrom(ResourceLocation id, Biome biome) {
-        var traits = traitAnalyzer
-                .stream()
-                .map(analyzer -> analyzer.evaluate(id, biome))
-                .flatMap(Collection::stream)
-                .distinct()
-                .collect(Collectors.toList());
+    public static BiomeTraits from(ResourceLocation id, Biome biome) {
+        EnumSet<BiomeTrait> traits = EnumSet.noneOf(BiomeTrait.class);
+        for (var analyzer : traitAnalyzer) {
+            int before = traits.size();
+            analyzer.analyze(id, biome, traits);
+            int after = traits.size();
+            LOGGER.debug("[%s] %s: %d traits (%d delta)", analyzer.name(), id, after, after - before);
+        }
         return new BiomeTraits(traits);
     }
 
-    public static BiomeTraits from(BiomeTrait... traits) {
-        return new BiomeTraits(List.of(traits));
+    public static BiomeTraits of(BiomeTrait... traits) {
+        return of(Arrays.asList(traits));
     }
 
-    public void mergeTraits(Collection<BiomeTrait> traits) {
+    public static BiomeTraits of(Collection<BiomeTrait> traits) {
+        return new BiomeTraits(EnumSet.copyOf(traits));
+    }
+
+    public void clear() {
+        this.traits.clear();
+    }
+
+    public void merge(Collection<BiomeTrait> traits) {
         int count = this.traits.size();
         this.traits.addAll(traits);
         this.updatedByMerge = this.updatedByMerge || count != this.traits.size();
     }
 
     public boolean contains(String trait) {
-        return contains(BiomeTrait.of(trait));
+        return this.traits.contains(BiomeTrait.of(trait));
     }
 
     public boolean contains(BiomeTrait trait) {

@@ -13,7 +13,7 @@ public final class TickCounter implements ITickCount {
     private long tickCount = 0;
 
     public TickCounter() {
-        ClientState.TICK_START.register(client -> this.tickCount++, HandlerPriority.VERY_HIGH);
+        ClientState.CLIENT_TICK_START_EVENT.register(client -> this.tickCount++, HandlerPriority.VERY_HIGH);
     }
 
     @Override

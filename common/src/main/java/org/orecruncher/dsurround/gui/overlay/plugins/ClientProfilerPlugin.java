@@ -10,7 +10,7 @@ import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
 import org.orecruncher.dsurround.eventing.ClientState;
 
-public class ClientProfilerPlugin implements IDiagnosticPlugin {
+public final class ClientProfilerPlugin implements IDiagnosticPlugin {
 
     private final TimerEMA clientTick = new TimerEMA("Client Tick");
     private final TimerEMA lastTick = new TimerEMA("Last Tick");
@@ -19,9 +19,9 @@ public class ClientProfilerPlugin implements IDiagnosticPlugin {
     private float tps = 0;
 
     public ClientProfilerPlugin() {
-        ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect, HandlerPriority.VERY_HIGH);
-        ClientState.TICK_START.register(this::tickStart, HandlerPriority.VERY_HIGH);
-        ClientState.TICK_END.register(this::tickEnd, HandlerPriority.VERY_LOW);
+        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.register(this::onCollect, HandlerPriority.VERY_HIGH);
+        ClientState.CLIENT_TICK_START_EVENT.register(this::tickStart, HandlerPriority.VERY_HIGH);
+        ClientState.CLIENT_TICK_END_EVENT.register(this::tickEnd, HandlerPriority.VERY_LOW);
     }
 
     private void tickStart(Minecraft client) {

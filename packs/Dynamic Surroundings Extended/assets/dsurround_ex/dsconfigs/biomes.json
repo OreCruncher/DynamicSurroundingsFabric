@@ -60,7 +60,7 @@
     ]
   },
   {
-    "biomeSelector": "OVERWORLD && !(CAVES || UNDERGROUND)",
+    "biomeSelector": "OVERWORLD && !(CAVE || UNDERGROUND)",
     "_comment": "Music for Nighttime",
     "acoustics": [
       {

@@ -1,10 +1,10 @@
 package org.orecruncher.dsurround.tags;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.config.BiomeTrait;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -63,15 +63,20 @@ public class BiomeTags {
     public static final TagKey<Biome> IS_TREE_JUNGLE = of("is_tree_jungle");
     public static final TagKey<Biome> IS_TREE_SAVANNA = of("is_tree_savanna");
     public static final TagKey<Biome> IS_UNDERGROUND = of("is_underground");
-    public static final TagKey<Biome> IS_VEGETATION_DENSE = of("is_vegetation_dense");
-    public static final TagKey<Biome> IS_VEGETATION_SPARSE = of("is_vegetation_sparse");
+    public static final TagKey<Biome> IS_DENSE_VEGETATION = of("is_dense_vegetation");
+    public static final TagKey<Biome> IS_SPARSE_VEGETATION = of("is_sparse_vegetation");
     public static final TagKey<Biome> IS_VOID = of("is_void");
     public static final TagKey<Biome> IS_WASTELAND = of("is_wasteland");
     public static final TagKey<Biome> IS_WINDSWEPT = of("is_windswept");
 
     private static TagKey<Biome> of(String id) {
-        var tagKey = TagKey.create(Registries.BIOME, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, id));
+        var tagKey = TagKey.create(Registries.BIOME, Constants.asId(id));
         TAGS.add(tagKey);
         return tagKey;
+    }
+
+    static {
+        for (var entry : BiomeTrait.values())
+            TAGS.add(entry.getBiomeTag());
     }
 }

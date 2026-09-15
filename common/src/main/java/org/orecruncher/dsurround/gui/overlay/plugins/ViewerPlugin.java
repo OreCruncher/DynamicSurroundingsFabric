@@ -30,7 +30,7 @@ import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 
 import java.util.*;
 
-public class ViewerPlugin implements IDiagnosticPlugin {
+public final class ViewerPlugin implements IDiagnosticPlugin {
 
     // Mod packs have a lot of tags. We are only interested in
     // tags for the various frameworks and ourselves.
@@ -55,7 +55,7 @@ public class ViewerPlugin implements IDiagnosticPlugin {
         this.blockLibrary = blockLibrary;
         this.tagLibrary = tagLibrary;
         this.entityEffectLibrary = entityEffectLibrary;
-        ClientEventHooks.COLLECT_DIAGNOSTICS.register(this::onCollect);
+        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.register(this::onCollect);
     }
 
     private void processBlockHitResult(Level world, BlockHitResult result, Collection<Component> data) {
