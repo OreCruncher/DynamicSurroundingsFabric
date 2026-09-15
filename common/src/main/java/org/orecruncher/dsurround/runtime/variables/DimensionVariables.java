@@ -6,7 +6,7 @@ import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 
-public class DimensionVariables extends VariableSet {
+public final class DimensionVariables extends VariableSet {
 
     private String id;
     private String name;

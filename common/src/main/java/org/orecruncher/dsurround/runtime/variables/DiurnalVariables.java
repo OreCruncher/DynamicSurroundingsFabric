@@ -5,7 +5,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 
-public class DiurnalVariables extends VariableSet {
+public final class DiurnalVariables extends VariableSet {
 
     private float moonPhaseFactor;
     private float celestialAngle;

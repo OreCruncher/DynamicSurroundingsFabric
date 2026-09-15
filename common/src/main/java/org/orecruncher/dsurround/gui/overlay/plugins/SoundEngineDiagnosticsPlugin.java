@@ -13,7 +13,7 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
+public final class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
 
     private static final String FMT_DBG_SOUND = "%s: %d";
 

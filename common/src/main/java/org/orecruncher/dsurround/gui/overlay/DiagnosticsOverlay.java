@@ -28,7 +28,7 @@ import java.util.function.Supplier;
 /***
  * Our debug and diagnostics overlay.  Derived from DebugHud.
  */
-public class DiagnosticsOverlay extends AbstractOverlay {
+public final class DiagnosticsOverlay extends AbstractOverlay {
 
     private static final int BACKGROUND_COLOR = 0x90505050;     // Very dark gray with alpha
     private static final int FOREGROUND_COLOR = 0x00E0E0E0;     // Very light gray
@@ -80,7 +80,7 @@ public class DiagnosticsOverlay extends AbstractOverlay {
     private final LoggingTimerEMA diagnostics = new LoggingTimerEMA("Collect Diagnostic");
     private final LoggingTimerEMA rendering = new LoggingTimerEMA("Render Diagnostic");
     private final String branding;
-    private final ObjectArray<IDiagnosticPlugin> plugins = new ObjectArray<>();
+    private final List<IDiagnosticPlugin> plugins;
     private final CollectDiagnosticsEvent reusableEvent = new CollectDiagnosticsEvent();
     private final ObjectArray<FormattedCharSequence> left = new ObjectArray<>(64);
     private final ObjectArray<FormattedCharSequence> right = new ObjectArray<>(64);
@@ -93,12 +93,12 @@ public class DiagnosticsOverlay extends AbstractOverlay {
         this.showHud = false;
         this.enableCollection = false;
 
-        // DiagnosticsOverlay is a singleton that makes the following similar to
-        // a singleton.
-        this.plugins.add(ContainerManager.resolve(ClientProfilerPlugin.class));
-        this.plugins.add(ContainerManager.resolve(ViewerPlugin.class));
-        this.plugins.add(ContainerManager.resolve(RuntimeDiagnosticsPlugin.class));
-        this.plugins.add(ContainerManager.resolve(SoundEngineDiagnosticsPlugin.class));
+        this.plugins = ImmutableList.of(
+                ContainerManager.resolve(ClientProfilerPlugin.class),
+                ContainerManager.resolve(ViewerPlugin.class),
+                ContainerManager.resolve(RuntimeDiagnosticsPlugin.class),
+                ContainerManager.resolve(SoundEngineDiagnosticsPlugin.class)
+        );
     }
 
     public void toggleCollection() {

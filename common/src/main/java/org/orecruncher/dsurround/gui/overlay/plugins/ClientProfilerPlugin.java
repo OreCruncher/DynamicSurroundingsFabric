@@ -10,7 +10,7 @@ import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
 import org.orecruncher.dsurround.eventing.ClientState;
 
-public class ClientProfilerPlugin implements IDiagnosticPlugin {
+public final class ClientProfilerPlugin implements IDiagnosticPlugin {
 
     private final TimerEMA clientTick = new TimerEMA("Client Tick");
     private final TimerEMA lastTick = new TimerEMA("Last Tick");

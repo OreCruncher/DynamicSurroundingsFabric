@@ -24,7 +24,7 @@ public final class MathFunctions {
         setup.defineFunction("math.exp", 1, l -> Math.exp(toDouble(l[0])));
 
         setup.defineFunction("math.sqrt", 1, l -> Math.sqrt(toDouble(l[0])));
-        setup.defineFunction("math.round", 1, l -> (double) Math.round(toDouble(l[0])));
+        setup.defineFunction("math.round", -1, MathFunctions::round);
         setup.defineFunction("math.abs", 1, l -> Math.abs(toDouble(l[0])));
 
         setup.defineFunction("math.random", l -> Math.random());
@@ -32,5 +32,17 @@ public final class MathFunctions {
 
     private static double toDouble(Object l) {
         return ScriptHelpers.toDouble(l);
+    }
+
+    private static double round(Object[] args) {
+        double number = toDouble(args[0]);
+        int places = 0;
+        if (args.length == 2) {
+            places = (int)toDouble(args[1]);
+        }
+        if (places < 1)
+            return Math.round(number);
+        var factor = Math.pow(10, places);
+        return Math.round(number * factor) / factor;
     }
 }

@@ -4,7 +4,7 @@ import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 import org.orecruncher.dsurround.processing.Scanners;
 
-public class EnvironmentState extends VariableSet {
+public final class EnvironmentState extends VariableSet {
 
     private final Scanners scanner;
 

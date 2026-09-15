@@ -5,7 +5,7 @@ import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 
-public class WeatherVariables extends VariableSet {
+public final class WeatherVariables extends VariableSet {
 
     private final ISeasonalInformation seasonalInformation;
 

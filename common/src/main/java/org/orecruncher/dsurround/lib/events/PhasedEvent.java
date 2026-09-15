@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.lib.events;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import org.orecruncher.dsurround.lib.collections.Pair;
 
 import java.util.*;
 import java.util.function.Function;
@@ -14,7 +15,7 @@ import java.util.function.Function;
 final class PhasedEvent<IHandler> implements IPhasedEvent<IHandler> {
 
     private final ImmutableList<EventPhase> phasedOrdering;
-    private final List<Map.Entry<Integer, IHandler>> eventHandlers = new ArrayList<>(10);
+    private final List<Pair<Integer, IHandler>> eventHandlers = new ArrayList<>(10);
     private final Function<List<IHandler>, IHandler> eventLoopFactory;
     private IHandler eventLoop;
 
@@ -40,8 +41,8 @@ final class PhasedEvent<IHandler> implements IPhasedEvent<IHandler> {
         if (this.eventLoop == null) {
             // Sort the handlers based on priorities, and then construct
             // a new event loop
-            this.eventHandlers.sort(Map.Entry.comparingByKey());
-            var handlerList = ImmutableList.copyOf(this.eventHandlers.stream().map(Map.Entry::getValue).iterator());
+            this.eventHandlers.sort(Pair.comparingByFirst());
+            var handlerList = ImmutableList.copyOf(this.eventHandlers.stream().map(Pair::second).iterator());
             this.eventLoop = this.eventLoopFactory.apply(handlerList);
         }
         return this.eventLoop;
@@ -52,7 +53,7 @@ final class PhasedEvent<IHandler> implements IPhasedEvent<IHandler> {
         Preconditions.checkNotNull(handler);
         Preconditions.checkNotNull(phase);
 
-        this.eventHandlers.add(Map.entry(this.getPriority(phase), handler));
+        this.eventHandlers.add(Pair.of(this.getPriority(phase), handler));
         this.eventLoop = null;
     }
 

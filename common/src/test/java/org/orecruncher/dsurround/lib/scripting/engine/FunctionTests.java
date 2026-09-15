@@ -21,7 +21,9 @@ public class FunctionTests {
             Pair.of("lib.isbetween( 7, 8, 10)", Boolean.FALSE),
             Pair.of("lib.isbetween( 7, 6, 10)", Boolean.TRUE),
             Pair.of("math.cos(math.toRadians(45))", Math.sqrt(2D) / 2.0D),
-            Pair.of("math.cos(math.toRadians(45)) == math.sqrt(2)/2", Boolean.TRUE)
+            Pair.of("math.cos(math.toRadians(45)) == math.sqrt(2)/2", Boolean.TRUE),
+            Pair.of("math.round(3.33333)", 3.0D),
+            Pair.of("math.round(3.33333, 2)", 3.33D)
     );
 
     // From the runtime diagnostic overlay
@@ -30,20 +32,20 @@ public class FunctionTests {
                     "'Dim: ' + dim.getId() + '/' + dim.getDimName() + '; isSuperFlat: ' + dim.isSuperFlat()",
                     "Dim: test:aroni/The Test of Aroni; isSuperFlat: true"),
             Pair.of(
-                    "'Biome: ' + biome.getName() + ' (' + biome.getId() + '); Temp ' + biome.getTemperature() + '; rainfall: ' + biome.getRainfall()",
+                    "'Biome: ' + biome.getName() + ' (' + biome.getId() + '); Temp ' + math.round(biome.getTemperature(), 2) + '; rainfall: ' + math.round(biome.getRainfall(), 2)",
                     "Biome: Vaudeville (test:vaudeville); Temp 0.8; rainfall: 0.33"),
             Pair.of(
                     "'Biome Traits: ' + biome.getTraits()",
                     "Biome Traits: [REALLY,COLD,TODAY]"),
             Pair.of(
-                    "'Weather: ' + lib.iif(weather.isRaining(),'rain: ' + weather.getRainIntensity(),'not raining') + lib.iif(weather.isThundering(),' thundering','') + '; Temp: ' + weather.getTemperature() + '; ice: ' + lib.iif(weather.getTemperature() < 0.15, 'true', 'false') + ' ' + lib.iif(weather.getTemperature() < 0.2, '(breath)', '')",
+                    "'Weather: ' + lib.iif(weather.isRaining(),'rain: ' + math.round(weather.getRainIntensity(), 2),'not raining') + lib.iif(weather.isThundering(),' thundering','') + '; Temp: ' + math.round(weather.getTemperature(), 2) + '; ice: ' + lib.iif(weather.getTemperature() < 0.15, 'true', 'false') + ' ' + lib.iif(weather.getTemperature() < 0.2, '(breath)', '')",
                     "Weather: rain: 0.9 thundering; Temp: 0.1; ice: true (breath)"),
             Pair.of(
-                    "'Diurnal: ' + lib.iif(diurnal.isNight(),' night',' day') + '; celestial angle: ' + diurnal.getCelestialAngle() + '; degrees: ' + (diurnal.getCelestialAngle()*360)",
-                    "Diurnal:  day; celestial angle: 45; degrees: 16200.0"),
+                    "'Diurnal: ' + lib.iif(diurnal.isNight(),'night','day') + '; celestial angle: ' + math.round(diurnal.getCelestialAngle(), 2) + '; degrees: ' + math.round(diurnal.getCelestialAngle()*360, 2)",
+                    "Diurnal: day; celestial angle: 45.0; degrees: 16200.0"),
             Pair.of(
-                    "'Player: health ' + player.getHealth() + '/' + player.getMaxHealth() + '; food ' + player.getFoodLevel() + '/' + player.getFoodSaturationLevel() + '; pos (' + player.getX() + ', ' + player.getY() + ', ' + player.getZ() + ')'",
-                    "Player: health 15/20; food 20/20; pos (100, 64, -100)"),
+                    "'Player: health ' + player.getHealth() + '/' + player.getMaxHealth() + '; food ' + player.getFoodLevel() + '/' + player.getFoodSaturationLevel() + '; pos (' + math.round(player.getX(), 2) + ', ' + math.round(player.getY(), 2) + ', ' + math.round(player.getZ(), 2) + ')'",
+                    "Player: health 15/20; food 20/20; pos (100.0, 64.0, -100.0)"),
             Pair.of(
                     "'State: isInside ' + state.isInside() + '; inVillage ' + state.isInVillage() + '; isUnderWater ' + state.isUnderWater()",
                     "State: isInside false; inVillage true; isUnderWater false")

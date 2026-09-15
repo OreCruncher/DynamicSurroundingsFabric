@@ -17,7 +17,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
 
-public class CompassOverlay extends AbstractOverlay {
+public final class CompassOverlay extends AbstractOverlay {
 
     // Vertical offset to avoid writing over the cross-hair
     private static final int CROSSHAIR_OFFSET = 60;
@@ -153,8 +153,8 @@ public class CompassOverlay extends AbstractOverlay {
      * Cloned from the Minecraft compass code
      */
     static class CompassWobble {
-        private static int TICK_DELAY = 5;
-        private static float MAX_DELTA_TICK = 1F / 20F;
+        private static final int TICK_DELAY = 5;
+        private static final float MAX_DELTA_TICK = 1F / 20F;
         private float targetRotation;
         private float lastRotation;
         private float rotation;

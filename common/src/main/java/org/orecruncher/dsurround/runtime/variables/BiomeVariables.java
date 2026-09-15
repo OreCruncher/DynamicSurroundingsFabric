@@ -9,7 +9,7 @@ import org.orecruncher.dsurround.lib.Lazy;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 
-public class BiomeVariables extends VariableSet {
+public final class BiomeVariables extends VariableSet {
 
     private final IBiomeLibrary biomeLibrary;
 
@@ -18,6 +18,7 @@ public class BiomeVariables extends VariableSet {
         return this.biome.getPrecipitationAt(pos).name();
     });
     private final Lazy<String> id = new Lazy<>(() -> this.info.getBiomeId().toString());
+    private final Lazy<String> biomeTraits = new Lazy<>(() -> this.info.getTraits().toString());
 
     private Biome biome;
     private BiomeInfo info;
@@ -51,6 +52,7 @@ public class BiomeVariables extends VariableSet {
         this.info = info;
         this.id.reset();
         this.precipitationType.reset();
+        this.biomeTraits.reset();
     }
 
     @Override
@@ -61,7 +63,7 @@ public class BiomeVariables extends VariableSet {
         config.defineFunction(id("getRainfall"), l -> this.info.getDownfall());
         config.defineFunction(id("getTemperature"), l -> this.biome.getBaseTemperature());
         config.defineFunction(id("getPrecipitationType"), l -> this.precipitationType.get());
-        config.defineFunction(id("getTraits"), l -> this.info.getTraits().toString());
+        config.defineFunction(id("getTraits"), l -> this.biomeTraits.get());
         config.defineFunction(id("is"), 1, l -> this.is(l[0]));
         config.defineFunction(id("isAllOf"), -1, this::isAllOf);
         config.defineFunction(id("isOneOf"), -1, this::isOneOf);

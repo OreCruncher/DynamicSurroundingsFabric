@@ -21,11 +21,11 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
 
     private static final List<String> scripts = ImmutableList.of(
             "'Dim: ' + dim.getId() + '/' + dim.getDimName() + '; isSuperFlat: ' + dim.isSuperFlat()",
-            "'Biome: ' + biome.getName() + ' (' + biome.getId() + '); Temp ' + biome.getTemperature() + '; rainfall: ' + biome.getRainfall()",
+            "'Biome: ' + biome.getName() + ' (' + biome.getId() + '); Temp ' + math.round(biome.getTemperature(), 2) + '; rainfall: ' + math.round(biome.getRainfall(), 2)",
             "'Biome Traits: ' + biome.getTraits()",
-            "'Weather: ' + lib.iif(weather.isRaining(),'rain: ' + weather.getRainIntensity(),'not raining') + lib.iif(weather.isThundering(),' thundering','') + '; Temp: ' + weather.getTemperature() + '; ice: ' + lib.iif(weather.getTemperature() < 0.15, 'true', 'false') + ' ' + lib.iif(weather.getTemperature() < 0.2, '(breath)', '')",
-            "'Diurnal: ' + lib.iif(diurnal.isNight(),' night',' day') + '; celestial angle: ' + diurnal.getCelestialAngle() + '; degrees: ' + (diurnal.getCelestialAngle()*360)",
-            "'Player: health ' + player.getHealth() + '/' + player.getMaxHealth() + '; food ' + player.getFoodLevel() + '/' + player.getFoodSaturationLevel() + '; pos (' + player.getX() + ', ' + player.getY() + ', ' + player.getZ() + ')'",
+            "'Weather: ' + lib.iif(weather.isRaining(),'rain: ' + math.round(weather.getRainIntensity(), 2),'not raining') + lib.iif(weather.isThundering(),' thundering','') + '; Temp: ' + math.round(weather.getTemperature(), 2) + '; ice: ' + lib.iif(weather.getTemperature() < 0.15, 'true', 'false') + ' ' + lib.iif(weather.getTemperature() < 0.2, '(breath)', '')",
+            "'Diurnal: ' + lib.iif(diurnal.isNight(),'night','day') + '; celestial angle: ' + math.round(diurnal.getCelestialAngle(), 2) + '; degrees: ' + math.round(diurnal.getCelestialAngle()*360, 2)",
+            "'Player: health ' + player.getHealth() + '/' + player.getMaxHealth() + '; food ' + player.getFoodLevel() + '/' + player.getFoodSaturationLevel() + '; pos (' + math.round(player.getX(), 2) + ', ' + math.round(player.getY(), 2) + ', ' + math.round(player.getZ(), 2) + ')'",
             "'State: isInside ' + state.isInside() + '; inVillage ' + state.isInVillage() + '; isUnderWater ' + state.isUnderWater()"
     );
 

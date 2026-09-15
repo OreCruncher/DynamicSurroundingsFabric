@@ -4,7 +4,7 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 
-public class GlobalVariables extends VariableSet {
+public final class GlobalVariables extends VariableSet {
 
     private final Configuration config;
 

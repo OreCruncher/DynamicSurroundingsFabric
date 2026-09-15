@@ -8,7 +8,7 @@ import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 
-public class PlayerVariables extends VariableSet {
+public final class PlayerVariables extends VariableSet {
 
     private boolean isSuffocating;
     private boolean canSeeSky;

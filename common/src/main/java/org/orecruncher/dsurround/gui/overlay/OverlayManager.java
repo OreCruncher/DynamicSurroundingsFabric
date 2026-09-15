@@ -1,23 +1,26 @@
 package org.orecruncher.dsurround.gui.overlay;
 
+import com.google.common.collect.ImmutableList;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.eventing.ClientState;
 
-@Cacheable
-public class OverlayManager {
+import java.util.List;
 
-    private final ObjectArray<AbstractOverlay> overlays;
+@Cacheable
+public final class OverlayManager {
+
+    private final List<AbstractOverlay> overlays;
 
     public OverlayManager() {
-        this.overlays = new ObjectArray<>(3);
-        this.overlays.add(ContainerManager.resolve(DiagnosticsOverlay.class));
-        this.overlays.add(ContainerManager.resolve(CompassOverlay.class));
-        this.overlays.add(ContainerManager.resolve(ClockOverlay.class));
+        this.overlays = ImmutableList.of(
+                ContainerManager.resolve(DiagnosticsOverlay.class),
+                ContainerManager.resolve(CompassOverlay.class),
+                ContainerManager.resolve(ClockOverlay.class)
+        );
 
         ClientState.CLIENT_TICK_END_EVENT.register(this::tick);
     }
