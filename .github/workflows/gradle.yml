@@ -30,10 +30,11 @@ jobs:
       run: chmod +x ./gradlew
     - name: Setup Gradle
       uses: gradle/actions/wrapper-validation@v4
-    - uses: gradle/gradle-build-action@v3
-      with:
-        arguments: build
-        gradle-executable: ./gradlew
+    - uses: gradle/actions/setup-gradle@v3
+    - name: Build Application
+      run: ./gradlew build
+    - name: Execute Unit Tests
+      run: ./gradlew :app:test
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
