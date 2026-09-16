@@ -29,4 +29,12 @@ loom {
 
 test {
     useJUnitPlatform()
+    testLogging {
+        outputs.upToDateWhen {false}
+        showStandardStreams = true
+        events = ['PASSED', 'FAILED', 'SKIPPED']
+        exceptionFormat = 'FULL'
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true    }
 }
