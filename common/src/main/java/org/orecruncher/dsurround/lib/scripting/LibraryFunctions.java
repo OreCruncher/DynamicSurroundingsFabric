@@ -11,10 +11,10 @@ import java.util.regex.Pattern;
 public final class LibraryFunctions {
 
     public static void configure(IConfigureDefinition config) {
-        config.defineFunction("lib.iif", 3, LibraryFunctions::iif);
-        config.defineFunction("lib.match", 2, LibraryFunctions::match);
-        config.defineFunction("lib.oneOf", -2, LibraryFunctions::oneof);
-        config.defineFunction("lib.isBetween", 3, LibraryFunctions::isBetween);
+        config.defineFunction("lib.iif", 3, false, LibraryFunctions::iif);
+        config.defineFunction("lib.match", 2, false, LibraryFunctions::match);
+        config.defineFunction("lib.oneOf", 2, true, LibraryFunctions::oneof);
+        config.defineFunction("lib.isBetween", 3, false, LibraryFunctions::isBetween);
     }
 
     private static Object iif(final Object[] args) {

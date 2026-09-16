@@ -22,12 +22,17 @@ public class FailureTests {
             Pair.of("1 + !45", ex -> ex.getMessage().equals("(1, 3) Incompatible operands for operator '+'")),
             Pair.of("4 % 2", ex -> ex.getMessage().equals("(1, 4) Unexpected character '%'")),
             Pair.of("()", ex -> ex.getMessage().equals("(-1, 0) Logic not detected in script")),
-            Pair.of("", ex -> ex.getMessage().equals("(-1, 0) Empty script"))
+            Pair.of("", ex -> ex.getMessage().equals("(-1, 0) Empty script")),
+            Pair.of("bad.parmVarArgs(1)", ex -> ex.getMessage().equals("(1, 18) Mismatched variable arguments: expected at least 2 but received 1")),
+            Pair.of("bad.parm(1)", ex -> ex.getMessage().equals("(1, 11) Mismatched variable arguments: expected 2 but received 1")),
+            Pair.of("bad.parm(1, 2, 3)", ex -> ex.getMessage().equals("(1, 17) Mismatched variable arguments: expected 2 but received 3"))
     );
 
     @TestFactory
     public Stream<DynamicTest> stringDynamicTests() {
         var scriptEngine = new ScriptEngine();
+        scriptEngine.defineFunction("bad.parmVarArgs", 2, true, l -> l.length);
+        scriptEngine.defineFunction("bad.parm", 2, false, l -> l.length);
         return TEST_CASES.stream()
                 .map(data -> DynamicTest.dynamicTest("Failure testing \"%s\"".formatted(data.first()), () -> {
                     var exception = assertThrows(ScriptException.class,  () -> scriptEngine.compile(data.first()).eval());

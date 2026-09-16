@@ -22,8 +22,8 @@ public final class PlatformFunctions implements IConfigureScripting {
 
     @Override
     public void configure(IConfigureDefinition config) {
-        config.defineFunction("platform.isModLoaded", 1, this::isModLoaded);
-        config.defineFunction("platform.isCurrentDateInRangeOf", 3, this::isCurrentDateInRangeOf);
+        config.defineFunction("platform.isModLoaded", 1, false, this::isModLoaded);
+        config.defineFunction("platform.isCurrentDateInRangeOf", 3, false, this::isCurrentDateInRangeOf);
     }
 
     private boolean isModLoaded(final Object[] args) {

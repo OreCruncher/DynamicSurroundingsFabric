@@ -8,9 +8,10 @@ public interface IConfigureDefinition {
      * Defines a function reference with associate delegate that implements the function.
      * @param name      Name of the function
      * @param arity     The number of parameters the function expects. A negative value indicates a variable number of parameters but with a certain minimum required.
+     * @param hasVarArgs The function supports variable arguments, with the minimum specified by arity.
      * @param delegate  The delegate that implements the function
      */
-    void defineFunction(@NotNull String name, int arity, @NotNull IScriptFunction delegate);
+    void defineFunction(@NotNull String name, int arity, boolean hasVarArgs, @NotNull IScriptFunction delegate);
 
     /**
      * Defines a function reference with associate delegate that implements the function. The function has an arity of 0,
@@ -19,7 +20,7 @@ public interface IConfigureDefinition {
      * @param delegate  The delegate that implements the function
      */
     default void defineFunction(@NotNull String name, @NotNull IScriptFunction delegate) {
-        this.defineFunction(name, 0, delegate);
+        this.defineFunction(name, 0, false, delegate);
     }
 
     /**

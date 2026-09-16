@@ -33,14 +33,18 @@ final class Environment {
         return null;
     }
 
-    void defineFunction(String name, int arity, IScriptFunction handler) {
+    FunctionDefinition getFunctionDefinition(Token token) {
+        return  this.functions.get(token.lexeme());
+    }
+
+    void defineFunction(String name, int arity, boolean hasVarArgs, IScriptFunction handler) {
         if (Definitions.KEYWORDS.containsKey(name))
             ScriptException.throwException("Cannot use a keyword to name a function '%s'".formatted(name));
         if (this.functions.containsKey(name))
             ScriptException.throwException("Function already defined for name '%s'".formatted(name));
         if (this.variables.containsKey(name))
             ScriptException.throwException("A variable has been previously defined with the name '%s'".formatted(name));
-        this.functions.put(name, FunctionDefinition.from(name, arity, handler));
+        this.functions.put(name, FunctionDefinition.from(name, arity, hasVarArgs, handler));
     }
 
     void defineVariable(String name, IScriptVariable handler) {
@@ -53,9 +57,9 @@ final class Environment {
         this.variables.put(name, ScriptVariable.from(name, handler));
     }
 
-    record FunctionDefinition(String name, int arity, IScriptFunction handler){
-        public static FunctionDefinition from(String name, int arity, IScriptFunction handler) {
-            return new FunctionDefinition(name, arity, handler);
+    record FunctionDefinition(String name, int arity, boolean hasVarArgs, IScriptFunction handler){
+        public static FunctionDefinition from(String name, int arity, boolean hasVarArgs, IScriptFunction handler) {
+            return new FunctionDefinition(name, arity, hasVarArgs, handler);
         }
     }
 

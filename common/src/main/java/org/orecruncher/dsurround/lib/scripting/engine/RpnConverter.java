@@ -33,7 +33,7 @@ record RpnConverter(Environment environment) {
                 break;
 
             // 1. Numbers / Variables
-            if (isOperand(token)) {
+            if (this.isOperand(token)) {
                 output.add(RpnToken.of(token));
             }
             // 2. Function Identifier
@@ -90,6 +90,24 @@ record RpnConverter(Environment environment) {
                 if (!operatorStack.isEmpty() && this.environment.isFunction(operatorStack.peek())) {
                     Token fnName = operatorStack.pop();
                     int count = argCounts.pop();
+
+                    // Check to ensure that a proper number of variables have been specified
+                    var definition = this.environment.getFunctionDefinition(fnName);
+                    if (definition == null) {
+                        // This should not happen
+                        ScriptException.throwException(token, "Unable to locate function definition in environment when it should be present: %s".formatted(token.lexeme()));
+                    }
+
+                    if (definition.hasVarArgs()) {
+                        // arity indicates the minimum required parameters for a vararg function
+                        if (count < definition.arity()) {
+                            ScriptException.throwException(token, "Mismatched variable arguments: expected at least %d but received %d".formatted(definition.arity(), count));
+                        }
+                    } else if (count != definition.arity()) {
+                        // The count must exactly match the function arity
+                        ScriptException.throwException(token, "Mismatched variable arguments: expected %d but received %d".formatted(definition.arity(), count));
+                    }
+
                     output.add(RpnToken.of(fnName, count));
                 }
             }

@@ -64,9 +64,9 @@ public final class BiomeVariables extends VariableSet {
         config.defineFunction(id("getTemperature"), l -> this.biome.getBaseTemperature());
         config.defineFunction(id("getPrecipitationType"), l -> this.precipitationType.get());
         config.defineFunction(id("getTraits"), l -> this.biomeTraits.get());
-        config.defineFunction(id("is"), 1, l -> this.is(l[0]));
-        config.defineFunction(id("isAllOf"), -1, this::isAllOf);
-        config.defineFunction(id("isOneOf"), -1, this::isOneOf);
+        config.defineFunction(id("is"), 1, false, l -> this.is(l[0]));
+        config.defineFunction(id("isAllOf"), 1, true, this::isAllOf);
+        config.defineFunction(id("isOneOf"), 1, true, this::isOneOf);
 
         for (var trait : BiomeTrait.values())
             config.defineVariable(trait.getName(), () -> this.hasTrait(trait));
