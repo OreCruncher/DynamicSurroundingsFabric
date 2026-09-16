@@ -1,6 +1,10 @@
 package org.orecruncher.dsurround.lib.events;
 
+import com.google.common.base.Suppliers;
 import org.jetbrains.annotations.NotNull;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.reflection.HandleCache;
 import org.orecruncher.dsurround.lib.reflection.IMethodCallHandler;
 
@@ -9,8 +13,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public final class EventingFactory {
+
+    private static final Supplier<IModLog> LOGGER = Suppliers.memoize(() -> ModLog.createChild(ContainerManager.resolve(IModLog.class), "EventingFactory"));
+
     private EventingFactory() {
     }
 
@@ -63,17 +71,14 @@ public final class EventingFactory {
         try {
             var methodHandle = HandleCache.forFunctionalInterface(clazz);
             return listeners -> {
-                // If there is only one listener it can be directly accessed.
-                if (listeners.size() == 1) {
-                    return listeners.getFirst();
-                }
-
+                // Don't optimize for the single event handler case. Though it would be more optimal, the
+                // exception handling behavior would be different and consistency is important.
                 InvocationHandler handler;
-                // If there are no listeners return the null event loop
                 if (listeners.isEmpty()) {
+                    // No listeners so it's a noop
                     handler = NullEventLoop.INSTANCE;
                 } else {
-                    // More than one listener, so do the loop
+                    // One or more so do the loop
                     var name = clazz.getSimpleName() + " Event Loop";
                     handler = new EventLoop<>(name, listeners, methodHandle);
                 }
@@ -99,15 +104,25 @@ public final class EventingFactory {
 
     private record EventLoop<IHandler>(String name, List<IHandler> listeners,
                                        IMethodCallHandler methodHandle) implements InvocationHandler {
+
         @Override
         public Object invoke(Object proxy, Method ignored, Object[] args) {
             for (var handler : this.listeners)
-                this.methodHandle.invoke(handler, args);
+                try {
+                    // Exceptions should be handled within the event handler. If an exception escapes
+                    // consider it fatal. (The only logic that should be hooking these events are
+                    // Dynamic Surroundings.)
+                    this.methodHandle.invoke(handler, args);
+                } catch (Throwable ex) {
+                    LOGGER.get().error(ex, "[%s] Error invoking event handler '%s'", this.name(), handler.getClass().getName());
+                    throw ex;
+                }
+            // Not used
             return null;
         }
 
         public @NotNull String toString() {
-            return this.name;
+            return "%s (%d handlers)".formatted(this.name(), this.listeners().size());
         }
     }
 }
