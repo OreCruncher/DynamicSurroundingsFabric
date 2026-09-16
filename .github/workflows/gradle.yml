@@ -29,7 +29,7 @@ jobs:
     - name: Change wrapper permissions
       run: chmod +x ./gradlew
     - name: Setup Gradle
-      uses: gradle/wrapper-validation-action@v4
+      uses: gradle/actions/wrapper-validation@v4
     - uses: gradle/gradle-build-action@v3
       with:
         arguments: build
