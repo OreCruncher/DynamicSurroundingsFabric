@@ -7,6 +7,7 @@ import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.Music;
 import org.jetbrains.annotations.NotNull;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.gui.sound.SoundToast;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
@@ -19,6 +20,7 @@ import org.orecruncher.dsurround.sound.IAudioPlayer;
 public final class DSurroundMusicManager extends MusicManager {
 
     private static final IModLog LOGGER = ModLog.createChild(ContainerManager.resolve(IModLog.class), "MusicManager");
+    private static final Configuration.MusicManagerOptions musicOptions = ContainerManager.resolve(Configuration.MusicManagerOptions.class);
     private static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
 
     private boolean pauseTicking;

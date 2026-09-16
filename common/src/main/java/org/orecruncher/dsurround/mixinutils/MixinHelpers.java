@@ -21,5 +21,6 @@ public class MixinHelpers {
     public static final Configuration.ParticleTweaks particleTweaksConfig = ContainerManager.resolve(Configuration.ParticleTweaks.class);
     public static final Configuration.SoundOptions soundOptions = ContainerManager.resolve(Configuration.SoundOptions.class);
     public static final Configuration.FogOptions fogOptions = ContainerManager.resolve(Configuration.FogOptions.class);
+    public static final Configuration.MusicManagerOptions musicOptions = ContainerManager.resolve(Configuration.MusicManagerOptions.class);
 
 }

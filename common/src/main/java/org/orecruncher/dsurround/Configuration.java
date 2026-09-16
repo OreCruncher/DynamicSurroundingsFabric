@@ -50,6 +50,10 @@ public class Configuration extends ConfigurationData {
     public final FogOptions fogOptions = new FogOptions();
 
     @Property
+    @Comment("Configuration options for modded Music Manager")
+    public final MusicManagerOptions musicManagerOptions = new MusicManagerOptions();
+
+    @Property
     @Comment("Configuration options for other things")
     public final OtherOptions otherOptions = new OtherOptions();
 
@@ -312,6 +316,19 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable weather fog effect")
         public boolean enableWeatherFog = true;
+    }
+
+    public static class MusicManagerOptions {
+        @Property
+        @RestartRequired
+        @Comment("Replace Minecraft's music manager with modded version")
+        public boolean replaceMusicManager = true;
+
+        @Property
+        @IntegerRange(min = 0, max = 100)
+        @Slider
+        @Comment("Reduce the wait time between music plays by a percentage")
+        public int reduceWaitTime = 0;
     }
 
     public static class OtherOptions {

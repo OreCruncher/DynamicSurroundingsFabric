@@ -16,9 +16,11 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 **What's New**
 * Biome configuration setting to reset fog color for biomes.
 * Biome configuration setting to clear existing traits before applying new ones.
-* Trident and Mace toolbar sound effects.
-* Waterfall cascade effect. Simulates turbulence and misting when water hits a surface. WIP - current implementation is passable. :)
 * Replaced Nashorn JavaScript engine with my own simple syntax tree implementation. Reduces issues related to maintenance and future compatibility. Fabric JARs should be thinner.
+* Trident and Mace toolbar sound effects.
+* Waterfall cascade effect. Simulates turbulence and misting when water hits a surface. WIP - current implementation is passable (NeoForge looks better IMO). :)
+* Replace Minecraft's music manager with a modded version. This enables the use of music manager commands (/dsmm \[pause|unpause|reset|whatsplaying\]). Replacement can be disabled via the configuration.
+* Configuration option to reduce the wait times between music plays. By default, there will be no reduction in wait time. This feature is independent of music manager replacement.
 
 **Changes**
 * Updated Dynamic Surroundings tag names to match the conventional tag naming scheme (ex., "dsurround:is_axe" rather than "dsurround:axes"). Old tag names will continue to work though dependencies should be updated to use the new naming scheme.

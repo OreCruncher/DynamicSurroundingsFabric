@@ -7,6 +7,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.main.GameConfig;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Abilities;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
 import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
@@ -24,7 +26,13 @@ public class MixinMinecraftClient {
     @Inject(method = "<init>(Lnet/minecraft/client/main/GameConfig;)V", at = @At(value = "RETURN"))
     public void dsurround$createMusicManager(GameConfig gameConfig, CallbackInfo ci) {
         ReflectionHelper.cast(this, Minecraft.class)
-                .ifPresent(minecraft -> minecraft.musicManager = new DSurroundMusicManager(minecraft));
+                .ifPresentOrElse(minecraft -> {
+                    if (MixinHelpers.musicOptions.replaceMusicManager) {
+                        minecraft.musicManager = new DSurroundMusicManager(minecraft);
+                        ContainerManager.resolve(IModLog.class).info("Replaced Minecraft's MusicManager");
+                    }
+                },
+                () -> ContainerManager.resolve(IModLog.class).info("Not configured to replace MusicManager"));
     }
 
     @Unique

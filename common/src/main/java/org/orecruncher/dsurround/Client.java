@@ -123,6 +123,7 @@ public final class Client {
                 .registerSingleton(Config.particleTweaks)
                 .registerSingleton(Config.compassAndClockOptions)
                 .registerSingleton(Config.fogOptions)
+                .registerSingleton(Config.musicManagerOptions)
                 .registerSingleton(Config.otherOptions)
                 .registerSingleton(IConditionEvaluator.class, ConditionEvaluator.class)
                 .registerSingleton(IVersionChecker.class, VersionChecker.class)
