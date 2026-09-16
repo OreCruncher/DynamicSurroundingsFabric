@@ -9,7 +9,7 @@ import com.mojang.serialization.DataResult;
 
 /**
  * Types of SoundEvent acoustics that can be defined for biome.  The play of these sounds is in
- * addition to what Minecraft may decided to do.  They do not replace (yet?)
+ * addition to what Minecraft may decide to do.  They do not replace (yet?)
  */
 public enum SoundEventType {
     /**

@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.sound;
 
-import com.google.common.base.MoreObjects;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.client.resources.sounds.EntityBoundSoundInstance;
@@ -152,11 +151,8 @@ public record SoundFactory(
     }
 
     @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("location", this.getLocation())
-                .add("soundEvent", this.soundEvent.getLocation())
-                .toString();
+    public @NotNull String toString() {
+        return "Factory {loc=%s, evt=%s}".formatted(this.getLocation(), this.soundEvent().getLocation());
     }
 
     static ISoundFactory from(SoundFactoryBuilder builder) {

@@ -7,7 +7,6 @@ import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
-import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
 import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
@@ -19,7 +18,7 @@ import java.util.List;
 
 public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
 
-    private static final List<String> scripts = ImmutableList.of(
+    private static final List<String> SCRIPTS = ImmutableList.of(
             "'Dim: ' + dim.getId() + '/' + dim.getDimName() + '; isSuperFlat: ' + dim.isSuperFlat()",
             "'Biome: ' + biome.getName() + ' (' + biome.getId() + '); Temp ' + math.round(biome.getTemperature(), 2) + '; rainfall: ' + math.round(biome.getRainfall(), 2)",
             "'Biome Traits: ' + biome.getTraits()",
@@ -29,7 +28,11 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
             "'State: isInside ' + state.isInside() + '; inVillage ' + state.isInVillage() + '; isUnderWater ' + state.isUnderWater()"
     );
 
-    private final static ObjectArray<Script> diagnosticScripts = new ObjectArray<>(scripts.size());
+    private final static List<Script> DIAGNOSTIC_SCRIPTS;
+
+    static {
+        DIAGNOSTIC_SCRIPTS = SCRIPTS.stream().map(Script::new).collect(ImmutableList.toImmutableList());
+    }
 
     private final MinecraftClock clock = new MinecraftClock();
     private final IConditionEvaluator conditionEvaluator;
@@ -57,20 +60,11 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
             ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.class)
                     .ifPresentOrElse(
                             mm -> event.add(CollectDiagnosticsEvent.Section.Systems, mm.getDiagnosticText()),
-                            ()-> event.add(CollectDiagnosticsEvent.Section.Systems, Component.literal("MusicManager unavailable")));
+                            () -> event.add(CollectDiagnosticsEvent.Section.Systems, Component.literal("MusicManager unavailable")));
 
-            if (diagnosticScripts.isEmpty()) {
-                for (String script : scripts) {
-                    var newScript = new Script(script);
-                    Object result = this.conditionEvaluator.eval(newScript);
-                    diagnosticScripts.add(newScript);
-                    event.add(CollectDiagnosticsEvent.Section.Environment, result.toString());
-                }
-            } else {
-                for (var script : diagnosticScripts) {
-                    Object result = this.conditionEvaluator.eval(script);
-                    event.add(CollectDiagnosticsEvent.Section.Environment, result.toString());
-                }
+            for (var script : DIAGNOSTIC_SCRIPTS) {
+                Object result = this.conditionEvaluator.eval(script);
+                event.add(CollectDiagnosticsEvent.Section.Environment, result.toString());
             }
         }
     }

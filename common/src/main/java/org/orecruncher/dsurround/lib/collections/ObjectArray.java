@@ -11,6 +11,7 @@ import java.util.function.Predicate;
 public class ObjectArray<T> implements Collection<T> {
 
     private static final int DEFAULT_SIZE = 4;
+    private static final Object[] EMPTY_ARRAY = new Object[0];
 
     protected Object[] data;
     protected int insertionIdx;
@@ -184,7 +185,7 @@ public class ObjectArray<T> implements Collection<T> {
     public void trim() {
         if (this.insertionIdx < this.data.length) {
             if (this.insertionIdx == 0) {
-                this.data = ArrayUtils.EMPTY_OBJECT_ARRAY;
+                this.data = EMPTY_ARRAY;
             } else {
                 final Object[] t = new Object[this.insertionIdx];
                 System.arraycopy(this.data, 0, t, 0, this.insertionIdx);

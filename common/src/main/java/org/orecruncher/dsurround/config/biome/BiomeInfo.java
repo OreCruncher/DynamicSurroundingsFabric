@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.config.biome;
 
-import com.google.common.collect.ImmutableList;
 import dev.architectury.hooks.level.biome.BiomeHooks;
 import dev.architectury.hooks.level.biome.BiomeProperties;
 import net.minecraft.core.BlockPos;
@@ -56,11 +55,11 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private final boolean isOcean;
     private final boolean isDeepOcean;
     private final boolean isCave;
-    private AcousticEntryCollection loopSounds = new AcousticEntryCollection();
-    private AcousticEntryCollection moodSounds = new AcousticEntryCollection();
-    private AcousticEntryCollection additionalSounds = new AcousticEntryCollection();
-    private AcousticEntryCollection musicSounds = new AcousticEntryCollection();
-    private Collection<String> comments = new ObjectArray<>();
+    private final AcousticEntryCollection loopSounds = new AcousticEntryCollection();
+    private final AcousticEntryCollection moodSounds = new AcousticEntryCollection();
+    private final AcousticEntryCollection additionalSounds = new AcousticEntryCollection();
+    private final AcousticEntryCollection musicSounds = new AcousticEntryCollection();
+    private final ObjectArray<String> comments = new ObjectArray<>();
     private TextColor fogColor;
     private FogDensity fogDensity;
     private Script additionalSoundChance = DEFAULT_SOUND_CHANCE;
@@ -298,16 +297,27 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     }
 
     public void trim() {
-        if (this.loopSounds.isEmpty())
-            this.loopSounds = AcousticEntryCollection.EMPTY;
-        if (this.moodSounds.isEmpty())
-            this.moodSounds = AcousticEntryCollection.EMPTY;
-        if (this.additionalSounds.isEmpty())
-            this.additionalSounds = AcousticEntryCollection.EMPTY;
-        if (this.musicSounds.isEmpty())
-            this.musicSounds = AcousticEntryCollection.EMPTY;
-        if (this.comments.isEmpty())
-            this.comments = ImmutableList.of();
+        this.loopSounds.trim();
+        this.moodSounds.trim();
+        this.additionalSounds.trim();
+        this.musicSounds.trim();
+        this.comments.trim();
+    }
+
+    /**
+     * Gets the list of sounds for the specified type. API for diagnostics purposes only.
+     */
+    public Collection<AcousticEntry> getSounds(SoundEventType type) {
+        return switch (type) {
+            case LOOP -> this.loopSounds;
+            case MUSIC -> this.musicSounds;
+            case MOOD -> this.moodSounds;
+            case ADDITION -> this.additionalSounds;
+        };
+    }
+
+    public Collection<String> getComments() {
+        return this.comments;
     }
 
     @Override

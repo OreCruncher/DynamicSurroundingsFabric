@@ -9,7 +9,7 @@ import org.orecruncher.dsurround.lib.weighted.WeightValue;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
-public class AcousticEntry extends WeightTable.Entry<ISoundFactory> {
+public final class AcousticEntry extends WeightTable.Entry<ISoundFactory> {
 
     private static final IConditionEvaluator CONDITION_EVALUATOR = ContainerManager.resolve(IConditionEvaluator.class);
     private static final WeightValue DEFAULT_WEIGHT = WeightValue.of(10);
@@ -37,10 +37,6 @@ public class AcousticEntry extends WeightTable.Entry<ISoundFactory> {
         return this.conditions == Script.TRUE || CONDITION_EVALUATOR.check(this.conditions);
     }
 
-    protected Script getConditionsForLogging() {
-        return getConditions();
-    }
-
     @Override
     public int hashCode() {
         return this.conditions.hashCode() * 31 + this.data.getLocation().hashCode();
@@ -55,10 +51,6 @@ public class AcousticEntry extends WeightTable.Entry<ISoundFactory> {
     }
 
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .addValue(weight())
-                .addValue(getAcoustic().toString())
-                .addValue(getConditionsForLogging())
-                .toString();
+        return "Acoustic {%d, %s} %s".formatted(this.weight().asInt(), this.getAcoustic(), this.getConditions());
     }
 }

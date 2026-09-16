@@ -8,27 +8,7 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class AcousticEntryCollection extends ObjectArray<AcousticEntry> {
-
-    public static final AcousticEntryCollection EMPTY;
-
-    static {
-        EMPTY = new AcousticEntryCollection() {
-            @Override
-            public boolean add(AcousticEntry entry) {
-                throw new RuntimeException("Cannot add AcousticEntry to EMPTY collection");
-            }
-            @Override
-            public Stream<AcousticEntry> findMatches() {
-                return Stream.empty();
-            }
-            @Override
-            public Optional<ISoundFactory> makeSelection() {
-                return Optional.empty();
-            }
-        };
-        EMPTY.trim();
-    }
+public final class AcousticEntryCollection extends ObjectArray<AcousticEntry> {
 
     @Override
     public boolean add(AcousticEntry entry) {
@@ -42,6 +22,8 @@ public class AcousticEntryCollection extends ObjectArray<AcousticEntry> {
      * the game.
      */
     public Stream<AcousticEntry> findMatches() {
+        if (this.isEmpty())
+            return Stream.empty();
         return this.stream().filter(AcousticEntry::matches);
     }
 
@@ -50,6 +32,8 @@ public class AcousticEntryCollection extends ObjectArray<AcousticEntry> {
      * collection.
      */
     public Optional<ISoundFactory> makeSelection() {
+        if (this.isEmpty())
+            return Optional.empty();
         return WeightTable.makeSelection(this.findMatches(), Randomizer.current());
     }
 }

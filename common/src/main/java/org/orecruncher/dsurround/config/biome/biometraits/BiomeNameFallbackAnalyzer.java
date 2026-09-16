@@ -14,7 +14,7 @@ import static org.orecruncher.dsurround.config.BiomeTrait.*;
 /**
  * Generates biome traits for a biome based on the biome ID
  */
-public class BiomeNameFallbackAnalyzer implements IBiomeTraitAnalyzer {
+public final class BiomeNameFallbackAnalyzer implements IBiomeTraitAnalyzer {
 
     private static final Map<String, Set<BiomeTrait>> VANILLA_TRAITS = Map.<String, Set<BiomeTrait>>ofEntries(
             entry("plains", traits(OVERWORLD, PLAINS, TEMPERATE, SPARSE_VEGETATION)),
