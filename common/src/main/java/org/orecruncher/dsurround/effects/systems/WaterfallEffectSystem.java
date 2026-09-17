@@ -250,7 +250,8 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
             return false;
         if (isUnboundedLiquid(world, pos)) {
             var downPos = pos.below();
-            if (world.getBlockState(downPos).isFaceSturdy(world, downPos, Direction.UP, SupportType.FULL))
+            var blockState = world.getBlockState(downPos);
+            if (blockState.getFluidState().isSource() || blockState.isFaceSturdy(world, downPos, Direction.UP, SupportType.FULL))
                 return true;
             return isBoundedLiquid(world, pos);
         }

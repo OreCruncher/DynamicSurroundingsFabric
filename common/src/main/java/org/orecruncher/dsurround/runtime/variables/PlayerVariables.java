@@ -117,7 +117,7 @@ public final class PlayerVariables extends VariableSet {
         config.defineFunction(id("getX"), l -> this.x);
         config.defineFunction(id("getY"), l -> this.y);
         config.defineFunction(id("getZ"), l -> this.z);
-        config.defineFunction(id("hasEffect"), l -> this.hasEffect(l[0].toString()));
+        config.defineFunction(id("hasEffect"), 1, false,l -> this.hasEffect(l[0].toString()));
     }
 
     private boolean hasEffect(String effect) {
