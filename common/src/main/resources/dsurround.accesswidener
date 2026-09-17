@@ -9,6 +9,8 @@ accessible method net/minecraft/world/level/biome/Biome	getTemperature	(Lnet/min
 # To access client side chunk information
 accessible field net/minecraft/client/multiplayer/ClientLevel chunkSource Lnet/minecraft/client/multiplayer/ClientChunkCache;
 accessible class net/minecraft/client/multiplayer/ClientChunkCache$Storage
+accessible field net/minecraft/client/multiplayer/ClientChunkCache storage Lnet/minecraft/client/multiplayer/ClientChunkCache$Storage;
+accessible field net/minecraft/client/multiplayer/ClientChunkCache$Storage chunks Ljava/util/concurrent/atomic/AtomicReferenceArray;
 
 # Get at fog data
 accessible class net/minecraft/client/renderer/FogRenderer$FogData
@@ -32,6 +34,8 @@ accessible field net/minecraft/client/sounds/SoundEngine listener Lcom/mojang/bl
 accessible field com/mojang/blaze3d/audio/Library currentDevice J
 accessible field net/minecraft/client/sounds/SoundEngine library Lcom/mojang/blaze3d/audio/Library;
 accessible field net/minecraft/client/sounds/SoundEngine loaded Z
+accessible field net/minecraft/client/resources/sounds/AbstractSoundInstance volume F
+accessible field net/minecraft/client/resources/sounds/AbstractSoundInstance pitch F
 
 # MusicManager
 accessible field net/minecraft/client/sounds/MusicManager currentMusic Lnet/minecraft/client/resources/sounds/SoundInstance;

@@ -4,6 +4,7 @@ import com.google.common.base.Suppliers;
 import com.mojang.blaze3d.audio.Library;
 import com.mojang.blaze3d.audio.Listener;
 import dev.architectury.platform.Platform;
+import net.minecraft.client.resources.sounds.AbstractSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.SoundEngine;
 import org.apache.commons.lang3.StringUtils;
@@ -16,7 +17,6 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
-import org.orecruncher.dsurround.mixins.core.MixinAbstractSoundInstance;
 
 import java.util.function.Supplier;
 
@@ -88,10 +88,10 @@ public final class AudioUtilities {
             var underlyingSound = sound.getSound();
             //noinspection ConstantValue
             if (underlyingSound != null) {
-                var accessor = ReflectionHelper.cast(sound, MixinAbstractSoundInstance.class);
+                var accessor = ReflectionHelper.cast(sound, AbstractSoundInstance.class);
                 accessor.ifPresent(a -> {
-                    sb.append(String.format(", v: %.4f(%.4f)", sound.getVolume(), a.dsurround$getRawVolume()));
-                    sb.append(String.format(", p: %.4f(%.4f)", sound.getPitch(), a.dsurround$getRawPitch()));
+                    sb.append(String.format(", v: %.4f(%.4f)", sound.getVolume(), a.volume));
+                    sb.append(String.format(", p: %.4f(%.4f)", sound.getPitch(), a.pitch));
                 });
                 sb.append(", s: ").append(sound.getSound().shouldStream());
             }
