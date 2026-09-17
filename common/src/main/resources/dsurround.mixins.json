@@ -22,7 +22,6 @@
     "core.MixinParticleEngine",
     "core.MixinParticleTypes",
     "core.MixinRainSplashParticle",
-    "core.MixinRaycastContextAccessor",
     "core.MixinSoundOptionsScreen",
     "core.MixinTagCollector",
     "core.MixinWorld"

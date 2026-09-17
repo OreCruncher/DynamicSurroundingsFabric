@@ -45,3 +45,11 @@ mutable field net/minecraft/client/Minecraft musicManager Lnet/minecraft/client/
 
 # To detect jumping
 accessible field net/minecraft/world/entity/LivingEntity jumping Z
+
+# Reusable ray cast object
+accessible field net/minecraft/world/level/ClipContext from Lnet/minecraft/world/phys/Vec3;
+mutable field net/minecraft/world/level/ClipContext from Lnet/minecraft/world/phys/Vec3;
+accessible field net/minecraft/world/level/ClipContext to Lnet/minecraft/world/phys/Vec3;
+mutable field net/minecraft/world/level/ClipContext to Lnet/minecraft/world/phys/Vec3;
+accessible field net/minecraft/world/level/ClipContext collisionContext Lnet/minecraft/world/phys/shapes/CollisionContext;
+mutable field net/minecraft/world/level/ClipContext collisionContext Lnet/minecraft/world/phys/shapes/CollisionContext;
