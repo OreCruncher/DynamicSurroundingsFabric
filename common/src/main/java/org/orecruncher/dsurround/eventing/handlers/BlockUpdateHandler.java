@@ -40,26 +40,22 @@ public class BlockUpdateHandler {
      * @param oldState The state that is being replaced
      * @param newState The new incoming state
      */
-    public static void blockPositionUpdate(Level world, BlockPos pos, BlockState oldState, BlockState newState) {
+    public static void blockPositionUpdate(ClientLevel world, BlockPos pos, BlockState oldState, BlockState newState) {
         // This routine should be invoked on the client thread, but in the off chance that some mod is doing
         // something strange, we need to protect ourselves.
-        if (world instanceof ClientLevel) {
-            if (GameUtils.getMC().isSameThread()) {
-                // We are on the client thread - fast path
-                addPosition(pos);
-            } else {
-                // Not on client thread; schedule it
-                try {
-                    CLIENT_TASKING.execute(() -> {
-                        Library.LOGGER.debug("blockPositionUpdate invoked from non-client thread!");
-                        addPosition(pos);
-                    });
-                } catch (Throwable t) {
-                    Library.LOGGER.error(t, "Unable to add block position to block update handler list");
-                }
-            }
+        if (GameUtils.getMC().isSameThread()) {
+            // We are on the client thread - fast path
+            addPosition(pos);
         } else {
-            Library.LOGGER.debug("blockPositionUpdate invoked from non-client level!");
+            // Not on client thread; schedule it
+            try {
+                CLIENT_TASKING.execute(() -> {
+                    Library.LOGGER.debug("blockPositionUpdate invoked from non-client thread!");
+                    addPosition(pos);
+                });
+            } catch (Throwable t) {
+                Library.LOGGER.error(t, "Unable to add block position to block update handler list");
+            }
         }
     }
 

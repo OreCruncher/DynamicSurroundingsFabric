@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.mixins.core;
 
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -19,12 +20,7 @@ public class MixinWorld {
      */
     @Inject(method = "onBlockStateChange(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("HEAD"))
     public void dsurround$onBlockChanged(BlockPos pos, BlockState oldBlock, BlockState newBlock, CallbackInfo ci) {
-        // The World is AutoClosable and tooling thinks this is a leak...
-        var self = ReflectionHelper.cast(this, Level.class);
-        self.ifPresent(level -> {
-            if (level.isClientSide()) {
-                BlockUpdateHandler.blockPositionUpdate(self.get(), pos, oldBlock, newBlock);
-            }
-        });
+        ReflectionHelper.cast(this, ClientLevel.class)
+            .ifPresent(level -> BlockUpdateHandler.blockPositionUpdate(level, pos, oldBlock, newBlock));
     }
 }

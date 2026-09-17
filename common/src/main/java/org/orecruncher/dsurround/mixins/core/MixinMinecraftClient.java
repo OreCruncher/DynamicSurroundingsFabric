@@ -6,9 +6,8 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.main.GameConfig;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.world.entity.player.Abilities;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
 import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
@@ -25,14 +24,20 @@ public class MixinMinecraftClient {
 
     @Inject(method = "<init>(Lnet/minecraft/client/main/GameConfig;)V", at = @At(value = "RETURN"))
     public void dsurround$createMusicManager(GameConfig gameConfig, CallbackInfo ci) {
-        ReflectionHelper.cast(this, Minecraft.class)
-                .ifPresentOrElse(minecraft -> {
-                    if (MixinHelpers.musicOptions.replaceMusicManager) {
-                        minecraft.musicManager = new DSurroundMusicManager(minecraft);
-                        ContainerManager.resolve(IModLog.class).info("Replaced Minecraft's MusicManager");
-                    }
-                },
-                () -> ContainerManager.resolve(IModLog.class).info("Not configured to replace MusicManager"));
+        if (MixinHelpers.musicOptions.replaceMusicManager) {
+            ReflectionHelper.cast(this, Minecraft.class)
+                    .ifPresentOrElse(minecraft -> {
+                                //noinspection ConstantConditions
+                                if (minecraft.musicManager != null && !minecraft.musicManager.getClass().equals(MusicManager.class)) {
+                                    MixinHelpers.LOGGER.warn("It looks like MusicManager was already replaced by '%s'. If this causes an issue disable Dynamic Surroundings music manager replacement in the configuration.".formatted(minecraft.musicManager.getClass().getName()));
+                                }
+                                minecraft.musicManager = new DSurroundMusicManager(minecraft);
+                                MixinHelpers.LOGGER.info("Replaced Minecraft's MusicManager");
+                            },
+                            () -> MixinHelpers.LOGGER.warn("Unable to replace Minecraft's MusicManager"));
+        } else {
+            MixinHelpers.LOGGER.info("Not configured to replace MusicManager");
+        }
     }
 
     @Unique
