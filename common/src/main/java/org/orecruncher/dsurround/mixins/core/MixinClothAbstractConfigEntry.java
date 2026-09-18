@@ -20,7 +20,7 @@ public class MixinClothAbstractConfigEntry {
      */
     @Overwrite
     public Component getDisplayedFieldName() {
-        var self = (AbstractConfigEntry)((Object)this);
+        var self = (AbstractConfigEntry<?>)((Object)this);
         MutableComponent text = self.getFieldName().copy();
         boolean hasError = self.getConfigError().isPresent();
         boolean isEdited = self.isEdited();

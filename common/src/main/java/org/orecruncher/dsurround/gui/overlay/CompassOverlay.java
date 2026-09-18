@@ -17,7 +17,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
 
-public class CompassOverlay extends AbstractOverlay {
+public final class CompassOverlay extends AbstractOverlay {
 
     // Vertical offset to avoid writing over the cross-hair
     private static final int CROSSHAIR_OFFSET = 60;
@@ -29,7 +29,7 @@ public class CompassOverlay extends AbstractOverlay {
     private static final float BAND_HEIGHT = 12F * 2;
     private static final float TEXTURE_SIZE_F = (float)TEXTURE_SIZE;
     private static final int HALF_TEXTURE_SIZE = TEXTURE_SIZE / 2;
-    private static final ResourceLocation COMPASS_TEXTURE = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/compass.png");
+    private static final ResourceLocation COMPASS_TEXTURE = Constants.asId("textures/compass.png");
 
     private final ITagLibrary tagLibrary;
     private final IDimensionInformation dimensionInformation;
@@ -153,8 +153,8 @@ public class CompassOverlay extends AbstractOverlay {
      * Cloned from the Minecraft compass code
      */
     static class CompassWobble {
-        private static int TICK_DELAY = 5;
-        private static float MAX_DELTA_TICK = 1F / 20F;
+        private static final int TICK_DELAY = 5;
+        private static final float MAX_DELTA_TICK = 1F / 20F;
         private float targetRotation;
         private float lastRotation;
         private float rotation;

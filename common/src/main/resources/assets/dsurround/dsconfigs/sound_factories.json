@@ -166,6 +166,46 @@
     }
   },
   {
+    "location": "dsurround:toolbar.spear.equip",
+    "soundEvent": "dsurround:item.shield.equip",
+    "category": "PLAYER",
+    "volume": 0.25,
+    "pitch": {
+      "min": 1.6,
+      "max": 2.0
+    }
+  },
+  {
+    "location": "dsurround:toolbar.spear.swing",
+    "soundEvent": "dsurround:item.shield.equip",
+    "category": "PLAYER",
+    "volume": 0.15,
+    "pitch": {
+      "min": 1.4,
+      "max": 1.6
+    }
+  },
+  {
+    "location": "dsurround:toolbar.mace.equip",
+    "soundEvent": "dsurround:item.shield.equip",
+    "category": "PLAYER",
+    "volume": 0.5,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:toolbar.mace.swing",
+    "soundEvent": "dsurround:item.blunt.swing",
+    "category": "PLAYER",
+    "volume": 1.0,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
     "location": "dsurround:fire_ambient",
     "soundEvent": "minecraft:block.fire.ambient"
   },

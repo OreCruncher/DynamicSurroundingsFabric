@@ -4,7 +4,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.data.DimensionConfigRule;
-import org.orecruncher.dsurround.lib.world.WorldUtils;
+import org.orecruncher.dsurround.lib.compat.LevelCompat;
 
 public class DimensionInfo {
 
@@ -22,7 +22,7 @@ public class DimensionInfo {
     protected boolean compassWobble = false;
 
     DimensionInfo() {
-        this.name = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "no_dimension");
+        this.name = Constants.asId("no_dimension");
         this.isFlatWorld = false;
     }
 
@@ -33,11 +33,11 @@ public class DimensionInfo {
         this.skyHeight = world.getHeight();
         this.cloudHeight = this.skyHeight;
         this.spaceHeight = this.skyHeight + SPACE_HEIGHT_OFFSET;
-        this.isFlatWorld = WorldUtils.isSuperFlat(world);
+        this.isFlatWorld = LevelCompat.isSuperFlat(world);
 
         // Force sea level based on known world types that give heartburn
         if (this.isFlatWorld)
-            this.seaLevel = 0;
+            this.seaLevel = -60;
 
         this.compassWobble = !world.dimensionType().natural();
     }

@@ -119,7 +119,7 @@ public abstract class ConfigurationData {
         } catch (Throwable t) {
             Library.LOGGER.error(t, "Unable to save configuration %s", t.getMessage());
         } finally {
-            CONFIG_CHANGED.raise().onChange(this);
+            CONFIG_CHANGED_EVENT.invoker().onChange(this);
         }
     }
 
@@ -245,11 +245,7 @@ public abstract class ConfigurationData {
         Class<? extends Enum<?>> value();
     }
 
-    public static final IEvent<IConfigChangedEvent> CONFIG_CHANGED = EventingFactory.createEvent(callbacks -> config -> {
-        for (var callback : callbacks) {
-            callback.onChange(config);
-        }
-    });
+    public static final IEvent<IConfigChangedEvent> CONFIG_CHANGED_EVENT = EventingFactory.createEvent();
 
     @FunctionalInterface
     public interface IConfigChangedEvent {

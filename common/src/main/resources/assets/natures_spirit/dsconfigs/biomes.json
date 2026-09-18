@@ -1,6 +1,6 @@
 [
     {
-      "biomeSelector": "biome.id == 'natures_spirit:chaparral'",
+      "biomeSelector": "biome.getId() == 'natures_spirit:chaparral'",
       "_comment": "Missing traits for Chaparral",
       "traits": [
         "OVERWORLD",
@@ -9,7 +9,7 @@
       ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:boreal_taiga'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:boreal_taiga'",
         "_comment": "Missing traits for Boreal Taiga",
         "traits": [
           "CONIFEROUS",
@@ -17,7 +17,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:carnation_fields'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:carnation_fields'",
         "_comment": "Missing traits for Carnation Fields",
         "traits": [
           "OVERWORLD",
@@ -25,7 +25,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:cypress_fields'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:cypress_fields'",
         "_comment": "Missing traits for Carnation Fields",
         "traits": [
           "OVERWORLD",
@@ -33,7 +33,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:fir_forest'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:fir_forest'",
         "_comment": "Missing traits for Fir Forest",
         "traits": [
           "OVERWORLD",
@@ -41,7 +41,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:flowering_shrubland'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:flowering_shrubland'",
         "_comment": "Missing traits for Flowering Shrubland",
         "traits": [
           "OVERWORLD",
@@ -49,7 +49,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:golden_wilds'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:golden_wilds'",
         "_comment": "Missing traits for Golden Wilds",
         "traits": [
           "OVERWORLD",
@@ -57,7 +57,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:heather_fields'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:heather_fields'",
         "_comment": "Missing traits for Heather Fields",
         "traits": [
           "OVERWORLD",
@@ -65,7 +65,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:lavender_fields'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:lavender_fields'",
         "_comment": "Missing traits for Lavender Fields",
         "traits": [
           "OVERWORLD",
@@ -73,7 +73,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:marigold_meadows'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:marigold_meadows'",
         "_comment": "Missing traits for Marigold Meadows",
         "traits": [
           "OVERWORLD",
@@ -81,7 +81,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:oak_savanna'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:oak_savanna'",
         "_comment": "Missing traits for Oak Savanna",
         "traits": [
           "OVERWORLD",
@@ -89,7 +89,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:prairie'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:prairie'",
         "_comment": "Missing traits for Prarie",
         "traits": [
           "OVERWORLD",
@@ -97,7 +97,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:snowy_fir_forest'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:snowy_fir_forest'",
         "_comment": "Missing traits for Snowy Fir Forest",
         "traits": [
           "OVERWORLD",
@@ -105,7 +105,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:sparse_tropical_woods'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:sparse_tropical_woods'",
         "_comment": "Missing traits for Snowy Sparse Tropical Woods",
         "traits": [
           "OVERWORLD",
@@ -113,7 +113,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:tropical_woods'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:tropical_woods'",
         "_comment": "Missing traits for Snowy Tropical Woods",
         "traits": [
           "OVERWORLD",
@@ -121,7 +121,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:tundra'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:tundra'",
         "_comment": "Missing traits for Tundra",
         "traits": [
           "OVERWORLD",
@@ -129,7 +129,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:white_cliffs'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:white_cliffs'",
         "_comment": "Missing traits for White Cliffs",
         "traits": [
           "OVERWORLD",
@@ -137,7 +137,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:windswept_sugi_forest'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:windswept_sugi_forest'",
         "_comment": "Missing traits for Windswept Sugi Forest",
         "traits": [
           "OVERWORLD",
@@ -145,7 +145,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:xeric_plains'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:xeric_plains'",
         "_comment": "Missing traits for Xeric Plains",
         "traits": [
           "OVERWORLD",
@@ -153,7 +153,7 @@
         ]
     },
     {
-        "biomeSelector": "biome.id == 'natures_spirit:wooded_drylands'",
+        "biomeSelector": "biome.getId() == 'natures_spirit:wooded_drylands'",
         "_comment": "Missing traits for Wooded Drylands",
         "traits": [
           "OVERWORLD",

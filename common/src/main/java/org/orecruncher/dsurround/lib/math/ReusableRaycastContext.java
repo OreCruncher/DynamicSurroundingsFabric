@@ -7,12 +7,10 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.mixins.core.MixinRaycastContextAccessor;
 
 public class ReusableRaycastContext extends ClipContext {
 
     private final Level world;
-    private final MixinRaycastContextAccessor accessor;
 
     public ReusableRaycastContext(Level world, ClipContext.Block shapeType, ClipContext.Fluid fluidHandling) {
         this(world, Vec3.ZERO, Vec3.ZERO, shapeType, fluidHandling);
@@ -22,14 +20,13 @@ public class ReusableRaycastContext extends ClipContext {
         this(world, start, end, shapeType, fluidHandling, GameUtils.getPlayer().orElseThrow());
 
         // Override the shape context that was passed into the ctor
-        this.accessor.dsurround_setShapeContext(CollisionContext.empty());
+        this.collisionContext = CollisionContext.empty();
     }
 
     public ReusableRaycastContext(Level world, Vec3 start, Vec3 end, ClipContext.Block shapeType, ClipContext.Fluid fluidHandling, Entity entity) {
         super(start, end, shapeType, fluidHandling, entity);
 
         this.world = world;
-        this.accessor = ((MixinRaycastContextAccessor)this);
     }
 
     public BlockHitResult trace(Vec3 start, Vec3 end) {
@@ -46,18 +43,18 @@ public class ReusableRaycastContext extends ClipContext {
     }
 
     public Vec3 getStart() {
-        return this.accessor.dsurround_getStartPoint();
+        return this.from;
     }
 
     void setStart(Vec3 point) {
-        this.accessor.dsurround_setStartPoint(point);
+        this.from = point;
     }
 
     public Vec3 getEnd() {
-        return this.accessor.dsurround_getEndPoint();
+        return this.to;
     }
 
     void setEnd(Vec3 point) {
-        this.accessor.dsurround_setEndPoint(point);
+        this.to = point;
     }
 }

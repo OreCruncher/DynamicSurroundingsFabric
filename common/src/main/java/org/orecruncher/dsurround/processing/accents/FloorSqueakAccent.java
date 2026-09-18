@@ -13,7 +13,7 @@ import org.orecruncher.dsurround.tags.BlockEffectTags;
 
 class FloorSqueakAccent  implements IFootstepAccentProvider {
 
-    private static final ResourceLocation FLOOR_SQUEAK = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "footstep/floorsqueak");
+    private static final ResourceLocation FLOOR_SQUEAK = Constants.asId("footstep/floorsqueak");
 
     private final Configuration config;
 

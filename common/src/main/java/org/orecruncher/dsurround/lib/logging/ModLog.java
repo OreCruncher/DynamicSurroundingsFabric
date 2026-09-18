@@ -109,7 +109,8 @@ public final class ModLog implements IModLog {
     @Override
     public void error(final Throwable e, final String msg, @Nullable final Object... params) {
         outputLines(this.logger::error, msg, params);
-        this.logger.error(e.toString());
+        if (e != null)
+            this.logger.error("EXCEPTION:", e);
     }
 
     @Override

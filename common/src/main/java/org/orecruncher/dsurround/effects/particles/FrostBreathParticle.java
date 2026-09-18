@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.effects.particles;
 
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.client.particle.TextureSheetParticle;
@@ -16,13 +17,33 @@ public class FrostBreathParticle extends TextureSheetParticle {
 
     private final SpriteSet spriteProvider;
 
-    public FrostBreathParticle(LivingEntity entity) {
+    public static Particle create(LivingEntity entity) {
+        SpriteSet spriteProvider = ParticleUtils.getSpriteProvider(ParticleTypes.CLOUD);
+        if (spriteProvider != null) {
+            return new FrostBreathParticle(entity, spriteProvider);
+        }
+
+        // Fallback to a vanilla cloud if the custom particle constructor cannot safely obtain sprites.
+        final Vec3 origin = ParticleUtils.getBreathOrigin(entity);
+        final Vec3 trajectory = ParticleUtils.getLookTrajectory(entity);
+        return ParticleUtils.createParticle(
+                ParticleTypes.CLOUD,
+                origin.x,
+                origin.y,
+                origin.z,
+                trajectory.x * 0.01D,
+                trajectory.y * 0.01D,
+                trajectory.z * 0.01D
+        );
+    }
+
+    private FrostBreathParticle(LivingEntity entity, SpriteSet spriteProvider) {
         super((ClientLevel) entity.level(), 0, 0, 0, 0.0, 0.0, 0.0);
         
         final IRandomizer rand = Randomizer.current();
 
         // Reuse the cloud sheet
-        this.spriteProvider = ParticleUtils.getSpriteProvider(ParticleTypes.CLOUD);
+        this.spriteProvider = spriteProvider;
         final Vec3 origin = ParticleUtils.getBreathOrigin(entity);
         final Vec3 trajectory = ParticleUtils.getLookTrajectory(entity);
 

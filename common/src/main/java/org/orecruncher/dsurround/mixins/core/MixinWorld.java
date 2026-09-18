@@ -1,9 +1,11 @@
 package org.orecruncher.dsurround.mixins.core;
 
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.eventing.handlers.BlockUpdateHandler;
+import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,11 +19,8 @@ public class MixinWorld {
      * a world that is client side.  Server side is a don't care.
      */
     @Inject(method = "onBlockStateChange(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("HEAD"))
-    public void dsurround_onBlockChanged(BlockPos pos, BlockState oldBlock, BlockState newBlock, CallbackInfo ci) {
-        // The World is AutoClosable and tooling thinks this is a leak...
-        var world = ((Level) (Object) this);
-        if (world.isClientSide()) {
-            BlockUpdateHandler.blockPositionUpdate(pos, oldBlock, newBlock);
-        }
+    public void dsurround$onBlockChanged(BlockPos pos, BlockState oldBlock, BlockState newBlock, CallbackInfo ci) {
+        ReflectionHelper.cast(this, ClientLevel.class)
+            .ifPresent(level -> BlockUpdateHandler.blockPositionUpdate(level, pos, oldBlock, newBlock));
     }
 }

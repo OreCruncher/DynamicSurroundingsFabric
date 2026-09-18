@@ -1,5 +1,7 @@
 package org.orecruncher.dsurround.eventing;
 
+import dev.architectury.event.events.client.ClientLifecycleEvent;
+import dev.architectury.event.events.client.ClientTickEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -9,86 +11,96 @@ import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.events.IPhasedEvent;
 
 /**
- * Event handlers for Server state.
+ * Event handlers for Client state.
  */
 public final class ClientState {
-    /**
-     * Event raised when the Client has started.
-     */
-    public static final IPhasedEvent<IClientStarted> STARTED = EventingFactory.createPrioritizedEvent(callbacks -> client -> {
-        for (var callback : callbacks) {
-            callback.onStart(client);
-        }
-    });
+
+    public static final IPhasedEvent<IClientStarted> CLIENT_START_EVENT = EventingFactory.createPrioritizedEvent();
+    public static final IPhasedEvent<IClientStopping> CLIENT_STOP_EVENT = EventingFactory.createPrioritizedEvent();
+    public static final IPhasedEvent<IClientTickStart> CLIENT_TICK_START_EVENT = EventingFactory.createPrioritizedEvent();
+    public static final IPhasedEvent<IClientTickEnd> CLIENT_TICK_END_EVENT = EventingFactory.createPrioritizedEvent();
+    public static final IPhasedEvent<IClientConnect> CLIENT_CONNECT_EVENT = EventingFactory.createPrioritizedEvent();
+    public static final IPhasedEvent<IClientDisconnect> CLIENT_DISCONNECT_EVENT = EventingFactory.createPrioritizedEvent();
+    public static final IPhasedEvent<ITagSync> TAG_SYNC_EVENT = EventingFactory.createPrioritizedEvent();
+    public static final IPhasedEvent<IResourceReload> RESOURCE_RELOAD_EVENT = EventingFactory.createPrioritizedEvent();
 
     /**
+     * Event raised when the client is starting
+     */
+    @FunctionalInterface
+    public interface IClientStarted {
+        void onStart(Minecraft client);
+    }
+
     /**
      * Event raised when the Client is stopping.
      */
-    public static final IPhasedEvent<IClientStopping> STOPPING = EventingFactory.createPrioritizedEvent(callbacks -> client -> {
-        for (var callback : callbacks) {
-            callback.onStopping(client);
-        }
-    });
+    @FunctionalInterface
+    public interface IClientStopping {
+        void onStopping(Minecraft client);
+    }
 
     /**
      * Event raised at the beginning of the Client tick cycle.
      */
-    public static final IPhasedEvent<IClientTickStart> TICK_START = EventingFactory.createPrioritizedEvent(callbacks -> client -> {
-        for (var callback : callbacks) {
-            callback.onTickStart(client);
-        }
-    });
+    @FunctionalInterface
+    public interface IClientTickStart {
+        void onTickStart(Minecraft client);
+    }
 
     /**
      * Event raised at the end of the Client tick cycle.
      */
-    public static final IPhasedEvent<IClientTickEnd> TICK_END = EventingFactory.createPrioritizedEvent(callbacks -> client -> {
-        for (var callback : callbacks) {
-            callback.onTickEnd(client);
-        }
-    });
+    @FunctionalInterface
+    public interface IClientTickEnd {
+        void onTickEnd(Minecraft client);
+    }
 
     /**
      * Event raised when the client connects to a server.
      */
-    public static final IPhasedEvent<IClientConnect> ON_CONNECT = EventingFactory.createPrioritizedEvent(callbacks -> client -> {
-        for (var callback : callbacks) {
-            callback.onConnect(client);
-        }
-    });
+    @FunctionalInterface
+    public interface IClientConnect {
+        void onConnect(Minecraft client);
+    }
 
     /**
      * Event raised when the client disconnects from a server.
      */
-    public static final IPhasedEvent<IClientDisconnect> ON_DISCONNECT = EventingFactory.createPrioritizedEvent(callbacks -> client -> {
-        for (var callback : callbacks) {
-            callback.onDisconnect(client);
-        }
-    });
+    @FunctionalInterface
+    public interface IClientDisconnect {
+        void onDisconnect(Minecraft client);
+    }
 
     /**
      * Event raised when tags sync to the client
      */
-    public static final IPhasedEvent<ITagSync> TAG_SYNC = EventingFactory.createPrioritizedEvent(callbacks -> registryAccess -> {
-        for (var callback : callbacks) {
-            callback.onTagSync(registryAccess);
-        }
-    });
+    @FunctionalInterface
+    public interface ITagSync {
+        void onTagSync(RegistryAccess registryAccess);
+    }
 
-    public static final IPhasedEvent<IResourceReload> RESOURCE_RELOAD = EventingFactory.createPrioritizedEvent(callbacks -> registryAccess -> {
-        for (var callback : callbacks) {
-            callback.onResourceReload(registryAccess);
-        }
-    });
+    /**
+     * Event raised when resources reload
+     */
+    @FunctionalInterface
+    public interface IResourceReload {
+        void onResourceReload(ResourceManager resourceManager);
+    }
 
     private ClientState() {
     }
 
-
     static {
+        // Register with Architectury for known client side events
+        ClientTickEvent.CLIENT_PRE.register(mc -> ClientState.CLIENT_TICK_START_EVENT.invoker().onTickStart(mc));
+        ClientTickEvent.CLIENT_POST.register(mc -> ClientState.CLIENT_TICK_END_EVENT.invoker().onTickEnd(mc));
+
+        ClientLifecycleEvent.CLIENT_STARTED.register(mc -> ClientState.CLIENT_START_EVENT.invoker().onStart(mc));
+        ClientLifecycleEvent.CLIENT_STOPPING.register(mc -> ClientState.CLIENT_STOP_EVENT.invoker().onStopping(mc));
+
         // Connection detection is the first thing that processes, period.
-        TICK_START.register(ClientState::connectionDetector, HandlerPriority.VERY_HIGH);
+        CLIENT_TICK_START_EVENT.register(ClientState::connectionDetector, HandlerPriority.VERY_HIGH);
     }
 
     private static boolean isConnected = false;
@@ -103,54 +115,14 @@ public final class ClientState {
             if (client.player == null) {
                 isConnected = false;
                 Library.LOGGER.info("Player instance no longer present");
-                ON_DISCONNECT.raise().onDisconnect(client);
+                CLIENT_DISCONNECT_EVENT.invoker().onDisconnect(client);
             }
         } else {
             if (client.player != null) {
                 isConnected = true;
                 Library.LOGGER.info("Player instance is now present");
-                ON_CONNECT.raise().onConnect(client);
+                CLIENT_CONNECT_EVENT.invoker().onConnect(client);
             }
         }
-    }
-
-    @FunctionalInterface
-    public interface IClientStarted {
-        void onStart(Minecraft client);
-    }
-
-    @FunctionalInterface
-    public interface IClientStopping {
-        void onStopping(Minecraft client);
-    }
-
-    @FunctionalInterface
-    public interface IClientTickStart {
-        void onTickStart(Minecraft client);
-    }
-
-    @FunctionalInterface
-    public interface IClientTickEnd {
-        void onTickEnd(Minecraft client);
-    }
-
-    @FunctionalInterface
-    public interface IClientConnect {
-        void onConnect(Minecraft client);
-    }
-
-    @FunctionalInterface
-    public interface IClientDisconnect {
-        void onDisconnect(Minecraft client);
-    }
-
-    @FunctionalInterface
-    public interface ITagSync {
-        void onTagSync(RegistryAccess registryAccess);
-    }
-
-    @FunctionalInterface
-    public interface IResourceReload {
-        void onResourceReload(ResourceManager resourceManager);
     }
 }

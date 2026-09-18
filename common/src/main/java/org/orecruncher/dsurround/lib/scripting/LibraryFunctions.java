@@ -1,77 +1,43 @@
 package org.orecruncher.dsurround.lib.scripting;
 
-import dev.architectury.platform.Platform;
-import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.lib.di.Cacheable;
-import org.orecruncher.dsurround.lib.system.ISystemClock;
+import org.orecruncher.dsurround.lib.scripting.engine.ScriptHelpers;
 
 import java.time.*;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
- * Library functions exposed via the JavaScript engine.  They are not directly used by code.
+ * Core functions that are automatically defined for the Script Engine when it is initialized
  */
-@SuppressWarnings("unused")
-@Cacheable
 public final class LibraryFunctions {
 
-    private final ISystemClock systemClock;
-
-    public LibraryFunctions(ISystemClock systemClock) {
-        this.systemClock = systemClock;
+    public static void configure(IConfigureDefinition config) {
+        config.defineFunction("lib.iif", 3, false, LibraryFunctions::iif);
+        config.defineFunction("lib.match", 2, false, LibraryFunctions::match);
+        config.defineFunction("lib.oneOf", 2, true, LibraryFunctions::oneof);
+        config.defineFunction("lib.isBetween", 3, false, LibraryFunctions::isBetween);
     }
 
-    public Object iif(final boolean flag, @Nullable final Object trueResult, @Nullable final Object falseResult) {
-        return flag ? trueResult : falseResult;
+    private static Object iif(final Object[] args) {
+        var flag = ScriptHelpers.toBoolean(args[0]);
+        return flag ? args[1] : args[2];
     }
 
-    public boolean match(final String pattern, final String subject) {
-        Objects.requireNonNull(pattern);
-        Objects.requireNonNull(subject);
-        return Pattern.matches(pattern, subject);
+    private static boolean match(final Object[] args) {
+        return Pattern.matches(args[0].toString(), args[1].toString());
     }
 
-    public boolean oneof(final Object testee, final Object... possibles) {
-        Objects.requireNonNull(testee);
-        Objects.requireNonNull(possibles);
-        for (final Object obj : possibles)
-            if (testee.equals(obj))
+    private static boolean oneof(final Object[] args) {
+        var testee = args[0];
+        for (int i = 1; i < args.length; i++)
+            if (testee.equals(args[i]))
                 return true;
         return false;
     }
 
-    public boolean isBetween(final double value, final double min, final double max) {
+    private static boolean isBetween(final Object[] args) {
+        var value = ScriptHelpers.toDouble(args[0]);
+        var min = ScriptHelpers.toDouble(args[1]);
+        var max = ScriptHelpers.toDouble(args[2]);
         return value >= min && value <= max;
-    }
-
-    public boolean isModLoaded(final String mod) {
-        return Platform.isModLoaded(mod);
-    }
-
-    public boolean isCurrentDateInRangeOf(int month, int day, int dayRange) {
-        try {
-            // Get the current Utc time. Assume the test date is the same year.
-            var theNow = LocalDate.ofInstant(this.systemClock.getUtcNow(), ZoneOffset.UTC);
-            var testDate = LocalDate.of(theNow.getYear(), month, day);
-
-            // If the test date is before the time window, it means the range is in the future
-            var begin = theNow.minusDays(dayRange);
-            if (begin.isAfter(testDate))
-                return false;
-
-            // So the test date is after the beginning of the window. See if it is before
-            // the end of the window. If so, it's in range.
-            var end = theNow.plusDays(dayRange);
-            if (!end.isBefore(testDate))
-                return true;
-
-            // So the range looks like it is in the past. It's possible that we are dealing with an end of year thing
-            // like new years. Handle that by adding one year to the test date and re-evaluate.
-            testDate = testDate.plusYears(1);
-            return !(begin.isAfter(testDate) || end.isBefore(testDate));
-        } catch (Throwable ignore) {
-        }
-        return false;
     }
 }

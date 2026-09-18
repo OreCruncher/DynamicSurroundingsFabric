@@ -12,11 +12,7 @@ import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 public class AssetLibraryEvent {
 
     private static final Configuration CONFIG = ContainerManager.resolve(Configuration.class);
-    public static final IPhasedEvent<IReloadEvent> RELOAD = EventingFactory.createPrioritizedEvent(callbacks -> (resourceUtilities, scope) ->  {
-        for (var callback : callbacks) {
-            callback.onReload(resourceUtilities, scope);
-        }
-    });
+    public static final IPhasedEvent<IReloadEvent> RELOAD = EventingFactory.createPrioritizedEvent();
 
     static {
         RELOAD.register(AssetLibraryEvent::afterReload, HandlerPriority.VERY_LOW);

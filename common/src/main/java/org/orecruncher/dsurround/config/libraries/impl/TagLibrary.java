@@ -54,8 +54,8 @@ public class TagLibrary implements ITagLibrary {
 
         // Need to clear the tag caches on disconnect. It's possible that
         // cached biome information will change with the next connection.
-        ClientState.ON_CONNECT.register(this::onConnect);
-        ClientState.ON_DISCONNECT.register(this::onDisconnect);
+        ClientState.CLIENT_CONNECT_EVENT.register(this::onConnect);
+        ClientState.CLIENT_DISCONNECT_EVENT.register(this::onDisconnect);
     }
 
     @Override

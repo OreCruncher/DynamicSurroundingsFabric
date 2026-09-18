@@ -149,9 +149,7 @@ public class BlockInfo {
     }
 
     public void trim() {
-        if (this.sounds.isEmpty()) {
-            this.sounds = AcousticEntryCollection.EMPTY;
-        }
+        this.sounds.trim();
         if (this.blockEffects.isEmpty()) {
             this.blockEffects = ImmutableList.of();
         }
