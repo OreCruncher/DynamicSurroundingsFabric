@@ -67,14 +67,14 @@ Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
 * Replace Minecraft's thunder sound with improved versions.
 * Hot block effects such as flame jets over lava, and steam where water hits a hot block.
     * Hot blocks are things Lava, Magma, campfires, and a cauldron containing lava.
-* Waterfall sound and visual effect - will trigger when flowing water is detected nearby.
+* Waterfall sound and visual effects - will trigger when flowing water is detected nearby.
 * Various "DS" client side commands for dumping configuration information.  (I currently use these while developing. I do plan to document at some point for general use.)
 * Custom debug HUD that can be accessed by key bind.  Moves the Dynamic Surroundings clutter out of the traditional F3 display.
 * Compatibility with Serene Seasons - variations in seasons and temperatures can influence effects.
 * Dynamic Surroundings is compatible when connecting to a Vanilla servers. Both Fabric and NeoForge loaders can do this.
 
 ## Embedded Jars
-* Fabric version has OpenJDK Nashorn JavaScript Engine 15.4 (https://github.com/openjdk/nashorn)
+* Fabric 0.4.2 and earlier has OpenJDK Nashorn JavaScript Engine 15.4 (https://github.com/openjdk/nashorn). For 0.4.3+ there is no JavaScript engine dependency.
 
 ## FAQ 
 * Will there be updates for the Forge loaders?
@@ -83,7 +83,6 @@ Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
 ## What's Being Dropped
 * Aurora.  Good at turning a computer into a space heater, and I do not know enough about shaders to improve.
 * Weather effects.  Again, there have been improvements to Minecraft.  I may add some additional processing around weather, but I do not expect to make major changes.
-* Player particle suppression. Mojang changed how player particle effects are handled and there isn't a clean way to suppress.
 
 As I indicated, these features are not planned.  Based on time commitments, I may change my mind. :) 
 
