@@ -25,7 +25,7 @@ public abstract class MixinBiome {
         if (MixinHelpers.fogOptions.enableFogEffects && MixinHelpers.fogOptions.enableBiomeFog) {
             var biome = ReflectionHelper.cast(this, Biome.class);
             biome.ifPresent(b -> {
-                var info = MixinHelpers.BIOME_LIBRARY.getBiomeInfo(b);
+                var info = MixinHelpers.BIOME_LIBRARY.getBiomeInfoWeak(b);
                 if (info != null) {
                     var color = info.getFogColor();
                     if (color != null)
@@ -46,11 +46,8 @@ public abstract class MixinBiome {
     private void dsurround$getBackgroundMusic(CallbackInfoReturnable<Optional<Music>> cir) {
         var biome = ReflectionHelper.cast(this, Biome.class);
         biome.ifPresent(b -> {
-            var info = MixinHelpers.BIOME_LIBRARY.getBiomeInfo(b);
-            if (info == null) {
-                // Can be null after things like a teleport
-                cir.setReturnValue(Optional.empty());
-            } else {
+            var info = MixinHelpers.BIOME_LIBRARY.getBiomeInfoWeak(b);
+            if (info != null) {
                 var result = info.getBackgroundMusic(Randomizer.current());
                 if (result.isPresent())
                     cir.setReturnValue(result);

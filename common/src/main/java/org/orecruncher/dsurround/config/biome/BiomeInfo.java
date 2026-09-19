@@ -87,15 +87,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         // other necessary dependent work.
         if (this.biome != null) {
             this.properties = BiomeHooks.getBiomeProperties(this.biome);
-
-            // Add background track to the list of possible plays for the biome
-            this.properties.getEffectsProperties()
-                            .getBackgroundMusic()
-                                    .ifPresent(m -> {
-                                        var factory = SOUND_LIBRARY.getSoundFactoryForMusic(m);
-                                        var entry = new AcousticEntry(factory, null);
-                                        this.musicSounds.add(entry);
-                                    });
+            this.setDefaultMusic();
         } else {
             this.properties = null;
         }
@@ -237,6 +229,23 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         this.moodSounds.clear();
         this.moodSoundChance = DEFAULT_SOUND_CHANCE;
         this.additionalSoundChance = DEFAULT_SOUND_CHANCE;
+
+        this.setDefaultMusic();
+    }
+
+    private void setDefaultMusic() {
+        if (this.properties == null)
+            return;
+
+        // Add background track to the list of possible plays for the biome
+        this.properties.getEffectsProperties()
+                .getBackgroundMusic()
+                .ifPresent(m -> {
+                    var factory = SOUND_LIBRARY.getSoundFactoryForMusic(m);
+                    var entry = new AcousticEntry(factory, null);
+                    this.musicSounds.add(entry);
+                });
+
     }
 
     public void update(final BiomeConfigRule entry) {

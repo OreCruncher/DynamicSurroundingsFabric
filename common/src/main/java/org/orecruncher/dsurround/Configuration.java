@@ -149,6 +149,14 @@ public class Configuration extends ConfigurationData {
     public static class SoundOptions {
 
         @Property
+        @Comment("Discard sounds that are played from a non-client thread")
+        public boolean discardNonClientSoundPlays = true;
+
+        @Property
+        @Comment("Emit stack trace when discarding sounds")
+        public boolean logStacktraceWhenDiscarding = true;
+
+        @Property
         @Slider
         @IntegerRange(min = 0, max = 400)
         @Comment("Ambient sounds played by the mod will be multiplied by this factor")
