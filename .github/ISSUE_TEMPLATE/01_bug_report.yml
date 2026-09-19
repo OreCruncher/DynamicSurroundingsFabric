@@ -1,0 +1,73 @@
+name: "Bug Report"
+description: Create a new ticket for a bug
+title: "[BUG] "
+labels: [
+  "bug", "needs-triage"
+]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to open an issue. If you haven't done so already, please review open issues to see
+        if someone else has already reported your issue. To help move things along, provide as much detail as
+        possible, and definitely include client logs.
+  - type: input
+    id: dsversion
+    attributes:
+      label: "Dynamic Surroundings Version"
+      description: Version of Dynamic Surroundings
+      placeholder: "Example: 1.21.1-0.4.3, or even the name of the jar: dynamicsurroundings-fabric-1.21.1-0.4.3"
+    validations:
+      required: true
+  - type: dropdown
+    id: modloader
+    attributes:
+      label: "Mod Loader"
+      description: What mod loader is involved?
+      multiple: true
+      options:
+        - Fabric
+        - NeoForge
+    validations:
+      required: true
+  - type: dropdown
+    id: isupgrade
+    attributes:
+      label: "Did you upgrade?"
+      description: Did you upgrade Dynamic Surroundings versions, or is this a brand new install?
+      options:
+        - Upgrade
+        - New Install
+    validations:
+      required: true
+  - type: textarea
+    id: modpack
+    attributes:
+        label: "Modpack Name"
+        description: "Please enter the name of the modpack you are using, or provide a mod list if it's private"
+        placeholder: You can provide a link to the modpack/modlist
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: "Description"
+      description: Please enter an explicit description of your issue
+      placeholder: Short and explicit description of your incident...
+    validations:
+      required: true
+  - type: textarea
+    id: reprod
+    attributes:
+      label: "Reproduction steps"
+      description: Please enter the steps to reproduce the issue, if any
+    validations:
+      required: false
+  - type: upload
+    id: logs
+    attributes:
+      label: "Logs"
+      description: Please provide relevant Minecraft logs; 25MB limit
+    validations:
+      required: false
+      accept: ".log,.log.gz,.txt,.zip"

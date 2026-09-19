@@ -1,0 +1,19 @@
+name: "I has a question"
+description: Ask a question
+title: "[QUESTION] "
+labels: [
+  "question", "needs-triage"
+]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to ask a question. If its a quick question you can ask it here. If you think its
+        going to turn into a discussion or require a bit of back and forth create a discussion topic [here](https://github.com/OreCruncher/DynamicSurroundingsFabric/discussions).
+  - type: textarea
+    id: question
+    attributes:
+      label: "Question"
+      description: Enter your question
+    validations:
+      required: true

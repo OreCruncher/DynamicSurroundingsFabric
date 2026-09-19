@@ -154,7 +154,7 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @Comment("Emit stack trace when discarding sounds")
-        public boolean logStacktraceWhenDiscarding = true;
+        public boolean logStacktraceWhenDiscarding = false;
 
         @Property
         @Slider
