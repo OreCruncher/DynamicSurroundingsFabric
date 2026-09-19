@@ -69,8 +69,19 @@ public abstract class MixinSoundEngine {
             // Ensure the sound is being played on the client thread. If it isn't cancel
             // the play and emit a message indicating such. This should also protect
             // dsurround$currentSoundInstance.
-            if (!GameUtils.getMC().isSameThread()) {
-                MixinHelpers.LOGGER.warn("Attempt to play sound (%s) from non-client thread; discarding", sound.getLocation());
+            if (MixinHelpers.soundOptions.discardNonClientSoundPlays && !GameUtils.getMC().isSameThread()) {
+                var builder = new StringBuilder();
+                builder.append("Attempt to play sound (%s) from non-client thread; discarding".formatted(sound.getLocation()));
+                if (MixinHelpers.soundOptions.logStacktraceWhenDiscarding) {
+                    builder.append("\nSTACK:\n");
+                    // Log the stack trace in case it gives clues, Start at element 1 of the stack trace
+                    // because 0 is *this* method.
+                    var trace = Thread.currentThread().getStackTrace();
+                    for (int i = 1; i < trace.length; i++) {
+                        builder.append("   ").append(trace[i].toString());
+                    }
+                }
+                MixinHelpers.LOGGER.warn(builder.toString());
                 ci.cancel();
             }
             // Check to see if the sound is blocked or being culled
