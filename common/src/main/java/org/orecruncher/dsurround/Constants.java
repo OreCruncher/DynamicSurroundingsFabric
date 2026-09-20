@@ -27,6 +27,7 @@ public final class Constants {
     // Enhanced sound processing.  Check AudioUtilities.java as well.
     public static final String MOD_SOUND_PHYSICS_REMASTERED = "sound_physics_remastered";
     public static final String MOD_PARTICLE_RAIN = "particlerain";
+    public static final String RAISE_SOUND_LIMIT_SIMPLIFIED = "rsls";
     public static final String CLOTH_CONFIG_FABRIC = "cloth-config";
     public static final String CLOTH_CONFIG_NEOFORGE = "cloth_config";  // Yeah...
     public static final String YACL = "yet_another_config_lib_v3";
@@ -51,6 +52,7 @@ public final class Constants {
                 MOD_PRESENCE_FOOTSTEPS,
                 MOD_SOUND_PHYSICS_REMASTERED,
                 MOD_PARTICLE_RAIN,
+                RAISE_SOUND_LIMIT_SIMPLIFIED,
                 CLOTH_CONFIG_FABRIC,
                 CLOTH_CONFIG_NEOFORGE,
                 YACL,
