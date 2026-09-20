@@ -44,7 +44,7 @@ public class MixinSource {
     }
 
     /**
-     * Called when a sounds stops playing.  Any context information sndctrl has generated will be cleaned up.
+     * Called when a sounds stops playing.  Any context information generated will be cleaned up.
      * @param ci Ignored
      */
     @Inject(method = "stop()V", at = @At("HEAD"))
