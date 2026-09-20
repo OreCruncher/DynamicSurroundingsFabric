@@ -8,7 +8,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Official documentation for Dynamic Surroundings can be found at ReadTheDocs at this [location](https://dynamic-surroundings.readthedocs.io/en/latest/index.html).
+        Official documentation for Dynamic Surroundings can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html).
         If you haven't done so already, review the existing documentation to see if your needs are met. If not, please
         continue and provide your suggestions for improving.
   - type: input

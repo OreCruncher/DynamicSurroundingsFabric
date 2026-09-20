@@ -2,6 +2,10 @@
 blank_issues_enabled: true
 
 contact_links:
+  - name: General Discussion
+    url: https://github.com/OreCruncher/DynamicSurroundingsFabric/discussions
+    about: Dynamic Surroundings discussion pages
+
   - name: Documentation
     url: https://dynamic-surroundings.readthedocs.io/en/latest/index.html
     about: Official documentation for Dynamic Surroundings

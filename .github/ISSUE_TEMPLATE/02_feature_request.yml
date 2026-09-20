@@ -10,7 +10,7 @@ body:
     attributes:
       label: "Dynamic Surroundings Version"
       description: Version of Dynamic Surroundings
-      placeholder: "Example: 1.21.1-0.4.3, or even the name of the jar: dynamicsurroundings-fabric-1.21.1-0.4.3"
+      placeholder: Example 1.21.1-0.4.3, or even the name of the jar dynamicsurroundings-fabric-1.21.1-0.4.3
     validations:
       required: true
   - type: textarea

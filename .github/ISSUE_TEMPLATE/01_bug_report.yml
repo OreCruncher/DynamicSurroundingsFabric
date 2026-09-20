@@ -10,13 +10,14 @@ body:
       value: |
         Thanks for taking the time to open an issue. If you haven't done so already, please review open issues to see
         if someone else has already reported your issue. To help move things along, provide as much detail as
-        possible, and definitely include client logs.
+        possible, and definitely include client logs. Most of the time the log will contain enough context information
+        to identify the source of the issue.
   - type: input
     id: dsversion
     attributes:
       label: "Dynamic Surroundings Version"
       description: Version of Dynamic Surroundings
-      placeholder: "Example: 1.21.1-0.4.3, or even the name of the jar: dynamicsurroundings-fabric-1.21.1-0.4.3"
+      placeholder: Example 1.21.1-0.4.3, or even the name of the jar dynamicsurroundings-fabric-1.21.1-0.4.3"
     validations:
       required: true
   - type: dropdown
@@ -45,7 +46,7 @@ body:
     attributes:
         label: "Modpack Name"
         description: "Please enter the name of the modpack you are using, or provide a mod list if it's private"
-        placeholder: You can provide a link to the modpack/modlist
+        placeholder: You can provide a link to the modpack/modlist as well
     validations:
       required: true
   - type: textarea
@@ -68,6 +69,7 @@ body:
     attributes:
       label: "Logs"
       description: Please provide relevant Minecraft logs; 25MB limit
+      placeholder: The log is usually ./minecraft/logs/latest.log
     validations:
       required: false
       accept: ".log,.log.gz,.txt,.zip"
