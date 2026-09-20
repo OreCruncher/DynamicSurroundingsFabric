@@ -89,7 +89,7 @@ As I indicated, these features are not planned.  Based on time commitments, I ma
 > # License
 The MIT License (MIT)
 
-Copyright (c) 2023-2025 OreCruncher
+Copyright (c) 2023-2026 OreCruncher
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
