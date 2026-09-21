@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.orecruncher.dsurround.lib.collections.Pair;
+import org.orecruncher.dsurround.lib.scripting.engine.expression.Literal;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -27,7 +28,7 @@ public class StringsTests {
                 .map(data -> DynamicTest.dynamicTest("Evaluating \"%s\"".formatted(data.first()), () -> {
                     var expression = scriptEngine.compile(data.first());
                     assertNotNull(expression);
-                    assertInstanceOf(Expression.Literal.class, expression);
+                    assertInstanceOf(Literal.class, expression);
                     assertInstanceOf(String.class, expression.eval());
                     assertEquals(data.second(), expression.eval());
                 }));

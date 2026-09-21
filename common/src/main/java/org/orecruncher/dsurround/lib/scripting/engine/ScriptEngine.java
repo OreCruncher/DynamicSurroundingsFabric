@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.lib.scripting.engine;
 import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.scripting.*;
+import org.orecruncher.dsurround.lib.scripting.engine.expression.Expression;
 
 public final class ScriptEngine implements IConfigureDefinition {
 

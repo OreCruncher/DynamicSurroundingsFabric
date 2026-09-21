@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.orecruncher.dsurround.lib.collections.Pair;
+import org.orecruncher.dsurround.lib.scripting.engine.expression.Literal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -47,7 +48,7 @@ public class ConstantFoldingTests {
                 .map(data -> DynamicTest.dynamicTest("Folding \"%s\"".formatted(data.first()), () -> {
                     var expression = scriptEngine.compile(data.first());
                     assertNotNull(expression);
-                    assertInstanceOf(Expression.Literal.class, expression);
+                    assertInstanceOf(Literal.class, expression);
                     assertInstanceOf(Boolean.class, expression.eval());
                     assertEquals(data.second(), expression.eval());
                 }));
@@ -60,7 +61,7 @@ public class ConstantFoldingTests {
                 .map(data -> DynamicTest.dynamicTest("Folding \"%s\"".formatted(data), () -> {
                     var expression = scriptEngine.compile(data);
                     assertNotNull(expression);
-                    assertInstanceOf(Expression.Literal.class, expression);
+                    assertInstanceOf(Literal.class, expression);
                     var result = expression.eval();
                     assertInstanceOf(Double.class, result);
                     assertEquals(0.0D, result);
@@ -74,7 +75,7 @@ public class ConstantFoldingTests {
                 .map(data -> DynamicTest.dynamicTest("Folding \"%s\"".formatted(data.first()), () -> {
                     var expression = scriptEngine.compile(data.first());
                     assertNotNull(expression);
-                    assertInstanceOf(Expression.Literal.class, expression);
+                    assertInstanceOf(Literal.class, expression);
                     assertInstanceOf(String.class, expression.eval());
                     assertEquals(data.second(), expression.eval());
                 }));

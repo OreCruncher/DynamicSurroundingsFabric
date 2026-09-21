@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.lib.scripting;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.scripting.engine.Expression;
+import org.orecruncher.dsurround.lib.scripting.engine.expression.Expression;
 import org.orecruncher.dsurround.lib.scripting.engine.ScriptEngine;
 import org.orecruncher.dsurround.lib.scripting.engine.ScriptException;
 import org.orecruncher.dsurround.lib.scripting.engine.ScriptHelpers;

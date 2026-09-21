@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.lib.scripting.engine;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.StringUtils;
+import org.orecruncher.dsurround.lib.scripting.engine.expression.Expression;
 
 public final class ScriptException extends RuntimeException {
 
@@ -35,33 +36,23 @@ public final class ScriptException extends RuntimeException {
 
     public Expression asExpression() {
         var msg = this.getMessageForLogging();
-        return new Expression(null) {
-            @Override
-            public Object eval() {
-                return msg;
-            }
-        };
+        return () -> msg;
     }
 
     public Expression asExpression(@Nullable String script) {
         var msg = this.getMessageForLogging(script);
-        return new Expression(null) {
-            @Override
-            public Object eval() {
-                return msg;
-            }
-        };
+        return () -> msg;
     }
 
-    static void throwException(Token token, String message) throws ScriptException {
+    public static void throwException(Token token, String message) throws ScriptException {
         throwException(token.line(), token.position(), message);
     }
 
-    static void throwException(String message) throws ScriptException {
+    public static void throwException(String message) throws ScriptException {
         throwException(-1, -1, message);
     }
 
-    static void throwException(int line, int position, String message) throws ScriptException  {
+    public static void throwException(int line, int position, String message) throws ScriptException  {
         report(line, position, message, null);
     }
 
