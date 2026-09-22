@@ -69,7 +69,6 @@ body:
     attributes:
       label: "Logs"
       description: Please provide relevant Minecraft logs; 25MB limit
-      placeholder: The log is usually ./minecraft/logs/latest.log
     validations:
       required: false
-      accept: ".log,.log.gz,.txt,.zip"
+      accept: ".log,.gz,.txt,.zip"
