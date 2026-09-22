@@ -69,6 +69,21 @@ public class SereneSeasons extends AbstractSeasonProvider {
         return helper.getSeason() == Season.WINTER;
     }
 
+    public boolean isEarly() {
+        var subSeason = SeasonHelper.getSeasonState(this.level()).getSubSeason();
+        return subSeason == Season.SubSeason.EARLY_AUTUMN || Season.SubSeason.EARLY_SPRING == subSeason ||  Season.SubSeason.EARLY_SUMMER == subSeason || Season.SubSeason.EARLY_WINTER == subSeason;
+    }
+
+    public boolean isMiddle() {
+        var subSeason = SeasonHelper.getSeasonState(this.level()).getSubSeason();
+        return subSeason == Season.SubSeason.MID_AUTUMN || Season.SubSeason.MID_SPRING == subSeason ||  Season.SubSeason.MID_SUMMER == subSeason || Season.SubSeason.MID_WINTER == subSeason;
+    }
+
+    public boolean isLate() {
+        var subSeason = SeasonHelper.getSeasonState(this.level()).getSubSeason();
+        return subSeason == Season.SubSeason.LATE_AUTUMN || Season.SubSeason.LATE_SPRING == subSeason ||  Season.SubSeason.LATE_SUMMER == subSeason || Season.SubSeason.LATE_WINTER == subSeason;
+    }
+
     @Override
     public Biome.Precipitation getPrecipitationAt(BlockPos blockPos) {
         var level = this.level();

@@ -55,6 +55,27 @@ public interface ISeasonalInformation {
     }
 
     /**
+     * Indicates if the current season is in the earlier part.
+     */
+    default boolean isEarly() {
+        return true;
+    }
+
+    /**
+     * Indicates if the current season is in the middle part.
+     */
+    default boolean isMiddle() {
+        return true;
+    }
+
+    /**
+     * Indicates if the current season is in the late part.
+     */
+    default boolean isLate() {
+        return true;
+    }
+
+    /**
      * Gets the temperature at the specified block location taking into account any seasonal variance.
      */
     float getTemperature(BlockPos blockPos);

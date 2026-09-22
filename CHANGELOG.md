@@ -17,9 +17,11 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Fixed compatibility with Enderscape mod. Client should no longer crash during startup.
 
 **Changes**
+* Added isEarly(), isMiddle(), and isLate() functions to seasonal script variables to detect sub-seasons For modpacks without seasonal mods (ie, Serene Season), each will return true.
 * Added configuration options (under Sound Options) to control how Dynamic Surroundings asserts a sound play is originating from the client thread.
   * discardNonClientSoundPlays (default true): If true, a sound play will be discarded with a corresponding message emitted into the log whenever it detects the play is originating from a non-client thread
   * logStacktraceWhenDiscarding (default false): If true, a stack trace is emitted to the log with the goal of giving as many clues as to which mod is making the call
+* Dynamically disable sound discarding feature if Raise Sound Limit Simplified (RSLS) is installed.
 
 > ### DynamicSurroundings-1.21.1-0.4.3
 
