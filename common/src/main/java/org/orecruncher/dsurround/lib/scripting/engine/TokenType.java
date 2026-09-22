@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.lib.scripting.engine;
 
-enum TokenType {
+public enum TokenType {
     // Punctuation
     LEFT_PAREN,
     RIGHT_PAREN,
@@ -84,4 +84,12 @@ enum TokenType {
     }
 
     public static final int NO_PRECEDENCE = -1;
+
+    public static boolean isLiteral(TokenType type) {
+        return type == TokenType.NUMBER || type == TokenType.STRING || type == TokenType.TRUE || type == TokenType.FALSE;
+    }
+
+    public static boolean isIdentifier(TokenType type) {
+        return type == TokenType.IDENTIFIER;
+    }
 }

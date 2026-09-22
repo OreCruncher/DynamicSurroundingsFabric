@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.lib.scripting.engine;
 
+import com.google.common.base.MoreObjects;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -202,7 +203,13 @@ record RpnConverter(Environment environment) {
 
         @Override
         public @NotNull String toString() {
-            return this.isFunction ? (this.token.lexeme() + ":" + this.argCount) : this.token.lexeme();
+            var builder = MoreObjects.toStringHelper(this)
+                    .add("isFunction", this.isFunction)
+                    .add("lexeme", this.token.lexeme());
+            if (this.isFunction) {
+                builder.add("args", this.argCount);
+            }
+            return builder.toString();
         }
 
         public static RpnToken of(Token token) {

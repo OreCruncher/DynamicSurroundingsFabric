@@ -1,0 +1,19 @@
+# Turn to false once forms have been validated
+blank_issues_enabled: true
+
+contact_links:
+  - name: General Discussion
+    url: https://github.com/OreCruncher/DynamicSurroundingsFabric/discussions
+    about: Dynamic Surroundings discussion pages
+
+  - name: Documentation
+    url: https://dynamic-surroundings.readthedocs.io/en/latest/index.html
+    about: Official documentation for Dynamic Surroundings
+
+  - name: Modrinth Project
+    url: https://modrinth.com/mod/dynamicsurroundingsfabric
+    about: Link to the official download page on Modrinth
+
+  - name: CurseForge Project
+    url: https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings
+    about: Link to the official download page on CurseForge

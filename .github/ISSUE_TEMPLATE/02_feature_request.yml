@@ -1,0 +1,23 @@
+name: "Enhancement Request"
+description: Suggest a new enhancement
+title: "[ENHANCEMENT] "
+labels: [
+  "enhancement", "needs-triage"
+]
+body:
+  - type: textarea
+    id: dsversion
+    attributes:
+      label: "Dynamic Surroundings Version"
+      description: Version of Dynamic Surroundings
+      placeholder: Example 1.21.1-0.4.3, or even the name of the jar dynamicsurroundings-fabric-1.21.1-0.4.3
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: "Description"
+      description: Please enter your suggestion for enhancing Dynamic Surroundings
+      placeholder: Suggestion - don't suggest migrating to newer versions of Minecraft, that's a well known
+    validations:
+      required: true

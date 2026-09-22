@@ -6,6 +6,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.locale.Language;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.SyntheticBiome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
@@ -98,12 +99,29 @@ public final class BiomeLibrary implements IBiomeLibrary {
     }
 
     @Override
+    public @Nullable BiomeInfo getBiomeInfoWeak(Biome biome) {
+        var info = this.biomes.get(biome);
+        // If it's not in the map, or the version is current, return the result
+        // It is possible it's not in the map if for some reason during client start
+        // a mod modifies properties on a biome that DS manages.
+        if (info == null || info.getVersion() == this.version) {
+            return info;
+        }
+
+        return this.refreshInfo(biome, info);
+    }
+
+    @Override
     public BiomeInfo getBiomeInfo(Biome biome) {
 
         var info = this.biomes.get(biome);
         if (info != null && info.getVersion() == this.version)
             return info;
 
+        return this.refreshInfo(biome, info);
+    }
+
+    private BiomeInfo refreshInfo(Biome biome, BiomeInfo info) {
         // Not set or something changed.  Need a refresh.
         ResourceLocation id;
         String name;

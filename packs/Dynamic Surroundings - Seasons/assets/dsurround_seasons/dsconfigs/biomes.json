@@ -7,73 +7,73 @@
         "factory": "dsurround_seasons:music/season/spring/early",
         "type": "music",
         "weight": 5,
-        "conditions": "season.isSpring()"
+        "conditions": "season.isSpring() && season.isEarly()"
       },
       {
         "factory": "dsurround_seasons:music/season/spring/mid",
         "type": "music",
         "weight": 5,
-        "conditions": "season.isSpring()"
+        "conditions": "season.isSpring() && season.isMiddle()"
       },
       {
         "factory": "dsurround_seasons:music/season/spring/late",
         "type": "music",
         "weight": 5,
-        "conditions": "season.isSpring()"
+        "conditions": "season.isSpring() && season.isLate()"
       },
       {
         "factory": "dsurround_seasons:music/season/summer/early",
         "type": "music",
         "weight": 5,
-        "conditions": "season.isSummer()"
+        "conditions": "season.isSummer() && season.isEarly()"
       },
       {
         "factory": "dsurround_seasons:music/season/summer/mid",
         "type": "music",
         "weight": 5,
-        "conditions": "season.isSummer()"
+        "conditions": "season.isSummer() && season.isMiddle()"
       },
       {
         "factory": "dsurround_seasons:music/season/summer/late",
         "type": "music",
         "weight": 5,
-        "conditions": "season.isSummer()"
+        "conditions": "season.isSummer() && season.isLate()"
       },
       {
         "factory": "dsurround_seasons:music/season/autumn/early",
         "type": "music",
         "weight": 5,
-        "conditions": "season.isAutumn()"
+        "conditions": "season.isAutumn() && season.isEarly()"
       },
       {
         "factory": "dsurround_seasons:music/season/autumn/mid",
         "type": "music",
         "weight": 5,
-        "conditions": "season.isAutumn()"
+        "conditions": "season.isAutumn() && season.isMiddle()"
       },
       {
         "factory": "dsurround_seasons:music/season/autumn/late",
         "type": "music",
         "weight": 5,
-        "conditions": "season.isAutumn()"
+        "conditions": "season.isAutumn() && season.isLate()"
       },
       {
         "factory": "dsurround_seasons:music/season/winter/early",
         "type": "music",
         "weight": 5,
-        "conditions": "season.isWinter()"
+        "conditions": "season.isWinter() && season.isEarly()"
       },
       {
         "factory": "dsurround_seasons:music/season/winter/mid",
         "type": "music",
         "weight": 5,
-        "conditions": "season.isWinter()"
+        "conditions": "season.isWinter() && season.isMiddle()"
       },
       {
         "factory": "dsurround_seasons:music/season/winter/late",
         "type": "music",
         "weight": 5,
-        "conditions": "season.isWinter()"
+        "conditions": "season.isWinter() && season.isLate()"
       }
     ]
   }

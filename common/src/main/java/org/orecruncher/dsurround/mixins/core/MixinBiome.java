@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.mixins.core;
 
 import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
+import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
@@ -23,15 +24,10 @@ public abstract class MixinBiome {
     @Inject(method = "getFogColor()I", at = @At("HEAD"), cancellable = true)
     public void dsurround$getFogColor(CallbackInfoReturnable<Integer> cir) {
         if (MixinHelpers.fogOptions.enableFogEffects && MixinHelpers.fogOptions.enableBiomeFog) {
-            var biome = ReflectionHelper.cast(this, Biome.class);
-            biome.ifPresent(b -> {
-                var info = MixinHelpers.BIOME_LIBRARY.getBiomeInfo(b);
-                if (info != null) {
-                    var color = info.getFogColor();
-                    if (color != null)
-                        cir.setReturnValue(color.getValue());
-                }
-            });
+            ReflectionHelper.cast(this, Biome.class)
+                    .map(MixinHelpers.BIOME_LIBRARY::getBiomeInfoWeak)
+                    .map(BiomeInfo::getFogColor)
+                    .ifPresent(color -> cir.setReturnValue(color.getValue()));
         }
     }
 
@@ -44,17 +40,9 @@ public abstract class MixinBiome {
      */
     @Inject(method = "getBackgroundMusic()Ljava/util/Optional;", at = @At("HEAD"), cancellable = true)
     private void dsurround$getBackgroundMusic(CallbackInfoReturnable<Optional<Music>> cir) {
-        var biome = ReflectionHelper.cast(this, Biome.class);
-        biome.ifPresent(b -> {
-            var info = MixinHelpers.BIOME_LIBRARY.getBiomeInfo(b);
-            if (info == null) {
-                // Can be null after things like a teleport
-                cir.setReturnValue(Optional.empty());
-            } else {
-                var result = info.getBackgroundMusic(Randomizer.current());
-                if (result.isPresent())
-                    cir.setReturnValue(result);
-            }
-        });
+        ReflectionHelper.cast(this, Biome.class)
+                .map(MixinHelpers.BIOME_LIBRARY::getBiomeInfoWeak)
+                .map(info -> info.getBackgroundMusic(Randomizer.current()))
+                .ifPresent(cir::setReturnValue);
     }
 }

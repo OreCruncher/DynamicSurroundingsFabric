@@ -5,7 +5,6 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.ClientState;
@@ -71,10 +70,9 @@ public class BlockUpdateHandler {
     }
 
     private static void addPosition(BlockPos pos) {
-        for (int dX = -1; dX < 2; dX++)
-            for (int dY = -1; dY < 2; dY++)
-                for (int dZ = -1; dZ < 2; dZ++)
-                    updatedPositions.add(BlockPos.asLong(pos.getX() + dX, pos.getY() + dY, pos.getZ() + dZ));
+        for (var offset : BlockPos.betweenClosed(-1, -1, -1, 1, 1, 1)) {
+            updatedPositions.add(BlockPos.asLong(pos.getX() + offset.getX(), pos.getY() + offset.getY(), pos.getZ() + offset.getZ()));
+        }
     }
 
     private static Optional<Collection<BlockPos>> expand() {

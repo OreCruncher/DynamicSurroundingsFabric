@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.lib;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class StringUtils {
 
@@ -73,8 +74,27 @@ public class StringUtils {
 
         // Calculate offset in code points
         int caratOffset = (focusIndex - start) + prefix.codePointCount(0, prefix.length());
-        String caratLine = " ".repeat(caratOffset) + "^";
+        String caratLine = "-".repeat(caratOffset) + "^";
 
         return new TruncatedResult(truncatedStr, caratLine);
+    }
+
+    public static String generateStackTrace(@Nullable StackTraceElement[] trace) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("STACK TRACE:\n");
+
+        if  (trace == null || trace.length == 0) {
+            trace = Thread.currentThread().getStackTrace();
+        }
+
+        // Start at element 1 of the stack trace because 0 the method that generated
+        // the trace (either this one or the parent).
+        for (int i = 1; i < trace.length; i++) {
+            var e = trace[i];
+            if (e != null)
+                sb.append("   ").append(e).append("\n");
+        }
+
+        return sb.toString();
     }
 }

@@ -1,0 +1,28 @@
+name: "Documentation Request"
+description: Suggest updates to documentation
+title: "[DOCUMENTATION] "
+labels: [
+  "documentation", "needs-triage"
+]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Official documentation for Dynamic Surroundings can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html).
+        If you haven't done so already, review the existing documentation to see if your needs are met. If not, please
+        continue and provide your suggestions for improving.
+  - type: input
+    id: doclink
+    attributes:
+      label: "Link"
+      description: Link to the documentation page, if applicable
+    validations:
+      required: false
+  - type: textarea
+    id: description
+    attributes:
+      label: "Description"
+      description: Please enter your suggestion for modifying/fixing documentation
+      render: markdown
+    validations:
+      required: true

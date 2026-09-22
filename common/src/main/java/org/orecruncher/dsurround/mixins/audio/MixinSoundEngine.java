@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.mixins.audio;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.audio.Library;
+import dev.architectury.platform.Platform;
 import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.ChannelAccess;
@@ -12,7 +13,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.StringUtils;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
 import org.orecruncher.dsurround.runtime.audio.SoundFXProcessor;
@@ -28,6 +31,9 @@ import java.util.concurrent.CompletableFuture;
 
 @Mixin(SoundEngine.class)
 public abstract class MixinSoundEngine {
+
+    @Unique
+    private static final boolean dsurround$compatibleSoundDiscardEnvironment = !Platform.isModLoaded(Constants.RAISE_SOUND_LIMIT_SIMPLIFIED);
 
     @Final
     @Shadow
@@ -69,8 +75,11 @@ public abstract class MixinSoundEngine {
             // Ensure the sound is being played on the client thread. If it isn't cancel
             // the play and emit a message indicating such. This should also protect
             // dsurround$currentSoundInstance.
-            if (!GameUtils.getMC().isSameThread()) {
-                MixinHelpers.LOGGER.warn("Attempt to play sound (%s) from non-client thread; discarding", sound.getLocation());
+            if (dsurround$compatibleSoundDiscardEnvironment && MixinHelpers.soundOptions.discardNonClientSoundPlays && !GameUtils.getMC().isSameThread()) {
+                MixinHelpers.LOGGER.warn("Attempt to play sound (%s) from non-client thread; discarding".formatted(sound.getLocation()));
+                if (MixinHelpers.soundOptions.logStacktraceWhenDiscarding) {
+                    MixinHelpers.LOGGER.warn(StringUtils.generateStackTrace(Thread.currentThread().getStackTrace()));
+                }
                 ci.cancel();
             }
             // Check to see if the sound is blocked or being culled

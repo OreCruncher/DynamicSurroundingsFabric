@@ -5,7 +5,7 @@ import org.orecruncher.dsurround.lib.scripting.IScriptVariable;
 
 import java.util.*;
 
-final class Environment {
+public final class Environment {
 
     final Map<String, FunctionDefinition> functions = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     final Map<String, ScriptVariable> variables = new  TreeMap<>(String.CASE_INSENSITIVE_ORDER);
@@ -17,7 +17,7 @@ final class Environment {
         return this.functions.containsKey(token.lexeme());
     }
 
-    IScriptFunction getFunctionHandler(Token token ) {
+    public IScriptFunction getFunctionHandler(Token token) {
         var functionDefinition = this.functions.get(token.lexeme());
         if (functionDefinition != null)
             return functionDefinition.handler;
@@ -25,7 +25,7 @@ final class Environment {
         return null;
     }
 
-    IScriptVariable getVariable(Token token) {
+    public IScriptVariable getVariable(Token token) {
         var variableHandler = this.variables.get(token.lexeme());
         if (variableHandler != null)
             return variableHandler.handler;
