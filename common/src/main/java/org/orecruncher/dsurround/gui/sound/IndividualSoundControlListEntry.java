@@ -48,13 +48,18 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private static final Collection<Component> PLAY_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.play.help", TOOLTIP_WIDTH, STYLE_HELP);
     private static final Collection<Component> CULL_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.cull.help", TOOLTIP_WIDTH, STYLE_HELP);
     private static final Collection<Component> BLOCK_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.block.help", TOOLTIP_WIDTH, STYLE_HELP);
+    private static final Collection<Component> DEFAULT_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.default.help", TOOLTIP_WIDTH, STYLE_HELP);
+
     private static final int CONTROL_SPACING = 3;
+
+    private static final Component STATE_DEFAULT = Component.translatable("dsurround.text.soundconfig.default").withStyle(Style.EMPTY.withColor(ColorPalette.LGRAY));
+    private static final Component STATE_CULL = Component.translatable("dsurround.text.soundconfig.cull").withStyle(Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE));
+    private static final Component STATE_BLOCK = Component.translatable("dsurround.text.soundconfig.block").withStyle(Style.EMPTY.withColor(ColorPalette.RED).withBold(true));
 
     private final IndividualSoundConfigEntry config;
     private final TextWidget label;
     private final VolumeSliderControl volume;
-    private final BlockButton blockButton;
-    private final CullButton cullButton;
+    private final CycleButton<Integer> stateButton;
     private final @Nullable SoundPlayButton playButton;
 
     private final List<AbstractWidget> children = new ArrayList<>();
@@ -71,11 +76,15 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         this.volume = new VolumeSliderControl(this, 0, 0);
         this.children.add(this.volume);
 
-        this.blockButton = new BlockButton(this.config.block, this::toggleBlock);
-        this.children.add(this.blockButton);
+        var textRenderer = GameUtils.getTextRenderer();
+        int stateWidth = Math.max(textRenderer.width(STATE_DEFAULT), Math.max(textRenderer.width(STATE_CULL), textRenderer.width(STATE_BLOCK))) + CONTROL_SPACING * 6;
 
-        this.cullButton = new CullButton(this.config.cull, this::toggleCull);
-        this.children.add(this.cullButton);
+        this.stateButton = CycleButton.builder(IndividualSoundControlListEntry::valueMap)
+                .withValues(0, 1, 2)
+                .withInitialValue(generateStateForButton(this.config))
+                .displayOnlyValue()
+                .create(0, 0, stateWidth, 20, Component.empty(), this::setStateFromButton);
+        this.children.add(this.stateButton);
 
         if (enablePlay) {
             this.playButton = new SoundPlayButton(this::play);
@@ -84,17 +93,26 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
             this.playButton = null;
         }
     }
+    
+    private static Component valueMap(int index) {
+        return switch(index) {
+            case 0 -> STATE_DEFAULT;
+            case 1 -> STATE_CULL;
+            case 2 -> STATE_BLOCK;
+            default -> throw new IllegalStateException("Unexpected value: " + index);
+        };
+    }
 
     public int getWidth() {
         int width = this.label.getWidth();
-        width += this.cullButton.getWidth() + this.blockButton.getWidth() + this.volume.getWidth() + 4 * CONTROL_SPACING;
+        width += this.stateButton.getWidth() + this.volume.getWidth() + 4 * CONTROL_SPACING;
         if (this.playButton != null)
             width += this.playButton.getWidth() + CONTROL_SPACING;
         return width;
     }
 
     public void setWidth(int width) {
-        var fixedWidth = this.cullButton.getWidth() + this.blockButton.getWidth() + this.volume.getWidth() + 4 * CONTROL_SPACING;
+        var fixedWidth = this.stateButton.getWidth() + this.volume.getWidth() + 4 * CONTROL_SPACING;
         if (this.playButton != null)
             fixedWidth += this.playButton.getWidth() + CONTROL_SPACING;
         width -= fixedWidth;
@@ -181,28 +199,12 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
             rightMargin -= this.playButton.getWidth() + CONTROL_SPACING;
         }
 
-        this.blockButton.setX(rightMargin - this.blockButton.getWidth());
-        this.blockButton.setY(rowTop);
-        this.blockButton.setHeight(rowHeight);
-        rightMargin -= this.blockButton.getWidth() + CONTROL_SPACING;
-
-        this.cullButton.setX(rightMargin - this.cullButton.getWidth());
-        this.cullButton.setHeight(rowHeight);
-        this.cullButton.setY(rowTop);
+        this.stateButton.setX(rightMargin - this.stateButton.getWidth());
+        this.stateButton.setY(rowTop);
+        this.stateButton.setHeight(rowHeight);
 
         for (final AbstractWidget w : this.children)
             w.render(context, mouseX, mouseY, partialTick_);
-    }
-
-    protected void toggleBlock(Button button) {
-        if (button instanceof BlockButton bb) {
-            this.config.block = bb.toggle();
-        }
-    }
-
-    protected void toggleCull(Button button) {
-        if (button instanceof CullButton cb)
-            this.config.cull = cb.toggle();
     }
 
     protected void play(final Button button) {
@@ -291,10 +293,12 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         Collection<Component> toAppend = null;
         if (this.volume.isMouseOver(mouseX, mouseY)) {
             toAppend = VOLUME_HELP;
-        } else if (this.blockButton.isMouseOver(mouseX, mouseY)) {
-            toAppend = BLOCK_HELP;
-        } else if (this.cullButton.isMouseOver(mouseX, mouseY)) {
-            toAppend = CULL_HELP;
+        } else if (this.stateButton.isMouseOver(mouseX, mouseY)) {
+            toAppend = switch(this.stateButton.getValue()) {
+                case 1 -> CULL_HELP;
+                case 2 -> BLOCK_HELP;
+                default -> DEFAULT_HELP;
+            };
         } else if (this.playButton != null && this.playButton.isMouseOver(mouseX, mouseY)) {
             toAppend = PLAY_HELP;
         }
@@ -326,6 +330,24 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
      */
     public IndividualSoundConfigEntry getData() {
         return this.config;
+    }
+
+    private static int generateStateForButton(IndividualSoundConfigEntry config) {
+        if (!config.block && !config.cull) {
+            return 0;
+        } else if (config.cull) {
+            return 1;
+        } else {
+            return 2;
+        }
+    }
+
+    private void setStateFromButton(CycleButton<Integer> ignored, int buttonState) {
+        switch (buttonState) {
+            case 0: this.config.block = this.config.cull = false; break;
+            case 1: this.config.cull = true; this.config.block = false; break;
+            case 2: this.config.block = true; this.config.cull = false; break;
+        }
     }
 
 }

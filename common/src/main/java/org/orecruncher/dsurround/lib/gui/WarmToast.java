@@ -14,8 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-@SuppressWarnings("unused")
-public class WarmToast  implements Toast {
+public final class WarmToast implements Toast {
     private static final Profile DEFAULT_PROFILE = new Profile(ResourceLocation.withDefaultNamespace("toast/advancement"), 5000, ColorPalette.GOLD, ColorPalette.WHITE);
 
     private static final int MAX_LINE_SIZE = 200;
@@ -31,14 +30,14 @@ public class WarmToast  implements Toast {
     private boolean changed;
     private final int width;
 
-    public static WarmToast multiline(Minecraft minecraft, Component title, Component body) {
-        return multiline(minecraft, DEFAULT_PROFILE, title, body);
+    public static WarmToast from(Minecraft minecraft, Component title, Component body) {
+        return from(minecraft, DEFAULT_PROFILE, title, body);
     }
 
-    public static WarmToast multiline(Minecraft minecraft, Profile profile, Component title, Component body) {
+    public static WarmToast from(Minecraft minecraft, Profile profile, Component title, Component body) {
         var font = minecraft.font;
         var list = font.split(body, MAX_LINE_SIZE);
-        var titleSize = Math.min(MAX_LINE_SIZE, Math.max(MIN_LINE_SIZE, font.width(title)));
+        var titleSize = Math.clamp(font.width(title), MIN_LINE_SIZE, MAX_LINE_SIZE);
         var lineSize = list.stream().mapToInt(font::width).max().orElse(MIN_LINE_SIZE);
         int width = Math.max(titleSize, lineSize) + MARGIN * 3;
         return new WarmToast(profile, title, list, width);
@@ -119,5 +118,8 @@ public class WarmToast  implements Toast {
 
     public record Profile(ResourceLocation sprite, int displayTime, TextColor titleColor, TextColor bodyColor) {
 
+        public static Profile of(ResourceLocation sprite, int displayTime, TextColor titleColor, TextColor bodyColor) {
+            return new Profile(sprite, displayTime, titleColor, bodyColor);
+        }
     }
 }
