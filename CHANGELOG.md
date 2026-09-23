@@ -18,6 +18,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 
 **Changes**
 * Consolidated the Block and Cull buttons in the Individual Sound configuration menu into a single tri-state button. The icons didn't grow on me.
+* Converted play button to text button.
 
 > ### DynamicSurroundings-1.21.1-0.4.4
 

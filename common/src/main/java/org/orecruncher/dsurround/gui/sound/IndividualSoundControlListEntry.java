@@ -11,6 +11,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -55,12 +56,14 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private static final Component STATE_DEFAULT = Component.translatable("dsurround.text.soundconfig.default").withStyle(Style.EMPTY.withColor(ColorPalette.LGRAY));
     private static final Component STATE_CULL = Component.translatable("dsurround.text.soundconfig.cull").withStyle(Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE));
     private static final Component STATE_BLOCK = Component.translatable("dsurround.text.soundconfig.block").withStyle(Style.EMPTY.withColor(ColorPalette.RED).withBold(true));
+    private static final Component SOUND_PLAY = Component.translatable("dsurround.text.soundconfig.play").withStyle(Style.EMPTY.withColor(ColorPalette.ELECTRIC_GREEN));
+    private static final Component SOUND_STOP = Component.translatable("dsurround.text.soundconfig.stop").withStyle(Style.EMPTY.withColor(ColorPalette.RED).withBold(true));
 
     private final IndividualSoundConfigEntry config;
     private final TextWidget label;
     private final VolumeSliderControl volume;
     private final CycleButton<Integer> stateButton;
-    private final @Nullable SoundPlayButton playButton;
+    private final @Nullable CycleButton<Boolean> playButton;
 
     private final List<AbstractWidget> children = new ArrayList<>();
     private final List<FormattedCharSequence> cachedToolTip = new ArrayList<>();
@@ -77,7 +80,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         this.children.add(this.volume);
 
         var textRenderer = GameUtils.getTextRenderer();
-        int stateWidth = Math.max(textRenderer.width(STATE_DEFAULT), Math.max(textRenderer.width(STATE_CULL), textRenderer.width(STATE_BLOCK))) + CONTROL_SPACING * 6;
+        int stateWidth = Math.max(textRenderer.width(STATE_DEFAULT), Math.max(textRenderer.width(STATE_CULL), textRenderer.width(STATE_BLOCK))) + CONTROL_SPACING * 5;
 
         this.stateButton = CycleButton.builder(IndividualSoundControlListEntry::valueMap)
                 .withValues(0, 1, 2)
@@ -87,7 +90,11 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         this.children.add(this.stateButton);
 
         if (enablePlay) {
-            this.playButton = new SoundPlayButton(this::play);
+            stateWidth = Math.max(textRenderer.width(SOUND_STOP), textRenderer.width((SOUND_PLAY))) + CONTROL_SPACING * 5;
+            this.playButton = CycleButton.booleanBuilder(SOUND_STOP, SOUND_PLAY)
+                    .withInitialValue(false)
+                    .displayOnlyValue()
+                    .create(0, 0, stateWidth, 20, Component.empty(), this::setPlayState);
             this.children.add(this.playButton);
         } else {
             this.playButton = null;
@@ -207,19 +214,6 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
             w.render(context, mouseX, mouseY, partialTick_);
     }
 
-    protected void play(final Button button) {
-        if (button instanceof SoundPlayButton sp) {
-            if (this.soundPlay == null) {
-                this.soundPlay = this.playSound(this.config);
-                sp.play();
-            } else {
-                AUDIO_PLAYER.stop(this.soundPlay);
-                this.soundPlay = null;
-                sp.stop();
-            }
-        }
-    }
-
     protected ConfigSoundInstance playSound(IndividualSoundConfigEntry entry) {
         var metadata = SOUND_LIBRARY.getSoundMetadata(entry.soundEventId);
         ConfigSoundInstance sound = ConfigSoundInstance.create(entry.soundEventId, metadata.getCategory(), () -> entry.volumeScale / 100F);
@@ -239,7 +233,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         if (this.soundPlay != null && this.playButton != null) {
             if (!AUDIO_PLAYER.isPlaying(this.soundPlay)) {
                 this.soundPlay = null;
-                this.playButton.stop();
+                this.playButton.setValue(false);
             }
         }
     }
@@ -264,7 +258,9 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
                 if (!metadata.getTitle().equals(Component.empty()))
                     this.cachedToolTip.add(metadata.getTitle().getVisualOrderText());
 
-                this.cachedToolTip.add(Component.literal(metadata.getCategory().toString()).withStyle(STYLE_CATEGORY).getVisualOrderText());
+                var soundSource = metadata.getCategory();
+                var categoryInfo = "%s (%d%%)".formatted(soundSource.toString(), soundSource == SoundSource.MASTER ? 100 : (int)(GameUtils.getGameSettings().getSoundSourceVolume(soundSource) * 100));
+                this.cachedToolTip.add(Component.literal(categoryInfo).withStyle(STYLE_CATEGORY).getVisualOrderText());
 
                 if (!metadata.getSubTitle().equals(Component.empty())) {
                     this.cachedToolTip.add(metadata.getSubTitle().copy().withStyle(STYLE_SUBTITLE).getVisualOrderText());
@@ -339,6 +335,22 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
             return 1;
         } else {
             return 2;
+        }
+    }
+
+    private void setPlayState(CycleButton<Boolean> ignored, boolean buttonState) {
+        if (buttonState) {
+            // Stop the currently playing sound, if any
+            if (this.soundPlay != null) {
+                AUDIO_PLAYER.stop(this.soundPlay);
+            }
+            this.soundPlay = this.playSound(this.config);
+        } else {
+            // Stop the currently playing sound
+            if (this.soundPlay != null) {
+                AUDIO_PLAYER.stop(this.soundPlay);
+                this.soundPlay = null;
+            }
         }
     }
 
