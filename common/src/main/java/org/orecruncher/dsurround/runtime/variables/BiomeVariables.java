@@ -5,7 +5,7 @@ import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.Lazy;
+import org.orecruncher.dsurround.lib.CachingSupplier;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 
@@ -13,12 +13,12 @@ public final class BiomeVariables extends VariableSet {
 
     private final IBiomeLibrary biomeLibrary;
 
-    private final Lazy<String> precipitationType = new Lazy<>(() -> {
+    private final CachingSupplier<String> precipitationType = CachingSupplier.from(() -> {
         var pos = GameUtils.getPlayer().orElseThrow().blockPosition();
         return this.biome.getPrecipitationAt(pos).name();
     });
-    private final Lazy<String> id = new Lazy<>(() -> this.info.getBiomeId().toString());
-    private final Lazy<String> biomeTraits = new Lazy<>(() -> this.info.getTraits().toString());
+    private final CachingSupplier<String> id = CachingSupplier.from(() -> this.info.getBiomeId().toString());
+    private final CachingSupplier<String> biomeTraits = CachingSupplier.from(() -> this.info.getTraits().toString());
 
     private Biome biome;
     private BiomeInfo info;
@@ -50,9 +50,9 @@ public final class BiomeVariables extends VariableSet {
     public void setBiome(final Biome biome, final BiomeInfo info) {
         this.biome = biome;
         this.info = info;
-        this.id.reset();
-        this.precipitationType.reset();
-        this.biomeTraits.reset();
+        this.id.clear();
+        this.precipitationType.clear();
+        this.biomeTraits.clear();
     }
 
     @Override

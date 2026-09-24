@@ -1,10 +1,9 @@
 package org.orecruncher.dsurround.lib.di.internal;
 
-import com.google.common.base.Suppliers;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.Singleton;
+import org.orecruncher.dsurround.lib.SingletonSupplier;
 import org.orecruncher.dsurround.lib.di.*;
 
 import java.lang.reflect.*;
@@ -56,7 +55,7 @@ public final class DependencyContainer implements IServiceContainer {
                     var builder = new StringBuilder();
                     builder.append(kvp.getKey().getName())
                             .append(" [");
-                    if (kvp.getValue() instanceof Singleton)
+                    if (kvp.getValue() instanceof SingletonSupplier)
                         builder.append("SINGLETON");
                     else
                         builder.append("PER INSTANCE");
@@ -93,7 +92,7 @@ public final class DependencyContainer implements IServiceContainer {
         try {
             this.checkForKeySuitability(clazz);
             this.checkForResolverSuitability(clazz);
-            return this.registerFactory(clazz, Suppliers.memoize(() -> this.createFactory(clazz).get()));
+            return this.registerFactory(clazz, SingletonSupplier.from(() -> this.createFactory(clazz).get()));
         } catch (Throwable ex) {
             Library.LOGGER.error(ex, "Unable to register singleton %s", clazz.getName());
             throw ex;
@@ -115,7 +114,7 @@ public final class DependencyContainer implements IServiceContainer {
         try {
             this.checkForKeySuitability(clazz);
             this.checkForResolverSuitability(desiredClass);
-            return this.registerFactory(clazz, Suppliers.memoize(() -> this.createFactory(desiredClass).get()));
+            return this.registerFactory(clazz, SingletonSupplier.from(() -> this.createFactory(desiredClass).get()));
         } catch (Throwable ex) {
             Library.LOGGER.error(ex, "Unable to register singleton %s using class %s", clazz.getName(), desiredClass.getName());
             throw ex;
@@ -176,7 +175,7 @@ public final class DependencyContainer implements IServiceContainer {
             if (!clazz.isAnnotationPresent(Cacheable.class)) {
                 this.registerFactory(clazz, factory);
             } else {
-                this.registerFactory(clazz, new Singleton<>(result));
+                this.registerFactory(clazz, SingletonSupplier.of(result));
             }
 
             return result;
@@ -196,7 +195,7 @@ public final class DependencyContainer implements IServiceContainer {
     @SuppressWarnings("unchecked")
     public <T> T memoize(Class<T> clazz) {
 
-        Supplier<T> memo = Suppliers.memoize(() -> this.resolve(clazz));
+        Supplier<T> memo = SingletonSupplier.from(() -> this.resolve(clazz));
 
         InvocationHandler handler = new InvocationHandler() {
             @NotNull
