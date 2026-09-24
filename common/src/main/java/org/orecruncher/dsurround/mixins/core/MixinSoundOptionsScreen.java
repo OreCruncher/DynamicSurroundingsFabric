@@ -46,25 +46,24 @@ public abstract class MixinSoundOptionsScreen extends OptionsSubScreen {
         if (this.minecraft == null)
             return;
 
-        ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.class)
-                .ifPresent(musicManager -> {
-                    var enablePlayButtons = this.minecraft.level == null || GameUtils.isSinglePlayer();
+        var enablePlayButtons = this.minecraft.level == null || GameUtils.isSinglePlayer();
+        var musicManager = ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.class);
 
+        if (enablePlayButtons) {
+            musicManager.ifPresent(m -> m.setPaused(true));
+        }
+
+        var screen = new IndividualSoundControlScreen(
+                this,
+                enablePlayButtons,
+                ignore -> {
+                    // Stop any sounds left hanging for whatever reason, and restart the MusicManager
+                    GameUtils.getSoundManager().stop();
                     if (enablePlayButtons) {
-                        musicManager.setPaused(true);
+                        musicManager.ifPresent(m -> m.setPaused(false));
                     }
-
-                    var screen = new IndividualSoundControlScreen(
-                            this,
-                            enablePlayButtons,
-                            ignore -> {
-                                // Stop any sounds left hanging for whatever reason, and restart the MusicManager
-                                GameUtils.getSoundManager().stop();
-                                if (enablePlayButtons)
-                                    musicManager.setPaused(false);
-                            });
-
-                    GameUtils.setScreen(screen);
                 });
+
+        GameUtils.setScreen(screen);
     }
 }

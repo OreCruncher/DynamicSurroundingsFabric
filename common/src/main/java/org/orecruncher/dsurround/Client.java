@@ -47,15 +47,14 @@ public final class Client {
      */
     public static Configuration Config;
 
-    private final IModLog logger;
-    private CompletableFuture<Optional<VersionResult>> versionInfo;
+    private static CompletableFuture<Optional<VersionResult>> versionInfo;
 
-    public Client() {
+    public static void initialize() {
         // Bootstrap library functions
-        this.logger = Library.LOGGER;
+        Library.LOGGER.info("[%s] Bootstrapping", Constants.MOD_ID);
 
         ContainerManager.getRootContainer()
-                .registerSingleton(IModLog.class, this.logger)
+                .registerSingleton(IModLog.class, Library.LOGGER)
                 .registerSingleton(IConfigScreenFactoryProvider.class, ClothAPIFactoryProvider.class);
 
         // Setup debug trace on the logger. It's not guaranteed that we
@@ -63,7 +62,7 @@ public final class Client {
         // on the event hook.  (ModMenu can trigger this when it looks for
         // the hook in our mod before we had a chance to initialize.)
         Config = ConfigurationData.getConfig(Configuration.class);
-        if (this.logger instanceof ModLog ml) {
+        if (Library.LOGGER instanceof ModLog ml) {
             ml.setDebug(Config.logging.enableDebugLogging);
             ml.setTraceMask(Config.logging.traceMask);
         }
@@ -71,28 +70,39 @@ public final class Client {
         // Hook the config load event so set we can set the debug flags when
         // the config changes.
         Configuration.CONFIG_CHANGED_EVENT.register(cfg -> {
-            if (cfg instanceof Configuration config) {
-                if (this.logger instanceof ModLog ml) {
-                    ml.setDebug(config.logging.enableDebugLogging);
-                    ml.setTraceMask(config.logging.traceMask);
-                }
+            if (cfg instanceof Configuration config && Library.LOGGER instanceof ModLog ml) {
+                ml.setDebug(config.logging.enableDebugLogging);
+                ml.setTraceMask(config.logging.traceMask);
             }
         });
-    }
-
-    public void construct() {
-        this.logger.info("[%s] Bootstrapping", Constants.MOD_ID);
 
         Library.initialize();
 
         // Register the Minecraft sound manager using a factory. Avoids issue with ModernUI and their dinger.
-        ContainerManager.getRootContainer().registerFactory(SoundManager.class, GameUtils::getSoundManager);
+        ContainerManager.getRootContainer()
+                .registerFactory(SoundManager.class, GameUtils::getSoundManager);
 
-        this.logger.info("[%s] Boostrap completed", Constants.MOD_ID);
+        // Register configuration elements
+        ContainerManager.getRootContainer()
+                .registerSingleton(Config)
+                .registerSingleton(Config.logging)
+                .registerSingleton(Config.soundSystem)
+                .registerSingleton(Config.enhancedSounds)
+                .registerSingleton(Config.soundOptions)
+                .registerSingleton(Config.blockEffects)
+                .registerSingleton(Config.entityEffects)
+                .registerSingleton(Config.footstepAccents)
+                .registerSingleton(Config.particleTweaks)
+                .registerSingleton(Config.compassAndClockOptions)
+                .registerSingleton(Config.fogOptions)
+                .registerSingleton(Config.musicManagerOptions)
+                .registerSingleton(Config.otherOptions);
+
+        Library.LOGGER.info("[%s] Boostrap completed", Constants.MOD_ID);
     }
 
-    public void initializeClient() {
-        this.logger.info("[%s] Client initializing", Constants.MOD_ID);
+    public static void initializeClient() {
+        Library.LOGGER.info("[%s] Client initializing", Constants.MOD_ID);
 
         if (Client.Config.logging.registerCommands) {
             if (!Platform.isModLoaded(Constants.QUILTED_LOADER))
@@ -107,24 +117,11 @@ public final class Client {
         // Do the handlers
         Handlers.registerHandlers();
 
-        ClientState.CLIENT_START_EVENT.register(this::onComplete, HandlerPriority.VERY_HIGH);
-        ClientState.CLIENT_CONNECT_EVENT.register(this::onConnect, HandlerPriority.LOW);
+        ClientState.CLIENT_START_EVENT.register(Client::onComplete, HandlerPriority.VERY_HIGH);
+        ClientState.CLIENT_CONNECT_EVENT.register(Client::onConnect, HandlerPriority.LOW);
 
         // Register core services
         ContainerManager.getRootContainer()
-                .registerSingleton(Config)
-                .registerSingleton(Config.logging)
-                .registerSingleton(Config.soundSystem)
-                .registerSingleton(Config.enhancedSounds)
-                .registerSingleton(Config.soundOptions)
-                .registerSingleton(Config.blockEffects)
-                .registerSingleton(Config.entityEffects)
-                .registerSingleton(Config.footstepAccents)
-                .registerSingleton(Config.particleTweaks)
-                .registerSingleton(Config.compassAndClockOptions)
-                .registerSingleton(Config.fogOptions)
-                .registerSingleton(Config.musicManagerOptions)
-                .registerSingleton(Config.otherOptions)
                 .registerSingleton(IConditionEvaluator.class, ConditionEvaluator.class)
                 .registerSingleton(IVersionChecker.class, VersionChecker.class)
                 .registerSingleton(ITagLibrary.class, TagLibrary.class)
@@ -140,29 +137,29 @@ public final class Client {
                 .registerSingleton(OverlayManager.class);
 
         // Depending on debug settings, enable the appropriate player
-        if (this.logger.isDebugging())
+        if (Library.LOGGER.isDebugging())
             ContainerManager.getRootContainer().registerSingleton(IAudioPlayer.class, AudioPlayerDebug.class);
         else
             ContainerManager.getRootContainer().registerSingleton(IAudioPlayer.class, AudioPlayer.class);
 
         // Kick off version checking if configured.  This should run in parallel with initialization.
         if (Config.logging.enableModUpdateChatMessage) {
-            this.versionInfo = CompletableFuture
+            versionInfo = CompletableFuture
                     .supplyAsync(ContainerManager.resolve(IVersionChecker.class)::getUpdateText)
                     .completeOnTimeout(Optional.empty(), 5, TimeUnit.SECONDS)
                     .exceptionally(t -> Optional.empty());
         } else {
-            this.versionInfo = CompletableFuture.completedFuture(Optional.empty());
+            versionInfo = CompletableFuture.completedFuture(Optional.empty());
         }
 
         KeyBindings.register();
 
-        this.logger.info("[%s] Client initialization complete", Constants.MOD_ID);
+        Library.LOGGER.info("[%s] Client initialization complete", Constants.MOD_ID);
     }
 
-    public void onComplete(Minecraft client) {
+    public static void onComplete(Minecraft client) {
 
-        this.logger.info("[%s] Completing initialization", Constants.MOD_ID);
+        Library.LOGGER.info("[%s] Finalizing initialization", Constants.MOD_ID);
         var container = ContainerManager.getRootContainer();
 
         // Register and initialize our libraries. Handlers will be reloaded in priority order.
@@ -177,7 +174,7 @@ public final class Client {
         AssetLibraryEvent.RELOAD.register(container.resolve(IDimensionLibrary.class)::reload, HandlerPriority.HIGH);
 
         ClientState.TAG_SYNC_EVENT.register(event -> {
-            this.logger.info("Tag sync event received - reloading libraries");
+            Library.LOGGER.info("Tag sync event received - reloading libraries");
             var resourceUtilities = ResourceUtilities.createForCurrentState();
             AssetLibraryEvent.RELOAD.invoker().onReload(resourceUtilities, IReloadEvent.Scope.TAGS);
         }, HandlerPriority.VERY_HIGH);
@@ -190,28 +187,28 @@ public final class Client {
         // of the dependencies to be initialized.
         container.resolve(Handlers.class);
 
-        this.logger.info("[%s] Finalization complete", Constants.MOD_ID);
+        Library.LOGGER.info("[%s] Finalization complete", Constants.MOD_ID);
     }
 
-    private void onConnect(Minecraft minecraftClient) {
+    private static void onConnect(Minecraft minecraftClient) {
         // Display version information when joining a game and when a chat window is available.
         try {
-            if (this.versionInfo == null || !this.versionInfo.isDone()) {
-                this.logger.debug("Version check still pending; skipping join-time update notice");
+            if (versionInfo == null || !versionInfo.isDone()) {
+                Library.LOGGER.debug("Version check still pending; skipping join-time update notice");
                 return;
             }
 
-            var versionQueryResult = this.versionInfo.get();
+            var versionQueryResult = versionInfo.get();
             if (versionQueryResult.isPresent()) {
                 var result = versionQueryResult.get();
-                this.logger.info("Update to %s version %s is available", result.displayName(), result.version());
+                Library.LOGGER.info("Update to %s version %s is available", result.displayName(), result.version());
                 var player = GameUtils.getPlayer();
                 player.ifPresent(p -> p.sendSystemMessage(result.getChatText()));
             } else if(Config.logging.enableModUpdateChatMessage) {
-                this.logger.info("The mod version is current");
+                Library.LOGGER.info("The mod version is current");
             }
         } catch (Throwable t) {
-            this.logger.error(t, "Unable to process version information");
+            Library.LOGGER.error(t, "Unable to process version information");
         }
     }
 }

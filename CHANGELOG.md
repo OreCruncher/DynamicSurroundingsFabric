@@ -1,3 +1,25 @@
+> ### DynamicSurroundings-1.21.1-0.4.5
+
+Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
+
+**All Loaders**
+* JAVA 21+
+* Architectury 13.0.8+
+
+**Fabric**
+* Fabric Loader >= 0.16.9
+* Fabric API >= 0.110.0+1.21.
+
+**NeoForge**
+* NeoForge 21.1.84+
+
+**Fixes**
+* Configure sound button on Sound Options screen will now work when Music Manager replacement is toggled off.
+
+**Changes**
+* Consolidated the Block and Cull buttons in the Individual Sound configuration menu into a single tri-state button. The icons didn't grow on me.
+* Converted play button to text button.
+
 > ### DynamicSurroundings-1.21.1-0.4.4
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.

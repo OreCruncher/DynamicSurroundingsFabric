@@ -15,8 +15,11 @@
   "icon": "assets/dsurround/icon.png",
   "environment": "client",
   "entrypoints": {
+    "main": [
+      "org.orecruncher.fabric.FabricMod::initialize"
+    ],
     "client": [
-      "org.orecruncher.fabric.FabricMod"
+      "org.orecruncher.fabric.FabricMod::initializeClient"
     ],
     "modmenu": [
       "org.orecruncher.fabric.ModConfigMenu"
@@ -40,8 +43,7 @@
     "modmenu": {
       "links": {
         "dsurround.mod.link.sources": "https://github.com/OreCruncher/DynamicSurroundingsFabric",
-        "dsurround.mod.link.credits": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CREDITS.md",
-        "dsurround.mod.link.nashorn": "https://github.com/openjdk/nashorn"
+        "dsurround.mod.link.credits": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CREDITS.md"
       }
     }
   }

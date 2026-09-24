@@ -39,7 +39,7 @@ public final class DSurroundMusicManager extends MusicManager {
     @Override
     public void startPlaying(@NotNull Music music) {
         if (MixinHelpers.soundOptions.displayToastMessagesForMusic)
-            SoundToast.create(music);
+            SoundToast.from(music);
         super.startPlaying(music);
     }
 

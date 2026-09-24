@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.lib.di;
 
-import org.orecruncher.dsurround.lib.Singleton;
+import org.orecruncher.dsurround.lib.SingletonSupplier;
 import org.orecruncher.dsurround.lib.di.internal.DependencyContainer;
 
 import java.util.function.Supplier;
@@ -24,7 +24,7 @@ public interface IServiceContainer {
      *
      * @param object Object instance to register
      * @param <T>    Type of object
-     * @return Reference to the SimpleDIContainer for fluent declarations
+     * @return Reference to the DependencyContainer for fluent declarations
      */
     @SuppressWarnings("unchecked")
     default <T> DependencyContainer registerSingleton(T object) {
@@ -38,7 +38,7 @@ public interface IServiceContainer {
      *
      * @param clazz        Type the object reference will be identified as
      * @param <T>          Type of object to represent the instance as
-     * @return Reference to the SimpleDIContainer for fluent declarations
+     * @return Reference to the DependencyContainer for fluent declarations
      */
     <T> DependencyContainer registerSingleton(Class<T> clazz);
 
@@ -50,10 +50,10 @@ public interface IServiceContainer {
      * @param object Object instance to register
      * @param <T>    Type of object to represent the instance as
      * @param <C>    Type of the object itself
-     * @return Reference to the SimpleDIContainer for fluent declarations
+     * @return Reference to the DependencyContainer for fluent declarations
      */
     default <T, C extends T> DependencyContainer registerSingleton(Class<T> clazz, C object) {
-        return this.registerFactory(clazz, new Singleton<T>(object));
+        return this.registerFactory(clazz, SingletonSupplier.of(object));
     }
 
     /**
@@ -64,7 +64,7 @@ public interface IServiceContainer {
      * @param clazz        Type the object reference will be identified as
      * @param desiredClass The class to instantiate that will represent the type
      * @param <T>          Type of object to represent the instance as
-     * @return Reference to the SimpleDIContainer for fluent declarations
+     * @return Reference to the DependencyContainer for fluent declarations
      */
     <T> DependencyContainer registerSingleton(Class<T> clazz, Class<? extends T> desiredClass);
 
@@ -76,7 +76,7 @@ public interface IServiceContainer {
      * @param clazz    Type the object reference will be identified as
      * @param supplier Supplier that provides the object instance as applicable
      * @param <T>      Type of object to represent the instance as
-     * @return Reference to the SimpleDIContainer for fluent declarations
+     * @return Reference to the DependencyContainer for fluent declarations
      */
     <T> DependencyContainer registerFactory(Class<T> clazz, Supplier<? extends T> supplier);
 

@@ -12,7 +12,7 @@ import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
-import org.orecruncher.dsurround.lib.Singleton;
+import org.orecruncher.dsurround.lib.SingletonSupplier;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -39,7 +39,7 @@ public final class SoundFXProcessor {
 
     // Use our own thread pool avoiding the common pool.  Thread allocation is better controlled, and we won't run
     // into/cause any problems with other tasks in the common pool.
-    private static final Singleton<ExecutorService> threadPool = new Singleton<>(() -> {
+    private static final SingletonSupplier<ExecutorService> threadPool = SingletonSupplier.from(() -> {
         var config = ContainerManager.resolve(Configuration.EnhancedSounds.class);
         int threads = config.backgroundThreadWorkers;
         if (threads == 0)
