@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.gui.overlay;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.eventing.ClientState;
@@ -25,7 +25,7 @@ public final class OverlayManager {
         ClientState.CLIENT_TICK_END_EVENT.register(this::tick);
     }
 
-    public void render(GuiGraphics context, DeltaTracker deltaTracker) {
+    public void render(GuiGraphicsExtractor context, DeltaTracker deltaTracker) {
         var partialTick = deltaTracker.getGameTimeDeltaTicks();
         this.overlays.forEach(overlay -> overlay.render(context, partialTick));
     }

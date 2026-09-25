@@ -6,6 +6,8 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
+import java.net.URI;
+
 public record VersionResult(String version, String modId, String displayName, String downloadLocation, String downloadLocationModrinth, String releaseNotesLink) {
 
     public Component getChatText() {
@@ -15,29 +17,29 @@ public record VersionResult(String version, String modId, String displayName, St
 
         var downloadPage = Component.translatable(this.modId + ".newversion.downloadpage")
                 .withColor(ColorPalette.CORN_FLOWER_BLUE.getValue());
-        var downloadHoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, downloadPage);
+        var downloadHoverEvent = new HoverEvent.ShowText(downloadPage);
 
         var releaseNotesPage = Component.translatable(this.modId + ".newversion.releasenotespage")
                 .withColor(ColorPalette.CORN_FLOWER_BLUE.getValue());
-        var releaseNotesHoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, releaseNotesPage);
+        var releaseNotesHoverEvent = new HoverEvent.ShowText(releaseNotesPage);
 
         var downloadStyleCurse = Style.EMPTY
                 .withHoverEvent(downloadHoverEvent)
-                .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, this.downloadLocation));
+                .withClickEvent(new ClickEvent.OpenUrl(URI.create(this.downloadLocation)));
         var curseHover = Component.translatable(this.modId + ".newversion.curseforge")
                 .withColor(ColorPalette.CURSEFORGE.getValue())
                 .withStyle(downloadStyleCurse);
 
         var releaseNotesStyle = Style.EMPTY
                 .withHoverEvent(releaseNotesHoverEvent)
-                .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, this.releaseNotesLink));
+                .withClickEvent(new ClickEvent.OpenUrl(URI.create(this.releaseNotesLink)));
         var releaseNotesHover = Component.translatable(this.modId + ".newversion.releasenotes")
                 .withColor(ColorPalette.BRIGHT_CERULEAN.getValue())
                 .withStyle(releaseNotesStyle);
 
         var downloadStyleModrinth = Style.EMPTY
                 .withHoverEvent(downloadHoverEvent)
-                .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, this.downloadLocationModrinth));
+                .withClickEvent(new ClickEvent.OpenUrl(URI.create(this.downloadLocationModrinth)));
         var modrinthHover = Component.translatable(this.modId + ".newversion.modrinth")
                 .withColor(ColorPalette.MODRINTH.getValue())
                 .withStyle(downloadStyleModrinth);

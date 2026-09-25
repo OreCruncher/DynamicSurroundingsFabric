@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.StringSplitter;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.toasts.ToastManager;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleEngine;
@@ -36,15 +37,19 @@ public final class GameUtils {
     }
 
     public static Optional<Screen> getCurrentScreen() {
-        return Optional.ofNullable(getMC().screen);
+        return Optional.ofNullable(getMC().gui.screen());
     }
 
     public static void setScreen(Screen screen) {
-        getMC().setScreen(screen);
+        getMC().gui.setScreen(screen);
     }
 
     public static ParticleEngine getParticleManager() {
         return getMC().particleEngine;
+    }
+
+    public static ToastManager getToastManager() {
+        return getMC().gui.toastManager();
     }
 
     public static Options getGameSettings() {
@@ -82,7 +87,7 @@ public final class GameUtils {
 
     public static boolean isSinglePlayer()
     {
-        return getMC().isSingleplayer();
+        return getMC().hasSingleplayerServer();
     }
 
     public static boolean isFirstPersonView() {

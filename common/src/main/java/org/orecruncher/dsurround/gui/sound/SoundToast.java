@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.gui.sound;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.Music;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -11,19 +11,19 @@ import org.orecruncher.dsurround.lib.gui.WarmToast;
 
 public final class SoundToast {
 
-    private static final WarmToast.Profile SOUND_TOAST_PROFILE = WarmToast.Profile.of(ResourceLocation.withDefaultNamespace("toast/advancement"), 5000, ColorPalette.PUMPKIN_ORANGE, ColorPalette.WHEAT);
+    private static final WarmToast.Profile SOUND_TOAST_PROFILE = WarmToast.Profile.of(Identifier.withDefaultNamespace("toast/advancement"), 5000, ColorPalette.PUMPKIN_ORANGE, ColorPalette.WHEAT);
 
     public static void from(Music music) {
         var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
-        var metadata = soundLibrary.getSoundMetadata(music.getEvent().value().getLocation());
+        var metadata = soundLibrary.getSoundMetadata(music.sound().value().location());
         if (metadata != null && !metadata.getCredits().isEmpty()) {
             var title = metadata.getTitle();
             if (!Component.empty().equals(title)) {
                 var author = metadata.getCredits().getFirst().author();
                 var titleLine = Component.translatable("dsurround.text.toast.music.title", title);
                 var authorLine = Component.translatable("dsurround.text.toast.music.author", author);
-                var toast = WarmToast.from(GameUtils.getMC(), SOUND_TOAST_PROFILE, titleLine, authorLine);
-                GameUtils.getMC().getToasts().addToast(toast);
+                var toast = WarmToast.from(SOUND_TOAST_PROFILE, titleLine, authorLine);
+                GameUtils.getToastManager().addToast(toast);
             }
         }
     }

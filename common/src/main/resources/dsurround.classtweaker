@@ -1,10 +1,10 @@
-accessWidener v2 named
+classTweaker v1 official
 
 # For sound GUI
 accessible class net/minecraft/client/gui/components/OptionsList$Entry
 
 # Get temperature at a specific block location within a biome
-accessible method net/minecraft/world/level/biome/Biome	getTemperature	(Lnet/minecraft/core/BlockPos;)F
+accessible method net/minecraft/world/level/biome/Biome getTemperature (Lnet/minecraft/core/BlockPos;I)F
 
 # To access client side chunk information
 accessible field net/minecraft/client/multiplayer/ClientLevel chunkSource Lnet/minecraft/client/multiplayer/ClientChunkCache;
@@ -12,15 +12,12 @@ accessible class net/minecraft/client/multiplayer/ClientChunkCache$Storage
 accessible field net/minecraft/client/multiplayer/ClientChunkCache storage Lnet/minecraft/client/multiplayer/ClientChunkCache$Storage;
 accessible field net/minecraft/client/multiplayer/ClientChunkCache$Storage chunks Ljava/util/concurrent/atomic/AtomicReferenceArray;
 
-# Get at fog data
-accessible class net/minecraft/client/renderer/FogRenderer$FogData
-
 # Access formatter when dumping biome information
 accessible method net/minecraft/network/chat/TextColor formatValue ()Ljava/lang/String;
 
 # Access to particle data
-accessible field net/minecraft/client/particle/ParticleEngine spriteSets Ljava/util/Map;
-accessible class net/minecraft/client/particle/ParticleEngine$SpriteParticleRegistration
+accessible field net/minecraft/client/particle/ParticleResources spriteSets Ljava/util/Map;
+accessible class net/minecraft/client/particle/ParticleResources$SpriteParticleRegistration
 
 # So we know if it is super flat
 accessible field net/minecraft/client/multiplayer/ClientLevel$ClientLevelData isFlat Z

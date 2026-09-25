@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -29,7 +29,7 @@ public final class BiomeTraits {
         this.traits = set;
     }
 
-    public static BiomeTraits from(ResourceLocation id, Biome biome) {
+    public static BiomeTraits from(Identifier id, Biome biome) {
         EnumSet<BiomeTrait> traits = EnumSet.noneOf(BiomeTrait.class);
         for (var analyzer : TRAIT_ANALYZERS) {
             int before = traits.size();

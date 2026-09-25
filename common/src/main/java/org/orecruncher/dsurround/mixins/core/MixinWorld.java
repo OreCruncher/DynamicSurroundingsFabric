@@ -18,8 +18,8 @@ public class MixinWorld {
      * Tap into block state change detection in the World instance.  Need to be careful to only get updates to
      * a world that is client side.  Server side is a don't care.
      */
-    @Inject(method = "onBlockStateChange(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("HEAD"))
-    public void dsurround$onBlockChanged(BlockPos pos, BlockState oldBlock, BlockState newBlock, CallbackInfo ci) {
+    @Inject(method = "setBlocksDirty(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("HEAD"))
+    public void dsurround$setBlocksDirty(BlockPos pos, BlockState oldBlock, BlockState newBlock, CallbackInfo ci) {
         ReflectionHelper.cast(this, ClientLevel.class)
             .ifPresent(level -> BlockUpdateHandler.blockPositionUpdate(level, pos, oldBlock, newBlock));
     }

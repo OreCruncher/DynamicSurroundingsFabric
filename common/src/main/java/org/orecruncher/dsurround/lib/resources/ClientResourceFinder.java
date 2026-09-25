@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.lib.resources;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.Codec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -25,7 +25,7 @@ public class ClientResourceFinder extends AbstractResourceFinder {
     @Override
     public <T> Collection<DiscoveredResource<T>> find(Codec<T> codec, String assetPath) {
 
-        var results = new HashMap<ResourceLocation, Collection<DiscoveredResource<T>>>();
+        var results = new HashMap<Identifier, Collection<DiscoveredResource<T>>>();
 
         this.logger.debug(RESOURCE_LOADING, "[%s] - Locating assets", assetPath);
 

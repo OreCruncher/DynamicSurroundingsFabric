@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.resources;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
 import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -31,7 +31,7 @@ public class ServerResourceFinder extends AbstractResourceFinder {
 
         Collection<DiscoveredResource<T>> results = new ObjectArray<>();
 
-        var resource = ResourceLocation.tryParse(assetPath);
+        var resource = Identifier.tryParse(assetPath);
         assert resource != null;
 
         var filePath = assetPath.replace(":", "/");

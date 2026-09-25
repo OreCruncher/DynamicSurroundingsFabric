@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.processing.scanner;
 
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
@@ -22,7 +22,7 @@ public final class BiomeScanner extends AbstractScanner {
     private static final int SURVEY_VERTICAL_OFFSET = SURVEY_VERTICAL_DIMENSION / 4 - 1;
     private static final int MAX_SURVEY_VOLUME = SURVEY_HORIZONTAL_DIMENSION * SURVEY_HORIZONTAL_DIMENSION * SURVEY_VERTICAL_DIMENSION;
 
-    private ResourceLocation surveyedDimension;
+    private Identifier surveyedDimension;
     private boolean isUnderWater;
     private BiomeInfo logicalBiomeInfo;
 
@@ -46,7 +46,7 @@ public final class BiomeScanner extends AbstractScanner {
         return this.logicalBiomeInfo;
     }
 
-    public ResourceLocation getDimInfo() {
+    public Identifier getDimInfo() {
         return this.surveyedDimension;
     }
 

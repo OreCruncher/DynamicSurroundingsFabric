@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.lib.gui;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.util.FastColor;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 
 @SuppressWarnings("unused")
@@ -81,15 +81,15 @@ public final class ColorPalette {
     public static final TextColor ELECTRIC_GREEN = of(0, 237, 1);
 
     public static int getRed(int rgb) {
-        return FastColor.ARGB32.red(rgb);
+        return ARGB.red(rgb);
     }
 
     public static int getGreen(int rgb) {
-        return FastColor.ARGB32.green(rgb);
+        return ARGB.green(rgb);
     }
 
     public static int getBlue(int rgb) {
-        return FastColor.ARGB32.blue(rgb);
+        return ARGB.blue(rgb);
     }
 
     private static TextColor of(ChatFormatting formatColor) {
@@ -109,7 +109,7 @@ public final class ColorPalette {
     }
 
     static int toRGB(int red, int green, int blue) {
-        return FastColor.ARGB32.color(red, green, blue);
+        return ARGB.color(red, green, blue);
     }
 
     public static TextColor lerp(float scale, TextColor start, TextColor end) {

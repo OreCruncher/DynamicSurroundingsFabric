@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.eventing;
 
-import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.client.renderer.fog.FogData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -44,6 +44,6 @@ public final class ClientEventHooks {
      */
     @FunctionalInterface
     public interface IFogRender {
-        void onRenderFog(FogRenderer.FogData data, float renderDistance, float partialTick);
+        void onRenderFog(FogData data, float renderDistance, float partialTick);
     }
 }

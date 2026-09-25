@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config.libraries;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.SyntheticBiome;
@@ -16,7 +16,7 @@ public interface IBiomeLibrary extends ILibrary {
     @Nullable BiomeInfo getBiomeInfoWeak(Biome biome);
     BiomeInfo getBiomeInfo(Biome biome);
     BiomeInfo getBiomeInfo(SyntheticBiome biome);
-    String getBiomeName(ResourceLocation id);
+    String getBiomeName(Identifier id);
 
     /**
      * Adhoc execution of a script vs the specified biome.  Used by the dsbiome command.

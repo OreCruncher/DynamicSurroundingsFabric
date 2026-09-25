@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.sound;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundSource;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
 
@@ -28,7 +28,7 @@ public final class SoundMetadata {
         this.isDefault = true;
     }
 
-    public SoundMetadata(ResourceLocation location) {
+    public SoundMetadata(Identifier location) {
         this.title = Component.empty();
         this.subTitle = Component.empty();
         this.credits = ImmutableList.of();
@@ -36,7 +36,7 @@ public final class SoundMetadata {
         this.category = this.estimateSoundSource(location);
     }
 
-    public SoundMetadata(ResourceLocation location, SoundMetadataConfig cfg) {
+    public SoundMetadata(Identifier location, SoundMetadataConfig cfg) {
         Objects.requireNonNull(cfg);
 
         this.isDefault = false;
@@ -66,7 +66,7 @@ public final class SoundMetadata {
         return this.isDefault;
     }
 
-    private SoundSource estimateSoundSource(ResourceLocation location) {
+    private SoundSource estimateSoundSource(Identifier location) {
         var path = location.getPath();
         if (path.startsWith("music"))
             return SoundSource.MUSIC;

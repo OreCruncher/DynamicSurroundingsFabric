@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.mixins.core;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Camera;
-import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.world.level.material.FogType;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(FogRenderer.class)
 public class MixinFogRenderer {
 
+    /*
     @Inject(method = "setupFog(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/FogRenderer$FogMode;FZF)V", at = @At("RETURN"))
     private static void dsurround$renderFog(Camera camera, FogRenderer.FogMode fogMode, float f, boolean bl, float g, CallbackInfo ci, @Local FogType fogType, @Local FogRenderer.FogData fogData) {
 
@@ -31,4 +32,6 @@ public class MixinFogRenderer {
 
         ClientEventHooks.FOG_RENDER_EVENT.invoker().onRenderFog(data, f, g);
     }
+
+     */
 }

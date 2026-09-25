@@ -4,7 +4,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import dev.architectury.platform.Platform;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
@@ -232,7 +232,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
     }
 
     @Override
-    public void render(GuiGraphics context, float partialTick) {
+    public void render(GuiGraphicsExtractor context, float partialTick) {
         this.rendering.begin();
         if (this.renderHud) {
             switch (this.displayDiagnostics) {
@@ -254,7 +254,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
         return this.displayDiagnostics != 0 && GameUtils.isInGame() && !GameUtils.getMC().getDebugOverlay().showDebugScreen();
     }
 
-    private void drawText(GuiGraphics context, ObjectArray<FormattedCharSequence> text, boolean left) {
+    private void drawText(GuiGraphicsExtractor context, ObjectArray<FormattedCharSequence> text, boolean left) {
         var textRenderer = GameUtils.getTextRenderer();
         int m;
         int l;
@@ -270,7 +270,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
             l = left ? 2 : context.guiWidth() - 2 - k;
             m = 2 + i * j;
             context.fill(l - 1, m - 1, l + k + 1, m + i - 1, BACKGROUND_COLOR);
-            context.drawString(textRenderer, component, l, m, FOREGROUND_COLOR, false);
+            context.text(textRenderer, component, l, m, FOREGROUND_COLOR, false);
         }
     }
 }

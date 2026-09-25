@@ -4,7 +4,7 @@ import com.mojang.serialization.Codec;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.locale.Language;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.SyntheticBiome;
@@ -123,7 +123,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
     private BiomeInfo refreshInfo(Biome biome, BiomeInfo info) {
         // Not set or something changed.  Need a refresh.
-        ResourceLocation id;
+        Identifier id;
         String name;
 
         // Pull from cached data if we have it, otherwise lookup
@@ -206,13 +206,13 @@ public final class BiomeLibrary implements IBiomeLibrary {
                 .filter(filter);
     }
 
-    private static ResourceLocation getBiomeId(Biome biome) {
+    private static Identifier getBiomeId(Biome biome) {
         return RegistryUtils.getRegistryEntry(Registries.BIOME, biome)
-                .map(holder -> holder.unwrapKey().orElseThrow().location()).orElseThrow();
+                .map(holder -> holder.unwrapKey().orElseThrow().identifier()).orElseThrow();
     }
 
     @Override
-    public String getBiomeName(ResourceLocation id) {
+    public String getBiomeName(Identifier id) {
         final String fmt = String.format("biome.%s.%s", id.getNamespace(), id.getPath());
         return Language.getInstance().getOrDefault(fmt);
     }

@@ -25,9 +25,9 @@ public class ToolbarEffect extends EntityEffectBase {
 
         // First time through we want to not trigger the equip sound
         if (this.lastSlot == -1) {
-            this.lastSlot = inventory.selected;
-        } else if (this.lastSlot != inventory.selected) {
-            final ItemStack currentStack = inventory.getItem(inventory.selected);
+            this.lastSlot = inventory.getSelectedSlot();
+        } else if (this.lastSlot != inventory.getSelectedSlot()) {
+            final ItemStack currentStack = inventory.getItem(inventory.getSelectedSlot());
             if (!currentStack.isEmpty() & !player.isSpectator()) {
                 this.itemLibrary.getItemEquipSound(currentStack).ifPresent(factory -> {
                     SoundInstance instance;
@@ -38,7 +38,7 @@ public class ToolbarEffect extends EntityEffectBase {
                     this.playSound(instance);
                 });
             }
-            this.lastSlot = inventory.selected;
+            this.lastSlot = inventory.getSelectedSlot();
         }
     }
 }

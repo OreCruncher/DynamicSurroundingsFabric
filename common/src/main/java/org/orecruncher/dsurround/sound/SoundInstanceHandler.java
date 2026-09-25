@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.sound;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.minecraft.client.resources.sounds.ElytraOnPlayerSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.Configuration;
@@ -28,17 +28,17 @@ public final class SoundInstanceHandler {
     private static final ITickCount TICK_COUNT = ContainerManager.resolve(ITickCount.class);
     private static final Configuration.SoundSystem SOUND_SYSTEM_CONFIG = ContainerManager.resolve(Configuration.SoundSystem.class);
 
-    private static final Object2LongOpenHashMap<ResourceLocation> SOUND_CULL = new Object2LongOpenHashMap<>(32);
+    private static final Object2LongOpenHashMap<Identifier> SOUND_CULL = new Object2LongOpenHashMap<>(32);
 
-    private static boolean isSoundBlocked(final ResourceLocation id) {
+    private static boolean isSoundBlocked(final Identifier id) {
         return SOUND_LIBRARY.isBlocked(id);
     }
 
-    private static boolean isSoundCulled(final ResourceLocation id) {
+    private static boolean isSoundCulled(final Identifier id) {
         return SOUND_LIBRARY.isCulled(id);
     }
 
-    private static boolean isSoundCulledLogical(final ResourceLocation sound) {
+    private static boolean isSoundCulledLogical(final Identifier sound) {
         int cullInterval = SOUND_SYSTEM_CONFIG.cullInterval;
         if (cullInterval > 0 && isSoundCulled(sound)) {
             final long lastOccurrence = SOUND_CULL.getLong(Objects.requireNonNull(sound));
@@ -67,7 +67,7 @@ public final class SoundInstanceHandler {
         if (theSound instanceof ConfigSoundInstance)
             return false;
 
-        final ResourceLocation id = theSound.getLocation();
+        final Identifier id = theSound.getIdentifier();
         return isSoundBlocked(id) || isSoundCulledLogical(id);
     }
 

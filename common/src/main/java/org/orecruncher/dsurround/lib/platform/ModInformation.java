@@ -82,7 +82,7 @@ public final class ModInformation implements IMinecraftDirectories {
     }
 
     public String getBranding() {
-        return String.format("%s %s-%s", this.displayName, SharedConstants.getCurrentVersion().getName(), this.version);
+        return String.format("%s %s-%s", this.displayName, SharedConstants.getCurrentVersion().name(), this.version);
     }
 
     public static Optional<ModInformation> getModInformation(String modId) {

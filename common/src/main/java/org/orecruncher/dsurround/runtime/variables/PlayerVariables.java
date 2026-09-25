@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.runtime.variables;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
@@ -55,7 +55,7 @@ public final class PlayerVariables extends VariableSet {
             this.isWet = player.isInWaterOrRain();
             this.isRiding = player.isPassenger();
             this.isOnGround = player.onGround();
-            this.isMoving = player.bob != player.oBob;
+            this.isMoving = player.xo!= player.xOld;    // TODO: Need to figure out new moving calculation
             this.health = player.getHealth();
             this.maxHealth = player.getMaxHealth();
             this.foodLevel = hm.getFoodLevel();
@@ -122,7 +122,7 @@ public final class PlayerVariables extends VariableSet {
 
     private boolean hasEffect(String effect) {
         try {
-            var id = ResourceLocation.parse(effect);
+            var id = Identifier.parse(effect);
             var r = RegistryUtils.getRegistryEntry(Registries.MOB_EFFECT, id).orElseThrow();
             return GameUtils.getPlayer().map(p -> p.hasEffect(r)).orElse(false);
         } catch (Throwable ignore) {

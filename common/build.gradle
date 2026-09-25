@@ -6,25 +6,28 @@ dependencies {
     // We depend on Fabric Loader here to use the Fabric @Environment annotations,
     // which get remapped to the correct annotations on each platform.
     // Do NOT use other classes from Fabric Loader.
-    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+    implementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+
+    // For some reason Fabric decorates some Minecraft classes so we need to make the compiler happy
+    compileOnly "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
 
     // Architectury API. This is optional, and you can comment it out if you don't need it.
-    modImplementation "dev.architectury:architectury:$rootProject.architectury_api_version"
+    implementation "dev.architectury:architectury:$rootProject.architectury_api_version"
 
-    modImplementation "com.github.glitchfiend:GlitchCore-fabric:${minecraft_version}-${rootProject.glitchcore_version}"
-    modImplementation "com.github.glitchfiend:SereneSeasons-fabric:${minecraft_version}-${rootProject.serene_seasons_version}"
+    implementation "com.github.glitchfiend:GlitchCore-fabric:${minecraft_version}-${rootProject.glitchcore_version}"
+    implementation "com.github.glitchfiend:SereneSeasons-fabric:${minecraft_version}-${rootProject.serene_seasons_version}"
 
     // Referencing the Fabric project for API
-    modApi("me.shedaniel.cloth:cloth-config-fabric:${rootProject.clothapi_version}") {
+    api("me.shedaniel.cloth:cloth-config-fabric:${rootProject.clothapi_version}") {
         exclude(group: "net.fabricmc.fabric-api")
     }
 
     testImplementation "net.fabricmc:fabric-loader-junit:$rootProject.fabric_loader_version"
-    testImplementation(project(path: ':common', configuration: 'namedElements'))
+    testImplementation(project(path: ':common'))
 }
 
 loom {
-    accessWidenerPath = file("src/main/resources/dsurround.accesswidener")
+    accessWidenerPath = file("src/main/resources/dsurround.classtweaker")
 }
 
 test {

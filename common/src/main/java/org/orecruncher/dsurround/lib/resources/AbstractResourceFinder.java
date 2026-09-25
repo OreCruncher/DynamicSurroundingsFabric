@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.resources;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.lib.CodecExtensions;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
@@ -18,7 +18,7 @@ public abstract class AbstractResourceFinder implements IResourceFinder {
         this.logger = ModLog.createChild(logger, "ResourceFinder");
     }
 
-    protected <T> Optional<T> decode(ResourceLocation location, String content, Codec<T> decoder) {
+    protected <T> Optional<T> decode(Identifier location, String content, Codec<T> decoder) {
         this.logger.debug(RESOURCE_LOADING, "[%s] - Decoding resource", location);
         var result = CodecExtensions.deserialize(content, decoder);
         if (this.logger.isTracing(RESOURCE_LOADING))

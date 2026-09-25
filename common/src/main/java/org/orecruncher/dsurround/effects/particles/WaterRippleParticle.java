@@ -1,17 +1,18 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.*;
+import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
+import org.jspecify.annotations.NonNull;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
-public class WaterRippleParticle extends TextureSheetParticle {
+public class WaterRippleParticle extends SingleQuadParticle {
 
     private final WaterRippleStyle rippleStyle;
     private final SpriteSet spriteProvider;
@@ -43,7 +44,7 @@ public class WaterRippleParticle extends TextureSheetParticle {
     }
 
     protected WaterRippleParticle(WaterRippleStyle rippleStyle, ClientLevel world, double x, double y, double z, SpriteSet spriteProvider) {
-        super(world, x, y, z, 0.0, 0.0, 0.0);
+        super(world, x, y, z, 0.0, 0.0, 0.0, spriteProvider.first());
 
         this.rippleStyle = rippleStyle;
         this.spriteProvider = spriteProvider;
@@ -76,20 +77,20 @@ public class WaterRippleParticle extends TextureSheetParticle {
     }
 
     @Override
-    public @NotNull ParticleRenderType getRenderType() {
+    public @NotNull Layer getLayer() {
         return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
     }
 
     @Override
-    public void render(@NotNull VertexConsumer vertexConsumer, @NotNull Camera camera, float tickDelta) {
-        this.setAlpha(this.lifetimeAlpha.currentAlphaForAge(this.age, this.lifetime, tickDelta));
+    public void extract(final @NonNull QuadParticleRenderState particleTypeRenderState, final @NonNull Camera camera, final float partialTickTime) {
+        this.setAlpha(this.lifetimeAlpha.currentAlphaForAge(this.age, this.lifetime, partialTickTime));
         Quaternionf quaternionf = new Quaternionf();
         quaternionf.rotateX((float) Math.toRadians(-90f));
-        this.renderRotatedQuad(vertexConsumer, camera, quaternionf, tickDelta);
+        this.extractRotatedQuad(particleTypeRenderState, camera, quaternionf, partialTickTime);
     }
 
     @Override
-    public int getLightColor(float partialTick) {
+    public int getLightCoords(float partialTick) {
         return 15728880;
     }
 

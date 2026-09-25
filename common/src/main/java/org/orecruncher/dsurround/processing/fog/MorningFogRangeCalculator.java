@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.processing.fog;
 
-import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.client.renderer.fog.FogData;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
@@ -53,7 +53,7 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
 
     @Override
     @NotNull
-    public FogRenderer.FogData render(@NotNull final FogRenderer.FogData data, float renderDistance, float partialTick) {
+    public FogData render(@NotNull final FogData data, float renderDistance, float partialTick) {
 
         if (this.type != FogDensity.NONE) {
             var angle = this.getCelestialAngleDegrees();
@@ -64,7 +64,7 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
                 final float newEnd = data.end - shift;
                 final float newStart = Mth.clamp(data.start - shift * 2, this.type.getReserve() + 1, newEnd);
 
-                var result = new FogRenderer.FogData(data.mode);
+                var result = new FogData(data.mode);
                 result.start = newStart;
                 result.end = newEnd;
                 return result;

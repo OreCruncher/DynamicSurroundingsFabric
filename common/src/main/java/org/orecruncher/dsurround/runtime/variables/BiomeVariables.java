@@ -14,8 +14,8 @@ public final class BiomeVariables extends VariableSet {
     private final IBiomeLibrary biomeLibrary;
 
     private final CachingSupplier<String> precipitationType = CachingSupplier.from(() -> {
-        var pos = GameUtils.getPlayer().orElseThrow().blockPosition();
-        return this.biome.getPrecipitationAt(pos).name();
+        var player = GameUtils.getPlayer().orElseThrow();
+        return this.biome.getPrecipitationAt(player.getOnPos(), player.level().getSeaLevel()).name();
     });
     private final CachingSupplier<String> id = CachingSupplier.from(() -> this.info.getBiomeId().toString());
     private final CachingSupplier<String> biomeTraits = CachingSupplier.from(() -> this.info.getTraits().toString());

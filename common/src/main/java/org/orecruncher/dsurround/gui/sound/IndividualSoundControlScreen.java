@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.gui.sound;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -132,26 +132,26 @@ public class IndividualSoundControlScreen extends Screen {
         return this.searchField.charTyped(codePoint, modifiers);
     }
 
-    public void render(final GuiGraphics context, int mouseX, int mouseY, float partialTicks) {
+    public void extractRenderState(final GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTicks) {
         var renderWidth = Mth.clamp(context.guiWidth() - 20, 200, SELECTION_WIDTH);
         this.soundConfigList.setRowWidth(renderWidth);
         if (this.parent == null)
-            this.renderTransparentBackground(context);
+            this.extractTransparentBackground(context);
         else
-            this.renderMenuBackground(context);
+            this.extractMenuBackground(context);
 
-        context.drawCenteredString(this.font, this.title, this.width / 2, TOP_OFFSET, ColorPalette.MC_WHITE.getValue());
+        context.centeredText(this.font, this.title, this.width / 2, TOP_OFFSET, ColorPalette.MC_WHITE.getValue());
 
-        this.soundConfigList.render(context, mouseX, mouseY, partialTicks);
-        this.searchField.render(context, mouseX, mouseY, partialTicks);
-        this.save.render(context, mouseX, mouseY, partialTicks);
-        this.cancel.render(context, mouseX, mouseY, partialTicks);
+        this.soundConfigList.extractRenderState(context, mouseX, mouseY, partialTicks);
+        this.searchField.extractRenderState(context, mouseX, mouseY, partialTicks);
+        this.save.extractRenderState(context, mouseX, mouseY, partialTicks);
+        this.cancel.extractRenderState(context, mouseX, mouseY, partialTicks);
 
         if (this.soundConfigList.isMouseOver(mouseX, mouseY)) {
             final IndividualSoundControlListEntry entry = this.soundConfigList.getEntryAt(mouseX, mouseY);
             if (entry != null) {
                 final List<FormattedCharSequence> toolTip = entry.getToolTip(mouseX, mouseY);
-                context.renderTooltip(this.font, toolTip, mouseX, mouseY + TOOLTIP_Y_OFFSET);
+                context.tooltip(this.font, toolTip, mouseX, mouseY + TOOLTIP_Y_OFFSET);
             }
         }
     }

@@ -94,14 +94,14 @@ public final class DSurroundMusicManager extends MusicManager {
         }
 
         // Lookup meta information
-        var metaData = MixinHelpers.SOUND_LIBRARY.getSoundMetadata(this.currentMusic.getLocation());
+        var metaData = MixinHelpers.SOUND_LIBRARY.getSoundMetadata(this.currentMusic.getIdentifier());
         if (metaData == null || Component.empty().equals(metaData.getTitle())) {
-            return Component.literal(this.currentMusic.getLocation().toString());
+            return Component.literal(this.currentMusic.getIdentifier().toString());
         }
 
         var title = metaData.getTitle().copy().withColor(ColorPalette.PUMPKIN_ORANGE.getValue());
         var author = metaData.getCredits().get(0).author().copy().withColor(ColorPalette.WHEAT.getValue());
-        return Component.translatable("dsurround.text.musicmanager.playing", title, author, Component.translationArg(this.currentMusic.getLocation()));
+        return Component.translatable("dsurround.text.musicmanager.playing", title, author, Component.translationArg(this.currentMusic.getIdentifier()));
     }
 
     public String getDiagnosticText() {
@@ -110,7 +110,7 @@ public final class DSurroundMusicManager extends MusicManager {
             result = "Audio system not available";
         } else {
             if (this.currentMusic != null)
-                result = this.currentMusic.getLocation().toString();
+                result = this.currentMusic.getIdentifier().toString();
             result = "%d (%s)".formatted(this.nextSongDelay, result);
             if (this.pauseTicking)
                 result += " (PAUSED)";

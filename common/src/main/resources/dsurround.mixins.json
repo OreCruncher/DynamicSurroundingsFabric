@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "org.orecruncher.dsurround.mixins",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "mixins": [
   ],
   "client": [
@@ -20,6 +20,7 @@
     "core.MixinMinecraftClient",
     "core.MixinMusic",
     "core.MixinParticleEngine",
+    "core.MixinParticleResources",
     "core.MixinParticleTypes",
     "core.MixinRainSplashParticle",
     "core.MixinSoundOptionsScreen",

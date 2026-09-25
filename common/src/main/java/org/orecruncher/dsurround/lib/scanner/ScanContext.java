@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.scanner;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -36,7 +36,7 @@ public final class ScanContext {
         return this.logger;
     }
 
-    public ResourceLocation getWorldReference() {
+    public Identifier getWorldReference() {
         return this.getWorld().dimension().registry();
     }
 

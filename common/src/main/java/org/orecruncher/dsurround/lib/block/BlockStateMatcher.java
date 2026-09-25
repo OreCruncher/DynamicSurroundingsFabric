@@ -10,9 +10,7 @@ import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.IMatcher;
 import org.orecruncher.dsurround.lib.IdentityUtils;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public abstract class BlockStateMatcher implements IMatcher<BlockState> {
 
@@ -80,22 +78,23 @@ public abstract class BlockStateMatcher implements IMatcher<BlockState> {
         }
 
         final Map<String, String> properties = result.getProperties();
-        final Map<Property<?>, Comparable<?>> props = new IdentityHashMap<>(properties.size());
+        final List<Property.Value<?>> props = new ArrayList<>(properties.size());
 
         // Blow out the property list
         for (final Map.Entry<String, String> entry : properties.entrySet()) {
-            final String s = entry.getKey();
-            final Property<?> prop = container.getProperty(s);
+            final String propertyName = entry.getKey();
+            final Property<?> prop = container.getProperty(propertyName);
             if (prop != null) {
                 final Optional<?> optional = prop.getValue(entry.getValue());
                 if (optional.isPresent()) {
-                    props.put(prop, (Comparable<?>) optional.get());
+                    // TODO: Sort this out
+                    props.add(new Property.Value<>(prop, (Comparable) optional.get()));
                 } else {
-                    var msg = String.format("Value '%s' for property '%s' not found for block '%s'", entry.getValue(), s, result.getBlockName());
+                    var msg = String.format("Value '%s' for property '%s' not found for block '%s'", entry.getValue(), propertyName, result.getBlockName());
                     throw new BlockStateParseException(msg);
                 }
             } else {
-                var msg = String.format("Property %s not found for block %s", s, result.getBlockName());
+                var msg = String.format("Property %s not found for block %s", propertyName, result.getBlockName());
                 throw new BlockStateParseException(msg);
             }
         }

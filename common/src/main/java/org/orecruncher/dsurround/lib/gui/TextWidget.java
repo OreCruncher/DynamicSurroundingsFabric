@@ -1,10 +1,10 @@
 package org.orecruncher.dsurround.lib.gui;
 
+import net.minecraft.client.gui.ActiveTextCollector;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractStringWidget;
 import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public class TextWidget extends AbstractStringWidget {
 
@@ -13,14 +13,13 @@ public class TextWidget extends AbstractStringWidget {
     }
 
     @Override
-    protected void renderWidget(@NotNull GuiGraphics guiGraphics, int i, int j, float f) {
-        int y = getY();
-
+    public void visitLines(@NonNull ActiveTextCollector output) {
         int nameWidth = this.getFont().width(this.getMessage());
+
         if (nameWidth > getWidth()) {
-            renderScrollingString(guiGraphics, this.getFont(), this.getMessage(), getX(), y, getX() + getWidth(), y + this.getFont().lineHeight, -1);
+            output.acceptScrollingWithDefaultCenter(this.getMessage(), this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getFont().lineHeight);
         } else {
-            guiGraphics.drawString(this.getFont(), this.getMessage(), getX(), y, 0xFFFFFF);
+            output.accept(getX(), getY(), this.getMessage());
         }
     }
 }

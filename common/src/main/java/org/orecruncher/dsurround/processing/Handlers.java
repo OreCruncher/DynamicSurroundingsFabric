@@ -141,7 +141,7 @@ public class Handlers {
 
     private void handleStartupSound() {
         var client = GameUtils.getMC();
-        if (client.getOverlay() != null)
+        if (!client.isGameLoadFinished())
             return;
 
         this.startupSoundPlayed = true;

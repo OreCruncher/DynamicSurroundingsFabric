@@ -5,7 +5,7 @@ import dev.architectury.hooks.level.biome.BiomeProperties;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
@@ -44,7 +44,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private static final IConditionEvaluator CONDITION_EVALUATOR = ContainerManager.resolve(IConditionEvaluator.class);
 
     private final int version;
-    private final ResourceLocation biomeId;
+    private final Identifier biomeId;
     private final String biomeName;
     @Nullable
     private final Biome biome;
@@ -65,11 +65,11 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private Script additionalSoundChance = DEFAULT_SOUND_CHANCE;
     private Script moodSoundChance = DEFAULT_SOUND_CHANCE;
 
-    public BiomeInfo(final int version, final ResourceLocation id, final String name, BiomeTraits traits) {
+    public BiomeInfo(final int version, final Identifier id, final String name, BiomeTraits traits) {
         this(version, id, name, traits, null);
     }
 
-    public BiomeInfo(final int version, final ResourceLocation id, final String name, BiomeTraits traits, @Nullable Biome biome) {
+    public BiomeInfo(final int version, final Identifier id, final String name, BiomeTraits traits, @Nullable Biome biome) {
         this.version = version;
         this.biomeId = id;
         this.biomeName = name;
@@ -113,7 +113,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         return this.isCave;
     }
 
-    public ResourceLocation getBiomeId() {
+    public Identifier getBiomeId() {
         return this.biomeId;
     }
 
@@ -151,10 +151,10 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         return this.properties != null ? this.properties.getClimateProperties().getTemperature() : 0.5F;
     }
 
-    public float getTemperature(@Nullable BlockPos pos) {
+    public float getTemperature(@Nullable BlockPos pos, int seaLevel) {
         if (this.biome == null || pos == null)
             return this.getBaseTemperature();
-        return this.biome.getTemperature(pos);
+        return this.biome.getTemperature(pos, seaLevel);
     }
 
     void setAdditionalSoundChance(final Script chance) {

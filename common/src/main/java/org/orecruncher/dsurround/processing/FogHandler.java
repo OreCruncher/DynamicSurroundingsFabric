@@ -1,7 +1,8 @@
 package org.orecruncher.dsurround.processing;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.client.renderer.fog.FogData;
+import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
@@ -12,13 +13,13 @@ import org.orecruncher.dsurround.processing.fog.HolisticFogRangeCalculator;
 public class FogHandler extends AbstractClientHandler {
 
     private final HolisticFogRangeCalculator fogCalculator;
-    private FogRenderer.FogData lastData;
+    private FogData lastData;
 
     public FogHandler(Configuration config, IModLog logger) {
         super("Fog Handler", config, logger);
 
         this.fogCalculator = new HolisticFogRangeCalculator(logger, config.fogOptions);
-        this.lastData = new FogRenderer.FogData(FogRenderer.FogMode.FOG_TERRAIN);
+        this.lastData = new FogData();
         this.lastData.start = this.lastData.end = 192F;
 
         ClientEventHooks.FOG_RENDER_EVENT.register(this::renderFog);
@@ -35,7 +36,7 @@ public class FogHandler extends AbstractClientHandler {
         this.fogCalculator.disconnect();
     }
 
-    private void renderFog(FogRenderer.FogData data, float renderDistance, float partialTick) {
+    private void renderFog(FogData data, float renderDistance, float partialTick) {
         if (this.fogCalculator.enabled()) {
             this.lastData = this.fogCalculator.render(data, renderDistance, partialTick);
             RenderSystem.setShaderFogStart(this.lastData.start);

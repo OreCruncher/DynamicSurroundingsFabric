@@ -5,8 +5,8 @@ import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
@@ -63,9 +63,9 @@ public final class ParticleUtils {
         return Optional.empty();
     }
 
-    private static Optional<ResourceLocation> getParticleId(ParticleType<?> particleType) {
+    private static Optional<Identifier> getParticleId(ParticleType<?> particleType) {
         return RegistryUtils.getRegistry(Registries.PARTICLE_TYPE)
-                .flatMap(registry -> registry.getResourceKey(particleType).map(ResourceKey::location));
+                .flatMap(registry -> registry.getResourceKey(particleType).map(ResourceKey::identifier));
     }
 
     /*

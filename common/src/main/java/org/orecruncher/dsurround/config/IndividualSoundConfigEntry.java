@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.config;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
@@ -12,21 +12,21 @@ public class IndividualSoundConfigEntry implements Comparable<IndividualSoundCon
 
     public static final Codec<IndividualSoundConfigEntry> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
-                    ResourceLocation.CODEC.fieldOf("soundEventId").forGetter(info -> info.soundEventId),
+                    Identifier.CODEC.fieldOf("soundEventId").forGetter(info -> info.soundEventId),
                     Codec.intRange(0, 400).optionalFieldOf("volumeScale", 100).forGetter(info -> info.volumeScale),
                     Codec.BOOL.optionalFieldOf("block", false).forGetter(info -> info.block),
                     Codec.BOOL.optionalFieldOf("cull", false).forGetter(info -> info.cull),
                     Codec.BOOL.optionalFieldOf("startup", false).forGetter(info -> info.startup)
             ).apply(instance, IndividualSoundConfigEntry::new));
 
-    public ResourceLocation soundEventId;
+    public Identifier soundEventId;
     public String soundEventIdProjected;
     public int volumeScale;
     public boolean block;
     public boolean cull;
     public boolean startup;
 
-    public IndividualSoundConfigEntry(ResourceLocation id, Integer volumeScale, Boolean block, Boolean cull, Boolean startup) {
+    public IndividualSoundConfigEntry(Identifier id, Integer volumeScale, Boolean block, Boolean cull, Boolean startup) {
         this.soundEventId = id;
         this.soundEventIdProjected = id.toString();
         this.volumeScale = Mth.clamp(volumeScale, 0, 400);
@@ -44,12 +44,12 @@ public class IndividualSoundConfigEntry implements Comparable<IndividualSoundCon
         this.startup = source.startup;
     }
 
-    public IndividualSoundConfigEntry(ResourceLocation id) {
+    public IndividualSoundConfigEntry(Identifier id) {
         this(id, 100, false, false, false);
     }
 
     public static IndividualSoundConfigEntry createDefault(final SoundEvent event) {
-        return new IndividualSoundConfigEntry(event.getLocation());
+        return new IndividualSoundConfigEntry(event.location());
     }
 
     public static IndividualSoundConfigEntry from(IndividualSoundConfigEntry source) {

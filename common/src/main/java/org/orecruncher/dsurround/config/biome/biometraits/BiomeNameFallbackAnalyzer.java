@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
 import dev.architectury.hooks.level.biome.BiomeHooks;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.BiomeTrait;
@@ -91,7 +91,7 @@ public final class BiomeNameFallbackAnalyzer implements IBiomeTraitAnalyzer {
     }
 
     @Override
-    public void analyze(@NotNull ResourceLocation id, @NotNull Biome biome, @NotNull Set<BiomeTrait> resultCollection) {
+    public void analyze(@NotNull Identifier id, @NotNull Biome biome, @NotNull Set<BiomeTrait> resultCollection) {
         String path = id.getPath().toLowerCase(Locale.ROOT);
 
         // If it is a vanilla biome it should be in our map

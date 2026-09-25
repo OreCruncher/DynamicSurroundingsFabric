@@ -60,10 +60,10 @@ public class FireflyParticle extends SimpleAnimatedParticle {
 
     // From GlowParticle
     @Override
-    public int getLightColor(float f) {
+    public int getLightCoords(float f) {
         float g = ((float)this.age + f) / (float)this.lifetime;
         g = Mth.clamp(g, 0.0f, 1.0f);
-        int i = super.getLightColor(f);
+        int i = super.getLightCoords(f);
         int j = i & 0xFF;
         int k = i >> 16 & 0xFF;
         if ((j += (int)(g * 15.0f * 16.0f)) > 240) {

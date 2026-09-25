@@ -2,13 +2,14 @@ package org.orecruncher.dsurround.gui.sound;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.sounds.SoundSource;
@@ -140,11 +141,13 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         return this.children;
     }
 
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        AbstractWidget child = this.findChild(mouseX, mouseY);
+    public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
+        AbstractWidget child = this.findChild(event.x(), event.y());
         if (child != null)
-            return child.mouseClicked(mouseX, mouseY, button);
+            child.mouseClicked(event, doubleClick);
         return false;
+        // TODO: Is this better?
+        //return super.mouseClicked(event, doubleClick);
     }
 
     @Override
@@ -152,6 +155,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         return ImmutableList.of();
     }
 
+    /*
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         AbstractWidget child = this.findChild(mouseX, mouseY);
         if (child != null)
@@ -172,6 +176,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
             return child.mouseScrolled(mouseX, mouseY, hAmount, vAmount);
         return false;
     }
+    */
 
     private AbstractWidget findChild(double mouseX, double mouseY) {
         if (this.isMouseOver(mouseX, mouseY)) {
@@ -185,7 +190,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     }
 
     @Override
-    public void render(final @NotNull GuiGraphics context, int index, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTick_) {
+    public void extractContent(final GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick_) {
         final var font = GameUtils.getTextRenderer();
         final int labelY = rowTop + (rowHeight - font.lineHeight) / 2;
 
@@ -211,7 +216,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         this.stateButton.setHeight(rowHeight);
 
         for (final AbstractWidget w : this.children)
-            w.render(context, mouseX, mouseY, partialTick_);
+            w.extractRenderState(graphics, mouseX, mouseY, partialTick_);
     }
 
     protected ConfigSoundInstance playSound(IndividualSoundConfigEntry entry) {
@@ -241,7 +246,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     protected List<FormattedCharSequence> getToolTip(final int mouseX, final int mouseY) {
         // Cache the static part of the tooltip if needed
         if (this.cachedToolTip.isEmpty()) {
-            ResourceLocation id = this.config.soundEventId;
+            Identifier id = this.config.soundEventId;
             this.resolveDisplayName(id.getNamespace())
                     .ifPresent(name -> {
                         FormattedCharSequence modName = FormattedCharSequence.forward(Objects.requireNonNull(ChatFormatting.stripFormatting(name)), STYLE_MOD_NAME);

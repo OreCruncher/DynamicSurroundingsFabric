@@ -2,9 +2,8 @@ package org.orecruncher.dsurround.effects.particles;
 
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.particle.SpriteSet;
-import net.minecraft.client.particle.TextureSheetParticle;
+import net.minecraft.client.particle.SingleQuadParticle;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
@@ -13,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
-public class FrostBreathParticle extends TextureSheetParticle {
+public class FrostBreathParticle extends SingleQuadParticle {
 
     private final SpriteSet spriteProvider;
 
@@ -38,7 +37,7 @@ public class FrostBreathParticle extends TextureSheetParticle {
     }
 
     private FrostBreathParticle(LivingEntity entity, SpriteSet spriteProvider) {
-        super((ClientLevel) entity.level(), 0, 0, 0, 0.0, 0.0, 0.0);
+        super((ClientLevel) entity.level(), 0, 0, 0, 0.0, 0.0, 0.0, spriteProvider.first());
         
         final IRandomizer rand = Randomizer.current();
 
@@ -69,11 +68,11 @@ public class FrostBreathParticle extends TextureSheetParticle {
     }
 
     @Override
-    public @NotNull ParticleRenderType getRenderType() {
-        return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
+    public @NotNull Layer getLayer() {
+        return Layer.TRANSLUCENT;
     }
 
-    public float getSize(float tickDelta) {
+    public float quadSize(float tickDelta) {
         return this.quadSize * Mth.clamp(((float)this.age + tickDelta) / (float)this.lifetime * 32.0F, 0.0F, 1.0F);
     }
 

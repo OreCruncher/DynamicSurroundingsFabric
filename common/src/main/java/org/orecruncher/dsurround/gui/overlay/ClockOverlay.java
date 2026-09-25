@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.gui.overlay;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
@@ -9,6 +9,7 @@ import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
+import org.orecruncher.dsurround.lib.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -70,7 +71,7 @@ public final class ClockOverlay extends AbstractOverlay {
             // Calculate the color this tick
             var world = player.level();
             // 0 is noon, 180 is midnight. Need to normalize so that midnight 0.
-            var angleDegrees = world.getTimeOfDay(1F)* 360F + 180;
+            var angleDegrees = DayCycle.getCelestialAngle(world) + 180;
             // Wrap
             if (angleDegrees >= 360)
                 angleDegrees -= 360;
@@ -95,7 +96,7 @@ public final class ClockOverlay extends AbstractOverlay {
     }
 
     @Override
-    public void render(GuiGraphics context, float partialTick) {
+    public void render(GuiGraphicsExtractor context, float partialTick) {
         if (!this.showClock)
             return;
 
@@ -108,9 +109,9 @@ public final class ClockOverlay extends AbstractOverlay {
 
         // Don't use renderTooltip. It uses a Z which pushes the rendering to the top of the Z stack and can
         // and can interfere with renders.
-        TooltipRenderUtil.renderTooltipBackground(context, x - this.renderWidth / 2, y, this.renderWidth, this.renderHeight, 0);
-        context.drawCenteredString(textRender, this.clockDisplay.get(0), x, y, this.color);
+        TooltipRenderUtil.extractTooltipBackground(context, x - this.renderWidth / 2, y, this.renderWidth, this.renderHeight, null);
+        context.centeredText(textRender, this.clockDisplay.get(0), x, y, this.color);
         if (this.clockDisplay.size() == 2)
-            context.drawCenteredString(textRender, this.clockDisplay.get(1), x, y + textRender.lineHeight, this.color);
+            context.centeredText(textRender, this.clockDisplay.get(1), x, y + textRender.lineHeight, this.color);
     }
 }
