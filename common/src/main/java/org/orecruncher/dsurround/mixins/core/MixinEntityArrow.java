@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(AbstractArrow.class)
 public abstract class MixinEntityArrow {
 
-    @WrapOperation(method = "tick()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/AbstractArrow;isCritArrow()Z"))
+    @WrapOperation(method = "tick()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/arrow/AbstractArrow;isCritArrow()Z"))
     private boolean dsurround$isCriticalCheck(AbstractArrow instance, Operation<Boolean> original) {
         if (MixinHelpers.particleTweaksConfig.suppressProjectileParticleTrails)
             return false;

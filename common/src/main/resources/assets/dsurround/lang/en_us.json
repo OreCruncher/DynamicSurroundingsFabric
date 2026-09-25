@@ -234,15 +234,15 @@
   "dsurround.text.soundconfig.volume.help": "Volume scaling factor applied when calculating the output volume of a sound. Increase to make quiet sounds louder; reduce to make loud sounds quieter. 100% is normal volume.",
   "dsurround.text.config.soundconfiguration": "Configure Sounds",
   "dsurround.text.config.soundconfiguration.tooltip": "Configure individual sounds within the modpack",
-  "dsurround.text.keybind.section": "Dynamic Surroundings",
-  "dsurround.text.keybind.modConfigurationMenu": "Mod Configuration Menu",
-  "dsurround.text.keybind.individualSoundConfig": "Individual Sound Configuration",
-  "dsurround.text.keybind.diagnosticHud": "Diagnostic Overlay",
   "dsurround.text.reloadassets": "[%1$s\u00a7r] \u00a7aReloaded configurations",
   "dsurround.text.seasons.spring": "Spring",
   "dsurround.text.toast.music.title": "Music \"%1$s\"",
   "dsurround.text.toast.music.author": "by %1$s",
   "dsurround.text.musicmanager.nothing": "No music is playing",
   "dsurround.text.musicmanager.playing": "%1$s by %2$s (%3$s)",
-  "dsurround.text.musicmanager.unavailable": "Sound system is unavailable"
+  "dsurround.text.musicmanager.unavailable": "Sound system is unavailable",
+  "key.category.dsurround.category": "Dynamic Surroundings",
+  "dsurround.text.keybind.modConfigurationMenu": "Mod Configuration Menu",
+  "dsurround.text.keybind.individualSoundConfig": "Individual Sound Configuration",
+  "dsurround.text.keybind.diagnosticHud": "Diagnostic Overlay"
 }

@@ -28,6 +28,7 @@ import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.SoundMetadata;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 public class IndividualSoundControlListEntry extends ContainerObjectSelectionList.Entry<IndividualSoundControlListEntry> implements AutoCloseable {
 
@@ -83,17 +84,16 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         var textRenderer = GameUtils.getTextRenderer();
         int stateWidth = Math.max(textRenderer.width(STATE_DEFAULT), Math.max(textRenderer.width(STATE_CULL), textRenderer.width(STATE_BLOCK))) + CONTROL_SPACING * 5;
 
-        this.stateButton = CycleButton.builder(IndividualSoundControlListEntry::valueMap)
+        var defaultState = Integer.valueOf(generateStateForButton(this.config));
+        this.stateButton = CycleButton.builder(IndividualSoundControlListEntry::valueMap, (Supplier<Integer>) () -> defaultState)
                 .withValues(0, 1, 2)
-                .withInitialValue(generateStateForButton(this.config))
                 .displayOnlyValue()
                 .create(0, 0, stateWidth, 20, Component.empty(), this::setStateFromButton);
         this.children.add(this.stateButton);
 
         if (enablePlay) {
             stateWidth = Math.max(textRenderer.width(SOUND_STOP), textRenderer.width((SOUND_PLAY))) + CONTROL_SPACING * 5;
-            this.playButton = CycleButton.booleanBuilder(SOUND_STOP, SOUND_PLAY)
-                    .withInitialValue(false)
+            this.playButton = CycleButton.booleanBuilder(SOUND_STOP, SOUND_PLAY, false)
                     .displayOnlyValue()
                     .create(0, 0, stateWidth, 20, Component.empty(), this::setPlayState);
             this.children.add(this.playButton);
@@ -102,7 +102,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         }
     }
     
-    private static Component valueMap(int index) {
+    private static Component valueMap(Integer index) {
         return switch(index) {
             case 0 -> STATE_DEFAULT;
             case 1 -> STATE_CULL;

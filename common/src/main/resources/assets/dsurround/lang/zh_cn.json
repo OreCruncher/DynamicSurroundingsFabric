@@ -183,12 +183,12 @@
   "dsurround.text.soundconfig.volume.help": "计算声音输出音量时应用的音量缩放因子\n增加使得安静声音变大；减少使得大声音变小\n100%代表正常音量。",
   "dsurround.text.config.soundconfiguration": "配置声音",
   "dsurround.text.config.soundconfiguration.tooltip": "在模组内配置单独的声音",
-  "dsurround.text.keybind.section": "动态环境/动态环绕(Dynamic Surroundings)",
-  "dsurround.text.keybind.modConfigurationMenu": "模组配置菜单",
-  "dsurround.text.keybind.individualSoundConfig": "单独声音配置",
-  "dsurround.text.keybind.diagnosticHud": "诊断叠加",
   "dsurround.text.reloadassets": "[%1$s\u00a7r] \u00a7a重新加载的配置",
   "dsurround.text.seasons.spring": "春季",
   "dsurround.text.toast.music.title": "音乐： \"%1$s\"",
-  "dsurround.text.toast.music.author": "作者： %1$s"
+  "dsurround.text.toast.music.author": "作者： %1$s",
+  "key.category.dsurround.category": "动态环境/动态环绕(Dynamic Surroundings)",
+  "dsurround.text.keybind.modConfigurationMenu": "模组配置菜单",
+  "dsurround.text.keybind.individualSoundConfig": "单独声音配置",
+  "dsurround.text.keybind.diagnosticHud": "诊断叠加"
 }

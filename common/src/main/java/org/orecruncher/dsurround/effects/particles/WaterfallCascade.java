@@ -52,7 +52,7 @@ public class WaterfallCascade extends SingleQuadParticle {
 
     @Override
     public @NotNull Layer getLayer() {
-        return DSurroundParticleRenderType.PARTICLE_SHEET_WATERFALL_CASCADE;
+        return Layer.TRANSLUCENT;
     }
 
     @Override

@@ -18,6 +18,7 @@ accessible method net/minecraft/network/chat/TextColor formatValue ()Ljava/lang/
 # Access to particle data
 accessible field net/minecraft/client/particle/ParticleResources spriteSets Ljava/util/Map;
 accessible class net/minecraft/client/particle/ParticleResources$SpriteParticleRegistration
+accessible field net/minecraft/client/particle/ParticleEngine resourceManager Lnet/minecraft/client/particle/ParticleResources;
 
 # So we know if it is super flat
 accessible field net/minecraft/client/multiplayer/ClientLevel$ClientLevelData isFlat Z

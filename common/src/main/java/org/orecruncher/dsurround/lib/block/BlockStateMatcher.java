@@ -78,7 +78,7 @@ public abstract class BlockStateMatcher implements IMatcher<BlockState> {
         }
 
         final Map<String, String> properties = result.getProperties();
-        final List<Property.Value<?>> props = new ArrayList<>(properties.size());
+        final Map<Property<?>, Comparable<?>> props = new IdentityHashMap<>(properties.size());
 
         // Blow out the property list
         for (final Map.Entry<String, String> entry : properties.entrySet()) {
@@ -87,8 +87,7 @@ public abstract class BlockStateMatcher implements IMatcher<BlockState> {
             if (prop != null) {
                 final Optional<?> optional = prop.getValue(entry.getValue());
                 if (optional.isPresent()) {
-                    // TODO: Sort this out
-                    props.add(new Property.Value<>(prop, (Comparable) optional.get()));
+                    props.put(prop, (Comparable<?>)optional.get());
                 } else {
                     var msg = String.format("Value '%s' for property '%s' not found for block '%s'", entry.getValue(), propertyName, result.getBlockName());
                     throw new BlockStateParseException(msg);

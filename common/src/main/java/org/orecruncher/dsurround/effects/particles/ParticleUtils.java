@@ -56,7 +56,7 @@ public final class ParticleUtils {
     private static Optional<SpriteSet> getSpriteProviderFromEngine(ParticleType<?> particleType) {
         var id = getParticleId(particleType);
         if (id.isPresent()) {
-            var engineSpriteSets = GameUtils.getParticleManager().spriteSets;
+            var engineSpriteSets = GameUtils.getParticleResources().spriteSets;
             return Optional.ofNullable(engineSpriteSets.get(id.get()));
         }
 

@@ -78,7 +78,7 @@ public class WaterRippleParticle extends SingleQuadParticle {
 
     @Override
     public @NotNull Layer getLayer() {
-        return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
+        return Layer.TRANSLUCENT;
     }
 
     @Override

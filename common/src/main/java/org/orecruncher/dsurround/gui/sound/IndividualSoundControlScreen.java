@@ -4,13 +4,16 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
+import org.jspecify.annotations.NonNull;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 public class IndividualSoundControlScreen extends Screen {
@@ -120,16 +123,16 @@ public class IndividualSoundControlScreen extends Screen {
             GameUtils.getSoundManager().tick(false);
     }
 
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return super.keyPressed(keyCode, scanCode, modifiers) || this.searchField.keyPressed(keyCode, scanCode, modifiers);
+    public boolean keyPressed(@NonNull KeyEvent event) {
+        return super.keyPressed(event) || this.searchField.keyPressed(event);
     }
 
     public void closeScreen() {
         GameUtils.setScreen(this.parent);
     }
 
-    public boolean charTyped(char codePoint, int modifiers) {
-        return this.searchField.charTyped(codePoint, modifiers);
+    public boolean charTyped(@NonNull CharacterEvent event) {
+        return this.searchField.charTyped(event);
     }
 
     public void extractRenderState(final GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTicks) {
@@ -150,8 +153,8 @@ public class IndividualSoundControlScreen extends Screen {
         if (this.soundConfigList.isMouseOver(mouseX, mouseY)) {
             final IndividualSoundControlListEntry entry = this.soundConfigList.getEntryAt(mouseX, mouseY);
             if (entry != null) {
-                final List<FormattedCharSequence> toolTip = entry.getToolTip(mouseX, mouseY);
-                context.tooltip(this.font, toolTip, mouseX, mouseY + TOOLTIP_Y_OFFSET);
+                final var toolTip = entry.getToolTip(mouseX, mouseY).stream().map(ClientTooltipComponent::create).toList();
+                context.tooltip(this.font, toolTip, mouseX, mouseY + TOOLTIP_Y_OFFSET, DefaultTooltipPositioner.INSTANCE, null);
             }
         }
     }

@@ -2,7 +2,6 @@ package org.orecruncher.dsurround.config.biome;
 
 import dev.architectury.hooks.level.biome.BiomeHooks;
 import dev.architectury.hooks.level.biome.BiomeProperties;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.Identifier;
@@ -147,16 +146,6 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         return this.properties != null ? this.properties.getClimateProperties().getDownfall() : 0.0F;
     }
 
-    public float getBaseTemperature() {
-        return this.properties != null ? this.properties.getClimateProperties().getTemperature() : 0.5F;
-    }
-
-    public float getTemperature(@Nullable BlockPos pos, int seaLevel) {
-        if (this.biome == null || pos == null)
-            return this.getBaseTemperature();
-        return this.biome.getTemperature(pos, seaLevel);
-    }
-
     void setAdditionalSoundChance(final Script chance) {
         this.additionalSoundChance = chance;
     }
@@ -234,6 +223,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     }
 
     private void setDefaultMusic() {
+        // TODO: Sort this out
+        /*
         if (this.properties == null)
             return;
 
@@ -245,7 +236,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
                     var entry = new AcousticEntry(factory, null);
                     this.musicSounds.add(entry);
                 });
-
+*/
     }
 
     public void update(final BiomeConfigRule entry) {

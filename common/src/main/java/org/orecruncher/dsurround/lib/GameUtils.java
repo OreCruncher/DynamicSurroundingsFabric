@@ -9,6 +9,7 @@ import net.minecraft.client.gui.components.toasts.ToastManager;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleEngine;
+import net.minecraft.client.particle.ParticleResources;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.core.RegistryAccess;
@@ -46,6 +47,10 @@ public final class GameUtils {
 
     public static ParticleEngine getParticleManager() {
         return getMC().particleEngine;
+    }
+
+    public static ParticleResources getParticleResources() {
+        return getParticleManager().resourceManager;
     }
 
     public static ToastManager getToastManager() {

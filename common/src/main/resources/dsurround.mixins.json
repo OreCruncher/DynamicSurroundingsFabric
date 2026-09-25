@@ -19,12 +19,11 @@
     "core.MixinFogRenderer",
     "core.MixinMinecraftClient",
     "core.MixinMusic",
-    "core.MixinParticleEngine",
     "core.MixinParticleResources",
     "core.MixinParticleTypes",
     "core.MixinRainSplashParticle",
     "core.MixinSoundOptionsScreen",
-    "core.MixinTagCollector",
+    "core.MixinClientPacketListener",
     "core.MixinWorld"
   ],
   "server": [],

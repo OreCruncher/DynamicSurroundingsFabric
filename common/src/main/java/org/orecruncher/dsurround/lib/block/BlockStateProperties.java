@@ -1,13 +1,13 @@
 package org.orecruncher.dsurround.lib.block;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import joptsimple.internal.Strings;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
-import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -20,18 +20,18 @@ public class BlockStateProperties {
 
     public static final BlockStateProperties NONE = new BlockStateProperties();
 
-    private final List<Property.Value<?>> props;
+    private final Map<Property<?>, Comparable<?>> props;
 
     private BlockStateProperties() {
-        this.props = ImmutableList.of();
+        this.props = ImmutableMap.of();
     }
 
     public BlockStateProperties(final BlockState state) {
-        this(state.getValues().toList());
+        this.props = state.getValues().map(v -> Map.entry(v.property(), v.value())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    public BlockStateProperties(final List<Property.Value<?>> properties) {
-        this.props = properties;
+    public BlockStateProperties(final Map<Property<?>, Comparable<?>> props) {
+        this.props = props;
     }
 
     /**
@@ -43,9 +43,9 @@ public class BlockStateProperties {
      */
     public boolean matches(final BlockState state) {
         try {
-            for (final var pv : this.props) {
-                final Comparable<?> comp = state.getValue(pv.property());
-                if (!comp.equals(pv.value()))
+            for (final var kvp : this.props.entrySet()) {
+                final Comparable<?> comp = state.getValue(kvp.getKey());
+                if (!comp.equals(kvp.getValue()))
                     return false;
             }
             return true;
@@ -74,20 +74,16 @@ public class BlockStateProperties {
      * @param m Property map to evaluate
      * @return true if all the property values in the collection are present in the map; false otherwise
      */
-    public boolean matches(final List<Property.Value<?>> m) {
+    public boolean matches(final Map<Property<?>, Comparable<?>> m) {
         try {
             if (this.props == m)
                 return true;
             if (this.props.size() > m.size())
                 return false;
-            for (final var pv : this.props) {
-                for (var entry : m) {
-                    if (entry.property().equals(pv.property())) {
-                        if (!entry.value().equals(pv.value())) {
-                            return false;
-                        }
-                    }
-                }
+            for (final Map.Entry<Property<?>, Comparable<?>> kvp : this.props.entrySet()) {
+                final Comparable<?> comp = m.get(kvp.getKey());
+                if (!comp.equals(kvp.getValue()))
+                    return false;
             }
             return true;
         } catch (final Throwable ignored) {
@@ -100,9 +96,9 @@ public class BlockStateProperties {
     @Override
     public int hashCode() {
         int code = 0;
-        for (final var pv : this.props) {
-            code = code * 31 + pv.property().hashCode();
-            code = code * 31 + pv.value().hashCode();
+        for (final var pv : this.props.entrySet()) {
+            code = code * 31 + pv.getKey().hashCode();
+            code = code * 31 + pv.getValue().hashCode();
         }
         return code;
     }
@@ -119,8 +115,8 @@ public class BlockStateProperties {
     public String getFormattedProperties() {
         if (this.props.isEmpty())
             return Strings.EMPTY;
-        final String txt = this.props.stream()
-                .map(kvp -> kvp.valueName() + "=" + kvp.value())
+        final String txt = this.props.entrySet().stream()
+                .map(kvp -> kvp.getKey().getName() + "=" + kvp.getValue().toString())
                 .collect(Collectors.joining(","));
         return "[" + txt + "]";
     }

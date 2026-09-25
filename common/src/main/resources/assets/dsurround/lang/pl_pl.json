@@ -183,12 +183,12 @@
   "dsurround.text.soundconfig.volume.help": "Współczynnik skalowania głośności stosowany podczas obliczania głośności wyjściowej dźwięku. Zwiększ, aby ciche dźwięki były głośniejsze; zmniejsz, aby głośne dźwięki były cichsze. 100% to normalna głośność.",
   "dsurround.text.config.soundconfiguration": "Konfiguruj dźwięki",
   "dsurround.text.config.soundconfiguration.tooltip": "Konfiguracja poszczególnych dźwięków w paczce modów",
-  "dsurround.text.keybind.section": "Dynamic Surroundings",
-  "dsurround.text.keybind.modConfigurationMenu": "Menu konfiguracji moda",
-  "dsurround.text.keybind.individualSoundConfig": "Konfiguracja poszczególnych dźwięków",
-  "dsurround.text.keybind.diagnosticHud": "Nakładka diagnostyczna",
   "dsurround.text.reloadassets": "[%1$s\u00a7r] \u00a7aPrzeładowane konfiguracje",
   "dsurround.text.seasons.spring": "Wiosna",
   "dsurround.text.toast.music.title": "Muzyka \"%1$s\"",
-  "dsurround.text.toast.music.author": "autorstwa %1$s"
+  "dsurround.text.toast.music.author": "autorstwa %1$s",
+  "key.category.dsurround.category": "Dynamic Surroundings",
+  "dsurround.text.keybind.modConfigurationMenu": "Menu konfiguracji moda",
+  "dsurround.text.keybind.individualSoundConfig": "Konfiguracja poszczególnych dźwięków",
+  "dsurround.text.keybind.diagnosticHud": "Nakładka diagnostyczna"
 }
