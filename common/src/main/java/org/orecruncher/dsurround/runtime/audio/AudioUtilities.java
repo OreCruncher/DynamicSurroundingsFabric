@@ -79,7 +79,7 @@ public final class AudioUtilities {
             sb.setLength(0);
 
             sb.append(sound.getClass().getSimpleName()).append("{");
-            sb.append(sound.getLocation());
+            sb.append(sound.getIdentifier());
             sb.append(", ").append(sound.getSource().getName());
             sb.append(", ").append(sound.getAttenuation());
             sb.append(String.format(", (%.2f,%.2f,%.2f)", sound.getX(), sound.getY(), sound.getZ()));

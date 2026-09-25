@@ -21,6 +21,8 @@ public class DimensionInfo {
     protected boolean alwaysOutside = false;
     protected boolean playBiomeSounds = true;
     protected boolean compassWobble = false;
+    // TODO: Expose in configs
+    protected boolean natural = true;
 
     DimensionInfo() {
         this.name = Constants.asId("no_dimension");
@@ -40,7 +42,8 @@ public class DimensionInfo {
         if (this.isFlatWorld)
             this.seaLevel = -60;
 
-        this.compassWobble = world.dimensionType().skybox() != DimensionType.Skybox.OVERWORLD;
+        this.natural = world.dimensionType().skybox() != DimensionType.Skybox.OVERWORLD;
+        this.compassWobble = !this.natural;
     }
 
     public void update(DimensionConfigRule config) {
@@ -93,6 +96,10 @@ public class DimensionInfo {
 
     public boolean getCompassWobble() {
         return this.compassWobble;
+    }
+
+    public boolean natural() {
+        return this.natural;
     }
 
 }

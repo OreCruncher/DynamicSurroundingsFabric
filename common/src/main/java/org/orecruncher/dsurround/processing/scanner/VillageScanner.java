@@ -6,13 +6,19 @@ import net.minecraft.world.level.block.entity.BellBlockEntity;
 import net.minecraft.world.phys.AABB;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 
 public class VillageScanner extends AbstractScanner {
 
     private static final double VILLAGE_RANGE = 64;
     private static final int SCAN_INTERVAL = 20;
 
+    private final IDimensionOracle dimensionOracle;
     private boolean isInVillage;
+
+    public VillageScanner(IDimensionOracle dimensionOracle) {
+        this.dimensionOracle = dimensionOracle;
+    }
 
     public void tick(long tickCount) {
         // Only check once a second
@@ -24,7 +30,7 @@ public class VillageScanner extends AbstractScanner {
         Player player = GameUtils.getPlayer().orElseThrow();
 
         // Only for surface worlds.  Other types of worlds are interpreted as not having villages.
-        if (world.dimensionType().natural()) {
+        if (this.dimensionOracle.natural()) {
             var playerEyes = player.getEyePosition();
             AABB box = AABB.unitCubeFromLowerCorner(playerEyes).inflate(VILLAGE_RANGE);
 

@@ -7,7 +7,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.config.SyntheticBiome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -33,10 +33,10 @@ public final class BiomeScanner extends AbstractScanner {
     private Biome surveyedBiome = null;
     private BlockPos surveyedPosition = BlockPos.ZERO;
     private final IBiomeLibrary biomeLibrary;
-    private final IDimensionInformation dimensionInformation;
+    private final IDimensionOracle dimensionInformation;
     private final CeilingScanner ceilingScanner;
 
-    public BiomeScanner(IBiomeLibrary biomeLibrary, IDimensionInformation dimensionInformation, CeilingScanner ceilingScanner) {
+    public BiomeScanner(IBiomeLibrary biomeLibrary, IDimensionOracle dimensionInformation, CeilingScanner ceilingScanner) {
         this.biomeLibrary = biomeLibrary;
         this.dimensionInformation = dimensionInformation;
         this.ceilingScanner = ceilingScanner;

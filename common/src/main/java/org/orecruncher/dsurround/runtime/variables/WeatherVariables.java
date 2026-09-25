@@ -4,9 +4,11 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
+import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 
 public final class WeatherVariables extends VariableSet {
 
+    private final ILevelOracle levelOracle;
     private final ISeasonalInformation seasonalInformation;
 
     private float temperature;
@@ -17,8 +19,9 @@ public final class WeatherVariables extends VariableSet {
     private boolean isFrosty;
     private boolean canWaterFreeze;
 
-    public WeatherVariables(ISeasonalInformation seasonalInformation) {
+    public WeatherVariables(ILevelOracle levelOracle, ISeasonalInformation seasonalInformation) {
         super("weather");
+        this.levelOracle = levelOracle;
         this.seasonalInformation = seasonalInformation;
     }
 
@@ -26,12 +29,11 @@ public final class WeatherVariables extends VariableSet {
     public void tick() {
         if (GameUtils.isInGame()) {
             final var player = GameUtils.getPlayer().orElseThrow();
-            final var world = player.level();
-            this.rainIntensity = world.getRainLevel(1F);
-            this.thunderIntensity = world.getThunderLevel(1F);
-            this.isRaining = world.isRaining();
-            this.isThundering = world.isThundering();
-            this.temperature = this.seasonalInformation.getTemperature(player.blockPosition());
+            this.rainIntensity = this.levelOracle.getRainLevel();
+            this.thunderIntensity = this.levelOracle.getThunderLevel();
+            this.isRaining = this.levelOracle.isRaining();
+            this.isThundering = this.levelOracle.isThundering();
+            this.temperature = this.seasonalInformation.getTemperatureAt(player.blockPosition());
             this.isFrosty = this.seasonalInformation.isColdTemperature(player.blockPosition());
             this.canWaterFreeze = this.seasonalInformation.isSnowTemperature(player.blockPosition());
         } else {

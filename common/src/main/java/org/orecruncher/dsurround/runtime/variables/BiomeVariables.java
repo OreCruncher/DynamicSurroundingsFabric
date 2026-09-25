@@ -8,24 +8,32 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.CachingSupplier;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
+import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 
 public final class BiomeVariables extends VariableSet {
 
     private final IBiomeLibrary biomeLibrary;
+    private final ILevelOracle levelOracle;
 
-    private final CachingSupplier<String> precipitationType = CachingSupplier.from(() -> {
-        var player = GameUtils.getPlayer().orElseThrow();
-        return this.biome.getPrecipitationAt(player.getOnPos(), player.level().getSeaLevel()).name();
-    });
-    private final CachingSupplier<String> id = CachingSupplier.from(() -> this.info.getBiomeId().toString());
-    private final CachingSupplier<String> biomeTraits = CachingSupplier.from(() -> this.info.getTraits().toString());
+    private final CachingSupplier<String> precipitationType;
+    private final CachingSupplier<String> id;
+    private final CachingSupplier<String> biomeTraits;
 
     private Biome biome;
     private BiomeInfo info;
 
-    public BiomeVariables(IBiomeLibrary biomeLibrary) {
+    public BiomeVariables(IBiomeLibrary biomeLibrary, ILevelOracle levelOracle) {
         super("biome");
         this.biomeLibrary = biomeLibrary;
+        this.levelOracle = levelOracle;
+
+        this.precipitationType = CachingSupplier.from(() -> {
+            var player = GameUtils.getPlayer().orElseThrow();
+            return this.levelOracle.precipitationAt(player.getOnPos()).name();
+        });
+
+        this.id = CachingSupplier.from(() -> this.info.getBiomeId().toString());
+        this.biomeTraits = CachingSupplier.from(() -> this.info.getTraits().toString());
     }
 
     @Override
@@ -33,7 +41,7 @@ public final class BiomeVariables extends VariableSet {
         Biome newBiome = null;
         if (GameUtils.isInGame()) {
             var player = GameUtils.getPlayer().orElseThrow();
-            newBiome = player.level().getBiome(player.getOnPos()).value();
+            newBiome = this.levelOracle.biome(player.getOnPos());
         }
         this.setBiome(newBiome);
     }

@@ -17,10 +17,10 @@ public final class BiomeConditionEvaluator {
     private final BiomeVariables biomeVariables;
     private final ExecutionContext context;
 
-    public BiomeConditionEvaluator(IBiomeLibrary biomeLibrary, IModLog logger) {
+    public BiomeConditionEvaluator(IModLog logger) {
         this.logger = logger;
         this.context = new ExecutionContext("BiomeConditions", logger);
-        this.biomeVariables = new BiomeVariables(biomeLibrary);
+        this.biomeVariables = ContainerManager.resolve(BiomeVariables.class);
         this.context.add(this.biomeVariables);
         this.context.configureScripting(ContainerManager.resolve(PlatformFunctions.class));
     }

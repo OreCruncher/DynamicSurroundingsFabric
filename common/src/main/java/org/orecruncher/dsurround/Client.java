@@ -32,6 +32,12 @@ import org.orecruncher.dsurround.processing.Handlers;
 import org.orecruncher.dsurround.processing.fog.HolisticFogRangeCalculator;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
+import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
+import org.orecruncher.dsurround.runtime.oracle.IMinecraftClock;
+import org.orecruncher.dsurround.runtime.oracle.impl.DimensionOracle;
+import org.orecruncher.dsurround.runtime.oracle.impl.LevelOracle;
+import org.orecruncher.dsurround.runtime.oracle.impl.MinecraftClock;
 import org.orecruncher.dsurround.sound.AudioPlayerDebug;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.AudioPlayer;
@@ -128,7 +134,9 @@ public final class Client {
                 .registerSingleton(ISoundLibrary.class, SoundLibrary.class)
                 .registerSingleton(IBiomeLibrary.class, BiomeLibrary.class)
                 .registerSingleton(IDimensionLibrary.class, DimensionLibrary.class)
-                .registerSingleton(IDimensionInformation.class, DimensionInformation.class)
+                .registerSingleton(IDimensionOracle.class, DimensionOracle.class)
+                .registerSingleton(ILevelOracle.class, LevelOracle.class)
+                .registerSingleton(IMinecraftClock.class, MinecraftClock.class)
                 // SeasonManager deferred as HANDLER is not initialized at this time
                 .registerFactory(ISeasonalInformation.class, () -> SeasonManager.HANDLER)
                 .registerSingleton(IBlockLibrary.class, BlockLibrary.class)

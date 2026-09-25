@@ -4,8 +4,11 @@ import org.orecruncher.dsurround.lib.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
+import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 
 public final class DiurnalVariables extends VariableSet {
+
+    private final ILevelOracle levelOracle;
 
     private float moonPhaseFactor;
     private float celestialAngle;
@@ -14,22 +17,22 @@ public final class DiurnalVariables extends VariableSet {
     private boolean isSunrise;
     private boolean isSunset;
 
-    public DiurnalVariables() {
+    public DiurnalVariables(ILevelOracle levelOracle) {
         super("diurnal");
+        this.levelOracle = levelOracle;
     }
 
     @Override
     public void tick() {
 
         if (GameUtils.isInGame()) {
-            var world = GameUtils.getWorld().orElseThrow();
-            DayCycle cycle = DayCycle.getCycle(world);
+            DayCycle cycle = this.levelOracle.currentDiurnalState();
             this.isDay = cycle == DayCycle.DAYTIME;
             this.isNight = cycle == DayCycle.NIGHTTIME;
             this.isSunrise = cycle == DayCycle.SUNRISE;
             this.isSunset = cycle == DayCycle.SUNSET;
-            this.moonPhaseFactor = DayCycle.getMoonSize(world);
-            this.celestialAngle = DayCycle.getCelestialAngle(world);
+            this.moonPhaseFactor = this.levelOracle.currentMoonSize();
+            this.celestialAngle = this.levelOracle.currentCelestialAngle();
         } else {
             this.isDay = false;
             this.isNight = false;

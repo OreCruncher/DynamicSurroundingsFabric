@@ -76,7 +76,7 @@ public final class SoundFXUtils {
 
         // Would have been cool to have a direction vec as a 3d as well as 3i.
         for (final Direction d : Direction.values()) {
-            SURFACE_DIRECTION_NORMALS[d.ordinal()] = Vec3.atLowerCornerOf(d.getNormal());
+            SURFACE_DIRECTION_NORMALS[d.ordinal()] = Vec3.atLowerCornerOf(d.getUnitVec3i());
         }
 
         // Pre-calculate the known vectors that will be projected off a sound source when casting about to establish
@@ -351,9 +351,9 @@ public final class SoundFXUtils {
         final BlockPos high = BlockPos.containing(pt2);
 
         // Determine the precipitation type at each point
-        final Biome.Precipitation rt1 = SEASONAL_INFORMATION.getActivePrecipitation(low);
-        final Biome.Precipitation rt2 = SEASONAL_INFORMATION.getActivePrecipitation(mid);
-        final Biome.Precipitation rt3 = SEASONAL_INFORMATION.getActivePrecipitation(high);
+        final Biome.Precipitation rt1 = SEASONAL_INFORMATION.getActivePrecipitationAt(low);
+        final Biome.Precipitation rt2 = SEASONAL_INFORMATION.getActivePrecipitationAt(mid);
+        final Biome.Precipitation rt3 = SEASONAL_INFORMATION.getActivePrecipitationAt(high);
 
         // Calculate the impact of weather on dampening
         float factor = calcFactor(rt1, 0.25F);

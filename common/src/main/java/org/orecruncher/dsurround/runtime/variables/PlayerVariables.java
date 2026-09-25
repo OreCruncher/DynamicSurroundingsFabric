@@ -5,10 +5,12 @@ import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
-import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
+import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 
 public final class PlayerVariables extends VariableSet {
+
+    private final ILevelOracle levelOracle;
 
     private boolean isSuffocating;
     private boolean canSeeSky;
@@ -32,8 +34,9 @@ public final class PlayerVariables extends VariableSet {
     private double y;
     private double z;
 
-    public PlayerVariables() {
+    public PlayerVariables(ILevelOracle levelOracle) {
         super("player");
+        this.levelOracle = levelOracle;
     }
 
     @Override
@@ -43,7 +46,6 @@ public final class PlayerVariables extends VariableSet {
             final var player = GameUtils.getPlayer().orElseThrow();
 
             var hm = player.getFoodData();
-            var world = player.level();
 
             this.isCreative = player.isCreative();
             this.isBurning = player.isOnFire();
@@ -65,8 +67,8 @@ public final class PlayerVariables extends VariableSet {
             this.z = player.getZ();
 
             this.isSuffocating = !player.isCreative() && player.getAirSupply() < 0;
-            this.canRainOn = world.canSeeSky(player.blockPosition().offset(0, 2, 0));
-            this.canSeeSky = this.canRainOn && LevelCompat.getTopSolidOrLiquidBlock(world, player.blockPosition()).getY() <= player.blockPosition().getY();
+            this.canRainOn = this.levelOracle.canSeeSky(player.blockPosition().offset(0, 2, 0));
+            this.canSeeSky = this.canRainOn && this.levelOracle.getTopSolidOrLiquidBlock(player.blockPosition()).getY() <= player.blockPosition().getY();
 
         } else {
 

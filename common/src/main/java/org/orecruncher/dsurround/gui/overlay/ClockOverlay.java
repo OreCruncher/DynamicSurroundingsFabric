@@ -11,7 +11,7 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.MinecraftClock;
+import org.orecruncher.dsurround.runtime.oracle.IMinecraftClock;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.gui.ColorGradient;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
@@ -28,8 +28,8 @@ public final class ClockOverlay extends AbstractOverlay {
 
     private final ITagLibrary tagLibrary;
     private final ISeasonalInformation seasonalInformation;
+    private final IMinecraftClock clock;
     private final Configuration config;
-    private final MinecraftClock clock;
     private final ColorGradient gradient;
     private final ObjectArray<Component> clockDisplay = new ObjectArray<>(2);
     private boolean showClock;
@@ -37,11 +37,11 @@ public final class ClockOverlay extends AbstractOverlay {
     private int renderHeight;
     private int color;
 
-    public ClockOverlay(Configuration config, ITagLibrary tagLibrary, ISeasonalInformation seasonalInformation) {
+    public ClockOverlay(Configuration config, ITagLibrary tagLibrary, ISeasonalInformation seasonalInformation, IMinecraftClock clock) {
         this.tagLibrary = tagLibrary;
         this.seasonalInformation = seasonalInformation;
+        this.clock = clock;
         this.config = config;
-        this.clock = new MinecraftClock();
         this.gradient = new ColorGradient(ColorPalette.DARK_VIOLET, ColorPalette.SUN_GLOW, 180F);
         this.showClock = false;
     }
@@ -55,7 +55,6 @@ public final class ClockOverlay extends AbstractOverlay {
             var offHandItem = player.getOffhandItem();
 
             this.showClock = this.doShowClock(mainHandItem) || this.doShowClock(offHandItem) || this.doShowClock(GameUtils.getMC().crosshairPickEntity);
-            this.clock.update(player.level());
 
             this.clockDisplay.clear();
             this.clockDisplay.add(this.clock.getFormattedTime());

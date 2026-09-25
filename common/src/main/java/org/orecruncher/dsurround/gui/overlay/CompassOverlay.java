@@ -12,7 +12,7 @@ import org.joml.Matrix3x2fStack;
 import org.joml.Matrix4f;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.Randomizer;
@@ -33,7 +33,7 @@ public final class CompassOverlay extends AbstractOverlay {
     private static final Identifier COMPASS_TEXTURE = Constants.asId("textures/compass.png");
 
     private final ITagLibrary tagLibrary;
-    private final IDimensionInformation dimensionInformation;
+    private final IDimensionOracle dimensionInformation;
     private final Configuration config;
     private final CompassWobble wobbler;
     private boolean showCompass;
@@ -41,7 +41,7 @@ public final class CompassOverlay extends AbstractOverlay {
     private float scale;
     private float spriteOffset;
 
-    public CompassOverlay(Configuration config, ITagLibrary tagLibrary, IDimensionInformation dimensionInformation) {
+    public CompassOverlay(Configuration config, ITagLibrary tagLibrary, IDimensionOracle dimensionInformation) {
         this.tagLibrary = tagLibrary;
         this.dimensionInformation = dimensionInformation;
         this.config = config;

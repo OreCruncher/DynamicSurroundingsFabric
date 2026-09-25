@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.eventing;
 import dev.architectury.event.events.client.ClientLifecycleEvent;
 import dev.architectury.event.events.client.ClientTickEvent;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.orecruncher.dsurround.lib.Library;
@@ -23,6 +24,7 @@ public final class ClientState {
     public static final IPhasedEvent<IClientDisconnect> CLIENT_DISCONNECT_EVENT = EventingFactory.createPrioritizedEvent();
     public static final IPhasedEvent<ITagSync> TAG_SYNC_EVENT = EventingFactory.createPrioritizedEvent();
     public static final IPhasedEvent<IResourceReload> RESOURCE_RELOAD_EVENT = EventingFactory.createPrioritizedEvent();
+    public static final IPhasedEvent<IClientLevelLoad> CLIENT_LEVEL_LOAD_EVENT = EventingFactory.createPrioritizedEvent();
 
     /**
      * Event raised when the client is starting
@@ -54,6 +56,14 @@ public final class ClientState {
     @FunctionalInterface
     public interface IClientTickEnd {
         void onTickEnd(Minecraft client);
+    }
+
+    /**
+     * Event raised when a ClientLevel is loaded
+     */
+    @FunctionalInterface
+    public interface IClientLevelLoad {
+        void onLevelLoad(ClientLevel level);
     }
 
     /**
@@ -98,6 +108,7 @@ public final class ClientState {
 
         ClientLifecycleEvent.CLIENT_STARTED.register(mc -> ClientState.CLIENT_START_EVENT.invoker().onStart(mc));
         ClientLifecycleEvent.CLIENT_STOPPING.register(mc -> ClientState.CLIENT_STOP_EVENT.invoker().onStopping(mc));
+        ClientLifecycleEvent.CLIENT_LEVEL_LOAD.register(clientLevel -> ClientState.CLIENT_LEVEL_LOAD_EVENT.invoker().onLevelLoad(clientLevel));
 
         // Connection detection is the first thing that processes, period.
         CLIENT_TICK_START_EVENT.register(ClientState::connectionDetector, HandlerPriority.VERY_HIGH);

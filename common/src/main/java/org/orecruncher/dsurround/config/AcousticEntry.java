@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.config;
 
-import com.google.common.base.MoreObjects;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.weighted.WeightTable;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
