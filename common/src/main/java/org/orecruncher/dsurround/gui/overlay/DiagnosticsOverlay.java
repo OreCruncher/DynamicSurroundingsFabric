@@ -33,8 +33,8 @@ import java.util.function.Supplier;
  */
 public final class DiagnosticsOverlay extends AbstractOverlay {
 
-    private static final int BACKGROUND_COLOR = 0x90505050;     // Very dark gray with alpha
-    private static final int FOREGROUND_COLOR = 0x01E0E0E0;     // Very light gray
+    private static final int BACKGROUND_COLOR = 0x90505050; // Very dark gray with alpha
+    private static final int FOREGROUND_COLOR = 0xFFE0E0E0; // Very light gray
 
     private static final Style BIOME_DIAGNOSTIC_TITLE_COLOR = Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE).withUnderlined(true);
     private static final Style BIOME_DIAGNOSTIC_HEADER_COLOR = Style.EMPTY.withColor(ColorPalette.AQUAMARINE);
@@ -257,10 +257,9 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
 
     private void drawText(GuiGraphicsExtractor context, ObjectArray<FormattedCharSequence> text, boolean alignLeft) {
         var textRenderer = GameUtils.getTextRenderer();
-        FormattedCharSequence component;
         int height = textRenderer.lineHeight;
         for (int i = 0; i < text.size(); ++i) {
-            component = text.get(i);
+            var component = text.get(i);
             if (component == null)
                 continue;
             int width = textRenderer.width(component);
