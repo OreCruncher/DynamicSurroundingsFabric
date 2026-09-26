@@ -80,6 +80,9 @@ public final class ColorPalette {
     public static final TextColor LEMON = of(254, 251, 1);
     public static final TextColor ELECTRIC_GREEN = of(0, 237, 1);
 
+    public static final TextColor DEBUG_TEXT_BACKGROUND = of("#505050");
+    public static final TextColor DEBUG_TEXT_FOREGROUND = of("#E0E0E0");
+
     public static int getRed(int rgb) {
         return ARGB.red(rgb);
     }
@@ -90,6 +93,18 @@ public final class ColorPalette {
 
     public static int getBlue(int rgb) {
         return ARGB.blue(rgb);
+    }
+
+    public static int getAlpha(int rgb) {
+        return ARGB.alpha(rgb);
+    }
+
+    public static int forTextRender(TextColor color) {
+        return withAlpha(color, 255);
+    }
+
+    public static int withAlpha(TextColor color, int alpha) {
+        return (alpha & 0xFF) << 24 | color.getValue();
     }
 
     private static TextColor of(ChatFormatting formatColor) {

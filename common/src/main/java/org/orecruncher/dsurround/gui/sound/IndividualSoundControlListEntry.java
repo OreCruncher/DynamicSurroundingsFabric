@@ -70,6 +70,9 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private final List<AbstractWidget> children = new ArrayList<>();
     private final List<FormattedCharSequence> cachedToolTip = new ArrayList<>();
 
+    private final int trueWidth;
+    private int actualWidth;
+
     private ConfigSoundInstance soundPlay;
 
     public IndividualSoundControlListEntry(final IndividualSoundConfigEntry data, final boolean enablePlay) {
@@ -100,6 +103,19 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         } else {
             this.playButton = null;
         }
+
+        this.trueWidth = this.calculateTrueWidth();
+        this.actualWidth = this.trueWidth;
+    }
+
+    // True width of the entry without any scrunching. Parent will set width which will cause the label
+    // to contract.
+    private int calculateTrueWidth() {
+        var width = GameUtils.getTextRenderer().width(this.label.getMessage());
+        width += this.stateButton.getWidth() + this.volume.getWidth() + 4 * CONTROL_SPACING;
+        if (this.playButton != null)
+            width += this.playButton.getWidth() + CONTROL_SPACING;
+        return width;
     }
 
     private static Component valueMap(Integer index) {
@@ -112,19 +128,19 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     }
 
     public int getWidth() {
-        int width = this.label.getWidth();
-        width += this.stateButton.getWidth() + this.volume.getWidth() + 4 * CONTROL_SPACING;
-        if (this.playButton != null)
-            width += this.playButton.getWidth() + CONTROL_SPACING;
-        return width;
+        return this.trueWidth;
     }
 
     public void setWidth(int width) {
-        var fixedWidth = this.getWidth() - this.label.getWidth();
-        width -= fixedWidth;
-        if (width < 100)
-            width = 100;
+        this.actualWidth = width;
+        width -= this.stateButton.getWidth() + this.volume.getWidth() + 4 * CONTROL_SPACING;
+        if (this.playButton != null)
+            width -= this.playButton.getWidth() + CONTROL_SPACING;
+        if (width < 50)
+            width = 50;
         this.label.setWidth(width);
+
+        this.updatePositions();
     }
 
     public void mouseMoved(double mouseX, double mouseY) {
@@ -164,13 +180,12 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         return null;
     }
 
-    @Override
-    public void extractContent(final GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick_) {
+    protected void updatePositions() {
         final int labelY = this.getContentY();
-        int rightMargin = this.getContentRight();
+        int rightMargin = this.getContentX() + this.actualWidth;
 
         this.label.setX(this.getContentX());
-        this.label.setY(labelY + 2);
+        this.label.setY(labelY + 3);
 
         // Need to position the other controls appropriately
         rightMargin -= this.volume.getWidth();
@@ -191,7 +206,10 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         this.stateButton.setX(rightMargin);
         this.stateButton.setY(labelY);
         //this.stateButton.setHeight(rowHeight);
+    }
 
+    @Override
+    public void extractContent(final GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick_) {
         for (final AbstractWidget w : this.children)
             w.extractRenderState(graphics, mouseX, mouseY, partialTick_);
     }

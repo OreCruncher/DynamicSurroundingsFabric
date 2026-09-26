@@ -29,12 +29,15 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 /***
- * Our debug and diagnostics overlay.  Derived from DebugHud.
+ * Our debug and diagnostics overlay.  Derived from Minecraft's debug overlay.
  */
 public final class DiagnosticsOverlay extends AbstractOverlay {
 
-    private static final int BACKGROUND_COLOR = 0x90505050; // Very dark gray with alpha
-    private static final int FOREGROUND_COLOR = 0xFFE0E0E0; // Very light gray
+    // With 26.2, text rendering accepts alpha on color, and will elide text rendering which have
+    // no/low alpha. Main thing is getting through the gatekeeper and let the color specified within the
+    // text component do the work.
+    private static final int BACKGROUND_COLOR = ColorPalette.withAlpha(ColorPalette.DEBUG_TEXT_BACKGROUND, 144); // Very dark gray with alpha
+    private static final int FOREGROUND_COLOR = ColorPalette.forTextRender(ColorPalette.DEBUG_TEXT_FOREGROUND); // Very light gray
 
     private static final Style BIOME_DIAGNOSTIC_TITLE_COLOR = Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE).withUnderlined(true);
     private static final Style BIOME_DIAGNOSTIC_HEADER_COLOR = Style.EMPTY.withColor(ColorPalette.AQUAMARINE);

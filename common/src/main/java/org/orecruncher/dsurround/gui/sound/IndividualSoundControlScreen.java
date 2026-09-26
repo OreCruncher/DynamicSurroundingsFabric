@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPosition
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
 import org.jspecify.annotations.NonNull;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -17,6 +18,9 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import java.util.function.Consumer;
 
 public class IndividualSoundControlScreen extends Screen {
+
+    private static final int TITLE_COLOR = ColorPalette.forTextRender(ColorPalette.MC_WHITE);
+    private static final Style TITLE_STYLE = Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE);
 
     private static final int TOP_OFFSET = 10;
     private static final int BOTTOM_OFFSET = 15;
@@ -53,7 +57,7 @@ public class IndividualSoundControlScreen extends Screen {
     }
 
     public IndividualSoundControlScreen(final Screen parent, final boolean enablePlay, Consumer<IndividualSoundControlScreen> onClose) {
-        super(Component.translatable("dsurround.text.keybind.individualSoundConfig"));
+        super(Component.translatable("dsurround.text.keybind.individualSoundConfig").withStyle(TITLE_STYLE));
         this.parent = parent;
         this.enablePlay = enablePlay;
         this.onClose = onClose;
@@ -110,6 +114,10 @@ public class IndividualSoundControlScreen extends Screen {
         this.addWidget(this.cancel);
 
         this.setFocused(this.searchField);
+
+        // Set the widths for the entries
+        var rowWidth = Mth.clamp(this.width, 200, SELECTION_WIDTH);
+        this.soundConfigList.setRowWidth(rowWidth);
     }
 
     public void tick() {
@@ -135,15 +143,13 @@ public class IndividualSoundControlScreen extends Screen {
         return this.searchField.charTyped(event);
     }
 
-    public void extractRenderState(final GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTicks) {
-        var renderWidth = Mth.clamp(context.guiWidth() - 20, 200, SELECTION_WIDTH);
-        this.soundConfigList.setRowWidth(renderWidth);
+    public void extractRenderState(final @NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTicks) {
         if (this.parent == null)
             this.extractTransparentBackground(context);
         else
             this.extractMenuBackground(context);
 
-        context.centeredText(this.font, this.title, this.width / 2, TOP_OFFSET, ColorPalette.MC_WHITE.getValue() | 0xFF000000);
+        context.centeredText(this.font, this.title, this.width / 2, TOP_OFFSET, TITLE_COLOR);
 
         this.soundConfigList.extractRenderState(context, mouseX, mouseY, partialTicks);
         this.searchField.extractRenderState(context, mouseX, mouseY, partialTicks);

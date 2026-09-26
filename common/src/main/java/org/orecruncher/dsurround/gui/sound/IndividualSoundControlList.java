@@ -16,11 +16,11 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class IndividualSoundControlList extends AbstractSelectionList<IndividualSoundControlListEntry> {
 
-    private final Screen parent;
     private final boolean enablePlay;
     private final ISoundLibrary soundLibrary;
     private int width;
@@ -32,20 +32,16 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
 
         this.soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
 
-        this.parent = parent;
         this.enablePlay = enablePlay;
         this.width = slotWidth;
 
         // Things like resizing will cause reconstruction and this preserves the existing state
         if (oldList != null) {
             this.source = oldList.source;
-            this.calculateRowWidth();
         }
 
         // Initialize the first pass
         this.setSearchFilter(filter);
-
-        //this.setRenderBackground(false);
     }
 
     @Override
@@ -59,13 +55,11 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
     }
 
     public void setRowWidth(int width) {
-        this.width = width - 40; // 40 for scrollbar
-        this.children().forEach(c -> c.setWidth(this.width));
-    }
-
-    @Override
-    protected int scrollBarX() {
-        return (this.parent.width + this.getRowWidth()) / 2 + 20;
+        this.width = width;
+        this.children().forEach(c -> {
+            c.setX(this.getRowLeft());
+            c.setWidth(this.width);
+        });
     }
 
     public void setSearchFilter(final Supplier<String> filterBy) {
@@ -82,16 +76,22 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
         // Load up sources if needed
         if (this.source == null) {
             this.source = new ArrayList<>(this.getSortedSoundConfigurations());
-            this.calculateRowWidth();
         }
 
-        // Get the filter string.  It's a simple contents check.
-        final Predicate<IndividualSoundConfigEntry> process;
+        Predicate<IndividualSoundConfigEntry> process;
 
-        if (StringUtils.isEmpty(filter))
+        // An empty filter matches everything
+        if (StringUtils.isEmpty(filter)) {
             process = (isc) -> true;
-        else
-            process = (isc) -> isc.soundEventIdProjected.contains(filter);
+        } else {
+            // Try compiling as a regular expression. If it fails just treat as a normal contains.
+            try {
+                var pattern = Pattern.compile(filter, Pattern.CASE_INSENSITIVE);
+                process = (isc) -> pattern.matcher(isc.soundEventIdProjected).find();
+            } catch (Throwable t) {
+                process = (isc) -> isc.soundEventIdProjected.contains(filter);
+            }
+        }
 
         IndividualSoundControlListEntry first = null;
         for (IndividualSoundConfigEntry cfg : this.source) {
@@ -102,8 +102,6 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
                 this.addEntry(entry);
             }
         }
-
-        this.calculateRowWidth();
 
         if (first != null)
             this.setFocused(first);
@@ -154,12 +152,5 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
         }
 
         return map.values().stream().sorted(IndividualSoundConfigEntry::compareTo).collect(Collectors.toList());
-    }
-
-    protected void calculateRowWidth() {
-        if (!this.children().isEmpty()) {
-            var width = this.children().stream().map(IndividualSoundControlListEntry::getWidth).max(Integer::compareTo);
-            width.ifPresent(w -> this.width = w);
-        }
     }
 }
