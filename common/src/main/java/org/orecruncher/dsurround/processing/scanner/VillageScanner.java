@@ -7,17 +7,18 @@ import net.minecraft.world.phys.AABB;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
+import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 
 public class VillageScanner extends AbstractScanner {
 
     private static final double VILLAGE_RANGE = 64;
     private static final int SCAN_INTERVAL = 20;
 
-    private final IDimensionOracle dimensionOracle;
+    private final ILevelOracle levelOracle;
     private boolean isInVillage;
 
-    public VillageScanner(IDimensionOracle dimensionOracle) {
-        this.dimensionOracle = dimensionOracle;
+    public VillageScanner(ILevelOracle levelOracle) {
+        this.levelOracle = levelOracle;
     }
 
     public void tick(long tickCount) {
@@ -26,19 +27,17 @@ public class VillageScanner extends AbstractScanner {
             return;
 
         this.isInVillage = false;
-        var world = GameUtils.getWorld().orElseThrow();
-        Player player = GameUtils.getPlayer().orElseThrow();
 
         // Only for surface worlds.  Other types of worlds are interpreted as not having villages.
-        if (this.dimensionOracle.natural()) {
+        if (this.levelOracle.natural()) {
+            Player player = GameUtils.getPlayer().orElseThrow();
             var playerEyes = player.getEyePosition();
             AABB box = AABB.unitCubeFromLowerCorner(playerEyes).inflate(VILLAGE_RANGE);
-
-            var villagerEntities = world.getEntitiesOfClass(Villager.class, box);
+            var villagerEntities = this.levelOracle.getEntitiesOfClass(Villager.class, box);
 
             if (!villagerEntities.isEmpty()) {
                 // We have villagers.  Now find a bell!
-                this.isInVillage = LevelCompat.doesBlockEntityExist(world, blockEntity -> blockEntity instanceof BellBlockEntity && blockEntity.getBlockPos().closerToCenterThan(playerEyes, VILLAGE_RANGE));;
+                this.isInVillage = this.levelOracle.doesBlockEntityExist(blockEntity -> blockEntity instanceof BellBlockEntity && blockEntity.getBlockPos().closerToCenterThan(playerEyes, VILLAGE_RANGE));;
             }
         }
     }

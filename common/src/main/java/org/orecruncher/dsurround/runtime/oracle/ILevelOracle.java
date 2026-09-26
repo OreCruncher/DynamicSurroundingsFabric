@@ -4,8 +4,14 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.AABB;
 import org.orecruncher.dsurround.lib.DayCycle;
+
+import java.util.List;
+import java.util.function.Predicate;
 
 public interface ILevelOracle {
 
@@ -93,4 +99,8 @@ public interface ILevelOracle {
      * Gets the current celestial angle
      */
     float currentCelestialAngle();
+
+    <T extends Entity> List<T> getEntitiesOfClass(final Class<T> baseClass, final AABB bb);
+
+    boolean doesBlockEntityExist(final Predicate<BlockEntity> predicate);
 }

@@ -42,7 +42,7 @@ public class DimensionInfo {
         if (this.isFlatWorld)
             this.seaLevel = -60;
 
-        this.natural = world.dimensionType().skybox() != DimensionType.Skybox.OVERWORLD;
+        this.natural = world.dimensionType().skybox() == DimensionType.Skybox.OVERWORLD;
         this.compassWobble = !this.natural;
     }
 

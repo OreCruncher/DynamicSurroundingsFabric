@@ -4,7 +4,10 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.eventing.ClientState;
@@ -15,6 +18,9 @@ import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
+
+import java.util.List;
+import java.util.function.Predicate;
 
 public final class LevelOracle implements ILevelOracle {
 
@@ -128,6 +134,16 @@ public final class LevelOracle implements ILevelOracle {
     @Override
     public float currentCelestialAngle() {
         return DayCycle.getCelestialAngle(this.level.get(), getPlayerPosition());
+    }
+
+    @Override
+    public <T extends Entity> List<T> getEntitiesOfClass(final Class<T> baseClass, final AABB bb) {
+        return this.level.get().getEntitiesOfClass(baseClass, bb);
+    }
+
+    @Override
+    public boolean doesBlockEntityExist(final Predicate<BlockEntity> predicate) {
+        return LevelCompat.doesBlockEntityExist(this.level.get(), predicate);
     }
 
     private static Vec3 getPlayerPosition() {
