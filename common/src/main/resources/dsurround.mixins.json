@@ -10,7 +10,7 @@
     "audio.MixinSoundBuffer",
     "audio.MixinSoundEngine",
     "audio.MixinSoundEvent",
-    "audio.MixinSoundLibrary",
+    "audio.MixinLibrary",
     "audio.MixinSource",
     "core.MixinBiome",
     "core.MixinClothAbstractConfigEntry",
@@ -24,7 +24,7 @@
     "core.MixinRainSplashParticle",
     "core.MixinSoundOptionsScreen",
     "core.MixinClientPacketListener",
-    "core.MixinWorld"
+    "core.MixinClientLevel"
   ],
   "server": [],
   "injectors": {
