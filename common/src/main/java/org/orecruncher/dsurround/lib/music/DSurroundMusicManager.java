@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.lib.music;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.network.chat.Component;
@@ -16,7 +14,6 @@ import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
-@Environment(EnvType.CLIENT)
 public final class DSurroundMusicManager extends MusicManager {
 
     private static final IModLog LOGGER = ModLog.createChild(ContainerManager.resolve(IModLog.class), "MusicManager");

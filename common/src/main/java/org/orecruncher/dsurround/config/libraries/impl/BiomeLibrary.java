@@ -49,7 +49,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
     public BiomeLibrary(IModLog logger) {
         this.logger = ModLog.createChild(logger, "BiomeLibrary");
-        this.biomeConditionEvaluator = new BiomeConditionEvaluator(logger);
+        this.biomeConditionEvaluator = new BiomeConditionEvaluator(this, logger);
     }
 
     @Override

@@ -9,6 +9,7 @@ import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.lib.scripting.engine.ScriptException;
 import org.orecruncher.dsurround.lib.scripting.engine.ScriptHelpers;
+import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 import org.orecruncher.dsurround.runtime.variables.BiomeVariables;
 
 public final class BiomeConditionEvaluator {
@@ -17,10 +18,10 @@ public final class BiomeConditionEvaluator {
     private final BiomeVariables biomeVariables;
     private final ExecutionContext context;
 
-    public BiomeConditionEvaluator(IModLog logger) {
+    public BiomeConditionEvaluator(IBiomeLibrary biomeLibrary, IModLog logger) {
         this.logger = logger;
         this.context = new ExecutionContext("BiomeConditions", logger);
-        this.biomeVariables = ContainerManager.resolve(BiomeVariables.class);
+        this.biomeVariables = new BiomeVariables(biomeLibrary, ContainerManager.resolve(ILevelOracle.class));
         this.context.add(this.biomeVariables);
         this.context.configureScripting(ContainerManager.resolve(PlatformFunctions.class));
     }

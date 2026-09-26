@@ -19,16 +19,23 @@ public class MixinSoundLibrary {
 
     /**
      * This will resize the capability buffer to accommodate additional settings
+     *
+     * NOTE: Looks like 26.2 is at 5 already
      */
-    @ModifyConstant(method = "init(Ljava/lang/String;Z)V", constant = @Constant(intValue = 3))
+    /*
+    @ModifyConstant(method = "init(Ljava/lang/String;Lcom/mojang/blaze3d/audio/DeviceList;Z)V", constant = @Constant(intValue = 3))
     private int dsurround$modifyIntBufferSize(int size) {
         return AudioUtilities.doEnhancedSounds() ? 5 : 3;
     }
+    */
 
     /**
      * Rewrite the capability buffer.  We only do this if advanced processing is enabled.
+     *
+     * NOTE: Looks like 26.2 is at 5 already
      */
-    @WrapOperation(method = "init(Ljava/lang/String;Z)V", at = @At(value = "INVOKE", target = "Lorg/lwjgl/openal/ALC10;alcCreateContext(JLjava/nio/IntBuffer;)J", remap = false))
+    /*
+    @WrapOperation(method = "init(Ljava/lang/String;Lcom/mojang/blaze3d/audio/DeviceList;Z)V", at = @At(value = "INVOKE", target = "Lorg/lwjgl/openal/ALC10;alcCreateContext(JLjava/nio/IntBuffer;)J", remap = false))
     private long dsurround$buildCapabilities(long deviceHandle, IntBuffer attrList, Operation<Long> original) {
         if (AudioUtilities.doEnhancedSounds()) {
             // Buffer should have been resized by the constant modification above
@@ -46,6 +53,8 @@ public class MixinSoundLibrary {
         }
     }
 
+     */
+
     /**
      * Modify the number of streaming sounds that can be handled by the underlying sound engine.  The number of
      * channels to set is driven by config settings.
@@ -53,7 +62,7 @@ public class MixinSoundLibrary {
      * @param v Existing value for the number of streaming sounds (should be 8)
      * @return The quantity of streaming sounds (should be at least 8)
      */
-    @ModifyConstant(method = "init(Ljava/lang/String;Z)V", constant = @Constant(intValue = 8))
+    @ModifyConstant(method = "init(Ljava/lang/String;Lcom/mojang/blaze3d/audio/DeviceList;Z)V", constant = @Constant(intValue = 8))
     public int dsurround$initialize(int v) {
         var config = ContainerManager.resolve(Configuration.SoundSystem.class);
         return config.streamingChannels;
