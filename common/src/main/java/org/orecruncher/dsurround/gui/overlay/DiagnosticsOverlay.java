@@ -34,7 +34,7 @@ import java.util.function.Supplier;
 public final class DiagnosticsOverlay extends AbstractOverlay {
 
     private static final int BACKGROUND_COLOR = 0x90505050;     // Very dark gray with alpha
-    private static final int FOREGROUND_COLOR = 0x00E0E0E0;     // Very light gray
+    private static final int FOREGROUND_COLOR = 0x01E0E0E0;     // Very light gray
 
     private static final Style BIOME_DIAGNOSTIC_TITLE_COLOR = Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE).withUnderlined(true);
     private static final Style BIOME_DIAGNOSTIC_HEADER_COLOR = Style.EMPTY.withColor(ColorPalette.AQUAMARINE);
@@ -235,6 +235,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
     public void render(GuiGraphicsExtractor context, float partialTick) {
         this.rendering.begin();
         if (this.renderHud) {
+            context.nextStratum();
             switch (this.displayDiagnostics) {
                 case 1: {
                     this.drawText(context, this.left, true);
@@ -254,23 +255,19 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
         return this.displayDiagnostics != 0 && GameUtils.isInGame() && !GameUtils.getMC().getDebugOverlay().showDebugScreen();
     }
 
-    private void drawText(GuiGraphicsExtractor context, ObjectArray<FormattedCharSequence> text, boolean left) {
+    private void drawText(GuiGraphicsExtractor context, ObjectArray<FormattedCharSequence> text, boolean alignLeft) {
         var textRenderer = GameUtils.getTextRenderer();
-        int m;
-        int l;
-        int k;
         FormattedCharSequence component;
-        int j;
-        int i = textRenderer.lineHeight;
-        for (j = 0; j < text.size(); ++j) {
-            component = text.get(j);
+        int height = textRenderer.lineHeight;
+        for (int i = 0; i < text.size(); ++i) {
+            component = text.get(i);
             if (component == null)
                 continue;
-            k = textRenderer.width(component);
-            l = left ? 2 : context.guiWidth() - 2 - k;
-            m = 2 + i * j;
-            context.fill(l - 1, m - 1, l + k + 1, m + i - 1, BACKGROUND_COLOR);
-            context.text(textRenderer, component, l, m, FOREGROUND_COLOR, false);
+            int width = textRenderer.width(component);
+            int left = alignLeft ? 2 : context.guiWidth() - 2 - width;
+            int top = 2 + height * i;
+            context.fill(left - 1, top - 1, left + width + 1, top + height - 1, BACKGROUND_COLOR);
+            context.text(textRenderer, component, left, top, FOREGROUND_COLOR, false);
         }
     }
 }

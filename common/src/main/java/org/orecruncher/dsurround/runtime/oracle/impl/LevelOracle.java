@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.CachingSupplier;
@@ -116,16 +117,20 @@ public final class LevelOracle implements ILevelOracle {
 
     @Override
     public DayCycle currentDiurnalState() {
-        return DayCycle.getCycle(this.level.get());
+        return DayCycle.getCycle(this.level.get(), getPlayerPosition());
     }
 
     @Override
     public float currentMoonSize() {
-        return DayCycle.getMoonSize(this.level.get());
+        return DayCycle.getMoonSize(this.level.get(), getPlayerPosition());
     }
 
     @Override
     public float currentCelestialAngle() {
-        return DayCycle.getCelestialAngle(this.level.get());
+        return DayCycle.getCelestialAngle(this.level.get(), getPlayerPosition());
+    }
+
+    private static Vec3 getPlayerPosition() {
+        return GameUtils.getMC().player.position();
     }
 }

@@ -70,7 +70,7 @@ public final class ClockOverlay extends AbstractOverlay {
             // Calculate the color this tick
             var world = player.level();
             // 0 is noon, 180 is midnight. Need to normalize so that midnight 0.
-            var angleDegrees = DayCycle.getCelestialAngle(world) + 180;
+            var angleDegrees = DayCycle.getCelestialAngle(world, player.position()) + 180;
             // Wrap
             if (angleDegrees >= 360)
                 angleDegrees -= 360;
