@@ -97,7 +97,6 @@ public class SereneSeasons extends AbstractSeasonProvider {
     @Override
     public float getTemperatureAt(BlockPos blockPos) {
         var biome = this.levelOracle.biomeHolder(blockPos);
-        var subSeason = this.seasonStateCache.get().getSubSeason();
-        return SeasonHooks.getBiomeTemperatureInSeason(subSeason, biome, blockPos, this.levelOracle.seaLevel());
+        return SeasonHooks.getBiomeTemperature(this.levelOracle.level(), biome, blockPos, this.levelOracle.seaLevel());
     }
 }

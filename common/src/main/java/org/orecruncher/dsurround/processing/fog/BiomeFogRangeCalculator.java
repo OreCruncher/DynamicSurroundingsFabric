@@ -55,9 +55,9 @@ public class BiomeFogRangeCalculator extends VanillaFogRangeCalculator {
             return data;
 
         var scale = 1F - this.activeScale;
-        var result = new FogData(data.mode);
-        result.end = data.end * scale;
-        result.start = data.start * scale * scale;
+        var result = new FogData();
+        result.environmentalStart = data.environmentalStart * scale * scale;
+        result.environmentalEnd = data.environmentalEnd * scale;
         return result;
     }
 

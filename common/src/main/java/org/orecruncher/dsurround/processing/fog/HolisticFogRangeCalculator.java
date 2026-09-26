@@ -3,13 +3,11 @@ package org.orecruncher.dsurround.processing.fog;
 import net.minecraft.client.renderer.fog.FogData;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
-import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,13 +21,9 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
     public HolisticFogRangeCalculator(IModLog logger, Configuration.FogOptions fogOptions) {
         this.logger = ModLog.createChild(logger, "HolisticFogRangeCalculator");
         this.fogOptions = fogOptions;
-
-        var biomeLibrary = ContainerManager.resolve(IBiomeLibrary.class);
-        var seasonInfo = ContainerManager.resolve(ISeasonalInformation.class);
-
-        this.calculators.add(new BiomeFogRangeCalculator(biomeLibrary, this.fogOptions));
-        this.calculators.add(new MorningFogRangeCalculator(seasonInfo, this.fogOptions));
-        this.calculators.add(new WeatherFogRangeCalculator(this.fogOptions));
+        this.calculators.add(ContainerManager.resolve(BiomeFogRangeCalculator.class));
+        this.calculators.add(ContainerManager.resolve(MorningFogRangeCalculator.class));
+        //this.calculators.add(ContainerManager.resolve(WeatherFogRangeCalculator.class));
     }
 
     @Override
@@ -49,26 +43,24 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
         if (!this.enabled())
             return data;
 
-        float start = data.start;
-        float end = data.end;
+        float start = data.environmentalStart;
+        float end = data.environmentalEnd;
 
         for (final IFogRangeCalculator calc : this.calculators) {
             if (calc.enabled()) {
                 final FogData result = calc.render(data, renderDistance, partialTick);
-                if (result.start > result.end || result.start < 0 || result.end < 0) {
-                    this.logger.warn("Fog calculator '%s' reporting invalid fog range (start %f, end %f); ignored", calc.getName(), result.start, result.end);
+                if (result.environmentalStart > result.environmentalEnd || result.environmentalStart < 0 || result.environmentalEnd < 0) {
+                    this.logger.warn("Fog calculator '%s' reporting invalid fog range (start %f, end %f); ignored", calc.getName(), result.environmentalStart, result.environmentalEnd);
                 } else {
-                    start = Math.min(start, result.start);
-                    end = Math.min(end, result.end);
+                    start = Math.min(start, result.environmentalStart);
+                    end = Math.min(end, result.environmentalEnd);
                 }
             }
         }
 
-        var result = new FogData(data.mode);
-        result.shape = data.shape;
-        result.start = start;
-        result.end = end;
-        return result;
+        data.environmentalStart = start;
+        data.environmentalEnd = end;
+        return data;
     }
 
     @Override

@@ -16,7 +16,7 @@
     "core.MixinClothAbstractConfigEntry",
     "core.MixinEntity",
     "core.MixinEntityArrow",
-    "core.MixinFogRenderer",
+    "core.MixinAtmosphericFogEnvironment",
     "core.MixinMinecraftClient",
     "core.MixinMusic",
     "core.MixinParticleResources",

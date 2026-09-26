@@ -62,13 +62,13 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
             if (this.type.inRange(angle)) {
                 final float mid = (this.type.getStartAngle() + this.type.getEndAngle()) / 2F;
                 final float factor = (1F - Mth.abs(angle - mid) / (mid - this.type.getStartAngle())) * this.type.getIntensity();
-                final float shift = data.start * factor;
-                final float newEnd = data.end - shift;
-                final float newStart = Mth.clamp(data.start - shift * 2, this.type.getReserve() + 1, newEnd);
+                final float shift = data.environmentalStart * factor;
+                final float newEnd = data.environmentalEnd - shift;
+                final float newStart = Mth.clamp(data.environmentalStart - shift * 2, this.type.getReserve() + 1, newEnd);
 
-                var result = new FogData(data.mode);
-                result.start = newStart;
-                result.end = newEnd;
+                var result = new FogData();
+                result.environmentalStart = newStart;
+                result.environmentalEnd = newEnd;
                 return result;
             }
         }

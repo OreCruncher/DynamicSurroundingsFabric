@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.processing;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.fog.FogData;
-import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.eventing.ClientEventHooks;
@@ -20,7 +18,6 @@ public class FogHandler extends AbstractClientHandler {
 
         this.fogCalculator = new HolisticFogRangeCalculator(logger, config.fogOptions);
         this.lastData = new FogData();
-        this.lastData.start = this.lastData.end = 192F;
 
         ClientEventHooks.FOG_RENDER_EVENT.register(this::renderFog);
     }
@@ -39,9 +36,6 @@ public class FogHandler extends AbstractClientHandler {
     private void renderFog(FogData data, float renderDistance, float partialTick) {
         if (this.fogCalculator.enabled()) {
             this.lastData = this.fogCalculator.render(data, renderDistance, partialTick);
-            RenderSystem.setShaderFogStart(this.lastData.start);
-            RenderSystem.setShaderFogEnd(this.lastData.end);
-            RenderSystem.setShaderFogShape(this.lastData.shape);
         } else {
             // Preserve for diagnostic trace even though action was not taken
             this.lastData = data;
@@ -50,7 +44,7 @@ public class FogHandler extends AbstractClientHandler {
 
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
-        var text = "Fog: %f/%f, %s, %s ".formatted(this.lastData.start, this.lastData.end, this.lastData.shape, this.lastData.mode);
+        var text = "Fog: %f/%f".formatted(this.lastData.environmentalStart, this.lastData.environmentalEnd);
         var disabledText = this.fogCalculator.getDisabledText();
         if (disabledText.isPresent())
             text += disabledText.get();

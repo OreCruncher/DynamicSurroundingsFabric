@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.config.data.DimensionConfigRule;
 import org.orecruncher.dsurround.config.DimensionInfo;
@@ -23,7 +21,6 @@ public final class DimensionLibrary implements IDimensionLibrary {
 
     private final IModLog logger;
     private final ObjectArray<DimensionConfigRule> dimensionRules = new ObjectArray<>();
-    private final Map<ResourceKey<Level>, DimensionInfo> configs = new Object2ObjectOpenHashMap<>();
     private int version = 0;
 
     public DimensionLibrary(IModLog logger) {
@@ -40,7 +37,6 @@ public final class DimensionLibrary implements IDimensionLibrary {
             return;
         }
         
-        this.configs.clear();
         this.dimensionRules.clear();
 
         var findResults = resourceUtilities.findModResources(CODEC, FILE_NAME);
@@ -51,13 +47,9 @@ public final class DimensionLibrary implements IDimensionLibrary {
 
     @Override
     public DimensionInfo getData(final Level world) {
-        return this.configs.computeIfAbsent(
-                world.dimension(),
-                key -> {
-                    var dimInfo = new DimensionInfo(world);
-                    this.dimensionRules.forEach(dimInfo::update);
-                    return dimInfo;
-                });
+        var dimInfo = new DimensionInfo(world);
+        this.dimensionRules.forEach(dimInfo::update);
+        return dimInfo;
     }
 
     @Override

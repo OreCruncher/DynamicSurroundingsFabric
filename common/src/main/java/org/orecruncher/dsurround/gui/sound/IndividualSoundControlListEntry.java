@@ -191,29 +191,28 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
 
     @Override
     public void extractContent(final GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick_) {
-        final var font = GameUtils.getTextRenderer();
-        final int labelY = rowTop + (rowHeight - font.lineHeight) / 2;
+        final int labelY = this.getContentY() - 2;
+        int rightMargin = this.getWidth();
 
-        this.label.setX(rowLeft);
+        this.label.setX(this.getContentX());
         this.label.setY(labelY);
 
         // Need to position the other controls appropriately
-        int rightMargin = rowLeft + rowWidth;
         this.volume.setX(rightMargin - this.volume.getWidth());
-        this.volume.setY(rowTop);
-        this.volume.setHeight(rowHeight);
+        this.volume.setY(labelY);
+        //this.volume.setHeight(rowHeight);
         rightMargin -= this.volume.getWidth() + CONTROL_SPACING;
 
         if (this.playButton != null) {
             this.playButton.setX(rightMargin - this.playButton.getWidth());
-            this.playButton.setY(rowTop);
-            this.playButton.setHeight(rowHeight);
+            this.playButton.setY(labelY);
+            //this.playButton.setHeight(rowHeight);
             rightMargin -= this.playButton.getWidth() + CONTROL_SPACING;
         }
 
         this.stateButton.setX(rightMargin - this.stateButton.getWidth());
-        this.stateButton.setY(rowTop);
-        this.stateButton.setHeight(rowHeight);
+        this.stateButton.setY(labelY);
+        //this.stateButton.setHeight(rowHeight);
 
         for (final AbstractWidget w : this.children)
             w.extractRenderState(graphics, mouseX, mouseY, partialTick_);

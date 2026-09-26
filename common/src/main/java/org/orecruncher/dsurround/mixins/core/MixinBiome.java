@@ -21,6 +21,7 @@ public abstract class MixinBiome {
      *
      * @param cir Mixin callback result
      */
+    /*
     @Inject(method = "getFogColor()I", at = @At("HEAD"), cancellable = true)
     public void dsurround$getFogColor(CallbackInfoReturnable<Integer> cir) {
         if (MixinHelpers.fogOptions.enableFogEffects && MixinHelpers.fogOptions.enableBiomeFog) {
@@ -31,6 +32,8 @@ public abstract class MixinBiome {
         }
     }
 
+     */
+
     /**
      * Check the biome configuration for a background soundtrack for the biome. If one is present,
      * return it. Otherwise, let Minecraft do its thing.
@@ -38,6 +41,7 @@ public abstract class MixinBiome {
      * NOTE: If a biome has been configured with a background sound via data pack, it is folded into
      * the selection weight table.
      */
+    /*
     @Inject(method = "getBackgroundMusic()Ljava/util/Optional;", at = @At("HEAD"), cancellable = true)
     private void dsurround$getBackgroundMusic(CallbackInfoReturnable<Optional<Music>> cir) {
         ReflectionHelper.cast(this, Biome.class)
@@ -45,4 +49,6 @@ public abstract class MixinBiome {
                 .map(info -> info.getBackgroundMusic(Randomizer.current()))
                 .ifPresent(cir::setReturnValue);
     }
+
+     */
 }
