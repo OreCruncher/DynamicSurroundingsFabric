@@ -101,7 +101,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
             this.playButton = null;
         }
     }
-    
+
     private static Component valueMap(Integer index) {
         return switch(index) {
             case 0 -> STATE_DEFAULT;
@@ -120,9 +120,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     }
 
     public void setWidth(int width) {
-        var fixedWidth = this.stateButton.getWidth() + this.volume.getWidth() + 4 * CONTROL_SPACING;
-        if (this.playButton != null)
-            fixedWidth += this.playButton.getWidth() + CONTROL_SPACING;
+        var fixedWidth = this.getWidth() - this.label.getWidth();
         width -= fixedWidth;
         if (width < 100)
             width = 100;
@@ -155,29 +153,6 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         return ImmutableList.of();
     }
 
-    /*
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        AbstractWidget child = this.findChild(mouseX, mouseY);
-        if (child != null)
-            return child.mouseReleased(mouseX, mouseY, button);
-        return false;
-    }
-
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        AbstractWidget child = this.findChild(mouseX, mouseY);
-        if (child != null)
-            return child.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
-        return false;
-    }
-
-    public boolean mouseScrolled(double mouseX, double mouseY, double hAmount, double vAmount) {
-        AbstractWidget child = this.findChild(mouseX, mouseY);
-        if (child != null)
-            return child.mouseScrolled(mouseX, mouseY, hAmount, vAmount);
-        return false;
-    }
-    */
-
     private AbstractWidget findChild(double mouseX, double mouseY) {
         if (this.isMouseOver(mouseX, mouseY)) {
             for (AbstractWidget e : this.children) {
@@ -191,26 +166,29 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
 
     @Override
     public void extractContent(final GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick_) {
-        final int labelY = this.getContentY() - 2;
-        int rightMargin = this.getWidth();
+        final int labelY = this.getContentY();
+        int rightMargin = this.getContentRight();
 
         this.label.setX(this.getContentX());
-        this.label.setY(labelY);
+        this.label.setY(labelY + 2);
 
         // Need to position the other controls appropriately
-        this.volume.setX(rightMargin - this.volume.getWidth());
+        rightMargin -= this.volume.getWidth();
+        this.volume.setX(rightMargin);
         this.volume.setY(labelY);
         //this.volume.setHeight(rowHeight);
-        rightMargin -= this.volume.getWidth() + CONTROL_SPACING;
+        rightMargin -= CONTROL_SPACING;
 
         if (this.playButton != null) {
-            this.playButton.setX(rightMargin - this.playButton.getWidth());
+            rightMargin -= this.playButton.getWidth();
+            this.playButton.setX(rightMargin);
             this.playButton.setY(labelY);
             //this.playButton.setHeight(rowHeight);
-            rightMargin -= this.playButton.getWidth() + CONTROL_SPACING;
+            rightMargin -= CONTROL_SPACING;
         }
 
-        this.stateButton.setX(rightMargin - this.stateButton.getWidth());
+        rightMargin -= this.stateButton.getWidth();
+        this.stateButton.setX(rightMargin);
         this.stateButton.setY(labelY);
         //this.stateButton.setHeight(rowHeight);
 

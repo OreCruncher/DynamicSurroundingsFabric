@@ -49,6 +49,11 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
     }
 
     @Override
+    protected boolean entriesCanBeSelected() {
+        return false;
+    }
+
+    @Override
     public int getRowWidth() {
         return this.width;
     }

@@ -143,7 +143,7 @@ public class IndividualSoundControlScreen extends Screen {
         else
             this.extractMenuBackground(context);
 
-        context.centeredText(this.font, this.title, this.width / 2, TOP_OFFSET, ColorPalette.MC_WHITE.getValue());
+        context.centeredText(this.font, this.title, this.width / 2, TOP_OFFSET, ColorPalette.MC_WHITE.getValue() | 0xFF000000);
 
         this.soundConfigList.extractRenderState(context, mouseX, mouseY, partialTicks);
         this.searchField.extractRenderState(context, mouseX, mouseY, partialTicks);

@@ -16,7 +16,6 @@ public class MixinAtmosphericFogEnvironment {
 
     @Inject(method = "setupFog(Lnet/minecraft/client/renderer/fog/FogData;Lnet/minecraft/client/Camera;Lnet/minecraft/client/multiplayer/ClientLevel;FLnet/minecraft/client/DeltaTracker;)V", at = @At("RETURN"))
     private static void dsurround$renderFog(FogData fog, Camera camera, ClientLevel level, float renderDistance, DeltaTracker deltaTracker, CallbackInfo ci) {
-        // TODO: Validate delta ticks
-        ClientEventHooks.FOG_RENDER_EVENT.invoker().onRenderFog(fog, renderDistance, deltaTracker.getRealtimeDeltaTicks());
+        ClientEventHooks.FOG_RENDER_EVENT.invoker().onRenderFog(fog, renderDistance, deltaTracker.getGameTimeDeltaPartialTick(false));
     }
 }
