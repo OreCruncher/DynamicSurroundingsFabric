@@ -16,6 +16,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -70,9 +71,6 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private final List<AbstractWidget> children = new ArrayList<>();
     private final List<FormattedCharSequence> cachedToolTip = new ArrayList<>();
 
-    private final int trueWidth;
-    private int actualWidth;
-
     private ConfigSoundInstance soundPlay;
 
     public IndividualSoundControlListEntry(final IndividualSoundConfigEntry data, final boolean enablePlay) {
@@ -103,19 +101,6 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         } else {
             this.playButton = null;
         }
-
-        this.trueWidth = this.calculateTrueWidth();
-        this.actualWidth = this.trueWidth;
-    }
-
-    // True width of the entry without any scrunching. Parent will set width which will cause the label
-    // to contract.
-    private int calculateTrueWidth() {
-        var width = GameUtils.getTextRenderer().width(this.label.getMessage());
-        width += this.stateButton.getWidth() + this.volume.getWidth() + 4 * CONTROL_SPACING;
-        if (this.playButton != null)
-            width += this.playButton.getWidth() + CONTROL_SPACING;
-        return width;
     }
 
     private static Component valueMap(Integer index) {
@@ -127,12 +112,8 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         };
     }
 
-    public int getWidth() {
-        return this.trueWidth;
-    }
-
     public void setWidth(int width) {
-        this.actualWidth = width;
+        super.setWidth(width);
         width -= this.stateButton.getWidth() + this.volume.getWidth() + 4 * CONTROL_SPACING;
         if (this.playButton != null)
             width -= this.playButton.getWidth() + CONTROL_SPACING;
@@ -151,17 +132,15 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
 
     @Override
     public @NotNull List<? extends GuiEventListener> children() {
-        // TODO:  What?
         return this.children;
     }
 
+    @Override
     public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
         AbstractWidget child = this.findChild(event.x(), event.y());
         if (child != null)
             child.mouseClicked(event, doubleClick);
         return false;
-        // TODO: Is this better?
-        //return super.mouseClicked(event, doubleClick);
     }
 
     @Override
@@ -182,34 +161,33 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
 
     protected void updatePositions() {
         final int labelY = this.getContentY();
-        int rightMargin = this.getContentX() + this.actualWidth;
-
-        this.label.setX(this.getContentX());
-        this.label.setY(labelY + 3);
+        int rightMargin = this.getContentRight();
 
         // Need to position the other controls appropriately
         rightMargin -= this.volume.getWidth();
         this.volume.setX(rightMargin);
         this.volume.setY(labelY);
-        //this.volume.setHeight(rowHeight);
         rightMargin -= CONTROL_SPACING;
 
         if (this.playButton != null) {
             rightMargin -= this.playButton.getWidth();
             this.playButton.setX(rightMargin);
             this.playButton.setY(labelY);
-            //this.playButton.setHeight(rowHeight);
             rightMargin -= CONTROL_SPACING;
         }
 
         rightMargin -= this.stateButton.getWidth();
         this.stateButton.setX(rightMargin);
         this.stateButton.setY(labelY);
-        //this.stateButton.setHeight(rowHeight);
+        rightMargin -= CONTROL_SPACING;
+
+        this.label.setX(this.getContentX());
+        this.label.setY(labelY + 5);
+        this.label.setWidth(rightMargin);
     }
 
     @Override
-    public void extractContent(final GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick_) {
+    public void extractContent(final @NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick_) {
         for (final AbstractWidget w : this.children)
             w.extractRenderState(graphics, mouseX, mouseY, partialTick_);
     }

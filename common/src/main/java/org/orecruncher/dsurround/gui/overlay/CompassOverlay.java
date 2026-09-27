@@ -43,7 +43,7 @@ public final class CompassOverlay extends AbstractOverlay {
         this.config = config;
         this.wobbler = new CompassWobble();
         this.showCompass = false;
-        this.spriteOffset = (int)this.config.compassAndClockOptions.compassStyle.getSpriteNumber();
+        this.spriteOffset = this.config.compassAndClockOptions.compassStyle.getSpriteNumber();
         this.scale = (float)this.config.compassAndClockOptions.scale;
     }
 
@@ -87,41 +87,27 @@ public final class CompassOverlay extends AbstractOverlay {
         if (!this.showCompass)
             return;
 
-        var matrixStack = context.pose();
+        float rotation;
 
-        try {
-
-            matrixStack.pushMatrix();
-
-            float rotation;
-
-            if (this.spinRandomly) {
-                rotation = this.wobbler.getRandomlySpinningRotation(partialTick);
-            } else {
-                final var player = GameUtils.getPlayer().orElseThrow();
-                rotation = player.getViewYRot(partialTick);
-            }
-
-            int direction = Mth.floor(((rotation * TEXTURE_SIZE) / 360F) + 0.5D) & (TEXTURE_SIZE - 1);
-            int x = (int)((context.guiWidth() - BAND_WIDTH * this.scale) / 2F);
-            int y = (int)((context.guiHeight() - CROSSHAIR_OFFSET - BAND_HEIGHT * this.scale) / 2F);
-
-            matrixStack.scale(this.scale, this.scale, matrixStack);
-            x /= this.scale;
-            y /= this.scale;
-
-            int v = this.spriteOffset * (BAND_HEIGHT * 2);
-
-            if (direction >= HALF_TEXTURE_SIZE) {
-                direction -= HALF_TEXTURE_SIZE;
-                v += BAND_HEIGHT;
-            }
-
-            context.blitSprite(RenderPipelines.GUI_TEXTURED, COMPASS_TEXTURE, BAND_WIDTH, BAND_HEIGHT, direction, v, x, y, BAND_WIDTH, BAND_HEIGHT);
-
-        } finally {
-            matrixStack.popMatrix();
+        if (this.spinRandomly) {
+            rotation = this.wobbler.getRandomlySpinningRotation(partialTick);
+        } else {
+            final var player = GameUtils.getPlayer().orElseThrow();
+            rotation = player.getViewYRot(partialTick);
         }
+
+        int direction = Mth.floor(((rotation * TEXTURE_SIZE) / 360F) + 0.5D) & (TEXTURE_SIZE - 1);
+        int x = (int) ((context.guiWidth() - BAND_WIDTH * this.scale) / 2F);
+        int y = (int) ((context.guiHeight() - CROSSHAIR_OFFSET - BAND_HEIGHT * this.scale) / 2F);
+
+        float v = this.spriteOffset * (BAND_HEIGHT * 2);
+
+        if (direction >= HALF_TEXTURE_SIZE) {
+            direction -= HALF_TEXTURE_SIZE;
+            v += BAND_HEIGHT;
+        }
+
+        context.blit(RenderPipelines.GUI_TEXTURED, COMPASS_TEXTURE, x, y, direction, v, BAND_WIDTH, BAND_HEIGHT, BAND_WIDTH, BAND_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE);
     }
 
     /**
