@@ -10,10 +10,6 @@ import org.orecruncher.dsurround.lib.config.ConfigurationData.*;
 public class Configuration extends ConfigurationData {
 
     @Property
-    @Comment("Configuration options for modifying logging behavior")
-    public final Logging logging = new Logging();
-
-    @Property
     @Comment("Configuration options for modifying Minecraft's Sound System behavior")
     public final SoundSystem soundSystem = new SoundSystem();
 
@@ -52,6 +48,16 @@ public class Configuration extends ConfigurationData {
     @Property
     @Comment("Configuration options for modded Music Manager")
     public final MusicManagerOptions musicManagerOptions = new MusicManagerOptions();
+
+    @Property
+    @Comment("Configuration options for modifying diagnostic behavior")
+    @TextStyle(color = "#0078D4", italic = true)
+    public final Logging logging = new Logging();
+
+    @Property
+    @Comment("Configuration options for features that are Works In Progress (WIP)")
+    @TextStyle(color = "#72FF13", italic = true)
+    public final WorksInProgressOptions worksInProgressOptions = new WorksInProgressOptions();
 
     @Property
     @Comment("Configuration options for other things")
@@ -337,6 +343,12 @@ public class Configuration extends ConfigurationData {
         @Slider
         @Comment("Reduce the wait time between music plays by a percentage")
         public int reduceWaitTime = 0;
+    }
+
+    public static class WorksInProgressOptions {
+        @Property
+        @Comment("Enable/disable waterfall cascade particle effect")
+        public boolean enableWaterfallCascade = true;
     }
 
     public static class OtherOptions {

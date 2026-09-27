@@ -92,7 +92,7 @@ public class ClothAPIFactory extends AbstractConfigScreenFactory {
 
     protected SubCategoryBuilder generate(final ConfigEntryBuilder builder, ConfigElement.PropertyGroup propertyGroup, Object instance) {
         SubCategoryBuilder categoryBuilder = builder
-                .startSubCategory(this.options.transformPropertyGroup(propertyGroup.getLanguageKey()))
+                .startSubCategory(this.options.transformPropertyGroup(propertyGroup.getLanguageKey(), propertyGroup.getTextStyle()))
                 .setTooltip(this.options.transformTooltip(propertyGroup.getTooltip(this.options.getTooltipStyle())).toArray(new Component[0]));
 
         for (var prop : propertyGroup.getChildren()) {
@@ -115,7 +115,7 @@ public class ClothAPIFactory extends AbstractConfigScreenFactory {
     protected @Nullable FieldBuilder<?, ? extends AbstractConfigListEntry<?>, ?> generate(final ConfigEntryBuilder builder, ConfigElement.PropertyValue<?> pv, Object instance) {
         FieldBuilder<?, ? extends AbstractConfigListEntry<?>, ?> fieldBuilder = null;
 
-        var name = this.options.transformProperty(pv.getLanguageKey());
+        var name = this.options.transformProperty(pv.getLanguageKey(), pv.getTextStyle());
         var tooltip = this.generateToolTip(pv);
 
         if (pv instanceof ConfigElement.IntegerValue v) {

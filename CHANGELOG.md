@@ -1,3 +1,23 @@
+> ### DynamicSurroundings-1.21.1-0.4.6
+
+Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
+
+**All Loaders**
+* JAVA 21+
+* Architectury 13.0.8+
+
+**Fabric**
+* Fabric Loader >= 0.16.9
+* Fabric API >= 0.110.0+1.21.
+
+**NeoForge**
+* NeoForge 21.1.84+
+
+**Changes**
+* Added a new "Works in Progress" configuration section where WIP features can be enabled/disabled. WIP features are not final versions, and could be removed between releases.
+* Added a WIP configuration option to enable/disable the waterfall cascade effect.
+* Does anyone read the release notes?
+
 > ### DynamicSurroundings-1.21.1-0.4.5
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.

@@ -96,6 +96,7 @@ public final class Client {
                 .registerSingleton(Config.compassAndClockOptions)
                 .registerSingleton(Config.fogOptions)
                 .registerSingleton(Config.musicManagerOptions)
+                .registerSingleton(Config.worksInProgressOptions)
                 .registerSingleton(Config.otherOptions);
 
         Library.LOGGER.info("[%s] Boostrap completed", Constants.MOD_ID);

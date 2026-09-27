@@ -63,23 +63,48 @@ public class ConfigOptions {
     }
 
     public Component transformTitle() {
+        return this.transformTitle(this.titleStyle);
+    }
+
+    public Component transformTitle(Style style) {
+        if (style.isEmpty()) {
+            style = this.titleStyle;
+        }
         var txt = Localization.load(this.translationRoot + ".title");
-        return Component.literal(txt).withStyle(this.titleStyle);
+        return Component.literal(txt).withStyle(style);
     }
 
     public Component transformPropertyGroup(String langKey) {
+        return this.transformPropertyGroup(langKey, this.propertyGroupStyle);
+    }
+
+    public Component transformPropertyGroup(String langKey, Style style) {
+        if (style.isEmpty()) {
+            style = this.propertyGroupStyle;
+        }
         var txt = Localization.load(langKey);
-        return Component.literal(txt).withStyle(this.propertyGroupStyle);
+        return Component.literal(txt).withStyle(style);
     }
 
     public Component transformProperty(String langKey) {
+        return this.transformProperty(langKey, this.propertyStyle);
+    }
+
+    public Component transformProperty(String langKey, Style style) {
+        if (style.isEmpty()) {
+            style = this.propertyStyle;
+        }
         var txt = Localization.load(langKey);
-        return Component.literal(txt).withStyle(this.propertyStyle);
+        return Component.literal(txt).withStyle(style);
     }
 
     public Collection<Component> transformTooltip(Component tooltip) {
+        return this.transformTooltip(tooltip, this.tooltipStyle);
+    }
+
+    public Collection<Component> transformTooltip(Component tooltip, Style style) {
         if (this.wrapToolTip)
-            return GuiHelpers.getTrimmedTextCollection(tooltip, toolTipWidth, this.tooltipStyle);
+            return GuiHelpers.getTrimmedTextCollection(tooltip, toolTipWidth, style);
         var result = new ArrayList<Component>();
         result.add(tooltip);
         return result;

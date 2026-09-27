@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.lib.config;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.lib.Localization;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
@@ -58,6 +59,25 @@ public abstract class ConfigElement<T> {
     public Optional<String> getComment() {
         var comment = this.getAnnotation(ConfigurationData.Comment.class);
         return comment.map(ConfigurationData.Comment::value);
+    }
+
+    public Style getTextStyle() {
+        var x = this.getAnnotation(ConfigurationData.TextStyle.class);
+        if (x.isPresent()) {
+            var textStyle = x.get();
+            Style workingStyle = Style.EMPTY;
+            try {
+                if (!textStyle.color().isEmpty()) {
+                    workingStyle = workingStyle.withColor(TextColor.parseColor(textStyle.color()).getOrThrow());
+                }
+                workingStyle = workingStyle
+                        .withItalic(textStyle.italic())
+                        .withBold(textStyle.bold())
+                        .withUnderlined(textStyle.underlined());
+                return workingStyle;
+            } catch(Throwable ignored) {}
+        }
+        return Style.EMPTY;
     }
 
     protected T get(Object instance) {

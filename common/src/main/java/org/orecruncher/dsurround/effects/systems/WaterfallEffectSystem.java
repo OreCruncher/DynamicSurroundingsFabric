@@ -299,6 +299,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     private static class WaterfallEffect extends AbstractParticleEmitterEffect {
 
         private static final Configuration.BlockEffects CONFIG = ContainerManager.resolve(Configuration.BlockEffects.class);
+        private static final Configuration.WorksInProgressOptions WIP_OPTIONS = ContainerManager.resolve(Configuration.WorksInProgressOptions.class);
 
         protected final double deltaY;
         protected int particleLimit;
@@ -370,7 +371,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
 
             }
 
-            if (this.strength > 1) {
+            if (this.strength > 1 && WIP_OPTIONS.enableWaterfallCascade) {
                 final double xOffset = RANDOM.nextFloat(-0.15F, 0.15F);
                 final double zOffset = RANDOM.nextFloat(-0.15F, 0.15F);
                 final double yOffset = RANDOM.nextFloat(-0.5F, 0.5F);
