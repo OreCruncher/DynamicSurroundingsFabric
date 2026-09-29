@@ -1,6 +1,9 @@
 {
   "dsurround.modname": "Dynamic Surroundings",
-  "dsurround.newversion.update": "Dostępna aktualizacja ",
+  "dsurround.newversion.current": "CURRENT",
+  "dsurround.newversion.update": "UPDATE",
+  "dsurround.newversion.discussion": "Discussion",
+  "dsurround.newversion.discussionspage": "Click to go to discussion forums",
   "dsurround.newversion.downloadpage": "Kliknij, aby przejść na stronę pobierania",
   "dsurround.newversion.curseforge": "CurseForge",
   "dsurround.newversion.modrinth": "Modrinth",
@@ -9,7 +12,6 @@
   "dsurround.mod.link.sources": "Repozytorium kodu źródłowego",
   "dsurround.mod.link.credits": "Zasługi i wzmianki zasobów dzwiękowych",
   "dsurround.mod.link.clothapi": "Osadzone: Cloth API (Fabric)",
-  "dsurround.mod.link.nashorn": "Osadzone: OpenJDK Nashorn JavaScript Engine",
   "dsurround.sound.caption.ice": "Lód kruszy się",
   "dsurround.sound.caption.wind": "Wiatr wieje",
   "dsurround.sound.caption.soulsand": "Maniakalny smiech",

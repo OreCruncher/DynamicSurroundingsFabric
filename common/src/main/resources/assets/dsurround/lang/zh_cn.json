@@ -1,6 +1,9 @@
 {
   "dsurround.modname": "动态环境/动态环绕(Dynamic Surroundings)",
-  "dsurround.newversion.update": "可用更新 ",
+  "dsurround.newversion.current": "CURRENT",
+  "dsurround.newversion.update": "UPDATE",
+  "dsurround.newversion.discussion": "Discussion",
+  "dsurround.newversion.discussionspage": "Click to go to discussion forums",
   "dsurround.newversion.downloadpage": "点击以获取下载页面",
   "dsurround.newversion.curseforge": "CurseForge",
   "dsurround.newversion.modrinth": "Modrinth",
@@ -9,7 +12,6 @@
   "dsurround.mod.link.sources": "源代码存储库",
   "dsurround.mod.link.credits": "声音资源致谢和归属",
   "dsurround.mod.link.clothapi": "内置：Cloth API（Fabric）",
-  "dsurround.mod.link.nashorn": "内置：OpenJDK Nashorn JavaScript 引擎",
   "dsurround.sound.caption.ice": "冰裂",
   "dsurround.sound.caption.wind": "刮风",
   "dsurround.sound.caption.soulsand": "狂笑",

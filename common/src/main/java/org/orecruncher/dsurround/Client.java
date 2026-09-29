@@ -146,7 +146,7 @@ public final class Client {
         // Kick off version checking if configured.  This should run in parallel with initialization.
         if (Config.logging.enableModUpdateChatMessage) {
             versionInfo = CompletableFuture
-                    .supplyAsync(ContainerManager.resolve(IVersionChecker.class)::getUpdateText)
+                    .supplyAsync(ContainerManager.resolve(IVersionChecker.class)::getVersionResult)
                     .completeOnTimeout(Optional.empty(), 5, TimeUnit.SECONDS)
                     .exceptionally(t -> Optional.empty());
         } else {
@@ -202,9 +202,13 @@ public final class Client {
             var versionQueryResult = versionInfo.get();
             if (versionQueryResult.isPresent()) {
                 var result = versionQueryResult.get();
-                Library.LOGGER.info("Update to %s version %s is available", result.displayName(), result.version());
-                var player = GameUtils.getPlayer();
-                player.ifPresent(p -> p.sendSystemMessage(result.getChatText()));
+                if (result.updateAvailable()) {
+                    Library.LOGGER.info("Update to %s version %s is available", result.displayName(), result.version());
+                    var player = GameUtils.getPlayer();
+                    player.ifPresent(p -> p.sendSystemMessage(result.getChatText()));
+                } else {
+                    Library.LOGGER.info("%s is current", result.displayName());
+                }
             } else if(Config.logging.enableModUpdateChatMessage) {
                 Library.LOGGER.info("The mod version is current");
             }

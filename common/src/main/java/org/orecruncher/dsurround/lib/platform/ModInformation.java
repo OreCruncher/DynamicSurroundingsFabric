@@ -18,7 +18,8 @@ public final class ModInformation implements IMinecraftDirectories {
 
     // TODO: Move into external resources?
     private static final URI modUpdate = URI.create("https://raw.githubusercontent.com/OreCruncher/DynamicSurroundingsFabric/main/versions.json");
-    private static final String modCurseForge = "https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings-fabric-edition";
+    private static final String modDiscussions = "https://github.com/OreCruncher/DynamicSurroundingsFabric/discussions";
+    private static final String modCurseForge = "https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings";
     private static final String modModrinth = "https://modrinth.com/mod/dynamicsurroundingsfabric";
 
     private final String modId;
@@ -79,6 +80,10 @@ public final class ModInformation implements IMinecraftDirectories {
 
     public String modrinthLink() {
         return modModrinth;
+    }
+
+    public String discussionsLink() {
+        return modDiscussions;
     }
 
     public String getBranding() {

@@ -26,22 +26,20 @@ public record VersionInformation(Map<SemanticVersion, Map<SemanticVersion, Strin
      * @param modVersion        Mod version installed
      * @return Pair containing the newest version and associated information
      */
-    public Optional<Pair<SemanticVersion, String>> getNewestVersion(SemanticVersion minecraftVersion, SemanticVersion modVersion) {
+    public Optional<Pair<SemanticVersion, String>> getLatestRecommendedVersion(SemanticVersion minecraftVersion, SemanticVersion modVersion) {
 
         var recommendation = this.recommended.get(minecraftVersion);
         if (recommendation == null)
             return Optional.empty();
 
-        if (modVersion.compareTo(recommendation) < 0) {
-            String releaseNotes = Strings.EMPTY;
-            var releases = this.releases.get(minecraftVersion);
-            if (releases != null) {
-                releaseNotes = releases.get(recommendation);
-                if (releaseNotes == null)
-                    releaseNotes = Strings.EMPTY;
-            }
-            return Optional.of(Pair.of(recommendation, releaseNotes));
+        String releaseNotes = Strings.EMPTY;
+        var releases = this.releases.get(minecraftVersion);
+        if (releases != null) {
+            releaseNotes = releases.get(recommendation);
+            if (releaseNotes == null)
+                releaseNotes = Strings.EMPTY;
         }
-        return Optional.empty();
+
+        return Optional.of(Pair.of(recommendation, releaseNotes));
     }
 }

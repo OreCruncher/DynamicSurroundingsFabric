@@ -4,5 +4,5 @@ import java.util.Optional;
 
 public interface IVersionChecker {
 
-    Optional<VersionResult> getUpdateText();
+    Optional<VersionResult> getVersionResult();
 }

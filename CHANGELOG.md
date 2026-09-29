@@ -13,9 +13,14 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 **NeoForge**
 * NeoForge 21.1.84+
 
+**What's New**
+* Added /dsversion command that will query version status from my repo and report back in the local chat. Response will have clickable links so you can navigate to various information sources. This command will work regardless if the chat report on login is disabled. (Some modpack authors disable this.)
+* Added "Sound Credits" button to the Sound Options dialog. Clicking will display credit and attribution information about the sounds in the mod. (This information is also buried in the tool tips when hovering over sounds in the sound configuration menu.)
+
 **Changes**
+* Search box in the Individual Sound Configuration menu will accept regular expressions for filtering.
 * Added a new "Works in Progress" configuration section where WIP features can be enabled/disabled. WIP features are not final versions, and could be removed between releases.
-* Added a WIP configuration option to enable/disable the waterfall cascade effect.
+* Added a WIP configuration option to enable/disable the waterfall cascade effect. This does not affect the waterfall droplet effect. (NOTE: If you turned off waterfall particle effects to disable the cascade, you can turn it back on and then turn off the waterfall cascade specific feature.)
 * Does anyone read the release notes?
 
 > ### DynamicSurroundings-1.21.1-0.4.5

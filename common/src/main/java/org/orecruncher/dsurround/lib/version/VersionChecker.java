@@ -22,7 +22,7 @@ public class VersionChecker implements IVersionChecker {
     }
 
     @Override
-    public Optional<VersionResult> getUpdateText() {
+    public Optional<VersionResult> getVersionResult() {
         return this.getVersionInformation().flatMap(this::getUpdateText);
     }
 
@@ -52,11 +52,12 @@ public class VersionChecker implements IVersionChecker {
         var mcVersion = ModInformation.getMinecraftVersion();
         if (mcVersion.isPresent()) {
             var semVer = mcVersion.get();
-            var newest = info.getNewestVersion(semVer, this.modInfo.version());
+            var newest = info.getLatestRecommendedVersion(semVer, this.modInfo.version());
             if (newest.isPresent()) {
                 var version = newest.get().getFirst();
+                var updateAvailable = this.modInfo.version().compareTo(version) < 0;
                 var releaseNotes = newest.get().getSecond();
-                return Optional.of(new VersionResult(version.toString(), this.modInfo.modId(), ChatFormatting.stripFormatting(this.modInfo.displayName()), this.modInfo.curseForgeLink(), this.modInfo.modrinthLink(), releaseNotes));
+                return Optional.of(new VersionResult(version.toString(), this.modInfo.modId(), ChatFormatting.stripFormatting(this.modInfo.displayName()), this.modInfo.curseForgeLink(), this.modInfo.modrinthLink(), releaseNotes, this.modInfo.discussionsLink(), updateAvailable));
             }
         }
         return Optional.empty();

@@ -6,7 +6,15 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
-public record VersionResult(String version, String modId, String displayName, String downloadLocation, String downloadLocationModrinth, String releaseNotesLink) {
+public record VersionResult(
+        String version,
+        String modId,
+        String displayName,
+        String downloadLocation,
+        String downloadLocationModrinth,
+        String releaseNotesLink,
+        String discussionsLink,
+        boolean updateAvailable) {
 
     public Component getChatText() {
         var space = Component.literal(" ");
@@ -20,6 +28,10 @@ public record VersionResult(String version, String modId, String displayName, St
         var releaseNotesPage = Component.translatable(this.modId + ".newversion.releasenotespage")
                 .withColor(ColorPalette.CORN_FLOWER_BLUE.getValue());
         var releaseNotesHoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, releaseNotesPage);
+
+        var discussionsPage = Component.translatable(this.modId + ".newversion.discussionspage")
+                .withColor(ColorPalette.CORN_FLOWER_BLUE.getValue());
+        var discussionsHoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, discussionsPage);
 
         var downloadStyleCurse = Style.EMPTY
                 .withHoverEvent(downloadHoverEvent)
@@ -35,6 +47,13 @@ public record VersionResult(String version, String modId, String displayName, St
                 .withColor(ColorPalette.BRIGHT_CERULEAN.getValue())
                 .withStyle(releaseNotesStyle);
 
+        var discussionsStyle = Style.EMPTY
+                .withHoverEvent(discussionsHoverEvent)
+                .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, this.discussionsLink));
+        var discussionsHover = Component.translatable(this.modId + ".newversion.discussion")
+                .withColor(ColorPalette.APRICOT.getValue())
+                .withStyle(discussionsStyle);
+
         var downloadStyleModrinth = Style.EMPTY
                 .withHoverEvent(downloadHoverEvent)
                 .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, this.downloadLocationModrinth));
@@ -46,12 +65,18 @@ public record VersionResult(String version, String modId, String displayName, St
                 .append(" v").append(this.version)
                 .withColor(ColorPalette.SUN_GLOW.getValue());
 
-        return Component.translatable(this.modId + ".newversion.update")
+        var prefix = this.modId + ".newversion." + (this.updateAvailable ? "update" : "current");
+        return Component.translatable(prefix)
                 .withColor(ColorPalette.AQUAMARINE.getValue())
+                .append(space)
                 .append(modDisplayNameAndVersion)
                 .append(space)
                 .append(openBracket)
                 .append(releaseNotesHover)
+                .append(closeBracket)
+                .append(space)
+                .append(openBracket)
+                .append(discussionsHover)
                 .append(closeBracket)
                 .append(space)
                 .append(openBracket)

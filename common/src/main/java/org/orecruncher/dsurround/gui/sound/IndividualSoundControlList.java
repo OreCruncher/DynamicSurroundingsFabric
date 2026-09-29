@@ -16,6 +16,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class IndividualSoundControlList extends AbstractSelectionList<IndividualSoundControlListEntry> {
@@ -80,13 +81,20 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
             this.calculateRowWidth();
         }
 
-        // Get the filter string.  It's a simple contents check.
-        final Predicate<IndividualSoundConfigEntry> process;
+        Predicate<IndividualSoundConfigEntry> process;
 
-        if (StringUtils.isEmpty(filter))
+        // An empty filter matches everything
+        if (StringUtils.isEmpty(filter)) {
             process = (isc) -> true;
-        else
-            process = (isc) -> isc.soundEventIdProjected.contains(filter);
+        } else {
+            // Try compiling as a regular expression. If it fails just treat as a normal contains.
+            try {
+                var pattern = Pattern.compile(filter, Pattern.CASE_INSENSITIVE);
+                process = (isc) -> pattern.matcher(isc.soundEventIdProjected).find();
+            } catch (Throwable t) {
+                process = (isc) -> isc.soundEventIdProjected.contains(filter);
+            }
+        }
 
         IndividualSoundControlListEntry first = null;
         for (IndividualSoundConfigEntry cfg : this.source) {
