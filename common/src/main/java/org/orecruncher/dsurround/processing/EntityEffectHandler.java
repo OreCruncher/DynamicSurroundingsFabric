@@ -66,7 +66,7 @@ public class EntityEffectHandler extends AbstractClientHandler {
             }
 
             if (info != null) {
-                if (inRange && info.isAlive() && !entity.isSpectator()) {
+                if (inRange && entity.isAlive() && !entity.isSpectator()) {
                     tickedEntities.add(entity.getId());
                     if (!info.isDefault()) {
                         this.entityEffectsTicked++;

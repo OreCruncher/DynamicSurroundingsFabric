@@ -17,9 +17,6 @@ public class ToolbarEffect extends EntityEffectBase {
 
     @Override
     public void tick(final EntityEffectInfo info) {
-        if (info.isRemoved())
-            return;
-
         final Player player = (Player) info.getEntity();
         var inventory = player.getInventory();
 

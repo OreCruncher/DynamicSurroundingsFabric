@@ -23,17 +23,11 @@ public class BreathEffect extends EntityEffectBase {
 
     @Override
     public void activate(final EntityEffectInfo info) {
-        if (info.isRemoved())
-            this.seed = 0;
-        else
-            this.seed = MurmurHash3.hash(info.getEntity().getId()) & 0xFFFF;
+        this.seed = MurmurHash3.hash(info.getEntityId()) & 0xFFFF;
     }
 
     @Override
     public void tick(final EntityEffectInfo info) {
-        if (info.isRemoved())
-            return;
-
         var entity = info.getEntity();
         if (!this.isBreathVisible(entity))
             return;

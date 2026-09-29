@@ -68,7 +68,7 @@ public class MarkdownParserTests {
         JsonObject linkObj = siblings.get(1).getAsJsonObject();
         assertEquals("our portal", linkObj.get("text").getAsString());
         assertTrue(linkObj.get("underlined").getAsBoolean());
-        assertEquals("blue", linkObj.get("color").getAsString());
+        assertEquals(ParserOptions.UNIFORM.defaultLinkColor(), linkObj.get("color").getAsString());
         assertEquals("minecraft:uniform", linkObj.get("font").getAsString());
 
         // Validate click event
@@ -127,7 +127,7 @@ public class MarkdownParserTests {
         assertNull(attribute);
         attribute = bulletObj.get("color");
         assertNotNull(attribute);
-        assertEquals("gray", attribute.getAsString());
+        assertEquals(ParserOptions.DEFAULT.defaultBulletColor(), attribute.getAsString());
 
         JsonObject unordContent = findElementByText(extra, "Unordered item");
         assertNotNull(unordContent);
@@ -139,7 +139,7 @@ public class MarkdownParserTests {
         assertNull(attribute);
         attribute = numberObj.get("color");
         assertNotNull(attribute);
-        assertEquals("gray", attribute.getAsString());
+        assertEquals(ParserOptions.DEFAULT.defaultBulletColor(), attribute.getAsString());
 
         JsonObject ordContent = findElementByText(extra, "Ordered item");
         assertNotNull(ordContent);
@@ -158,7 +158,7 @@ public class MarkdownParserTests {
         JsonObject headingWrapper = findParentHeadingByChildText(extra, "Server Status");
         assertNotNull(headingWrapper, "Heading wrapper object should exist");
         assertTrue(headingWrapper.get("bold").getAsBoolean());
-        assertEquals("gold", headingWrapper.get("color").getAsString());
+        assertEquals(ParserOptions.DEFAULT.defaultHeadingColor(), headingWrapper.get("color").getAsString());
     }
 
     @Test

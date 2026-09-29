@@ -38,13 +38,13 @@ public class MarkdownBlockQuoteTests {
         // Validate prefix element
         JsonObject prefixElement = siblings.get(0).getAsJsonObject();
         assertEquals("│ ", prefixElement.get("text").getAsString());
-        assertEquals("gray", prefixElement.get("color").getAsString());
+        assertEquals(options.defaultQuoteColor(), prefixElement.get("color").getAsString());
         assertEquals("minecraft:uniform", prefixElement.get("font").getAsString());
 
         // Validate quote text container element
         JsonObject quoteElement = siblings.get(1).getAsJsonObject();
         assertEquals("", quoteElement.get("text").getAsString());
-        assertEquals("gray", quoteElement.get("color").getAsString());
+        assertEquals(options.defaultQuoteColor(), quoteElement.get("color").getAsString());
         assertEquals("minecraft:uniform", quoteElement.get("font").getAsString());
 
         assertTrue(quoteElement.has("extra"));

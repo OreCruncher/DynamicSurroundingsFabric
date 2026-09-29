@@ -33,8 +33,6 @@ public class StepThroughBrushEffect extends EntityEffectBase {
         var currentCount = this.tickCount.getTickCount();
         if (currentCount > this.lastBrushCheck) {
             this.lastBrushCheck = currentCount + BRUSH_INTERVAL;
-            if (info.isRemoved())
-                return;
             var entity = info.getEntity();
             if (shouldProcess(entity)) {
                 var world = entity.level();

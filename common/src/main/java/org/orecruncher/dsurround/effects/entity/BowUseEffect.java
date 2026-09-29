@@ -13,11 +13,6 @@ public class BowUseEffect extends EntityEffectBase {
 
     @Override
     public void tick(EntityEffectInfo info) {
-        if (info.isRemoved()) {
-            this.lastActiveStack = ItemStack.EMPTY;
-            return;
-        }
-
         var entity = info.getEntity();
         final ItemStack currentStack = entity.getUseItem();
         if (isApplicable(currentStack)) {
