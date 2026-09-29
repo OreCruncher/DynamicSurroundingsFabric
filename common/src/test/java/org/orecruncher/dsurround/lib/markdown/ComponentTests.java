@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SuppressWarnings("unused")
-public class MarkdownComponentTests {
+public class ComponentTests {
 
     // Need this to bootstrap the Minecraft environment so tests run
     @BeforeAll
@@ -26,7 +26,7 @@ public class MarkdownComponentTests {
     void testConversionToMinecraftTextComponent() {
         String markdownInput = "# Welcome\n- <color:green>**Status Online**</color>\n- Visit [our site](https://example.com)";
 
-        Optional<Component> minecraftText = MarkdownHelper.markdownToComponent(markdownInput);
+        Optional<Component> minecraftText = MarkdownParser.markdownToComponent(markdownInput);
         assertTrue(minecraftText.isPresent());
 
         var plainText = minecraftText.get().getString();
@@ -39,7 +39,7 @@ public class MarkdownComponentTests {
     void testMinecraftTextComponentSiblingsAndStyling() {
         String markdownInput = "Hello **world**!";
 
-        Optional<Component> minecraftText = MarkdownHelper.markdownToComponent(markdownInput);
+        Optional<Component> minecraftText = MarkdownParser.markdownToComponent(markdownInput);
         assertTrue(minecraftText.isPresent());
 
         var siblings = minecraftText.get().getSiblings();
@@ -53,5 +53,16 @@ public class MarkdownComponentTests {
             }
         }
         assertTrue(foundBoldComponent, "Minecraft Text component should preserve bold styling flag");
+    }
+
+    @Test
+    public void testHoverEventUsesTranslationKey() {
+        String markdown = "[Link](https://example.com)";
+        String jsonOutput = MarkdownParser.parseToComponentJson(markdown);
+
+        assertNotNull(jsonOutput);
+        assertTrue(jsonOutput.contains("\"translate\":\"dsurround.text.markdown.hovertext\""), "Should use the specified translation resource key");
+        assertTrue(jsonOutput.contains("\"with\":[{\"text\":\"https://example.com\",\"color\":\"%s\"}]".formatted(Options.DEFAULT.linkColor())), "Should pass the URL as a dynamic parameter in 'with'");
+        assertFalse(jsonOutput.contains("Click to open:"), "Should ignore the hardcoded template when a translation key is present");
     }
 }

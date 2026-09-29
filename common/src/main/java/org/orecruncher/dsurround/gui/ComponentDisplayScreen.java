@@ -13,8 +13,8 @@ import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
-import org.orecruncher.dsurround.lib.markdown.MarkdownHelper;
-import org.orecruncher.dsurround.lib.markdown.ParserOptions;
+import org.orecruncher.dsurround.lib.markdown.MarkdownParser;
+import org.orecruncher.dsurround.lib.markdown.Options;
 
 import java.util.List;
 
@@ -190,7 +190,7 @@ public class ComponentDisplayScreen extends Screen {
     }
 
     public static ComponentDisplayScreen createFromMarkdown(Screen parent, Component title, String markdownDocument) {
-        Component document = MarkdownHelper.markdownToComponent(markdownDocument, ParserOptions.UNIFORM)
+        Component document = MarkdownParser.markdownToComponent(markdownDocument, Options.UNIFORM)
                 .orElse(Component.literal("Could not translate markdown document"));
         return create(parent, title, document);
     }
