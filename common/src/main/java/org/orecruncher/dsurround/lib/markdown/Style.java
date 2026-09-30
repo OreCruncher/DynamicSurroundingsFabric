@@ -26,13 +26,13 @@ class Style {
     }
 
     boolean matches(Style other) {
-        return Objects.equals(color, other.color) &&
-                Objects.equals(font, other.font) &&
-                Objects.equals(bold, other.bold) &&
-                Objects.equals(italic, other.italic) &&
-                Objects.equals(underline, other.underline) &&
-                Objects.equals(strikethrough, other.strikethrough) &&
-                Objects.equals(clickEventUrl, other.clickEventUrl) &&
-                Objects.equals(hoverEventText, other.hoverEventText);
+        return Objects.equals(this.color, other.color) &&
+                Objects.equals(this.font, other.font) &&
+                Objects.equals(this.bold, other.bold) &&
+                Objects.equals(this.italic, other.italic) &&
+                Objects.equals(this.underline, other.underline) &&
+                Objects.equals(this.strikethrough, other.strikethrough) &&
+                Objects.equals(this.clickEventUrl, other.clickEventUrl) &&
+                Objects.equals(this.hoverEventText, other.hoverEventText);
     }
 }

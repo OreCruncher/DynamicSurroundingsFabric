@@ -5,8 +5,8 @@ import java.util.List;
 
 class Scanner {
     private final CharSequence input;
-    private int pos = 0;
     private final int length;
+    private int pos = 0;
 
     public Scanner(CharSequence input) {
         this.input = input;
@@ -17,23 +17,23 @@ class Scanner {
         List<Token> tokens = new ArrayList<>();
         boolean atLineStart = true;
 
-        while (pos < length) {
-            char c = input.charAt(pos);
+        while (this.pos < this.length) {
+            char c = this.input.charAt(pos);
 
-            if (c == '\\' && pos + 1 < length) {
-                tokens.add(new Token(TokenType.TEXT, pos + 1, pos + 2, input));
-                pos += 2;
+            if (c == '\\' && this.pos + 1 < this.length) {
+                tokens.add(new Token(TokenType.TEXT, this.pos + 1, this.pos + 2, this.input));
+                this.pos += 2;
                 atLineStart = false;
             } else if (c == '\n') {
-                int newlineStart = pos;
-                pos++;
+                int newlineStart = this.pos;
+                this.pos++;
                 atLineStart = true;
 
                 // Check if the current line being ended is a blank line (only whitespace since last newline)
                 boolean isBlankLine = true;
                 int lookBack = newlineStart - 1;
-                while (lookBack >= 0 && input.charAt(lookBack) != '\n') {
-                    char prevC = input.charAt(lookBack);
+                while (lookBack >= 0 && this.input.charAt(lookBack) != '\n') {
+                    char prevC = this.input.charAt(lookBack);
                     if (prevC != ' ' && prevC != '\t' && prevC != '\r') {
                         isBlankLine = false;
                         break;
@@ -42,113 +42,115 @@ class Scanner {
                 }
 
                 boolean isBlockBoundary = false;
-                if (pos < length) {
-                    char nextC = input.charAt(pos);
+                if (this.pos < this.length) {
+                    char nextC = this.input.charAt(this.pos);
                     if (nextC == '\n' || nextC == '#' || nextC == '>') {
                         isBlockBoundary = true;
-                    } else if ((nextC == '-' || nextC == '*') && pos + 1 < length && input.charAt(pos + 1) == ' ') {
+                    } else if ((nextC == '-' || nextC == '*') && this.pos + 1 < this.length && this.input.charAt(this.pos + 1) == ' ') {
                         isBlockBoundary = true;
                     }
                 }
 
                 if (isBlankLine || isBlockBoundary) {
-                    tokens.add(new Token(TokenType.NEWLINE, newlineStart, newlineStart + 1, input));
+                    tokens.add(new Token(TokenType.NEWLINE, newlineStart, newlineStart + 1, this.input));
                 } else {
-                    tokens.add(new Token(TokenType.SOFT_BREAK, newlineStart, newlineStart + 1, input));
+                    tokens.add(new Token(TokenType.SOFT_BREAK, newlineStart, newlineStart + 1, this.input));
                 }
             } else if (atLineStart && c == '#') {
-                int headerStart = pos;
+                int headerStart = this.pos;
                 int hashCount = 0;
-                while (pos < length && input.charAt(pos) == '#' && hashCount < 6) {
+                while (this.pos < this.length && this.input.charAt(this.pos) == '#' && hashCount < 6) {
                     hashCount++;
-                    pos++;
+                    this.pos++;
                 }
-                if (pos < length && input.charAt(pos) == ' ') {
-                    pos++; // consume space
-                    tokens.add(new Token(TokenType.HEADER_MARKER, headerStart, pos, input, String.valueOf(hashCount)));
+                if (this.pos < this.length && this.input.charAt(this.pos) == ' ') {
+                    this.pos++; // consume space
+                    tokens.add(new Token(TokenType.HEADER_MARKER, headerStart, this.pos, this.input, String.valueOf(hashCount)));
 
-                    int textStart = pos;
-                    while (pos < length && input.charAt(pos) != '\n') {
-                        pos++;
+                    int textStart = this.pos;
+                    while (this.pos < this.length && this.input.charAt(this.pos) != '\n') {
+                        this.pos++;
                     }
-                    if (textStart < pos) {
-                        tokens.add(new Token(TokenType.TEXT, textStart, pos, input));
+                    if (textStart < this.pos) {
+                        tokens.add(new Token(TokenType.TEXT, textStart, this.pos, this.input));
                     }
-                    if (pos < length && input.charAt(pos) == '\n') {
-                        tokens.add(new Token(TokenType.NEWLINE, pos, pos + 1, input));
-                        pos++;
-                        atLineStart = true;
+                    if (this.pos < this.length && this.input.charAt(this.pos) == '\n') {
+                        tokens.add(new Token(TokenType.NEWLINE, this.pos, this.pos + 1, this.input));
+                        this.pos++;
                     }
                 } else {
-                    pos = headerStart;
-                    int start = pos;
-                    while (pos < length && !isSpecial(input.charAt(pos))) {
-                        pos++;
+                    this.pos = headerStart;
+                    int start = this.pos;
+                    while (this.pos < this.length && isNotSpecial(this.input.charAt(this.pos))) {
+                        this.pos++;
                     }
-                    if (start == pos) pos++;
-                    tokens.add(new Token(TokenType.TEXT, start, pos, input));
+                    if (start == this.pos) {
+                        this.pos++;
+                    }
+                    tokens.add(new Token(TokenType.TEXT, start, this.pos, this.input));
                     atLineStart = false;
                 }
-            } else if (atLineStart && c == '>' && (pos + 1 >= length || input.charAt(pos + 1) == ' ' || input.charAt(pos + 1) == '\n')) {
-                tokens.add(new Token(TokenType.BLOCKQUOTE_MARKER, pos, pos + 1, input));
-                pos++;
-                if (pos < length && input.charAt(pos) == ' ') pos++;
-                atLineStart = true;
-            } else if (atLineStart && (c == '-' || c == '*') && pos + 1 < length && input.charAt(pos + 1) == ' ') {
-                tokens.add(new Token(TokenType.BULLET_MARKER, pos, pos + 2, input));
-                pos += 2;
+            } else if (atLineStart && c == '>' && (this.pos + 1 >= this.length || this.input.charAt(this.pos + 1) == ' ' || this.input.charAt(this.pos + 1) == '\n')) {
+                tokens.add(new Token(TokenType.BLOCKQUOTE_MARKER, this.pos, this.pos + 1, this.input));
+                this.pos++;
+                if (this.pos < this.length && this.input.charAt(this.pos) == ' ') {
+                    this.pos++;
+                }
+            } else if (atLineStart && (c == '-' || c == '*') && this.pos + 1 < this.length && this.input.charAt(this.pos + 1) == ' ') {
+                tokens.add(new Token(TokenType.BULLET_MARKER, this.pos, this.pos + 2, this.input));
+                this.pos += 2;
                 atLineStart = false;
             } else if (c == '*' && peekMatch("**")) {
-                tokens.add(new Token(TokenType.BOLD_MARKER, pos, pos + 2, input));
-                pos += 2;
+                tokens.add(new Token(TokenType.BOLD_MARKER, this.pos, this.pos + 2, this.input));
+                this.pos += 2;
                 atLineStart = false;
             } else if (c == '_' && peekMatch("__")) {
-                tokens.add(new Token(TokenType.UNDERLINE_MARKER, pos, pos + 2, input));
-                pos += 2;
+                tokens.add(new Token(TokenType.UNDERLINE_MARKER, this.pos, this.pos + 2, this.input));
+                this.pos += 2;
                 atLineStart = false;
             } else if (c == '*') {
-                tokens.add(new Token(TokenType.ITALIC_MARKER, pos, pos + 1, input));
-                pos++;
+                tokens.add(new Token(TokenType.ITALIC_MARKER, this.pos, this.pos + 1, this.input));
+                this.pos++;
                 atLineStart = false;
             } else if (c == '~' && peekMatch("~~")) {
-                tokens.add(new Token(TokenType.STRIKE_MARKER, pos, pos + 2, input));
-                pos += 2;
+                tokens.add(new Token(TokenType.STRIKE_MARKER, this.pos, this.pos + 2, this.input));
+                this.pos += 2;
                 atLineStart = false;
-            } else if (c == '<' && input.subSequence(pos, Math.min(length, pos + 7)).toString().startsWith("<color:")) {
-                int endIdx = indexOf('>', pos);
+            } else if (c == '<' && this.input.subSequence(this.pos, Math.min(this.length, this.pos + 7)).toString().startsWith("<color:")) {
+                int endIdx = indexOf('>', this.pos);
                 if (endIdx != -1) {
-                    String colorHex = input.subSequence(pos + 7, endIdx).toString().trim();
-                    tokens.add(new Token(TokenType.COLOR_START, pos, endIdx + 1, input, colorHex));
-                    pos = endIdx + 1;
+                    String colorHex = this.input.subSequence(this.pos + 7, endIdx).toString().trim();
+                    tokens.add(new Token(TokenType.COLOR_START, this.pos, endIdx + 1, this.input, colorHex));
+                    this.pos = endIdx + 1;
                 } else {
-                    pos++;
+                    this.pos++;
                 }
                 atLineStart = false;
-            } else if (c == '<' && input.subSequence(pos, Math.min(length, pos + 8)).toString().equalsIgnoreCase("</color>")) {
-                tokens.add(new Token(TokenType.COLOR_END, pos, pos + 8, input));
-                pos += 8;
+            } else if (c == '<' && this.input.subSequence(this.pos, Math.min(this.length, this.pos + 8)).toString().equalsIgnoreCase("</color>")) {
+                tokens.add(new Token(TokenType.COLOR_END, this.pos, this.pos + 8, this.input));
+                this.pos += 8;
                 atLineStart = false;
             } else if (c == '[') {
-                tokens.add(new Token(TokenType.LINK_START, pos, pos + 1, input));
-                pos++;
+                tokens.add(new Token(TokenType.LINK_START, this.pos, this.pos + 1, this.input));
+                this.pos++;
                 atLineStart = false;
-            } else if (c == ']' && pos + 1 < length && input.charAt(pos + 1) == '(') {
-                tokens.add(new Token(TokenType.LINK_MID, pos, pos + 2, input));
-                pos += 2;
+            } else if (c == ']' && this.pos + 1 < this.length && this.input.charAt(this.pos + 1) == '(') {
+                tokens.add(new Token(TokenType.LINK_MID, this.pos, this.pos + 2, this.input));
+                this.pos += 2;
                 atLineStart = false;
             } else if (c == ')') {
-                tokens.add(new Token(TokenType.LINK_END, pos, pos + 1, input));
-                pos++;
+                tokens.add(new Token(TokenType.LINK_END, this.pos, this.pos + 1, this.input));
+                this.pos++;
                 atLineStart = false;
             } else {
-                int start = pos;
-                while (pos < length && !isSpecial(input.charAt(pos))) {
-                    pos++;
+                int start = this.pos;
+                while (this.pos < this.length && isNotSpecial(this.input.charAt(this.pos))) {
+                    this.pos++;
                 }
-                if (start == pos) {
-                    pos++;
+                if (start == this.pos) {
+                    this.pos++;
                 }
-                tokens.add(new Token(TokenType.TEXT, start, pos, input));
+                tokens.add(new Token(TokenType.TEXT, start, this.pos, this.input));
                 atLineStart = false;
             }
         }
@@ -156,21 +158,27 @@ class Scanner {
     }
 
     private boolean peekMatch(String target) {
-        if (pos + target.length() > length) return false;
+        if (this.pos + target.length() > this.length) {
+            return false;
+        }
         for (int i = 0; i < target.length(); i++) {
-            if (input.charAt(pos + i) != target.charAt(i)) return false;
+            if (this.input.charAt(this.pos + i) != target.charAt(i)) {
+                return false;
+            }
         }
         return true;
     }
 
     private int indexOf(char target, int startFrom) {
-        for (int i = startFrom; i < length; i++) {
-            if (input.charAt(i) == target) return i;
+        for (int i = startFrom; i < this.length; i++) {
+            if (this.input.charAt(i) == target) {
+                return i;
+            }
         }
         return -1;
     }
 
-    private boolean isSpecial(char c) {
-        return c == '\\' || c == '\n' || c == '#' || c == '>' || c == '*' || c == '_' || c == '~' || c == '<' || c == '[' || c == ']' || c == ')';
+    private boolean isNotSpecial(char c) {
+        return c != '\\' && c != '\n' && c != '#' && c != '>' && c != '*' && c != '_' && c != '~' && c != '<' && c != '[' && c != ']' && c != ')';
     }
 }

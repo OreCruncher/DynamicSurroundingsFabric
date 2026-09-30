@@ -8,7 +8,7 @@ class Optimizer {
         List<ComponentNode> optimizedChildren = new ArrayList<>();
         ComponentNode currentMerged = null;
 
-        for (ComponentNode child : root.children) {
+        for (ComponentNode child : root.children()) {
             optimize(child);
 
             if (currentMerged == null) {
@@ -17,12 +17,12 @@ class Optimizer {
             } else {
                 // Do not merge if styles don't match, if child has its own sub-children,
                 // OR if either node contains a newline character (to preserve line boundaries)
-                boolean stylesMatch = currentMerged.style.matches(child.style);
-                boolean hasChildren = !child.children.isEmpty();
-                boolean containsNewline = currentMerged.text.indexOf("\n") != -1 || child.text.indexOf("\n") != -1;
+                boolean stylesMatch = currentMerged.style().matches(child.style());
+                boolean hasChildren = !child.children().isEmpty();
+                boolean containsNewline = currentMerged.indexOf("\n") != -1 || child.indexOf("\n") != -1;
 
                 if (stylesMatch && !hasChildren && !containsNewline) {
-                    currentMerged.text.append(child.text);
+                    currentMerged.merge(child);
                 } else {
                     currentMerged = child;
                     optimizedChildren.add(currentMerged);
@@ -30,8 +30,8 @@ class Optimizer {
             }
         }
 
-        root.children.clear();
-        root.children.addAll(optimizedChildren);
+        root.children().clear();
+        root.children().addAll(optimizedChildren);
         return root;
     }
 }

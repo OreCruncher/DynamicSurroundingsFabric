@@ -11,19 +11,25 @@ class JsonExporter {
         json.append("{");
         json.append("\"text\":\"").append(escapeJson(node.getText())).append("\"");
 
-        Style s = node.style;
-        if (s.color != null)
+        Style s = node.style();
+        if (s.color != null) {
             json.append(",\"color\":\"").append(s.color).append("\"");
-        if (s.font != null && !s.font.isEmpty())
+        }
+        if (s.font != null && !s.font.isEmpty()) {
             json.append(",\"font\":\"").append(s.font).append("\"");
-        if (s.bold != null)
+        }
+        if (s.bold != null) {
             json.append(",\"bold\":").append(s.bold);
-        if (s.italic != null)
+        }
+        if (s.italic != null) {
             json.append(",\"italic\":").append(s.italic);
-        if (s.underline != null)
+        }
+        if (s.underline != null) {
             json.append(",\"underlined\":").append(s.underline);
-        if (s.strikethrough != null)
+        }
+        if (s.strikethrough != null) {
             json.append(",\"strikethrough\":").append(s.strikethrough);
+        }
 
         if (s.clickEventUrl != null) {
             json.append(",\"clickEvent\":{\"action\":\"open_url\",\"value\":\"").append(escapeJson(s.clickEventUrl)).append("\"}");
@@ -54,11 +60,13 @@ class JsonExporter {
             json.append("}}");
         }
 
-        if (!node.children.isEmpty()) {
+        if (!node.children().isEmpty()) {
             json.append(",\"extra\":[");
-            for (int i = 0; i < node.children.size(); i++) {
-                if (i > 0) json.append(",");
-                serializeNode(node.children.get(i), json, false, options);
+            for (int i = 0; i < node.children().size(); i++) {
+                if (i > 0) {
+                    json.append(",");
+                }
+                serializeNode(node.children().get(i), json, false, options);
             }
             json.append("]");
         }

@@ -9,7 +9,8 @@ import java.util.Optional;
 
 public final class MarkdownParser {
 
-    MarkdownParser() {}
+    MarkdownParser() {
+    }
 
     /**
      * Converts the mark-down document into a Component representation for rendering

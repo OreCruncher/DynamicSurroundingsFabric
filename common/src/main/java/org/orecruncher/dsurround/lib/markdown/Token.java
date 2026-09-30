@@ -6,6 +6,6 @@ record Token(TokenType type, int start, int end, CharSequence source, String ext
     }
 
     public CharSequence value() {
-        return source.subSequence(start, end);
+        return this.source.subSequence(this.start, this.end);
     }
 }

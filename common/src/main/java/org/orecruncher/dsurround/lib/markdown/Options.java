@@ -14,14 +14,14 @@ public final class Options {
     private static final String DEFAULT_BLOCK_QUOTE = "│ ";
     private static final String DEFAULT_HOVER_TEMPLATE = "%s";
     private static final String DEFAULT_HOVER_TEXT_LANG_KEY = "dsurround.text.markdown.hovertext";
-
+    public static Options DEFAULT = new Builder().build();
+    public static Options UNIFORM = new Builder().font(BuiltinFonts.UNIFORM).build();
     private String defaultHeadingColor;
     private String defaultLinkColor;
     private String defaultBulletColor;
     private String defaultTextColor;
     private String defaultQuoteColor;
     private String font;
-
     private String bulletStyle;
     private String quoteStyle;
     private String linkHoverTemplate;
@@ -32,13 +32,17 @@ public final class Options {
         this.defaultLinkColor = ColorPalette.MC_BLUE.formatValue();
         this.defaultBulletColor = ColorPalette.MC_GRAY.formatValue();
         this.defaultTextColor = null;
-        this.defaultQuoteColor = ColorPalette.MC_GRAY.formatValue();;
+        this.defaultQuoteColor = ColorPalette.MC_GRAY.formatValue();
         this.font = null;
 
         this.bulletStyle = DEFAULT_BULLET;
         this.quoteStyle = DEFAULT_BLOCK_QUOTE;
         this.linkHoverTemplate = DEFAULT_HOVER_TEMPLATE;
         this.linkHoverTranslationKey = DEFAULT_HOVER_TEXT_LANG_KEY;
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public String headingColor() {
@@ -81,18 +85,12 @@ public final class Options {
         return this.linkHoverTranslationKey;
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    public static Options DEFAULT = new Builder().build();
-    public static Options UNIFORM = new Builder().font(ResourceLocation.withDefaultNamespace("uniform")).build();
-
     public static class Builder {
 
         private final Options options = new Options();
 
-        public Builder() { }
+        public Builder() {
+        }
 
         public Builder headingColor(TextColor color) {
             return this.headingColor(color.formatValue());
@@ -167,5 +165,12 @@ public final class Options {
         public Options build() {
             return this.options;
         }
+    }
+
+    public static class BuiltinFonts {
+        public static final ResourceLocation DEFAULT = ResourceLocation.withDefaultNamespace("default");
+        public static final ResourceLocation UNIFORM = ResourceLocation.withDefaultNamespace("uniform");
+        public static final ResourceLocation GALACTIC = ResourceLocation.withDefaultNamespace("galactic");
+        public static final ResourceLocation ILLAGERALT = ResourceLocation.withDefaultNamespace("illageralt");
     }
 }
