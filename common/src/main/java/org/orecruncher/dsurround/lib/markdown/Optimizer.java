@@ -3,35 +3,47 @@ package org.orecruncher.dsurround.lib.markdown;
 import java.util.ArrayList;
 import java.util.List;
 
-class Optimizer {
-    public static ComponentNode optimize(ComponentNode root) {
-        List<ComponentNode> optimizedChildren = new ArrayList<>();
-        ComponentNode currentMerged = null;
+/**
+ * Merges neighboring segments that have the same style, so the output has as few components as possible.
+ */
+final class Optimizer {
 
-        for (ComponentNode child : root.children()) {
-            optimize(child);
+    private Optimizer() {
+    }
 
-            if (currentMerged == null) {
-                currentMerged = child;
-                optimizedChildren.add(currentMerged);
+    /**
+     * Returns a new list in which adjacent segments with equal styles are joined. Segments containing a newline are
+     * never merged with anything, which keeps line boundaries as separate components.
+     */
+    static List<Segment> optimize(List<Segment> segments) {
+        List<Segment> merged = new ArrayList<>();
+        StringBuilder text = new StringBuilder();
+        Style style = null;
+        boolean runHasNewline = false;
+
+        for (Segment segment : segments) {
+            boolean hasNewline = segment.text().indexOf('\n') != -1;
+            boolean canMerge = style != null && !runHasNewline && !hasNewline && style.equals(segment.style());
+
+            if (canMerge) {
+                // Neither the run nor the segment has a newline, so the merged run still doesn't
+                text.append(segment.text());
             } else {
-                // Do not merge if styles don't match, if child has its own sub-children,
-                // OR if either node contains a newline character (to preserve line boundaries)
-                boolean stylesMatch = currentMerged.style().matches(child.style());
-                boolean hasChildren = !child.children().isEmpty();
-                boolean containsNewline = currentMerged.indexOf("\n") != -1 || child.indexOf("\n") != -1;
-
-                if (stylesMatch && !hasChildren && !containsNewline) {
-                    currentMerged.merge(child);
-                } else {
-                    currentMerged = child;
-                    optimizedChildren.add(currentMerged);
+                // Close the current run and start a new one. A run containing a newline is never extended, so it
+                // holds exactly the one segment that started it.
+                if (style != null) {
+                    merged.add(new Segment(text.toString(), style));
                 }
+                text.setLength(0);
+                text.append(segment.text());
+                style = segment.style();
+                runHasNewline = hasNewline;
             }
         }
 
-        root.children().clear();
-        root.children().addAll(optimizedChildren);
-        return root;
+        if (style != null) {
+            merged.add(new Segment(text.toString(), style));
+        }
+        return merged;
     }
 }
