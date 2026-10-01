@@ -121,6 +121,12 @@ public class SystemsScanner extends CuboidScanner {
             this.scanTargets.get(i).blockScan(world, state, pos);
     }
 
+    @Override
+    public void blockUpdated(Level world, BlockState state, BlockPos pos, IRandomizer rand) {
+        for (int i = 0; i < this.scanTargets.size(); i++)
+            this.scanTargets.get(i).blockUpdated(world, state, pos);
+    }
+
     public void gatherDiagnostics(Collection<Component> output) {
         output.add(Component.literal("[%s] pending: %d blocks in %d jobs".formatted(this.name, this.getPendingBlocks(), this.getPendingJobs())));
         output.add(Component.literal("[%s] %s".formatted(this.name, this.getStats().summary())));

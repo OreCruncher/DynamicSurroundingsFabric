@@ -32,6 +32,15 @@ public interface IEffectSystem {
     void blockScan(Level world, BlockState state, BlockPos pos);
 
     /**
+     * Invoked when a block in the scan area changed (the client received a block update), as opposed to coming into
+     * range. Systems that find their blocks indirectly, from a neighbor, can use this to also check the changed
+     * block itself. Defaults to {@link #blockScan}.
+     */
+    default void blockUpdated(Level world, BlockState state, BlockPos pos) {
+        this.blockScan(world, state, pos);
+    }
+
+    /**
      * Invoked when a block position leaves the scan area
      */
     void blockUnscan(Level world, BlockState state, BlockPos pos);

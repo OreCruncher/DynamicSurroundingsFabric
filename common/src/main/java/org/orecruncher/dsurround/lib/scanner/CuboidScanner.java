@@ -310,16 +310,19 @@ public abstract class CuboidScanner extends Scanner {
         if (this.activeCuboid == null || world != this.lastWorld)
             return;
 
+        // One block wider than the chunk on each side: a block along the border of an already loaded neighbor may
+        // depend on blocks in this chunk (steam is found from the heat source next to the water), and that neighbor
+        // was scanned while this chunk was missing.
         var column = new BlockBox(
-                new BlockPos(chunkPos.getMinBlockX(), this.activeCuboid.min().getY(), chunkPos.getMinBlockZ()),
-                new BlockPos(chunkPos.getMaxBlockX(), this.activeCuboid.max().getY(), chunkPos.getMaxBlockZ()));
+                new BlockPos(chunkPos.getMinBlockX() - 1, this.activeCuboid.min().getY(), chunkPos.getMinBlockZ() - 1),
+                new BlockPos(chunkPos.getMaxBlockX() + 1, this.activeCuboid.max().getY(), chunkPos.getMaxBlockZ() + 1));
         var inRange = Cuboid.intersection(column, this.activeCuboid);
         if (inRange != null)
             this.jobs.add(new ScanJob(false, inRange));
     }
 
     /**
-     * Rescans blocks the client was told changed, if they are in range. Not queued: block updates are few and
+     * Reports blocks the client was told changed, if they are in range, through {@link #blockUpdated}. Not queued: block updates are few and
      * should take effect immediately.
      */
     public void onBlockUpdates(Collection<BlockPos> positions) {
@@ -329,7 +332,7 @@ public abstract class CuboidScanner extends Scanner {
         var world = this.locus.getWorld();
         for (var pos : positions) {
             if (this.activeCuboid.contains(pos))
-                this.scanBlock(world, world.getBlockState(pos), pos);
+                this.updateBlock(world, world.getBlockState(pos), pos);
         }
     }
 }

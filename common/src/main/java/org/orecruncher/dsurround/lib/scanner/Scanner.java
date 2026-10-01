@@ -86,6 +86,14 @@ public abstract class Scanner {
     public abstract void blockScan(final Level world, final BlockState state, final BlockPos pos, final IRandomizer rand);
 
     /**
+     * Invoked for a block the client was told changed, rather than one coming into range. Override when a change
+     * needs different handling from a scan. Defaults to {@link #blockScan}. The same BlockPos caveat applies.
+     */
+    public void blockUpdated(final Level world, final BlockState state, final BlockPos pos, final IRandomizer rand) {
+        this.blockScan(world, state, pos, rand);
+    }
+
+    /**
      * Does this tick's share of scanning, within {@link #TIME_BUDGET_NANOS} (and at most {@link #MAX_BLOCKS_TICK}
      * blocks).
      */
@@ -103,6 +111,19 @@ public abstract class Scanner {
             this.blockScan(world, state, pos, this.random);
         } catch (Throwable t) {
             this.onBlockError(t, "blockScan", state, pos);
+        }
+    }
+
+    /**
+     * The {@link #blockUpdated} counterpart of {@link #scanBlock}, for blocks the client was told changed.
+     */
+    protected final void updateBlock(final Level world, final BlockState state, final BlockPos pos) {
+        if (Constants.BLOCKS_TO_IGNORE.contains(state.getBlock()))
+            return;
+        try {
+            this.blockUpdated(world, state, pos, this.random);
+        } catch (Throwable t) {
+            this.onBlockError(t, "blockUpdated", state, pos);
         }
     }
 

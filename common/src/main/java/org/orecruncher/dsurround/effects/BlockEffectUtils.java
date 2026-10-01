@@ -41,11 +41,23 @@ public class BlockEffectUtils {
     public static final Predicate<BlockState> IS_HOT_SOURCE = (state) ->
             IS_HEAT_PRODUCER.test(state) || IS_LIT_FURNACE.test(state) || IS_LIT_CAMPFIRE.test(state);
 
+    /**
+     * True if any block in the 3x3x3 cube centered on {@code pos} (including {@code pos}) matches the predicate.
+     * A plain loop with one reusable position: this is called for many scanned blocks, so it avoids the iterator
+     * and lambda that BlockPos.findClosestMatch allocates per call.
+     */
     public static boolean blockExistsAround(
         final Level provider,
         final BlockPos pos,
         final Predicate<BlockState> predicate) {
-        return BlockPos.findClosestMatch(pos, 1, 1, blockPos -> predicate.test(provider.getBlockState(blockPos))).isPresent();
+        final BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
+        for (int dy = -1; dy <= 1; dy++)
+            for (int dz = -1; dz <= 1; dz++)
+                for (int dx = -1; dx <= 1; dx++) {
+                    if (predicate.test(provider.getBlockState(mutable.setWithOffset(pos, dx, dy, dz))))
+                        return true;
+                }
+        return false;
     }
 
     public static int countVerticalBlocks(final Level provider,

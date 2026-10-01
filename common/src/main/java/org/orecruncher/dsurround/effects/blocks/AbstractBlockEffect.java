@@ -21,6 +21,13 @@ public abstract class AbstractBlockEffect implements IBlockEffect {
     protected static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
     protected static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
 
+    /**
+     * Vanilla doesn't show ordinary particles more than 32 blocks from the camera (LevelRenderer drops them).
+     * Effects create particles through ParticleEngine directly, which skips that check, so effects should apply it
+     * themselves via {@link #cameraDistanceSq()}.
+     */
+    protected static final double PARTICLE_RANGE_SQ = 32 * 32;
+
 
     protected final Level world;
     protected final double posX;
@@ -39,6 +46,13 @@ public abstract class AbstractBlockEffect implements IBlockEffect {
 
     public BlockPos getPos() {
         return this.position;
+    }
+
+    /**
+     * Squared distance from the camera to this effect, for comparing with {@link #PARTICLE_RANGE_SQ}.
+     */
+    protected double cameraDistanceSq() {
+        return GameUtils.getMC().gameRenderer.getMainCamera().getPosition().distanceToSqr(this.posX, this.posY, this.posZ);
     }
 
     /**

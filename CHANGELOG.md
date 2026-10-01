@@ -61,6 +61,9 @@ So here is the impact of using AI for this release:
   * Replaced logic for determining sound locations with a LongMap improving performance
   * Stop playing fall sound as soon as waterfall system is removed rather than lagging by 4 ticks
   * The further away the effect is the fewer particles that will be spawned
+* Steam effect system
+  * The same particle changes as Waterfall
+  * Optimized detection so that low cost/high value checks are performed before more expensive checks
 
 **What's New**
 * Added /dsversion command that will query version status from my repo and report back in the local chat. Response will have clickable links so you can navigate to various information sources. This command will work regardless if the chat report on login is disabled. (Some modpack authors disable this.)

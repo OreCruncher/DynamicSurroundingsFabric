@@ -384,10 +384,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
         private static final Configuration.BlockEffects CONFIG = ContainerManager.resolve(Configuration.BlockEffects.class);
         private static final Configuration.WorksInProgressOptions WIP_OPTIONS = ContainerManager.resolve(Configuration.WorksInProgressOptions.class);
 
-        // Vanilla doesn't show ordinary particles more than 32 blocks from the camera (LevelRenderer drops them).
-        // These particles are created through ParticleEngine directly, which skips that check, so apply it here.
-        private static final double PARTICLE_MAX_DISTANCE_SQ = 32 * 32;
-        // Beyond this distance, splashes are halved
+        // Beyond this distance, splashes are halved. Beyond PARTICLE_RANGE_SQ there are none.
         private static final double PARTICLE_FULL_DISTANCE_SQ = 16 * 16;
 
         protected final double deltaY;
@@ -461,9 +458,8 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
                 return;
 
             // Nothing is produced past the vanilla particle distance, so skip the work entirely
-            var camera = GameUtils.getMC().gameRenderer.getMainCamera().getPosition();
-            this.cameraDistanceSq = this.distanceSqTo(camera);
-            if (this.cameraDistanceSq > PARTICLE_MAX_DISTANCE_SQ)
+            this.cameraDistanceSq = this.cameraDistanceSq();
+            if (this.cameraDistanceSq > PARTICLE_RANGE_SQ)
                 return;
 
             super.handleParticles();
