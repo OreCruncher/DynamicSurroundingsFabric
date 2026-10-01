@@ -1,9 +1,13 @@
 package org.orecruncher.dsurround.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractScrollWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
+import net.minecraft.client.gui.narration.NarratedElementType;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -13,7 +17,6 @@ import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.markdown.MarkdownParser;
 import org.orecruncher.dsurround.lib.markdown.Options;
 
@@ -22,33 +25,21 @@ import java.util.List;
 /**
  * Shows a (possibly long) Component in a scrollable panel, with a Done button that returns to the parent screen.
  * Links in the text show their hover text and can be clicked.
+ * <p>
+ * Built from vanilla pieces: {@link HeaderAndFooterLayout} for the title and Done button, and an
+ * {@link AbstractScrollWidget} for the scrolling, scrollbar, dragging, focus and narration.
  */
 public class ComponentDisplayScreen extends Screen {
 
-    // Panel placement within the screen
+    // Space between the screen edges and the panel
     private static final int PANEL_MARGIN_X = 20;
-    private static final int PANEL_MARGIN_Y = 50;
-    private static final int BOTTOM_WIDGET_HEIGHT = 50;
-
-    // Space between the panel border and the text
-    private static final int TEXT_PADDING = 10;
-    // Space reserved on the right of the panel for the scrollbar; the text is clipped at its left edge
-    private static final int SCROLLBAR_GUTTER = 14;
-    private static final int SCROLLBAR_WIDTH = 4;
-    // Gap between the scrollbar and the panel's right border
-    private static final int SCROLLBAR_INSET = 2;
-    // Extra pixels either side of the scrollbar that still count as grabbing it
-    private static final int SCROLLBAR_GRAB_MARGIN = 2;
-    private static final int MIN_THUMB_HEIGHT = 20;
+    // Space between the panel and the header/footer
+    private static final int PANEL_MARGIN_Y = 4;
 
     private final Screen parent;
     private final Component bodyToDisplay;
-    private List<FormattedCharSequence> splitLines = List.of();
-    private int lastSplitWidth = -1;
-    private int totalTextHeight = 0;
-    private int maxScrollY = 0;
-    private double scrollAmount = 0.0;
-    private boolean draggingScrollbar = false;
+    private final HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this);
+    private TextPanel textPanel;
 
     protected ComponentDisplayScreen(Screen parent, Component title, Component bodyToDisplay) {
         super(title);
@@ -68,24 +59,32 @@ public class ComponentDisplayScreen extends Screen {
 
     @Override
     protected void init() {
-        super.init();
+        this.layout.addTitleHeader(this.title, this.font);
+        this.textPanel = this.layout.addToContents(new TextPanel(this.font, this.bodyToDisplay));
+        this.layout.addToFooter(Button.builder(CommonComponents.GUI_DONE, button -> this.onClose())
+                .width(Button.BIG_WIDTH)
+                .build());
+        this.layout.visitWidgets(this::addRenderableWidget);
+        this.repositionElements();
 
-        this.addRenderableWidget(
-                Button.builder(CommonComponents.GUI_DONE, button -> this.onClose())
-                        .bounds(this.width / 2 - 50, this.height - 35, 100, 20)
-                        .build()
-        );
-
-        this.layoutText();
+        // Focus the text so the arrow and page keys scroll it straight away
+        this.setInitialFocus(this.textPanel);
     }
 
+    /**
+     * Called on resize (and when returning from the link confirmation screen). Only the sizes change, so the panel
+     * keeps its text and scroll position instead of being rebuilt.
+     */
     @Override
-    public void resize(@NotNull Minecraft client, int width, int height) {
-        // Keep the reader at the same relative place in the document. super.resize() calls init(), which re-wraps
-        // the text and recalculates maxScrollY for the new size.
-        double scrollRatio = this.maxScrollY > 0 ? this.scrollAmount / this.maxScrollY : 0.0;
-        super.resize(client, width, height);
-        this.scrollTo(scrollRatio * this.maxScrollY);
+    protected void repositionElements() {
+        int panelWidth = this.width - PANEL_MARGIN_X * 2 - this.textPanel.scrollbarWidth();
+        int panelHeight = this.layout.getContentHeight() - PANEL_MARGIN_Y * 2;
+        this.textPanel.resize(panelWidth, panelHeight);
+        this.layout.arrangeElements();
+
+        // The scrollbar is drawn outside the widget on the right. Shift left by half its width so the widget and
+        // scrollbar together are centered.
+        this.textPanel.setX(this.textPanel.getX() - this.textPanel.scrollbarWidth() / 2);
     }
 
     @Override
@@ -93,70 +92,21 @@ public class ComponentDisplayScreen extends Screen {
         GameUtils.setScreen(this.parent);
     }
 
-    // ---- Rendering -------------------------------------------------------------------------------------------
-
     @Override
     public void render(@NotNull GuiGraphics context, int mouseX, int mouseY, float delta) {
-        // Screen.render draws the background, then the widgets
         super.render(context, mouseX, mouseY, delta);
 
-        context.drawCenteredString(this.font, this.title, this.width / 2, 12, 0xFFFFFFFF);
-
-        int panelX = this.getPanelX();
-        int panelY = this.getPanelY();
-        int panelWidth = this.getPanelWidth();
-        int panelHeight = this.getPanelHeight();
-
-        // Window too small to show anything useful
-        if (panelWidth <= SCROLLBAR_GUTTER + TEXT_PADDING || panelHeight <= 2 * TEXT_PADDING) {
-            return;
-        }
-
-        context.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, ColorPalette.NEAR_BLACK.getValue() | 0xC0000000);
-        context.renderOutline(panelX, panelY, panelWidth, panelHeight, ColorPalette.GRAY.getValue() | 0xFF000000);
-
-        context.enableScissor(this.getTextClipLeft(), this.getTextClipTop(), this.getTextClipRight(), this.getTextClipBottom());
-        context.pose().pushPose();
-        context.pose().translate(this.getTextX(), this.getTextY() - (float) this.scrollAmount, 0.0f);
-
-        int currentY = 0;
-        for (var line : this.splitLines) {
-            context.drawString(this.font, line, 0, currentY, 0xFFFFFFFF, true);
-            currentY += this.font.lineHeight;
-        }
-
-        context.pose().popPose();
-        context.disableScissor();
-
-        if (this.maxScrollY > 0) {
-            int scrollbarX = this.getScrollbarX();
-            int thumbY = this.getThumbY();
-            context.fill(scrollbarX, this.getTrackTop(), scrollbarX + SCROLLBAR_WIDTH, this.getTrackBottom(), ColorPalette.CHARCOAL.getValue() | 0xFF000000);
-            context.fill(scrollbarX, thumbY, scrollbarX + SCROLLBAR_WIDTH, thumbY + this.getThumbHeight(), ColorPalette.GRAY.getValue() | 0xFF000000);
-        }
-
-        Style hoveredStyle = this.getStyleAt(mouseX, mouseY);
+        // Drawn after everything else so the tooltip is on top
+        Style hoveredStyle = this.textPanel.getStyleAt(mouseX, mouseY);
         if (hoveredStyle != null) {
             context.renderComponentHoverEffect(this.font, hoveredStyle, mouseX, mouseY);
         }
     }
 
-    // ---- Input -----------------------------------------------------------------------------------------------
-
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == InputConstants.MOUSE_BUTTON_LEFT) {
-            if (this.isOverScrollbar(mouseX, mouseY)) {
-                // Clicking the track outside the thumb jumps there, centering the thumb on the mouse
-                int thumbY = this.getThumbY();
-                if (mouseY < thumbY || mouseY >= thumbY + this.getThumbHeight()) {
-                    double thumbTop = mouseY - this.getThumbHeight() / 2.0 - this.getTrackTop();
-                    this.scrollTo(thumbTop * this.getScrollPerThumbPixel());
-                }
-                this.draggingScrollbar = true;
-                return true;
-            }
-            Style style = this.getStyleAt(mouseX, mouseY);
+            Style style = this.textPanel.getStyleAt(mouseX, mouseY);
             if (style != null && this.handleComponentClicked(style)) {
                 return true;
             }
@@ -165,198 +115,142 @@ public class ComponentDisplayScreen extends Screen {
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
-            this.draggingScrollbar = false;
-        }
-        return super.mouseReleased(mouseX, mouseY, button);
-    }
-
-    @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (this.draggingScrollbar && button == InputConstants.MOUSE_BUTTON_LEFT) {
-            this.scrollTo(this.scrollAmount + deltaY * this.getScrollPerThumbPixel());
-            return true;
-        }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
-    }
-
-    @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        if (this.maxScrollY > 0) {
-            this.scrollTo(this.scrollAmount - verticalAmount * this.font.lineHeight * 2);
-            return true;
-        }
-        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+        // The wheel scrolls the text wherever the mouse is, not only over the panel
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
+                || this.textPanel.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
 
-    @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (this.maxScrollY > 0) {
-            int page = Math.max(this.font.lineHeight, this.getVisibleTextHeight() - this.font.lineHeight);
-            switch (keyCode) {
-                case InputConstants.KEY_UP -> this.scrollTo(this.scrollAmount - this.font.lineHeight);
-                case InputConstants.KEY_DOWN -> this.scrollTo(this.scrollAmount + this.font.lineHeight);
-                case InputConstants.KEY_PAGEUP -> this.scrollTo(this.scrollAmount - page);
-                case InputConstants.KEY_PAGEDOWN -> this.scrollTo(this.scrollAmount + page);
-                case InputConstants.KEY_HOME -> this.scrollTo(0);
-                case InputConstants.KEY_END -> this.scrollTo(this.maxScrollY);
-                default -> {
-                    return super.keyPressed(keyCode, scanCode, modifiers);
-                }
+    /**
+     * The scrolling text area. The text is wrapped to the widget's width and redrawn each frame; only lines that
+     * are at least partly visible are drawn.
+     */
+    private static final class TextPanel extends AbstractScrollWidget {
+
+        private final Font font;
+        private final Component body;
+        private List<FormattedCharSequence> lines = List.of();
+        private int wrapWidth = -1;
+
+        TextPanel(Font font, Component body) {
+            super(0, 0, 0, 0, body);
+            this.font = font;
+            this.body = body;
+        }
+
+        /**
+         * Sets the size, re-wraps the text if the width changed, and keeps the reader at the same relative place
+         * in the document.
+         */
+        void resize(int width, int height) {
+            int maxScroll = this.getMaxScrollAmount();
+            double scrollRatio = maxScroll > 0 ? this.scrollAmount() / maxScroll : 0.0;
+
+            this.setSize(Math.max(1, width), Math.max(1, height));
+            int newWrapWidth = Math.max(1, this.width - this.totalInnerPadding());
+            if (newWrapWidth != this.wrapWidth) {
+                this.wrapWidth = newWrapWidth;
+                this.lines = this.font.split(this.body, newWrapWidth);
             }
-            return true;
-        }
-        return super.keyPressed(keyCode, scanCode, modifiers);
-    }
 
-    // ---- Layout ----------------------------------------------------------------------------------------------
-
-    /**
-     * Re-wraps the text if the available width changed, and recalculates how far the text can scroll. Called
-     * whenever the screen is (re)initialized, so render and the input handlers always see a consistent layout.
-     */
-    private void layoutText() {
-        int wrapWidth = Math.max(1, this.getPanelWidth() - TEXT_PADDING - SCROLLBAR_GUTTER);
-        if (this.lastSplitWidth != wrapWidth) {
-            this.lastSplitWidth = wrapWidth;
-            this.splitLines = this.font.split(this.bodyToDisplay, wrapWidth);
-        }
-        this.totalTextHeight = this.splitLines.size() * this.font.lineHeight;
-        this.maxScrollY = Math.max(0, this.totalTextHeight - this.getVisibleTextHeight());
-        this.scrollTo(this.scrollAmount);
-    }
-
-    private void scrollTo(double amount) {
-        this.scrollAmount = Mth.clamp(amount, 0.0, this.maxScrollY);
-    }
-
-    private int getPanelX() {
-        return PANEL_MARGIN_X;
-    }
-
-    private int getPanelY() {
-        return PANEL_MARGIN_Y;
-    }
-
-    private int getPanelWidth() {
-        return this.width - PANEL_MARGIN_X * 2;
-    }
-
-    private int getPanelHeight() {
-        return this.height - PANEL_MARGIN_Y - BOTTOM_WIDGET_HEIGHT;
-    }
-
-    private int getTextX() {
-        return this.getPanelX() + TEXT_PADDING;
-    }
-
-    private int getTextY() {
-        return this.getPanelY() + TEXT_PADDING;
-    }
-
-    private int getVisibleTextHeight() {
-        return Math.max(0, this.getPanelHeight() - 2 * TEXT_PADDING);
-    }
-
-    // The text is clipped to the inside of the border, stopping at the scrollbar gutter
-
-    private int getTextClipLeft() {
-        return this.getPanelX() + 1;
-    }
-
-    private int getTextClipTop() {
-        return this.getPanelY() + 1;
-    }
-
-    private int getTextClipRight() {
-        return this.getPanelX() + this.getPanelWidth() - SCROLLBAR_GUTTER;
-    }
-
-    private int getTextClipBottom() {
-        return this.getPanelY() + this.getPanelHeight() - 1;
-    }
-
-    // ---- Scrollbar geometry ----------------------------------------------------------------------------------
-
-    private int getScrollbarX() {
-        return this.getPanelX() + this.getPanelWidth() - SCROLLBAR_INSET - SCROLLBAR_WIDTH;
-    }
-
-    private int getTrackTop() {
-        return this.getPanelY() + 1;
-    }
-
-    private int getTrackBottom() {
-        return this.getPanelY() + this.getPanelHeight() - 1;
-    }
-
-    private int getTrackHeight() {
-        return Math.max(0, this.getTrackBottom() - this.getTrackTop());
-    }
-
-    /**
-     * The thumb's share of the track matches the visible share of the text, but never smaller than
-     * {@link #MIN_THUMB_HEIGHT} (or larger than the track).
-     */
-    private int getThumbHeight() {
-        int trackHeight = this.getTrackHeight();
-        if (this.totalTextHeight <= 0) {
-            return trackHeight;
-        }
-        int proportional = (int) ((long) this.getVisibleTextHeight() * trackHeight / this.totalTextHeight);
-        return Mth.clamp(proportional, Math.min(MIN_THUMB_HEIGHT, trackHeight), trackHeight);
-    }
-
-    private int getThumbY() {
-        if (this.maxScrollY <= 0) {
-            return this.getTrackTop();
-        }
-        int travel = this.getTrackHeight() - this.getThumbHeight();
-        return this.getTrackTop() + (int) (this.scrollAmount / this.maxScrollY * travel);
-    }
-
-    /**
-     * How far the text scrolls when the thumb moves one pixel.
-     */
-    private double getScrollPerThumbPixel() {
-        int travel = this.getTrackHeight() - this.getThumbHeight();
-        return travel > 0 ? (double) this.maxScrollY / travel : 0.0;
-    }
-
-    private boolean isOverScrollbar(double mouseX, double mouseY) {
-        if (this.maxScrollY <= 0) {
-            return false;
-        }
-        int scrollbarX = this.getScrollbarX();
-        return mouseX >= scrollbarX - SCROLLBAR_GRAB_MARGIN && mouseX < scrollbarX + SCROLLBAR_WIDTH + SCROLLBAR_GRAB_MARGIN
-                && mouseY >= this.getTrackTop() && mouseY < this.getTrackBottom();
-    }
-
-    // ---- Hit testing -----------------------------------------------------------------------------------------
-
-    /**
-     * The style of the text under the mouse, or null if the mouse isn't over visible text.
-     */
-    private @Nullable Style getStyleAt(double mouseX, double mouseY) {
-        // Only the area the text is actually drawn in (the scissor rectangle) counts
-        if (mouseX < this.getTextClipLeft() || mouseX >= this.getTextClipRight()
-                || mouseY < this.getTextClipTop() || mouseY >= this.getTextClipBottom()) {
-            return null;
+            this.setScrollAmount(scrollRatio * this.getMaxScrollAmount());
         }
 
-        double relativeX = mouseX - this.getTextX();
-        if (relativeX < 0) {
-            // Left padding. componentStyleAtWidth would report the line's first character here.
-            return null;
+        @Override
+        protected int getInnerHeight() {
+            return this.lines.size() * this.font.lineHeight;
         }
 
-        double relativeY = mouseY - this.getTextY() + this.scrollAmount;
-        // floor, not a cast: a cast rounds -0.5 up to row 0
-        int row = Mth.floor(relativeY / this.font.lineHeight);
-        if (row < 0 || row >= this.splitLines.size()) {
-            return null;
+        @Override
+        protected double scrollRate() {
+            return this.font.lineHeight * 2;
         }
-        return this.font.getSplitter().componentStyleAtWidth(this.splitLines.get(row), Mth.floor(relativeX));
+
+        /**
+         * Same as the vanilla version except that the text is moved by a whole number of pixels. Dragging the
+         * scrollbar produces fractional scroll amounts, and text drawn between pixels can shimmer.
+         */
+        @Override
+        public void renderWidget(@NotNull GuiGraphics context, int mouseX, int mouseY, float delta) {
+            if (!this.visible) {
+                return;
+            }
+            this.renderBackground(context);
+            context.enableScissor(this.getX() + 1, this.getY() + 1, this.getX() + this.width - 1, this.getY() + this.height - 1);
+            context.pose().pushPose();
+            context.pose().translate(0.0f, -this.renderedScrollAmount(), 0.0f);
+            this.renderContents(context, mouseX, mouseY, delta);
+            context.pose().popPose();
+            context.disableScissor();
+            this.renderDecorations(context);
+        }
+
+        @Override
+        protected void renderContents(@NotNull GuiGraphics context, int mouseX, int mouseY, float delta) {
+            int x = this.getX() + this.innerPadding();
+            int y = this.getY() + this.innerPadding();
+            for (var line : this.lines) {
+                if (this.withinContentAreaTopBottom(y, y + this.font.lineHeight)) {
+                    context.drawString(this.font, line, x, y, 0xFFFFFFFF, true);
+                }
+                y += this.font.lineHeight;
+            }
+        }
+
+        @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            if (this.scrollbarVisible()) {
+                int page = Math.max(this.font.lineHeight, this.height - this.totalInnerPadding() - this.font.lineHeight);
+                switch (keyCode) {
+                    case InputConstants.KEY_PAGEUP -> this.setScrollAmount(this.scrollAmount() - page);
+                    case InputConstants.KEY_PAGEDOWN -> this.setScrollAmount(this.scrollAmount() + page);
+                    case InputConstants.KEY_HOME -> this.setScrollAmount(0);
+                    case InputConstants.KEY_END -> this.setScrollAmount(this.getMaxScrollAmount());
+                    default -> {
+                        // Up and down are handled by the vanilla widget
+                        return super.keyPressed(keyCode, scanCode, modifiers);
+                    }
+                }
+                return true;
+            }
+            return super.keyPressed(keyCode, scanCode, modifiers);
+        }
+
+        @Override
+        protected void updateWidgetNarration(@NotNull NarrationElementOutput output) {
+            output.add(NarratedElementType.TITLE, this.body);
+        }
+
+        /**
+         * The style of the text under the mouse, or null if the mouse isn't over visible text.
+         */
+        @Nullable
+        Style getStyleAt(double mouseX, double mouseY) {
+            if (!this.visible || !this.withinContentAreaPoint(mouseX, mouseY)) {
+                return null;
+            }
+
+            double relativeX = mouseX - (this.getX() + this.innerPadding());
+            if (relativeX < 0) {
+                // Left padding. componentStyleAtWidth would report the line's first character here.
+                return null;
+            }
+
+            double relativeY = mouseY - (this.getY() + this.innerPadding()) + this.renderedScrollAmount();
+            // floor, not a cast: a cast rounds -0.5 up to row 0
+            int row = Mth.floor(relativeY / this.font.lineHeight);
+            if (row < 0 || row >= this.lines.size()) {
+                return null;
+            }
+            return this.font.getSplitter().componentStyleAtWidth(this.lines.get(row), Mth.floor(relativeX));
+        }
+
+        /**
+         * The scroll offset actually used for drawing and hit testing: the scroll amount rounded to a whole pixel.
+         * The unrounded amount is kept so small drags still add up.
+         */
+        private int renderedScrollAmount() {
+            return (int) Math.round(this.scrollAmount());
+        }
     }
 }
