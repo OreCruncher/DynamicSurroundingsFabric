@@ -122,9 +122,6 @@ class MarkdownParserFuzzTests {
                 }
 
                 boolean isLink = style.clickEventUrl() != null;
-                if (isLink == (style.hoverEventText() == null)) {
-                    return "click and hover text disagree in segment " + i;
-                }
                 if (isLink && !isAcceptableUrl(style.clickEventUrl())) {
                     return "link with an unacceptable url " + show(style.clickEventUrl()) + " in segment " + i;
                 }
@@ -264,12 +261,17 @@ class MarkdownParserFuzzTests {
     }
 
     /**
-     * Puts a backslash in front of every character, which the parser must treat as "this character is literal".
+     * Puts a backslash in front of every escapable (ASCII punctuation) character. The parser must treat each of
+     * those as literal and leave everything else, including backslashes it can't pair up, alone.
      */
     private static String escapeAll(String text) {
         StringBuilder sb = new StringBuilder(text.length() * 2);
         for (int i = 0; i < text.length(); i++) {
-            sb.append('\\').append(text.charAt(i));
+            char c = text.charAt(i);
+            if (Lexer.isEscapable(c)) {
+                sb.append('\\');
+            }
+            sb.append(c);
         }
         return sb.toString();
     }
@@ -362,7 +364,7 @@ class MarkdownParserFuzzTests {
             }
             Style s = last.style();
             if (s.bold() != null || s.italic() != null || s.underline() != null || s.strikethrough() != null
-                    || s.clickEventUrl() != null || s.hoverEventText() != null) {
+                    || s.clickEventUrl() != null) {
                 return "styling leaked into the next paragraph: " + s;
             }
             return null;

@@ -1,7 +1,11 @@
 package org.orecruncher.dsurround.lib.markdown;
 
-public enum TokenType {
+enum TokenType {
     TEXT,
+    /**
+     * A single character made literal by a preceding backslash. The token covers the character, not the backslash.
+     */
+    ESCAPED,
     NEWLINE,
     SOFT_BREAK,
     BOLD_MARKER,

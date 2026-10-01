@@ -207,6 +207,20 @@ class ComponentExporterTests {
     }
 
     @Test
+    void hoverTemplateWithStrayPercentDoesNotThrow() {
+        Options options = Options.builder().linkHoverTranslationKey("").linkHoverTemplate("100% of %s").build();
+        Component link = build("[site](https://example.com)", options).getSiblings().get(0);
+
+        Component hoverText = link.getStyle().getHoverEvent().getValue(HoverEvent.Action.SHOW_TEXT);
+        assertEquals("100% of https://example.com", hoverText.getString());
+    }
+
+    @Test
+    void nullOptionsAreRejected() {
+        assertThrows(NullPointerException.class, () -> MarkdownParser.markdownToComponent("x", null));
+    }
+
+    @Test
     void textAfterALinkHasNoLinkBehaviour() {
         Component root = build("[site](https://example.com) tail");
 

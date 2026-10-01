@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.lib.markdown;
 import net.minecraft.network.chat.Component;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -23,7 +24,8 @@ import java.util.Optional;
  *   <tr><td>{@code [text](https://example.com)}</td>
  *       <td>A link in the link color, underlined, that opens the URL when clicked and shows hover text. Only
  *           {@code http} and {@code https} URLs are links, and the whole {@code [text](url)} must be on one line.
- *           The link text may contain inline markup.</td></tr>
+ *           Parentheses in the URL must balance, or be escaped as {@code \)}. The link text may contain inline
+ *           markup.</td></tr>
  *   <tr><td>{@code <color:red>text</color>}, {@code <color:#FF8800>text</color>}</td>
  *       <td>Colored text. Names are the 16 Minecraft colors ({@code gold}, {@code dark_red}, ...). The tags are not
  *           case sensitive. Color tags may be nested. An explicit color overrides the heading and quote colors, but
@@ -33,13 +35,16 @@ import java.util.Optional;
  *   <tr><td>{@code > text}</td>
  *       <td>A block quote, using {@link Options#quoteStyle()} as a prefix on every quoted line. Italic unless
  *           {@link Options#quoteItalic()} is off. Headings inside a quote are never italic.</td></tr>
- *   <tr><td>{@code \*}</td><td>A backslash makes the next character literal.</td></tr>
+ *   <tr><td>{@code \*}</td><td>A backslash makes the next character literal if it is ASCII punctuation, as in
+ *       CommonMark. Before anything else the backslash is itself literal, so {@code C:\path} is shown as
+ *       written.</td></tr>
  * </table>
  *
  * <h2>Lines and paragraphs</h2>
  * A block marker ({@code #}, {@code >}, {@code -}, {@code *}) is only recognized at the very start of a line, with
- * no indentation. A single newline inside a paragraph is a "soft break" and becomes one space. A blank line, or a
- * line beginning with a block marker, starts a new block and keeps its newline.
+ * no indentation. A single newline inside a paragraph is a "soft break" and becomes one space. A blank line (one
+ * that is empty or holds only spaces and tabs), or a line beginning with a block marker, starts a new block and
+ * keeps its newline.
  * <p>
  * Inline markers do not carry across blocks: an unclosed {@code *} or {@code **} lasts until the end of its
  * paragraph (the next blank line or block marker) and then stops. {@code <color:>} tags are the exception, since
@@ -51,8 +56,9 @@ import java.util.Optional;
  *
  * <h2>Malformed and unsupported input</h2>
  * The parser never rejects input. Anything it cannot interpret is shown as literal text, including an unclosed
- * {@code [} or {@code <color:}, a color name Minecraft doesn't have, and a link whose URL isn't {@code http} or
- * {@code https}. A closing {@code </color>} with no opening tag is silently dropped.
+ * {@code [} or {@code <color:}, a color tag naming a color Minecraft doesn't have (along with its matching
+ * {@code </color>}), and a link whose URL isn't {@code http} or {@code https}. A closing {@code </color>} with no
+ * opening tag is silently dropped.
  * <p>
  * Not supported, and shown as written: numbered and nested lists, inline code and code blocks, tables,
  * horizontal rules, HTML other than {@code <color>}, and hard line breaks. Images are not supported either:
@@ -85,6 +91,7 @@ public final class MarkdownParser {
      * @return the rendered component, or empty if {@code markdown} is null
      */
     public static Optional<Component> markdownToComponent(String markdown, Options parserOptions) {
+        Objects.requireNonNull(parserOptions, "parserOptions");
         if (markdown == null) {
             return Optional.empty();
         }

@@ -245,7 +245,7 @@ class MarkdownParserTests {
         for (String tag : new String[]{"#fff", "#+fffff", "#-fffff", "#1234567", "#gg0000", "#"}) {
             List<Segment> segments = parse("<color:" + tag + ">x</color>");
 
-            assertEquals("<color:" + tag + ">x", plain(segments), tag);
+            assertEquals("<color:" + tag + ">x</color>", plain(segments), tag);
             assertNull(find(segments, "x").style().color(), tag);
         }
     }
@@ -265,8 +265,18 @@ class MarkdownParserTests {
     void unknownColorIsShownLiterally() {
         List<Segment> segments = parse("<color:foo>x</color>");
 
-        assertEquals("<color:foo>x", plain(segments));
+        assertEquals("<color:foo>x</color>", plain(segments));
         assertNull(find(segments, "x").style().color());
+    }
+
+    @Test
+    void unknownNestedColorDoesNotCloseTheOuterColor() {
+        List<Segment> segments = parse("<color:red>a <color:bogus>b</color> c</color> d");
+
+        assertEquals("a <color:bogus>b</color> c d", plain(segments));
+        assertEquals(color("red"), find(segments, "b").style().color());
+        assertEquals(color("red"), find(segments, " c").style().color());
+        assertNull(find(segments, " d").style().color());
     }
 
     @Test
@@ -356,19 +366,19 @@ class MarkdownParserTests {
     }
 
     @Test
-    void hoverTextUsesTemplateWithLiteralReplacement() {
-        Options options = Options.builder().linkHoverTemplate("Open %s now").build();
-        List<Segment> segments = parse("[x](https://example.com)", options);
+    void balancedParenthesesStayInTheUrl() {
+        List<Segment> segments = parse("[x](https://en.wikipedia.org/wiki/Foo_(bar)) tail");
 
-        assertEquals("Open https://example.com now", find(segments, "x").style().hoverEventText());
+        assertEquals("https://en.wikipedia.org/wiki/Foo_(bar)", find(segments, "x").style().clickEventUrl());
+        assertEquals("x tail", plain(segments));
     }
 
     @Test
-    void hoverTemplateWithStrayPercentDoesNotThrow() {
-        Options options = Options.builder().linkHoverTemplate("100% of %s").build();
-        List<Segment> segments = parse("[x](https://example.com)", options);
+    void unbalancedParenthesesInTheUrlAreNotALink() {
+        List<Segment> segments = parse("[x](https://example.com/(a)");
 
-        assertEquals("100% of https://example.com", find(segments, "x").style().hoverEventText());
+        assertEquals("[x](https://example.com/(a)", plain(segments));
+        assertNoLinks(segments);
     }
 
     // ---- Block elements --------------------------------------------------------------------------------------
@@ -657,6 +667,25 @@ class MarkdownParserTests {
         assertEquals("a\n\nb", plain(parse("a\n\nb")));
     }
 
+    @Test
+    void whitespaceOnlyLineIsABlankLine() {
+        assertEquals("a\n\nb", plain(parse("a\n  \nb")));
+        assertEquals("a\n\nb", plain(parse("a\n\t \nb")));
+
+        Segment after = find(parse("*a\n \nb"), "b");
+        assertNull(after.style().italic());
+    }
+
+    @Test
+    void lineThatOnlyLooksLikeABlockMarkerIsASoftBreak() {
+        assertEquals("see #tag", plain(parse("see\n#tag")));
+        assertEquals("a >b", plain(parse("a\n>b")));
+        assertEquals("a -b", plain(parse("a\n-b")));
+
+        // Inline styles carry on across the soft break
+        assertEquals(Boolean.TRUE, find(parse("**a\n#tag**"), "#tag").style().bold());
+    }
+
     // ---- Options applied to output ---------------------------------------------------------------------------
 
     @Test
@@ -699,6 +728,19 @@ class MarkdownParserTests {
     void quotesAndBackslashesSurviveIntact() {
         assertEquals("say \"hi\"", plain(parse("say \"hi\"")));
         assertEquals("a\\b", plain(parse("a\\\\b"))); // markdown "a\\b" is an escaped backslash
+    }
+
+    @Test
+    void backslashBeforeNonPunctuationIsLiteral() {
+        assertEquals("C:\\config\\dsurround", plain(parse("C:\\config\\dsurround")));
+        assertEquals("a\\ b", plain(parse("a\\ b")));
+        assertEquals("\\", plain(parse("\\")));
+    }
+
+    @Test
+    void backslashBeforeNewlineIsLiteralAndNotALineBreak() {
+        assertEquals(Options.DEFAULT.quoteStyle() + "a\\ b", plain(parse("> a\\\nb")));
+        assertEquals("a\\\n" + Options.DEFAULT.bulletStyle() + "x", plain(parse("a\\\n- x")));
     }
 
     // ---- Options builder -------------------------------------------------------------------------------------

@@ -48,26 +48,26 @@ final class ComponentExporter {
             style = style.withStrikethrough(s.strikethrough());
         }
         if (s.clickEventUrl() != null) {
-            style = style.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, s.clickEventUrl()));
-        }
-        if (s.hoverEventText() != null) {
-            style = style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverContents(s, options)));
+            style = style.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, s.clickEventUrl()))
+                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverContents(s, options)));
         }
         return style;
     }
 
     /**
      * Hover text for a link. With a translation key the URL is passed as the translation argument; without one
-     * the (templated) hover text is shown as is.
+     * the URL is substituted into {@link Options#linkHoverTemplate()}. The replacement is literal, so a stray
+     * {@code %} in the template is harmless.
      */
     private static Component hoverContents(Style s, Options options) {
+        String url = s.clickEventUrl();
         String key = options.linkHoverTranslationKey();
-        if (key != null && !key.isEmpty()) {
-            String url = s.clickEventUrl() != null ? s.clickEventUrl() : s.hoverEventText();
+        if (!key.isEmpty()) {
             MutableComponent urlComponent = Component.literal(url).withStyle(colorAndFont(s));
             return Component.translatable(key, urlComponent).withStyle(fontOnly(s));
         }
-        return Component.literal(s.hoverEventText()).withStyle(colorAndFont(s));
+        String text = options.linkHoverTemplate().replace("%s", url);
+        return Component.literal(text).withStyle(colorAndFont(s));
     }
 
     private static net.minecraft.network.chat.Style colorAndFont(Style s) {

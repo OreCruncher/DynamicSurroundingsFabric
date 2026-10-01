@@ -10,8 +10,8 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
  */
 public final class Options {
 
-    public static final Options DEFAULT = new Builder().build();
-    public static final Options UNIFORM = new Builder().font(BuiltinFonts.UNIFORM).build();
+    public static final Options DEFAULT = builder().build();
+    public static final Options UNIFORM = builder().font(BuiltinFonts.UNIFORM).build();
     private static final String DEFAULT_BULLET = "• ";
     private static final String DEFAULT_BLOCK_QUOTE = "│ ";
     private static final String DEFAULT_HOVER_TEMPLATE = "%s";
@@ -126,11 +126,11 @@ public final class Options {
     public static final class Builder {
 
         // Colors: null means "no explicit color" (inherit).
-        private TextColor headingColor = Colors.parse(ColorPalette.MC_GOLD.formatValue());
-        private TextColor linkColor = Colors.parse(ColorPalette.MC_BLUE.formatValue());
-        private TextColor bulletColor = Colors.parse(ColorPalette.MC_GRAY.formatValue());
+        private TextColor headingColor = ColorPalette.MC_GOLD;
+        private TextColor linkColor = ColorPalette.MC_BLUE;
+        private TextColor bulletColor = ColorPalette.MC_GRAY;
         private TextColor textColor = null;
-        private TextColor quoteColor = Colors.parse(ColorPalette.MC_GRAY.formatValue());
+        private TextColor quoteColor = ColorPalette.MC_GRAY;
         private ResourceLocation font = null;
 
         private String bulletStyle = DEFAULT_BULLET;
@@ -139,7 +139,7 @@ public final class Options {
         private String linkHoverTemplate = DEFAULT_HOVER_TEMPLATE;
         private String linkHoverTranslationKey = DEFAULT_HOVER_TEXT_LANG_KEY;
 
-        public Builder() {
+        private Builder() {
         }
 
         /**

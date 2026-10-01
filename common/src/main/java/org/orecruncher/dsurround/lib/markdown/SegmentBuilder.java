@@ -13,7 +13,8 @@ import java.util.*;
  * <ul>
  *   <li>inline flags (bold, italic, underline, strikethrough) - toggled by markers, reset at block boundaries</li>
  *   <li>block context (heading, block quote) - set by line-start markers, cleared at the end of the line</li>
- *   <li>explicit colors from {@code <color:x>...</color>} - a real stack, pushed/popped only by those tags</li>
+ *   <li>explicit colors from {@code <color:x>...</color>} - a real stack, pushed/popped only by those tags. An
+ *       unrecognized color is shown literally, and so is the {@code </color>} that pairs with it.</li>
  * </ul>
  * Links are validated up front; anything that doesn't form a complete, safe link is emitted as literal text.
  */
@@ -22,7 +23,7 @@ class SegmentBuilder {
     private final List<Token> tokens;
     private final Options options;
     private final List<Segment> segments = new ArrayList<>();
-    private final Deque<TextColor> colors = new ArrayDeque<>();
+    private final Deque<ColorFrame> colors = new ArrayDeque<>();
     private int index = 0;
     // Inline flags
     private boolean bold;
@@ -35,6 +36,7 @@ class SegmentBuilder {
     // Active link. linkUrl is null when not inside link text. linkEnd is the token index of the closing ')'.
     private String linkUrl;
     private int linkEnd;
+
     public SegmentBuilder(List<Token> tokens, Options options) {
         this.tokens = tokens;
         this.options = options;
@@ -62,14 +64,12 @@ class SegmentBuilder {
         }
     }
 
-    // ---- Style derivation ------------------------------------------------------------------------------------
-
     public List<Segment> build() {
         while (this.index < this.tokens.size()) {
             Token token = this.tokens.get(this.index++);
 
             switch (token.type()) {
-                case TEXT -> this.emit(token.source(), token.start(), token.end());
+                case TEXT, ESCAPED -> this.emit(token.source(), token.start(), token.end());
                 // Soft breaks are wrapped lines inside a paragraph and act as a single space
                 case SOFT_BREAK -> this.emit(" ");
                 case NEWLINE -> {
@@ -87,11 +87,7 @@ class SegmentBuilder {
                 case UNDERLINE_MARKER -> this.underline = this.toggle(token, this.underline);
                 case STRIKE_MARKER -> this.strikethrough = this.toggle(token, this.strikethrough);
                 case COLOR_START -> this.startColor(token);
-                case COLOR_END -> {
-                    if (!this.colors.isEmpty()) {
-                        this.colors.pop();
-                    }
-                }
+                case COLOR_END -> this.endColor(token);
                 case LINK_START -> this.startLink(token);
                 case LINK_MID -> this.endLinkText(token);
                 // A ')' that isn't closing a link is just text. Valid links skip past their own ')'.
@@ -101,13 +97,12 @@ class SegmentBuilder {
         return this.segments;
     }
 
+    // ---- Style derivation ------------------------------------------------------------------------------------
+
     private Style currentStyle() {
         // Quotes are italic when the option is on, but a heading inside a quote never is. Explicit italic markup
         // still applies.
         boolean quoteItalic = this.quote && this.options.quoteItalic() && !this.heading;
-
-        String clickUrl = this.linkUrl;
-        String hoverText = this.linkUrl == null ? null : this.options.linkHoverTemplate().replace("%s", this.linkUrl);
 
         // Flags are null when "off" so they merge cleanly in the Optimizer and stay unset in the output.
         return new Style(
@@ -117,8 +112,7 @@ class SegmentBuilder {
                 (this.italic || quoteItalic) ? Boolean.TRUE : null,
                 (this.underline || this.linkUrl != null) ? Boolean.TRUE : null,
                 this.strikethrough ? Boolean.TRUE : null,
-                clickUrl,
-                hoverText);
+                this.linkUrl);
     }
 
     /**
@@ -133,8 +127,8 @@ class SegmentBuilder {
         if (this.heading && this.options.headingColor() != null) {
             color = this.options.headingColor();
         }
-        if (!this.colors.isEmpty()) {
-            color = this.colors.peek();
+        if (!this.colors.isEmpty() && this.colors.peek().color() != null) {
+            color = this.colors.peek().color();
         }
         if (this.linkUrl != null && this.options.linkColor() != null) {
             color = this.options.linkColor();
@@ -184,8 +178,6 @@ class SegmentBuilder {
         this.emit(style, prefix, 0, prefix.length());
     }
 
-    // ---- Inline style markers --------------------------------------------------------------------------------
-
     private void emitBullet() {
         Style style = this.currentStyle();
         if (this.options.bulletColor() != null) {
@@ -194,6 +186,8 @@ class SegmentBuilder {
         String bullet = this.options.bulletStyle();
         this.emit(style, bullet, 0, bullet.length());
     }
+
+    // ---- Inline style markers --------------------------------------------------------------------------------
 
     /**
      * Flips an inline style flag for a marker token and returns the new value.
@@ -213,11 +207,22 @@ class SegmentBuilder {
     // ---- Colors ----------------------------------------------------------------------------------------------
 
     private void startColor(Token token) {
-        TextColor color = Colors.parse(token.extraData());
+        TextColor color = Colors.parse(token.argument());
         if (color != null) {
-            this.colors.push(color);
+            this.colors.push(new ColorFrame(color, false));
         } else {
-            // Unknown color - show the tag literally rather than guess what was meant.
+            // Unknown color - show the tag literally rather than guess what was meant. A frame is still pushed so
+            // the matching </color> closes this tag (and is shown literally too) instead of an enclosing one.
+            this.emit(token.source(), token.start(), token.end());
+            this.colors.push(new ColorFrame(this.colors.isEmpty() ? null : this.colors.peek().color(), true));
+        }
+    }
+
+    private void endColor(Token token) {
+        if (this.colors.isEmpty()) {
+            return; // stray closing tag
+        }
+        if (this.colors.pop().literal()) {
             this.emit(token.source(), token.start(), token.end());
         }
     }
@@ -247,11 +252,16 @@ class SegmentBuilder {
     /**
      * Looks ahead from just after a '[' for a matching "](url)" on the same line. Returns null if the link
      * is incomplete or the URL isn't acceptable, in which case the '[' should be treated as text.
+     * <p>
+     * Parentheses in the URL must balance, so {@code (https://en.wikipedia.org/wiki/Foo_(bar))} keeps its last
+     * {@code )}. Escaped parentheses don't count.
      */
     private LinkMatch matchLink(int from) {
         int mid = -1;
+        int depth = 0;
         for (int i = from; i < this.tokens.size(); i++) {
-            TokenType type = this.tokens.get(i).type();
+            Token token = this.tokens.get(i);
+            TokenType type = token.type();
             if (type == TokenType.NEWLINE || type == TokenType.SOFT_BREAK) {
                 return null;
             }
@@ -262,6 +272,10 @@ class SegmentBuilder {
                 if (type == TokenType.LINK_MID) {
                     mid = i;
                 }
+            } else if (type == TokenType.TEXT) {
+                depth += count(token.value(), '(');
+            } else if (type == TokenType.LINK_END && depth > 0) {
+                depth--;
             } else if (type == TokenType.LINK_END) {
                 StringBuilder url = new StringBuilder();
                 for (int j = mid + 1; j < i; j++) {
@@ -274,6 +288,23 @@ class SegmentBuilder {
         return null;
     }
 
+    private static int count(CharSequence text, char c) {
+        int n = 0;
+        for (int i = 0; i < text.length(); i++) {
+            if (text.charAt(i) == c) {
+                n++;
+            }
+        }
+        return n;
+    }
+
     private record LinkMatch(String url, int endIndex) {
+    }
+
+    /**
+     * One open {@code <color>} tag. {@code color} is null when the tag doesn't change the color. {@code literal} is
+     * true for a tag with an unrecognized color, which was shown as text.
+     */
+    private record ColorFrame(TextColor color, boolean literal) {
     }
 }
