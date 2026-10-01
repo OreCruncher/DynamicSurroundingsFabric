@@ -106,6 +106,20 @@ public final class SoundMetadata {
     }
 
     /**
+     * True if a title is configured and it isn't blank in the current language.
+     */
+    public boolean hasTitle() {
+        return !this.title.getString().isBlank();
+    }
+
+    /**
+     * True if a subtitle is configured and it isn't blank in the current language.
+     */
+    public boolean hasSubTitle() {
+        return !this.subTitle.getString().isBlank();
+    }
+
+    /**
      * Gets the credits configured for the sound event in sounds.json, or an empty list if not present.
      *
      * @return List containing zero or more strings describing the sound credits.

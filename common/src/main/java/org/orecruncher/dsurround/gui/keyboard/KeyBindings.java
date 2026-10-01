@@ -14,7 +14,6 @@ import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.IConfigScreenFactoryProvider;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.eventing.ClientState;
-import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -40,12 +39,8 @@ public final class KeyBindings {
         registerKeyBinding(
                 "individualSoundConfig",
                 InputConstants.UNKNOWN.getValue(),
-                () -> {
-                    final boolean singlePlayer = GameUtils.isSinglePlayer();
-                    GameUtils.setScreen(new IndividualSoundControlScreen(null, singlePlayer));
-                    if (singlePlayer)
-                        ContainerManager.resolve(IAudioPlayer.class).stopAll();
-                }
+                // The screen handles stopping sounds and pausing the music itself
+                () -> GameUtils.setScreen(new IndividualSoundControlScreen(null, GameUtils.isSinglePlayer()))
         );
 
         registerKeyBinding(

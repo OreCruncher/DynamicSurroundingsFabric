@@ -16,8 +16,6 @@ import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Localization;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
-import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
-import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.lib.resources.FileResourceUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -66,25 +64,9 @@ public abstract class MixinSoundOptionsScreen extends OptionsSubScreen {
         if (this.minecraft == null)
             return;
 
+        // The screen pauses and resumes the music itself
         var enablePlayButtons = this.minecraft.level == null || GameUtils.isSinglePlayer();
-        var musicManager = ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.class);
-
-        if (enablePlayButtons) {
-            musicManager.ifPresent(m -> m.setPaused(true));
-        }
-
-        var screen = new IndividualSoundControlScreen(
-                this,
-                enablePlayButtons,
-                ignore -> {
-                    // Stop any sounds left hanging for whatever reason, and restart the MusicManager
-                    GameUtils.getSoundManager().stop();
-                    if (enablePlayButtons) {
-                        musicManager.ifPresent(m -> m.setPaused(false));
-                    }
-                });
-
-        GameUtils.setScreen(screen);
+        GameUtils.setScreen(new IndividualSoundControlScreen(this, enablePlayButtons));
     }
 
     @Unique

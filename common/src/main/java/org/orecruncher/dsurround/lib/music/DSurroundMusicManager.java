@@ -95,7 +95,7 @@ public final class DSurroundMusicManager extends MusicManager {
 
         // Lookup meta information
         var metaData = MixinHelpers.SOUND_LIBRARY.getSoundMetadata(this.currentMusic.getLocation());
-        if (metaData == null || Component.empty().equals(metaData.getTitle())) {
+        if (metaData == null || !metaData.hasTitle()) {
             return Component.literal(this.currentMusic.getLocation().toString());
         }
 
