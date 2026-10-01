@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.lib.scanner;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -36,16 +35,16 @@ public final class ScanContext {
         return this.logger;
     }
 
-    public ResourceLocation getWorldReference() {
-        return this.getWorld().dimension().registry();
-    }
-
     public boolean isOutOfHeightLimit(int y) {
         return this.getWorld().isOutsideBuildHeight(y);
     }
 
+    /**
+     * Clamps to the range of valid block positions. getMaxBuildHeight() is exclusive, so the highest valid y is
+     * one less.
+     */
     public int clampHeight(int y) {
         var world = this.getWorld();
-        return Mth.clamp(y, world.getMinBuildHeight(), world.getMaxBuildHeight());
+        return Mth.clamp(y, world.getMinBuildHeight(), world.getMaxBuildHeight() - 1);
     }
 }

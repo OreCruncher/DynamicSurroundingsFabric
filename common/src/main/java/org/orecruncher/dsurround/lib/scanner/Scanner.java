@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.lib.scanner;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
@@ -11,6 +10,8 @@ import org.orecruncher.dsurround.lib.random.Randomizer;
 public abstract class Scanner {
 
     private final static int MAX_BLOCKS_TICK = 6000;
+    // After this many failures only a count is kept, so a broken handler can't flood the log
+    private final static int MAX_LOGGED_ERRORS = 10;
 
     protected final String name;
 
@@ -28,6 +29,8 @@ public abstract class Scanner {
 
     protected final IRandomizer random = Randomizer.current();
     protected final BlockPos.MutableBlockPos workingPos = new BlockPos.MutableBlockPos();
+
+    private int errorCount = 0;
 
     public Scanner(final ScanContext locus, final String name, final int range) {
         this(locus, name, range, range, range);
@@ -53,7 +56,8 @@ public abstract class Scanner {
         this.ySize = yRange * 2 + 1;
         this.zSize = zRange * 2 + 1;
         this.volume = this.xSize * this.ySize * this.zSize;
-        this.blocksPerTick = Math.min(this.volume / 20, MAX_BLOCKS_TICK);
+        // At least one, so a tiny range still makes progress
+        this.blocksPerTick = Math.clamp(this.volume / 20, 1, MAX_BLOCKS_TICK);
     }
 
     /**
@@ -70,25 +74,39 @@ public abstract class Scanner {
      */
     public abstract void blockScan(final Level world, final BlockState state, final BlockPos pos, final IRandomizer rand);
 
-    public void tick() {
-        var world = this.locus.getWorld();
-        for (int count = 0; count < this.blocksPerTick; count++) {
-            final BlockPos pos = nextPos(this.workingPos, this.random);
-            if (pos == null)
-                break;
-            final BlockState state = world.getBlockState(pos);
-            if (Constants.BLOCKS_TO_IGNORE.contains(state.getBlock()))
-                continue;
-            blockScan(world, state, pos, this.random);
+    /**
+     * Does this tick's share of scanning, reading at most about {@link #blocksPerTick} blocks.
+     */
+    public abstract void tick();
+
+    /**
+     * Passes a block to {@link #blockScan} unless it is one of {@link Constants#BLOCKS_TO_IGNORE}. Every scan path
+     * goes through here, so they all skip the same blocks, and an exception from one block is logged instead of
+     * abandoning the rest of the scan.
+     */
+    protected final void scanBlock(final Level world, final BlockState state, final BlockPos pos) {
+        if (Constants.BLOCKS_TO_IGNORE.contains(state.getBlock()))
+            return;
+        try {
+            this.blockScan(world, state, pos, this.random);
+        } catch (Throwable t) {
+            this.onBlockError(t, "blockScan", state, pos);
         }
     }
 
     /**
-     * Provide the next block position to be processed. For memory efficiency the
-     * provided mutable should be used to store the coordinate information and
-     * returned from the function call.
+     * Logs a failure from a block handler. Errors the JVM can't recover from (out of memory, stack overflow) are
+     * rethrown rather than swallowed.
      */
-    @Nullable
-    protected abstract BlockPos nextPos(final BlockPos.MutableBlockPos pos, final IRandomizer rand);
+    protected final void onBlockError(final Throwable t, final String handler, final BlockState state, final BlockPos pos) {
+        if (t instanceof VirtualMachineError fatal)
+            throw fatal;
 
+        this.errorCount++;
+        if (this.errorCount <= MAX_LOGGED_ERRORS) {
+            this.locus.getLogger().error(t, "[%s] %s failed at %s for %s", this.name, handler, pos.toShortString(), state);
+            if (this.errorCount == MAX_LOGGED_ERRORS)
+                this.locus.getLogger().warn("[%s] %d block errors; further errors will not be logged", this.name, MAX_LOGGED_ERRORS);
+        }
+    }
 }

@@ -1,53 +1,69 @@
 package org.orecruncher.dsurround.lib.scanner;
 
+import net.minecraft.core.BlockBox;
 import net.minecraft.core.BlockPos;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.Iterator;
+/**
+ * Visits every position in a cuboid exactly once, bounds inclusive, without allocating: each point is written into
+ * a position supplied by the caller. X changes fastest, then Z, then Y, so each
+ * horizontal layer is finished before moving up.
+ */
+public final class CuboidPointIterator {
 
-public class CuboidPointIterator implements IPointIterator {
+    /**
+     * An iterator with no points.
+     */
+    static final CuboidPointIterator EMPTY = new CuboidPointIterator();
 
-    static final CuboidPointIterator NULL_ITERATOR = new CuboidPointIterator() {
-
-        @Override
-        public BlockPos next() {
-            return null;
-        }
-
-        @Override
-        public BlockPos peek() {
-            return null;
-        }
-
-    };
-
-    protected final Iterator<BlockPos> itr;
-    protected BlockPos peeked;
+    private final int minX, minZ;
+    private final int maxX, maxY, maxZ;
+    private int x, y, z;
+    private boolean done;
 
     private CuboidPointIterator() {
-        this.itr = null;
+        this.minX = this.minZ = this.maxX = this.maxY = this.maxZ = 0;
+        this.done = true;
     }
 
-    public CuboidPointIterator(final BlockPos[] points) {
-        this(points[0], points[1]);
+    public CuboidPointIterator(final BlockBox box) {
+        this(box.min(), box.max());
     }
 
+    /**
+     * The two corners may be given in either order.
+     */
     public CuboidPointIterator(final BlockPos p1, final BlockPos p2) {
-        this.itr = BlockPos.betweenClosed(p1, p2).iterator();
-        this.peeked = this.itr.next();
+        this.minX = Math.min(p1.getX(), p2.getX());
+        this.minZ = Math.min(p1.getZ(), p2.getZ());
+        this.maxX = Math.max(p1.getX(), p2.getX());
+        this.maxY = Math.max(p1.getY(), p2.getY());
+        this.maxZ = Math.max(p1.getZ(), p2.getZ());
+
+        this.x = this.minX;
+        this.y = Math.min(p1.getY(), p2.getY());
+        this.z = this.minZ;
+        this.done = false;
     }
 
-    @Override
-    @Nullable
-    public BlockPos next() {
-        final BlockPos result = this.peeked;
-        this.peeked = this.itr.hasNext() ? this.itr.next() : null;
-        return result;
-    }
+    /**
+     * Writes the next point into {@code out}.
+     *
+     * @return true if a point was written, false if there are no more points ({@code out} is then unchanged)
+     */
+    public boolean next(final BlockPos.MutableBlockPos out) {
+        if (this.done)
+            return false;
 
-    @Override
-    @Nullable
-    public BlockPos peek() {
-        return this.peeked;
+        out.set(this.x, this.y, this.z);
+
+        if (++this.x > this.maxX) {
+            this.x = this.minX;
+            if (++this.z > this.maxZ) {
+                this.z = this.minZ;
+                if (++this.y > this.maxY)
+                    this.done = true;
+            }
+        }
+        return true;
     }
 }

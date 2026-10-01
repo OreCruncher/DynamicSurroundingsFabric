@@ -19,6 +19,14 @@ public interface IEffectSystem {
     boolean isEnabled();
 
     /**
+     * Whether {@link #blockScan} does anything. Systems that find their blocks some other way return false, so the
+     * scanner doesn't call them for every block in range.
+     */
+    default boolean wantsBlockScans() {
+        return true;
+    }
+
+    /**
      * Invoked when a new block comes into the scan area
      */
     void blockScan(Level world, BlockState state, BlockPos pos);

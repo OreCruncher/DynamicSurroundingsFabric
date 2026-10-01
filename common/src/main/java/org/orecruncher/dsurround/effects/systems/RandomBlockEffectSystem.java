@@ -88,6 +88,12 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
     }
 
     @Override
+    public boolean wantsBlockScans() {
+        // Blocks are sampled at random in tick(), so the scanner needn't report each one
+        return false;
+    }
+
+    @Override
     public void blockScan(Level world, BlockState state, BlockPos pos) {
         // Do nothing - everything is in the tick
     }
