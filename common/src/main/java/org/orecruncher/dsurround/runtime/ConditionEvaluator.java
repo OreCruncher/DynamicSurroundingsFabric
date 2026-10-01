@@ -8,8 +8,6 @@ import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.lib.scripting.engine.ScriptException;
-import org.orecruncher.dsurround.lib.scripting.engine.ScriptHelpers;
 import org.orecruncher.dsurround.runtime.variables.*;
 
 public final class ConditionEvaluator implements IConditionEvaluator {
@@ -40,19 +38,13 @@ public final class ConditionEvaluator implements IConditionEvaluator {
     }
 
     public boolean check(final Script conditions) {
-        return ScriptHelpers.toBoolean(this.eval(conditions));
+        // Evaluates directly to a boolean. A script that fails, or whose result cannot be converted to a boolean,
+        // is treated as false and the problem is logged once.
+        return this.context.check(conditions);
     }
 
     public Object eval(final Script conditions) {
-        try {
-            return this.context.eval(conditions).orElse(false);
-        } catch(ScriptException e) {
-            var msg = e.getMessageForLogging(conditions.asString());
-            this.logger.error(e, msg);
-            return msg;
-        } catch(Throwable t) {
-            this.logger.error(t, "Unable to evaluate script");
-        }
-        return false;
+        // ExecutionContext.eval() handles and logs script errors itself
+        return this.context.eval(conditions).orElse(false);
     }
 }

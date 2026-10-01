@@ -7,8 +7,9 @@ import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 
 public final class DiurnalVariables extends VariableSet {
 
-    private float moonPhaseFactor;
-    private float celestialAngle;
+    // Numeric values are stored boxed when updated each tick, so that reading them from scripts does not allocate
+    private Float moonPhaseFactor = 0F;
+    private Float celestialAngle = 0F;
     private boolean isDay;
     private boolean isNight;
     private boolean isSunrise;
@@ -42,11 +43,11 @@ public final class DiurnalVariables extends VariableSet {
 
     @Override
     public void configure(IConfigureDefinition config) {
-        config.defineFunction(id("isDay"), l -> this.isDay);
-        config.defineFunction(id("isNight"), l -> this.isNight);
-        config.defineFunction(id("isSunrise"), l -> this.isSunrise);
-        config.defineFunction(id("isSunset"), l -> this.isSunset);
-        config.defineFunction(id("getMoonPhaseFactor"), l -> this.moonPhaseFactor);
-        config.defineFunction(id("getCelestialAngle"), l -> this.celestialAngle);
+        config.property(id("isDay"), () -> this.isDay);
+        config.property(id("isNight"), () -> this.isNight);
+        config.property(id("isSunrise"), () -> this.isSunrise);
+        config.property(id("isSunset"), () -> this.isSunset);
+        config.property(id("getMoonPhaseFactor"), () -> this.moonPhaseFactor);
+        config.property(id("getCelestialAngle"), () -> this.celestialAngle);
     }
 }

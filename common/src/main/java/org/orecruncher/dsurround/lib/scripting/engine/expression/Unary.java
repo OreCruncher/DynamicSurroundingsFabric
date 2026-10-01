@@ -27,13 +27,36 @@ public record Unary(Token operator, Expression right, IUnaryOperationHandler fun
 
     private static IUnaryOperationHandler getFunction(Token operator) {
         return switch (operator.type()) {
-            case NOT -> o -> !ScriptHelpers.toBoolean(o.eval());
-            case NEG -> o -> -ScriptHelpers.toDouble(o.eval());
+            case NOT -> o -> !toBoolean(operator, o.eval());
+            case NEG -> o -> -toDouble(operator, o.eval());
             default -> {
                 ScriptException.throwException(operator, "Unknown unary operator type '%s'".formatted(operator.lexeme()));
                 yield null;
             }
         };
+    }
+
+    // Conversions do not use exceptions internally: a failure throws exactly one ScriptException, with the
+    // operator's location. Numbers and booleans take a fast path that avoids boxing.
+
+    private static double toDouble(Token operator, Object value) {
+        if (value instanceof Number n)
+            return n.doubleValue();
+        var converted = ScriptHelpers.tryToDouble(value);
+        if (converted != null)
+            return converted;
+        ScriptException.throwException(operator, "Operand must be a number or value that converts to a number");
+        return 0D;
+    }
+
+    private static boolean toBoolean(Token operator, Object value) {
+        if (value instanceof Boolean b)
+            return b;
+        var converted = ScriptHelpers.tryToBoolean(value);
+        if (converted != null)
+            return converted;
+        ScriptException.throwException(operator, "Operand must be a boolean or value that converts to a boolean");
+        return false;
     }
 
     @FunctionalInterface

@@ -36,10 +36,9 @@ public final class ScriptEngine implements IConfigureDefinition {
     }
 
     @Override
-    public void defineFunction(@NotNull String name, int arity, boolean hasVarArgs, @NotNull IScriptFunction delegate) {
-        Preconditions.checkNotNull(name);
-        Preconditions.checkNotNull(delegate);
-        this.environment.defineFunction(name, arity, hasVarArgs, delegate);
+    public void defineFunction(@NotNull ScriptFunction function) {
+        Preconditions.checkNotNull(function);
+        this.environment.defineFunction(function);
     }
 
 }

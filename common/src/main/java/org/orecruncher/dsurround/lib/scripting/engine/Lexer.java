@@ -14,6 +14,11 @@ class Lexer {
     private int start = 0;
     private int current = 0;
     private int line = 1;
+    // Absolute offset of the first character of the current line
+    private int lineStart = 0;
+    // Location where the token currently being scanned started
+    private int tokenLine = 1;
+    private int tokenColumn = 0;
 
     Lexer(String source) {
         this.source = source;
@@ -23,10 +28,12 @@ class Lexer {
         while (!this.isAtEnd()) {
             // We are at the beginning of the next lexeme.
             this.start = this.current;
+            this.tokenLine = this.line;
+            this.tokenColumn = this.current - this.lineStart;
             this.scanToken();
         }
 
-        this.tokens.add(Token.from(EOF, "", null, this.line, this.start));
+        this.tokens.add(Token.from(EOF, "", null, this.line, this.current - this.lineStart, this.current));
         return this.tokens;
     }
 
@@ -44,14 +51,13 @@ class Lexer {
                 this.addToken(COMMA);
                 break;
             case '.':
-                if (lastToken == null || lastToken.type() != TokenType.STRING) {
-                    ScriptException.throwException(this.line, this.current, "Unexpected character '.'");
-                }
-                this.addToken(DOT);
+                // Member access on values is not supported. Dots are only valid inside identifiers (namespaces)
+                // and numeric literals, both of which are consumed by their own scanners.
+                this.errorAtTokenStart("Unexpected character '.'");
                 break;
             case '-':
                 // Need to disambiguate between the binary operator and the prefix operator for negation
-                if (lastToken == null || lastToken.type().isOperator() || lastToken.type() == LEFT_PAREN) {
+                if (this.isPrefixPosition(lastToken)) {
                     this.addToken(NEG);
                 } else {
                     this.addToken(MINUS);
@@ -60,7 +66,7 @@ class Lexer {
             case '+':
                 // Similar rule to negation, but the + sign is dropped because a number without a negative
                 // prefix is assumed to be positive.
-                if (!(lastToken == null || lastToken.type().isOperator() || lastToken.type() == LEFT_PAREN)) {
+                if (!this.isPrefixPosition(lastToken)) {
                     this.addToken(PLUS);
                 }
                 break;
@@ -72,7 +78,7 @@ class Lexer {
                 break;
             case '=':
                 if (!this.match('=')) {
-                    ScriptException.throwException(this.line, this.current, "Unexpected character '%c'".formatted(this.peek()));
+                    this.errorAtTokenStart("Unexpected character '=' (did you mean '=='?)");
                 }
                 this.addToken(EQUAL_EQUAL);
                 break;
@@ -84,13 +90,13 @@ class Lexer {
                 break;
             case '|':
                 if (!this.match('|')) {
-                    ScriptException.throwException(this.line, this.current, "Unexpected character '%c'".formatted(this.peek()));
+                    this.errorAtTokenStart("Unexpected character '|' (did you mean '||'?)");
                 }
                 this.addToken(CONDITIONAL_OR);
                 break;
             case '&':
                 if (!this.match('&')) {
-                    ScriptException.throwException(this.line, this.current, "Unexpected character '%c'".formatted(this.peek()));
+                    this.errorAtTokenStart("Unexpected character '&' (did you mean '&&'?)");
                 }
                 this.addToken(CONDITIONAL_AND);
                 break;
@@ -111,7 +117,7 @@ class Lexer {
                 break;
 
             case '\n':
-                this.line++;
+                this.newLine();
                 break;
 
             case '"':
@@ -128,10 +134,21 @@ class Lexer {
                 } else if (this.isAlpha(c)) {
                     this.identifier();
                 } else {
-                    ScriptException.throwException(this.line, this.current,"Unexpected character '%c'".formatted(c));
+                    this.errorAtTokenStart("Unexpected character '%c'".formatted(c));
                 }
                 break;
         }
+    }
+
+    /**
+     * A '-' or '+' is a prefix (unary) operator when it starts the expression, follows another operator, or
+     * starts a parenthesized expression or function argument.
+     */
+    private boolean isPrefixPosition(Token lastToken) {
+        return lastToken == null
+                || lastToken.type().isOperator()
+                || lastToken.type() == LEFT_PAREN
+                || lastToken.type() == COMMA;
     }
 
     private void identifier() {
@@ -145,9 +162,9 @@ class Lexer {
                     this.advance();
                 } else {
                     if (peeked == '\0')
-                        ScriptException.throwException(this.line, this.current,"Unexpected end of line");
+                        this.errorAtCurrent("Unexpected end of line");
                     else
-                        ScriptException.throwException(this.line, this.current, "Unexpected character '%c'".formatted(peeked));
+                        this.errorAtCurrent("Unexpected character '%c'".formatted(peeked));
                 }
             } else if (peeked == '.') {
                 afterDot = true;
@@ -182,20 +199,20 @@ class Lexer {
         try {
             this.addToken(NUMBER, Double.parseDouble(this.source.substring(this.start, this.current)));
         } catch (final NumberFormatException e) {
-            ScriptException.throwException(this.line, this.start, "Invalid numeric constant");
+            this.errorAtTokenStart("Invalid numeric constant");
         }
     }
 
     private void string(char closingChar) {
         while (this.peek() != closingChar && !this.isAtEnd()) {
-            if (this.peek() == '\n')
-                this.line++;
-            this.advance();
+            char c = this.advance();
+            if (c == '\n')
+                this.newLine();
         }
 
         // Unterminated string.
         if (this.isAtEnd()) {
-            ScriptException.throwException(this.line, this.current, "Unterminated string");
+            this.errorAtTokenStart("Unterminated string");
             return;
         }
 
@@ -205,6 +222,20 @@ class Lexer {
         // Trim the surrounding quotes.
         String value = this.source.substring(this.start + 1, this.current - 1);
         this.addToken(STRING, value);
+    }
+
+    private void newLine() {
+        // Called after the '\n' has been consumed
+        this.line++;
+        this.lineStart = this.current;
+    }
+
+    private void errorAtTokenStart(String message) {
+        ScriptException.throwException(this.tokenLine, this.tokenColumn, this.start, message);
+    }
+
+    private void errorAtCurrent(String message) {
+        ScriptException.throwException(this.line, this.current - this.lineStart, this.current, message);
     }
 
     private boolean match(char expected) {
@@ -258,6 +289,6 @@ class Lexer {
 
     private void addToken(TokenType type, Object literal) {
         String text = this.source.substring(this.start, this.current);
-        this.tokens.add(Token.from(type, text, literal, this.line, this.start));
+        this.tokens.add(Token.from(type, text, literal, this.tokenLine, this.tokenColumn, this.start));
     }
 }

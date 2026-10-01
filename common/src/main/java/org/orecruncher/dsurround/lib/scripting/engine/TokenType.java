@@ -5,7 +5,6 @@ public enum TokenType {
     LEFT_PAREN,
     RIGHT_PAREN,
     COMMA,
-    DOT,
 
     // Binary operators
     MINUS(7, false, false, true),

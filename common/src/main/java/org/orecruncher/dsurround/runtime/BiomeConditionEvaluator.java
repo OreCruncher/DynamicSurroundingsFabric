@@ -7,8 +7,6 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.lib.scripting.engine.ScriptException;
-import org.orecruncher.dsurround.lib.scripting.engine.ScriptHelpers;
 import org.orecruncher.dsurround.runtime.variables.BiomeVariables;
 
 public final class BiomeConditionEvaluator {
@@ -30,7 +28,9 @@ public final class BiomeConditionEvaluator {
     }
 
     public boolean check(Biome biome, BiomeInfo info, final Script conditions) {
-        return ScriptHelpers.toBoolean(this.eval(biome, info, conditions));
+        // Evaluates directly to a boolean. A script that fails, or whose result cannot be converted to a boolean,
+        // is treated as false and the problem is logged once.
+        return this.setBiome(biome, info) && this.context.check(conditions);
     }
 
     public Object eval(Biome biome, final Script conditions) {
@@ -38,18 +38,24 @@ public final class BiomeConditionEvaluator {
     }
 
     public Object eval(Biome biome, BiomeInfo info, final Script conditions) {
+        // ExecutionContext.eval() handles and logs script errors itself
+        return this.setBiome(biome, info) ? this.context.eval(conditions).orElse(false) : false;
+    }
+
+    /**
+     * Sets the biome the scripts see.
+     * @return False if setting up the biome failed (the problem is logged)
+     */
+    private boolean setBiome(Biome biome, BiomeInfo info) {
         try {
             if (info == null)
                 this.biomeVariables.setBiome(biome);
             else
                 this.biomeVariables.setBiome(biome, info);
-            return this.context.eval(conditions).orElse(false);
-        } catch (ScriptException e) {
-            var msg = e.getMessageForLogging(conditions.asString());
-            this.logger.error(e, msg);
+            return true;
         } catch (Throwable t) {
             this.logger.error(t, "Unable to evaluate script");
+            return false;
         }
-        return false;
     }
 }

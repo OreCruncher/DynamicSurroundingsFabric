@@ -36,9 +36,9 @@ public final class DimensionVariables extends VariableSet {
 
     @Override
     public void configure(IConfigureDefinition config) {
-        config.defineFunction(id("getId"), l -> this.id);
-        config.defineFunction(id("getDimName"), l -> this.name);
-        config.defineFunction(id("hasSky"), l -> this.hasSky);
-        config.defineFunction(id("isSuperFlat"), l -> this.isSuperFlat);
+        config.property(id("getId"), () -> this.id);
+        config.property(id("getDimName"), () -> this.name);
+        config.property(id("hasSky"), () -> this.hasSky);
+        config.property(id("isSuperFlat"), () -> this.isSuperFlat);
     }
 }

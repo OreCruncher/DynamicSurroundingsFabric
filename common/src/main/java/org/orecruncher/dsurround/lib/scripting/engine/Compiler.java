@@ -1,205 +1,243 @@
 package org.orecruncher.dsurround.lib.scripting.engine;
 
+import org.orecruncher.dsurround.lib.scripting.ConstantVariable;
 import org.orecruncher.dsurround.lib.scripting.engine.expression.*;
 
 import java.util.*;
 
 record Compiler(Environment environment) {
 
+    /**
+     * Builds the expression tree. The RPN has already been validated by RpnConverter, so every operator and
+     * function is guaranteed its operands and exactly one expression remains at the end.
+     */
     Expression translate(List<RpnConverter.RpnToken> tokens) {
         Deque<Expression> stack = new ArrayDeque<>();
+        // Parallel to the expression stack: the first token (in source order) of each sub-expression. Used to
+        // report problems with a function argument where that argument starts in the script.
+        Deque<Token> starts = new ArrayDeque<>();
 
         // Iterate through the tokens generating a syntax tree
         for (var token : tokens) {
             if (token.isFunction()) {
                 List<Expression> children = new ArrayList<>();
+                List<Token> childStarts = new ArrayList<>();
                 // Pop N arguments off the stack (popped in reverse order)
                 for (int i = 0; i < token.argCount(); i++) {
-                    if (stack.isEmpty()) {
-                        ScriptException.throwException(token.token(), "Insufficient operands for function '%s'".formatted(token.token().lexeme()));
-                    }
                     children.add(stack.pop());
+                    childStarts.add(starts.pop());
                 }
 
                 // Reverse to restore original argument ordering
                 Collections.reverse(children);
+                Collections.reverse(childStarts);
 
-                stack.push(Call.from(this.environment, token.token(), children));
+                stack.push(this.createCall(token.token(), children, childStarts));
+                starts.push(token.token());
             } else if (token.token().type().isBinaryOperator()) {
-                if (stack.size() < 2) {
-                    ScriptException.throwException(token.token(), "Insufficient operands for binary operator '%s'".formatted(token.token().lexeme()));
-                }
                 Expression right = stack.pop();
                 Expression left = stack.pop();
                 Expression result = this.optimizeBinaryOperation(left, token.token(), right);
 
                 stack.push(result);
+                // The result starts where the left operand starts
+                starts.pop();
             } else if (token.token().type().isUnaryOperator()) {
-                if (stack.isEmpty()) {
-                    ScriptException.throwException(token.token(), "Insufficient operands for unary operator '%s'".formatted(token.token().lexeme()));
-                }
                 Expression right = stack.pop();
                 var result = this.optimizeUnaryOperation(token.token(), right);
 
                 stack.push(result);
+                // Prefix operator: the result starts at the operator
+                starts.pop();
+                starts.push(token.token());
             } else if (TokenType.isIdentifier(token.token().type())) {
-                stack.push(Variable.from(this.environment, token.token()));
+                stack.push(this.createVariable(token.token()));
+                starts.push(token.token());
             } else if (TokenType.isLiteral(token.token().type())) {
                 stack.push(Literal.from(token.token()));
+                starts.push(token.token());
+            } else {
+                // The lexer produces no other token types; this guards against adding one without handling it here
+                ScriptException.throwException(token.token(), "Unexpected token '%s'".formatted(token.token().lexeme()));
             }
-        }
-
-        if (stack.size() != 1) {
-            ScriptException.throwException("Extra unused tokens remain on stack");
         }
 
         return stack.pop();
     }
 
-    private Expression optimizeBinaryOperation(Expression left, Token operator, Expression right) {
-        switch (operator.type()) {
-            case STAR: {
-                // Optimize for multiplying by 0. Result will be zero, so we can just return
-                // the appropriate operand.
-                if (left instanceof Literal l && l.value() instanceof Number number && number.doubleValue() == 0) {
-                    return l;
-                }
+    /**
+     * A constant, such as math.pi, compiles to a literal so that expressions using it can be folded.
+     */
+    private Expression createVariable(Token token) {
+        var variable = Variable.from(this.environment, token);
+        if (variable.variable() instanceof ConstantVariable<?> constant) {
+            var literal = literalOf(constant.value(), token);
+            if (literal != null)
+                return literal;
+        }
+        return variable;
+    }
 
-                if (right instanceof Literal r && r.value() instanceof Number number && number.doubleValue() == 0) {
-                    return r;
-                }
+    /**
+     * Creates a function call. Constant arguments are converted to their parameter types now, so an invalid
+     * constant is reported as a compile error at the argument. A pure function whose arguments are all constant
+     * is evaluated now and replaced by its result.
+     */
+    private Expression createCall(Token token, List<Expression> arguments, List<Token> argumentStarts) {
+        var function = this.environment.getFunction(token);
+        int count = arguments.size();
+        var constants = new Object[count];
+        var isConstant = new boolean[count];
+        boolean allConstant = true;
+
+        for (int i = 0; i < count; i++) {
+            if (arguments.get(i) instanceof Literal literal) {
+                constants[i] = Call.convertArgument(function, i, literal.value(), argumentStarts.get(i));
+                isConstant[i] = true;
+            } else {
+                allConstant = false;
             }
-            break;
+        }
+
+        var call = new Call(token, function, arguments.toArray(new Expression[0]), argumentStarts.toArray(new Token[0]), constants, isConstant);
+
+        if (function.pure() && allConstant) {
+            // Would produce the same result (or the same error) on every evaluation
+            var folded = literalOf(call.eval(), token);
+            if (folded != null)
+                return folded;
+        }
+
+        if (function.compiler() != null) {
+            var specialized = function.compiler().compile(call);
+            if (specialized != null)
+                return specialized;
+        }
+
+        return call;
+    }
+
+    private Expression optimizeBinaryOperation(Expression left, Token operator, Expression right) {
+        // If both operands are literals evaluate now. This uses the exact same code path as runtime evaluation,
+        // so folded results cannot differ from what the script would produce. Errors (such as 'abc' * 2) are
+        // reported at compile time since they would fail on every evaluation.
+        if (left instanceof Literal && right instanceof Literal) {
+            var folded = literalOf(Binary.from(left, operator, right).eval(), operator);
+            if (folded != null)
+                return folded;
+        }
+
+        switch (operator.type()) {
             case CONDITIONAL_OR: {
                 // Optimize for literal true
-                if (left instanceof Literal(Token token, Object value)) {
-                    var v = ScriptHelpers.toBoolean(value);
-                    if (v) {
-                        var newToken = Token.from(TokenType.TRUE, "TRUE", Boolean.TRUE, token.line(), token.position());
-                        return Literal.from(newToken);
-                    }
+                if (left instanceof Literal(Token token, Object value) && ScriptHelpers.toBoolean(value)) {
+                    return literalOf(Boolean.TRUE, token);
                 }
 
-                if (right instanceof Literal(Token token, Object value)) {
-                    var v = ScriptHelpers.toBoolean(value);
-                    if (v) {
-                        var newToken = Token.from(TokenType.TRUE, "TRUE", Boolean.TRUE, token.line(), token.position());
-                        return Literal.from(newToken);
-                    }
-                }
-
-                // What if both are false
-                if (left instanceof Literal(Token t1, Object leftValue) && right instanceof Literal(Token t2, Object rightValue)) {
-                    var lv = ScriptHelpers.toBoolean(leftValue);
-                    var rv = ScriptHelpers.toBoolean(rightValue);
-                    if (!(lv || rv)) {
-                        var newToken = Token.from(TokenType.FALSE, "FALSE", Boolean.FALSE, operator.line(), operator.position());
-                        return Literal.from(newToken);
-                    }
+                if (right instanceof Literal(Token token, Object value) && ScriptHelpers.toBoolean(value)) {
+                    return literalOf(Boolean.TRUE, token);
                 }
             }
             break;
             case CONDITIONAL_AND: {
                 // Optimize for literal false
-                if (left instanceof Literal(Token token, Object value)) {
-                    var v = ScriptHelpers.toBoolean(value);
-                    if (!v) {
-                        var newToken = Token.from(TokenType.FALSE, "FALSE", Boolean.FALSE, token.line(), token.position());
-                        return Literal.from(newToken);
-                    }
+                if (left instanceof Literal(Token token, Object value) && !ScriptHelpers.toBoolean(value)) {
+                    return literalOf(Boolean.FALSE, token);
                 }
 
-                if (right instanceof Literal(Token token, Object value)) {
-                    var v = ScriptHelpers.toBoolean(value);
-                    if (!v) {
-                        var newToken = Token.from(TokenType.FALSE, "FALSE", Boolean.FALSE, token.line(), token.position());
-                        return Literal.from(newToken);
-                    }
-                }
-
-                // What if both are true
-                if (left instanceof Literal(Token t1, Object leftValue) && right instanceof Literal(Token t2, Object rightValue)) {
-                    var lv = ScriptHelpers.toBoolean(leftValue);
-                    var rv = ScriptHelpers.toBoolean(rightValue);
-                    if (lv && rv) {
-                        var newToken = Token.from(TokenType.TRUE, "TRUE", Boolean.TRUE, operator.line(), operator.position());
-                        return Literal.from(newToken);
-                    }
+                if (right instanceof Literal(Token token, Object value) && !ScriptHelpers.toBoolean(value)) {
+                    return literalOf(Boolean.FALSE, token);
                 }
             }
             break;
-            case PLUS: {
-                // If both operands are literals see if the expression can be reduced
-                if (left instanceof Literal(Token leftToken, Object leftValue) && right instanceof Literal(Token rightToken, Object rightValue)) {
-                    // If numbers are involved
-                    if (leftToken.type() == TokenType.NUMBER && rightToken.type() == TokenType.NUMBER) {
-                        if (leftValue.equals(0.0)) {
-                            return right;
-                        } else if (rightValue.equals(0.0)) {
-                            return left;
-                        }
-                    }
-
-                    // If strings are involved
-                    if (leftToken.type() == TokenType.STRING || rightToken.type() == TokenType.STRING) {
-                        // We do some concatenation
-                        var result = leftValue.toString() + rightValue.toString();
-                        var newToken = Token.from(TokenType.STRING, "'" + result + "'", result, operator.line(), operator.position());
-                        return Literal.from(newToken);
-                    }
-                }
-            }
-            break;
+            default:
+                break;
         }
         return Binary.from(left, operator, right);
     }
 
     private Expression optimizeUnaryOperation(Token operator, Expression right) {
 
-        switch (operator.type()) {
-            case NOT: {
-                // Optimize inverting literal true and false
-                if (right instanceof Literal(Token token, Object value)) {
-                    var v = ScriptHelpers.toBoolean(value);
-                    Token newToken;
-                    if (v) {
-                        newToken = Token.from(TokenType.FALSE, "FALSE", Boolean.FALSE, token.line(), token.position());
-                    } else {
-                        newToken = Token.from(TokenType.TRUE, "TRUE", Boolean.TRUE, token.line(), token.position());
-                    }
-                    return Literal.from(newToken);
-                }
-
-                // Optimize multiple NOT operations as they can cancel each other out
-                if (right instanceof Unary u && u.operator().type() == TokenType.NOT) {
-                    // Basically we can promote the operand of the target canceling the NOT operations
-                    // out
-                    return u.right();
-                }
-            }
-            break;
-            case NEG: {
-                // Optimize negation of a numeric constant
-                if (right instanceof Literal(Token token, Object value)) {
-                    // Should be a number; negate the constant
-                    if (token.type() != TokenType.NUMBER) {
-                        ScriptException.throwException(token, "Number expected");
-                    }
-                    var n = -ScriptHelpers.toDouble(value);
-                    var newToken = Token.from(TokenType.NUMBER, Double.toString(n), n, token.line(), token.position());
-                    return Literal.from(newToken);
-                }
-
-                // Optimize multiple NEG operations as they can cancel each other out
-                if (right instanceof Unary u && u.operator().type() == TokenType.NEG) {
-                    // Basically we can promote the operand of the target canceling the NEG operations
-                    // out
-                    return u.right();
-                }
-            }
-            break;
+        // Fold operations on constants using the runtime code path
+        // (Errors such as -true are reported at compile time since they would fail on every evaluation.)
+        if (right instanceof Literal literal) {
+            var value = Unary.from(operator, right).eval();
+            var folded = literalOf(value, literal.token());
+            if (folded != null)
+                return folded;
         }
+
+        // Double negation cancels out, but only when the inner operand already has the type the operator would
+        // coerce to. Otherwise, !!5 would become 5 instead of true, and --'5' would become '5' instead of 5.
+        if (right instanceof Unary u && u.operator().type() == operator.type()) {
+            switch (operator.type()) {
+                case NOT -> {
+                    if (yieldsBoolean(u.right()))
+                        return u.right();
+                }
+                case NEG -> {
+                    if (yieldsNumber(u.right()))
+                        return u.right();
+                }
+                default -> {
+                }
+            }
+        }
+
         return Unary.from(operator, right);
+    }
+
+    /**
+     * Determines if the expression is statically known to produce a Boolean.
+     */
+    private static boolean yieldsBoolean(Expression expression) {
+        if (expression instanceof Literal l)
+            return l.value() instanceof Boolean;
+        if (expression instanceof Unary u)
+            return u.operator().type() == TokenType.NOT;
+        if (expression instanceof Binary b) {
+            return switch (b.operator().type()) {
+                case EQUAL_EQUAL, NOT_EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, CONDITIONAL_AND, CONDITIONAL_OR -> true;
+                default -> false;
+            };
+        }
+        return false;
+    }
+
+    /**
+     * Determines if the expression is statically known to produce a Double.
+     */
+    private static boolean yieldsNumber(Expression expression) {
+        if (expression instanceof Literal l)
+            return l.value() instanceof Double;
+        if (expression instanceof Unary u)
+            return u.operator().type() == TokenType.NEG;
+        if (expression instanceof Binary b) {
+            return switch (b.operator().type()) {
+                case MINUS, STAR, SLASH -> true;
+                // PLUS produces a string if either side is a string
+                case PLUS -> yieldsNumber(b.left()) && yieldsNumber(b.right());
+                default -> false;
+            };
+        }
+        return false;
+    }
+
+    /**
+     * Creates a literal for a folded value, or null if the value has no literal representation.
+     */
+    private static Literal literalOf(Object value, Token at) {
+        if (value instanceof Boolean b) {
+            return Literal.from(Token.derive(b ? TokenType.TRUE : TokenType.FALSE, b ? "TRUE" : "FALSE", b, at));
+        }
+        if (value instanceof Number n) {
+            var d = n.doubleValue();
+            return Literal.from(Token.derive(TokenType.NUMBER, ScriptHelpers.toStringValue(d), d, at));
+        }
+        if (value instanceof String s) {
+            return Literal.from(Token.derive(TokenType.STRING, "'" + s + "'", s, at));
+        }
+        return null;
     }
 
     Expression compile(String script) {
