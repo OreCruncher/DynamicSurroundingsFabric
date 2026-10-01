@@ -9,7 +9,21 @@ import org.orecruncher.dsurround.lib.random.Randomizer;
 
 public abstract class Scanner {
 
-    private final static int MAX_BLOCKS_TICK = 6000;
+    /**
+     * How long scanning may run each tick. Scanning runs on the client thread, so this is time taken from the
+     * frame; 1 ms is about 6% of a frame at 60 fps. This is the real limit; the block count below is a backstop.
+     */
+    protected final static long TIME_BUDGET_NANOS = 1_000_000L;
+    /**
+     * Upper bound on blocks read per tick regardless of time, in case the clock misbehaves.
+     */
+    protected final static int MAX_BLOCKS_TICK = 65_536;
+    /**
+     * How many blocks are read between checks of the clock. Reading the clock isn't free, and a block costs well
+     * under a microsecond, so checking every block would be wasteful. The budget can be overrun by at most this
+     * many blocks.
+     */
+    protected final static int CLOCK_CHECK_INTERVAL = 256;
     // After this many failures only a count is kept, so a broken handler can't flood the log
     private final static int MAX_LOGGED_ERRORS = 10;
 
@@ -22,7 +36,6 @@ public abstract class Scanner {
     protected int xSize;
     protected int ySize;
     protected int zSize;
-    protected int blocksPerTick;
     protected int volume;
 
     protected final ScanContext locus;
@@ -56,8 +69,6 @@ public abstract class Scanner {
         this.ySize = yRange * 2 + 1;
         this.zSize = zRange * 2 + 1;
         this.volume = this.xSize * this.ySize * this.zSize;
-        // At least one, so a tiny range still makes progress
-        this.blocksPerTick = Math.clamp(this.volume / 20, 1, MAX_BLOCKS_TICK);
     }
 
     /**
@@ -75,7 +86,8 @@ public abstract class Scanner {
     public abstract void blockScan(final Level world, final BlockState state, final BlockPos pos, final IRandomizer rand);
 
     /**
-     * Does this tick's share of scanning, reading at most about {@link #blocksPerTick} blocks.
+     * Does this tick's share of scanning, within {@link #TIME_BUDGET_NANOS} (and at most {@link #MAX_BLOCKS_TICK}
+     * blocks).
      */
     public abstract void tick();
 

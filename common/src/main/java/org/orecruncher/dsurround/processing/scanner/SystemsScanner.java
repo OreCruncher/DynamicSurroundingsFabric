@@ -31,14 +31,11 @@ public class SystemsScanner extends CuboidScanner {
 
     private final Configuration config;
     private final ObjectArray<IEffectSystem> systems = new ObjectArray<>();
-    // The enabled systems, worked out once per tick rather than for every scanned block. scanTargets leaves out
-    // systems that don't want blockScan calls.
+    // The enabled systems that want blockScan calls, worked out once per tick rather than for every scanned block
     private final List<IEffectSystem> scanTargets = new ArrayList<>();
-    private final List<IEffectSystem> unscanTargets = new ArrayList<>();
 
     private int lastRange;
-    // Where the player was last tick, for deciding whether effects need a range check. Kept separate from
-    // CuboidScanner.lastPos, which records where the scanned volume is centered and must only change with it.
+    // Where the player was last tick, for deciding whether effects need a range check
     private BlockPos lastPlayerPos = BlockPos.ZERO;
 
     public SystemsScanner(Configuration config, ScanContext locus) {
@@ -55,16 +52,13 @@ public class SystemsScanner extends CuboidScanner {
 
     private void refreshTargets() {
         this.scanTargets.clear();
-        this.unscanTargets.clear();
         for (var system : this.systems) {
-            if (system.isEnabled()) {
-                this.unscanTargets.add(system);
-                if (system.wantsBlockScans())
-                    this.scanTargets.add(system);
-            }
+            if (system.isEnabled() && system.wantsBlockScans())
+                this.scanTargets.add(system);
         }
     }
 
+    @Override
     public void resetFullScan() {
         super.resetFullScan();
         this.systems.forEach(IEffectSystem::clear);
@@ -91,6 +85,8 @@ public class SystemsScanner extends CuboidScanner {
         Predicate<IBlockEffect> filter;
 
         if (!sittingStill) {
+            // This is how effects leaving range are removed: every tick the player moves, anything outside the
+            // range is dropped. That is why the scanner doesn't need to unscan the blocks that left range.
             var range = this.config.blockEffects.blockEffectRange;
             var blockBox = BlockBox.of(current.offset(-range, -range, -range), current.offset(range, range, range));
 
@@ -117,27 +113,17 @@ public class SystemsScanner extends CuboidScanner {
                 system.clear();
     }
 
-    @Override
-    public boolean doBlockUnscan() {
-        return true;
-    }
-
-    // Called for every block scanned, so these are plain loops over the per-tick lists
-
+    // Called for every block scanned, so this is a plain loop over the per-tick list. Unscans aren't requested
+    // (doBlockUnscan() stays false): the range check in tick() removes effects that leave range.
     @Override
     public void blockScan(Level world, BlockState state, BlockPos pos, IRandomizer rand) {
         for (int i = 0; i < this.scanTargets.size(); i++)
             this.scanTargets.get(i).blockScan(world, state, pos);
     }
 
-    @Override
-    public void blockUnscan(Level world, BlockState state, BlockPos pos, IRandomizer rand) {
-        for (int i = 0; i < this.unscanTargets.size(); i++)
-            this.unscanTargets.get(i).blockUnscan(world, state, pos);
-    }
-
     public void gatherDiagnostics(Collection<Component> output) {
-        output.add(Component.literal("[%s] pending blocks: %d".formatted(this.name, this.getPendingBlocks())));
+        output.add(Component.literal("[%s] pending: %d blocks in %d jobs".formatted(this.name, this.getPendingBlocks(), this.getPendingJobs())));
+        output.add(Component.literal("[%s] %s".formatted(this.name, this.getStats().summary())));
         this.systems.forEach(system -> {
             var text = system.gatherDiagnostics();
             if (!system.isEnabled())

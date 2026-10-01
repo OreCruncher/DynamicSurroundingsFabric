@@ -13,6 +13,7 @@
     "audio.MixinSoundLibrary",
     "audio.MixinSource",
     "core.MixinBiome",
+    "core.MixinClientLevel",
     "core.MixinClothAbstractConfigEntry",
     "core.MixinEntity",
     "core.MixinEntityArrow",

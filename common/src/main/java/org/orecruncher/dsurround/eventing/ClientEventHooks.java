@@ -1,8 +1,10 @@
 package org.orecruncher.dsurround.eventing;
 
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.lib.events.EventingFactory;
 import org.orecruncher.dsurround.lib.events.IPhasedEvent;
@@ -13,6 +15,7 @@ public final class ClientEventHooks {
 
     public static final IPhasedEvent<ICollectDiagnostics> COLLECT_DIAGNOSTICS_EVENT = EventingFactory.createPrioritizedEvent();
     public static final IPhasedEvent<IBlockUpdates> BLOCK_UPDATES_EVENT = EventingFactory.createPrioritizedEvent();
+    public static final IPhasedEvent<IChunkLoad> CHUNK_LOAD_EVENT = EventingFactory.createPrioritizedEvent();
     public static final IPhasedEvent<IEntityStep> ENTITY_STEP_EVENT = EventingFactory.createPrioritizedEvent();
     public static final IPhasedEvent<IFogRender> FOG_RENDER_EVENT = EventingFactory.createPrioritizedEvent();
 
@@ -30,6 +33,15 @@ public final class ClientEventHooks {
     @FunctionalInterface
     public interface IBlockUpdates {
         void onBlockUpdates(Collection<BlockPos> blockPositions);
+    }
+
+    /**
+     * Fired on the client thread when a chunk's data has arrived from the server and been loaded into the client
+     * level. Also fired if the server sends a chunk again.
+     */
+    @FunctionalInterface
+    public interface IChunkLoad {
+        void onChunkLoad(ClientLevel level, ChunkPos chunkPos);
     }
 
     /**
