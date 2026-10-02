@@ -69,7 +69,9 @@ public record SoundMapping(ResourceLocation soundEvent, ObjectArray<Mapping> rul
         var last = this.rules.getLast();
         if (!last.isDefaultRule())
             throw new RuntimeException("Last rule in sound mapping configuration is not default");
-        this.rules.remove(last);
+        // removeLast keeps the order of the other rules; remove(last) would find it by equality and fill its
+        // place with whatever is last
+        this.rules.removeLast();
         this.rules.add(mapping);
         this.rules.add(last);
     }
