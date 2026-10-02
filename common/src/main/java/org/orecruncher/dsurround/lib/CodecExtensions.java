@@ -5,7 +5,6 @@ import com.google.gson.JsonParser;
 import com.mojang.serialization.*;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.lib.block.BlockStateMatcher;
-import org.orecruncher.dsurround.lib.block.MatchOnBlockTag;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -20,7 +19,7 @@ public interface CodecExtensions<A> extends Codec<A> {
      */
     static Codec<IMatcher<BlockState>> checkBlockStateSpecification(boolean allowTags) {
         final Function<IMatcher<BlockState>, DataResult<IMatcher<BlockState>>> func = value -> {
-            if (!allowTags && value instanceof MatchOnBlockTag)
+            if (!allowTags && value instanceof BlockStateMatcher m && m.isTagMatcher())
                 return DataResult.error(() -> String.format("Current context does not allow block matching based on tags (%s)", value));
             return DataResult.success(value);
         };
