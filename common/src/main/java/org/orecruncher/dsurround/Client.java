@@ -182,6 +182,17 @@ public final class Client {
 
         // Add our fog handler
         container.registerSingleton(HolisticFogRangeCalculator.class);
+
+        // Registration is complete. Report circular or missing dependencies now, with the full list, rather than
+        // one at a time as each is first used.
+        var problems = container.validate(Handlers.class);
+        if (problems.isEmpty()) {
+            Library.LOGGER.info("Dependency registration validated: no problems found");
+        } else {
+            for (var problem : problems)
+                Library.LOGGER.warn("Dependency registration: %s", problem);
+        }
+
         ContainerManager.resolve(HolisticFogRangeCalculator.class);
 
         // Force instantiation of the core Handler. This should cause the rest

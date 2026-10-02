@@ -1,426 +1,439 @@
 package org.orecruncher.dsurround.lib.di.internal;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.SingletonSupplier;
 import org.orecruncher.dsurround.lib.di.*;
 
 import java.lang.reflect.*;
 import java.util.*;
-import java.util.function.Consumer;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
- * Simple dependency injection container that injects via constructor as well as
- * Injection annotation.  Does not handle complex cases such as circular dependencies
- * so brain power may be required.
+ * Dependency injection container that creates objects through their constructor, resolving its parameters from
+ * the container, and then sets any fields marked {@link Injection}.
+ * <p>
+ * Circular dependencies are not supported. They are reported, with the path, as a {@link DependencyException} when
+ * creation runs into one, and {@link #validate} can find them (and missing dependencies) before anything is created.
+ * <p>
+ * Thread safety: lookups are lock-free. Everything that creates an object (a lazy singleton's first use, or
+ * creating and registering a class that wasn't registered) happens under one lock, so a singleton is only ever
+ * created once, and creations on different threads can't deadlock against each other. The lock is reentrant, so
+ * creating an object can resolve and create its dependencies.
  */
-@SuppressWarnings("unused")
 public final class DependencyContainer implements IServiceContainer {
 
-    private final Map<Class<?>, Supplier<?>> _resolvers;
-    private final String _name;
-    private final ContainerManager _manager;
-    @Nullable
-    private final DependencyContainer _parent;
+    private final Map<Class<?>, Supplier<?>> resolvers = new ConcurrentHashMap<>();
+    // For registrations backed by a class the container creates: the class it creates. Registrations of an
+    // existing object or a supplier have no entry (the container can't see what they depend on). Used by validate().
+    private final Map<Class<?>, Class<?>> implementations = new ConcurrentHashMap<>();
+    // The classes this thread is in the middle of creating, outermost first, to catch circular dependencies. Per
+    // thread rather than under the creation lock, because per-instance factories run outside that lock.
+    private final ThreadLocal<ArrayDeque<Class<?>>> creating = ThreadLocal.withInitial(ArrayDeque::new);
+    private final Object creationLock = new Object();
+    private final String name;
 
-    public DependencyContainer(String containerName, ContainerManager manager) {
-        this(containerName, manager, null);
+    public DependencyContainer(String containerName) {
+        this.name = containerName;
     }
 
-    public DependencyContainer(String containerName, ContainerManager manager, @Nullable DependencyContainer parent) {
-        this._name = containerName;
-        this._manager = manager;
-        this._parent = parent;
-        this._resolvers = new IdentityHashMap<>();
-    }
-
-    /**
-     * Returns the name of the container
-     */
     @Override
     public String getName() {
-        return this._name;
+        return this.name;
     }
 
-    /**
-     * Dumps the registrations in the container
-     */
     @Override
     public Stream<String> dumpRegistrations() {
-        return this._resolvers.entrySet().stream()
-                .map(kvp -> {
-                    var builder = new StringBuilder();
-                    builder.append(kvp.getKey().getName())
-                            .append(" [");
-                    if (kvp.getValue() instanceof SingletonSupplier)
-                        builder.append("SINGLETON");
-                    else
-                        builder.append("PER INSTANCE");
-                    return builder.append("]").toString();
-                })
+        return this.resolvers.entrySet().stream()
+                .map(kvp -> kvp.getKey().getName() + " [" + (isSingleton(kvp.getValue()) ? "SINGLETON" : "PER INSTANCE") + "]")
                 .sorted();
     }
 
-    /**
-     * Creates a child container, using the current instance as the parent.  When resolving the parent is used
-     * to resolve a class instance if no resolver is present in the current instance.
-     *
-     * @param containerName Name of the container to create
-     * @return Container instance
-     */
+    private static boolean isSingleton(Supplier<?> supplier) {
+        return supplier instanceof SingletonSupplier || supplier instanceof LazySingleton;
+    }
+
+    // ---- Registration ----------------------------------------------------------------------------------------
+
     @Override
-    public IServiceContainer createChildContainer(String containerName) {
-        var container = new DependencyContainer(containerName, this._manager, this);
-        this._manager.registerContainer(container);
-        return container;
+    public <T> IServiceContainer registerSingleton(Class<T> clazz) {
+        return this.registerSingleton(clazz, clazz);
+    }
+
+    @Override
+    public <T> IServiceContainer registerSingleton(Class<T> clazz, Class<? extends T> desiredClass) {
+        checkKeySuitability(clazz);
+        checkCreatable(desiredClass);
+        this.register(clazz, new LazySingleton<>(() -> this.createFactory(desiredClass).get()), desiredClass);
+        return this;
+    }
+
+    @Override
+    public <T> IServiceContainer registerFactory(Class<T> clazz, Supplier<? extends T> supplier) {
+        checkKeySuitability(clazz);
+        Objects.requireNonNull(supplier, "supplier");
+        this.register(clazz, supplier, null);
+        return this;
     }
 
     /**
-     * Registers the class instance with the container, with it being identified by the
-     * class type.  The object instantiation is deferred until the first time it is
-     * requested.
+     * Records a registration, replacing any earlier one for the type.
      *
-     * @param clazz        Type the object reference will be identified as
-     * @param <T>          Type of object to represent the instance as
-     * @return Reference to the SimpleDIContainer for fluent declarations
+     * @param implementation the class the container creates for it, or null if it is an existing object or a
+     *                       supplier
      */
-    @Override
-    public <T> DependencyContainer registerSingleton(Class<T> clazz) {
-        try {
-            this.checkForKeySuitability(clazz);
-            this.checkForResolverSuitability(clazz);
-            return this.registerFactory(clazz, SingletonSupplier.from(() -> this.createFactory(clazz).get()));
-        } catch (Throwable ex) {
-            Library.LOGGER.error(ex, "Unable to register singleton %s", clazz.getName());
-            throw ex;
-        }
+    private void register(Class<?> clazz, Supplier<?> supplier, @Nullable Class<?> implementation) {
+        if (implementation != null)
+            this.implementations.put(clazz, implementation);
+        else
+            this.implementations.remove(clazz);
+        this.resolvers.put(clazz, supplier);
     }
 
-    /**
-     * Registers the class instance with the container, with it being identified by the
-     * class type.  The object instantiation is deferred until the first time it is
-     * requested.
-     *
-     * @param clazz        Type the object reference will be identified as
-     * @param desiredClass The class to instantiate that will represent the type
-     * @param <T>          Type of object to represent the instance as
-     * @return Reference to the SimpleDIContainer for fluent declarations
-     */
-    @Override
-    public <T> DependencyContainer registerSingleton(Class<T> clazz, Class<? extends T> desiredClass) {
-        try {
-            this.checkForKeySuitability(clazz);
-            this.checkForResolverSuitability(desiredClass);
-            return this.registerFactory(clazz, SingletonSupplier.from(() -> this.createFactory(desiredClass).get()));
-        } catch (Throwable ex) {
-            Library.LOGGER.error(ex, "Unable to register singleton %s using class %s", clazz.getName(), desiredClass.getName());
-            throw ex;
-        }
-    }
+    // ---- Resolution ------------------------------------------------------------------------------------------
 
-    /**
-     * Registers the factory supplier for the given type.  The Supplier will be invoked each time it is needed
-     * for injection.  Supplied object references should be cached if possible.  A simple way to cache is to use
-     * a Lazy<> supplier instance.
-     *
-     * @param clazz    Type the object reference will be identified as
-     * @param supplier Supplier that provides the object instance as applicable
-     * @param <T>      Type of object to represent the instance as
-     * @return Reference to the SimpleDIContainer for fluent declarations
-     */
-    @Override
-    public <T> DependencyContainer registerFactory(Class<T> clazz, Supplier<? extends T> supplier)
-    {
-        try {
-            this.checkForKeySuitability(clazz);
-            synchronized (this._resolvers) {
-                this._resolvers.put(clazz, supplier);
-            }
-            return this;
-        } catch (Throwable ex) {
-            Library.LOGGER.error(ex, "Unable to register factor for class %s", clazz.getName());
-            throw ex;
-        }
-    }
-
-    /**
-     * Resolves an instance of an object based on the provided class information.  If an object in the
-     * container can meet the requirements it's instance would be provided.  Otherwise, an object is instantiated
-     * and provided back to the caller.
-     *
-     * @param clazz Type the object reference will be identified as
-     * @param <T>   Type of object to represent the instance as
-     * @return Reference to the resolved object instance
-     */
     @Override
     @SuppressWarnings("unchecked")
     public <T> T resolve(Class<T> clazz) {
-        try {
-            var resolver = this.findResolver(clazz);
+        var resolver = this.resolvers.get(clazz);
+        if (resolver != null)
+            return (T) resolver.get();
+
+        // Not registered: create it, and register how to get it again. Done under the creation lock so two threads
+        // asking for the same class at once don't each create (and register) their own.
+        synchronized (this.creationLock) {
+            resolver = this.resolvers.get(clazz);
             if (resolver != null)
                 return (T) resolver.get();
 
-            // Have not seen.  Create a factory object for the class.
             var factory = this.createFactory(clazz);
-
-            // Get the factory result
-            var result = factory.get();
-
-            // If the class is not annotated with cacheable, register the factory so later
-            // resolves will be pre-staged.  Otherwise, register the new class instance
-            // as it will be a singleton.
-            if (!clazz.isAnnotationPresent(Cacheable.class)) {
-                this.registerFactory(clazz, factory);
-            } else {
-                this.registerFactory(clazz, SingletonSupplier.of(result));
+            if (clazz.isAnnotationPresent(Cacheable.class)) {
+                // A single instance for the life of the container
+                var instance = factory.get();
+                this.register(clazz, SingletonSupplier.of(instance), clazz);
+                return instance;
             }
 
-            return result;
-        } catch (Throwable ex) {
-            Library.LOGGER.error(ex, "Unable to resolve class %s", clazz.getName());
-            throw ex;
+            // A new instance each time
+            this.register(clazz, factory, clazz);
+            return factory.get();
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T memoize(Class<T> clazz) {
+        if (!clazz.isInterface())
+            throw new IllegalArgumentException(String.format("memoize() needs an interface; '%s' is a class", clazz.getName()));
+
+        // A LazySingleton, so the first resolve happens under the same single creation lock as everything else.
+        // (A constructor running under that lock may call a memoized logger; a separate lock here could deadlock.)
+        Supplier<T> target = new LazySingleton<>(() -> this.resolve(clazz));
+        InvocationHandler handler = (proxy, method, args) -> {
+            try {
+                return method.invoke(target.get(), args);
+            } catch (InvocationTargetException e) {
+                // Rethrow what the target threw. Left wrapped, the proxy would turn it into an
+                // UndeclaredThrowableException, hiding the real exception from the caller.
+                throw e.getCause();
+            }
+        };
+        return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[]{clazz}, handler);
+    }
+
+    // ---- Creation --------------------------------------------------------------------------------------------
+
+    /**
+     * A singleton created on first use. Creation happens under the container's single creation lock rather than a
+     * lock of its own: with a lock per singleton, two threads creating different objects could take the locks in
+     * opposite orders and deadlock.
+     */
+    private final class LazySingleton<T> implements Supplier<T> {
+        private final Supplier<T> factory;
+        private volatile T instance;
+
+        LazySingleton(Supplier<T> factory) {
+            this.factory = factory;
+        }
+
+        @Override
+        public T get() {
+            var result = this.instance;
+            if (result != null)
+                return result;
+            synchronized (DependencyContainer.this.creationLock) {
+                if (this.instance == null)
+                    this.instance = this.factory.get();
+                return this.instance;
+            }
         }
     }
 
     /**
-     * Returns a Supplier that will lazily resolve the specified interface
-     * @param clazz Type the object reference will be identified as
-     * @param <T>   Type of object to represent the instance as
-     * @return Reference to a Supplier that will resolve and cache the object instance
+     * Builds a supplier that creates instances of {@code clazz}: it picks the constructor, then on each call
+     * resolves the constructor's parameters, creates the instance and sets its {@link Injection} fields.
+     * <p>
+     * Parameters and fields are resolved when the instance is created, with {@link #resolve}, so a dependency
+     * that isn't registered is created the same way a top-level request would be, whatever was resolved before.
      */
-    @Override
     @SuppressWarnings("unchecked")
-    public <T> T memoize(Class<T> clazz) {
+    private <T> Supplier<T> createFactory(Class<T> clazz) {
+        checkCreatable(clazz);
+        var constructor = findSuitableConstructor(clazz);
+        var parameterTypes = constructor.getParameterTypes();
+        var injectedFields = getInjectedFields(clazz);
+        for (var field : injectedFields)
+            field.setAccessible(true);
 
-        Supplier<T> memo = SingletonSupplier.from(() -> this.resolve(clazz));
-
-        InvocationHandler handler = new InvocationHandler() {
-            @NotNull
-            private final Supplier<T> target = memo;
-
-            @Override
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                return method.invoke(this.target.get(), args);
+        return () -> {
+            // If this thread is already creating this class further up, its dependencies lead back to it. Without
+            // this check that recursion would run until the stack overflowed.
+            var stack = this.creating.get();
+            if (stack.contains(clazz))
+                throw new DependencyException("Circular dependency: " + formatCycle(stack, clazz));
+            stack.addLast(clazz);
+            try {
+                return this.createInstance(clazz, constructor, parameterTypes, injectedFields);
+            } finally {
+                stack.removeLast();
             }
         };
-
-        return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[]{clazz}, handler);
     }
 
-    /**
-     * Crawls through the class hierarchy looking for @Injection points.
-     */
-    private static List<Field> getInjectedFields(Class<?> clazz) {
-        List<Field> fields = new ArrayList<>();
-
-        do {
-            for (var field : clazz.getDeclaredFields())
-                if (field.isAnnotationPresent(Injection.class))
-                    fields.add(field);
-            clazz = clazz.getSuperclass();
-        } while (!clazz.equals(Object.class));
-
-        return fields;
-    }
-
-    /**
-     * Creates an object instance using the supplied constructor.
-     */
-    private static Object createInstance(Constructor<?> constructor) throws InvocationTargetException, InstantiationException, IllegalAccessException {
-        return constructor.newInstance();
-    }
-
-    /**
-     * Creates an object instance using the supplied constructor.  The parameter
-     * resolvers are used to resolve the parameters that are to be passed in during
-     * construction.
-     */
-    private static Object createInstance(Constructor<?> constructor, Supplier<?>[] parameterResolvers) throws InvocationTargetException, InstantiationException, IllegalAccessException {
-        var parameters = new Object[parameterResolvers.length];
+    @SuppressWarnings("unchecked")
+    private <T> T createInstance(Class<T> clazz, Constructor<?> constructor, Class<?>[] parameterTypes, List<Field> injectedFields) {
+        var parameters = new Object[parameterTypes.length];
         for (int i = 0; i < parameters.length; i++)
-            parameters[i] = parameterResolvers[i].get();
-        return constructor.newInstance(parameters);
-    }
+            parameters[i] = this.resolveDependency(parameterTypes[i], clazz, "constructor parameter");
 
-    /**
-     * Applies injectors to the provided object instance.
-     */
-    private static Object applyInjectors(Object instance, List<Consumer<Object>> injections) {
-        for (var injector : injections)
-            injector.accept(instance);
+        T instance;
+        try {
+            instance = (T) constructor.newInstance(parameters);
+        } catch (InvocationTargetException e) {
+            // The constructor threw: report that exception itself, not the reflection wrapper
+            var cause = e.getCause();
+            if (cause instanceof VirtualMachineError fatal)
+                throw fatal;
+            throw new DependencyException(String.format("Constructor of '%s' threw %s", clazz.getName(), cause), cause);
+        } catch (ReflectiveOperationException e) {
+            throw new DependencyException(String.format("Unable to create '%s': %s", clazz.getName(), e), e);
+        }
+
+        for (var field : injectedFields) {
+            var value = this.resolveDependency(field.getType(), clazz, "field '" + field.getName() + "'");
+            try {
+                field.set(instance, value);
+            } catch (IllegalAccessException e) {
+                throw new DependencyException(String.format("Unable to set field '%s' of '%s'", field.getName(), clazz.getName()), e);
+            }
+        }
         return instance;
     }
 
     /**
-     * Checks the class for suitability for use in dependency injection.  If not suitable a RuntimeException
-     * is generated.
-     *
-     * @param clazz Class to check for suitability
+     * The part of {@code path} from {@code repeated}'s first appearance, then {@code repeated} again, as in
+     * "A -> B -> C -> A".
      */
-    private void checkForKeySuitability(Class<?> clazz) {
-        if (clazz.isPrimitive())
-            throw new RuntimeException(String.format("'%s' is a primitive type and cannot be used for dependency injection", clazz.getName()));
-        if (clazz.equals(Object.class))
-            throw new RuntimeException("Object is not a suitable key");
-        if (clazz.equals(Optional.class))
-            throw new RuntimeException("Cannot use an optional as a key");
-        if (!Modifier.isPublic(clazz.getModifiers()))
-            throw new RuntimeException(String.format("Class '%s' is not public", clazz.getName()));
-    }
-
-    /**
-     * Checks the class for suitability for use in dependency injection.
-     * If not suitable, a RuntimeException is generated.
-     *
-     * @param clazz Class to check for suitability
-     */
-    private void checkForResolverSuitability(Class<?> clazz) {
-        if (clazz.isInterface())
-            throw new RuntimeException(String.format("The class %s is an interface and cannot be instantiated directly", clazz.getName()));
-        if (clazz.equals(Optional.class))
-            throw new RuntimeException("Cannot use an optional as a resolved type");
-        if (!Modifier.isPublic(clazz.getModifiers()))
-            throw new RuntimeException(String.format("Class '%s' is not public", clazz.getName()));
-    }
-
-    /**
-     * Recursively searches for a resolver to satisfy the request.
-     * The Current container is searched prior to searching the parent as this allows
-     * for override in a child container.
-     *
-     * @param clazz Instance resolver to locate
-     * @return Resolver if found
-     */
-    @Nullable
-    private Supplier<?> findResolver(Class<?> clazz) {
-        Supplier<?> resolver;
-        synchronized (this._resolvers) {
-            resolver = this._resolvers.get(clazz);
-            if (resolver == null && this._parent != null)
-                resolver = this._parent.findResolver(clazz);
+    private static String formatCycle(Collection<Class<?>> path, Class<?> repeated) {
+        var names = new ArrayList<String>();
+        boolean inCycle = false;
+        for (var c : path) {
+            if (c == repeated)
+                inCycle = true;
+            if (inCycle)
+                names.add(c.getSimpleName());
         }
-        return resolver;
+        names.add(repeated.getSimpleName());
+        return String.join(" -> ", names);
+    }
+
+    // ---- Validation ------------------------------------------------------------------------------------------
+
+    /**
+     * Checks the registrations without creating anything. Starting from every registration backed by a class (and
+     * from {@code additionalRoots}, for classes that will be resolved without being registered), it follows
+     * constructor parameter and {@link Injection} field types: through registrations to the classes behind them,
+     * and through unregistered classes, which would be created on request.
+     * <p>
+     * Reports circular dependencies (with the path), dependencies that can't be satisfied (an interface or
+     * abstract class with no registration, a class that isn't public), and classes the container couldn't pick a
+     * constructor for. Registrations of an existing object or a supplier are dead ends: what they depend on can't
+     * be seen.
+     *
+     * @return the problems found, empty if there are none
+     */
+    @Override
+    public List<String> validate(Class<?>... additionalRoots) {
+        var problems = new ArrayList<String>();
+        var visit = new Validation(problems);
+
+        // Sorted so the report is the same from run to run
+        var roots = new TreeSet<Class<?>>(Comparator.comparing(Class::getName));
+        roots.addAll(this.implementations.keySet());
+        roots.addAll(Arrays.asList(additionalRoots));
+        for (var root : roots)
+            visit.visit(root, null);
+
+        return problems;
     }
 
     /**
-     * Creates an instance of a class, resolving dependencies using information in the container chain.  Note that
-     * the target class must have a single constructor otherwise it creates ambiguity and an exception is thrown.
-     *
-     * @param clazz Type to instantiate
-     * @param <T>   Type of instance to create
-     * @return Instance of the specified class
+     * Depth-first walk of the dependency graph for {@link #validate}.
      */
-    @SuppressWarnings("unchecked")
-    private <T> Supplier<T> createFactory(Class<T> clazz) {
-        this.checkForResolverSuitability(clazz);
-        var constructor = this.findSuitableConstructor(clazz);
-        var pTypes = constructor.getParameterTypes();
-        var parameterResolvers = new Supplier<?>[pTypes.length];
+    private final class Validation {
+        private final List<String> problems;
+        // Types fully checked
+        private final Set<Class<?>> done = new HashSet<>();
+        // The path from the root being checked to the current type
+        private final ArrayDeque<Class<?>> path = new ArrayDeque<>();
+        // Each cycle is reported once, however many roots lead into it
+        private final Set<Set<Class<?>>> reportedCycles = new HashSet<>();
 
-        if (pTypes.length > 0)
-            for (int i = 0; i < pTypes.length; i++) {
-                var resolver = this.findResolver(pTypes[i]);
-                if (resolver == null)
-                    throw new RuntimeException(String.format("Unable to resolve type %s", pTypes[i].getName()));
-                parameterResolvers[i] = resolver;
+        Validation(List<String> problems) {
+            this.problems = problems;
+        }
+
+        void visit(Class<?> type, @Nullable Class<?> neededBy) {
+            if (this.done.contains(type))
+                return;
+            if (this.path.contains(type)) {
+                var cycleMembers = new HashSet<Class<?>>();
+                boolean inCycle = false;
+                for (var c : this.path) {
+                    if (c == type)
+                        inCycle = true;
+                    if (inCycle)
+                        cycleMembers.add(c);
+                }
+                if (this.reportedCycles.add(cycleMembers))
+                    this.problems.add("Circular dependency: " + formatCycle(this.path, type));
+                return;
             }
 
-        var injections = new ArrayList<Consumer<Object>>();
-
-        // Scan through looking for fields that are tagged with @Injection to set them up
-        for (var field : getInjectedFields(clazz)) {
-            // Resolve the type
-            var type = field.getType();
-            var resolver = this.findResolver(type);
-            if (resolver == null)
-                throw new RuntimeException(String.format("Unable to resolve type %s", type.getName()));
-            field.setAccessible(true);
-            injections.add(obj -> {
-                try {
-                    field.set(obj, resolver.get());
-                } catch (Throwable t) {
-                    throw new RuntimeException(t.getMessage());
-                }
-            });
-        }
-
-        // Simple case of no parameters or injections
-        if (pTypes.length == 0 && injections.isEmpty())
-            return () -> {
-                try {
-                    return (T) createInstance(constructor);
-                } catch (Throwable t) {
-                    throw new RuntimeException(t);
-                }
-            };
-
-        // Has parameters but no injections
-        if (injections.isEmpty())
-            return () -> {
-                try {
-                    return (T) createInstance(constructor, parameterResolvers);
-                } catch (Throwable t) {
-                    throw new RuntimeException(t);
-                }
-            };
-
-        // No parameters but has injections
-        if (pTypes.length == 0)
-            return () -> {
-                Object created = null;
-                try {
-                    created = createInstance(constructor);
-                } catch (Throwable t) {
-                    throw new RuntimeException(t);
-                }
-                return (T) applyInjectors(created, injections);
-            };
-
-        // Has both parameters and injections
-        return () -> {
-            Object created = null;
+            this.path.addLast(type);
             try {
-                created = createInstance(constructor, parameterResolvers);
-            } catch (Throwable t) {
-                throw new RuntimeException(t);
+                var implementation = this.implementationFor(type, neededBy);
+                if (implementation != null) {
+                    for (var dependency : this.dependenciesOf(implementation))
+                        this.visit(dependency, type);
+                }
+            } finally {
+                this.path.removeLast();
+                this.done.add(type);
             }
-            return (T) applyInjectors(created, injections);
-        };
+        }
+
+        /**
+         * The class the container would create for {@code type}, or null if there is none to follow (an existing
+         * object, a supplier, or a type that can't be created, which is reported).
+         */
+        @Nullable
+        private Class<?> implementationFor(Class<?> type, @Nullable Class<?> neededBy) {
+            if (DependencyContainer.this.resolvers.containsKey(type))
+                return DependencyContainer.this.implementations.get(type);
+            try {
+                checkKeySuitability(type);
+                checkCreatable(type);
+                return type;
+            } catch (DependencyException e) {
+                this.problems.add(neededBy != null
+                        ? String.format("'%s' needs '%s': %s", neededBy.getName(), type.getName(), e.getMessage())
+                        : e.getMessage());
+                return null;
+            }
+        }
+
+        /**
+         * Constructor parameter and injected field types of {@code implementation}.
+         */
+        private List<Class<?>> dependenciesOf(Class<?> implementation) {
+            var dependencies = new ArrayList<Class<?>>();
+            try {
+                dependencies.addAll(Arrays.asList(findSuitableConstructor(implementation).getParameterTypes()));
+            } catch (DependencyException e) {
+                this.problems.add(e.getMessage());
+            }
+            for (var field : getInjectedFields(implementation))
+                dependencies.add(field.getType());
+            return dependencies;
+        }
     }
 
     /**
-     * Finds a suitable constructor to use when instantiating a class.  If a class has a single declared
-     * constructor, it will be used.  As a fallback if a constructor has the DependencyConstructor annotation,
-     * it will be selected.  If a class has more than one constructor, or if more than one constructor has
-     * the annotation and exception will be generated.
-     *
-     * @param clazz Class to examine for a candidate constructor
-     * @return Suitable constructor for creation
+     * Resolves a dependency of {@code owner}, adding which class needed it to any failure.
      */
-    private Constructor<?> findSuitableConstructor(Class<?> clazz) {
+    private Object resolveDependency(Class<?> type, Class<?> owner, String usage) {
+        try {
+            return this.resolve(type);
+        } catch (DependencyException e) {
+            throw new DependencyException(String.format("Unable to resolve %s '%s' of '%s': %s", usage, type.getName(), owner.getName(), e.getMessage()), e);
+        }
+    }
+
+    /**
+     * The fields marked {@link Injection} in the class and its superclasses.
+     */
+    private static List<Field> getInjectedFields(Class<?> clazz) {
+        List<Field> fields = new ArrayList<>();
+        for (Class<?> c = clazz; c != null && c != Object.class; c = c.getSuperclass()) {
+            for (var field : c.getDeclaredFields())
+                if (field.isAnnotationPresent(Injection.class))
+                    fields.add(field);
+        }
+        return fields;
+    }
+
+    /**
+     * The constructor to create the class with: its only public constructor, or else the one marked
+     * {@link DependencyConstructor}.
+     */
+    private static Constructor<?> findSuitableConstructor(Class<?> clazz) {
         var constructors = clazz.getConstructors();
 
         if (constructors.length == 0)
-            throw new RuntimeException(String.format("Class '%s' does not have any constructors declared", clazz.getName()));
-
-        // Degenerative case
-        if (constructors.length == 1) {
+            throw new DependencyException(String.format("Class '%s' has no public constructor", clazz.getName()));
+        if (constructors.length == 1)
             return constructors[0];
-        }
 
-        //  More than one - search for a constructor marked with an appropriate annotation
-        constructors = Arrays.stream(constructors)
+        var marked = Arrays.stream(constructors)
                 .filter(c -> c.isAnnotationPresent(DependencyConstructor.class))
-                .toArray(size -> new Constructor<?>[size]);
+                .toArray(Constructor<?>[]::new);
 
-        if (constructors.length == 0)
-            throw new RuntimeException(String.format("Class '%s' has more than one constructor declared and none have the @DependencyConstructor annotation", clazz.getName()));
-        else if (constructors.length > 1)
-            throw new RuntimeException(String.format("Class '%s' has more than one constructor with the @DependencyConstructor annotation.  Only annotate a single constructor.", clazz.getName()));
+        if (marked.length == 0)
+            throw new DependencyException(String.format("Class '%s' has more than one constructor and none has the @DependencyConstructor annotation", clazz.getName()));
+        if (marked.length > 1)
+            throw new DependencyException(String.format("Class '%s' has more than one constructor with the @DependencyConstructor annotation; only annotate one", clazz.getName()));
+        return marked[0];
+    }
 
-        return constructors[0];
+    // ---- Checks ----------------------------------------------------------------------------------------------
+
+    /**
+     * Checks that a type can identify a registration.
+     */
+    private static void checkKeySuitability(Class<?> clazz) {
+        if (clazz.isPrimitive())
+            throw new DependencyException(String.format("'%s' is a primitive type and cannot be used for dependency injection", clazz.getName()));
+        if (clazz.equals(Object.class))
+            throw new DependencyException("Object is not a suitable key");
+        if (clazz.equals(Optional.class))
+            throw new DependencyException("Cannot use an Optional as a key");
+        if (!Modifier.isPublic(clazz.getModifiers()))
+            throw new DependencyException(String.format("Class '%s' is not public", clazz.getName()));
+    }
+
+    /**
+     * Checks that the container can create instances of a class.
+     */
+    private static void checkCreatable(Class<?> clazz) {
+        if (clazz.isInterface())
+            throw new DependencyException(String.format("'%s' is an interface with no registration, so it cannot be created", clazz.getName()));
+        if (Modifier.isAbstract(clazz.getModifiers()))
+            throw new DependencyException(String.format("'%s' is abstract with no registration, so it cannot be created", clazz.getName()));
+        if (clazz.equals(Optional.class))
+            throw new DependencyException("Cannot use an Optional as a resolved type");
+        if (!Modifier.isPublic(clazz.getModifiers()))
+            throw new DependencyException(String.format("Class '%s' is not public", clazz.getName()));
     }
 }
