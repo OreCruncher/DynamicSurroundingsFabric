@@ -2,7 +2,9 @@ package org.orecruncher.dsurround.config.libraries.impl;
 
 import it.unimi.dsi.fastutil.ints.AbstractIntSet;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.*;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.config.EntityEffectType;
@@ -10,17 +12,28 @@ import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
 import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
-import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.tags.EntityEffectTags;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Works out which entity effects apply to an entity, and caches the result:
+ * <ul>
+ *   <li>per entity type, the effect types its tags give it</li>
+ *   <li>per entity (by id), the live effects, as an {@link EntityEffectInfo}. Entities with none share one default
+ *       instance.</li>
+ * </ul>
+ * Cached entity info is rebuilt when its version no longer matches, which happens after a reload or a config
+ * change.
+ */
 public class EntityEffectLibrary implements IEntityEffectLibrary {
 
     private final ITagLibrary tagLibrary;
@@ -28,6 +41,8 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
 
     private final Reference2ObjectOpenHashMap<EntityType<?>, Set<EntityEffectType>> entityEffects = new Reference2ObjectOpenHashMap<>();
     private final Int2ObjectOpenHashMap<EntityEffectInfo> entityInfoCache = new Int2ObjectOpenHashMap<>(128);
+    // Reused by cleanCache()
+    private final IntArrayList toRemove = new IntArrayList();
 
     private EntityEffectInfo defaultInfo;
     private int version;
@@ -35,25 +50,48 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
     public EntityEffectLibrary(ITagLibrary tagLibrary, IModLog logger) {
         this.tagLibrary = tagLibrary;
         this.logger = ModLog.createChild(logger, "EntityEffectLibrary");
+        this.defaultInfo = EntityEffectInfo.createDefault(this.version);
+
+        // Whether an effect type is produced depends on config, so cached entity info is rebuilt when it changes
+        ConfigurationData.CONFIG_CHANGED_EVENT.register(cfg -> this.invalidate());
     }
 
     @Override
     public void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
-        this.version++;
-
-        if (scope == IReloadEvent.Scope.TAGS) {
-            this.logger.info("[EntityEffectLibrary] received tag update notification; version is now %d", this.version);
-            return;
-        }
-
-        this.entityEffects.clear();
-        this.defaultInfo = EntityEffectInfo.createDefault(this.version);
-        this.logger.info("[EntityEffectLibrary] Configured; version is now %d", this.version);
+        // Every scope invalidates: tags decide the effect types, so a tag sync matters as much as a full reload
+        this.invalidate();
+        if (scope == IReloadEvent.Scope.TAGS)
+            this.logger.info("received tag update notification; version is now %d", this.version);
+        else
+            this.logger.info("Configured; version is now %d", this.version);
     }
 
+    /**
+     * Makes all cached entity info stale, so it is rebuilt from current tags and config the next time it is used.
+     * The per-type cache is cleared, and a new default instance carries the new version: if the default kept an old
+     * one, every entity using it would fail the version check and be rebuilt on every tick.
+     */
+    private void invalidate() {
+        this.version++;
+        this.entityEffects.clear();
+        this.defaultInfo = EntityEffectInfo.createDefault(this.version);
+    }
+
+    /**
+     * Each entity type that has effects, with its effect types.
+     */
     @Override
     public Stream<String> dump() {
-        return Stream.of();
+        return BuiltInRegistries.ENTITY_TYPE.stream()
+                .map(type -> {
+                    var types = this.getEntityEffectTypes(type);
+                    if (types.isEmpty())
+                        return null;
+                    var names = types.stream().map(EntityEffectType::getName).sorted().collect(Collectors.joining(", "));
+                    return BuiltInRegistries.ENTITY_TYPE.getKey(type) + ": " + names;
+                })
+                .filter(s -> s != null)
+                .sorted();
     }
 
     @Override
@@ -63,18 +101,24 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
 
     @Override
     public void cleanCache(AbstractIntSet entitiesToRetain) {
-        ObjectArray<Integer> toRemove = new ObjectArray<>(8);
         for (var kvp : this.entityInfoCache.int2ObjectEntrySet()) {
             if (!entitiesToRetain.contains(kvp.getIntKey())) {
                 kvp.getValue().deactivate();
-                toRemove.add(kvp.getIntKey());
+                this.toRemove.add(kvp.getIntKey());
             }
         }
 
-        // Work around issue in the underlying Int2ObjectOpenHashMap instance
-        for (int key : toRemove) {
-            this.entityInfoCache.remove(key);
-        }
+        // Removed after iterating rather than during, to stay clear of modifying the map mid-iteration
+        for (int i = 0; i < this.toRemove.size(); i++)
+            this.entityInfoCache.remove(this.toRemove.getInt(i));
+        this.toRemove.clear();
+    }
+
+    @Override
+    public void clearCache() {
+        for (var info : this.entityInfoCache.values())
+            info.deactivate();
+        this.entityInfoCache.clear();
     }
 
     @Override
@@ -89,11 +133,8 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
             info.deactivate();
         }
 
-        // Find the entity in our map
-        var types = this.entityEffects.computeIfAbsent(entity.getType(), this::gatherEffectsFromConfigRules);
-
         // Project the effect instances
-        var effects = types.stream()
+        var effects = this.getEntityEffectTypes(entity.getType()).stream()
                 .map(e -> e.produce(entity))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -111,9 +152,19 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
         // Initialize the attached effects before returning.
         // Usually, the next step in processing would be
         // to tick the effects.
-        info.activate();
+        info.activate(entity);
 
         return info;
+    }
+
+    @Override
+    public Optional<EntityEffectInfo> findEntityEffectInfo(LivingEntity entity) {
+        return Optional.ofNullable(this.entityInfoCache.get(entity.getId()));
+    }
+
+    @Override
+    public Set<EntityEffectType> getEntityEffectTypes(EntityType<?> entityType) {
+        return Collections.unmodifiableSet(this.entityEffects.computeIfAbsent(entityType, this::gatherEffectsFromConfigRules));
     }
 
     private Set<EntityEffectType> gatherEffectsFromConfigRules(EntityType<?> entityType) {

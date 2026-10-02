@@ -13,6 +13,8 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 public class EntityEffectHandler extends AbstractClientHandler {
 
     private final IEntityEffectLibrary entityEffectLibrary;
+    // Ids of the entities ticked this pass; reused between ticks
+    private final IntOpenHashSet tickedEntities = new IntOpenHashSet();
     private int entityCount;
     private int entityEffectsTicked;
 
@@ -47,7 +49,8 @@ public class EntityEffectHandler extends AbstractClientHandler {
         // This will collect the list of entity IDs that we want to
         // keep track of. Entities not in this set can be removed from
         // the cache.
-        IntOpenHashSet tickedEntities = new IntOpenHashSet();
+        var tickedEntities = this.tickedEntities;
+        tickedEntities.clear();
 
         for (var entity : entitiesInRange) {
             this.entityCount++;
@@ -70,7 +73,7 @@ public class EntityEffectHandler extends AbstractClientHandler {
                     tickedEntities.add(entity.getId());
                     if (!info.isDefault()) {
                         this.entityEffectsTicked++;
-                        info.tick();
+                        info.tick(entity);
                     }
                 }
             }
@@ -78,6 +81,14 @@ public class EntityEffectHandler extends AbstractClientHandler {
 
         // Need to remove entities that were not ticked from the cache
         this.entityEffectLibrary.cleanCache(tickedEntities);
+    }
+
+    /**
+     * Entity ids are only unique within one world, so cached info must not carry over to the next.
+     */
+    @Override
+    public void onDisconnect() {
+        this.entityEffectLibrary.clearCache();
     }
 
     @Override

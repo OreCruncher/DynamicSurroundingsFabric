@@ -82,11 +82,18 @@ public class BlockInfo {
         this.stepSound = state.getSoundType().getStepSound().getLocation();
     }
 
+    /**
+     * True if this block needs nothing beyond the shared default info: no sounds, no effects, and the same acoustic
+     * properties as the default. BlockLibrary then stores the shared instance instead of this one.
+     * <p>
+     * The acoustics must match the default exactly. Translucent blocks (occlusion DEFAULT_TRANSLUCENT) don't
+     * qualify: the shared instance has ordinary occlusion, so collapsing them into it would change how much sound
+     * they block.
+     */
     public boolean isDefault() {
-        return this.sounds == null && this.blockEffects == null
+        return this.sounds.isEmpty() && this.blockEffects.isEmpty()
                 && this.soundReflectivity == Reflectance.DEFAULT
-                && (this.soundOcclusion == Occlusion.DEFAULT
-                        || this.soundOcclusion == Occlusion.DEFAULT_TRANSLUCENT);
+                && this.soundOcclusion == Occlusion.DEFAULT;
     }
 
     public int getVersion() {
@@ -130,12 +137,15 @@ public class BlockInfo {
             this.sounds.clear();
     }
 
+    // Neither collection is ever null (they start empty, and trim() keeps them non-null), so these test for content
+
     public boolean hasSoundsOrEffects() {
-        return this.sounds != null || this.blockEffects != null;
+        return !this.sounds.isEmpty() || !this.blockEffects.isEmpty();
     }
 
     public Optional<ISoundFactory> getSoundToPlay(final IRandomizer random) {
-        if (this.sounds != null) {
+        // Checked before evaluating the chance script, which would otherwise run for blocks with no sounds
+        if (!this.sounds.isEmpty()) {
             var chance = CONDITION_EVALUATOR.eval(this.soundChance);
             if (chance instanceof Double c && random.nextDouble() < c) {
                 return this.sounds.makeSelection();

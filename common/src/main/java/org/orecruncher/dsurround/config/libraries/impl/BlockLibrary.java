@@ -1,10 +1,13 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateHolder;
 import org.orecruncher.dsurround.config.block.BlockInfo;
@@ -19,6 +22,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.stream.Stream;
 
 public class BlockLibrary implements IBlockLibrary {
@@ -38,8 +42,64 @@ public class BlockLibrary implements IBlockLibrary {
     private final IModLog logger;
     private final ITagLibrary tagLibrary;
 
-    // Cache of block states and their associated data
-    private final Map<BlockState, BlockInfo> blocks = new WeakHashMap<>(32 * 1024);
+    /**
+     * Cache of block info, indexed by block state id (Block.getId()).
+     * <p>
+     * Filled by the client thread in getBlockInfo() and read by the sound thread in getBlockInfoWeak(). The atomic
+     * array gives each entry safe publication between the two; the field is volatile so that replacing the whole
+     * array (to clear it on reload, or grow it) is seen by both.
+     * <p>
+     * State ids can be renumbered after the cache is filled (registry sync when joining a server), so each entry
+     * records the state it belongs to, and a lookup only counts as a hit when that state matches.
+     */
+    private volatile AtomicReferenceArray<CacheEntry> blocks = newCache(0);
+
+    private record CacheEntry(BlockState state, BlockInfo info) {
+    }
+
+    /*
+     * Blocks that make up most terrain, cached as soon as the library reloads instead of waiting for them to be
+     * looked up. Sound processing reads acoustics with getBlockInfoWeak(), which never builds anything, so an
+     * uncached block gets the default reflectivity and occlusion. That's right for plain blocks, but wrong for blocks
+     * like stone, which occlude more than the default. These are what sound rays hit most.
+     *
+     * Tags pick up modded variants. Glass uses vanilla's IMPERMEABLE (glass, stained and tinted glass) plus the
+     * c:glass_blocks and c:glass_panes convention tags, which Fabric and NeoForge both provide; vanilla has no tag
+     * for panes. A few common blocks aren't in any suitable tag, so they are listed directly.
+     * Tags are only bound once in a world, so on the title screen only the listed blocks are seeded; the tag sync
+     * when joining seeds the rest.
+     */
+    private static final List<TagKey<Block>> SEED_TAGS = List.of(
+            BlockTags.BASE_STONE_OVERWORLD,
+            BlockTags.BASE_STONE_NETHER,
+            BlockTags.STONE_ORE_REPLACEABLES,
+            BlockTags.DEEPSLATE_ORE_REPLACEABLES,
+            BlockTags.DIRT,
+            BlockTags.SAND,
+            BlockTags.LOGS,
+            BlockTags.LEAVES,
+            BlockTags.ICE,
+            BlockTags.TERRACOTTA,
+            BlockTags.PLANKS,
+            BlockTags.IMPERMEABLE,
+            conventionTag("glass_blocks"),
+            conventionTag("glass_panes"));
+
+    private static final List<Block> SEED_BLOCKS = List.of(
+            Blocks.GRAVEL,
+            Blocks.CLAY,
+            Blocks.SANDSTONE,
+            Blocks.RED_SANDSTONE,
+            Blocks.SNOW_BLOCK,
+            Blocks.END_STONE,
+            Blocks.OBSIDIAN,
+            // Also covered by the tags above, but listed so they are seeded on the title screen too
+            Blocks.GLASS,
+            Blocks.GLASS_PANE);
+
+    private static TagKey<Block> conventionTag(String path) {
+        return TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", path));
+    }
 
     private final Collection<BlockConfigRule> blockConfigs = new ObjectArray<>();
     private int version = 0;
@@ -55,35 +115,76 @@ public class BlockLibrary implements IBlockLibrary {
         this.version++;
 
         if (scope == IReloadEvent.Scope.TAGS) {
+            // Tags affect block info (acoustic properties, which configs match), so drop the cache to rebuild it
+            // lazily. The version bump alone isn't enough: blocks stored as the shared DEFAULT are accepted whatever
+            // their version, so they would never pick up the new tags.
+            this.blocks = newCache(0);
             this.logger.info("[BlockLibrary] received tag update notification; version is now %d", this.version);
+            this.seedCache();
             return;
         }
 
-        this.blocks.clear();
+        this.blocks = newCache(0);
         this.blockConfigs.clear();
 
         var findResults = resourceUtilities.findModResources(CODEC, FILE_NAME);
         findResults.forEach(result -> this.blockConfigs.addAll(result.resourceContent()));
 
         this.logger.info("[BlockLibrary] %d block configs loaded; version is now %d", blockConfigs.size(), version);
+        this.seedCache();
     }
 
+    /**
+     * Caches every state of the common terrain blocks (see SEED_TAGS and SEED_BLOCKS). Runs on the client thread as
+     * part of a reload, after the tag library has reloaded, so it is the cache's only writer at the time and sees
+     * current tags.
+     */
+    private void seedCache() {
+        final long start = System.nanoTime();
+
+        Set<Block> seeds = Collections.newSetFromMap(new IdentityHashMap<>());
+        seeds.addAll(SEED_BLOCKS);
+        for (var tag : SEED_TAGS) {
+            for (var holder : BuiltInRegistries.BLOCK.getTagOrEmpty(tag))
+                seeds.add(holder.value());
+        }
+
+        int states = 0;
+        for (var block : seeds) {
+            for (var state : block.getStateDefinition().getPossibleStates()) {
+                this.getBlockInfo(state);
+                states++;
+            }
+        }
+
+        final long micros = (System.nanoTime() - start) / 1_000;
+        this.logger.info("[BlockLibrary] seeded %d block states from %d blocks in %d.%03d ms",
+                states, seeds.size(), micros / 1_000, micros % 1_000);
+    }
+
+    /**
+     * Safe from any thread. Returns whatever is cached, or DEFAULT if nothing is, without building anything.
+     */
     @Override
     public BlockInfo getBlockInfoWeak(BlockState state) {
-        var info = this.blocks.get(state);
-        return info != null ? info : DEFAULT;
+        var entry = lookup(this.blocks, state);
+        return entry != null ? entry.info() : DEFAULT;
     }
 
+    /**
+     * Client thread only: builds and caches the info if it isn't cached for the current version.
+     */
     @Override
     public BlockInfo getBlockInfo(BlockState state) {
-        var info = this.blocks.get(state);
-        if (info != null) {
+        var entry = lookup(this.blocks, state);
+        if (entry != null) {
+            var info = entry.info();
             if (info.getVersion() == this.version || info == DEFAULT)
                 return info;
         }
 
         // OK - need to build out info for the block.
-        info = new BlockInfo(this.version, state);
+        var info = new BlockInfo(this.version, state);
         this.blockConfigs.stream()
                 .filter(c -> c.match(state))
                 .forEach(info::update);
@@ -95,8 +196,44 @@ public class BlockLibrary implements IBlockLibrary {
         else
             info.trim();
 
-        this.blocks.put(state, info);
+        this.store(state, info);
         return info;
+    }
+
+    /**
+     * The cached entry for {@code state}, or null if there is none (or the slot belongs to a different state after
+     * the ids were renumbered).
+     */
+    private static CacheEntry lookup(AtomicReferenceArray<CacheEntry> cache, BlockState state) {
+        int id = Block.getId(state);
+        if (id < 0 || id >= cache.length())
+            return null;
+        var entry = cache.get(id);
+        return entry != null && entry.state() == state ? entry : null;
+    }
+
+    private void store(BlockState state, BlockInfo info) {
+        int id = Block.getId(state);
+        if (id < 0)
+            return; // Not a registered state; nothing to index it by
+
+        var cache = this.blocks;
+        if (id >= cache.length()) {
+            // More states than when the cache was made (registry sync, late registration). Grow, keeping entries.
+            var grown = newCache(id + 1);
+            for (int i = 0; i < cache.length(); i++)
+                grown.set(i, cache.get(i));
+            this.blocks = grown;
+            cache = grown;
+        }
+        cache.set(id, new CacheEntry(state, info));
+    }
+
+    /**
+     * An empty cache with room for every block state currently registered, and at least {@code minSize}.
+     */
+    private static AtomicReferenceArray<CacheEntry> newCache(int minSize) {
+        return new AtomicReferenceArray<>(Math.max(minSize, Block.BLOCK_STATE_REGISTRY.size()));
     }
 
     @Override

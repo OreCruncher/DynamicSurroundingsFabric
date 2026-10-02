@@ -91,11 +91,17 @@ public final class ViewerPlugin implements IDiagnosticPlugin {
         this.processTags(holderResult.get(), data);
 
         if (entity instanceof LivingEntity le) {
-            var info = this.entityEffectLibrary.getEntityEffectInfo(le);
-            if (info.isDefault()) {
-                data.add(Component.literal("Default Effects"));
+            // Read-only lookups: the viewer must not create or activate effects for whatever it is pointed at.
+            // Active effects are shown when the entity has some; otherwise the configured effect types.
+            var info = this.entityEffectLibrary.findEntityEffectInfo(le);
+            if (info.isPresent() && !info.get().isDefault()) {
+                info.get().getEffects().forEach(effect -> data.add(Component.literal(effect.toString())));
             } else {
-                info.getEffects().forEach(effect -> data.add(Component.literal(effect.toString())));
+                var types = this.entityEffectLibrary.getEntityEffectTypes(le.getType());
+                if (types.isEmpty())
+                    data.add(Component.literal("Default Effects"));
+                else
+                    types.forEach(type -> data.add(Component.literal(type.getName() + " (not active)")));
             }
         } else {
             data.add(Component.literal("Not a LivingEntity"));

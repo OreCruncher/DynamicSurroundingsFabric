@@ -3,18 +3,28 @@ package org.orecruncher.dsurround.effects.entity;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.effects.IEntityEffect;
-import org.orecruncher.dsurround.lib.CachingSupplier;
 import org.orecruncher.dsurround.lib.GameUtils;
 
 import java.util.Collection;
 
+/**
+ * The effects attached to one entity. Effect instances are shared between entities, so anything specific to the
+ * entity is reached through this object.
+ * <p>
+ * No reference to the entity is kept between calls, so the cache holding these never keeps an entity alive. During
+ * {@link #activate} and {@link #tick} the entity is supplied by the caller (who already has it), so effects asking
+ * for {@link #getEntity()} get it without a lookup. Outside those calls it is looked up by id.
+ */
 public class EntityEffectInfo {
 
     private final int entityId;
     private final int version;
-    private final CachingSupplier<LivingEntity> entityReference;
     private final Collection<IEntityEffect> effects;
+
+    // The entity being activated or ticked; only set during those calls
+    private @Nullable LivingEntity current;
 
     /**
      * Special constructor for creating a default instance
@@ -23,20 +33,10 @@ public class EntityEffectInfo {
         this(version, null, ImmutableList.of());
     }
 
-    public EntityEffectInfo(int version, LivingEntity entity, Collection<IEntityEffect> effects) {
+    public EntityEffectInfo(int version, @Nullable LivingEntity entity, Collection<IEntityEffect> effects) {
         this.version = version;
         this.entityId = entity != null ? entity.getId() : -1;
         this.effects = effects;
-
-        if (this.entityId == -1) {
-            this.entityReference = CachingSupplier.from(() -> { throw new RuntimeException(); });
-        } else {
-            this.entityReference = CachingSupplier.from(() ->
-                    GameUtils.getWorld()
-                    .map(l -> l.getEntity(this.entityId))
-                    .map(LivingEntity.class::cast)
-                    .orElseThrow());
-        }
     }
 
     public int getVersion() {
@@ -51,17 +51,35 @@ public class EntityEffectInfo {
         return this.entityId;
     }
 
+    /**
+     * The entity these effects belong to. Throws if it can't be found (no world, or no living entity with this id).
+     */
     @NotNull
     public LivingEntity getEntity() {
-        return this.entityReference.get();
+        var entity = this.current;
+        if (entity != null)
+            return entity;
+        return GameUtils.getWorld()
+                .map(l -> l.getEntity(this.entityId))
+                .filter(LivingEntity.class::isInstance)
+                .map(LivingEntity.class::cast)
+                .orElseThrow();
     }
 
-    public void activate() {
+    /**
+     * Initializes the effects for {@code entity}, the entity this info was created for.
+     */
+    public void activate(LivingEntity entity) {
         // If the entity is already removed, do nothing.
-        if (this.entityReference.get().isAlive())
+        if (!entity.isAlive())
+            return;
+        this.current = entity;
+        try {
             for (var e : this.effects)
                 e.activate(this);
-        this.entityReference.clear();
+        } finally {
+            this.current = null;
+        }
     }
 
     public void deactivate() {
@@ -69,15 +87,22 @@ public class EntityEffectInfo {
         // resources that need to be cleaned up.
         for (var e : this.effects)
             e.deactivate(this);
-        this.entityReference.clear();
     }
 
-    public void tick() {
+    /**
+     * Ticks the effects for {@code entity}, the entity this info was created for.
+     */
+    public void tick(LivingEntity entity) {
         // Do not tick if already removed
-        if (this.entityReference.get().isAlive())
+        if (!entity.isAlive())
+            return;
+        this.current = entity;
+        try {
             for (var e : this.effects)
                 e.tick(this);
-        this.entityReference.clear();
+        } finally {
+            this.current = null;
+        }
     }
 
     // Use only for diagnostic purposes
@@ -103,11 +128,11 @@ public class EntityEffectInfo {
                 throw new RuntimeException("No entity associated with default entity effect info");
             }
             @Override
-            public void activate() {}
+            public void activate(LivingEntity entity) {}
             @Override
             public void deactivate() {}
             @Override
-            public void tick() {}
+            public void tick(LivingEntity entity) {}
             @Override
             public boolean isCurrentPlayer(LivingEntity player) {
                 return false;

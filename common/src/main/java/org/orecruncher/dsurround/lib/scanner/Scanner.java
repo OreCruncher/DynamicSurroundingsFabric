@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
@@ -43,7 +44,7 @@ public abstract class Scanner {
     protected final IRandomizer random = Randomizer.current();
     protected final BlockPos.MutableBlockPos workingPos = new BlockPos.MutableBlockPos();
 
-    private int errorCount = 0;
+    private final LogThrottle<Object> blockErrors;
 
     public Scanner(final ScanContext locus, final String name, final int range) {
         this(locus, name, range, range, range);
@@ -52,6 +53,7 @@ public abstract class Scanner {
     public Scanner(final ScanContext locus, final String name, final int xRange, final int yRange, final int zRange) {
         this.name = name;
         this.locus = locus;
+        this.blockErrors = LogThrottle.firstN(locus.getLogger(), "block errors from " + name, null, MAX_LOGGED_ERRORS);
 
         this.setRange(xRange, yRange, zRange);
     }
@@ -135,11 +137,6 @@ public abstract class Scanner {
         if (t instanceof VirtualMachineError fatal)
             throw fatal;
 
-        this.errorCount++;
-        if (this.errorCount <= MAX_LOGGED_ERRORS) {
-            this.locus.getLogger().error(t, "[%s] %s failed at %s for %s", this.name, handler, pos.toShortString(), state);
-            if (this.errorCount == MAX_LOGGED_ERRORS)
-                this.locus.getLogger().warn("[%s] %d block errors; further errors will not be logged", this.name, MAX_LOGGED_ERRORS);
-        }
+        this.blockErrors.error(t, "[%s] %s failed at %s for %s", this.name, handler, pos.toShortString(), state);
     }
 }

@@ -24,9 +24,10 @@ public abstract class AbstractBlockEffect implements IBlockEffect {
     /**
      * Vanilla doesn't show ordinary particles more than 32 blocks from the camera (LevelRenderer drops them).
      * Effects create particles through ParticleEngine directly, which skips that check, so effects should apply it
-     * themselves via {@link #cameraDistanceSq()}.
+     * themselves via {@link #cameraDistanceSq()}. Public so effect systems can apply the same limit before creating
+     * effects.
      */
-    protected static final double PARTICLE_RANGE_SQ = 32 * 32;
+    public static final double PARTICLE_RANGE_SQ = 32 * 32;
 
 
     protected final Level world;

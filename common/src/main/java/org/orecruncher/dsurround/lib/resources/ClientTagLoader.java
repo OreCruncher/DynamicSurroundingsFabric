@@ -43,10 +43,6 @@ public class ClientTagLoader {
         return this.getTagData(tagKey, new HashSet<>()).members();
     }
 
-    public <T> Collection<ResourceLocation> getCompleteIds(TagKey<T> tagKey) {
-        return this.getTagData(tagKey, new HashSet<>()).members();
-    }
-
     public void clear() {
         this.logger.debug(RESOURCE_LOADING, "Clearing client tag loader");
         this.tagCache.clear();

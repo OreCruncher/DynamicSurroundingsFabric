@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.lib.scripting;
 
 import com.google.common.base.Preconditions;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.scripting.engine.expression.Expression;
 import org.orecruncher.dsurround.lib.scripting.engine.ScriptEngine;
 import org.orecruncher.dsurround.lib.scripting.engine.ScriptException;
@@ -29,8 +30,8 @@ public final class ExecutionContext {
     private final Map<String, Expression> expressions = new ConcurrentHashMap<>(32);
     // Scripts that failed to compile with the current definitions, keyed by script text
     private final Map<String, Expression> failedCompiles = new ConcurrentHashMap<>();
-    // Scripts that have already logged a runtime error, so a broken script run every tick logs only once
-    private final Set<String> reportedRuntimeErrors = ConcurrentHashMap.newKeySet();
+    // Runtime errors, keyed by script text, so a broken script run every tick logs only once (per definition change)
+    private final LogThrottle<String> scriptFailures;
 
     // Incremented whenever definitions change so that compile failures are retried with the new definitions
     private volatile int generation;
@@ -38,6 +39,7 @@ public final class ExecutionContext {
     public ExecutionContext(final String contextName, IModLog logger) {
         this.logger = logger;
         this.contextName = contextName;
+        this.scriptFailures = LogThrottle.oncePerKey(logger, "script errors", "the script definitions change");
         this.engine = new ScriptEngine();
         this.logger.info("[%s] Configured", this.contextName);
     }
@@ -90,15 +92,22 @@ public final class ExecutionContext {
         var converted = ScriptHelpers.tryToBoolean(value);
         if (converted != null)
             return converted;
-        if (this.reportedRuntimeErrors.add(script.asString())) {
-            // Only reached once per script, so creating the exception for the log entry costs nothing per tick
-            try {
-                ScriptHelpers.toBoolean(value);
-            } catch (final ScriptException e) {
-                this.logger.error(e, "Script result cannot be converted to a boolean: %s", script.asString());
-            }
-        }
+        // The exception is only created if the message is logged, so a script failing every tick costs nothing extra
+        this.scriptFailures.error(script.asString(), () -> conversionError(value),
+                "Script result cannot be converted to a boolean: %s", script.asString());
         return false;
+    }
+
+    /**
+     * The exception explaining why {@code value} isn't a boolean, for the log.
+     */
+    private static Throwable conversionError(final Object value) {
+        try {
+            ScriptHelpers.toBoolean(value);
+        } catch (final ScriptException e) {
+            return e;
+        }
+        return new IllegalArgumentException("Cannot convert to a boolean: " + value);
     }
 
     public Optional<Object> eval(final Script script) {
@@ -116,19 +125,17 @@ public final class ExecutionContext {
     }
 
     private void reportScriptError(final Script script, final ScriptException e) {
-        if (this.reportedRuntimeErrors.add(script.asString()))
-            this.logger.error(e, "%s", e.getMessageForLogging(script.asString()));
+        this.scriptFailures.error(script.asString(), e, () -> e.getMessageForLogging(script.asString()));
     }
 
     private void reportUnexpectedError(final Script script, final Throwable t) {
-        if (this.reportedRuntimeErrors.add(script.asString()))
-            this.logger.error(t, "Error executing script: %s", script.asString());
+        this.scriptFailures.error(script.asString(), t, "Error executing script: %s", script.asString());
     }
 
     private void onDefinitionsChanged() {
         this.generation++;
         this.failedCompiles.clear();
-        this.reportedRuntimeErrors.clear();
+        this.scriptFailures.reset();
     }
 
     private Expression getExpression(final Script script) {

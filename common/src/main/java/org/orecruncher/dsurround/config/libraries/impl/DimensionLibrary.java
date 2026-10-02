@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
+import dev.architectury.event.events.client.ClientLifecycleEvent;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
@@ -23,30 +24,36 @@ public final class DimensionLibrary implements IDimensionLibrary {
 
     private final IModLog logger;
     private final ObjectArray<DimensionConfigRule> dimensionRules = new ObjectArray<>();
+    // Built from the world as well as the rules (sea level, height, superflat, clouds), so it only holds for the
+    // current world: cleared on every reload and whenever the client loads a world
     private final Map<ResourceKey<Level>, DimensionInfo> configs = new Object2ObjectOpenHashMap<>();
     private int version = 0;
 
     public DimensionLibrary(IModLog logger) {
         this.logger = ModLog.createChild(logger, "DimensionLibrary");
+
+        // A different world can have different values for the same dimension key (a superflat overworld after a
+        // normal one, say), so nothing carries over between worlds
+        ClientLifecycleEvent.CLIENT_LEVEL_LOAD.register(level -> this.configs.clear());
     }
 
     @Override
     public void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
 
         this.version++;
+        this.configs.clear();
 
         if (scope == IReloadEvent.Scope.TAGS) {
-            this.logger.info("[DimensionLibrary] received tag update notification; version is now %d", this.version);
+            this.logger.info("received tag update notification; version is now %d", this.version);
             return;
         }
-        
-        this.configs.clear();
+
         this.dimensionRules.clear();
 
         var findResults = resourceUtilities.findModResources(CODEC, FILE_NAME);
         findResults.forEach(result -> this.dimensionRules.addAll(result.resourceContent()));
 
-        this.logger.info("[DimensionLibrary] %d dimension rules loaded; version is now %d", this.dimensionRules.size(), this.version);
+        this.logger.info("%d dimension rules loaded; version is now %d", this.dimensionRules.size(), this.version);
     }
 
     @Override
@@ -56,7 +63,7 @@ public final class DimensionLibrary implements IDimensionLibrary {
                 key -> {
                     var dimInfo = new DimensionInfo(world);
                     this.dimensionRules.forEach(dimInfo::update);
-                    return dimInfo;
+                    return dimInfo.finish();
                 });
     }
 
