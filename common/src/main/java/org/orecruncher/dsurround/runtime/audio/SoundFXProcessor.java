@@ -18,7 +18,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.threading.Worker;
-import org.orecruncher.dsurround.runtime.audio.effects.Effects;
+import org.orecruncher.dsurround.runtime.audio.effects.Efx;
 
 import java.util.Arrays;
 import java.util.concurrent.*;
@@ -56,6 +56,8 @@ public final class SoundFXProcessor {
     static {
         ICollectDiagnostics.EVENT.register(SoundFXProcessor::onGatherText);
         IClientTickStart.EVENT.register(SoundFXProcessor::clientTick);
+        // Lets sounds reuse their ray traced results until something in the world changes
+        WorldChangeTracker.register();
     }
 
     public static WorldContext getWorldContext() {
@@ -72,7 +74,7 @@ public final class SoundFXProcessor {
     }
 
     public static void initialize() {
-        Effects.initialize();
+        Efx.initialize();
 
         sources = new SourceContext[AudioUtilities.getMaxSounds()];
 
@@ -101,7 +103,7 @@ public final class SoundFXProcessor {
                 Arrays.fill(sources, null);
                 sources = null;
             }
-            Effects.deinitialize();
+            Efx.deinitialize();
         }
     }
 
