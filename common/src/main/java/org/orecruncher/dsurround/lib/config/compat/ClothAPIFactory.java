@@ -4,7 +4,6 @@ import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
-import me.shedaniel.clothconfig2.impl.builders.EnumSelectorBuilder;
 import me.shedaniel.clothconfig2.impl.builders.FieldBuilder;
 import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
 import net.minecraft.client.gui.screens.Screen;
@@ -160,14 +159,16 @@ public class ClothAPIFactory extends AbstractConfigScreenFactory {
                     .setSaveConsumer(binder::setValue);
         } else if (pv instanceof ConfigElement.EnumValue v) {
             var binder = pv.<Enum<?>>createBinder(instance);
-            fieldBuilder = new EnumSelectorBuilder<>(builder.getResetButtonKey(), name, (Class<Enum<?>>)(v.getEnumClass()), binder.getValue())
+            fieldBuilder = builder.startEnumSelector(name, (Class<Enum<?>>) v.getEnumClass(), binder.getValue())
                     .setTooltip(tooltip)
                     .setDefaultValue(binder.defaultValue())
                     .setSaveConsumer(binder::setValue);
         }
 
+        // Cloth's restart prompt asks to exit Minecraft, so only use it when that is what's needed. A world
+        // restart (leave and rejoin) is explained in the tooltip instead.
         if (fieldBuilder != null) {
-            fieldBuilder.requireRestart(pv.isAnyRestartRequired());
+            fieldBuilder.requireRestart(pv.isClientRestartRequired());
         }
 
         return fieldBuilder;

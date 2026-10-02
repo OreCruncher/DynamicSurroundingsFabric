@@ -4,14 +4,20 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.util.Mth;
+import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.Localization;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
+/**
+ * An element of a configuration's specification: a property value, or a group of them backed by a nested object.
+ * Elements describe a field; the object holding the field is passed to each call.
+ */
 public abstract class ConfigElement<T> {
 
     private static final Style STYLE_RANGE = Style.EMPTY.withColor(ColorPalette.CORN_FLOWER_BLUE);
@@ -20,10 +26,12 @@ public abstract class ConfigElement<T> {
 
     private final String languageKey;
     private final ElementAccessor<T> field;
+    private final Style textStyle;
 
     ConfigElement(String elementNameKey, Field field) {
         this.languageKey = elementNameKey;
         this.field = new ElementAccessor<>(field);
+        this.textStyle = parseTextStyle(field.getAnnotation(ConfigurationData.TextStyle.class), field);
     }
 
     public String getLanguageKey() {
@@ -61,23 +69,29 @@ public abstract class ConfigElement<T> {
         return comment.map(ConfigurationData.Comment::value);
     }
 
+    /**
+     * The style from the property's {@link ConfigurationData.TextStyle} annotation, or {@link Style#EMPTY}.
+     */
     public Style getTextStyle() {
-        var x = this.getAnnotation(ConfigurationData.TextStyle.class);
-        if (x.isPresent()) {
-            var textStyle = x.get();
-            Style workingStyle = Style.EMPTY;
-            try {
-                if (!textStyle.color().isEmpty()) {
-                    workingStyle = workingStyle.withColor(TextColor.parseColor(textStyle.color()).getOrThrow());
-                }
-                workingStyle = workingStyle
-                        .withItalic(textStyle.italic())
-                        .withBold(textStyle.bold())
-                        .withUnderlined(textStyle.underlined());
-                return workingStyle;
-            } catch(Throwable ignored) {}
+        return this.textStyle;
+    }
+
+    private static Style parseTextStyle(ConfigurationData.TextStyle textStyle, Field field) {
+        if (textStyle == null)
+            return Style.EMPTY;
+
+        var style = Style.EMPTY
+                .withItalic(textStyle.italic())
+                .withBold(textStyle.bold())
+                .withUnderlined(textStyle.underlined());
+        if (!textStyle.color().isEmpty()) {
+            var color = TextColor.parseColor(textStyle.color());
+            if (color.result().isPresent())
+                style = style.withColor(color.result().get());
+            else
+                Library.LOGGER.warn("Configuration property '%s' has an invalid TextStyle color '%s'", field.getName(), textStyle.color());
         }
-        return Style.EMPTY;
+        return style;
     }
 
     protected T get(Object instance) {
@@ -96,18 +110,39 @@ public abstract class ConfigElement<T> {
         return this.getAnnotation(annotation).isPresent();
     }
 
+    /**
+     * A group of properties held in a nested object.
+     */
     public static class PropertyGroup extends ConfigElement<Object> {
 
-        private final Collection<ConfigElement<?>> children;
+        private final Class<?> type;
+        private Collection<ConfigElement<?>> children = List.of();
 
-        PropertyGroup(String translationKey, Collection<ConfigElement<?>> children, Field field) {
+        PropertyGroup(String translationKey, Field field) {
             super(translationKey, field);
+            this.type = field.getType();
+        }
 
+        void setChildren(Collection<ConfigElement<?>> children) {
             this.children = children;
         }
 
+        /**
+         * The class of the nested object
+         */
+        public Class<?> getType() {
+            return this.type;
+        }
+
+        /**
+         * The nested object held by {@code instance}
+         */
         public Object getInstance(Object instance) {
             return this.get(instance);
+        }
+
+        void setInstance(Object instance, Object groupInstance) {
+            this.set(instance, groupInstance);
         }
 
         public Collection<ConfigElement<?>> getChildren() {
@@ -116,6 +151,9 @@ public abstract class ConfigElement<T> {
 
     }
 
+    /**
+     * A single value. The default is the value in the prototype the specification was built from.
+     */
     public static class PropertyValue<T> extends ConfigElement<T> {
 
         private final T defaultValue;
@@ -179,6 +217,9 @@ public abstract class ConfigElement<T> {
         }
 
 
+        /**
+         * The value limited to the property's range, if it has one.
+         */
         protected T clamp(T value) {
             return value;
         }
@@ -252,7 +293,8 @@ public abstract class ConfigElement<T> {
 
     public static class DoubleValue extends PropertyValue<Double> implements IRangeTooltip {
 
-        private double minValue = Double.MIN_VALUE;
+        // Not Double.MIN_VALUE: that is the smallest positive double, and would clamp negative values to about 0
+        private double minValue = -Double.MAX_VALUE;
         private double maxValue = Double.MAX_VALUE;
 
         DoubleValue(Object instance, String translationKey, Field field) {
@@ -274,7 +316,7 @@ public abstract class ConfigElement<T> {
 
         @Override
         public boolean hasRange() {
-            return this.minValue != Double.MIN_VALUE || this.maxValue != Double.MAX_VALUE;
+            return this.minValue != -Double.MAX_VALUE || this.maxValue != Double.MAX_VALUE;
         }
 
         @Override
