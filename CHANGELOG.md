@@ -40,7 +40,7 @@ This is what I am using it for:
 
 Impacts:
 
-* Added 800+ unit tests to validate internal logic
+* Added 950+ unit tests to validate internal logic
 * Improved script engine error reporting, and performance by roughly 40%
 * Identified and fixed performance issues in the area scanner resulting in a 50% increase in performance
 * Identified and fixed cases where caches weren't flushed or data was holding a reference to an object that could go out of scope (like Entities)
@@ -49,6 +49,7 @@ Impacts:
 * Improved performance and resource usage of waterfall and steam producer effect systems
 * Improved error detection and reporting around json configurations
 * Cleaned up mod configuration processing and added logic to handle cases where a hand edit results in bad input
+* Refactored the sound effect engine (reverb) and introduced mechanisms to reduce calculations where possible
 * Added an annotation processor to create event loop implementations rather than use reflection which reduces overhead and eliminates allocations
 * Removed dead code, or code that wasn't actually providing any value (always return true, didn't contribute anything meaningful, etc.)
 
@@ -58,11 +59,13 @@ Impacts:
 
 **Changes**
 * Search box in the Individual Sound Configuration menu will accept regular expressions for filtering.
+* Reduced the reverb ray count from 256 to 128 as a default. Existing configs (upgrades) will still have 256 so you can reduce if you want. Math models and testing showed anything more than 100 would give marginal improvements to sound.
 * Added a new "Works in Progress" configuration section where WIP features can be enabled/disabled. WIP features are not final versions, and could be removed between releases.
 * Added a WIP configuration option to enable/disable the waterfall cascade effect. This does not affect the waterfall droplet effect. (NOTE: If you turned off waterfall particle effects to disable the cascade, you can turn it back on and then turn off the waterfall cascade specific feature.)
 
 **Fixes**
-* Too numerous to count - nothing horrific. Most were edge conditions or related to validation of configuration data coming from external sources.
+* A lot of small ones - nothing horrific. Most were edge conditions or related to validation of configuration data coming from external sources.
+* Sound effects when the player is underwater are properly dampened.
 
 > ### DynamicSurroundings-1.21.1-0.4.5
 
