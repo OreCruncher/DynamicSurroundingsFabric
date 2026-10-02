@@ -134,6 +134,10 @@ public class Configuration extends ConfigurationData {
         public boolean enableOcclusionProcessing = false;
 
         @Property
+        @Comment("Check whether reflections reach the player only from each reverb ray's last reflection, instead of from every reflection. Cheaper; may sound different")
+        public boolean simplifiedSharedAirspace = false;
+
+        @Property
         @IntegerRange(min = 16, max = 64)
         @RestartRequired
         @Comment("The number of rays to project around a sound location to calculate reverb effect")
@@ -149,7 +153,9 @@ public class Configuration extends ConfigurationData {
         @IntegerRange(min = 64, max = 512)
         @RestartRequired
         @Comment("Total distance a reverb ray will traverse before ending calculation")
-        public int reverbRayTraceDistance = 256;
+        // Beyond about 70-100 blocks a longer ray no longer changes which reverb a reflection feeds, only whether a
+        // distant surface is found to bounce off; an open-air ray costs in proportion to its length
+        public int reverbRayTraceDistance = 128;
     }
 
     public static class SoundOptions {

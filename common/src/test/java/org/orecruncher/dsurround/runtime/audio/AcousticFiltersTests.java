@@ -246,4 +246,35 @@ public class AcousticFiltersTests {
             assertTrue(result.directCutoff() >= 0F && result.directCutoff() <= 1F);
         }
     }
+
+    // ---- Shared airspace -------------------------------------------------------------------------------------
+
+    @Test
+    void checkingEveryReflectionGivesTheValuesItAlwaysHas() {
+        // Was: sharedAirspace * RECIP_TOTAL_RAYS * 64F, with RECIP_TOTAL_RAYS = 1F / (rays * bounces)
+        for (int bounces = 2; bounces <= 8; bounces++) {
+            final float recipTotalRays = 1F / (RAYS * bounces);
+            for (int clear = 0; clear <= RAYS * bounces; clear++)
+                assertEquals(clear * recipTotalRays * 64F, AcousticFilters.sharedAirspace(clear, RAYS * bounces),
+                        "bounces " + bounces + ", clear " + clear);
+        }
+    }
+
+    @Test
+    void bothModesMeanTheShareOfPossibleChecks() {
+        // Every reflection: rays x bounces checks possible. Last reflection only: one per ray.
+        assertEquals(64F, AcousticFilters.sharedAirspace(RAYS * 4, RAYS * 4), 1.0E-4);
+        assertEquals(64F, AcousticFilters.sharedAirspace(RAYS, RAYS), 1.0E-4);
+        assertEquals(32F, AcousticFilters.sharedAirspace(RAYS / 2, RAYS), 1.0E-4);
+        assertEquals(0F, AcousticFilters.sharedAirspace(0, RAYS));
+    }
+
+    @Test
+    void simplifiedModeCanFullyOpenTheCutoffs() {
+        // Without scaling by the checks actually possible, one check per ray could never reach the thresholds
+        var open = compute(2F, new float[4], new float[4], AcousticFilters.sharedAirspace(RAYS, RAYS), Submersion.NONE);
+
+        for (int c = 0; c < AcousticFilters.CHANNELS; c++)
+            assertEquals(1F, open.sendCutoff()[c], 1.0E-6, "channel " + c);
+    }
 }

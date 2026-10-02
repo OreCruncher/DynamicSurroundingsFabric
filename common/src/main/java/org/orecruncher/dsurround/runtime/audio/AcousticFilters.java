@@ -49,6 +49,19 @@ final class AcousticFilters {
     }
 
     /**
+     * The shared airspace measure the filters expect: the share of the possible checks that found a clear path from
+     * a reflection to the player, scaled so that 64 means all of them.
+     *
+     * @param clearPaths     checks that reached the player
+     * @param possibleChecks how many checks could have been made: rays x bounces when checking every reflection,
+     *                       rays when checking only each ray's last
+     */
+    static float sharedAirspace(float clearPaths, int possibleChecks) {
+        // Written as a reciprocal multiply so the every-reflection case gives exactly the values it always has
+        return clearPaths * (1F / possibleChecks) * 64F;
+    }
+
+    /**
      * @param occlusion      accumulated occlusion between the sound and the player
      * @param sendGains      accumulated reflection energy per reverb channel (not modified)
      * @param bounceRatios   per channel, from {@link #channelRatios}

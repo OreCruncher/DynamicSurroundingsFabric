@@ -115,6 +115,7 @@ public final class SoundFXUtils {
     private final float[] tracedSendGains = new float[AcousticFilters.CHANNELS];
     private final float[] tracedBounceTotals = new float[REVERB_RAY_BOUNCES];
     private float tracedSharedAirspace;
+    private int tracedAirspaceChecks = 1;
 
     public SoundFXUtils(final SourceContext source) {
         this.source = source;
@@ -153,7 +154,7 @@ public final class SoundFXUtils {
                 this.tracedOcclusion,
                 this.tracedSendGains,
                 AcousticFilters.channelRatios(this.tracedBounceTotals, REVERB_RAYS),
-                this.tracedSharedAirspace * RECIP_TOTAL_RAYS * 64F,
+                AcousticFilters.sharedAirspace(this.tracedSharedAirspace, this.tracedAirspaceChecks),
                 ctx.submersion);
 
         this.apply(filters, airAbsorptionFactor);
@@ -162,6 +163,9 @@ public final class SoundFXUtils {
     /**
      * Casts rays around the sound, bouncing them off what they hit, and accumulates the reflected energy per reverb
      * channel, the reflectivity per bounce, and how often a reflection point can see the player (shared airspace).
+     * <p>
+     * Shared airspace is checked from every reflection, or with {@code simplifiedSharedAirspace} only from each
+     * ray's last one (up to a quarter as many rays with 4 bounces).
      */
     private void traceReverb(final WorldContext ctx, final Vec3 soundPos) {
         final float[] sendGains = this.tracedSendGains;
@@ -169,6 +173,7 @@ public final class SoundFXUtils {
         Arrays.fill(sendGains, 0F);
         Arrays.fill(bounceTotals, 0F);
         float sharedAirspace = 0F;
+        final boolean checkLastReflectionOnly = CONFIG.simplifiedSharedAirspace;
 
         final ReusableRaycastContext traceContext = new ReusableRaycastContext(ctx.world, ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY);
 
@@ -216,9 +221,7 @@ public final class SoundFXUtils {
 
                     // Cast a ray back at the player.  If it is a miss there is a path back from the reflection
                     // point to the player meaning they share the same airspace.
-                    final Vec3 finalRayStart = MathStuff.addScaled(lastHitPos, lastHitNormal, 0.01F);
-                    var finalRayHit = traceContext.trace(finalRayStart, ctx.playerEyePosition);
-                    if (isMiss(finalRayHit)) {
+                    if (!checkLastReflectionOnly && canReachPlayer(traceContext, lastHitPos, lastHitNormal, ctx.playerEyePosition)) {
                         sharedAirspace += 1.0F;
                     }
                 }
@@ -242,9 +245,23 @@ public final class SoundFXUtils {
                     break;
                 }
             }
+
+            // Simplified: one check per ray, from the last surface it reflected off
+            if (checkLastReflectionOnly && canReachPlayer(traceContext, lastHitPos, lastHitNormal, ctx.playerEyePosition)) {
+                sharedAirspace += 1.0F;
+            }
         }
 
         this.tracedSharedAirspace = sharedAirspace;
+        this.tracedAirspaceChecks = checkLastReflectionOnly ? REVERB_RAYS : REVERB_RAYS * REVERB_RAY_BOUNCES;
+    }
+
+    /**
+     * Whether a straight path leads from a reflection point (just off the surface) to the player.
+     */
+    private static boolean canReachPlayer(final ReusableRaycastContext traceContext, final Vec3 hitPos, final Vec3 hitNormal, final Vec3 playerEye) {
+        final Vec3 start = MathStuff.addScaled(hitPos, hitNormal, 0.01F);
+        return isMiss(traceContext.trace(start, playerEye));
     }
 
     private void apply(final AcousticFilters.Result filters, final float airAbsorptionFactor) {
