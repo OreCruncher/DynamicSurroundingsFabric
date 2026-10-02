@@ -34,13 +34,12 @@ class LogThrottleTests {
         }
 
         @Override
-        public void error(Throwable e, String msg, @Nullable Object... parms) {
-            this.errors.add(String.format(msg, parms));
-        }
-
-        @Override
-        public void warn(String msg, @Nullable Object... parms) {
-            this.warnings.add(String.format(msg, parms));
+        public void log(Level level, @Nullable Throwable t, String format, @Nullable Object... params) {
+            var text = String.format(format, params);
+            if (level == Level.ERROR)
+                this.errors.add(text);
+            else if (level == Level.WARN)
+                this.warnings.add(text);
         }
     }
 

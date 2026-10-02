@@ -68,17 +68,15 @@ public final class Client {
         // on the event hook.  (ModMenu can trigger this when it looks for
         // the hook in our mod before we had a chance to initialize.)
         Config = ConfigurationData.getConfig(Configuration.class);
-        if (Library.LOGGER instanceof ModLog ml) {
-            ml.setDebug(Config.logging.enableDebugLogging);
-            ml.setTraceMask(Config.logging.traceMask);
-        }
+        ModLog.setDebug(Config.logging.enableDebugLogging);
+        ModLog.setTraceMask(Config.logging.traceMask);
 
         // Hook the config load event so set we can set the debug flags when
         // the config changes.
         IConfigChangedEvent.EVENT.register(cfg -> {
-            if (cfg instanceof Configuration config && Library.LOGGER instanceof ModLog ml) {
-                ml.setDebug(config.logging.enableDebugLogging);
-                ml.setTraceMask(config.logging.traceMask);
+            if (cfg instanceof Configuration config) {
+                ModLog.setDebug(config.logging.enableDebugLogging);
+                ModLog.setTraceMask(config.logging.traceMask);
             }
         });
 

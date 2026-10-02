@@ -62,7 +62,7 @@ Impacts:
 * Added a WIP configuration option to enable/disable the waterfall cascade effect. This does not affect the waterfall droplet effect. (NOTE: If you turned off waterfall particle effects to disable the cascade, you can turn it back on and then turn off the waterfall cascade specific feature.)
 
 **Fixes**
-* Too numerous to count. Most were edge conditions or related to validation of configuration data coming from external sources.
+* Too numerous to count - nothing horrific. Most were edge conditions or related to validation of configuration data coming from external sources.
 
 > ### DynamicSurroundings-1.21.1-0.4.5
 

@@ -43,11 +43,10 @@ public class FixesTest {
             return false;
         }
 
-        public void info(String f, Object... a) {
-        }
-
-        public void error(Throwable t, String f, Object... a) {
-            FixesTest.this.logs.add(String.format(f, a));
+        @Override
+        public void log(Level level, Throwable t, String f, Object... a) {
+            if (level == Level.ERROR)
+                FixesTest.this.logs.add(String.format(f, a));
         }
     };
 
