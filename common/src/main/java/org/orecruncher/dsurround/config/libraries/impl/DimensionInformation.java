@@ -4,9 +4,9 @@ import dev.architectury.event.events.client.ClientLifecycleEvent;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.resources.ResourceLocation;
 import org.orecruncher.dsurround.config.DimensionInfo;
-import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
 import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
+import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 
@@ -21,7 +21,7 @@ public class DimensionInformation implements IDimensionInformation {
         // Need to reset the cached dimension info whenever the client world
         // changes or if there is a resource reload.
         ClientLifecycleEvent.CLIENT_LEVEL_LOAD.register(state -> this.info = null);
-        AssetLibraryEvent.RELOAD.register((x, y) -> this.info = null, HandlerPriority.HIGH);
+        IReloadEvent.EVENT.register((x, y) -> this.info = null, HandlerPriority.HIGH);
     }
 
     public ResourceLocation name() {

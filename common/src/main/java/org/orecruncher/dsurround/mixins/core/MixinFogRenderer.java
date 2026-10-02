@@ -5,7 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.world.level.material.FogType;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.eventing.IFogRender;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -29,6 +29,6 @@ public class MixinFogRenderer {
         data.end = RenderSystem.getShaderFogEnd();
         data.shape = RenderSystem.getShaderFogShape();
 
-        ClientEventHooks.FOG_RENDER_EVENT.invoker().onRenderFog(data, f, g);
+        IFogRender.EVENT.invoker().onRenderFog(data, f, g);
     }
 }

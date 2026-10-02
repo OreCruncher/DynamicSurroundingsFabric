@@ -5,10 +5,17 @@ import dev.architectury.platform.Platform;
 import dev.architectury.registry.ReloadListenerRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.PackType;
 import org.orecruncher.dsurround.commands.Commands;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
+import org.orecruncher.dsurround.eventing.ClientState;
+import org.orecruncher.dsurround.eventing.IClientConnect;
+import org.orecruncher.dsurround.eventing.IClientStarted;
+import org.orecruncher.dsurround.eventing.IConfigChangedEvent;
+import org.orecruncher.dsurround.eventing.IReloadEvent;
+import org.orecruncher.dsurround.eventing.ITagSync;
 import org.orecruncher.dsurround.gui.overlay.OverlayManager;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -20,7 +27,6 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
-import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.registry.ReloadListener;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
@@ -69,12 +75,15 @@ public final class Client {
 
         // Hook the config load event so set we can set the debug flags when
         // the config changes.
-        Configuration.CONFIG_CHANGED_EVENT.register(cfg -> {
+        IConfigChangedEvent.EVENT.register(cfg -> {
             if (cfg instanceof Configuration config && Library.LOGGER instanceof ModLog ml) {
                 ml.setDebug(config.logging.enableDebugLogging);
                 ml.setTraceMask(config.logging.traceMask);
             }
         });
+
+        // Connect the platform's client events to the mod's. Must happen before the client starts.
+        ClientState.initialize();
 
         Library.initialize();
 
@@ -118,8 +127,8 @@ public final class Client {
         // Do the handlers
         Handlers.registerHandlers();
 
-        ClientState.CLIENT_START_EVENT.register(Client::onComplete, HandlerPriority.VERY_HIGH);
-        ClientState.CLIENT_CONNECT_EVENT.register(Client::onConnect, HandlerPriority.LOW);
+        IClientStarted.EVENT.register(Client::onComplete, HandlerPriority.VERY_HIGH);
+        IClientConnect.EVENT.register(Client::onConnect, HandlerPriority.LOW);
 
         // Register core services
         ContainerManager.getRootContainer()
@@ -158,6 +167,16 @@ public final class Client {
         Library.LOGGER.info("[%s] Client initialization complete", Constants.MOD_ID);
     }
 
+    /**
+     * Last to run on a library reload: when debug logging is on, tells the player the reload happened.
+     */
+    private static void afterReload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
+        if (Config.logging.enableDebugLogging) {
+            var msg = Component.translatable("dsurround.text.reloadassets", Component.translatable("dsurround.modname"));
+            GameUtils.getPlayer().ifPresent(p -> p.sendSystemMessage(msg));
+        }
+    }
+
     public static void onComplete(Minecraft client) {
 
         Library.LOGGER.info("[%s] Finalizing initialization", Constants.MOD_ID);
@@ -166,18 +185,19 @@ public final class Client {
         // Register and initialize our libraries. Handlers will be reloaded in priority order.
         // Leave normal to very low priority for other things in the mod that would need such
         // notification.
-        AssetLibraryEvent.RELOAD.register(container.resolve(ISoundLibrary.class)::reload, HandlerPriority.VERY_HIGH);
-        AssetLibraryEvent.RELOAD.register(container.resolve(ITagLibrary.class)::reload, HandlerPriority.VERY_HIGH);
-        AssetLibraryEvent.RELOAD.register(container.resolve(IBiomeLibrary.class)::reload, HandlerPriority.HIGH);
-        AssetLibraryEvent.RELOAD.register(container.resolve(IBlockLibrary.class)::reload, HandlerPriority.HIGH);
-        AssetLibraryEvent.RELOAD.register(container.resolve(IItemLibrary.class)::reload, HandlerPriority.HIGH);
-        AssetLibraryEvent.RELOAD.register(container.resolve(IEntityEffectLibrary.class)::reload, HandlerPriority.HIGH);
-        AssetLibraryEvent.RELOAD.register(container.resolve(IDimensionLibrary.class)::reload, HandlerPriority.HIGH);
+        IReloadEvent.EVENT.register(container.resolve(ISoundLibrary.class)::reload, HandlerPriority.VERY_HIGH);
+        IReloadEvent.EVENT.register(container.resolve(ITagLibrary.class)::reload, HandlerPriority.VERY_HIGH);
+        IReloadEvent.EVENT.register(container.resolve(IBiomeLibrary.class)::reload, HandlerPriority.HIGH);
+        IReloadEvent.EVENT.register(container.resolve(IBlockLibrary.class)::reload, HandlerPriority.HIGH);
+        IReloadEvent.EVENT.register(container.resolve(IItemLibrary.class)::reload, HandlerPriority.HIGH);
+        IReloadEvent.EVENT.register(container.resolve(IEntityEffectLibrary.class)::reload, HandlerPriority.HIGH);
+        IReloadEvent.EVENT.register(container.resolve(IDimensionLibrary.class)::reload, HandlerPriority.HIGH);
+        IReloadEvent.EVENT.register(Client::afterReload, HandlerPriority.VERY_LOW);
 
-        ClientState.TAG_SYNC_EVENT.register(event -> {
+        ITagSync.EVENT.register(event -> {
             Library.LOGGER.info("Tag sync event received - reloading libraries");
             var resourceUtilities = ResourceUtilities.createForCurrentState();
-            AssetLibraryEvent.RELOAD.invoker().onReload(resourceUtilities, IReloadEvent.Scope.TAGS);
+            IReloadEvent.EVENT.invoker().onReload(resourceUtilities, IReloadEvent.Scope.TAGS);
         }, HandlerPriority.VERY_HIGH);
 
         // Add our fog handler

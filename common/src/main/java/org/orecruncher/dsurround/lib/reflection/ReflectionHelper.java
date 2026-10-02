@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.lib.reflection;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,9 +8,6 @@ import org.orecruncher.dsurround.lib.collections.Pair;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -20,93 +16,6 @@ import java.util.function.Supplier;
 public final class ReflectionHelper {
 
     private static final Supplier<IModLog> LOGGER = Suppliers.memoize(() -> ModLog.createChild(Library.LOGGER, "ReflectionHelper"));
-
-    /**
-     * Finds a Single Abstract method on a functional interface. Interfaces with multiple methods defined will
-     * cause an exception to be thrown.
-     *
-     * @param interfaceClass Functional interface where the SAM method is to be discovered
-     * @return SAM method on the specified interface
-     */
-    static Method findSamMethod(Class<?> interfaceClass) {
-        Preconditions.checkNotNull(interfaceClass);
-
-        if (!interfaceClass.isInterface()) {
-            throw new IllegalArgumentException("Provided type is not an interface: " + interfaceClass.getName());
-        }
-
-        Method samMethod = null;
-
-        // getMethods() returns all public methods, including inherited ones from superinterfaces
-        for (Method m : interfaceClass.getMethods()) {
-            int mods = m.getModifiers();
-
-            // Check if method is abstract, not static, not a default interface method,
-            // and not a standard java.lang.Object method (like toString or equals)
-            if (Modifier.isAbstract(mods)
-                    && !Modifier.isStatic(mods)
-                    && !m.isDefault()
-                    && !isObjectMethod(m)) {
-
-                if (samMethod != null) {
-                    throw new IllegalStateException(
-                            "Multiple abstract methods found. Interface is not a valid SAM type: " + interfaceClass.getName()
-                    );
-                }
-                samMethod = m;
-            }
-        }
-
-        if (samMethod == null) {
-            throw new IllegalArgumentException("No abstract method found on interface: " + interfaceClass.getName());
-        }
-
-        return samMethod;
-    }
-
-    static Optional<Method> findMethod(@NotNull Class<?> type, @NotNull String[] names, @Nullable Class<?>... parameterTypes) {
-        Preconditions.checkNotNull(type);
-        Preconditions.checkNotNull(names);
-
-        if (names.length == 0)
-            return Optional.empty();
-
-        for (String name : names) {
-            for (Class<?> current = type; current != null; current = current.getSuperclass()) {
-                var result = resolveMethod(current, name, parameterTypes);
-                if (result != null) {
-                    return Optional.of(result);
-                }
-            }
-        }
-
-        for (String name : names) {
-            for (Class<?> xface : type.getInterfaces()) {
-                var result = resolveMethod(xface, name, parameterTypes);
-                if (result != null) {
-                    return Optional.of(result);
-                }
-            }
-        }
-
-        return Optional.empty();
-    }
-
-    static Optional<Field> findField(Class<?> type, String[] names) {
-        Preconditions.checkNotNull(type);
-        Preconditions.checkNotNull(names);
-
-        for (String name : names) {
-            for (Class<?> current = type; current != null; current = current.getSuperclass()) {
-                var result = resolveField(current, name);
-                if (result != null) {
-                    return Optional.of(result);
-                }
-            }
-        }
-
-        return Optional.empty();
-    }
 
     public static float asFloat(Object value, float fallback) {
         if (value == null) {
@@ -174,35 +83,4 @@ public final class ReflectionHelper {
 
         throw new RuntimeException("ReflectionHelper: [%s] Exhausted all %d choices".formatted(description, choices.length));
     }
-
-    @Nullable
-    private static Method resolveMethod(Class<?> clazz, String name, Class<?>... parameterTypes ) {
-        try {
-            var method = clazz.getDeclaredMethod(name, parameterTypes);
-            method.setAccessible(true);
-            return method;
-        } catch (LinkageError | RuntimeException | NoSuchMethodException ignored) {
-        }
-        return null;
-    }
-
-    private static Field resolveField(Class<?> clazz, String name) {
-        try {
-            var field = clazz.getDeclaredField(name);
-            field.setAccessible(true);
-            return field;
-        } catch (LinkageError | RuntimeException | NoSuchFieldException ignored) {
-        }
-        return null;
-    }
-
-    private static boolean isObjectMethod(Method m) {
-        try {
-            Object.class.getMethod(m.getName(), m.getParameterTypes());
-            return true;
-        } catch (NoSuchMethodException e) {
-            return false;
-        }
-    }
-
 }

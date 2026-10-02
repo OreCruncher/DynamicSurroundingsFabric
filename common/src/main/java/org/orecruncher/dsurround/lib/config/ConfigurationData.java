@@ -4,9 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.eventing.IConfigChangedEvent;
 import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.events.EventingFactory;
-import org.orecruncher.dsurround.lib.events.IEvent;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 
 import java.io.BufferedReader;
@@ -84,7 +83,7 @@ public abstract class ConfigurationData {
 
     /**
      * Loads the configuration from {@code path}, checks it against the specification, and writes it back. Doesn't
-     * raise {@link #CONFIG_CHANGED_EVENT}: nothing has changed from the point of view of the rest of the mod.
+     * raise {@link IConfigChangedEvent#EVENT}: nothing has changed from the point of view of the rest of the mod.
      * <p>
      * If the file exists but can't be read, it is renamed (see {@link #backupUnreadableFile}) and the defaults are
      * used, so the user's settings can be recovered by hand.
@@ -140,7 +139,7 @@ public abstract class ConfigurationData {
     }
 
     /**
-     * Saves the configuration to disk and raises {@link #CONFIG_CHANGED_EVENT}. The event is raised even if
+     * Saves the configuration to disk and raises {@link IConfigChangedEvent#EVENT}. The event is raised even if
      * writing fails: the values in memory have changed either way.
      */
     public void save() {
@@ -149,7 +148,7 @@ public abstract class ConfigurationData {
         } catch (IOException e) {
             Library.LOGGER.error(e, "Unable to save configuration %s", this.configFilePath);
         }
-        CONFIG_CHANGED_EVENT.invoker().onChange(this);
+        IConfigChangedEvent.EVENT.invoker().onChange(this);
     }
 
     /**
@@ -304,12 +303,5 @@ public abstract class ConfigurationData {
     @Retention(RetentionPolicy.RUNTIME)
     public @interface EnumType {
         Class<? extends Enum<?>> value();
-    }
-
-    public static final IEvent<IConfigChangedEvent> CONFIG_CHANGED_EVENT = EventingFactory.createEvent();
-
-    @FunctionalInterface
-    public interface IConfigChangedEvent {
-        void onChange(ConfigurationData config);
     }
 }

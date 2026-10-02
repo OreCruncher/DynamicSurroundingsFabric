@@ -12,8 +12,9 @@ import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.ItemClassType;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
-import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
+import org.orecruncher.dsurround.eventing.IConfigChangedEvent;
+import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
@@ -52,7 +53,7 @@ public class ItemLibrary implements IItemLibrary {
 
         // What an item resolves to depends on config (enableToolbarBlockSounds), so cached answers are dropped when
         // it changes
-        ConfigurationData.CONFIG_CHANGED_EVENT.register(cfg -> this.clearCaches());
+        IConfigChangedEvent.EVENT.register(cfg -> this.clearCaches());
     }
 
     /**

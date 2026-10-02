@@ -12,12 +12,12 @@ public final class EventPhase {
      */
     public static final EventPhase DEFAULT = EventPhase.of("event.phase.default");
 
-    private final String _name;
+    private final String name;
 
     EventPhase(String phaseName) {
         Preconditions.checkNotNull(phaseName);
 
-        this._name = phaseName;
+        this.name = phaseName;
     }
 
     public static EventPhase of(String... name) {
@@ -45,24 +45,24 @@ public final class EventPhase {
     }
 
     public String getName() {
-        return this._name;
+        return this.name;
     }
 
     @Override
     public boolean equals(Object object) {
         if (this == object)
             return true;
-        return object instanceof EventPhase phase && this._name.equals(phase._name);
+        return object instanceof EventPhase phase && this.name.equals(phase.name);
     }
 
     @Override
     public int hashCode() {
-        return this._name.hashCode();
+        return this.name.hashCode();
     }
 
     @Override
     public String toString() {
-        return String.format("EventPhase [%s]", this._name);
+        return String.format("EventPhase [%s]", this.name);
     }
 
 }

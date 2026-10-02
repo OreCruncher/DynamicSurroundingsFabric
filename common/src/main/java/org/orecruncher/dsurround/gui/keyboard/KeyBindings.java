@@ -7,13 +7,13 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.eventing.IClientTickEnd;
 import org.orecruncher.dsurround.gui.overlay.DiagnosticsOverlay;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.IConfigScreenFactoryProvider;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.eventing.ClientState;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -49,7 +49,7 @@ public final class KeyBindings {
                 () -> ContainerManager.resolve(DiagnosticsOverlay.class).toggleCollection()
         );
 
-        ClientState.CLIENT_TICK_END_EVENT.register(KeyBindings::handleMenuKeyPress);
+        IClientTickEnd.EVENT.register(KeyBindings::handleMenuKeyPress);
     }
 
     private static void registerKeyBinding(String translationKey, int code, Runnable handler) {

@@ -20,8 +20,8 @@ import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.Comparers;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -55,7 +55,7 @@ public final class ViewerPlugin implements IDiagnosticPlugin {
         this.blockLibrary = blockLibrary;
         this.tagLibrary = tagLibrary;
         this.entityEffectLibrary = entityEffectLibrary;
-        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.register(this::onCollect);
+        ICollectDiagnostics.EVENT.register(this::onCollect);
     }
 
     private void processBlockHitResult(Level world, BlockHitResult result, Collection<Component> data) {

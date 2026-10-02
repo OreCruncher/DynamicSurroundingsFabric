@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.eventing.IConfigChangedEvent;
 import org.orecruncher.dsurround.lib.config.ConfigurationData.*;
 
 import java.io.IOException;
@@ -388,7 +389,7 @@ public class ConfigurationDataTests {
     void saveRaisesTheChangedEventButLoadDoesNot() {
         var path = this.configFile();
         var events = new AtomicInteger();
-        ConfigurationData.CONFIG_CHANGED_EVENT.register(cfg -> {
+        IConfigChangedEvent.EVENT.register(cfg -> {
             if (cfg instanceof TestConfig tc && path.equals(tc.configFilePath))
                 events.incrementAndGet();
         });

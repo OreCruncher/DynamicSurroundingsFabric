@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.mixins.core;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.eventing.IEntityStep;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
@@ -33,7 +33,7 @@ public abstract class MixinEntity {
 
                     // Lastly, the entity has to be tagged
                     if (MixinHelpers.TAG_LIBRARY.is(EntityEffectTags.BRUSH_STEP, entity.getType())) {
-                        ClientEventHooks.ENTITY_STEP_EVENT.invoker().onStep(entity, pos, state);
+                        IEntityStep.EVENT.invoker().onStep(entity, pos, state);
                     }
                 }
             });

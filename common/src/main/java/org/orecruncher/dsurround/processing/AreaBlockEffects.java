@@ -6,14 +6,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
-import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.effects.systems.RandomBlockEffectSystem;
 import org.orecruncher.dsurround.effects.systems.SteamEffectSystem;
 import org.orecruncher.dsurround.effects.systems.WaterfallEffectSystem;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.eventing.IBlockUpdates;
+import org.orecruncher.dsurround.eventing.IChunkLoad;
+import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
@@ -38,11 +38,11 @@ public class AreaBlockEffects extends AbstractClientHandler {
 
         this.blockLibrary = blockLibrary;
         this.audioPlayer = audioPlayer;
-        ClientEventHooks.BLOCK_UPDATES_EVENT.register(this::blockUpdates);
-        ClientEventHooks.CHUNK_LOAD_EVENT.register(this::chunkLoaded);
+        IBlockUpdates.EVENT.register(this::blockUpdates);
+        IChunkLoad.EVENT.register(this::chunkLoaded);
 
         // Whenever things reload need to rescan the area
-        AssetLibraryEvent.RELOAD.register(this::clear);
+        IReloadEvent.EVENT.register(this::clear);
     }
 
     @Override

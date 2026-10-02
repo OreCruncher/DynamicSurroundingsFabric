@@ -8,7 +8,7 @@ import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.config.data.DimensionConfigRule;
 import org.orecruncher.dsurround.config.DimensionInfo;
 import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
-import org.orecruncher.dsurround.config.libraries.IReloadEvent;
+import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;

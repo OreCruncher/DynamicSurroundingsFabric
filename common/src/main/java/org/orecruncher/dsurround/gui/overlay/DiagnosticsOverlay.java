@@ -12,8 +12,8 @@ import net.minecraft.util.FormattedCharSequence;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.overlay.plugins.*;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -195,7 +195,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
         this.reusableEvent.add(this.diagnostics);
         this.reusableEvent.add(this.rendering);
 
-        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.invoker().onCollect(this.reusableEvent);
+        ICollectDiagnostics.EVENT.invoker().onCollect(this.reusableEvent);
 
         this.left.clear();
         this.right.clear();

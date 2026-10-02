@@ -10,13 +10,13 @@ import net.minecraft.sounds.SoundSource;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.eventing.IClientTickStart;
+import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.lib.SingletonSupplier;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.threading.Worker;
 import org.orecruncher.dsurround.runtime.audio.effects.Effects;
 
@@ -51,8 +51,8 @@ public final class SoundFXProcessor {
     private static WorldContext worldContext = new WorldContext();
 
     static {
-        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.register(SoundFXProcessor::onGatherText);
-        ClientState.CLIENT_TICK_START_EVENT.register(SoundFXProcessor::clientTick);
+        ICollectDiagnostics.EVENT.register(SoundFXProcessor::onGatherText);
+        IClientTickStart.EVENT.register(SoundFXProcessor::clientTick);
     }
 
     public static WorldContext getWorldContext() {

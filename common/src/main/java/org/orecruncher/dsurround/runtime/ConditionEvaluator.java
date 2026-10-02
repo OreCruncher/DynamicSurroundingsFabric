@@ -1,10 +1,10 @@
 package org.orecruncher.dsurround.runtime;
 
 import net.minecraft.client.Minecraft;
+import org.orecruncher.dsurround.eventing.IClientTickStart;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
-import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
@@ -28,7 +28,7 @@ public final class ConditionEvaluator implements IConditionEvaluator {
         this.context.add(ContainerManager.resolve(GlobalVariables.class));
         this.context.add(ContainerManager.resolve(SeasonVariables.class));
 
-        ClientState.CLIENT_TICK_START_EVENT.register(this::tick, HandlerPriority.VERY_HIGH);
+        IClientTickStart.EVENT.register(this::tick, HandlerPriority.VERY_HIGH);
     }
 
     public void tick(Minecraft client) {

@@ -6,8 +6,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
-import org.orecruncher.dsurround.eventing.ClientState;
+import org.orecruncher.dsurround.eventing.IBlockUpdates;
+import org.orecruncher.dsurround.eventing.IClientTickEnd;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -27,7 +27,7 @@ public class BlockUpdateHandler {
     private static final LongSet updatedPositions = new LongOpenHashSet(4 * 1024);
 
     static {
-        ClientState.CLIENT_TICK_END_EVENT.register(BlockUpdateHandler::tick);
+        IClientTickEnd.EVENT.register(BlockUpdateHandler::tick);
     }
 
     /**
@@ -66,7 +66,7 @@ public class BlockUpdateHandler {
      */
     private static void tick(Minecraft ignored) {
         var updates = expand();
-        updates.ifPresent(positions -> ClientEventHooks.BLOCK_UPDATES_EVENT.invoker().onBlockUpdates(positions));
+        updates.ifPresent(positions -> IBlockUpdates.EVENT.invoker().onBlockUpdates(positions));
     }
 
     private static void addPosition(BlockPos pos) {

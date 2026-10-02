@@ -13,7 +13,7 @@ import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.config.libraries.IReloadEvent;
+import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.Guard;
 import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.logging.ModLog;

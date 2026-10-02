@@ -9,9 +9,10 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.config.EntityEffectType;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
-import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
+import org.orecruncher.dsurround.eventing.IConfigChangedEvent;
+import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
@@ -54,7 +55,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
         this.defaultInfo = EntityEffectInfo.createDefault(this.version);
 
         // Whether an effect type is produced depends on config, so cached entity info is rebuilt when it changes
-        ConfigurationData.CONFIG_CHANGED_EVENT.register(cfg -> this.invalidate());
+        IConfigChangedEvent.EVENT.register(cfg -> this.invalidate());
     }
 
     @Override

@@ -49,6 +49,7 @@ Impacts:
 * Improved performance and resource usage of waterfall and steam producer effect systems
 * Improved error detection and reporting around json configurations
 * Cleaned up mod configuration processing and added logic to handle cases where a hand edit results in bad input
+* Added an annotation processor to create event loop implementations rather than use reflection which reduces overhead and eliminates allocations
 * Removed dead code, or code that wasn't actually providing any value (always return true, didn't contribute anything meaningful, etc.)
 
 **What's New**

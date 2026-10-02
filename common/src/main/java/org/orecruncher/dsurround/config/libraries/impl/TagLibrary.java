@@ -22,9 +22,10 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Constants;
-import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
-import org.orecruncher.dsurround.eventing.ClientState;
+import org.orecruncher.dsurround.eventing.IClientConnect;
+import org.orecruncher.dsurround.eventing.IClientDisconnect;
+import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
@@ -81,8 +82,8 @@ public class TagLibrary implements ITagLibrary {
 
         // The cache is rebuilt for each connection, and dropped on disconnect: tag membership can differ between
         // servers.
-        ClientState.CLIENT_CONNECT_EVENT.register(this::onConnect);
-        ClientState.CLIENT_DISCONNECT_EVENT.register(this::onDisconnect);
+        IClientConnect.EVENT.register(this::onConnect);
+        IClientDisconnect.EVENT.register(this::onDisconnect);
     }
 
     @Override

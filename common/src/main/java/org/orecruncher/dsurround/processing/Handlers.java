@@ -4,8 +4,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.eventing.IClientConnect;
+import org.orecruncher.dsurround.eventing.IClientDisconnect;
+import org.orecruncher.dsurround.eventing.IClientTickEnd;
+import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.Cacheable;
@@ -13,7 +16,6 @@ import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
-import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.threading.IClientTasking;
@@ -72,11 +74,11 @@ public class Handlers {
         this.register(StepAccentGenerator.class);
         this.register(FogHandler.class);
 
-        ClientState.CLIENT_TICK_END_EVENT.register(this::tick);
-        ClientState.CLIENT_CONNECT_EVENT.register(this::onConnect);
-        ClientState.CLIENT_DISCONNECT_EVENT.register(this::onDisconnect);
+        IClientTickEnd.EVENT.register(this::tick);
+        IClientConnect.EVENT.register(this::onConnect);
+        IClientDisconnect.EVENT.register(this::onDisconnect);
 
-        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.register(this::gatherDiagnostics, HandlerPriority.HIGH);
+        ICollectDiagnostics.EVENT.register(this::gatherDiagnostics, HandlerPriority.HIGH);
     }
 
     private void onConnect(Minecraft client) {

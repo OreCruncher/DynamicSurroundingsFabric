@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.config.libraries;
 
+import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 
 public interface ILibrary extends IDebug {

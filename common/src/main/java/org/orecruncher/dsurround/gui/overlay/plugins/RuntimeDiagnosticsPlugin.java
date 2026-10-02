@@ -2,8 +2,8 @@ package org.orecruncher.dsurround.gui.overlay.plugins;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.network.chat.Component;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
@@ -41,7 +41,7 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
     public RuntimeDiagnosticsPlugin(IConditionEvaluator conditionEvaluator, ISeasonalInformation seasonalInformation) {
         this.conditionEvaluator = conditionEvaluator;
         this.seasonalInformation = seasonalInformation;
-        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.register(this::onCollect, HandlerPriority.HIGH);
+        ICollectDiagnostics.EVENT.register(this::onCollect, HandlerPriority.HIGH);
     }
 
     public void onCollect(CollectDiagnosticsEvent event) {

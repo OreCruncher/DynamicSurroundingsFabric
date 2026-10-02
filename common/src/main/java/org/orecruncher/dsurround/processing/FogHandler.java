@@ -4,8 +4,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.eventing.IFogRender;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.processing.fog.HolisticFogRangeCalculator;
 
@@ -21,7 +21,7 @@ public class FogHandler extends AbstractClientHandler {
         this.lastData = new FogRenderer.FogData(FogRenderer.FogMode.FOG_TERRAIN);
         this.lastData.start = this.lastData.end = 192F;
 
-        ClientEventHooks.FOG_RENDER_EVENT.register(this::renderFog);
+        IFogRender.EVENT.register(this::renderFog);
     }
 
     @Override

@@ -3,8 +3,8 @@ package org.orecruncher.dsurround.gui.overlay.plugins;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
@@ -18,7 +18,7 @@ public final class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
     private static final String FMT_DBG_SOUND = "%s: %d";
 
     public SoundEngineDiagnosticsPlugin() {
-        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.register(this::onCollect, HandlerPriority.LOW);
+        ICollectDiagnostics.EVENT.register(this::onCollect, HandlerPriority.LOW);
     }
 
     public void onCollect(CollectDiagnosticsEvent event) {

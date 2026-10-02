@@ -19,6 +19,10 @@ dependencies {
         exclude(group: "net.fabricmc.fabric-api")
     }
 
+    // Generates the event invokers (see lib.events.GenerateInvoker). Build time only; nothing is shipped.
+    annotationProcessor project(':processor')
+    testAnnotationProcessor project(':processor')
+
     testImplementation "net.fabricmc:fabric-loader-junit:$rootProject.fabric_loader_version"
     testImplementation(project(path: ':common', configuration: 'namedElements'))
 }

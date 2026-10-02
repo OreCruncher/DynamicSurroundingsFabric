@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.mixins.core;
 
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.level.ChunkPos;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.eventing.IChunkLoad;
 import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,6 +19,6 @@ public class MixinClientLevel {
     @Inject(method = "onChunkLoaded(Lnet/minecraft/world/level/ChunkPos;)V", at = @At("TAIL"))
     public void dsurround$onChunkLoaded(ChunkPos chunkPos, CallbackInfo ci) {
         ReflectionHelper.cast(this, ClientLevel.class)
-                .ifPresent(level -> ClientEventHooks.CHUNK_LOAD_EVENT.invoker().onChunkLoad(level, chunkPos));
+                .ifPresent(level -> IChunkLoad.EVENT.invoker().onChunkLoad(level, chunkPos));
     }
 }
