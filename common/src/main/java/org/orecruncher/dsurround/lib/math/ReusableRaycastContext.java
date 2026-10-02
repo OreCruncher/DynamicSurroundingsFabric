@@ -1,31 +1,26 @@
 package org.orecruncher.dsurround.lib.math;
 
-import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
-import org.orecruncher.dsurround.lib.GameUtils;
 
+/**
+ * A ClipContext whose start and end can be changed, so one instance can trace many rays. Traces use an empty
+ * collision context (no entity), so they don't depend on the player and work on any thread that may read the
+ * world.
+ */
 public class ReusableRaycastContext extends ClipContext {
 
-    private final Level world;
+    private final BlockGetter world;
 
-    public ReusableRaycastContext(Level world, ClipContext.Block shapeType, ClipContext.Fluid fluidHandling) {
+    public ReusableRaycastContext(BlockGetter world, ClipContext.Block shapeType, ClipContext.Fluid fluidHandling) {
         this(world, Vec3.ZERO, Vec3.ZERO, shapeType, fluidHandling);
     }
 
-    public ReusableRaycastContext(Level world, Vec3 start, Vec3 end, ClipContext.Block shapeType, ClipContext.Fluid fluidHandling) {
-        this(world, start, end, shapeType, fluidHandling, GameUtils.getPlayer().orElseThrow());
-
-        // Override the shape context that was passed into the ctor
-        this.collisionContext = CollisionContext.empty();
-    }
-
-    public ReusableRaycastContext(Level world, Vec3 start, Vec3 end, ClipContext.Block shapeType, ClipContext.Fluid fluidHandling, Entity entity) {
-        super(start, end, shapeType, fluidHandling, entity);
-
+    public ReusableRaycastContext(BlockGetter world, Vec3 start, Vec3 end, ClipContext.Block shapeType, ClipContext.Fluid fluidHandling) {
+        super(start, end, shapeType, fluidHandling, CollisionContext.empty());
         this.world = world;
     }
 

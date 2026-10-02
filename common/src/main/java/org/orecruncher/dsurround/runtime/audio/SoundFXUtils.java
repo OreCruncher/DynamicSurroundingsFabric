@@ -124,7 +124,7 @@ public final class SoundFXUtils {
         final float occlusionAccumulation = calculateOcclusion(ctx, soundPos, ctx.playerEyePosition);
         final float sendCoeff = -occlusionAccumulation * absorptionCoeff;
 
-        float directCutoff = (float) MathStuff.exp(sendCoeff);
+        float directCutoff = (float) Math.exp(sendCoeff);
 
         // Handle any dampening effects from the player, like head in water
         directCutoff *= 1F - ctx.auralDampening;
@@ -230,8 +230,8 @@ public final class SoundFXUtils {
         final float sharedAirspaceWeight2 = MathStuff.clamp1(sharedAirspace / 10.0F);
         final float sharedAirspaceWeight3 = MathStuff.clamp1(sharedAirspace / 10.0F);
 
-        final float exp1 = (float) MathStuff.exp(sendCoeff);
-        final float exp2 = (float) MathStuff.exp(sendCoeff * 1.5F);
+        final float exp1 = (float) Math.exp(sendCoeff);
+        final float exp2 = (float) Math.exp(sendCoeff * 1.5F);
         sendCutoff0 = exp1 * (1.0F - sharedAirspaceWeight0) + sharedAirspaceWeight0;
         sendCutoff1 = exp1 * (1.0F - sharedAirspaceWeight1) + sharedAirspaceWeight1;
         sendCutoff2 = exp2 * (1.0F - sharedAirspaceWeight2) + sharedAirspaceWeight2;
@@ -241,21 +241,21 @@ public final class SoundFXUtils {
                 + sharedAirspaceWeight3) * 0.25F;
         directCutoff = Math.max((float) Math.sqrt(averageSharedAirspace) * 0.2F, directCutoff);
 
-        float directGain = (float) MathStuff.pow(directCutoff, 0.1);
+        float directGain = (float) Math.pow(directCutoff, 0.1);
 
         sendGain1 *= bounceRatio[1];
-        sendGain2 *= (float) MathStuff.pow(bounceRatio[2], 3.0);
-        sendGain3 *= (float) MathStuff.pow(bounceRatio[3], 4.0);
+        sendGain2 *= (float) Math.pow(bounceRatio[2], 3.0);
+        sendGain3 *= (float) Math.pow(bounceRatio[3], 4.0);
 
         sendGain0 = MathStuff.clamp1(sendGain0);
         sendGain1 = MathStuff.clamp1(sendGain1);
         sendGain2 = MathStuff.clamp1(sendGain2 * 1.05F - 0.05F);
         sendGain3 = MathStuff.clamp1(sendGain3 * 1.05F - 0.05F);
 
-        sendGain0 *= (float) MathStuff.pow(sendCutoff0, 0.1);
-        sendGain1 *= (float) MathStuff.pow(sendCutoff1, 0.1);
-        sendGain2 *= (float) MathStuff.pow(sendCutoff2, 0.1);
-        sendGain3 *= (float) MathStuff.pow(sendCutoff3, 0.1);
+        sendGain0 *= (float) Math.pow(sendCutoff0, 0.1);
+        sendGain1 *= (float) Math.pow(sendCutoff1, 0.1);
+        sendGain2 *= (float) Math.pow(sendCutoff2, 0.1);
+        sendGain3 *= (float) Math.pow(sendCutoff3, 0.1);
 
         if (ctx.player.isUnderWater()) {
             sendCutoff0 *= 0.4F;
@@ -347,7 +347,8 @@ public final class SoundFXUtils {
             return 1F;
 
         final BlockPos low = BlockPos.containing(pt1);
-        final BlockPos mid = BlockPos.containing(MathStuff.addScaled(pt1, pt2, 0.5F));
+        // Halfway between the two points (not addScaled, which would give pt1 + pt2 / 2)
+        final BlockPos mid = BlockPos.containing(pt1.lerp(pt2, 0.5D));
         final BlockPos high = BlockPos.containing(pt2);
 
         // Determine the precipitation type at each point
