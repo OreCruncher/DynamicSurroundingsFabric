@@ -63,7 +63,7 @@ public class ItemLibrary implements IItemLibrary {
     public void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
         this.version++;
         this.clearCaches();
-        this.logger.info("[ItemLibrary] Configured; version is now %d", this.version);
+        this.logger.info("Configured; version is now %d", this.version);
     }
 
     private void clearCaches() {
@@ -93,6 +93,10 @@ public class ItemLibrary implements IItemLibrary {
         return this.itemArmorStepFactories.computeIfAbsent(stack.getItem(), k -> Optional.ofNullable(resolveEquipableStepSound(stack)));
     }
 
+    /**
+     * Each item with its tags and what it resolves to: item class, and the toolbar, swing and armor-step sounds
+     * (by factory id, or "none").
+     */
     @Override
     public Stream<String> dump() {
         var itemRegistry = RegistryUtils.getRegistry(Registries.ITEM).map(Registry::entrySet).orElseThrow();
@@ -209,6 +213,17 @@ public class ItemLibrary implements IItemLibrary {
                 })
                 .orElse("null");
 
-        return id.toString() + "\nTags: " + tags + "\n";
+        // Resolved from a default stack of the item; in 1.21.1 that is what the caches are keyed by anyway
+        var stack = new ItemStack(item);
+        return id + "\nTags: " + tags
+                + "\nClass: " + (stack.isEmpty() ? "none" : resolveClassType(stack).getName())
+                + "\nToolbar sound: " + describe(this.getItemEquipSound(stack))
+                + "\nSwing sound: " + describe(this.getItemSwingSound(stack))
+                + "\nArmor step sound: " + describe(this.getEquipableStepAccentSound(stack))
+                + "\n";
+    }
+
+    private static String describe(Optional<ISoundFactory> factory) {
+        return factory.map(f -> f.getLocation().toString()).orElse("none");
     }
 }

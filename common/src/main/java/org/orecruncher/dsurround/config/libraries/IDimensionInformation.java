@@ -25,7 +25,7 @@ public interface IDimensionInformation {
      */
     int getSpaceHeight();
     /**
-     * The veritical Y level where clouds are expected to be
+     * The vertical Y level where clouds are expected to be
      */
     int getCloudHeight();
 

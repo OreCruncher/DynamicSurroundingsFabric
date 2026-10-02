@@ -13,6 +13,7 @@ import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.compat.BlockCompat;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
 
 import java.util.ArrayList;
@@ -125,7 +126,7 @@ public final class CeilingScanner extends AbstractScanner {
 
                 final BlockState state = world.getBlockState(this.working);
 
-                if (actsAsCeiling(state)) {
+                if (actsAsCeiling(world, this.working, state)) {
                     // Cover block - no points for you!
                     return 0;
                 }
@@ -148,9 +149,9 @@ public final class CeilingScanner extends AbstractScanner {
             return this.offset.toString() + " points: " + this.points;
         }
 
-        private boolean actsAsCeiling(final BlockState state) {
-            // If it doesn't block movement, it doesn't count as a ceiling.
-            if (!state.blocksMotion())
+        private boolean actsAsCeiling(final Level world, final BlockPos pos, final BlockState state) {
+            // Only blocks solid enough to be a roof count; small ones like lanterns and chains don't.
+            if (!BlockCompat.isCeilingSolid(world, pos, state))
                 return false;
 
             // Test the block tags in our NON_CEILING set to see if any match

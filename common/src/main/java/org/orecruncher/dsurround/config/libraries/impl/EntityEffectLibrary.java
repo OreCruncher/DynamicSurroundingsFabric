@@ -19,6 +19,7 @@ import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.tags.EntityEffectTags;
 
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -90,7 +91,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
                     var names = types.stream().map(EntityEffectType::getName).sorted().collect(Collectors.joining(", "));
                     return BuiltInRegistries.ENTITY_TYPE.getKey(type) + ": " + names;
                 })
-                .filter(s -> s != null)
+                .filter(Objects::nonNull)
                 .sorted();
     }
 

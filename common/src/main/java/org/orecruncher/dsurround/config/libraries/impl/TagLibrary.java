@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -111,7 +112,7 @@ public class TagLibrary implements ITagLibrary {
         if (item == Items.AIR)
             return false;
         var members = this.memberObjects(tagKey);
-        return members != null ? members.contains(item) : item.builtInRegistryHolder().is(tagKey);
+        return members != null ? members.contains(item) : BuiltInRegistries.ITEM.wrapAsHolder(item).is(tagKey);
     }
 
     @Override

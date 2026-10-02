@@ -25,6 +25,18 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.stream.Stream;
 
+/**
+ * Per block state information: acoustic properties (sound reflectivity and occlusion, used by the enhanced sound
+ * processing) and the sounds and effects configured in blocks.json, as a {@link BlockInfo}.
+ * <ul>
+ *   <li>{@link #getBlockInfo} builds the info on first request and caches it. Client thread only.</li>
+ *   <li>{@link #getBlockInfoWeak} returns whatever is cached, or DEFAULT, without building anything. Safe from any
+ *       thread; the sound processing threads use it.</li>
+ *   <li>Blocks with no configuration and default acoustics share one DEFAULT instance, to save memory.</li>
+ *   <li>Every reload (resources or tags) starts a fresh cache and seeds it with common terrain blocks, so sound
+ *       processing has their real acoustics straight away.</li>
+ * </ul>
+ */
 public class BlockLibrary implements IBlockLibrary {
 
     private static final String FILE_NAME = "blocks.json";
@@ -119,7 +131,7 @@ public class BlockLibrary implements IBlockLibrary {
             // lazily. The version bump alone isn't enough: blocks stored as the shared DEFAULT are accepted whatever
             // their version, so they would never pick up the new tags.
             this.blocks = newCache(0);
-            this.logger.info("[BlockLibrary] received tag update notification; version is now %d", this.version);
+            this.logger.info("received tag update notification; version is now %d", this.version);
             this.seedCache();
             return;
         }
@@ -130,7 +142,7 @@ public class BlockLibrary implements IBlockLibrary {
         var findResults = resourceUtilities.findModResources(CODEC, FILE_NAME);
         findResults.forEach(result -> this.blockConfigs.addAll(result.resourceContent()));
 
-        this.logger.info("[BlockLibrary] %d block configs loaded; version is now %d", blockConfigs.size(), version);
+        this.logger.info("%d block configs loaded; version is now %d", blockConfigs.size(), version);
         this.seedCache();
     }
 
@@ -158,7 +170,7 @@ public class BlockLibrary implements IBlockLibrary {
         }
 
         final long micros = (System.nanoTime() - start) / 1_000;
-        this.logger.info("[BlockLibrary] seeded %d block states from %d blocks in %d.%03d ms",
+        this.logger.info("seeded %d block states from %d blocks in %d.%03d ms",
                 states, seeds.size(), micros / 1_000, micros % 1_000);
     }
 
@@ -172,16 +184,16 @@ public class BlockLibrary implements IBlockLibrary {
     }
 
     /**
-     * Client thread only: builds and caches the info if it isn't cached for the current version.
+     * Client thread only: builds and caches the info if it isn't cached yet.
+     * <p>
+     * A cached entry is always current: every reload bumps the version and starts a new, empty cache, so there is
+     * no need to compare versions here.
      */
     @Override
     public BlockInfo getBlockInfo(BlockState state) {
         var entry = lookup(this.blocks, state);
-        if (entry != null) {
-            var info = entry.info();
-            if (info.getVersion() == this.version || info == DEFAULT)
-                return info;
-        }
+        if (entry != null)
+            return entry.info();
 
         // OK - need to build out info for the block.
         var info = new BlockInfo(this.version, state);
