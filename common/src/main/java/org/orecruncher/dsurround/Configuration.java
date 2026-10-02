@@ -126,7 +126,7 @@ public class Configuration extends ConfigurationData {
         public int backgroundThreadWorkers = 0;
 
         @Property
-        @Comment("Enable/disable on the fly conversion of stereo sounds to mono as needed")
+        @Comment("Enable/disable on the fly conversion of this mod's stereo sounds to mono as needed")
         public boolean enableMonoConversion = true;
 
         @Property

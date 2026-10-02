@@ -10,6 +10,7 @@ import net.minecraft.sounds.SoundSource;
 import org.apache.commons.lang3.StringUtils;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IClientTickStart;
 import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
@@ -20,8 +21,8 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.threading.Worker;
 import org.orecruncher.dsurround.runtime.audio.effects.Efx;
 
-import java.util.Arrays;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public final class SoundFXProcessor {
 
@@ -32,8 +33,11 @@ public final class SoundFXProcessor {
 
     // Sparse array to hold references to the SoundContexts of playing sounds
     // Volatile: replaced on the client thread, read by the sound processor's worker thread
-    private static volatile SourceContext[] sources;
-    private static final Object sourcesLock = new Object();
+    // The context of the sound playing on each OpenAL source, indexed by source ID - 1. An atomic array so the
+    // worker thread sees each context fully set up: contexts are stored by the client thread and read by the sound
+    // engine and worker threads. Each entry belongs to one sound at a time: its stop hook clears it before the
+    // source is deleted, so before the ID can be reused. Replaced when the sound engine starts, null while stopped.
+    private static volatile AtomicReferenceArray<SourceContext> sources;
 
     private static Worker soundProcessor;
     private static String diagnosticString = StringUtils.EMPTY;
@@ -76,7 +80,7 @@ public final class SoundFXProcessor {
     public static void initialize() {
         Efx.initialize();
 
-        sources = new SourceContext[AudioUtilities.getMaxSounds()];
+        sources = new AtomicReferenceArray<>(AudioUtilities.getMaxSounds());
 
         if (soundProcessor == null) {
             soundProcessor = new Worker(
@@ -99,12 +103,23 @@ public final class SoundFXProcessor {
                 soundProcessor.stop();
                 soundProcessor = null;
             }
-            if (sources != null) {
-                Arrays.fill(sources, null);
-                sources = null;
-            }
+            sources = null;
             Efx.deinitialize();
         }
+    }
+
+    /**
+     * The context of the sound playing on the channel's source, or null if none (or the processor is stopped).
+     */
+    private static SourceContext contextFor(final Channel channel) {
+        final var current = sources;
+        return current == null ? null : current.get(channel.source - 1);
+    }
+
+    private static void setContext(final int sourceId, final SourceContext ctx) {
+        final var current = sources;
+        if (current != null)
+            current.set(sourceId - 1, ctx);
     }
 
     private static boolean shouldIgnoreSound(SoundInstance sound) {
@@ -133,9 +148,7 @@ public final class SoundFXProcessor {
             final SourceContext ctx = new SourceContext(id);
             ctx.attachSound(sound);
             ctx.enable();
-            synchronized (sourcesLock) {
-                sources[id - 1] = ctx;
-            }
+            setContext(id, ctx);
         }
     }
 
@@ -147,10 +160,7 @@ public final class SoundFXProcessor {
         if (!isAvailable())
             return;
 
-        SourceContext context = null;
-        synchronized (sourcesLock) {
-            context = sources[source.source - 1];
-        }
+        final SourceContext context = contextFor(source);
         if (context != null) {
             context.exec();
         }
@@ -166,10 +176,7 @@ public final class SoundFXProcessor {
         if (!isAvailable())
             return;
 
-        SourceContext context = null;
-        synchronized (sourcesLock) {
-            context = sources[source.source - 1];
-        }
+        final SourceContext context = contextFor(source);
         if (context != null) {
             context.tick();
         }
@@ -184,37 +191,39 @@ public final class SoundFXProcessor {
         if (!isAvailable())
             return;
 
-        synchronized (sourcesLock) {
-            sources[source.source - 1] = null;
-        }
+        setContext(source.source, null);
     }
 
     /**
      * Injected into SoundSource and will be invoked when a non-streaming sound data stream is attached to the
-     * SoundSource.  Take the opportunity to convert the audio stream into mono format if needed.  Note that
-     * conversion will take place only if it is enabled in the configuration and the sound is playing
-     * non-attenuated.
+     * SoundSource.  Take the opportunity to convert the audio stream into mono format if needed.  Conversion takes
+     * place only if it is enabled in the configuration, the sound is positional (attenuated and not relative), and
+     * the sound file is one of this mod's.
+     * <p>
+     * The check is on the sound file, not the sound event: the buffer belongs to the file and is shared by every
+     * event that plays it, so converting it would change how a vanilla or other mod's file plays everywhere.
      *
      * @param source SoundSource for which the audio buffer is being generated
      * @param buffer The buffer in question.
      */
-
     public static void doMonoConversion(final Channel source, final SoundBuffer buffer) {
 
         // If disabled, return
         if (!isAvailable() || !Client.Config.enhancedSounds.enableMonoConversion)
             return;
 
-        SourceContext sourceContext = null;
-        synchronized (sourcesLock) {
-            sourceContext = sources[source.source - 1];
-        }
+        final SourceContext sourceContext = contextFor(source);
+        if (sourceContext == null)
+            return;
 
-        if (sourceContext != null) {
-            var s = sourceContext.getSound();
-            if (s != null && s.getAttenuation() != SoundInstance.Attenuation.NONE && !s.isRelative())
-                Conversion.convert(buffer);
-        }
+        var s = sourceContext.getSound();
+        if (s == null || s.getAttenuation() == SoundInstance.Attenuation.NONE || s.isRelative())
+            return;
+
+        // Only this mod's own sound files
+        var file = s.getSound();
+        if (file != null && Constants.MOD_ID.equals(file.getLocation().getNamespace()))
+            Conversion.convert(buffer);
     }
 
     /**
@@ -236,15 +245,16 @@ public final class SoundFXProcessor {
             assert pool != null;
 
             // Read once: deinitialize() may clear it from the client thread
-            final SourceContext[] current = sources;
+            final AtomicReferenceArray<SourceContext> current = sources;
             if (current == null)
                 return;
 
-            final ObjectArray<Future<?>> tasks = new ObjectArray<>(current.length);
+            final ObjectArray<Future<?>> tasks = new ObjectArray<>(current.length());
 
             // Each source will be examined once per 7 ticks. See
             // SourceContext.UPDATE_FREQUENCY_TICKS for the current interval.
-            for (final SourceContext ctx : current) {
+            for (int i = 0; i < current.length(); i++) {
+                final SourceContext ctx = current.get(i);
                 if (ctx != null && ctx.shouldExecute()) {
                     tasks.add(pool.submit(ctx));
                 }
