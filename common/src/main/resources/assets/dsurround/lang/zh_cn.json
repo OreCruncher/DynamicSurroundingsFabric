@@ -159,8 +159,6 @@
   "dsurround.config.enhancedSounds.tooltip": "增强声音处理的配置选项(混响等)",
   "dsurround.config.enhancedSounds.enableEnhancedSounds": "增强音效处理",
   "dsurround.config.enhancedSounds.enableEnhancedSounds.tooltip": "启用/禁用 增强音效处理(混响，遮挡等)",
-  "dsurround.config.enhancedSounds.enableMonoConversion": "单声道转换",
-  "dsurround.config.enhancedSounds.enableMonoConversion.tooltip": "启用/禁用 根据需要将立体声音转换为单声道\n此功能仅在启用 '增强音效处理' 时才会激活",
   "dsurround.config.enhancedSounds.backgroundThreadWorkers": "后台工作线程",
   "dsurround.config.enhancedSounds.backgroundThreadWorkers.tooltip": "用于增强音效处理的后台线程数量\n请不要随意更改此值，因为这可能会影响性能",
   "dsurround.config.enhancedSounds.enableOcclusionProcessing": "遮挡处理",

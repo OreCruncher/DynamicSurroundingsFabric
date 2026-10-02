@@ -126,10 +126,6 @@ public class Configuration extends ConfigurationData {
         public int backgroundThreadWorkers = 0;
 
         @Property
-        @Comment("Enable/disable on the fly conversion of this mod's stereo sounds to mono as needed")
-        public boolean enableMonoConversion = true;
-
-        @Property
         @Comment("Enable/disable sound occlusion processing (sound muffling behind blocks)")
         public boolean enableOcclusionProcessing = false;
 

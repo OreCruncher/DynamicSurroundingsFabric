@@ -159,8 +159,6 @@
   "dsurround.config.enhancedSounds.tooltip": "Opcje konfiguracji dla zaawansowanego przetwarzania dźwięku (pogłos, itd.)",
   "dsurround.config.enhancedSounds.enableEnhancedSounds": "Zaawansowane przetwarzanie dźwięku",
   "dsurround.config.enhancedSounds.enableEnhancedSounds.tooltip": "Włącza/wyłącza zaawansowane przetwarzanie dźwięku (pogłos, ockluzja, itd.)",
-  "dsurround.config.enhancedSounds.enableMonoConversion": "Konwersja mono",
-  "dsurround.config.enhancedSounds.enableMonoConversion.tooltip": "Włącza/wyłącza konwersję na bieżąco dźwięków stereo do mono w razie potrzeby. Ta funkcja będzie aktywna tylko wtedy, kiedy 'Zaawansowane przetwarzanie dźwięku' jest włączone.",
   "dsurround.config.enhancedSounds.backgroundThreadWorkers": "Pracujące wątki w tle",
   "dsurround.config.enhancedSounds.backgroundThreadWorkers.tooltip": "Liczba wątków w tle używanych do zaawansowanego przetwarzania dźwięku. Nie należy dowolnie zmieniać tej wartości, ponieważ może to wpłynąć na wydajność.",
   "dsurround.config.enhancedSounds.enableOcclusionProcessing": "Przetwarzanie okluzji",

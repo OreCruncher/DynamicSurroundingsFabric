@@ -1,16 +1,13 @@
 package org.orecruncher.dsurround.runtime.audio;
 
 import com.mojang.blaze3d.audio.Channel;
-import com.mojang.blaze3d.audio.SoundBuffer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.ChannelAccess;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
 import org.apache.commons.lang3.StringUtils;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IClientTickStart;
 import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
@@ -192,38 +189,6 @@ public final class SoundFXProcessor {
             return;
 
         setContext(source.source, null);
-    }
-
-    /**
-     * Injected into SoundSource and will be invoked when a non-streaming sound data stream is attached to the
-     * SoundSource.  Take the opportunity to convert the audio stream into mono format if needed.  Conversion takes
-     * place only if it is enabled in the configuration, the sound is positional (attenuated and not relative), and
-     * the sound file is one of this mod's.
-     * <p>
-     * The check is on the sound file, not the sound event: the buffer belongs to the file and is shared by every
-     * event that plays it, so converting it would change how a vanilla or other mod's file plays everywhere.
-     *
-     * @param source SoundSource for which the audio buffer is being generated
-     * @param buffer The buffer in question.
-     */
-    public static void doMonoConversion(final Channel source, final SoundBuffer buffer) {
-
-        // If disabled, return
-        if (!isAvailable() || !Client.Config.enhancedSounds.enableMonoConversion)
-            return;
-
-        final SourceContext sourceContext = contextFor(source);
-        if (sourceContext == null)
-            return;
-
-        var s = sourceContext.getSound();
-        if (s == null || s.getAttenuation() == SoundInstance.Attenuation.NONE || s.isRelative())
-            return;
-
-        // Only this mod's own sound files
-        var file = s.getSound();
-        if (file != null && Constants.MOD_ID.equals(file.getLocation().getNamespace()))
-            Conversion.convert(buffer);
     }
 
     /**
