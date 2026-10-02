@@ -46,15 +46,12 @@ public class BlockUpdateHandler {
             // We are on the client thread - fast path
             addPosition(pos);
         } else {
-            // Not on client thread; schedule it
-            try {
-                CLIENT_TASKING.execute(() -> {
-                    Library.LOGGER.debug("blockPositionUpdate invoked from non-client thread!");
-                    addPosition(pos);
-                });
-            } catch (Throwable t) {
-                Library.LOGGER.error(t, "Unable to add block position to block update handler list");
-            }
+            // Not on client thread; queue it for the client thread. No need to wait: positions are only read at the
+            // end of the client tick.
+            CLIENT_TASKING.submit(() -> {
+                Library.LOGGER.debug("blockPositionUpdate invoked from non-client thread!");
+                addPosition(pos);
+            });
         }
     }
 

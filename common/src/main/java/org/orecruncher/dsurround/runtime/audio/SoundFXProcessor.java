@@ -31,7 +31,8 @@ public final class SoundFXProcessor {
     static boolean isAvailable;
 
     // Sparse array to hold references to the SoundContexts of playing sounds
-    private static SourceContext[] sources;
+    // Volatile: replaced on the client thread, read by the sound processor's worker thread
+    private static volatile SourceContext[] sources;
     private static final Object sourcesLock = new Object();
 
     private static Worker soundProcessor;
@@ -45,7 +46,9 @@ public final class SoundFXProcessor {
         if (threads == 0)
             threads = 2;
         LOGGER.info("Threads allocated to enhanced sound processor: %d", threads);
-        return Executors.newFixedThreadPool(threads);
+        // Named daemon threads: identifiable in thread dumps and profilers, and they can't keep the game's process
+        // alive after it exits. The pool lives as long as the game.
+        return Executors.newFixedThreadPool(threads, Worker.threadFactory("Enhanced Sound Task"));
     });
 
     private static WorldContext worldContext = new WorldContext();
@@ -90,6 +93,7 @@ public final class SoundFXProcessor {
         if (isAvailable()) {
             isAvailable = false;
             if (soundProcessor != null) {
+                // Waits for a run in progress to finish, so it isn't using the sources or effects cleared below
                 soundProcessor.stop();
                 soundProcessor = null;
             }
@@ -229,11 +233,16 @@ public final class SoundFXProcessor {
             final ExecutorService pool = threadPool.get();
             assert pool != null;
 
-            final ObjectArray<Future<?>> tasks = new ObjectArray<>(sources.length);
+            // Read once: deinitialize() may clear it from the client thread
+            final SourceContext[] current = sources;
+            if (current == null)
+                return;
+
+            final ObjectArray<Future<?>> tasks = new ObjectArray<>(current.length);
 
             // Each source will be examined once per 7 ticks. See
             // SourceContext.UPDATE_FREQUENCY_TICKS for the current interval.
-            for (final SourceContext ctx : sources) {
+            for (final SourceContext ctx : current) {
                 if (ctx != null && ctx.shouldExecute()) {
                     tasks.add(pool.submit(ctx));
                 }

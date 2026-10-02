@@ -18,7 +18,6 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
-import org.orecruncher.dsurround.lib.threading.IClientTasking;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.processing.accents.FootstepAccents;
 import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
@@ -32,7 +31,6 @@ public class Handlers {
 
     private final Configuration config;
     private final IModLog logger;
-    private final IClientTasking tasking;
     private final ITickCount tickCount;
     private final ISoundLibrary soundLibrary;
     private final IAudioPlayer audioPlayer;
@@ -41,10 +39,9 @@ public class Handlers {
     private boolean isConnected = false;
     private boolean startupSoundPlayed = false;
 
-    public Handlers(Configuration config, IModLog logger, IClientTasking tasking, ITickCount tickCount, ISoundLibrary soundLibrary, IAudioPlayer audioPlayer) {
+    public Handlers(Configuration config, IModLog logger, ITickCount tickCount, ISoundLibrary soundLibrary, IAudioPlayer audioPlayer) {
         this.config = config;
         this.logger = logger;
-        this.tasking = tasking;
         this.tickCount = tickCount;
         this.soundLibrary = soundLibrary;
         this.audioPlayer = audioPlayer;
@@ -81,17 +78,16 @@ public class Handlers {
         ICollectDiagnostics.EVENT.register(this::gatherDiagnostics, HandlerPriority.HIGH);
     }
 
+    // Connect and disconnect are raised from the client tick, so these run on the client thread
     private void onConnect(Minecraft client) {
         try {
-            this.tasking.execute(() -> {
-                this.logger.info("Handlers connecting...");
-                if (this.isConnected) {
-                    this.logger.warn("Attempt to connect when already connected; disconnecting first");
-                    this.onDisconnect(client);
-                }
-                this.effectHandlers.forEach(AbstractClientHandler::connect0);
-                this.isConnected = true;
-            });
+            this.logger.info("Handlers connecting...");
+            if (this.isConnected) {
+                this.logger.warn("Attempt to connect when already connected; disconnecting first");
+                this.onDisconnect(client);
+            }
+            this.effectHandlers.forEach(AbstractClientHandler::connect0);
+            this.isConnected = true;
         } catch (Exception ex) {
             this.logger.error(ex, "Unable to perform client connect");
         }
@@ -99,11 +95,9 @@ public class Handlers {
 
     private void onDisconnect(Minecraft client) {
         try {
-            this.tasking.execute(() -> {
-                this.logger.info("Client disconnecting...");
-                this.isConnected = false;
-                this.effectHandlers.forEach(AbstractClientHandler::disconnect0);
-            });
+            this.logger.info("Client disconnecting...");
+            this.isConnected = false;
+            this.effectHandlers.forEach(AbstractClientHandler::disconnect0);
         } catch (Exception ex) {
             this.logger.error(ex, "Unable to perform client disconnect");
         }
