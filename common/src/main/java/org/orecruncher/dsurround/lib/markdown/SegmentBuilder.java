@@ -16,7 +16,8 @@ import java.util.*;
  *   <li>explicit colors from {@code <color:x>...</color>} - a real stack, pushed/popped only by those tags. An
  *       unrecognized color is shown literally, and so is the {@code </color>} that pairs with it.</li>
  * </ul>
- * Links are validated up front; anything that doesn't form a complete, safe link is emitted as literal text.
+ * Links are validated up front; anything that doesn't form a complete, safe link is emitted as literal text. A link
+ * may have a title after its URL, {@code [text](url "title")} or {@code 'title'}, which becomes its hover text.
  */
 class SegmentBuilder {
 
@@ -33,8 +34,10 @@ class SegmentBuilder {
     // Block context
     private boolean heading;
     private boolean quote;
-    // Active link. linkUrl is null when not inside link text. linkEnd is the token index of the closing ')'.
+    // Active link. linkUrl is null when not inside link text. linkTitle is null if the link has no title. linkEnd is
+    // the token index of the closing ')'.
     private String linkUrl;
+    private String linkTitle;
     private int linkEnd;
 
     public SegmentBuilder(List<Token> tokens, Options options) {
@@ -112,12 +115,14 @@ class SegmentBuilder {
                 (this.italic || quoteItalic) ? Boolean.TRUE : null,
                 (this.underline || this.linkUrl != null) ? Boolean.TRUE : null,
                 this.strikethrough ? Boolean.TRUE : null,
-                this.linkUrl);
+                this.linkUrl,
+                this.linkTitle);
     }
 
     /**
      * The color for text emitted right now, or null for the renderer default. Precedence, lowest to highest:
-     * text < quote < heading < explicit {@code <color>} < link.
+     * text < quote < heading < explicit {@code <color>} < link, or with {@link Options#colorOverridesLink()},
+     * text < quote < heading < link < explicit {@code <color>}.
      */
     private TextColor currentColor() {
         TextColor color = this.options.textColor();
@@ -127,13 +132,12 @@ class SegmentBuilder {
         if (this.heading && this.options.headingColor() != null) {
             color = this.options.headingColor();
         }
-        if (!this.colors.isEmpty() && this.colors.peek().color() != null) {
-            color = this.colors.peek().color();
+        TextColor explicit = this.colors.isEmpty() ? null : this.colors.peek().color();
+        if (this.linkUrl != null && this.options.linkColor() != null
+                && (explicit == null || !this.options.colorOverridesLink())) {
+            return this.options.linkColor();
         }
-        if (this.linkUrl != null && this.options.linkColor() != null) {
-            color = this.options.linkColor();
-        }
-        return color;
+        return explicit != null ? explicit : color;
     }
 
     // ---- Emitting --------------------------------------------------------------------------------------------
@@ -236,6 +240,7 @@ class SegmentBuilder {
             return;
         }
         this.linkUrl = match.url();
+        this.linkTitle = match.title();
         this.linkEnd = match.endIndex();
     }
 
@@ -247,6 +252,7 @@ class SegmentBuilder {
         // Link text has been emitted with link styling. Skip over the URL tokens and the closing ')'.
         this.index = this.linkEnd + 1;
         this.linkUrl = null;
+        this.linkTitle = null;
     }
 
     /**
@@ -254,7 +260,8 @@ class SegmentBuilder {
      * is incomplete or the URL isn't acceptable, in which case the '[' should be treated as text.
      * <p>
      * Parentheses in the URL must balance, so {@code (https://en.wikipedia.org/wiki/Foo_(bar))} keeps its last
-     * {@code )}. Escaped parentheses don't count.
+     * {@code )}. Escaped parentheses don't count. The same goes for a title, so a {@code )} in one must be escaped
+     * or balanced.
      */
     private LinkMatch matchLink(int from) {
         int mid = -1;
@@ -277,12 +284,7 @@ class SegmentBuilder {
             } else if (type == TokenType.LINK_END && depth > 0) {
                 depth--;
             } else if (type == TokenType.LINK_END) {
-                StringBuilder url = new StringBuilder();
-                for (int j = mid + 1; j < i; j++) {
-                    url.append(this.tokens.get(j).value());
-                }
-                String candidate = url.toString().trim();
-                return isSafeUrl(candidate) ? new LinkMatch(candidate, i) : null;
+                return this.destination(mid + 1, i);
             }
         }
         return null;
@@ -298,7 +300,66 @@ class SegmentBuilder {
         return n;
     }
 
-    private record LinkMatch(String url, int endIndex) {
+    /**
+     * The link for the tokens between "](" and ")": a URL, then optionally whitespace and a title in double or single
+     * quotes. Null if the URL isn't acceptable, or anything else follows it. Escaped characters are taken literally,
+     * so a title can hold its own quote as {@code \"}.
+     */
+    private LinkMatch destination(int from, int endIndex) {
+        // The text, and which of its characters were escaped (an escaped quote doesn't end a title)
+        StringBuilder text = new StringBuilder();
+        BitSet escaped = new BitSet();
+        for (int j = from; j < endIndex; j++) {
+            Token token = this.tokens.get(j);
+            if (token.type() == TokenType.ESCAPED) {
+                escaped.set(text.length());
+            }
+            text.append(token.value());
+        }
+
+        int start = skipWhitespace(text, 0);
+        int urlEnd = start;
+        while (urlEnd < text.length() && !Character.isWhitespace(text.charAt(urlEnd))) {
+            urlEnd++;
+        }
+        String url = text.substring(start, urlEnd);
+        if (!isSafeUrl(url)) {
+            return null;
+        }
+
+        int titleStart = skipWhitespace(text, urlEnd);
+        int titleEnd = text.length();
+        while (titleEnd > titleStart && Character.isWhitespace(text.charAt(titleEnd - 1))) {
+            titleEnd--;
+        }
+        if (titleStart == titleEnd) {
+            return new LinkMatch(url, null, endIndex);
+        }
+
+        // A title: from an unescaped quote to the same quote, with nothing after it
+        char quote = text.charAt(titleStart);
+        if ((quote != '"' && quote != '\'') || escaped.get(titleStart) || titleEnd - titleStart < 2
+                || text.charAt(titleEnd - 1) != quote || escaped.get(titleEnd - 1)) {
+            return null;
+        }
+        for (int k = titleStart + 1; k < titleEnd - 1; k++) {
+            if (text.charAt(k) == quote && !escaped.get(k)) {
+                return null;
+            }
+        }
+        String title = text.substring(titleStart + 1, titleEnd - 1);
+        return new LinkMatch(url, title.isBlank() ? null : title, endIndex);
+    }
+
+    private static int skipWhitespace(CharSequence text, int from) {
+        int i = from;
+        while (i < text.length() && Character.isWhitespace(text.charAt(i))) {
+            i++;
+        }
+        return i;
+    }
+
+    private record LinkMatch(String url, String title, int endIndex) {
     }
 
     /**

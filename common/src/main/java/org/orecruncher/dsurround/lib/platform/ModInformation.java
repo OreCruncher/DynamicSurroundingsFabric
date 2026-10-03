@@ -105,8 +105,19 @@ public final class ModInformation implements IMinecraftDirectories {
                 .orElse(Optional.empty());
     }
 
+    /**
+     * The Minecraft version, or empty if it isn't a version that can be compared (e.g. a snapshot). A release such
+     * as 1.21, with no patch number, is 1.21.0.
+     */
     public static Optional<SemanticVersion> getMinecraftVersion() {
-        return getModVersion("minecraft");
+        var container = Platform.getMod("minecraft");
+        if (container != null) {
+            try {
+                return Optional.of(SemanticVersion.parseMinecraft(container.getVersion()));
+            } catch (Exception ignored) {
+            }
+        }
+        return Optional.empty();
     }
 
     public static Optional<SemanticVersion> getModVersion(String namespace) {

@@ -207,6 +207,15 @@ class ComponentExporterTests {
     }
 
     @Test
+    void linkTitleIsTheHoverText() {
+        Component link = build("[site](https://example.com \"Go there\")").getSiblings().get(0);
+
+        Component hoverText = link.getStyle().getHoverEvent().getValue(HoverEvent.Action.SHOW_TEXT);
+        assertEquals("Go there", hoverText.getString());
+        assertEquals("https://example.com", link.getStyle().getClickEvent().getValue());
+    }
+
+    @Test
     void hoverTemplateWithStrayPercentDoesNotThrow() {
         Options options = Options.builder().linkHoverTranslationKey("").linkHoverTemplate("100% of %s").build();
         Component link = build("[site](https://example.com)", options).getSiblings().get(0);

@@ -26,10 +26,15 @@ import java.util.Optional;
  *           {@code http} and {@code https} URLs are links, and the whole {@code [text](url)} must be on one line.
  *           Parentheses in the URL must balance, or be escaped as {@code \)}. The link text may contain inline
  *           markup.</td></tr>
+ *   <tr><td>{@code [text](https://example.com "Hover text")}</td>
+ *       <td>A link with a title, in double or single quotes, which is shown as its hover text instead of the
+ *           URL. The title is plain text. A quote of the same kind inside it is escaped as {@code \"}, and a
+ *           {@code )} must balance or be escaped, as in the URL. Anything else after the URL makes the whole link
+ *           literal text.</td></tr>
  *   <tr><td>{@code <color:red>text</color>}, {@code <color:#FF8800>text</color>}</td>
  *       <td>Colored text. Names are the 16 Minecraft colors ({@code gold}, {@code dark_red}, ...). The tags are not
  *           case sensitive. Color tags may be nested. An explicit color overrides the heading and quote colors, but
- *           not the link color.</td></tr>
+ *           not the link color unless {@link Options#colorOverridesLink()} is on.</td></tr>
  *   <tr><td>{@code - item} or {@code * item}</td>
  *       <td>A bullet, using {@link Options#bulletStyle()}. One level only.</td></tr>
  *   <tr><td>{@code > text}</td>
@@ -97,6 +102,28 @@ public final class MarkdownParser {
         }
         List<Segment> segments = parseToSegments(markdown, parserOptions);
         return Optional.of(ComponentExporter.export(segments, parserOptions));
+    }
+
+    /**
+     * Escapes {@code text} so it shows as written when inserted into a document: each ASCII punctuation character
+     * gets a backslash, so nothing in it is taken as markup. Safe in a link's URL too, as escaped characters keep
+     * their meaning there. Not for a link's title, which is plain text.
+     *
+     * @return the escaped text, or null if {@code text} is null
+     */
+    public static String escape(String text) {
+        if (text == null) {
+            return null;
+        }
+        StringBuilder result = new StringBuilder(text.length() + 8);
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (Lexer.isEscapable(c)) {
+                result.append('\\');
+            }
+            result.append(c);
+        }
+        return result.toString();
     }
 
     static List<Segment> parseToSegments(String markdown) {

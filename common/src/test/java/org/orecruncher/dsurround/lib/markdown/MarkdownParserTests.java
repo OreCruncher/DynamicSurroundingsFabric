@@ -568,6 +568,84 @@ class MarkdownParserTests {
     }
 
     @Test
+    void colorOverridesLinkOptionLetsAColorTagSetTheLinkColor() {
+        Options options = Options.builder().colorOverridesLink(true).build();
+
+        assertEquals(color("red"), find(parse("<color:red>[x](https://example.com)</color>", options), "x").style().color());
+        assertEquals(color("red"), find(parse("[<color:red>x</color>](https://example.com)", options), "x").style().color());
+        assertEquals(Options.DEFAULT.linkColor(), find(parse("[x](https://example.com)", options), "x").style().color(),
+                "without a color tag the link color still applies");
+        assertEquals(Boolean.TRUE, find(parse("<color:red>[x](https://example.com)</color>", options), "x").style().underline(),
+                "still underlined as a link");
+    }
+
+    // ---- Link titles -----------------------------------------------------------------------------------------
+
+    @Test
+    void linkTitleInDoubleOrSingleQuotes() {
+        Segment link = find(parse("[site](https://example.com \"Go there\") tail"), "site");
+        assertEquals("https://example.com", link.style().clickEventUrl());
+        assertEquals("Go there", link.style().linkTitle());
+
+        assertEquals("Go there", find(parse("[site](https://example.com 'Go there')"), "site").style().linkTitle());
+    }
+
+    @Test
+    void linkWithoutATitleHasNone() {
+        assertNull(find(parse("[site](https://example.com)"), "site").style().linkTitle());
+        assertNull(find(parse("[site](https://example.com \"\")"), "site").style().linkTitle(), "blank title");
+        assertNull(find(parse("[a](https://a.com \"A\") [b](https://b.com)"), "b").style().linkTitle(),
+                "a title doesn't carry over to the next link");
+    }
+
+    @Test
+    void linkTitleCanHoldEscapedQuotesMarkupAndOtherQuotes() {
+        assertEquals("Say \"hi\"", find(parse("[x](https://example.com \"Say \\\"hi\\\"\")"), "x").style().linkTitle());
+        assertEquals("Don't", find(parse("[x](https://example.com \"Don't\")"), "x").style().linkTitle());
+        assertEquals("**not bold** [or a link]", find(parse("[x](https://example.com \"**not bold** [or a link]\")"), "x").style().linkTitle());
+        assertEquals("a (b) c", find(parse("[x](https://example.com \"a (b) c\")"), "x").style().linkTitle());
+    }
+
+    @Test
+    void malformedTitleMakesTheLinkLiteral() {
+        for (String markdown : List.of(
+                "[x](https://example.com Go)",               // not quoted
+                "[x](https://example.com \"Go)",             // unclosed
+                "[x](https://example.com \"Go' )",           // mismatched quotes
+                "[x](https://example.com \"Go\" more)",      // something after it
+                "[x](https://example.com \"a\"b\")")) {      // unescaped quote inside
+            List<Segment> segments = parse(markdown);
+            assertNoLinks(segments);
+            assertEquals(markdown, plain(segments), markdown);
+        }
+    }
+
+    // ---- Escaping --------------------------------------------------------------------------------------------
+
+    @Test
+    void escapedTextIsShownAsWritten() {
+        for (String text : List.of("**not bold**", "a_b__c", "[x](https://example.com)", "<color:red>x</color>",
+                "# not a heading", "C:\\path", "1 * 2 ~~ 3", "plain")) {
+            List<Segment> segments = parse(MarkdownParser.escape(text));
+            assertEquals(text, plain(segments), text);
+            assertNoLinks(segments);
+            for (Segment s : segments) {
+                assertNull(s.style().bold(), text);
+                assertNull(s.style().color(), text);
+            }
+        }
+        assertNull(MarkdownParser.escape(null));
+    }
+
+    @Test
+    void escapedUrlStillWorksAsALinkDestination() {
+        String url = "https://example.com/a_(b)/c*d?x=1#top";
+        Segment link = find(parse("[x](" + MarkdownParser.escape(url) + ")"), "x");
+
+        assertEquals(url, link.style().clickEventUrl());
+    }
+
+    @Test
     void unsupportedSyntaxIsShownAsWritten() {
         assertEquals("1. one", plain(parse("1. one")));
         assertEquals("`code`", plain(parse("`code`")));

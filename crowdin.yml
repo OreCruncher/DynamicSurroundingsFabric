@@ -1,0 +1,48 @@
+# Crowdin configuration: en_us.json is the source, and the other language files are generated from it. Edit only
+# en_us.json by hand; translations come back from Crowdin.
+#
+# The project ID and API token are read from the environment (or repository secrets, for the GitHub integration).
+#project_id_env: CROWDIN_PROJECT_ID
+#api_token_env: CROWDIN_PERSONAL_TOKEN
+#base_path: "."
+#preserve_hierarchy: true
+
+files:
+  - source: /common/src/main/resources/assets/dsurround/lang/en_us.json
+    translation: /common/src/main/resources/assets/dsurround/lang/%locale_with_underscore%.json
+    # Minecraft resource paths must be lowercase, but %locale_with_underscore% gives "pl_PL" and "zh_CN". Each
+    # language needs a mapping to its Minecraft code here (Crowdin language code: file name).
+    languages_mapping:
+      locale_with_underscore:
+        pl: pl_pl
+        zh-CN: zh_cn
+        ro-RO: ro_ro
+        fr-FR: fr_fr
+        es-ES: es_es
+        af-ZA: af_za
+        ar-SA: ar_sa
+        ca-ES: ca_es
+        cs-CZ: cs_cz
+        da-DK: da_dk
+        de-DE: de_de
+        el-GR: el_gr
+        fi-FI: fi_fi
+        he-IL: he_il
+        he-HE: hu_hu
+        it-IT: it_it
+        ja-JP: ja_jp
+        ko-KR: ko_kr
+        nl-NL: nl_nl
+        no-NO: no_no
+        pt-PT: pt_pt
+        ru-RU: ru_ru
+        sr-SP: sr_sp
+        sv-SE: sv_se
+        tr-TR: tr_tr
+        uk-UA: uk_ua
+        zh-TW: zh_tw
+        vi-VN: vi_vn
+        pt-BR: pt_br
+    # Leave untranslated strings out rather than filling them with English: Minecraft shows the English text for
+    # a missing key anyway, and an English copy would look translated.
+    skip_untranslated_strings: true

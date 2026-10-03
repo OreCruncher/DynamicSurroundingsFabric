@@ -25,6 +25,7 @@ public final class Options {
     private final String bulletStyle;
     private final String quoteStyle;
     private final boolean quoteItalic;
+    private final boolean colorOverridesLink;
     private final String linkHoverTemplate;
     private final String linkHoverTranslationKey;
 
@@ -38,6 +39,7 @@ public final class Options {
         this.bulletStyle = b.bulletStyle;
         this.quoteStyle = b.quoteStyle;
         this.quoteItalic = b.quoteItalic;
+        this.colorOverridesLink = b.colorOverridesLink;
         this.linkHoverTemplate = b.linkHoverTemplate;
         this.linkHoverTranslationKey = b.linkHoverTranslationKey;
     }
@@ -110,6 +112,14 @@ public final class Options {
     }
 
     /**
+     * Whether a {@code <color>} tag around or inside a link sets the link's color. Off by default, when links are
+     * always in the link color.
+     */
+    public boolean colorOverridesLink() {
+        return this.colorOverridesLink;
+    }
+
+    /**
      * Template for link hover text when no translation key is used. "%s" is replaced with the URL.
      */
     public String linkHoverTemplate() {
@@ -136,6 +146,7 @@ public final class Options {
         private String bulletStyle = DEFAULT_BULLET;
         private String quoteStyle = DEFAULT_BLOCK_QUOTE;
         private boolean quoteItalic = true;
+        private boolean colorOverridesLink = false;
         private String linkHoverTemplate = DEFAULT_HOVER_TEMPLATE;
         private String linkHoverTranslationKey = DEFAULT_HOVER_TEXT_LANG_KEY;
 
@@ -248,6 +259,15 @@ public final class Options {
          */
         public Builder quoteItalic(boolean italic) {
             this.quoteItalic = italic;
+            return this;
+        }
+
+        /**
+         * Whether a {@code <color>} tag sets the color of a link inside it, rather than the link color always
+         * applying. Defaults to false.
+         */
+        public Builder colorOverridesLink(boolean overrides) {
+            this.colorOverridesLink = overrides;
             return this;
         }
 

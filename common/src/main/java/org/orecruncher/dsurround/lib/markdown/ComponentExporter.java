@@ -55,11 +55,14 @@ final class ComponentExporter {
     }
 
     /**
-     * Hover text for a link. With a translation key the URL is passed as the translation argument; without one
-     * the URL is substituted into {@link Options#linkHoverTemplate()}. The replacement is literal, so a stray
-     * {@code %} in the template is harmless.
+     * Hover text for a link: its title if it has one. Otherwise, with a translation key the URL is passed as the
+     * translation argument; without one the URL is substituted into {@link Options#linkHoverTemplate()}. The
+     * replacement is literal, so a stray {@code %} in the template is harmless.
      */
     private static Component hoverContents(Style s, Options options) {
+        if (s.linkTitle() != null) {
+            return Component.literal(s.linkTitle()).withStyle(fontOnly(s));
+        }
         String url = s.clickEventUrl();
         String key = options.linkHoverTranslationKey();
         if (!key.isEmpty()) {

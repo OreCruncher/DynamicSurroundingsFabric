@@ -32,6 +32,7 @@ import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.lib.seasons.SeasonManager;
 import org.orecruncher.dsurround.lib.version.IVersionChecker;
+import org.orecruncher.dsurround.lib.version.VersionCheckException;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionResult;
 import org.orecruncher.dsurround.processing.Handlers;
@@ -42,7 +43,9 @@ import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.AudioPlayer;
 
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 
 public final class Client {
@@ -151,10 +154,10 @@ public final class Client {
 
         // Kick off version checking if configured.  This should run in parallel with initialization.
         if (Config.logging.enableModUpdateChatMessage) {
+            // A failure or timeout completes the future exceptionally, so it isn't mistaken for "no recommendation"
             versionInfo = CompletableFuture
                     .supplyAsync(ContainerManager.resolve(IVersionChecker.class)::getVersionResult)
-                    .completeOnTimeout(Optional.empty(), 5, TimeUnit.SECONDS)
-                    .exceptionally(t -> Optional.empty());
+                    .orTimeout(5, TimeUnit.SECONDS);
         } else {
             versionInfo = CompletableFuture.completedFuture(Optional.empty());
         }
@@ -222,7 +225,14 @@ public final class Client {
                 return;
             }
 
-            var versionQueryResult = versionInfo.get();
+            Optional<VersionResult> versionQueryResult;
+            try {
+                versionQueryResult = versionInfo.join();
+            } catch (CompletionException | CancellationException e) {
+                Library.LOGGER.warn("Unable to check for an update: %s", VersionCheckException.describe(e));
+                return;
+            }
+
             if (versionQueryResult.isPresent()) {
                 var result = versionQueryResult.get();
                 if (result.updateAvailable()) {
@@ -232,8 +242,8 @@ public final class Client {
                 } else {
                     Library.LOGGER.info("%s is current", result.displayName());
                 }
-            } else if(Config.logging.enableModUpdateChatMessage) {
-                Library.LOGGER.info("The mod version is current");
+            } else if (Config.logging.enableModUpdateChatMessage) {
+                Library.LOGGER.info("No recommended version is published for this version of Minecraft");
             }
         } catch (Throwable t) {
             Library.LOGGER.error(t, "Unable to process version information");

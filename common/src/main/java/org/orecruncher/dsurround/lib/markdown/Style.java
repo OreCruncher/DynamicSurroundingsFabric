@@ -8,8 +8,10 @@ import net.minecraft.resources.ResourceLocation;
  * with {@link #equals(Object)}.
  * <p>
  * The color and font are typed values, or null to inherit. The boolean flags are {@code null} when "off",
- * never {@code false}, so an unset flag is simply absent from the output and inherits from its parent. Link hover
- * text is not stored here; {@link ComponentExporter} derives it from {@link #clickEventUrl()} and the options.
+ * never {@code false}, so an unset flag is simply absent from the output and inherits from its parent.
+ * <p>
+ * {@code linkTitle} is the title written after a link's URL ({@code [text](url "title")}), used as its hover text;
+ * null if there is none, in which case {@link ComponentExporter} builds the hover text from the URL and the options.
  */
 record Style(
         TextColor color,
@@ -18,22 +20,23 @@ record Style(
         Boolean italic,
         Boolean underline,
         Boolean strikethrough,
-        String clickEventUrl) {
+        String clickEventUrl,
+        String linkTitle) {
 
-    static final Style EMPTY = new Style(null, null, null, null, null, null, null);
+    static final Style EMPTY = new Style(null, null, null, null, null, null, null, null);
 
     Style withColor(TextColor color) {
         return new Style(color, this.font, this.bold, this.italic, this.underline, this.strikethrough,
-                this.clickEventUrl);
+                this.clickEventUrl, this.linkTitle);
     }
 
     Style withFont(ResourceLocation font) {
         return new Style(this.color, font, this.bold, this.italic, this.underline, this.strikethrough,
-                this.clickEventUrl);
+                this.clickEventUrl, this.linkTitle);
     }
 
     Style withItalic(Boolean italic) {
         return new Style(this.color, this.font, this.bold, italic, this.underline, this.strikethrough,
-                this.clickEventUrl);
+                this.clickEventUrl, this.linkTitle);
     }
 }
