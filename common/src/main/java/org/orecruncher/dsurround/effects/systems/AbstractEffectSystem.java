@@ -58,7 +58,7 @@ public abstract class AbstractEffectSystem implements IEffectSystem {
             effect.remove();
             this.onRemoveSystem(longPos);
         }
-    };
+    }
 
     @Override
     public String gatherDiagnostics() {

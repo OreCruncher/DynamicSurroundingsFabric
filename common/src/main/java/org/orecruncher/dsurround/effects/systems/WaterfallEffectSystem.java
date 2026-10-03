@@ -91,9 +91,9 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     private final long[] candidatePositions = new long[SOUND_INSTANCE_CAP];
     private final double[] candidateWeights = new double[SOUND_INSTANCE_CAP];
 
-    public WaterfallEffectSystem(IModLog logger, Configuration config) {
-        super(logger, config,"Waterfall");
-        this.audioPlayer = ContainerManager.resolve(IAudioPlayer.class);
+    public WaterfallEffectSystem(IModLog logger, Configuration config, IAudioPlayer audioPlayer) {
+        super(logger, config, "Waterfall");
+        this.audioPlayer = audioPlayer;
         this.soundCheckThrottle = 0;
     }
 
@@ -304,14 +304,8 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
             var effect = createWaterfallEffect(world, state, pos);
             this.systems.put(pos.asLong(), effect);
         } else {
-            // The block no longer supports a waterfall. Mark the effect removed, as AbstractEffectSystem does,
-            // then drop it and its sound.
-            var posLong = pos.asLong();
-            var effect = this.systems.get(posLong);
-            if (effect != null) {
-                effect.remove();
-                this.onRemoveSystem(posLong);
-            }
+            // The block no longer supports a waterfall: drop the effect and, through onRemoveSystem, its sound
+            this.blockUnscan(world, state, pos);
         }
     }
 
@@ -507,7 +501,8 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
                 final double zOffset = RANDOM.nextFloat(-0.15F, 0.15F);
                 final double yOffset = RANDOM.nextFloat(-0.5F, 0.5F);
                 var cascadeParticle = WaterfallCascade.create(clientLevel, this.posX + xOffset, this.deltaY + yOffset, this.posZ + zOffset, this.strength);
-                particles.add(cascadeParticle);
+                if (cascadeParticle != null)
+                    particles.add(cascadeParticle);
             }
 
             return particles;

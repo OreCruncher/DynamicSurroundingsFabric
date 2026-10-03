@@ -1,5 +1,7 @@
 package org.orecruncher.dsurround.processing;
 
+import java.util.function.BiConsumer;
+import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.Configuration;
@@ -37,6 +39,7 @@ public class Handlers {
     private final IAudioPlayer audioPlayer;
     private final ObjectArray<AbstractClientHandler> effectHandlers = new ObjectArray<>();
     private final LoggingTimerEMA handlerTimer = new LoggingTimerEMA("Handlers");
+    private final LogThrottle<String> handlerFailures;
     private boolean isConnected = false;
     private boolean startupSoundPlayed = false;
 
@@ -46,6 +49,7 @@ public class Handlers {
         this.tickCount = tickCount;
         this.soundLibrary = soundLibrary;
         this.audioPlayer = audioPlayer;
+        this.handlerFailures = LogThrottle.oncePerKey(logger, "handler errors", "the next connect");
         init();
     }
 
@@ -87,6 +91,7 @@ public class Handlers {
                 this.logger.warn("Attempt to connect when already connected; disconnecting first");
                 this.onDisconnect(client);
             }
+            this.handlerFailures.reset();
             this.effectHandlers.forEach(AbstractClientHandler::connect0);
             this.isConnected = true;
         } catch (Exception ex) {
@@ -130,11 +135,29 @@ public class Handlers {
 
         for (final AbstractClientHandler handler : this.effectHandlers) {
             final long mark = System.nanoTime();
-            if (handler.doTick(tick))
-                handler.process(player);
+            tickHandler(handler, tick, player, this::handlerFailed);
             handler.updateTimer(System.nanoTime() - mark);
         }
         this.handlerTimer.end();
+    }
+
+    /**
+     * Ticks one handler. If it throws, {@code onFailure} is told and the caller goes on to the next handler, so one
+     * broken handler doesn't stop the rest. Errors the JVM can't recover from are rethrown.
+     */
+    static void tickHandler(AbstractClientHandler handler, long tick, Player player, BiConsumer<AbstractClientHandler, Throwable> onFailure) {
+        try {
+            if (handler.doTick(tick))
+                handler.process(player);
+        } catch (VirtualMachineError fatal) {
+            throw fatal;
+        } catch (Throwable t) {
+            onFailure.accept(handler, t);
+        }
+    }
+
+    private void handlerFailed(AbstractClientHandler handler, Throwable t) {
+        this.handlerFailures.error(handler.getHandlerName(), t, "Handler [%s] failed", handler.getHandlerName());
     }
 
     private void handleStartupSound() {

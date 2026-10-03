@@ -51,6 +51,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
 
     // An effect type that fails to produce for an entity is reported once per reload, not once per entity per tick
     private final LogThrottle<EntityEffectType> produceFailures;
+    private final LogThrottle<Class<?>> effectFailures;
 
     private EntityEffectInfo defaultInfo;
     private int version;
@@ -59,6 +60,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
         this.tagLibrary = tagLibrary;
         this.logger = ModLog.createChild(logger, "EntityEffectLibrary");
         this.produceFailures = LogThrottle.oncePerKey(this.logger, "entity effect failures", "the next reload");
+        this.effectFailures = LogThrottle.oncePerKey(this.logger, "entity effect errors", "the next reload");
         this.defaultInfo = EntityEffectInfo.createDefault(this.version);
 
         // Whether an effect type is produced depends on config, so cached entity info is rebuilt when it changes
@@ -83,6 +85,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
     private void invalidate() {
         this.version++;
         this.produceFailures.reset();
+        this.effectFailures.reset();
         this.entityEffects.clear();
         this.defaultInfo = EntityEffectInfo.createDefault(this.version);
     }
@@ -156,10 +159,14 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
 
         // If we have effect instances create a new info object.  Otherwise, set
         // the default.
-        if (!effects.isEmpty())
-            info = new EntityEffectInfo(this.version, entity, effects);
-        else
+        if (!effects.isEmpty()) {
+            // Only the type is captured, so the info never keeps the entity alive
+            var entityType = entity.getType();
+            info = new EntityEffectInfo(this.version, entity, effects,
+                    (effect, t) -> this.effectFailures.error(effect.getClass(), t, "Entity effect %s failed for %s", effect.getClass().getSimpleName(), entityType));
+        } else {
             info = this.defaultInfo;
+        }
 
         this.entityInfoCache.put(entity.getId(), info);
 

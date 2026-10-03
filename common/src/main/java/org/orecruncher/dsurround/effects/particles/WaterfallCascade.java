@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.effects.particles;
 
+import org.jetbrains.annotations.Nullable;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -22,10 +23,17 @@ public class WaterfallCascade extends TextureSheetParticle {
     private final SpriteSet sprites;
     private final int ageJitter;
 
+    /**
+     * A cascade particle, or null if its sprites aren't available (they are captured when particle providers
+     * register, so a reload in an unexpected order can leave them missing).
+     */
+    @Nullable
     public static Particle create(ClientLevel level, double x, double y, double z, int strength) {
+        var sprites = ParticleUtils.getSpriteProvider(DSurroundParticleTypes.WATERFALL_CASCADE);
+        if (sprites == null)
+            return null;
         // Calculate the quad size based on waterfall strength
         var quadSize = 0.5F + 4.5F * ((strength - 1) / (float)BlockEffectUtils.MAX_STRENGTH);
-        var sprites = ParticleUtils.getSpriteProvider(DSurroundParticleTypes.WATERFALL_CASCADE);
         return new WaterfallCascade(level, x, y, z, sprites, quadSize);
     }
 

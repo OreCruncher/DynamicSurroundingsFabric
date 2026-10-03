@@ -33,7 +33,7 @@ public class WaterRippleHandler {
     public static Optional<Particle> createRippleParticle(ClientLevel world, Vec3 position) {
         if (doRipples()) {
             var pos = BlockPos.containing(position);
-            var fluidState = world.getFluidState(BlockPos.containing(position));
+            var fluidState = world.getFluidState(pos);
 
             if (fluidState.isSource() && TAG_LIBRARY.is(FluidTags.WATER_RIPPLES, fluidState)) {
                 final float actualHeight = fluidState.getHeight(world, pos) + pos.getY();

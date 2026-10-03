@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.effects;
 
+import org.jetbrains.annotations.Nullable;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
@@ -41,8 +42,10 @@ public interface IEntityEffect {
     /**
      * Helper method to add a particle to the particle system
      */
-    default void addParticle(Particle particle) {
-        GameUtils.getParticleManager().add(particle);
+    default void addParticle(@Nullable Particle particle) {
+        // Vanilla's createParticle() fallbacks can return null; the particle engine doesn't take it
+        if (particle != null)
+            GameUtils.getParticleManager().add(particle);
     }
 
 }

@@ -69,7 +69,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
 
         this.effectSystems = new SystemsScanner(this.config, this.locus);
         this.effectSystems.addEffectSystem(new SteamEffectSystem(this.logger, this.config));
-        this.effectSystems.addEffectSystem(new WaterfallEffectSystem(this.logger, this.config));
+        this.effectSystems.addEffectSystem(new WaterfallEffectSystem(this.logger, this.config, this.audioPlayer));
         this.effectSystems.addEffectSystem(new RandomBlockEffectSystem(this.logger, this.config, this.blockLibrary, this.audioPlayer, RandomBlockEffectSystem.NEAR_RANGE));
         this.effectSystems.addEffectSystem(new RandomBlockEffectSystem(this.logger, this.config, this.blockLibrary, this.audioPlayer, RandomBlockEffectSystem.FAR_RANGE));
 

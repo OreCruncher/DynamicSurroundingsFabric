@@ -13,6 +13,9 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
 public class WaterRippleParticle extends TextureSheetParticle {
 
+    // Lays the quad flat on the water. renderRotatedQuad() only reads it, so one instance serves every ripple.
+    private static final Quaternionf FLAT = new Quaternionf().rotateX((float) Math.toRadians(-90f));
+
     private final WaterRippleStyle rippleStyle;
     private final SpriteSet spriteProvider;
     private final LifetimeAlpha lifetimeAlpha;
@@ -83,9 +86,7 @@ public class WaterRippleParticle extends TextureSheetParticle {
     @Override
     public void render(@NotNull VertexConsumer vertexConsumer, @NotNull Camera camera, float tickDelta) {
         this.setAlpha(this.lifetimeAlpha.currentAlphaForAge(this.age, this.lifetime, tickDelta));
-        Quaternionf quaternionf = new Quaternionf();
-        quaternionf.rotateX((float) Math.toRadians(-90f));
-        this.renderRotatedQuad(vertexConsumer, camera, quaternionf, tickDelta);
+        this.renderRotatedQuad(vertexConsumer, camera, FLAT, tickDelta);
     }
 
     @Override

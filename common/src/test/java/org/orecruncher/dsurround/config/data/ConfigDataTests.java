@@ -6,8 +6,12 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.SharedConstants;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.TagEntry;
+import net.minecraft.tags.TagFile;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.lib.CodecExtensions;
@@ -218,5 +222,30 @@ public class ConfigDataTests {
         assertLoadsCleanly("/assets/dsurround/dsconfigs/sound_mappings.json", Codec.list(SoundMappingConfigRule.CODEC));
         assertLoadsCleanly("/assets/dsurround/dsconfigs/sound_factories.json", Codec.list(SoundFactory.CODEC));
         assertLoadsCleanly("/assets/dsurround/sounds.json", Codec.unboundedMap(Codec.STRING, SoundMetadataConfig.CODEC));
+    }
+
+    private static List<String> tagEntries(String path) throws IOException {
+        var result = TagFile.CODEC.parse(JsonOps.INSTANCE, json(resource(path)));
+        assertTrue(result.isSuccess(), path + ": " + errorOf(result));
+        // A TagEntry prints as its id, with # in front for a tag reference
+        return result.getOrThrow().entries().stream().map(TagEntry::toString).toList();
+    }
+
+    @Test
+    void villagersTagHasTheVillagerTypes() throws IOException {
+        // Neither vanilla nor the c: convention tags have a villager tag, so the mod has its own
+        var entries = tagEntries("/assets/dsurround/dsconfigs/tags/entity_type/villagers.json");
+
+        assertEquals(List.of("minecraft:villager", "minecraft:wandering_trader"), entries);
+        for (var entry : entries)
+            assertTrue(BuiltInRegistries.ENTITY_TYPE.containsKey(ResourceLocation.parse(entry)), entry + " isn't an entity type");
+    }
+
+    @Test
+    void frostBreathUsesTheVillagersTag() throws IOException {
+        var entries = tagEntries("/assets/dsurround/dsconfigs/tags/entity_type/effects/frost_breath.json");
+
+        assertTrue(entries.contains("#dsurround:villagers"), entries.toString());
+        assertFalse(entries.contains("minecraft:villager"), "listed through the tag now");
     }
 }

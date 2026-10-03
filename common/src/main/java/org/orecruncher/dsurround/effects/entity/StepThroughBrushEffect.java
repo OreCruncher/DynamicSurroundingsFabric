@@ -9,6 +9,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
@@ -21,11 +22,13 @@ public class StepThroughBrushEffect extends EntityEffectBase {
 
     private final ITickCount tickCount;
     private final ITagLibrary tagLibrary;
+    private final ISoundLibrary soundLibrary;
     private long lastBrushCheck;
 
-    public StepThroughBrushEffect(ITickCount tickCount, ITagLibrary tagLibrary) {
+    public StepThroughBrushEffect(ITickCount tickCount, ITagLibrary tagLibrary, ISoundLibrary soundLibrary) {
         this.tickCount = tickCount;
         this.tagLibrary = tagLibrary;
+        this.soundLibrary = soundLibrary;
     }
 
     @Override
@@ -70,13 +73,22 @@ public class StepThroughBrushEffect extends EntityEffectBase {
     private static boolean shouldProcess(LivingEntity entity) {
         if (entity.isSilent() || entity.isSpectator())
             return false;
-        if (entity.xxa != 0 || entity.zza != 0 || entity.yya != 0)
-            return true;
-        return entity.jumping;
+        return isMoving(entity.getX() - entity.xo, entity.getZ() - entity.zo, entity.jumping);
+    }
+
+    // Below this (squared, per tick) the entity is standing still; it filters out interpolation jitter
+    private static final double MOVING_THRESHOLD_SQ = 0.001D * 0.001D;
+
+    /**
+     * Whether the entity moved this tick. Uses how far it actually moved rather than movement input: input is only
+     * known for the local player, so other players would never make a sound.
+     */
+    static boolean isMoving(double dx, double dz, boolean jumping) {
+        return jumping || dx * dx + dz * dz > MOVING_THRESHOLD_SQ;
     }
 
     private void playSoundEffect(BlockPos pos, ResourceLocation factory, float volumeScale) {
-       SOUND_LIBRARY.getSoundFactory(factory)
+       this.soundLibrary.getSoundFactory(factory)
                .ifPresent(f -> {
                    var soundInstance = f.createAtLocation(pos, volumeScale);
                    this.playSound(soundInstance);

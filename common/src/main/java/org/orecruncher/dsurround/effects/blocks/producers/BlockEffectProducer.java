@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.effects.blocks.producers;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.effects.IBlockEffect;
@@ -12,7 +11,6 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
 import java.util.Optional;
-import java.util.function.Predicate;
 
 public abstract class BlockEffectProducer implements IBlockEffectProducer {
 
@@ -22,17 +20,27 @@ public abstract class BlockEffectProducer implements IBlockEffectProducer {
 
 
     protected BlockEffectProducer(Script chance, Script conditions) {
+        this(ContainerManager.resolve(IConditionEvaluator.class), chance, conditions);
+    }
+
+    protected BlockEffectProducer(IConditionEvaluator conditionEvaluator, Script chance, Script conditions) {
         this.chance = chance;
         this.conditions = conditions;
-        this.conditionEvaluator = ContainerManager.resolve(IConditionEvaluator.class);
+        this.conditionEvaluator = conditionEvaluator;
     }
 
     protected boolean canTrigger(Level world, BlockState state, BlockPos pos, IRandomizer rand) {
-        if (this.conditionEvaluator.check(this.conditions)) {
-            var chance = this.conditionEvaluator.eval(this.chance);
-            return chance instanceof Double c && rand.nextDouble() < c;
-        }
+        if (this.conditionEvaluator.check(this.conditions))
+            return rollChance(this.conditionEvaluator.eval(this.chance), rand);
         return false;
+    }
+
+    /**
+     * Whether a roll succeeds for {@code chance}, a script result. Any number counts (a script function can return
+     * an integer or a float, not just the double a literal gives); anything else never succeeds.
+     */
+    static boolean rollChance(Object chance, IRandomizer rand) {
+        return chance instanceof Number c && rand.nextDouble() < c.doubleValue();
     }
 
     @Override
@@ -44,40 +52,6 @@ public abstract class BlockEffectProducer implements IBlockEffectProducer {
     }
 
     protected abstract Optional<IBlockEffect> produceImpl(Level world, BlockState state, BlockPos pos, IRandomizer rand);
-
-    //
-    // Bunch of helper methods for implementations
-    //
-    public static final int MAX_STRENGTH = 10;
-
-    public static int countVerticalBlocks(final Level provider,
-                                          final BlockPos pos,
-                                          final Predicate<BlockState> predicate,
-                                          final int step) {
-        int count = 0;
-        final BlockPos.MutableBlockPos mutable = pos.mutable();
-        for (; count < MAX_STRENGTH && predicate.test(provider.getBlockState(mutable)); count++)
-            mutable.setY(mutable.getY() + step);
-        return Mth.clamp(count, 0, MAX_STRENGTH);
-    }
-
-    public static int countCubeBlocks(final Level provider,
-                                      final BlockPos pos,
-                                      final Predicate<BlockState> predicate,
-                                      final boolean fastFirst) {
-        int blockCount = 0;
-        for (int k = -1; k <= 1; k++)
-            for (int j = -1; j <= 1; j++)
-                for (int i = -1; i <= 1; i++) {
-                    final BlockState state = provider.getBlockState(pos.offset(i, j, k));
-                    if (predicate.test(state)) {
-                        if (fastFirst)
-                            return 1;
-                        blockCount++;
-                    }
-                }
-        return blockCount;
-    }
 
     @Override
     public String toString() {

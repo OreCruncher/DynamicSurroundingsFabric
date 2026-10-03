@@ -26,7 +26,7 @@ import java.util.function.Predicate;
  * Sounds can come from anywhere sampled. Effects only start within the configured block effect range and within
  * vanilla's particle distance of the camera, and follow the Particles option.
  */
-public class    RandomBlockEffectSystem extends AbstractEffectSystem {
+public class RandomBlockEffectSystem extends AbstractEffectSystem {
 
     protected static final IRandomizer RANDOM = Randomizer.current();
 

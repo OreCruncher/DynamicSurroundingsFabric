@@ -1,5 +1,7 @@
 package org.orecruncher.dsurround.effects.entity;
 
+import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.NotNull;
@@ -10,8 +12,11 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import java.util.Collection;
 
 /**
- * The effects attached to one entity. Effect instances are shared between entities, so anything specific to the
- * entity is reached through this object.
+ * The effects attached to one entity. Each entity gets its own effect instances (effects aren't cacheable, so the
+ * container creates new ones each time), which is why effects can keep per-entity state in their fields. Effects
+ * must not be made cacheable.
+ * <p>
+ * An effect that throws is reported to the failure handler and skipped; the entity's other effects still run.
  * <p>
  * No reference to the entity is kept between calls, so the cache holding these never keeps an entity alive. During
  * {@link #activate} and {@link #tick} the entity is supplied by the caller (who already has it), so effects asking
@@ -22,6 +27,7 @@ public class EntityEffectInfo {
     private final int entityId;
     private final int version;
     private final Collection<IEntityEffect> effects;
+    private final BiConsumer<IEntityEffect, Throwable> onFailure;
 
     // The entity being activated or ticked; only set during those calls
     private @Nullable LivingEntity current;
@@ -30,13 +36,33 @@ public class EntityEffectInfo {
      * Special constructor for creating a default instance
      */
     private EntityEffectInfo(int version) {
-        this(version, null, ImmutableList.of());
+        this(version, null, ImmutableList.of(), (effect, t) -> {});
     }
 
-    public EntityEffectInfo(int version, @Nullable LivingEntity entity, Collection<IEntityEffect> effects) {
+    /**
+     * @param onFailure told about an effect that threw; the effect is skipped for that call
+     */
+    public EntityEffectInfo(int version, @Nullable LivingEntity entity, Collection<IEntityEffect> effects, BiConsumer<IEntityEffect, Throwable> onFailure) {
         this.version = version;
         this.entityId = entity != null ? entity.getId() : -1;
         this.effects = effects;
+        this.onFailure = onFailure;
+    }
+
+    /**
+     * Runs {@code action} for each effect. One that throws goes to the failure handler and the rest still run.
+     * Errors the JVM can't recover from are rethrown.
+     */
+    void forEachEffect(Consumer<IEntityEffect> action) {
+        for (var e : this.effects) {
+            try {
+                action.accept(e);
+            } catch (VirtualMachineError fatal) {
+                throw fatal;
+            } catch (Throwable t) {
+                this.onFailure.accept(e, t);
+            }
+        }
     }
 
     public int getVersion() {
@@ -75,8 +101,7 @@ public class EntityEffectInfo {
             return;
         this.current = entity;
         try {
-            for (var e : this.effects)
-                e.activate(this);
+            this.forEachEffect(e -> e.activate(this));
         } finally {
             this.current = null;
         }
@@ -85,8 +110,7 @@ public class EntityEffectInfo {
     public void deactivate() {
         // Need to deactivate regardless of whether the entity has been removed. There may be
         // resources that need to be cleaned up.
-        for (var e : this.effects)
-            e.deactivate(this);
+        this.forEachEffect(e -> e.deactivate(this));
     }
 
     /**
@@ -98,8 +122,7 @@ public class EntityEffectInfo {
             return;
         this.current = entity;
         try {
-            for (var e : this.effects)
-                e.tick(this);
+            this.forEachEffect(e -> e.tick(this));
         } finally {
             this.current = null;
         }
