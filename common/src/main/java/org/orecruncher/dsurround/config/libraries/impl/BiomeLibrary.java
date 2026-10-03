@@ -64,7 +64,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
     public BiomeLibrary(IModLog logger) {
         this.logger = ModLog.createChild(logger, "BiomeLibrary");
         this.ruleFailures = LogThrottle.oncePerKey(this.logger, "biome rule failures", "the next reload");
-        this.biomeConditionEvaluator = new BiomeConditionEvaluator(this, logger);
+        this.biomeConditionEvaluator = new BiomeConditionEvaluator(this, this.logger);
     }
 
     @Override
@@ -121,7 +121,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
      * mixins that can run before the library is ready.
      */
     @Override
-    public @Nullable BiomeInfo getBiomeInfoWeak(Biome biome) {
+    public @Nullable BiomeInfo findBiomeInfo(Biome biome) {
         return this.biomes.get(biome);
     }
 
@@ -148,6 +148,11 @@ public final class BiomeLibrary implements IBiomeLibrary {
         // Apply rule configs
         Guard.execute(() -> applyRuleConfigs(biome, result));
         return result;
+    }
+
+    @Override
+    public int getVersion() {
+        return this.version;
     }
 
     @Override

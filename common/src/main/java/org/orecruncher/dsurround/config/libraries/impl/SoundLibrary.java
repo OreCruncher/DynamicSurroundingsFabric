@@ -97,6 +97,7 @@ public final class SoundLibrary implements ISoundLibrary {
     // Metadata for sounds that have none configured, built on first request instead of on every request
     private final Map<ResourceLocation, SoundMetadata> defaultMetadata = new Object2ObjectOpenHashMap<>();
     private List<IndividualSoundConfigEntry> soundConfiguration = new ArrayList<>();
+    private int version;
 
     public SoundLibrary(Configuration config, IModLog logger, IMinecraftDirectories directories) {
         this.logger = ModLog.createChild(logger, "SoundLibrary");
@@ -122,6 +123,7 @@ public final class SoundLibrary implements ISoundLibrary {
             return;
 
         // Forget cached data and reload
+        this.version++;
         this.myRegistry.clear();
         this.soundMetadata.clear();
         this.soundFactories.clear();
@@ -151,6 +153,11 @@ public final class SoundLibrary implements ISoundLibrary {
         this.logger.info("Number of SoundEvents cached: %d", this.myRegistry.size());
         this.logger.info("Number of factories cached: %d", this.soundFactories.size());
         this.logger.info("Number of sound mappings cached: %d", this.soundMappings.size());
+    }
+
+    @Override
+    public int getVersion() {
+        return this.version;
     }
 
     @Override

@@ -1,27 +1,26 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
-import dev.architectury.event.events.client.ClientLifecycleEvent;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.resources.ResourceLocation;
 import org.orecruncher.dsurround.config.DimensionInfo;
 import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
 import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
-import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.events.HandlerPriority;
 
+/**
+ * The current dimension's settings. The info is cached for the current level and the dimension library's version,
+ * and rebuilt when either changes: a different level (changing dimension, joining another world) or a reload. No
+ * events are needed to keep it current, so it doesn't depend on the order handlers run in.
+ * <p>
+ * Client thread only. Methods other than {@link #level()} need to be in a world.
+ */
 public class DimensionInformation implements IDimensionInformation {
 
     private final IDimensionLibrary dimensionLibrary;
-    private DimensionInfo info;
+    private final VersionedCache<ClientLevel, DimensionInfo> info = new VersionedCache<>();
 
     public DimensionInformation(IDimensionLibrary dimensionLibrary) {
         this.dimensionLibrary = dimensionLibrary;
-
-        // Need to reset the cached dimension info whenever the client world
-        // changes or if there is a resource reload.
-        ClientLifecycleEvent.CLIENT_LEVEL_LOAD.register(state -> this.info = null);
-        IReloadEvent.EVENT.register((x, y) -> this.info = null, HandlerPriority.HIGH);
     }
 
     public ResourceLocation name() {
@@ -53,8 +52,6 @@ public class DimensionInformation implements IDimensionInformation {
     }
 
     private DimensionInfo getInfo() {
-        if (this.info == null)
-            this.info = this.dimensionLibrary.getData(this.level());
-        return this.info;
+        return this.info.get(this.level(), this.dimensionLibrary.getVersion(), this.dimensionLibrary::getData);
     }
 }

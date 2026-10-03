@@ -18,6 +18,7 @@ class DumpCommand extends AbstractClientCommand {
     private static final String BLOCKSTATES = "blockstates";
     private static final String ITEMS = "items";
     private static final String TAGS = "tags";
+    private static final String ENTITIES = "entities";
     private static final String DIREGISTRATIONS = "diregistrations";
 
     public void register(CommandDispatcher<ClientCommandRegistrationEvent.ClientCommandSourceStack> dispatcher, CommandBuildContext registryAccess) {
@@ -32,6 +33,7 @@ class DumpCommand extends AbstractClientCommand {
                 .then(subCommand(BLOCKSTATES, DumpCommandHandler::dumpBlockState))
                 .then(subCommand(ITEMS, DumpCommandHandler::dumpItems))
                 .then(subCommand(TAGS, DumpCommandHandler::dumpTags))
+                .then(subCommand(ENTITIES, DumpCommandHandler::dumpEntities))
                 .then(subCommand(DIREGISTRATIONS, DumpCommandHandler::dumpDIRegistrations))
         );
     }

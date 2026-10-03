@@ -22,6 +22,7 @@ public class DumpCommandHandler {
     private static final IBlockLibrary blockLibrary = ContainerManager.resolve(IBlockLibrary.class);
     private static final IItemLibrary itemLibrary = ContainerManager.resolve(IItemLibrary.class);
     private static final ITagLibrary tagLibrary = ContainerManager.resolve(ITagLibrary.class);
+    private static final IEntityEffectLibrary entityEffectLibrary = ContainerManager.resolve(IEntityEffectLibrary.class);
 
     public static Component dumpBiomes() {
         return handle("biomes", biomeLibrary::dump);
@@ -53,6 +54,10 @@ public class DumpCommandHandler {
 
     public static Component dumpItems() {
         return handle("items", itemLibrary::dump);
+    }
+
+    public static Component dumpEntities() {
+        return handle("entities", entityEffectLibrary::dump);
     }
 
     public static Component dumpTags() {

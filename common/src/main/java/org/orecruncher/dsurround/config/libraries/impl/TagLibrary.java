@@ -74,6 +74,7 @@ public class TagLibrary implements ITagLibrary {
     private boolean cacheValid = false;
 
     private boolean isConnected;
+    private int version;
 
     public TagLibrary(IModLog logger, ISystemClock systemClock) {
         this.logger = ModLog.createChild(logger, "TagLibrary");
@@ -183,6 +184,11 @@ public class TagLibrary implements ITagLibrary {
     }
 
     @Override
+    public int getVersion() {
+        return this.version;
+    }
+
+    @Override
     public <T> String asString(Stream<TagKey<T>> tagStream) {
         return tagStream
                 .map(key -> key.location().toString())
@@ -228,6 +234,7 @@ public class TagLibrary implements ITagLibrary {
     // ---- Cache -----------------------------------------------------------------------------------------------
 
     private void invalidate() {
+        this.version++;
         this.tagCache.clear();
         this.memberObjects.clear();
         this.cacheValid = false;

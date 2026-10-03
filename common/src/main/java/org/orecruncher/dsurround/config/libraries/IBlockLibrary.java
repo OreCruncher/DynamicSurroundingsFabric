@@ -6,6 +6,10 @@ import org.orecruncher.dsurround.config.block.BlockInfo;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+/**
+ * Per block state settings (acoustics, sounds, effects) from blocks.json. Client thread only, except
+ * {@link #getBlockInfoWeak}.
+ */
 public interface IBlockLibrary extends ILibrary {
     /**
      * Obtains the cached block information data instance from the given BlockState. If

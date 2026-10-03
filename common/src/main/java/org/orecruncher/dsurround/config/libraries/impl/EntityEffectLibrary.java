@@ -15,10 +15,13 @@ import org.orecruncher.dsurround.eventing.IConfigChangedEvent;
 import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.effects.IEntityEffect;
+import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.tags.EntityEffectTags;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
@@ -46,12 +49,16 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
     // Reused by cleanCache()
     private final IntArrayList toRemove = new IntArrayList();
 
+    // An effect type that fails to produce for an entity is reported once per reload, not once per entity per tick
+    private final LogThrottle<EntityEffectType> produceFailures;
+
     private EntityEffectInfo defaultInfo;
     private int version;
 
     public EntityEffectLibrary(ITagLibrary tagLibrary, IModLog logger) {
         this.tagLibrary = tagLibrary;
         this.logger = ModLog.createChild(logger, "EntityEffectLibrary");
+        this.produceFailures = LogThrottle.oncePerKey(this.logger, "entity effect failures", "the next reload");
         this.defaultInfo = EntityEffectInfo.createDefault(this.version);
 
         // Whether an effect type is produced depends on config, so cached entity info is rebuilt when it changes
@@ -75,6 +82,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
      */
     private void invalidate() {
         this.version++;
+        this.produceFailures.reset();
         this.entityEffects.clear();
         this.defaultInfo = EntityEffectInfo.createDefault(this.version);
     }
@@ -94,6 +102,11 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
                 })
                 .filter(Objects::nonNull)
                 .sorted();
+    }
+
+    @Override
+    public int getVersion() {
+        return this.version;
     }
 
     @Override
@@ -135,12 +148,11 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
             info.deactivate();
         }
 
-        // Project the effect instances
-        var effects = this.getEntityEffectTypes(entity.getType()).stream()
-                .map(e -> e.produce(entity))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toList());
+        // Project the effect instances. An effect type that throws is reported and left out; the others still apply.
+        var effects = new ArrayList<IEntityEffect>();
+        RuleGuard.forEach(this.getEntityEffectTypes(entity.getType()),
+                type -> type.produce(entity).ifPresent(effects::add),
+                (type, t) -> this.produceFailures.error(type, t, "Unable to create effect %s for %s", type.getName(), entity.getType()));
 
         // If we have effect instances create a new info object.  Otherwise, set
         // the default.

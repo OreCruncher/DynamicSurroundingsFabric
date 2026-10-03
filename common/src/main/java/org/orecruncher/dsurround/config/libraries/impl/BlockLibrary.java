@@ -15,6 +15,7 @@ import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.IReloadEvent;
+import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -114,17 +115,26 @@ public class BlockLibrary implements IBlockLibrary {
     }
 
     private final Collection<BlockConfigRule> blockConfigs = new ObjectArray<>();
+    // A broken rule fails for every block it is checked against, so each is reported once per reload
+    private final LogThrottle<Object> ruleFailures;
     private int version = 0;
 
     public BlockLibrary(IModLog logger, ITagLibrary tagLibrary) {
         this.logger = ModLog.createChild(logger, "BlockLibrary");
         this.tagLibrary = tagLibrary;
+        this.ruleFailures = LogThrottle.oncePerKey(this.logger, "block rule failures", "the next reload");
+    }
+
+    @Override
+    public int getVersion() {
+        return this.version;
     }
 
     @Override
     public void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
 
         this.version++;
+        this.ruleFailures.reset();
 
         if (scope == IReloadEvent.Scope.TAGS) {
             // Tags affect block info (acoustic properties, which configs match), so drop the cache to rebuild it
@@ -161,17 +171,20 @@ public class BlockLibrary implements IBlockLibrary {
                 seeds.add(holder.value());
         }
 
-        int states = 0;
-        for (var block : seeds) {
-            for (var state : block.getStateDefinition().getPossibleStates()) {
-                this.getBlockInfo(state);
-                states++;
-            }
-        }
+        // A block that fails is reported and skipped; the rest are still seeded
+        int[] states = {0};
+        RuleGuard.forEach(seeds,
+                block -> {
+                    for (var state : block.getStateDefinition().getPossibleStates()) {
+                        this.getBlockInfo(state);
+                        states[0]++;
+                    }
+                },
+                (block, t) -> this.ruleFailures.error(block, t, "Unable to seed block info for %s", block));
 
         final long micros = (System.nanoTime() - start) / 1_000;
         this.logger.info("seeded %d block states from %d blocks in %d.%03d ms",
-                states, seeds.size(), micros / 1_000, micros % 1_000);
+                states[0], seeds.size(), micros / 1_000, micros % 1_000);
     }
 
     /**
@@ -196,13 +209,18 @@ public class BlockLibrary implements IBlockLibrary {
             return entry.info();
 
         // OK - need to build out info for the block.
-        var info = new BlockInfo(this.version, state);
-        this.blockConfigs.stream()
-                .filter(c -> c.match(state))
-                .forEach(info::update);
+        final var built = new BlockInfo(this.version, state);
+        // A rule that throws is reported once and skipped, rather than failing this block's lookup every time
+        RuleGuard.forEach(this.blockConfigs,
+                rule -> {
+                    if (rule.match(state))
+                        built.update(rule);
+                },
+                (rule, t) -> this.ruleFailures.error(rule, t, "Unable to apply block rule to %s [%s]", state, rule));
 
         // Optimization to reduce memory bloat.  Coalesce blocks that do not have any special
         // processing to the DEFAULT, and trim the others to release memory that is not needed.
+        var info = built;
         if (info.isDefault())
             info = DEFAULT;
         else

@@ -1,13 +1,13 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
-import dev.architectury.event.events.client.ClientLifecycleEvent;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.config.data.DimensionConfigRule;
 import org.orecruncher.dsurround.config.DimensionInfo;
 import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
+import org.orecruncher.dsurround.eventing.IClientDisconnect;
 import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -33,8 +33,12 @@ public final class DimensionLibrary implements IDimensionLibrary {
         this.logger = ModLog.createChild(logger, "DimensionLibrary");
 
         // A different world can have different values for the same dimension key (a superflat overworld after a
-        // normal one, say), so nothing carries over between worlds
-        ClientLifecycleEvent.CLIENT_LEVEL_LOAD.register(level -> this.configs.clear());
+        // normal one, say), so nothing carries over between worlds. Leaving a world (including a server transfer) is
+        // a disconnect; moving between dimensions within one needs nothing, as the cache is per dimension.
+        IClientDisconnect.EVENT.register(client -> {
+            this.configs.clear();
+            this.version++;
+        });
     }
 
     @Override
@@ -54,6 +58,11 @@ public final class DimensionLibrary implements IDimensionLibrary {
         findResults.forEach(result -> this.dimensionRules.addAll(result.resourceContent()));
 
         this.logger.info("%d dimension rules loaded; version is now %d", this.dimensionRules.size(), this.version);
+    }
+
+    @Override
+    public int getVersion() {
+        return this.version;
     }
 
     @Override

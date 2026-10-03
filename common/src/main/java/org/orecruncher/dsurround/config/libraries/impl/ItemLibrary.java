@@ -67,6 +67,11 @@ public class ItemLibrary implements IItemLibrary {
         this.logger.info("Configured; version is now %d", this.version);
     }
 
+    @Override
+    public int getVersion() {
+        return this.version;
+    }
+
     private void clearCaches() {
         this.itemEquipFactories.clear();
         this.itemSwingFactories.clear();

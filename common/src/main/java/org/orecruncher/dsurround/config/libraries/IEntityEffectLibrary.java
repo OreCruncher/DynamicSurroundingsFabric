@@ -9,6 +9,9 @@ import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Which entity effects (breath, bow pull, ...) apply to entities, and their live state. Client thread only.
+ */
 public interface IEntityEffectLibrary extends ILibrary {
     boolean doesEntityEffectInfoExist(LivingEntity entity);
 
