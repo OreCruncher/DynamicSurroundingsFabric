@@ -27,13 +27,22 @@ public interface CodecExtensions<A> extends Codec<A> {
     }
 
     static <A> Optional<A> deserialize(String content, Codec<A> codec) {
+        return deserialize("input", content, codec);
+    }
+
+    /**
+     * Decodes JSON content. Entries that fail are dropped with a warning and the rest kept (where the codec
+     * allows a partial result); content that can't be parsed at all gives empty. Messages start with
+     * {@code source}, e.g. the file's location, so a problem can be traced.
+     */
+    static <A> Optional<A> deserialize(String source, String content, Codec<A> codec) {
         try {
             var jsonElement = JsonParser.parseString(content);
             var dynamic = new Dynamic<>(JsonOps.INSTANCE, jsonElement);
             DataResult<A> result = codec.parse(dynamic);
-            return result.resultOrPartial(Library.LOGGER::warn);
+            return result.resultOrPartial(message -> Library.LOGGER.warn("[%s] %s", source, message));
         } catch (Throwable t) {
-            Library.LOGGER.error(t, "Unable to parse input");
+            Library.LOGGER.error(t, "[%s] Unable to parse", source);
         }
 
         return Optional.empty();

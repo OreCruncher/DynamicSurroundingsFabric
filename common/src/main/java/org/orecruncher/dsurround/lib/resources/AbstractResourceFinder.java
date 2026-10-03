@@ -20,7 +20,7 @@ public abstract class AbstractResourceFinder implements IResourceFinder {
 
     protected <T> Optional<T> decode(ResourceLocation location, String content, Codec<T> decoder) {
         this.logger.debug(RESOURCE_LOADING, "[%s] - Decoding resource", location);
-        var result = CodecExtensions.deserialize(content, decoder);
+        var result = CodecExtensions.deserialize(location.toString(), content, decoder);
         if (this.logger.isTracing(RESOURCE_LOADING))
             if (result.isPresent())
                 this.logger.debug(RESOURCE_LOADING, "[%s] - Content successfully decoded", location);
