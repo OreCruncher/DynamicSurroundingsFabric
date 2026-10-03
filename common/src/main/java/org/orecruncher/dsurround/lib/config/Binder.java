@@ -7,12 +7,13 @@ package org.orecruncher.dsurround.lib.config;
 public class Binder<T> {
 
     private final ConfigElement.PropertyValue<T> property;
-    private final T instance;
+    // The object holding the property, not a value of it
+    private final Object instance;
 
     @SuppressWarnings("unchecked")
     Binder(ConfigElement.PropertyValue<?> property, Object instance) {
         this.property = (ConfigElement.PropertyValue<T>) property;
-        this.instance = (T)instance;
+        this.instance = instance;
     }
 
     public void setValue(T value) {

@@ -87,6 +87,8 @@
   "dsurround.config.tooltip.assetReloadRequired": "ASSET reload required",
   "dsurround.config.tooltip.defaultValue": "Default value: %1$s",
   "dsurround.config.tooltip.range": "Range: %1$s to %2$s",
+  "dsurround.config.tooltip.minimum": "Minimum: %1$s",
+  "dsurround.config.slider.value": "Value: %1$s",
   "dsurround.config.logging": "Diagnostic Options",
   "dsurround.config.logging.tooltip": "Configuration options for modifying diagnostic behavior",
   "dsurround.config.logging.enableDebugLogging": "Debug Logging",

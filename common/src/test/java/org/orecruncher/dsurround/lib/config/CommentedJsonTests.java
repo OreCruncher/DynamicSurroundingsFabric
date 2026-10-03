@@ -75,6 +75,14 @@ public class CommentedJsonTests {
         public int atLeast = 3;
 
         @Property
+        @Slider(min = 2, max = 8)
+        public int slid = 4;
+
+        @Property
+        @DoubleSlider(min = 0D, max = 1D, step = 0.05D)
+        public double fraction = 0.25D;
+
+        @Property
         @DoubleRange(min = 0.5D, max = 4D)
         public double scale = 1.5D;
 
@@ -158,6 +166,20 @@ public class CommentedJsonTests {
         var lines = lines(write(new CommentedConfig()));
 
         assertEquals(List.of("// Minimum: 0, default: 3"), commentsAbove(lines, "\"atLeast\": 3,"));
+    }
+
+    @Test
+    void sliderRangeIsShown() {
+        var lines = lines(write(new CommentedConfig()));
+
+        assertEquals(List.of("// Range: 2 - 8, default: 4"), commentsAbove(lines, "\"slid\": 4,"));
+    }
+
+    @Test
+    void doubleSliderRangeAndStepAreShown() {
+        var lines = lines(write(new CommentedConfig()));
+
+        assertEquals(List.of("// Range: 0 - 1, step: 0.05, default: 0.25"), commentsAbove(lines, "\"fraction\": 0.25,"));
     }
 
     @Test

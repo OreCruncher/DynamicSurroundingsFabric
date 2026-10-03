@@ -2,6 +2,8 @@ package org.orecruncher.dsurround.lib.config;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.orecruncher.dsurround.Constants;
@@ -11,6 +13,7 @@ import org.orecruncher.dsurround.lib.config.ConfigurationData.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -68,6 +71,22 @@ public class ConfigurationDataTests {
         public double unbounded = -2.5D;
 
         @Property
+        @IntegerRange(min = 1)
+        public int atLeastOne = 1;
+
+        @Property
+        @DoubleRange(min = 0D)
+        public double atLeastZero = 0D;
+
+        @Property
+        @Slider(min = 0, max = 10)
+        public int slider = 5;
+
+        @Property
+        @DoubleSlider(min = 0.5D, max = 4D, step = 0.25D)
+        public double doubleSlider = 1.5D;
+
+        @Property
         public float unsupportedFloat = 1F;
 
         @Property
@@ -87,6 +106,60 @@ public class ConfigurationDataTests {
         public boolean badlyStyled = true;
 
         public int notAProperty = 7;
+    }
+
+    public static class NullDefaultConfig extends ConfigurationData {
+        @Property
+        public String name = null;
+    }
+
+    public static class NaNDefaultConfig extends ConfigurationData {
+        @Property
+        public double value = Double.NaN;
+    }
+
+    public static class SliderAndRangeConfig extends ConfigurationData {
+        @Property
+        @IntegerRange(min = 0, max = 10)
+        @Slider(min = 0, max = 10)
+        public int value = 5;
+    }
+
+    public static class SliderOnDoubleConfig extends ConfigurationData {
+        @Property
+        @Slider(min = 0, max = 10)
+        public double value = 5D;
+    }
+
+    public static class InvertedSliderConfig extends ConfigurationData {
+        @Property
+        @Slider(min = 10, max = 0)
+        public int value = 5;
+    }
+
+    public static class DoubleSliderAndRangeConfig extends ConfigurationData {
+        @Property
+        @DoubleRange(min = 0D, max = 1D)
+        @DoubleSlider(min = 0D, max = 1D, step = 0.1D)
+        public double value = 0.5D;
+    }
+
+    public static class DoubleSliderOnIntConfig extends ConfigurationData {
+        @Property
+        @DoubleSlider(min = 0D, max = 10D, step = 1D)
+        public int value = 5;
+    }
+
+    public static class UnevenDoubleSliderConfig extends ConfigurationData {
+        @Property
+        @DoubleSlider(min = 0D, max = 1D, step = 0.3D)
+        public double value = 0.3D;
+    }
+
+    public static class OffGridDefaultConfig extends ConfigurationData {
+        @Property
+        @DoubleSlider(min = 0D, max = 1D, step = 0.1D)
+        public double value = 0.35D;
     }
 
     private Path configFile() {
@@ -194,6 +267,101 @@ public class ConfigurationDataTests {
     }
 
     @Test
+    void nullDefaultIsRejected() {
+        // A missing value is replaced with the default, so there has to be one
+        var e = assertThrows(IllegalStateException.class, () -> ConfigurationData.getSpecification(NullDefaultConfig.class));
+        assertTrue(e.getMessage().contains("'name'"), e.getMessage());
+    }
+
+    @Test
+    void nanDefaultIsRejected() {
+        var e = assertThrows(IllegalStateException.class, () -> ConfigurationData.getSpecification(NaNDefaultConfig.class));
+        assertTrue(e.getMessage().contains("'value'"), e.getMessage());
+    }
+
+    private static void assertTooltip(Component tooltip, String key, Object... args) {
+        var contents = assertInstanceOf(TranslatableContents.class, tooltip.getContents());
+        assertEquals(key, contents.getKey());
+        assertArrayEquals(args, contents.getArgs());
+    }
+
+    @Test
+    void rangeTooltips() {
+        // Regression: a range with no maximum showed Integer.MAX_VALUE or Double.MAX_VALUE as its upper limit
+        var spec = spec();
+
+        assertTooltip(((ConfigElement.IntegerValue) element(spec, "count")).getRangeTooltip(), "dsurround.config.tooltip.range", 0, 10);
+        assertTooltip(((ConfigElement.IntegerValue) element(spec, "atLeastOne")).getRangeTooltip(), "dsurround.config.tooltip.minimum", 1);
+        assertTooltip(((ConfigElement.DoubleValue) element(spec, "scale")).getRangeTooltip(), "dsurround.config.tooltip.range", "0.5", "4");
+        assertTooltip(((ConfigElement.DoubleValue) element(spec, "atLeastZero")).getRangeTooltip(), "dsurround.config.tooltip.minimum", "0");
+    }
+
+    @Test
+    void sliderHoldsTheRange() {
+        var slider = (ConfigElement.IntegerValue) element(spec(), "slider");
+
+        assertTrue(slider.useSlider());
+        assertEquals(0, slider.getMinValue());
+        assertEquals(10, slider.getMaxValue());
+        assertFalse(((ConfigElement.IntegerValue) element(spec(), "count")).useSlider(), "no @Slider");
+    }
+
+    @Test
+    void sliderAndIntegerRangeTogetherAreRejected() {
+        var e = assertThrows(IllegalStateException.class, () -> ConfigurationData.getSpecification(SliderAndRangeConfig.class));
+        assertTrue(e.getMessage().contains("'value'"), e.getMessage());
+    }
+
+    @Test
+    void sliderOnANonIntIsRejected() {
+        var e = assertThrows(IllegalStateException.class, () -> ConfigurationData.getSpecification(SliderOnDoubleConfig.class));
+        assertTrue(e.getMessage().contains("'value'"), e.getMessage());
+    }
+
+    @Test
+    void sliderMinimumMustBeBelowItsMaximum() {
+        var e = assertThrows(IllegalStateException.class, () -> ConfigurationData.getSpecification(InvertedSliderConfig.class));
+        assertTrue(e.getMessage().contains("'value'"), e.getMessage());
+    }
+
+    @Test
+    void doubleSliderHoldsTheRange() {
+        var slider = (ConfigElement.DoubleValue) element(spec(), "doubleSlider");
+
+        assertTrue(slider.useSlider());
+        assertEquals(0.5D, slider.getMinValue());
+        assertEquals(4D, slider.getMaxValue());
+        assertNotNull(slider.getSliderScale());
+        assertEquals(14, slider.getSliderScale().lastIndex());
+        assertFalse(((ConfigElement.DoubleValue) element(spec(), "scale")).useSlider(), "no @DoubleSlider");
+    }
+
+    @Test
+    void doubleSliderAndDoubleRangeTogetherAreRejected() {
+        var e = assertThrows(IllegalStateException.class, () -> ConfigurationData.getSpecification(DoubleSliderAndRangeConfig.class));
+        assertTrue(e.getMessage().contains("'value'"), e.getMessage());
+    }
+
+    @Test
+    void doubleSliderOnANonDoubleIsRejected() {
+        var e = assertThrows(IllegalStateException.class, () -> ConfigurationData.getSpecification(DoubleSliderOnIntConfig.class));
+        assertTrue(e.getMessage().contains("'value'"), e.getMessage());
+    }
+
+    @Test
+    void invalidDoubleSliderIsRejected() {
+        var e = assertThrows(IllegalStateException.class, () -> ConfigurationData.getSpecification(UnevenDoubleSliderConfig.class));
+        assertTrue(e.getMessage().contains("'value'") && e.getMessage().contains("evenly"), e.getMessage());
+    }
+
+    @Test
+    void doubleSliderDefaultMustBeAPosition() {
+        // Otherwise the slider's reset button would set a value near the default rather than the default
+        var e = assertThrows(IllegalStateException.class, () -> ConfigurationData.getSpecification(OffGridDefaultConfig.class));
+        assertTrue(e.getMessage().contains("'value'"), e.getMessage());
+    }
+
+    @Test
     void restartKinds() {
         var world = (ConfigElement.PropertyValue<?>) element(spec(), "needsWorldRestart");
         var client = (ConfigElement.PropertyValue<?>) element(spec(), "needsClientRestart");
@@ -289,7 +457,7 @@ public class ConfigurationDataTests {
     void outOfRangeValuesAreClamped() throws IOException {
         // Regression: ranges were only applied when a value was changed in the config screen
         this.writeFile("""
-                {"count": 50, "scale": 0, "unbounded": -100, "group": {"level": 9}}
+                {"count": 50, "scale": 0, "unbounded": -100, "slider": 11, "doubleSlider": 9, "group": {"level": 9}}
                 """);
 
         var config = ConfigurationData.load(TestConfig.class, this.configFile());
@@ -297,8 +465,36 @@ public class ConfigurationDataTests {
         assertEquals(10, config.count);
         assertEquals(0.5D, config.scale);
         assertEquals(-100D, config.unbounded, "no range, so left alone");
+        assertEquals(10, config.slider, "a slider's range applies too");
+        assertEquals(4D, config.doubleSlider, "and a double slider's");
         assertEquals(3, config.group.level);
         assertEquals(10, this.readFile().get("count").getAsInt(), "the corrected value is saved");
+    }
+
+    @Test
+    void nanGetsTheDefault() throws IOException {
+        // Regression: NaN survived clamping, then Gson refused to write it and loading failed
+        this.writeFile("""
+                {"scale": NaN, "unbounded": NaN}
+                """);
+
+        var config = ConfigurationData.load(TestConfig.class, this.configFile());
+
+        assertEquals(1D, config.scale);
+        assertEquals(-2.5D, config.unbounded);
+        assertEquals(-2.5D, this.readFile().get("unbounded").getAsDouble());
+    }
+
+    @Test
+    void doubleSliderValuesNeedNotBeOnAStep() throws IOException {
+        // Only the slider moves in steps; a hand-edited value in range is kept
+        this.writeFile("""
+                {"doubleSlider": 1.37}
+                """);
+
+        var config = ConfigurationData.load(TestConfig.class, this.configFile());
+
+        assertEquals(1.37D, config.doubleSlider);
     }
 
     @Test
@@ -357,6 +553,25 @@ public class ConfigurationDataTests {
         assertEquals(1, backups.size(), backups.toString());
         assertTrue(backups.getFirst().getFileName().toString().startsWith("test.json."), backups.toString());
         assertEquals(broken, Files.readString(backups.getFirst()));
+    }
+
+    @Test
+    void unreadableFileThatCannotBeRenamedIsNotOverwritten() throws IOException {
+        // Regression: when the rename failed, the defaults were still written over the file
+        var broken = "{\"count\": 7,, \"name\": ";
+        this.writeFile(broken);
+        // The backup name has a timestamp to the second. A non-empty folder in its place makes the rename fail.
+        var now = LocalDateTime.now();
+        for (int i = 0; i < 30; i++) {
+            var blocker = ConfigurationData.backupPath(this.configFile(), now.plusSeconds(i));
+            Files.createDirectories(blocker);
+            Files.writeString(blocker.resolve("keep"), "x");
+        }
+
+        var config = ConfigurationData.load(TestConfig.class, this.configFile());
+
+        assertEquals(5, config.count, "the defaults are used");
+        assertEquals(broken, Files.readString(this.configFile()), "the file is left as it was");
     }
 
     // ---- Saving ----------------------------------------------------------------------------------------------

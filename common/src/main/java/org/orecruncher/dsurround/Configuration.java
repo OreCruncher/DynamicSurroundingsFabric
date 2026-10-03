@@ -95,15 +95,13 @@ public class Configuration extends ConfigurationData {
 
     public static class SoundSystem {
         @Property
-        @IntegerRange(min = 8, max = 16)
-        @Slider
+        @Slider(min = 8, max = 16)
         @RestartRequired
         @Comment("The number of sound channels to reserve for streaming sounds (music, biome sounds, records, etc.)")
         public int streamingChannels = 12;
 
         @Property
-        @IntegerRange(min = 0, max = 20 * 10)
-        @Slider
+        @Slider(min = 0, max = 20 * 10)
         @Comment("Ticks between culled sound events (0 to disable culling)")
         public int cullInterval = 20;
 
@@ -119,8 +117,7 @@ public class Configuration extends ConfigurationData {
         public boolean enableEnhancedSounds = true;
 
         @Property
-        @IntegerRange(min = 0, max = 8)
-        @Slider
+        @Slider(min = 0, max = 8)
         @RestartRequired
         @Comment("Number of background threads to use for enhanced sound processing (0 means use internal default)")
         public int backgroundThreadWorkers = 0;
@@ -165,8 +162,7 @@ public class Configuration extends ConfigurationData {
         public boolean logStacktraceWhenDiscarding = false;
 
         @Property
-        @Slider
-        @IntegerRange(min = 0, max = 400)
+        @Slider(min = 0, max = 400)
         @Comment("Ambient sounds played by the mod will be multiplied by this factor")
         public int ambientVolumeScaling = 100;
 
@@ -194,8 +190,7 @@ public class Configuration extends ConfigurationData {
     public static class BlockEffects {
 
         @Property
-        @IntegerRange(min = 16, max = 64)
-        @Slider
+        @Slider(min = 16, max = 64)
         @Comment("Distance that will be scanned when generating block effects")
         public int blockEffectRange = 32;
 
@@ -236,8 +231,7 @@ public class Configuration extends ConfigurationData {
     public static class EntityEffects {
 
         @Property
-        @IntegerRange(min = 16, max = 64)
-        @Slider
+        @Slider(min = 16, max = 64)
         @Comment("The maximum range at which entity special effects are applied")
         public int entityEffectRange = 24;
 
@@ -312,7 +306,7 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @Comment("Scales the display by the specified amount")
-        @DoubleRange(min = 0.5D, max = 4D)
+        @DoubleSlider(min = 0.5D, max = 4D, step = 0.1D)
         public double scale = 1D;
     }
 
@@ -341,8 +335,7 @@ public class Configuration extends ConfigurationData {
         public boolean replaceMusicManager = true;
 
         @Property
-        @IntegerRange(min = 0, max = 100)
-        @Slider
+        @Slider(min = 0, max = 100)
         @Comment("Reduce the wait time between music plays by a percentage")
         public int reduceWaitTime = 0;
     }

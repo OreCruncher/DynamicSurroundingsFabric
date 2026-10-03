@@ -85,7 +85,7 @@ public final class ConfigProcessor {
         var clamped = property.clamp(current);
         if (!Objects.equals(current, clamped)) {
             property.setValue(instance, clamped);
-            Library.LOGGER.warn("%s: '%s' value %s is out of range; using %s", source, property.getLanguageKey(), current, clamped);
+            Library.LOGGER.warn("%s: '%s' value %s is out of range or not valid; using %s", source, property.getLanguageKey(), current, clamped);
             return true;
         }
         return false;
@@ -113,6 +113,11 @@ public final class ConfigProcessor {
         private ConfigElement<?> process(ConfigurationData.Property property, Object prototype, Field f) {
             var type = f.getType();
             var key = this.calculateLangKey(property, f);
+
+            if (f.isAnnotationPresent(ConfigurationData.Slider.class) && type != int.class && type != Integer.class)
+                throw new IllegalStateException(String.format("Configuration property '%s' in %s has @Slider, which is only supported on int properties; use @DoubleSlider for a double", f.getName(), this.clazz.getName()));
+            if (f.isAnnotationPresent(ConfigurationData.DoubleSlider.class) && type != double.class && type != Double.class)
+                throw new IllegalStateException(String.format("Configuration property '%s' in %s has @DoubleSlider, which is only supported on double properties", f.getName(), this.clazz.getName()));
 
             if (type == boolean.class || type == Boolean.class)
                 return new ConfigElement.BooleanValue(prototype, key, f);
@@ -151,16 +156,39 @@ public final class ConfigProcessor {
         private ConfigElement<?> processInteger(Object prototype, String key, Field f) {
             var element = new ConfigElement.IntegerValue(prototype, key, f);
             var range = f.getAnnotation(ConfigurationData.IntegerRange.class);
+            var slider = f.getAnnotation(ConfigurationData.Slider.class);
+            if (range != null && slider != null)
+                throw new IllegalStateException(String.format("Configuration property '%s' in %s has both @IntegerRange and @Slider; @Slider holds the range", f.getName(), this.clazz.getName()));
             if (range != null)
                 element.setRange(range.min(), range.max());
+            if (slider != null) {
+                if (slider.min() >= slider.max())
+                    throw new IllegalStateException(String.format("Configuration property '%s' in %s has a @Slider minimum (%d) that isn't below its maximum (%d)", f.getName(), this.clazz.getName(), slider.min(), slider.max()));
+                element.setRange(slider.min(), slider.max());
+            }
             return element;
         }
 
         private ConfigElement<?> processDouble(Object prototype, String key, Field f) {
             var element = new ConfigElement.DoubleValue(prototype, key, f);
             var range = f.getAnnotation(ConfigurationData.DoubleRange.class);
+            var slider = f.getAnnotation(ConfigurationData.DoubleSlider.class);
+            if (range != null && slider != null)
+                throw new IllegalStateException(String.format("Configuration property '%s' in %s has both @DoubleRange and @DoubleSlider; @DoubleSlider holds the range", f.getName(), this.clazz.getName()));
             if (range != null)
                 element.setRange(range.min(), range.max());
+            if (slider != null) {
+                DoubleSliderScale scale;
+                try {
+                    scale = new DoubleSliderScale(slider.min(), slider.max(), slider.step());
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalStateException(String.format("Configuration property '%s' in %s has a @DoubleSlider that isn't valid: %s", f.getName(), this.clazz.getName(), e.getMessage()), e);
+                }
+                // Otherwise the slider's reset button would set a nearby value rather than the default
+                if (!scale.isPosition(element.defaultValue()))
+                    throw new IllegalStateException(String.format("Configuration property '%s' in %s has the default %s, which isn't one of its @DoubleSlider positions", f.getName(), this.clazz.getName(), element.defaultValue()));
+                element.setSlider(slider.min(), slider.max(), scale);
+            }
             return element;
         }
 

@@ -63,6 +63,8 @@
   "dsurround.config.tooltip.assetReloadRequired": "需要重新加载资源",
   "dsurround.config.tooltip.defaultValue": "默认值: %1$s",
   "dsurround.config.tooltip.range": "范围: %1$s 至 %2$s",
+  "dsurround.config.tooltip.minimum": "最小值: %1$s",
+  "dsurround.config.slider.value": "值: %1$s",
   "dsurround.config.logging": "诊断选项",
   "dsurround.config.logging.tooltip": "修改诊断行为的配置选项",
   "dsurround.config.logging.enableDebugLogging": "调试日志记录",

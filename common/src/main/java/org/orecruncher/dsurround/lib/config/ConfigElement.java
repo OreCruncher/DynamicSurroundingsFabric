@@ -4,6 +4,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.Localization;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
@@ -152,7 +153,8 @@ public abstract class ConfigElement<T> {
     }
 
     /**
-     * A single value. The default is the value in the prototype the specification was built from.
+     * A single value. The default is the value in the prototype the specification was built from, and can't be null:
+     * it is what a missing value is replaced with.
      */
     public static class PropertyValue<T> extends ConfigElement<T> {
 
@@ -162,6 +164,8 @@ public abstract class ConfigElement<T> {
             super(translationKey, field);
 
             this.defaultValue = this.get(instance);
+            if (this.defaultValue == null)
+                throw new IllegalStateException(String.format("Configuration property '%s' in %s must have a default value", field.getName(), field.getDeclaringClass().getName()));
         }
 
         public <V> Binder<V> createBinder(Object instance) {
@@ -211,11 +215,6 @@ public abstract class ConfigElement<T> {
         public boolean isAssetReloadRequired() {
             return this.hasAnnotation(ConfigurationData.AssetReloadRequired.class);
         }
-
-        public boolean useSlider() {
-            return this.hasAnnotation(ConfigurationData.Slider.class);
-        }
-
 
         /**
          * The value limited to the property's range, if it has one.
@@ -279,9 +278,19 @@ public abstract class ConfigElement<T> {
             return this.minValue != Integer.MIN_VALUE || this.maxValue != Integer.MAX_VALUE;
         }
 
+        /**
+         * Whether the property is edited with a slider. The {@link ConfigurationData.Slider} annotation holds its
+         * range, so the range is always bounded.
+         */
+        public boolean useSlider() {
+            return this.hasAnnotation(ConfigurationData.Slider.class);
+        }
+
         @Override
         public Component getRangeTooltip() {
-            return Component.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()).withStyle(STYLE_RANGE);
+            if (this.maxValue == Integer.MAX_VALUE)
+                return Component.translatable("dsurround.config.tooltip.minimum", this.minValue).withStyle(STYLE_RANGE);
+            return Component.translatable("dsurround.config.tooltip.range", this.minValue, this.maxValue).withStyle(STYLE_RANGE);
         }
 
         @Override
@@ -296,9 +305,13 @@ public abstract class ConfigElement<T> {
         // Not Double.MIN_VALUE: that is the smallest positive double, and would clamp negative values to about 0
         private double minValue = -Double.MAX_VALUE;
         private double maxValue = Double.MAX_VALUE;
+        private @Nullable DoubleSliderScale sliderScale;
 
         DoubleValue(Object instance, String translationKey, Field field) {
             super(instance, translationKey, field);
+
+            if (Double.isNaN(this.defaultValue()))
+                throw new IllegalStateException(String.format("Configuration property '%s' in %s can't have NaN as its default value", field.getName(), field.getDeclaringClass().getName()));
         }
 
         public void setRange(double min, double max) {
@@ -314,6 +327,25 @@ public abstract class ConfigElement<T> {
             return this.maxValue;
         }
 
+        void setSlider(double min, double max, DoubleSliderScale scale) {
+            this.setRange(min, max);
+            this.sliderScale = scale;
+        }
+
+        /**
+         * Whether the property is edited with a slider; see {@link ConfigurationData.DoubleSlider}.
+         */
+        public boolean useSlider() {
+            return this.sliderScale != null;
+        }
+
+        /**
+         * The slider's positions, or null if the property doesn't use a slider.
+         */
+        public @Nullable DoubleSliderScale getSliderScale() {
+            return this.sliderScale;
+        }
+
         @Override
         public boolean hasRange() {
             return this.minValue != -Double.MAX_VALUE || this.maxValue != Double.MAX_VALUE;
@@ -321,11 +353,20 @@ public abstract class ConfigElement<T> {
 
         @Override
         public Component getRangeTooltip() {
-            return Component.translatable("dsurround.config.tooltip.range", this.getMinValue(), this.getMaxValue()).withStyle(STYLE_RANGE);
+            var min = CommentedJson.formatNumber(this.minValue);
+            if (this.maxValue == Double.MAX_VALUE)
+                return Component.translatable("dsurround.config.tooltip.minimum", min).withStyle(STYLE_RANGE);
+            return Component.translatable("dsurround.config.tooltip.range", min, CommentedJson.formatNumber(this.maxValue)).withStyle(STYLE_RANGE);
         }
 
+        /**
+         * Also replaces NaN, which a hand-edited file can hold, with the default: clamping leaves it as NaN, and
+         * Gson won't write it.
+         */
         @Override
         protected Double clamp(Double val) {
+            if (Double.isNaN(val))
+                return this.defaultValue();
             return Mth.clamp(val, this.minValue, this.maxValue);
         }
 

@@ -95,12 +95,14 @@ public abstract class ConfigurationData {
         var specification = getSpecification(clazz);
 
         T config = null;
+        // False if the file couldn't be read or renamed out of the way; writing would then destroy it
+        boolean writeBack = true;
         if (Files.exists(path)) {
             try (BufferedReader reader = Files.newBufferedReader(path)) {
                 config = CommentedJson.read(reader, clazz);
             } catch (Exception e) {
                 Library.LOGGER.error(e, "Unable to read configuration file %s", path);
-                backupUnreadableFile(path);
+                writeBack = backupUnreadableFile(path);
             }
         }
 
@@ -112,10 +114,12 @@ public abstract class ConfigurationData {
         config.postLoad();
 
         // Write it back: properties may have been added, removed or corrected
-        try {
-            config.write();
-        } catch (IOException e) {
-            Library.LOGGER.error(e, "Unable to save configuration %s", path);
+        if (writeBack) {
+            try {
+                config.write();
+            } catch (IOException e) {
+                Library.LOGGER.error(e, "Unable to save configuration %s", path);
+            }
         }
         return config;
     }
@@ -123,15 +127,23 @@ public abstract class ConfigurationData {
     /**
      * Renames a file that couldn't be read, so writing the defaults doesn't destroy it. The name gets a ".bad"
      * suffix and a timestamp, e.g. "dsurround.json.20261002-142233.bad".
+     *
+     * @return true if it was renamed
      */
-    private static void backupUnreadableFile(Path path) {
-        var backup = path.resolveSibling(path.getFileName() + "." + LocalDateTime.now().format(BACKUP_SUFFIX) + ".bad");
+    private static boolean backupUnreadableFile(Path path) {
+        var backup = backupPath(path, LocalDateTime.now());
         try {
             Files.move(path, backup, StandardCopyOption.REPLACE_EXISTING);
             Library.LOGGER.warn("Configuration file %s could not be read; it has been renamed to %s and the defaults used", path, backup.getFileName());
+            return true;
         } catch (IOException e) {
-            Library.LOGGER.error(e, "Unable to rename unreadable configuration file %s", path);
+            Library.LOGGER.error(e, "Unable to rename unreadable configuration file %s; the defaults are used, but not saved over it", path);
+            return false;
         }
+    }
+
+    static Path backupPath(Path path, LocalDateTime time) {
+        return path.resolveSibling(path.getFileName() + "." + time.format(BACKUP_SUFFIX) + ".bad");
     }
 
     public Collection<ConfigElement<?>> getSpecification() {
@@ -285,12 +297,33 @@ public abstract class ConfigurationData {
     }
 
     /**
-     * Indicates the preference for a slider in GUI when modifying the integer property
+     * Value range of an integer property, edited with a slider in the GUI. A slider needs both limits, so neither
+     * has a default. This is the property's range, as {@link IntegerRange} would be, so a field can't have both.
      */
-    @Target({ElementType.FIELD, ElementType.TYPE})
+    @Target({ElementType.FIELD})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Slider {
+        int min();
 
+        int max();
+    }
+
+    /**
+     * Value range of a double property, edited with a slider in the GUI that moves in steps of {@code step}. As with
+     * {@link Slider}, this is the property's range, so a field can't also have {@link DoubleRange}.
+     * <p>
+     * The step must divide the range evenly, have at most six decimal places, and the default must be one of the
+     * positions. The slider shows as many decimal places as the step has (or the minimum, if it has more). Values
+     * in the file don't have to be on a step; the slider shows the nearest one.
+     */
+    @Target({ElementType.FIELD})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface DoubleSlider {
+        double min();
+
+        double max();
+
+        double step();
     }
 
     /**

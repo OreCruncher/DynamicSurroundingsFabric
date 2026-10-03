@@ -117,52 +117,78 @@ public class ClothAPIFactory extends AbstractConfigScreenFactory {
         var name = this.options.transformProperty(pv.getLanguageKey(), pv.getTextStyle());
         var tooltip = this.generateToolTip(pv);
 
-        if (pv instanceof ConfigElement.IntegerValue v) {
-            var binder = pv.<Integer>createBinder(instance);
-            if (pv.useSlider()) {
+        switch (pv) {
+            case ConfigElement.IntegerValue v -> {
+                var binder = pv.<Integer>createBinder(instance);
+                if (v.useSlider()) {
+                    fieldBuilder = builder
+                            .startIntSlider(name, binder.getValue(), v.getMinValue(), v.getMaxValue())
+                            .setTextGetter(i -> sliderText(Integer.toString(i)))
+                            .setTooltip(tooltip)
+                            .setDefaultValue(binder::defaultValue)
+                            .setSaveConsumer(binder::setValue);
+                } else {
+                    fieldBuilder = builder
+                            .startIntField(name, binder.getValue())
+                            .setTooltip(tooltip)
+                            .setDefaultValue(binder.defaultValue())
+                            .setMin(v.getMinValue())
+                            .setMax(v.getMaxValue())
+                            .setSaveConsumer(binder::setValue);
+                }
+            }
+            case ConfigElement.DoubleValue v -> {
+                var binder = pv.<Double>createBinder(instance);
+                var scale = v.getSliderScale();
+                if (scale != null) {
+                    // Cloth has no double slider, so this is an integer slider over the positions. Cloth calls the
+                    // save consumer for every entry, edited or not, and a value between positions (from a hand-edited
+                    // file) shows at the nearest one: only write it if the slider was moved off that position, so
+                    // saving doesn't change values nobody touched.
+                    fieldBuilder = builder
+                            .startIntSlider(name, scale.indexOf(binder.getValue()), 0, scale.lastIndex())
+                            .setTextGetter(i -> sliderText(scale.format(i)))
+                            .setTooltip(tooltip)
+                            .setDefaultValue(() -> scale.indexOf(binder.defaultValue()))
+                            .setSaveConsumer(i -> {
+                                if (i != scale.indexOf(binder.getValue()))
+                                    binder.setValue(scale.valueAt(i));
+                            });
+                } else {
+                    fieldBuilder = builder
+                            .startDoubleField(name, binder.getValue())
+                            .setTooltip(tooltip)
+                            .setDefaultValue(binder.defaultValue())
+                            .setMin(v.getMinValue())
+                            .setMax(v.getMaxValue())
+                            .setSaveConsumer(binder::setValue);
+                }
+            }
+            case ConfigElement.StringValue stringValue -> {
+                var binder = pv.<String>createBinder(instance);
                 fieldBuilder = builder
-                        .startIntSlider(name, binder.getValue(), v.getMinValue(), v.getMaxValue())
-                        .setTooltip(tooltip)
-                        .setDefaultValue(binder::defaultValue)
-                        .setSaveConsumer(binder::setValue);
-            } else {
-                fieldBuilder = builder
-                        .startIntField(name, binder.getValue())
+                        .startStrField(name, binder.getValue())
                         .setTooltip(tooltip)
                         .setDefaultValue(binder.defaultValue())
-                        .setMin(v.getMinValue())
-                        .setMax(v.getMaxValue())
                         .setSaveConsumer(binder::setValue);
             }
-        } else if (pv instanceof ConfigElement.DoubleValue v) {
-            var binder = pv.<Double>createBinder(instance);
-            fieldBuilder = builder
-                    .startDoubleField(name, binder.getValue())
-                    .setTooltip(tooltip)
-                    .setDefaultValue(binder.defaultValue())
-                    .setMin(v.getMinValue())
-                    .setMax(v.getMaxValue())
-                    .setSaveConsumer(binder::setValue);
-        } else if (pv instanceof ConfigElement.StringValue) {
-            var binder = pv.<String>createBinder(instance);
-            fieldBuilder = builder
-                    .startStrField(name, binder.getValue())
-                    .setTooltip(tooltip)
-                    .setDefaultValue(binder.defaultValue())
-                    .setSaveConsumer(binder::setValue);
-        } else if (pv instanceof ConfigElement.BooleanValue) {
-            var binder = pv.<Boolean>createBinder(instance);
-            fieldBuilder = builder
-                    .startBooleanToggle(name, binder.getValue())
-                    .setTooltip(tooltip)
-                    .setDefaultValue(binder.defaultValue())
-                    .setSaveConsumer(binder::setValue);
-        } else if (pv instanceof ConfigElement.EnumValue v) {
-            var binder = pv.<Enum<?>>createBinder(instance);
-            fieldBuilder = builder.startEnumSelector(name, (Class<Enum<?>>) v.getEnumClass(), binder.getValue())
-                    .setTooltip(tooltip)
-                    .setDefaultValue(binder.defaultValue())
-                    .setSaveConsumer(binder::setValue);
+            case ConfigElement.BooleanValue booleanValue -> {
+                var binder = pv.<Boolean>createBinder(instance);
+                fieldBuilder = builder
+                        .startBooleanToggle(name, binder.getValue())
+                        .setTooltip(tooltip)
+                        .setDefaultValue(binder.defaultValue())
+                        .setSaveConsumer(binder::setValue);
+            }
+            case ConfigElement.EnumValue v -> {
+                var binder = pv.<Enum<?>>createBinder(instance);
+                fieldBuilder = builder.startEnumSelector(name, (Class<Enum<?>>) v.getEnumClass(), binder.getValue())
+                        .setTooltip(tooltip)
+                        .setDefaultValue(binder.defaultValue())
+                        .setSaveConsumer(binder::setValue);
+            }
+            default -> {
+            }
         }
 
         // Cloth's restart prompt asks to exit Minecraft, so only use it when that is what's needed. A world
@@ -172,6 +198,13 @@ public class ClothAPIFactory extends AbstractConfigScreenFactory {
         }
 
         return fieldBuilder;
+    }
+
+    /**
+     * A slider's label. Cloth's own is "Value: %d", in English whatever the language.
+     */
+    private static Component sliderText(String value) {
+        return Component.translatable("dsurround.config.slider.value", value);
     }
 
     private Component[] generateToolTip(ConfigElement.PropertyValue<?> pv) {

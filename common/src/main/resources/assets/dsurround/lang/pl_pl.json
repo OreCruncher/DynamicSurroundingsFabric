@@ -63,6 +63,8 @@
   "dsurround.config.tooltip.assetReloadRequired": "Wymagany restart ZASOBÓW",
   "dsurround.config.tooltip.defaultValue": "Domyślna wartość: %1$s",
   "dsurround.config.tooltip.range": "Zasięg: %1$s do %2$s",
+  "dsurround.config.tooltip.minimum": "Minimum: %1$s",
+  "dsurround.config.slider.value": "Wartość: %1$s",
   "dsurround.config.logging": "Opcje diagnostyczne",
   "dsurround.config.logging.tooltip": "Opcje konfiguracji dla modyfikowania działań diagnostycznych",
   "dsurround.config.logging.enableDebugLogging": "Dziennik debugowania",

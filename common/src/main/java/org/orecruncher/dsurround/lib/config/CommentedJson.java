@@ -12,8 +12,10 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.config.ConfigurationData.Comment;
+import org.orecruncher.dsurround.lib.config.ConfigurationData.DoubleSlider;
 import org.orecruncher.dsurround.lib.config.ConfigurationData.DoubleRange;
 import org.orecruncher.dsurround.lib.config.ConfigurationData.IntegerRange;
+import org.orecruncher.dsurround.lib.config.ConfigurationData.Slider;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -27,8 +29,8 @@ import java.util.List;
  * has comments in it, so {@link #read} must accept them.
  * <p>
  * Writing lays the JSON out as Gson's pretty printing does, with {@code //} comments above each field: its
- * {@link Comment}, then its range ({@link IntegerRange}, {@link DoubleRange}), the values an enum can take, and the
- * default value. Gson builds the JSON, so it is the same as Gson would write; only the comments are added.
+ * {@link Comment}, then its range ({@link IntegerRange}, {@link Slider}, {@link DoubleRange}, {@link DoubleSlider}),
+ * the values an enum can take, and the default value. Gson builds the JSON, so it is the same as Gson would write; only the comments are added.
  * <p>
  * A field without a comment of its own uses its type's only if the type's comment is marked
  * {@link Comment#inherit()}. Defaults come from a newly constructed instance of the object, so they are only shown
@@ -214,7 +216,8 @@ final class CommentedJson {
     }
 
     /**
-     * The field's range, as "range: 0 - 10", or "minimum: 0" when it has no upper limit. Null if it has no range.
+     * The field's range, as "range: 0 - 10", or "minimum: 0" when it has no upper limit, and a double slider's step,
+     * as "range: 0 - 1, step: 0.1". Null if it has no range.
      */
     static @Nullable String rangeOf(Field field) {
         var intRange = field.getAnnotation(IntegerRange.class);
@@ -222,6 +225,16 @@ final class CommentedJson {
             return intRange.max() == Integer.MAX_VALUE
                     ? "minimum: " + intRange.min()
                     : "range: " + intRange.min() + " - " + intRange.max();
+
+        // A slider's range always has both limits
+        var slider = field.getAnnotation(Slider.class);
+        if (slider != null)
+            return "range: " + slider.min() + " - " + slider.max();
+
+        var doubleSlider = field.getAnnotation(DoubleSlider.class);
+        if (doubleSlider != null)
+            return "range: " + formatNumber(doubleSlider.min()) + " - " + formatNumber(doubleSlider.max())
+                    + ", step: " + formatNumber(doubleSlider.step());
 
         var doubleRange = field.getAnnotation(DoubleRange.class);
         if (doubleRange != null)
@@ -235,7 +248,7 @@ final class CommentedJson {
     /**
      * A range limit as a person would write it: whole numbers without ".0".
      */
-    private static String formatNumber(double value) {
+    static String formatNumber(double value) {
         if (value == Math.rint(value) && Math.abs(value) < 1e15)
             return Long.toString((long) value);
         return Double.toString(value);
