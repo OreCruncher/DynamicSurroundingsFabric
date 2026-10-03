@@ -6,12 +6,6 @@ accessible class net/minecraft/client/gui/components/OptionsList$Entry
 # Get temperature at a specific block location within a biome
 accessible method net/minecraft/world/level/biome/Biome	getTemperature	(Lnet/minecraft/core/BlockPos;)F
 
-# To access client side chunk information
-accessible field net/minecraft/client/multiplayer/ClientLevel chunkSource Lnet/minecraft/client/multiplayer/ClientChunkCache;
-accessible class net/minecraft/client/multiplayer/ClientChunkCache$Storage
-accessible field net/minecraft/client/multiplayer/ClientChunkCache storage Lnet/minecraft/client/multiplayer/ClientChunkCache$Storage;
-accessible field net/minecraft/client/multiplayer/ClientChunkCache$Storage chunks Ljava/util/concurrent/atomic/AtomicReferenceArray;
-
 # Get at fog data
 accessible class net/minecraft/client/renderer/FogRenderer$FogData
 

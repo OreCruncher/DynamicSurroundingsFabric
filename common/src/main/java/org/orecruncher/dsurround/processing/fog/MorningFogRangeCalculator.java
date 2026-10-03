@@ -64,10 +64,7 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
                 final float newEnd = data.end - shift;
                 final float newStart = Mth.clamp(data.start - shift * 2, this.type.getReserve() + 1, newEnd);
 
-                var result = new FogRenderer.FogData(data.mode);
-                result.start = newStart;
-                result.end = newEnd;
-                return result;
+                return withRange(data, newStart, newEnd);
             }
         }
         return data;

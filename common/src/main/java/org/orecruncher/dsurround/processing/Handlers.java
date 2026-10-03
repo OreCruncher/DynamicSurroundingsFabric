@@ -20,6 +20,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.processing.accents.FootstepAccents;
+import org.orecruncher.dsurround.processing.fog.HolisticFogRangeCalculator;
 import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
 import org.orecruncher.dsurround.processing.scanner.VillageScanner;
@@ -125,11 +126,12 @@ public class Handlers {
 
         this.handlerTimer.begin();
         final long tick = this.tickCount.getTickCount();
+        final Player player = getPlayer();
 
         for (final AbstractClientHandler handler : this.effectHandlers) {
             final long mark = System.nanoTime();
             if (handler.doTick(tick))
-                handler.process(getPlayer());
+                handler.process(player);
             handler.updateTimer(System.nanoTime() - mark);
         }
         this.handlerTimer.end();
@@ -174,6 +176,7 @@ public class Handlers {
             .registerSingleton(AreaBlockEffects.class)
             .registerSingleton(FootstepAccents.class)
             .registerSingleton(StepAccentGenerator.class)
+            .registerSingleton(HolisticFogRangeCalculator.class)
             .registerSingleton(FogHandler.class)
             .registerSingleton(Handlers.class);
     }

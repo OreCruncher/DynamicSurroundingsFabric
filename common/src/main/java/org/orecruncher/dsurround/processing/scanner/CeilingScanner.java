@@ -12,7 +12,6 @@ import org.orecruncher.dsurround.config.DimensionInfo;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.compat.BlockCompat;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
 
@@ -21,8 +20,6 @@ import java.util.Collections;
 import java.util.List;
 
 public final class CeilingScanner extends AbstractScanner {
-
-    private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
     private static final int SURVEY_INTERVAL = 4;
     private static final int INSIDE_SURVEY_RANGE = 3;
@@ -56,11 +53,13 @@ public final class CeilingScanner extends AbstractScanner {
     }
 
     private final IDimensionLibrary dimensionLibrary;
+    private final ITagLibrary tagLibrary;
     private boolean reallyInside = false;
     private float coverageRatio = 0;
 
-    public CeilingScanner(IDimensionLibrary dimensionLibrary) {
+    public CeilingScanner(IDimensionLibrary dimensionLibrary, ITagLibrary tagLibrary) {
         this.dimensionLibrary = dimensionLibrary;
+        this.tagLibrary = tagLibrary;
     }
 
     public void tick(long tickCount) {
@@ -70,15 +69,20 @@ public final class CeilingScanner extends AbstractScanner {
         var world = GameUtils.getWorld().orElseThrow();
         final DimensionInfo dimInfo = this.dimensionLibrary.getData(world);
         if (dimInfo.alwaysOutside()) {
-            this.reallyInside = false;
+            // Nothing overhead counts as a ceiling here
+            this.setCoverage(0F);
         } else {
             var player = GameUtils.getPlayer().orElseThrow();
             final BlockPos pos = player.blockPosition();
             float score = 0.0F;
-            for (Cell cell : cells) score += cell.score(pos);
-            this.coverageRatio = 1.0F - (score / TOTAL_POINTS);
-            this.reallyInside = this.coverageRatio > INSIDE_THRESHOLD;
+            for (Cell cell : cells) score += cell.score(world, pos, this);
+            this.setCoverage(1.0F - (score / TOTAL_POINTS));
         }
+    }
+
+    void setCoverage(float coverageRatio) {
+        this.coverageRatio = coverageRatio;
+        this.reallyInside = coverageRatio > INSIDE_THRESHOLD;
     }
 
     public boolean isReallyInside() {
@@ -108,14 +112,13 @@ public final class CeilingScanner extends AbstractScanner {
             return this.points;
         }
 
-        public float score(final BlockPos playerPos) {
+        public float score(final Level world, final BlockPos playerPos, final CeilingScanner scanner) {
             this.working.set(
                     playerPos.getX() + this.offset.getX(),
                     playerPos.getY() + this.offset.getY(),
                     playerPos.getZ() + this.offset.getZ()
             );
 
-            final Level world = GameUtils.getWorld().orElseThrow();
             final int playerHeight = Math.max(playerPos.getY() + 1, 0);
 
             // Get the precipitation height
@@ -126,7 +129,7 @@ public final class CeilingScanner extends AbstractScanner {
 
                 final BlockState state = world.getBlockState(this.working);
 
-                if (actsAsCeiling(world, this.working, state)) {
+                if (scanner.actsAsCeiling(world, this.working, state)) {
                     // Cover block - no points for you!
                     return 0;
                 }
@@ -148,18 +151,18 @@ public final class CeilingScanner extends AbstractScanner {
         public String toString() {
             return this.offset.toString() + " points: " + this.points;
         }
+    }
 
-        private boolean actsAsCeiling(final Level world, final BlockPos pos, final BlockState state) {
-            // Only blocks solid enough to be a roof count; small ones like lanterns and chains don't.
-            if (!BlockCompat.isCeilingSolid(world, pos, state))
+    private boolean actsAsCeiling(final Level world, final BlockPos pos, final BlockState state) {
+        // Only blocks solid enough to be a roof count; small ones like lanterns and chains don't.
+        if (!BlockCompat.isCeilingSolid(world, pos, state))
+            return false;
+
+        // Test the block tags in our NON_CEILING set to see if any match
+        for (final TagKey<Block> tag : NON_CEILING) {
+            if (this.tagLibrary.is(tag, state))
                 return false;
-
-            // Test the block tags in our NON_CEILING set to see if any match
-            for (final TagKey<Block> tag : NON_CEILING) {
-                if (TAG_LIBRARY.is(tag, state))
-                    return false;
-            }
-            return true;
         }
+        return true;
     }
 }

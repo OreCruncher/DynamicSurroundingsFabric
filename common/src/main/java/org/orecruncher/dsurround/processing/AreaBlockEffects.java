@@ -14,6 +14,7 @@ import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IBlockUpdates;
 import org.orecruncher.dsurround.eventing.IChunkLoad;
 import org.orecruncher.dsurround.eventing.IReloadEvent;
+import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
@@ -41,8 +42,9 @@ public class AreaBlockEffects extends AbstractClientHandler {
         IBlockUpdates.EVENT.register(this::blockUpdates);
         IChunkLoad.EVENT.register(this::chunkLoaded);
 
-        // Whenever things reload need to rescan the area
-        IReloadEvent.EVENT.register(this::clear);
+        // Whenever things reload need to rescan the area. Runs after the libraries, which reload at HIGH and
+        // VERY_HIGH, so the rescan sees the new data.
+        IReloadEvent.EVENT.register(this::clear, HandlerPriority.LOW);
     }
 
     @Override

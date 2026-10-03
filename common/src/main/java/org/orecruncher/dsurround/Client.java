@@ -35,7 +35,6 @@ import org.orecruncher.dsurround.lib.version.IVersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionResult;
 import org.orecruncher.dsurround.processing.Handlers;
-import org.orecruncher.dsurround.processing.fog.HolisticFogRangeCalculator;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.AudioPlayerDebug;
@@ -198,9 +197,6 @@ public final class Client {
             IReloadEvent.EVENT.invoker().onReload(resourceUtilities, IReloadEvent.Scope.TAGS);
         }, HandlerPriority.VERY_HIGH);
 
-        // Add our fog handler
-        container.registerSingleton(HolisticFogRangeCalculator.class);
-
         // Registration is complete. Report circular or missing dependencies now, with the full list, rather than
         // one at a time as each is first used.
         var problems = container.validate(Handlers.class);
@@ -210,8 +206,6 @@ public final class Client {
             for (var problem : problems)
                 Library.LOGGER.warn("Dependency registration: %s", problem);
         }
-
-        ContainerManager.resolve(HolisticFogRangeCalculator.class);
 
         // Force instantiation of the core Handler. This should cause the rest
         // of the dependencies to be initialized.

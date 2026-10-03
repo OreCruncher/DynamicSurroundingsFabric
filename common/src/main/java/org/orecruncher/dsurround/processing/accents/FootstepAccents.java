@@ -8,24 +8,22 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
+import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
 public class FootstepAccents {
 
-    static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
-
     private final ObjectArray<IFootstepAccentProvider> providers = new ObjectArray<>();
 
-    public FootstepAccents(Configuration config, IItemLibrary itemLibrary) {
+    public FootstepAccents(Configuration config, IItemLibrary itemLibrary, ISoundLibrary soundLibrary, ITagLibrary tagLibrary) {
         this.providers.add(new ArmorAccents(config, itemLibrary));
-        this.providers.add(new FloorSqueakAccent(config));
+        this.providers.add(new FloorSqueakAccent(config, soundLibrary, tagLibrary));
 
         // Only register these providers if Presence Footsteps is not installed
         if (!Platform.isModLoaded(Constants.MOD_PRESENCE_FOOTSTEPS)) {
-            this.providers.add(new WaterySurfaceAccent(config));
+            this.providers.add(new WaterySurfaceAccent(config, soundLibrary, tagLibrary));
         }
     }
 

@@ -1,11 +1,11 @@
 package org.orecruncher.dsurround.processing;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IFogRender;
+import org.orecruncher.dsurround.lib.compat.FogCompat;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.processing.fog.HolisticFogRangeCalculator;
 
@@ -14,10 +14,10 @@ public class FogHandler extends AbstractClientHandler {
     private final HolisticFogRangeCalculator fogCalculator;
     private FogRenderer.FogData lastData;
 
-    public FogHandler(Configuration config, IModLog logger) {
+    public FogHandler(HolisticFogRangeCalculator fogCalculator, Configuration config, IModLog logger) {
         super("Fog Handler", config, logger);
 
-        this.fogCalculator = new HolisticFogRangeCalculator(logger, config.fogOptions);
+        this.fogCalculator = fogCalculator;
         this.lastData = new FogRenderer.FogData(FogRenderer.FogMode.FOG_TERRAIN);
         this.lastData.start = this.lastData.end = 192F;
 
@@ -38,9 +38,7 @@ public class FogHandler extends AbstractClientHandler {
     private void renderFog(FogRenderer.FogData data, float renderDistance, float partialTick) {
         if (this.fogCalculator.enabled()) {
             this.lastData = this.fogCalculator.render(data, renderDistance, partialTick);
-            RenderSystem.setShaderFogStart(this.lastData.start);
-            RenderSystem.setShaderFogEnd(this.lastData.end);
-            RenderSystem.setShaderFogShape(this.lastData.shape);
+            FogCompat.applyShaderFog(this.lastData);
         } else {
             // Preserve for diagnostic trace even though action was not taken
             this.lastData = data;

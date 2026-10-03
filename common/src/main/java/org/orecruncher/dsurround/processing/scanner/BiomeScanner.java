@@ -12,6 +12,9 @@ import org.orecruncher.dsurround.config.SyntheticBiome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
 
+import java.util.Objects;
+import java.util.function.Function;
+
 public final class BiomeScanner extends AbstractScanner {
 
     public static final int SCAN_INTERVAL = 4;
@@ -20,7 +23,10 @@ public final class BiomeScanner extends AbstractScanner {
     private static final int SURVEY_HORIZONTAL_OFFSET = SURVEY_HORIZONTAL_DIMENSION / 2 - 1;
     private static final int SURVEY_VERTICAL_DIMENSION = 16;
     private static final int SURVEY_VERTICAL_OFFSET = SURVEY_VERTICAL_DIMENSION / 4 - 1;
-    private static final int MAX_SURVEY_VOLUME = SURVEY_HORIZONTAL_DIMENSION * SURVEY_HORIZONTAL_DIMENSION * SURVEY_VERTICAL_DIMENSION;
+    static final int MAX_SURVEY_VOLUME = SURVEY_HORIZONTAL_DIMENSION * SURVEY_HORIZONTAL_DIMENSION * SURVEY_VERTICAL_DIMENSION;
+    // Sample every other block on each axis: 648 lookups rather than 5,184. Biomes change on a 4 block grid, with
+    // some blending at the edges, so the shares come out nearly the same.
+    static final int SURVEY_STRIDE = 2;
 
     private ResourceLocation surveyedDimension;
     private boolean isUnderWater;
@@ -29,7 +35,7 @@ public final class BiomeScanner extends AbstractScanner {
     private final BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
 
     private int biomeArea;
-    private Reference2IntOpenHashMap<BiomeInfo> weights = new Reference2IntOpenHashMap<>(8);
+    private final Reference2IntOpenHashMap<BiomeInfo> weights = new Reference2IntOpenHashMap<>(8);
     private Biome surveyedBiome = null;
     private BlockPos surveyedPosition = BlockPos.ZERO;
     private final IBiomeLibrary biomeLibrary;
@@ -66,15 +72,16 @@ public final class BiomeScanner extends AbstractScanner {
         var biomes = world.getBiomeManager();
         var playerBiome = biomes.getBiome(position);
 
+        var dimension = this.dimensionInformation.name();
         if (this.surveyedBiome != playerBiome.value()
-                || !this.surveyedDimension.equals(this.dimensionInformation.name())
+                || !Objects.equals(this.surveyedDimension, dimension)
                 || !this.surveyedPosition.equals(position)) {
 
             this.surveyedBiome = playerBiome.value();
             this.surveyedPosition = position;
-            this.surveyedDimension = this.dimensionInformation.name();
+            this.surveyedDimension = dimension;
 
-            this.weights = new Reference2IntOpenHashMap<>(8);
+            this.weights.clear();
 
             // If the player is underwater, underwater effects will rule over everything else
             this.isUnderWater = player.isEyeInFluid(FluidTags.WATER);
@@ -97,23 +104,32 @@ public final class BiomeScanner extends AbstractScanner {
             }
 
             this.logicalBiomeInfo = this.resolveBiome(biomes, position);
+            this.biomeArea = survey(position, SURVEY_STRIDE, this.mutable, this.weights, pos -> this.resolveBiome(biomes, pos));
+        }
+    }
 
-            for (int z = 0; z < SURVEY_HORIZONTAL_DIMENSION; z++) {
-                var dZ = z - SURVEY_HORIZONTAL_OFFSET + this.surveyedPosition.getZ();
-                this.mutable.setZ(dZ);
-                for (int x = 0; x < SURVEY_HORIZONTAL_DIMENSION; x++) {
-                    var dX = x - SURVEY_HORIZONTAL_OFFSET + this.surveyedPosition.getX();
-                    this.mutable.setX(dX);
-                    for (int y = 0; y < SURVEY_VERTICAL_DIMENSION; y++) {
-                        var dY = y - SURVEY_VERTICAL_OFFSET + this.surveyedPosition.getY();
-                        this.mutable.setY(dY);
-                        var info = this.resolveBiome(biomes, this.mutable);
-                        this.weights.addTo(info, 1);
-                    }
+    /**
+     * Counts what {@code lookup} reports across the survey volume around {@code center}, into {@code weights}.
+     * Every {@code stride}th block along each axis is sampled, and each sample counts for the
+     * {@code stride}<sup>3</sup> blocks it stands for, so the total is the same whatever the stride.
+     *
+     * @return the total weight added
+     */
+    static <T> int survey(BlockPos center, int stride, BlockPos.MutableBlockPos mutable, Reference2IntOpenHashMap<T> weights, Function<BlockPos, T> lookup) {
+        final int weight = stride * stride * stride;
+        int total = 0;
+        for (int z = 0; z < SURVEY_HORIZONTAL_DIMENSION; z += stride) {
+            mutable.setZ(z - SURVEY_HORIZONTAL_OFFSET + center.getZ());
+            for (int x = 0; x < SURVEY_HORIZONTAL_DIMENSION; x += stride) {
+                mutable.setX(x - SURVEY_HORIZONTAL_OFFSET + center.getX());
+                for (int y = 0; y < SURVEY_VERTICAL_DIMENSION; y += stride) {
+                    mutable.setY(y - SURVEY_VERTICAL_OFFSET + center.getY());
+                    weights.addTo(lookup.apply(mutable), weight);
+                    total += weight;
                 }
             }
-            this.biomeArea = MAX_SURVEY_VOLUME;
         }
+        return total;
     }
 
     private BiomeInfo resolveBiome(BiomeManager access, BlockPos pos) {
