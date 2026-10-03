@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
+import org.orecruncher.dsurround.runtime.PlatformFunctions;
 import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.minecraft.core.Registry;
@@ -61,10 +62,10 @@ public final class BiomeLibrary implements IBiomeLibrary {
     // Current version of the configs that are loaded.
     private int version = 0;
 
-    public BiomeLibrary(IModLog logger) {
+    public BiomeLibrary(IModLog logger, PlatformFunctions platformFunctions) {
         this.logger = ModLog.createChild(logger, "BiomeLibrary");
         this.ruleFailures = LogThrottle.oncePerKey(this.logger, "biome rule failures", "the next reload");
-        this.biomeConditionEvaluator = new BiomeConditionEvaluator(this, this.logger);
+        this.biomeConditionEvaluator = new BiomeConditionEvaluator(this, this.logger, platformFunctions);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.effects.entity;
 
+import org.orecruncher.dsurround.lib.math.Motion;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
@@ -76,15 +77,12 @@ public class StepThroughBrushEffect extends EntityEffectBase {
         return isMoving(entity.getX() - entity.xo, entity.getZ() - entity.zo, entity.jumping);
     }
 
-    // Below this (squared, per tick) the entity is standing still; it filters out interpolation jitter
-    private static final double MOVING_THRESHOLD_SQ = 0.001D * 0.001D;
-
     /**
      * Whether the entity moved this tick. Uses how far it actually moved rather than movement input: input is only
      * known for the local player, so other players would never make a sound.
      */
     static boolean isMoving(double dx, double dz, boolean jumping) {
-        return jumping || dx * dx + dz * dz > MOVING_THRESHOLD_SQ;
+        return jumping || Motion.isMovingHorizontally(dx, dz);
     }
 
     private void playSoundEffect(BlockPos pos, ResourceLocation factory, float volumeScale) {

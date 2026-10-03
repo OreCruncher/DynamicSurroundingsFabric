@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.runtime;
 import net.minecraft.client.Minecraft;
 import org.orecruncher.dsurround.eventing.IClientTickStart;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
@@ -12,29 +11,41 @@ import org.orecruncher.dsurround.runtime.variables.*;
 
 public final class ConditionEvaluator implements IConditionEvaluator {
 
-    private final IModLog logger;
     private final ExecutionContext context;
+    private boolean wasInGame;
 
-    public ConditionEvaluator(IModLog logger) {
-        this.logger = logger;
+    public ConditionEvaluator(IModLog logger, PlatformFunctions platformFunctions,
+                              BiomeVariables biomeVariables, DimensionVariables dimensionVariables,
+                              DiurnalVariables diurnalVariables, PlayerVariables playerVariables,
+                              WeatherVariables weatherVariables, EnvironmentState environmentState,
+                              GlobalVariables globalVariables, SeasonVariables seasonVariables) {
         this.context = new ExecutionContext("Conditions", logger);
-        this.context.configureScripting(ContainerManager.resolve(PlatformFunctions.class));
-        this.context.add(ContainerManager.resolve(BiomeVariables.class));
-        this.context.add(ContainerManager.resolve(DimensionVariables.class));
-        this.context.add(ContainerManager.resolve(DiurnalVariables.class));
-        this.context.add(ContainerManager.resolve(PlayerVariables.class));
-        this.context.add(ContainerManager.resolve(WeatherVariables.class));
-        this.context.add(ContainerManager.resolve(EnvironmentState.class));
-        this.context.add(ContainerManager.resolve(GlobalVariables.class));
-        this.context.add(ContainerManager.resolve(SeasonVariables.class));
+        this.context.configureScripting(platformFunctions);
+        this.context.add(biomeVariables);
+        this.context.add(dimensionVariables);
+        this.context.add(diurnalVariables);
+        this.context.add(playerVariables);
+        this.context.add(weatherVariables);
+        this.context.add(environmentState);
+        this.context.add(globalVariables);
+        this.context.add(seasonVariables);
 
         IClientTickStart.EVENT.register(this::tick, HandlerPriority.VERY_HIGH);
     }
 
     public void tick(Minecraft client) {
-        // Only want to tick while in game and the GUI is not paused.
-        if (GameUtils.isInGame() && !client.isPaused())
+        var inGame = GameUtils.isInGame();
+        if (shouldTick(inGame, client.isPaused(), this.wasInGame))
             this.context.tick();
+        this.wasInGame = inGame;
+    }
+
+    /**
+     * Whether to update the variables this tick: while in game and not paused, and once more on the first tick
+     * after leaving the game, so the variables drop the last world's values for their out-of-game defaults.
+     */
+    static boolean shouldTick(boolean inGame, boolean paused, boolean wasInGame) {
+        return inGame ? !paused : wasInGame;
     }
 
     public boolean check(final Script conditions) {

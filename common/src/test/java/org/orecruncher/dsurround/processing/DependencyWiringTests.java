@@ -7,7 +7,12 @@ import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.entity.BowUseEffect;
 import org.orecruncher.dsurround.effects.entity.BreathEffect;
 import org.orecruncher.dsurround.effects.entity.StepThroughBrushEffect;
+import org.orecruncher.dsurround.config.libraries.impl.BiomeLibrary;
 import org.orecruncher.dsurround.lib.di.internal.DependencyContainer;
+import org.orecruncher.dsurround.lib.system.ISystemClock;
+import org.orecruncher.dsurround.runtime.ConditionEvaluator;
+import org.orecruncher.dsurround.runtime.PlatformFunctions;
+import org.orecruncher.dsurround.runtime.variables.BiomeVariables;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.processing.accents.FootstepAccents;
 import org.orecruncher.dsurround.processing.fog.HolisticFogRangeCalculator;
@@ -58,6 +63,20 @@ public class DependencyWiringTests {
         assertNeeds(problemsFor(BowUseEffect.class), BowUseEffect.class, ITagLibrary.class);
         assertNeeds(problemsFor(BreathEffect.class), BreathEffect.class, ISeasonalInformation.class);
         assertNeeds(problemsFor(StepThroughBrushEffect.class), StepThroughBrushEffect.class, ISoundLibrary.class);
+    }
+
+    @Test
+    void conditionEvaluatorsNeedTheirVariables() {
+        // The condition evaluator looked its variable sets up itself, so validation saw none of what they need
+        var problems = problemsFor(ConditionEvaluator.class);
+        assertNeeds(problems, PlatformFunctions.class, ISystemClock.class);
+        assertNeeds(problems, BiomeVariables.class, IBiomeLibrary.class);
+        // Each missing type is reported once, by whichever variable set reaches it first
+        var seasons = "needs '" + ISeasonalInformation.class.getName() + "'";
+        assertTrue(problems.stream().anyMatch(p -> p.contains(seasons)), () -> "expected " + seasons + " in " + problems);
+
+        // The biome library builds its own evaluator; the platform functions now come through its constructor
+        assertNeeds(problemsFor(BiomeLibrary.class), PlatformFunctions.class, ISystemClock.class);
     }
 
     @Test

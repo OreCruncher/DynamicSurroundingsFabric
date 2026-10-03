@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.runtime;
 
+import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
@@ -11,20 +11,22 @@ import org.orecruncher.dsurround.runtime.variables.BiomeVariables;
 
 public final class BiomeConditionEvaluator {
 
-    private final IModLog logger;
     private final BiomeVariables biomeVariables;
     private final ExecutionContext context;
+    // Every rule is checked against every biome, so a biome that can't be set up is reported once per reload
+    private final LogThrottle<Biome> failures;
 
-    public BiomeConditionEvaluator(IBiomeLibrary biomeLibrary, IModLog logger) {
-        this.logger = logger;
+    public BiomeConditionEvaluator(IBiomeLibrary biomeLibrary, IModLog logger, PlatformFunctions platformFunctions) {
         this.context = new ExecutionContext("BiomeConditions", logger);
-        this.biomeVariables = new BiomeVariables(biomeLibrary);
+        this.biomeVariables = BiomeVariables.forBiomeRules(biomeLibrary);
         this.context.add(this.biomeVariables);
-        this.context.configureScripting(ContainerManager.resolve(PlatformFunctions.class));
+        this.context.configureScripting(platformFunctions);
+        this.failures = LogThrottle.oncePerKey(logger, "biome script setup failures", "the next reload");
     }
 
     public void reset() {
         this.biomeVariables.setBiome(null, null);
+        this.failures.reset();
     }
 
     public boolean check(Biome biome, BiomeInfo info, final Script conditions) {
@@ -53,8 +55,10 @@ public final class BiomeConditionEvaluator {
             else
                 this.biomeVariables.setBiome(biome, info);
             return true;
+        } catch (VirtualMachineError fatal) {
+            throw fatal;
         } catch (Throwable t) {
-            this.logger.error(t, "Unable to evaluate script");
+            this.failures.error(biome, t, "Unable to evaluate scripts for biome %s", biome);
             return false;
         }
     }

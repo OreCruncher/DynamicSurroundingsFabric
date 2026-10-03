@@ -40,7 +40,7 @@ This is what I am currently using it for:
 
 Impacts:
 
-* Added 975+ unit tests to validate internal logic
+* Added 1100+ unit tests to validate internal logic
 * Improved script engine error reporting, and performance by roughly 40%
 * Identified and fixed performance issues in the area scanner resulting in a 50% increase in performance
 * Identified and fixed cases where caches weren't flushed or data was holding a reference to an object that could go out of scope (like Entities)

@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.runtime;
 
+import java.time.ZoneId;
 import dev.architectury.platform.Platform;
 import org.orecruncher.dsurround.lib.scripting.ArgType;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
@@ -8,7 +9,6 @@ import org.orecruncher.dsurround.lib.system.ISystemClock;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
 /**
@@ -17,9 +17,18 @@ import java.time.temporal.ChronoUnit;
 public final class PlatformFunctions implements IConfigureScripting {
 
     private final ISystemClock systemClock;
+    private final ZoneId zone;
 
     public PlatformFunctions(ISystemClock systemClock) {
+        this(systemClock, ZoneId.systemDefault());
+    }
+
+    /**
+     * @param zone the time zone "today" is in; the player's own, so holidays start at their midnight
+     */
+    PlatformFunctions(ISystemClock systemClock, ZoneId zone) {
         this.systemClock = systemClock;
+        this.zone = zone;
     }
 
     @Override
@@ -37,8 +46,8 @@ public final class PlatformFunctions implements IConfigureScripting {
                 .handler(args -> this.isCurrentDateInRangeOf(args.integer(0), args.integer(1), args.integer(2)));
     }
 
-    private boolean isCurrentDateInRangeOf(final int month, final int day, final int dayRange) {
-        var today = LocalDate.ofInstant(this.systemClock.getUtcNow(), ZoneOffset.UTC);
+    boolean isCurrentDateInRangeOf(final int month, final int day, final int dayRange) {
+        var today = LocalDate.ofInstant(this.systemClock.getUtcNow(), this.zone);
         return isDateInRange(today, month, day, dayRange);
     }
 

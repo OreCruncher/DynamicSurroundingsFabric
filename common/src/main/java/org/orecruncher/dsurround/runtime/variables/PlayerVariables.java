@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.runtime.variables;
 
+import org.orecruncher.dsurround.lib.math.Motion;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -63,7 +64,8 @@ public final class PlayerVariables extends VariableSet {
             this.isWet = player.isInWaterOrRain();
             this.isRiding = player.isPassenger();
             this.isOnGround = player.onGround();
-            this.isMoving = player.bob != player.oBob;
+            // Ticked at the start of the client tick, so this is the move made during the last tick
+            this.isMoving = Motion.isMovingHorizontally(player.getX() - player.xo, player.getZ() - player.zo);
             this.health = player.getHealth();
             this.maxHealth = player.getMaxHealth();
             this.foodLevel = (float) hm.getFoodLevel();
@@ -72,7 +74,7 @@ public final class PlayerVariables extends VariableSet {
             this.y = player.getY();
             this.z = player.getZ();
 
-            this.isSuffocating = !player.isCreative() && player.getAirSupply() < 0;
+            this.isSuffocating = isSuffocating(player.isCreative(), player.getAirSupply());
             this.canRainOn = world.canSeeSky(player.blockPosition().offset(0, 2, 0));
             this.canSeeSky = this.canRainOn && LevelCompat.getTopSolidOrLiquidBlock(world, player.blockPosition()).getY() <= player.blockPosition().getY();
 
@@ -88,6 +90,7 @@ public final class PlayerVariables extends VariableSet {
             this.isWet = false;
             this.isRiding = false;
             this.isOnGround = false;
+            this.isMoving = false;
             this.health = 20F;
             this.maxHealth = 20F;
             this.foodLevel = 20F;
@@ -111,6 +114,7 @@ public final class PlayerVariables extends VariableSet {
         config.property(id("isSprinting"), () -> this.isSprinting);
         config.property(id("isInLava"), () -> this.isInLava);
         config.property(id("isInvisible"), () -> this.isInvisible);
+        // Eyes under water, not feet in water: player.isUnderWater(). Kept as it is for existing scripts.
         config.property(id("isInWater"), () -> this.isInWater);
         config.property(id("isMoving"), () -> this.isMoving);
         config.property(id("isWet"), () -> this.isWet);
@@ -128,6 +132,14 @@ public final class PlayerVariables extends VariableSet {
         config.function(id("hasEffect"))
                 .param(RESOURCE_ID)
                 .handler(args -> this.hasEffect(args.get(0)));
+    }
+
+    /**
+     * Out of air. Air runs down to -20 before drowning damage resets it to 0, so both count; checking only below
+     * zero dropped out for a tick each cycle.
+     */
+    static boolean isSuffocating(boolean isCreative, int airSupply) {
+        return !isCreative && airSupply <= 0;
     }
 
     private static ResourceLocation toResourceId(Object value) {
