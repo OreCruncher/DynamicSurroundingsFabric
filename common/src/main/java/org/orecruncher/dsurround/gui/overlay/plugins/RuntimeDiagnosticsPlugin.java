@@ -5,6 +5,7 @@ import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
+import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.MinecraftClock;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
@@ -16,6 +17,7 @@ import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
 import java.util.List;
 
+@Cacheable
 public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
 
     private static final List<String> SCRIPTS = ImmutableList.of(
@@ -51,7 +53,8 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
             event.add(CollectDiagnosticsEvent.Section.Header, this.clock.getFormattedTime());
 
             var seasonInfo = this.seasonalInformation.getCurrentSeasonTranslated().orElse(Component.literal("UNKNOWN"));
-            var seasonText = Component.translatable("Season: %s (%s)", seasonInfo, this.seasonalInformation.getProviderName());
+            var seasonText = Component.literal("Season: ").append(seasonInfo)
+                    .append(" (%s)".formatted(this.seasonalInformation.getProviderName()));
             event.add(CollectDiagnosticsEvent.Section.Header, seasonText);
 
             var particleLoad = "Particle Manager: %s".formatted(GameUtils.getParticleManager().countParticles());

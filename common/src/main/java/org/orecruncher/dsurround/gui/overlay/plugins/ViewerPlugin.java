@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.gui.overlay.plugins;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import joptsimple.internal.Strings;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -23,6 +22,7 @@ import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
+import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.Comparers;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
@@ -30,6 +30,7 @@ import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 
 import java.util.*;
 
+@Cacheable
 public final class ViewerPlugin implements IDiagnosticPlugin {
 
     // Mod packs have a lot of tags. We are only interested in
@@ -41,6 +42,7 @@ public final class ViewerPlugin implements IDiagnosticPlugin {
         TAG_STYLES.put(Constants.MOD_ID, Style.EMPTY.withColor(ColorPalette.GOLD));
         TAG_STYLES.put("minecraft", Style.EMPTY.withColor(ColorPalette.FRESH_AIR));
         TAG_STYLES.put("forge", Style.EMPTY.withColor(ColorPalette.AQUAMARINE));
+        TAG_STYLES.put("neoforge", Style.EMPTY.withColor(ColorPalette.AQUAMARINE));
         TAG_STYLES.put("fabric", Style.EMPTY.withColor(ColorPalette.CORNSILK));
         TAG_STYLES.put("c", Style.EMPTY.withColor(ColorPalette.CORNSILK));
     }
@@ -75,7 +77,7 @@ public final class ViewerPlugin implements IDiagnosticPlugin {
         var wallOfText = info.toString();
         Arrays.stream(wallOfText.split("\n"))
             .map(l -> l.replaceAll("[\\[\\]]", "").strip())
-            .filter(s -> !Strings.isNullOrEmpty(s))
+            .filter(s -> !s.isEmpty())
             .map(Component::literal)
             .forEach(data::add);
     }

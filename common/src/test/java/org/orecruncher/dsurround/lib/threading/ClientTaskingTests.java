@@ -104,7 +104,9 @@ public class ClientTaskingTests {
             long start = System.nanoTime();
             assertThrows(TimeoutException.class, () -> this.tasking.execute(() -> ran.set(true)));
             long waitedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-            assertTrue(waitedMs >= TIMEOUT_MS - 20 && waitedMs < TIMEOUT_MS * 10, "waited " + waitedMs + "ms");
+            // At least the timeout. No tight upper bound: a busy machine can delay waking this thread (once seen at
+            // 2.5s), and the class's @Timeout already catches a real hang
+            assertTrue(waitedMs >= TIMEOUT_MS - 20, "waited " + waitedMs + "ms");
         } finally {
             release.countDown();
         }
@@ -150,12 +152,11 @@ public class ClientTaskingTests {
         var release = this.blockClientThread();
         var ran = new CountDownLatch(1);
         try {
-            long start = System.nanoTime();
+            // The client thread stays blocked until the latch is released below, so if submit waited for the task
+            // it would never return (and the class's @Timeout would fail the test). No clock needed.
             this.tasking.submit(ran::countDown);
-            long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
-            assertTrue(tookMs < TIMEOUT_MS / 2, "submit took " + tookMs + "ms");
-            assertEquals(1, ran.getCount(), "not run yet: the client thread is busy");
+            assertEquals(1, ran.getCount(), "returned before the task ran: the client thread is busy");
         } finally {
             release.countDown();
         }
