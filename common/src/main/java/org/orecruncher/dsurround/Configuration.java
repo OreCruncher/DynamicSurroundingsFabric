@@ -146,7 +146,7 @@ public class Configuration extends ConfigurationData {
         public int reverbBounces = 4;
 
         @Property
-        @IntegerRange(min = 64, max = 512)
+        @IntegerRange(min = 64, max = 256)
         @RestartRequired
         @Comment("Total distance a reverb ray will traverse before ending calculation")
         // Beyond about 70-100 blocks a longer ray no longer changes which reverb a reflection feeds, only whether a

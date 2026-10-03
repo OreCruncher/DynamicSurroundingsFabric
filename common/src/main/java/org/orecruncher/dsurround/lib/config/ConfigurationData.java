@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.lib.config;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.eventing.IConfigChangedEvent;
@@ -32,10 +30,12 @@ import java.util.Map;
  * When loaded, the file is read if it exists, values are checked against the specification (out of range values are
  * clamped and missing ones replaced with their defaults), and the result is written back, so the file always has
  * every current property. A file that can't be read is kept, renamed, rather than overwritten.
+ * <p>
+ * Each property's {@link Comment} is written above it in the file as a {@code //} comment. Comments in the file are
+ * allowed when reading, but they are rewritten from the annotations on every save, so hand-written ones are lost.
  */
 public abstract class ConfigurationData {
 
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final DateTimeFormatter BACKUP_SUFFIX = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private static final Map<Class<? extends ConfigurationData>, Collection<ConfigElement<?>>> SPECIFICATIONS = new IdentityHashMap<>();
     private static final Map<Class<? extends ConfigurationData>, ConfigurationData> CONFIGS = new IdentityHashMap<>();
@@ -97,7 +97,7 @@ public abstract class ConfigurationData {
         T config = null;
         if (Files.exists(path)) {
             try (BufferedReader reader = Files.newBufferedReader(path)) {
-                config = GSON.fromJson(reader, clazz);
+                config = CommentedJson.read(reader, clazz);
             } catch (Exception e) {
                 Library.LOGGER.error(e, "Unable to read configuration file %s", path);
                 backupUnreadableFile(path);
@@ -164,7 +164,7 @@ public abstract class ConfigurationData {
         var temp = Files.createTempFile(parent, this.configFilePath.getFileName().toString(), ".tmp");
         try {
             try (BufferedWriter writer = Files.newBufferedWriter(temp)) {
-                GSON.toJson(this, writer);
+                writer.write(CommentedJson.write(this));
             }
             try {
                 Files.move(temp, this.configFilePath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
@@ -257,13 +257,19 @@ public abstract class ConfigurationData {
     }
 
     /**
-     * Comment associated with a property, if any. This is used if a translation is not available. Depending on
-     * config file format, the comment may be persisted with the data as well.
+     * Comment associated with a property, if any. This is used if a translation is not available. It is also
+     * written above the property in the config file.
      */
     @Target({ElementType.FIELD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Comment {
         String value();
+
+        /**
+         * On a type: whether properties of this type that have no comment of their own use this one in the config
+         * file. Ignored on fields.
+         */
+        boolean inherit() default false;
     }
 
     /**

@@ -50,12 +50,14 @@ Impacts:
 * Improved error detection and reporting around json configurations
 * Cleaned up mod configuration processing and added logic to handle cases where a hand edit results in bad input
 * Refactored the sound effect engine (reverb) and introduced mechanisms to reduce calculations where possible
-* Added an annotation processor to create event loop implementations rather than use reflection which reduces overhead and eliminates allocations
+* Added an annotation processor to generate event loop implementations rather than use reflection (reduces overhead and eliminates allocations)
 * Removed dead code, or code that wasn't actually providing any value (always return true, didn't contribute anything meaningful, etc.)
 
 **What's New**
 * Added /dsversion command that will query version status from my repo and report back in the local chat. Response will have clickable links so you can navigate to various information sources. This command will work regardless if the chat report on login is disabled. (Some modpack authors disable this.)
 * Added "Sound Credits" button to the Sound Options dialog. Clicking will display credit and attribution information about the sounds in the mod. (This information is also buried in the tool tips when hovering over sounds in the sound configuration menu.)
+* Comments are written into the mod configuration file. User supplied comments will be lost between saves.
+* Humanoid mobs gain brush and straw step effect (skeletons, zombies, raiders, etc.) Did not do creepers, sorry.
 
 **Changes**
 * Search box in the Individual Sound Configuration menu will accept regular expressions for filtering.
@@ -69,6 +71,7 @@ Impacts:
 * A lot of small ones - nothing horrific. Most were edge conditions or related to validation of configuration data coming from external sources.
 * Sound effects when the player is underwater are properly dampened.
 * Some of the math in reverb calculations were lossy, and as a result sounds where muted a bit (about 8 - 20% depending on environment). I do not directly hear the difference, but it seems like the listening experience is improved.
+* Breath effect underwater is back (bubbles being emitted). Will be disabled if breath effect is disabled.
 
 > ### DynamicSurroundings-1.21.1-0.4.5
 
