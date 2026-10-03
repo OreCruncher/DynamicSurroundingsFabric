@@ -42,10 +42,10 @@ public class FunctionTests {
                     "Weather: rain: 0.9 thundering; Temp: 0.1; ice: true (breath)"),
             Pair.of(
                     "'Diurnal: ' + lib.iif(diurnal.isNight(),'night','day') + '; celestial angle: ' + math.round(diurnal.getCelestialAngle(), 2) + '; degrees: ' + math.round(diurnal.getCelestialAngle()*360, 2)",
-                    "Diurnal: day; celestial angle: 45.0; degrees: 16200.0"),
+                    "Diurnal: day; celestial angle: 45; degrees: 16200"),
             Pair.of(
                     "'Player: health ' + player.getHealth() + '/' + player.getMaxHealth() + '; food ' + player.getFoodLevel() + '/' + player.getFoodSaturationLevel() + '; pos (' + math.round(player.getX(), 2) + ', ' + math.round(player.getY(), 2) + ', ' + math.round(player.getZ(), 2) + ')'",
-                    "Player: health 15/20; food 20/20; pos (100.0, 64.0, -100.0)"),
+                    "Player: health 15/20; food 20/20; pos (100, 64, -100)"),
             Pair.of(
                     "'State: isInside ' + state.isInside() + '; inVillage ' + state.isInVillage() + '; isUnderWater ' + state.isUnderWater()",
                     "State: isInside false; inVillage true; isUnderWater false")
@@ -65,30 +65,30 @@ public class FunctionTests {
     @TestFactory
     public Stream<DynamicTest> diagnosticDynamicTests() {
         var scriptEngine = new ScriptEngine();
-        scriptEngine.defineFunction("dim.getId", a -> "test:aroni");
-        scriptEngine.defineFunction("dim.getDimName", a -> "The Test of Aroni");
-        scriptEngine.defineFunction("dim.isSuperFlat", a -> true);
-        scriptEngine.defineFunction("biome.getName", a -> "Vaudeville");
-        scriptEngine.defineFunction("biome.getId", a -> "test:vaudeville");
-        scriptEngine.defineFunction("biome.getTemperature", a -> 0.8D);
-        scriptEngine.defineFunction("biome.getRainfall", a -> 0.33D);
-        scriptEngine.defineFunction("biome.getTraits", a -> "[REALLY,COLD,TODAY]");
-        scriptEngine.defineFunction("weather.isRaining", a -> true);
-        scriptEngine.defineFunction("weather.getRainIntensity", a -> 0.9D);
-        scriptEngine.defineFunction("weather.isThundering", a -> true);
-        scriptEngine.defineFunction("weather.getTemperature", a -> 0.1D);
-        scriptEngine.defineFunction("diurnal.isNight", a -> false);
-        scriptEngine.defineFunction("diurnal.getCelestialAngle", a -> 45);
-        scriptEngine.defineFunction("player.getHealth", a -> 15);
-        scriptEngine.defineFunction("player.getMaxHealth", a -> 20);
-        scriptEngine.defineFunction("player.getFoodLevel", a -> 20);
-        scriptEngine.defineFunction("player.getFoodSaturationLevel", a -> 20);
-        scriptEngine.defineFunction("player.getX", a -> 100);
-        scriptEngine.defineFunction("player.getY", a -> 64);
-        scriptEngine.defineFunction("player.getZ", a -> -100);
-        scriptEngine.defineFunction("state.isInside", a -> false);
-        scriptEngine.defineFunction("state.isInVillage", a -> true);
-        scriptEngine.defineFunction("state.isUnderWater", a -> false);
+        scriptEngine.property("dim.getId", () -> "test:aroni");
+        scriptEngine.property("dim.getDimName", () -> "The Test of Aroni");
+        scriptEngine.property("dim.isSuperFlat", () -> true);
+        scriptEngine.property("biome.getName", () -> "Vaudeville");
+        scriptEngine.property("biome.getId", () -> "test:vaudeville");
+        scriptEngine.property("biome.getTemperature", () -> 0.8D);
+        scriptEngine.property("biome.getRainfall", () -> 0.33D);
+        scriptEngine.property("biome.getTraits", () -> "[REALLY,COLD,TODAY]");
+        scriptEngine.property("weather.isRaining", () -> true);
+        scriptEngine.property("weather.getRainIntensity", () -> 0.9D);
+        scriptEngine.property("weather.isThundering", () -> true);
+        scriptEngine.property("weather.getTemperature", () -> 0.1D);
+        scriptEngine.property("diurnal.isNight", () -> false);
+        scriptEngine.property("diurnal.getCelestialAngle", () -> 45);
+        scriptEngine.property("player.getHealth", () -> 15);
+        scriptEngine.property("player.getMaxHealth", () -> 20);
+        scriptEngine.property("player.getFoodLevel", () -> 20);
+        scriptEngine.property("player.getFoodSaturationLevel", () -> 20);
+        scriptEngine.property("player.getX", () -> 100);
+        scriptEngine.property("player.getY", () -> 64);
+        scriptEngine.property("player.getZ", () -> -100);
+        scriptEngine.property("state.isInside", () -> false);
+        scriptEngine.property("state.isInVillage", () -> true);
+        scriptEngine.property("state.isUnderWater", () -> false);
         return DIAGNOSTIC_TEST_DATA.stream()
                 .map(data -> DynamicTest.dynamicTest("Diagnostic \"%s\"".formatted(data.first()), () -> {
                     var expression = scriptEngine.compile(data.first());

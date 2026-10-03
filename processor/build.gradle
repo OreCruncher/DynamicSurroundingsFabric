@@ -1,0 +1,32 @@
+// Annotation processor that generates event invokers for the mod (see lib.events.GenerateInvoker in common).
+// Plain Java with no Minecraft dependency; it runs while common is compiled and nothing from it is shipped.
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events = ['FAILED']
+        exceptionFormat = 'FULL'
+    }
+}

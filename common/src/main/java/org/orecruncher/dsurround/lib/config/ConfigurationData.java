@@ -1,130 +1,196 @@
 package org.orecruncher.dsurround.lib.config;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.eventing.IConfigChangedEvent;
 import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.events.EventingFactory;
-import org.orecruncher.dsurround.lib.events.IEvent;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.Objects;
 
+/**
+ * Base class for a configuration persisted as JSON. Fields marked {@link Property} make up the specification, which
+ * drives the config screen and the checks applied when the file is loaded.
+ * <p>
+ * When loaded, the file is read if it exists, values are checked against the specification (out of range values are
+ * clamped and missing ones replaced with their defaults), and the result is written back, so the file always has
+ * every current property. A file that can't be read is kept, renamed, rather than overwritten.
+ * <p>
+ * Each property's {@link Comment} is written above it in the file as a {@code //} comment. Comments in the file are
+ * allowed when reading, but they are rewritten from the annotations on every save, so hand-written ones are lost.
+ */
 public abstract class ConfigurationData {
 
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final DateTimeFormatter BACKUP_SUFFIX = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private static final Map<Class<? extends ConfigurationData>, Collection<ConfigElement<?>>> SPECIFICATIONS = new IdentityHashMap<>();
     private static final Map<Class<? extends ConfigurationData>, ConfigurationData> CONFIGS = new IdentityHashMap<>();
 
-    transient final Path configFilePath;
+    // Where the configuration is saved. Set when it is loaded.
+    transient Path configFilePath;
 
     protected ConfigurationData() {
-        this.configFilePath = computePath(this.getClass());
     }
 
+    /**
+     * Gets the configuration, loading it from the mod's config folder the first time.
+     *
+     * @throws IllegalStateException if it can't be created
+     */
     @SuppressWarnings("unchecked")
     public static <T extends ConfigurationData> @NotNull T getConfig(Class<T> clazz) {
-        return (T) Objects.requireNonNull(CONFIGS.computeIfAbsent(clazz, ConfigurationData::computeConfiguration));
+        synchronized (CONFIGS) {
+            var config = CONFIGS.get(clazz);
+            if (config == null) {
+                config = load(clazz, computePath(clazz));
+                CONFIGS.put(clazz, config);
+            }
+            return (T) config;
+        }
     }
 
-    @Nullable
-    public static <T extends ConfigurationData> Collection<ConfigElement<?>> getSpecification(Class<T> clazz) {
-        var spec = SPECIFICATIONS.get(clazz);
-        if (spec == null) {
-            var specResult = ConfigProcessor.generateAccessors(clazz);
-            if (specResult.isPresent()) {
-                spec = specResult.get();
-                SPECIFICATIONS.put(clazz, spec);
-            }
+    /**
+     * Gets the specification for the configuration class, creating it the first time.
+     *
+     * @throws IllegalStateException if the class can't be processed
+     */
+    public static <T extends ConfigurationData> @NotNull Collection<ConfigElement<?>> getSpecification(Class<T> clazz) {
+        synchronized (SPECIFICATIONS) {
+            return SPECIFICATIONS.computeIfAbsent(clazz, ConfigProcessor::generateAccessors);
         }
-        return spec;
     }
 
     private static Path computePath(Class<?> clazz) {
-        var configFolderAnnotation = clazz.getAnnotation(ConfigPlacement.class);
-        if (configFolderAnnotation == null)
-            throw new RuntimeException("Configuration class must have a ConfigFolder annotation");
-        return ModInformation.getConfigPath(configFolderAnnotation.folderName())
-                .resolve(configFolderAnnotation.fileName() + ".json");
+        var placement = clazz.getAnnotation(ConfigPlacement.class);
+        if (placement == null)
+            throw new IllegalStateException(String.format("Configuration class '%s' must have a @ConfigPlacement annotation", clazz.getName()));
+        return ModInformation.getConfigPath(placement.folderName()).resolve(placement.fileName() + ".json");
     }
 
-    private static <T extends ConfigurationData> T computeConfiguration(Class<T> clazz) {
-        try {
-            // Construct the path to the configuration folder
-            var configFolderPath = computePath(clazz);
+    /**
+     * Loads the configuration from {@code path}, checks it against the specification, and writes it back. Doesn't
+     * raise {@link IConfigChangedEvent#EVENT}: nothing has changed from the point of view of the rest of the mod.
+     * <p>
+     * If the file exists but can't be read, it is renamed (see {@link #backupUnreadableFile}) and the defaults are
+     * used, so the user's settings can be recovered by hand.
+     *
+     * @throws IllegalStateException if the class can't be created or processed
+     */
+    static <T extends ConfigurationData> T load(Class<T> clazz, Path path) {
+        // The specification comes from a freshly constructed instance, so it holds the defaults
+        var specification = getSpecification(clazz);
 
-            // We need to construct a new instance to capture the specification. Once that is done, we can load
-            // from disk if present.
-            var ignored = getSpecification(clazz);
-
-            // Check to see if it exists on the disk, and if so, load it up. Otherwise, save it so the defaults are
-            // persisted and the user can edit manually.
-            T config = ConfigProcessor.createPrototype(clazz).orElseThrow();
-            try {
-                if (Files.exists(configFolderPath)) {
-                    try (BufferedReader reader = Files.newBufferedReader(configFolderPath)) {
-                        config = GSON.fromJson(reader, clazz);
-                    }
-                }
-            } catch (Throwable t) {
-                Library.LOGGER.error(t, "Unable to handle configuration");
+        T config = null;
+        // False if the file couldn't be read or renamed out of the way; writing would then destroy it
+        boolean writeBack = true;
+        if (Files.exists(path)) {
+            try (BufferedReader reader = Files.newBufferedReader(path)) {
+                config = CommentedJson.read(reader, clazz);
+            } catch (Exception e) {
+                Library.LOGGER.error(e, "Unable to read configuration file %s", path);
+                writeBack = backupUnreadableFile(path);
             }
-
-            if (config == null) {
-                var ctor = clazz.getDeclaredConstructor();
-                ctor.setAccessible(true);
-                config = ctor.newInstance();
-            }
-
-            // Post-load processing
-            config.postLoad();
-
-            // Save it out.  Config parameters may have been added, removed, clamped, etc.
-            config.save();
-
-            return config;
-        } catch (Throwable t) {
-            Library.LOGGER.error(t, "Unable to handle configuration");
         }
 
-        return null;
+        if (config == null)
+            config = ConfigProcessor.createPrototype(clazz);
+
+        config.configFilePath = path;
+        ConfigProcessor.repair(specification, config, path.getFileName().toString());
+        config.postLoad();
+
+        // Write it back: properties may have been added, removed or corrected
+        if (writeBack) {
+            try {
+                config.write();
+            } catch (IOException e) {
+                Library.LOGGER.error(e, "Unable to save configuration %s", path);
+            }
+        }
+        return config;
+    }
+
+    /**
+     * Renames a file that couldn't be read, so writing the defaults doesn't destroy it. The name gets a ".bad"
+     * suffix and a timestamp, e.g. "dsurround.json.20261002-142233.bad".
+     *
+     * @return true if it was renamed
+     */
+    private static boolean backupUnreadableFile(Path path) {
+        var backup = backupPath(path, LocalDateTime.now());
+        try {
+            Files.move(path, backup, StandardCopyOption.REPLACE_EXISTING);
+            Library.LOGGER.warn("Configuration file %s could not be read; it has been renamed to %s and the defaults used", path, backup.getFileName());
+            return true;
+        } catch (IOException e) {
+            Library.LOGGER.error(e, "Unable to rename unreadable configuration file %s; the defaults are used, but not saved over it", path);
+            return false;
+        }
+    }
+
+    static Path backupPath(Path path, LocalDateTime time) {
+        return path.resolveSibling(path.getFileName() + "." + time.format(BACKUP_SUFFIX) + ".bad");
     }
 
     public Collection<ConfigElement<?>> getSpecification() {
-        return SPECIFICATIONS.get(this.getClass());
+        return getSpecification(this.getClass());
     }
 
     /**
-     * Saves the state of the config to disk
+     * Saves the configuration to disk and raises {@link IConfigChangedEvent#EVENT}. The event is raised even if
+     * writing fails: the values in memory have changed either way.
      */
     public void save() {
         try {
-            Files.createDirectories(this.configFilePath.getParent());
-            try (BufferedWriter writer = Files.newBufferedWriter(this.configFilePath)) {
-                GSON.toJson(this, writer);
+            this.write();
+        } catch (IOException e) {
+            Library.LOGGER.error(e, "Unable to save configuration %s", this.configFilePath);
+        }
+        IConfigChangedEvent.EVENT.invoker().onChange(this);
+    }
+
+    /**
+     * Writes the configuration to its file. Written to a temporary file which then replaces the real one, so a
+     * crash part way through leaves the previous file intact.
+     */
+    void write() throws IOException {
+        if (this.configFilePath == null)
+            throw new IOException("Configuration " + this.getClass().getName() + " was not loaded from a file");
+
+        var parent = this.configFilePath.toAbsolutePath().getParent();
+        Files.createDirectories(parent);
+        var temp = Files.createTempFile(parent, this.configFilePath.getFileName().toString(), ".tmp");
+        try {
+            try (BufferedWriter writer = Files.newBufferedWriter(temp)) {
+                writer.write(CommentedJson.write(this));
             }
-        } catch (Throwable t) {
-            Library.LOGGER.error(t, "Unable to save configuration %s", t.getMessage());
+            try {
+                Files.move(temp, this.configFilePath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(temp, this.configFilePath, StandardCopyOption.REPLACE_EXISTING);
+            }
         } finally {
-            CONFIG_CHANGED_EVENT.invoker().onChange(this);
+            Files.deleteIfExists(temp);
         }
     }
 
     /**
-     * Hook to provide processing after the configuration is loaded from the disk
+     * Hook to provide processing after the configuration is loaded from the disk and checked against the
+     * specification.
      */
     public void postLoad() {
     }
@@ -150,7 +216,8 @@ public abstract class ConfigurationData {
     }
 
     /**
-     * Indicates the field is a property
+     * Indicates the field is a property. Supported types are boolean, int, double, String and enums (primitive or
+     * boxed), and nested classes of properties, which become property groups.
      */
     @Target({ElementType.FIELD})
     @Retention(RetentionPolicy.RUNTIME)
@@ -184,7 +251,8 @@ public abstract class ConfigurationData {
     }
 
     /**
-     * Changing the value of this property will require a restart for it to have an effect.
+     * Changing the value of this property will require a restart for it to have an effect: of Minecraft if
+     * {@code client} is true, otherwise leaving and rejoining the world.
      */
     @Target({ElementType.FIELD})
     @Retention(RetentionPolicy.RUNTIME)
@@ -201,30 +269,61 @@ public abstract class ConfigurationData {
     }
 
     /**
-     * Changing the value of this property will require the world to be reloaded to have an effect.
-     */
-    @Target({ElementType.FIELD})
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface WorldReloadRequired {
-    }
-
-    /**
-     * Comment associated with a property, if any. This is used if a translation is not available. Depending on
-     * config file format, the comment may be persisted with the data as well.
+     * Comment associated with a property, if any. This is used if a translation is not available. It is also
+     * written above the property in the config file.
      */
     @Target({ElementType.FIELD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Comment {
         String value();
+
+        /**
+         * On a type: whether properties of this type that have no comment of their own use this one in the config
+         * file. Ignored on fields.
+         */
+        boolean inherit() default false;
     }
 
     /**
-     * Indicates the preference for a slider in GUI when modifying the integer property
+     * Style elements to apply when rendering in the configuration display
      */
     @Target({ElementType.FIELD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
-    public @interface Slider {
+    public @interface TextStyle {
+        String color() default "";
+        boolean italic() default false;
+        boolean bold() default false;
+        boolean underlined() default false;
+    }
 
+    /**
+     * Value range of an integer property, edited with a slider in the GUI. A slider needs both limits, so neither
+     * has a default. This is the property's range, as {@link IntegerRange} would be, so a field can't have both.
+     */
+    @Target({ElementType.FIELD})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Slider {
+        int min();
+
+        int max();
+    }
+
+    /**
+     * Value range of a double property, edited with a slider in the GUI that moves in steps of {@code step}. As with
+     * {@link Slider}, this is the property's range, so a field can't also have {@link DoubleRange}.
+     * <p>
+     * The step must divide the range evenly, have at most six decimal places, and the default must be one of the
+     * positions. The slider shows as many decimal places as the step has (or the minimum, if it has more). Values
+     * in the file don't have to be on a step; the slider shows the nearest one.
+     */
+    @Target({ElementType.FIELD})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface DoubleSlider {
+        double min();
+
+        double max();
+
+        double step();
     }
 
     /**
@@ -237,18 +336,11 @@ public abstract class ConfigurationData {
     }
 
     /**
-     * The class of the Enum in question. Thanks type erasure.
+     * The class of the enum. Optional: the field's type is used when it is absent.
      */
     @Target({ElementType.FIELD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface EnumType {
         Class<? extends Enum<?>> value();
-    }
-
-    public static final IEvent<IConfigChangedEvent> CONFIG_CHANGED_EVENT = EventingFactory.createEvent();
-
-    @FunctionalInterface
-    public interface IConfigChangedEvent {
-        void onChange(ConfigurationData config);
     }
 }

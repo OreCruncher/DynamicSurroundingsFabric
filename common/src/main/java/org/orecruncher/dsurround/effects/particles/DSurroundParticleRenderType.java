@@ -16,6 +16,11 @@ public class DSurroundParticleRenderType {
 
     public static final ParticleRenderType PARTICLE_SHEET_WATERFALL_CASCADE = new ParticleRenderType() {
 
+        // TextureAtlas.LOCATION_PARTICLES is deprecated in 1.21.1, but vanilla's own particle sheets (opaque,
+        // translucent and lit) use it and there is no replacement. This is vanilla's translucent sheet with depth
+        // writes off. In 26.2 ParticleRenderType becomes a plain record and particle rendering is reworked, so this
+        // class is rewritten for the port rather than updated.
+        @SuppressWarnings("deprecation")
         public BufferBuilder begin(Tesselator tesselator, @NotNull TextureManager textureManager) {
             RenderSystem.depthMask(false);
             RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_PARTICLES);

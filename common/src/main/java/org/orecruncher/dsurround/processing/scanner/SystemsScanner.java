@@ -15,7 +15,9 @@ import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.scanner.CuboidScanner;
 import org.orecruncher.dsurround.lib.scanner.ScanContext;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -29,8 +31,12 @@ public class SystemsScanner extends CuboidScanner {
 
     private final Configuration config;
     private final ObjectArray<IEffectSystem> systems = new ObjectArray<>();
+    // The enabled systems that want blockScan calls, worked out once per tick rather than for every scanned block
+    private final List<IEffectSystem> scanTargets = new ArrayList<>();
 
     private int lastRange;
+    // Where the player was last tick, for deciding whether effects need a range check
+    private BlockPos lastPlayerPos = BlockPos.ZERO;
 
     public SystemsScanner(Configuration config, ScanContext locus) {
         super(locus, "SystemsScanner", config.blockEffects.blockEffectRange);
@@ -41,8 +47,18 @@ public class SystemsScanner extends CuboidScanner {
 
     public void addEffectSystem(IEffectSystem system) {
         this.systems.add(system);
+        this.refreshTargets();
     }
 
+    private void refreshTargets() {
+        this.scanTargets.clear();
+        for (var system : this.systems) {
+            if (system.isEnabled() && system.wantsBlockScans())
+                this.scanTargets.add(system);
+        }
+    }
+
+    @Override
     public void resetFullScan() {
         super.resetFullScan();
         this.systems.forEach(IEffectSystem::clear);
@@ -50,6 +66,8 @@ public class SystemsScanner extends CuboidScanner {
 
     @Override
     public void tick() {
+        // Systems can be switched on and off in the config while playing
+        this.refreshTargets();
         super.tick();
 
         // If the range changed, we need to reset all effects in process
@@ -61,12 +79,14 @@ public class SystemsScanner extends CuboidScanner {
 
         var player = GameUtils.getPlayer().orElseThrow();
         final BlockPos current = player.blockPosition();
-        final boolean sittingStill = this.lastPos.equals(current);
-        this.lastPos = current;
+        final boolean sittingStill = this.lastPlayerPos.equals(current);
+        this.lastPlayerPos = current;
 
         Predicate<IBlockEffect> filter;
 
         if (!sittingStill) {
+            // This is how effects leaving range are removed: every tick the player moves, anything outside the
+            // range is dropped. That is why the scanner doesn't need to unscan the blocks that left range.
             var range = this.config.blockEffects.blockEffectRange;
             var blockBox = BlockBox.of(current.offset(-range, -range, -range), current.offset(range, range, range));
 
@@ -93,22 +113,23 @@ public class SystemsScanner extends CuboidScanner {
                 system.clear();
     }
 
-    @Override
-    public boolean doBlockUnscan() {
-        return true;
-    }
-
+    // Called for every block scanned, so this is a plain loop over the per-tick list. Unscans aren't requested
+    // (doBlockUnscan() stays false): the range check in tick() removes effects that leave range.
     @Override
     public void blockScan(Level world, BlockState state, BlockPos pos, IRandomizer rand) {
-        this.processIfEnabled(false, system -> system.blockScan(world, state, pos));
+        for (int i = 0; i < this.scanTargets.size(); i++)
+            this.scanTargets.get(i).blockScan(world, state, pos);
     }
 
     @Override
-    public void blockUnscan(Level world, BlockState state, BlockPos pos, IRandomizer rand) {
-        this.processIfEnabled(false, system -> system.blockUnscan(world, state, pos));
+    public void blockUpdated(Level world, BlockState state, BlockPos pos, IRandomizer rand) {
+        for (int i = 0; i < this.scanTargets.size(); i++)
+            this.scanTargets.get(i).blockUpdated(world, state, pos);
     }
 
     public void gatherDiagnostics(Collection<Component> output) {
+        output.add(Component.literal("[%s] pending: %d blocks in %d jobs".formatted(this.name, this.getPendingBlocks(), this.getPendingJobs())));
+        output.add(Component.literal("[%s] %s".formatted(this.name, this.getStats().summary())));
         this.systems.forEach(system -> {
             var text = system.gatherDiagnostics();
             if (!system.isEnabled())

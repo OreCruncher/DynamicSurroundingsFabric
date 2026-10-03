@@ -17,6 +17,9 @@ import net.minecraft.world.level.material.FluidState;
 import java.util.Set;
 import java.util.stream.Stream;
 
+/**
+ * Tag membership checks, including the mod's client-side tags. Client thread only.
+ */
 public interface ITagLibrary extends ILibrary {
 
     boolean is(TagKey<Block> tagKey, BlockState entry);

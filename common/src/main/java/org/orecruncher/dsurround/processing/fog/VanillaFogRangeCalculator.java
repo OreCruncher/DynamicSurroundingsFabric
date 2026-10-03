@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.processing.fog;
 import net.minecraft.client.renderer.FogRenderer;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.lib.GameUtils;
 
 public abstract class VanillaFogRangeCalculator implements IFogRangeCalculator {
 
@@ -27,9 +26,16 @@ public abstract class VanillaFogRangeCalculator implements IFogRangeCalculator {
         return data;
     }
 
-    protected float getRenderDistance() {
-        float h = GameUtils.getMC().gameRenderer.getRenderDistance();
-        return Math.max(h, 32);
+    /**
+     * A copy of {@code data} with a new range; the mode and shape are kept.
+     */
+    @NotNull
+    protected static FogRenderer.FogData withRange(@NotNull final FogRenderer.FogData data, float start, float end) {
+        var result = new FogRenderer.FogData(data.mode);
+        result.shape = data.shape;
+        result.start = start;
+        result.end = end;
+        return result;
     }
 
     public void tick() {

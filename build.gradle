@@ -13,7 +13,8 @@ allprojects {
     version = rootProject.mod_version
 }
 
-subprojects {
+// Every subproject is a Minecraft module except the annotation processor, which is plain Java used at build time
+configure(subprojects.findAll { it.name != 'processor' }) {
     apply plugin: 'dev.architectury.loom'
     apply plugin: 'architectury-plugin'
     apply plugin: 'maven-publish'

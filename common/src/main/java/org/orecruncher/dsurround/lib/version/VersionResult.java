@@ -1,65 +1,76 @@
 package org.orecruncher.dsurround.lib.version;
 
-import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.network.chat.Style;
-import org.orecruncher.dsurround.lib.gui.ColorPalette;
+import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.Localization;
+import org.orecruncher.dsurround.lib.markdown.MarkdownParser;
+import org.orecruncher.dsurround.lib.markdown.Options;
 
-public record VersionResult(String version, String modId, String displayName, String downloadLocation, String downloadLocationModrinth, String releaseNotesLink) {
+import java.util.IllegalFormatException;
+import java.util.Locale;
+import java.util.function.Function;
+
+/**
+ * The outcome of a version check, and the chat message describing it.
+ * <p>
+ * The message is markdown from the language file ({@code <modId>.newversion.message}), with the version details
+ * inserted, so translators control the wording, link text, hover text (link titles) and colors. Inserted values are
+ * escaped, so nothing in them is taken as markup.
+ *
+ * @param releaseNotesLink link to the release notes, or null if there isn't one; the message then leaves the link out
+ */
+public record VersionResult(
+        String version,
+        String modId,
+        String displayName,
+        String downloadLocation,
+        String downloadLocationModrinth,
+        @Nullable String releaseNotesLink,
+        String discussionsLink,
+        boolean updateAvailable) {
+
+    // Each link has its own color, set with <color> in the message
+    private static final Options CHAT_OPTIONS = Options.builder().colorOverridesLink(true).build();
 
     public Component getChatText() {
-        var space = Component.literal(" ");
-        var openBracket = Component.literal("[").withColor(ColorPalette.SILVER_SAND.getValue());
-        var closeBracket = Component.literal("]").withColor(ColorPalette.SILVER_SAND.getValue());
+        return this.getChatText(Localization::load);
+    }
 
-        var downloadPage = Component.translatable(this.modId + ".newversion.downloadpage")
-                .withColor(ColorPalette.CORN_FLOWER_BLUE.getValue());
-        var downloadHoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, downloadPage);
+    /**
+     * The chat message, with text from {@code language}, which maps a translation key to its text.
+     */
+    Component getChatText(Function<String, String> language) {
+        var status = language.apply(this.modId + ".newversion." + (this.updateAvailable ? "update" : "current"));
 
-        var releaseNotesPage = Component.translatable(this.modId + ".newversion.releasenotespage")
-                .withColor(ColorPalette.CORN_FLOWER_BLUE.getValue());
-        var releaseNotesHoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, releaseNotesPage);
+        // Markdown has no conditionals, so the release notes link is a piece of its own, left out when there's no link
+        var releaseNotes = this.releaseNotesLink == null
+                ? ""
+                : format(language, this.modId + ".newversion.releasenoteslink", MarkdownParser.escape(this.releaseNotesLink));
 
-        var downloadStyleCurse = Style.EMPTY
-                .withHoverEvent(downloadHoverEvent)
-                .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, this.downloadLocation));
-        var curseHover = Component.translatable(this.modId + ".newversion.curseforge")
-                .withColor(ColorPalette.CURSEFORGE.getValue())
-                .withStyle(downloadStyleCurse);
+        var markdown = format(language, this.modId + ".newversion.message",
+                MarkdownParser.escape(status),
+                MarkdownParser.escape(this.displayName),
+                MarkdownParser.escape(this.version),
+                releaseNotes,
+                MarkdownParser.escape(this.discussionsLink),
+                MarkdownParser.escape(this.downloadLocation),
+                MarkdownParser.escape(this.downloadLocationModrinth));
 
-        var releaseNotesStyle = Style.EMPTY
-                .withHoverEvent(releaseNotesHoverEvent)
-                .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, this.releaseNotesLink));
-        var releaseNotesHover = Component.translatable(this.modId + ".newversion.releasenotes")
-                .withColor(ColorPalette.BRIGHT_CERULEAN.getValue())
-                .withStyle(releaseNotesStyle);
+        return MarkdownParser.markdownToComponent(markdown, CHAT_OPTIONS).orElseGet(Component::empty);
+    }
 
-        var downloadStyleModrinth = Style.EMPTY
-                .withHoverEvent(downloadHoverEvent)
-                .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, this.downloadLocationModrinth));
-        var modrinthHover = Component.translatable(this.modId + ".newversion.modrinth")
-                .withColor(ColorPalette.MODRINTH.getValue())
-                .withStyle(downloadStyleModrinth);
-
-        var modDisplayNameAndVersion = Component.literal(this.displayName)
-                .append(" v").append(this.version)
-                .withColor(ColorPalette.SUN_GLOW.getValue());
-
-        return Component.translatable(this.modId + ".newversion.update")
-                .withColor(ColorPalette.AQUAMARINE.getValue())
-                .append(modDisplayNameAndVersion)
-                .append(space)
-                .append(openBracket)
-                .append(releaseNotesHover)
-                .append(closeBracket)
-                .append(space)
-                .append(openBracket)
-                .append(curseHover)
-                .append(closeBracket)
-                .append(space)
-                .append(openBracket)
-                .append(modrinthHover)
-                .append(closeBracket);
+    /**
+     * The text for {@code key} with {@code args} inserted, as {@link String#format} does. A translation with a
+     * broken placeholder is used as it is, rather than losing the message.
+     */
+    private static String format(Function<String, String> language, String key, Object... args) {
+        var template = language.apply(key);
+        try {
+            return String.format(Locale.ROOT, template, args);
+        } catch (IllegalFormatException e) {
+            Library.LOGGER.warn("Translation '%s' has a placeholder that isn't valid: %s", key, e.getMessage());
+            return template;
+        }
     }
 }

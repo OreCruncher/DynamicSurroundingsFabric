@@ -12,14 +12,13 @@ import net.minecraft.util.FormattedCharSequence;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.overlay.plugins.*;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
-import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 
@@ -34,7 +33,8 @@ import java.util.function.Supplier;
 public final class DiagnosticsOverlay extends AbstractOverlay {
 
     private static final int BACKGROUND_COLOR = 0x90505050;     // Very dark gray with alpha
-    private static final int FOREGROUND_COLOR = 0x00E0E0E0;     // Very light gray
+    // Fully opaque: newer versions draw text with zero alpha invisibly, where this one makes it opaque
+    private static final int FOREGROUND_COLOR = 0xFFE0E0E0;     // Very light gray
 
     private static final Style BIOME_DIAGNOSTIC_TITLE_COLOR = Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE).withUnderlined(true);
     private static final Style BIOME_DIAGNOSTIC_HEADER_COLOR = Style.EMPTY.withColor(ColorPalette.AQUAMARINE);
@@ -94,13 +94,23 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
     private final ObjectArray<FormattedCharSequence> left = new ObjectArray<>(64);
     private final ObjectArray<FormattedCharSequence> right = new ObjectArray<>(64);
     private final ObjectArray<FormattedCharSequence> biomeText = new ObjectArray<>(64);
-    private int displayDiagnostics;
+    private Mode mode = Mode.OFF;
     private boolean renderHud;
+
+    /**
+     * What the overlay shows. The key binding cycles through them in order.
+     */
+    enum Mode {
+        OFF, DEBUG, BIOME;
+
+        Mode next() {
+            return values()[(this.ordinal() + 1) % values().length];
+        }
+    }
 
     public DiagnosticsOverlay(ModInformation modInformation) {
         var platformName = Platform.isFabric() ? "Fabric" : "NeoForge";
         this.branding = "%s (%s)".formatted(modInformation.getBranding(), platformName);
-        this.displayDiagnostics = 0;
 
         this.plugins = ImmutableList.of(
                 ContainerManager.resolve(ClientProfilerPlugin.class),
@@ -111,7 +121,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
     }
 
     public void toggleCollection() {
-        this.displayDiagnostics = MathStuff.wrap(this.displayDiagnostics + 1, 3);
+        this.mode = this.mode.next();
     }
 
     @Override
@@ -121,9 +131,11 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
         // We only want to take the processing hit if the debug overlay is activated
         this.renderHud = this.showDiagnosticHud();
         if (this.renderHud) {
-            switch (this.displayDiagnostics) {
-                case 1 -> this.tickDebugDiagnostic(client);
-                case 2 -> this.tickBiomeDiagnostic(client);
+            switch (this.mode) {
+                case DEBUG -> this.tickDebugDiagnostic(client);
+                case BIOME -> this.tickBiomeDiagnostic(client);
+                case OFF -> {
+                }
             }
         }
 
@@ -195,7 +207,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
         this.reusableEvent.add(this.diagnostics);
         this.reusableEvent.add(this.rendering);
 
-        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.invoker().onCollect(this.reusableEvent);
+        ICollectDiagnostics.EVENT.invoker().onCollect(this.reusableEvent);
 
         this.left.clear();
         this.right.clear();
@@ -235,42 +247,38 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
     public void render(GuiGraphics context, float partialTick) {
         this.rendering.begin();
         if (this.renderHud) {
-            switch (this.displayDiagnostics) {
-                case 1: {
+            switch (this.mode) {
+                case DEBUG -> {
                     this.drawText(context, this.left, true);
                     this.drawText(context, this.right, false);
                 }
-                break;
-                case 2: {
-                    this.drawText(context, this.biomeText, true);
+                case BIOME -> this.drawText(context, this.biomeText, true);
+                case OFF -> {
                 }
-                break;
             }
         }
         this.rendering.end();
     }
 
     private boolean showDiagnosticHud() {
-        return this.displayDiagnostics != 0 && GameUtils.isInGame() && !GameUtils.getMC().getDebugOverlay().showDebugScreen();
+        return this.mode != Mode.OFF && GameUtils.isInGame() && !GameUtils.getMC().getDebugOverlay().showDebugScreen();
     }
 
+    /**
+     * Draws the lines down the left or right edge, each on its own background. A null line is a blank gap.
+     */
     private void drawText(GuiGraphics context, ObjectArray<FormattedCharSequence> text, boolean left) {
         var textRenderer = GameUtils.getTextRenderer();
-        int m;
-        int l;
-        int k;
-        FormattedCharSequence component;
-        int j;
-        int i = textRenderer.lineHeight;
-        for (j = 0; j < text.size(); ++j) {
-            component = text.get(j);
+        int lineHeight = textRenderer.lineHeight;
+        for (int line = 0; line < text.size(); ++line) {
+            var component = text.get(line);
             if (component == null)
                 continue;
-            k = textRenderer.width(component);
-            l = left ? 2 : context.guiWidth() - 2 - k;
-            m = 2 + i * j;
-            context.fill(l - 1, m - 1, l + k + 1, m + i - 1, BACKGROUND_COLOR);
-            context.drawString(textRenderer, component, l, m, FOREGROUND_COLOR, false);
+            int width = textRenderer.width(component);
+            int x = left ? 2 : context.guiWidth() - 2 - width;
+            int y = 2 + lineHeight * line;
+            context.fill(x - 1, y - 1, x + width + 1, y + lineHeight - 1, BACKGROUND_COLOR);
+            context.drawString(textRenderer, component, x, y, FOREGROUND_COLOR, false);
         }
     }
 }

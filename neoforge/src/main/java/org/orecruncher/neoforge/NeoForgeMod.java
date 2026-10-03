@@ -30,8 +30,8 @@ public final class NeoForgeMod {
 
     @SubscribeEvent
     public void onRegisterGuiLayersEvent(RegisterGuiLayersEvent event) {
-        // Add the overlay manager to the render layers of Gui
+        // Add the overlay manager to the render layers of Gui: above the vanilla HUD, as on Fabric
         OverlayManager overlayManager = ContainerManager.resolve(OverlayManager.class);
-        event.registerBelowAll(Constants.asId("layer/overlaymanager"), overlayManager::render);
+        event.registerAboveAll(Constants.asId("layer/overlaymanager"), overlayManager::render);
     }
 }

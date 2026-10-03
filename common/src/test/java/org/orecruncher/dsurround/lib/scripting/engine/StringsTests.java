@@ -18,7 +18,7 @@ public class StringsTests {
             Pair.of("\"test\"", "test"),
             Pair.of("'first' + 'second'", "firstsecond"),
             Pair.of("'this' + 'is' + 'sparta'", "thisissparta"),
-            Pair.of("'zero' + 0", "zero0.0")
+            Pair.of("'zero' + 0", "zero0")
     );
 
     @TestFactory

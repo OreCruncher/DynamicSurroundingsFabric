@@ -18,7 +18,8 @@ public final class ModInformation implements IMinecraftDirectories {
 
     // TODO: Move into external resources?
     private static final URI modUpdate = URI.create("https://raw.githubusercontent.com/OreCruncher/DynamicSurroundingsFabric/main/versions.json");
-    private static final String modCurseForge = "https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings-fabric-edition";
+    private static final String modDiscussions = "https://github.com/OreCruncher/DynamicSurroundingsFabric/discussions";
+    private static final String modCurseForge = "https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings";
     private static final String modModrinth = "https://modrinth.com/mod/dynamicsurroundingsfabric";
 
     private final String modId;
@@ -81,6 +82,10 @@ public final class ModInformation implements IMinecraftDirectories {
         return modModrinth;
     }
 
+    public String discussionsLink() {
+        return modDiscussions;
+    }
+
     public String getBranding() {
         return String.format("%s %s-%s", this.displayName, SharedConstants.getCurrentVersion().getName(), this.version);
     }
@@ -100,8 +105,19 @@ public final class ModInformation implements IMinecraftDirectories {
                 .orElse(Optional.empty());
     }
 
+    /**
+     * The Minecraft version, or empty if it isn't a version that can be compared (e.g. a snapshot). A release such
+     * as 1.21, with no patch number, is 1.21.0.
+     */
     public static Optional<SemanticVersion> getMinecraftVersion() {
-        return getModVersion("minecraft");
+        var container = Platform.getMod("minecraft");
+        if (container != null) {
+            try {
+                return Optional.of(SemanticVersion.parseMinecraft(container.getVersion()));
+            } catch (Exception ignored) {
+            }
+        }
+        return Optional.empty();
     }
 
     public static Optional<SemanticVersion> getModVersion(String namespace) {

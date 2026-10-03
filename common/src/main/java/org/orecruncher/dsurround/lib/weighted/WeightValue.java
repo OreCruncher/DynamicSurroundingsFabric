@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.lib.weighted;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -9,7 +10,15 @@ import org.jetbrains.annotations.NotNull;
  */
 public record WeightValue(int asInt) {
 
-    public static final Codec<WeightValue> CODEC = Codec.INT.xmap(WeightValue::of, WeightValue::asInt);
+    /**
+     * A non-negative integer. A negative one is a parse error, so only the entry it is in is dropped: an exception
+     * here would abandon the whole file.
+     */
+    public static final Codec<WeightValue> CODEC = Codec.INT.comapFlatMap(
+            value -> value < 0
+                    ? DataResult.error(() -> "Weight must not be negative: " + value)
+                    : DataResult.success(new WeightValue(value)),
+            WeightValue::asInt);
 
     public static WeightValue of(int value) {
         if (value < 0)

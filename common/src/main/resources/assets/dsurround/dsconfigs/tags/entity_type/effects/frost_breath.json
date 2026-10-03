@@ -1,7 +1,7 @@
 {
   "values": [
     "minecraft:player",
-    "minecraft:villager",
+    "#dsurround:villagers",
     "#minecraft:raiders"
   ]
 }

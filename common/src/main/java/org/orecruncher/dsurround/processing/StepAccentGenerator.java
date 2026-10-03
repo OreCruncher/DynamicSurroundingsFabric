@@ -5,7 +5,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.eventing.IEntityStep;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.processing.accents.FootstepAccents;
@@ -13,7 +13,7 @@ import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
 /**
- * Listens to the ENTITY_STEP_EVENT stream for opportunities to emphasize an Entities
+ * Listens to the IEntityStep event stream for opportunities to emphasize an Entities
  * step effect.
  */
 public class StepAccentGenerator extends AbstractClientHandler {
@@ -26,7 +26,7 @@ public class StepAccentGenerator extends AbstractClientHandler {
         super("Step Accent", config, logger);
         this.audioPlayer = audioPlayer;
         this.footstepAccents = footstepAccents;
-        ClientEventHooks.ENTITY_STEP_EVENT.register(this::footStepGenerated);
+        IEntityStep.EVENT.register(this::footStepGenerated);
     }
 
     protected void footStepGenerated(Entity entity, BlockPos blockPos, BlockState blockState) {

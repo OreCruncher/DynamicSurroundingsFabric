@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.lib.resources;
 import com.mojang.serialization.Codec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
-import org.orecruncher.dsurround.eventing.ClientState;
+import org.orecruncher.dsurround.eventing.IResourceReload;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -19,7 +19,7 @@ public class ServerResourceFinder extends AbstractResourceFinder {
 
     static {
         lookupHelper = new ResourceLookupHelper(PackType.SERVER_DATA);
-        ClientState.RESOURCE_RELOAD_EVENT.register(rm -> lookupHelper.refresh(), HandlerPriority.VERY_HIGH);
+        IResourceReload.EVENT.register(rm -> lookupHelper.refresh(), HandlerPriority.VERY_HIGH);
     }
 
     protected ServerResourceFinder(IModLog logger) {

@@ -72,7 +72,7 @@ processResources {
         expand expandProps
     }
 
-    into('/') {
+    into('/assets') {
         from("$projectDir/../CREDITS.md")
     }
 }

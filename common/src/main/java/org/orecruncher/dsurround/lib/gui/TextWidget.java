@@ -20,7 +20,8 @@ public class TextWidget extends AbstractStringWidget {
         if (nameWidth > getWidth()) {
             renderScrollingString(guiGraphics, this.getFont(), this.getMessage(), getX(), y, getX() + getWidth(), y + this.getFont().lineHeight, -1);
         } else {
-            guiGraphics.drawString(this.getFont(), this.getMessage(), getX(), y, 0xFFFFFF);
+            // Full alpha is required: newer versions don't draw text whose alpha is 0
+            guiGraphics.drawString(this.getFont(), this.getMessage(), getX(), y, 0xFFFFFFFF);
         }
     }
 }

@@ -1,14 +1,17 @@
 package org.orecruncher.dsurround.lib.block;
 
-
 import net.minecraft.world.level.block.state.BlockState;
 
-public class MatchOnBlockState extends MatchOnBlock {
+/**
+ * Matches the states of one block that have particular property values. Properties not listed can have any value.
+ */
+final class MatchOnBlockState extends MatchOnBlock {
 
-    // Sometimes an exact match of state is needed. The state being compared
-    // would have to match all these properties.
     private final BlockStateProperties props;
 
+    /**
+     * Matches exactly this state: every one of its properties must match.
+     */
     MatchOnBlockState(BlockState state) {
         this(state, new BlockStateProperties(state));
     }
@@ -24,15 +27,20 @@ public class MatchOnBlockState extends MatchOnBlock {
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        if (obj instanceof final MatchOnBlockState m) {
-            return super.equals(obj) && m.props.matches(this.props);
-        }
-        return false;
+    public String toSpecification() {
+        return super.toSpecification() + this.props.getFormattedProperties();
     }
 
     @Override
-    public String toString() {
-        return super.toString() + "[" + this.props.getFormattedProperties() + "]";
+    public int hashCode() {
+        return 31 * super.hashCode() + this.props.hashCode();
+    }
+
+    /**
+     * Equal to another MatchOnBlockState for the same block with exactly the same property values.
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        return super.equals(obj) && this.props.equals(((MatchOnBlockState) obj).props);
     }
 }

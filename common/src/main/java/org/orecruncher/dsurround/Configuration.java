@@ -10,10 +10,6 @@ import org.orecruncher.dsurround.lib.config.ConfigurationData.*;
 public class Configuration extends ConfigurationData {
 
     @Property
-    @Comment("Configuration options for modifying logging behavior")
-    public final Logging logging = new Logging();
-
-    @Property
     @Comment("Configuration options for modifying Minecraft's Sound System behavior")
     public final SoundSystem soundSystem = new SoundSystem();
 
@@ -54,6 +50,16 @@ public class Configuration extends ConfigurationData {
     public final MusicManagerOptions musicManagerOptions = new MusicManagerOptions();
 
     @Property
+    @Comment("Configuration options for modifying diagnostic behavior")
+    @TextStyle(color = "#0078D4", italic = true)
+    public final Logging logging = new Logging();
+
+    @Property
+    @Comment("Configuration options for features that are Works In Progress (WIP)")
+    @TextStyle(color = "#72FF13", italic = true)
+    public final WorksInProgressOptions worksInProgressOptions = new WorksInProgressOptions();
+
+    @Property
     @Comment("Configuration options for other things")
     public final OtherOptions otherOptions = new OtherOptions();
 
@@ -89,15 +95,13 @@ public class Configuration extends ConfigurationData {
 
     public static class SoundSystem {
         @Property
-        @IntegerRange(min = 8, max = 16)
-        @Slider
+        @Slider(min = 8, max = 16)
         @RestartRequired
         @Comment("The number of sound channels to reserve for streaming sounds (music, biome sounds, records, etc.)")
         public int streamingChannels = 12;
 
         @Property
-        @IntegerRange(min = 0, max = 20 * 10)
-        @Slider
+        @Slider(min = 0, max = 20 * 10)
         @Comment("Ticks between culled sound events (0 to disable culling)")
         public int cullInterval = 20;
 
@@ -113,19 +117,18 @@ public class Configuration extends ConfigurationData {
         public boolean enableEnhancedSounds = true;
 
         @Property
-        @IntegerRange(min = 0, max = 8)
-        @Slider
+        @Slider(min = 0, max = 8)
         @RestartRequired
         @Comment("Number of background threads to use for enhanced sound processing (0 means use internal default)")
         public int backgroundThreadWorkers = 0;
 
         @Property
-        @Comment("Enable/disable on the fly conversion of stereo sounds to mono as needed")
-        public boolean enableMonoConversion = true;
-
-        @Property
         @Comment("Enable/disable sound occlusion processing (sound muffling behind blocks)")
         public boolean enableOcclusionProcessing = false;
+
+        @Property
+        @Comment("Check whether reflections reach the player only from each reverb ray's last reflection, instead of from every reflection. Cheaper; may sound different")
+        public boolean simplifiedSharedAirspace = false;
 
         @Property
         @IntegerRange(min = 16, max = 64)
@@ -140,10 +143,12 @@ public class Configuration extends ConfigurationData {
         public int reverbBounces = 4;
 
         @Property
-        @IntegerRange(min = 64, max = 512)
+        @IntegerRange(min = 64, max = 256)
         @RestartRequired
         @Comment("Total distance a reverb ray will traverse before ending calculation")
-        public int reverbRayTraceDistance = 256;
+        // Beyond about 70-100 blocks a longer ray no longer changes which reverb a reflection feeds, only whether a
+        // distant surface is found to bounce off; an open-air ray costs in proportion to its length
+        public int reverbRayTraceDistance = 128;
     }
 
     public static class SoundOptions {
@@ -157,8 +162,7 @@ public class Configuration extends ConfigurationData {
         public boolean logStacktraceWhenDiscarding = false;
 
         @Property
-        @Slider
-        @IntegerRange(min = 0, max = 400)
+        @Slider(min = 0, max = 400)
         @Comment("Ambient sounds played by the mod will be multiplied by this factor")
         public int ambientVolumeScaling = 100;
 
@@ -186,8 +190,7 @@ public class Configuration extends ConfigurationData {
     public static class BlockEffects {
 
         @Property
-        @IntegerRange(min = 16, max = 64)
-        @Slider
+        @Slider(min = 16, max = 64)
         @Comment("Distance that will be scanned when generating block effects")
         public int blockEffectRange = 32;
 
@@ -228,8 +231,7 @@ public class Configuration extends ConfigurationData {
     public static class EntityEffects {
 
         @Property
-        @IntegerRange(min = 16, max = 64)
-        @Slider
+        @Slider(min = 16, max = 64)
         @Comment("The maximum range at which entity special effects are applied")
         public int entityEffectRange = 24;
 
@@ -304,7 +306,7 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @Comment("Scales the display by the specified amount")
-        @DoubleRange(min = 0.5D, max = 4D)
+        @DoubleSlider(min = 0.5D, max = 4D, step = 0.1D)
         public double scale = 1D;
     }
 
@@ -333,10 +335,15 @@ public class Configuration extends ConfigurationData {
         public boolean replaceMusicManager = true;
 
         @Property
-        @IntegerRange(min = 0, max = 100)
-        @Slider
+        @Slider(min = 0, max = 100)
         @Comment("Reduce the wait time between music plays by a percentage")
         public int reduceWaitTime = 0;
+    }
+
+    public static class WorksInProgressOptions {
+        @Property
+        @Comment("Enable/disable waterfall cascade particle effect")
+        public boolean enableWaterfallCascade = true;
     }
 
     public static class OtherOptions {

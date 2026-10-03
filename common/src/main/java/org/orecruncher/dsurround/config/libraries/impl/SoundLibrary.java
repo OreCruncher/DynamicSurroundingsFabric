@@ -1,7 +1,11 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.UnboundedMapCodec;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -22,14 +26,16 @@ import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.SoundMapping;
 import org.orecruncher.dsurround.config.data.SoundMappingConfigRule;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
-import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
+import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.gui.sound.ConfigSoundInstance;
 import org.orecruncher.dsurround.lib.CodecExtensions;
 import org.orecruncher.dsurround.lib.Comparers;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.compat.BlockCompat;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.resources.DiscoveredResource;
@@ -40,8 +46,11 @@ import org.orecruncher.dsurround.sound.SoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 import org.orecruncher.dsurround.sound.SoundMetadata;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -67,11 +76,15 @@ public final class SoundLibrary implements ISoundLibrary {
 
     private static final ResourceLocation THUNDER_SOUND = SoundEvents.LIGHTNING_BOLT_THUNDER.getLocation();
     private static final Set<String> SOUND_MAPPING_BLOCKED_MOBS = ImmutableSet.of("creeper");
-    private static final BlockPos.MutableBlockPos MUTABLE_BLOCK_POS = new BlockPos.MutableBlockPos();
+    private static final DateTimeFormatter BACKUP_TIMESTAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 
     private final IModLog logger;
     private final Configuration config;
     private final Path soundConfigPath;
+    // A missing sound may be asked for repeatedly; warn once per sound per reload
+    private final LogThrottle<ResourceLocation> missingSounds;
+    // Used by mapSound() to look around a block. Client thread only, like the rest of the class.
+    private final BlockPos.MutableBlockPos neighborPos = new BlockPos.MutableBlockPos();
 
     private final Object2ObjectOpenHashMap<ResourceLocation, SoundEvent> myRegistry = new Object2ObjectOpenHashMap<>();
     private final Object2ObjectOpenHashMap<ResourceLocation, SoundMetadata> soundMetadata = new Object2ObjectOpenHashMap<>();
@@ -81,10 +94,14 @@ public final class SoundLibrary implements ISoundLibrary {
     private final Set<ResourceLocation> culledSounds = new ObjectOpenHashSet<>();
     private final List<ResourceLocation> startupSounds = new ArrayList<>();
     private final Map<ResourceLocation, SoundMapping> soundMappings = new Object2ObjectOpenHashMap<>();
+    // Metadata for sounds that have none configured, built on first request instead of on every request
+    private final Map<ResourceLocation, SoundMetadata> defaultMetadata = new Object2ObjectOpenHashMap<>();
     private List<IndividualSoundConfigEntry> soundConfiguration = new ArrayList<>();
+    private int version;
 
     public SoundLibrary(Configuration config, IModLog logger, IMinecraftDirectories directories) {
         this.logger = ModLog.createChild(logger, "SoundLibrary");
+        this.missingSounds = LogThrottle.oncePerKey(this.logger, "missing sounds", "the next reload");
         this.config = config;
         this.myRegistry.defaultReturnValue(SoundLibrary.MISSING);
         this.soundMetadata.defaultReturnValue(new SoundMetadata());
@@ -106,10 +123,13 @@ public final class SoundLibrary implements ISoundLibrary {
             return;
 
         // Forget cached data and reload
+        this.version++;
         this.myRegistry.clear();
         this.soundMetadata.clear();
         this.soundFactories.clear();
         this.soundMappings.clear();
+        this.defaultMetadata.clear();
+        this.missingSounds.reset();
         this.loadSoundConfiguration();
 
         // Initializes the internal sound registry once all the other mods have
@@ -136,6 +156,11 @@ public final class SoundLibrary implements ISoundLibrary {
     }
 
     @Override
+    public int getVersion() {
+        return this.version;
+    }
+
+    @Override
     public SoundEvent getSound(final String sound) {
         return getSound(ResourceLocation.parse(sound));
     }
@@ -145,7 +170,7 @@ public final class SoundLibrary implements ISoundLibrary {
         Objects.requireNonNull(sound);
         final SoundEvent se = this.myRegistry.get(sound);
         if (se == SoundLibrary.MISSING) {
-            this.logger.warn("Unable to locate sound '%s'", sound.toString());
+            this.missingSounds.warn(sound, "Unable to locate sound '%s'", sound);
         }
         return se;
     }
@@ -158,7 +183,7 @@ public final class SoundLibrary implements ISoundLibrary {
     @Override
     public SoundMetadata getSoundMetadata(final ResourceLocation sound) {
         var result = this.soundMetadata.get(Objects.requireNonNull(sound));
-        return result.isDefault() ? new SoundMetadata(sound) : result;
+        return result.isDefault() ? this.defaultMetadata.computeIfAbsent(sound, SoundMetadata::new) : result;
     }
 
     @Override
@@ -225,7 +250,6 @@ public final class SoundLibrary implements ISoundLibrary {
 
     @Override
     public void saveIndividualSoundConfigs(Collection<IndividualSoundConfigEntry> configs) {
-        this.blockedSounds.clear();
         this.soundConfiguration = configs.stream()
                 .filter(IndividualSoundConfigEntry::isNotDefault)
                 .collect(Collectors.toList());
@@ -262,12 +286,13 @@ public final class SoundLibrary implements ISoundLibrary {
                 var pos = BlockPos.containing(soundInstance.getX(), soundInstance.getY() + 0.25D, soundInstance.getZ()).below();
                 blockState = level.getBlockState(pos);
 
-                // If the BlockState is air or not solid, it means we are hanging at a block edge. Scan around looking for
-                // something that is solid. It's not perfect, but it's 90% down the center.
-                if (blockState.isAir() || !blockState.isSolid()) {
+                // If the block isn't solid (air has no collision either), we are hanging at a block edge. Scan around
+                // looking for something that is solid. It's not perfect, but it's 90% down the center.
+                if (!BlockCompat.isSolid(level, pos, blockState)) {
                     for (var dir : Direction.Plane.HORIZONTAL) {
-                        blockState = level.getBlockState(MUTABLE_BLOCK_POS.setWithOffset(pos, dir));
-                        if (!blockState.isAir() && blockState.isSolid())
+                        var neighbor = this.neighborPos.setWithOffset(pos, dir);
+                        blockState = level.getBlockState(neighbor);
+                        if (BlockCompat.isSolid(level, neighbor, blockState))
                             break;
                     }
                 }
@@ -345,25 +370,37 @@ public final class SoundLibrary implements ISoundLibrary {
         this.logger.debug("Registered %d sound factories for namespace %s", factories.resourceContent().size(), factories.namespace());
     }
 
+    /**
+     * Loads soundconfig.json, or the defaults if there isn't one, and saves the result back (entries may have been
+     * added, dropped or normalized).
+     * <p>
+     * The file is read strictly. If any of it can't be read (a typo after hand-editing, say), the original is first
+     * copied to a timestamped backup next to it, so saving can never lose a player's settings. Whatever entries did
+     * read are kept; if none did, the defaults are used.
+     */
     private void loadSoundConfiguration() {
         this.soundConfiguration.clear();
-        this.blockedSounds.clear();
 
-        // Check to see if it exists on the disk, and if so, load it up. Otherwise, save it so the defaults are
-        // persisted and the user can edit manually.
-        try {
-            if (Files.exists(this.soundConfigPath)) {
+        if (Files.exists(this.soundConfigPath)) {
+            DataResult<List<IndividualSoundConfigEntry>> parsed;
+            try {
                 var content = Files.readString(this.soundConfigPath);
-                var result = CodecExtensions.deserialize(content, SOUND_CONFIG_CODEC);
-                result.ifPresentOrElse(
-                        cfgList -> this.soundConfiguration.addAll(cfgList),
-                        () -> this.logger.warn("Unable to obtain content of %s!", SOUND_CONFIG_FILE)
-                );
-            } else {
-                this.addSoundConfigDefaults();
+                parsed = SOUND_CONFIG_CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString(content));
+            } catch (IOException | JsonParseException e) {
+                parsed = DataResult.error(e::toString);
             }
-        } catch (Throwable t) {
-            this.logger.error(t, "Unable to load sound configuration %s! Resetting to defaults.", SOUND_CONFIG_FILE);
+
+            if (parsed.error().isPresent()) {
+                var backup = this.backupSoundConfiguration();
+                this.logger.warn("%s could not be read completely (%s); %s", SOUND_CONFIG_FILE,
+                        parsed.error().get().message(),
+                        backup != null ? "the original was saved as " + backup.getFileName() : "no backup could be made");
+                parsed.resultOrPartial().ifPresentOrElse(this.soundConfiguration::addAll, this::addSoundConfigDefaults);
+            } else {
+                parsed.result().ifPresent(this.soundConfiguration::addAll);
+            }
+        } else {
+            // First run: save the defaults so the player can edit them by hand
             this.addSoundConfigDefaults();
         }
 
@@ -371,6 +408,21 @@ public final class SoundLibrary implements ISoundLibrary {
 
         // Save it out.  Config parameters may have been added/removed
         this.save();
+    }
+
+    /**
+     * Copies soundconfig.json to soundconfig.json.<timestamp>.bak beside it. Returns the backup's path, or null if
+     * the copy failed (which is logged).
+     */
+    private @Nullable Path backupSoundConfiguration() {
+        var backup = this.soundConfigPath.resolveSibling(SOUND_CONFIG_FILE + "." + LocalDateTime.now().format(BACKUP_TIMESTAMP) + ".bak");
+        try {
+            Files.copy(this.soundConfigPath, backup);
+            return backup;
+        } catch (IOException e) {
+            this.logger.error(e, "Unable to back up %s", SOUND_CONFIG_FILE);
+            return null;
+        }
     }
 
     private void addSoundConfigDefaults() {
@@ -402,9 +454,23 @@ public final class SoundLibrary implements ISoundLibrary {
     }
 
     /**
-     * This routine assumes that soundConfiguration has been initialized with data.
+     * Rebuilds the lookup collections from soundConfiguration. Assumes soundConfiguration has been set.
+     * <p>
+     * The lookups are cleared first: they must reflect exactly the current list, or a sound put back to its
+     * defaults (and so dropped from the list) would keep its old volume, cull or startup setting.
      */
     private void postProcess() {
+        this.individualSoundConfiguration.clear();
+        this.blockedSounds.clear();
+        this.culledSounds.clear();
+        this.startupSounds.clear();
+
+        // One entry per sound; if a sound is listed more than once, the last entry wins
+        var bySound = new LinkedHashMap<ResourceLocation, IndividualSoundConfigEntry>();
+        for (var e : this.soundConfiguration)
+            bySound.put(e.soundEventId, e);
+        this.soundConfiguration = new ArrayList<>(bySound.values());
+
         // Purge the list of anything that is a default
         this.soundConfiguration.removeIf(e -> !e.isNotDefault());
         // Sort the list naturally based on identity

@@ -6,7 +6,6 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
@@ -20,12 +19,9 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
     protected final Configuration.FogOptions fogOptions;
     protected final ObjectArray<IFogRangeCalculator> calculators = new ObjectArray<>(3);
 
-    public HolisticFogRangeCalculator(IModLog logger, Configuration.FogOptions fogOptions) {
+    public HolisticFogRangeCalculator(IModLog logger, Configuration.FogOptions fogOptions, IBiomeLibrary biomeLibrary, ISeasonalInformation seasonInfo) {
         this.logger = ModLog.createChild(logger, "HolisticFogRangeCalculator");
         this.fogOptions = fogOptions;
-
-        var biomeLibrary = ContainerManager.resolve(IBiomeLibrary.class);
-        var seasonInfo = ContainerManager.resolve(ISeasonalInformation.class);
 
         this.calculators.add(new BiomeFogRangeCalculator(biomeLibrary, this.fogOptions));
         this.calculators.add(new MorningFogRangeCalculator(seasonInfo, this.fogOptions));

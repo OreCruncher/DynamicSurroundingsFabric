@@ -14,18 +14,17 @@ import org.orecruncher.dsurround.lib.GameUtils;
 
 public class BiomeFogRangeCalculator extends VanillaFogRangeCalculator {
 
-    private static final float SCALE_ADJUST = 0.002F;
+    // Per tick; a full fade takes about 8 seconds
+    private static final float SCALE_ADJUST = 0.006F;
 
     private final IBiomeLibrary biomeLibrary;
 
+    private final ScaleTransition scale = new ScaleTransition(SCALE_ADJUST);
     private BlockPos lastBlockPos;
-    private float activeScale;
-    private float targetScale;
 
     public BiomeFogRangeCalculator(IBiomeLibrary biomeLibrary, Configuration.FogOptions fogOptions) {
         super("Biome", fogOptions);
         this.biomeLibrary = biomeLibrary;
-        this.activeScale = this.targetScale = 0F;
         this.lastBlockPos = BlockPos.ZERO;
     }
 
@@ -37,49 +36,34 @@ public class BiomeFogRangeCalculator extends VanillaFogRangeCalculator {
     @Override
     @NotNull
     public FogRenderer.FogData render(@NotNull final FogRenderer.FogData data, float renderDistance, float partialTick) {
-
-        // Adjust the scale in the right direction
-        if (Float.compare(this.activeScale, this.targetScale) != 0) {
-            if (this.targetScale < this.activeScale) {
-                this.activeScale -= SCALE_ADJUST;
-                if (this.activeScale < this.targetScale)
-                    this.activeScale = this.targetScale;
-            } else if(this.targetScale > this.activeScale) {
-                this.activeScale += SCALE_ADJUST;
-                if (this.activeScale > this.targetScale)
-                    this.activeScale = this.targetScale;
-            }
-        }
-
-        if (Float.compare(this.activeScale, 0F) == 0)
+        var activeScale = this.scale.get(partialTick);
+        if (activeScale == 0F)
             return data;
 
-        var scale = 1F - this.activeScale;
-        var result = new FogRenderer.FogData(data.mode);
-        result.end = data.end * scale;
-        result.start = data.start * scale * scale;
-        return result;
+        var scale = 1F - activeScale;
+        return withRange(data, data.start * scale * scale, data.end * scale);
     }
 
     @Override
     public void tick() {
         // Only need to sample if the player moves position
         var currentPosition = GameUtils.getPlayer().map(Entity::getOnPos).orElseThrow();
-        if (this.lastBlockPos.equals(currentPosition))
-            return;
-        this.lastBlockPos = currentPosition;
-        this.targetScale = this.sampleArea(currentPosition, 6);
+        if (!this.lastBlockPos.equals(currentPosition)) {
+            this.lastBlockPos = currentPosition;
+            this.scale.setTarget(this.sampleArea(currentPosition, 6));
+        }
+        this.scale.tick();
     }
 
     @Override
     public void disconnect() {
-        this.activeScale = this.targetScale = 0F;
+        this.scale.reset();
         this.lastBlockPos = BlockPos.ZERO;
     }
 
     private float sampleArea(BlockPos pos, int range) {
         final BiomeManager biomeManager = GameUtils.getWorld().map(Level::getBiomeManager).orElseThrow();
-        var iterator =BlockPos.withinManhattan(pos, range, range, range).iterator();
+        var iterator = BlockPos.withinManhattan(pos, range, range, range).iterator();
         float intensityAccum = 0F;
         float intensityCount = 0;
         while(iterator.hasNext()) {

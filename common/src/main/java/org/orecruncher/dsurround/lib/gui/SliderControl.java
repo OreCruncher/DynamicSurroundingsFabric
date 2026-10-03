@@ -2,24 +2,19 @@ package org.orecruncher.dsurround.lib.gui;
 
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
-
-import java.util.List;
 
 public abstract class SliderControl extends AbstractSliderButton {
 
     protected final double step;
     protected final double min;
-    protected final List<FormattedCharSequence> toolTip;
-    protected double max;
+    protected final double max;
 
-    public SliderControl(int x, int y, int width, int height, double minValue, double maxValue, float valueStep, double currentValue, List<FormattedCharSequence> toolTip) {
+    public SliderControl(int x, int y, int width, int height, double minValue, double maxValue, float valueStep, double currentValue) {
         super(x, y, width, height, Component.empty(), getRatio(currentValue, minValue, maxValue, valueStep));
         this.min = minValue;
         this.max = maxValue;
         this.step = valueStep;
-        this.toolTip = toolTip;
     }
 
     private static double getRatio(double value, double min, double max, double step) {

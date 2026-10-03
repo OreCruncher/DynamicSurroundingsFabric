@@ -32,7 +32,7 @@ public class VillageScanner extends AbstractScanner {
 
             if (!villagerEntities.isEmpty()) {
                 // We have villagers.  Now find a bell!
-                this.isInVillage = LevelCompat.doesBlockEntityExist(world, blockEntity -> blockEntity instanceof BellBlockEntity && blockEntity.getBlockPos().closerToCenterThan(playerEyes, VILLAGE_RANGE));;
+                this.isInVillage = LevelCompat.doesBlockEntityExistNear(world, playerEyes, VILLAGE_RANGE, blockEntity -> blockEntity instanceof BellBlockEntity);
             }
         }
     }

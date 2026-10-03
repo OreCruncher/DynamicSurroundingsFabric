@@ -1,14 +1,11 @@
 package org.orecruncher.dsurround.gui.overlay;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
-import org.joml.Matrix4f;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
@@ -17,18 +14,20 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
 
+/**
+ * Shows a compass band above the crosshair while a compass is held.
+ */
 public final class CompassOverlay extends AbstractOverlay {
 
     // Vertical offset to avoid writing over the cross-hair
     private static final int CROSSHAIR_OFFSET = 60;
 
-    // Width and height of the actual band in the texture. The texture is 512x512 but the actual
-    // rendering is smaller.
+    // The texture is 512x512. Each style has two rows of bands: the first half of the heading on the first, the
+    // second half on the second.
     private static final int TEXTURE_SIZE = 512;
-    private static final float BAND_WIDTH = 65F * 2;
-    private static final float BAND_HEIGHT = 12F * 2;
-    private static final float TEXTURE_SIZE_F = (float)TEXTURE_SIZE;
     private static final int HALF_TEXTURE_SIZE = TEXTURE_SIZE / 2;
+    private static final int BAND_WIDTH = 65 * 2;
+    private static final int BAND_HEIGHT = 12 * 2;
     private static final ResourceLocation COMPASS_TEXTURE = Constants.asId("textures/compass.png");
 
     private final ITagLibrary tagLibrary;
@@ -47,11 +46,12 @@ public final class CompassOverlay extends AbstractOverlay {
         this.wobbler = new CompassWobble();
         this.showCompass = false;
         this.spriteOffset = this.config.compassAndClockOptions.compassStyle.getSpriteNumber();
-        this.scale = (float)this.config.compassAndClockOptions.scale;
+        this.scale = (float) this.config.compassAndClockOptions.scale;
     }
 
     public void tick(Minecraft client) {
         this.showCompass = false;
+        this.spinRandomly = false;
 
         if (this.config.compassAndClockOptions.enableCompass && GameUtils.isInGame()) {
             this.scale = (float) this.config.compassAndClockOptions.scale;
@@ -64,17 +64,19 @@ public final class CompassOverlay extends AbstractOverlay {
             var mainHandShow = this.doShowCompass(mainHandItem);
             var offHandShow = this.doShowCompass(offHandItem);
             this.showCompass = mainHandShow || offHandShow;
-
-            if (mainHandShow) {
-                this.spinRandomly = this.doCompassSpin(mainHandItem);
-            }
-
-            if (offHandShow && !this.spinRandomly) {
-                this.spinRandomly = this.doCompassSpin(offHandItem);
-            }
+            this.spinRandomly = shouldSpin(mainHandShow, mainHandShow && this.doCompassSpin(mainHandItem),
+                    offHandShow, offHandShow && this.doCompassSpin(offHandItem));
 
             this.wobbler.update(player.level().getGameTime());
         }
+    }
+
+    /**
+     * Whether the compass band spins randomly: if a compass held in either hand is one that wobbles (in a dimension
+     * where compasses wobble). Decided afresh each tick from what is held now.
+     */
+    static boolean shouldSpin(boolean mainHandCompass, boolean mainHandWobbles, boolean offHandCompass, boolean offHandWobbles) {
+        return (mainHandCompass && mainHandWobbles) || (offHandCompass && offHandWobbles);
     }
 
     private boolean doShowCompass(ItemStack stack) {
@@ -90,63 +92,39 @@ public final class CompassOverlay extends AbstractOverlay {
         if (!this.showCompass)
             return;
 
-        var matrixStack = context.pose();
-
-        try {
-
-            matrixStack.pushPose();
-
-            float rotation;
-
-            if (this.spinRandomly) {
-                rotation = this.wobbler.getRandomlySpinningRotation(partialTick);
-            } else {
-                final var player = GameUtils.getPlayer().orElseThrow();
-                rotation = player.getViewYRot(partialTick);
-            }
-
-            int direction = Mth.floor(((rotation * TEXTURE_SIZE) / 360F) + 0.5D) & (TEXTURE_SIZE - 1);
-            float x = (context.guiWidth() - BAND_WIDTH * this.scale) / 2F;
-            float y = (context.guiHeight() - CROSSHAIR_OFFSET - BAND_HEIGHT * this.scale) / 2F;
-
-            matrixStack.scale(this.scale, this.scale, 0F);
-            x /= this.scale;
-            y /= this.scale;
-
-            float v = this.spriteOffset * (BAND_HEIGHT * 2);
-
-            if (direction >= HALF_TEXTURE_SIZE) {
-                direction -= HALF_TEXTURE_SIZE;
-                v += BAND_HEIGHT;
-            }
-
-            this.drawTexture(matrixStack, COMPASS_TEXTURE, x, y, direction, v, BAND_WIDTH, BAND_HEIGHT);
-
-        } finally {
-            matrixStack.popPose();
+        float rotation;
+        if (this.spinRandomly) {
+            rotation = this.wobbler.getRandomlySpinningRotation(partialTick);
+        } else {
+            final var player = GameUtils.getPlayer().orElseThrow();
+            rotation = player.getViewYRot(partialTick);
         }
-    }
 
-    public void drawTexture(PoseStack stack, ResourceLocation texture, float x, float y, float u, float v, float width, float height) {
-        this.drawTexture(stack, texture, x, x + width, y, y + height, width, height, u, v);
-    }
+        // Which part of the band to show: the heading, as a position across the texture
+        int u = Mth.floor(((rotation * TEXTURE_SIZE) / 360F) + 0.5D) & (TEXTURE_SIZE - 1);
+        float v = this.spriteOffset * (BAND_HEIGHT * 2);
+        if (u >= HALF_TEXTURE_SIZE) {
+            u -= HALF_TEXTURE_SIZE;
+            v += BAND_HEIGHT;
+        }
 
-    void drawTexture(PoseStack stack, ResourceLocation texture, float x1, float x2, float y1, float y2, float regionWidth, float regionHeight, float u, float v) {
-        this.drawTexturedQuad(stack, texture, x1, x2, y1, y2, (float) 0, u / TEXTURE_SIZE_F, (u + regionWidth) / TEXTURE_SIZE_F, v / TEXTURE_SIZE_F, (v + regionHeight) / TEXTURE_SIZE_F);
-    }
+        // Centered horizontally, above the crosshair, at the configured scale
+        float x = (context.guiWidth() - BAND_WIDTH * this.scale) / 2F;
+        float y = (context.guiHeight() - CROSSHAIR_OFFSET - BAND_HEIGHT * this.scale) / 2F;
 
-    void drawTexturedQuad(PoseStack stack, ResourceLocation texture, float x1, float x2, float y1, float y2, float z, float u1, float u2, float v1, float v2) {
-        RenderSystem.setShaderTexture(0, texture);
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        Matrix4f matrix4f = stack.last().pose();
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        bufferBuilder.addVertex(matrix4f, x1, y1, z).setUv(u1, v1);
-        bufferBuilder.addVertex(matrix4f, x1, y2, z).setUv(u1, v2);
-        bufferBuilder.addVertex(matrix4f, x2, y2, z).setUv(u2, v2);
-        bufferBuilder.addVertex(matrix4f, x2, y1, z).setUv(u2, v1);
-        var mesh = bufferBuilder.build();
-        if (mesh != null)
-            BufferUploader.drawWithShader(mesh);
+        var pose = context.pose();
+        pose.pushPose();
+        try {
+            pose.translate(x, y, 0F);
+            pose.scale(this.scale, this.scale, 1F);
+            // The transparent styles need blending; this version's blit doesn't set it up itself
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            context.blit(COMPASS_TEXTURE, 0, 0, u, v, BAND_WIDTH, BAND_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE);
+            RenderSystem.disableBlend();
+        } finally {
+            pose.popPose();
+        }
     }
 
     /**
@@ -154,7 +132,7 @@ public final class CompassOverlay extends AbstractOverlay {
      */
     static class CompassWobble {
         private static final int TICK_DELAY = 5;
-        private static final float MAX_DELTA_TICK = 1F / 20F;
+        static final float MAX_DELTA_TICK = 1F / 20F;
         private float targetRotation;
         private float lastRotation;
         private float rotation;

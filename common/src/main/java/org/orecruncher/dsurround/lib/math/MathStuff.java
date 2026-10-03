@@ -1,90 +1,53 @@
 package org.orecruncher.dsurround.lib.math;
 
-import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
-public class MathStuff {
-    public static final double PHI = 0.5D + Math.sqrt(5) / 2D;  // Golden ratio
-    public static final float PHI_F = (float) PHI;
-    public static final double ANGLE = PHI * Math.PI * 2D;
-    public static final float ANGLE_F = (float) ANGLE;
-    public static final float PI_F = (float) Math.PI;
-    public static final float E_F = (float) Math.E;
+public final class MathStuff {
 
-    public static double log(final double value) {
-        return value < 0.03D ? Math.log(value) : 6 * (value - 1) / (value + 1 + 4 * (Math.sqrt(value)));
-    }
-
-    public static Vec3 normalize(Vec3 vec) {
-        double len = Math.sqrt((vec.x * vec.x) + (vec.y * vec.y) * (vec.z * vec.z));
-        return new Vec3(vec.x / len, vec.y / len, vec.z / len);
-    }
-
-    public static float tan(float x) {
-        return Mth.sin(x) / Mth.cos(x);
-    }
-
+    private static final double PHI = 0.5D + Math.sqrt(5) / 2D;  // Golden ratio
 
     /**
-     * Fast Method: Projects a random disk displacement onto the tangent plane and re-normalizes.
-     * Suitable for small angles (e.g., < 10 degrees).
-     *
-     * (Thanks Google Gemini!)
-     *
-     * @param normal Unit vector to perturb (must be normalized)
-     * @param maxDegrees Maximum angular deviation in degrees
-     * @return Unit vector with jitter applied
+     * The golden angle (in radians, plus whole turns): stepping around a circle by this much spreads points evenly.
      */
-    private static final Vec3 V1 = new Vec3(0, 1, 0);
-    private static final Vec3 V2 = new Vec3(1, 0, 0);
-    public static Vec3 jitterNormalFast(Vec3 normal, float maxDegrees, IRandomizer randomizer) {
-        // 1. Build orthonormal basis (T, B) on the tangent plane
-        Vec3 helper = (Math.abs(normal.x) > 0.9) ? V1 : V2;
-        Vec3 T = helper.cross(normal).normalize();
-        Vec3 B = normal.cross(T);
+    public static final double ANGLE = PHI * Math.PI * 2D;
 
-        // 2. Uniform sample inside a disk on the tangent plane
-        float maxRadians = maxDegrees * Mth.DEG_TO_RAD;
-        float r = tan(maxRadians) * Mth.sqrt(randomizer.nextFloat());
-        float phi = randomizer.nextFloat() * Mth.TWO_PI;
-
-        // 3. Compute offset vector on the tangent plane
-        Vec3 offset = T.scale(r * Mth.cos(phi)).add(B.scale(r * Mth.sin(phi)));
-
-        // 4. Add offset to original normal and re-normalize
-        return normal.add(offset).normalize();
+    private MathStuff() {
     }
 
+    /**
+     * A random point between {@code minRange} and {@code maxRange} blocks from the origin, in a uniformly random
+     * direction. If the range is empty, the point is {@code minRange} away.
+     */
     public static Vec3 randomPoint(final int minRange, final int maxRange) {
-        var rand = Randomizer.current();
+        return randomPoint(minRange, maxRange, Randomizer.current());
+    }
 
-        // Establish a random unit vector
-        final double x = rand.nextDouble() - 0.5D;
-        final double y = rand.nextDouble() - 0.5D;
-        final double z = rand.nextDouble() - 0.5D;
-        var vec = new Vec3(x, y, z).normalize();
+    static Vec3 randomPoint(final int minRange, final int maxRange, final IRandomizer rand) {
+        // A uniformly random direction: a random point in the unit cube, kept only if it is inside the unit sphere
+        // (and not too close to the center to normalize). Normalizing any point of the cube would favor the
+        // cube's diagonals.
+        double x, y, z, lengthSq;
+        do {
+            x = rand.nextDouble() * 2D - 1D;
+            y = rand.nextDouble() * 2D - 1D;
+            z = rand.nextDouble() * 2D - 1D;
+            lengthSq = x * x + y * y + z * z;
+        } while (lengthSq > 1D || lengthSq < 1.0E-4D);
 
-        // Establish the range and scaling value
         final int range = maxRange - minRange;
-        final double magnitude;
+        final double magnitude = range <= 0 ? minRange : minRange + rand.nextDouble() * range;
 
-        if (range <= 0) {
-            magnitude = minRange;
-        } else {
-            magnitude = minRange + rand.nextDouble() * range;
-        }
-
-        // Generate a vector based on the generated scaling values
-        return vec.scale(magnitude);
+        final double scale = magnitude / Math.sqrt(lengthSq);
+        return new Vec3(x * scale, y * scale, z * scale);
     }
 
     /**
      * Calculate the reflection of a vector based on a surface normal.
      *
      * @param vector        Incoming vector
-     * @param surfaceNormal Surface normal
+     * @param surfaceNormal Surface normal (unit length)
      * @return The reflected vector
      */
     public static Vec3 reflection(final Vec3 vector, final Vec3 surfaceNormal) {
@@ -96,25 +59,16 @@ public class MathStuff {
     }
 
     /**
-     * Simple method to add a scaled addened to a base.  Eliminates unecessary allocations.
-     * @param base Base to add another scaled vector to
-     * @param addened Vector to scale and add to the base
-     * @param scale Scale to apply to the addened vector before adding to the base
-     * @return Vector that is a sum of the base and the addened that has been scaled
+     * {@code base + addend * scale}, without the intermediate vector {@code addend * scale}. Not a midpoint: for
+     * the point halfway between two positions use {@code a.lerp(b, 0.5)}.
+     *
+     * @param base   Base to add another scaled vector to
+     * @param addend Vector to scale and add to the base
+     * @param scale  Scale to apply to the addend before adding it to the base
+     * @return The sum of the base and the scaled addend
      */
-    public static Vec3 addScaled(final Vec3 base, final Vec3 addened, final double scale) {
-        return base.add(addened.x() * scale, addened.y() * scale, addened.z() * scale);
-    }
-
-    public static double pow(final double a, final double b) {
-        final long tmp = Double.doubleToRawLongBits(a);
-        final long tmp2 = (long) (b * (tmp - 4606921280493453312L)) + 4606921280493453312L;
-        return Double.longBitsToDouble(tmp2);
-    }
-
-    public static double exp(final double val) {
-        final long tmp = (long) (1512775 * val + (1072693248 - 60801));
-        return Double.longBitsToDouble(tmp << 32);
+    public static Vec3 addScaled(final Vec3 base, final Vec3 addend, final double scale) {
+        return base.add(addend.x() * scale, addend.y() * scale, addend.z() * scale);
     }
 
     /**
@@ -124,7 +78,7 @@ public class MathStuff {
      * @return Number clamped between 0 and 1
      */
     public static float clamp1(final float num) {
-        return num <= 0 ? 0F : Math.min(num, 1F);
+        return num <= 0F ? 0F : Math.min(num, 1F);
     }
 
     /**
@@ -134,16 +88,14 @@ public class MathStuff {
      * @return Number clamped between 0 and 1
      */
     public static double clamp1(final double num) {
-        return num <= 0 ? 0F : Math.min(num, 1F);
+        return num <= 0D ? 0D : Math.min(num, 1D);
     }
 
     /**
-     * Wraps the integer value until it fits within the desired window (0 - scale)
-     * @param value
-     * @param size
-     * @return
+     * Wraps the value into the range 0 (inclusive) to size (exclusive), including negative values: -1 wraps to
+     * size - 1.
      */
     public static int wrap(int value, int size) {
-        return ((value % size) + size) % size;
+        return Math.floorMod(value, size);
     }
 }

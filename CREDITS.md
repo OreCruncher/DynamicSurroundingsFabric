@@ -1,217 +1,153 @@
-### Sounds
-The sounds provided with Dynamic Surroundings are from the public
-domain or have Creative Common restrictions.  These restrictions may impact
-whether LPs can be monetized on the various streaming services.
+> ### Sound Credit and Attribution
 
-##### Modifications (if any):
-* Sounds converted to OGG format
-* Would have been converted to mono if needed
-* May have been sampled to select certain sounds from the original track
+The sounds provided with Dynamic Surroundings are from the public domain or have Creative Common/Attribution
+requirements. These requirements may impact whether "let's plays" can be monetized on the various streaming services.
+
+##### Modifications
+
+Sounds may have been modified from the original, specifically:
+
+* Converted to OGG format
+* Converted to mono if the original was in stereo
+* May have been sampled (snip extracted, audio properties modified, etc.)
 
 ##### Credits
 
 *dsurround:biome.beach*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/c97059890/sounds/21754/">Fiji Beach (Stereo)128kbps.mp3</a> by <a href="https://www.freesound.org/people/c97059890/">c97059890</a> | License: Creative Commons 0</li> 
-</ul>
+* S: [Fiji Beach (Stereo)128kbps.mp3](https://www.freesound.org/people/c97059890/sounds/21754/) by [c97059890](https://www.freesound.org/people/c97059890/) | License: Creative Commons 0
 
 *dsurround:bigrockslide / dsurround:rockslide*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/Benboncan/sounds/60085/">Rockfall in mine.wav</a> by <a href="https://www.freesound.org/people/Benboncan/">Benboncan</a> | License: Attribution</li> 
-     <li>S: <a href="https://www.freesound.org/people/gfrog/sounds/190505/">Rocks falling over rocks, over a steep hill, like a cliff.flac</a> by <a href="https://www.freesound.org/people/gfrog/">gfrog</a> | License: Creative Commons 0</li> 
-     <li>S: <a href="https://www.freesound.org/people/adamgryu/sounds/336023/">Rocks.wav</a> by <a href="https://www.freesound.org/people/adamgryu/">adamgryu</a> | License: Creative Commons 0</li>
-</ul>
+* S: [Rockfall in mine.wav](https://www.freesound.org/people/Benboncan/sounds/60085/) by [Benboncan](https://www.freesound.org/people/Benboncan/) | License: Attribution
+* S: [Rocks falling over rocks, over a steep hill, like a cliff.flac](https://www.freesound.org/people/gfrog/sounds/190505/) by [gfrog](https://www.freesound.org/people/gfrog/) | License: Creative Commons 0
+* S: [Rocks.wav](https://www.freesound.org/people/adamgryu/sounds/336023/) by [adamgryu](https://www.freesound.org/people/adamgryu/) | License: Creative Commons 0
 
 *dsurround:biome.crickets*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/rayjensen/sounds/202749/">Soft, Chilled Crickets Field Recording</a> by <a href="https://www.freesound.org/people/rayjensen/">rayjensen</a> | License: Creative Commons 0</li>
-</ul>
+* S: [Soft, Chilled Crickets Field Recording](https://www.freesound.org/people/rayjensen/sounds/202749/) by [rayjensen](https://www.freesound.org/people/rayjensen/) | License: Creative Commons 0
 
 *dsurround:thunder*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/Yoyodaman234/sounds/253953/">Thunder 1</a> by <a href="https://www.freesound.org/people/Yoyodaman234/">Yoyodaman234</a> | License: Creative Commons 0</li> 
-     <li>S: <a href="https://www.freesound.org/people/swuing/sounds/37774/">Donner1.wav</a> by <a href="https://www.freesound.org/people/swuing/">swuing</a> | License: Attribution</li> 
-     <li>S: <a href="https://www.freesound.org/people/bone666138/sounds/198857/">Thunder - 1</a> by <a href="https://www.freesound.org/people/bone666138/">bone666138</a> | License: Attribution</li> 
-     <li>S: <a href="https://www.freesound.org/people/bone666138/sounds/198858/">Thunder - 2</a> by <a href="https://www.freesound.org/people/bone666138/">bone666138</a> | License: Attribution</li> 
-     <li>S: <a href="https://www.freesound.org/people/sarson/sounds/195522/">Distant Thunder.wav</a> by <a href="https://www.freesound.org/people/sarson/">sarson</a> | License: Creative Commons 0</li> 
-     <li>S: <a href="https://www.freesound.org/people/aaronstar/sounds/194849/">NM-Mejor-Lado-Thunder-01.wav</a> by <a href="https://www.freesound.org/people/aaronstar/">aaronstar</a> | License: Creative Commons 0</li> 
-</ul>
+* S: [Thunder 1](https://www.freesound.org/people/Yoyodaman234/sounds/253953/) by [Yoyodaman234](https://www.freesound.org/people/Yoyodaman234/) | License: Creative Commons 0
+* S: [Donner1.wav](https://www.freesound.org/people/swuing/sounds/37774/) by [swuing](https://www.freesound.org/people/swuing/) | License: Attribution
+* S: [Thunder - 1](https://www.freesound.org/people/bone666138/sounds/198857/) by [bone666138](https://www.freesound.org/people/bone666138/) | License: Attribution
+* S: [Thunder - 2](https://www.freesound.org/people/bone666138/sounds/198858/) by [bone666138](https://www.freesound.org/people/bone666138/) | License: Attribution
+* S: [Distant Thunder.wav](https://www.freesound.org/people/sarson/sounds/195522/) by [sarson](https://www.freesound.org/people/sarson/) | License: Creative Commons 0
+* S: [NM-Mejor-Lado-Thunder-01.wav](https://www.freesound.org/people/aaronstar/sounds/194849/) by [aaronstar](https://www.freesound.org/people/aaronstar/) | License: Creative Commons 0
 
 *dsurround:waterfall.0*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/genghis%20attenborough/sounds/28266/">Waterfall Winspit Dorset.wav</a> by <a href="https://www.freesound.org/people/genghis%20attenborough/">genghis attenborough</a> | License: Attribution Noncommercial</li> 
-</ul>
+* S: [Waterfall Winspit Dorset.wav](https://www.freesound.org/people/genghis%20attenborough/sounds/28266/) by [genghis attenborough](https://www.freesound.org/people/genghis%20attenborough/) | License: Attribution Noncommercial 
 
 *dsurround:waterfall.1*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/InspectorJ/sounds/365921/">Waterfall, Small, B.wav</a> by <a href="https://www.freesound.org/people/InspectorJ/">InspectorJ</a> | License: Attribution</li> 
-</ul>
+* S: [Waterfall, Small, B.wav](https://www.freesound.org/people/InspectorJ/sounds/365921/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: Attribution
 
 *dsurround:waterfall.2*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/Orpheuz/sounds/321886/">Waterfall</a> by <a href="https://www.freesound.org/people/Orpheuz/">Orpheuz</a> | License: Creative Commons 0</li> 
-</ul>
+* S: [Waterfall](https://www.freesound.org/people/Orpheuz/sounds/321886/) by [Orpheuz](https://www.freesound.org/people/Orpheuz/) | License: Creative Commons 0
 
 *dsurround:waterfall.3*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/willstepp/sounds/188295/">Small Waterfall at the Mill</a> by <a href="https://www.freesound.org/people/willstepp/">willstepp</a> | License: Creative Commons 0</li> 
-</ul>
+* S: [Small Waterfall at the Mill](https://www.freesound.org/people/willstepp/sounds/188295/) by [willstepp](https://www.freesound.org/people/willstepp/) | License: Creative Commons 0
 
 *dsurround:waterfall.4*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/InspectorJ/sounds/335992/">Waterfall, Large, A.wav</a> by <a href="https://www.freesound.org/people/InspectorJ/">InspectorJ</a> | License: Attribution</li> 
-</ul>
+* S: [Waterfall, Large, A.wav](https://www.freesound.org/people/InspectorJ/sounds/335992/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: Attribution
 
 *dsurround:waterfall.5*
 
-<ul>
-<li> <a href="https://orangefreesounds.com/running-water-sound-mountain-stream/">Running-water-mountain-stream.mp3</a> by Alexander | License Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)</li>
-</ul>
+* [Running-water-mountain-stream.mp3](https://orangefreesounds.com/running-water-sound-mountain-stream/) by Alexander | License Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
 
 *dsurround:biome.wind / dsurround:biome.wind.hills / dsurround:biome.wind.mountains*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/felix.blume/sounds/156414/">Wind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).</a> by <a href="https://www.freesound.org/people/felix.blume/">felix.blume</a> | License: Creative Commons 0</li>
-</ul>
+* S: [Wind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).](https://www.freesound.org/people/felix.blume/sounds/156414/) by [felix.blume](https://www.freesound.org/people/felix.blume/) | License: Creative Commons 0
 
 *dsurround:biome.wind.arctic*
 
-<ul>
-     <li>S: <a href="https://freesound.org/people/DBlover/sounds/405601/">Howling Wind Ambience</a> by <a href="https://www.freesound.org/people/DBlover/">DBlover</a> | License: Creative Commons 0</li>
-</ul>
+* S: [Howling Wind Ambience](https://freesound.org/people/DBlover/sounds/405601/) by [DBlover](https://freesound.org/people/DBlover/) | License: Creative Commons 0
 
 *dsurround:biome.ocean / dsurround:biome.ocean.deep / dsurround:biome.ocean.deep.under*
 
-<ul>
-    <li>S: <a href="https://freesound.org/people/bohitomi/sounds/240219/">ocean waves surround me.wav</a> by <a href="https://www.freesound.org/people/bohitomi/">bohitomi</a> | License: Attribution</li>
-</ul>
+* S: [ocean waves surround me.wav](https://freesound.org/people/bohitomi/sounds/240219/) by [bohitomi](https://freesound.org/people/bohitomi/) | License: Attribution
 
 *dsurround:biome.river / dsurround:biome.ocean.under*
 
-<ul>
-     <li>S: <a href="https://freesound.org/people/AlienXXX/sounds/218276/">underwater ambience.wav</a> by <a href="https://freesound.org/people/AlienXXX/">AlienXXX</a> | License: Attribution</li>
-</ul>
+* S: [underwater ambience.wav](https://www.freesound.org/people/AlienXXX/sounds/218276/) by [AlienXXX](https://www.freesound.org/people/AlienXXX/) | License: Attribution
 
 *dsurround:biome.bog*
 
-<ul>
-     <li>S: <a href="https://freesound.org/people/RHumphries/sounds/1050/">rbh Mpls Bog birds.wav</a> by <a href="https://freesound.org/people/RHumphries/">RHumphries</a> | License: Attribution</li>
-</ul>
+* S: [rbh Mpls Bog birds.wav](https://www.freesound.org/people/RHumphries/sounds/1050/) by [RHumphries](https://www.freesound.org/people/RHumphries/) | License: Attribution
 
 *dsurround:underriver / dsurround:underocean / dsurround:underdeepocean*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/AlienXXX/sounds/218276/">underwater ambience.wav</a> by <a href="https://www.freesound.org/people/AlienXXX/">AlienXXX</a> | License: Attribution</li> 
-</ul>
+* S: [underwater ambience.wav](https://www.freesound.org/people/AlienXXX/sounds/218276/) by [AlienXXX](https://www.freesound.org/people/AlienXXX/) | License: Attribution
 
 *dsurround:biome.plains*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/blouhond/sounds/157947/">Calm Morning Outdoor Ambience</a> by <a href="https://www.freesound.org/people/blouhond/">blouhond</a> | License: Attribution</li> 
-</ul>
+* S: [Calm Morning Outdoor Ambience](https://www.freesound.org/people/blouhond/sounds/157947/) by [blouhond](https://www.freesound.org/people/blouhond/) | License: Attribution
 
 *dsurround:biome.forest*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/joepsporck/sounds/262037/">001_forrest.wav</a> by <a href="https://www.freesound.org/people/joepsporck/">joepsporck</a> | License: Creative Commons 0</li> 
-</ul>
+* S: [001_forrest.wav](https://www.freesound.org/people/joepsporck/sounds/262037/) by [joepsporck](https://www.freesound.org/people/joepsporck/) | License: Creative Commons 0
 
 *dsurround:biome.forest.pine*
 
-<ul>
-     <li>S: <a href="https://freesound.org/people/nfsgit/sounds/121960/">Nord_Odal_Nyhus_04_juni_2011_open_forest_birds_insects_wind_through_large_pines.wav</a> by <a href="https://www.freesound.org/people/nfsgit/">nfsgit</a> | License: Creative Commons 0</li> 
-</ul>
+* S: [Nord_Odal_Nyhus_04_juni_2011_open_forest_birds_insects_wind_through_large_pines.wav](https://freesound.org/people/nfsgit/sounds/121960/) by [nfsgit](https://www.freesound.org/people/nfsgit/) | License: Creative Commons 0
 
 *dsurround:coyote*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/dkaufman/sounds/256533/">coyote barks and howls</a> by <a href="https://www.freesound.org/people/dkaufman/">dkaufman</a> | License: Creative Commons 0</li> 
-</ul>
+* S: [coyote barks and howls](https://www.freesound.org/people/dkaufman/sounds/256533/) by [dkaufman](https://www.freesound.org/people/dkaufman/) | License: Creative Commons 0
 
 *dsurround:biome.village.rooster*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/Ramston/sounds/331442/">Village ambience rooster and light birds with wind .wav</a> by <a href="https://www.freesound.org/people/Ramston/">Ramston</a> | License: Creative Commons 0</li> 
-</ul>
+* S: [Village ambience rooster and light birds with wind .wav](https://www.freesound.org/people/Ramston/sounds/331442/) by [Ramston](https://www.freesound.org/people/Ramston/) | License: Creative Commons 0
 
 *dsurround:biome.village.anvil*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/MrAuralization/sounds/274846/">Anvil</a> by <a href="https://www.freesound.org/people/MrAuralization/">MrAuralization</a> | License: Attribution</li> 
-</ul>
+* S: [Anvil](https://www.freesound.org/people/MrAuralization/sounds/274846/) by [MrAuralization](https://www.freesound.org/people/MrAuralization/) | License: Attribution
 
 *dsurround:waterdrips*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/InspectorJ/sounds/343761/">Dripping, Very Fast, A.wav</a> by <a href="https://www.freesound.org/people/InspectorJ/">InspectorJ</a> | License: Attribution</li> 
-</ul>
+* S: [Dripping, Very Fast, A.wav](https://www.freesound.org/people/InspectorJ/sounds/343761/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: Attribution
 
 *dsurround:biome.village.dogbark*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/darranambler/sounds/344955/">Dogs Barking</a> by <a href="https://www.freesound.org/people/darranambler/">darranambler</a> | License: Creative Commons 0</li> 
-</ul>
+* S: [Dogs Barking](https://www.freesound.org/people/darranambler/sounds/344955/) by [darranambler](https://www.freesound.org/people/darranambler/) | License: Creative Commons 0
 
 *dsurround:biome.water.under*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/Abolla/sounds/213914/">UnderwaterDrowning01.wav</a> by <a href="https://www.freesound.org/people/Abolla/">Abolla</a> | License: Creative Commons 0</li> 
-</ul>
+* S: [UnderwaterDrowning01.wav](https://www.freesound.org/people/Abolla/sounds/213914/) by [Abolla](https://www.freesound.org/people/Abolla/) | License: Creative Commons 0
 
 *dsurround:dimension.nether*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/DrMinky/sounds/166187/">Creepy Dungeon Ambience</a> by <a href="https://www.freesound.org/people/DrMinky/">DrMinky</a> | License: Attribution</li> 
-</ul>
-
+* S: [Creepy Dungeon Ambience](https://www.freesound.org/people/DrMinky/sounds/166187/) by [DrMinky](https://www.freesound.org/people/DrMinky/) | License: Attribution
 
 *dsurround:crow*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/conleec/sounds/173866/">ANML_M_Ext_Crow_Calls_Single1.wav</a> by <a href="https://www.freesound.org/people/conleec/">conleec</a> | License: Creative Commons 0</li> 
-</ul>
+* S: [ANML_M_Ext_Crow_Calls_Single1.wav](https://www.freesound.org/people/conleec/sounds/173866/) by [conleec](https://www.freesound.org/people/conleec/) | License: Creative Commons 0
 
 *dsurround:bog*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/RHumphries/sounds/1050/">rbh Mpls Bog birds.wav</a> by <a href="https://www.freesound.org/people/RHumphries/">RHumphries</a> | License: Attribution</li> 
-</ul>
+* S: [rbh Mpls Bog birds.wav](https://www.freesound.org/people/RHumphries/sounds/1050/) by [RHumphries](https://www.freesound.org/people/RHumphries/) | License: Attribution
 
 *dsurround:biome.desert.wind*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/nageor/sounds/112296/">desertwind1FINAL.wav</a> by <a href="https://www.freesound.org/people/nageor/">nageor</a> | License: Creative Commons 0</li> 
-</ul>
+* S: [desertwind1FINAL.wav](https://www.freesound.org/people/nageor/sounds/112296/) by [nageor](https://www.freesound.org/people/nageor/) | License: Creative Commons 0
 
 *dsurround:biome.savanna.night*
 
-<ul>
-     <li>S: <a href="https://www.freesound.org/people/reinsamba/sounds/58236/">MerlothPark_crickets2.WAV</a> by <a href="https://www.freesound.org/people/reinsamba/">reinsamba</a> | License: Attribution</li>
-</ul>
+* S: [MerlothPark_crickets2.WAV](https://www.freesound.org/people/reinsamba/sounds/58236/) by [reinsamba](https://www.freesound.org/people/reinsamba/) | License: Attribution
 
 *dsurround:biome.savanna.day*
 
-<ul> 
-     <li>S: <a href="https://www.freesound.org/people/reinsamba/sounds/58237/">MerlothPark_morning_ambiance.wav</a> by <a href="https://www.freesound.org/people/reinsamba/">reinsamba</a> | License: Attribution</li> 
-</ul>
+* S: [MerlothPark_morning_ambiance.wav](https://www.freesound.org/people/reinsamba/sounds/58237/) by [reinsamba](https://www.freesound.org/people/reinsamba/) | License: Attribution
 
 *dsurround:turtledove*
 
-<ul>
-     <li>S: <a href="https://freesound.org/people/csengeri/sounds/351726/">turtledove sounds</a> by <a href="https://freesound.org/people/csengeri/">csengeri</a> | License: Creative Commons 0</li>
-</ul>
+* S: [turtledove sounds](https://freesound.org/people/csengeri/sounds/351726/) by [csengeri](https://www.freesound.org/people/csengeri/) | License: Creative Commons 0
 
 *dsurround:biome.forest.silent*
 
-<ul>
-    <li>S: <a href="https://freesound.org/people/ZHR%C3%98/sounds/753418/">Silent forest</a> by <a href="https://freesound.org/people/ZHR%C3%98/">ZHRØ</a> | License: Creative Commons 0</li>
-</ul>
+* S: [Silent forest](https://freesound.org/people/ZHR%C3%98/sounds/753418/) by [ZHRØ](https://freesound.org/people/ZHR%C3%98/) | License: Creative Commons 0

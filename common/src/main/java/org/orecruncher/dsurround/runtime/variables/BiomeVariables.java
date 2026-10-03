@@ -6,26 +6,68 @@ import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.CachingSupplier;
+import org.orecruncher.dsurround.lib.scripting.ArgType;
+import org.orecruncher.dsurround.lib.scripting.ScriptArguments;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 
+import java.util.function.Function;
+
 public final class BiomeVariables extends VariableSet {
 
-    private final IBiomeLibrary biomeLibrary;
+    private static final String UNKNOWN = "UNKNOWN";
 
-    private final CachingSupplier<String> precipitationType = CachingSupplier.from(() -> {
-        var pos = GameUtils.getPlayer().orElseThrow().blockPosition();
-        return this.biome.getPrecipitationAt(pos).name();
-    });
-    private final CachingSupplier<String> id = CachingSupplier.from(() -> this.info.getBiomeId().toString());
-    private final CachingSupplier<String> biomeTraits = CachingSupplier.from(() -> this.info.getTraits().toString());
+    /**
+     * A biome trait name, case-insensitive. Constant names are checked when the script is compiled, so a typo
+     * such as biome.is('HOTT') is reported as an error instead of never matching.
+     */
+    private static final ArgType<BiomeTrait> BIOME_TRAIT = ArgType.of("biome trait", BiomeVariables::toTrait);
+
+    // Vanilla's Biome.warmEnoughToRain() threshold
+    private static final float RAIN_TEMPERATURE = 0.15F;
+
+    private final IBiomeLibrary biomeLibrary;
+    // Where the player is in game; the biome's own for biome rules
+    private final CachingSupplier<String> precipitationType;
+    private final CachingSupplier<String> id = CachingSupplier.from(() -> this.info == null ? UNKNOWN : this.info.getBiomeId().toString());
+    private final CachingSupplier<String> biomeTraits = CachingSupplier.from(() -> this.info == null ? "[]" : this.info.getTraits().toString());
 
     private Biome biome;
     private BiomeInfo info;
 
+    /**
+     * The player's biome, updated each tick. Precipitation is at the player's position.
+     */
     public BiomeVariables(IBiomeLibrary biomeLibrary) {
+        this(biomeLibrary, biome -> GameUtils.getPlayer()
+                .map(p -> biome.getPrecipitationAt(p.blockPosition()))
+                .orElse(Biome.Precipitation.NONE));
+    }
+
+    BiomeVariables(IBiomeLibrary biomeLibrary, Function<Biome, Biome.Precipitation> precipitation) {
         super("biome");
         this.biomeLibrary = biomeLibrary;
+        this.precipitationType = CachingSupplier.from(() ->
+                (this.biome == null ? Biome.Precipitation.NONE : precipitation.apply(this.biome)).name());
+    }
+
+    /**
+     * Variables for biome rules, which describe a biome rather than where the player is. Precipitation is the
+     * biome's own (see {@link #biomePrecipitation}), so a rule gives the same answer wherever the player happens
+     * to be when the libraries reload, or at the main menu.
+     */
+    public static BiomeVariables forBiomeRules(IBiomeLibrary biomeLibrary) {
+        return new BiomeVariables(biomeLibrary, BiomeVariables::biomePrecipitation);
+    }
+
+    /**
+     * What falls in the biome itself, from its own settings, the way vanilla decides at sea level. Doesn't call
+     * Biome.getPrecipitationAt(): seasons mods change that to read the current world, which there may not be.
+     */
+    static Biome.Precipitation biomePrecipitation(Biome biome) {
+        if (!biome.hasPrecipitation())
+            return Biome.Precipitation.NONE;
+        return biome.getBaseTemperature() >= RAIN_TEMPERATURE ? Biome.Precipitation.RAIN : Biome.Precipitation.SNOW;
     }
 
     @Override
@@ -36,6 +78,8 @@ public final class BiomeVariables extends VariableSet {
             newBiome = player.level().getBiome(player.getOnPos()).value();
         }
         this.setBiome(newBiome);
+        // Depends on where the player is, not only the biome, so it can change while the biome stays the same
+        this.precipitationType.clear();
     }
 
     public void setBiome(final Biome biome) {
@@ -48,6 +92,9 @@ public final class BiomeVariables extends VariableSet {
     }
 
     public void setBiome(final Biome biome, final BiomeInfo info) {
+        // Usually the same as last tick. A reload gives the same biome a new info, so both are compared.
+        if (biome == this.biome && info == this.info)
+            return;
         this.biome = biome;
         this.info = info;
         this.id.clear();
@@ -57,35 +104,54 @@ public final class BiomeVariables extends VariableSet {
 
     @Override
     public void configure(IConfigureDefinition config) {
-        config.defineFunction(id("getModId"), l -> this.info.getBiomeId().getNamespace());
-        config.defineFunction(id("getId"), l -> this.id.get());
-        config.defineFunction(id("getName"), l -> this.info.getBiomeName());
-        config.defineFunction(id("getRainfall"), l -> this.info.getDownfall());
-        config.defineFunction(id("getTemperature"), l -> this.biome.getBaseTemperature());
-        config.defineFunction(id("getPrecipitationType"), l -> this.precipitationType.get());
-        config.defineFunction(id("getTraits"), l -> this.biomeTraits.get());
-        config.defineFunction(id("is"), 1, false, l -> this.is(l[0]));
-        config.defineFunction(id("isAllOf"), 1, true, this::isAllOf);
-        config.defineFunction(id("isOneOf"), 1, true, this::isOneOf);
+        // info and biome are null when not in game
+        config.property(id("getModId"), () -> this.info == null ? UNKNOWN : this.info.getBiomeId().getNamespace());
+        config.property(id("getId"), this.id::get);
+        config.property(id("getName"), () -> this.info == null ? UNKNOWN : this.info.getBiomeName());
+        config.property(id("getRainfall"), () -> this.info == null ? 0F : this.info.getDownfall());
+        config.property(id("getTemperature"), () -> this.biome == null ? 0F : this.biome.getBaseTemperature());
+        config.property(id("getPrecipitationType"), this::getPrecipitationType);
+        config.property(id("getTraits"), this.biomeTraits::get);
+
+        config.function(id("is"))
+                .param(BIOME_TRAIT)
+                .handler(args -> this.hasTrait(args.<BiomeTrait>get(0)));
+        config.function(id("isAllOf"))
+                .param(BIOME_TRAIT).varParams(BIOME_TRAIT)
+                .handler(this::isAllOf);
+        config.function(id("isOneOf"))
+                .param(BIOME_TRAIT).varParams(BIOME_TRAIT)
+                .handler(this::isOneOf);
 
         for (var trait : BiomeTrait.values())
             config.defineVariable(trait.getName(), () -> this.hasTrait(trait));
     }
 
-    private boolean is(final Object o) {
-        return this.info != null && this.info.hasTrait(o.toString());
+    String getPrecipitationType() {
+        return this.precipitationType.get();
     }
 
-    private boolean isAllOf(final Object[] trait) {
-        for (var t : trait)
-            if (!this.is(t))
+    private static BiomeTrait toTrait(Object value) {
+        if (value instanceof BiomeTrait trait)
+            return trait;
+        if (!(value instanceof String name))
+            return null;
+        var trait = BiomeTrait.of(name);
+        if (trait == BiomeTrait.UNKNOWN && !UNKNOWN.equalsIgnoreCase(name))
+            return ArgType.reject("unknown biome trait '%s'".formatted(name));
+        return trait;
+    }
+
+    private boolean isAllOf(final ScriptArguments traits) {
+        for (int i = 0; i < traits.count(); i++)
+            if (!this.hasTrait(traits.get(i)))
                 return false;
         return true;
     }
 
-    private boolean isOneOf(final Object[] trait) {
-        for (var t : trait)
-            if (this.is(t))
+    private boolean isOneOf(final ScriptArguments traits) {
+        for (int i = 0; i < traits.count(); i++)
+            if (this.hasTrait(traits.get(i)))
                 return true;
         return false;
     }

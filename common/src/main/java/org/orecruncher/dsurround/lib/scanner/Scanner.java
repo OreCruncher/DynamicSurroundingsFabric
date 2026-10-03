@@ -3,14 +3,30 @@ package org.orecruncher.dsurround.lib.scanner;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
 public abstract class Scanner {
 
-    private final static int MAX_BLOCKS_TICK = 6000;
+    /**
+     * How long scanning may run each tick. Scanning runs on the client thread, so this is time taken from the
+     * frame; 1 ms is about 6% of a frame at 60 fps. This is the real limit; the block count below is a backstop.
+     */
+    protected final static long TIME_BUDGET_NANOS = 1_000_000L;
+    /**
+     * Upper bound on blocks read per tick regardless of time, in case the clock misbehaves.
+     */
+    protected final static int MAX_BLOCKS_TICK = 65_536;
+    /**
+     * How many blocks are read between checks of the clock. Reading the clock isn't free, and a block costs well
+     * under a microsecond, so checking every block would be wasteful. The budget can be overrun by at most this
+     * many blocks.
+     */
+    protected final static int CLOCK_CHECK_INTERVAL = 256;
+    // After this many failures only a count is kept, so a broken handler can't flood the log
+    private final static int MAX_LOGGED_ERRORS = 10;
 
     protected final String name;
 
@@ -21,13 +37,14 @@ public abstract class Scanner {
     protected int xSize;
     protected int ySize;
     protected int zSize;
-    protected int blocksPerTick;
     protected int volume;
 
     protected final ScanContext locus;
 
     protected final IRandomizer random = Randomizer.current();
     protected final BlockPos.MutableBlockPos workingPos = new BlockPos.MutableBlockPos();
+
+    private final LogThrottle<Object> blockErrors;
 
     public Scanner(final ScanContext locus, final String name, final int range) {
         this(locus, name, range, range, range);
@@ -36,6 +53,7 @@ public abstract class Scanner {
     public Scanner(final ScanContext locus, final String name, final int xRange, final int yRange, final int zRange) {
         this.name = name;
         this.locus = locus;
+        this.blockErrors = LogThrottle.firstN(locus.getLogger(), "block errors from " + name, null, MAX_LOGGED_ERRORS);
 
         this.setRange(xRange, yRange, zRange);
     }
@@ -53,7 +71,6 @@ public abstract class Scanner {
         this.ySize = yRange * 2 + 1;
         this.zSize = zRange * 2 + 1;
         this.volume = this.xSize * this.ySize * this.zSize;
-        this.blocksPerTick = Math.min(this.volume / 20, MAX_BLOCKS_TICK);
     }
 
     /**
@@ -70,25 +87,56 @@ public abstract class Scanner {
      */
     public abstract void blockScan(final Level world, final BlockState state, final BlockPos pos, final IRandomizer rand);
 
-    public void tick() {
-        var world = this.locus.getWorld();
-        for (int count = 0; count < this.blocksPerTick; count++) {
-            final BlockPos pos = nextPos(this.workingPos, this.random);
-            if (pos == null)
-                break;
-            final BlockState state = world.getBlockState(pos);
-            if (Constants.BLOCKS_TO_IGNORE.contains(state.getBlock()))
-                continue;
-            blockScan(world, state, pos, this.random);
+    /**
+     * Invoked for a block the client was told changed, rather than one coming into range. Override when a change
+     * needs different handling from a scan. Defaults to {@link #blockScan}. The same BlockPos caveat applies.
+     */
+    public void blockUpdated(final Level world, final BlockState state, final BlockPos pos, final IRandomizer rand) {
+        this.blockScan(world, state, pos, rand);
+    }
+
+    /**
+     * Does this tick's share of scanning, within {@link #TIME_BUDGET_NANOS} (and at most {@link #MAX_BLOCKS_TICK}
+     * blocks).
+     */
+    public abstract void tick();
+
+    /**
+     * Passes a block to {@link #blockScan} unless it is one of {@link Constants#BLOCKS_TO_IGNORE}. Every scan path
+     * goes through here, so they all skip the same blocks, and an exception from one block is logged instead of
+     * abandoning the rest of the scan.
+     */
+    protected final void scanBlock(final Level world, final BlockState state, final BlockPos pos) {
+        if (Constants.BLOCKS_TO_IGNORE.contains(state.getBlock()))
+            return;
+        try {
+            this.blockScan(world, state, pos, this.random);
+        } catch (Throwable t) {
+            this.onBlockError(t, "blockScan", state, pos);
         }
     }
 
     /**
-     * Provide the next block position to be processed. For memory efficiency the
-     * provided mutable should be used to store the coordinate information and
-     * returned from the function call.
+     * The {@link #blockUpdated} counterpart of {@link #scanBlock}, for blocks the client was told changed.
      */
-    @Nullable
-    protected abstract BlockPos nextPos(final BlockPos.MutableBlockPos pos, final IRandomizer rand);
+    protected final void updateBlock(final Level world, final BlockState state, final BlockPos pos) {
+        if (Constants.BLOCKS_TO_IGNORE.contains(state.getBlock()))
+            return;
+        try {
+            this.blockUpdated(world, state, pos, this.random);
+        } catch (Throwable t) {
+            this.onBlockError(t, "blockUpdated", state, pos);
+        }
+    }
 
+    /**
+     * Logs a failure from a block handler. Errors the JVM can't recover from (out of memory, stack overflow) are
+     * rethrown rather than swallowed.
+     */
+    protected final void onBlockError(final Throwable t, final String handler, final BlockState state, final BlockPos pos) {
+        if (t instanceof VirtualMachineError fatal)
+            throw fatal;
+
+        this.blockErrors.error(t, "[%s] %s failed at %s for %s", this.name, handler, pos.toShortString(), state);
+    }
 }

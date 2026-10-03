@@ -4,15 +4,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -20,16 +17,29 @@ import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.lib.math.ReusableRaycastContext;
 import org.orecruncher.dsurround.lib.math.ReusableRaycastIterator;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
-import org.orecruncher.dsurround.runtime.audio.effects.Effects;
-import org.orecruncher.dsurround.runtime.audio.effects.LowPassData;
-import org.orecruncher.dsurround.runtime.audio.effects.SourcePropertyFloat;
 import org.orecruncher.dsurround.sound.SoundInstanceHandler;
 
+import java.util.Arrays;
+
+/**
+ * Calculates the occlusion, reverb and air absorption filters for one playing sound.
+ * <p>
+ * The expensive part is ray tracing: rays cast around the sound and bounced off surfaces for reverb, and one cast
+ * towards the player for occlusion. Its results are reused while the sound and the player stay in the same blocks
+ * and the world hasn't changed (see {@link TraceCache}); the cheap per-update factors (weather, being under water,
+ * dampened hearing) are applied every time.
+ */
 public final class SoundFXUtils {
 
     private static final IBlockLibrary BLOCK_LIBRARY = ContainerManager.resolve(IBlockLibrary.class);
     private static final ISeasonalInformation SEASONAL_INFORMATION = ContainerManager.resolve(ISeasonalInformation.class);
     private static final Configuration.EnhancedSounds CONFIG = ContainerManager.resolve(Configuration.EnhancedSounds.class);
+
+    /**
+     * How much rain and snow absorb sound passing through them.
+     */
+    private static final float RAIN_AIR_ABSORPTION_FACTOR = 2F;
+    private static final float SNOW_AIR_ABSORPTION_FACTOR = 5F;
 
     /**
      * Maximum number of segments to check when ray tracing for occlusion.
@@ -68,7 +78,7 @@ public final class SoundFXUtils {
      */
     private static final Vec3[] REVERB_RAY_PROJECTED = new Vec3[REVERB_RAYS];
     /**
-     * Precaluclated direction surface normals as Vec3 instead of Vec3i
+     * Precalculated direction surface normals as Vec3 instead of Vec3i
      */
     private static final Vec3[] SURFACE_DIRECTION_NORMALS = new Vec3[Direction.values().length];
 
@@ -98,6 +108,15 @@ public final class SoundFXUtils {
 
     private final SourceContext source;
 
+    // Ray traced results, reused while the cache says nothing relevant has changed
+    private final TraceCache cache = new TraceCache();
+    private Vec3 tracedSoundPos = Vec3.ZERO;
+    private float tracedOcclusion;
+    private final float[] tracedSendGains = new float[AcousticFilters.CHANNELS];
+    private final float[] tracedBounceTotals = new float[REVERB_RAY_BOUNCES];
+    private float tracedSharedAirspace;
+    private int tracedAirspaceChecks = 1;
+
     public SoundFXUtils(final SourceContext source) {
         this.source = source;
     }
@@ -112,38 +131,49 @@ public final class SoundFXUtils {
                 || !this.source.isEnabled()
                 || !SoundInstanceHandler.inRange(ctx.playerEyePosition, this.source.getSound())
                 || this.source.getPosition().equals(Vec3.ZERO)) {
+            this.cache.invalidate();
             this.clearSettings();
             return;
         }
 
-        // Need to offset sound toward player if it is in a solid block
-        final Vec3 soundPos = offsetPositionIfSolid(ctx.world, this.source.getPosition(), ctx.playerEyePosition);
+        // Read before tracing, so a change while tracing makes the next calculation trace again
+        final long generation = WorldChangeTracker.generation();
+        final long soundBlock = BlockPos.containing(this.source.getPosition()).asLong();
+        final long eyeBlock = BlockPos.containing(ctx.playerEyePosition).asLong();
 
-        final float absorptionCoeff = Effects.GLOBAL_BLOCK_ABSORPTION * 3.0F;
-        final float airAbsorptionFactor = calculateWeatherAbsorption(ctx, soundPos, ctx.playerEyePosition);
-        final float occlusionAccumulation = calculateOcclusion(ctx, soundPos, ctx.playerEyePosition);
-        final float sendCoeff = -occlusionAccumulation * absorptionCoeff;
+        if (!this.cache.matches(ctx.world, soundBlock, eyeBlock, generation)) {
+            // Need to offset sound toward player if it is in a solid block or fluid
+            this.tracedSoundPos = SoundGeometry.offsetPositionIfNeeded(ctx.world, this.source.getPosition(), ctx.playerEyePosition);
+            this.tracedOcclusion = this.calculateOcclusion(ctx, this.tracedSoundPos, ctx.playerEyePosition);
+            this.traceReverb(ctx, this.tracedSoundPos);
+            this.cache.update(ctx.world, soundBlock, eyeBlock, generation);
+        }
 
-        float directCutoff = (float) MathStuff.exp(sendCoeff);
+        final float airAbsorptionFactor = calculateWeatherAbsorption(ctx, this.tracedSoundPos, ctx.playerEyePosition);
+        final var filters = AcousticFilters.compute(
+                this.tracedOcclusion,
+                this.tracedSendGains,
+                AcousticFilters.channelRatios(this.tracedBounceTotals, REVERB_RAYS),
+                AcousticFilters.sharedAirspace(this.tracedSharedAirspace, this.tracedAirspaceChecks),
+                ctx.submersion);
 
-        // Handle any dampening effects from the player, like head in water
-        directCutoff *= 1F - ctx.auralDampening;
+        this.apply(filters, airAbsorptionFactor);
+    }
 
-        // Calculate reverb parameters for this sound
-        float sendGain0 = 0F;
-        float sendGain1 = 0F;
-        float sendGain2 = 0F;
-        float sendGain3 = 0F;
-
-        float sendCutoff0;
-        float sendCutoff1;
-        float sendCutoff2;
-        float sendCutoff3;
-
-        // Shoot rays around sound
-        final float[] bounceRatio = new float[REVERB_RAY_BOUNCES];
-
+    /**
+     * Casts rays around the sound, bouncing them off what they hit, and accumulates the reflected energy per reverb
+     * channel, the reflectivity per bounce, and how often a reflection point can see the player (shared airspace).
+     * <p>
+     * Shared airspace is checked from every reflection, or with {@code simplifiedSharedAirspace} only from each
+     * ray's last one (up to a quarter as many rays with 4 bounces).
+     */
+    private void traceReverb(final WorldContext ctx, final Vec3 soundPos) {
+        final float[] sendGains = this.tracedSendGains;
+        final float[] bounceTotals = this.tracedBounceTotals;
+        Arrays.fill(sendGains, 0F);
+        Arrays.fill(bounceTotals, 0F);
         float sharedAirspace = 0F;
+        final boolean checkLastReflectionOnly = CONFIG.simplifiedSharedAirspace;
 
         final ReusableRaycastContext traceContext = new ReusableRaycastContext(ctx.world, ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY);
 
@@ -181,7 +211,7 @@ public final class SoundFXUtils {
                 if (missed) {
                     totalRayDistance += lastHitPos.distanceTo(ctx.playerEyePosition);
                 } else {
-                    bounceRatio[j] += blockReflectivity;
+                    bounceTotals[j] += blockReflectivity;
                     totalRayDistance += lastHitPos.distanceTo(rayHit.getLocation());
 
                     lastHitPos = rayHit.getLocation();
@@ -191,9 +221,7 @@ public final class SoundFXUtils {
 
                     // Cast a ray back at the player.  If it is a miss there is a path back from the reflection
                     // point to the player meaning they share the same airspace.
-                    final Vec3 finalRayStart = MathStuff.addScaled(lastHitPos, lastHitNormal, 0.01F);
-                    var finalRayHit = traceContext.trace(finalRayStart, ctx.playerEyePosition);
-                    if (isMiss(finalRayHit)) {
+                    if (!checkLastReflectionOnly && canReachPlayer(traceContext, lastHitPos, lastHitNormal, ctx.playerEyePosition)) {
                         sharedAirspace += 1.0F;
                     }
                 }
@@ -201,110 +229,59 @@ public final class SoundFXUtils {
                 assert totalRayDistance >= 0;
                 final float reflectionDelay = (float) totalRayDistance * 0.12F * blockReflectivity;
 
+                // Spread the energy over the channels by delay: channel n peaks at a delay of n
                 final float cross0 = 1.0F - MathStuff.clamp1(Math.abs(reflectionDelay - 0.0F));
                 final float cross1 = 1.0F - MathStuff.clamp1(Math.abs(reflectionDelay - 1.0F));
                 final float cross2 = 1.0F - MathStuff.clamp1(Math.abs(reflectionDelay - 2.0F));
                 final float cross3 = MathStuff.clamp1(reflectionDelay - 2.0F);
 
-                sendGain0 += cross0 * energyTowardsPlayer * 6.4F;
-                sendGain1 += cross1 * energyTowardsPlayer * 12.8F;
-                sendGain2 += cross2 * energyTowardsPlayer * 12.8F;
-                sendGain3 += cross3 * energyTowardsPlayer * 12.8F;
+                sendGains[0] += cross0 * energyTowardsPlayer * 6.4F;
+                sendGains[1] += cross1 * energyTowardsPlayer * 12.8F;
+                sendGains[2] += cross2 * energyTowardsPlayer * 12.8F;
+                sendGains[3] += cross3 * energyTowardsPlayer * 12.8F;
 
                 // Nowhere to bounce off of, stop bouncing!
                 if (missed) {
                     break;
                 }
             }
+
+            // Simplified: one check per ray, from the last surface it reflected off
+            if (checkLastReflectionOnly && canReachPlayer(traceContext, lastHitPos, lastHitNormal, ctx.playerEyePosition)) {
+                sharedAirspace += 1.0F;
+            }
         }
 
-        bounceRatio[0] = bounceRatio[0] / REVERB_RAYS;
-        bounceRatio[1] = bounceRatio[1] / REVERB_RAYS;
-        bounceRatio[2] = bounceRatio[2] / REVERB_RAYS;
-        bounceRatio[3] = bounceRatio[3] / REVERB_RAYS;
+        this.tracedSharedAirspace = sharedAirspace;
+        this.tracedAirspaceChecks = checkLastReflectionOnly ? REVERB_RAYS : REVERB_RAYS * REVERB_RAY_BOUNCES;
+    }
 
-        sharedAirspace *= RECIP_TOTAL_RAYS * 64F;
+    /**
+     * Whether a straight path leads from a reflection point (just off the surface) to the player.
+     */
+    private static boolean canReachPlayer(final ReusableRaycastContext traceContext, final Vec3 hitPos, final Vec3 hitNormal, final Vec3 playerEye) {
+        final Vec3 start = MathStuff.addScaled(hitPos, hitNormal, 0.01F);
+        return isMiss(traceContext.trace(start, playerEye));
+    }
 
-        final float sharedAirspaceWeight0 = MathStuff.clamp1(sharedAirspace / 20.0F);
-        final float sharedAirspaceWeight1 = MathStuff.clamp1(sharedAirspace / 15.0F);
-        final float sharedAirspaceWeight2 = MathStuff.clamp1(sharedAirspace / 10.0F);
-        final float sharedAirspaceWeight3 = MathStuff.clamp1(sharedAirspace / 10.0F);
-
-        final float exp1 = (float) MathStuff.exp(sendCoeff);
-        final float exp2 = (float) MathStuff.exp(sendCoeff * 1.5F);
-        sendCutoff0 = exp1 * (1.0F - sharedAirspaceWeight0) + sharedAirspaceWeight0;
-        sendCutoff1 = exp1 * (1.0F - sharedAirspaceWeight1) + sharedAirspaceWeight1;
-        sendCutoff2 = exp2 * (1.0F - sharedAirspaceWeight2) + sharedAirspaceWeight2;
-        sendCutoff3 = exp2 * (1.0F - sharedAirspaceWeight3) + sharedAirspaceWeight3;
-
-        final float averageSharedAirspace = (sharedAirspaceWeight0 + sharedAirspaceWeight1 + sharedAirspaceWeight2
-                + sharedAirspaceWeight3) * 0.25F;
-        directCutoff = Math.max((float) Math.sqrt(averageSharedAirspace) * 0.2F, directCutoff);
-
-        float directGain = (float) MathStuff.pow(directCutoff, 0.1);
-
-        sendGain1 *= bounceRatio[1];
-        sendGain2 *= (float) MathStuff.pow(bounceRatio[2], 3.0);
-        sendGain3 *= (float) MathStuff.pow(bounceRatio[3], 4.0);
-
-        sendGain0 = MathStuff.clamp1(sendGain0);
-        sendGain1 = MathStuff.clamp1(sendGain1);
-        sendGain2 = MathStuff.clamp1(sendGain2 * 1.05F - 0.05F);
-        sendGain3 = MathStuff.clamp1(sendGain3 * 1.05F - 0.05F);
-
-        sendGain0 *= (float) MathStuff.pow(sendCutoff0, 0.1);
-        sendGain1 *= (float) MathStuff.pow(sendCutoff1, 0.1);
-        sendGain2 *= (float) MathStuff.pow(sendCutoff2, 0.1);
-        sendGain3 *= (float) MathStuff.pow(sendCutoff3, 0.1);
-
-        if (ctx.player.isUnderWater()) {
-            sendCutoff0 *= 0.4F;
-            sendCutoff1 *= 0.4F;
-            sendCutoff2 *= 0.4F;
-            sendCutoff3 *= 0.4F;
-        }
-
-        final LowPassData lp0 = this.source.getLowPass0();
-        final LowPassData lp1 = this.source.getLowPass1();
-        final LowPassData lp2 = this.source.getLowPass2();
-        final LowPassData lp3 = this.source.getLowPass3();
-        final LowPassData direct = this.source.getDirect();
-        final SourcePropertyFloat prop = this.source.getAirAbsorb();
-
+    private void apply(final AcousticFilters.Result filters, final float airAbsorptionFactor) {
         synchronized (this.source.sync()) {
-            lp0.gain = sendGain0;
-            lp0.gainHF = sendCutoff0;
-            lp0.setProcess(true);
+            for (int c = 0; c < AcousticFilters.CHANNELS; c++)
+                this.source.getSend(c).set(filters.sendGain()[c], filters.sendCutoff()[c]);
+            this.source.getDirect().set(filters.directGain(), filters.directCutoff());
 
-            lp1.gain = sendGain1;
-            lp1.gainHF = sendCutoff1;
-            lp1.setProcess(true);
-
-            lp2.gain = sendGain2;
-            lp2.gainHF = sendCutoff2;
-            lp2.setProcess(true);
-
-            lp3.gain = sendGain3;
-            lp3.gainHF = sendCutoff3;
-            lp3.setProcess(true);
-
-            direct.gain = directGain;
-            direct.gainHF = directCutoff;
-            direct.setProcess(true);
-
-            prop.setValue(airAbsorptionFactor);
-            prop.setProcess(true);
+            final var airAbsorb = this.source.getAirAbsorb();
+            airAbsorb.setValue(airAbsorptionFactor);
+            airAbsorb.setProcess(true);
         }
     }
 
     private void clearSettings() {
         synchronized (this.source.sync()) {
-            source.getLowPass0().setProcess(false);
-            source.getLowPass1().setProcess(false);
-            source.getLowPass2().setProcess(false);
-            source.getLowPass3().setProcess(false);
-            source.getDirect().setProcess(false);
-            source.getAirAbsorb().setProcess(false);
+            for (int c = 0; c < AcousticFilters.CHANNELS; c++)
+                this.source.getSend(c).disable();
+            this.source.getDirect().disable();
+            this.source.getAirAbsorb().setProcess(false);
         }
     }
 
@@ -323,18 +300,14 @@ public final class SoundFXUtils {
         BlockState lastState = ctx.world.getBlockState(BlockPos.containing(lastHit.x(), lastHit.y(), lastHit.z()));
         var traceContext = new ReusableRaycastContext(ctx.world, origin, target, ClipContext.Block.VISUAL, ClipContext.Fluid.ANY);
         var itr = new ReusableRaycastIterator(traceContext);
-        for (int i = 0; i < OCCLUSION_SEGMENTS; i++) {
-            if (itr.hasNext()) {
-                var result = itr.next();
-                final float occlusion = getOcclusion(lastState);
-                final double distance = lastHit.distanceTo(result.getLocation());
-                // Occlusion is scaled by the distance traveled through the block.
-                factor += (float) (occlusion * distance);
-                lastHit = result.getLocation();
-                lastState = ctx.world.getBlockState(result.getBlockPos());
-            } else {
-                break;
-            }
+        for (int i = 0; i < OCCLUSION_SEGMENTS && itr.hasNext(); i++) {
+            var result = itr.next();
+            final float occlusion = getOcclusion(lastState);
+            final double distance = lastHit.distanceTo(result.getLocation());
+            // Occlusion is scaled by the distance traveled through the block.
+            factor += (float) (occlusion * distance);
+            lastHit = result.getLocation();
+            lastState = ctx.world.getBlockState(result.getBlockPos());
         }
 
         return factor;
@@ -347,7 +320,8 @@ public final class SoundFXUtils {
             return 1F;
 
         final BlockPos low = BlockPos.containing(pt1);
-        final BlockPos mid = BlockPos.containing(MathStuff.addScaled(pt1, pt2, 0.5F));
+        // Halfway between the two points (not addScaled, which would give pt1 + pt2 / 2)
+        final BlockPos mid = BlockPos.containing(pt1.lerp(pt2, 0.5D));
         final BlockPos high = BlockPos.containing(pt2);
 
         // Determine the precipitation type at each point
@@ -382,20 +356,12 @@ public final class SoundFXUtils {
         return SURFACE_DIRECTION_NORMALS[d.ordinal()];
     }
 
-    private static Vec3 offsetPositionIfSolid(final Level world, final Vec3 origin, final Vec3 target) {
-        if (world.getBlockState(BlockPos.containing(origin)) != Blocks.AIR.defaultBlockState()) {
-            var normal = origin.vectorTo(target).normalize();
-            return MathStuff.addScaled(origin, normal, 0.876F);
-        }
-        return origin;
-    }
-
     private static float calcFactor(final Biome.Precipitation type, final float base) {
-        return type == Biome.Precipitation.NONE ? base : base * (type == Biome.Precipitation.SNOW ? Effects.SNOW_AIR_ABSORPTION_FACTOR : Effects.RAIN_AIR_ABSORPTION_FACTOR);
+        return type == Biome.Precipitation.NONE ? base : base * (type == Biome.Precipitation.SNOW ? SNOW_AIR_ABSORPTION_FACTOR : RAIN_AIR_ABSORPTION_FACTOR);
     }
 
-    private static boolean isMiss(@Nullable final BlockHitResult result) {
-        return result == null || result.getType() == HitResult.Type.MISS;
+    private static boolean isMiss(final BlockHitResult result) {
+        return result.getType() == HitResult.Type.MISS;
     }
 
     private static boolean skipOcclusion(SoundSource category) {

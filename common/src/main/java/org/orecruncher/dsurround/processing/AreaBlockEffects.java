@@ -1,17 +1,20 @@
 package org.orecruncher.dsurround.processing;
 
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ChunkPos;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
-import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.effects.systems.RandomBlockEffectSystem;
 import org.orecruncher.dsurround.effects.systems.SteamEffectSystem;
 import org.orecruncher.dsurround.effects.systems.WaterfallEffectSystem;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.eventing.IBlockUpdates;
+import org.orecruncher.dsurround.eventing.IChunkLoad;
+import org.orecruncher.dsurround.eventing.IReloadEvent;
+import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
@@ -36,10 +39,12 @@ public class AreaBlockEffects extends AbstractClientHandler {
 
         this.blockLibrary = blockLibrary;
         this.audioPlayer = audioPlayer;
-        ClientEventHooks.BLOCK_UPDATES_EVENT.register(this::blockUpdates);
+        IBlockUpdates.EVENT.register(this::blockUpdates);
+        IChunkLoad.EVENT.register(this::chunkLoaded);
 
-        // Whenever things reload need to rescan the area
-        AssetLibraryEvent.RELOAD.register(this::clear);
+        // Whenever things reload need to rescan the area. Runs after the libraries, which reload at HIGH and
+        // VERY_HIGH, so the rescan sees the new data.
+        IReloadEvent.EVENT.register(this::clear, HandlerPriority.LOW);
     }
 
     @Override
@@ -64,7 +69,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
 
         this.effectSystems = new SystemsScanner(this.config, this.locus);
         this.effectSystems.addEffectSystem(new SteamEffectSystem(this.logger, this.config));
-        this.effectSystems.addEffectSystem(new WaterfallEffectSystem(this.logger, this.config));
+        this.effectSystems.addEffectSystem(new WaterfallEffectSystem(this.logger, this.config, this.audioPlayer));
         this.effectSystems.addEffectSystem(new RandomBlockEffectSystem(this.logger, this.config, this.blockLibrary, this.audioPlayer, RandomBlockEffectSystem.NEAR_RANGE));
         this.effectSystems.addEffectSystem(new RandomBlockEffectSystem(this.logger, this.config, this.blockLibrary, this.audioPlayer, RandomBlockEffectSystem.FAR_RANGE));
 
@@ -93,6 +98,13 @@ public class AreaBlockEffects extends AbstractClientHandler {
         // Possible that a client connected to a server, but is being transferred (BungeeCord)
         if (this.effectSystems != null && GameUtils.isInGame())
             this.effectSystems.onBlockUpdates(blockPositions);
+    }
+
+    private void chunkLoaded(ClientLevel level, ChunkPos chunkPos) {
+        // Chunks keep arriving after the initial scan (joining, respawning, long scan ranges). The scanner queues
+        // the newly loaded part of its volume so those blocks aren't missed.
+        if (this.effectSystems != null && GameUtils.isInGame())
+            this.effectSystems.onChunkLoaded(level, chunkPos);
     }
 
     @Override
