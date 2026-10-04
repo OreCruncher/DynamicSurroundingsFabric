@@ -7,8 +7,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
+import org.orecruncher.dsurround.effects.IEffectSystem;
 import org.orecruncher.dsurround.effects.systems.RandomBlockEffectSystem;
 import org.orecruncher.dsurround.effects.systems.SteamEffectSystem;
+import org.orecruncher.dsurround.effects.systems.WaterStepEffectSystem;
 import org.orecruncher.dsurround.effects.systems.WaterfallEffectSystem;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IBlockUpdates;
@@ -23,6 +25,7 @@ import org.orecruncher.dsurround.processing.scanner.SystemsScanner;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 import java.util.Collection;
+import java.util.function.Consumer;
 
 public class AreaBlockEffects extends AbstractClientHandler {
 
@@ -45,6 +48,15 @@ public class AreaBlockEffects extends AbstractClientHandler {
         // Whenever things reload need to rescan the area. Runs after the libraries, which reload at HIGH and
         // VERY_HIGH, so the rescan sees the new data.
         IReloadEvent.EVENT.register(this::clear, HandlerPriority.LOW);
+    }
+
+    /**
+     * Calls {@code consumer} with each effect system; none while not connected to a world.
+     */
+    public void forEachEffectSystem(Consumer<IEffectSystem> consumer) {
+        var systems = this.effectSystems;
+        if (systems != null)
+            systems.forEachSystem(consumer);
     }
 
     @Override
@@ -70,6 +82,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
         this.effectSystems = new SystemsScanner(this.config, this.locus);
         this.effectSystems.addEffectSystem(new SteamEffectSystem(this.logger, this.config));
         this.effectSystems.addEffectSystem(new WaterfallEffectSystem(this.logger, this.config, this.audioPlayer));
+        this.effectSystems.addEffectSystem(new WaterStepEffectSystem(this.logger, this.config, this.audioPlayer));
         this.effectSystems.addEffectSystem(new RandomBlockEffectSystem(this.logger, this.config, this.blockLibrary, this.audioPlayer, RandomBlockEffectSystem.NEAR_RANGE));
         this.effectSystems.addEffectSystem(new RandomBlockEffectSystem(this.logger, this.config, this.blockLibrary, this.audioPlayer, RandomBlockEffectSystem.FAR_RANGE));
 

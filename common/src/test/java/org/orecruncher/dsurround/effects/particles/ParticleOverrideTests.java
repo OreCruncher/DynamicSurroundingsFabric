@@ -1,5 +1,7 @@
 package org.orecruncher.dsurround.effects.particles;
 
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.Camera;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
@@ -38,7 +40,17 @@ public class ParticleOverrideTests {
     void particleTicksOverrideVanilla() {
         assertOverrides(FrostBreathParticle.class, "tick");
         assertOverrides(WaterRippleParticle.class, "tick");
-        assertOverrides(WaterfallCascade.class, "tick");
+        assertOverrides(WaterfallMist.class, "tick");
+        assertOverrides(WaterFoam.class, "tick");
+    }
+
+    @Test
+    void mistAndFoamOverrideSizeAndRendering() {
+        // Both grow over their life and set their fade (and foam its tilt) as they are drawn
+        for (var type : new Class<?>[]{WaterfallMist.class, WaterFoam.class}) {
+            assertOverrides(type, "getQuadSize", float.class);
+            assertOverrides(type, "render", VertexConsumer.class, Camera.class, float.class);
+        }
     }
 
     @Test

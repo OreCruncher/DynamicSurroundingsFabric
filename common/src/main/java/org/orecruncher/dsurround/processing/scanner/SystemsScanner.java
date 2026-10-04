@@ -50,6 +50,13 @@ public class SystemsScanner extends CuboidScanner {
         this.refreshTargets();
     }
 
+    /**
+     * Calls {@code consumer} with each effect system, enabled or not.
+     */
+    public void forEachSystem(Consumer<IEffectSystem> consumer) {
+        this.systems.forEach(consumer);
+    }
+
     private void refreshTargets() {
         this.scanTargets.clear();
         for (var system : this.systems) {

@@ -106,6 +106,7 @@ public class OverlayTests {
     void diagnosticsModesCycle() {
         assertEquals(DiagnosticsOverlay.Mode.DEBUG, DiagnosticsOverlay.Mode.OFF.next());
         assertEquals(DiagnosticsOverlay.Mode.BIOME, DiagnosticsOverlay.Mode.DEBUG.next());
-        assertEquals(DiagnosticsOverlay.Mode.OFF, DiagnosticsOverlay.Mode.BIOME.next());
+        assertEquals(DiagnosticsOverlay.Mode.EFFECTS, DiagnosticsOverlay.Mode.BIOME.next());
+        assertEquals(DiagnosticsOverlay.Mode.OFF, DiagnosticsOverlay.Mode.EFFECTS.next());
     }
 }

@@ -8,14 +8,11 @@ import net.minecraft.client.ParticleStatus;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.SupportType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
@@ -25,9 +22,11 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.effects.BlockEffectUtils;
 import org.orecruncher.dsurround.effects.IBlockEffect;
+import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.effects.IEffectSystem;
 import org.orecruncher.dsurround.effects.blocks.AbstractParticleEmitterEffect;
-import org.orecruncher.dsurround.effects.particles.WaterfallCascade;
+import org.orecruncher.dsurround.effects.particles.WaterFoam;
+import org.orecruncher.dsurround.effects.particles.WaterfallMist;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -38,9 +37,9 @@ import org.orecruncher.dsurround.tags.FluidTags;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import static org.orecruncher.dsurround.effects.BlockEffectUtils.HAS_FLUID;
 
 public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffectSystem {
 
@@ -64,11 +63,13 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
         var base = soundLibrary.getSoundFactoryOrDefault(Constants.asId("waterfalls/0"));
         Arrays.fill(ACOUSTICS, base);
 
-        ACOUSTICS[2] = ACOUSTICS[3] = factoryOrBase(soundLibrary, "waterfalls/1", base);
-        ACOUSTICS[4] = factoryOrBase(soundLibrary, "waterfalls/2", base);
-        ACOUSTICS[5] = ACOUSTICS[6] = factoryOrBase(soundLibrary, "waterfalls/3", base);
-        ACOUSTICS[7] = ACOUSTICS[8] = factoryOrBase(soundLibrary, "waterfalls/4", base);
-        ACOUSTICS[9] = ACOUSTICS[10] = factoryOrBase(soundLibrary, "waterfalls/5", base);
+        // By strength, the height of the drop. (Strength used to count 2 more than the drop; these tiers were
+        // moved down to match, so a given waterfall sounds as it did. waterfalls/0 is only the fallback.)
+        ACOUSTICS[1] = factoryOrBase(soundLibrary, "waterfalls/1", base);
+        ACOUSTICS[2] = factoryOrBase(soundLibrary, "waterfalls/2", base);
+        ACOUSTICS[3] = ACOUSTICS[4] = factoryOrBase(soundLibrary, "waterfalls/3", base);
+        ACOUSTICS[5] = ACOUSTICS[6] = factoryOrBase(soundLibrary, "waterfalls/4", base);
+        ACOUSTICS[7] = ACOUSTICS[8] = ACOUSTICS[9] = ACOUSTICS[10] = factoryOrBase(soundLibrary, "waterfalls/5", base);
     }
 
     private static ISoundFactory factoryOrBase(ISoundLibrary soundLibrary, String name, ISoundFactory base) {
@@ -100,6 +101,24 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     @Override
     public boolean isEnabled() {
         return this.config.blockEffects.waterfallsEnabled;
+    }
+
+    @Override
+    public int getDiagnosticColor() {
+        return ColorPalette.TURQUOISE.getValue();
+    }
+
+    @Override
+    public void describeEffect(IBlockEffect effect, Consumer<String> lines) {
+        super.describeEffect(effect, lines);
+        lines.accept(this.waterfallSoundInstances.containsKey(effect.getPosIndex()) ? "sound: playing" : "sound: none");
+        if (effect instanceof WaterfallEffect waterfall) {
+            lines.accept("splash limit " + waterfall.particleLimit);
+            if (WaterfallEffect.WIP_OPTIONS.enableWaterfallMist)
+                lines.accept("mist");
+            if (WaterfallEffect.WIP_OPTIONS.enableWaterStepFroth)
+                lines.accept("foam");
+        }
     }
 
     @Override
@@ -223,8 +242,9 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
 
     /**
      * Where waterfall sounds should play. Only SOUND_INSTANCE_CAP sounds are allowed, so when there are more
-     * waterfalls than that, the ones with the most impact are chosen: impact is strength squared over the squared
-     * distance from the listener, so loud nearby waterfalls win.
+     * waterfalls than that, the ones with the most impact are chosen: impact is loudness squared over the squared
+     * distance from the listener, so loud nearby waterfalls win. Loudness is strength + 2: strength used to count 2
+     * more than the drop, and this keeps the ranking (how much a small waterfall counts against a big one) as it was.
      * <p>
      * The result is a set reused between calls; it is only valid until the next call.
      */
@@ -254,8 +274,8 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
 
         for (var e : this.systems.values()) {
             var effect = (WaterfallEffect) e;
-            var strength = effect.getStrength();
-            var weight = (strength * strength) / effect.distanceSqTo(listener);
+            var loudness = effect.getStrength() + 2;
+            var weight = (loudness * loudness) / effect.distanceSqTo(listener);
 
             if (count == SOUND_INSTANCE_CAP && weight <= weights[lowest])
                 continue;
@@ -328,10 +348,10 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
     }
 
     /**
-     * The height of the fluid column from {@code pos} upward, capped at BlockEffectUtils.MAX_STRENGTH.
+     * The waterfall's strength, the height of its drop: see {@link WaterfallColumn#strength}.
      */
     private static int columnStrength(Level world, BlockPos pos) {
-        return BlockEffectUtils.countVerticalBlocks(world, pos, HAS_FLUID, 1);
+        return WaterfallColumn.strength(world, pos);
     }
 
     private static boolean canWaterfallSpawn(Level world, BlockState state, BlockPos pos) {
@@ -344,16 +364,13 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
      */
     private static boolean isValidWaterfallSource(Level world, BlockPos pos) {
         // Falling water above, not just any fluid: otherwise the bottom of a still pool next to flowing water
-        // qualifies. Every vanilla flowing fluid has the FALLING property; anything without it can't be falling.
-        var above = world.getFluidState(pos.above());
-        if (!above.hasProperty(FlowingFluid.FALLING) || !above.getValue(FlowingFluid.FALLING))
+        // qualifies. The same test that measures the waterfall's strength.
+        if (!WaterfallColumn.isFalling(world.getFluidState(pos.above())))
             return false;
         if (!isUnboundedLiquid(world, pos))
             return false;
 
-        var downPos = pos.below();
-        var blockState = world.getBlockState(downPos);
-        return blockState.getFluidState().isSource() || blockState.isFaceSturdy(world, downPos, Direction.UP, SupportType.FULL);
+        return WaterfallColumn.landsOn(world, pos);
     }
 
     private static boolean isUnboundedLiquid(final Level provider, final BlockPos pos) {
@@ -381,6 +398,9 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
         // Beyond this distance, splashes are halved. Beyond PARTICLE_RANGE_SQ there are none.
         private static final double PARTICLE_FULL_DISTANCE_SQ = 16 * 16;
 
+        // Mist puffs added each time particles are made, whatever the waterfall's strength
+        private static final int MIST_PUFFS = 4;
+
         // A still water surface is drawn at 8/9 of the block's height
         private static final double WATER_SURFACE_HEIGHT = 8D / 9D;
 
@@ -396,7 +416,8 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
             super(strength, world, loc.getX() + 0.5D, loc.getY() + 0.5D, loc.getZ() + 0.5D, 4);
             this.deltaY = loc.getY() + dY;
             this.waterSurfaceY = loc.getY() + WATER_SURFACE_HEIGHT;
-            this.setSpawnCount((int) (strength * 2.5F));
+            // 5 splashes, and 2.5 more per block of drop (the same counts as before strength measured the drop)
+            this.setSpawnCount(5 + (int) (strength * 2.5F));
         }
 
         public void setSpawnCount(final int limit) {
@@ -471,7 +492,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
 
             var particles = new ObjectArray<Particle>();
 
-            // Minimal particles means no waterfall particles at all, including the cascade
+            // Minimal particles means no waterfall particles at all, including mist and foam
             final ParticleStatus status = GameUtils.getGameSettings().particles().get();
             if (status == ParticleStatus.MINIMAL)
                 return particles;
@@ -483,7 +504,8 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
                 final double xOffset = RANDOM.nextFloat(-1.0F, 1.0F);
                 final double zOffset = RANDOM.nextFloat(-1.0F, 1.0F);
 
-                final double motionStr = (this.strength + 1) / 20D;
+                // How far splashes fly: grows with the drop, from 0.2 for the smallest waterfall
+                final double motionStr = (this.strength + 3) / 20D;
                 final double motionX = xOffset * motionStr;
                 final double motionZ = zOffset * motionStr;
                 final double motionY = 0.1D + RANDOM.nextFloat() * motionStr;
@@ -503,16 +525,64 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
 
             // The effect's own world, not whatever the client has loaded now (they differ briefly during a
             // dimension change). Effects only exist client side, so it is always a ClientLevel.
-            if (this.strength > 1 && WIP_OPTIONS.enableWaterfallCascade && this.world instanceof ClientLevel clientLevel) {
-                final double xOffset = RANDOM.nextFloat(-0.15F, 0.15F);
-                final double zOffset = RANDOM.nextFloat(-0.15F, 0.15F);
-                final double yOffset = RANDOM.nextFloat(-0.25F, 0.25F);
-                var cascadeParticle = WaterfallCascade.create(clientLevel, this.posX + xOffset, this.waterSurfaceY + yOffset, this.posZ + zOffset, this.strength);
-                if (cascadeParticle != null)
-                    particles.add(cascadeParticle);
-            }
+            if (WIP_OPTIONS.enableWaterfallMist && this.world instanceof ClientLevel clientLevel)
+                this.addMist(clientLevel, status, particles);
+
+            if (WIP_OPTIONS.enableWaterStepFroth && this.world instanceof ClientLevel clientLevel)
+                this.addFoam(clientLevel, status, particles);
 
             return particles;
+        }
+
+        /**
+         * Adds foam patches on the water around where the waterfall lands (see {@link WaterFoam#spawnAround}), thrown
+         * out from it: carried off by the water spreading from the impact, or coasting out across a pool. More of
+         * them, thrown faster, for a bigger waterfall; fewer with decreased particles, or far from the camera.
+         */
+        private void addFoam(ClientLevel clientLevel, ParticleStatus status, ObjectArray<Particle> particles) {
+            int count = 2 + this.strength / 3;
+            if (status != ParticleStatus.ALL || this.cameraDistanceSq > PARTICLE_FULL_DISTANCE_SQ)
+                count = Math.max(1, count / 2);
+            double minSpeed = 0.06D + this.strength * 0.01D;
+            WaterFoam.spawnAround(clientLevel, this.position, count, minSpeed, minSpeed + 0.06D, RANDOM, particles::add);
+        }
+
+        /**
+         * Adds a few mist puffs (see {@link WaterfallMist}): scattered around where the water lands, thrown up and out
+         * from it. The same number for every waterfall: there is mist wherever one lands, and a bigger waterfall makes
+         * bigger puffs and churns them harder, rather than making more. Fewer with decreased particles, or far from
+         * the camera. Puffs live 1 to 3 seconds, and this runs every few ticks, so a waterfall has about 40 at a time.
+         */
+        private void addMist(ClientLevel clientLevel, ParticleStatus status, ObjectArray<Particle> particles) {
+            int count = MIST_PUFFS;
+            if (status != ParticleStatus.ALL || this.cameraDistanceSq > PARTICLE_FULL_DISTANCE_SQ)
+                count = Math.max(1, count / 2);
+
+            // Thrown harder by a bigger waterfall
+            final double outwardScale = 1D + this.strength * 0.1D;
+            final double upwardScale = 1D + this.strength * 0.08D;
+
+            for (int i = 0; i < count; i++) {
+                // A direction out from the impact, and how far from its center the puff starts
+                double angle = RANDOM.nextDouble() * Mth.TWO_PI;
+                double dirX = Math.cos(angle);
+                double dirZ = Math.sin(angle);
+                double radius = RANDOM.nextDouble() * 0.6D;
+
+                double outward = (0.025D + RANDOM.nextDouble() * 0.05D) * outwardScale;
+                double upward = (0.02D + RANDOM.nextDouble() * 0.03D) * upwardScale;
+
+                // Starts a little under the surface and rises out of it; the soft shader hides the part under the water
+                double depth = 0.25D + RANDOM.nextDouble() * 0.25D;
+
+                var puff = WaterfallMist.create(clientLevel,
+                        this.posX + dirX * radius, this.waterSurfaceY - depth, this.posZ + dirZ * radius,
+                        dirX * outward, upward, dirZ * outward,
+                        this.posX, this.waterSurfaceY, this.posZ,
+                        this.strength);
+                if (puff != null)
+                    particles.add(puff);
+            }
         }
     }
 }

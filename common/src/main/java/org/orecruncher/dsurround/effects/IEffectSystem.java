@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public interface IEffectSystem {
@@ -55,4 +56,32 @@ public interface IEffectSystem {
      */
     String gatherDiagnostics();
 
+    // ---- For showing tracked effects in the world (DiagnosticsOverlay's EFFECTS mode) -----------------------
+
+    /**
+     * The system's name, as shown in diagnostics.
+     */
+    default String getName() {
+        return this.getClass().getSimpleName();
+    }
+
+    /**
+     * The color the system's effects are shown in, as RGB.
+     */
+    default int getDiagnosticColor() {
+        return 0xA0A0A0;
+    }
+
+    /**
+     * Calls {@code consumer} with each effect the system is tracking. Systems that don't track effects by position
+     * do nothing.
+     */
+    default void forEachEffect(Consumer<IBlockEffect> consumer) {
+    }
+
+    /**
+     * Adds lines describing {@code effect} (one of this system's) for showing next to it, after its system's name.
+     */
+    default void describeEffect(IBlockEffect effect, Consumer<String> lines) {
+    }
 }

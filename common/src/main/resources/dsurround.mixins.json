@@ -14,6 +14,7 @@
     "core.MixinBiome",
     "core.MixinClientLevel",
     "core.MixinClothAbstractConfigEntry",
+    "core.MixinDebugRenderer",
     "core.MixinEntity",
     "core.MixinEntityArrow",
     "core.MixinFogRenderer",

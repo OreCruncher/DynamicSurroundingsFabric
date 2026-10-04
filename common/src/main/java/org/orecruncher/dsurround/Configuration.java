@@ -340,8 +340,12 @@ public class Configuration extends ConfigurationData {
 
     public static class WorksInProgressOptions {
         @Property
-        @Comment("Enable/disable waterfall cascade particle effect")
-        public boolean enableWaterfallCascade = true;
+        @Comment("Enable/disable waterfall mist: many small puffs of mist thrown up where a waterfall lands")
+        public boolean enableWaterfallMist = true;
+
+        @Property
+        @Comment("Enable/disable water froth: foam where flowing water drops one block (with a gentle sound) and around where waterfalls land")
+        public boolean enableWaterStepFroth = true;
     }
 
     public static class OtherOptions {

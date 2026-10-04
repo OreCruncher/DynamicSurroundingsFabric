@@ -11,6 +11,7 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.effects.IEffectSystem;
 import org.orecruncher.dsurround.effects.blocks.AbstractParticleEmitterEffect;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 
@@ -39,6 +40,11 @@ public class SteamEffectSystem extends AbstractEffectSystem implements IEffectSy
     @Override
     public boolean isEnabled() {
         return this.config.blockEffects.steamColumnEnabled;
+    }
+
+    @Override
+    public int getDiagnosticColor() {
+        return ColorPalette.SEASHELL.getValue();
     }
 
     /**

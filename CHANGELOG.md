@@ -25,11 +25,12 @@ Starting with **1.21.1-0.4.6** I am using AI to assist with coding (Claude Code 
 use and the impact so you can make a more informed "should I use" decision. If you have an opinion (either pro or anti AI) or questions
 feel free to comment [here](https://github.com/OreCruncher/DynamicSurroundingsFabric/discussions).
 
-This is what it is being used for:
+This is what I used for:
 
 * Analyze code to identify/fix bugs, improve performance, and check adherence to best practices
 * Analyze GUI implementations and make recommendations to be more consistent with Minecraft's own implementations
 * Examine the path to subsequent Minecraft versions (26.2) so that migration is easier and less error-prone
+* Reworked the waterfall cascade effect into mist/foam
 * Creation of extensive unit tests
 
 Impacts:
@@ -52,13 +53,17 @@ Impacts:
 * Added "Sound Credits" button to the Sound Options dialog. Clicking will display credit and attribution information about the sounds in the mod. (This information is also buried in the tool tips when hovering over sounds in the sound configuration menu.)
 * Comments are written into the mod configuration file. User supplied comments will be lost between saves.
 * Humanoid mobs gain brush and straw step effect (skeletons, zombies, raiders, etc.) Did not do creepers, sorry.
+* New Works in Progress (WIP) configuration section that can be used to toggle features that are currently baking.
+* Waterfall mist (replaces the relatively new cascade) and water foam. Options to enable/disable are in the WIP configuration section.
+  * Mist - swirls at the bottom of a waterfall (falling water hitting a surface)
+  * Foam - generates when water drops down a block, or when water hits a surface. Foam will flow with the direction of water and eventually fade.
 
 **Changes**
 * Search box in the Individual Sound Configuration menu will accept regular expressions for filtering.
 * Reduced the reverb ray count from 256 to 128 as a default. Existing configs will still have 256 so you can reduce if you want. Math models and testing showed anything more than 100 would give marginal improvements to sound.
 * Added a new "Works in Progress" configuration section where WIP features can be enabled/disabled. WIP features are not final versions, and could be removed between releases.
-* Added a WIP configuration option to enable/disable the waterfall cascade effect. This does not affect the waterfall droplet effect. (NOTE: If you turned off waterfall particle effects to disable the cascade, you can turn it back on and then turn off the waterfall cascade specific feature.)
 * Ensured all Dynamic Surroundings footstep sounds are mono, and removed on the fly mono-conversion support.
+* Removed the waterfall cascade effect as it is replaced by mist and foam.
 
 **Fixes**
 * A lot of small ones - nothing horrific. Most were edge conditions or related to validation of configuration data coming from external sources.

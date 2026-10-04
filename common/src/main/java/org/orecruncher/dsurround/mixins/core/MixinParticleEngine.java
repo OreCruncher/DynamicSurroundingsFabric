@@ -46,7 +46,7 @@ public abstract class MixinParticleEngine {
             if (entry == ParticleRenderType.CUSTOM) {
                 // Insert our custom types before CUSTOM. By default, CUSTOM is at the end of the render
                 // ordering list.
-                listBuilder.add(DSurroundParticleRenderType.PARTICLE_SHEET_WATERFALL_CASCADE);
+                listBuilder.add(DSurroundParticleRenderType.PARTICLE_SHEET_WATERFALL_MIST);
             }
             listBuilder.add(entry);
         }

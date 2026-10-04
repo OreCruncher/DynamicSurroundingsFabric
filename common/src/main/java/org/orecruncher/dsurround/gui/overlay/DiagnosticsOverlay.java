@@ -21,6 +21,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
+import org.orecruncher.dsurround.processing.AreaBlockEffects;
 
 import java.util.EnumMap;
 import java.util.List;
@@ -94,14 +95,16 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
     private final ObjectArray<FormattedCharSequence> left = new ObjectArray<>(64);
     private final ObjectArray<FormattedCharSequence> right = new ObjectArray<>(64);
     private final ObjectArray<FormattedCharSequence> biomeText = new ObjectArray<>(64);
+    private final ObjectArray<FormattedCharSequence> effectsLegend = new ObjectArray<>(8);
     private Mode mode = Mode.OFF;
     private boolean renderHud;
 
     /**
-     * What the overlay shows. The key binding cycles through them in order.
+     * What the overlay shows. The key binding cycles through them in order. EFFECTS draws the effects the effect
+     * systems are tracking in the world (see {@link EffectSystemsRenderer}), with a legend on screen.
      */
     enum Mode {
-        OFF, DEBUG, BIOME;
+        OFF, DEBUG, BIOME, EFFECTS;
 
         Mode next() {
             return values()[(this.ordinal() + 1) % values().length];
@@ -124,6 +127,13 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
         this.mode = this.mode.next();
     }
 
+    /**
+     * Whether tracked effects should be drawn in the world. Unlike the on-screen text, not hidden by the F3 screen.
+     */
+    public boolean isShowingEffects() {
+        return this.mode == Mode.EFFECTS;
+    }
+
     @Override
     public void tick(Minecraft client) {
         this.diagnostics.begin();
@@ -134,12 +144,32 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
             switch (this.mode) {
                 case DEBUG -> this.tickDebugDiagnostic(client);
                 case BIOME -> this.tickBiomeDiagnostic(client);
+                case EFFECTS -> this.tickEffectsLegend();
                 case OFF -> {
                 }
             }
         }
 
         this.diagnostics.end();
+    }
+
+    /**
+     * The legend for the EFFECTS mode: each system that is tracking effects, in the color its effects are drawn in,
+     * with how many.
+     */
+    private void tickEffectsLegend() {
+        this.effectsLegend.clear();
+        this.effectsLegend.add(Component.literal("Tracked effects").withStyle(BIOME_DIAGNOSTIC_TITLE_COLOR).getVisualOrderText());
+        ContainerManager.resolve(AreaBlockEffects.class).forEachEffectSystem(system -> {
+            int[] count = {0};
+            system.forEachEffect(effect -> count[0]++);
+            if (count[0] > 0) {
+                var style = Style.EMPTY.withColor(system.getDiagnosticColor());
+                this.effectsLegend.add(Component.literal("%s: %d".formatted(system.getName(), count[0])).withStyle(style).getVisualOrderText());
+            }
+        });
+        if (this.effectsLegend.size() == 1)
+            this.effectsLegend.add(Component.literal("None in range").withStyle(BIOME_DIAGNOSTIC_MUSIC_NOT_ELIGIBLE).getVisualOrderText());
     }
 
     private void tickBiomeDiagnostic(Minecraft client) {
@@ -253,6 +283,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
                     this.drawText(context, this.right, false);
                 }
                 case BIOME -> this.drawText(context, this.biomeText, true);
+                case EFFECTS -> this.drawText(context, this.effectsLegend, true);
                 case OFF -> {
                 }
             }

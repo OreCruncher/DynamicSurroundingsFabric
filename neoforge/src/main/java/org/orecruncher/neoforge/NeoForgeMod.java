@@ -7,7 +7,11 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import net.minecraft.client.renderer.ShaderInstance;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.event.RegisterShadersEvent;
+import org.orecruncher.dsurround.effects.particles.SoftParticles;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.Constants;
@@ -19,6 +23,7 @@ public final class NeoForgeMod {
 
     public NeoForgeMod(ModContainer container, IEventBus modBus) {
         modBus.addListener(this::onRegisterGuiLayersEvent);
+        modBus.addListener(this::onRegisterShaders);
 
         Client.initialize();
         Client.initializeClient();
@@ -26,6 +31,17 @@ public final class NeoForgeMod {
         if (ModList.get().isLoaded(Constants.CLOTH_CONFIG_NEOFORGE))
             container.registerExtensionPoint(IConfigScreenFactory.class, new ModConfigMenu());
 
+    }
+
+    @SubscribeEvent
+    public void onRegisterShaders(RegisterShadersEvent event) {
+        // A shader that fails to compile throws here. Caught so the game still loads, drawing particles without it.
+        try {
+            var shader = new ShaderInstance(event.getResourceProvider(), SoftParticles.SHADER_ID, DefaultVertexFormat.PARTICLE);
+            event.registerShader(shader, SoftParticles::onShaderLoaded);
+        } catch (Exception e) {
+            SoftParticles.onShaderFailed(e);
+        }
     }
 
     @SubscribeEvent
