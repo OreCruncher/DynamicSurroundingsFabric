@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.config;
 
 import org.orecruncher.dsurround.lib.weighted.WeightTable;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.random.Randomizer;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
 import java.util.Optional;
@@ -28,12 +28,12 @@ public final class AcousticEntryCollection extends ObjectArray<AcousticEntry> {
     }
 
     /**
-     * Makes a weighted choice from the candidates available in the
-     * collection.
+     * Makes a weighted choice from the entries whose conditions match the current state of the game. Each condition
+     * is evaluated once, and nothing is allocated but the result.
      */
-    public Optional<ISoundFactory> makeSelection() {
+    public Optional<ISoundFactory> makeSelection(IRandomizer random) {
         if (this.isEmpty())
             return Optional.empty();
-        return WeightTable.makeSelection(this.findMatches(), Randomizer.current());
+        return WeightTable.makeSelection(this, AcousticEntry::matches, random);
     }
 }

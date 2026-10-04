@@ -148,7 +148,7 @@ public class BlockInfo {
         if (!this.sounds.isEmpty()) {
             var chance = CONDITION_EVALUATOR.eval(this.soundChance);
             if (chance instanceof Double c && random.nextDouble() < c) {
-                return this.sounds.makeSelection();
+                return this.sounds.makeSelection(random);
             }
         }
         return Optional.empty();

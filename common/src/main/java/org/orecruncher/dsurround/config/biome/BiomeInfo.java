@@ -214,7 +214,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
             case MUSIC -> sourceList = this.musicSounds;
         }
 
-        return sourceList == null ? Optional.empty() : sourceList.makeSelection();
+        return sourceList == null ? Optional.empty() : sourceList.makeSelection(random);
     }
 
     @Override

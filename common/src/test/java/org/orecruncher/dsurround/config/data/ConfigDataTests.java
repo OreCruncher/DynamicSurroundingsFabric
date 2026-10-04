@@ -55,7 +55,16 @@ public class ConfigDataTests {
         var result = assertDoesNotThrow(() -> parse(AcousticConfig.CODEC, "{\"factory\": \"dsurround:a\", \"weight\": -1}"));
 
         assertTrue(result.isError());
-        assertTrue(errorOf(result).contains("must not be negative"), errorOf(result));
+        assertTrue(errorOf(result).contains("must be from 0 to"), errorOf(result));
+    }
+
+    @Test
+    void hugeWeightIsAnError() {
+        // Regression: weights had no upper limit, so a few huge ones overflowed the total and nothing was chosen
+        var result = assertDoesNotThrow(() -> parse(AcousticConfig.CODEC, "{\"factory\": \"dsurround:a\", \"weight\": 2000000000}"));
+
+        assertTrue(result.isError());
+        assertTrue(errorOf(result).contains("must be from 0 to"), errorOf(result));
     }
 
     @Test
