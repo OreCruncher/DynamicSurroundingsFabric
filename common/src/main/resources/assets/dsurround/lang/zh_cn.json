@@ -58,7 +58,6 @@
   "dsurround.config.title": "动态环境/动态环绕(Dynamic Surroundings)配置选项",
   "dsurround.config.tooltip.clientRestartRequired": "需要重新启动客户端",
   "dsurround.config.tooltip.worldRestartRequired": "需要重新启动世界",
-  "dsurround.config.tooltip.assetReloadRequired": "需要重新加载资源",
   "dsurround.config.tooltip.defaultValue": "默认值: %1$s",
   "dsurround.config.tooltip.range": "范围: %1$s 至 %2$s",
   "dsurround.config.tooltip.minimum": "最小值: %1$s",

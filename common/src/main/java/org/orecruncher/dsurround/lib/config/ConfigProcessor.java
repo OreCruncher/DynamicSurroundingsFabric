@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.lib.config;
 
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 
@@ -42,9 +41,7 @@ public final class ConfigProcessor {
      * @throws IllegalStateException if the class can't be created or a property is not valid
      */
     public static <T extends ConfigurationData> Collection<ConfigElement<?>> generateAccessors(Class<T> clazz) {
-        var translationRootAnnotation = clazz.getAnnotation(ConfigurationData.TranslationRoot.class);
-        var translationRoot = translationRootAnnotation != null ? translationRootAnnotation.value() : Constants.MOD_ID;
-        return new GenerationContext(clazz, translationRoot).generateLevel(createPrototype(clazz));
+        return new GenerationContext(clazz, ConfigurationData.translationRootOf(clazz)).generateLevel(createPrototype(clazz));
     }
 
     /**
@@ -128,20 +125,13 @@ public final class ConfigProcessor {
             if (type == String.class)
                 return new ConfigElement.StringValue(prototype, key, f);
             if (type.isEnum())
-                return this.processEnum(prototype, key, f);
+                return new ConfigElement.EnumValue(prototype, key, f);
             if (!type.isPrimitive() && !type.isArray() && !type.getName().startsWith("java."))
                 return this.processGroup(prototype, key, f);
 
             // float, long, arrays, collections and the like aren't supported by the config screen
             Library.LOGGER.warn("Configuration property '%s' in %s has unsupported type %s; it is ignored", f.getName(), this.clazz.getName(), type.getName());
             return null;
-        }
-
-        @SuppressWarnings("unchecked")
-        private ConfigElement<?> processEnum(Object prototype, String key, Field f) {
-            var enumType = f.getAnnotation(ConfigurationData.EnumType.class);
-            Class<? extends Enum<?>> enumClass = enumType != null ? enumType.value() : (Class<? extends Enum<?>>) f.getType();
-            return new ConfigElement.EnumValue(enumClass, prototype, key, f);
         }
 
         private ConfigElement<?> processGroup(Object prototype, String key, Field f) {

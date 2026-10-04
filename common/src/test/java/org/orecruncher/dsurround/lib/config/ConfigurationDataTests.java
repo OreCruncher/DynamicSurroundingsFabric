@@ -6,6 +6,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.eventing.IConfigChangedEvent;
 import org.orecruncher.dsurround.lib.config.ConfigurationData.*;
@@ -389,16 +390,23 @@ public class ConfigurationDataTests {
     // ---- Values ----------------------------------------------------------------------------------------------
 
     @Test
-    void binderClampsToTheRange() {
+    void setValueClampsToTheRange() {
+        // How the config screen writes an edited value back
         var count = (ConfigElement.IntegerValue) element(spec(), "count");
         var config = new TestConfig();
-        var binder = count.<Integer>createBinder(config);
 
-        binder.setValue(99);
+        count.setValue(config, 99);
 
         assertEquals(10, config.count);
-        assertEquals(10, binder.getValue());
-        assertEquals(5, binder.defaultValue());
+        assertEquals(10, count.getValue(config));
+        assertEquals(5, count.defaultValue());
+    }
+
+    @Test
+    void translationRootComesFromTheAnnotation() {
+        // TestConfig has no @TranslationRoot, so it is the mod id; the real configuration sets its own
+        assertEquals(Constants.MOD_ID, new TestConfig().getTranslationRoot());
+        assertEquals(Constants.MOD_ID + ".config", ConfigurationData.translationRootOf(Configuration.class));
     }
 
     @Test

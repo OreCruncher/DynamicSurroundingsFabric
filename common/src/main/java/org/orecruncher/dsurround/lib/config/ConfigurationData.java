@@ -111,7 +111,6 @@ public abstract class ConfigurationData {
 
         config.configFilePath = path;
         ConfigProcessor.repair(specification, config, path.getFileName().toString());
-        config.postLoad();
 
         // Write it back: properties may have been added, removed or corrected
         if (writeBack) {
@@ -151,6 +150,19 @@ public abstract class ConfigurationData {
     }
 
     /**
+     * The root of the configuration's translation keys: the screen title is "root.title", and each property is
+     * "root.name". See {@link TranslationRoot}.
+     */
+    public String getTranslationRoot() {
+        return translationRootOf(this.getClass());
+    }
+
+    static String translationRootOf(Class<?> clazz) {
+        var annotation = clazz.getAnnotation(TranslationRoot.class);
+        return annotation != null ? annotation.value() : Constants.MOD_ID;
+    }
+
+    /**
      * Saves the configuration to disk and raises {@link IConfigChangedEvent#EVENT}. The event is raised even if
      * writing fails: the values in memory have changed either way.
      */
@@ -186,13 +198,6 @@ public abstract class ConfigurationData {
         } finally {
             Files.deleteIfExists(temp);
         }
-    }
-
-    /**
-     * Hook to provide processing after the configuration is loaded from the disk and checked against the
-     * specification.
-     */
-    public void postLoad() {
     }
 
     /**
@@ -261,14 +266,6 @@ public abstract class ConfigurationData {
     }
 
     /**
-     * Changing the value of this property will require the assets to be reloaded to have an effect.
-     */
-    @Target({ElementType.FIELD})
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface AssetReloadRequired {
-    }
-
-    /**
      * Comment associated with a property, if any. This is used if a translation is not available. It is also
      * written above the property in the config file.
      */
@@ -324,23 +321,5 @@ public abstract class ConfigurationData {
         double max();
 
         double step();
-    }
-
-    /**
-     * Indicates the property will not show in the GUI
-     */
-    @Target({ElementType.FIELD, ElementType.TYPE})
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface Hidden {
-
-    }
-
-    /**
-     * The class of the enum. Optional: the field's type is used when it is absent.
-     */
-    @Target({ElementType.FIELD, ElementType.TYPE})
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface EnumType {
-        Class<? extends Enum<?>> value();
     }
 }

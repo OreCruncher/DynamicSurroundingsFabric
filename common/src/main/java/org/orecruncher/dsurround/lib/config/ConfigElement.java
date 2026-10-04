@@ -18,6 +18,9 @@ import java.util.Optional;
 /**
  * An element of a configuration's specification: a property value, or a group of them backed by a nested object.
  * Elements describe a field; the object holding the field is passed to each call.
+ * <p>
+ * The field is read and written by reflection. A failure there is a programming error (the specification doesn't
+ * match the object it is used with), so it is thrown, naming the field, rather than logged and turned into a null.
  */
 public abstract class ConfigElement<T> {
 
@@ -26,12 +29,13 @@ public abstract class ConfigElement<T> {
     private static final Style STYLE_MISSING = Style.EMPTY.withColor(ColorPalette.RED).withItalic(true);
 
     private final String languageKey;
-    private final ElementAccessor<T> field;
+    private final Field field;
     private final Style textStyle;
 
     ConfigElement(String elementNameKey, Field field) {
         this.languageKey = elementNameKey;
-        this.field = new ElementAccessor<>(field);
+        this.field = field;
+        this.field.setAccessible(true);
         this.textStyle = parseTextStyle(field.getAnnotation(ConfigurationData.TextStyle.class), field);
     }
 
@@ -56,10 +60,6 @@ public abstract class ConfigElement<T> {
         return resourceText
                 .map(txt -> Component.literal(txt).withStyle(style))
                 .orElse(Component.literal("MISSING: " + key).withStyle(STYLE_MISSING));
-    }
-
-    public boolean isHidden() {
-        return this.hasAnnotation(ConfigurationData.Hidden.class);
     }
 
     /**
@@ -95,12 +95,25 @@ public abstract class ConfigElement<T> {
         return style;
     }
 
+    @SuppressWarnings("unchecked")
     protected T get(Object instance) {
-        return this.field.get(instance);
+        try {
+            return (T) this.field.get(instance);
+        } catch (IllegalAccessException | IllegalArgumentException e) {
+            throw new IllegalStateException(String.format("Unable to read configuration field '%s' of %s", this.field.getName(), describe(instance)), e);
+        }
     }
 
     protected void set(Object instance, T val) {
-        this.field.set(instance, val);
+        try {
+            this.field.set(instance, val);
+        } catch (IllegalAccessException | IllegalArgumentException e) {
+            throw new IllegalStateException(String.format("Unable to set configuration field '%s' of %s to %s", this.field.getName(), describe(instance), val), e);
+        }
+    }
+
+    private static String describe(Object instance) {
+        return instance == null ? "null" : instance.getClass().getName();
     }
 
     protected <A extends Annotation> Optional<A> getAnnotation(Class<A> annotation) {
@@ -168,10 +181,6 @@ public abstract class ConfigElement<T> {
                 throw new IllegalStateException(String.format("Configuration property '%s' in %s must have a default value", field.getName(), field.getDeclaringClass().getName()));
         }
 
-        public <V> Binder<V> createBinder(Object instance) {
-            return new Binder<>(this, instance);
-        }
-
         public T defaultValue() {
             return this.defaultValue;
         }
@@ -182,13 +191,6 @@ public abstract class ConfigElement<T> {
 
         public void setValue(Object instance, T value) {
             this.set(instance, this.clamp(value));
-        }
-
-        /**
-         * Determines if the RestartRequired annotation is present
-         */
-        public boolean isAnyRestartRequired() {
-            return this.getAnnotation(ConfigurationData.RestartRequired.class).isPresent();
         }
 
         /**
@@ -207,13 +209,6 @@ public abstract class ConfigElement<T> {
         public boolean isWorldRestartRequired() {
             var annotation = this.getAnnotation(ConfigurationData.RestartRequired.class);
             return annotation.map(a -> !a.client()).orElse(false);
-        }
-
-        /**
-         * Determines if the Minecraft assets need to be reloaded for changes to take effect.
-         */
-        public boolean isAssetReloadRequired() {
-            return this.hasAnnotation(ConfigurationData.AssetReloadRequired.class);
         }
 
         /**
@@ -376,10 +371,11 @@ public abstract class ConfigElement<T> {
 
         private final Class<? extends Enum<?>> enumClass;
 
-        EnumValue(Class<? extends Enum<?>> enumClass, Object instance, String translationKey, Field field) {
+        @SuppressWarnings("unchecked")
+        EnumValue(Object instance, String translationKey, Field field) {
             super(instance, translationKey, field);
 
-            this.enumClass = enumClass;
+            this.enumClass = (Class<? extends Enum<?>>) field.getType();
         }
 
         public Class<? extends Enum<?>> getEnumClass() {

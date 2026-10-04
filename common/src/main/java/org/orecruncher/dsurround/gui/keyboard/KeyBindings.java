@@ -31,7 +31,7 @@ public final class KeyBindings {
                 () -> ContainerManager.resolve(IConfigScreenFactoryProvider.class)
                         .getModConfigScreenFactory(Configuration.class)
                         .ifPresentOrElse(
-                                f -> f.create(null),
+                                f -> GameUtils.setScreen(f.create(null)),
                                 () -> Library.LOGGER.info("Configuration GUI libraries not present")
                         )
         );

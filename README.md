@@ -79,6 +79,8 @@ Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
 ## FAQ 
 * Will there be updates for the Forge loaders?
   * Not until Architectury has support for Forge 1.21.1+
+* Do you use AI for features in the mod?
+  * AI is used for certain things: code review, fixes, and creation of unit tests.
 
 ## What's Being Dropped
 * Aurora.  Good at turning a computer into a space heater, and I do not know enough about shaders to improve.

@@ -58,7 +58,6 @@
   "dsurround.config.title": "Opcje konfiguracji Dynamic Surroundings",
   "dsurround.config.tooltip.clientRestartRequired": "Wymagany restart KLIENTA",
   "dsurround.config.tooltip.worldRestartRequired": "Wymagany restart ŚWIATA",
-  "dsurround.config.tooltip.assetReloadRequired": "Wymagany restart ZASOBÓW",
   "dsurround.config.tooltip.defaultValue": "Domyślna wartość: %1$s",
   "dsurround.config.tooltip.range": "Zasięg: %1$s do %2$s",
   "dsurround.config.tooltip.minimum": "Minimum: %1$s",
