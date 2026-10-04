@@ -25,8 +25,8 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
  * Puffs circulate around a ring encircling the impact the same way, and wobble a little each in its own rhythm so no
  * two follow the same path.
  * <p>
- * Uses the waterfall_cascade sprites (see {@link DSurroundParticleTypes#WATERFALL_CASCADE}), one picked at random and
- * kept for the puff's life rather than animated.
+ * Uses the waterfall_mist sprites (textures/particle/waterfall_mist_0 to 5), one picked at random and kept for the
+ * puff's life rather than animated.
  */
 public class WaterfallMist extends TextureSheetParticle {
 
@@ -85,7 +85,7 @@ public class WaterfallMist extends TextureSheetParticle {
     @Nullable
     public static Particle create(ClientLevel level, double x, double y, double z, double xd, double yd, double zd,
                                   double centerX, double surfaceY, double centerZ, int strength) {
-        var sprites = ParticleUtils.getSpriteProvider(DSurroundParticleTypes.WATERFALL_CASCADE);
+        var sprites = ParticleUtils.getSpriteProvider(DSurroundParticleTypes.WATERFALL_MIST);
         if (sprites == null)
             return null;
         return new WaterfallMist(level, x, y, z, xd, yd, zd, centerX, surfaceY, centerZ, sprites, strength);

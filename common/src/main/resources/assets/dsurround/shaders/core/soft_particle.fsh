@@ -40,11 +40,11 @@ float linear_depth(float depth) {
 
 void main() {
     vec4 texel = texture(Sampler0, texCoord0);
-    // Vanilla discards below 0.1 alpha after the particle's own alpha is applied; this tests the texture alone. A
-    // faint particle fading out (mist) would otherwise vanish all at once when it crossed 0.1, rather than fading to
-    // nothing. For a particle at full alpha the two are the same. Tested before the soft fade too, so
-    // that takes the edge smoothly down to nothing.
-    if (texel.a < 0.1) {
+    // Vanilla discards below 0.1 alpha after the particle's own alpha is applied; this tests the texture alone, and
+    // only drops what is all but invisible. A faint particle fading out (mist) would otherwise vanish all at once
+    // when it crossed 0.1, and the faint outer wisps of the mist sprites would be cut off. Tested before the soft
+    // fade too, so that takes the edge smoothly down to nothing.
+    if (texel.a < 0.01) {
         discard;
     }
     vec4 color = texel * vertexColor * ColorModulator;

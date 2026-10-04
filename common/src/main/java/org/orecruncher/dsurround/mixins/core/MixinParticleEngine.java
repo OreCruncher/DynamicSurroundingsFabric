@@ -31,7 +31,8 @@ public abstract class MixinParticleEngine {
     public void dsurround$registerHook(CallbackInfo ci) {
         this.dsurround$register(DSurroundParticleTypes.WATER_RIPPLE, spriteSet -> new SpriteOnlyProvider(DSurroundParticleTypes.WATER_RIPPLE, spriteSet));
         this.dsurround$register(DSurroundParticleTypes.WATER_RIPPLE_PIXELATED, spriteSet -> new SpriteOnlyProvider(DSurroundParticleTypes.WATER_RIPPLE_PIXELATED, spriteSet));
-        this.dsurround$register(DSurroundParticleTypes.WATERFALL_CASCADE, spriteSet -> new SpriteOnlyProvider(DSurroundParticleTypes.WATERFALL_CASCADE, spriteSet));
+        this.dsurround$register(DSurroundParticleTypes.WATERFALL_MIST, spriteSet -> new SpriteOnlyProvider(DSurroundParticleTypes.WATERFALL_MIST, spriteSet));
+        this.dsurround$register(DSurroundParticleTypes.WATER_FOAM, spriteSet -> new SpriteOnlyProvider(DSurroundParticleTypes.WATER_FOAM, spriteSet));
     }
 
     @Invoker("register")

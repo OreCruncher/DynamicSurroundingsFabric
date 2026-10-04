@@ -28,8 +28,7 @@ import java.util.function.Consumer;
  * Drawn as an ordinary translucent particle, not soft (see {@link SoftParticles}): it rests just above the water, and
  * the soft shader would fade anything that close to the surface behind it to nothing.
  * <p>
- * Uses the waterfall_cascade sprites (see {@link DSurroundParticleTypes#WATERFALL_CASCADE}), one picked at random:
- * small, they read as irregular flecks of foam.
+ * Uses the water_foam sprites (textures/particle/water_foam_0 to 5): clusters of small bubbles, one picked at random.
  */
 public class WaterFoam extends TextureSheetParticle {
 
@@ -106,7 +105,7 @@ public class WaterFoam extends TextureSheetParticle {
      */
     @Nullable
     public static Particle create(ClientLevel level, double x, double y, double z, double xd, double zd) {
-        var sprites = ParticleUtils.getSpriteProvider(DSurroundParticleTypes.WATERFALL_CASCADE);
+        var sprites = ParticleUtils.getSpriteProvider(DSurroundParticleTypes.WATER_FOAM);
         if (sprites == null)
             return null;
         return new WaterFoam(level, x, y, z, xd, zd, sprites);
