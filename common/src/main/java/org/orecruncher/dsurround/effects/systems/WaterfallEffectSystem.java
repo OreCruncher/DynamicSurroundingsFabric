@@ -381,7 +381,13 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
         // Beyond this distance, splashes are halved. Beyond PARTICLE_RANGE_SQ there are none.
         private static final double PARTICLE_FULL_DISTANCE_SQ = 16 * 16;
 
+        // A still water surface is drawn at 8/9 of the block's height
+        private static final double WATER_SURFACE_HEIGHT = 8D / 9D;
+
         protected final double deltaY;
+        // The visible surface of the pool where the waterfall lands. Not the fluid height: water with water above
+        // it reports a full block (1.0), which is above the surface that is drawn.
+        protected final double waterSurfaceY;
         protected int particleLimit;
         private double cameraDistanceSq;
         private boolean strengthStale = false;
@@ -389,6 +395,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
         public WaterfallEffect(final int strength, final Level world, final BlockPos loc, final double dY) {
             super(strength, world, loc.getX() + 0.5D, loc.getY() + 0.5D, loc.getZ() + 0.5D, 4);
             this.deltaY = loc.getY() + dY;
+            this.waterSurfaceY = loc.getY() + WATER_SURFACE_HEIGHT;
             this.setSpawnCount((int) (strength * 2.5F));
         }
 
@@ -499,8 +506,8 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
             if (this.strength > 1 && WIP_OPTIONS.enableWaterfallCascade && this.world instanceof ClientLevel clientLevel) {
                 final double xOffset = RANDOM.nextFloat(-0.15F, 0.15F);
                 final double zOffset = RANDOM.nextFloat(-0.15F, 0.15F);
-                final double yOffset = RANDOM.nextFloat(-0.5F, 0.5F);
-                var cascadeParticle = WaterfallCascade.create(clientLevel, this.posX + xOffset, this.deltaY + yOffset, this.posZ + zOffset, this.strength);
+                final double yOffset = RANDOM.nextFloat(-0.25F, 0.25F);
+                var cascadeParticle = WaterfallCascade.create(clientLevel, this.posX + xOffset, this.waterSurfaceY + yOffset, this.posZ + zOffset, this.strength);
                 if (cascadeParticle != null)
                     particles.add(cascadeParticle);
             }

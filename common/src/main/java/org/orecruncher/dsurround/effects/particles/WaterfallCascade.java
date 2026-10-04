@@ -19,6 +19,9 @@ public class WaterfallCascade extends TextureSheetParticle {
 
     private final static Vector3f DEFAULT_NORMAL = new Vector3f(0, 0, 1);
 
+    // How far the particle is drawn in front of where it is, toward the camera, so the waterfall doesn't hide it
+    private static final double CAMERA_PUSH = 1.5D;
+
     private final Vec3 position;
     private final SpriteSet sprites;
     private final int ageJitter;
@@ -26,18 +29,25 @@ public class WaterfallCascade extends TextureSheetParticle {
     /**
      * A cascade particle, or null if its sprites aren't available (they are captured when particle providers
      * register, so a reload in an unexpected order can leave them missing).
+     * <p>
+     * The particle is a square billboard {@code 2 * quadSize} across, larger for a stronger waterfall. It is centred
+     * half a quad size below {@code waterSurfaceY}, so the mist rises {@code quadSize / 2} above the water where the
+     * waterfall lands; the part below the surface is hidden by the water.
+     *
+     * @param waterSurfaceY the height of the water's surface where the waterfall lands
      */
     @Nullable
-    public static Particle create(ClientLevel level, double x, double y, double z, int strength) {
+    public static Particle create(ClientLevel level, double x, double waterSurfaceY, double z, int strength) {
         var sprites = ParticleUtils.getSpriteProvider(DSurroundParticleTypes.WATERFALL_CASCADE);
         if (sprites == null)
             return null;
         // Calculate the quad size based on waterfall strength
         var quadSize = 0.5F + 4.5F * ((strength - 1) / (float)BlockEffectUtils.MAX_STRENGTH);
-        return new WaterfallCascade(level, x, y, z, sprites, quadSize);
+        var colorPos = BlockPos.containing(x, waterSurfaceY, z);
+        return new WaterfallCascade(level, x, waterSurfaceY - quadSize / 2D, z, sprites, quadSize, colorPos);
     }
 
-    protected WaterfallCascade(ClientLevel clientLevel, double x, double y, double z, SpriteSet spriteProvider, float quadSize) {
+    protected WaterfallCascade(ClientLevel clientLevel, double x, double y, double z, SpriteSet spriteProvider, float quadSize, BlockPos colorPos) {
         super(clientLevel, x, y, z);
         this.position = new Vec3(x, y, z);
         this.lifetime = 15;
@@ -47,9 +57,9 @@ public class WaterfallCascade extends TextureSheetParticle {
         this.setAlpha(1F);
         this.setSpriteFromAge(this.sprites);
 
-        // Set the color. It would be the biome water color shifted toward white.
-        var position = BlockPos.containing(this.x, this.y, this.z);
-        var biomeColor = this.level.getBiome(position).value().getWaterColor();
+        // Set the color: the biome's water color where the waterfall lands, shifted toward white. (The particle's
+        // own position can be a few blocks under the water for a big waterfall.)
+        var biomeColor = this.level.getBiome(colorPos).value().getWaterColor();
         var colorRgb = FastColor.ARGB32.lerp(0.5F, biomeColor, ColorPalette.MC_WHITE.getValue());
         this.rCol = ColorPalette.getRed(colorRgb) / 255F;
         this.gCol = ColorPalette.getGreen(colorRgb) / 255F;
@@ -72,7 +82,7 @@ public class WaterfallCascade extends TextureSheetParticle {
                 .normalize();
 
         var renderPosition = normal
-                .scale(1.5D)
+                .scale(CAMERA_PUSH)
                 .add(this.position);
 
         this.x = renderPosition.x;
