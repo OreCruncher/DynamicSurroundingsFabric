@@ -25,12 +25,13 @@ Starting with **1.21.1-0.4.6** I am using AI to assist with coding (Claude Code 
 use and the impact so you can make a more informed "should I use" decision. If you have an opinion (either pro or anti AI) or questions
 feel free to comment [here](https://github.com/OreCruncher/DynamicSurroundingsFabric/discussions).
 
-This is what I used for:
+This is what I used it for:
 
 * Analyze code to identify/fix bugs, improve performance, and check adherence to best practices
 * Analyze GUI implementations and make recommendations to be more consistent with Minecraft's own implementations
 * Examine the path to subsequent Minecraft versions (26.2) so that migration is easier and less error-prone
 * Reworked the waterfall cascade effect into mist/foam
+* Adapted the older aurora shader and logic from older versions into a form suitable for 1.21.1
 * Creation of extensive unit tests
 
 Impacts:
@@ -57,6 +58,8 @@ Impacts:
 * Waterfall mist (replaces the relatively new cascade) and water foam. Options to enable/disable are in the WIP configuration section.
   * Mist - swirls at the bottom of a waterfall (falling water hitting a surface)
   * Foam - generates when water drops down a block, or when water hits a surface. Foam will flow with the direction of water and eventually fade.
+  * Shader blending will auto disable if Iris/Oculus is installed.
+* The aurora is back. There are a set of options in the configuration to enable/disable, adjust frequency, as well as the max number of bands. (Will auto disable if Iris/Oculus is installed.)
 
 **Changes**
 * Search box in the Individual Sound Configuration menu will accept regular expressions for filtering.

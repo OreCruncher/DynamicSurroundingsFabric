@@ -75,6 +75,7 @@ public class Handlers {
         this.register(AreaBlockEffects.class);
         this.register(StepAccentGenerator.class);
         this.register(FogHandler.class);
+        this.register(AuroraHandler.class);
 
         IClientTickEnd.EVENT.register(this::tick);
         IClientConnect.EVENT.register(this::onConnect);
@@ -201,6 +202,7 @@ public class Handlers {
             .registerSingleton(StepAccentGenerator.class)
             .registerSingleton(HolisticFogRangeCalculator.class)
             .registerSingleton(FogHandler.class)
+            .registerSingleton(AuroraHandler.class)
             .registerSingleton(Handlers.class);
     }
 }

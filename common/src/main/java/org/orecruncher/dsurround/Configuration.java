@@ -46,6 +46,10 @@ public class Configuration extends ConfigurationData {
     public final FogOptions fogOptions = new FogOptions();
 
     @Property
+    @Comment("Configuration options for auroras")
+    public final AuroraOptions auroraOptions = new AuroraOptions();
+
+    @Property
     @Comment("Configuration options for modded Music Manager")
     public final MusicManagerOptions musicManagerOptions = new MusicManagerOptions();
 
@@ -324,6 +328,22 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable weather fog effect")
         public boolean enableWeatherFog = true;
+    }
+
+    public static class AuroraOptions {
+        @Property
+        @Comment("Enable/disable auroras: curtains of light in the night sky, on some nights, over cold biomes")
+        public boolean enableAuroras = true;
+
+        @Property
+        @Slider(min = 0, max = 100)
+        @Comment("Percent of nights with an aurora")
+        public int chance = 33;
+
+        @Property
+        @Slider(min = 1, max = 3)
+        @Comment("The most curtains of light an aurora can have")
+        public int maxBands = 3;
     }
 
     public static class MusicManagerOptions {

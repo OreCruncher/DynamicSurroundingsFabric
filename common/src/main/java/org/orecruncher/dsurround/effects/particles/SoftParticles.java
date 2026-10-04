@@ -3,13 +3,13 @@ package org.orecruncher.dsurround.effects.particles;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import dev.architectury.platform.Platform;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.compat.IrisCompat;
 
 import java.lang.reflect.Method;
 import java.util.function.Supplier;
@@ -139,44 +139,6 @@ public final class SoftParticles {
             } catch (ReflectiveOperationException | RuntimeException e) {
                 // Leave it as it is. If the formats then differ, the depth copy fails and the copy's contents are
                 // undefined, which can fade the particles away entirely; but this only happens if reflection breaks.
-            }
-        }
-    }
-
-    /**
-     * Whether an Iris shader pack is in use (Iris, or Oculus, its NeoForge port). Asked through Iris's public API by
-     * reflection, so there is no dependency on it. If the API can't be reached, assumes not.
-     */
-    private static final class IrisCompat {
-
-        @Nullable
-        private static final Object API;
-        @Nullable
-        private static final Method IS_SHADER_PACK_IN_USE;
-
-        static {
-            Object api = null;
-            Method method = null;
-            if (Platform.isModLoaded(Constants.IRIS) || Platform.isModLoaded(Constants.OCULUS)) {
-                try {
-                    var apiClass = Class.forName("net.irisshaders.iris.api.v0.IrisApi");
-                    api = apiClass.getMethod("getInstance").invoke(null);
-                    method = apiClass.getMethod("isShaderPackInUse");
-                } catch (ReflectiveOperationException | LinkageError e) {
-                    Library.LOGGER.warn("Unable to reach the Iris API; soft particles may not suit shader packs: %s", e);
-                }
-            }
-            API = api;
-            IS_SHADER_PACK_IN_USE = method;
-        }
-
-        static boolean isShaderPackInUse() {
-            if (API == null || IS_SHADER_PACK_IN_USE == null)
-                return false;
-            try {
-                return (boolean) IS_SHADER_PACK_IN_USE.invoke(API);
-            } catch (ReflectiveOperationException | RuntimeException e) {
-                return false;
             }
         }
     }

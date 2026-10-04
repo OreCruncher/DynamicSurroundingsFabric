@@ -68,6 +68,8 @@ Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
 * Hot block effects such as flame jets over lava, and steam where water hits a hot block.
     * Hot blocks are things Lava, Magma, campfires, and a cauldron containing lava.
 * Waterfall sound and visual effects - will trigger when flowing water is detected nearby.
+* Water foam for water that drops a block and flows in a direction.
+* An aurora that renders in the northern nighttime sky if the player is in an icy, cold, or taiga biome.
 * Various "DS" client side commands for dumping configuration information.  (I currently use these while developing. I do plan to document at some point for general use.)
 * Custom debug HUD that can be accessed by key bind.  Moves the Dynamic Surroundings clutter out of the traditional F3 display.
 * Compatibility with Serene Seasons - variations in seasons and temperatures can influence effects.
@@ -83,7 +85,6 @@ Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
   * AI is used for certain things: code review, fixes, and creation of unit tests.
 
 ## What's Being Dropped
-* Aurora.  Good at turning a computer into a space heater, and I do not know enough about shaders to improve.
 * Weather effects.  Again, there have been improvements to Minecraft.  I may add some additional processing around weather, but I do not expect to make major changes.
 
 As I indicated, these features are not planned.  Based on time commitments, I may change my mind. :) 
