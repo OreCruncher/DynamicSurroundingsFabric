@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.runtime.audio;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
@@ -106,6 +107,33 @@ public final class SoundFXUtils {
 
     }
 
+    /**
+     * The ray trace contexts for the current thread. Calculations run on the worker pool, and a sound's first one on
+     * the sound engine's thread, so each thread keeps its own rather than creating them for every trace.
+     */
+    private static final ThreadLocal<TraceContexts> TRACE_CONTEXTS = ThreadLocal.withInitial(TraceContexts::new);
+
+    /**
+     * A thread's trace contexts: one per block shape type, which a context can't change. Attached to the world only
+     * while tracing; a context kept by a pool thread would otherwise keep the last world loaded after leaving it.
+     */
+    private static final class TraceContexts {
+        final ReusableRaycastContext reverb = new ReusableRaycastContext(null, ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY);
+        final ReusableRaycastContext occlusion = new ReusableRaycastContext(null, ClipContext.Block.VISUAL, ClipContext.Fluid.ANY);
+        // The blocks between a sound and the player, traced with the occlusion context
+        final ReusableRaycastIterator occlusionHits = ReusableRaycastIterator.unstarted(this.occlusion);
+
+        void attach(BlockGetter world) {
+            this.reverb.setWorld(world);
+            this.occlusion.setWorld(world);
+        }
+
+        void detach() {
+            this.reverb.setWorld(null);
+            this.occlusion.setWorld(null);
+        }
+    }
+
     private final SourceContext source;
 
     // Ray traced results, reused while the cache says nothing relevant has changed
@@ -142,10 +170,16 @@ public final class SoundFXUtils {
         final long eyeBlock = BlockPos.containing(ctx.playerEyePosition).asLong();
 
         if (!this.cache.matches(ctx.world, soundBlock, eyeBlock, generation)) {
-            // Need to offset sound toward player if it is in a solid block or fluid
-            this.tracedSoundPos = SoundGeometry.offsetPositionIfNeeded(ctx.world, this.source.getPosition(), ctx.playerEyePosition);
-            this.tracedOcclusion = this.calculateOcclusion(ctx, this.tracedSoundPos, ctx.playerEyePosition);
-            this.traceReverb(ctx, this.tracedSoundPos);
+            var traces = TRACE_CONTEXTS.get();
+            traces.attach(ctx.world);
+            try {
+                // Need to offset sound toward player if it is in a solid block or fluid
+                this.tracedSoundPos = SoundGeometry.offsetPositionIfNeeded(ctx.world, this.source.getPosition(), ctx.playerEyePosition);
+                this.tracedOcclusion = this.calculateOcclusion(ctx, traces.occlusionHits, this.tracedSoundPos, ctx.playerEyePosition);
+                this.traceReverb(ctx, traces.reverb, this.tracedSoundPos);
+            } finally {
+                traces.detach();
+            }
             this.cache.update(ctx.world, soundBlock, eyeBlock, generation);
         }
 
@@ -167,7 +201,7 @@ public final class SoundFXUtils {
      * Shared airspace is checked from every reflection, or with {@code simplifiedSharedAirspace} only from each
      * ray's last one (up to a quarter as many rays with 4 bounces).
      */
-    private void traceReverb(final WorldContext ctx, final Vec3 soundPos) {
+    private void traceReverb(final WorldContext ctx, final ReusableRaycastContext traceContext, final Vec3 soundPos) {
         final float[] sendGains = this.tracedSendGains;
         final float[] bounceTotals = this.tracedBounceTotals;
         Arrays.fill(sendGains, 0F);
@@ -175,7 +209,6 @@ public final class SoundFXUtils {
         float sharedAirspace = 0F;
         final boolean checkLastReflectionOnly = CONFIG.simplifiedSharedAirspace;
 
-        final ReusableRaycastContext traceContext = new ReusableRaycastContext(ctx.world, ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY);
 
         for (int i = 0; i < REVERB_RAYS; i++) {
 
@@ -285,7 +318,7 @@ public final class SoundFXUtils {
         }
     }
 
-    private float calculateOcclusion(final WorldContext ctx, final Vec3 origin, final Vec3 target) {
+    private float calculateOcclusion(final WorldContext ctx, final ReusableRaycastIterator hits, final Vec3 origin, final Vec3 target) {
 
         // Shortcut if occlusion isn't to happen for this sound
         if (skipOcclusion(this.source.getCategory()))
@@ -298,8 +331,7 @@ public final class SoundFXUtils {
 
         Vec3 lastHit = origin;
         BlockState lastState = ctx.world.getBlockState(BlockPos.containing(lastHit.x(), lastHit.y(), lastHit.z()));
-        var traceContext = new ReusableRaycastContext(ctx.world, origin, target, ClipContext.Block.VISUAL, ClipContext.Fluid.ANY);
-        var itr = new ReusableRaycastIterator(traceContext);
+        var itr = hits.restart(origin, target);
         for (int i = 0; i < OCCLUSION_SEGMENTS && itr.hasNext(); i++) {
             var result = itr.next();
             final float occlusion = getOcclusion(lastState);

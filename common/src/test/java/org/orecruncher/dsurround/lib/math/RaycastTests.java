@@ -113,6 +113,62 @@ public class RaycastTests {
         assertEquals(HitResult.Type.MISS, context.trace(new Vec3(0.5, 0.5, 0.5), new Vec3(0.5, 10.5, 0.5)).getType());
     }
 
+    @Test
+    void contextCanMoveBetweenWorlds() {
+        // How the sound processor keeps one per thread: attached to the world while tracing, then let go of
+        var first = new FakeWorld().stone(5, 0, 0);
+        var second = new FakeWorld().stone(3, 0, 0);
+        var context = new ReusableRaycastContext(null, ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY);
+        var start = new Vec3(0.5, 0.5, 0.5);
+        var end = new Vec3(10.5, 0.5, 0.5);
+
+        context.setWorld(first);
+        assertEquals(new BlockPos(5, 0, 0), context.trace(start, end).getBlockPos());
+        context.setWorld(second);
+        assertEquals(new BlockPos(3, 0, 0), context.trace(start, end).getBlockPos());
+        context.setWorld(null);
+        assertThrows(NullPointerException.class, () -> context.trace(start, end), "no world is kept once let go of");
+    }
+
+    private static List<BlockHitResult> drain(ReusableRaycastIterator iterator) {
+        var result = new ArrayList<BlockHitResult>();
+        while (iterator.hasNext()) {
+            result.add(iterator.next());
+            assertTrue(result.size() < 100, "runaway iteration");
+        }
+        return result;
+    }
+
+    @Test
+    void unstartedIteratorHasNoHitsAndNeedsNoWorld() {
+        // How the sound processor keeps one per thread, before any world is attached
+        var context = new ReusableRaycastContext(null, ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY);
+        var iterator = ReusableRaycastIterator.unstarted(context);
+
+        assertFalse(iterator.hasNext());
+        assertThrows(NoSuchElementException.class, iterator::next);
+    }
+
+    @Test
+    void restartedIteratorMatchesANewOneEachTime() {
+        // The occlusion calculation keeps one iterator and restarts it for every ray
+        var world = new FakeWorld().stone(2, 0, 0).stone(5, 0, 0).stone(8, 0, 0).stone(0, 0, 4);
+        var context = new ReusableRaycastContext(world, ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY);
+        var iterator = ReusableRaycastIterator.unstarted(context);
+        var origin = new Vec3(0.5, 0.5, 0.5);
+        var east = new Vec3(10.5, 0.5, 0.5);
+        var south = new Vec3(0.5, 0.5, 10.5);
+        var up = new Vec3(0.5, 10.5, 0.5);
+
+        assertEquals(positions(hits(world, origin, east)), positions(drain(iterator.restart(origin, east))));
+        assertEquals(positions(hits(world, origin, south)), positions(drain(iterator.restart(origin, south))));
+        assertEquals(List.of(), drain(iterator.restart(origin, up)), "a miss");
+
+        // Restarted part way through a ray: the rest of the old one is forgotten
+        iterator.restart(origin, east).next();
+        assertEquals(positions(hits(world, origin, south)), positions(drain(iterator.restart(origin, south))));
+    }
+
     // ---- Iterator --------------------------------------------------------------------------------------------
 
     @Test
