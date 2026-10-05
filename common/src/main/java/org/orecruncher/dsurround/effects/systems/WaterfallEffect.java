@@ -26,8 +26,7 @@ import java.util.Collection;
  */
 final class WaterfallEffect extends AbstractParticleEmitterEffect {
 
-    static final Configuration.BlockEffects CONFIG = ContainerManager.resolve(Configuration.BlockEffects.class);
-    static final Configuration.WorksInProgressOptions WIP_OPTIONS = ContainerManager.resolve(Configuration.WorksInProgressOptions.class);
+    static final Configuration.WaterfallOptions OPTIONS = ContainerManager.resolve(Configuration.WaterfallOptions.class);
 
     // Beyond this distance, splashes are halved (and mist and foam). Beyond PARTICLE_RANGE_SQ there are none.
     static final double PARTICLE_FULL_DISTANCE_SQ = 16 * 16;
@@ -122,7 +121,7 @@ final class WaterfallEffect extends AbstractParticleEmitterEffect {
 
     @Override
     protected void handleParticles() {
-        if (!CONFIG.enableWaterfallParticles)
+        if (!OPTIONS.enableParticles)
             return;
 
         // Nothing is produced past the vanilla particle distance, so skip the work entirely
@@ -172,9 +171,9 @@ final class WaterfallEffect extends AbstractParticleEmitterEffect {
         // The effect's own world, not whatever the client has loaded now (they differ briefly during a
         // dimension change). Effects only exist client side, so it is always a ClientLevel.
         if (this.world instanceof ClientLevel clientLevel) {
-            if (WIP_OPTIONS.enableWaterfallMist)
+            if (OPTIONS.enableMist)
                 WaterfallSpray.addMist(clientLevel, this.posX, this.waterSurfaceY, this.posZ, this.strength, status, far, RANDOM, particles::add);
-            if (WIP_OPTIONS.enableWaterStepFroth)
+            if (OPTIONS.enableFroth)
                 WaterfallSpray.addFoam(clientLevel, this.position, this.strength, status, far, RANDOM, particles::add);
         }
 

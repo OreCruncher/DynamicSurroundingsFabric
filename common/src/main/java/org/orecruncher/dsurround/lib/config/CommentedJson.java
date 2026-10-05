@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
@@ -56,19 +57,43 @@ final class CommentedJson {
      * @throws JsonParseException if the input isn't valid JSON for the type, or has anything after it
      */
     static <T> @Nullable T read(Reader reader, Class<T> type) {
+        return fromTree(readTree(reader), type);
+    }
+
+    /**
+     * Reads the JSON from {@code reader}, allowing comments, without turning it into objects: so it can be adjusted
+     * first (see {@link MovedProperties}).
+     *
+     * @return the JSON, or null if the input is empty
+     * @throws JsonParseException if the input isn't valid JSON, or has anything after it
+     */
+    static @Nullable JsonElement readTree(Reader reader) {
         var json = new JsonReader(reader);
         // Lenient parsing is what allows comments. Gson's fromJson() turns it on by default too, but depending on
         // that would tie the config files to a default; newer Gson replaces this with setStrictness(LENIENT).
         json.setLenient(true);
-        T result = GSON.fromJson(json, type);
-        // fromJson(Reader) checks for content after the object; fromJson(JsonReader) leaves that to the caller
+        // Empty input (or only comments) parses as JSON null
+        var tree = JsonParser.parseReader(json);
+        if (tree.isJsonNull())
+            return null;
+        // Gson checks for content after the object when reading a whole Reader; a JsonReader leaves that to the caller
         try {
-            if (result != null && json.peek() != JsonToken.END_DOCUMENT)
+            if (json.peek() != JsonToken.END_DOCUMENT)
                 throw new JsonSyntaxException("Unexpected content after the JSON object");
         } catch (IOException e) {
             throw new JsonIOException(e);
         }
-        return result;
+        return tree;
+    }
+
+    /**
+     * Turns JSON read by {@link #readTree} into an object of type {@code type}.
+     *
+     * @return the object, or null if {@code tree} is null
+     * @throws JsonParseException if the JSON isn't valid for the type
+     */
+    static <T> @Nullable T fromTree(@Nullable JsonElement tree, Class<T> type) {
+        return tree == null ? null : GSON.fromJson(tree, type);
     }
 
     /**

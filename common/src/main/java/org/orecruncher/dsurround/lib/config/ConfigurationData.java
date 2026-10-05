@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.lib.config;
 
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.eventing.IConfigChangedEvent;
@@ -102,7 +103,14 @@ public abstract class ConfigurationData {
         boolean writeBack = true;
         if (Files.exists(path)) {
             try (BufferedReader reader = Files.newBufferedReader(path)) {
-                config = CommentedJson.read(reader, clazz);
+                var tree = CommentedJson.readTree(reader);
+                // Properties that have moved to another group keep the values set at their old place
+                if (tree instanceof JsonObject object) {
+                    var file = path.getFileName().toString();
+                    MovedProperties.apply(object, specification,
+                            (from, to) -> Library.LOGGER.info("%s: '%s' has moved to '%s'; keeping its value", file, from, to));
+                }
+                config = CommentedJson.fromTree(tree, clazz);
             } catch (Exception e) {
                 Library.LOGGER.error(e, "Unable to read configuration file %s", path);
                 writeBack = backupUnreadableFile(path);
@@ -288,6 +296,19 @@ public abstract class ConfigurationData {
     @Retention(RetentionPolicy.RUNTIME)
     public @interface RestartRequired {
         boolean client() default true;
+    }
+
+    /**
+     * Where a property used to be in the config file, as dotted paths from its top: "group.property". When a file is
+     * loaded that has nothing at the property's place, the first of these with a value gives it, so moving a
+     * property (to another group, or under another name) keeps what the player had set. List the most recent place
+     * first; a property moved more than once lists each place it has been. The file is then written with the
+     * property in its new place only.
+     */
+    @Target({ElementType.FIELD})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface MovedFrom {
+        String[] value();
     }
 
     /**

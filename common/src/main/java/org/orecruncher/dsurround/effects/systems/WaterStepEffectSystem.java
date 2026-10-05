@@ -36,7 +36,7 @@ import java.util.function.Predicate;
  * player. Every step down a slope gets its own. Drops of two or more blocks are waterfalls
  * ({@link WaterfallEffectSystem}) instead.
  * <p>
- * A work in progress, behind {@link Configuration.WorksInProgressOptions#enableWaterStepFroth}.
+ * Turned on and off by {@link Configuration.WaterfallOptions#enableFroth}.
  */
 public class WaterStepEffectSystem extends AbstractEffectSystem {
 
@@ -62,7 +62,7 @@ public class WaterStepEffectSystem extends AbstractEffectSystem {
 
     @Override
     public boolean isEnabled() {
-        return this.config.worksInProgressOptions.enableWaterStepFroth;
+        return this.config.waterfallOptions.enableFroth;
     }
 
     @Override
@@ -114,7 +114,7 @@ public class WaterStepEffectSystem extends AbstractEffectSystem {
     public void tick(Predicate<IBlockEffect> processingPredicate) {
         super.tick(processingPredicate);
 
-        if (!this.isEnabled() || !this.config.blockEffects.enableWaterfallSounds) {
+        if (!this.isEnabled() || !this.config.waterfallOptions.enableSounds) {
             if (!this.sounds.isEmpty())
                 this.stopAllSounds();
             return;

@@ -33,7 +33,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
 
     @Override
     public boolean isEnabled() {
-        return this.config.blockEffects.waterfallsEnabled;
+        return this.config.waterfallOptions.enableWaterfalls;
     }
 
     @Override
@@ -47,9 +47,9 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
         lines.accept(this.sounds.hasSound(effect.getPosIndex()) ? "sound: playing" : "sound: none");
         if (effect instanceof WaterfallEffect waterfall) {
             lines.accept("splash limit " + waterfall.particleLimit);
-            if (WaterfallEffect.WIP_OPTIONS.enableWaterfallMist)
+            if (WaterfallEffect.OPTIONS.enableMist)
                 lines.accept("mist");
-            if (WaterfallEffect.WIP_OPTIONS.enableWaterStepFroth)
+            if (WaterfallEffect.OPTIONS.enableFroth)
                 lines.accept("foam");
         }
     }
@@ -67,7 +67,7 @@ public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffe
         super.tick(processingPredicate);
         this.refreshStaleStrengths();
 
-        if (this.isEnabled() && this.config.blockEffects.enableWaterfallSounds)
+        if (this.isEnabled() && this.config.waterfallOptions.enableSounds)
             this.sounds.update(this.systems);
         else
             this.sounds.stopAll();

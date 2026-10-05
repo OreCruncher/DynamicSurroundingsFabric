@@ -61,9 +61,10 @@ public enum BlockEffectType {
 
     static {
         Configuration.BlockEffects config = ContainerManager.resolve(Configuration.BlockEffects.class);
+        Configuration.FireflyOptions fireflies = ContainerManager.resolve(Configuration.FireflyOptions.class);
         UNKNOWN.setConfigProvider(() -> false);
         FLAME_JET.setConfigProvider(() -> config.flameJetEnabled);
         BUBBLE_COLUMN.setConfigProvider(() -> config.bubbleColumnEnabled);
-        FIREFLY.setConfigProvider(() -> config.firefliesEnabled);
+        FIREFLY.setConfigProvider(() -> fireflies.enableFireflies);
     }
 }

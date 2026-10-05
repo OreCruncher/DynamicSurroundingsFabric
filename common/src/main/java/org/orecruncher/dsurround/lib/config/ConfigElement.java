@@ -43,6 +43,13 @@ public abstract class ConfigElement<T> {
         return this.languageKey;
     }
 
+    /**
+     * The name of the field this element is held in: also its name in the config file.
+     */
+    String fieldName() {
+        return this.field.getName();
+    }
+
     public String getTooltipLanguageKey() {
         return this.languageKey + ".tooltip";
     }

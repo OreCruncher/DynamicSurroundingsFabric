@@ -103,8 +103,8 @@ public class FireflyParticle extends SimpleAnimatedParticle {
         if (glow < MIN_VISIBLE)
             return;
 
-        var options = Client.Config.worksInProgressOptions;
-        if (options.enableFireflyGlow && this.haloSprite != null) {
+        var options = Client.Config.fireflyOptions;
+        if (options.enableGlow && this.haloSprite != null) {
             // Drawn as the firefly is, with the halo's sprite, size and strength swapped in for it
             var sprite = this.sprite;
             var size = this.quadSize;

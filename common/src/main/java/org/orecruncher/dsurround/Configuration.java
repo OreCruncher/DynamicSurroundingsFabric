@@ -26,6 +26,14 @@ public class Configuration extends ConfigurationData {
     public final BlockEffects blockEffects = new BlockEffects();
 
     @Property
+    @Comment("Configuration options for waterfalls")
+    public final WaterfallOptions waterfallOptions = new WaterfallOptions();
+
+    @Property
+    @Comment("Configuration options for fireflies")
+    public final FireflyOptions fireflyOptions = new FireflyOptions();
+
+    @Property
     @Comment("Configuration options for entity effects")
     public final EntityEffects entityEffects = new EntityEffects();
 
@@ -57,11 +65,6 @@ public class Configuration extends ConfigurationData {
     @Comment("Configuration options for modifying diagnostic behavior")
     @TextStyle(color = "#0078D4", italic = true)
     public final Logging logging = new Logging();
-
-    @Property
-    @Comment("Configuration options for features that are Works In Progress (WIP)")
-    @TextStyle(color = "#72FF13", italic = true)
-    public final WorksInProgressOptions worksInProgressOptions = new WorksInProgressOptions();
 
     @Property
     @Comment("Configuration options for other things")
@@ -211,24 +214,52 @@ public class Configuration extends ConfigurationData {
         public boolean bubbleColumnEnabled = true;
 
         @Property
-        @Comment("Enable/disable firefly generation")
-        public boolean firefliesEnabled = true;
-
-        @Property
-        @Comment("Enable/disable waterfall effect from flowing water")
-        public boolean waterfallsEnabled = true;
-
-        @Property
-        @Comment("Enable/disable sounds from waterfalls")
-        public boolean enableWaterfallSounds = true;
-
-        @Property
-        @Comment("Enable/disable particles from waterfalls")
-        public boolean enableWaterfallParticles = true;
-
-        @Property
         @Comment("The style of water ripple to render when a drop hits a fluid")
         public WaterRippleStyle waterRippleStyle = WaterRippleStyle.PIXELATED_CIRCLE;
+    }
+
+    public static class WaterfallOptions {
+        @Property
+        @MovedFrom("blockEffects.waterfallsEnabled")
+        @Comment("Enable/disable waterfall effects where flowing water lands")
+        public boolean enableWaterfalls = true;
+
+        @Property
+        @MovedFrom("blockEffects.enableWaterfallSounds")
+        @Comment("Enable/disable sounds from waterfalls, and from water stepping down a block")
+        public boolean enableSounds = true;
+
+        @Property
+        @MovedFrom("blockEffects.enableWaterfallParticles")
+        @Comment("Enable/disable particles from waterfalls: their splashes, and the mist and foam where they land")
+        public boolean enableParticles = true;
+
+        @Property
+        @MovedFrom({"particleEffects.enableWaterfallMist", "worksInProgressOptions.enableWaterfallMist"})
+        @Comment("Enable/disable waterfall mist: many small puffs of mist thrown up where a waterfall lands")
+        public boolean enableMist = true;
+
+        @Property
+        @MovedFrom({"particleEffects.enableWaterStepFroth", "worksInProgressOptions.enableWaterStepFroth"})
+        @Comment("Enable/disable water froth: foam where flowing water drops one block (with a gentle sound) and around where waterfalls land")
+        public boolean enableFroth = true;
+    }
+
+    public static class FireflyOptions {
+        @Property
+        @MovedFrom("blockEffects.firefliesEnabled")
+        @Comment("Enable/disable fireflies")
+        public boolean enableFireflies = true;
+
+        @Property
+        @MovedFrom({"particleEffects.enableFireflyGlow", "worksInProgressOptions.enableFireflyGlow"})
+        @Comment("Enable/disable a soft glow around fireflies")
+        public boolean enableGlow = true;
+
+        @Property
+        @MovedFrom({"particleEffects.enableFireflyLight", "worksInProgressOptions.enableFireflyLight"})
+        @Comment("Enable/disable fireflies lighting the grass, leaves and ground close to them. Not shown while a shader pack is in use")
+        public boolean enableLight = true;
     }
 
     public static class EntityEffects {
@@ -356,24 +387,6 @@ public class Configuration extends ConfigurationData {
         @Slider(min = 0, max = 100)
         @Comment("Reduce the wait time between music plays by a percentage")
         public int reduceWaitTime = 0;
-    }
-
-    public static class WorksInProgressOptions {
-        @Property
-        @Comment("Enable/disable waterfall mist: many small puffs of mist thrown up where a waterfall lands")
-        public boolean enableWaterfallMist = true;
-
-        @Property
-        @Comment("Enable/disable water froth: foam where flowing water drops one block (with a gentle sound) and around where waterfalls land")
-        public boolean enableWaterStepFroth = true;
-
-        @Property
-        @Comment("Enable/disable a soft glow around fireflies")
-        public boolean enableFireflyGlow = true;
-
-        @Property
-        @Comment("Enable/disable fireflies lighting the grass, leaves and ground close to them. Not shown while a shader pack is in use")
-        public boolean enableFireflyLight = true;
     }
 
     public static class OtherOptions {

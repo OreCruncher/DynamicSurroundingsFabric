@@ -60,7 +60,7 @@ public final class FireflyLights {
      * Whether firefly lights are being drawn.
      */
     public static boolean isActive() {
-        return Client.Config.worksInProgressOptions.enableFireflyLight && SHADER.isUsable();
+        return Client.Config.fireflyOptions.enableLight && SHADER.isUsable();
     }
 
     /**
