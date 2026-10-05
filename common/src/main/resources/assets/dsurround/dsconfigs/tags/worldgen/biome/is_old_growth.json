@@ -11,6 +11,10 @@
     {
       "id": "minecraft:old_growth_spruce_taiga",
       "required": false
+    },
+    {
+      "id": "#c:is_old_growth",
+      "required": false
     }
   ]
 }

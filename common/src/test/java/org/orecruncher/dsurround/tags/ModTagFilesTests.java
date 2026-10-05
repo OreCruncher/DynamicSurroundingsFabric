@@ -106,6 +106,25 @@ public class ModTagFilesTests {
         assertTrue(missing.isEmpty(), "tag references with no tag file: " + missing);
     }
 
+    @Test
+    void conventionTagsAreReferencedAsTags() throws IOException {
+        // The "c" namespace only holds tags, so an entry there without its "#" names a biome or block that can't
+        // exist, and quietly adds nothing (as dsurround:is_outer_end_island once did)
+        var plain = Pattern.compile("\"(c:[a-z0-9_/]+)\"");
+        var missing = new ArrayList<String>();
+        try (var files = Files.walk(assets)) {
+            for (var path : files.filter(p -> p.toString().endsWith(".json")).toList()) {
+                var relative = assets.relativize(path).toString().replace('\\', '/');
+                if (!relative.contains("/dsconfigs/tags/"))
+                    continue;
+                var matcher = plain.matcher(Files.readString(path));
+                while (matcher.find())
+                    missing.add(relative + " -> " + matcher.group(1));
+            }
+        }
+        assertTrue(missing.isEmpty(), "convention tags referenced without '#': " + missing);
+    }
+
     /**
      * Which registry's tags a config file refers to: a tag file refers to tags of its own registry; the block and
      * sound mapping configuration to block tags. Null for files that don't refer to tags.
