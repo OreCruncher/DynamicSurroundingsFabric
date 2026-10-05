@@ -95,7 +95,7 @@ public final class Client {
         // needs. The groups are found from the configuration, so a new one is registered without being listed here.
         Config.registerWith(ContainerManager.getRootContainer());
 
-        Library.LOGGER.info("[%s] Boostrap completed", Constants.MOD_ID);
+        Library.LOGGER.info("[%s] Bootstrap completed", Constants.MOD_ID);
     }
 
     public static void initializeClient() {

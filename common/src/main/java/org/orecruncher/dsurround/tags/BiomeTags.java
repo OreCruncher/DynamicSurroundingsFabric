@@ -8,66 +8,23 @@ import org.orecruncher.dsurround.config.BiomeTrait;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
+/**
+ * The mod's biome tags, cached with its other tags when tags load (see {@link ModTags}): one for each biome trait
+ * ("is_" and the trait's name), and a few finer ones that aren't traits.
+ */
 public class BiomeTags {
+
+    // Biome tags that aren't traits, for configuration and resource packs to use
+    private static final List<String> FINER = List.of("is_mountain_peak", "is_mountain_slope", "is_tree_jungle", "is_tree_savanna");
 
     static final Collection<TagKey<Biome>> TAGS = new HashSet<>();
 
-    public static final TagKey<Biome> IS_AQUATIC = of("is_aquatic");
-    public static final TagKey<Biome> IS_AQUATIC_ICY = of("is_aquatic_icy");
-    public static final TagKey<Biome> IS_BADLANDS = of("is_badlands");
-    public static final TagKey<Biome> IS_BEACH = of("is_beach");
-    public static final TagKey<Biome> IS_BIRCH_FOREST = of("is_birch_forest");
-    public static final TagKey<Biome> IS_CAVE = of("is_cave");
-    public static final TagKey<Biome> IS_DEAD = of("is_dead");
-    public static final TagKey<Biome> IS_DEEP_OCEAN = of("is_deep_ocean");
-    public static final TagKey<Biome> IS_DESERT = of("is_desert");
-    public static final TagKey<Biome> IS_HILL = of("is_hill");
-    public static final TagKey<Biome> IS_FLORAL = of("is_floral");
-    public static final TagKey<Biome> IS_FLOWER_FOREST = of("is_flower_forest");
-    public static final TagKey<Biome> IS_FOREST = of("is_forest");
-    public static final TagKey<Biome> IS_ICY = of("is_icy");
-    public static final TagKey<Biome> IS_NETHER = of("is_nether");
-    public static final TagKey<Biome> IS_OVERWORLD = of("is_overworld");
-    public static final TagKey<Biome> IS_JUNGLE = of("is_jungle");
-    public static final TagKey<Biome> IS_LUSH = of("is_lush");
-    public static final TagKey<Biome> IS_MAGICAL = of("is_magical");
-    public static final TagKey<Biome> IS_PLATEAU = of("is_plateau");
-    public static final TagKey<Biome> IS_MOUNTAIN = of("is_mountain");
-    public static final TagKey<Biome> IS_MOUNTAIN_PEAK = of("is_mountain_peak");
-    public static final TagKey<Biome> IS_MOUNTAIN_SLOPE = of("is_mountain_slope");
-    public static final TagKey<Biome> IS_MUSHROOM = of("is_mushroom");
-    public static final TagKey<Biome> IS_NETHER_FOREST = of("is_nether_forest");
-    public static final TagKey<Biome> IS_OCEAN = of("is_ocean");
-    public static final TagKey<Biome> IS_PLAINS = of("is_plains");
-    public static final TagKey<Biome> IS_RARE = of("is_rare");
-    public static final TagKey<Biome> IS_RIVER = of("is_river");
-    public static final TagKey<Biome> IS_SANDY = of("is_sandy");
-    public static final TagKey<Biome> IS_SAVANNA = of("is_savanna");
-    public static final TagKey<Biome> IS_SHALLOW_OCEAN = of("is_shallow_ocean");
-    public static final TagKey<Biome> IS_SNOWY = of("is_snowy");
-    public static final TagKey<Biome> IS_SNOWY_PLAINS = of("is_snowy_plains");
-    public static final TagKey<Biome> IS_SPOOKY = of("is_spooky");
-    public static final TagKey<Biome> IS_STONY_SHORES = of("is_stony_shores");
-    public static final TagKey<Biome> IS_SWAMP = of("is_swamp");
-    public static final TagKey<Biome> IS_TAIGA = of("is_taiga");
-    public static final TagKey<Biome> IS_TREE_JUNGLE = of("is_tree_jungle");
-    public static final TagKey<Biome> IS_TREE_SAVANNA = of("is_tree_savanna");
-    public static final TagKey<Biome> IS_UNDERGROUND = of("is_underground");
-    public static final TagKey<Biome> IS_DENSE_VEGETATION = of("is_dense_vegetation");
-    public static final TagKey<Biome> IS_SPARSE_VEGETATION = of("is_sparse_vegetation");
-    public static final TagKey<Biome> IS_VOID = of("is_void");
-    public static final TagKey<Biome> IS_WASTELAND = of("is_wasteland");
-    public static final TagKey<Biome> IS_WINDSWEPT = of("is_windswept");
-
-    private static TagKey<Biome> of(String id) {
-        var tagKey = TagKey.create(Registries.BIOME, Constants.asId(id));
-        TAGS.add(tagKey);
-        return tagKey;
-    }
-
     static {
-        for (var entry : BiomeTrait.values())
-            TAGS.add(entry.getBiomeTag());
+        for (var trait : BiomeTrait.values())
+            TAGS.add(trait.getBiomeTag());
+        for (var name : FINER)
+            TAGS.add(TagKey.create(Registries.BIOME, Constants.asId(name)));
     }
 }
