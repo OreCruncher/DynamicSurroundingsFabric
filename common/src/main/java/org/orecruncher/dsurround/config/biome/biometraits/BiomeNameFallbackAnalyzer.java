@@ -16,7 +16,7 @@ import static org.orecruncher.dsurround.config.BiomeTrait.*;
  */
 public final class BiomeNameFallbackAnalyzer implements IBiomeTraitAnalyzer {
 
-    private static final Map<String, Set<BiomeTrait>> VANILLA_TRAITS = Map.<String, Set<BiomeTrait>>ofEntries(
+    static final Map<String, Set<BiomeTrait>> VANILLA_TRAITS = Map.<String, Set<BiomeTrait>>ofEntries(
             entry("plains", traits(OVERWORLD, PLAINS, TEMPERATE, SPARSE_VEGETATION)),
             entry("sunflower_plains", traits(OVERWORLD, PLAINS, TEMPERATE, FLORAL, SPARSE_VEGETATION)),
             entry("snowy_plains", traits(OVERWORLD, PLAINS, COLD, SNOWY, SPARSE_VEGETATION)),
@@ -108,14 +108,19 @@ public final class BiomeNameFallbackAnalyzer implements IBiomeTraitAnalyzer {
         addClimateTraits(biome, resultCollection);
     }
 
-    private static void addNameBasedTraits(String path, @NotNull Set<BiomeTrait> results) {
+    /**
+     * Traits suggested by a biome's name. Short words that turn up inside other words are matched as whole words
+     * in the name (the parts between underscores and slashes): "end" would otherwise make lavender_field an End
+     * biome.
+     */
+    static void addNameBasedTraits(String path, @NotNull Set<BiomeTrait> results) {
         if (path.contains("nether")) {
             results.add(NETHER);
             results.add(HOT);
             results.add(DRY);
         }
 
-        if (path.contains("end") && !path.contains("endless")) {
+        if (hasWord(path, "end")) {
             results.add(END);
             results.add(DRY);
         }
@@ -155,7 +160,7 @@ public final class BiomeNameFallbackAnalyzer implements IBiomeTraitAnalyzer {
             results.add(DENSE_VEGETATION);
         }
 
-        if (path.contains("taiga") || path.contains("pine") || path.contains("spruce")) {
+        if (path.contains("taiga") || path.contains("pine") || path.contains("spruce") || path.contains("conifer")) {
             results.add(TAIGA);
             results.add(CONIFEROUS);
         }
@@ -217,9 +222,13 @@ public final class BiomeNameFallbackAnalyzer implements IBiomeTraitAnalyzer {
         // Initialization of BiomeInfo depends on this routine. We need to use the
         // biome property information directly.
         var properties = BiomeHooks.getBiomeProperties(biome);
-        float downfall = properties.getClimateProperties().getDownfall();
-        float temperature = properties.getClimateProperties().getTemperature();
+        addClimateTraits(properties.getClimateProperties().getTemperature(), properties.getClimateProperties().getDownfall(), results);
+    }
 
+    /**
+     * Traits from a biome's climate: cold, temperate or hot by its temperature, and dry or wet by its downfall.
+     */
+    static void addClimateTraits(float temperature, float downfall, Set<BiomeTrait> results) {
         if (temperature <= 0.15F) {
             results.add(COLD);
         } else if (temperature >= 0.95F) {
@@ -233,6 +242,16 @@ public final class BiomeNameFallbackAnalyzer implements IBiomeTraitAnalyzer {
         } else if (downfall >= 0.70F) {
             results.add(WET);
         }
+    }
+
+    /**
+     * Whether {@code word} is one of the words of {@code path}: the parts between underscores and slashes.
+     */
+    static boolean hasWord(String path, String word) {
+        for (var part : path.split("[_/]"))
+            if (part.equals(word))
+                return true;
+        return false;
     }
 
     private static Set<BiomeTrait> traits(BiomeTrait... traits) {

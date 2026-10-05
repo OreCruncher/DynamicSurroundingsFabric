@@ -9,13 +9,17 @@ import net.minecraft.locale.Language;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.config.ConfigServices;
 import org.orecruncher.dsurround.config.SyntheticBiome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
+import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.Guard;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
@@ -24,6 +28,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
+import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
 import java.util.*;
 import java.util.function.Function;
@@ -36,6 +41,11 @@ public final class BiomeLibrary implements IBiomeLibrary {
     private static final Codec<List<BiomeConfigRule>> CODEC = Codec.list(BiomeConfigRule.CODEC);
 
     private final IModLog logger;
+    private final ISoundLibrary soundLibrary;
+    private final ITagLibrary tagLibrary;
+    // What each BiomeInfo is given; see services()
+    @Nullable
+    private ConfigServices services;
     private final BiomeConditionEvaluator biomeConditionEvaluator;
 
     // Mapping of biomes to their respective data
@@ -62,8 +72,10 @@ public final class BiomeLibrary implements IBiomeLibrary {
     // Current version of the configs that are loaded.
     private int version = 0;
 
-    public BiomeLibrary(IModLog logger, PlatformFunctions platformFunctions) {
+    public BiomeLibrary(IModLog logger, PlatformFunctions platformFunctions, ISoundLibrary soundLibrary, ITagLibrary tagLibrary) {
         this.logger = ModLog.createChild(logger, "BiomeLibrary");
+        this.soundLibrary = soundLibrary;
+        this.tagLibrary = tagLibrary;
         this.ruleFailures = LogThrottle.oncePerKey(this.logger, "biome rule failures", "the next reload");
         this.biomeConditionEvaluator = new BiomeConditionEvaluator(this, this.logger, platformFunctions);
     }
@@ -100,9 +112,20 @@ public final class BiomeLibrary implements IBiomeLibrary {
         this.logger.info("%d biome configs loaded; version is now %d", this.biomeConfigs.size(), this.version);
     }
 
+    /**
+     * What each BiomeInfo is given. Built on first use: the condition evaluator can't be given to this library when
+     * it is created, as the evaluator's biome variables need this library (a cycle), but by the time biome info is
+     * built, during a reload, everything has been created.
+     */
+    private ConfigServices services() {
+        if (this.services == null)
+            this.services = new ConfigServices(this.logger, this.soundLibrary, this.tagLibrary, ContainerManager.resolve(IConditionEvaluator.class));
+        return this.services;
+    }
+
     private void initializeSyntheticBiome(SyntheticBiome biome) {
         String match = "@" + biome.getName();
-        var info = new BiomeInfo(this.version, biome.getId(), biome.getName(), biome.getTraits());
+        var info = new BiomeInfo(this.version, biome.getId(), biome.getName(), biome.getTraits(), this.services());
 
         for (var c : this.biomeConfigs) {
             if (c.biomeSelector().asString().equalsIgnoreCase(match)) {
@@ -135,11 +158,11 @@ public final class BiomeLibrary implements IBiomeLibrary {
     private BiomeInfo buildInfo(Biome biome) {
         var id = getBiomeId(biome);
         var name = getBiomeName(id);
-        BiomeTraits traits = BiomeTraits.from(id, biome);
+        BiomeTraits traits = BiomeTraits.from(id, biome, this.tagLibrary);
 
         // Build out the info object and store into the biome.  We need to do that
         // so that when applying configs, the script engine can find it.
-        final var result = new BiomeInfo(this.version, id, name, traits, biome);
+        final var result = new BiomeInfo(this.version, id, name, traits, biome, this.services());
         this.biomes.put(biome, result);
 
         // Collect any trait changes into the trait collection before applying

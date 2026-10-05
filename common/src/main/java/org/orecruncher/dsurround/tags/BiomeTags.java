@@ -19,15 +19,9 @@ public class BiomeTags {
     public static final TagKey<Biome> IS_BEACH = of("is_beach");
     public static final TagKey<Biome> IS_BIRCH_FOREST = of("is_birch_forest");
     public static final TagKey<Biome> IS_CAVE = of("is_cave");
-    public static final TagKey<Biome> CLIMATE_COLD = of("climate_cold");
-    public static final TagKey<Biome> CLIMATE_DRY = of("climate_dry");
-    public static final TagKey<Biome> CLIMATE_HOT = of("climate_hot");
-    public static final TagKey<Biome> CLIMATE_TEMPERATE = of("climate_temperate");
-    public static final TagKey<Biome> CLIMATE_WET = of("climate_wet");
     public static final TagKey<Biome> IS_DEAD = of("is_dead");
     public static final TagKey<Biome> IS_DEEP_OCEAN = of("is_deep_ocean");
     public static final TagKey<Biome> IS_DESERT = of("is_desert");
-    public static final TagKey<Biome> IS_END_ISLANDS = of("is_end_islands");
     public static final TagKey<Biome> IS_HILL = of("is_hill");
     public static final TagKey<Biome> IS_FLORAL = of("is_floral");
     public static final TagKey<Biome> IS_FLOWER_FOREST = of("is_flower_forest");
@@ -35,7 +29,6 @@ public class BiomeTags {
     public static final TagKey<Biome> IS_ICY = of("is_icy");
     public static final TagKey<Biome> IS_NETHER = of("is_nether");
     public static final TagKey<Biome> IS_OVERWORLD = of("is_overworld");
-    public static final TagKey<Biome> IS_THE_END = of("is_the_end");
     public static final TagKey<Biome> IS_JUNGLE = of("is_jungle");
     public static final TagKey<Biome> IS_LUSH = of("is_lush");
     public static final TagKey<Biome> IS_MAGICAL = of("is_magical");
@@ -58,8 +51,6 @@ public class BiomeTags {
     public static final TagKey<Biome> IS_STONY_SHORES = of("is_stony_shores");
     public static final TagKey<Biome> IS_SWAMP = of("is_swamp");
     public static final TagKey<Biome> IS_TAIGA = of("is_taiga");
-    public static final TagKey<Biome> IS_TREE_CONIFEROUS = of("is_tree_coniferous");
-    public static final TagKey<Biome> IS_TREE_DECIDUOUS = of("is_tree_deciduous");
     public static final TagKey<Biome> IS_TREE_JUNGLE = of("is_tree_jungle");
     public static final TagKey<Biome> IS_TREE_SAVANNA = of("is_tree_savanna");
     public static final TagKey<Biome> IS_UNDERGROUND = of("is_underground");

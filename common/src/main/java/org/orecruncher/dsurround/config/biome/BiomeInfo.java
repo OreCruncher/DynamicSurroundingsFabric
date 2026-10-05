@@ -13,22 +13,17 @@ import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.AcousticEntry;
 import org.orecruncher.dsurround.config.AcousticEntryCollection;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
-import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
-import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.BiomeTrait;
+import org.orecruncher.dsurround.config.ConfigServices;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
-import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.lib.weighted.WeightValue;
 import org.orecruncher.dsurround.processing.fog.FogDensity;
-import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
 import java.util.Collection;
@@ -38,12 +33,9 @@ import java.util.stream.Collectors;
 public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvider {
 
     public static final Script DEFAULT_SOUND_CHANCE = new Script("0.008");
-    private static final IModLog LOGGER = ModLog.createChild(ContainerManager.resolve(IModLog.class), "BiomeInfo");
-    private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
-    private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
-    private static final IConditionEvaluator CONDITION_EVALUATOR = ContainerManager.resolve(IConditionEvaluator.class);
 
     private final int version;
+    private final ConfigServices services;
     private final ResourceLocation biomeId;
     private final String biomeName;
     @Nullable
@@ -65,12 +57,16 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private Script additionalSoundChance = DEFAULT_SOUND_CHANCE;
     private Script moodSoundChance = DEFAULT_SOUND_CHANCE;
 
-    public BiomeInfo(final int version, final ResourceLocation id, final String name, BiomeTraits traits) {
-        this(version, id, name, traits, null);
+    public BiomeInfo(final int version, final ResourceLocation id, final String name, BiomeTraits traits, ConfigServices services) {
+        this(version, id, name, traits, null, services);
     }
 
-    public BiomeInfo(final int version, final ResourceLocation id, final String name, BiomeTraits traits, @Nullable Biome biome) {
+    /**
+     * @param services what it uses, from the library that builds it
+     */
+    public BiomeInfo(final int version, final ResourceLocation id, final String name, BiomeTraits traits, @Nullable Biome biome, ConfigServices services) {
         this.version = version;
+        this.services = services;
         this.biomeId = id;
         this.biomeName = name;
         this.biome = biome;
@@ -200,13 +196,13 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
         switch (type) {
             case ADDITION -> {
-                var chance = CONDITION_EVALUATOR.eval(this.additionalSoundChance);
+                var chance = this.services.conditionEvaluator().eval(this.additionalSoundChance);
                 if (chance instanceof Double c) {
                     sourceList = random.nextDouble() < c ? this.additionalSounds : null;
                 }
             }
             case MOOD -> {
-                var chance = CONDITION_EVALUATOR.eval(this.moodSoundChance);
+                var chance = this.services.conditionEvaluator().eval(this.moodSoundChance);
                 if (chance instanceof Double c) {
                     sourceList = random.nextDouble() < c ? this.moodSounds : null;
                 }
@@ -241,8 +237,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         this.properties.getEffectsProperties()
                 .getBackgroundMusic()
                 .ifPresent(m -> {
-                    var factory = SOUND_LIBRARY.getSoundFactoryForMusic(m);
-                    var entry = new AcousticEntry(factory, null);
+                    var factory = this.services.soundLibrary().getSoundFactoryForMusic(m);
+                    var entry = new AcousticEntry(factory, null, this.services.conditionEvaluator());
                     this.musicSounds.add(entry);
                 });
 
@@ -273,19 +269,19 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         }
 
         for (final AcousticConfig sr : entry.acoustics()) {
-            var factory = SOUND_LIBRARY.getSoundFactoryOrDefault(sr.factory());
+            var factory = this.services.soundLibrary().getSoundFactoryOrDefault(sr.factory());
 
             Collection<AcousticEntry> targetCollection = null;
             AcousticEntry acousticEntry = null;
 
             switch (sr.type()) {
                 case LOOP -> {
-                    acousticEntry = new AcousticEntry(factory, sr.conditions());
+                    acousticEntry = new AcousticEntry(factory, sr.conditions(), this.services.conditionEvaluator());
                     targetCollection = this.loopSounds;
                 }
                 case MUSIC, MOOD, ADDITION -> {
                     final WeightValue weight = sr.weight();
-                    acousticEntry = new AcousticEntry(factory, sr.conditions(), weight);
+                    acousticEntry = new AcousticEntry(factory, sr.conditions(), weight, this.services.conditionEvaluator());
 
                     if (sr.type() == SoundEventType.ADDITION)
                         targetCollection = this.additionalSounds;
@@ -294,13 +290,13 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
                     else
                         targetCollection = this.musicSounds;
                 }
-                default -> LOGGER.warn("[%s] Unknown SoundEventType %s", this.getBiomeName(), sr.type());
+                default -> this.services.logger().warn("[%s] Unknown SoundEventType %s", this.getBiomeName(), sr.type());
             }
 
             // Add if we have a target collection and it is not present
             if (targetCollection != null) {
                 if (!targetCollection.add(acousticEntry))
-                    LOGGER.warn("[%s] Duplicate acoustic entry: %s", this.getBiomeName(), sr.toString());
+                    this.services.logger().warn("[%s] Duplicate acoustic entry: %s", this.getBiomeName(), sr.toString());
             }
         }
     }
@@ -337,7 +333,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
                     var holder = RegistryUtils.getRegistryEntry(Registries.BIOME, b);
                     if (holder.isEmpty())
                         return "null";
-                    return TAG_LIBRARY.asString(TAG_LIBRARY.streamTags(holder.get()));
+                    return this.services.tagLibrary().asString(this.services.tagLibrary().streamTags(holder.get()));
                 }).orElse("null");
 
         final StringBuilder builder = new StringBuilder();

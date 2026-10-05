@@ -10,9 +10,11 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateHolder;
+import org.orecruncher.dsurround.config.ConfigServices;
 import org.orecruncher.dsurround.config.block.BlockInfo;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
+import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.logging.LogThrottle;
@@ -21,6 +23,7 @@ import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
+import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReferenceArray;
@@ -31,9 +34,9 @@ import java.util.stream.Stream;
  * processing) and the sounds and effects configured in blocks.json, as a {@link BlockInfo}.
  * <ul>
  *   <li>{@link #getBlockInfo} builds the info on first request and caches it. Client thread only.</li>
- *   <li>{@link #getBlockInfoWeak} returns whatever is cached, or DEFAULT, without building anything. Safe from any
+ *   <li>{@link #getBlockInfoWeak} returns whatever is cached, or the default info, without building anything. Safe from any
  *       thread; the sound processing threads use it.</li>
- *   <li>Blocks with no configuration and default acoustics share one DEFAULT instance, to save memory.</li>
+ *   <li>Blocks with no configuration and default acoustics share one default info instance, to save memory.</li>
  *   <li>Every reload (resources or tags) starts a fresh cache and seeds it with common terrain blocks, so sound
  *       processing has their real acoustics straight away.</li>
  * </ul>
@@ -45,15 +48,12 @@ public class BlockLibrary implements IBlockLibrary {
 
     private static final int INDEFINITE = -1;
 
-    private static final BlockInfo DEFAULT = new BlockInfo(INDEFINITE) {
-        @Override
-        public boolean isDefault() {
-            return true;
-        }
-    };
-
     private final IModLog logger;
     private final ITagLibrary tagLibrary;
+    // Handed to every BlockInfo built
+    private final ConfigServices services;
+    // Shared by every block with no configuration and default acoustics
+    private final BlockInfo defaultInfo;
 
     /**
      * Cache of block info, indexed by block state id (Block.getId()).
@@ -119,9 +119,16 @@ public class BlockLibrary implements IBlockLibrary {
     private final LogThrottle<Object> ruleFailures;
     private int version = 0;
 
-    public BlockLibrary(IModLog logger, ITagLibrary tagLibrary) {
+    public BlockLibrary(IModLog logger, ITagLibrary tagLibrary, ISoundLibrary soundLibrary, IConditionEvaluator conditionEvaluator) {
         this.logger = ModLog.createChild(logger, "BlockLibrary");
         this.tagLibrary = tagLibrary;
+        this.services = new ConfigServices(this.logger, soundLibrary, tagLibrary, conditionEvaluator);
+        this.defaultInfo = new BlockInfo(INDEFINITE, this.services) {
+            @Override
+            public boolean isDefault() {
+                return true;
+            }
+        };
         this.ruleFailures = LogThrottle.oncePerKey(this.logger, "block rule failures", "the next reload");
     }
 
@@ -138,7 +145,7 @@ public class BlockLibrary implements IBlockLibrary {
 
         if (scope == IReloadEvent.Scope.TAGS) {
             // Tags affect block info (acoustic properties, which configs match), so drop the cache to rebuild it
-            // lazily. The version bump alone isn't enough: blocks stored as the shared DEFAULT are accepted whatever
+            // lazily. The version bump alone isn't enough: blocks stored as the shared default info are accepted whatever
             // their version, so they would never pick up the new tags.
             this.blocks = newCache(0);
             this.logger.info("received tag update notification; version is now %d", this.version);
@@ -188,12 +195,12 @@ public class BlockLibrary implements IBlockLibrary {
     }
 
     /**
-     * Safe from any thread. Returns whatever is cached, or DEFAULT if nothing is, without building anything.
+     * Safe from any thread. Returns whatever is cached, or the default info if nothing is, without building anything.
      */
     @Override
     public BlockInfo getBlockInfoWeak(BlockState state) {
         var entry = lookup(this.blocks, state);
-        return entry != null ? entry.info() : DEFAULT;
+        return entry != null ? entry.info() : this.defaultInfo;
     }
 
     /**
@@ -209,7 +216,7 @@ public class BlockLibrary implements IBlockLibrary {
             return entry.info();
 
         // OK - need to build out info for the block.
-        final var built = new BlockInfo(this.version, state);
+        final var built = new BlockInfo(this.version, state, this.services);
         // A rule that throws is reported once and skipped, rather than failing this block's lookup every time
         RuleGuard.forEach(this.blockConfigs,
                 rule -> {
@@ -219,10 +226,10 @@ public class BlockLibrary implements IBlockLibrary {
                 (rule, t) -> this.ruleFailures.error(rule, t, "Unable to apply block rule to %s [%s]", state, rule));
 
         // Optimization to reduce memory bloat.  Coalesce blocks that do not have any special
-        // processing to the DEFAULT, and trim the others to release memory that is not needed.
+        // processing to the default info, and trim the others to release memory that is not needed.
         var info = built;
         if (info.isDefault())
-            info = DEFAULT;
+            info = this.defaultInfo;
         else
             info.trim();
 

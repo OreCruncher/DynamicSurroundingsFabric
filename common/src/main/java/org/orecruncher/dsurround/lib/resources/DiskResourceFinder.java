@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.function.Predicate;
 
 import static org.orecruncher.dsurround.Configuration.Flags.RESOURCE_LOADING;
 
@@ -19,13 +20,21 @@ public class DiskResourceFinder extends AbstractResourceFinder {
     private final Collection<Path> namespacesOnDisk = new ObjectArray<>();
 
     public DiskResourceFinder(IModLog logger, Path diskLocation) {
+        this(logger, diskLocation, Platform::isModLoaded);
+    }
+
+    /**
+     * @param isModLoaded whether a mod is installed, by its ID: only the folders of installed mods are read
+     */
+    DiskResourceFinder(IModLog logger, Path diskLocation, Predicate<String> isModLoaded) {
         super(logger);
 
-        // List the folders on disk and validate against loaded mods.
+        // List the folders on disk and validate against loaded mods. If the location doesn't exist there is nothing
+        // to read, which is the usual case.
         try (var directoryList = Files.newDirectoryStream(diskLocation, Files::isDirectory)) {
             directoryList.forEach(p -> {
                 var modNamespace = p.getFileName().toString();
-                if (Platform.isModLoaded(modNamespace))
+                if (isModLoaded.test(modNamespace))
                     this.namespacesOnDisk.add(p);
             });
         } catch (Throwable ignored) {
