@@ -74,22 +74,30 @@ public final class SoftParticles {
         if (current == null || IrisCompat.isShaderPackInUse())
             return false;
 
-        // With Fabulous graphics particles are drawn to their own target, which holds a copy of the scene's depth
-        var minecraft = Minecraft.getInstance();
-        RenderTarget target = minecraft.levelRenderer.getParticlesTarget();
-        if (target == null)
-            target = minecraft.getMainRenderTarget();
-
-        var copy = depthCopyFor(target);
-        copy.copyDepthFrom(target);
-        // Copying leaves no frame buffer bound
-        target.bindWrite(false);
-
-        current.setSampler("DepthSampler", copy.getDepthTextureId());
+        bindSceneDepth(current);
         // The shader is shared by every soft render type, so each sets its own fade distance
         current.safeGetUniform("SoftDistance").set(softDistance);
         RenderSystem.setShader(SHADER_SUPPLIER);
         return true;
+    }
+
+    /**
+     * Copies the scene's depth as it is now, and gives the copy to {@code target} as its DepthSampler, for a shader
+     * drawing particles that needs to know what is behind them.
+     */
+    public static void bindSceneDepth(ShaderInstance target) {
+        // With Fabulous graphics particles are drawn to their own target, which holds a copy of the scene's depth
+        var minecraft = Minecraft.getInstance();
+        RenderTarget renderTarget = minecraft.levelRenderer.getParticlesTarget();
+        if (renderTarget == null)
+            renderTarget = minecraft.getMainRenderTarget();
+
+        var copy = depthCopyFor(renderTarget);
+        copy.copyDepthFrom(renderTarget);
+        // Copying leaves no frame buffer bound
+        renderTarget.bindWrite(false);
+
+        target.setSampler("DepthSampler", copy.getDepthTextureId());
     }
 
     /**

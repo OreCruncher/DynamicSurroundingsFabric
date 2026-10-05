@@ -130,7 +130,7 @@
       {
         "effect": "firefly",
         "conditions": "weather.isNotRaining() && (diurnal.isNight() || diurnal.isSunset()) && !(HOT || weather.canWaterFreeze())",
-        "spawnChance": "0.035"
+        "spawnChance": "0.045"
       }
     ]
   }

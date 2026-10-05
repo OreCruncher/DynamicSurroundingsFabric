@@ -18,6 +18,27 @@ public class DSurroundParticleRenderType {
     public static final ParticleRenderType PARTICLE_SHEET_WATERFALL_MIST = softSheet("PARTICLE_SHEET_WATERFALL_MIST", 0.4F);
 
     /**
+     * Fireflies, with their halos. Vanilla's translucent sheet with depth writes off; before the fireflies, it draws
+     * the lights they cast (see {@link FireflyLights}).
+     */
+    public static final ParticleRenderType PARTICLE_SHEET_FIREFLY = new ParticleRenderType() {
+
+        @SuppressWarnings("deprecation")
+        public BufferBuilder begin(Tesselator tesselator, @NotNull TextureManager textureManager) {
+            FireflyLights.draw(tesselator);
+            RenderSystem.depthMask(false);
+            RenderSystem.setShaderTexture(0, TextureAtlas.LOCATION_PARTICLES);
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            return tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
+        }
+
+        public String toString() {
+            return "PARTICLE_SHEET_FIREFLY";
+        }
+    };
+
+    /**
      * A sheet of particles drawn soft (see {@link SoftParticles}): fading out over {@code softDistance} blocks as they
      * near whatever is behind them. Each sheet is its own render type so it can have its own fade distance.
      * <p>

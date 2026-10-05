@@ -33,6 +33,7 @@ public abstract class MixinParticleEngine {
         this.dsurround$register(DSurroundParticleTypes.WATER_RIPPLE_PIXELATED, spriteSet -> new SpriteOnlyProvider(DSurroundParticleTypes.WATER_RIPPLE_PIXELATED, spriteSet));
         this.dsurround$register(DSurroundParticleTypes.WATERFALL_MIST, spriteSet -> new SpriteOnlyProvider(DSurroundParticleTypes.WATERFALL_MIST, spriteSet));
         this.dsurround$register(DSurroundParticleTypes.WATER_FOAM, spriteSet -> new SpriteOnlyProvider(DSurroundParticleTypes.WATER_FOAM, spriteSet));
+        this.dsurround$register(DSurroundParticleTypes.FIREFLY_GLOW, spriteSet -> new SpriteOnlyProvider(DSurroundParticleTypes.FIREFLY_GLOW, spriteSet));
     }
 
     @Invoker("register")
@@ -48,6 +49,7 @@ public abstract class MixinParticleEngine {
                 // Insert our custom types before CUSTOM. By default, CUSTOM is at the end of the render
                 // ordering list.
                 listBuilder.add(DSurroundParticleRenderType.PARTICLE_SHEET_WATERFALL_MIST);
+                listBuilder.add(DSurroundParticleRenderType.PARTICLE_SHEET_FIREFLY);
             }
             listBuilder.add(entry);
         }

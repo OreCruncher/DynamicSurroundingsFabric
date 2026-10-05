@@ -11,6 +11,7 @@ public final class DSurroundParticleTypes {
     // Sprite sets for particles the mod creates itself, rather than through the particle engine
     public static SimpleParticleType WATERFALL_MIST;
     public static SimpleParticleType WATER_FOAM;
+    public static SimpleParticleType FIREFLY_GLOW;
 
     public static SimpleParticleType forRippleStyle(WaterRippleStyle style) {
         return style == WaterRippleStyle.PIXELATED_CIRCLE

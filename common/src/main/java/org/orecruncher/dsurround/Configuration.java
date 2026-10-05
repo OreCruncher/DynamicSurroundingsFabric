@@ -366,6 +366,14 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable water froth: foam where flowing water drops one block (with a gentle sound) and around where waterfalls land")
         public boolean enableWaterStepFroth = true;
+
+        @Property
+        @Comment("Enable/disable a soft glow around fireflies")
+        public boolean enableFireflyGlow = true;
+
+        @Property
+        @Comment("Enable/disable fireflies lighting the grass, leaves and ground close to them. Not shown while a shader pack is in use")
+        public boolean enableFireflyLight = true;
     }
 
     public static class OtherOptions {

@@ -19,7 +19,7 @@ To establish a bit more context, I am a software engineer with almost 40 years (
 I personally believe that AI has a role in modding, but the challenge is having the "wisdom" and "experience" of applying it "properly"
 (notice all the quotes). Further, there are qualitative differences in work product between the different AI models, and a lack of
 software experience on the users part runs the risk of producing something that is low quality. Unfortunately there isn't much I can
-do about the situation, other than be transparent about my use of AI.
+do about the situation, other than be transparent about my use of AI. (I am aware of the broader discussion of AI.)
 
 Starting with **1.21.1-0.4.6** I am using AI to assist with coding (Claude Code Pro if you are interested). Here are the details of its
 use and the impact so you can make a more informed "should I use" decision. If you have an opinion (either pro or anti AI) or questions
@@ -31,12 +31,13 @@ This is what I used it for:
 * Analyze GUI implementations and make recommendations to be more consistent with Minecraft's own implementations
 * Examine the path to subsequent Minecraft versions (26.2) so that migration is easier and less error-prone
 * Reworked the waterfall cascade effect into mist/foam
-* Adapted the older aurora shader and logic from older versions into a form suitable for 1.21.1
+* Reworked the firefly effect to add glow and improve movement behavior
+* Adapted the older aurora shader and logic from older versions of Dynamic Surroundings into a form suitable for 1.21.1
 * Creation of extensive unit tests
 
 Impacts:
 
-* Added 1100+ unit tests to validate internal logic
+* Added 1250+ unit tests to validate internal logic
 * Improved script engine error reporting, and performance by roughly 40%
 * Identified and fixed performance issues in the area scanner resulting in a 50% increase in performance
 * Identified and fixed cases where caches weren't flushed or data was holding a reference to an object that could go out of scope (like Entities)
@@ -55,11 +56,18 @@ Impacts:
 * Comments are written into the mod configuration file. User supplied comments will be lost between saves.
 * Humanoid mobs gain brush and straw step effect (skeletons, zombies, raiders, etc.) Did not do creepers, sorry.
 * New Works in Progress (WIP) configuration section that can be used to toggle features that are currently baking.
-* Waterfall mist (replaces the relatively new cascade) and water foam. Options to enable/disable are in the WIP configuration section.
+* Waterfall mist (replaces the relatively new cascade) and water foam.
   * Mist - swirls at the bottom of a waterfall (falling water hitting a surface)
   * Foam - generates when water drops down a block, or when water hits a surface. Foam will flow with the direction of water and eventually fade.
-  * Shader blending will auto disable if Iris/Oculus is installed.
-* The aurora is back. There are a set of options in the configuration to enable/disable, adjust frequency, as well as the max number of bands. (Will auto disable if Iris/Oculus is installed.)
+  * Options to enable/disable are in the WIP configuration section.
+  * Shader blending will auto disable if Iris or Oculus is installed.
+* The aurora is back. There are a set of options in the configuration to enable/disable, adjust frequency, as well as the max number of bands.
+  * There is a new Aurora configuration section where it can be enabled/disabled, and other properties modified
+  * Will auto disable if Iris or Oculus is installed.
+* Refreshed firefly effect so that they behave more like fireflies; added a glow around them that lights up the area a bit.
+  * Options to enable/disable glow and lighting are in the WIP config section
+  * Will auto disable shader lighting if Iris or Oculus is installed.
+* Extended debug hud for Dynamic Surroundings. If the key is bound, hitting it will toggle between the normal HUD, information about the player biome, and the effect system placements in world.
 
 **Changes**
 * Search box in the Individual Sound Configuration menu will accept regular expressions for filtering.

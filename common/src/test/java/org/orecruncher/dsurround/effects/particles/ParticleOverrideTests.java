@@ -39,6 +39,7 @@ public class ParticleOverrideTests {
     @Test
     void particleTicksOverrideVanilla() {
         assertOverrides(FrostBreathParticle.class, "tick");
+        assertOverrides(FireflyParticle.class, "tick");
         assertOverrides(WaterRippleParticle.class, "tick");
         assertOverrides(WaterfallMist.class, "tick");
         assertOverrides(WaterFoam.class, "tick");
@@ -51,6 +52,13 @@ public class ParticleOverrideTests {
             assertOverrides(type, "getQuadSize", float.class);
             assertOverrides(type, "render", VertexConsumer.class, Camera.class, float.class);
         }
+    }
+
+    @Test
+    void fireflyDrawsItsOwnWay() {
+        // Its halo and light are added as it's drawn, in its own render type, which draws the lights
+        assertOverrides(FireflyParticle.class, "render", VertexConsumer.class, Camera.class, float.class);
+        assertOverrides(FireflyParticle.class, "getRenderType");
     }
 
     @Test

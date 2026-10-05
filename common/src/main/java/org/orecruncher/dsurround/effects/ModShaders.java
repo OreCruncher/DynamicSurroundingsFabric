@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
+import org.orecruncher.dsurround.effects.particles.FireflyLights;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
 
 import java.util.List;
@@ -21,7 +22,8 @@ public final class ModShaders {
 
     public static final List<Definition> SHADERS = List.of(
             new Definition(SoftParticles.SHADER_ID, DefaultVertexFormat.PARTICLE, SoftParticles::onShaderLoaded, SoftParticles::onShaderFailed),
-            new Definition(AuroraRenderer.SHADER_ID, DefaultVertexFormat.POSITION_TEX_COLOR, AuroraRenderer::onShaderLoaded, AuroraRenderer::onShaderFailed));
+            new Definition(AuroraRenderer.SHADER_ID, DefaultVertexFormat.POSITION_TEX_COLOR, AuroraRenderer::onShaderLoaded, AuroraRenderer::onShaderFailed),
+            new Definition(FireflyLights.SHADER_ID, DefaultVertexFormat.POSITION_TEX_COLOR, FireflyLights::onShaderLoaded, FireflyLights::onShaderFailed));
 
     private ModShaders() {
     }
