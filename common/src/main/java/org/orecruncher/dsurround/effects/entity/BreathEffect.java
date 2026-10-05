@@ -9,7 +9,7 @@ import org.orecruncher.dsurround.effects.particles.FrostBreathParticle;
 import org.orecruncher.dsurround.effects.particles.ParticleUtils;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
-import org.orecruncher.dsurround.lib.random.MurmurHash3;
+import org.orecruncher.dsurround.lib.random.Mixers;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.lib.system.ITickCount;
@@ -35,7 +35,7 @@ public class BreathEffect extends EntityEffectBase {
 
     @Override
     public void activate(final EntityEffectInfo info) {
-        this.seed = MurmurHash3.hash(info.getEntityId()) & 0xFFFF;
+        this.seed = Mixers.fmix32(info.getEntityId()) & 0xFFFF;
     }
 
     @Override

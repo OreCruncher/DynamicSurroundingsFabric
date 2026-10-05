@@ -2,7 +2,6 @@ package org.orecruncher.dsurround.lib.random;
 
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.PositionalRandomFactory;
-import net.minecraft.world.level.levelgen.XoroshiroRandomSource;
 import org.jetbrains.annotations.NotNull;
 
 /**

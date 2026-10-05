@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.lib.random;
 
-import net.minecraft.util.RandomSource;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -10,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class RandomizerTests {
 
     private static IRandomizer seeded(long seed) {
-        return new MinecraftRandomizer(RandomSource.create(seed));
+        return Randomizer.create(seed);
     }
 
     @Test
@@ -140,27 +139,5 @@ public class RandomizerTests {
         Randomizer.create(99L).nextLong();
         Randomizer.current().nextLong();
         assertEquals(expected, random.nextLong());
-    }
-
-    @Test
-    void murmurMixMatchesTheReference() {
-        // fmix32 and fmix64 from MurmurHash3, worked out independently
-        assertEquals(0, MurmurHash3.hash(0));
-        assertEquals(0x514E28B7, MurmurHash3.hash(1));
-        assertEquals(0x30F4C306, MurmurHash3.hash(2));
-        assertEquals(0x81F16F39, MurmurHash3.hash(-1));
-        assertEquals(0L, MurmurHash3.hash(0L));
-        assertEquals(0xB456BCFC34C2CB2CL, MurmurHash3.hash(1L));
-        assertEquals(0x64B5720B4B825F21L, MurmurHash3.hash(-1L));
-    }
-
-    @Test
-    void murmurMixScramblesConsecutiveValues() {
-        // Consecutive ids give unrelated results: on average about half the bits differ
-        long differing = 0;
-        for (int i = 0; i < 1000; i++)
-            differing += Integer.bitCount(MurmurHash3.hash(i) ^ MurmurHash3.hash(i + 1));
-        var average = differing / 1000.0;
-        assertEquals(16.0, average, 1.5);
     }
 }

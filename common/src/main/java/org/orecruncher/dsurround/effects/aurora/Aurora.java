@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.effects.aurora;
 
 import net.minecraft.util.Mth;
 import org.joml.Vector3f;
+import org.orecruncher.dsurround.lib.random.Mixers;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
 
@@ -54,8 +55,7 @@ public record Aurora(long night, AuroraPalette palette, float heading, float dis
     // How quickly the folds drift
     private static final float FOLD_DRIFT = 0.04F;
 
-    // Hashing constants (from SplitMix64), so seeds spread well from consecutive night numbers
-    private static final long GOLDEN = 0x9E3779B97F4A7C15L;
+    // Keeps whether a night has an aurora apart from what it looks like, though both come from the night's number
     private static final long CHANCE_SALT = 0x5DEECE66DL;
 
     /**
@@ -64,7 +64,7 @@ public record Aurora(long night, AuroraPalette palette, float heading, float dis
      * @param chance percent of nights with an aurora, 0 to 100
      */
     public static boolean appears(long night, int chance) {
-        return Math.floorMod(mix(night ^ CHANCE_SALT), 100L) < chance;
+        return Math.floorMod(Mixers.splitMix64(night ^ CHANCE_SALT), 100L) < chance;
     }
 
     /**
@@ -73,7 +73,7 @@ public record Aurora(long night, AuroraPalette palette, float heading, float dis
      * @param maxBands the most curtains it may have, 1 to 3
      */
     public static Aurora create(long night, int maxBands) {
-        var random = Randomizer.create(mix(night));
+        var random = Randomizer.create(Mixers.splitMix64(night));
         var palette = AuroraPalette.PALETTES.get(random.nextInt(AuroraPalette.PALETTES.size()));
         var heading = random.nextFloat(-MAX_HEADING, MAX_HEADING);
         var distance = random.nextFloat(1.5F, 4F);
@@ -84,6 +84,7 @@ public record Aurora(long night, AuroraPalette palette, float heading, float dis
         var foldAmount = random.nextFloat(0.15F, 0.45F);
         var foldFrequency = random.nextFloat(0.75F, 1.75F);
         var phase = random.nextFloat() * Mth.TWO_PI;
+        // TODO: Assess brightness. Old code was roughly 0.5 - 0.75.
         var brightness = random.nextFloat(0.7F, 1F);
         var textureOffset = random.nextFloat() * 1000F;
         return new Aurora(night, palette, heading, distance, length, altitude, height, bands, foldAmount, foldFrequency,
@@ -155,13 +156,5 @@ public record Aurora(long night, AuroraPalette palette, float heading, float dis
 
     private float outwardZ() {
         return -Mth.cos(this.heading);
-    }
-
-
-    private static long mix(long value) {
-        var z = value * GOLDEN + GOLDEN;
-        z = (z ^ (z >>> 30)) * 0xBF58476D1CE4E5B9L;
-        z = (z ^ (z >>> 27)) * 0x94D049BB133111EBL;
-        return z ^ (z >>> 31);
     }
 }

@@ -18,7 +18,7 @@ class MinecraftRandomizer implements IRandomizer {
     }
 
     public MinecraftRandomizer(long seed) {
-        // Prefer Xorishiro
+        // Xoroshiro128++: fast, with good statistical quality
         this(new XoroshiroRandomSource(seed));
     }
 
