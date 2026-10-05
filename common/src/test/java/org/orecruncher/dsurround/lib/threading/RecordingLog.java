@@ -9,14 +9,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * Records errors and warnings logged by the code under test, from any thread.
  */
-final class RecordingLog implements IModLog {
+public final class RecordingLog implements IModLog {
 
-    record Entry(Level level, String message, @Nullable Throwable throwable) {
+    public record Entry(Level level, String message, @Nullable Throwable throwable) {
     }
 
-    final List<Entry> entries = new CopyOnWriteArrayList<>();
+    public final List<Entry> entries = new CopyOnWriteArrayList<>();
 
-    List<Entry> at(Level level) {
+    public List<Entry> at(Level level) {
         return this.entries.stream().filter(e -> e.level() == level).toList();
     }
 

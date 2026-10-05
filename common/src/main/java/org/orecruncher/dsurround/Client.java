@@ -91,22 +91,9 @@ public final class Client {
         ContainerManager.getRootContainer()
                 .registerFactory(SoundManager.class, GameUtils::getSoundManager);
 
-        // Register configuration elements
-        ContainerManager.getRootContainer()
-                .registerSingleton(Config)
-                .registerSingleton(Config.logging)
-                .registerSingleton(Config.soundSystem)
-                .registerSingleton(Config.enhancedSounds)
-                .registerSingleton(Config.soundOptions)
-                .registerSingleton(Config.blockEffects)
-                .registerSingleton(Config.entityEffects)
-                .registerSingleton(Config.footstepAccents)
-                .registerSingleton(Config.particleTweaks)
-                .registerSingleton(Config.compassAndClockOptions)
-                .registerSingleton(Config.fogOptions)
-                .registerSingleton(Config.musicManagerOptions)
-                .registerSingleton(Config.worksInProgressOptions)
-                .registerSingleton(Config.otherOptions);
+        // Register the configuration, and each of its groups of settings so a class can be given just the group it
+        // needs. The groups are found from the configuration, so a new one is registered without being listed here.
+        Config.registerWith(ContainerManager.getRootContainer());
 
         Library.LOGGER.info("[%s] Boostrap completed", Constants.MOD_ID);
     }

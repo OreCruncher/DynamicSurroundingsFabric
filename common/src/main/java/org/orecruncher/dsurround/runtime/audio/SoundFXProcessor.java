@@ -15,6 +15,8 @@ import org.orecruncher.dsurround.lib.SingletonSupplier;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.logging.LogThrottle;
+import org.orecruncher.dsurround.lib.threading.Tasks;
 import org.orecruncher.dsurround.lib.threading.Worker;
 import org.orecruncher.dsurround.runtime.audio.effects.Efx;
 
@@ -25,11 +27,10 @@ public final class SoundFXProcessor {
 
     private static final IModLog LOGGER = ContainerManager.memoize(IModLog.class);
     private static final int SOUND_PROCESS_ITERATION = 1000 / 20;   // Match MC client tick rate
+    private static final LogThrottle<Object> TASK_ERRORS = LogThrottle.firstN(LOGGER, "enhanced sound task errors", null, 10);
 
     static boolean isAvailable;
 
-    // Sparse array to hold references to the SoundContexts of playing sounds
-    // Volatile: replaced on the client thread, read by the sound processor's worker thread
     // The context of the sound playing on each OpenAL source, indexed by source ID - 1. An atomic array so the
     // worker thread sees each context fully set up: contexts are stored by the client thread and read by the sound
     // engine and worker threads. Each entry belongs to one sound at a time: its stop hook clears it before the
@@ -227,18 +228,12 @@ public final class SoundFXProcessor {
 
             diagnosticString = "(ticked: %d)".formatted(tasks.size());
 
-            tasks.forEach(task -> {
-                try {
-                    // This will cause this thread to block waiting for
-                    // a result. Since they are processed in order, the amount
-                    // of time spent blocking will be minimal.
-                    task.get();
-                } catch (InterruptedException | ExecutionException ignored) {
-                }
-            });
+            // SourceContext catches and logs its own exceptions, so a task failing here threw an Error (a game class
+            // changed under it, say)
+            Tasks.awaitAll(tasks, TASK_ERRORS, "An enhanced sound task");
 
         } catch (final Throwable t) {
-            LOGGER.error(t, "Error in SoundContext ForkJoinPool");
+            LOGGER.error(t, "Error in the enhanced sound processor");
         }
     }
 

@@ -88,7 +88,7 @@ public class AuroraHandler extends AbstractClientHandler {
         if (!options.enableAuroras) {
             this.status = "disabled";
         } else if (!AuroraRenderer.isAvailable()) {
-            this.status = "no shader";
+            this.status = "shader unavailable or failed";
         } else if (IrisCompat.isShaderPackInUse()) {
             this.status = "shader pack in use";
         } else if (level.dimension() != Level.OVERWORLD) {

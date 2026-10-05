@@ -20,9 +20,9 @@ public final class FabricMod {
             // A shader that fails to compile throws here. Caught so the game still loads, without that shader.
             for (var shader : ModShaders.SHADERS) {
                 try {
-                    context.register(shader.id(), shader.format(), shader.onLoaded()::accept);
+                    context.register(shader.id(), shader.format(), shader::onLoaded);
                 } catch (Exception e) {
-                    shader.onFailed().accept(e);
+                    shader.onFailed(e);
                 }
             }
         });

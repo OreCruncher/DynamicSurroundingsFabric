@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.eventing.IConfigChangedEvent;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.di.IServiceContainer;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 
 import java.io.BufferedReader;
@@ -19,8 +20,10 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -147,6 +150,28 @@ public abstract class ConfigurationData {
 
     public Collection<ConfigElement<?>> getSpecification() {
         return getSpecification(this.getClass());
+    }
+
+    /**
+     * The configuration's top-level groups of settings: the objects held by its property group fields, in the order
+     * they are declared. Lets each be registered with the dependency container, so a class can be given just the
+     * group it needs, without a list that must be kept up to date by hand.
+     */
+    public List<Object> getGroups() {
+        var groups = new ArrayList<>();
+        for (var element : this.getSpecification())
+            if (element instanceof ConfigElement.PropertyGroup group)
+                groups.add(group.getInstance(this));
+        return groups;
+    }
+
+    /**
+     * Registers the configuration, and each of its top-level groups of settings, with {@code container}.
+     */
+    public void registerWith(IServiceContainer container) {
+        container.registerSingleton(this);
+        for (var group : this.getGroups())
+            container.registerSingleton(group);
     }
 
     /**

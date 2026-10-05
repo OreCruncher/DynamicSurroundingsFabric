@@ -38,9 +38,9 @@ public final class NeoForgeMod {
         for (var definition : ModShaders.SHADERS) {
             try {
                 var shader = new ShaderInstance(event.getResourceProvider(), definition.id(), definition.format());
-                event.registerShader(shader, definition.onLoaded());
+                event.registerShader(shader, definition::onLoaded);
             } catch (Exception e) {
-                definition.onFailed().accept(e);
+                definition.onFailed(e);
             }
         }
     }

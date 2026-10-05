@@ -3,58 +3,35 @@ package org.orecruncher.dsurround.effects.particles;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.compat.IrisCompat;
 
 import java.lang.reflect.Method;
-import java.util.function.Supplier;
 
 /**
  * "Soft" particles: drawn with a shader that fades a particle out as it nears whatever is behind it, so where it
  * passes into terrain or the surface of water it blends away instead of ending in a hard line. The shader needs the
  * scene's depth, so a copy of it is made just before the particles are drawn.
  * <p>
- * The shader is registered by each platform (it has its own API for that) and handed over with
- * {@link #onShaderLoaded}. If it isn't available, because it failed to load or an Iris shader pack is in use (which
+ * The shader ({@link #SHADER}) is registered by each platform. If it isn't available, because it failed to load or an Iris shader pack is in use (which
  * replaces the rendering, so a shader of ours wouldn't fit in), particles are drawn the vanilla way instead.
  * <p>
  * Everything here runs on the render thread.
  */
 public final class SoftParticles {
 
-    public static final ResourceLocation SHADER_ID = Constants.asId("soft_particle");
-
-    @Nullable
-    private static ShaderInstance shader;
-    private static final Supplier<ShaderInstance> SHADER_SUPPLIER = () -> shader;
+    public static final ModShader SHADER = new ModShader("soft_particle", DefaultVertexFormat.PARTICLE,
+            "soft particles", "particles will be drawn without it", Library.LOGGER);
 
     // The copy of the scene's depth the shader reads; can't be the depth buffer being drawn to
     @Nullable
     private static TextureTarget depthCopy;
 
     private SoftParticles() {
-    }
-
-    /**
-     * Called by the platform when the shader has been loaded (on each resource reload).
-     */
-    public static void onShaderLoaded(ShaderInstance loaded) {
-        shader = loaded;
-        Library.LOGGER.info("Loaded the %s shader", SHADER_ID);
-    }
-
-    /**
-     * Called by the platform when the shader couldn't be loaded. Particles are then drawn the vanilla way, rather than
-     * the error stopping the game from loading its resources.
-     */
-    public static void onShaderFailed(Throwable error) {
-        shader = null;
-        Library.LOGGER.error(error, "Unable to load the %s shader; particles will be drawn without it", SHADER_ID);
     }
 
     /**
@@ -70,15 +47,17 @@ public final class SoftParticles {
      * @return true if particles will be drawn soft
      */
     public static boolean begin(float softDistance) {
-        var current = shader;
-        if (current == null || IrisCompat.isShaderPackInUse())
+        var current = SHADER.get();
+        if (current == null || !SHADER.isUsable())
             return false;
 
-        bindSceneDepth(current);
-        // The shader is shared by every soft render type, so each sets its own fade distance
-        current.safeGetUniform("SoftDistance").set(softDistance);
-        RenderSystem.setShader(SHADER_SUPPLIER);
-        return true;
+        // On a failure the vanilla particle shader is still current, so the particles are drawn the vanilla way
+        return SHADER.run(() -> {
+            bindSceneDepth(current);
+            // The shader is shared by every soft render type, so each sets its own fade distance
+            current.safeGetUniform("SoftDistance").set(softDistance);
+            RenderSystem.setShader(SHADER.supplier());
+        }, SoftParticles::bindParticleTarget);
     }
 
     /**
@@ -86,18 +65,31 @@ public final class SoftParticles {
      * drawing particles that needs to know what is behind them.
      */
     public static void bindSceneDepth(ShaderInstance target) {
-        // With Fabulous graphics particles are drawn to their own target, which holds a copy of the scene's depth
-        var minecraft = Minecraft.getInstance();
-        RenderTarget renderTarget = minecraft.levelRenderer.getParticlesTarget();
-        if (renderTarget == null)
-            renderTarget = minecraft.getMainRenderTarget();
-
+        var renderTarget = particleTarget();
         var copy = depthCopyFor(renderTarget);
         copy.copyDepthFrom(renderTarget);
         // Copying leaves no frame buffer bound
         renderTarget.bindWrite(false);
 
         target.setSampler("DepthSampler", copy.getDepthTextureId());
+    }
+
+    /**
+     * Binds the render target particles are drawn to, for drawing. Puts things right after something drawing
+     * particles failed part way through, possibly with another frame buffer bound.
+     */
+    public static void bindParticleTarget() {
+        particleTarget().bindWrite(false);
+    }
+
+    /**
+     * Where particles are drawn: with Fabulous graphics, a target of their own (which holds a copy of the scene's
+     * depth); otherwise the main target.
+     */
+    private static RenderTarget particleTarget() {
+        var minecraft = Minecraft.getInstance();
+        RenderTarget target = minecraft.levelRenderer.getParticlesTarget();
+        return target != null ? target : minecraft.getMainRenderTarget();
     }
 
     /**

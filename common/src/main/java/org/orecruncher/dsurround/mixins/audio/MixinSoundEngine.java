@@ -2,16 +2,13 @@ package org.orecruncher.dsurround.mixins.audio;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.audio.Library;
 import dev.architectury.platform.Platform;
-import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.ChannelAccess;
 import net.minecraft.client.sounds.SoundEngine;
-import net.minecraft.client.sounds.WeighedSoundEvents;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -25,9 +22,6 @@ import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-
-import java.util.concurrent.CompletableFuture;
 
 @Mixin(SoundEngine.class)
 public abstract class MixinSoundEngine {
@@ -58,9 +52,12 @@ public abstract class MixinSoundEngine {
     /**
      * Callback will trigger the creation of sound context information for the sound play once it has been queued to the
      * sound engine.  It will also perform the first calculations of sound effects based on the player environment.
+     * <p>
+     * Only the channel handle is taken from play()'s locals, found by its type (there is one), so a change to play()'s
+     * other locals, by a Minecraft update, a NeoForge patch or another mod, doesn't stop this applying.
      */
-    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/ChannelAccess$ChannelHandle;execute(Ljava/util/function/Consumer;)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILEXCEPTION)
-    public void dsurround$onSoundPlay(SoundInstance soundInstance, CallbackInfo ci, WeighedSoundEvents weighedSoundEvents, ResourceLocation resourceLocation, Sound sound, float f, float g, SoundSource soundSource, float h, float i, SoundInstance.Attenuation attenuation, boolean bl, Vec3 vec3, boolean bl2, boolean bl3, CompletableFuture<?> completableFuture, ChannelAccess.ChannelHandle channelHandle) {
+    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/ChannelAccess$ChannelHandle;execute(Ljava/util/function/Consumer;)V", shift = At.Shift.AFTER))
+    public void dsurround$onSoundPlay(SoundInstance soundInstance, CallbackInfo ci, @Local ChannelAccess.ChannelHandle channelHandle) {
         try {
             SoundFXProcessor.onSoundPlay(soundInstance, channelHandle);
             AudioUtilities.onSoundPlay(soundInstance);

@@ -9,16 +9,12 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.compat.IrisCompat;
 
 import java.util.Arrays;
-import java.util.function.Supplier;
 
 /**
  * Small point lights around fireflies, lighting the grass, leaves and ground near them. Each is drawn with a shader
@@ -31,12 +27,13 @@ import java.util.function.Supplier;
  * time. Drawing them there, from the begin() of the firefly render type, lets them set up and put back the drawing
  * state they need, which a render type of their own couldn't (render types have no end()).
  * <p>
- * The shader is registered by each platform and handed over with {@link #onShaderLoaded}. Without it, or while an
- * Iris shader pack is in use, there are no lights. Everything here runs on the render thread.
+ * The shader ({@link #SHADER}) is registered by each platform. Without it, or while an Iris shader pack is in use,
+ * there are no lights. Everything here runs on the render thread.
  */
 public final class FireflyLights {
 
-    public static final ResourceLocation SHADER_ID = Constants.asId("firefly_light");
+    public static final ModShader SHADER = new ModShader("firefly_light", DefaultVertexFormat.POSITION_TEX_COLOR,
+            "firefly lights", "fireflies will not light their surroundings", Library.LOGGER);
 
     /**
      * How far a firefly's light reaches, in blocks.
@@ -52,10 +49,6 @@ public final class FireflyLights {
     // x, y, z, red, green, blue, strength
     private static final int STRIDE = 7;
 
-    @Nullable
-    private static ShaderInstance shader;
-    private static final Supplier<ShaderInstance> SHADER_SUPPLIER = () -> shader;
-
     private static float[] lights = new float[STRIDE * 64];
     private static int count;
     private static long lastAdded;
@@ -63,21 +56,11 @@ public final class FireflyLights {
     private FireflyLights() {
     }
 
-    public static void onShaderLoaded(ShaderInstance loaded) {
-        shader = loaded;
-        Library.LOGGER.info("Loaded the %s shader", SHADER_ID);
-    }
-
-    public static void onShaderFailed(Throwable error) {
-        shader = null;
-        Library.LOGGER.error(error, "Unable to load the %s shader; fireflies will not light their surroundings", SHADER_ID);
-    }
-
     /**
      * Whether firefly lights are being drawn.
      */
     public static boolean isActive() {
-        return shader != null && Client.Config.worksInProgressOptions.enableFireflyLight && !IrisCompat.isShaderPackInUse();
+        return Client.Config.worksInProgressOptions.enableFireflyLight && SHADER.isUsable();
     }
 
     /**
@@ -110,14 +93,23 @@ public final class FireflyLights {
     public static void draw(Tesselator tesselator) {
         int n = count;
         count = 0;
-        var current = shader;
+        var current = SHADER.get();
         if (n == 0 || current == null || System.nanoTime() - lastAdded > STALE_NANOS || !isActive())
             return;
 
+        SHADER.run(() -> drawLights(tesselator, current, n), () -> {
+            // Leave things as the fireflies drawn next expect them
+            tesselator.clear();
+            SoftParticles.bindParticleTarget();
+            RenderSystem.setShader(GameRenderer::getParticleShader);
+        });
+    }
+
+    private static void drawLights(Tesselator tesselator, ShaderInstance current, int n) {
         SoftParticles.bindSceneDepth(current);
         current.safeGetUniform("InverseProjMat").set(RenderSystem.getProjectionMatrix().invert(new Matrix4f()));
         current.safeGetUniform("LightRadius").set(RADIUS);
-        RenderSystem.setShader(SHADER_SUPPLIER);
+        RenderSystem.setShader(SHADER.supplier());
 
         // The shader finds what each light reaches itself, so nothing is tested against depth; and its squares
         // may face either way
@@ -126,29 +118,30 @@ public final class FireflyLights {
         RenderSystem.depthMask(false);
         RenderSystem.disableDepthTest();
         RenderSystem.disableCull();
-
-        // Positions relative to the camera, as for all particles
-        var camera = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
-        var builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-        for (int l = 0; l < n; l++) {
-            int i = l * STRIDE;
-            float x = (float) (lights[i] - camera.x);
-            float y = (float) (lights[i + 1] - camera.y);
-            float z = (float) (lights[i + 2] - camera.z);
-            float r = lights[i + 3], g = lights[i + 4], b = lights[i + 5], a = lights[i + 6];
-            // All four at the centre; the vertex shader spreads them out
-            builder.addVertex(x, y, z).setUv(-1F, -1F).setColor(r, g, b, a);
-            builder.addVertex(x, y, z).setUv(1F, -1F).setColor(r, g, b, a);
-            builder.addVertex(x, y, z).setUv(1F, 1F).setColor(r, g, b, a);
-            builder.addVertex(x, y, z).setUv(-1F, 1F).setColor(r, g, b, a);
+        try {
+            // Positions relative to the camera, as for all particles
+            var camera = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+            var builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+            for (int l = 0; l < n; l++) {
+                int i = l * STRIDE;
+                float x = (float) (lights[i] - camera.x);
+                float y = (float) (lights[i + 1] - camera.y);
+                float z = (float) (lights[i + 2] - camera.z);
+                float r = lights[i + 3], g = lights[i + 4], b = lights[i + 5], a = lights[i + 6];
+                // All four at the centre; the vertex shader spreads them out
+                builder.addVertex(x, y, z).setUv(-1F, -1F).setColor(r, g, b, a);
+                builder.addVertex(x, y, z).setUv(1F, -1F).setColor(r, g, b, a);
+                builder.addVertex(x, y, z).setUv(1F, 1F).setColor(r, g, b, a);
+                builder.addVertex(x, y, z).setUv(-1F, 1F).setColor(r, g, b, a);
+            }
+            var mesh = builder.build();
+            if (mesh != null)
+                BufferUploader.drawWithShader(mesh);
+        } finally {
+            RenderSystem.enableCull();
+            RenderSystem.enableDepthTest();
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.setShader(GameRenderer::getParticleShader);
         }
-        var mesh = builder.build();
-        if (mesh != null)
-            BufferUploader.drawWithShader(mesh);
-
-        RenderSystem.enableCull();
-        RenderSystem.enableDepthTest();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getParticleShader);
     }
 }
