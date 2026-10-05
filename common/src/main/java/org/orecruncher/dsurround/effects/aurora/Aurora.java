@@ -2,8 +2,8 @@ package org.orecruncher.dsurround.effects.aurora;
 
 import net.minecraft.util.Mth;
 import org.joml.Vector3f;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 
-import java.util.Random;
 
 /**
  * One night's aurora: its colours and the shape of its curtains. Everything is drawn from the night's number, so
@@ -73,18 +73,18 @@ public record Aurora(long night, AuroraPalette palette, float heading, float dis
      * @param maxBands the most curtains it may have, 1 to 3
      */
     public static Aurora create(long night, int maxBands) {
-        var random = new Random(mix(night));
+        var random = Randomizer.create(mix(night));
         var palette = AuroraPalette.PALETTES.get(random.nextInt(AuroraPalette.PALETTES.size()));
-        var heading = (random.nextFloat() * 2F - 1F) * MAX_HEADING;
-        var distance = range(random, 1.5F, 4F);
-        var length = range(random, 6F, 10F);
-        var altitude = range(random, 0.8F, 1.2F);
-        var height = range(random, 0.8F, 1.4F);
+        var heading = random.nextFloat(-MAX_HEADING, MAX_HEADING);
+        var distance = random.nextFloat(1.5F, 4F);
+        var length = random.nextFloat(6F, 10F);
+        var altitude = random.nextFloat(0.8F, 1.2F);
+        var height = random.nextFloat(0.8F, 1.4F);
         var bands = 1 + random.nextInt(Math.clamp(maxBands, 1, 3));
-        var foldAmount = range(random, 0.15F, 0.45F);
-        var foldFrequency = range(random, 0.75F, 1.75F);
+        var foldAmount = random.nextFloat(0.15F, 0.45F);
+        var foldFrequency = random.nextFloat(0.75F, 1.75F);
         var phase = random.nextFloat() * Mth.TWO_PI;
-        var brightness = range(random, 0.7F, 1F);
+        var brightness = random.nextFloat(0.7F, 1F);
         var textureOffset = random.nextFloat() * 1000F;
         return new Aurora(night, palette, heading, distance, length, altitude, height, bands, foldAmount, foldFrequency,
                 phase, brightness, textureOffset);
@@ -157,9 +157,6 @@ public record Aurora(long night, AuroraPalette palette, float heading, float dis
         return -Mth.cos(this.heading);
     }
 
-    private static float range(Random random, float min, float max) {
-        return min + random.nextFloat() * (max - min);
-    }
 
     private static long mix(long value) {
         var z = value * GOLDEN + GOLDEN;

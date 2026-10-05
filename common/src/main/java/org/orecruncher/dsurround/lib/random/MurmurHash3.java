@@ -1,15 +1,18 @@
 package org.orecruncher.dsurround.lib.random;
 
 /**
- * @see "http://sites.google.com/site/murmurhash/"
+ * The finalization mix ("fmix") from MurmurHash3: scrambles the bits of a value so that inputs that differ by a
+ * single bit, or are consecutive, give results that look unrelated. Useful for turning an id into a seed. This is
+ * only the last step of MurmurHash3, not the full hash of a byte sequence.
+ *
+ * @see "https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp"
  */
-@SuppressWarnings("unused")
 public final class MurmurHash3 {
     private MurmurHash3() {
     }
 
     /**
-     * Hashes a 4-byte sequence (Java int).
+     * Mixes the bits of an int (fmix32). Zero mixes to zero.
      */
     public static int hash(int k) {
         k ^= k >>> 16;
@@ -21,7 +24,7 @@ public final class MurmurHash3 {
     }
 
     /**
-     * Hashes an 8-byte sequence (Java long).
+     * Mixes the bits of a long (fmix64). Zero mixes to zero.
      */
     public static long hash(long k) {
         k ^= k >>> 33;

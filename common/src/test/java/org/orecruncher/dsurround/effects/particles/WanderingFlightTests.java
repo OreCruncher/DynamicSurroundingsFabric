@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import net.minecraft.util.RandomSource;
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,7 +18,7 @@ public class WanderingFlightTests {
     @Test
     void startsUnderWayAtCruisingSpeed() {
         for (long seed = 0; seed < 100; seed++) {
-            var flight = new WanderingFlight(SETTINGS, RandomSource.create(seed));
+            var flight = new WanderingFlight(SETTINGS, Randomizer.create(seed));
             var speed = horizontalSpeed(flight);
             assertTrue(speed >= SETTINGS.minSpeed() - 1e-6 && speed <= SETTINGS.maxSpeed() + 1e-6, "speed " + speed);
             assertEquals(0D, flight.yd());
@@ -28,7 +28,7 @@ public class WanderingFlightTests {
     @Test
     void neverFasterThanItsTopSpeed() {
         for (long seed = 0; seed < 50; seed++) {
-            var flight = new WanderingFlight(SETTINGS, RandomSource.create(seed));
+            var flight = new WanderingFlight(SETTINGS, Randomizer.create(seed));
             for (int age = 0; age < 200; age++) {
                 flight.tick(0, 0, 0, age, 0F, OPEN_AIR);
                 assertTrue(horizontalSpeed(flight) <= SETTINGS.maxSpeed() + 1e-6);
@@ -41,7 +41,7 @@ public class WanderingFlightTests {
         // The velocity only eases toward its target, so it never changes by much in a tick
         var limit = SETTINGS.steer() * 2 * (SETTINGS.maxSpeed() + SETTINGS.lift() + SETTINGS.bob());
         for (long seed = 0; seed < 50; seed++) {
-            var flight = new WanderingFlight(SETTINGS, RandomSource.create(seed));
+            var flight = new WanderingFlight(SETTINGS, Randomizer.create(seed));
             for (int age = 0; age < 200; age++) {
                 double xd = flight.xd(), yd = flight.yd(), zd = flight.zd();
                 flight.tick(0, 0, 0, age, 1F, OPEN_AIR);
@@ -56,7 +56,7 @@ public class WanderingFlightTests {
         // Over a long flight it ends up well short of how far it flew, since its path bends
         int bent = 0;
         for (long seed = 0; seed < 50; seed++) {
-            var flight = new WanderingFlight(SETTINGS, RandomSource.create(seed));
+            var flight = new WanderingFlight(SETTINGS, Randomizer.create(seed));
             double x = 0, z = 0, travelled = 0;
             for (int age = 0; age < 200; age++) {
                 flight.tick(x, 0, z, age, 0F, OPEN_AIR);
@@ -73,7 +73,7 @@ public class WanderingFlightTests {
     @Test
     void climbsAndSinksAsAsked() {
         for (var climb : new float[]{1F, -1F}) {
-            var flight = new WanderingFlight(SETTINGS, RandomSource.create(7));
+            var flight = new WanderingFlight(SETTINGS, Randomizer.create(7));
             double y = 0;
             for (int age = 0; age < 100; age++) {
                 flight.tick(0, y, 0, age, climb, OPEN_AIR);
@@ -86,7 +86,7 @@ public class WanderingFlightTests {
     @Test
     void turnsAsideAndLiftsWhenBlocked() {
         for (long seed = 0; seed < 50; seed++) {
-            var flight = new WanderingFlight(SETTINGS, RandomSource.create(seed));
+            var flight = new WanderingFlight(SETTINGS, Randomizer.create(seed));
             double xd = flight.xd(), zd = flight.zd();
             flight.tick(0, 0, 0, 0, -1F, (x, y, z) -> true);
             // Steering away: the change in velocity points back against the way it was going, and up
@@ -100,7 +100,7 @@ public class WanderingFlightTests {
     @Test
     void looksAheadAlongItsPath() {
         // Only the point it is heading for is blocked: a wall ahead, nothing to the sides or behind
-        var flight = new WanderingFlight(SETTINGS, RandomSource.create(3));
+        var flight = new WanderingFlight(SETTINGS, Randomizer.create(3));
         var asked = new double[3];
         flight.tick(10, 20, 30, 0, 0F, (x, y, z) -> {
             asked[0] = x;
@@ -115,8 +115,8 @@ public class WanderingFlightTests {
 
     @Test
     void sameSeedSameFlight() {
-        var a = new WanderingFlight(SETTINGS, RandomSource.create(42));
-        var b = new WanderingFlight(SETTINGS, RandomSource.create(42));
+        var a = new WanderingFlight(SETTINGS, Randomizer.create(42));
+        var b = new WanderingFlight(SETTINGS, Randomizer.create(42));
         for (int age = 0; age < 100; age++) {
             a.tick(0, 0, 0, age, 0.5F, OPEN_AIR);
             b.tick(0, 0, 0, age, 0.5F, OPEN_AIR);

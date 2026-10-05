@@ -32,7 +32,7 @@ This is what I used it for:
 * Examine the path to subsequent Minecraft versions (26.2) so that migration is easier and less error-prone
 * Reworked the waterfall cascade effect into mist/foam
 * Reworked the firefly effect to add glow and improve movement behavior
-* Adapted the older aurora shader and logic from older versions of Dynamic Surroundings into a form suitable for 1.21.1
+* Adapted the aurora implementation from older versions of Dynamic Surroundings into a form suitable for 1.21.1
 * Creation of extensive unit tests
 
 Impacts:
@@ -53,7 +53,7 @@ Impacts:
 **What's New**
 * Added /dsversion command that will query version status from my repo and report back in the local chat. Response will have clickable links so you can navigate to various information sources. This command will work regardless if the chat report on login is disabled. (Some modpack authors disable this.)
 * Added "Sound Credits" button to the Sound Options dialog. Clicking will display credit and attribution information about the sounds in the mod. (This information is also buried in the tool tips when hovering over sounds in the sound configuration menu.)
-* Comments are written into the mod configuration file. User supplied comments will be lost between saves.
+* Comments are written into the mod configuration file. User created comments will be lost between saves.
 * Humanoid mobs gain brush and straw step effect (skeletons, zombies, raiders, etc.) Did not do creepers, sorry.
 * New Works in Progress (WIP) configuration section that can be used to toggle features that are currently baking.
 * Waterfall mist (replaces the relatively new cascade) and water foam.

@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import net.minecraft.util.RandomSource;
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import java.util.EnumMap;
 
@@ -21,7 +21,7 @@ public class FireflyFlashTests {
     @Test
     void darkBeforeTheFirstFlash() {
         for (long seed = 0; seed < SEEDS; seed++) {
-            var flash = new FireflyFlash(RandomSource.create(seed));
+            var flash = new FireflyFlash(Randomizer.create(seed));
             var first = flash.pulseStarts()[0];
             assertTrue(first >= 5F && first <= 25F, "first flash at " + first);
             for (float t = 0F; t <= first; t += 0.5F)
@@ -32,7 +32,7 @@ public class FireflyFlashTests {
     @Test
     void eachPulseReachesFullBrightness() {
         for (long seed = 0; seed < SEEDS; seed++) {
-            var flash = new FireflyFlash(RandomSource.create(seed));
+            var flash = new FireflyFlash(Randomizer.create(seed));
             for (var start : flash.pulseStarts())
                 assertEquals(1F, peakNear(flash, start), 0.01F);
         }
@@ -43,7 +43,7 @@ public class FireflyFlashTests {
         // A real firefly is dark most of the time: count how much of its life it is more than faintly lit (the
         // fading tail of each flash counts as lit, so a short-lived double flasher is lit the most)
         for (long seed = 0; seed < SEEDS; seed++) {
-            var flash = new FireflyFlash(RandomSource.create(seed));
+            var flash = new FireflyFlash(Randomizer.create(seed));
             int lit = 0;
             for (int t = 0; t < flash.lifetime(); t++)
                 if (flash.brightness(t) > 0.1F)
@@ -56,7 +56,7 @@ public class FireflyFlashTests {
     @Test
     void darkBetweenFlashes() {
         for (long seed = 0; seed < SEEDS; seed++) {
-            var flash = new FireflyFlash(FireflyFlash.Pattern.SINGLE, RandomSource.create(seed));
+            var flash = new FireflyFlash(FireflyFlash.Pattern.SINGLE, Randomizer.create(seed));
             var starts = flash.pulseStarts();
             for (int i = 1; i < starts.length; i++) {
                 var midway = (starts[i - 1] + starts[i]) / 2F;
@@ -67,7 +67,7 @@ public class FireflyFlashTests {
 
     @Test
     void flashesQuickerThanTheyFade() {
-        var flash = new FireflyFlash(FireflyFlash.Pattern.SINGLE, RandomSource.create(1));
+        var flash = new FireflyFlash(FireflyFlash.Pattern.SINGLE, Randomizer.create(1));
         var start = flash.pulseStarts()[0];
         // Up to full in 3 ticks; still lit a few ticks after
         assertEquals(1F, flash.brightness(start + 3F), 1e-4);
@@ -78,7 +78,7 @@ public class FireflyFlashTests {
     @Test
     void doubleFlashesComeInPairs() {
         for (long seed = 0; seed < SEEDS; seed++) {
-            var flash = new FireflyFlash(FireflyFlash.Pattern.DOUBLE, RandomSource.create(seed));
+            var flash = new FireflyFlash(FireflyFlash.Pattern.DOUBLE, Randomizer.create(seed));
             var starts = flash.pulseStarts();
             assertEquals(0, starts.length % 2);
             for (int i = 0; i < starts.length; i += 2) {
@@ -93,7 +93,7 @@ public class FireflyFlashTests {
     void periodsMatchTheirKind() {
         for (var pattern : FireflyFlash.Pattern.values()) {
             for (long seed = 0; seed < SEEDS; seed++) {
-                var starts = new FireflyFlash(pattern, RandomSource.create(seed)).pulseStarts();
+                var starts = new FireflyFlash(pattern, Randomizer.create(seed)).pulseStarts();
                 for (int i = pattern.pulses; i < starts.length; i += pattern.pulses) {
                     var period = starts[i] - starts[i - pattern.pulses];
                     assertTrue(period >= pattern.minPeriod - pattern.jitter && period <= pattern.maxPeriod + pattern.jitter,
@@ -108,7 +108,7 @@ public class FireflyFlashTests {
     @Test
     void livesUntilItsLastFlashHasFaded() {
         for (long seed = 0; seed < SEEDS; seed++) {
-            var flash = new FireflyFlash(RandomSource.create(seed));
+            var flash = new FireflyFlash(Randomizer.create(seed));
             var starts = flash.pulseStarts();
             assertTrue(flash.lifetime() > starts[starts.length - 1]);
             assertTrue(flash.brightness(flash.lifetime()) < 0.01F, "still lit when it goes");
@@ -117,7 +117,7 @@ public class FireflyFlashTests {
 
     @Test
     void dipsBeforeAFlashAndRisesWhileLit() {
-        var flash = new FireflyFlash(FireflyFlash.Pattern.SINGLE, RandomSource.create(5));
+        var flash = new FireflyFlash(FireflyFlash.Pattern.SINGLE, Randomizer.create(5));
         var start = flash.pulseStarts()[0];
         assertTrue(flash.climb(start - 3F) < 0F, "no dip before the flash");
         assertTrue(flash.climb(start + 3F) > 0F, "no rise while lit");
@@ -128,7 +128,7 @@ public class FireflyFlashTests {
     void allKindsAppear() {
         var counts = new EnumMap<FireflyFlash.Pattern, Integer>(FireflyFlash.Pattern.class);
         for (long seed = 0; seed < 1000; seed++)
-            counts.merge(new FireflyFlash(RandomSource.create(seed)).pattern(), 1, Integer::sum);
+            counts.merge(new FireflyFlash(Randomizer.create(seed)).pattern(), 1, Integer::sum);
         assertEquals(FireflyFlash.Pattern.values().length, counts.size());
         // Single flashers are the most common
         assertTrue(counts.get(FireflyFlash.Pattern.SINGLE) > counts.get(FireflyFlash.Pattern.QUICK));

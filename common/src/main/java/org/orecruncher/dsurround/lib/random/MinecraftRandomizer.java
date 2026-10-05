@@ -14,7 +14,12 @@ class MinecraftRandomizer implements IRandomizer {
     private final RandomSource source;
 
     public MinecraftRandomizer() {
-        this(new XoroshiroRandomSource(RandomSupport.generateUniqueSeed()));
+        this(RandomSupport.generateUniqueSeed());
+    }
+
+    public MinecraftRandomizer(long seed) {
+        // Prefer Xorishiro
+        this(new XoroshiroRandomSource(seed));
     }
 
     public MinecraftRandomizer(RandomSource source) {
