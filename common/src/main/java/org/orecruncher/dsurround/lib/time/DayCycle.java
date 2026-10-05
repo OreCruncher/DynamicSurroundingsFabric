@@ -1,7 +1,8 @@
-package org.orecruncher.dsurround.lib;
+package org.orecruncher.dsurround.lib.time;
 
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.lib.text.Localization;
 
 public enum DayCycle {
 

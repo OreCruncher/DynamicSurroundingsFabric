@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.runtime.variables;
 
-import org.orecruncher.dsurround.lib.DayCycle;
+import org.orecruncher.dsurround.lib.time.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;

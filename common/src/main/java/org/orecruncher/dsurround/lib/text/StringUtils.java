@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib;
+package org.orecruncher.dsurround.lib.text;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -12,7 +12,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.Localization;
+import org.orecruncher.dsurround.lib.text.Localization;
 import org.orecruncher.dsurround.lib.config.ConfigElement;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.config.IScreenFactory;

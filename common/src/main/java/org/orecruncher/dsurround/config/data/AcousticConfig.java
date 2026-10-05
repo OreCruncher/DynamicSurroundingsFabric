@@ -5,7 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.SoundEventType;
-import org.orecruncher.dsurround.lib.IdentityUtils;
+import org.orecruncher.dsurround.lib.registry.IdentityUtils;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.lib.weighted.WeightValue;
 

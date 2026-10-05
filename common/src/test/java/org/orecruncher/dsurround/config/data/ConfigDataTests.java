@@ -14,7 +14,7 @@ import net.minecraft.tags.TagEntry;
 import net.minecraft.tags.TagFile;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.orecruncher.dsurround.lib.CodecExtensions;
+import org.orecruncher.dsurround.lib.codec.CodecExtensions;
 import org.orecruncher.dsurround.sound.SoundFactory;
 
 import java.io.IOException;

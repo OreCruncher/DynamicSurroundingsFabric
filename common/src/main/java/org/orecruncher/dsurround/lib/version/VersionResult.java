@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.lib.version;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.Localization;
+import org.orecruncher.dsurround.lib.text.Localization;
 import org.orecruncher.dsurround.lib.markdown.MarkdownParser;
 import org.orecruncher.dsurround.lib.markdown.Options;
 

@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.lib.di;
 
-import org.orecruncher.dsurround.lib.SingletonSupplier;
-
+import org.orecruncher.dsurround.lib.function.SingletonSupplier;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;

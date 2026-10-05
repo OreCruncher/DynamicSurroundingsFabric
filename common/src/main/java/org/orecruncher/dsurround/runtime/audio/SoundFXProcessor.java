@@ -11,7 +11,7 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IClientTickStart;
 import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
-import org.orecruncher.dsurround.lib.SingletonSupplier;
+import org.orecruncher.dsurround.lib.function.SingletonSupplier;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;

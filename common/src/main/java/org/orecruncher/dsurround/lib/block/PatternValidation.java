@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib;
+package org.orecruncher.dsurround.lib.block;
 
 import java.util.regex.Pattern;
 

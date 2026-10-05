@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.lib.resources;
 
 import com.mojang.serialization.Codec;
 import net.minecraft.resources.ResourceLocation;
-import org.orecruncher.dsurround.lib.CodecExtensions;
+import org.orecruncher.dsurround.lib.codec.CodecExtensions;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 

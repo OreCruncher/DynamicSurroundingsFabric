@@ -143,6 +143,17 @@ public class AuroraTests {
     }
 
     @Test
+    void brightnessIsOneOfTheOriginalLevels() {
+        var seen = new java.util.HashSet<Float>();
+        for (long night = 0; night < NIGHTS; night++) {
+            var brightness = Aurora.create(night, 3).brightness();
+            assertTrue(brightness == 0.50F || brightness == 0.63F || brightness == 0.75F, "brightness " + brightness);
+            seen.add(brightness);
+        }
+        assertEquals(3, seen.size(), "not every level is used");
+    }
+
+    @Test
     void taperFadesOnlyTowardTheEnds() {
         assertEquals(1F, Aurora.taper(0F), 1e-6);
         assertEquals(1F, Aurora.taper(0.5F), 1e-6);

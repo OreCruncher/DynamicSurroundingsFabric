@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib;
+package org.orecruncher.dsurround.lib.time;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;

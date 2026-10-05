@@ -5,7 +5,7 @@ import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.CachingSupplier;
+import org.orecruncher.dsurround.lib.function.CachingSupplier;
 import org.orecruncher.dsurround.lib.scripting.ArgType;
 import org.orecruncher.dsurround.lib.scripting.ScriptArguments;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;

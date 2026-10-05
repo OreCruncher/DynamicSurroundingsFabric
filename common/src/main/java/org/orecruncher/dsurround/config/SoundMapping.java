@@ -4,7 +4,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.data.SoundMappingConfigRule;
-import org.orecruncher.dsurround.lib.IMatcher;
+import org.orecruncher.dsurround.lib.codec.IMatcher;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 
 import java.util.Optional;

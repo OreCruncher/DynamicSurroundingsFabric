@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.di.internal;
 
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.lib.SingletonSupplier;
+import org.orecruncher.dsurround.lib.function.SingletonSupplier;
 import org.orecruncher.dsurround.lib.di.*;
 
 import java.lang.reflect.*;

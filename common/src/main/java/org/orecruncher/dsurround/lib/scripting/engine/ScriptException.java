@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.lib.scripting.engine;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.lib.StringUtils;
+import org.orecruncher.dsurround.lib.text.StringUtils;
 import org.orecruncher.dsurround.lib.scripting.engine.expression.Expression;
 
 /**

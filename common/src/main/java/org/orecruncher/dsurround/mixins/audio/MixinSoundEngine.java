@@ -12,7 +12,7 @@ import net.minecraft.sounds.SoundSource;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.StringUtils;
+import org.orecruncher.dsurround.lib.text.StringUtils;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
 import org.orecruncher.dsurround.runtime.audio.SoundFXProcessor;

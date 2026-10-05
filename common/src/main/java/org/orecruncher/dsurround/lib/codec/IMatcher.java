@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib;
+package org.orecruncher.dsurround.lib.codec;
 
 /**
  * Generalization of object matching logic.

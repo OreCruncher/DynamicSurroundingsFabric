@@ -5,7 +5,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.config.data.SoundMappingConfigRule;
 import org.orecruncher.dsurround.config.data.SoundMappingConfigRule.MappingRule;
-import org.orecruncher.dsurround.lib.IMatcher;
+import org.orecruncher.dsurround.lib.codec.IMatcher;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib;
+package org.orecruncher.dsurround.lib.platform;
 
 public enum MinecraftServerType {
     VANILLA(false),

@@ -1,5 +1,4 @@
-package org.orecruncher.dsurround.lib;
-
+package org.orecruncher.dsurround.lib.text;
 
 import net.minecraft.locale.Language;
 

@@ -5,7 +5,6 @@ import org.joml.Vector3f;
 import org.orecruncher.dsurround.lib.random.Mixers;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
-
 /**
  * One night's aurora: its colours and the shape of its curtains. Everything is drawn from the night's number, so
  * everyone in a world sees the same aurora on the same night.
@@ -27,7 +26,7 @@ import org.orecruncher.dsurround.lib.random.Randomizer;
  * @param foldAmount     how far the path folds in and out
  * @param foldFrequency  how many folds along it
  * @param phase          where along their cycle the folds and ripples start
- * @param brightness     how bright it is, at most
+ * @param brightness     how bright it is, at most: one of {@link #BRIGHTNESS_LEVELS}
  * @param textureOffset  where in the shader's pattern it starts, so each night's rays differ
  */
 public record Aurora(long night, AuroraPalette palette, float heading, float distance, float length, float altitude,
@@ -40,6 +39,12 @@ public record Aurora(long night, AuroraPalette palette, float heading, float dis
      */
     public static final float SCALE = 11F;
     public static final float MAX_REACH = 95F / SCALE;
+
+    /**
+     * How bright a night's aurora is, at most: one of these. They are the original Dynamic Surroundings aurora's
+     * levels (its presets' alpha limits of 64, 80 and 96, doubled by its shader, over 255).
+     */
+    static final float[] BRIGHTNESS_LEVELS = {0.50F, 0.63F, 0.75F};
 
     // Curtain layout. Auroras lie toward the pole, so a curtain is always somewhere to the north.
     public static final float MAX_HEADING = 30F * Mth.DEG_TO_RAD;
@@ -84,8 +89,7 @@ public record Aurora(long night, AuroraPalette palette, float heading, float dis
         var foldAmount = random.nextFloat(0.15F, 0.45F);
         var foldFrequency = random.nextFloat(0.75F, 1.75F);
         var phase = random.nextFloat() * Mth.TWO_PI;
-        // TODO: Assess brightness. Old code was roughly 0.5 - 0.75.
-        var brightness = random.nextFloat(0.7F, 1F);
+        var brightness = BRIGHTNESS_LEVELS[random.nextInt(BRIGHTNESS_LEVELS.length)];
         var textureOffset = random.nextFloat() * 1000F;
         return new Aurora(night, palette, heading, distance, length, altitude, height, bands, foldAmount, foldFrequency,
                 phase, brightness, textureOffset);

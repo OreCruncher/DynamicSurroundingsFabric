@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib;
+package org.orecruncher.dsurround.lib.registry;
 
 import com.google.common.base.Preconditions;
 import com.mojang.serialization.Codec;

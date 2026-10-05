@@ -9,7 +9,7 @@ import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.lang.LanguageFiles;
-import org.orecruncher.dsurround.lib.CodecExtensions;
+import org.orecruncher.dsurround.lib.codec.CodecExtensions;
 
 import java.text.ParseException;
 import java.util.ArrayList;

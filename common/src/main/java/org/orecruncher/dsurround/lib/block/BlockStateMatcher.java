@@ -7,8 +7,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.Property;
 import org.orecruncher.dsurround.Constants;
-import org.orecruncher.dsurround.lib.IMatcher;
-import org.orecruncher.dsurround.lib.IdentityUtils;
+import org.orecruncher.dsurround.lib.codec.IMatcher;
+import org.orecruncher.dsurround.lib.registry.IdentityUtils;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.lib;
+package org.orecruncher.dsurround.lib.registry;
 
 import net.minecraft.resources.ResourceLocation;
 

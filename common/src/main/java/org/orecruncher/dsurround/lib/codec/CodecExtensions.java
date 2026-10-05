@@ -1,9 +1,10 @@
-package org.orecruncher.dsurround.lib;
+package org.orecruncher.dsurround.lib.codec;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.*;
 import net.minecraft.world.level.block.state.BlockState;
+import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.block.BlockStateMatcher;
 
 import java.util.Optional;

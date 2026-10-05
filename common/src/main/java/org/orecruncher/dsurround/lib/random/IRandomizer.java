@@ -22,9 +22,16 @@ public interface IRandomizer extends RandomSource {
         return midPoint + this.nextInt(range + 1) - this.nextInt(range + 1);
     }
 
+    /**
+     * A number from {@code min} (included) up to {@code max} (not included); {@code min} itself if the two are equal.
+     *
+     * @throws IllegalArgumentException if {@code min} is more than {@code max}
+     */
     default float nextFloat(float min, float max) {
-        if (min >= max)
-            throw new IllegalArgumentException("bound - origin is non-positive");
+        if (min > max)
+            throw new IllegalArgumentException("min (%s) must not be more than max (%s)".formatted(min, max));
+        if (min == max)
+            return min;
         return min + this.nextFloat() * (max - min);
     }
 }

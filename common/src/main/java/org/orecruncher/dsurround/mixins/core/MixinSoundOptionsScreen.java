@@ -14,7 +14,7 @@ import net.minecraft.network.chat.Style;
 import org.orecruncher.dsurround.gui.ComponentDisplayScreen;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.Localization;
+import org.orecruncher.dsurround.lib.text.Localization;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.resources.FileResourceUtil;
 import org.spongepowered.asm.mixin.Mixin;

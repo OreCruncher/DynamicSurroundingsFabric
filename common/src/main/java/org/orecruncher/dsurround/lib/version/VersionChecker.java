@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.version;
 
 import net.minecraft.ChatFormatting;
-import org.orecruncher.dsurround.lib.CodecExtensions;
+import org.orecruncher.dsurround.lib.codec.CodecExtensions;
 
 import java.io.IOException;
 import java.io.InputStream;

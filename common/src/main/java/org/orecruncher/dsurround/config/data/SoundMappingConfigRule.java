@@ -6,9 +6,9 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockState;
-import org.orecruncher.dsurround.lib.CodecExtensions;
-import org.orecruncher.dsurround.lib.IMatcher;
-import org.orecruncher.dsurround.lib.IdentityUtils;
+import org.orecruncher.dsurround.lib.codec.CodecExtensions;
+import org.orecruncher.dsurround.lib.codec.IMatcher;
+import org.orecruncher.dsurround.lib.registry.IdentityUtils;
 
 import java.util.List;
 

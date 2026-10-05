@@ -5,8 +5,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
-import org.orecruncher.dsurround.lib.CodecExtensions;
-import org.orecruncher.dsurround.lib.IMatcher;
+import org.orecruncher.dsurround.lib.codec.CodecExtensions;
+import org.orecruncher.dsurround.lib.codec.IMatcher;
 import org.orecruncher.dsurround.lib.scripting.Script;
 
 import java.util.List;

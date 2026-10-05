@@ -4,7 +4,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
-import org.orecruncher.dsurround.lib.PatternValidation;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

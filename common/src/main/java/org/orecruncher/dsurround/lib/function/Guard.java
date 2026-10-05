@@ -1,6 +1,7 @@
-package org.orecruncher.dsurround.lib;
+package org.orecruncher.dsurround.lib.function;
 
 import com.google.common.base.Preconditions;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 

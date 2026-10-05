@@ -55,17 +55,16 @@ Impacts:
 * Added "Sound Credits" button to the Sound Options dialog. Clicking will display credit and attribution information about the sounds in the mod. (This information is also buried in the tool tips when hovering over sounds in the sound configuration menu.)
 * Comments are written into the mod configuration file. User created comments will be lost between saves.
 * Humanoid mobs gain brush and straw step effect (skeletons, zombies, raiders, etc.) Did not do creepers, sorry.
-* New Works in Progress (WIP) configuration section that can be used to toggle features that are currently baking.
 * Waterfall mist (replaces the relatively new cascade) and water foam.
   * Mist - swirls at the bottom of a waterfall (falling water hitting a surface)
   * Foam - generates when water drops down a block, or when water hits a surface. Foam will flow with the direction of water and eventually fade.
-  * Options to enable/disable are in the WIP configuration section.
+  * Options are in the Waterfall Options section of the configuration. (Previous settings, if any, are migrated.)
   * Shader blending will auto disable if Iris or Oculus is installed.
 * The aurora is back. There are a set of options in the configuration to enable/disable, adjust frequency, as well as the max number of bands.
   * There is a new Aurora configuration section where it can be enabled/disabled, and other properties modified
   * Will auto disable if Iris or Oculus is installed.
 * Refreshed firefly effect so that they behave more like fireflies; added a glow around them that lights up the area a bit.
-  * Options to enable/disable glow and lighting are in the WIP config section
+  * Options are in the Firefly Options section. (Previous settings, if any, are migrated.)
   * Will auto disable shader lighting if Iris or Oculus is installed.
 * Extended debug hud for Dynamic Surroundings. If the key is bound, hitting it will toggle between the normal HUD, information about the player biome, and the effect system placements in world.
 

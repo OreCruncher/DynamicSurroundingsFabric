@@ -54,6 +54,26 @@ public class RandomizerTests {
     }
 
     @Test
+    void nextFloatStaysInRange() {
+        var random = seeded(5);
+        for (int i = 0; i < 10_000; i++) {
+            var v = random.nextFloat(-1F, 2F);
+            assertTrue(v >= -1F && v < 2F, "out of range: " + v);
+        }
+    }
+
+    @Test
+    void nextFloatOfAnEmptyRangeIsItsEnd() {
+        assertEquals(3.5F, seeded(6).nextFloat(3.5F, 3.5F));
+    }
+
+    @Test
+    void nextFloatRejectsABackwardsRange() {
+        var error = assertThrows(IllegalArgumentException.class, () -> seeded(7).nextFloat(2F, 1F));
+        assertTrue(error.getMessage().contains("min"), error.getMessage());
+    }
+
+    @Test
     void sharedRandomizerCannotBeReseeded() {
         assertThrows(UnsupportedOperationException.class, () -> Randomizer.current().setSeed(1L));
     }

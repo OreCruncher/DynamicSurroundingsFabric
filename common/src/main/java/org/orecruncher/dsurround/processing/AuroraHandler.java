@@ -18,7 +18,7 @@ import org.orecruncher.dsurround.effects.aurora.AuroraPalette;
 import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.ISkyRender;
-import org.orecruncher.dsurround.lib.DayCycle;
+import org.orecruncher.dsurround.lib.time.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.compat.IrisCompat;
 import org.orecruncher.dsurround.lib.logging.IModLog;
