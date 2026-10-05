@@ -36,6 +36,35 @@ final class WaterfallColumn {
     }
 
     /**
+     * Whether a waterfall lands at {@code pos}: falling fluid directly above, the fluid here can spread sideways (see
+     * {@link #canSpread}), and below is a source block or a solid top face to land on (see {@link #landsOn}). Says
+     * nothing about which fluid it is; the effect system checks that with a tag.
+     */
+    static boolean isLandingSite(BlockGetter world, BlockPos pos) {
+        // Falling fluid above, not just any fluid: otherwise the bottom of a still pool next to flowing water
+        // qualifies. The same test that measures the waterfall's strength.
+        return isFalling(world.getFluidState(pos.above())) && canSpread(world, pos) && landsOn(world, pos);
+    }
+
+    /**
+     * Whether fluid at {@code pos} can spread sideways: one of the four sides is air, or holds fluid that only partly
+     * fills the block. Fluid hemmed in on every side (a full pool, or walls) can't, and makes no waterfall.
+     */
+    static boolean canSpread(BlockGetter world, BlockPos pos) {
+        var side = new BlockPos.MutableBlockPos();
+        for (var direction : Direction.Plane.HORIZONTAL) {
+            var state = world.getBlockState(side.setWithOffset(pos, direction));
+            if (state.isAir())
+                return true;
+            // An empty fluid has an amount of 0
+            int amount = state.getFluidState().getAmount();
+            if (amount > 0 && amount < FluidState.AMOUNT_FULL)
+                return true;
+        }
+        return false;
+    }
+
+    /**
      * Whether fluid at {@code pos} is a step: where flowing fluid drops a single block. It is falling, the fluid above
      * it (that it spilled from) isn't, and it lands on something. A drop of two or more blocks is a waterfall instead
      * (see {@link WaterfallEffectSystem}), which needs falling fluid above where it lands; so the two never overlap.

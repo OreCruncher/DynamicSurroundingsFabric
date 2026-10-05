@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,6 +51,20 @@ public class WaterfallColumnTests {
         Column(BlockState... fromTheBottom) {
             for (int y = 0; y < fromTheBottom.length; y++)
                 this.blocks.put(new BlockPos(0, y, 0), fromTheBottom[y]);
+        }
+
+        /**
+         * Puts {@code state} on all four sides of the column at height {@code y}.
+         */
+        Column around(int y, BlockState state) {
+            for (var side : List.of(new BlockPos(1, y, 0), new BlockPos(-1, y, 0), new BlockPos(0, y, 1), new BlockPos(0, y, -1)))
+                this.blocks.put(side, state);
+            return this;
+        }
+
+        Column with(BlockPos pos, BlockState state) {
+            this.blocks.put(pos, state);
+            return this;
         }
 
         @Override
@@ -168,5 +183,35 @@ public class WaterfallColumnTests {
         assertTrue(WaterfallColumn.landsOn(new Column(SOURCE, FALLING), ONE_UP));
         assertFalse(WaterfallColumn.landsOn(new Column(FLOWING, FALLING), ONE_UP));
         assertFalse(WaterfallColumn.landsOn(new Column(AIR, FALLING), ONE_UP));
+    }
+
+    // ---- Where waterfalls land
+
+    @Test
+    void waterCanSpreadWhereASideIsOpenOrPartlyFilled() {
+        var hemmedIn = new Column(STONE, SOURCE).around(1, STONE);
+        assertFalse(WaterfallColumn.canSpread(hemmedIn, ONE_UP), "walls on every side");
+
+        var fullPool = new Column(STONE, SOURCE).around(1, SOURCE);
+        assertFalse(WaterfallColumn.canSpread(fullPool, ONE_UP), "a full pool all round");
+
+        assertTrue(WaterfallColumn.canSpread(new Column(STONE, SOURCE).around(1, STONE).with(new BlockPos(1, 1, 0), AIR), ONE_UP), "one side open");
+        assertTrue(WaterfallColumn.canSpread(new Column(STONE, SOURCE).around(1, STONE).with(new BlockPos(0, 1, -1), FLOWING), ONE_UP), "one side partly filled");
+    }
+
+    @Test
+    void aWaterfallLandsWhereFallingWaterHitsSomethingAndCanSpread() {
+        // Falling water above, open sides (air by default), and ground below
+        assertTrue(WaterfallColumn.isLandingSite(new Column(STONE, FALLING, FALLING), ONE_UP));
+        // ... or a pool below
+        assertTrue(WaterfallColumn.isLandingSite(new Column(SOURCE, FALLING, FALLING), ONE_UP));
+    }
+
+    @Test
+    void noWaterfallWithoutFallingWaterAboveSomethingToLandOnOrRoomToSpread() {
+        assertFalse(WaterfallColumn.isLandingSite(new Column(STONE, FALLING, FLOWING), ONE_UP), "not falling above");
+        assertFalse(WaterfallColumn.isLandingSite(new Column(STONE, SOURCE, SOURCE), ONE_UP), "still water above");
+        assertFalse(WaterfallColumn.isLandingSite(new Column(AIR, FALLING, FALLING), ONE_UP), "nothing to land on");
+        assertFalse(WaterfallColumn.isLandingSite(new Column(STONE, FALLING, FALLING).around(1, STONE), ONE_UP), "walled in");
     }
 }
