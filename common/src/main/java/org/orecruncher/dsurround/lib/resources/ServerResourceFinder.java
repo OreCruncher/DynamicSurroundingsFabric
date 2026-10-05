@@ -1,54 +1,77 @@
 package org.orecruncher.dsurround.lib.resources;
 
 import com.mojang.serialization.Codec;
+import dev.architectury.platform.Platform;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
-import org.orecruncher.dsurround.eventing.IResourceReload;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.events.HandlerPriority;
+import org.orecruncher.dsurround.lib.function.SingletonSupplier;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
+import java.util.function.Supplier;
 
-import static org.orecruncher.dsurround.Configuration.Flags.RESOURCE_LOADING;
-
+/**
+ * Finds data files, such as tags, in the jars of the installed mods (data/(namespace)/...). When connected to a
+ * server that doesn't send the mod's tags (a vanilla server), this is where they are filled in from.
+ */
 public class ServerResourceFinder extends AbstractResourceFinder {
 
-    private static final ResourceLookupHelper lookupHelper;
+    // The installed mods' data folders. Mods can't come or go during a session, so these are found once.
+    private static final Supplier<List<Path>> INSTALLED_DATA_ROOTS = SingletonSupplier.from(ServerResourceFinder::findInstalledDataRoots);
 
-    static {
-        lookupHelper = new ResourceLookupHelper(PackType.SERVER_DATA);
-        IResourceReload.EVENT.register(rm -> lookupHelper.refresh(), HandlerPriority.VERY_HIGH);
-    }
+    private final Supplier<? extends Collection<Path>> dataRoots;
 
     protected ServerResourceFinder(IModLog logger) {
-        super(logger);
+        this(logger, INSTALLED_DATA_ROOTS);
     }
 
+    /**
+     * @param dataRoots the data folders to look in
+     */
+    ServerResourceFinder(IModLog logger, Supplier<? extends Collection<Path>> dataRoots) {
+        super(logger);
+        this.dataRoots = dataRoots;
+    }
+
+    /**
+     * @param assetPath what to find, as namespace:path (e.g. "c:tags/block/glass_blocks")
+     */
     @Override
     public <T> Collection<DiscoveredResource<T>> find(Codec<T> codec, String assetPath) {
-
-        Collection<DiscoveredResource<T>> results = new ObjectArray<>();
-
-        var resource = ResourceLocation.tryParse(assetPath);
-        assert resource != null;
-
-        var filePath = assetPath.replace(":", "/");
-        if (!filePath.endsWith(".json"))
-            filePath = filePath + ".json";
-
-        for (var path : lookupHelper.findResourcePaths(filePath)) {
-            this.logger.debug(RESOURCE_LOADING, "[%s] - Processing %s", resource, path.toString());
-            try {
-                var content = Files.readString(path);
-                this.decode(resource, content, codec).ifPresent(r -> results.add(new DiscoveredResource<>(resource.getNamespace(), r)));
-                this.logger.debug(RESOURCE_LOADING, "[%s] - Completed decode of %s", resource, path);
-            } catch (Throwable t) {
-                this.logger.error(t, "[%s] - Unable to read %s", resource, path.toString());
-            }
+        var location = ResourceLocation.tryParse(assetPath);
+        if (location == null) {
+            this.logger.warn("Not a resource location: %s", assetPath);
+            return List.of();
         }
 
+        var relative = withJsonExtension(location.getNamespace() + "/" + location.getPath());
+        var results = new ObjectArray<DiscoveredResource<T>>();
+        for (var root : this.dataRoots.get()) {
+            var file = root.resolve(relative.replace("/", root.getFileSystem().getSeparator()));
+            if (Files.exists(file))
+                this.readInto(location, location.getNamespace(), file, () -> Files.newInputStream(file), codec, results);
+        }
         return results;
+    }
+
+    private static List<Path> findInstalledDataRoots() {
+        var folder = PackType.SERVER_DATA.getDirectory();
+        var roots = new ObjectArray<Path>();
+        for (var mod : Platform.getMods()) {
+            // A mod may be spread over several roots (in development, its classes and resources); the first with a
+            // data folder is the one
+            for (var root : mod.getFilePaths()) {
+                var data = root.resolve(folder);
+                if (Files.exists(data)) {
+                    roots.add(data);
+                    break;
+                }
+            }
+        }
+        return List.copyOf(roots);
     }
 }

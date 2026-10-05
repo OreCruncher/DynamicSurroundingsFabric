@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.lib.resources;
 
 import com.mojang.serialization.Codec;
+import dev.architectury.platform.Platform;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.tags.TagFile;
@@ -13,7 +14,11 @@ import org.orecruncher.dsurround.lib.platform.IMinecraftDirectories;
 
 import java.util.*;
 
-@SuppressWarnings("unused")
+/**
+ * Finds the mod's configuration and the files it fills in tags from, in three places: mod jars and resource packs
+ * (assets/(mod)/dsconfigs/...), the player's own files (config/dsurround/configs/(mod)/...), and the installed mods'
+ * data (data/(namespace)/tags/...). Configuration in the first two is only read for mods that are installed.
+ */
 public final class ResourceUtilities {
 
     private final ModConfigResourceFinder modConfigHelper;
@@ -22,7 +27,7 @@ public final class ResourceUtilities {
     private final ServerResourceFinder packResourceFinder;
 
     ResourceUtilities(IModLog modLog, IMinecraftDirectories minecraftDirectories, ResourceManager resourceManager) {
-        this.modConfigHelper = new ModConfigResourceFinder(modLog, resourceManager, "dsconfigs");
+        this.modConfigHelper = new ModConfigResourceFinder(modLog, resourceManager, "dsconfigs", Platform::isModLoaded);
         this.diskResourceHelper = new DiskResourceFinder(modLog, minecraftDirectories.getModDataDirectory());
         this.resourceFinder = new ClientResourceFinder(modLog, resourceManager);
         this.packResourceFinder = new ServerResourceFinder(modLog);

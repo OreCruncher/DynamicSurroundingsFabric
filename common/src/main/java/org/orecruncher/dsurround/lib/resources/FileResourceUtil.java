@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.lib.resources;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 public final class FileResourceUtil {
@@ -12,7 +12,7 @@ public final class FileResourceUtil {
                     return Optional.empty();
                 }
                 var assetBytes = inputStream.readAllBytes();
-                var assetString = new String(assetBytes, Charset.defaultCharset());
+                var assetString = new String(assetBytes, StandardCharsets.UTF_8);
                 return Optional.of(assetString);
             }
         } catch(Throwable ignored) {}

@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 
 import static org.orecruncher.dsurround.Configuration.Flags.RESOURCE_LOADING;
 
-@SuppressWarnings("unused")
 public class ClientTagLoader {
 
     private final IModLog logger;
