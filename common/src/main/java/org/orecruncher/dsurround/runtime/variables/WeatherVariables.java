@@ -11,11 +11,12 @@ public final class WeatherVariables extends VariableSet {
     private final ILevelOracle levelOracle;
     private final ISeasonalInformation seasonalInformation;
 
-    private float temperature;
+    // Numeric values are stored boxed when updated each tick, so that reading them from scripts does not allocate
+    private Float temperature = 0F;
     private boolean isRaining;
     private boolean isThundering;
-    private float rainIntensity;
-    private float thunderIntensity;
+    private Float rainIntensity = 0F;
+    private Float thunderIntensity = 0F;
     private boolean isFrosty;
     private boolean canWaterFreeze;
 
@@ -41,7 +42,7 @@ public final class WeatherVariables extends VariableSet {
             this.thunderIntensity = 0F;
             this.isRaining = false;
             this.isThundering = false;
-            this.temperature = 0;
+            this.temperature = 0F;
             this.isFrosty = false;
             this.canWaterFreeze = false;
         }
@@ -49,13 +50,13 @@ public final class WeatherVariables extends VariableSet {
 
     @Override
     public void configure(IConfigureDefinition config) {
-        config.defineFunction(id("isRaining"), l -> this.isRaining);
-        config.defineFunction(id("isNotRaining"), l -> !this.isRaining);
-        config.defineFunction(id("isThundering"), l -> this.isThundering);
-        config.defineFunction(id("getRainIntensity"), l -> this.rainIntensity);
-        config.defineFunction(id("getThunderIntensity"), l -> this.thunderIntensity);
-        config.defineFunction(id("getTemperature"), l -> this.temperature);
-        config.defineFunction(id("isFrosty"), l -> this.isFrosty);
-        config.defineFunction(id("canWaterFreeze"), l -> this.canWaterFreeze);
+        config.property(id("isRaining"), () -> this.isRaining);
+        config.property(id("isNotRaining"), () -> !this.isRaining);
+        config.property(id("isThundering"), () -> this.isThundering);
+        config.property(id("getRainIntensity"), () -> this.rainIntensity);
+        config.property(id("getThunderIntensity"), () -> this.thunderIntensity);
+        config.property(id("getTemperature"), () -> this.temperature);
+        config.property(id("isFrosty"), () -> this.isFrosty);
+        config.property(id("canWaterFreeze"), () -> this.canWaterFreeze);
     }
 }

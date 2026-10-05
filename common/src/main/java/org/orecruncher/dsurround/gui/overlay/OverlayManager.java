@@ -4,9 +4,9 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import org.orecruncher.dsurround.eventing.IClientTickEnd;
 import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.eventing.ClientState;
 
 import java.util.List;
 
@@ -22,7 +22,7 @@ public final class OverlayManager {
                 ContainerManager.resolve(ClockOverlay.class)
         );
 
-        ClientState.CLIENT_TICK_END_EVENT.register(this::tick);
+        IClientTickEnd.EVENT.register(this::tick);
     }
 
     public void render(GuiGraphicsExtractor context, DeltaTracker deltaTracker) {

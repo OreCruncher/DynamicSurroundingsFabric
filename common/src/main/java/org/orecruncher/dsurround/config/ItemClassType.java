@@ -46,8 +46,12 @@ public enum ItemClassType {
         return this.name;
     }
 
+    /**
+     * Never null, and never throws: if the factory is missing (a resource pack removed it), the sound library's
+     * default factory for the id is used rather than crashing the game when an item is selected.
+     */
     public ISoundFactory getToolBarSound() {
-        return SOUND_LIBRARY.getSoundFactory(this.toolBarSound).orElseThrow();
+        return SOUND_LIBRARY.getSoundFactoryOrDefault(this.toolBarSound);
     }
 
     public @Nullable ISoundFactory getSwingSound() {

@@ -3,8 +3,8 @@ package org.orecruncher.dsurround.lib.seasons.compat;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.biome.Biome;
-import org.orecruncher.dsurround.eventing.ClientState;
-import org.orecruncher.dsurround.lib.CachingSupplier;
+import org.orecruncher.dsurround.eventing.IClientTickStart;
+import org.orecruncher.dsurround.lib.function.CachingSupplier;
 import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 import sereneseasons.api.season.ISeasonState;
 import sereneseasons.api.season.Season;
@@ -26,7 +26,7 @@ public class SereneSeasons extends AbstractSeasonProvider {
     public SereneSeasons(ILevelOracle levelOracle) {
         super("Serene Seasons", levelOracle);
         this.seasonStateCache = CachingSupplier.from(() -> SeasonHelper.getSeasonState(this.level()));
-        ClientState.CLIENT_TICK_START_EVENT.register(ignored -> this.seasonStateCache.clear());
+        IClientTickStart.EVENT.register(ignored -> this.seasonStateCache.clear());
     }
 
     @Override

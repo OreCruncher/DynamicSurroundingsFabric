@@ -15,6 +15,7 @@ import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.entity.player.Player;
+import org.orecruncher.dsurround.lib.platform.MinecraftServerType;
 
 import java.util.Objects;
 import java.util.Optional;

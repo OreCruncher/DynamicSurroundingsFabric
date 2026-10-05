@@ -1,12 +1,13 @@
 package org.orecruncher.dsurround.gui.sound;
 
-import com.google.common.collect.ImmutableList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.*;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.ContainerObjectSelectionList;
+import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.narration.NarratableEntry;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
@@ -29,8 +30,11 @@ import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.SoundMetadata;
 
 import java.util.*;
-import java.util.function.Supplier;
 
+/**
+ * One row of the individual sound configuration list: the sound's id, its state (default, cull or block), an
+ * optional play button, and its volume.
+ */
 public class IndividualSoundControlListEntry extends ContainerObjectSelectionList.Entry<IndividualSoundControlListEntry> implements AutoCloseable {
 
     private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
@@ -47,87 +51,126 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private static final Style STYLE_CREDIT_LICENSE = Style.EMPTY.withItalic(true).withColor(ColorPalette.MC_DARKAQUA);
     private static final Style STYLE_HELP = Style.EMPTY.withItalic(true).withColor(ColorPalette.KEY_LIME);
 
-    private static final FormattedCharSequence VANILLA_CREDIT = Component.translatable("dsurround.text.soundconfig.vanilla").getVisualOrderText();
-    private static final Collection<Component> VOLUME_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.volume.help", TOOLTIP_WIDTH, STYLE_HELP);
-    private static final Collection<Component> PLAY_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.play.help", TOOLTIP_WIDTH, STYLE_HELP);
-    private static final Collection<Component> CULL_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.cull.help", TOOLTIP_WIDTH, STYLE_HELP);
-    private static final Collection<Component> BLOCK_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.block.help", TOOLTIP_WIDTH, STYLE_HELP);
-    private static final Collection<Component> DEFAULT_HELP = GuiHelpers.getTrimmedTextCollection("dsurround.text.soundconfig.default.help", TOOLTIP_WIDTH, STYLE_HELP);
+    // Translation keys rather than prepared text, so a language change in game is picked up
+    private static final String VANILLA_CREDIT_KEY = "dsurround.text.soundconfig.vanilla";
+    private static final String VOLUME_HELP_KEY = "dsurround.text.soundconfig.volume.help";
+    private static final String PLAY_HELP_KEY = "dsurround.text.soundconfig.play.help";
 
-    private static final int CONTROL_SPACING = 3;
-
-    private static final Component STATE_DEFAULT = Component.translatable("dsurround.text.soundconfig.default").withStyle(Style.EMPTY.withColor(ColorPalette.LGRAY));
-    private static final Component STATE_CULL = Component.translatable("dsurround.text.soundconfig.cull").withStyle(Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE));
-    private static final Component STATE_BLOCK = Component.translatable("dsurround.text.soundconfig.block").withStyle(Style.EMPTY.withColor(ColorPalette.RED).withBold(true));
     private static final Component SOUND_PLAY = Component.translatable("dsurround.text.soundconfig.play").withStyle(Style.EMPTY.withColor(ColorPalette.ELECTRIC_GREEN));
     private static final Component SOUND_STOP = Component.translatable("dsurround.text.soundconfig.stop").withStyle(Style.EMPTY.withColor(ColorPalette.RED).withBold(true));
 
+    private static final int CONTROL_SPACING = 3;
+    // Extra space between the label and the first control, on top of CONTROL_SPACING
+    private static final int LABEL_GAP = 2 * CONTROL_SPACING;
+    private static final int MIN_LABEL_WIDTH = 100;
+    private static final int CONTROL_HEIGHT = 20;
+    // Room either side of a button's text
+    private static final int BUTTON_TEXT_PADDING = CONTROL_SPACING * 5;
+
+    /**
+     * What happens to a sound. A sound is never both culled and blocked; if a configuration says so, cull wins.
+     */
+    private enum SoundState {
+        DEFAULT("dsurround.text.soundconfig.default", Style.EMPTY.withColor(ColorPalette.LGRAY), false, false),
+        CULL("dsurround.text.soundconfig.cull", Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE), true, false),
+        BLOCK("dsurround.text.soundconfig.block", Style.EMPTY.withColor(ColorPalette.RED).withBold(true), false, true);
+
+        private final Component label;
+        private final String helpKey;
+        private final boolean cull;
+        private final boolean block;
+
+        SoundState(String key, Style style, boolean cull, boolean block) {
+            this.label = Component.translatable(key).withStyle(style);
+            this.helpKey = key + ".help";
+            this.cull = cull;
+            this.block = block;
+        }
+
+        Component label() {
+            return this.label;
+        }
+
+        static SoundState from(IndividualSoundConfigEntry config) {
+            if (config.cull)
+                return CULL;
+            return config.block ? BLOCK : DEFAULT;
+        }
+
+        void applyTo(IndividualSoundConfigEntry config) {
+            config.cull = this.cull;
+            config.block = this.block;
+        }
+    }
+
     private final IndividualSoundConfigEntry config;
     private final TextWidget label;
-    private final VolumeSliderControl volume;
-    private final CycleButton<Integer> stateButton;
+    private final CycleButton<SoundState> stateButton;
     private final @Nullable CycleButton<Boolean> playButton;
+    private final VolumeSliderControl volume;
 
+    // label | state | play | volume. Controls keep their natural height (as in vanilla lists) and sit at the top of
+    // the row; the label is centered against them. Only the label's width changes.
+    private final LinearLayout row = LinearLayout.horizontal().spacing(CONTROL_SPACING);
+    private final int controlsWidth;
+
+    // In visual order, which is also the keyboard navigation order
     private final List<AbstractWidget> children = new ArrayList<>();
     private final List<FormattedCharSequence> cachedToolTip = new ArrayList<>();
 
-    private ConfigSoundInstance soundPlay;
+    private @Nullable ConfigSoundInstance soundPlay;
 
     public IndividualSoundControlListEntry(final IndividualSoundConfigEntry data, final boolean enablePlay) {
         this.config = data;
 
-        this.label = new TextWidget(0, 0, 200, GameUtils.getTextRenderer().lineHeight, Component.literal(data.soundEventId.toString()), GameUtils.getTextRenderer());
-        this.children.add(this.label);
+        var font = GameUtils.getTextRenderer();
+        this.label = new TextWidget(0, 0, MIN_LABEL_WIDTH, font.lineHeight, Component.literal(data.soundEventId.toString()), font);
 
-        this.volume = new VolumeSliderControl(this, 0, 0);
-        this.children.add(this.volume);
-
-        var textRenderer = GameUtils.getTextRenderer();
-        int stateWidth = Math.max(textRenderer.width(STATE_DEFAULT), Math.max(textRenderer.width(STATE_CULL), textRenderer.width(STATE_BLOCK))) + CONTROL_SPACING * 5;
-
-        var defaultState = Integer.valueOf(generateStateForButton(this.config));
-        this.stateButton = CycleButton.builder(IndividualSoundControlListEntry::valueMap, (Supplier<Integer>) () -> defaultState)
-                .withValues(0, 1, 2)
+        int stateWidth = Arrays.stream(SoundState.values()).mapToInt(s -> font.width(s.label())).max().orElse(0) + BUTTON_TEXT_PADDING;
+        this.stateButton = CycleButton.builder(SoundState::label, SoundState.from(this.config))
+                .withValues(SoundState.values())
                 .displayOnlyValue()
-                .create(0, 0, stateWidth, 20, Component.empty(), this::setStateFromButton);
-        this.children.add(this.stateButton);
+                .create(0, 0, stateWidth, CONTROL_HEIGHT, Component.empty(), (button, state) -> state.applyTo(this.config));
 
         if (enablePlay) {
-            stateWidth = Math.max(textRenderer.width(SOUND_STOP), textRenderer.width((SOUND_PLAY))) + CONTROL_SPACING * 5;
+            int playWidth = Math.max(font.width(SOUND_STOP), font.width(SOUND_PLAY)) + BUTTON_TEXT_PADDING;
             this.playButton = CycleButton.booleanBuilder(SOUND_STOP, SOUND_PLAY, false)
                     .displayOnlyValue()
-                    .create(0, 0, stateWidth, 20, Component.empty(), this::setPlayState);
-            this.children.add(this.playButton);
+                    .create(0, 0, playWidth, CONTROL_HEIGHT, Component.empty(), (button, play) -> this.setPlaying(play));
         } else {
             this.playButton = null;
         }
+
+        this.volume = new VolumeSliderControl(this.config);
+
+        this.row.defaultCellSetting().alignVerticallyMiddle();
+        this.row.addChild(this.label, s -> s.paddingRight(LABEL_GAP));
+        this.row.addChild(this.stateButton);
+        if (this.playButton != null)
+            this.row.addChild(this.playButton);
+        this.row.addChild(this.volume);
+        this.row.visitWidgets(this.children::add);
+
+        this.row.arrangeElements();
+        this.controlsWidth = this.row.getWidth() - this.label.getWidth();
     }
 
-    private static Component valueMap(Integer index) {
-        return switch(index) {
-            case 0 -> STATE_DEFAULT;
-            case 1 -> STATE_CULL;
-            case 2 -> STATE_BLOCK;
-            default -> throw new IllegalStateException("Unexpected value: " + index);
-        };
+    /**
+     * The narrowest this row can be without its controls running past the right edge.
+     */
+    public int getMinimumWidth() {
+        return MIN_LABEL_WIDTH + this.controlsWidth;
     }
 
+    /**
+     * Fits the row to the given width by stretching or shrinking the label, which never gets narrower than
+     * {@link #MIN_LABEL_WIDTH}.
+     */
+    @Override
     public void setWidth(int width) {
         super.setWidth(width);
-        width -= this.stateButton.getWidth() + this.volume.getWidth() + 4 * CONTROL_SPACING;
-        if (this.playButton != null)
-            width -= this.playButton.getWidth() + CONTROL_SPACING;
-        if (width < 50)
-            width = 50;
-        this.label.setWidth(width);
-
-        this.updatePositions();
-    }
-
-    public void mouseMoved(double mouseX, double mouseY) {
-        AbstractWidget child = this.findChild(mouseX, mouseY);
-        if (child != null)
-            child.mouseMoved(mouseX, mouseY);
+        this.label.setWidth(Math.max(MIN_LABEL_WIDTH, width - this.controlsWidth));
+        this.row.arrangeElements();
     }
 
     @Override
@@ -136,153 +179,125 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     }
 
     @Override
-    public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
-        AbstractWidget child = this.findChild(event.x(), event.y());
-        if (child != null)
-            child.mouseClicked(event, doubleClick);
-        return false;
-    }
-
-    @Override
     public @NotNull List<? extends NarratableEntry> narratables() {
-        return ImmutableList.of();
-    }
-
-    private AbstractWidget findChild(double mouseX, double mouseY) {
-        if (this.isMouseOver(mouseX, mouseY)) {
-            for (AbstractWidget e : this.children) {
-                if (e.isMouseOver(mouseX, mouseY)) {
-                    return e;
-                }
-            }
-        }
-        return null;
-    }
-
-    protected void updatePositions() {
-        final int labelY = this.getContentY();
-        int rightMargin = this.getContentRight();
-
-        // Need to position the other controls appropriately
-        rightMargin -= this.volume.getWidth();
-        this.volume.setX(rightMargin);
-        this.volume.setY(labelY);
-        rightMargin -= CONTROL_SPACING;
-
-        if (this.playButton != null) {
-            rightMargin -= this.playButton.getWidth();
-            this.playButton.setX(rightMargin);
-            this.playButton.setY(labelY);
-            rightMargin -= CONTROL_SPACING;
-        }
-
-        rightMargin -= this.stateButton.getWidth();
-        this.stateButton.setX(rightMargin);
-        this.stateButton.setY(labelY);
-        rightMargin -= CONTROL_SPACING;
-
-        this.label.setX(this.getContentX());
-        this.label.setY(labelY + 5);
-        this.label.setWidth(rightMargin);
+        return this.children;
     }
 
     @Override
-    public void extractContent(final @NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick_) {
+    public void extractContent(final @NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
+        // Moving the layout moves its widgets; they were arranged when the width was set
+        this.row.setPosition(this.getContentX(), this.getContentY());
         for (final AbstractWidget w : this.children)
-            w.extractRenderState(graphics, mouseX, mouseY, partialTick_);
+            w.extractRenderState(graphics, mouseX, mouseY, partialTick);
     }
 
-    protected ConfigSoundInstance playSound(IndividualSoundConfigEntry entry) {
-        var metadata = SOUND_LIBRARY.getSoundMetadata(entry.soundEventId);
-        ConfigSoundInstance sound = ConfigSoundInstance.create(entry.soundEventId, metadata.getCategory(), () -> entry.volumeScale / 100F);
-        AUDIO_PLAYER.play(sound);
-        return sound;
+    /**
+     * The data this row edits.
+     */
+    public IndividualSoundConfigEntry getData() {
+        return this.config;
     }
 
-    @Override
-    public void close() {
+    // ---- Playing the sound -----------------------------------------------------------------------------------
+
+    private void setPlaying(boolean play) {
+        this.stopSound();
+        if (play) {
+            var metadata = SOUND_LIBRARY.getSoundMetadata(this.config.soundEventId);
+            // The volume is read live, so moving the slider changes a sound that is already playing
+            this.soundPlay = ConfigSoundInstance.create(this.config.soundEventId, metadata.getCategory(), () -> this.config.volumeScale / 100F);
+            AUDIO_PLAYER.play(this.soundPlay);
+        }
+    }
+
+    private void stopSound() {
         if (this.soundPlay != null) {
             AUDIO_PLAYER.stop(this.soundPlay);
             this.soundPlay = null;
         }
     }
 
+    /**
+     * Resets the play button once the sound has finished on its own.
+     */
     public void tick() {
-        if (this.soundPlay != null && this.playButton != null) {
-            if (!AUDIO_PLAYER.isPlaying(this.soundPlay)) {
-                this.soundPlay = null;
-                this.playButton.setValue(false);
-            }
+        if (this.soundPlay != null && this.playButton != null && !AUDIO_PLAYER.isPlaying(this.soundPlay)) {
+            this.soundPlay = null;
+            this.playButton.setValue(false);
         }
     }
 
+    @Override
+    public void close() {
+        this.stopSound();
+    }
+
+    // ---- Tooltip ---------------------------------------------------------------------------------------------
+
+    /**
+     * Information about the sound, followed by help for the control under the mouse, if any.
+     */
     protected List<FormattedCharSequence> getToolTip(final int mouseX, final int mouseY) {
-        // Cache the static part of the tooltip if needed
         if (this.cachedToolTip.isEmpty()) {
-            Identifier id = this.config.soundEventId;
-            this.resolveDisplayName(id.getNamespace())
-                    .ifPresent(name -> {
-                        FormattedCharSequence modName = FormattedCharSequence.forward(Objects.requireNonNull(ChatFormatting.stripFormatting(name)), STYLE_MOD_NAME);
-                        this.cachedToolTip.add(modName);
-                    });
-
-            @SuppressWarnings("ConstantConditions")
-            FormattedCharSequence soundLocationId = FormattedCharSequence.forward(id.toString(), STYLE_ID);
-
-            this.cachedToolTip.add(soundLocationId);
-
-            SoundMetadata metadata = SOUND_LIBRARY.getSoundMetadata(id);
-            if (metadata != null) {
-                if (!metadata.getTitle().equals(Component.empty()))
-                    this.cachedToolTip.add(metadata.getTitle().getVisualOrderText());
-
-                var soundSource = metadata.getCategory();
-                var categoryInfo = "%s (%d%%)".formatted(soundSource.toString(), soundSource == SoundSource.MASTER ? 100 : (int)(GameUtils.getGameSettings().getSoundSourceVolume(soundSource) * 100));
-                this.cachedToolTip.add(Component.literal(categoryInfo).withStyle(STYLE_CATEGORY).getVisualOrderText());
-
-                if (!metadata.getSubTitle().equals(Component.empty())) {
-                    this.cachedToolTip.add(metadata.getSubTitle().copy().withStyle(STYLE_SUBTITLE).getVisualOrderText());
-                }
-
-                if (!metadata.getCredits().isEmpty()) {
-                    for (var credit : metadata.getCredits()) {
-                        this.cachedToolTip.add(Component.empty().getVisualOrderText());
-                        this.cachedToolTip.add(credit.name().copy().withStyle(STYLE_CREDIT_NAME).getVisualOrderText());
-                        this.cachedToolTip.add(credit.author().copy().withStyle(STYLE_CREDIT_AUTHOR).getVisualOrderText());
-                        if (credit.webSite().isPresent()) {
-                            this.cachedToolTip.add(credit.webSite().get().copy().withStyle(STYLE_CREDIT_AUTHOR).getVisualOrderText());
-                        }
-                        this.cachedToolTip.add(credit.license().copy().withStyle(STYLE_CREDIT_LICENSE).getVisualOrderText());
-                    }
-                }
-            }
-
-            if (id.getNamespace().equals("minecraft")) {
-                this.cachedToolTip.add(VANILLA_CREDIT);
-            }
+            this.buildSoundInfo(this.cachedToolTip);
         }
 
         List<FormattedCharSequence> generatedTip = new ArrayList<>(this.cachedToolTip);
 
-        Collection<Component> toAppend = null;
+        String helpKey = null;
         if (this.volume.isMouseOver(mouseX, mouseY)) {
-            toAppend = VOLUME_HELP;
+            helpKey = VOLUME_HELP_KEY;
         } else if (this.stateButton.isMouseOver(mouseX, mouseY)) {
-            toAppend = switch(this.stateButton.getValue()) {
-                case 1 -> CULL_HELP;
-                case 2 -> BLOCK_HELP;
-                default -> DEFAULT_HELP;
-            };
+            helpKey = this.stateButton.getValue().helpKey;
         } else if (this.playButton != null && this.playButton.isMouseOver(mouseX, mouseY)) {
-            toAppend = PLAY_HELP;
+            helpKey = PLAY_HELP_KEY;
         }
 
-        if (toAppend != null) {
+        if (helpKey != null) {
             generatedTip.add(FormattedCharSequence.EMPTY);
-            toAppend.forEach(e -> generatedTip.add(e.getVisualOrderText()));
+            GuiHelpers.getTrimmedTextCollection(helpKey, TOOLTIP_WIDTH, STYLE_HELP)
+                    .forEach(line -> generatedTip.add(line.getVisualOrderText()));
         }
 
         return generatedTip;
+    }
+
+    /**
+     * The part of the tooltip that doesn't depend on the mouse: owner, id, title, category and credits. Built once
+     * per row, which lives only as long as the screen.
+     */
+    private void buildSoundInfo(List<FormattedCharSequence> lines) {
+        Identifier id = this.config.soundEventId;
+        this.resolveDisplayName(id.getNamespace())
+                .ifPresent(name -> lines.add(FormattedCharSequence.forward(Objects.requireNonNull(ChatFormatting.stripFormatting(name)), STYLE_MOD_NAME)));
+
+        lines.add(FormattedCharSequence.forward(id.toString(), STYLE_ID));
+
+        // Never null; unknown sounds get default metadata
+        SoundMetadata metadata = SOUND_LIBRARY.getSoundMetadata(id);
+        if (metadata.hasTitle())
+            lines.add(metadata.getTitle().getVisualOrderText());
+
+        var soundSource = metadata.getCategory();
+        int volumePercent = soundSource == SoundSource.MASTER ? 100 : (int) (GameUtils.getGameSettings().getSoundSourceVolume(soundSource) * 100);
+        lines.add(Component.translatable("soundCategory." + soundSource.getName())
+                .append(" (" + volumePercent + "%)")
+                .withStyle(STYLE_CATEGORY)
+                .getVisualOrderText());
+
+        if (metadata.hasSubTitle())
+            lines.add(metadata.getSubTitle().copy().withStyle(STYLE_SUBTITLE).getVisualOrderText());
+
+        for (var credit : metadata.getCredits()) {
+            lines.add(FormattedCharSequence.EMPTY);
+            lines.add(credit.name().copy().withStyle(STYLE_CREDIT_NAME).getVisualOrderText());
+            lines.add(credit.author().copy().withStyle(STYLE_CREDIT_AUTHOR).getVisualOrderText());
+            credit.webSite().ifPresent(site -> lines.add(site.copy().withStyle(STYLE_CREDIT_AUTHOR).getVisualOrderText()));
+            lines.add(credit.license().copy().withStyle(STYLE_CREDIT_LICENSE).getVisualOrderText());
+        }
+
+        if (id.getNamespace().equals("minecraft"))
+            lines.add(Component.translatable(VANILLA_CREDIT_KEY).getVisualOrderText());
     }
 
     private Optional<String> resolveDisplayName(String namespace) {
@@ -296,48 +311,4 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
                 .map(PackResources::packId)
                 .findAny();
     }
-
-    /**
-     * Retrieves the updated data from the entry
-     *
-     * @return Updated IndividualSoundControl data
-     */
-    public IndividualSoundConfigEntry getData() {
-        return this.config;
-    }
-
-    private static int generateStateForButton(IndividualSoundConfigEntry config) {
-        if (!config.block && !config.cull) {
-            return 0;
-        } else if (config.cull) {
-            return 1;
-        } else {
-            return 2;
-        }
-    }
-
-    private void setPlayState(CycleButton<Boolean> ignored, boolean buttonState) {
-        if (buttonState) {
-            // Stop the currently playing sound, if any
-            if (this.soundPlay != null) {
-                AUDIO_PLAYER.stop(this.soundPlay);
-            }
-            this.soundPlay = this.playSound(this.config);
-        } else {
-            // Stop the currently playing sound
-            if (this.soundPlay != null) {
-                AUDIO_PLAYER.stop(this.soundPlay);
-                this.soundPlay = null;
-            }
-        }
-    }
-
-    private void setStateFromButton(CycleButton<Integer> ignored, int buttonState) {
-        switch (buttonState) {
-            case 0: this.config.block = this.config.cull = false; break;
-            case 1: this.config.cull = true; this.config.block = false; break;
-            case 2: this.config.block = true; this.config.cull = false; break;
-        }
-    }
-
 }

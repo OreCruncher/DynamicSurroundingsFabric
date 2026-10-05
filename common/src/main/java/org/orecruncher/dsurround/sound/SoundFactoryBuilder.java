@@ -11,6 +11,10 @@ import net.minecraft.util.valueproviders.UniformFloat;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 
+/**
+ * Builds a sound factory in code (factories can also come from the configuration files). Defaults: volume and
+ * pitch 1, the ambient category, linear attenuation, not repeating.
+ */
 @SuppressWarnings("unused")
 public final class SoundFactoryBuilder {
 

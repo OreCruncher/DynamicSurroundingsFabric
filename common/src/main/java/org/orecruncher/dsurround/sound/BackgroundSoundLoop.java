@@ -18,30 +18,35 @@ public class BackgroundSoundLoop extends AbstractTickableSoundInstance {
     private float target;
     private boolean isFading;
 
+    /**
+     * A loop that plays at the listener, not fading with distance.
+     */
     public BackgroundSoundLoop(SoundEvent soundEvent) {
         super(soundEvent, SoundSource.AMBIENT, Randomizer.current());
-        this.scale = INITIAL_SCALE;
-        this.target = 1F;
-        this.isFading = false;
-        this.looping = true;
-        this.delay = 0;
+        this.init();
         this.attenuation = Attenuation.NONE;
         this.relative = true;
     }
 
+    /**
+     * A loop at the center of the block, fading with distance.
+     */
     public BackgroundSoundLoop(SoundEvent soundEvent, BlockPos pos) {
         super(soundEvent, SoundSource.AMBIENT, Randomizer.current());
+        this.init();
+        this.attenuation = Attenuation.LINEAR;
+        this.relative = false;
+        this.x = pos.getX() + 0.5D;
+        this.y = pos.getY() + 0.5D;
+        this.z = pos.getZ() + 0.5D;
+    }
+
+    private void init() {
         this.scale = INITIAL_SCALE;
         this.target = 1F;
         this.isFading = false;
         this.looping = true;
         this.delay = 0;
-        this.attenuation = Attenuation.LINEAR;
-        this.relative = false;
-
-        this.x = pos.getX() + 0.5F;
-        this.y = pos.getY() + 0.5F;
-        this.z = pos.getZ() + 0.5F;
     }
 
     public void tick() {

@@ -45,13 +45,13 @@ public final class SeasonVariables extends VariableSet {
 
     @Override
     public void configure(IConfigureDefinition config) {
-        config.defineFunction(id("isSpring"), l -> this.isSpring);
-        config.defineFunction(id("isSummer"),l -> this.isSummer);
-        config.defineFunction(id("isAutumn"), l -> this.isAutumn);
-        config.defineFunction(id("isWinter"), l -> this.isWinter);
+        config.property(id("isSpring"), () -> this.isSpring);
+        config.property(id("isSummer"), () -> this.isSummer);
+        config.property(id("isAutumn"), () -> this.isAutumn);
+        config.property(id("isWinter"), () -> this.isWinter);
 
-        config.defineFunction(id("isEarly"), l -> this.isEarly);
-        config.defineFunction(id("isMiddle"), l -> this.isMiddle);
-        config.defineFunction(id("isLate"), l -> this.isLate);
+        config.property(id("isEarly"), () -> this.isEarly);
+        config.property(id("isMiddle"), () -> this.isMiddle);
+        config.property(id("isLate"), () -> this.isLate);
     }
 }

@@ -20,20 +20,26 @@ public final class SoundMetadata {
     private final SoundSource category;
     private final boolean isDefault;
 
+    /**
+     * Metadata for a sound with none configured.
+     */
     public SoundMetadata() {
-        this.title = Component.empty();
-        this.subTitle = Component.empty();
-        this.credits = ImmutableList.of();
-        this.category = SoundSource.AMBIENT;
-        this.isDefault = true;
+        this(SoundSource.AMBIENT, true);
     }
 
+    /**
+     * Metadata with nothing configured but the category, estimated from the sound's ID.
+     */
     public SoundMetadata(Identifier location) {
+        this(estimateSoundSource(location), false);
+    }
+
+    private SoundMetadata(SoundSource category, boolean isDefault) {
         this.title = Component.empty();
         this.subTitle = Component.empty();
         this.credits = ImmutableList.of();
-        this.isDefault = false;
-        this.category = this.estimateSoundSource(location);
+        this.category = category;
+        this.isDefault = isDefault;
     }
 
     public SoundMetadata(Identifier location, SoundMetadataConfig cfg) {
@@ -59,14 +65,14 @@ public final class SoundMetadata {
             this.credits = ImmutableList.copyOf(temp);
         }
 
-        this.category = cfg.category().orElseGet(() -> this.estimateSoundSource(location));
+        this.category = cfg.category().orElseGet(() -> estimateSoundSource(location));
     }
 
     public boolean isDefault() {
         return this.isDefault;
     }
 
-    private SoundSource estimateSoundSource(Identifier location) {
+    private static SoundSource estimateSoundSource(Identifier location) {
         var path = location.getPath();
         if (path.startsWith("music"))
             return SoundSource.MUSIC;
@@ -78,8 +84,7 @@ public final class SoundMetadata {
             return SoundSource.HOSTILE;
         if (path.startsWith("weather"))
             return SoundSource.WEATHER;
-        if (path.startsWith("ambient"))
-            return SoundSource.AMBIENT;
+        // Including "ambient" sounds
         return SoundSource.AMBIENT;
     }
 
@@ -103,6 +108,20 @@ public final class SoundMetadata {
      */
     public Component getSubTitle() {
         return this.subTitle;
+    }
+
+    /**
+     * True if a title is configured and it isn't blank in the current language.
+     */
+    public boolean hasTitle() {
+        return !this.title.getString().isBlank();
+    }
+
+    /**
+     * True if a subtitle is configured and it isn't blank in the current language.
+     */
+    public boolean hasSubTitle() {
+        return !this.subTitle.getString().isBlank();
     }
 
     /**

@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.effects.blocks.producers;
 
+import static org.orecruncher.dsurround.effects.BlockEffectUtils.countVerticalBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;

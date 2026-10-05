@@ -15,13 +15,16 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
 
+/**
+ * Shows a compass band above the crosshair while a compass is held.
+ */
 public final class CompassOverlay extends AbstractOverlay {
 
     // Vertical offset to avoid writing over the cross-hair
     private static final int CROSSHAIR_OFFSET = 60;
 
-    // Width and height of the actual band in the texture. The texture is 512x512 but the actual
-    // rendering is smaller.
+    // The texture is 512x512. Each style has two rows of bands: the first half of the heading on the first, the
+    // second half on the second.
     private static final int TEXTURE_SIZE = 512;
     private static final int BAND_WIDTH = 65 * 2;
     private static final int BAND_HEIGHT = 12 * 2;
@@ -44,11 +47,12 @@ public final class CompassOverlay extends AbstractOverlay {
         this.wobbler = new CompassWobble();
         this.showCompass = false;
         this.spriteOffset = this.config.compassAndClockOptions.compassStyle.getSpriteNumber();
-        this.scale = (float)this.config.compassAndClockOptions.scale;
+        this.scale = (float) this.config.compassAndClockOptions.scale;
     }
 
     public void tick(Minecraft client) {
         this.showCompass = false;
+        this.spinRandomly = false;
 
         if (this.config.compassAndClockOptions.enableCompass && GameUtils.isInGame()) {
             this.scale = (float) this.config.compassAndClockOptions.scale;
@@ -61,17 +65,19 @@ public final class CompassOverlay extends AbstractOverlay {
             var mainHandShow = this.doShowCompass(mainHandItem);
             var offHandShow = this.doShowCompass(offHandItem);
             this.showCompass = mainHandShow || offHandShow;
-
-            if (mainHandShow) {
-                this.spinRandomly = this.doCompassSpin(mainHandItem);
-            }
-
-            if (offHandShow && !this.spinRandomly) {
-                this.spinRandomly = this.doCompassSpin(offHandItem);
-            }
+            this.spinRandomly = shouldSpin(mainHandShow, mainHandShow && this.doCompassSpin(mainHandItem),
+                    offHandShow, offHandShow && this.doCompassSpin(offHandItem));
 
             this.wobbler.update(player.level().getGameTime());
         }
+    }
+
+    /**
+     * Whether the compass band spins randomly: if a compass held in either hand is one that wobbles (in a dimension
+     * where compasses wobble). Decided afresh each tick from what is held now.
+     */
+    static boolean shouldSpin(boolean mainHandCompass, boolean mainHandWobbles, boolean offHandCompass, boolean offHandWobbles) {
+        return (mainHandCompass && mainHandWobbles) || (offHandCompass && offHandWobbles);
     }
 
     private boolean doShowCompass(ItemStack stack) {
@@ -96,18 +102,28 @@ public final class CompassOverlay extends AbstractOverlay {
             rotation = player.getViewYRot(partialTick);
         }
 
-        int direction = Mth.floor(((rotation * TEXTURE_SIZE) / 360F) + 0.5D) & (TEXTURE_SIZE - 1);
-        int x = (int) ((context.guiWidth() - BAND_WIDTH * this.scale) / 2F);
-        int y = (int) ((context.guiHeight() - CROSSHAIR_OFFSET - BAND_HEIGHT * this.scale) / 2F);
-
+        // Which part of the band to show: the heading, as a position across the texture
+        int u = Mth.floor(((rotation * TEXTURE_SIZE) / 360F) + 0.5D) & (TEXTURE_SIZE - 1);
         float v = this.spriteOffset * (BAND_HEIGHT * 2);
-
-        if (direction >= HALF_TEXTURE_SIZE) {
-            direction -= HALF_TEXTURE_SIZE;
+        if (u >= HALF_TEXTURE_SIZE) {
+            u -= HALF_TEXTURE_SIZE;
             v += BAND_HEIGHT;
         }
 
-        context.blit(RenderPipelines.GUI_TEXTURED, COMPASS_TEXTURE, x, y, direction, v, BAND_WIDTH, BAND_HEIGHT, BAND_WIDTH, BAND_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE);
+        // Centered horizontally, above the crosshair, at the configured scale
+        float x = (context.guiWidth() - BAND_WIDTH * this.scale) / 2F;
+        float y = (context.guiHeight() - CROSSHAIR_OFFSET - BAND_HEIGHT * this.scale) / 2F;
+
+        var pose = context.pose();
+        pose.pushMatrix();
+        try {
+            pose.translate(x, y);
+            pose.scale(this.scale, this.scale);
+            // The textured GUI pipeline blends, so the transparent styles need nothing more
+            context.blit(RenderPipelines.GUI_TEXTURED, COMPASS_TEXTURE, 0, 0, u, v, BAND_WIDTH, BAND_HEIGHT, BAND_WIDTH, BAND_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE);
+        } finally {
+            pose.popMatrix();
+        }
     }
 
     /**
@@ -115,7 +131,7 @@ public final class CompassOverlay extends AbstractOverlay {
      */
     static class CompassWobble {
         private static final int TICK_DELAY = 5;
-        private static final float MAX_DELTA_TICK = 1F / 20F;
+        static final float MAX_DELTA_TICK = 1F / 20F;
         private float targetRotation;
         private float lastRotation;
         private float rotation;

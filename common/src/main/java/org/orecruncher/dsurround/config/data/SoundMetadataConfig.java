@@ -2,24 +2,20 @@ package org.orecruncher.dsurround.config.data;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.sounds.SoundSource;
+import org.orecruncher.dsurround.sound.SoundCodecHelpers;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public record SoundMetadataConfig(Optional<String> title, Optional<String> subtitle, Optional<SoundSource> category, List<CreditEntry> credits) {
 
-    private static final Map<String, SoundSource> SOUND_SOURCE_BY_NAME = Arrays.stream(SoundSource.values()).collect(Collectors.toMap(SoundSource::getName, (category) -> category));
-    public static final Codec<SoundSource> SOUND_SOURCE_CODEC = Codec.STRING.comapFlatMap(DataResult.partialGet(SOUND_SOURCE_BY_NAME::get, () -> "unknown sound category type"), SoundSource::getName);
     public static final Codec<SoundMetadataConfig> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
             Codec.STRING.optionalFieldOf("ds_title").forGetter(SoundMetadataConfig::title),
             Codec.STRING.optionalFieldOf("subtitle").forGetter(SoundMetadataConfig::subtitle),
-            SOUND_SOURCE_CODEC.optionalFieldOf("ds_category").forGetter(SoundMetadataConfig::category),
+            // Case-insensitive; an unknown name is logged and treated as ambient, keeping the rest of the entry
+            SoundCodecHelpers.SOUND_CATEGORY_CODEC.optionalFieldOf("ds_category").forGetter(SoundMetadataConfig::category),
             Codec.list(CreditEntry.CODEC).optionalFieldOf("ds_credits", ImmutableList.of()).forGetter(SoundMetadataConfig::credits))
             .apply(instance, SoundMetadataConfig::new));
 

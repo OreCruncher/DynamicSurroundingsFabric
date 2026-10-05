@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -22,9 +22,6 @@ public class ItemSwingEffect extends EntityEffectBase {
 
     @Override
     public void tick(final EntityEffectInfo info) {
-        if (info.isRemoved())
-            return;
-
         final LivingEntity entity = info.getEntity();
 
         // Boats are strange - ignore them for now
@@ -86,8 +83,9 @@ public class ItemSwingEffect extends EntityEffectBase {
     }
 
     protected static double getReach(final LivingEntity entity) {
-        if (entity instanceof LocalPlayer p)
-            return p.isCreative() ? 5D : 3D;
+        // Any player, local or not: the attribute covers creative and anything that changes reach
+        if (entity instanceof Player p)
+            return p.blockInteractionRange();
 
         var dist = entity.getBbWidth();
         dist *= 2;

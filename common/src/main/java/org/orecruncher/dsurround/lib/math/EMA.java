@@ -1,7 +1,8 @@
 package org.orecruncher.dsurround.lib.math;
 
 /**
- * Simple EMA calculator.
+ * Exponential moving average over roughly the last {@code periods} samples. The first sample is taken as is.
+ * Not thread-safe.
  */
 public class EMA {
 
@@ -36,8 +37,11 @@ public class EMA {
         return this.name;
     }
 
+    /**
+     * The current average, or 0 if there have been no samples yet.
+     */
     public double get() {
-        return this.ema;
+        return Double.isNaN(this.ema) ? 0D : this.ema;
     }
 
 }

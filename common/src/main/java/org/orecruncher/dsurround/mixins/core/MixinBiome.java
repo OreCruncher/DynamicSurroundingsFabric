@@ -26,7 +26,7 @@ public abstract class MixinBiome {
     public void dsurround$getFogColor(CallbackInfoReturnable<Integer> cir) {
         if (MixinHelpers.fogOptions.enableFogEffects && MixinHelpers.fogOptions.enableBiomeFog) {
             ReflectionHelper.cast(this, Biome.class)
-                    .map(MixinHelpers.BIOME_LIBRARY::getBiomeInfoWeak)
+                    .map(MixinHelpers.biomeLibrary()::findBiomeInfo)
                     .map(BiomeInfo::getFogColor)
                     .ifPresent(color -> cir.setReturnValue(color.getValue()));
         }
@@ -45,7 +45,7 @@ public abstract class MixinBiome {
     @Inject(method = "getBackgroundMusic()Ljava/util/Optional;", at = @At("HEAD"), cancellable = true)
     private void dsurround$getBackgroundMusic(CallbackInfoReturnable<Optional<Music>> cir) {
         ReflectionHelper.cast(this, Biome.class)
-                .map(MixinHelpers.BIOME_LIBRARY::getBiomeInfoWeak)
+                .map(MixinHelpers.biomeLibrary()::findBiomeInfo)
                 .map(info -> info.getBackgroundMusic(Randomizer.current()))
                 .ifPresent(cir::setReturnValue);
     }

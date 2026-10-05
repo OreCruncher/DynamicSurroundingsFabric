@@ -1,13 +1,9 @@
 package org.orecruncher.dsurround.gui.sound;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.AbstractSelectionList;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
-import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
@@ -15,127 +11,114 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.regex.PatternSyntaxException;
 
-public class IndividualSoundControlList extends AbstractSelectionList<IndividualSoundControlListEntry> {
+/**
+ * One row per sound. The rows are built once; the search filter only changes which of them are shown, so their
+ * widgets (and any sound a row is playing) survive filtering.
+ */
+public class IndividualSoundControlList extends ContainerObjectSelectionList<IndividualSoundControlListEntry> implements AutoCloseable {
 
-    private final boolean enablePlay;
     private final ISoundLibrary soundLibrary;
-    private int width;
-    private List<IndividualSoundConfigEntry> source;
-    private String lastSearchText = null;
+    private final List<IndividualSoundControlListEntry> allEntries;
+    private int rowWidth;
+    private @Nullable String lastSearchText = null;
 
-    public IndividualSoundControlList(final Screen parent, final Minecraft mcIn, int widthIn, int heightIn, int topIn, int slotWidth, int slotHeightIn, boolean enablePlay, final Supplier<String> filter, @Nullable final IndividualSoundControlList oldList) {
-        super(mcIn, widthIn, heightIn, topIn, slotHeightIn);
+    public IndividualSoundControlList(final Minecraft mc, int width, int height, int y, int itemHeight, boolean enablePlay) {
+        super(mc, width, height, y, itemHeight);
 
         this.soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
+        this.allEntries = this.getSortedSoundConfigurations().stream()
+                .map(cfg -> new IndividualSoundControlListEntry(cfg, enablePlay))
+                .toList();
+        this.rowWidth = width;
 
-        this.enablePlay = enablePlay;
-        this.width = slotWidth;
-
-        // Things like resizing will cause reconstruction and this preserves the existing state
-        if (oldList != null) {
-            this.source = oldList.source;
-        }
-
-        // Initialize the first pass
-        this.setSearchFilter(filter);
-    }
-
-    @Override
-    protected boolean entriesCanBeSelected() {
-        return false;
+        this.setSearchFilter("");
     }
 
     @Override
     public int getRowWidth() {
-        return this.width;
+        return this.rowWidth;
+    }
+
+    /**
+     * The narrowest the rows can be without any row's controls running past its right edge.
+     */
+    public int getMinimumRowWidth() {
+        return this.allEntries.stream().mapToInt(IndividualSoundControlListEntry::getMinimumWidth).max().orElse(0);
     }
 
     public void setRowWidth(int width) {
-        this.width = width;
-        this.children().forEach(c -> {
-            c.setX(this.getRowLeft());
-            c.setWidth(this.width);
-        });
+        this.rowWidth = width;
+        this.allEntries.forEach(e -> e.setWidth(width));
     }
 
-    public void setSearchFilter(final Supplier<String> filterBy) {
-        final String filter = filterBy.get();
+    /**
+     * Shows only the sounds whose id matches the filter. The filter is tried as a case-insensitive regular
+     * expression first; if it isn't a valid one, it is matched as plain text, also ignoring case.
+     */
+    public void setSearchFilter(@Nullable String filter) {
+        if (filter == null)
+            filter = "";
 
-        if (this.lastSearchText != null && this.lastSearchText.equals(filter))
+        if (filter.equals(this.lastSearchText))
             return;
 
         this.lastSearchText = filter;
 
-        // Clear any existing children - they are going to be repopulated
-        this.clearEntries();
-
-        // Load up sources if needed
-        if (this.source == null) {
-            this.source = new ArrayList<>(this.getSortedSoundConfigurations());
-        }
-
-        Predicate<IndividualSoundConfigEntry> process;
-
-        // An empty filter matches everything
-        if (StringUtils.isEmpty(filter)) {
-            process = (isc) -> true;
+        Predicate<IndividualSoundConfigEntry> matches;
+        if (filter.isEmpty()) {
+            matches = cfg -> true;
         } else {
-            // Try compiling as a regular expression. If it fails just treat as a normal contains.
             try {
                 var pattern = Pattern.compile(filter, Pattern.CASE_INSENSITIVE);
-                process = (isc) -> pattern.matcher(isc.soundEventIdProjected).find();
-            } catch (Throwable t) {
-                process = (isc) -> isc.soundEventIdProjected.contains(filter);
+                matches = cfg -> pattern.matcher(cfg.soundEventIdProjected).find();
+            } catch (PatternSyntaxException e) {
+                var text = filter.toLowerCase(Locale.ROOT);
+                matches = cfg -> cfg.soundEventIdProjected.toLowerCase(Locale.ROOT).contains(text);
             }
         }
 
-        IndividualSoundControlListEntry first = null;
-        for (IndividualSoundConfigEntry cfg : this.source) {
-            if (process.test(cfg)) {
-                final IndividualSoundControlListEntry entry = new IndividualSoundControlListEntry(cfg, this.enablePlay);
-                if (first == null)
-                    first = entry;
-                this.addEntry(entry);
-            }
-        }
-
-        if (first != null)
-            this.setFocused(first);
+        final var test = matches;
+        this.replaceEntries(this.allEntries.stream().filter(e -> test.test(e.getData())).toList());
+        this.setScrollAmount(0);
     }
 
+    /**
+     * The row under the mouse, or null if the mouse isn't over a row.
+     */
     @Nullable
     public IndividualSoundControlListEntry getEntryAt(final int mouseX, final int mouseY) {
-        return this.getEntryAtPosition(mouseX, mouseY);
+        return this.isMouseOver(mouseX, mouseY) ? this.getEntryAtPosition(mouseX, mouseY) : null;
     }
 
+    /**
+     * Ticks every row, including hidden ones, so a sound that finishes while its row is filtered out still resets
+     * the row's play button.
+     */
     public void tick() {
-        this.children().forEach(IndividualSoundControlListEntry::tick);
+        this.allEntries.forEach(IndividualSoundControlListEntry::tick);
     }
 
-    // Gathers all the sound configs that are different from default for handling.
-    protected Collection<IndividualSoundConfigEntry> getConfigs() {
-        final List<IndividualSoundConfigEntry> configs = new ArrayList<>();
-        for (final IndividualSoundConfigEntry cfg : this.source) {
-            if (cfg.isNotDefault())
-                configs.add(cfg);
-        }
-        return configs;
+    /**
+     * Stops any sound started by a row.
+     */
+    @Override
+    public void close() {
+        this.allEntries.forEach(IndividualSoundControlListEntry::close);
     }
 
     public void saveChanges() {
-        this.soundLibrary.saveIndividualSoundConfigs(getConfigs());
+        // Only configurations that differ from the default need to be saved
+        var configs = this.allEntries.stream()
+                .map(IndividualSoundControlListEntry::getData)
+                .filter(IndividualSoundConfigEntry::isNotDefault)
+                .toList();
+        this.soundLibrary.saveIndividualSoundConfigs(configs);
     }
 
-    @Override
-    protected void updateWidgetNarration(@NotNull NarrationElementOutput builder) {
-        // Narrate my shiny metal...
-    }
-
-    protected Collection<IndividualSoundConfigEntry> getSortedSoundConfigurations() {
+    private Collection<IndividualSoundConfigEntry> getSortedSoundConfigurations() {
 
         final Map<Identifier, IndividualSoundConfigEntry> map = new HashMap<>();
 
@@ -146,11 +129,11 @@ public class IndividualSoundControlList extends AbstractSelectionList<Individual
             map.put(entry.soundEventId, entry);
         }
 
-        // Override with the defaults from configuration.  Make a copy of the original, so it doesn't change.
+        // Override with the current configuration. Copies are edited, so Cancel leaves the live configuration as it was.
         for (IndividualSoundConfigEntry entry : this.soundLibrary.getIndividualSoundConfigs()) {
-            map.put(entry.soundEventId, entry);
+            map.put(entry.soundEventId, IndividualSoundConfigEntry.from(entry));
         }
 
-        return map.values().stream().sorted(IndividualSoundConfigEntry::compareTo).collect(Collectors.toList());
+        return map.values().stream().sorted(IndividualSoundConfigEntry::compareTo).toList();
     }
 }

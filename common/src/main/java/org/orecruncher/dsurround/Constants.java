@@ -35,6 +35,8 @@ public final class Constants {
     public static final String SERENE_SEASONS = "sereneseasons";
     public static final String QUILTED_LOADER = "quilt_loader";
     public static final String MODMENU = "modmenu";
+    public static final String IRIS = "iris";
+    public static final String OCULUS = "oculus";
 
     /**
      * Collection of MOD IDs that are of interest.  Ease of iteration.
@@ -58,7 +60,9 @@ public final class Constants {
                 YACL,
                 SINYTRA_CONNECTOR,
                 SERENE_SEASONS,
-                QUILTED_LOADER);
+                QUILTED_LOADER,
+                IRIS,
+                OCULUS);
 
         BLOCKS_TO_IGNORE.add(Blocks.VOID_AIR);
         BLOCKS_TO_IGNORE.add(Blocks.CAVE_AIR);

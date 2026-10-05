@@ -47,8 +47,9 @@ public interface ISoundFactory {
     }
 
     /**
-     * Creates a non-attenuated sound instance that will not repeat. Mimics the sound profile of
-     * a biome "additional" sound as defined in Minecraft.
+     * Creates a sound instance that plays at the listener (relative, at 0,0,0), so distance never makes it
+     * quieter. Repeats only if the factory is repeatable. Mimics the sound profile of a biome "additional" sound as
+     * defined in Minecraft.
      */
     SimpleSoundInstance createAsAdditional();
 

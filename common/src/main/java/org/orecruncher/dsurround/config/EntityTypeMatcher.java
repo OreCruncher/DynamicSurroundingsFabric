@@ -9,8 +9,8 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
-import org.orecruncher.dsurround.lib.IMatcher;
-import org.orecruncher.dsurround.lib.IdentityUtils;
+import org.orecruncher.dsurround.lib.codec.IMatcher;
+import org.orecruncher.dsurround.lib.registry.IdentityUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 public abstract class EntityTypeMatcher implements IMatcher<Entity> {

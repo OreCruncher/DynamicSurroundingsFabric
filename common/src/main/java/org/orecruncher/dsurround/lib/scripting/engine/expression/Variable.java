@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.scripting.IScriptVariable;
 import org.orecruncher.dsurround.lib.scripting.engine.Environment;
+import org.orecruncher.dsurround.lib.scripting.engine.ScriptException;
 import org.orecruncher.dsurround.lib.scripting.engine.Token;
 
 public record Variable(Token name, IScriptVariable variable) implements Expression {
@@ -15,7 +16,11 @@ public record Variable(Token name, IScriptVariable variable) implements Expressi
 
     @Override
     public Object eval() {
-        return this.variable.getValue();
+        try {
+            return this.variable.getValue();
+        } catch (ScriptException e) {
+            throw ScriptException.locate(this.name, e);
+        }
     }
 
     @Override

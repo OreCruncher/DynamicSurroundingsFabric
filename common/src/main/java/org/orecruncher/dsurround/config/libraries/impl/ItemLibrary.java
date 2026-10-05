@@ -8,14 +8,15 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.*;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.ItemClassType;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
-import org.orecruncher.dsurround.config.libraries.IReloadEvent;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
+import org.orecruncher.dsurround.eventing.IConfigChangedEvent;
+import org.orecruncher.dsurround.eventing.IReloadEvent;
+import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -35,49 +36,74 @@ public class ItemLibrary implements IItemLibrary {
     private final ITagLibrary tagLibrary;
     private final IModLog logger;
     private final Configuration config;
-    private final Reference2ObjectOpenHashMap<Item, ISoundFactory> itemEquipFactories = new Reference2ObjectOpenHashMap<>();
-    private final Reference2ObjectOpenHashMap<Item, ISoundFactory> itemSwingFactories = new Reference2ObjectOpenHashMap<>();
-    private final Reference2ObjectOpenHashMap<Item, ISoundFactory> itemArmorStepFactories = new Reference2ObjectOpenHashMap<>();
+    // Resolved sounds per item. Optional.empty() records "this item has no sound", so it is cached like any other
+    // answer: computeIfAbsent stores nothing for a null result, which would mean resolving those items on every use.
+    //
+    // PORTING: these caches are keyed by Item, which assumes an item's sounds don't depend on the individual stack.
+    // That holds in 1.21.1, but see getEquipableSoundEvent(): once equippability is a per-stack component, two stacks
+    // of the same item can have different equip sounds.
+    private final Reference2ObjectOpenHashMap<Item, Optional<ISoundFactory>> itemEquipFactories = new Reference2ObjectOpenHashMap<>();
+    private final Reference2ObjectOpenHashMap<Item, Optional<ISoundFactory>> itemSwingFactories = new Reference2ObjectOpenHashMap<>();
+    private final Reference2ObjectOpenHashMap<Item, Optional<ISoundFactory>> itemArmorStepFactories = new Reference2ObjectOpenHashMap<>();
     private int version;
 
     public ItemLibrary(ITagLibrary tagLibrary, Configuration config, IModLog logger) {
         this.tagLibrary = tagLibrary;
         this.logger = ModLog.createChild(logger, "ItemLibrary");
         this.config = config;
+
+        // What an item resolves to depends on config (enableToolbarBlockSounds), so cached answers are dropped when
+        // it changes
+        IConfigChangedEvent.EVENT.register(cfg -> this.clearCaches());
+    }
+
+    /**
+     * Clears on every reload. Item sounds depend on tags (a tag sync) and on the sound library's factories, which a
+     * resource reload rebuilds, so every scope can change the answers.
+     */
+    @Override
+    public void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
+        this.version++;
+        this.clearCaches();
+        this.logger.info("Configured; version is now %d", this.version);
     }
 
     @Override
-    public void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
-        if (scope != IReloadEvent.Scope.RESOURCES) {
-            this.version++;
-            this.itemEquipFactories.clear();
-            this.itemSwingFactories.clear();
-            this.itemArmorStepFactories.clear();
-            this.logger.info("[ItemLibrary] Configured; version is now %d", this.version);
-        }
+    public int getVersion() {
+        return this.version;
+    }
+
+    private void clearCaches() {
+        this.itemEquipFactories.clear();
+        this.itemSwingFactories.clear();
+        this.itemArmorStepFactories.clear();
     }
 
     @Override
     public Optional<ISoundFactory> getItemEquipSound(ItemStack stack) {
         if (stack.isEmpty())
             return Optional.empty();
-        return Optional.ofNullable(this.itemEquipFactories.computeIfAbsent(stack.getItem(), k -> resolve(stack, ItemClassType::getToolBarSound, ItemClassType.NONE::getToolBarSound)));
+        return this.itemEquipFactories.computeIfAbsent(stack.getItem(), k -> Optional.ofNullable(resolve(stack, ItemClassType::getToolBarSound, ItemClassType.NONE::getToolBarSound)));
     }
 
     @Override
     public Optional<ISoundFactory> getItemSwingSound(ItemStack stack) {
         if (stack.isEmpty())
             return Optional.empty();
-        return Optional.ofNullable(this.itemSwingFactories.computeIfAbsent(stack.getItem(), k -> resolve(stack, ItemClassType::getSwingSound, () -> null)));
+        return this.itemSwingFactories.computeIfAbsent(stack.getItem(), k -> Optional.ofNullable(resolve(stack, ItemClassType::getSwingSound, () -> null)));
     }
 
     @Override
     public Optional<ISoundFactory> getEquipableStepAccentSound(ItemStack stack) {
         if (stack.isEmpty())
             return Optional.empty();
-        return Optional.ofNullable(this.itemArmorStepFactories.computeIfAbsent(stack.getItem(), k -> resolveEquipableStepSound(stack)));
+        return this.itemArmorStepFactories.computeIfAbsent(stack.getItem(), k -> Optional.ofNullable(resolveEquipableStepSound(stack)));
     }
 
+    /**
+     * Each item with its tags and what it resolves to: item class, and the toolbar, swing and armor-step sounds
+     * (by factory id, or "none").
+     */
     @Override
     public Stream<String> dump() {
         var itemRegistry = RegistryUtils.getRegistry(Registries.ITEM).map(Registry::entrySet).orElseThrow();
@@ -109,6 +135,18 @@ public class ItemLibrary implements IItemLibrary {
         return resolveSound.apply(itemClassType);
     }
 
+    /**
+     * PORTING: in 1.21.1 equippability comes from the Item (the Equipable interface), so caching by Item is safe.
+     * In later versions (26.2 at least) the Equipable class is gone and equippability is the per-stack
+     * DataComponents.EQUIPPABLE component (an Equippable record with equipSound), so this method has to be rewritten,
+     * and the Item-keyed caches above stop being correct for stacks given a custom EQUIPPABLE (via /give, datapacks or
+     * other mods).
+     * <p>
+     * Suggested approach: keep the Item-keyed caches for stacks whose EQUIPPABLE equals their item's default (nearly
+     * all of them). Resolve stacks with a custom one without caching, or cache them in a second map keyed by the
+     * Equippable record, which compares by value. Only EQUIPPABLE matters here; damage, enchantments and other
+     * components don't affect these sounds, so "the stack has any component changes" is not the right test.
+     */
     @Nullable
     private static SoundEvent getEquipableSoundEvent(ItemStack stack) {
         SoundEvent itemEquipSound = null;
@@ -182,6 +220,17 @@ public class ItemLibrary implements IItemLibrary {
                 })
                 .orElse("null");
 
-        return id.toString() + "\nTags: " + tags + "\n";
+        // Resolved from a default stack of the item; in 1.21.1 that is what the caches are keyed by anyway
+        var stack = new ItemStack(item);
+        return id + "\nTags: " + tags
+                + "\nClass: " + (stack.isEmpty() ? "none" : resolveClassType(stack).getName())
+                + "\nToolbar sound: " + describe(this.getItemEquipSound(stack))
+                + "\nSwing sound: " + describe(this.getItemSwingSound(stack))
+                + "\nArmor step sound: " + describe(this.getEquipableStepAccentSound(stack))
+                + "\n";
+    }
+
+    private static String describe(Optional<ISoundFactory> factory) {
+        return factory.map(f -> f.getLocation().toString()).orElse("none");
     }
 }

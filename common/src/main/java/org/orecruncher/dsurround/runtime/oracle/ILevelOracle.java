@@ -8,7 +8,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
-import org.orecruncher.dsurround.lib.DayCycle;
+import net.minecraft.world.phys.Vec3;
+import org.orecruncher.dsurround.lib.time.DayCycle;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -102,5 +103,9 @@ public interface ILevelOracle {
 
     <T extends Entity> List<T> getEntitiesOfClass(final Class<T> baseClass, final AABB bb);
 
-    boolean doesBlockEntityExist(final Predicate<BlockEntity> predicate);
+    /**
+     * Whether a block entity matching {@code predicate} is within {@code range} blocks of {@code center}, looking only
+     * at the loaded chunks in range.
+     */
+    boolean doesBlockEntityExistNear(final Vec3 center, final double range, final Predicate<BlockEntity> predicate);
 }

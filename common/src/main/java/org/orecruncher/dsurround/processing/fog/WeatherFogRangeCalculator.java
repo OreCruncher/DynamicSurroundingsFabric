@@ -26,10 +26,7 @@ public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
         if (rainStr > 0) {
             final float startScale = 1F - (START_IMPACT * rainStr);
             final float endScale = 1F - (END_IMPACT * rainStr);
-            var result = new FogData();
-            result.environmentalStart = data.environmentalStart * startScale;
-            result.environmentalEnd = data.environmentalEnd * endScale;
-            return result;
+            return withRange(data, data.environmentalStart * startScale, data.environmentalEnd * endScale);
         }
 
         return data;

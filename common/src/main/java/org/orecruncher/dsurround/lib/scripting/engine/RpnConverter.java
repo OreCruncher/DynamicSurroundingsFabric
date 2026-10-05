@@ -35,10 +35,12 @@ record RpnConverter(Environment environment) {
 
             // 1. Numbers / Variables
             if (this.isOperand(token)) {
+                this.checkNotAdjacent(prevToken, token);
                 output.add(RpnToken.of(token));
             }
             // 2. Function Identifier
             else if (this.environment.isFunction(token)) {
+                this.checkNotAdjacent(prevToken, token);
                 operatorStack.push(token);
                 argCounts.push(1); // Default to 1 argument
             }
@@ -47,8 +49,14 @@ record RpnConverter(Environment environment) {
                 while (!operatorStack.isEmpty() && operatorStack.peek().type() != TokenType.LEFT_PAREN) {
                     output.add(RpnToken.of(operatorStack.pop()));
                 }
-                if (operatorStack.isEmpty() || argCounts.isEmpty()) {
+                // The '(' on top of the stack must belong to a function call. A comma inside a plain grouping
+                // parenthesis, such as f((1, 2)), is an error rather than an extra argument to f.
+                if (operatorStack.isEmpty() || argCounts.isEmpty() || !this.isFunctionParen(operatorStack)) {
                     ScriptException.throwException(token, "Comma outside of valid function parameters");
+                }
+                // A complete argument must come before each comma, as in f(, 1), f(1, , 2) or f(1 +, 2)
+                if (!this.endsValue(prevToken)) {
+                    ScriptException.throwException(token, "Unexpected ',' (missing argument?)");
                 }
                 // Increment argument counter for the active function
                 argCounts.push(argCounts.pop() + 1);
@@ -56,7 +64,7 @@ record RpnConverter(Environment environment) {
             // 4. Left Parenthesis '('
             else if (token.type() == TokenType.LEFT_PAREN) {
                 // If there was no previous token, or if it was an operator or identifier (function)
-                if (prevToken == null || prevToken.type().isOperator() || prevToken.type() == TokenType.LEFT_PAREN || this.environment.isFunction(prevToken)) {
+                if (prevToken == null || prevToken.type().isOperator() || prevToken.type() == TokenType.LEFT_PAREN || prevToken.type() == TokenType.COMMA || this.environment.isFunction(prevToken)) {
                     operatorStack.push(token);
                 } else {
                     ScriptException.throwException(token, "Unexpected '(' (undefined function/typo?)");
@@ -92,21 +100,25 @@ record RpnConverter(Environment environment) {
                     Token fnName = operatorStack.pop();
                     int count = argCounts.pop();
 
-                    // Check to ensure that a proper number of variables have been specified
-                    var definition = this.environment.getFunctionDefinition(fnName);
-                    if (definition == null) {
-                        // This should not happen
-                        ScriptException.throwException(token, "Unable to locate function definition in environment when it should be present: %s".formatted(token.lexeme()));
-                    }
+                    // Check to ensure that a proper number of variables have been specified. Errors are reported at the
+                    // function name, which is where the problem is, rather than at the closing parenthesis.
+                    var definition = this.environment.getFunction(fnName);
 
-                    if (definition.hasVarArgs()) {
-                        // arity indicates the minimum required parameters for a vararg function
-                        if (count < definition.arity()) {
-                            ScriptException.throwException(token, "Mismatched variable arguments: expected at least %d but received %d".formatted(definition.arity(), count));
+                    int min = definition.minArgs();
+                    int max = definition.maxArgs();
+                    if (max < 0) {
+                        // Variable arguments: only a minimum
+                        if (count < min) {
+                            ScriptException.throwException(fnName, "Mismatched variable arguments: expected at least %d but received %d".formatted(min, count));
                         }
-                    } else if (count != definition.arity()) {
+                    } else if (min == max) {
                         // The count must exactly match the function arity
-                        ScriptException.throwException(token, "Mismatched variable arguments: expected %d but received %d".formatted(definition.arity(), count));
+                        if (count != min) {
+                            ScriptException.throwException(fnName, "Mismatched variable arguments: expected %d but received %d".formatted(min, count));
+                        }
+                    } else if (count < min || count > max) {
+                        // Optional parameters: a range
+                        ScriptException.throwException(fnName, "Mismatched variable arguments: expected %d to %d but received %d".formatted(min, max, count));
                     }
 
                     output.add(RpnToken.of(fnName, count));
@@ -114,8 +126,13 @@ record RpnConverter(Environment environment) {
             }
             // 6. Operators
             else if (token.type().isOperator()) {
-                if (token.type().isUnaryOperator() && prevToken != null && prevToken.type() != TokenType.LEFT_PAREN && !prevToken.type().isOperator()) {
+                if (token.type().isUnaryOperator() && prevToken != null && prevToken.type() != TokenType.LEFT_PAREN && prevToken.type() != TokenType.COMMA && !prevToken.type().isOperator()) {
                     ScriptException.throwException(token, "Unexpected character '%s'".formatted(token.lexeme()));
+                }
+                // A binary operator needs a value on its left. Without this check, "|| 1 1" converts to the valid
+                // RPN "1 1 ||" and compiles as "1 || 1".
+                if (token.type().isBinaryOperator() && !this.endsValue(prevToken)) {
+                    ScriptException.throwException(token, "Unexpected '%s' (missing left operand?)".formatted(token.lexeme()));
                 }
                 int currPrec = token.type().getPrecedence();
                 boolean isRightAssoc = token.type().isRightAssociative();
@@ -154,6 +171,35 @@ record RpnConverter(Environment environment) {
         return output;
     }
 
+    /**
+     * Reports a value that directly follows another value with no operator between them, such as the 'y' in
+     * "f(x) y". Catching this here, rather than from the leftover stack in validate(), reports the stray piece
+     * itself: once converted, "1 + 2 3" becomes "1 2 3 +", where the '+' appears to join 2 and 3. It also rejects
+     * scripts whose RPN happens to be well-formed even though the infix is not, such as "true x / 's' /".
+     */
+    private void checkNotAdjacent(Token prevToken, Token token) {
+        if (this.endsValue(prevToken)) {
+            ScriptException.throwException(token, "Unexpected '%s' (missing operator?)".formatted(token.lexeme()));
+        }
+    }
+
+    /**
+     * Determines if the token completes a value: an operand, or the ')' closing a group or call.
+     */
+    private boolean endsValue(Token token) {
+        return token != null && (this.isOperand(token) || token.type() == TokenType.RIGHT_PAREN);
+    }
+
+    /**
+     * Determines if the '(' at the top of the operator stack opens a function call's argument list.
+     */
+    private boolean isFunctionParen(Deque<Token> operatorStack) {
+        Iterator<Token> it = operatorStack.iterator();
+        if (!it.hasNext() || it.next().type() != TokenType.LEFT_PAREN)
+            return false;
+        return it.hasNext() && this.environment.isFunction(it.next());
+    }
+
     private boolean isOperand(Token token) {
         return !this.environment.isFunction(token) &&
                 !token.type().isBinaryOperator() &&
@@ -164,37 +210,51 @@ record RpnConverter(Environment environment) {
     }
 
     private void validate(List<RpnToken> tokens) {
-        int stackDepth = 0;
+        // Simulates evaluation of the RPN. Each stack entry holds the first token (in source order) of the
+        // sub-expression it represents, so leftover entries can be reported where they start in the script.
+        Deque<Token> stack = new ArrayDeque<>();
 
         for (RpnToken token : tokens) {
             // Case 1: Function call
             if (token.isFunction) {
-                if (stackDepth < token.argCount) {
-                    ScriptException.throwException(token.token(), "Expected %d operands, but found %d".formatted(token.argCount, stackDepth));
+                if (stack.size() < token.argCount) {
+                    ScriptException.throwException(token.token(), "Expected %d operands, but found %d".formatted(token.argCount, stack.size()));
                 }
-                stackDepth -= (token.argCount - 1);
+                for (int i = 0; i < token.argCount; i++)
+                    stack.pop();
+                // The function name comes before its arguments
+                stack.push(token.token());
             }
             // Case 2: Unary Operator
             else if (token.token().type().isUnaryOperator()) {
-                if (stackDepth < 1) {
+                if (stack.isEmpty()) {
                     ScriptException.throwException(token.token(), "Insufficient operands for unary operator");
                 }
+                // Prefix operator: it comes before its operand
+                stack.pop();
+                stack.push(token.token());
             }
             // Case 3: Binary Operator
             else if (token.token().type().isBinaryOperator()) {
-                if (stackDepth < 2) {
-                    ScriptException.throwException(token.token(), "Expected 2 operands, but found %d".formatted(stackDepth));
+                if (stack.size() < 2) {
+                    ScriptException.throwException(token.token(), "Expected 2 operands, but found %d".formatted(stack.size()));
                 }
-                stackDepth--;
+                // The result starts where the left operand starts
+                stack.pop();
             }
             // Case 4: Operand
             else {
-                stackDepth++;
+                stack.push(token.token());
             }
         }
 
-        if (stackDepth != 1) {
-            ScriptException.throwException("Malformed expression: %d items remain on stack instead of 1".formatted(stackDepth));
+        if (stack.size() > 1) {
+            // Backstop: adjacent values are normally reported during conversion (see checkNotAdjacent). Entries are
+            // in source order from the bottom of the stack; report where the second one starts.
+            var firstExtra = stack.stream().skip(stack.size() - 2).findFirst().orElseThrow();
+            ScriptException.throwException(firstExtra, "Malformed expression: %d items remain on stack instead of 1".formatted(stack.size()));
+        } else if (stack.isEmpty()) {
+            ScriptException.throwException("Malformed expression: no value produced");
         }
     }
 
@@ -220,4 +280,4 @@ record RpnConverter(Environment environment) {
             return new RpnToken(token, argCount, true);
         }
     }
-}
+}

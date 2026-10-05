@@ -6,7 +6,6 @@ import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 import java.util.*;
 
@@ -15,13 +14,17 @@ import java.util.*;
  */
 public final class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
 
-    private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
-
     private static final Map<TagKey<Biome>, BiomeTrait> tagToTraitMap = new HashMap<>();
 
     static {
         for (var entry : BiomeTrait.values())
             tagToTraitMap.put(entry.getBiomeTag(), entry);
+    }
+
+    private final ITagLibrary tagLibrary;
+
+    public BiomeTagAnalyzer(ITagLibrary tagLibrary) {
+        this.tagLibrary = tagLibrary;
     }
 
     @Override
@@ -34,7 +37,7 @@ public final class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
         // Have to do it this way so that the client side tagging has a chance.  When connecting to
         // vanilla servers, they will ONLY have the Minecraft tags, not the Fabric ones.
         for (var tagEntry : tagToTraitMap.entrySet())
-            if (TAG_LIBRARY.is(tagEntry.getKey(), biome))
+            if (this.tagLibrary.is(tagEntry.getKey(), biome))
                 resultCollection.add(tagEntry.getValue());
     }
 }

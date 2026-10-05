@@ -8,9 +8,11 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IEffectSystem;
+import org.orecruncher.dsurround.effects.blocks.AbstractParticleEmitterEffect;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public abstract class AbstractEffectSystem implements IEffectSystem {
@@ -58,11 +60,29 @@ public abstract class AbstractEffectSystem implements IEffectSystem {
             effect.remove();
             this.onRemoveSystem(longPos);
         }
-    };
+    }
 
     @Override
     public String gatherDiagnostics() {
         return "[%s] count: %d".formatted(this.systemName, this.systems.size());
+    }
+
+    @Override
+    public String getName() {
+        return this.systemName;
+    }
+
+    @Override
+    public void forEachEffect(Consumer<IBlockEffect> consumer) {
+        this.systems.values().forEach(consumer);
+    }
+
+    @Override
+    public void describeEffect(IBlockEffect effect, Consumer<String> lines) {
+        if (effect instanceof AbstractParticleEmitterEffect emitter)
+            lines.accept("strength " + emitter.getStrength());
+        var pos = effect.getPos();
+        lines.accept("%d, %d, %d".formatted(pos.getX(), pos.getY(), pos.getZ()));
     }
 
     protected boolean hasSystemAtPosition(BlockPos pos) {

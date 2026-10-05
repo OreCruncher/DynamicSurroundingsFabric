@@ -23,7 +23,7 @@ public enum BlockEffectType {
     BUBBLE_COLUMN("bubble_column", UnderwaterBubbleProducer::new),
     FIREFLY("firefly",
             (chance, conditions) -> new BlockParticleEffectProducer(chance, conditions,
-                    (world, state, pos, rand) -> FireflyParticle.create(world, pos.getX() + 0.D, pos.getY() + 0.5D, pos.getZ() + 0.5D)));
+                    (world, state, pos, rand) -> FireflyParticle.create(world, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D)));
 
     private static final Map<String, BlockEffectType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(BlockEffectType::getName, (category) -> category));
     public static final Codec<BlockEffectType> CODEC = Codec.STRING.comapFlatMap(DataResult.partialGet(BY_NAME::get, () -> "unknown block effect type"), d -> d.name);
@@ -61,9 +61,10 @@ public enum BlockEffectType {
 
     static {
         Configuration.BlockEffects config = ContainerManager.resolve(Configuration.BlockEffects.class);
+        Configuration.FireflyOptions fireflies = ContainerManager.resolve(Configuration.FireflyOptions.class);
         UNKNOWN.setConfigProvider(() -> false);
         FLAME_JET.setConfigProvider(() -> config.flameJetEnabled);
         BUBBLE_COLUMN.setConfigProvider(() -> config.bubbleColumnEnabled);
-        FIREFLY.setConfigProvider(() -> config.firefliesEnabled);
+        FIREFLY.setConfigProvider(() -> fireflies.enableFireflies);
     }
 }

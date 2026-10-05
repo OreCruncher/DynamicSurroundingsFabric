@@ -23,7 +23,9 @@ public class MixinParticleTypes {
     private static void dsurround$staticHook(CallbackInfo ci) {
         DSurroundParticleTypes.WATER_RIPPLE = dsurround$register(Constants.asId("water_ripple").toString(), false);
         DSurroundParticleTypes.WATER_RIPPLE_PIXELATED = dsurround$register(Constants.asId("water_ripple_pixelated").toString(), false);
-        DSurroundParticleTypes.WATERFALL_CASCADE = dsurround$register(Constants.asId("waterfall_cascade").toString(), false);
+        DSurroundParticleTypes.WATERFALL_MIST = dsurround$register(Constants.asId("waterfall_mist").toString(), false);
+        DSurroundParticleTypes.WATER_FOAM = dsurround$register(Constants.asId("water_foam").toString(), false);
+        DSurroundParticleTypes.FIREFLY_GLOW = dsurround$register(Constants.asId("firefly_glow").toString(), false);
     }
 
     @Invoker("register")

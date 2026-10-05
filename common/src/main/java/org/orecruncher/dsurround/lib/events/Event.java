@@ -7,37 +7,31 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+/**
+ * An event whose handlers are called in registration order.
+ * <p>
+ * Thread-safe: registering builds a new invoker, so {@link #invoker()} is a plain read.
+ */
 final class Event<IHandler> implements IEvent<IHandler> {
 
-    private final List<IHandler> eventHandlers;
-    private final Function<List<IHandler>, IHandler> eventLoopFactory;
-    private IHandler eventLoop;
+    private final List<IHandler> eventHandlers = new ArrayList<>(4);
+    private final Function<List<IHandler>, IHandler> invokerFactory;
+    private volatile IHandler invoker;
 
-    Event(Function<List<IHandler>, IHandler> eventLoopFactory) {
-        Preconditions.checkNotNull(eventLoopFactory);
-
-        this.eventLoopFactory = eventLoopFactory;
-        this.eventHandlers = new ArrayList<>(4);
-        this.eventLoop = null;
+    Event(Function<List<IHandler>, IHandler> invokerFactory) {
+        this.invokerFactory = Preconditions.checkNotNull(invokerFactory);
+        this.invoker = invokerFactory.apply(List.of());
     }
 
     @Override
-    public void register(IHandler handler) {
+    public synchronized void register(IHandler handler) {
         Preconditions.checkNotNull(handler);
         this.eventHandlers.add(handler);
-        this.eventLoop = null;
+        this.invoker = this.invokerFactory.apply(ImmutableList.copyOf(this.eventHandlers));
     }
 
     @Override
     public IHandler invoker() {
-        if (this.eventLoop == null) {
-            var handlers = ImmutableList.copyOf(this.eventHandlers);
-            this.eventLoop = this.eventLoopFactory.apply(handlers);
-        }
-        return this.eventLoop;
-    }
-
-    public static <IHandler> Event<IHandler> of(Function<List<IHandler>, IHandler> callbackFactory) {
-        return new Event<>(callbackFactory);
+        return this.invoker;
     }
 }

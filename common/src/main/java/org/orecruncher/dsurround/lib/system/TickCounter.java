@@ -1,8 +1,8 @@
 package org.orecruncher.dsurround.lib.system;
 
+import org.orecruncher.dsurround.eventing.IClientTickStart;
 import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
-import org.orecruncher.dsurround.eventing.ClientState;
 
 /**
  * Monotonically increasing tick count based on client ticks.
@@ -13,7 +13,7 @@ public final class TickCounter implements ITickCount {
     private long tickCount = 0;
 
     public TickCounter() {
-        ClientState.CLIENT_TICK_START_EVENT.register(client -> this.tickCount++, HandlerPriority.VERY_HIGH);
+        IClientTickStart.EVENT.register(client -> this.tickCount++, HandlerPriority.VERY_HIGH);
     }
 
     @Override

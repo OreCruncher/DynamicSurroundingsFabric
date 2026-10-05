@@ -1,14 +1,22 @@
 package org.orecruncher.dsurround.runtime.variables;
 
+import org.orecruncher.dsurround.lib.math.Motion;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
+import org.orecruncher.dsurround.lib.scripting.ArgType;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 
 public final class PlayerVariables extends VariableSet {
+
+    /**
+     * A registry id such as "minecraft:night_vision". Constant ids are parsed when the script is compiled, so a
+     * malformed id is reported as an error instead of failing (and being ignored) on every evaluation.
+     */
+    private static final ArgType<Identifier> RESOURCE_ID = ArgType.of("resource id", PlayerVariables::toResourceId);
 
     private final ILevelOracle levelOracle;
 
@@ -26,13 +34,14 @@ public final class PlayerVariables extends VariableSet {
     private boolean isRiding;
     private boolean isOnGround;
     private boolean isMoving;
-    private float health;
-    private float maxHealth;
-    private float foodLevel;
-    private float foodSaturationLevel;
-    private double x;
-    private double y;
-    private double z;
+    // Numeric values are stored boxed when updated each tick, so that reading them from scripts does not allocate
+    private Float health = 0F;
+    private Float maxHealth = 0F;
+    private Float foodLevel = 0F;
+    private Float foodSaturationLevel = 0F;
+    private Double x = 0D;
+    private Double y = 0D;
+    private Double z = 0D;
 
     public PlayerVariables(ILevelOracle levelOracle) {
         super("player");
@@ -57,16 +66,17 @@ public final class PlayerVariables extends VariableSet {
             this.isWet = player.isInWaterOrRain();
             this.isRiding = player.isPassenger();
             this.isOnGround = player.onGround();
-            this.isMoving = player.xo!= player.xOld;    // TODO: Need to figure out new moving calculation
+            // Ticked at the start of the client tick, so this is the move made during the last tick
+            this.isMoving = Motion.isMovingHorizontally(player.getX() - player.xo, player.getZ() - player.zo);
             this.health = player.getHealth();
             this.maxHealth = player.getMaxHealth();
-            this.foodLevel = hm.getFoodLevel();
+            this.foodLevel = (float) hm.getFoodLevel();
             this.foodSaturationLevel = hm.getSaturationLevel();
             this.x = player.getX();
             this.y = player.getY();
             this.z = player.getZ();
 
-            this.isSuffocating = !player.isCreative() && player.getAirSupply() < 0;
+            this.isSuffocating = isSuffocating(player.isCreative(), player.getAirSupply());
             this.canRainOn = this.levelOracle.canSeeSky(player.blockPosition().offset(0, 2, 0));
             this.canSeeSky = this.canRainOn && this.levelOracle.getTopSolidOrLiquidBlock(player.blockPosition()).getY() <= player.blockPosition().getY();
 
@@ -82,13 +92,14 @@ public final class PlayerVariables extends VariableSet {
             this.isWet = false;
             this.isRiding = false;
             this.isOnGround = false;
+            this.isMoving = false;
             this.health = 20F;
             this.maxHealth = 20F;
             this.foodLevel = 20F;
             this.foodSaturationLevel = 20F;
-            this.x = 0;
-            this.y = 0;
-            this.z = 0;
+            this.x = 0D;
+            this.y = 0D;
+            this.z = 0D;
 
             this.isSuffocating = false;
             this.canRainOn = false;
@@ -98,38 +109,58 @@ public final class PlayerVariables extends VariableSet {
 
     @Override
     public void configure(IConfigureDefinition config) {
-        config.defineFunction(id("isCreative"), l -> this.isCreative);
-        config.defineFunction(id("isBurning"), l -> this.isBurning);
-        config.defineFunction(id("isSuffocating"), l -> this.isSuffocating);
-        config.defineFunction(id("isFlying"), l -> this.isFlying);
-        config.defineFunction(id("isSprinting"), l -> this.isSprinting);
-        config.defineFunction(id("isInLava"), l -> this.isInLava);
-        config.defineFunction(id("isInvisible"), l -> this.isInvisible);
-        config.defineFunction(id("isInWater"), l -> this.isInWater);
-        config.defineFunction(id("isMoving"), l -> this.isMoving);
-        config.defineFunction(id("isWet"), l -> this.isWet);
-        config.defineFunction(id("isRiding"), l -> this.isRiding);
-        config.defineFunction(id("isOnGround"), l -> this.isOnGround);
-        config.defineFunction(id("canRainOn"), l -> this.canRainOn);
-        config.defineFunction(id("canSeeSky"), l -> this.canSeeSky);
-        config.defineFunction(id("getHealth"), l -> this.health);
-        config.defineFunction(id("getMaxHealth"), l -> this.maxHealth);
-        config.defineFunction(id("getFoodLevel"), l -> this.foodLevel);
-        config.defineFunction(id("getFoodSaturationLevel"), l -> this.foodSaturationLevel);
-        config.defineFunction(id("getX"), l -> this.x);
-        config.defineFunction(id("getY"), l -> this.y);
-        config.defineFunction(id("getZ"), l -> this.z);
-        config.defineFunction(id("hasEffect"), 1, false,l -> this.hasEffect(l[0].toString()));
+        config.property(id("isCreative"), () -> this.isCreative);
+        config.property(id("isBurning"), () -> this.isBurning);
+        config.property(id("isSuffocating"), () -> this.isSuffocating);
+        config.property(id("isFlying"), () -> this.isFlying);
+        config.property(id("isSprinting"), () -> this.isSprinting);
+        config.property(id("isInLava"), () -> this.isInLava);
+        config.property(id("isInvisible"), () -> this.isInvisible);
+        // Eyes under water, not feet in water: player.isUnderWater(). Kept as it is for existing scripts.
+        config.property(id("isInWater"), () -> this.isInWater);
+        config.property(id("isMoving"), () -> this.isMoving);
+        config.property(id("isWet"), () -> this.isWet);
+        config.property(id("isRiding"), () -> this.isRiding);
+        config.property(id("isOnGround"), () -> this.isOnGround);
+        config.property(id("canRainOn"), () -> this.canRainOn);
+        config.property(id("canSeeSky"), () -> this.canSeeSky);
+        config.property(id("getHealth"), () -> this.health);
+        config.property(id("getMaxHealth"), () -> this.maxHealth);
+        config.property(id("getFoodLevel"), () -> this.foodLevel);
+        config.property(id("getFoodSaturationLevel"), () -> this.foodSaturationLevel);
+        config.property(id("getX"), () -> this.x);
+        config.property(id("getY"), () -> this.y);
+        config.property(id("getZ"), () -> this.z);
+        config.function(id("hasEffect"))
+                .param(RESOURCE_ID)
+                .handler(args -> this.hasEffect(args.get(0)));
     }
 
-    private boolean hasEffect(String effect) {
-        try {
-            var id = Identifier.parse(effect);
-            var r = RegistryUtils.getRegistryEntry(Registries.MOB_EFFECT, id).orElseThrow();
-            return GameUtils.getPlayer().map(p -> p.hasEffect(r)).orElse(false);
-        } catch (Throwable ignore) {
-        }
+    /**
+     * Out of air. Air runs down to -20 before drowning damage resets it to 0, so both count; checking only below
+     * zero dropped out for a tick each cycle.
+     */
+    static boolean isSuffocating(boolean isCreative, int airSupply) {
+        return !isCreative && airSupply <= 0;
+    }
 
-        return false;
+    private static Identifier toResourceId(Object value) {
+        if (value instanceof Identifier id)
+            return id;
+        if (!(value instanceof String text))
+            return null;
+        var id = Identifier.tryParse(text);
+        return id != null ? id : ArgType.reject("invalid resource id '%s'".formatted(text));
+    }
+
+    private boolean hasEffect(Identifier effect) {
+        // An id that is well-formed but not registered (such as an effect from a mod that is not installed) is
+        // not an error: the player simply does not have it.
+        var player = GameUtils.getPlayer();
+        if (player.isEmpty())
+            return false;
+        return RegistryUtils.getRegistryEntry(Registries.MOB_EFFECT, effect)
+                .map(r -> player.get().hasEffect(r))
+                .orElse(false);
     }
 }

@@ -6,8 +6,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
-import org.orecruncher.dsurround.eventing.ClientState;
+import org.orecruncher.dsurround.eventing.IBlockUpdates;
+import org.orecruncher.dsurround.eventing.IClientTickEnd;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -27,7 +27,7 @@ public class BlockUpdateHandler {
     private static final LongSet updatedPositions = new LongOpenHashSet(4 * 1024);
 
     static {
-        ClientState.CLIENT_TICK_END_EVENT.register(BlockUpdateHandler::tick);
+        IClientTickEnd.EVENT.register(BlockUpdateHandler::tick);
     }
 
     /**
@@ -46,15 +46,12 @@ public class BlockUpdateHandler {
             // We are on the client thread - fast path
             addPosition(pos);
         } else {
-            // Not on client thread; schedule it
-            try {
-                CLIENT_TASKING.execute(() -> {
-                    Library.LOGGER.debug("blockPositionUpdate invoked from non-client thread!");
-                    addPosition(pos);
-                });
-            } catch (Throwable t) {
-                Library.LOGGER.error(t, "Unable to add block position to block update handler list");
-            }
+            // Not on client thread; queue it for the client thread. No need to wait: positions are only read at the
+            // end of the client tick.
+            CLIENT_TASKING.submit(() -> {
+                Library.LOGGER.debug("blockPositionUpdate invoked from non-client thread!");
+                addPosition(pos);
+            });
         }
     }
 
@@ -66,7 +63,7 @@ public class BlockUpdateHandler {
      */
     private static void tick(Minecraft ignored) {
         var updates = expand();
-        updates.ifPresent(positions -> ClientEventHooks.BLOCK_UPDATES_EVENT.invoker().onBlockUpdates(positions));
+        updates.ifPresent(positions -> IBlockUpdates.EVENT.invoker().onBlockUpdates(positions));
     }
 
     private static void addPosition(BlockPos pos) {

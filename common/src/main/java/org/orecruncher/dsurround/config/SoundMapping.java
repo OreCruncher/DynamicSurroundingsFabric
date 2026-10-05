@@ -4,7 +4,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.data.SoundMappingConfigRule;
-import org.orecruncher.dsurround.lib.IMatcher;
+import org.orecruncher.dsurround.lib.codec.IMatcher;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 
 import java.util.Optional;
@@ -69,7 +69,9 @@ public record SoundMapping(Identifier soundEvent, ObjectArray<Mapping> rules) {
         var last = this.rules.getLast();
         if (!last.isDefaultRule())
             throw new RuntimeException("Last rule in sound mapping configuration is not default");
-        this.rules.remove(last);
+        // removeLast keeps the order of the other rules; remove(last) would find it by equality and fill its
+        // place with whatever is last
+        this.rules.removeLast();
         this.rules.add(mapping);
         this.rules.add(last);
     }

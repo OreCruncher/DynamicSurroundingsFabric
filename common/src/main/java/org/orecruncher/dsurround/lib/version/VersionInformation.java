@@ -1,13 +1,17 @@
 package org.orecruncher.dsurround.lib.version;
 
-import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import joptsimple.internal.Strings;
+import org.jetbrains.annotations.Nullable;
 
+import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * The mod's published version information (versions.json): for each Minecraft version, the releases with their
+ * release notes links, and the recommended release.
+ */
 public record VersionInformation(Map<SemanticVersion, Map<SemanticVersion, String>> releases, Map<SemanticVersion, SemanticVersion> recommended) {
 
     private static final Codec<Map<SemanticVersion, String>> CODEC_RELEASES = Codec.unboundedMap(SemanticVersion.CODEC, Codec.STRING).stable();
@@ -21,27 +25,43 @@ public record VersionInformation(Map<SemanticVersion, Map<SemanticVersion, Strin
             ).apply(instance, VersionInformation::new));
 
     /**
-     * Gets the newest release as compared to the current version information provided.
-     * @param minecraftVersion  Version of Minecraft installed
-     * @param modVersion        Mod version installed
-     * @return Pair containing the newest version and associated information
+     * The recommended release for a Minecraft version.
+     *
+     * @param version         the release
+     * @param releaseNotesUrl a link to its release notes, or null if there is none
      */
-    public Optional<Pair<SemanticVersion, String>> getNewestVersion(SemanticVersion minecraftVersion, SemanticVersion modVersion) {
+    public record Recommendation(SemanticVersion version, @Nullable String releaseNotesUrl) {
+    }
 
+    /**
+     * Gets the recommended release for the Minecraft version, with a link to its release notes if versions.json
+     * has one. Some older entries have text rather than a link; those are treated as having none.
+     *
+     * @param minecraftVersion Version of Minecraft installed
+     * @return the recommendation, or empty if there is none for this Minecraft version
+     */
+    public Optional<Recommendation> getRecommendation(SemanticVersion minecraftVersion) {
         var recommendation = this.recommended.get(minecraftVersion);
         if (recommendation == null)
             return Optional.empty();
 
-        if (modVersion.compareTo(recommendation) < 0) {
-            String releaseNotes = Strings.EMPTY;
-            var releases = this.releases.get(minecraftVersion);
-            if (releases != null) {
-                releaseNotes = releases.get(recommendation);
-                if (releaseNotes == null)
-                    releaseNotes = Strings.EMPTY;
-            }
-            return Optional.of(Pair.of(recommendation, releaseNotes));
+        var releases = this.releases.get(minecraftVersion);
+        var releaseNotes = releases == null ? null : releases.get(recommendation);
+        return Optional.of(new Recommendation(recommendation, isWebLink(releaseNotes) ? releaseNotes : null));
+    }
+
+    /**
+     * Whether {@code text} is an http or https link, which is all a chat link should open.
+     */
+    static boolean isWebLink(@Nullable String text) {
+        if (text == null || text.isBlank())
+            return false;
+        try {
+            var uri = new URI(text);
+            var scheme = uri.getScheme();
+            return ("https".equalsIgnoreCase(scheme) || "http".equalsIgnoreCase(scheme)) && uri.getHost() != null;
+        } catch (Exception e) {
+            return false;
         }
-        return Optional.empty();
     }
 }

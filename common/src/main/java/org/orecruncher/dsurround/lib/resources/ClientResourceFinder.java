@@ -1,18 +1,22 @@
 package org.orecruncher.dsurround.lib.resources;
 
-import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.Codec;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
-import java.nio.charset.Charset;
 import java.util.Collection;
-import java.util.HashMap;
 
 import static org.orecruncher.dsurround.Configuration.Flags.RESOURCE_LOADING;
 
+/**
+ * Finds an asset file, such as sounds.json, in every namespace of the mod jars and resource packs. Not limited to
+ * installed mods: like vanilla, it takes a resource pack's own namespaces too (a pack can add "mypack:" sounds).
+ * <p>
+ * Looks the file up in each namespace, as vanilla's sound manager does, rather than listing it: listing is for
+ * folders, and not every pack implementation lists a single file (NeoForge's mod packs don't).
+ */
 public class ClientResourceFinder extends AbstractResourceFinder {
 
     private final ResourceManager resourceManager;
@@ -24,35 +28,19 @@ public class ClientResourceFinder extends AbstractResourceFinder {
 
     @Override
     public <T> Collection<DiscoveredResource<T>> find(Codec<T> codec, String assetPath) {
-
-        var results = new HashMap<Identifier, Collection<DiscoveredResource<T>>>();
-
-        this.logger.debug(RESOURCE_LOADING, "[%s] - Locating assets", assetPath);
-
-        var assets = this.resourceManager.listResourceStacks(assetPath, location -> true);
-        if (assets.isEmpty()) {
-            this.logger.debug(RESOURCE_LOADING, "[%s] - No assets found", assetPath);
-            return ImmutableList.of();
+        var results = new ObjectArray<DiscoveredResource<T>>();
+        // Sorted, so the files are read in the same order every time
+        var namespaces = this.resourceManager.getNamespaces().stream().sorted().toList();
+        for (var namespace : namespaces) {
+            var location = Identifier.tryBuild(namespace, assetPath);
+            if (location == null)
+                continue;
+            var stack = this.resourceManager.getResourceStack(location);
+            if (!stack.isEmpty())
+                this.logger.debug(RESOURCE_LOADING, "[%s] - %d found", location, stack.size());
+            for (var resource : stack)
+                this.readInto(location, namespace, location, resource::open, codec, results);
         }
-
-        this.logger.debug(RESOURCE_LOADING, "[%s] - %d entries found", assetPath, assets.size());
-        for (var kvp : assets.entrySet()) {
-            this.logger.debug(RESOURCE_LOADING, "[%s] - Processing %s", assetPath, kvp.getKey());
-            var resultList = results.computeIfAbsent(kvp.getKey(), i -> new ObjectArray<>());
-
-            for (var resource : kvp.getValue()) {
-                try (var inputStream = resource.open()) {
-                    var assetBytes = inputStream.readAllBytes();
-                    var assetString = new String(assetBytes, Charset.defaultCharset());
-                    var entity = this.decode(kvp.getKey(), assetString, codec);
-                    entity.ifPresent(e -> resultList.add(new DiscoveredResource<>(kvp.getKey().getNamespace(), e)));
-                    this.logger.debug(RESOURCE_LOADING, "[%s] - Completed decode of %s", assetPath, kvp.getKey());
-                } catch (Throwable t) {
-                    this.logger.error(t, "[%s] - Unable to read resource stream for path %s", assetPath, kvp.getKey());
-                }
-            }
-        }
-
-        return results.values().stream().flatMap(Collection::stream).toList();
+        return results;
     }
 }

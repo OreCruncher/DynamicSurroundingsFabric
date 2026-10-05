@@ -17,10 +17,9 @@ public class ToolbarEffect extends EntityEffectBase {
 
     @Override
     public void tick(final EntityEffectInfo info) {
-        if (info.isRemoved())
+        // Only players have a toolbar; a pack could tag other entities
+        if (!(info.getEntity() instanceof Player player))
             return;
-
-        final Player player = (Player) info.getEntity();
         var inventory = player.getInventory();
 
         // First time through we want to not trigger the equip sound
@@ -28,7 +27,7 @@ public class ToolbarEffect extends EntityEffectBase {
             this.lastSlot = inventory.getSelectedSlot();
         } else if (this.lastSlot != inventory.getSelectedSlot()) {
             final ItemStack currentStack = inventory.getItem(inventory.getSelectedSlot());
-            if (!currentStack.isEmpty() & !player.isSpectator()) {
+            if (!currentStack.isEmpty() && !player.isSpectator()) {
                 this.itemLibrary.getItemEquipSound(currentStack).ifPresent(factory -> {
                     SoundInstance instance;
                     if (info.isCurrentPlayer(player))

@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.config.data;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.Identifier;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
@@ -26,11 +27,11 @@ public record DimensionConfigRule(
                 .apply(instance, DimensionConfigRule::new));
 
     @Override
-    public String toString() {
+    public @NotNull String toString() {
         final StringBuilder builder = new StringBuilder();
         builder.append("dimensionId: ").append(this.dimensionId);
         this.seaLevel.ifPresent(v -> builder.append(" seaLevel: ").append(v));
-        this.skyHeight.ifPresent(v -> builder.append(" seaLevel: ").append(v));
+        this.skyHeight.ifPresent(v -> builder.append(" skyHeight: ").append(v));
         this.cloudHeight.ifPresent(v -> builder.append(" cloudHeight: ").append(v));
         this.alwaysOutside.ifPresent(v -> builder.append(" alwaysOutside: ").append(v));
         this.playBiomeSounds.ifPresent(v -> builder.append(" playBiomeSounds: ").append(v));
@@ -38,16 +39,4 @@ public record DimensionConfigRule(
         return builder.toString();
     }
 
-    @Override
-    public int hashCode() {
-        return this.dimensionId.hashCode();
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (obj instanceof final DimensionConfigRule dc) {
-            return this.dimensionId.equals(dc.dimensionId);
-        }
-        return false;
-    }
 }

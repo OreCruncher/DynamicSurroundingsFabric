@@ -7,6 +7,8 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
@@ -16,9 +18,13 @@ class WaterySurfaceAccent implements IFootstepAccentProvider {
     private static final Identifier WETSURFACE_FACTORY = Constants.asId("footstep/wetsurface");
 
     private final Configuration config;
+    private final ISoundLibrary soundLibrary;
+    private final ITagLibrary tagLibrary;
 
-    WaterySurfaceAccent(Configuration config) {
+    WaterySurfaceAccent(Configuration config, ISoundLibrary soundLibrary, ITagLibrary tagLibrary) {
         this.config = config;
+        this.soundLibrary = soundLibrary;
+        this.tagLibrary = tagLibrary;
     }
 
     @Override
@@ -32,13 +38,13 @@ class WaterySurfaceAccent implements IFootstepAccentProvider {
         boolean addAcoustic = isWaterLogged;
 
         if (!addAcoustic)
-            addAcoustic = FootstepAccents.TAG_LIBRARY.is(BlockEffectTags.WATERY_STEP, state);
+            addAcoustic = this.tagLibrary.is(BlockEffectTags.WATERY_STEP, state);
 
         // Check the block above because it may be flagged as having a wet effect, like a lily pad.
         if (!addAcoustic) {
             var world = entity.level();
             var up = pos.above();
-            addAcoustic = FootstepAccents.TAG_LIBRARY.is(BlockEffectTags.WATERY_STEP, world.getBlockState(up));
+            addAcoustic = this.tagLibrary.is(BlockEffectTags.WATERY_STEP, world.getBlockState(up));
 
             if (!addAcoustic && world.isRainingAt(up)) {
                 // Get the precipitation type at the location
@@ -48,7 +54,7 @@ class WaterySurfaceAccent implements IFootstepAccentProvider {
         }
 
         if (addAcoustic)
-            SOUND_LIBRARY.getSoundFactory(WETSURFACE_FACTORY)
+            this.soundLibrary.getSoundFactory(WETSURFACE_FACTORY)
                     .ifPresent(acoustics::add);
     }
 }

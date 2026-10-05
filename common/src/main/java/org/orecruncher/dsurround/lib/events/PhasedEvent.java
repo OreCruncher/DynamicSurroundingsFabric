@@ -2,69 +2,68 @@ package org.orecruncher.dsurround.lib.events;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import org.orecruncher.dsurround.lib.collections.Pair;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 
 /**
- * Simple implementation of IEvent for callback processing.
+ * An event whose handlers are registered with a phase and called in phase order; handlers in the same phase are
+ * called in registration order.
+ * <p>
+ * Thread-safe: registering builds a new invoker, so {@link #invoker()} is a plain read.
  *
- * @param <IHandler> The type of information passed into callback handlers
+ * @param <IHandler> The handler interface
  */
 final class PhasedEvent<IHandler> implements IPhasedEvent<IHandler> {
 
-    private final ImmutableList<EventPhase> phasedOrdering;
-    private final List<Pair<Integer, IHandler>> eventHandlers = new ArrayList<>(10);
-    private final Function<List<IHandler>, IHandler> eventLoopFactory;
-    private IHandler eventLoop;
+    private record Registration<H>(int phaseIndex, H handler) {
+    }
 
-    PhasedEvent(ImmutableList<EventPhase> phasedOrdering, Function<List<IHandler>, IHandler> eventLoopFactory) {
-        Preconditions.checkNotNull(phasedOrdering);
-        Preconditions.checkArgument(!phasedOrdering.isEmpty(), "At least one entry needs to be provided");
-        Preconditions.checkNotNull(eventLoopFactory);
+    private final ImmutableList<EventPhase> phaseOrdering;
+    // Kept sorted by phase index, registration order within a phase
+    private final List<Registration<IHandler>> registrations = new ArrayList<>(10);
+    private final Function<List<IHandler>, IHandler> invokerFactory;
+    private volatile IHandler invoker;
 
-        this.phasedOrdering = phasedOrdering;
-        this.eventLoopFactory = eventLoopFactory;
+    PhasedEvent(ImmutableList<EventPhase> phaseOrdering, Function<List<IHandler>, IHandler> invokerFactory) {
+        Preconditions.checkNotNull(phaseOrdering);
+        Preconditions.checkArgument(!phaseOrdering.isEmpty(), "At least one entry needs to be provided");
+        this.phaseOrdering = phaseOrdering;
+        this.invokerFactory = Preconditions.checkNotNull(invokerFactory);
+        this.invoker = invokerFactory.apply(List.of());
     }
 
     @Override
     public void register(IHandler handler) {
-        Preconditions.checkNotNull(handler);
-
-        // Register the handler with the default phase
         this.register(handler, EventPhase.DEFAULT);
     }
 
     @Override
-    public IHandler invoker() {
-        if (this.eventLoop == null) {
-            // Sort the handlers based on priorities, and then construct
-            // a new event loop
-            this.eventHandlers.sort(Pair.comparingByFirst());
-            var handlerList = ImmutableList.copyOf(this.eventHandlers.stream().map(Pair::second).iterator());
-            this.eventLoop = this.eventLoopFactory.apply(handlerList);
-        }
-        return this.eventLoop;
-    }
-
-    @Override
-    public void register(IHandler handler, EventPhase phase) {
+    public synchronized void register(IHandler handler, EventPhase phase) {
         Preconditions.checkNotNull(handler);
         Preconditions.checkNotNull(phase);
 
-        this.eventHandlers.add(Pair.of(this.getPriority(phase), handler));
-        this.eventLoop = null;
+        int phaseIndex = this.getPhaseIndex(phase);
+
+        // Insert after every handler of the same or an earlier phase
+        int insertAt = this.registrations.size();
+        while (insertAt > 0 && this.registrations.get(insertAt - 1).phaseIndex() > phaseIndex)
+            insertAt--;
+        this.registrations.add(insertAt, new Registration<>(phaseIndex, handler));
+
+        this.invoker = this.invokerFactory.apply(this.registrations.stream().map(Registration::handler).collect(ImmutableList.toImmutableList()));
     }
 
-    private int getPriority(EventPhase phase) {
-        var index = this.phasedOrdering.indexOf(phase);
+    @Override
+    public IHandler invoker() {
+        return this.invoker;
+    }
+
+    private int getPhaseIndex(EventPhase phase) {
+        var index = this.phaseOrdering.indexOf(phase);
         if (index == -1)
-            throw new IllegalArgumentException(String.format("The event does not understand phase '%s'", phase.toString()));
+            throw new IllegalArgumentException(String.format("The event does not understand phase '%s'", phase));
         return index;
-    }
-
-    public static <IHandler> IPhasedEvent<IHandler> of(EventPhases phasedOrdering, Function<List<IHandler>, IHandler> function) {
-        return new PhasedEvent<>(phasedOrdering.getPhases(), function);
     }
 }

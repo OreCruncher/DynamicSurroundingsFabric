@@ -9,10 +9,10 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import org.orecruncher.dsurround.config.libraries.AssetLibraryEvent;
-import org.orecruncher.dsurround.eventing.ClientState;
-import org.orecruncher.dsurround.lib.CachingSupplier;
-import org.orecruncher.dsurround.lib.DayCycle;
+import org.orecruncher.dsurround.eventing.IReloadEvent;
+import org.orecruncher.dsurround.eventing.IClientLevelLoad;
+import org.orecruncher.dsurround.lib.function.CachingSupplier;
+import org.orecruncher.dsurround.lib.time.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
@@ -32,8 +32,8 @@ public final class LevelOracle implements ILevelOracle {
         this.level = CachingSupplier.from(() -> GameUtils.getMC().level);
 
         // Hook the level load event so that we can clear cached information
-        ClientState.CLIENT_LEVEL_LOAD_EVENT.register(_ -> this.level.clear(), HandlerPriority.HIGH);
-        AssetLibraryEvent.RELOAD.register((_, _) -> this.level.clear(), HandlerPriority.HIGH);
+        IClientLevelLoad.EVENT.register(_ -> this.level.clear(), HandlerPriority.HIGH);
+        IReloadEvent.EVENT.register((_, _) -> this.level.clear(), HandlerPriority.HIGH);
     }
 
     @Override
@@ -43,7 +43,8 @@ public final class LevelOracle implements ILevelOracle {
 
     @Override
     public long worldTime() {
-        return this.level.get().getGameTime();
+        // The day clock, as Level.getDayTime() was: follows /time set and sleeping through the night
+        return this.level.get().getDefaultClockTime();
     }
 
     @Override
@@ -142,8 +143,8 @@ public final class LevelOracle implements ILevelOracle {
     }
 
     @Override
-    public boolean doesBlockEntityExist(final Predicate<BlockEntity> predicate) {
-        return LevelCompat.doesBlockEntityExist(this.level.get(), predicate);
+    public boolean doesBlockEntityExistNear(final Vec3 center, final double range, final Predicate<BlockEntity> predicate) {
+        return LevelCompat.doesBlockEntityExistNear(this.level.get(), center, range, predicate);
     }
 
     private static Vec3 getPlayerPosition() {

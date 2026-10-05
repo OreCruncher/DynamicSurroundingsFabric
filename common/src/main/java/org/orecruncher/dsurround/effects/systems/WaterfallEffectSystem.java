@@ -1,385 +1,121 @@
 package org.orecruncher.dsurround.effects.systems;
 
-import com.google.common.collect.ImmutableSet;
-import it.unimi.dsi.fastutil.Pair;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import net.minecraft.client.particle.Particle;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.Vec3i;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.server.level.ParticleStatus;
-import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.SupportType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.FlowingFluid;
-import net.minecraft.world.level.material.FluidState;
-import org.jetbrains.annotations.NotNull;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
-import org.orecruncher.dsurround.effects.BlockEffectUtils;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IEffectSystem;
-import org.orecruncher.dsurround.effects.blocks.AbstractParticleEmitterEffect;
-import org.orecruncher.dsurround.effects.particles.WaterfallCascade;
-import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.sound.*;
-import org.orecruncher.dsurround.tags.FluidTags;
+import org.orecruncher.dsurround.sound.IAudioPlayer;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
-import static org.orecruncher.dsurround.effects.BlockEffectUtils.HAS_FLUID;
-
+/**
+ * Waterfalls: an effect wherever falling water lands (see {@link WaterfallEffect}), with its splashes, mist and foam,
+ * and the sound of the nearest and biggest of them (see {@link WaterfallSounds}). This finds them as blocks are
+ * scanned, and keeps the effects and their sounds in step.
+ */
 public class WaterfallEffectSystem extends AbstractEffectSystem implements IEffectSystem {
 
-    private static final int SOUND_CHECK_INTERVAL = 4;
-    private static final int SOUND_INSTANCE_CAP = 32;
-    private final static Vec3i[] CARDINAL_OFFSETS = {
-            new Vec3i(-1, 0, 0),
-            new Vec3i(1, 0, 0),
-            new Vec3i(0, 0, -1),
-            new Vec3i(0, 0, 1)
-    };
+    private final WaterfallSounds sounds;
 
-    private static final ISoundFactory[] ACOUSTICS = new ISoundFactory[BlockEffectUtils.MAX_STRENGTH + 1];
+    // Waterfalls found this tick whose column height changed; reused between ticks
+    private final LongArrayList staleStrengths = new LongArrayList();
 
-    static {
-        var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
-
-        var factory = soundLibrary.getSoundFactory(Constants.asId("waterfalls/0")).orElseThrow();
-        Arrays.fill(ACOUSTICS, factory);
-
-        ACOUSTICS[2] = ACOUSTICS[3] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/1")).orElseThrow();
-        ACOUSTICS[4] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/2")).orElseThrow();
-        ACOUSTICS[5] = ACOUSTICS[6] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/3")).orElseThrow();
-        ACOUSTICS[7] = ACOUSTICS[8] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/4")).orElseThrow();
-        ACOUSTICS[9] = ACOUSTICS[10] = soundLibrary.getSoundFactory(Constants.asId("waterfalls/5")).orElseThrow();
-    }
-
-    // Keep track of sound plays outside the effect.
-    private final IAudioPlayer audioPlayer;
-    private final Long2ObjectOpenHashMap<BackgroundSoundLoop> waterfallSoundInstances = new Long2ObjectOpenHashMap<>();
-    private long soundCheckThrottle;
-
-    public WaterfallEffectSystem(IModLog logger, Configuration config) {
-        super(logger, config,"Waterfall");
-        this.audioPlayer = ContainerManager.resolve(IAudioPlayer.class);
-        this.soundCheckThrottle = 0;
+    public WaterfallEffectSystem(IModLog logger, Configuration config, IAudioPlayer audioPlayer) {
+        super(logger, config, "Waterfall");
+        this.sounds = new WaterfallSounds(logger, this.systemName, audioPlayer);
     }
 
     @Override
     public boolean isEnabled() {
-        return this.config.blockEffects.waterfallsEnabled;
+        return this.config.waterfallOptions.enableWaterfalls;
+    }
+
+    @Override
+    public int getDiagnosticColor() {
+        return ColorPalette.TURQUOISE.getValue();
+    }
+
+    @Override
+    public void describeEffect(IBlockEffect effect, Consumer<String> lines) {
+        super.describeEffect(effect, lines);
+        lines.accept(this.sounds.hasSound(effect.getPosIndex()) ? "sound: playing" : "sound: none");
+        if (effect instanceof WaterfallEffect waterfall) {
+            lines.accept("splash limit " + waterfall.particleLimit);
+            if (WaterfallEffect.OPTIONS.enableMist)
+                lines.accept("mist");
+            if (WaterfallEffect.OPTIONS.enableFroth)
+                lines.accept("foam");
+        }
     }
 
     @Override
     public void clear() {
         super.clear();
-        this.waterfallSoundInstances.values().forEach(this.audioPlayer::stop);
-        this.waterfallSoundInstances.clear();
+        this.sounds.stopAll();
     }
 
     @Override
     public void tick(Predicate<IBlockEffect> processingPredicate) {
-        // Process the waterfall systems first. This should prune
-        // the junk prior to processing sound plays.  Note that the
-        // sound instance tracking collection should be kept in sync
-        // during this process.
+        // Process the waterfall effects first, which prunes those that have gone, before the sounds are brought up
+        // to date with them
         super.tick(processingPredicate);
+        this.refreshStaleStrengths();
 
-        // May need to flat out purge if water fall sounds
-        // are disabled.
-        if (!(this.isEnabled() && this.config.blockEffects.enableWaterfallSounds)) {
-            // Fast happy path for purge
-            if (this.waterfallSoundInstances.isEmpty())
-                return;
-            this.waterfallSoundInstances.values().forEach(this.audioPlayer::stop);
-            this.waterfallSoundInstances.clear();
-            return;
-        }
-
-        // Throttle these checks as it can be expensive
-        if (((++this.soundCheckThrottle) % SOUND_CHECK_INTERVAL) != 0)
-            return;
-
-        var player = GameUtils.getPlayer().orElseThrow();
-        var eyePosition = player.getEyePosition();
-
-        // Do a fancy evaluation to determine the desired sound play locations
-        var desiredLocations = this.getDesiredWaterfallSoundLocations();
-
-        // We need to process the existing waterfall effect instances
-        // to ensure the sounds are being played.
-        for (var system : this.systems.values()) {
-            var posIndex = system.getPosIndex();
-
-            var waterFallEffect = (WaterfallEffect) system;
-            var sound = this.waterfallSoundInstances.get(posIndex);
-
-            // If it is in a desired location, make it happen
-            if (desiredLocations.contains(posIndex)) {
-                if (sound == null) {
-                    int idx = Mth.clamp(waterFallEffect.getStrength(), 0, ACOUSTICS.length - 1);
-                    sound = ACOUSTICS[idx].createBackgroundSoundLoopAt(system.getPos());
-                    this.waterfallSoundInstances.put(posIndex, sound);
-                }
-
-                final boolean inRange = SoundInstanceHandler.inRange(eyePosition, sound, 4);
-                final boolean isDone = !this.audioPlayer.isPlaying(sound);
-
-                if (inRange && isDone) {
-                    this.audioPlayer.play(sound);
-                } else if (!inRange && !isDone) {
-                    this.audioPlayer.stop(sound);
-                }
-            } else if (sound != null) {
-                // Not in the list - cross it off
-                this.logger.debug("[%s] removing sound instance %s", this.systemName, sound.toString());
-                this.audioPlayer.stop(sound);
-                this.waterfallSoundInstances.remove(posIndex);
-            }
-        }
-
-        this.waterfallSoundInstances.values().removeIf(sound -> {
-           if (!this.systems.containsKey(sound.getPos().asLong())) {
-               this.logger.debug("[%s] Orphan sound removed: %s", this.systemName, sound.toString());
-               this.audioPlayer.stop(sound);
-               return true;
-           }
-           return false;
-        });
+        if (this.isEnabled() && this.config.waterfallOptions.enableSounds)
+            this.sounds.update(this.systems);
+        else
+            this.sounds.stopAll();
     }
 
-    protected Set<Long> getDesiredWaterfallSoundLocations() {
-        // The goal is to determine where waterfall sounds need to be played given that only
-        // a subset of instances will be utilized. To do this, we need to examine all
-        // the potential play locations and compare the effect of that sound as compared
-        // to its peers.  The results are ranked most effective to least effective, with
-        // a limit of SOUND_INSTANCE_CAP being returned.
-
-        // If waterfall sounds are disabled, there are no desirable locations, obviously
-        if (!this.config.blockEffects.enableWaterfallSounds || this.systems.isEmpty()) {
-            return ImmutableSet.of();
+    /**
+     * Replaces waterfalls whose column has grown or shrunk since they were created, so the splashes and sound match
+     * the new strength. Each waterfall recounts its column as part of its periodic validity check; this only acts
+     * on the ones that found a change. The old sound is stopped here and the next sound pass starts one for the new
+     * strength.
+     */
+    private void refreshStaleStrengths() {
+        for (var effect : this.systems.values()) {
+            if (((WaterfallEffect) effect).isStrengthStale())
+                this.staleStrengths.add(effect.getPosIndex());
         }
+        if (this.staleStrengths.isEmpty())
+            return;
 
-        var player = GameUtils.getPlayer().orElseThrow();
-
-        // The next possible happy path is if the number of active waterfall instances is less
-        // than the cap. All can be included.
-        if (this.systems.size() <= SOUND_INSTANCE_CAP)
-            return this.systems.values().stream()
-                    .filter(e -> shouldPlaySoundFilter(player.level(), e))
-                    .map(IBlockEffect::getPosIndex).collect(Collectors.toSet());
-
-        // This is the interesting path where we need to stack rank using an impact
-        // heuristic based on strength and distance to player.
-        return this.systems.values().stream()
-                .filter(e -> shouldPlaySoundFilter(player.level(), e))
-                .map(e -> {
-                    var effect = (WaterfallEffect)e;
-                    var posIndex = effect.getPosIndex();
-                    var strength = effect.getStrength();
-                    var pos = effect.getPosition();
-                    var weight = (strength * strength) / player.getEyePosition().distanceToSqr(pos);
-                    return Pair.of(weight, posIndex);
-                })
-                .sorted((e1, e2) -> -Double.compare(e1.key(), e2.key()))
-                .limit(SOUND_INSTANCE_CAP)
-                .map(Pair::value)
-                .collect(Collectors.toSet());
-    }
-
-    private static boolean shouldPlaySoundFilter(Level world, IBlockEffect effect) {
-        return TAG_LIBRARY.is(FluidTags.WATERFALL_SOUND, world.getFluidState(effect.getPos()));
+        for (int i = 0; i < this.staleStrengths.size(); i++) {
+            long posLong = this.staleStrengths.getLong(i);
+            var old = (WaterfallEffect) this.systems.get(posLong);
+            var replacement = old.rebuild();
+            old.remove();
+            this.onRemoveSystem(posLong);
+            if (replacement != null)
+                this.systems.put(posLong, replacement);
+        }
+        this.staleStrengths.clear();
     }
 
     @Override
     public void blockScan(Level world, BlockState state, BlockPos pos) {
-        // Steam jet can form if the blockState in question is a fluid block, there is an air block
-        // above, and there is a hot block adjacent.
-        if (canWaterfallSpawn(world, state, pos)) {
-            // Ignore if steam is already present.  This scan is due to a block update of some
-            // sort.
+        if (WaterfallEffect.canForm(world, state, pos)) {
+            // Ignore if a waterfall is already present. This scan is due to a block update of some sort.
             if (this.hasSystemAtPosition(pos))
                 return;
-
-            // We are going for spawn! The location of where the steam column starts
-            // is based on whether we have a fluid or a solid water block like a
-            // water cauldron.
-            var effect = createWaterfallEffect(world, state, pos);
-            this.systems.put(pos.asLong(), effect);
-        } else if (this.hasSystemAtPosition(pos)) {
-            this.onRemoveSystem(pos.asLong());
+            this.systems.put(pos.asLong(), WaterfallEffect.create(world, state, pos));
+        } else {
+            // The block no longer supports a waterfall: drop the effect and, through onRemoveSystem, its sound
+            this.blockUnscan(world, state, pos);
         }
     }
 
     @Override
     protected void onRemoveSystem(long posLong) {
-        // Do not unhook - this keeps the sound instance data
-        // in sync with the system data.
+        // Keeps the sounds in step with the effects
         super.onRemoveSystem(posLong);
-        var sound = this.waterfallSoundInstances.get(posLong);
-        if (sound != null) {
-            this.audioPlayer.stop(sound);
-            this.waterfallSoundInstances.remove(posLong);
-        }
-    }
-
-    @NotNull
-    private static WaterfallEffect createWaterfallEffect(Level world, BlockState state, BlockPos pos) {
-        var strength = BlockEffectUtils.countVerticalBlocks(world, pos, HAS_FLUID, 1);
-        final float height = state.getFluidState().getHeight(world, pos) + 0.1F;
-        return new WaterfallEffect(strength, world, pos, height);
-    }
-
-    private static boolean canWaterfallSpawn(Level world, BlockState state, BlockPos pos) {
-        return TAG_LIBRARY.is(FluidTags.WATERFALL_SOURCE, state.getFluidState()) && isValidWaterfallSource(world, pos);
-    }
-
-    private static boolean isValidWaterfallSource(Level world, BlockPos pos) {
-        if (world.getFluidState(pos.above()).isEmpty())
-            return false;
-        if (isUnboundedLiquid(world, pos)) {
-            var downPos = pos.below();
-            var blockState = world.getBlockState(downPos);
-            if (blockState.getFluidState().isSource() || blockState.isFaceSturdy(world, downPos, Direction.UP, SupportType.FULL))
-                return true;
-            return isBoundedLiquid(world, pos);
-        }
-        return false;
-    }
-
-    private static boolean isUnboundedLiquid(final Level provider, final BlockPos pos) {
-        var mutable = new BlockPos.MutableBlockPos();
-        for (final Vec3i cardinal_offset : CARDINAL_OFFSETS) {
-            final BlockPos tp = mutable.setWithOffset(pos, cardinal_offset);
-            final BlockState state = provider.getBlockState(tp);
-            if (state.isAir())
-                return true;
-            final FluidState fluidState = state.getFluidState();
-            final int height = fluidState.getAmount();
-            // Fluids with a height of 0 are empty.
-            if (height > 0 && height < FluidState.AMOUNT_FULL)
-                return true;
-        }
-
-        return false;
-    }
-
-    private static boolean isBoundedLiquid(Level provider, BlockPos pos) {
-        var mutable = new BlockPos.MutableBlockPos();
-        for (final Vec3i cardinal_offset : CARDINAL_OFFSETS) {
-            final BlockPos tp = mutable.setWithOffset(pos, cardinal_offset);
-            final BlockState state = provider.getBlockState(tp);
-            if (state.isAir())
-                return false;
-            final FluidState fluidState = state.getFluidState();
-            if (fluidState.isEmpty()) {
-                continue;
-            }
-            if (fluidState.hasProperty(FlowingFluid.FALLING))
-                return false;
-            final int height = fluidState.getAmount();
-            if (height > 0 && height < 8)
-                return false;
-        }
-
-        return true;
-    }
-
-    private static class WaterfallEffect extends AbstractParticleEmitterEffect {
-
-        private static final Configuration.BlockEffects CONFIG = ContainerManager.resolve(Configuration.BlockEffects.class);
-
-        protected final double deltaY;
-        protected int particleLimit;
-
-        public WaterfallEffect(final int strength, final Level world, final BlockPos loc, final double dY) {
-            super(strength, world, loc.getX() + 0.5D, loc.getY() + 0.5D, loc.getZ() + 0.5D, 4);
-            this.deltaY = loc.getY() + dY;
-            this.setSpawnCount((int) (strength * 2.5F));
-        }
-
-        public void setSpawnCount(final int limit) {
-            this.particleLimit = Mth.clamp(limit, 5, 20);
-        }
-
-        @Override
-        public boolean shouldRemove() {
-            // Check every half second
-            return (this.age % 10) == 0
-                    && !canWaterfallSpawn(this.world, this.world.getBlockState(this.position), this.position);
-        }
-
-        private int getSplashParticleSpawnCount() {
-            ParticleStatus state = GameUtils.getGameSettings().particles().get();
-            var count = switch (state) {
-                case MINIMAL -> 0;
-                case ALL -> this.particleLimit;
-                default -> this.particleLimit / 2;
-            };
-
-            if (count < 4)
-                return count;
-
-            var x = count / 2;
-            return RANDOM.nextInt(count - x) + x;
-        }
-
-        @Override
-        protected void handleParticles() {
-            if (!CONFIG.enableWaterfallParticles)
-                return;
-            super.handleParticles();
-        }
-
-        @Override
-        protected Collection<Particle> produceParticles() {
-
-            var particles = new ObjectArray<Particle>();
-
-            var particleCount = this.getSplashParticleSpawnCount();
-            for (int i = 0; i <= particleCount; i++) {
-                final double xOffset = RANDOM.nextFloat(-1.0F, 1.0F);
-                final double zOffset = RANDOM.nextFloat(-1.0F, 1.0F);
-
-                final double motionStr = (this.strength + 1) / 20D;
-                final double motionX = xOffset * motionStr;
-                final double motionZ = zOffset * motionStr;
-                final double motionY = 0.1D + RANDOM.nextFloat() * motionStr;
-
-                var posX = this.posX + xOffset;
-                var posZ = this.posZ + zOffset;
-
-                var particle = this.createParticle(ParticleTypes.SPLASH, posX, this.deltaY, posZ, motionX, motionY, motionZ);
-
-                particle.ifPresent(p -> {
-                    p.setParticleSpeed(motionX, motionY, motionZ);
-                    p.setLifetime(p.getLifetime() * 2);
-                    particles.add(p);
-                });
-
-            }
-
-            if (this.strength > 1) {
-                final double xOffset = RANDOM.nextFloat(-0.15F, 0.15F);
-                final double zOffset = RANDOM.nextFloat(-0.15F, 0.15F);
-                final double yOffset = RANDOM.nextFloat(-0.5F, 0.5F);
-                var level = GameUtils.getMC().level;
-                var cascadeParticle = WaterfallCascade.create(level, this.posX + xOffset, this.deltaY + yOffset, this.posZ + zOffset, this.strength);
-                particles.add(cascadeParticle);
-            }
-
-            return particles;
-        }
+        this.sounds.stop(posLong);
     }
 }

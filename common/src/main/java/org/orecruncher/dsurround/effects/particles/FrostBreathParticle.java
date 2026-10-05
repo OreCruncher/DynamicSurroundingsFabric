@@ -72,10 +72,12 @@ public class FrostBreathParticle extends SingleQuadParticle {
         return Layer.TRANSLUCENT;
     }
 
-    public float quadSize(float tickDelta) {
+    @Override
+    public float getQuadSize(float tickDelta) {
         return this.quadSize * Mth.clamp(((float)this.age + tickDelta) / (float)this.lifetime * 32.0F, 0.0F, 1.0F);
     }
 
+    @Override
     public void tick() {
         this.xo = this.x;
         this.yo = this.y;

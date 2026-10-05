@@ -3,7 +3,9 @@ package org.orecruncher.dsurround.processing.fog;
 import net.minecraft.client.renderer.fog.FogData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeManager;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
@@ -12,18 +14,17 @@ import org.orecruncher.dsurround.lib.GameUtils;
 
 public class BiomeFogRangeCalculator extends VanillaFogRangeCalculator {
 
-    private static final float SCALE_ADJUST = 0.002F;
+    // Per tick; a full fade takes about 8 seconds
+    private static final float SCALE_ADJUST = 0.006F;
 
     private final IBiomeLibrary biomeLibrary;
 
+    private final ScaleTransition scale = new ScaleTransition(SCALE_ADJUST);
     private BlockPos lastBlockPos;
-    private float activeScale;
-    private float targetScale;
 
     public BiomeFogRangeCalculator(IBiomeLibrary biomeLibrary, Configuration.FogOptions fogOptions) {
         super("Biome", fogOptions);
         this.biomeLibrary = biomeLibrary;
-        this.activeScale = this.targetScale = 0F;
         this.lastBlockPos = BlockPos.ZERO;
     }
 
@@ -35,54 +36,39 @@ public class BiomeFogRangeCalculator extends VanillaFogRangeCalculator {
     @Override
     @NotNull
     public FogData render(@NotNull final FogData data, float renderDistance, float partialTick) {
-
-        // Adjust the scale in the right direction
-        if (Float.compare(this.activeScale, this.targetScale) != 0) {
-            if (this.targetScale < this.activeScale) {
-                this.activeScale -= SCALE_ADJUST;
-                if (this.activeScale < this.targetScale)
-                    this.activeScale = this.targetScale;
-            } else if(this.targetScale > this.activeScale) {
-                this.activeScale += SCALE_ADJUST;
-                if (this.activeScale > this.targetScale)
-                    this.activeScale = this.targetScale;
-            }
-        }
-
-        if (Float.compare(this.activeScale, 0F) == 0)
+        var activeScale = this.scale.get(partialTick);
+        if (activeScale == 0F)
             return data;
 
-        var scale = 1F - this.activeScale;
-        var result = new FogData();
-        result.environmentalStart = data.environmentalStart * scale * scale;
-        result.environmentalEnd = data.environmentalEnd * scale;
-        return result;
+        var scale = 1F - activeScale;
+        return withRange(data, data.environmentalStart * scale * scale, data.environmentalEnd * scale);
     }
 
     @Override
     public void tick() {
         // Only need to sample if the player moves position
         var currentPosition = GameUtils.getPlayer().map(Entity::getOnPos).orElseThrow();
-        if (this.lastBlockPos.equals(currentPosition))
-            return;
-        this.lastBlockPos = currentPosition;
-        this.targetScale = this.sampleArea(currentPosition, 6);
+        if (!this.lastBlockPos.equals(currentPosition)) {
+            this.lastBlockPos = currentPosition;
+            this.scale.setTarget(this.sampleArea(currentPosition, 6));
+        }
+        this.scale.tick();
     }
 
     @Override
     public void disconnect() {
-        this.activeScale = this.targetScale = 0F;
+        this.scale.reset();
         this.lastBlockPos = BlockPos.ZERO;
     }
 
     private float sampleArea(BlockPos pos, int range) {
-        var level = GameUtils.getWorld().orElseThrow();
-        var iterator =BlockPos.withinManhattan(pos, range, range, range).iterator();
+        final BiomeManager biomeManager = GameUtils.getWorld().map(Level::getBiomeManager).orElseThrow();
+        var iterator = BlockPos.withinManhattan(pos, range, range, range).iterator();
         float intensityAccum = 0F;
         float intensityCount = 0;
         while(iterator.hasNext()) {
             var p = iterator.next();
-            final Biome b = level.getBiome(p).value();
+            final Biome b = biomeManager.getNoiseBiomeAtPosition(p).value();
             final BiomeInfo info = this.biomeLibrary.getBiomeInfo(b);
             intensityAccum += info.getFogDensity().getIntensity();
             intensityCount++;

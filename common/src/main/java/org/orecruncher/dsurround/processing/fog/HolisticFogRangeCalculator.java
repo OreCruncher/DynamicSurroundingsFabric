@@ -3,11 +3,14 @@ package org.orecruncher.dsurround.processing.fog;
 import net.minecraft.client.renderer.fog.FogData;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
+import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
+import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
+import org.orecruncher.dsurround.runtime.oracle.IMinecraftClock;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,12 +21,14 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
     protected final Configuration.FogOptions fogOptions;
     protected final ObjectArray<IFogRangeCalculator> calculators = new ObjectArray<>(3);
 
-    public HolisticFogRangeCalculator(IModLog logger, Configuration.FogOptions fogOptions) {
+    public HolisticFogRangeCalculator(IModLog logger, Configuration.FogOptions fogOptions, IBiomeLibrary biomeLibrary, ISeasonalInformation seasonInfo, IMinecraftClock clock, ILevelOracle levelOracle) {
         this.logger = ModLog.createChild(logger, "HolisticFogRangeCalculator");
         this.fogOptions = fogOptions;
-        this.calculators.add(ContainerManager.resolve(BiomeFogRangeCalculator.class));
-        this.calculators.add(ContainerManager.resolve(MorningFogRangeCalculator.class));
-        //this.calculators.add(ContainerManager.resolve(WeatherFogRangeCalculator.class));
+
+        this.calculators.add(new BiomeFogRangeCalculator(biomeLibrary, this.fogOptions));
+        this.calculators.add(new MorningFogRangeCalculator(seasonInfo, clock, levelOracle, this.fogOptions));
+        // Left out in the 26.2 port
+        //this.calculators.add(new WeatherFogRangeCalculator(this.fogOptions));
     }
 
     @Override

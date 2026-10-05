@@ -9,6 +9,7 @@ pluginManagement {
 
 rootProject.name = 'dsurround'
 
+include 'processor'
 include 'common'
 include 'fabric'
 include 'neoforge'

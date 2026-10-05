@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.sound;
 
-import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.minecraft.client.resources.sounds.ElytraOnPlayerSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.resources.Identifier;
@@ -28,7 +27,7 @@ public final class SoundInstanceHandler {
     private static final ITickCount TICK_COUNT = ContainerManager.resolve(ITickCount.class);
     private static final Configuration.SoundSystem SOUND_SYSTEM_CONFIG = ContainerManager.resolve(Configuration.SoundSystem.class);
 
-    private static final Object2LongOpenHashMap<Identifier> SOUND_CULL = new Object2LongOpenHashMap<>(32);
+    private static final SoundCullTracker SOUND_CULL = new SoundCullTracker();
 
     private static boolean isSoundBlocked(final Identifier id) {
         return SOUND_LIBRARY.isBlocked(id);
@@ -40,17 +39,9 @@ public final class SoundInstanceHandler {
 
     private static boolean isSoundCulledLogical(final Identifier sound) {
         int cullInterval = SOUND_SYSTEM_CONFIG.cullInterval;
-        if (cullInterval > 0 && isSoundCulled(sound)) {
-            final long lastOccurrence = SOUND_CULL.getLong(Objects.requireNonNull(sound));
-            final long currentTick = TICK_COUNT.getTickCount();
-            if ((currentTick - lastOccurrence) < cullInterval) {
-                return true;
-            } else {
-                // Set when it happened and fall through for remapping and stuff
-                SOUND_CULL.put(sound, currentTick);
-            }
-        }
-        return false;
+        return cullInterval > 0
+                && isSoundCulled(sound)
+                && SOUND_CULL.shouldCull(Objects.requireNonNull(sound), TICK_COUNT.getTickCount(), cullInterval);
     }
 
     /**
@@ -121,6 +112,11 @@ public final class SoundInstanceHandler {
                 Library.LOGGER.error(t, "Unable to set sound on sound instance");
             }
         }
+
+        // Still unresolved (resolving timed out or failed): no range to check against, so let it through
+        //noinspection ConstantValue
+        if (sound.getSound() == null)
+            return true;
 
         // If it is a loud sound, let it through
         if (sound.getVolume() > 1F)

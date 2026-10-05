@@ -5,7 +5,7 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.fog.FogData;
 import net.minecraft.client.renderer.fog.environment.AtmosphericFogEnvironment;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
+import org.orecruncher.dsurround.eventing.IFogRender;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinAtmosphericFogEnvironment {
 
     @Inject(method = "setupFog(Lnet/minecraft/client/renderer/fog/FogData;Lnet/minecraft/client/Camera;Lnet/minecraft/client/multiplayer/ClientLevel;FLnet/minecraft/client/DeltaTracker;)V", at = @At("RETURN"))
-    private static void dsurround$renderFog(FogData fog, Camera camera, ClientLevel level, float renderDistance, DeltaTracker deltaTracker, CallbackInfo ci) {
-        ClientEventHooks.FOG_RENDER_EVENT.invoker().onRenderFog(fog, renderDistance, deltaTracker.getGameTimeDeltaPartialTick(false));
+    private void dsurround$renderFog(FogData fog, Camera camera, ClientLevel level, float renderDistance, DeltaTracker deltaTracker, CallbackInfo ci) {
+        IFogRender.EVENT.invoker().onRenderFog(fog, renderDistance, deltaTracker.getGameTimeDeltaPartialTick(false));
     }
 }

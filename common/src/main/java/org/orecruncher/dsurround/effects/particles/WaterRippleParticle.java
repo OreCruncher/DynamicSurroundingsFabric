@@ -14,6 +14,9 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
 public class WaterRippleParticle extends SingleQuadParticle {
 
+    // Lays the quad flat on the water. renderRotatedQuad() only reads it, so one instance serves every ripple.
+    private static final Quaternionf FLAT = new Quaternionf().rotateX((float) Math.toRadians(-90f));
+
     private final WaterRippleStyle rippleStyle;
     private final SpriteSet spriteProvider;
     private final LifetimeAlpha lifetimeAlpha;

@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.runtime.variables;
 
-import org.orecruncher.dsurround.lib.DayCycle;
+import org.orecruncher.dsurround.lib.time.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
@@ -10,8 +10,9 @@ public final class DiurnalVariables extends VariableSet {
 
     private final ILevelOracle levelOracle;
 
-    private float moonPhaseFactor;
-    private float celestialAngle;
+    // Numeric values are stored boxed when updated each tick, so that reading them from scripts does not allocate
+    private Float moonPhaseFactor = 0F;
+    private Float celestialAngle = 0F;
     private boolean isDay;
     private boolean isNight;
     private boolean isSunrise;
@@ -32,7 +33,8 @@ public final class DiurnalVariables extends VariableSet {
             this.isSunrise = cycle == DayCycle.SUNRISE;
             this.isSunset = cycle == DayCycle.SUNSET;
             this.moonPhaseFactor = this.levelOracle.currentMoonSize();
-            this.celestialAngle = this.levelOracle.currentCelestialAngle();
+            // A fraction of the day from noon, 0 to 1, as Level.getTimeOfDay() was; the oracle gives degrees
+            this.celestialAngle = this.levelOracle.currentCelestialAngle() / 360F;
         } else {
             this.isDay = false;
             this.isNight = false;
@@ -45,11 +47,11 @@ public final class DiurnalVariables extends VariableSet {
 
     @Override
     public void configure(IConfigureDefinition config) {
-        config.defineFunction(id("isDay"), l -> this.isDay);
-        config.defineFunction(id("isNight"), l -> this.isNight);
-        config.defineFunction(id("isSunrise"), l -> this.isSunrise);
-        config.defineFunction(id("isSunset"), l -> this.isSunset);
-        config.defineFunction(id("getMoonPhaseFactor"), l -> this.moonPhaseFactor);
-        config.defineFunction(id("getCelestialAngle"), l -> this.celestialAngle);
+        config.property(id("isDay"), () -> this.isDay);
+        config.property(id("isNight"), () -> this.isNight);
+        config.property(id("isSunrise"), () -> this.isSunrise);
+        config.property(id("isSunset"), () -> this.isSunset);
+        config.property(id("getMoonPhaseFactor"), () -> this.moonPhaseFactor);
+        config.property(id("getCelestialAngle"), () -> this.celestialAngle);
     }
 }

@@ -1,32 +1,40 @@
 package org.orecruncher.dsurround.runtime.variables;
 
+import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
+import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
-import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 
 public final class DimensionVariables extends VariableSet {
-
-    private final ILevelOracle levelOracle;
 
     private String id;
     private String name;
     private boolean hasSky;
     private boolean isSuperFlat;
+    // The level the values were taken from; they only change with it
+    private @Nullable Level level;
 
-    public DimensionVariables(ILevelOracle levelOracle) {
+    public DimensionVariables() {
         super("dim");
-        this.levelOracle = levelOracle;
     }
 
     @Override
     public void tick() {
         if (GameUtils.isInGame()) {
-            this.id = this.levelOracle.dimensionIdentifier().toString();
-            this.name = this.levelOracle.dimensionName();
-            this.hasSky = this.levelOracle.hasSkyLight();
-            this.isSuperFlat = this.levelOracle.isSuperFlat();
+            var world = GameUtils.getWorld().orElseThrow();
+            if (world == this.level)
+                return;
+            this.level = world;
+            final DimensionType dim = world.dimensionType();
+            this.id = world.dimension().identifier().toString();
+            this.name = world.dimension().identifier().getPath();
+            this.hasSky = dim.hasSkyLight();
+            this.isSuperFlat = LevelCompat.isSuperFlat(world);
         } else {
+            this.level = null;
             this.id = "UNKNOWN";
             this.name = "UNKNOWN";
             this.hasSky = false;
@@ -36,9 +44,9 @@ public final class DimensionVariables extends VariableSet {
 
     @Override
     public void configure(IConfigureDefinition config) {
-        config.defineFunction(id("getId"), l -> this.id);
-        config.defineFunction(id("getDimName"), l -> this.name);
-        config.defineFunction(id("hasSky"), l -> this.hasSky);
-        config.defineFunction(id("isSuperFlat"), l -> this.isSuperFlat);
+        config.property(id("getId"), () -> this.id);
+        config.property(id("getDimName"), () -> this.name);
+        config.property(id("hasSky"), () -> this.hasSky);
+        config.property(id("isSuperFlat"), () -> this.isSuperFlat);
     }
 }

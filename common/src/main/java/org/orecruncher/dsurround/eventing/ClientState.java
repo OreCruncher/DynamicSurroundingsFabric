@@ -3,118 +3,43 @@ package org.orecruncher.dsurround.eventing;
 import dev.architectury.event.events.client.ClientLifecycleEvent;
 import dev.architectury.event.events.client.ClientTickEvent;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.server.packs.resources.ResourceManager;
 import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.events.EventingFactory;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
-import org.orecruncher.dsurround.lib.events.IPhasedEvent;
 
 /**
- * Event handlers for Client state.
+ * Connects the platform's client events (through Architectury) to the mod's: tick start and end, client started and
+ * stopping, level load. Also raises {@link IClientConnect} and {@link IClientDisconnect}, by watching for the player instance at
+ * the start of each tick.
+ * <p>
+ * {@link #initialize()} must be called during mod initialization, before the client starts.
  */
 public final class ClientState {
 
-    public static final IPhasedEvent<IClientStarted> CLIENT_START_EVENT = EventingFactory.createPrioritizedEvent();
-    public static final IPhasedEvent<IClientStopping> CLIENT_STOP_EVENT = EventingFactory.createPrioritizedEvent();
-    public static final IPhasedEvent<IClientTickStart> CLIENT_TICK_START_EVENT = EventingFactory.createPrioritizedEvent();
-    public static final IPhasedEvent<IClientTickEnd> CLIENT_TICK_END_EVENT = EventingFactory.createPrioritizedEvent();
-    public static final IPhasedEvent<IClientConnect> CLIENT_CONNECT_EVENT = EventingFactory.createPrioritizedEvent();
-    public static final IPhasedEvent<IClientDisconnect> CLIENT_DISCONNECT_EVENT = EventingFactory.createPrioritizedEvent();
-    public static final IPhasedEvent<ITagSync> TAG_SYNC_EVENT = EventingFactory.createPrioritizedEvent();
-    public static final IPhasedEvent<IResourceReload> RESOURCE_RELOAD_EVENT = EventingFactory.createPrioritizedEvent();
-    public static final IPhasedEvent<IClientLevelLoad> CLIENT_LEVEL_LOAD_EVENT = EventingFactory.createPrioritizedEvent();
-
-    /**
-     * Event raised when the client is starting
-     */
-    @FunctionalInterface
-    public interface IClientStarted {
-        void onStart(Minecraft client);
-    }
-
-    /**
-     * Event raised when the Client is stopping.
-     */
-    @FunctionalInterface
-    public interface IClientStopping {
-        void onStopping(Minecraft client);
-    }
-
-    /**
-     * Event raised at the beginning of the Client tick cycle.
-     */
-    @FunctionalInterface
-    public interface IClientTickStart {
-        void onTickStart(Minecraft client);
-    }
-
-    /**
-     * Event raised at the end of the Client tick cycle.
-     */
-    @FunctionalInterface
-    public interface IClientTickEnd {
-        void onTickEnd(Minecraft client);
-    }
-
-    /**
-     * Event raised when a ClientLevel is loaded
-     */
-    @FunctionalInterface
-    public interface IClientLevelLoad {
-        void onLevelLoad(ClientLevel level);
-    }
-
-    /**
-     * Event raised when the client connects to a server.
-     */
-    @FunctionalInterface
-    public interface IClientConnect {
-        void onConnect(Minecraft client);
-    }
-
-    /**
-     * Event raised when the client disconnects from a server.
-     */
-    @FunctionalInterface
-    public interface IClientDisconnect {
-        void onDisconnect(Minecraft client);
-    }
-
-    /**
-     * Event raised when tags sync to the client
-     */
-    @FunctionalInterface
-    public interface ITagSync {
-        void onTagSync(RegistryAccess registryAccess);
-    }
-
-    /**
-     * Event raised when resources reload
-     */
-    @FunctionalInterface
-    public interface IResourceReload {
-        void onResourceReload(ResourceManager resourceManager);
-    }
+    private static boolean initialized = false;
+    private static boolean isConnected = false;
 
     private ClientState() {
     }
 
-    static {
-        // Register with Architectury for known client side events
-        ClientTickEvent.CLIENT_PRE.register(mc -> ClientState.CLIENT_TICK_START_EVENT.invoker().onTickStart(mc));
-        ClientTickEvent.CLIENT_POST.register(mc -> ClientState.CLIENT_TICK_END_EVENT.invoker().onTickEnd(mc));
+    /**
+     * Hooks up the platform events. Calling it again does nothing.
+     */
+    public static synchronized void initialize() {
+        if (initialized)
+            return;
+        initialized = true;
 
-        ClientLifecycleEvent.CLIENT_STARTED.register(mc -> ClientState.CLIENT_START_EVENT.invoker().onStart(mc));
-        ClientLifecycleEvent.CLIENT_STOPPING.register(mc -> ClientState.CLIENT_STOP_EVENT.invoker().onStopping(mc));
-        ClientLifecycleEvent.CLIENT_LEVEL_LOAD.register(clientLevel -> ClientState.CLIENT_LEVEL_LOAD_EVENT.invoker().onLevelLoad(clientLevel));
+        ClientTickEvent.CLIENT_PRE.register(mc -> IClientTickStart.EVENT.invoker().onTickStart(mc));
+        ClientTickEvent.CLIENT_POST.register(mc -> IClientTickEnd.EVENT.invoker().onTickEnd(mc));
+
+        ClientLifecycleEvent.CLIENT_STARTED.register(mc -> IClientStarted.EVENT.invoker().onStart(mc));
+        ClientLifecycleEvent.CLIENT_STOPPING.register(mc -> IClientStopping.EVENT.invoker().onStopping(mc));
+        ClientLifecycleEvent.CLIENT_LEVEL_LOAD.register(level -> IClientLevelLoad.EVENT.invoker().onLevelLoad(level));
 
         // Connection detection is the first thing that processes, period.
-        CLIENT_TICK_START_EVENT.register(ClientState::connectionDetector, HandlerPriority.VERY_HIGH);
+        IClientTickStart.EVENT.register(ClientState::connectionDetector, HandlerPriority.VERY_HIGH);
     }
 
-    private static boolean isConnected = false;
     private static void connectionDetector(Minecraft client) {
         // Basically, the logic will toggle isConnected based on whether a player instance
         // is present in the Minecraft client instance. Since this is a 100% client side,
@@ -126,13 +51,13 @@ public final class ClientState {
             if (client.player == null) {
                 isConnected = false;
                 Library.LOGGER.info("Player instance no longer present");
-                CLIENT_DISCONNECT_EVENT.invoker().onDisconnect(client);
+                IClientDisconnect.EVENT.invoker().onDisconnect(client);
             }
         } else {
             if (client.player != null) {
                 isConnected = true;
                 Library.LOGGER.info("Player instance is now present");
-                CLIENT_CONNECT_EVENT.invoker().onConnect(client);
+                IClientConnect.EVENT.invoker().onConnect(client);
             }
         }
     }

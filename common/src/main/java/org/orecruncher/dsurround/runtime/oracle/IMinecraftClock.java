@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.runtime.oracle;
 
 import net.minecraft.network.chat.Component;
-import org.orecruncher.dsurround.lib.DayCycle;
+import org.orecruncher.dsurround.lib.time.DayCycle;
 
 public interface IMinecraftClock {
 

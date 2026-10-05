@@ -15,11 +15,11 @@ import net.minecraft.util.valueproviders.ConstantFloat;
 import net.minecraft.util.valueproviders.FloatProvider;
 import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.NotNull;
-import org.orecruncher.dsurround.lib.IdentityUtils;
+import org.orecruncher.dsurround.lib.registry.IdentityUtils;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Optional;
 
 import static org.orecruncher.dsurround.sound.SoundCodecHelpers.SOUND_PROPERTY_RANGE;
@@ -50,7 +50,23 @@ public record SoundFactory(
                     MusicSettings.CODEC.optionalFieldOf("music", MusicSettings.DEFAULT).forGetter(SoundFactory::musicSettings)
             ).apply(instance, SoundFactory::new));
 
-    private static final Map<SoundEvent, Music> MUSIC_MAP = new HashMap<>();
+    // Music instances by sound event ID and settings: factories that agree share one, and different (or reloaded)
+    // settings get their own. The ID, as SoundEvent instances aren't compared by value.
+    private record MusicKey(Identifier event, MusicSettings settings) {
+    }
+
+    private static final Map<MusicKey, Music> MUSIC_MAP = new ConcurrentHashMap<>();
+
+    /**
+     * Keeps {@code global} and {@code attenuation} consistent, whichever the configuration set: a global sound has
+     * no attenuation, and a sound without attenuation is global.
+     */
+    public SoundFactory {
+        if (global)
+            attenuation = SoundInstance.Attenuation.NONE;
+        else if (attenuation == SoundInstance.Attenuation.NONE)
+            global = true;
+    }
 
     @Override
     public Identifier getLocation() {
@@ -100,8 +116,17 @@ public record SoundFactory(
         );
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * A global sound is heard the same everywhere, so it plays at the listener (relative, at 0,0,0) whatever
+     * position is given.
+     */
     @Override
     public SimpleSoundInstance createAtLocation(double posX, double posY, double posZ, float volumeScale) {
+        // The last argument is "relative": a relative sound's position is an offset from the listener, so a global
+        // sound at world coordinates would be heard as coming from far off in that direction
+        final boolean relative = this.global;
         return new SimpleSoundInstance(
                 this.soundEvent.location(),
                 this.category,
@@ -111,18 +136,16 @@ public record SoundFactory(
                 this.isRepeatable,
                 this.repeatDelay,
                 this.attenuation,
-                posX,
-                posY,
-                posZ,
-                this.global);
+                relative ? 0D : posX,
+                relative ? 0D : posY,
+                relative ? 0D : posZ,
+                relative);
     }
 
     @Override
     public Music createAsMusic() {
-        return MUSIC_MAP.computeIfAbsent(this.soundEvent, key -> {
-            var holder = Holder.direct(key);
-            return new Music(holder, this.musicSettings.minDelay, this.musicSettings.maxDelay, this.musicSettings.replaceCurrentMusic);
-        });
+        return MUSIC_MAP.computeIfAbsent(new MusicKey(this.soundEvent.location(), this.musicSettings), key ->
+                new Music(Holder.direct(this.soundEvent), key.settings().minDelay(), key.settings().maxDelay(), key.settings().replaceCurrentMusic()));
     }
 
     private float getVolume() {
