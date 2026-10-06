@@ -108,10 +108,11 @@ public class IndividualSoundControlScreen extends Screen {
     @Override
     protected void repositionElements() {
         this.layout.arrangeElements();
-        this.soundConfigList.updateSize(this.width, this.layout);
         // Never narrower than the controls need, even if that means the rows don't fit a very small window
         int minRowWidth = this.soundConfigList.getMinimumRowWidth();
         this.soundConfigList.setRowWidth(Mth.clamp(this.width - 2 * ROW_SIDE_MARGIN, minRowWidth, Math.max(minRowWidth, MAX_ROW_WIDTH)));
+        // After the row width: this is what places the rows, and it centers them using that width
+        this.soundConfigList.updateSize(this.width, this.layout);
     }
 
     @Override

@@ -61,7 +61,8 @@ configure(subprojects.findAll { it.name != 'processor' }) {
     tasks.register('copyJarToMain', Copy) {
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
         if (project.name != "common" && project.name != "stubs") {
-            from remapJar
+            // No remapJar on 26.2 (unobfuscated); the shaded jar is the one that ships
+            from tasks.named('shadowJar')
             into "../build/libs"
         }
     }

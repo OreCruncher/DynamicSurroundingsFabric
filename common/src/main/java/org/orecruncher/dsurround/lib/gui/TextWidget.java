@@ -17,7 +17,8 @@ public class TextWidget extends AbstractStringWidget {
         int nameWidth = this.getFont().width(this.getMessage());
 
         if (nameWidth > getWidth()) {
-            output.acceptScrollingWithDefaultCenter(this.getMessage(), this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getFont().lineHeight);
+            // Arguments are left, right, top, bottom
+            output.acceptScrollingWithDefaultCenter(this.getMessage(), this.getX(), this.getX() + this.getWidth(), this.getY(), this.getY() + this.getFont().lineHeight);
         } else {
             output.accept(getX(), getY(), this.getMessage());
         }
