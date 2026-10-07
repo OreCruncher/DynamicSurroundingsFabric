@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.lib.scanner;
 
+import it.unimi.dsi.fastutil.longs.LongCollection;
 import net.minecraft.core.BlockBox;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -12,7 +13,6 @@ import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 
 import java.util.ArrayDeque;
-import java.util.Collection;
 
 /**
  * Scans the cuboid around the scan center, reporting blocks as they come into range ({@link #blockScan}) and, if
@@ -324,13 +324,17 @@ public abstract class CuboidScanner extends Scanner {
     /**
      * Reports blocks the client was told changed, if they are in range, through {@link #blockUpdated}. Not queued: block updates are few and
      * should take effect immediately.
+     *
+     * @param positions positions packed with {@link BlockPos#asLong}
      */
-    public void onBlockUpdates(Collection<BlockPos> positions) {
+    public void onBlockUpdates(LongCollection positions) {
         if (positions.isEmpty() || this.activeCuboid == null)
             return;
 
         var world = this.locus.getWorld();
-        for (var pos : positions) {
+        var pos = new BlockPos.MutableBlockPos();
+        for (var it = positions.iterator(); it.hasNext(); ) {
+            pos.set(it.nextLong());
             if (this.activeCuboid.contains(pos))
                 this.updateBlock(world, world.getBlockState(pos), pos);
         }
