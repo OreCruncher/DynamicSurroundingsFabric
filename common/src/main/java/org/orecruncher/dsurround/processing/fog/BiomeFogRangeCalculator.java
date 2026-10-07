@@ -3,9 +3,7 @@ package org.orecruncher.dsurround.processing.fog;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.BiomeManager;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
@@ -62,13 +60,13 @@ public class BiomeFogRangeCalculator extends VanillaFogRangeCalculator {
     }
 
     private float sampleArea(BlockPos pos, int range) {
-        final BiomeManager biomeManager = GameUtils.getWorld().map(Level::getBiomeManager).orElseThrow();
+        var level = GameUtils.getWorld().orElseThrow();
         var iterator = BlockPos.withinManhattan(pos, range, range, range).iterator();
         float intensityAccum = 0F;
         float intensityCount = 0;
         while(iterator.hasNext()) {
             var p = iterator.next();
-            final Biome b = biomeManager.getNoiseBiomeAtPosition(p).value();
+            final Biome b = level.getBiome(p).value();
             final BiomeInfo info = this.biomeLibrary.getBiomeInfo(b);
             intensityAccum += info.getFogDensity().getIntensity();
             intensityCount++;

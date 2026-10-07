@@ -47,16 +47,21 @@ public class ResourceFinderTests {
         }
 
         ResourceManager manager() {
-            return Fakes.of(ResourceManager.class, Map.of("listResourceStacks", args -> {
-                this.listings++;
-                var folder = (String) args[0];
-                var result = new LinkedHashMap<ResourceLocation, List<Resource>>();
-                this.files.forEach((location, stack) -> {
-                    if (location.getPath().equals(folder) || location.getPath().startsWith(folder + "/"))
-                        result.put(location, stack);
-                });
-                return result;
-            }));
+            return Fakes.of(ResourceManager.class, Map.of(
+                    "listResourceStacks", args -> {
+                        this.listings++;
+                        // Lists the files in a folder, as the real one does; a file's own path lists nothing, as
+                        // with NeoForge's mod packs
+                        var folder = (String) args[0];
+                        var result = new LinkedHashMap<ResourceLocation, List<Resource>>();
+                        this.files.forEach((location, stack) -> {
+                            if (location.getPath().startsWith(folder + "/"))
+                                result.put(location, stack);
+                        });
+                        return result;
+                    },
+                    "getNamespaces", args -> this.files.keySet().stream().map(ResourceLocation::getNamespace).collect(Collectors.toSet()),
+                    "getResourceStack", args -> this.files.getOrDefault((ResourceLocation) args[0], List.of())));
         }
     }
 
@@ -145,6 +150,18 @@ public class ResourceFinderTests {
                 .add("mypack:sounds.json", "{\"b\": \"2\"}");
         var found = new ClientResourceFinder(new RecordingLog(), packs.manager()).find(CODEC, "sounds.json");
         assertEquals(Set.of("minecraft", "mypack"), namespaces(found));
+    }
+
+    @Test
+    void assetsAreLookedUpNotListed() {
+        // Listing "sounds.json" finds nothing in packs that only list folders (NeoForge 26.2's mod packs), so none of
+        // the mod's own sounds would be known. Every pack's version of the file is read.
+        var packs = new Packs()
+                .add("dsurround:sounds.json", "{\"jar\": \"1\"}", "{\"pack\": \"2\"}")
+                .add("dsurround:sounds/other.json", "{\"c\": \"3\"}");
+        var found = new ClientResourceFinder(new RecordingLog(), packs.manager()).find(CODEC, "sounds.json");
+        assertEquals(2, found.size());
+        assertEquals(Set.of("dsurround"), namespaces(found));
     }
 
     // ---- Installed mods' data
