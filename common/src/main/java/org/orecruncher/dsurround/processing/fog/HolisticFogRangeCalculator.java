@@ -45,6 +45,8 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
         if (!this.enabled())
             return data;
 
+        // The thickest fog wins: its start and end are kept together, so one calculator's start isn't paired with
+        // another's end, which made fog thicker than any of them asked for
         float start = data.start;
         float end = data.end;
 
@@ -53,9 +55,9 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
                 final FogRenderer.FogData result = calc.render(data, renderDistance, partialTick);
                 if (result.start > result.end || result.start < 0 || result.end < 0) {
                     this.logger.warn("Fog calculator '%s' reporting invalid fog range (start %f, end %f); ignored", calc.getName(), result.start, result.end);
-                } else {
-                    start = Math.min(start, result.start);
-                    end = Math.min(end, result.end);
+                } else if (result.end < end) {
+                    start = result.start;
+                    end = result.end;
                 }
             }
         }

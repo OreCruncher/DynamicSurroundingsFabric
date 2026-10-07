@@ -36,13 +36,15 @@ public class FogHandler extends AbstractClientHandler {
     }
 
     private void renderFog(FogRenderer.FogData data, float renderDistance, float partialTick) {
+        var result = data;
         if (this.fogCalculator.enabled()) {
-            this.lastData = this.fogCalculator.render(data, renderDistance, partialTick);
-            FogCompat.applyShaderFog(this.lastData);
-        } else {
-            // Preserve for diagnostic trace even though action was not taken
-            this.lastData = data;
+            result = this.fogCalculator.render(data, renderDistance, partialTick);
+            FogCompat.applyShaderFog(result);
         }
+
+        // The diagnostic trace shows the terrain fog, even when no action was taken; the sky's is set too
+        if (data.mode == FogRenderer.FogMode.FOG_TERRAIN)
+            this.lastData = result;
     }
 
     @Override

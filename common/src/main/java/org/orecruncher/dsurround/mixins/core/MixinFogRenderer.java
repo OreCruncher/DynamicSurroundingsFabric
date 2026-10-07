@@ -17,7 +17,9 @@ public class MixinFogRenderer {
     @Inject(method = "setupFog(Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/FogRenderer$FogMode;FZF)V", at = @At("RETURN"))
     private static void dsurround$renderFog(Camera camera, FogRenderer.FogMode fogMode, float f, boolean bl, float g, CallbackInfo ci, @Local FogType fogType, @Local FogRenderer.FogData fogData) {
 
-        if (fogData.mode != FogRenderer.FogMode.FOG_TERRAIN || fogType != FogType.NONE)
+        // The sky's fog is set just before the terrain's each frame. Thickening both keeps the sky from staying clear
+        // above fogged-out terrain; the game's own thick fog (the Nether, boss fog) hides the sky the same way.
+        if (fogType != FogType.NONE)
             return;
 
         // At this point, Minecraft has already configured fog. It's possible that another

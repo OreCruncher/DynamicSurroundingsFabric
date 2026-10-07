@@ -60,11 +60,7 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
             if (this.type.inRange(angle)) {
                 final float mid = (this.type.getStartAngle() + this.type.getEndAngle()) / 2F;
                 final float factor = (1F - Mth.abs(angle - mid) / (mid - this.type.getStartAngle())) * this.type.getIntensity();
-                final float shift = data.start * factor;
-                final float newEnd = data.end - shift;
-                final float newStart = Mth.clamp(data.start - shift * 2, this.type.getReserve() + 1, newEnd);
-
-                return withRange(data, newStart, newEnd);
+                return thicken(data, factor, this.type.getReserve() + 1);
             }
         }
         return data;

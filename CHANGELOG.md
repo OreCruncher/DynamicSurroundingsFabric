@@ -91,6 +91,7 @@ Results:
 * Reduced the reverb ray count from 256 to 128 as a default. Existing configs will still have 256 so you can reduce if you want. Math models and testing showed anything more than 100 would give marginal improvements to sound.
 * Ensured all Dynamic Surroundings footstep sounds are mono, and removed on the fly mono-conversion support.
 * Removed the waterfall cascade effect as it is replaced by mist and foam.
+* Backported fog calculator changes from 26.2 to 1.21.1. Biome fog should be softer, and sky fog is taken into account.
 
 **Fixes**
 * A lot of small ones - nothing horrific. Most were edge conditions or related to validation of configuration data coming from external sources.
