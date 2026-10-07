@@ -80,11 +80,3 @@ A working 26.2 port exists: branch `OreCruncher/26.2` (Minecraft 26.2, NeoForge 
 Cloth Config 26.2.155), split from 0.4.5. Its build files and adapted code are the reference for 26.2 APIs. The plan is
 to port this branch's later changes onto it (in a worktree), not to migrate this branch from scratch: read it with
 `git show OreCruncher/26.2:<path>` and compare with `git diff <merge-base> HEAD`.
-
-Open issues found in the 26.2 branch, to check when working on it:
-- `ITagSync` probably doesn't fire for the tags sent at login. 26.2 has no `TagCollector`, and its
-  `MixinClientPacketListener` hooks `handleUpdateTags`, which only runs in play (`/reload`). Login tags are applied in
-  `ClientConfigurationPacketListenerImpl.handleConfigurationFinished` → `RegistryDataCollector.collectGameRegistries`,
-  which nothing hooks. On 1.21.1 `MixinTagCollector` covers both paths (it used to fire only for single-player: an
-  `if (local)` carried over from Fabric's `TAGS_LOADED` `client` flag, removed in 0.4.6). Check: a datapack tag
-  that changes an effect should work on joining a world, not only after `/reload`.
