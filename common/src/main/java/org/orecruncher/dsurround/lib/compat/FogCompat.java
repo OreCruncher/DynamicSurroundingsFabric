@@ -28,10 +28,14 @@ public final class FogCompat {
     }
 
     /**
-     * Sets the environmental range of {@code target}, the game's fog for this frame, from {@code source}.
+     * Sets the environmental range and the sky and cloud fog ends of {@code target}, the game's fog for this frame,
+     * from {@code source}. The render distance fog is set by the game after the fog environments run, so it is left
+     * alone.
      */
     public static void applyRange(FogData target, FogData source) {
         target.environmentalStart = source.environmentalStart;
         target.environmentalEnd = source.environmentalEnd;
+        target.skyEnd = source.skyEnd;
+        target.cloudEnd = source.cloudEnd;
     }
 }

@@ -48,23 +48,33 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
         if (!this.enabled())
             return data;
 
+        // The thickest fog wins: its start and end are kept together, so one calculator's start isn't paired with
+        // another's end. A negative start is fine; the game's rain fog sets one.
         float start = data.environmentalStart;
         float end = data.environmentalEnd;
+        float skyEnd = data.skyEnd;
+        float cloudEnd = data.cloudEnd;
 
         for (final IFogRangeCalculator calc : this.calculators) {
             if (calc.enabled()) {
                 final FogData result = calc.render(data, renderDistance, partialTick);
-                if (result.environmentalStart > result.environmentalEnd || result.environmentalStart < 0 || result.environmentalEnd < 0) {
+                if (!(result.environmentalStart <= result.environmentalEnd) || !(result.environmentalEnd >= 0)) {
                     this.logger.warn("Fog calculator '%s' reporting invalid fog range (start %f, end %f); ignored", calc.getName(), result.environmentalStart, result.environmentalEnd);
                 } else {
-                    start = Math.min(start, result.environmentalStart);
-                    end = Math.min(end, result.environmentalEnd);
+                    if (result.environmentalEnd < end) {
+                        start = result.environmentalStart;
+                        end = result.environmentalEnd;
+                    }
+                    skyEnd = Math.min(skyEnd, result.skyEnd);
+                    cloudEnd = Math.min(cloudEnd, result.cloudEnd);
                 }
             }
         }
 
         data.environmentalStart = start;
         data.environmentalEnd = end;
+        data.skyEnd = skyEnd;
+        data.cloudEnd = cloudEnd;
         return data;
     }
 

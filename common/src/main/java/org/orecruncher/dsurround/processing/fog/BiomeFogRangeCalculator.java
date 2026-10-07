@@ -36,12 +36,7 @@ public class BiomeFogRangeCalculator extends VanillaFogRangeCalculator {
     @Override
     @NotNull
     public FogData render(@NotNull final FogData data, float renderDistance, float partialTick) {
-        var activeScale = this.scale.get(partialTick);
-        if (activeScale == 0F)
-            return data;
-
-        var scale = 1F - activeScale;
-        return withRange(data, data.environmentalStart * scale * scale, data.environmentalEnd * scale);
+        return thicken(data, renderDistance, this.scale.get(partialTick), 0F);
     }
 
     @Override
