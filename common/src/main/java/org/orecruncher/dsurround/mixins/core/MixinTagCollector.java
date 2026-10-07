@@ -10,9 +10,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(TagCollector.class)
 public class MixinTagCollector {
+    /**
+     * Called for the tags sent at login (end of configuration) and on /reload. {@code isMemoryConnection} is only
+     * whether the server is in this process; tags arrive either way.
+     */
     @Inject(method = "updateTags(Lnet/minecraft/core/RegistryAccess;Z)V", at = @At("TAIL"))
-    private void dsurround$tagsUpdated(RegistryAccess registryAccess, boolean local, CallbackInfo ci) {
-        if (local)
-            ITagSync.EVENT.invoker().onTagSync(registryAccess);
+    private void dsurround$tagsUpdated(RegistryAccess registryAccess, boolean isMemoryConnection, CallbackInfo ci) {
+        ITagSync.EVENT.invoker().onTagSync(registryAccess);
     }
 }

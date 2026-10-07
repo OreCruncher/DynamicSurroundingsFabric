@@ -97,6 +97,7 @@ Results:
 * Sound effects when the player is underwater are properly dampened.
 * Some of the math in reverb calculations were lossy, and as a result sounds where muted a bit (about 8 - 20% depending on environment). I do not directly hear the difference, but it seems like the listening experience is improved.
 * Breath effect underwater is back (bubbles being emitted). Will be disabled if breath effect is disabled.
+* Fixed issue when joining a remote server where a tag sync is detected would not properly update Dynamic Surroundings tag cache.
 
 > ### DynamicSurroundings-1.21.1-0.4.5
 
