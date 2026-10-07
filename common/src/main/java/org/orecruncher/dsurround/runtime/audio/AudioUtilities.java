@@ -16,7 +16,6 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 
 import java.util.function.Supplier;
 
@@ -88,11 +87,10 @@ public final class AudioUtilities {
             var underlyingSound = sound.getSound();
             //noinspection ConstantValue
             if (underlyingSound != null) {
-                var accessor = ReflectionHelper.cast(sound, AbstractSoundInstance.class);
-                accessor.ifPresent(a -> {
+                if (sound instanceof AbstractSoundInstance a) {
                     sb.append(String.format(", v: %.4f(%.4f)", sound.getVolume(), a.volume));
                     sb.append(String.format(", p: %.4f(%.4f)", sound.getPitch(), a.pitch));
-                });
+                }
                 sb.append(", s: ").append(sound.getSound().shouldStream());
             }
 

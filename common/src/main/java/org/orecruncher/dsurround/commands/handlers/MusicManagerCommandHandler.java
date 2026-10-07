@@ -4,7 +4,6 @@ import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
-import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 
 public class MusicManagerCommandHandler {
 
@@ -22,9 +21,8 @@ public class MusicManagerCommandHandler {
 
     public static Component whatsPlaying() {
         try {
-            var mm = ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.class);
-            if (mm.isPresent()) {
-                var result =mm.get().whatsPlaying();
+            if (GameUtils.getMC().getMusicManager() instanceof DSurroundMusicManager mm) {
+                var result = mm.whatsPlaying();
                 return Component.translatable("dsurround.command.dsmm.whatsplaying.success", result);
             } else {
                 return Component.translatable("dsurround.command.dsmm.notpresent");
@@ -36,9 +34,8 @@ public class MusicManagerCommandHandler {
 
     private static Component execute(MusicManager musicManager, DSurroundMusicManager.Commands command) {
         try {
-            var mm = ReflectionHelper.cast(musicManager, DSurroundMusicManager.class);
-            if (mm.isPresent()) {
-                mm.get().doCommand(command);
+            if (musicManager instanceof DSurroundMusicManager mm) {
+                mm.doCommand(command);
                 return Component.translatable("dsurround.command.dsmm." + command.commandName() + ".success", command);
             } else {
                 return Component.translatable("dsurround.command.dsmm.notpresent");
