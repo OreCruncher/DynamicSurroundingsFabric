@@ -23,7 +23,6 @@
     "core.MixinMinecraftClient",
     "core.MixinMusic",
     "core.MixinParticleEngine",
-    "core.MixinParticleTypes",
     "core.MixinRainSplashParticle",
     "core.MixinSoundOptionsScreen",
     "core.MixinTagCollector",

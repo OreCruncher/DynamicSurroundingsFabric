@@ -95,8 +95,7 @@ final class WaterfallSpray {
                     dirX * outward, upward, dirZ * outward,
                     x, surfaceY, z,
                     strength);
-            if (puff != null)
-                particles.accept(puff);
+            particles.accept(puff);
         }
     }
 }
