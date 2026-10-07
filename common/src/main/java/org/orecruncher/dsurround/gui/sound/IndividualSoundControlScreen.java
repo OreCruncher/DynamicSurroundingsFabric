@@ -20,7 +20,6 @@ import org.jspecify.annotations.NonNull;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
-import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 /**
@@ -180,7 +179,7 @@ public class IndividualSoundControlScreen extends Screen {
     }
 
     private static void setMusicPaused(boolean paused) {
-        ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.class)
-                .ifPresent(m -> m.setPaused(paused));
+        if (GameUtils.getMC().getMusicManager() instanceof DSurroundMusicManager m)
+            m.setPaused(paused);
     }
 }

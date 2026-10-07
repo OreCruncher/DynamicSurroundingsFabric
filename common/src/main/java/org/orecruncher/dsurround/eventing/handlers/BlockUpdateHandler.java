@@ -1,7 +1,8 @@
 package org.orecruncher.dsurround.eventing.handlers;
 
+import it.unimi.dsi.fastutil.longs.LongCollection;
+import it.unimi.dsi.fastutil.longs.LongCollections;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -13,9 +14,6 @@ import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.threading.IClientTasking;
 
-import java.util.Collection;
-import java.util.Optional;
-
 /**
  * Handles and tracks incoming block updates for the client world. Because this is client side, the logic will also
  * queue updates for the other blocks surrounding the indicated block. As the underlying tracking mechanism is
@@ -24,7 +22,10 @@ import java.util.Optional;
 public class BlockUpdateHandler {
 
     private static final IClientTasking CLIENT_TASKING = ContainerManager.resolve(IClientTasking.class);
-    private static final LongSet updatedPositions = new LongOpenHashSet(4 * 1024);
+    private static final int INITIAL_CAPACITY = 4 * 1024;
+    private static final LongOpenHashSet updatedPositions = new LongOpenHashSet(INITIAL_CAPACITY);
+    // What listeners get, so they can't change the set
+    private static final LongCollection UPDATES_VIEW = LongCollections.unmodifiable(updatedPositions);
 
     static {
         IClientTickEnd.EVENT.register(BlockUpdateHandler::tick);
@@ -62,25 +63,25 @@ public class BlockUpdateHandler {
      * @param ignored MinecraftClient instance - ignored
      */
     private static void tick(Minecraft ignored) {
-        var updates = expand();
-        updates.ifPresent(positions -> IBlockUpdates.EVENT.invoker().onBlockUpdates(positions));
+        if (updatedPositions.isEmpty())
+            return;
+
+        var count = updatedPositions.size();
+        IBlockUpdates.EVENT.invoker().onBlockUpdates(UPDATES_VIEW);
+
+        // Have to clear for the next run. A burst grows the table, and clear() wipes all of it, so shrink it back.
+        updatedPositions.clear();
+        if (count > INITIAL_CAPACITY)
+            updatedPositions.trim(INITIAL_CAPACITY);
     }
 
     private static void addPosition(BlockPos pos) {
-        for (var offset : BlockPos.betweenClosed(-1, -1, -1, 1, 1, 1)) {
-            updatedPositions.add(BlockPos.asLong(pos.getX() + offset.getX(), pos.getY() + offset.getY(), pos.getZ() + offset.getZ()));
-        }
-    }
-
-    private static Optional<Collection<BlockPos>> expand() {
-        if (updatedPositions.isEmpty())
-            return Optional.empty();
-
-        // Get the positions in the list as BlockPos instances
-        var result = updatedPositions.longStream().mapToObj(BlockPos::of).toList();
-
-        // Have to clear for the next run
-        updatedPositions.clear();
-        return Optional.of(result);
+        int x = pos.getX();
+        int y = pos.getY();
+        int z = pos.getZ();
+        for (int dx = -1; dx <= 1; dx++)
+            for (int dy = -1; dy <= 1; dy++)
+                for (int dz = -1; dz <= 1; dz++)
+                    updatedPositions.add(BlockPos.asLong(x + dx, y + dy, z + dz));
     }
 }

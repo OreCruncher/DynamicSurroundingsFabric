@@ -4,36 +4,25 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
-import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.random.Randomizer;
-
-import java.util.Optional;
 
 public final class ParticleUtils {
 
     private static final IRandomizer RANDOM = Randomizer.current();
 
+    /**
+     * The sprites the particle engine loaded for a game particle. The engine keeps one set per particle type and
+     * swaps its sprites when resources reload, so it can be held on to.
+     */
     public static SpriteSet getSpriteProvider(ParticleType<?> particleType) {
-
-        var registered = DSurroundParticleSpriteSets.get(particleType);
-        if (registered.isPresent())
-            return registered.get();
-
-        var spriteSet = getSpriteProviderFromEngine(particleType);
-        if (spriteSet.isPresent()) {
-            DSurroundParticleSpriteSets.register(particleType, spriteSet.get());
-            return spriteSet.get();
-        }
-
-        return null;
+        var id = BuiltInRegistries.PARTICLE_TYPE.getKey(particleType);
+        return GameUtils.getParticleResources().spriteSets.get(id);
     }
 
     public static Vec3 getBreathOrigin(final LivingEntity entity) {
@@ -51,21 +40,6 @@ public final class ParticleUtils {
 
     public static <T extends ParticleOptions> Particle createParticle(T parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
         return GameUtils.getParticleManager().createParticle(parameters, x, y, z, velocityX, velocityY, velocityZ);
-    }
-
-    private static Optional<SpriteSet> getSpriteProviderFromEngine(ParticleType<?> particleType) {
-        var id = getParticleId(particleType);
-        if (id.isPresent()) {
-            var engineSpriteSets = GameUtils.getParticleResources().spriteSets;
-            return Optional.ofNullable(engineSpriteSets.get(id.get()));
-        }
-
-        return Optional.empty();
-    }
-
-    private static Optional<Identifier> getParticleId(ParticleType<?> particleType) {
-        return RegistryUtils.getRegistry(Registries.PARTICLE_TYPE)
-                .flatMap(registry -> registry.getResourceKey(particleType).map(ResourceKey::identifier));
     }
 
     /*

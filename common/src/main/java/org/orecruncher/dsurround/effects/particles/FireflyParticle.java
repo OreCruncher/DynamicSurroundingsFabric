@@ -10,7 +10,6 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
@@ -51,7 +50,6 @@ public class FireflyParticle extends SimpleAnimatedParticle {
     private final FireflyFlash flash;
     private final WanderingFlight flight;
     private final WanderingFlight.Obstacles obstacles;
-    @Nullable
     private final TextureAtlasSprite haloSprite;
 
     public static Particle create(Level level, double x, double y, double z) {
@@ -93,8 +91,7 @@ public class FireflyParticle extends SimpleAnimatedParticle {
 
         this.gravity = 0F;
 
-        var haloSprites = ParticleUtils.getSpriteProvider(DSurroundParticleTypes.FIREFLY_GLOW);
-        this.haloSprite = haloSprites != null ? haloSprites.get(0, 1) : null;
+        this.haloSprite = DSurroundParticleSprites.FIREFLY_GLOW.get(0, 1);
     }
 
     @Override
@@ -110,7 +107,7 @@ public class FireflyParticle extends SimpleAnimatedParticle {
             return;
 
         var options = Client.Config.fireflyOptions;
-        if (options.enableGlow && this.haloSprite != null) {
+        if (options.enableGlow) {
             // Drawn as the firefly is, with the halo's sprite, size and strength swapped in for it
             var sprite = this.sprite;
             var size = this.quadSize;

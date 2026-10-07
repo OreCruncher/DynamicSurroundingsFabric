@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.processing;
 
+import it.unimi.dsi.fastutil.longs.LongCollection;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
@@ -24,7 +24,6 @@ import org.orecruncher.dsurround.lib.scanner.ScanContext;
 import org.orecruncher.dsurround.processing.scanner.SystemsScanner;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
-import java.util.Collection;
 import java.util.function.Consumer;
 
 public class AreaBlockEffects extends AbstractClientHandler {
@@ -102,7 +101,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
             this.effectSystems.resetFullScan();
     }
 
-    private void blockUpdates(Collection<BlockPos> blockPositions) {
+    private void blockUpdates(LongCollection blockPositions) {
         // Need to pump the updates through to the effect system. The cuboid scanner
         // will handle the details for filtering and applying updates via blockScan().
         var count = blockPositions.size();

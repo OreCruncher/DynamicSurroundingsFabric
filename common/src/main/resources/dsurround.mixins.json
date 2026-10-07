@@ -24,11 +24,10 @@
     "core.MixinQuadParticleFeatureRenderer",
     "core.MixinMinecraftClient",
     "core.MixinMusic",
-    "core.MixinParticleResources",
-    "core.MixinParticleTypes",
     "core.MixinRainSplashParticle",
     "core.MixinSoundOptionsScreen",
-    "core.MixinClientPacketListener"
+    "core.MixinClientPacketListener",
+    "core.MixinRegistryDataCollector"
   ],
   "server": [],
   "injectors": {

@@ -6,7 +6,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.eventing.IChunkLoad;
 import org.orecruncher.dsurround.eventing.handlers.BlockUpdateHandler;
-import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -21,8 +20,7 @@ public class MixinClientLevel {
      */
     @Inject(method = "sendBlockUpdated(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;I)V", at = @At("RETURN"))
     public void dsurround$setBlocksDirty(BlockPos pos, BlockState old, BlockState current, int updateFlags, CallbackInfo ci) {
-        ReflectionHelper.cast(this, ClientLevel.class)
-            .ifPresent(level -> BlockUpdateHandler.blockPositionUpdate(level, pos, old, current));
+        BlockUpdateHandler.blockPositionUpdate((ClientLevel) (Object) this, pos, old, current);
     }
 
     /**
@@ -31,7 +29,6 @@ public class MixinClientLevel {
      */
     @Inject(method = "onChunkLoaded(Lnet/minecraft/world/level/ChunkPos;)V", at = @At("TAIL"))
     public void dsurround$onChunkLoaded(ChunkPos chunkPos, CallbackInfo ci) {
-        ReflectionHelper.cast(this, ClientLevel.class)
-                .ifPresent(level -> IChunkLoad.EVENT.invoker().onChunkLoad(level, chunkPos));
+        IChunkLoad.EVENT.invoker().onChunkLoad((ClientLevel) (Object) this, chunkPos);
     }
 }

@@ -1,9 +1,20 @@
 # 0.4.6 → 26.2 port
 
-Branch `OreCruncher/26.2-0.4.6`: `OreCruncher/26.2` (the 26.2 port of 0.4.5) with `OreCruncher/0.4.6` merged in. Game
-APIs follow the 26.2 branch; behaviour follows 0.4.6 unless noted. Checked so far: everything compiles on common,
-Fabric and NeoForge; the common tests pass; both clients start to the title screen with all three shaders compiled.
-Not yet checked in a world on either platform.
+Branch `OreCruncher/26.2`: the 26.2 port of 0.4.5 with `OreCruncher/0.4.6` merged in. Game APIs follow the 26.2
+branch; behaviour follows 0.4.6 unless noted. Checked so far: everything compiles on common, Fabric and NeoForge; the
+common tests pass; both clients start with all three shaders compiled and join a world without errors.
+
+## Later 0.4.6 merges
+
+Through `ceb6cd3` (tag sync on remote servers):
+- Custom sprite sets (`58333c5`): `AtlasSpriteSet` reads the particle atlas through
+  `Minecraft.getAtlasManager().getAtlasOrThrow(AtlasIds.PARTICLES)` and implements 26.2's `SpriteSet.first()`.
+  `MixinParticleResources`, `MixinParticleTypes` and `SpriteOnlyProvider` are gone; `ParticleUtils.getSpriteProvider`
+  reads `ParticleResources.spriteSets`.
+- Tag sync (`ceb6cd3`): 26.2 has no `TagCollector`. Login tags fire `ITagSync` from `MixinRegistryDataCollector`
+  (`collectGameRegistries` RETURN, for remote and integrated servers); `/reload` still goes through
+  `MixinClientPacketListener.handleUpdateTags`. Checked: "Tag sync event received" logs on joining a world.
+- `ReflectionHelper` casts in `MixinClientLevel` became plain casts.
 
 ## Structure: which side was kept
 

@@ -5,7 +5,6 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.*;
 import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 import org.jspecify.annotations.NonNull;
@@ -24,26 +23,7 @@ public class WaterRippleParticle extends SingleQuadParticle {
     private final float growthRate;
 
     public static Particle create(WaterRippleStyle rippleStyle, ClientLevel world, double x, double y, double z) {
-        SpriteSet spriteProvider = spriteProviderFor(rippleStyle);
-        if (spriteProvider != null) {
-            return new WaterRippleParticle(rippleStyle, world, x, y, z, spriteProvider);
-        }
-
-        // Last-resort fallback.  This should rarely be used because DS ripple SpriteSets are captured
-        // during Fabric particle provider registration, but it avoids crashing worlds if resource reload
-        // order changes.
-        return ParticleUtils.createParticle(ParticleTypes.SPLASH, x, y, z, 0D, 0D, 0D);
-    }
-
-    private static SpriteSet spriteProviderFor(WaterRippleStyle rippleStyle) {
-        var sprites = ParticleUtils.getSpriteProvider(DSurroundParticleTypes.forRippleStyle(rippleStyle));
-        if (sprites == null) {
-            sprites = ParticleUtils.getSpriteProvider(ParticleTypes.FISHING);
-        }
-        if (sprites == null) {
-            sprites = ParticleUtils.getSpriteProvider(ParticleTypes.SPLASH);
-        }
-        return sprites;
+        return new WaterRippleParticle(rippleStyle, world, x, y, z, DSurroundParticleSprites.forRippleStyle(rippleStyle));
     }
 
     protected WaterRippleParticle(WaterRippleStyle rippleStyle, ClientLevel world, double x, double y, double z, SpriteSet spriteProvider) {

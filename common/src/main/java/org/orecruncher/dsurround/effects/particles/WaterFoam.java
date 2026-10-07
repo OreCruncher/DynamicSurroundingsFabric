@@ -12,7 +12,6 @@ import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
@@ -91,23 +90,17 @@ public class WaterFoam extends SingleQuadParticle {
             double speed = minSpeed + random.nextDouble() * (maxSpeed - minSpeed);
 
             var foam = create(level, x, y, z, side.getStepX() * speed, side.getStepZ() * speed);
-            if (foam != null)
-                particles.accept(foam);
+            particles.accept(foam);
         }
     }
 
     /**
-     * A foam patch on the water at {@code x}, {@code z}, or null if its sprites aren't available. It starts on the
-     * surface of the water there.
+     * A foam patch on the water at {@code x}, {@code z}. It starts on the surface of the water there.
      *
      * @param xd starting velocity across the water, in blocks per tick; the current then takes over
      */
-    @Nullable
     public static Particle create(ClientLevel level, double x, double y, double z, double xd, double zd) {
-        var sprites = ParticleUtils.getSpriteProvider(DSurroundParticleTypes.WATER_FOAM);
-        if (sprites == null)
-            return null;
-        return new WaterFoam(level, x, y, z, xd, zd, sprites);
+        return new WaterFoam(level, x, y, z, xd, zd, DSurroundParticleSprites.WATER_FOAM);
     }
 
     protected WaterFoam(ClientLevel level, double x, double y, double z, double xd, double zd, SpriteSet sprites) {

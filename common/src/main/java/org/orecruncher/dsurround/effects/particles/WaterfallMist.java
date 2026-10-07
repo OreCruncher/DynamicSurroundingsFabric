@@ -10,7 +10,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
 /**
@@ -73,7 +72,7 @@ public class WaterfallMist extends SingleQuadParticle {
     private final float wobblePhaseZ;
 
     /**
-     * A mist puff, or null if its sprites aren't available.
+     * A mist puff.
      *
      * @param xd       starting velocity, in blocks per tick; drag slows it
      * @param centerX  the center of the impact, where the waterfall lands
@@ -81,13 +80,10 @@ public class WaterfallMist extends SingleQuadParticle {
      * @param strength the waterfall's strength, the height of its drop: a bigger waterfall makes bigger puffs and a
      *                 bigger, stronger roll
      */
-    @Nullable
     public static Particle create(ClientLevel level, double x, double y, double z, double xd, double yd, double zd,
                                   double centerX, double surfaceY, double centerZ, int strength) {
-        var sprites = ParticleUtils.getSpriteProvider(DSurroundParticleTypes.WATERFALL_MIST);
-        if (sprites == null)
-            return null;
-        return new WaterfallMist(level, x, y, z, xd, yd, zd, centerX, surfaceY, centerZ, sprites, strength);
+        return new WaterfallMist(level, x, y, z, xd, yd, zd, centerX, surfaceY, centerZ,
+                DSurroundParticleSprites.WATERFALL_MIST, strength);
     }
 
     protected WaterfallMist(ClientLevel level, double x, double y, double z, double xd, double yd, double zd,

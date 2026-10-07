@@ -8,15 +8,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
-import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 
 import java.util.function.Predicate;
 
 public class LevelCompat {
     public static boolean isSuperFlat(final Level level) {
-        return ReflectionHelper.cast(level, ClientLevel.class)
-                .map(cl -> cl.getLevelData().isFlat)
-                .orElse(false);
+        return level instanceof ClientLevel cl && cl.getLevelData().isFlat;
     }
 
     public static BlockPos getTopSolidOrLiquidBlock(final Level level, final BlockPos pos) {

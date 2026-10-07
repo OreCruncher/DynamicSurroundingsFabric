@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.mixins.audio;
 
 import com.mojang.blaze3d.audio.Channel;
-import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.orecruncher.dsurround.runtime.audio.SoundFXProcessor;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,8 +19,7 @@ public class MixinSource {
     @Inject(method = "play()V", at = @At("HEAD"))
     public void dsurround$onSourcePlay(CallbackInfo ci) {
         try {
-            ReflectionHelper.cast(this, Channel.class)
-                .ifPresent(SoundFXProcessor::onSourcePlay);
+            SoundFXProcessor.onSourcePlay((Channel) (Object) this);
         } catch(final Throwable t) {
             MixinHelpers.LOGGER.error(t, "Error in dsurround_onSourcePlay()!");
         }
@@ -35,8 +33,7 @@ public class MixinSource {
     @Inject(method = "updateStream()V", at = @At("HEAD"))
     public void dsurround$onSourceTick(CallbackInfo ci) {
         try {
-            ReflectionHelper.cast(this, Channel.class)
-                .ifPresent(SoundFXProcessor::tick);
+            SoundFXProcessor.tick((Channel) (Object) this);
         } catch(final Throwable t) {
             MixinHelpers.LOGGER.error(t, "Error in dsurround_onSourceTick()!");
         }
@@ -49,8 +46,7 @@ public class MixinSource {
     @Inject(method = "stop()V", at = @At("HEAD"))
     public void dsurround$onSourceStop(CallbackInfo ci) {
         try {
-            ReflectionHelper.cast(this, Channel.class)
-                .ifPresent(SoundFXProcessor::stopSoundPlay);
+            SoundFXProcessor.stopSoundPlay((Channel) (Object) this);
         } catch(final Throwable t) {
             MixinHelpers.LOGGER.error(t, "Error in dsurround_onSourceStop()!");
         }

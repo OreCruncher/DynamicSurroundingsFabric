@@ -5,7 +5,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.eventing.IEntityStep;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.orecruncher.dsurround.tags.EntityEffectTags;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,19 +23,17 @@ public abstract class MixinEntity {
     public void dsurround$playStepSound(BlockPos pos, BlockState state, CallbackInfo ci) {
         // Only want to enable eventing if accents are enabled
         if (MixinHelpers.footstepAccentsConfig.enableAccents) {
-            var self = ReflectionHelper.cast(this, Entity.class);
-            self.ifPresent(entity -> {
-                if (entity.level().isClientSide()) {
-                    // Is the entity in range?  If not, avoid generating an event
-                    if (GameUtils.getPlayer().orElseThrow().distanceToSqr(entity) > DSURROUND_MAX_ACCENT_RANGE)
-                        return;
+            var entity = (Entity) (Object) this;
+            if (entity.level().isClientSide()) {
+                // Is the entity in range?  If not, avoid generating an event
+                if (GameUtils.getPlayer().orElseThrow().distanceToSqr(entity) > DSURROUND_MAX_ACCENT_RANGE)
+                    return;
 
-                    // Lastly, the entity has to be tagged
-                    if (MixinHelpers.TAG_LIBRARY.is(EntityEffectTags.BRUSH_STEP, entity.getType())) {
-                        IEntityStep.EVENT.invoker().onStep(entity, pos, state);
-                    }
+                // Lastly, the entity has to be tagged
+                if (MixinHelpers.TAG_LIBRARY.is(EntityEffectTags.BRUSH_STEP, entity.getType())) {
+                    IEntityStep.EVENT.invoker().onStep(entity, pos, state);
                 }
-            });
+            }
         }
     }
 }

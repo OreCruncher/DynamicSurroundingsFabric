@@ -10,7 +10,6 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.runtime.oracle.IMinecraftClock;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
-import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
@@ -59,10 +58,10 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
             var particleLoad = "Particle Manager: %s".formatted(GameUtils.getParticleManager().countParticles());
             event.add(CollectDiagnosticsEvent.Section.Systems, particleLoad);
 
-            ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.class)
-                    .ifPresentOrElse(
-                            mm -> event.add(CollectDiagnosticsEvent.Section.Systems, mm.getDiagnosticText()),
-                            () -> event.add(CollectDiagnosticsEvent.Section.Systems, Component.literal("MusicManager unavailable")));
+            if (GameUtils.getMC().getMusicManager() instanceof DSurroundMusicManager mm)
+                event.add(CollectDiagnosticsEvent.Section.Systems, mm.getDiagnosticText());
+            else
+                event.add(CollectDiagnosticsEvent.Section.Systems, Component.literal("MusicManager unavailable"));
 
             for (var script : DIAGNOSTIC_SCRIPTS) {
                 Object result = this.conditionEvaluator.eval(script);
