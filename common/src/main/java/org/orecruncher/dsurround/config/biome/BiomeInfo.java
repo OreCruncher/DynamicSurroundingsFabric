@@ -42,10 +42,6 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     @Nullable
     private final BiomeProperties properties;
     private final BiomeTraits traits;
-    private final boolean isRiver;
-    private final boolean isOcean;
-    private final boolean isDeepOcean;
-    private final boolean isCave;
     private final AcousticEntryCollection loopSounds = new AcousticEntryCollection();
     private final AcousticEntryCollection moodSounds = new AcousticEntryCollection();
     private final AcousticEntryCollection additionalSounds = new AcousticEntryCollection();
@@ -55,14 +51,11 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private FogDensity fogDensity;
     private Script additionalSoundChance = DEFAULT_SOUND_CHANCE;
     private Script moodSoundChance = DEFAULT_SOUND_CHANCE;
+    // Built from the configuration and the game's track for the biome, which doesn't change
     @Nullable
     private AcousticEntryCollection musicChoices;
     @Nullable
     private Music musicChoicesVanilla;
-    @Nullable
-    private Music chosenMusic;
-    @Nullable
-    private Music chosenMusicVanilla;
 
     public BiomeInfo(final int version, final Identifier id, final String name, BiomeTraits traits, ConfigServices services) {
         this(version, id, name, traits, null, services);
@@ -77,13 +70,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         this.biomeId = id;
         this.biomeName = name;
         this.biome = biome;
-
         this.traits = traits;
-        this.isRiver = this.traits.contains(BiomeTrait.RIVER);
-        this.isOcean = this.traits.contains(BiomeTrait.OCEAN);
-        this.isDeepOcean = this.traits.contains(BiomeTrait.DEEP_OCEAN);
-        this.isCave = this.traits.contains(BiomeTrait.CAVE);
-
         this.fogDensity = FogDensity.NONE;
 
         // Fetch biome properties if a Biome is provided, and perform
@@ -96,19 +83,19 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     }
 
     public boolean isRiver() {
-        return this.isRiver;
+        return this.hasTrait(BiomeTrait.RIVER);
     }
 
     public boolean isOcean() {
-        return this.isOcean;
+        return this.hasTrait(BiomeTrait.OCEAN);
     }
 
     public boolean isDeepOcean() {
-        return this.isDeepOcean;
+        return this.hasTrait(BiomeTrait.DEEP_OCEAN);
     }
 
     public boolean isCave() {
-        return this.isCave;
+        return this.hasTrait(BiomeTrait.CAVE);
     }
 
     public Identifier getBiomeId() {
@@ -164,10 +151,6 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         configRule.comment().ifPresent(this::addComment);
     }
 
-    public boolean hasTrait(String trait) {
-        return this.traits.contains(trait);
-    }
-
     public boolean hasTrait(BiomeTrait trait) {
         return this.traits.contains(trait);
     }
@@ -186,17 +169,22 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         @Nullable
         AcousticEntryCollection sourceList = null;
 
+        // An empty list can't produce a sound, so the chance script isn't run for it
         switch (type) {
             case ADDITION -> {
-                var chance = this.services.conditionEvaluator().eval(this.additionalSoundChance);
-                if (chance instanceof Double c) {
-                    sourceList = random.nextDouble() < c ? this.additionalSounds : null;
+                if (!this.additionalSounds.isEmpty()) {
+                    var chance = this.services.conditionEvaluator().eval(this.additionalSoundChance);
+                    if (chance instanceof Double c) {
+                        sourceList = random.nextDouble() < c ? this.additionalSounds : null;
+                    }
                 }
             }
             case MOOD -> {
-                var chance = this.services.conditionEvaluator().eval(this.moodSoundChance);
-                if (chance instanceof Double c) {
-                    sourceList = random.nextDouble() < c ? this.moodSounds : null;
+                if (!this.moodSounds.isEmpty()) {
+                    var chance = this.services.conditionEvaluator().eval(this.moodSoundChance);
+                    if (chance instanceof Double c) {
+                        sourceList = random.nextDouble() < c ? this.moodSounds : null;
+                    }
                 }
             }
             case MUSIC -> sourceList = this.musicSounds;
@@ -206,30 +194,18 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     }
 
     @Override
-    public Optional<Music> getBackgroundMusic(Optional<Music> vanilla, IRandomizer random, boolean chooseAgain) {
+    public AcousticEntryCollection getMusicChoices(Optional<Music> vanilla) {
         var offered = vanilla.orElse(null);
-        if (chooseAgain || this.chosenMusic == null || this.chosenMusicVanilla != offered) {
-            var choices = offered != null ? this.musicChoicesWith(offered) : this.musicSounds;
-            this.chosenMusic = choices.makeSelection(random).map(ISoundFactory::createAsMusic).orElse(null);
-            this.chosenMusicVanilla = offered;
-        }
-        return Optional.ofNullable(this.chosenMusic);
-    }
-
-    /**
-     * The configured music plus the game's track for the biome, built when first asked for and kept while the game
-     * offers the same track.
-     */
-    private AcousticEntryCollection musicChoicesWith(Music vanilla) {
-        if (this.musicChoices == null || this.musicChoicesVanilla != vanilla) {
+        if (this.musicChoices == null || this.musicChoicesVanilla != offered) {
             var choices = new AcousticEntryCollection();
-            var factory = this.services.soundLibrary().getSoundFactoryForMusic(vanilla);
-            choices.add(new AcousticEntry(factory, null, this.services.conditionEvaluator()));
-            for (var entry : this.musicSounds)
-                choices.add(entry);
+            if (offered != null) {
+                var factory = this.services.soundLibrary().getSoundFactoryForMusic(offered);
+                choices.add(new AcousticEntry(factory, null, this.services.conditionEvaluator()));
+            }
+            choices.addAll(this.musicSounds);
             choices.trim();
             this.musicChoices = choices;
-            this.musicChoicesVanilla = vanilla;
+            this.musicChoicesVanilla = offered;
         }
         return this.musicChoices;
     }
@@ -245,9 +221,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
     public void update(final BiomeConfigRule entry) {
 
-        // The music may change, so the choices with the game's track are built again when next asked for
+        // The music may change, so the choices are built again when next asked for
         this.musicChoices = null;
-        this.chosenMusic = null;
 
         // If configured, reset the fog color. This will only reset the
         // Dynamic Surrounding fog color - the underlying fog color from
@@ -373,7 +348,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         }
 
         if (!this.moodSounds.isEmpty()) {
-            builder.append("\nMOOD chance: ").append(this.additionalSoundChance);
+            builder.append("\nMOOD chance: ").append(this.moodSoundChance);
             builder.append("\nMOOD sounds [\n");
             builder.append(this.moodSounds.stream().map(c -> indent + c.toString()).collect(Collectors.joining("\n")));
             builder.append("\n]");

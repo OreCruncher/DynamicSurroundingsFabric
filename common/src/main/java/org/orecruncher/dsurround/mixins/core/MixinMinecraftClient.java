@@ -70,7 +70,7 @@ public class MixinMinecraftClient {
 
         var biomeTrack = biome.getAttributes().contains(EnvironmentAttributes.BACKGROUND_MUSIC) ? vanilla : Optional.<Music>empty();
         var chooseAgain = !(minecraft.getMusicManager() instanceof DSurroundMusicManager mm) || mm.isTrackStarting();
-        var chosen = info.getBackgroundMusic(biomeTrack, Randomizer.current(), chooseAgain);
+        var chosen = MixinHelpers.BIOME_MUSIC.select(info, biomeTrack, Randomizer.current(), chooseAgain);
         return chosen.isPresent() ? chosen : vanilla;
     }
 }
