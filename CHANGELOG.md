@@ -58,7 +58,7 @@ Results:
   * Reduced calculations in the sound effect engine (reverb) where possible 
     * Basically, it only does calculations if any of the critical factors changed, like player block position, block state changes in the area, etc.                                                                                                                                                                                                                                        
   * Added an annotation processor to generate event loop implementations instead of using reflection (less overhead, no allocations)
-    * This is for the mod's internal event system, not Architectry/Fabric/NeoForge
+    * This is for the mod's internal event system, not Architectury/Fabric/NeoForge
   * Fixed GUI render performance issues 
 
 *Reliability*                                                                                                                                                                                                                                                                                                    
@@ -104,13 +104,14 @@ Results:
 * Backported fog calculator changes from 26.2 to 1.21.1
   * Biome fog should be softer
   * Sky fog is taken into account
+* Configuration in player resource packs is read whatever its namespace, so a pack can bring its own sounds and the configuration that plays them (such as Dynamic Surroundings Extended under `dsurround_ex`)
 
 **Fixes**
 * Some caches weren't properly flushed when the level changes (as when changing dimensions)
 * Edge cases where caches were holding direct references to things longer than they should (like Entities)
-* Cased related to validation and handling of configuration data coming from external sources (better error reporting, etc.)
+* Cases related to validation and handling of configuration data coming from external sources (better error reporting, etc.)
 * Sound effects when the player is underwater are properly dampened
-* Some of the math in reverb calculations were lossy, and as a result sounds where muted a bit (about 8 - 20% depending on environment)
+* Some of the math in reverb calculations were lossy, and as a result sounds were muted a bit (about 8 - 20% depending on environment)
   * I do not directly hear the difference, but it seems like the listening experience is improved
 * Breath effect underwater is back (bubbles being emitted)
   * Will be disabled if breath effect is disabled.
