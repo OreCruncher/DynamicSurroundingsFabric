@@ -99,8 +99,12 @@ public class BlockInfoTests {
         return services(tags, new Conditions(), new RecordingLog());
     }
 
+    private static BlockInfoBuilder builder(Block block, Tags tags) {
+        return new BlockInfoBuilder(1, block.defaultBlockState(), services(tags));
+    }
+
     private static BlockInfo info(Block block, Tags tags) {
-        return new BlockInfo(1, block.defaultBlockState(), services(tags));
+        return builder(block, tags).build();
     }
 
     private static BlockConfigRule soundRule(Optional<Script> chance, String... sounds) {
@@ -147,19 +151,20 @@ public class BlockInfoTests {
 
     @Test
     void anOrdinaryBlockGetsTheDefaults() {
-        var dirt = info(Blocks.DIRT, new Tags());
-        assertEquals(REFLECTANCE_DEFAULT, dirt.getSoundReflectivity());
-        assertEquals(OCCLUSION_DEFAULT, dirt.getSoundOcclusion());
+        var dirt = builder(Blocks.DIRT, new Tags());
         assertTrue(dirt.isDefault(), "a plain block should be able to share the default info");
+        var info = dirt.build();
+        assertEquals(REFLECTANCE_DEFAULT, info.getSoundReflectivity());
+        assertEquals(OCCLUSION_DEFAULT, info.getSoundOcclusion());
     }
 
     @Test
     void aBlockYouCanSeeThroughBlocksLessSound() {
         // A door doesn't occlude in Minecraft's sense, and with no tag or telling name: translucent occlusion, so it
         // can't share the default info
-        var info = info(Blocks.OAK_DOOR, new Tags());
-        assertEquals(0.15F, info.getSoundOcclusion());
-        assertFalse(info.isDefault());
+        var door = builder(Blocks.OAK_DOOR, new Tags());
+        assertFalse(door.isDefault());
+        assertEquals(0.15F, door.build().getSoundOcclusion());
     }
 
     // ---- Sounds
@@ -167,7 +172,7 @@ public class BlockInfoTests {
     @Test
     void noSoundsMeansNoSoundAndNoScriptRun() {
         var conditions = new Conditions();
-        var info = new BlockInfo(1, Blocks.DIRT.defaultBlockState(), services(new Tags(), conditions, new RecordingLog()));
+        var info = new BlockInfoBuilder(1, Blocks.DIRT.defaultBlockState(), services(new Tags(), conditions, new RecordingLog())).build();
         assertTrue(info.getSoundToPlay(Randomizer.create(1)).isEmpty());
         assertEquals(0, conditions.evaluations, "the chance script ran for a block with no sounds");
     }
@@ -175,10 +180,11 @@ public class BlockInfoTests {
     @Test
     void aSoundIsChosenWhenTheChanceComesUp() {
         var conditions = new Conditions();
-        var info = new BlockInfo(1, Blocks.DIRT.defaultBlockState(), services(new Tags(), conditions, new RecordingLog()));
-        info.update(soundRule(Optional.of(new Script("1")), "a"));
+        var builder = new BlockInfoBuilder(1, Blocks.DIRT.defaultBlockState(), services(new Tags(), conditions, new RecordingLog()));
+        builder.apply(soundRule(Optional.of(new Script("1")), "a"));
+        assertFalse(builder.isDefault());
+        var info = builder.build();
         assertTrue(info.hasSoundsOrEffects());
-        assertFalse(info.isDefault());
 
         conditions.chance = 1.0;
         var sound = info.getSoundToPlay(Randomizer.create(1));
@@ -191,18 +197,27 @@ public class BlockInfoTests {
     @Test
     void duplicateSoundsAreReportedToTheLibrarysLog() {
         var log = new RecordingLog();
-        var info = new BlockInfo(1, Blocks.DIRT.defaultBlockState(), services(new Tags(), new Conditions(), log));
-        info.update(soundRule(Optional.empty(), "a"));
-        info.update(soundRule(Optional.empty(), "a"));
+        var builder = new BlockInfoBuilder(1, Blocks.DIRT.defaultBlockState(), services(new Tags(), new Conditions(), log));
+        builder.apply(soundRule(Optional.empty(), "a"));
+        builder.apply(soundRule(Optional.empty(), "a"));
         assertEquals(1, log.at(IModLog.Level.WARN).size());
         assertTrue(log.at(IModLog.Level.WARN).getFirst().message().contains("Duplicate acoustic entry"));
     }
 
     @Test
     void clearingSoundsRemovesEarlierOnes() {
-        var info = new BlockInfo(1, Blocks.DIRT.defaultBlockState(), services(new Tags()));
-        info.update(soundRule(Optional.empty(), "a"));
-        info.update(new BlockConfigRule(List.of(), true, Optional.empty(), List.of(), List.of()));
-        assertFalse(info.hasSoundsOrEffects());
+        var builder = builder(Blocks.DIRT, new Tags());
+        builder.apply(soundRule(Optional.empty(), "a"));
+        builder.apply(new BlockConfigRule(List.of(), true, Optional.empty(), List.of(), List.of()));
+        assertTrue(builder.isDefault());
+        assertFalse(builder.build().hasSoundsOrEffects());
+    }
+
+    @Test
+    void theBuilderCantBeUsedOnceBuilt() {
+        var builder = builder(Blocks.DIRT, new Tags());
+        builder.build();
+        assertThrows(IllegalStateException.class, () -> builder.apply(soundRule(Optional.empty(), "a")));
+        assertThrows(IllegalStateException.class, builder::build);
     }
 }

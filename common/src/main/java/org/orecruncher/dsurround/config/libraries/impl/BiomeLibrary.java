@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.ConfigServices;
 import org.orecruncher.dsurround.config.SyntheticBiome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
+import org.orecruncher.dsurround.config.biome.BiomeInfoBuilder;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
@@ -125,15 +126,15 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
     private void initializeSyntheticBiome(SyntheticBiome biome) {
         String match = "@" + biome.getName();
-        var info = new BiomeInfo(this.version, biome.getId(), biome.getName(), biome.getTraits(), this.services());
+        var builder = new BiomeInfoBuilder(this.version, biome.getId(), biome.getName(), biome.getTraits(), this.services());
 
         for (var c : this.biomeConfigs) {
             if (c.biomeSelector().asString().equalsIgnoreCase(match)) {
-                info.update(c);
+                builder.apply(c);
             }
         }
 
-        this.internalBiomes.put(biome, info);
+        this.internalBiomes.put(biome, builder.build());
     }
 
     private static Registry<Biome> getActiveRegistry() {
@@ -160,17 +161,18 @@ public final class BiomeLibrary implements IBiomeLibrary {
         var name = getBiomeName(id);
         BiomeTraits traits = BiomeTraits.from(id, biome, this.tagLibrary);
 
-        // Build out the info object and store into the biome.  We need to do that
-        // so that when applying configs, the script engine can find it.
-        final var result = new BiomeInfo(this.version, id, name, traits, biome, this.services());
-        this.biomes.put(biome, result);
+        // The rule selectors are checked against the builder, so the info isn't needed until it is finished
+        final var builder = new BiomeInfoBuilder(this.version, id, name, traits, biome, this.services());
 
         // Collect any trait changes into the trait collection before applying
         // general rules as these traits can influence decisions.
-        this.applyTraits(biome, result);
+        this.applyTraits(biome, builder);
 
         // Apply rule configs
-        Guard.execute(() -> applyRuleConfigs(biome, result));
+        Guard.execute(() -> applyRuleConfigs(biome, builder));
+
+        final var result = builder.build();
+        this.biomes.put(biome, result);
         return result;
     }
 
@@ -190,13 +192,13 @@ public final class BiomeLibrary implements IBiomeLibrary {
         return this.biomeConditionEvaluator.eval(biome, info, script);
     }
 
-    private void applyTraits(Biome biome, BiomeInfo info) {
+    private void applyTraits(Biome biome, BiomeInfoBuilder builder) {
         this.getNonSyntheticBiomeRules(rule -> !rule.traits().isEmpty())
                 .forEach(rule -> {
                     try {
-                        var applies = this.biomeConditionEvaluator.check(biome, info, rule.biomeSelector());
+                        var applies = this.biomeConditionEvaluator.check(biome, builder, rule.biomeSelector());
                         if (applies) {
-                            info.mergeTraits(rule);
+                            builder.mergeTraits(rule);
                         }
                     } catch (Throwable t) {
                         this.reportRuleFailure(rule, t, "Unable to apply traits from rule");
@@ -204,21 +206,18 @@ public final class BiomeLibrary implements IBiomeLibrary {
                 });
     }
 
-    private void applyRuleConfigs(Biome biome, BiomeInfo info) {
+    private void applyRuleConfigs(Biome biome, BiomeInfoBuilder builder) {
         this.getNonSyntheticBiomeRules(rule -> rule.traits().isEmpty())
                 .forEach(rule -> {
                     try {
-                        var applies = this.biomeConditionEvaluator.check(biome, info, rule.biomeSelector());
+                        var applies = this.biomeConditionEvaluator.check(biome, builder, rule.biomeSelector());
                         if (applies) {
-                            info.update(rule);
+                            builder.apply(rule);
                         }
                     } catch (Throwable t) {
                         this.reportRuleFailure(rule, t, "Unable to process biome rule");
                     }
                 });
-
-        // Reduce memory consumption as much as possible
-        info.trim();
     }
 
     /**

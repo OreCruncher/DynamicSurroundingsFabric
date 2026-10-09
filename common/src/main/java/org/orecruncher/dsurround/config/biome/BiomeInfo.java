@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.config.biome;
 
-import dev.architectury.hooks.level.biome.BiomeHooks;
 import dev.architectury.hooks.level.biome.BiomeProperties;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
@@ -8,21 +7,17 @@ import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.AcousticEntry;
 import org.orecruncher.dsurround.config.AcousticEntryCollection;
-import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.ConfigServices;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
-import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.lib.weighted.WeightValue;
 import org.orecruncher.dsurround.processing.fog.FogDensity;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
@@ -30,9 +25,11 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvider {
-
-    public static final Script DEFAULT_SOUND_CHANCE = new Script("0.008");
+/**
+ * A biome as the configuration describes it, built by {@link BiomeInfoBuilder}. Doesn't change once built; a reload
+ * builds new ones.
+ */
+public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, IBiomeSoundProvider {
 
     private final int version;
     private final ConfigServices services;
@@ -43,40 +40,39 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     @Nullable
     private final BiomeProperties properties;
     private final BiomeTraits traits;
-    private final AcousticEntryCollection loopSounds = new AcousticEntryCollection();
-    private final AcousticEntryCollection moodSounds = new AcousticEntryCollection();
-    private final AcousticEntryCollection additionalSounds = new AcousticEntryCollection();
-    private final AcousticEntryCollection musicSounds = new AcousticEntryCollection();
-    private final ObjectArray<String> comments = new ObjectArray<>();
-    private TextColor fogColor;
-    private FogDensity fogDensity;
-    private Script additionalSoundChance = DEFAULT_SOUND_CHANCE;
-    private Script moodSoundChance = DEFAULT_SOUND_CHANCE;
-    // Built from the configuration and the game's track for the biome, which doesn't change
+    private final AcousticEntryCollection loopSounds;
+    private final AcousticEntryCollection moodSounds;
+    private final AcousticEntryCollection additionalSounds;
+    private final AcousticEntryCollection musicSounds;
+    private final ObjectArray<String> comments;
+    @Nullable
+    private final TextColor fogColor;
+    private final FogDensity fogDensity;
+    private final Script additionalSoundChance;
+    private final Script moodSoundChance;
+    // Built from the configured music and the game's track for the biome, which doesn't change
     @Nullable
     private AcousticEntryCollection musicChoices;
     @Nullable
     private Music musicChoicesVanilla;
 
-    public BiomeInfo(final int version, final ResourceLocation id, final String name, BiomeTraits traits, ConfigServices services) {
-        this(version, id, name, traits, null, services);
-    }
-
-    /**
-     * @param services what it uses, from the library that builds it
-     */
-    public BiomeInfo(final int version, final ResourceLocation id, final String name, BiomeTraits traits, @Nullable Biome biome, ConfigServices services) {
-        this.version = version;
-        this.services = services;
-        this.biomeId = id;
-        this.biomeName = name;
-        this.biome = biome;
-        this.traits = traits;
-        this.fogDensity = FogDensity.NONE;
-
-        // Fetch biome properties if a Biome is provided, and perform
-        // other necessary dependent work.
-        this.properties = this.biome != null ? BiomeHooks.getBiomeProperties(this.biome) : null;
+    BiomeInfo(BiomeInfoBuilder builder) {
+        this.version = builder.version;
+        this.services = builder.services;
+        this.biomeId = builder.biomeId;
+        this.biomeName = builder.biomeName;
+        this.biome = builder.biome;
+        this.properties = builder.properties;
+        this.traits = builder.traits;
+        this.loopSounds = builder.loopSounds;
+        this.moodSounds = builder.moodSounds;
+        this.additionalSounds = builder.additionalSounds;
+        this.musicSounds = builder.musicSounds;
+        this.comments = builder.comments;
+        this.fogColor = builder.fogColor;
+        this.fogDensity = builder.fogDensity;
+        this.additionalSoundChance = builder.additionalSoundChance;
+        this.moodSoundChance = builder.moodSoundChance;
     }
 
     public int getVersion() {
@@ -99,38 +95,27 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         return this.hasTrait(BiomeTrait.CAVE);
     }
 
+    @Override
     public ResourceLocation getBiomeId() {
         return this.biomeId;
     }
 
-    void addComment(final String comment) {
-        if (!StringUtils.isEmpty(comment)) {
-            this.comments.add(comment);
-        }
-    }
-
+    @Override
     public String getBiomeName() {
         return this.biomeName;
     }
 
-    public TextColor getFogColor() {
+    public @Nullable TextColor getFogColor() {
         return this.fogColor;
-    }
-
-    void setFogColor(final TextColor color) {
-        this.fogColor = color;
     }
 
     public FogDensity getFogDensity() {
         return this.fogDensity;
     }
 
-    public void setFogDensity(final FogDensity density) {
-        this.fogDensity = density;
-    }
-
+    @Override
     public float getDownfall() {
-        return this.properties != null ? this.properties.getClimateProperties().getDownfall() : 0.0F;
+        return BiomeInfoBuilder.downfall(this.properties);
     }
 
     public float getBaseTemperature() {
@@ -143,27 +128,9 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         return this.biome.getTemperature(pos);
     }
 
-    void setAdditionalSoundChance(final Script chance) {
-        this.additionalSoundChance = chance;
-    }
-
-    void setMoodSoundChance(final Script chance) {
-        this.moodSoundChance = chance;
-    }
-
+    @Override
     public BiomeTraits getTraits() {
         return this.traits;
-    }
-
-    public void mergeTraits(BiomeConfigRule configRule) {
-        if (configRule.clearTraits())
-            this.traits.clear();
-        this.traits.merge(configRule.traits());
-        configRule.comment().ifPresent(this::addComment);
-    }
-
-    public boolean hasTrait(BiomeTrait trait) {
-        return this.traits.contains(trait);
     }
 
     @Override
@@ -219,83 +186,6 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
             this.musicChoicesVanilla = offered;
         }
         return this.musicChoices;
-    }
-
-    void clearSounds() {
-        this.loopSounds.clear();
-        this.additionalSounds.clear();
-        this.musicSounds.clear();
-        this.moodSounds.clear();
-        this.moodSoundChance = DEFAULT_SOUND_CHANCE;
-        this.additionalSoundChance = DEFAULT_SOUND_CHANCE;
-    }
-
-    public void update(final BiomeConfigRule entry) {
-
-        // The music may change, so the choices are built again when next asked for
-        this.musicChoices = null;
-
-        // If configured, reset the fog color. This will only reset the
-        // Dynamic Surrounding fog color - the underlying fog color from
-        // data packs will still apply.
-        if (entry.resetFogColor()) {
-            addComment("> Reset Fog");
-            this.setFogColor(null);
-        }
-
-        entry.comment().ifPresent(this::addComment);
-        entry.fogColor().ifPresent(this::setFogColor);
-        entry.fogDensity().ifPresent(this::setFogDensity);
-        entry.additionalSoundChance().ifPresent(this::setAdditionalSoundChance);
-        entry.moodSoundChance().ifPresent(this::setMoodSoundChance);
-
-        // NOTE: We do not merge in traits here - it has already
-        // been done prior to this point.
-
-        if (entry.clearSounds()) {
-            addComment("> Sound Clear");
-            clearSounds();
-        }
-
-        for (final AcousticConfig sr : entry.acoustics()) {
-            var factory = this.services.soundLibrary().getSoundFactoryOrDefault(sr.factory());
-
-            Collection<AcousticEntry> targetCollection = null;
-            AcousticEntry acousticEntry = null;
-
-            switch (sr.type()) {
-                case LOOP -> {
-                    acousticEntry = new AcousticEntry(factory, sr.conditions(), this.services.conditionEvaluator());
-                    targetCollection = this.loopSounds;
-                }
-                case MUSIC, MOOD, ADDITION -> {
-                    final WeightValue weight = sr.weight();
-                    acousticEntry = new AcousticEntry(factory, sr.conditions(), weight, this.services.conditionEvaluator());
-
-                    if (sr.type() == SoundEventType.ADDITION)
-                        targetCollection = this.additionalSounds;
-                    else if (sr.type() == SoundEventType.MOOD)
-                        targetCollection = this.moodSounds;
-                    else
-                        targetCollection = this.musicSounds;
-                }
-                default -> this.services.logger().warn("[%s] Unknown SoundEventType %s", this.getBiomeName(), sr.type());
-            }
-
-            // Add if we have a target collection and it is not present
-            if (targetCollection != null) {
-                if (!targetCollection.add(acousticEntry))
-                    this.services.logger().warn("[%s] Duplicate acoustic entry: %s", this.getBiomeName(), sr.toString());
-            }
-        }
-    }
-
-    public void trim() {
-        this.loopSounds.trim();
-        this.moodSounds.trim();
-        this.additionalSounds.trim();
-        this.musicSounds.trim();
-        this.comments.trim();
     }
 
     /**

@@ -68,9 +68,15 @@ public class BiomeInfoMusicTests {
             "eval", args -> 0D,
             "check", args -> true));
 
-    static BiomeInfo info() {
+    /**
+     * Info for a biome with the rules applied in order
+     */
+    static BiomeInfo info(BiomeConfigRule... rules) {
         var services = new ConfigServices(new RecordingLog(), SOUNDS, Fakes.of(ITagLibrary.class, Map.of()), CONDITIONS);
-        return new BiomeInfo(1, id("biome"), "biome", BiomeTraits.of(), services);
+        var builder = new BiomeInfoBuilder(1, id("biome"), "biome", BiomeTraits.of(), services);
+        for (var rule : rules)
+            builder.apply(rule);
+        return builder.build();
     }
 
     static BiomeConfigRule musicRule(boolean clearSounds, String... sounds) {
@@ -99,69 +105,65 @@ public class BiomeInfoMusicTests {
 
     @Test
     void configuredMusicAloneWhenTheGameOffersNone() {
-        var info = info();
-        info.update(musicRule(false, "one", "two"));
+        var info = info(musicRule(false, "one", "two"));
         assertEquals(Set.of(id("one"), id("two")), choices(info, Optional.empty()));
     }
 
     @Test
     void configuredMusicIsOfferedAlongsideTheGameTrack() {
-        var info = info();
-        info.update(musicRule(false, "one"));
+        var info = info(musicRule(false, "one"));
         assertEquals(Set.of(id("one"), id("vanilla")), choices(info, Optional.of(music(id("vanilla")))));
     }
 
     @Test
     void clearingSoundsKeepsTheGameTrack() {
-        var info = info();
-        info.update(musicRule(false, "one"));
-        info.update(musicRule(true, "two"));
+        var info = info(musicRule(false, "one"), musicRule(true, "two"));
         assertEquals(Set.of(id("two"), id("vanilla")), choices(info, Optional.of(music(id("vanilla")))));
     }
 
     @Test
     void theGameTrackIsNotListedWithTheConfiguredMusic() {
-        var info = info();
-        info.update(musicRule(false, "one"));
+        var info = info(musicRule(false, "one"));
         info.getMusicChoices(Optional.of(music(id("vanilla"))));
         assertEquals(1, info.getSounds(SoundEventType.MUSIC).size());
     }
 
     @Test
     void choicesFollowAChangeInTheGameTrack() {
-        var info = info();
-        info.update(musicRule(false, "one"));
+        var info = info(musicRule(false, "one"));
         assertEquals(Set.of(id("one"), id("first")), choices(info, Optional.of(music(id("first")))));
         assertEquals(Set.of(id("one"), id("second")), choices(info, Optional.of(music(id("second")))));
     }
 
     @Test
-    void choicesFollowAnUpdate() {
-        var info = info();
-        var vanilla = Optional.of(music(id("vanilla")));
-        info.update(musicRule(false, "one"));
-        assertEquals(Set.of(id("one"), id("vanilla")), choices(info, vanilla));
-        info.update(musicRule(false, "two"));
-        assertEquals(Set.of(id("one"), id("two"), id("vanilla")), choices(info, vanilla));
+    void musicFromEachRuleIsOffered() {
+        var info = info(musicRule(false, "one"), musicRule(false, "two"));
+        assertEquals(Set.of(id("one"), id("two"), id("vanilla")), choices(info, Optional.of(music(id("vanilla")))));
     }
 
     @Test
     void theSameChoicesAreReturnedWhileTheGameTrackIsTheSame() {
         // How the selector knows the choices haven't changed
-        var info = info();
-        info.update(musicRule(false, "one"));
+        var info = info(musicRule(false, "one"));
         var vanilla = music(id("vanilla"));
         assertSame(info.getMusicChoices(Optional.of(vanilla)), info.getMusicChoices(Optional.of(vanilla)));
         assertSame(info.getMusicChoices(Optional.empty()), info.getMusicChoices(Optional.empty()));
     }
 
     @Test
-    void newChoicesAfterAChangeInTheGameTrackOrAnUpdate() {
+    void newChoicesAfterAChangeInTheGameTrack() {
         var info = info();
         var first = info.getMusicChoices(Optional.of(music(id("first"))));
         var second = info.getMusicChoices(Optional.of(music(id("second"))));
         assertNotSame(first, second);
-        info.update(musicRule(false, "one"));
-        assertNotSame(second, info.getMusicChoices(Optional.of(music(id("second")))));
+    }
+
+    @Test
+    void theBuilderCantBeUsedOnceBuilt() {
+        var services = new ConfigServices(new RecordingLog(), SOUNDS, Fakes.of(ITagLibrary.class, Map.of()), CONDITIONS);
+        var builder = new BiomeInfoBuilder(1, id("biome"), "biome", BiomeTraits.of(), services);
+        builder.build();
+        assertThrows(IllegalStateException.class, () -> builder.apply(musicRule(false, "one")));
+        assertThrows(IllegalStateException.class, builder::build);
     }
 }
