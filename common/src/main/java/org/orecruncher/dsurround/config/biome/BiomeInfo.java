@@ -59,6 +59,10 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private AcousticEntryCollection musicChoices;
     @Nullable
     private Music musicChoicesVanilla;
+    @Nullable
+    private Music chosenMusic;
+    @Nullable
+    private Music chosenMusicVanilla;
 
     public BiomeInfo(final int version, final Identifier id, final String name, BiomeTraits traits, ConfigServices services) {
         this(version, id, name, traits, null, services);
@@ -202,14 +206,19 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     }
 
     @Override
-    public Optional<Music> getBackgroundMusic(Optional<Music> vanilla, IRandomizer random) {
-        var choices = vanilla.isPresent() ? this.musicChoicesWith(vanilla.get()) : this.musicSounds;
-        return choices.makeSelection(random).map(ISoundFactory::createAsMusic);
+    public Optional<Music> getBackgroundMusic(Optional<Music> vanilla, IRandomizer random, boolean chooseAgain) {
+        var offered = vanilla.orElse(null);
+        if (chooseAgain || this.chosenMusic == null || this.chosenMusicVanilla != offered) {
+            var choices = offered != null ? this.musicChoicesWith(offered) : this.musicSounds;
+            this.chosenMusic = choices.makeSelection(random).map(ISoundFactory::createAsMusic).orElse(null);
+            this.chosenMusicVanilla = offered;
+        }
+        return Optional.ofNullable(this.chosenMusic);
     }
 
     /**
      * The configured music plus the game's track for the biome, built when first asked for and kept while the game
-     * offers the same track. Called every tick, so it does not rebuild otherwise.
+     * offers the same track.
      */
     private AcousticEntryCollection musicChoicesWith(Music vanilla) {
         if (this.musicChoices == null || this.musicChoicesVanilla != vanilla) {
@@ -238,6 +247,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
         // The music may change, so the choices with the game's track are built again when next asked for
         this.musicChoices = null;
+        this.chosenMusic = null;
 
         // If configured, reset the fog color. This will only reset the
         // Dynamic Surrounding fog color - the underlying fog color from

@@ -46,6 +46,9 @@ public class MixinMinecraftClient {
      * <p>
      * The game's track is one of the choices only if the biome sets its own background music, as in 1.21.1. Otherwise,
      * the dimension's track (Musics.GAME in the overworld) plays only when the configured music gives nothing.
+     * <p>
+     * The music manager asks every tick, but the choice only matters when a track starts. Our music manager says
+     * when that is, and the choice is kept until then; with the game's music manager a choice is made each time.
      */
     @WrapOperation(method = "getSituationalMusic()Lnet/minecraft/sounds/Music;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/attribute/BackgroundMusic;select(ZZ)Ljava/util/Optional;"))
     private Optional<Music> dsurround$biomeMusic(BackgroundMusic backgroundMusic, boolean isCreative, boolean isUnderwater, Operation<Optional<Music>> original) {
@@ -66,7 +69,8 @@ public class MixinMinecraftClient {
             return vanilla;
 
         var biomeTrack = biome.getAttributes().contains(EnvironmentAttributes.BACKGROUND_MUSIC) ? vanilla : Optional.<Music>empty();
-        var chosen = info.getBackgroundMusic(biomeTrack, Randomizer.current());
+        var chooseAgain = !(minecraft.getMusicManager() instanceof DSurroundMusicManager mm) || mm.isTrackStarting();
+        var chosen = info.getBackgroundMusic(biomeTrack, Randomizer.current(), chooseAgain);
         return chosen.isPresent() ? chosen : vanilla;
     }
 }

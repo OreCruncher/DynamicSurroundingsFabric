@@ -28,10 +28,13 @@ public interface IBiomeSoundProvider {
     Optional<ISoundFactory> getExtraSound(SoundEventType type, IRandomizer random);
 
     /**
-     * Creates a Music instance to be used with Minecraft's music manager
+     * Creates a Music instance to be used with Minecraft's music manager. The choice is kept until asked to choose
+     * again or the game offers a different track: the music manager asks every tick, but the choice only matters when
+     * a track starts.
      *
-     * @param vanilla    The music the game would play for the biome, folded into the choices
-     * @param randomizer Randomizer to use
+     * @param vanilla     The music the game would play for the biome, folded into the choices
+     * @param randomizer  Randomizer to use
+     * @param chooseAgain Make a new choice even if one is kept
      */
-    Optional<Music> getBackgroundMusic(Optional<Music> vanilla, IRandomizer randomizer);
+    Optional<Music> getBackgroundMusic(Optional<Music> vanilla, IRandomizer randomizer, boolean chooseAgain);
 }

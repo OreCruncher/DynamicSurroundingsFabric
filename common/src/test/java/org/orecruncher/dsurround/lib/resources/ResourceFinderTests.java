@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.lib.resources;
 
 import com.mojang.serialization.Codec;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.junit.jupiter.api.Test;
@@ -40,9 +41,17 @@ public class ResourceFinderTests {
         int listings;
 
         Packs add(String location, String... contents) {
+            return this.addFrom(null, location, contents);
+        }
+
+        /**
+         * Adds files from the pack with the given id (a mod's, or "file/(name)" for one in the resource packs folder)
+         */
+        Packs addFrom(String packId, String location, String... contents) {
+            var pack = packId == null ? null : Fakes.of(PackResources.class, Map.of("packId", args -> packId));
             var stack = this.files.computeIfAbsent(Identifier.parse(location), l -> new ArrayList<>());
             for (var content : contents)
-                stack.add(new Resource(null, () -> new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8))));
+                stack.add(new Resource(pack, () -> new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8))));
             return this;
         }
 
@@ -107,6 +116,34 @@ public class ResourceFinderTests {
                 .add("biomesoplenty:dsconfigs/biomes.json", "{\"b\": \"2\"}")
                 .add("natures_spirit:dsconfigs/biomes.json", "{\"c\": \"3\"}");
         assertEquals(Set.of("dsurround", "biomesoplenty"), namespaces(configFinder(packs).find(CODEC, "biomes")));
+    }
+
+    @Test
+    void readsResourcePacksWithTheirOwnNamespace() {
+        // Packs like Dynamic Surroundings Extended keep their sounds and configuration under a namespace of their own
+        var packs = new Packs()
+                .addFrom("file/Dynamic Surroundings Extended", "dsurround_ex:dsconfigs/biomes.json", "{\"a\": \"1\"}")
+                .addFrom("file/Dynamic Surroundings - Seasons", "dsurround_seasons:dsconfigs/biomes.json", "{\"b\": \"2\"}");
+        assertEquals(Set.of("dsurround_ex", "dsurround_seasons"), namespaces(configFinder(packs).find(CODEC, "biomes")));
+    }
+
+    @Test
+    void stillSkipsModPacksForModsThatArentInstalled() {
+        // NeoForge's mod packs, and Fabric's
+        var packs = new Packs()
+                .addFrom("mod/somemod", "natures_spirit:dsconfigs/biomes.json", "{\"a\": \"1\"}")
+                .addFrom("fabric", "terralith:dsconfigs/biomes.json", "{\"b\": \"2\"}");
+        assertTrue(configFinder(packs).find(CODEC, "biomes").isEmpty());
+    }
+
+    @Test
+    void keepsOnlyThePlayersPackWhenAModAndAPackShareAMissingNamespace() {
+        var packs = new Packs()
+                .addFrom("mod/dsurround", "natures_spirit:dsconfigs/biomes.json", "{\"mod\": \"x\"}")
+                .addFrom("file/My Pack", "natures_spirit:dsconfigs/biomes.json", "{\"pack\": \"x\"}");
+        var found = configFinder(packs).find(CODEC, "biomes");
+        assertEquals(1, found.size());
+        assertEquals(Map.of("pack", "x"), found.iterator().next().resourceContent());
     }
 
     @Test

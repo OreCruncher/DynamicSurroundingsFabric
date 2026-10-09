@@ -2,11 +2,12 @@ package org.orecruncher.dsurround.lib.music;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.sounds.MusicManager;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.Music;
 import org.jetbrains.annotations.NotNull;
-import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.gui.sound.SoundToast;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -17,7 +18,6 @@ import org.orecruncher.dsurround.sound.IAudioPlayer;
 public final class DSurroundMusicManager extends MusicManager {
 
     private static final IModLog LOGGER = ModLog.createChild(ContainerManager.resolve(IModLog.class), "MusicManager");
-    private static final Configuration.MusicManagerOptions musicOptions = ContainerManager.resolve(Configuration.MusicManagerOptions.class);
     private static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
 
     private boolean pauseTicking;
@@ -33,26 +33,43 @@ public final class DSurroundMusicManager extends MusicManager {
         }
     }
 
+    /**
+     * Credited music gets our toast, unless the game shows its own "now playing" toast (its Music Toast option), which
+     * names the track through {@link #getCurrentMusicTranslationKey()}.
+     */
     @Override
     public void startPlaying(@NotNull Music music) {
-        if (MixinHelpers.soundOptions.displayToastMessagesForMusic)
+        if (MixinHelpers.soundOptions.displayToastMessagesForMusic && !GameUtils.getGameSettings().musicToast().get().renderToast())
             SoundToast.from(music);
         super.startPlaying(music);
     }
 
+    /**
+     * The game names the current track in its toast and on the pause screen by this key. Tracks it has no translation
+     * for (ours and resource packs') are named by their title and author instead, when their sound metadata has them.
+     */
     @Override
-    public void stopPlaying(@NotNull Music music) {
-        super.stopPlaying(music);
+    public String getCurrentMusicTranslationKey() {
+        var key = super.getCurrentMusicTranslationKey();
+        if (key == null)
+            return null;
+
+        var metaData = MixinHelpers.SOUND_LIBRARY.getSoundMetadata(this.currentMusic.getIdentifier());
+        var title = metaData.hasTitle() ? metaData.getTitle() : null;
+        var author = metaData.getCredits().isEmpty() ? null : metaData.getCredits().getFirst().author();
+        return NowPlayingName.of(key, Language.getInstance()::has, title, author);
     }
 
-    @Override
-    public void stopPlaying() {
-        super.stopPlaying();
-    }
-
-    @Override
-    public boolean isPlayingMusic(@NotNull Music music) {
-        return super.isPlayingMusic(music);
+    /**
+     * Whether this tick starts a new track: nothing is playing and the wait is over. Situational music asked for at
+     * any other time only decides whether the current track is replaced and how long the wait can be. The game counts
+     * the wait down before checking it, so the wait is over at 1.
+     * <p>
+     * Only meaningful during {@link #tick()}, the game's one caller of situational music, which has already checked
+     * that the manager is not paused and the sound system is available.
+     */
+    public boolean isTrackStarting() {
+        return this.currentMusic == null && this.nextSongDelay <= 1;
     }
 
     public void doCommand(Commands command) {
@@ -90,14 +107,14 @@ public final class DSurroundMusicManager extends MusicManager {
             return Component.translatable("dsurround.text.musicmanager.nothing");
         }
 
-        // Lookup meta information
+        // Lookup meta information; getSoundMetadata never returns null
         var metaData = MixinHelpers.SOUND_LIBRARY.getSoundMetadata(this.currentMusic.getIdentifier());
-        if (metaData == null || !metaData.hasTitle()) {
+        if (!metaData.hasTitle() || metaData.getCredits().isEmpty()) {
             return Component.literal(this.currentMusic.getIdentifier().toString());
         }
 
         var title = metaData.getTitle().copy().withColor(ColorPalette.PUMPKIN_ORANGE.getValue());
-        var author = metaData.getCredits().get(0).author().copy().withColor(ColorPalette.WHEAT.getValue());
+        var author = metaData.getCredits().getFirst().author().copy().withColor(ColorPalette.WHEAT.getValue());
         return Component.translatable("dsurround.text.musicmanager.playing", title, author, Component.translationArg(this.currentMusic.getIdentifier()));
     }
 

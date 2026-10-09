@@ -123,7 +123,7 @@
   "dsurround.config.soundOptions.playBiomeMusicWhileCreative": "Play biome music while creative",
   "dsurround.config.soundOptions.playBiomeMusicWhileCreative.tooltip": "Enables playing configured biome background music when in creative mode. Normally while in creative mode, Minecraft's situational music selector will automatically pick creative music rather than biome background music.",
   "dsurround.config.soundOptions.displayToastMessagesForMusic": "Display music toast messages",
-  "dsurround.config.soundOptions.displayToastMessagesForMusic.tooltip": "Enables the display of toast notifications for music that has a requirement for attribution. Please see the CREDITS.md file on Github for details.",
+  "dsurround.config.soundOptions.displayToastMessagesForMusic.tooltip": "Enables the display of toast notifications for music that has a requirement for attribution. Please see the CREDITS.md file on Github for details. When the game's own Music Toast option is set to show toasts, the game's toast is used instead.",
   "dsurround.config.blockEffects": "Block Effect Options",
   "dsurround.config.blockEffects.tooltip": "Configuration options for block effects",
   "dsurround.config.blockEffects.blockEffectRange": "Block Effect Range",

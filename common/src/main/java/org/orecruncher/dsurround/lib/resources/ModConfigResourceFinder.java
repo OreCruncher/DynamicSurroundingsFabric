@@ -20,7 +20,9 @@ import static org.orecruncher.dsurround.Configuration.Flags.RESOURCE_LOADING;
 /**
  * Finds the mod's configuration files in mod jars and resource packs: assets/(namespace)/(config folder)/..., one
  * folder per mod. A folder whose namespace isn't an installed mod is skipped, so configuration for mods that aren't
- * there (including what this mod ships for others) isn't loaded.
+ * there (including what this mod ships for others) isn't loaded. Resource packs the player added are the exception:
+ * they are read whatever their namespace, as a pack can bring its own (sounds and the configuration that plays them,
+ * as Dynamic Surroundings Extended does under dsurround_ex).
  * <p>
  * The files are listed once, when this is made, and looked up by their exact path within the config folder.
  */
@@ -44,17 +46,29 @@ public class ModConfigResourceFinder extends AbstractResourceFinder {
         var skipped = new TreeSet<String>();
         for (var entry : resourceManager.listResourceStacks(configPath, location -> true).entrySet()) {
             var location = entry.getKey();
+            var stack = entry.getValue();
             if (!isModLoaded.test(location.getNamespace())) {
-                skipped.add(location.getNamespace());
-                continue;
+                stack = stack.stream().filter(ModConfigResourceFinder::isFromPlayerPack).toList();
+                if (stack.isEmpty()) {
+                    skipped.add(location.getNamespace());
+                    continue;
+                }
             }
             var path = location.getPath();
             if (path.startsWith(prefix))
-                this.byPath.computeIfAbsent(path.substring(prefix.length()), p -> new ArrayList<>()).add(new Found(location, entry.getValue()));
+                this.byPath.computeIfAbsent(path.substring(prefix.length()), p -> new ArrayList<>()).add(new Found(location, stack));
         }
 
         if (!skipped.isEmpty())
             this.logger.debug(RESOURCE_LOADING, "Skipping %s configuration for mods that aren't installed: %s", configPath, skipped);
+    }
+
+    /**
+     * Whether a resource comes from a pack in the resource packs folder, rather than a mod. The pack's source can't
+     * tell (NeoForge gives its mod packs the same one as the player's), but the folder's packs are all "file/(name)".
+     */
+    static boolean isFromPlayerPack(Resource resource) {
+        return resource.source() != null && resource.sourcePackId().startsWith("file/");
     }
 
     @Override
