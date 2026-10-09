@@ -17,12 +17,13 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 
 This section is a bit long since this is the first time I am writing this. In subsequent releases it should be shorter. :)
 
-Starting with **1.21.1-0.4.6** I am directly using AI to assist with modding (Claude Code Pro if you are interested). To establish
-a bit more context, I am a software engineer with almost 40 years (egad!) industry experience, primarily working on backend systems.
-I personally believe that AI has a role in modding, but the challenge is having the "wisdom" and "experience" of applying it "properly"
-(notice all the quotes). Further, there are qualitative differences in work product between the different AI models, and a lack of
-software experience on the users part runs the risk of releasing something that is low quality. Unfortunately there isn't much I can
-do about this particular situation, other than be transparent about my use of AI. (I am aware of the broader discussion/issues of AI.)
+Starting with **1.21.1-0.4.6** I am using AI to assist with modding (Claude Code Pro if you are interested). To establish
+a bit more context, I am a software engineer with almost 40 years industry experience (50 if you include high school and other
+personal projects), primarily working on backend systems. I personally believe that AI has a role in modding, but the challenge
+is having the "wisdom" and "experience" of applying it "properly" (notice all the quotes). Further, there are qualitative
+differences in work product between the different AI models, and a lack of software experience on the users part runs the risk
+of releasing something that is low quality. Unfortunately there isn't much I can do about this particular situation, other
+than be transparent about my use of AI. (I am aware of the broader discussion/issues of AI.)
 
 If you have constructive feedback or questions related to my AI experience feel free to comment [here](https://github.com/OreCruncher/DynamicSurroundingsFabric/discussions).
 
@@ -34,36 +35,42 @@ Summary:
 * Code review: finding bugs, performance problems, and places that didn't follow best practices
 * Refactoring: restructuring code so it can be unit tested (isolation, mocking), removing duplicate code, and cleaning up config processing
 * Testing: writing an extensive set of unit tests
-* GUIs: making the mod's screens consistent with how Minecraft's own screens work (I suck at creating GUIs)
+* GUIs: making the mod's screens consistent with how Minecraft's own screens work
 * Mod compatibility: analyzing how the mod interacts with other mods and making improvements
-* Visual effects: reworking the waterfall and firefly effects, and bringing back the aurora from older versions, including shaders
+* Visual effects: reworked noise textures, added particle shaders, and integrated the shader based aurora from older versions
 * Planning ahead: working out the migration path to Minecraft 26.2 so it is easier and less error-prone   
 
 Results:
 
 *Testing and maintainability*                                                                                                                                                                                                                                                                                    
   * Added 1400+ unit tests to validate internal logic                                                                                                                                                                                                                                                              
-  * Refactored the sound effect engine (reverb) so it can be tested in isolation                                                                                                                                                                                                                                   
-  * Found duplicate code and refactored to remove the redundancy                                                                                                                                                                                                                                                
+  * Refactored, eliminating static references in favor of injection
+  * Found duplicate code and refactored to remove the redundancy
   * Removed dead code, or code that wasn't actually providing any value (always return true, didn't contribute anything meaningful, etc.)
+  * Produced comments for undocumented methods where clarification was needed
 
 *Performance*                                                                                                                                                                                                                                                                                                    
   * Script engine performance improved by roughly 40%                                                                                                                                                                                                                                                              
-  * Fixed performance issues in the area scanner, making it about 50% faster                                                                                                                                                                                                                                       
+  * Fixed performance issues in the area block event scanner, making it about 50% faster
+    * There were a lot of cases where it would do a needless double scan
+  * Identified a Minecraft biome blend behavior and tuned the area biome scanner to take advantage, reducing the number of samples by 85%
   * Improved performance and resource usage of the waterfall and steam producer effect systems                                                                                                                                                                                                                     
-  * Reduced calculations in the sound effect engine (reverb) where possible                                                                                                                                                                                                                                        
-  * Added an annotation processor to generate event loop implementations instead of using reflection (less overhead, no allocations)                                                                                                                                                                               
+  * Reduced calculations in the sound effect engine (reverb) where possible 
+    * Basically, it only does calculations if any of the critical factors changed, like player block position, block state changes in the area, etc.                                                                                                                                                                                                                                        
+  * Added an annotation processor to generate event loop implementations instead of using reflection (less overhead, no allocations)
+    * This is for the mod's internal event system, not Architectry/Fabric/NeoForge
   * Fixed GUI render performance issues 
 
 *Reliability*                                                                                                                                                                                                                                                                                                    
   * Fixed edge cases where caches weren't flushed or data held a reference to an object that could go out of scope (like Entities)                                                                                                                                                                                 
   * Added throttling where repeated errors could spam the log                                                                                                                                                                                                                                                      
-  * Improved error detection and reporting for script engine and json configurations                                                                                                                                                                                                                               
-  * Mod configuration handles bad input from hand edits, and writes comments into the config file                                                                                                                                                                                                                  
-  * Improved Markdown parsing robustness and performance (Sound Credits dialog)                                                                                                                                                                                                                                    
+  * Improved error detection and reporting for scripts and json configurations                                                                                                                                                                                                                               
+  * Mod configuration logic handles bad input from hand edits, and writes comments into the config file                                                                                                                                                                                                                  
+  * Improved Markdown parsing robustness and performance (Sound Credits dialog)
+  * Validation of dependency injection entries to detect circular dependencies (cycles) earlier in the startup process (a development aid rather than a player facing issue)
                                                                                                                                                                                                                                                                                                                    
 *Features*                                                                                                                                                                                                                                                                                                       
-  * Waterfall mist/foam, firefly glow and lighting, and the return of the aurora (see What's New)
+  * Waterfall mist and foam, firefly glow and lighting, and the return of the aurora (see What's New)
 
 **What's New**
 * Added /dsversion command that will query version status from my GitHub and report back in the local chat. Response will have clickable links so you can navigate to various information sources. This command will work regardless if the chat report on login is disabled. (Some modpack authors disable chat reporting on client login.)
@@ -73,11 +80,12 @@ Results:
   * Added comments to fields when writing out the configuration file. User comments will not be preserved.
   * Added mechanisms to migrate existing settings to new fields when the config is loaded
 * The aurora is back. There are a set of options in the configuration to enable/disable, adjust frequency, as well as the max number of bands.
+  * New version takes about 1/10th the compute to render (no more computer space heater)
   * Shows in the northern sky while standing in cold/icy/taiga biomes
   * There is a new Aurora configuration section where it can be enabled/disabled, and other properties modified
   * Will auto disable if Iris or Oculus is installed.
 * Waterfall mist (replaces the relatively new cascade) and water foam.
-  * Mist - swirls at the bottom of a waterfall (falling water hitting a surface)
+  * Mist - swirls at the bottom of a waterfall drops (falling water hitting a surface)
   * Foam - generates when water drops down a block, or when water hits a surface. Foam will flow with the direction of water and eventually fade.
   * Options are in the Waterfall Options section of the configuration. (Previous settings, if any, are migrated.)
   * Shader blending will auto disable if Iris or Oculus is installed.
@@ -87,18 +95,26 @@ Results:
 * Extended debug hud for Dynamic Surroundings. If the key is bound, hitting it will toggle between the normal HUD, information about the player biome, and the effect system placements in world.
 
 **Changes**
-* Search box in the Individual Sound Configuration menu will accept regular expressions for filtering.
-* Reduced the reverb ray count from 256 to 128 as a default. Existing configs will still have 256 so you can reduce if you want. Math models and testing showed anything more than 100 would give marginal improvements to sound.
-* Ensured all Dynamic Surroundings footstep sounds are mono, and removed on the fly mono-conversion support.
-* Removed the waterfall cascade effect as it is replaced by mist and foam.
-* Backported fog calculator changes from 26.2 to 1.21.1. Biome fog should be softer, and sky fog is taken into account.
+* Search box in the Individual Sound Configuration menu will accept regular expressions for filtering
+* Reduced the default reverb ray distance from 256 to 128
+  * Existing configs will still have 256 (because the new upper bound is 256) so you can reduce if you want
+  * Math models and testing showed anything more than 110 would give marginal improvements to sound
+* Ensured all Dynamic Surroundings footstep sounds are mono, and removed on the fly mono-conversion support
+* Removed the waterfall cascade effect as it is replaced by mist and foam
+* Backported fog calculator changes from 26.2 to 1.21.1
+  * Biome fog should be softer
+  * Sky fog is taken into account
 
 **Fixes**
-* A lot of small ones - nothing horrific. Most were edge conditions or related to validation of configuration data coming from external sources.
-* Sound effects when the player is underwater are properly dampened.
-* Some of the math in reverb calculations were lossy, and as a result sounds where muted a bit (about 8 - 20% depending on environment). I do not directly hear the difference, but it seems like the listening experience is improved.
-* Breath effect underwater is back (bubbles being emitted). Will be disabled if breath effect is disabled.
-* Fixed issue when joining a remote server where a tag sync is detected would not properly update Dynamic Surroundings tag cache.
+* Some caches weren't properly flushed when the level changes (as when changing dimensions)
+* Edge cases where caches were holding direct references to things longer than they should (like Entities)
+* Cased related to validation and handling of configuration data coming from external sources (better error reporting, etc.)
+* Sound effects when the player is underwater are properly dampened
+* Some of the math in reverb calculations were lossy, and as a result sounds where muted a bit (about 8 - 20% depending on environment)
+  * I do not directly hear the difference, but it seems like the listening experience is improved
+* Breath effect underwater is back (bubbles being emitted)
+  * Will be disabled if breath effect is disabled.
+* Fixed issue when joining a remote server where a tag sync is not detected and Dynamic Surroundings tag cache is not cleared
 
 > ### DynamicSurroundings-1.21.1-0.4.5
 

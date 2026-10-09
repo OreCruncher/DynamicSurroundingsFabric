@@ -7,8 +7,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.main.GameConfig;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.sounds.MusicManager;
+import net.minecraft.sounds.Music;
 import net.minecraft.world.entity.player.Abilities;
+import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -16,6 +19,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 @Mixin(Minecraft.class)
@@ -53,5 +57,17 @@ public class MixinMinecraftClient {
             return this.dsurround$cachedAbilities.get();
         }
         return original.call(instance);
+    }
+
+    /**
+     * Hooks the biome's background music when Minecraft picks the situational music. Music configured for the
+     * biome is chosen alongside the biome's own track. Only the music Minecraft plays is affected: other callers of
+     * Biome.getBackgroundMusic() still see the game's value.
+     */
+    @WrapOperation(method = "getSituationalMusic()Lnet/minecraft/sounds/Music;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/biome/Biome;getBackgroundMusic()Ljava/util/Optional;"))
+    private Optional<Music> dsurround$biomeMusic(Biome biome, Operation<Optional<Music>> original) {
+        var vanilla = original.call(biome);
+        var info = MixinHelpers.biomeLibrary().findBiomeInfo(biome);
+        return info != null ? info.getBackgroundMusic(vanilla, Randomizer.current()) : vanilla;
     }
 }
