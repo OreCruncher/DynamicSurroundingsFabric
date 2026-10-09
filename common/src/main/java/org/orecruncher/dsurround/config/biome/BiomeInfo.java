@@ -55,6 +55,10 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     private FogDensity fogDensity;
     private Script additionalSoundChance = DEFAULT_SOUND_CHANCE;
     private Script moodSoundChance = DEFAULT_SOUND_CHANCE;
+    @Nullable
+    private AcousticEntryCollection musicChoices;
+    @Nullable
+    private Music musicChoicesVanilla;
 
     public BiomeInfo(final int version, final Identifier id, final String name, BiomeTraits traits, ConfigServices services) {
         this(version, id, name, traits, null, services);
@@ -80,12 +84,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
 
         // Fetch biome properties if a Biome is provided, and perform
         // other necessary dependent work.
-        if (this.biome != null) {
-            this.properties = BiomeHooks.getBiomeProperties(this.biome);
-            this.setDefaultMusic();
-        } else {
-            this.properties = null;
-        }
+        this.properties = this.biome != null ? BiomeHooks.getBiomeProperties(this.biome) : null;
     }
 
     public int getVersion() {
@@ -203,8 +202,27 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
     }
 
     @Override
-    public Optional<Music> getBackgroundMusic(IRandomizer random) {
-        return this.getExtraSound(SoundEventType.MUSIC, random).map(ISoundFactory::createAsMusic);
+    public Optional<Music> getBackgroundMusic(Optional<Music> vanilla, IRandomizer random) {
+        var choices = vanilla.isPresent() ? this.musicChoicesWith(vanilla.get()) : this.musicSounds;
+        return choices.makeSelection(random).map(ISoundFactory::createAsMusic);
+    }
+
+    /**
+     * The configured music plus the game's track for the biome, built when first asked for and kept while the game
+     * offers the same track. Called every tick, so it does not rebuild otherwise.
+     */
+    private AcousticEntryCollection musicChoicesWith(Music vanilla) {
+        if (this.musicChoices == null || this.musicChoicesVanilla != vanilla) {
+            var choices = new AcousticEntryCollection();
+            var factory = this.services.soundLibrary().getSoundFactoryForMusic(vanilla);
+            choices.add(new AcousticEntry(factory, null, this.services.conditionEvaluator()));
+            for (var entry : this.musicSounds)
+                choices.add(entry);
+            choices.trim();
+            this.musicChoices = choices;
+            this.musicChoicesVanilla = vanilla;
+        }
+        return this.musicChoices;
     }
 
     void clearSounds() {
@@ -214,28 +232,12 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeSoundProvid
         this.moodSounds.clear();
         this.moodSoundChance = DEFAULT_SOUND_CHANCE;
         this.additionalSoundChance = DEFAULT_SOUND_CHANCE;
-
-        this.setDefaultMusic();
-    }
-
-    private void setDefaultMusic() {
-        // TODO: Sort this out
-        /*
-        if (this.properties == null)
-            return;
-
-        // Add background track to the list of possible plays for the biome
-        this.properties.getEffectsProperties()
-                .getBackgroundMusic()
-                .ifPresent(m -> {
-                    var factory = this.services.soundLibrary().getSoundFactoryForMusic(m);
-                    var entry = new AcousticEntry(factory, null, this.services.conditionEvaluator());
-                    this.musicSounds.add(entry);
-                });
-*/
     }
 
     public void update(final BiomeConfigRule entry) {
+
+        // The music may change, so the choices with the game's track are built again when next asked for
+        this.musicChoices = null;
 
         // If configured, reset the fog color. This will only reset the
         // Dynamic Surrounding fog color - the underlying fog color from

@@ -15,6 +15,13 @@ Through `ceb6cd3` (tag sync on remote servers):
   (`collectGameRegistries` RETURN, for remote and integrated servers); `/reload` still goes through
   `MixinClientPacketListener.handleUpdateTags`. Checked: "Tag sync event received" logs on joining a world.
 - `ReflectionHelper` casts in `MixinClientLevel` became plain casts.
+- Biome background music: 26.2 has no `Biome.getBackgroundMusic()`; music is the `BACKGROUND_MUSIC` environment
+  attribute with default, creative and underwater tracks. `MixinMinecraftClient` wraps `BackgroundMusic.select(ZZ)`
+  in `getSituationalMusic` (0.4.6 wraps `Biome.getBackgroundMusic()` there). The game's underwater and creative tracks
+  still play; configured music is chosen with the default one, which is folded into the choices only when the biome
+  sets the attribute itself (otherwise it is the dimension's `Musics.GAME`, the fallback, as in 1.21.1). Biome at the
+  camera, where the attribute is sampled. `playBiomeMusicWhileCreative` passes `isCreative = false` to `select`
+  instead of faking `Abilities`.
 
 ## Structure: which side was kept
 
@@ -79,3 +86,5 @@ render types are gone. What replaced them:
 - Fog effects (biome, morning) now actually change the fog.
 - Sound configuration screen: layout, filter, play/stop, tooltips; credits/markdown screen links and hover text.
 - Compass scale, clock colour, diagnostics overlay modes including the in-world effect boxes.
+- Biome music (`/dsmm whatsplaying`): configured tracks in their biomes, underwater music in oceans, creative music
+  with and without `playBiomeMusicWhileCreative`.

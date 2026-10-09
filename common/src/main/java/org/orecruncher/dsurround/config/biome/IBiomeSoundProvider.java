@@ -29,6 +29,9 @@ public interface IBiomeSoundProvider {
 
     /**
      * Creates a Music instance to be used with Minecraft's music manager
+     *
+     * @param vanilla    The music the game would play for the biome, folded into the choices
+     * @param randomizer Randomizer to use
      */
-    Optional<Music> getBackgroundMusic(IRandomizer randomizer);
+    Optional<Music> getBackgroundMusic(Optional<Music> vanilla, IRandomizer randomizer);
 }
