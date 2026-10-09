@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.runtime;
 
 import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import net.minecraft.world.level.biome.Biome;
-import org.orecruncher.dsurround.config.biome.BiomeInfo;
+import org.orecruncher.dsurround.config.biome.IBiomeIdentity;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
@@ -29,7 +29,7 @@ public final class BiomeConditionEvaluator {
         this.failures.reset();
     }
 
-    public boolean check(Biome biome, BiomeInfo info, final Script conditions) {
+    public boolean check(Biome biome, IBiomeIdentity info, final Script conditions) {
         // Evaluates directly to a boolean. A script that fails, or whose result cannot be converted to a boolean,
         // is treated as false and the problem is logged once.
         return this.setBiome(biome, info) && this.context.check(conditions);
@@ -39,7 +39,7 @@ public final class BiomeConditionEvaluator {
         return this.eval(biome, null, conditions);
     }
 
-    public Object eval(Biome biome, BiomeInfo info, final Script conditions) {
+    public Object eval(Biome biome, IBiomeIdentity info, final Script conditions) {
         // ExecutionContext.eval() handles and logs script errors itself
         return this.setBiome(biome, info) ? this.context.eval(conditions).orElse(false) : false;
     }
@@ -48,7 +48,7 @@ public final class BiomeConditionEvaluator {
      * Sets the biome the scripts see.
      * @return False if setting up the biome failed (the problem is logged)
      */
-    private boolean setBiome(Biome biome, BiomeInfo info) {
+    private boolean setBiome(Biome biome, IBiomeIdentity info) {
         try {
             if (info == null)
                 this.biomeVariables.setBiome(biome);

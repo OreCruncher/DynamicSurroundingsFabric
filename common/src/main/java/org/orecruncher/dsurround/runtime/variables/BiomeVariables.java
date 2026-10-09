@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.runtime.variables;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.config.biome.BiomeInfo;
+import org.orecruncher.dsurround.config.biome.IBiomeIdentity;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.function.CachingSupplier;
 import org.orecruncher.dsurround.lib.scripting.ArgType;
@@ -33,7 +33,7 @@ public final class BiomeVariables extends VariableSet {
     private final CachingSupplier<String> biomeTraits = CachingSupplier.from(() -> this.info == null ? "[]" : this.info.getTraits().toString());
 
     private Biome biome;
-    private BiomeInfo info;
+    private IBiomeIdentity info;
 
     /**
      * The player's biome, updated each tick. Precipitation is at the player's position.
@@ -84,14 +84,14 @@ public final class BiomeVariables extends VariableSet {
 
     public void setBiome(final Biome biome) {
         if (biome != null) {
-            BiomeInfo info = this.biomeLibrary.getBiomeInfo(biome);
+            var info = this.biomeLibrary.getBiomeInfo(biome);
             this.setBiome(biome, info);
         } else {
             this.setBiome(null, null);
         }
     }
 
-    public void setBiome(final Biome biome, final BiomeInfo info) {
+    public void setBiome(final Biome biome, final IBiomeIdentity info) {
         // Usually the same as last tick. A reload gives the same biome a new info, so both are compared.
         if (biome == this.biome && info == this.info)
             return;

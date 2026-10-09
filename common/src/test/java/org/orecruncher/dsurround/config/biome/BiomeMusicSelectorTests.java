@@ -30,8 +30,7 @@ public class BiomeMusicSelectorTests {
 
     @Test
     void theChoiceIsKeptUntilAskedToChooseAgain() {
-        var info = info();
-        info.update(musicRule(false, "one", "two", "three"));
+        var info = info(musicRule(false, "one", "two", "three"));
         var vanilla = Optional.of(music(id("vanilla")));
         var selector = new BiomeMusicSelector();
         IRandomizer random = Randomizer.create(42);
@@ -43,8 +42,7 @@ public class BiomeMusicSelectorTests {
 
     @Test
     void askingToChooseAgainMakesANewChoice() {
-        var info = info();
-        info.update(musicRule(false, "one", "two", "three"));
+        var info = info(musicRule(false, "one", "two", "three"));
         var vanilla = Optional.of(music(id("vanilla")));
         var selector = new BiomeMusicSelector();
         IRandomizer random = Randomizer.create(42);
@@ -76,22 +74,9 @@ public class BiomeMusicSelectorTests {
     void aDifferentBiomeMakesANewChoice() {
         var selector = new BiomeMusicSelector();
         IRandomizer random = Randomizer.create(42);
-        var one = info();
-        one.update(musicRule(false, "one"));
-        var two = info();
-        two.update(musicRule(false, "two"));
+        var one = info(musicRule(false, "one"));
+        var two = info(musicRule(false, "two"));
         assertEquals(Optional.of(id("one")), selector.select(one, Optional.empty(), random, true).map(BiomeInfoMusicTests::location));
         assertEquals(Optional.of(id("two")), selector.select(two, Optional.empty(), random, false).map(BiomeInfoMusicTests::location));
-    }
-
-    @Test
-    void anUpdateMakesANewChoice() {
-        var info = info();
-        var selector = new BiomeMusicSelector();
-        IRandomizer random = Randomizer.create(42);
-        info.update(musicRule(false, "one"));
-        assertEquals(Optional.of(id("one")), selector.select(info, Optional.empty(), random, true).map(BiomeInfoMusicTests::location));
-        info.update(musicRule(true, "two"));
-        assertEquals(Optional.of(id("two")), selector.select(info, Optional.empty(), random, false).map(BiomeInfoMusicTests::location));
     }
 }

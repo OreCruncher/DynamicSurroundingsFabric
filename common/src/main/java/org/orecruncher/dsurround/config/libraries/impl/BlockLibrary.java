@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateHolder;
 import org.orecruncher.dsurround.config.ConfigServices;
 import org.orecruncher.dsurround.config.block.BlockInfo;
+import org.orecruncher.dsurround.config.block.BlockInfoBuilder;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
@@ -123,12 +124,7 @@ public class BlockLibrary implements IBlockLibrary {
         this.logger = ModLog.createChild(logger, "BlockLibrary");
         this.tagLibrary = tagLibrary;
         this.services = new ConfigServices(this.logger, soundLibrary, tagLibrary, conditionEvaluator);
-        this.defaultInfo = new BlockInfo(INDEFINITE, this.services) {
-            @Override
-            public boolean isDefault() {
-                return true;
-            }
-        };
+        this.defaultInfo = new BlockInfoBuilder(INDEFINITE, this.services).build();
         this.ruleFailures = LogThrottle.oncePerKey(this.logger, "block rule failures", "the next reload");
     }
 
@@ -216,22 +212,18 @@ public class BlockLibrary implements IBlockLibrary {
             return entry.info();
 
         // OK - need to build out info for the block.
-        final var built = new BlockInfo(this.version, state, this.services);
+        final var builder = new BlockInfoBuilder(this.version, state, this.services);
         // A rule that throws is reported once and skipped, rather than failing this block's lookup every time
         RuleGuard.forEach(this.blockConfigs,
                 rule -> {
                     if (rule.match(state))
-                        built.update(rule);
+                        builder.apply(rule);
                 },
                 (rule, t) -> this.ruleFailures.error(rule, t, "Unable to apply block rule to %s [%s]", state, rule));
 
         // Optimization to reduce memory bloat.  Coalesce blocks that do not have any special
-        // processing to the default info, and trim the others to release memory that is not needed.
-        var info = built;
-        if (info.isDefault())
-            info = this.defaultInfo;
-        else
-            info.trim();
+        // processing to the default info.
+        var info = builder.isDefault() ? this.defaultInfo : builder.build();
 
         this.store(state, info);
         return info;
