@@ -63,11 +63,17 @@ public class MixinMinecraftClient {
      * Hooks the biome's background music when Minecraft picks the situational music. Music configured for the
      * biome is chosen alongside the biome's own track. Only the music Minecraft plays is affected: other callers of
      * Biome.getBackgroundMusic() still see the game's value.
+     *
+     * The music manager asks every tick, but the choice only matters when a track starts. Our music manager says
+     * when that is, and the choice is kept until then; with the game's music manager a choice is made each time.
      */
     @WrapOperation(method = "getSituationalMusic()Lnet/minecraft/sounds/Music;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/biome/Biome;getBackgroundMusic()Ljava/util/Optional;"))
     private Optional<Music> dsurround$biomeMusic(Biome biome, Operation<Optional<Music>> original) {
         var vanilla = original.call(biome);
         var info = MixinHelpers.biomeLibrary().findBiomeInfo(biome);
-        return info != null ? info.getBackgroundMusic(vanilla, Randomizer.current()) : vanilla;
+        if (info == null)
+            return vanilla;
+        var chooseAgain = !(((Minecraft) (Object) this).getMusicManager() instanceof DSurroundMusicManager mm) || mm.isTrackStarting();
+        return info.getBackgroundMusic(vanilla, Randomizer.current(), chooseAgain);
     }
 }

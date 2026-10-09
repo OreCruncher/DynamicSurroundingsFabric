@@ -17,7 +17,8 @@ import java.util.*;
 /**
  * Finds the mod's configuration and the files it fills in tags from, in three places: mod jars and resource packs
  * (assets/(mod)/dsconfigs/...), the player's own files (config/dsurround/configs/(mod)/...), and the installed mods'
- * data (data/(namespace)/tags/...). Configuration in the first two is only read for mods that are installed.
+ * data (data/(namespace)/tags/...). Configuration in the first two is only read for mods that are installed, except
+ * in the player's resource packs, which may use a namespace of their own.
  */
 public final class ResourceUtilities {
 

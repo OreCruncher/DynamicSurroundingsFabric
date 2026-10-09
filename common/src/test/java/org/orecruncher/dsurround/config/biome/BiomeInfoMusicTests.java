@@ -91,13 +91,13 @@ public class BiomeInfoMusicTests {
         IRandomizer random = Randomizer.create(42);
         var result = new HashSet<ResourceLocation>();
         for (int i = 0; i < DRAWS; i++)
-            info.getBackgroundMusic(vanilla, random).ifPresent(m -> result.add(location(m)));
+            info.getBackgroundMusic(vanilla, random, true).ifPresent(m -> result.add(location(m)));
         return result;
     }
 
     @Test
     void noMusicAnywhereGivesNone() {
-        assertTrue(info().getBackgroundMusic(Optional.empty(), Randomizer.create(42)).isEmpty());
+        assertTrue(info().getBackgroundMusic(Optional.empty(), Randomizer.create(42), true).isEmpty());
     }
 
     @Test
@@ -131,7 +131,7 @@ public class BiomeInfoMusicTests {
     void theGameTrackIsNotListedWithTheConfiguredMusic() {
         var info = info();
         info.update(musicRule(false, "one"));
-        info.getBackgroundMusic(Optional.of(music(id("vanilla"))), Randomizer.create(42));
+        info.getBackgroundMusic(Optional.of(music(id("vanilla"))), Randomizer.create(42), true);
         assertEquals(1, info.getSounds(SoundEventType.MUSIC).size());
     }
 
@@ -151,5 +151,42 @@ public class BiomeInfoMusicTests {
         assertEquals(Set.of(id("one"), id("vanilla")), chosen(info, vanilla));
         info.update(musicRule(false, "two"));
         assertEquals(Set.of(id("one"), id("two"), id("vanilla")), chosen(info, vanilla));
+    }
+
+    @Test
+    void theChoiceIsKeptUntilAskedToChooseAgain() {
+        var info = info();
+        info.update(musicRule(false, "one", "two", "three"));
+        var vanilla = Optional.of(music(id("vanilla")));
+        IRandomizer random = Randomizer.create(42);
+        var first = info.getBackgroundMusic(vanilla, random, true);
+        assertTrue(first.isPresent());
+        for (int i = 0; i < DRAWS; i++)
+            assertEquals(first, info.getBackgroundMusic(vanilla, random, false));
+    }
+
+    @Test
+    void aChoiceIsMadeWhenNoneIsKept() {
+        assertEquals(Optional.of(id("vanilla")),
+                info().getBackgroundMusic(Optional.of(music(id("vanilla"))), Randomizer.create(42), false).map(BiomeInfoMusicTests::location));
+    }
+
+    @Test
+    void aChangeInTheGameTrackMakesANewChoice() {
+        var info = info();
+        IRandomizer random = Randomizer.create(42);
+        info.getBackgroundMusic(Optional.of(music(id("first"))), random, true);
+        assertEquals(Optional.of(id("second")),
+                info.getBackgroundMusic(Optional.of(music(id("second"))), random, false).map(BiomeInfoMusicTests::location));
+    }
+
+    @Test
+    void anUpdateMakesANewChoice() {
+        var info = info();
+        IRandomizer random = Randomizer.create(42);
+        info.update(musicRule(false, "one"));
+        assertEquals(Optional.of(id("one")), info.getBackgroundMusic(Optional.empty(), random, true).map(BiomeInfoMusicTests::location));
+        info.update(musicRule(true, "two"));
+        assertEquals(Optional.of(id("two")), info.getBackgroundMusic(Optional.empty(), random, false).map(BiomeInfoMusicTests::location));
     }
 }

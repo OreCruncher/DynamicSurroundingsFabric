@@ -7,7 +7,6 @@ import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.Music;
 import org.jetbrains.annotations.NotNull;
-import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.gui.sound.SoundToast;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
@@ -20,7 +19,6 @@ import org.orecruncher.dsurround.sound.IAudioPlayer;
 public final class DSurroundMusicManager extends MusicManager {
 
     private static final IModLog LOGGER = ModLog.createChild(ContainerManager.resolve(IModLog.class), "MusicManager");
-    private static final Configuration.MusicManagerOptions musicOptions = ContainerManager.resolve(Configuration.MusicManagerOptions.class);
     private static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
 
     private boolean pauseTicking;
@@ -43,19 +41,15 @@ public final class DSurroundMusicManager extends MusicManager {
         super.startPlaying(music);
     }
 
-    @Override
-    public void stopPlaying(@NotNull Music music) {
-        super.stopPlaying(music);
-    }
-
-    @Override
-    public void stopPlaying() {
-        super.stopPlaying();
-    }
-
-    @Override
-    public boolean isPlayingMusic(@NotNull Music music) {
-        return super.isPlayingMusic(music);
+    /**
+     * Whether this tick starts a new track: nothing is playing and the wait is over. Situational music asked for at
+     * any other time only decides whether the current track is replaced and how long the wait can be.
+     * <p>
+     * Only meaningful during {@link #tick()}, the game's one caller of situational music, which has already checked
+     * that the manager is not paused and the sound system is available.
+     */
+    public boolean isTrackStarting() {
+        return this.currentMusic == null && this.nextSongDelay <= 0;
     }
 
     public void doCommand(Commands command) {
@@ -93,14 +87,14 @@ public final class DSurroundMusicManager extends MusicManager {
             return Component.translatable("dsurround.text.musicmanager.nothing");
         }
 
-        // Lookup meta information
+        // Lookup meta information; getSoundMetadata never returns null
         var metaData = MixinHelpers.SOUND_LIBRARY.getSoundMetadata(this.currentMusic.getLocation());
-        if (metaData == null || !metaData.hasTitle()) {
+        if (!metaData.hasTitle() || metaData.getCredits().isEmpty()) {
             return Component.literal(this.currentMusic.getLocation().toString());
         }
 
         var title = metaData.getTitle().copy().withColor(ColorPalette.PUMPKIN_ORANGE.getValue());
-        var author = metaData.getCredits().get(0).author().copy().withColor(ColorPalette.WHEAT.getValue());
+        var author = metaData.getCredits().getFirst().author().copy().withColor(ColorPalette.WHEAT.getValue());
         return Component.translatable("dsurround.text.musicmanager.playing", title, author, Component.translationArg(this.currentMusic.getLocation()));
     }
 
