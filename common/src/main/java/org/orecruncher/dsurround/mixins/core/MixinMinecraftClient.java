@@ -74,6 +74,6 @@ public class MixinMinecraftClient {
         if (info == null)
             return vanilla;
         var chooseAgain = !(((Minecraft) (Object) this).getMusicManager() instanceof DSurroundMusicManager mm) || mm.isTrackStarting();
-        return info.getBackgroundMusic(vanilla, Randomizer.current(), chooseAgain);
+        return MixinHelpers.BIOME_MUSIC.select(info, vanilla, Randomizer.current(), chooseAgain);
     }
 }
