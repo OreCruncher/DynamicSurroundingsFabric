@@ -2,7 +2,6 @@ package org.orecruncher.dsurround.processing.fog;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import org.orecruncher.dsurround.config.SoundEventType;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -31,7 +30,7 @@ public enum FogDensity {
     }
 
     private static final Map<String, FogDensity> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(FogDensity::getName, (category) -> category));
-    public static final Codec<FogDensity> CODEC = Codec.STRING.comapFlatMap(DataResult.partialGet(BY_NAME::get, () -> "unknown sound event type"), FogDensity::getName);
+    public static final Codec<FogDensity> CODEC = Codec.STRING.comapFlatMap(DataResult.partialGet(BY_NAME::get, () -> "unknown fog density"), FogDensity::getName);
 
     public boolean inRange(float celestialAngleDegrees) {
         return celestialAngleDegrees >= this.start && celestialAngleDegrees <= this.end;

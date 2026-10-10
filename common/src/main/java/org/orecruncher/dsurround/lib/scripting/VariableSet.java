@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.lib.scripting;
 
-import org.orecruncher.dsurround.lib.ITickable;
+import org.orecruncher.dsurround.lib.function.ITickable;
 
 /**
  * A VariableSet is used to insert instances into the scripting runtime environment so that scripts can access game

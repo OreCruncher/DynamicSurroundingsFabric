@@ -3,112 +3,112 @@ package org.orecruncher.dsurround.gui.sound;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
+import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.gui.ColorPalette;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
+import org.orecruncher.dsurround.sound.IAudioPlayer;
 
-import java.util.List;
-import java.util.function.Consumer;
-
+/**
+ * Lets the player adjust the volume of, cull, or block individual sounds, and optionally play them.
+ * <p>
+ * Layout and event handling are left to vanilla ({@link HeaderAndFooterLayout}, widgets registered with
+ * {@link #addRenderableWidget}) so as few methods as possible depend on signatures that change between Minecraft
+ * versions.
+ * <p>
+ * When play buttons are enabled the screen owns the audio while it is open: it pauses the music and silences
+ * other sounds on the way in, and stops everything and resumes the music on the way out.
+ */
 public class IndividualSoundControlScreen extends Screen {
 
-    private static final int TOP_OFFSET = 10;
-    private static final int BOTTOM_OFFSET = 15;
-    private static final int HEADER_HEIGHT = 40;
-    private static final int FOOTER_HEIGHT = 80;
+    private static final int HEADER_HEIGHT = 50;
+    private static final int FOOTER_HEIGHT = HeaderAndFooterLayout.DEFAULT_HEADER_AND_FOOTER_HEIGHT;
+    private static final int HEADER_SPACING = 6;
+    private static final int FOOTER_SPACING = 8;
 
     private static final int SEARCH_BAR_WIDTH = 200;
     private static final int SEARCH_BAR_HEIGHT = 20;
 
-    private static final int SELECTION_HEIGHT_OFFSET = 5;
-    private static final int SELECTION_WIDTH = 600;
-    private static final int SELECTION_HEIGHT = 24;
-
-    private static final int BUTTON_WIDTH = 60;
-    private static final int BUTTON_HEIGHT = 20;
-    private static final int BUTTON_SPACING = 10;
-    private static final int CONTROL_WIDTH = BUTTON_WIDTH * 2 + BUTTON_SPACING;
+    // Same as vanilla's OptionsList: 20px controls with a 5px gap between rows
+    private static final int ROW_HEIGHT = 25;
+    private static final int MAX_ROW_WIDTH = 560;
+    // Space left on each side of the rows, which includes room for the scrollbar
+    private static final int ROW_SIDE_MARGIN = 30;
 
     private static final int TOOLTIP_Y_OFFSET = 30;
 
-    private static final Component SAVE = Component.translatable("gui.done");
-    private static final Component CANCEL = Component.translatable("gui.cancel");
+    private final @Nullable Screen parent;
+    private final boolean enablePlay;
+    private final HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this, HEADER_HEIGHT, FOOTER_HEIGHT);
+    private EditBox searchField;
+    private IndividualSoundControlList soundConfigList;
 
-    protected final Screen parent;
-    protected final boolean enablePlay;
-    protected final Consumer<IndividualSoundControlScreen> onClose;
-    protected EditBox searchField;
-    protected IndividualSoundControlList soundConfigList;
-    protected Button save;
-    protected Button cancel;
-
-    public IndividualSoundControlScreen(final Screen parent, final boolean enablePlay) {
-        this(parent, enablePlay, (ignore) ->{});
-    }
-
-    public IndividualSoundControlScreen(final Screen parent, final boolean enablePlay, Consumer<IndividualSoundControlScreen> onClose) {
+    /**
+     * @param parent     the screen to return to, or null to return to the game
+     * @param enablePlay whether rows get a play button. Only sensible when the game can be paused (single player or
+     *                   no world loaded), since playing a sound ticks the sound manager.
+     */
+    public IndividualSoundControlScreen(final @Nullable Screen parent, final boolean enablePlay) {
         super(Component.translatable("dsurround.text.keybind.individualSoundConfig"));
         this.parent = parent;
         this.enablePlay = enablePlay;
-        this.onClose = onClose;
+    }
+
+    @Override
+    public void added() {
+        super.added();
+        if (this.enablePlay) {
+            setMusicPaused(true);
+            ContainerManager.resolve(IAudioPlayer.class).stopAll();
+        }
     }
 
     @Override
     protected void init() {
-        // Setup search bar
-        final int searchBarLeftMargin = (this.width - SEARCH_BAR_WIDTH) / 2;
-        final int searchBarY = TOP_OFFSET + HEADER_HEIGHT - SEARCH_BAR_HEIGHT;
-        this.searchField = new EditBox(
-                this.font,
-                searchBarLeftMargin,
-                searchBarY,
-                SEARCH_BAR_WIDTH,
-                SEARCH_BAR_HEIGHT,
-                this.searchField,   // Copy existing data over
-                Component.empty());
+        LinearLayout header = this.layout.addToHeader(LinearLayout.vertical().spacing(HEADER_SPACING));
+        header.defaultCellSetting().alignHorizontallyCenter();
+        header.addChild(new StringWidget(this.title, this.font));
+        this.searchField = header.addChild(new EditBox(this.font, SEARCH_BAR_WIDTH, SEARCH_BAR_HEIGHT, Component.empty()));
 
-        this.searchField.setResponder((filter) -> this.soundConfigList.setSearchFilter(() -> filter));
-        this.addWidget(this.searchField);
-
-        // Set up the list control
-        final int topY = TOP_OFFSET + HEADER_HEIGHT + SELECTION_HEIGHT_OFFSET;
-        final int bottomY = this.height - BOTTOM_OFFSET - FOOTER_HEIGHT - SELECTION_HEIGHT_OFFSET;
-        this.soundConfigList = new IndividualSoundControlList(
-                this,
+        this.soundConfigList = this.layout.addToContents(new IndividualSoundControlList(
                 GameUtils.getMC(),
                 this.width,
-                bottomY,
-                topY,
-                SELECTION_WIDTH,
-                SELECTION_HEIGHT,
-                this.enablePlay,
-                () -> this.searchField.getValue(),
-                this.soundConfigList);
+                this.layout.getContentHeight(),
+                this.layout.getHeaderHeight(),
+                ROW_HEIGHT,
+                this.enablePlay));
+        this.searchField.setResponder(this.soundConfigList::setSearchFilter);
 
-        this.addWidget(this.soundConfigList);
+        LinearLayout footer = this.layout.addToFooter(LinearLayout.horizontal().spacing(FOOTER_SPACING));
+        footer.addChild(Button.builder(CommonComponents.GUI_DONE, button -> this.save()).build());
+        footer.addChild(Button.builder(CommonComponents.GUI_CANCEL, button -> this.onClose()).build());
 
-        // Set the control buttons at the bottom
-        final int controlMargin = (this.width - CONTROL_WIDTH) / 2;
-        final int controlHeight = this.height - BOTTOM_OFFSET - BUTTON_HEIGHT;
-
-        this.save = Button.builder(SAVE, this::save)
-                .size(BUTTON_WIDTH, BUTTON_HEIGHT)
-                .pos(controlMargin, controlHeight)
-                .build();
-        this.addWidget(this.save);
-
-        this.cancel = Button.builder(CANCEL, this::cancel)
-                .size(BUTTON_WIDTH, BUTTON_HEIGHT)
-                .pos(controlMargin + BUTTON_WIDTH + BUTTON_SPACING, controlHeight)
-                .build();
-        this.addWidget(this.cancel);
-
-        this.setFocused(this.searchField);
+        this.layout.visitWidgets(this::addRenderableWidget);
+        this.repositionElements();
+        this.setInitialFocus(this.searchField);
     }
 
+    /**
+     * Called on resize. The widgets are kept, so the search text, list contents and scroll position survive.
+     */
+    @Override
+    protected void repositionElements() {
+        this.layout.arrangeElements();
+        this.soundConfigList.updateSize(this.width, this.layout);
+        // Never narrower than the controls need, even if that means the rows don't fit a very small window
+        int minRowWidth = this.soundConfigList.getMinimumRowWidth();
+        this.soundConfigList.setRowWidth(Mth.clamp(this.width - 2 * ROW_SIDE_MARGIN, minRowWidth, Math.max(minRowWidth, MAX_ROW_WIDTH)));
+    }
+
+    @Override
     public void tick() {
         this.soundConfigList.tick();
 
@@ -120,60 +120,59 @@ public class IndividualSoundControlScreen extends Screen {
             GameUtils.getSoundManager().tick(false);
     }
 
+    // Typing goes to the search box even when another control has focus
+
+    @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         return super.keyPressed(keyCode, scanCode, modifiers) || this.searchField.keyPressed(keyCode, scanCode, modifiers);
     }
 
-    public void closeScreen() {
-        GameUtils.setScreen(this.parent);
-    }
-
+    @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        return this.searchField.charTyped(codePoint, modifiers);
-    }
-
-    public void render(final GuiGraphics context, int mouseX, int mouseY, float partialTicks) {
-        var renderWidth = Mth.clamp(context.guiWidth() - 20, 200, SELECTION_WIDTH);
-        this.soundConfigList.setRowWidth(renderWidth);
-        if (this.parent == null)
-            this.renderTransparentBackground(context);
-        else
-            this.renderMenuBackground(context);
-
-        context.drawCenteredString(this.font, this.title, this.width / 2, TOP_OFFSET, ColorPalette.MC_WHITE.getValue());
-
-        this.soundConfigList.render(context, mouseX, mouseY, partialTicks);
-        this.searchField.render(context, mouseX, mouseY, partialTicks);
-        this.save.render(context, mouseX, mouseY, partialTicks);
-        this.cancel.render(context, mouseX, mouseY, partialTicks);
-
-        if (this.soundConfigList.isMouseOver(mouseX, mouseY)) {
-            final IndividualSoundControlListEntry entry = this.soundConfigList.getEntryAt(mouseX, mouseY);
-            if (entry != null) {
-                final List<FormattedCharSequence> toolTip = entry.getToolTip(mouseX, mouseY);
-                context.renderTooltip(this.font, toolTip, mouseX, mouseY + TOOLTIP_Y_OFFSET);
-            }
-        }
-    }
-
-    // Handlers
-
-    protected void save(final Button button) {
-        // Gather the changes and push to underlying routine for parsing and packaging
-        this.soundConfigList.saveChanges();
-        this.onClose();
-        this.closeScreen();
-    }
-
-    protected void cancel(final Button button) {
-        // Just discard - no processing
-        this.onClose();
-        this.closeScreen();
+        return super.charTyped(codePoint, modifiers) || this.searchField.charTyped(codePoint, modifiers);
     }
 
     @Override
+    public void render(@NotNull GuiGraphics context, int mouseX, int mouseY, float partialTicks) {
+        super.render(context, mouseX, mouseY, partialTicks);
+
+        // Offset downward so the tooltip doesn't cover the row's controls
+        var entry = this.soundConfigList.getEntryAt(mouseX, mouseY);
+        if (entry != null) {
+            context.renderTooltip(this.font, entry.getToolTip(mouseX, mouseY), mouseX, mouseY + TOOLTIP_Y_OFFSET);
+        }
+    }
+
+    private void save() {
+        // Gather the changes and push to underlying routine for parsing and packaging
+        this.soundConfigList.saveChanges();
+        this.onClose();
+    }
+
+    /**
+     * Done, Cancel and Escape all end here. Returns to the parent screen, or to the game when there is none.
+     */
+    @Override
     public void onClose() {
-        this.onClose.accept(this);
-        super.onClose();
+        GameUtils.setScreen(this.parent);
+    }
+
+    /**
+     * Called whenever this screen is replaced, however that happens. Stops any sound started with a play button
+     * (and anything else left playing), then lets the music continue.
+     */
+    @Override
+    public void removed() {
+        this.soundConfigList.close();
+        if (this.enablePlay) {
+            GameUtils.getSoundManager().stop();
+            setMusicPaused(false);
+        }
+        super.removed();
+    }
+
+    private static void setMusicPaused(boolean paused) {
+        if (GameUtils.getMC().getMusicManager() instanceof DSurroundMusicManager m)
+            m.setPaused(paused);
     }
 }

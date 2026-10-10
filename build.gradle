@@ -13,7 +13,8 @@ allprojects {
     version = rootProject.mod_version
 }
 
-subprojects {
+// Every subproject is a Minecraft module except the annotation processor, which is plain Java used at build time
+configure(subprojects.findAll { it.name != 'processor' }) {
     apply plugin: 'dev.architectury.loom'
     apply plugin: 'architectury-plugin'
     apply plugin: 'maven-publish'
@@ -58,12 +59,24 @@ subprojects {
         it.options.release = 21
     }
 
-    tasks.register('copyJarToMain', Copy) {
+    tasks.register('copyJarToMain', Sync) {
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
         if (project.name != "common" && project.name != "stubs") {
+            // Only publish jars to the shared folder once the tests (all in common) have passed
+            dependsOn ':common:test'
             from remapJar
             into "../build/libs"
+            // Every loader syncs into the same folder: only replace this loader's jars for this Minecraft version
+            def ownJars = "${base.archivesName.get()}-*"
+            preserve {
+                include '**'
+                exclude ownJars
+            }
         }
+    }
+
+    if (project.name != "common" && project.name != "stubs") {
+        tasks.named('build') { finalizedBy 'copyJarToMain' }
     }
 
     // Configure Maven publishing.

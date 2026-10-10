@@ -2,20 +2,21 @@ package org.orecruncher.dsurround.gui.overlay.plugins;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.network.chat.Component;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
+import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.MinecraftClock;
+import org.orecruncher.dsurround.lib.time.MinecraftClock;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
-import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 
 import java.util.List;
 
+@Cacheable
 public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
 
     private static final List<String> SCRIPTS = ImmutableList.of(
@@ -41,7 +42,7 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
     public RuntimeDiagnosticsPlugin(IConditionEvaluator conditionEvaluator, ISeasonalInformation seasonalInformation) {
         this.conditionEvaluator = conditionEvaluator;
         this.seasonalInformation = seasonalInformation;
-        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.register(this::onCollect, HandlerPriority.HIGH);
+        ICollectDiagnostics.EVENT.register(this::onCollect, HandlerPriority.HIGH);
     }
 
     public void onCollect(CollectDiagnosticsEvent event) {
@@ -51,16 +52,17 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
             event.add(CollectDiagnosticsEvent.Section.Header, this.clock.getFormattedTime());
 
             var seasonInfo = this.seasonalInformation.getCurrentSeasonTranslated().orElse(Component.literal("UNKNOWN"));
-            var seasonText = Component.translatable("Season: %s (%s)", seasonInfo, this.seasonalInformation.getProviderName());
+            var seasonText = Component.literal("Season: ").append(seasonInfo)
+                    .append(" (%s)".formatted(this.seasonalInformation.getProviderName()));
             event.add(CollectDiagnosticsEvent.Section.Header, seasonText);
 
             var particleLoad = "Particle Manager: %s".formatted(GameUtils.getParticleManager().countParticles());
             event.add(CollectDiagnosticsEvent.Section.Systems, particleLoad);
 
-            ReflectionHelper.cast(GameUtils.getMC().getMusicManager(), DSurroundMusicManager.class)
-                    .ifPresentOrElse(
-                            mm -> event.add(CollectDiagnosticsEvent.Section.Systems, mm.getDiagnosticText()),
-                            () -> event.add(CollectDiagnosticsEvent.Section.Systems, Component.literal("MusicManager unavailable")));
+            if (GameUtils.getMC().getMusicManager() instanceof DSurroundMusicManager mm)
+                event.add(CollectDiagnosticsEvent.Section.Systems, mm.getDiagnosticText());
+            else
+                event.add(CollectDiagnosticsEvent.Section.Systems, Component.literal("MusicManager unavailable"));
 
             for (var script : DIAGNOSTIC_SCRIPTS) {
                 Object result = this.conditionEvaluator.eval(script);

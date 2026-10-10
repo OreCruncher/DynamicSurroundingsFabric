@@ -12,6 +12,9 @@ import org.orecruncher.dsurround.sound.SoundMetadata;
 import java.util.Collection;
 import java.util.Optional;
 
+/**
+ * Sound events, sound factories, sound mappings and per-sound player settings. Client thread only.
+ */
 public interface ISoundLibrary extends ILibrary {
 
     SoundEvent getSound(final String sound);

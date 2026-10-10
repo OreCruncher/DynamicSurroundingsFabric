@@ -7,13 +7,20 @@ import org.orecruncher.dsurround.config.SyntheticBiome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.scripting.Script;
 
+/**
+ * Per-biome settings (traits, fog, sounds) from biomes.json. Client thread only.
+ */
 public interface IBiomeLibrary extends ILibrary {
     /**
-     * Used to obtain a BiomeInfo object if one has already been created. Used by mixins to cover the case
-     * of when a biome is dynamically modified via code during client initialization. Should only be called
-     * if necessary.
+     * The biome's info if it has already been built, otherwise null; never builds anything. Used by mixins, which
+     * can run before the library is ready (or while a biome is being modified during client initialization), and
+     * on the fog path, which runs hundreds of times per frame.
      */
-    @Nullable BiomeInfo getBiomeInfoWeak(Biome biome);
+    @Nullable BiomeInfo findBiomeInfo(Biome biome);
+
+    /**
+     * The biome's info, building and caching it on first request.
+     */
     BiomeInfo getBiomeInfo(Biome biome);
     BiomeInfo getBiomeInfo(SyntheticBiome biome);
     String getBiomeName(ResourceLocation id);

@@ -46,9 +46,9 @@ public final class WorldContext {
      */
     public final float precipitationStrength;
     /**
-     * Coefficient used for dampening sound.  Usually caused by the player's head being in lava or water.
+     * What the player's head is in, which muffles what they hear.
      */
-    public final float auralDampening;
+    public final Submersion submersion;
 
     public WorldContext() {
         if (GameUtils.isInGame()) {
@@ -60,10 +60,7 @@ public final class WorldContext {
             this.playerPos = BlockPos.containing(this.playerPosition);
             this.playerEyePos = BlockPos.containing(this.playerEyePosition);
 
-            if (this.player.isUnderWater())
-                this.auralDampening = 0.6F;
-            else
-                this.auralDampening = 0;
+            this.submersion = Submersion.of(this.player);
 
             // Get our current rain strength.
             this.precipitationStrength = this.world.getRainLevel(1F);
@@ -77,7 +74,7 @@ public final class WorldContext {
             this.playerEyePosition = Vec3.ZERO;
             this.playerPos = BlockPos.ZERO;
             this.playerEyePos = BlockPos.ZERO;
-            this.auralDampening = 0;
+            this.submersion = Submersion.NONE;
             this.precipitationStrength = 0F;
         }
     }

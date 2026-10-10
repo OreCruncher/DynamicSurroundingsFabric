@@ -9,6 +9,7 @@ import org.orecruncher.dsurround.Constants;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -105,12 +106,14 @@ public enum BiomeTrait {
     private final TagKey<Biome> biomeTag;
 
     BiomeTrait(String name) {
-        this.name = name.toUpperCase();
-        this.biomeTag = TagKey.create(Registries.BIOME, Constants.asId("is_" + name.toLowerCase()));
+        // Locale.ROOT so names do not change under locales such as Turkish, where "i".toUpperCase() is not "I"
+        this.name = name.toUpperCase(Locale.ROOT);
+        this.biomeTag = TagKey.create(Registries.BIOME, Constants.asId("is_" + name.toLowerCase(Locale.ROOT)));
     }
 
     public static BiomeTrait of(String name) {
-        var result = mapper.get(name.toLowerCase());
+        // Names are registered in upper case (see the constructor), so look up in upper case. Case-insensitive.
+        var result = mapper.get(name.toUpperCase(Locale.ROOT));
         return result == null ? UNKNOWN : result;
     }
 

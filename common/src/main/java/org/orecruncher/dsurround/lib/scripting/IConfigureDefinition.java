@@ -2,25 +2,60 @@ package org.orecruncher.dsurround.lib.scripting;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.function.DoubleBinaryOperator;
+import java.util.function.DoubleUnaryOperator;
+import java.util.function.Supplier;
+
 public interface IConfigureDefinition {
 
     /**
-     * Defines a function reference with associate delegate that implements the function.
-     * @param name      Name of the function
-     * @param arity     The number of parameters the function expects. A negative value indicates a variable number of parameters but with a certain minimum required.
-     * @param hasVarArgs The function supports variable arguments, with the minimum specified by arity.
-     * @param delegate  The delegate that implements the function
+     * Defines a function from a complete description. Most callers use {@link #function(String)} instead.
+     * @param function Description of the function, including its implementation
      */
-    void defineFunction(@NotNull String name, int arity, boolean hasVarArgs, @NotNull IScriptFunction delegate);
+    void defineFunction(@NotNull ScriptFunction function);
 
     /**
-     * Defines a function reference with associate delegate that implements the function. The function has an arity of 0,
-     * meaning that it takes no input parameters.
-     * @param name      Name of the function
-     * @param delegate  The delegate that implements the function
+     * Starts defining a function with typed parameters. Finish with {@link FunctionBuilder#handler}:
+     * <pre>
+     * config.function("math.pow")
+     *       .param(ArgType.NUMBER).param(ArgType.NUMBER)
+     *       .pure()
+     *       .handler(args -&gt; Math.pow(args.number(0), args.number(1)));
+     * </pre>
+     * @param name Name of the function as used in scripts
+     * @return Builder for the function's parameters and options
      */
-    default void defineFunction(@NotNull String name, @NotNull IScriptFunction delegate) {
-        this.defineFunction(name, 0, false, delegate);
+    default FunctionBuilder function(@NotNull String name) {
+        return new FunctionBuilder(name, this::defineFunction);
+    }
+
+    /**
+     * Defines a function that takes no arguments and returns a value, such as {@code player.isFlying()}.
+     * @param name   Name of the function
+     * @param getter Supplies the current value
+     */
+    default void property(@NotNull String name, @NotNull Supplier<?> getter) {
+        this.function(name).handler(args -> getter.get());
+    }
+
+    /**
+     * Defines a pure function of one number, such as {@code math.sqrt}.
+     */
+    default void numberFunction(@NotNull String name, @NotNull DoubleUnaryOperator operator) {
+        this.function(name)
+                .param(ArgType.NUMBER)
+                .pure()
+                .handler(args -> operator.applyAsDouble(args.number(0)));
+    }
+
+    /**
+     * Defines a pure function of two numbers, such as {@code math.pow}.
+     */
+    default void numberFunction(@NotNull String name, @NotNull DoubleBinaryOperator operator) {
+        this.function(name)
+                .param(ArgType.NUMBER).param(ArgType.NUMBER)
+                .pure()
+                .handler(args -> operator.applyAsDouble(args.number(0), args.number(1)));
     }
 
     /**

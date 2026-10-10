@@ -1,140 +1,189 @@
 package org.orecruncher.dsurround.lib.config;
 
-import joptsimple.internal.Strings;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.Collection;
-import java.util.Optional;
+import java.util.Objects;
 
-public class ConfigProcessor {
+/**
+ * Builds the specification of a configuration class from its {@link ConfigurationData.Property} fields, and checks
+ * loaded values against it.
+ */
+public final class ConfigProcessor {
 
-    public static <T extends ConfigurationData> Optional<T> createPrototype(Class<T> clazz) {
+    private ConfigProcessor() {
+    }
+
+    /**
+     * Creates an instance through the class's no-argument constructor, which may be private.
+     *
+     * @throws IllegalStateException if it can't be created
+     */
+    public static <T> T createPrototype(Class<T> clazz) {
         try {
             var ctor = clazz.getDeclaredConstructor();
             ctor.setAccessible(true);
-            return Optional.of(ctor.newInstance());
-        } catch (Exception ex) {
-            Library.LOGGER.error(ex, "Unable to create prototype for %s", clazz.getName());
+            return ctor.newInstance();
+        } catch (InvocationTargetException e) {
+            throw new IllegalStateException(String.format("Constructor of '%s' threw %s", clazz.getName(), e.getCause()), e.getCause());
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(String.format("Unable to create '%s'; it needs a no-argument constructor", clazz.getName()), e);
         }
-        return Optional.empty();
     }
 
-    public static <T extends ConfigurationData> Optional<Collection<ConfigElement<?>>> generateAccessors(Class<T> clazz) {
-        try {
-            var translationRootAnnotation = clazz.getAnnotation(ConfigurationData.TranslationRoot.class);
+    /**
+     * Builds the specification for the class. Default values are taken from a newly created instance.
+     *
+     * @throws IllegalStateException if the class can't be created or a property is not valid
+     */
+    public static <T extends ConfigurationData> Collection<ConfigElement<?>> generateAccessors(Class<T> clazz) {
+        return new GenerationContext(clazz, ConfigurationData.translationRootOf(clazz)).generateLevel(createPrototype(clazz));
+    }
 
-            String translationRoot;
-            if (translationRootAnnotation != null) {
-                translationRoot = translationRootAnnotation.value();
-            } else {
-                translationRoot = Constants.MOD_ID;
+    /**
+     * Checks the values in {@code instance} against the specification, logging each correction: a missing (null)
+     * value is replaced with its default (for a property group, a new instance with default values), and a value
+     * out of range is clamped.
+     *
+     * @param source names what was loaded, for the log
+     * @return the number of values corrected
+     */
+    public static int repair(Collection<ConfigElement<?>> specification, Object instance, String source) {
+        int corrections = 0;
+        for (var element : specification) {
+            if (element instanceof ConfigElement.PropertyGroup group) {
+                var groupInstance = group.getInstance(instance);
+                if (groupInstance == null) {
+                    groupInstance = createPrototype(group.getType());
+                    group.setInstance(instance, groupInstance);
+                    Library.LOGGER.warn("%s: '%s' was missing; using defaults", source, group.getLanguageKey());
+                    corrections++;
+                }
+                corrections += repair(group.getChildren(), groupInstance, source);
+            } else if (element instanceof ConfigElement.PropertyValue<?> value) {
+                if (repairValue(value, instance, source))
+                    corrections++;
             }
-
-            Optional<T> prototype = createPrototype(clazz);
-            return prototype.map(p -> new GenerationContext<T>(clazz, translationRoot).generateLevel(p));
-        } catch (Throwable t) {
-            Library.LOGGER.error(t, "Unable to generate accessors for %s", clazz.getName());
         }
-
-        return Optional.empty();
+        return corrections;
     }
 
-    private record GenerationContext<T>(Class<?> clazz, String translationRoot) {
+    private static <T> boolean repairValue(ConfigElement.PropertyValue<T> property, Object instance, String source) {
+        var current = property.getValue(instance);
+        if (current == null) {
+            property.setValue(instance, property.defaultValue());
+            Library.LOGGER.warn("%s: '%s' was missing or not valid; using the default %s", source, property.getLanguageKey(), property.defaultValue());
+            return true;
+        }
+        var clamped = property.clamp(current);
+        if (!Objects.equals(current, clamped)) {
+            property.setValue(instance, clamped);
+            Library.LOGGER.warn("%s: '%s' value %s is out of range or not valid; using %s", source, property.getLanguageKey(), current, clamped);
+            return true;
+        }
+        return false;
+    }
 
-        public Collection<ConfigElement<?>> generateLevel(Object prototype) {
+    private record GenerationContext(Class<?> clazz, String translationRoot) {
+
+        Collection<ConfigElement<?>> generateLevel(Object prototype) {
             var elements = new ObjectArray<ConfigElement<?>>();
 
-            var fields = this.clazz.getFields();
-
-            for (var f : fields) {
-
+            for (var f : this.clazz.getFields()) {
                 // See if it is marked as a property.  If not continue.
-                ConfigurationData.Property property = f.getAnnotation(ConfigurationData.Property.class);
-                if (property == null)
+                var property = f.getAnnotation(ConfigurationData.Property.class);
+                if (property == null || Modifier.isStatic(f.getModifiers()))
                     continue;
 
-                // Only support a narrow set of properties
-                var fieldType = f.getType();
-
-                if (!fieldType.isPrimitive()) {
-                    if (fieldType.isEnum())
-                        elements.add(processEnumInstance(property, prototype, f));
-                    else
-                        elements.add(processClassInstance(property, prototype, f));
-                } else {
-                    ConfigElement<?> element;
-                    if (fieldType == Integer.class || fieldType == int.class) {
-                        element = processIntegerInstance(property, prototype, f);
-                    } else if (fieldType == Double.class || fieldType == Float.class || fieldType == double.class || fieldType == float.class) {
-                        element = processDoubleInstance(property, prototype, f);
-                    } else if (fieldType == String.class) {
-                        element = processStringInstance(property, prototype, f);
-                    } else if (fieldType == Boolean.class || fieldType == boolean.class) {
-                        element = processBooleanInstance(property, prototype, f);
-                    } else {
-                        // Not a supported type so skip.  Probably should log a warning or some such here.
-                        continue;
-                    }
-
+                var element = this.process(property, prototype, f);
+                if (element != null)
                     elements.add(element);
-                }
             }
 
             return elements;
         }
 
-        GenerationContext<T> createChild(Class<?> clazz, String langKey) {
-            return new GenerationContext<>(clazz, langKey);
+        private ConfigElement<?> process(ConfigurationData.Property property, Object prototype, Field f) {
+            var type = f.getType();
+            var key = this.calculateLangKey(property, f);
+
+            if (f.isAnnotationPresent(ConfigurationData.Slider.class) && type != int.class && type != Integer.class)
+                throw new IllegalStateException(String.format("Configuration property '%s' in %s has @Slider, which is only supported on int properties; use @DoubleSlider for a double", f.getName(), this.clazz.getName()));
+            if (f.isAnnotationPresent(ConfigurationData.DoubleSlider.class) && type != double.class && type != Double.class)
+                throw new IllegalStateException(String.format("Configuration property '%s' in %s has @DoubleSlider, which is only supported on double properties", f.getName(), this.clazz.getName()));
+
+            if (type == boolean.class || type == Boolean.class)
+                return new ConfigElement.BooleanValue(prototype, key, f);
+            if (type == int.class || type == Integer.class)
+                return this.processInteger(prototype, key, f);
+            if (type == double.class || type == Double.class)
+                return this.processDouble(prototype, key, f);
+            if (type == String.class)
+                return new ConfigElement.StringValue(prototype, key, f);
+            if (type.isEnum())
+                return new ConfigElement.EnumValue(prototype, key, f);
+            if (!type.isPrimitive() && !type.isArray() && !type.getName().startsWith("java."))
+                return this.processGroup(prototype, key, f);
+
+            // float, long, arrays, collections and the like aren't supported by the config screen
+            Library.LOGGER.warn("Configuration property '%s' in %s has unsupported type %s; it is ignored", f.getName(), this.clazz.getName(), type.getName());
+            return null;
         }
 
-        private ConfigElement<?> processEnumInstance(ConfigurationData.Property property, Object instance, Field f) {
-            var enumType = f.getAnnotation(ConfigurationData.EnumType.class);
-            if (enumType == null)
-                throw new RuntimeException("Enum field must have an EnumType annotation");
-            return new ConfigElement.EnumValue(enumType.value(), instance, calculateLangKey(property, f), f);
+        private ConfigElement<?> processGroup(Object prototype, String key, Field f) {
+            var group = new ConfigElement.PropertyGroup(key, f);
+            var groupPrototype = group.getInstance(prototype);
+            if (groupPrototype == null)
+                throw new IllegalStateException(String.format("Property group '%s' in %s must be initialized", f.getName(), this.clazz.getName()));
+            group.setChildren(new GenerationContext(f.getType(), key).generateLevel(groupPrototype));
+            return group;
         }
 
-        private ConfigElement<?> processClassInstance(ConfigurationData.Property property, Object instance, Field f) {
-            var wrapper = new ElementAccessor<>(f);
-            var key = calculateLangKey(property, f);
-            var ctx = this.createChild(f.getType(), key);
-            var subElements = ctx.generateLevel(wrapper.get(instance));
-            return new ConfigElement.PropertyGroup(key, subElements, f);
-        }
-
-        private ConfigElement<?> processStringInstance(ConfigurationData.Property property, Object instance, Field f) {
-            return new ConfigElement.StringValue(instance, calculateLangKey(property, f), f);
-        }
-
-        private ConfigElement<?> processBooleanInstance(ConfigurationData.Property property, Object instance, Field f) {
-            return new ConfigElement.BooleanValue(instance, calculateLangKey(property, f), f);
-        }
-
-        private ConfigElement<?> processIntegerInstance(ConfigurationData.Property property, Object instance, Field f) {
-            var element = new ConfigElement.IntegerValue(instance, calculateLangKey(property, f), f);
+        private ConfigElement<?> processInteger(Object prototype, String key, Field f) {
+            var element = new ConfigElement.IntegerValue(prototype, key, f);
             var range = f.getAnnotation(ConfigurationData.IntegerRange.class);
-            if (range != null) {
+            var slider = f.getAnnotation(ConfigurationData.Slider.class);
+            if (range != null && slider != null)
+                throw new IllegalStateException(String.format("Configuration property '%s' in %s has both @IntegerRange and @Slider; @Slider holds the range", f.getName(), this.clazz.getName()));
+            if (range != null)
                 element.setRange(range.min(), range.max());
+            if (slider != null) {
+                if (slider.min() >= slider.max())
+                    throw new IllegalStateException(String.format("Configuration property '%s' in %s has a @Slider minimum (%d) that isn't below its maximum (%d)", f.getName(), this.clazz.getName(), slider.min(), slider.max()));
+                element.setRange(slider.min(), slider.max());
             }
             return element;
         }
 
-        private ConfigElement<?> processDoubleInstance(ConfigurationData.Property property, Object instance, Field f) {
-            var element = new ConfigElement.DoubleValue(instance, calculateLangKey(property, f), f);
+        private ConfigElement<?> processDouble(Object prototype, String key, Field f) {
+            var element = new ConfigElement.DoubleValue(prototype, key, f);
             var range = f.getAnnotation(ConfigurationData.DoubleRange.class);
-            if (range != null) {
+            var slider = f.getAnnotation(ConfigurationData.DoubleSlider.class);
+            if (range != null && slider != null)
+                throw new IllegalStateException(String.format("Configuration property '%s' in %s has both @DoubleRange and @DoubleSlider; @DoubleSlider holds the range", f.getName(), this.clazz.getName()));
+            if (range != null)
                 element.setRange(range.min(), range.max());
+            if (slider != null) {
+                DoubleSliderScale scale;
+                try {
+                    scale = new DoubleSliderScale(slider.min(), slider.max(), slider.step());
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalStateException(String.format("Configuration property '%s' in %s has a @DoubleSlider that isn't valid: %s", f.getName(), this.clazz.getName(), e.getMessage()), e);
+                }
+                // Otherwise the slider's reset button would set a nearby value rather than the default
+                if (!scale.isPosition(element.defaultValue()))
+                    throw new IllegalStateException(String.format("Configuration property '%s' in %s has the default %s, which isn't one of its @DoubleSlider positions", f.getName(), this.clazz.getName(), element.defaultValue()));
+                element.setSlider(slider.min(), slider.max(), scale);
             }
             return element;
         }
 
         private String calculateLangKey(ConfigurationData.Property property, Field f) {
-            var segment = f.getName();
-            if (!Strings.isNullOrEmpty(property.value()))
-                segment = property.value();
+            var segment = property.value().isEmpty() ? f.getName() : property.value();
             return this.translationRoot + "." + segment;
         }
     }

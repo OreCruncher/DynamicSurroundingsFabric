@@ -1,51 +1,23 @@
 package org.orecruncher.dsurround.mixins.core;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import me.shedaniel.clothconfig2.api.AbstractConfigEntry;
-import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
+import org.orecruncher.dsurround.mixinutils.ClothFieldNames;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
 
 /**
- * NOTE: This mixin will fail application if Cloth Config is not present. Not harmful, just emits noise into logs
- * and can make some folks concerned.
+ * Keeps the colour of option names in Cloth Config screens (see {@link ClothFieldNames}). Adjusts what Cloth returns
+ * rather than replacing the method, so Cloth's own changes to it, and other mods', still apply. Only applied when
+ * Cloth Config is installed (see DSurroundMixinPlugin).
  */
 @Mixin(AbstractConfigEntry.class)
-public class MixinClothAbstractConfigEntry {
+public abstract class MixinClothAbstractConfigEntry {
 
-    /**
-     * @author OreCruncher
-     * @reason Preserve style of Component.  The current implementation overrides color settings to force Gray.
-     */
-    @Overwrite
-    public Component getDisplayedFieldName() {
-        var self = (AbstractConfigEntry<?>)((Object)this);
-        MutableComponent text = self.getFieldName().copy();
-        boolean hasError = self.getConfigError().isPresent();
-        boolean isEdited = self.isEdited();
-
-        if (!hasError && !isEdited) {
-            // If the text entry does not have a color set, force
-            // to gray.
-            var color = text.getStyle().getColor();
-            if (color == null)
-                text = text.withStyle(ChatFormatting.GRAY);
-        }
-
-        if (hasError) {
-            text = text.withStyle(ChatFormatting.RED);
-        }
-
-        if (isEdited) {
-            text = text.withStyle(ChatFormatting.ITALIC);
-        }
-
-        if (!self.isEnabled()) {
-            text = text.withStyle(ChatFormatting.DARK_GRAY);
-        }
-
-        return text;
+    @ModifyReturnValue(method = "getDisplayedFieldName", at = @At("RETURN"), remap = false)
+    private Component dsurround$keepFieldNameColor(Component displayed) {
+        var self = (AbstractConfigEntry<?>) (Object) this;
+        return ClothFieldNames.keepColor(displayed, self.getFieldName(), self.getConfigError().isPresent(), self.isEdited(), self.isEnabled());
     }
-
 }

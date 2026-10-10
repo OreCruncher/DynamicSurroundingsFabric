@@ -5,7 +5,7 @@ import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.MinecraftClock;
+import org.orecruncher.dsurround.lib.time.MinecraftClock;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.lib.weighted.WeightedList;
@@ -60,14 +60,7 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
             if (this.type.inRange(angle)) {
                 final float mid = (this.type.getStartAngle() + this.type.getEndAngle()) / 2F;
                 final float factor = (1F - Mth.abs(angle - mid) / (mid - this.type.getStartAngle())) * this.type.getIntensity();
-                final float shift = data.start * factor;
-                final float newEnd = data.end - shift;
-                final float newStart = Mth.clamp(data.start - shift * 2, this.type.getReserve() + 1, newEnd);
-
-                var result = new FogRenderer.FogData(data.mode);
-                result.start = newStart;
-                result.end = newEnd;
-                return result;
+                return thicken(data, factor, this.type.getReserve() + 1);
             }
         }
         return data;

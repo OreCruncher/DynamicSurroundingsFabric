@@ -5,13 +5,15 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.*;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
 public class WaterRippleParticle extends TextureSheetParticle {
+
+    // Lays the quad flat on the water. renderRotatedQuad() only reads it, so one instance serves every ripple.
+    private static final Quaternionf FLAT = new Quaternionf().rotateX((float) Math.toRadians(-90f));
 
     private final WaterRippleStyle rippleStyle;
     private final SpriteSet spriteProvider;
@@ -20,26 +22,7 @@ public class WaterRippleParticle extends TextureSheetParticle {
     private final float growthRate;
 
     public static Particle create(WaterRippleStyle rippleStyle, ClientLevel world, double x, double y, double z) {
-        SpriteSet spriteProvider = spriteProviderFor(rippleStyle);
-        if (spriteProvider != null) {
-            return new WaterRippleParticle(rippleStyle, world, x, y, z, spriteProvider);
-        }
-
-        // Last-resort fallback.  This should rarely be used because DS ripple SpriteSets are captured
-        // during Fabric particle provider registration, but it avoids crashing worlds if resource reload
-        // order changes.
-        return ParticleUtils.createParticle(ParticleTypes.SPLASH, x, y, z, 0D, 0D, 0D);
-    }
-
-    private static SpriteSet spriteProviderFor(WaterRippleStyle rippleStyle) {
-        var sprites = ParticleUtils.getSpriteProvider(DSurroundParticleTypes.forRippleStyle(rippleStyle));
-        if (sprites == null) {
-            sprites = ParticleUtils.getSpriteProvider(ParticleTypes.FISHING);
-        }
-        if (sprites == null) {
-            sprites = ParticleUtils.getSpriteProvider(ParticleTypes.SPLASH);
-        }
-        return sprites;
+        return new WaterRippleParticle(rippleStyle, world, x, y, z, DSurroundParticleSprites.forRippleStyle(rippleStyle));
     }
 
     protected WaterRippleParticle(WaterRippleStyle rippleStyle, ClientLevel world, double x, double y, double z, SpriteSet spriteProvider) {
@@ -83,9 +66,7 @@ public class WaterRippleParticle extends TextureSheetParticle {
     @Override
     public void render(@NotNull VertexConsumer vertexConsumer, @NotNull Camera camera, float tickDelta) {
         this.setAlpha(this.lifetimeAlpha.currentAlphaForAge(this.age, this.lifetime, tickDelta));
-        Quaternionf quaternionf = new Quaternionf();
-        quaternionf.rotateX((float) Math.toRadians(-90f));
-        this.renderRotatedQuad(vertexConsumer, camera, quaternionf, tickDelta);
+        this.renderRotatedQuad(vertexConsumer, camera, FLAT, tickDelta);
     }
 
     @Override

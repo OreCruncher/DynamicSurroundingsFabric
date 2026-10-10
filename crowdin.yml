@@ -16,32 +16,32 @@ files:
       locale_with_underscore:
         pl: pl_pl
         zh-CN: zh_cn
-        ro-RO: ro_ro
-        fr-FR: fr_fr
+        ro: ro_ro
+        fr: fr_fr
         es-ES: es_es
-        af-ZA: af_za
+        af: af_za
         ar-SA: ar_sa
-        ca-ES: ca_es
-        cs-CZ: cs_cz
-        da-DK: da_dk
-        de-DE: de_de
-        el-GR: el_gr
-        fi-FI: fi_fi
-        he-IL: he_il
-        he-HE: hu_hu
-        it-IT: it_it
-        ja-JP: ja_jp
-        ko-KR: ko_kr
-        nl-NL: nl_nl
-        no-NO: no_no
+        ca: ca_es
+        cs: cs_cz
+        da: da_dk
+        de: de_de
+        el: el_gr
+        fi: fi_fi
+        he: he_il
+        hu: hu_hu
+        it: it_it
+        ja: ja_jp
+        ko: ko_kr
+        nl: nl_nl
+        no: no_no
         pt-PT: pt_pt
-        ru-RU: ru_ru
-        sr-SP: sr_sp
+        ru: ru_ru
+        sr: sr_sp
         sv-SE: sv_se
-        tr-TR: tr_tr
-        uk-UA: uk_ua
+        tr: tr_tr
+        uk: uk_ua
         zh-TW: zh_tw
-        vi-VN: vi_vn
+        vi: vi_vn
         pt-BR: pt_br
     # Leave untranslated strings out rather than filling them with English: Minecraft shows the English text for
     # a missing key anyway, and an English copy would look translated.

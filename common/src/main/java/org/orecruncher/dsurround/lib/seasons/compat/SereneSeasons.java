@@ -5,6 +5,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
+import org.orecruncher.dsurround.eventing.IClientTickStart;
+import org.orecruncher.dsurround.lib.function.CachingSupplier;
+import sereneseasons.api.season.ISeasonState;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 import sereneseasons.season.SeasonHooks;
@@ -13,6 +16,9 @@ import java.util.Locale;
 import java.util.Optional;
 
 public class SereneSeasons extends AbstractSeasonProvider {
+
+    // Looked up once per tick; the season queries are made many times a tick
+    private final CachingSupplier<ISeasonState> seasonStateCache;
 
     // Cache for previously computed data
     private Season.SubSeason subSeason;
@@ -24,18 +30,20 @@ public class SereneSeasons extends AbstractSeasonProvider {
     public SereneSeasons(IDimensionInformation dimensionInformation) {
         super("Serene Seasons");
         this.dimensionInformation = dimensionInformation;
+        this.seasonStateCache = CachingSupplier.from(() -> SeasonHelper.getSeasonState(this.level()));
+        IClientTickStart.EVENT.register(ignored -> this.seasonStateCache.clear());
     }
 
     @Override
     public Optional<Component> getCurrentSeason() {
-        var helper = SeasonHelper.getSeasonState(this.level());
+        var helper = this.seasonStateCache.get();
         var subSeason = helper.getSubSeason();
         return Optional.of(Component.literal(subSeason.toString()));
     }
 
     @Override
     public Optional<Component> getCurrentSeasonTranslated() {
-        var helper = SeasonHelper.getSeasonState(this.level());
+        var helper = this.seasonStateCache.get();
         if (this.subSeason != helper.getSubSeason() || this.tropicalSeason != helper.getTropicalSeason()) {
             var subSeasonKey = "desc.sereneseasons." + helper.getSeason().toString().toLowerCase(Locale.ROOT);
             var tropicalSeasonKey = "desc.sereneseasons." + helper.getTropicalSeason().toString().toLowerCase(Locale.ROOT);
@@ -50,37 +58,37 @@ public class SereneSeasons extends AbstractSeasonProvider {
     }
 
     public boolean isSpring() {
-        var helper = SeasonHelper.getSeasonState(this.level());
+        var helper = this.seasonStateCache.get();
         return helper.getSeason() == Season.SPRING;
     }
 
     public  boolean isSummer() {
-        var helper = SeasonHelper.getSeasonState(this.level());
+        var helper = this.seasonStateCache.get();
         return helper.getSeason() == Season.SUMMER;
     }
 
     public  boolean isAutumn() {
-        var helper = SeasonHelper.getSeasonState(this.level());
+        var helper = this.seasonStateCache.get();
         return helper.getSeason() == Season.AUTUMN;
     }
 
     public  boolean isWinter() {
-        var helper = SeasonHelper.getSeasonState(this.level());
+        var helper = this.seasonStateCache.get();
         return helper.getSeason() == Season.WINTER;
     }
 
     public boolean isEarly() {
-        var subSeason = SeasonHelper.getSeasonState(this.level()).getSubSeason();
+        var subSeason = this.seasonStateCache.get().getSubSeason();
         return subSeason == Season.SubSeason.EARLY_AUTUMN || Season.SubSeason.EARLY_SPRING == subSeason ||  Season.SubSeason.EARLY_SUMMER == subSeason || Season.SubSeason.EARLY_WINTER == subSeason;
     }
 
     public boolean isMiddle() {
-        var subSeason = SeasonHelper.getSeasonState(this.level()).getSubSeason();
+        var subSeason = this.seasonStateCache.get().getSubSeason();
         return subSeason == Season.SubSeason.MID_AUTUMN || Season.SubSeason.MID_SPRING == subSeason ||  Season.SubSeason.MID_SUMMER == subSeason || Season.SubSeason.MID_WINTER == subSeason;
     }
 
     public boolean isLate() {
-        var subSeason = SeasonHelper.getSeasonState(this.level()).getSubSeason();
+        var subSeason = this.seasonStateCache.get().getSubSeason();
         return subSeason == Season.SubSeason.LATE_AUTUMN || Season.SubSeason.LATE_SPRING == subSeason ||  Season.SubSeason.LATE_SUMMER == subSeason || Season.SubSeason.LATE_WINTER == subSeason;
     }
 

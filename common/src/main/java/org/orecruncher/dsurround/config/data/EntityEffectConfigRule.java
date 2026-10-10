@@ -6,7 +6,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.config.EntityEffectType;
 import org.orecruncher.dsurround.config.EntityTypeMatcher;
-import org.orecruncher.dsurround.lib.IMatcher;
+import org.orecruncher.dsurround.lib.codec.IMatcher;
 
 import java.util.List;
 

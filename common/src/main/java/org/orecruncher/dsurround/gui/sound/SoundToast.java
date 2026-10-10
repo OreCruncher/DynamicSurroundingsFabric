@@ -16,15 +16,13 @@ public final class SoundToast {
     public static void from(Music music) {
         var soundLibrary = ContainerManager.resolve(ISoundLibrary.class);
         var metadata = soundLibrary.getSoundMetadata(music.getEvent().value().getLocation());
-        if (metadata != null && !metadata.getCredits().isEmpty()) {
-            var title = metadata.getTitle();
-            if (!Component.empty().equals(title)) {
-                var author = metadata.getCredits().getFirst().author();
-                var titleLine = Component.translatable("dsurround.text.toast.music.title", title);
-                var authorLine = Component.translatable("dsurround.text.toast.music.author", author);
-                var toast = WarmToast.from(GameUtils.getMC(), SOUND_TOAST_PROFILE, titleLine, authorLine);
-                GameUtils.getMC().getToasts().addToast(toast);
-            }
+        // getSoundMetadata never returns null; unknown sounds get default metadata with no title or credits
+        if (metadata.hasTitle() && !metadata.getCredits().isEmpty()) {
+            var author = metadata.getCredits().getFirst().author();
+            var titleLine = Component.translatable("dsurround.text.toast.music.title", metadata.getTitle());
+            var authorLine = Component.translatable("dsurround.text.toast.music.author", author);
+            var toast = WarmToast.from(GameUtils.getMC(), SOUND_TOAST_PROFILE, titleLine, authorLine);
+            GameUtils.getMC().getToasts().addToast(toast);
         }
     }
 }

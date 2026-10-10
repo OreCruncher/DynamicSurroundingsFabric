@@ -7,8 +7,8 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
-import org.orecruncher.dsurround.lib.IMatcher;
-import org.orecruncher.dsurround.lib.IdentityUtils;
+import org.orecruncher.dsurround.lib.codec.IMatcher;
+import org.orecruncher.dsurround.lib.registry.IdentityUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 public abstract class ItemTypeMatcher implements IMatcher<Item> {

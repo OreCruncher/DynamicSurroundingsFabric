@@ -2,24 +2,28 @@ package org.orecruncher.dsurround.lib.platform;
 
 import dev.architectury.platform.Platform;
 import net.minecraft.SharedConstants;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.version.SemanticVersion;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 
 public final class ModInformation implements IMinecraftDirectories {
 
-    // TODO: Move into external resources?
-    private static final URI modUpdate = URI.create("https://raw.githubusercontent.com/OreCruncher/DynamicSurroundingsFabric/main/versions.json");
-    private static final String modCurseForge = "https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings-fabric-edition";
-    private static final String modModrinth = "https://modrinth.com/mod/dynamicsurroundingsfabric";
+    // The mod's links: kept in gradle.properties with its other details, and written into this file by the build
+    static final String LINKS_RESOURCE = "/assets/dsurround/mod_links.properties";
+    private static final Properties LINKS = loadLinks(ModInformation.class.getResourceAsStream(LINKS_RESOURCE));
 
     private final String modId;
     private final String displayName;
@@ -65,20 +69,58 @@ public final class ModInformation implements IMinecraftDirectories {
         return this.modDumpDirectory;
     }
 
+    /**
+     * Where the list of released versions is, for the update check; empty if the link is missing or isn't a URL.
+     */
     public Optional<URL> getUpdateUrl() {
-        try {
-            return Optional.of(modUpdate.toURL());
-        } catch (MalformedURLException ignored) {
-        }
-        return Optional.empty();
+        return toUrl(link("update"));
     }
 
     public String curseForgeLink() {
-        return modCurseForge;
+        return link("curseforge");
     }
 
     public String modrinthLink() {
-        return modModrinth;
+        return link("modrinth");
+    }
+
+    public String discussionsLink() {
+        return link("discussions");
+    }
+
+    /**
+     * One of the mod's links by name (see mod_links.properties), or an empty string if there is no such link.
+     */
+    static String link(String name) {
+        return LINKS.getProperty(name, "");
+    }
+
+    static Optional<URL> toUrl(String link) {
+        if (link.isEmpty())
+            return Optional.empty();
+        try {
+            return Optional.of(URI.create(link).toURL());
+        } catch (IllegalArgumentException | MalformedURLException e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Reads the links file. Missing or unreadable, there are no links (logged): the update check is then skipped,
+     * rather than the mod failing to load.
+     */
+    static Properties loadLinks(@Nullable InputStream stream) {
+        var links = new Properties();
+        if (stream == null) {
+            Library.LOGGER.warn("The mod's links (%s) are missing; the update check is turned off", LINKS_RESOURCE);
+            return links;
+        }
+        try (var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+            links.load(reader);
+        } catch (IOException e) {
+            Library.LOGGER.error(e, "Unable to read the mod's links (%s); the update check is turned off", LINKS_RESOURCE);
+        }
+        return links;
     }
 
     public String getBranding() {
@@ -100,8 +142,19 @@ public final class ModInformation implements IMinecraftDirectories {
                 .orElse(Optional.empty());
     }
 
+    /**
+     * The Minecraft version, or empty if it isn't a version that can be compared (e.g. a snapshot). A release such
+     * as 1.21, with no patch number, is 1.21.0.
+     */
     public static Optional<SemanticVersion> getMinecraftVersion() {
-        return getModVersion("minecraft");
+        var container = Platform.getMod("minecraft");
+        if (container != null) {
+            try {
+                return Optional.of(SemanticVersion.parseMinecraft(container.getVersion()));
+            } catch (Exception ignored) {
+            }
+        }
+        return Optional.empty();
     }
 
     public static Optional<SemanticVersion> getModVersion(String namespace) {

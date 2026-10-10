@@ -1,92 +1,44 @@
 package org.orecruncher.dsurround.config.block;
 
-import com.google.common.collect.ImmutableList;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.AcousticEntryCollection;
-import org.orecruncher.dsurround.config.data.AcousticConfig;
-import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
-import org.orecruncher.dsurround.config.AcousticEntry;
-import org.orecruncher.dsurround.config.data.BlockConfigRule;
-import org.orecruncher.dsurround.config.libraries.ITagLibrary;
+import org.orecruncher.dsurround.config.ConfigServices;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
-import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.sound.ISoundFactory;
-import org.orecruncher.dsurround.tags.OcclusionTags;
-import org.orecruncher.dsurround.tags.ReflectanceTags;
 
 import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class BlockInfo {
+/**
+ * A block state as the configuration describes it, built by {@link BlockInfoBuilder}. Doesn't change once built; a
+ * reload builds new ones.
+ */
+public final class BlockInfo {
 
-    private static final IModLog LOGGER = ModLog.createChild(ContainerManager.resolve(IModLog.class), "BlockInfo");
-    private static final IConditionEvaluator CONDITION_EVALUATOR = ContainerManager.resolve(IConditionEvaluator.class);
-
-    private static class Occlusion {
-        public static final float NONE = 0;
-        public static final float VERY_LOW = 0.15F;
-        public static final float LOW = 0.35F;
-        public static final float MEDIUM = 0.5F;
-        public static final float HIGH = 0.65F;
-        public static final float VERY_HIGH = 0.8F;
-        public static final float MAX = 1.0F;
-        public static final float VIBRATION = HIGH;
-        public static final float DEFAULT = MEDIUM;
-        public static final float DEFAULT_TRANSLUCENT = VERY_LOW;
-    }
-
-    private static class Reflectance {
-        public static final float NONE = 0;
-        public static final float VERY_LOW = 0.15F;
-        public static final float LOW = 0.35F;
-        public static final float MEDIUM = 0.5F;
-        public static final float HIGH = 0.65F;
-        public static final float VERY_HIGH = 0.8F;
-        public static final float MAX = 1.0F;
-        public static final float VIBRATION = LOW;
-        public static final float DEFAULT = LOW;
-    }
-
-    private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
-    private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
-
-    protected final int version;
+    private final int version;
+    // What it uses, from the library that built it: kept as one reference, as there is an info for every block state
+    private final ConfigServices services;
     @Nullable
-    protected final ResourceLocation stepSound;
-    protected AcousticEntryCollection sounds = new AcousticEntryCollection();
-    protected Collection<IBlockEffectProducer> blockEffects = new ObjectArray<>();
+    private final ResourceLocation stepSound;
+    private final AcousticEntryCollection sounds;
+    private final Collection<IBlockEffectProducer> blockEffects;
+    private final Script soundChance;
+    private final float soundReflectivity;
+    private final float soundOcclusion;
 
-    protected Script soundChance = new Script("0.01");
-    protected float soundReflectivity = Reflectance.DEFAULT;
-    protected float soundOcclusion = Occlusion.DEFAULT;
-
-    public BlockInfo(int version) {
-        this.version = version;
-        this.stepSound = null;
-    }
-
-    public BlockInfo(int version, BlockState state) {
-        this.version = version;
-        this.soundOcclusion = getSoundOcclusionSetting(state);
-        this.soundReflectivity = getSoundReflectionSetting(state);
-        this.stepSound = state.getSoundType().getStepSound().getLocation();
-    }
-
-    public boolean isDefault() {
-        return this.sounds == null && this.blockEffects == null
-                && this.soundReflectivity == Reflectance.DEFAULT
-                && (this.soundOcclusion == Occlusion.DEFAULT
-                        || this.soundOcclusion == Occlusion.DEFAULT_TRANSLUCENT);
+    BlockInfo(BlockInfoBuilder builder, Collection<IBlockEffectProducer> blockEffects) {
+        this.version = builder.version;
+        this.services = builder.services;
+        this.stepSound = builder.stepSound;
+        this.sounds = builder.sounds;
+        this.blockEffects = blockEffects;
+        this.soundChance = builder.soundChance;
+        this.soundReflectivity = builder.soundReflectivity;
+        this.soundOcclusion = builder.soundOcclusion;
     }
 
     public int getVersion() {
@@ -101,44 +53,16 @@ public class BlockInfo {
         return this.soundOcclusion;
     }
 
-    private void addToBlockEffects(IBlockEffectProducer effect) {
-        this.blockEffects.add(effect);
-    }
-
-    public void update(BlockConfigRule config) {
-        // Reset of a block clears all registries
-        if (config.clearSounds())
-            this.clearSounds();
-
-        config.soundChance().ifPresent(v -> this.soundChance = v);
-
-        for (final AcousticConfig sr : config.acoustics()) {
-            var factory = SOUND_LIBRARY.getSoundFactoryOrDefault(sr.factory());
-            final AcousticEntry acousticEntry = new AcousticEntry(factory, sr.conditions(), sr.weight());
-            if (!this.sounds.add(acousticEntry))
-                LOGGER.warn("[BlockInfo] Duplicate acoustic entry: %s", sr.toString());
-        }
-
-        for (var e : config.effects()) {
-            var effect = e.effect().createInstance(e.spawnChance(), e.conditions());
-            effect.ifPresent(this::addToBlockEffects);
-        }
-    }
-
-    private void clearSounds() {
-        if (this.sounds != null)
-            this.sounds.clear();
-    }
-
     public boolean hasSoundsOrEffects() {
-        return this.sounds != null || this.blockEffects != null;
+        return !this.sounds.isEmpty() || !this.blockEffects.isEmpty();
     }
 
     public Optional<ISoundFactory> getSoundToPlay(final IRandomizer random) {
-        if (this.sounds != null) {
-            var chance = CONDITION_EVALUATOR.eval(this.soundChance);
+        // Checked before evaluating the chance script, which would otherwise run for blocks with no sounds
+        if (!this.sounds.isEmpty()) {
+            var chance = this.services.conditionEvaluator().eval(this.soundChance);
             if (chance instanceof Double c && random.nextDouble() < c) {
-                return this.sounds.makeSelection();
+                return this.sounds.makeSelection(random);
             }
         }
         return Optional.empty();
@@ -148,183 +72,7 @@ public class BlockInfo {
         return this.blockEffects;
     }
 
-    public void trim() {
-        this.sounds.trim();
-        if (this.blockEffects.isEmpty()) {
-            this.blockEffects = ImmutableList.of();
-        }
-    }
-
-    private static float getSoundReflectionSetting(BlockState state) {
-        if (TAG_LIBRARY.is(ReflectanceTags.NONE, state))
-            return Reflectance.NONE;
-        if (TAG_LIBRARY.is(ReflectanceTags.VERY_LOW, state))
-            return Reflectance.VERY_LOW;
-        if (TAG_LIBRARY.is(ReflectanceTags.LOW, state))
-            return Reflectance.LOW;
-        if (TAG_LIBRARY.is(ReflectanceTags.MEDIUM, state))
-            return Reflectance.MEDIUM;
-        if (TAG_LIBRARY.is(ReflectanceTags.HIGH, state))
-            return Reflectance.HIGH;
-        if (TAG_LIBRARY.is(ReflectanceTags.VERY_HIGH, state))
-            return Reflectance.VERY_HIGH;
-        if (TAG_LIBRARY.is(ReflectanceTags.MAX, state))
-            return Reflectance.MAX;
-
-        return estimateReflectance(state);
-    }
-
-    private static float estimateReflectance(BlockState state) {
-
-        Float result = null;
-
-        if (TAG_LIBRARY.is(BlockTags.FLOWERS, state))
-            result = Reflectance.NONE;
-        else if (TAG_LIBRARY.is(BlockTags.FENCES, state))
-            result = Reflectance.NONE;
-        else if (TAG_LIBRARY.is(BlockTags.FENCE_GATES, state))
-            result = Reflectance.NONE;
-        else if (TAG_LIBRARY.is(BlockTags.BEDS, state))
-            result = Reflectance.NONE;
-        else if (TAG_LIBRARY.is(BlockTags.TRAPDOORS, state))
-            result = Reflectance.VERY_LOW;
-        else if (TAG_LIBRARY.is(BlockTags.BANNERS, state))
-            result = Reflectance.VERY_LOW;
-        else if (TAG_LIBRARY.is(BlockTags.LEAVES, state))
-            result = Reflectance.VERY_LOW;
-        else if (TAG_LIBRARY.is(BlockTags.WOOL, state))
-            result = Reflectance.VERY_LOW;
-        else if (TAG_LIBRARY.is(BlockTags.WOOL_CARPETS, state))
-            result = Reflectance.VERY_LOW;
-        else if (TAG_LIBRARY.is(BlockTags.BUTTONS, state))
-            result = Reflectance.NONE;
-        else if (TAG_LIBRARY.is(BlockTags.DOORS, state))
-            result = Reflectance.LOW;
-        else if (TAG_LIBRARY.is(BlockTags.LOGS, state))
-            result = Reflectance.VERY_LOW;
-        else if (TAG_LIBRARY.is(BlockTags.TERRACOTTA, state))
-            result = Reflectance.MEDIUM;
-        else if (TAG_LIBRARY.is(BlockTags.ICE, state))
-            result = Reflectance.LOW;
-        else if (TAG_LIBRARY.is(BlockTags.SIGNS, state))
-            result = Reflectance.NONE;
-        else if (TAG_LIBRARY.is(BlockTags.CROPS, state))
-            result = Reflectance.NONE;
-        else if (TAG_LIBRARY.is(BlockTags.CAULDRONS, state))
-            result = Reflectance.MEDIUM;
-        else if (TAG_LIBRARY.is(BlockTags.SAPLINGS, state))
-            result = Reflectance.NONE;
-        else if (TAG_LIBRARY.is(BlockTags.STONE_ORE_REPLACEABLES, state))
-            // Assume stone equivalent
-            result = Occlusion.MAX;
-        else if (TAG_LIBRARY.is(BlockTags.DAMPENS_VIBRATIONS, state))
-            result = Reflectance.VIBRATION;
-        else if (TAG_LIBRARY.is(BlockTags.SWORD_EFFICIENT, state))
-            result = Reflectance.NONE;
-
-        if (result == null) {
-            var pathString = state.getBlockHolder().unwrapKey().map(k -> k.location().getPath()).orElse(null);
-            if (pathString != null) {
-                if (pathString.contains("panes") || pathString.contains("wall"))
-                    result = Reflectance.LOW;
-                else if (pathString.contains("glass") || pathString.contains("dripstone"))
-                    result = Reflectance.MEDIUM;
-                else if (pathString.contains("cobble") || pathString.contains("deepslate"))
-                    result = Reflectance.HIGH;
-                else if (pathString.contains("stone") || pathString.contains("infested"))
-                    result = Reflectance.MAX;
-            }
-        }
-
-        if (result == null)
-            result = Reflectance.DEFAULT;
-
-        return result;
-    }
-
-    private static float getSoundOcclusionSetting(BlockState state) {
-        if (TAG_LIBRARY.is(OcclusionTags.NONE, state))
-            return Occlusion.NONE;
-        if (TAG_LIBRARY.is(OcclusionTags.VERY_LOW, state))
-            return Occlusion.VERY_LOW;
-        if (TAG_LIBRARY.is(OcclusionTags.LOW, state))
-            return Occlusion.LOW;
-        if (TAG_LIBRARY.is(OcclusionTags.MEDIUM, state))
-            return Occlusion.MEDIUM;
-        if (TAG_LIBRARY.is(OcclusionTags.HIGH, state))
-            return Occlusion.HIGH;
-        if (TAG_LIBRARY.is(OcclusionTags.VERY_HIGH, state))
-            return Occlusion.VERY_HIGH;
-        if (TAG_LIBRARY.is(OcclusionTags.MAX, state))
-            return Occlusion.MAX;
-
-        return estimateOcclusion(state);
-    }
-
-    private static float estimateOcclusion(BlockState state) {
-
-        Float result = null;
-
-        if (TAG_LIBRARY.is(BlockTags.FLOWERS, state))
-            result = Occlusion.NONE;
-        else if (TAG_LIBRARY.is(BlockTags.FENCES, state))
-            result = Occlusion.VERY_LOW;
-        else if (TAG_LIBRARY.is(BlockTags.FENCE_GATES, state))
-            result = Occlusion.VERY_LOW;
-        else if (TAG_LIBRARY.is(BlockTags.BEDS, state))
-            result = Occlusion.MEDIUM;
-        else if (TAG_LIBRARY.is(BlockTags.TRAPDOORS, state))
-            result = Occlusion.VERY_LOW;
-        else if (TAG_LIBRARY.is(BlockTags.BANNERS, state))
-            result = Occlusion.VERY_LOW;
-        else if (TAG_LIBRARY.is(BlockTags.LEAVES, state))
-            result = Occlusion.LOW;
-        else if (TAG_LIBRARY.is(BlockTags.WOOL, state))
-            result = Occlusion.MAX;
-        else if (TAG_LIBRARY.is(BlockTags.WOOL_CARPETS, state))
-            result = Occlusion.HIGH;
-        else if (TAG_LIBRARY.is(BlockTags.BUTTONS, state))
-            result = Occlusion.NONE;
-        else if (TAG_LIBRARY.is(BlockTags.DOORS, state))
-            result = Occlusion.LOW;
-        else if (TAG_LIBRARY.is(BlockTags.LOGS, state))
-            result = Occlusion.MEDIUM;
-        else if (TAG_LIBRARY.is(BlockTags.TERRACOTTA, state))
-            result = Occlusion.MEDIUM;
-        else if (TAG_LIBRARY.is(BlockTags.ICE, state))
-            result = Occlusion.LOW;
-        else if (TAG_LIBRARY.is(BlockTags.SIGNS, state))
-            result = Occlusion.NONE;
-        else if (TAG_LIBRARY.is(BlockTags.CROPS, state))
-            result = Occlusion.NONE;
-        else if (TAG_LIBRARY.is(BlockTags.CAULDRONS, state))
-            result = Occlusion.MEDIUM;
-        else if (TAG_LIBRARY.is(BlockTags.SAPLINGS, state))
-            result = Occlusion.NONE;
-        else if (TAG_LIBRARY.is(BlockTags.STONE_ORE_REPLACEABLES, state))
-            // Assume stone equivalent
-            result = Occlusion.HIGH;
-        else if (TAG_LIBRARY.is(BlockTags.OCCLUDES_VIBRATION_SIGNALS, state))
-            result = Occlusion.VIBRATION;
-        else if (TAG_LIBRARY.is(BlockTags.SWORD_EFFICIENT, state))
-            result = Occlusion.NONE;
-
-        if (result == null) {
-            var pathString = state.getBlockHolder().unwrapKey().map(k -> k.location().getPath()).orElse(null);
-            if (pathString != null) {
-                if (pathString.contains("chest") || pathString.contains("glass"))
-                    result = Occlusion.LOW;
-                else if (pathString.contains("stone"))
-                    result = Occlusion.HIGH;
-            }
-        }
-
-        if (result == null)
-            result = state.canOcclude() ? Occlusion.DEFAULT : Occlusion.DEFAULT_TRANSLUCENT;
-
-        return result;
-    }
-
+    @Override
     public String toString() {
         final StringBuilder builder = new StringBuilder();
 

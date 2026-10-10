@@ -1,12 +1,16 @@
 package org.orecruncher.dsurround.lib.block;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
+/**
+ * Matches every state of one block.
+ */
 class MatchOnBlock extends BlockStateMatcher {
 
-    private final Block block;
+    protected final Block block;
 
     MatchOnBlock(Block block) {
         this.block = block;
@@ -23,22 +27,21 @@ class MatchOnBlock extends BlockStateMatcher {
     }
 
     @Override
+    public String toSpecification() {
+        return BuiltInRegistries.BLOCK.getKey(this.block).toString();
+    }
+
+    @Override
     public int hashCode() {
-        // Only do the block hash code.  Reason is that BlockStateMatcher does not honor the equality contract set
-        // forth by Object.  Equals can perform a partial match.
         return this.block.hashCode();
     }
 
+    /**
+     * Equal to another matcher of exactly this class for the same block. A MatchOnBlockState for the same block is
+     * not equal: it matches fewer states.
+     */
     @Override
     public boolean equals(final Object obj) {
-        if (obj instanceof final MatchOnBlock m) {
-            return this.block == m.block;
-        }
-        return false;
-    }
-
-    @Override
-    public String toString() {
-        return "BlockStateMatcher{" + this.block.toString() + "}";
+        return obj != null && obj.getClass() == this.getClass() && this.block == ((MatchOnBlock) obj).block;
     }
 }

@@ -10,10 +10,6 @@ import org.orecruncher.dsurround.lib.config.ConfigurationData.*;
 public class Configuration extends ConfigurationData {
 
     @Property
-    @Comment("Configuration options for modifying logging behavior")
-    public final Logging logging = new Logging();
-
-    @Property
     @Comment("Configuration options for modifying Minecraft's Sound System behavior")
     public final SoundSystem soundSystem = new SoundSystem();
 
@@ -28,6 +24,14 @@ public class Configuration extends ConfigurationData {
     @Property
     @Comment("Configuration options for block effects")
     public final BlockEffects blockEffects = new BlockEffects();
+
+    @Property
+    @Comment("Configuration options for waterfalls")
+    public final WaterfallOptions waterfallOptions = new WaterfallOptions();
+
+    @Property
+    @Comment("Configuration options for fireflies")
+    public final FireflyOptions fireflyOptions = new FireflyOptions();
 
     @Property
     @Comment("Configuration options for entity effects")
@@ -50,8 +54,17 @@ public class Configuration extends ConfigurationData {
     public final FogOptions fogOptions = new FogOptions();
 
     @Property
+    @Comment("Configuration options for auroras")
+    public final AuroraOptions auroraOptions = new AuroraOptions();
+
+    @Property
     @Comment("Configuration options for modded Music Manager")
     public final MusicManagerOptions musicManagerOptions = new MusicManagerOptions();
+
+    @Property
+    @Comment("Configuration options for modifying diagnostic behavior")
+    @TextStyle(color = "#0078D4", italic = true)
+    public final Logging logging = new Logging();
 
     @Property
     @Comment("Configuration options for other things")
@@ -89,15 +102,13 @@ public class Configuration extends ConfigurationData {
 
     public static class SoundSystem {
         @Property
-        @IntegerRange(min = 8, max = 16)
-        @Slider
+        @Slider(min = 8, max = 16)
         @RestartRequired
         @Comment("The number of sound channels to reserve for streaming sounds (music, biome sounds, records, etc.)")
         public int streamingChannels = 12;
 
         @Property
-        @IntegerRange(min = 0, max = 20 * 10)
-        @Slider
+        @Slider(min = 0, max = 20 * 10)
         @Comment("Ticks between culled sound events (0 to disable culling)")
         public int cullInterval = 20;
 
@@ -113,19 +124,18 @@ public class Configuration extends ConfigurationData {
         public boolean enableEnhancedSounds = true;
 
         @Property
-        @IntegerRange(min = 0, max = 8)
-        @Slider
+        @Slider(min = 0, max = 8)
         @RestartRequired
         @Comment("Number of background threads to use for enhanced sound processing (0 means use internal default)")
         public int backgroundThreadWorkers = 0;
 
         @Property
-        @Comment("Enable/disable on the fly conversion of stereo sounds to mono as needed")
-        public boolean enableMonoConversion = true;
-
-        @Property
         @Comment("Enable/disable sound occlusion processing (sound muffling behind blocks)")
         public boolean enableOcclusionProcessing = false;
+
+        @Property
+        @Comment("Check whether reflections reach the player only from each reverb ray's last reflection, instead of from every reflection. Cheaper; may sound different")
+        public boolean simplifiedSharedAirspace = false;
 
         @Property
         @IntegerRange(min = 16, max = 64)
@@ -140,10 +150,12 @@ public class Configuration extends ConfigurationData {
         public int reverbBounces = 4;
 
         @Property
-        @IntegerRange(min = 64, max = 512)
+        @IntegerRange(min = 64, max = 256)
         @RestartRequired
         @Comment("Total distance a reverb ray will traverse before ending calculation")
-        public int reverbRayTraceDistance = 256;
+        // Beyond about 70-100 blocks a longer ray no longer changes which reverb a reflection feeds, only whether a
+        // distant surface is found to bounce off; an open-air ray costs in proportion to its length
+        public int reverbRayTraceDistance = 128;
     }
 
     public static class SoundOptions {
@@ -157,8 +169,7 @@ public class Configuration extends ConfigurationData {
         public boolean logStacktraceWhenDiscarding = false;
 
         @Property
-        @Slider
-        @IntegerRange(min = 0, max = 400)
+        @Slider(min = 0, max = 400)
         @Comment("Ambient sounds played by the mod will be multiplied by this factor")
         public int ambientVolumeScaling = 100;
 
@@ -186,8 +197,7 @@ public class Configuration extends ConfigurationData {
     public static class BlockEffects {
 
         @Property
-        @IntegerRange(min = 16, max = 64)
-        @Slider
+        @Slider(min = 16, max = 64)
         @Comment("Distance that will be scanned when generating block effects")
         public int blockEffectRange = 32;
 
@@ -204,32 +214,58 @@ public class Configuration extends ConfigurationData {
         public boolean bubbleColumnEnabled = true;
 
         @Property
-        @Comment("Enable/disable firefly generation")
-        public boolean firefliesEnabled = true;
-
-        @Property
-        @Comment("Enable/disable waterfall effect from flowing water")
-        public boolean waterfallsEnabled = true;
-
-        @Property
-        @Comment("Enable/disable sounds from waterfalls")
-        public boolean enableWaterfallSounds = true;
-
-        @Property
-        @Comment("Enable/disable particles from waterfalls")
-        public boolean enableWaterfallParticles = true;
-
-        @Property
-        @EnumType(WaterRippleStyle.class)
         @Comment("The style of water ripple to render when a drop hits a fluid")
         public WaterRippleStyle waterRippleStyle = WaterRippleStyle.PIXELATED_CIRCLE;
+    }
+
+    public static class WaterfallOptions {
+        @Property
+        @MovedFrom("blockEffects.waterfallsEnabled")
+        @Comment("Enable/disable waterfall effects where flowing water lands")
+        public boolean enableWaterfalls = true;
+
+        @Property
+        @MovedFrom("blockEffects.enableWaterfallSounds")
+        @Comment("Enable/disable sounds from waterfalls, and from water stepping down a block")
+        public boolean enableSounds = true;
+
+        @Property
+        @MovedFrom("blockEffects.enableWaterfallParticles")
+        @Comment("Enable/disable particles from waterfalls: their splashes, and the mist and foam where they land")
+        public boolean enableParticles = true;
+
+        @Property
+        @MovedFrom({"particleEffects.enableWaterfallMist", "worksInProgressOptions.enableWaterfallMist"})
+        @Comment("Enable/disable waterfall mist: many small puffs of mist thrown up where a waterfall lands")
+        public boolean enableMist = true;
+
+        @Property
+        @MovedFrom({"particleEffects.enableWaterStepFroth", "worksInProgressOptions.enableWaterStepFroth"})
+        @Comment("Enable/disable water froth: foam where flowing water drops one block (with a gentle sound) and around where waterfalls land")
+        public boolean enableFroth = true;
+    }
+
+    public static class FireflyOptions {
+        @Property
+        @MovedFrom("blockEffects.firefliesEnabled")
+        @Comment("Enable/disable fireflies")
+        public boolean enableFireflies = true;
+
+        @Property
+        @MovedFrom({"particleEffects.enableFireflyGlow", "worksInProgressOptions.enableFireflyGlow"})
+        @Comment("Enable/disable a soft glow around fireflies")
+        public boolean enableGlow = true;
+
+        @Property
+        @MovedFrom({"particleEffects.enableFireflyLight", "worksInProgressOptions.enableFireflyLight"})
+        @Comment("Enable/disable fireflies lighting the grass, leaves and ground close to them. Not shown while a shader pack is in use")
+        public boolean enableLight = true;
     }
 
     public static class EntityEffects {
 
         @Property
-        @IntegerRange(min = 16, max = 64)
-        @Slider
+        @Slider(min = 16, max = 64)
         @Comment("The maximum range at which entity special effects are applied")
         public int entityEffectRange = 24;
 
@@ -299,12 +335,11 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @Comment("Style of compass rendering")
-        @EnumType(CompassStyle.class)
         public CompassStyle compassStyle = CompassStyle.TRANSPARENT_WITH_INDICATOR;
 
         @Property
         @Comment("Scales the display by the specified amount")
-        @DoubleRange(min = 0.5D, max = 4D)
+        @DoubleSlider(min = 0.5D, max = 4D, step = 0.1D)
         public double scale = 1D;
     }
 
@@ -326,6 +361,22 @@ public class Configuration extends ConfigurationData {
         public boolean enableWeatherFog = true;
     }
 
+    public static class AuroraOptions {
+        @Property
+        @Comment("Enable/disable auroras: curtains of light in the night sky, on some nights, over cold biomes")
+        public boolean enableAuroras = true;
+
+        @Property
+        @Slider(min = 0, max = 100)
+        @Comment("Percent of nights with an aurora")
+        public int chance = 33;
+
+        @Property
+        @Slider(min = 1, max = 3)
+        @Comment("The most curtains of light an aurora can have")
+        public int maxBands = 3;
+    }
+
     public static class MusicManagerOptions {
         @Property
         @RestartRequired
@@ -333,8 +384,7 @@ public class Configuration extends ConfigurationData {
         public boolean replaceMusicManager = true;
 
         @Property
-        @IntegerRange(min = 0, max = 100)
-        @Slider
+        @Slider(min = 0, max = 100)
         @Comment("Reduce the wait time between music plays by a percentage")
         public int reduceWaitTime = 0;
     }

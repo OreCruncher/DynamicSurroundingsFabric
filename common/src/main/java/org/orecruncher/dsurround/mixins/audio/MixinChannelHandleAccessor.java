@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.mixins.audio;
 
 import net.minecraft.client.sounds.ChannelAccess;
-import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.orecruncher.dsurround.runtime.audio.SoundFXProcessor;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,12 +14,10 @@ public abstract class MixinChannelHandleAccessor {
     @Inject(method = "release()V", at = @At("HEAD"))
     private void dsurround$release(CallbackInfo ci) {
         try {
-            ReflectionHelper.cast(this, ChannelAccess.ChannelHandle.class)
-                    .ifPresent( c -> {
-                        if (c.channel != null) {
-                            SoundFXProcessor.stopSoundPlay(c.channel);
-                        }
-                    });
+            var channel = ((ChannelAccess.ChannelHandle) (Object) this).channel;
+            if (channel != null) {
+                SoundFXProcessor.stopSoundPlay(channel);
+            }
         } catch (Throwable t) {
             MixinHelpers.LOGGER.error(t, "Unable to stop sound play");
         }

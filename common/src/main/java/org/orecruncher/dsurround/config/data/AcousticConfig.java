@@ -3,9 +3,9 @@ package org.orecruncher.dsurround.config.data;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.random.Weight;
+import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.SoundEventType;
-import org.orecruncher.dsurround.lib.IdentityUtils;
+import org.orecruncher.dsurround.lib.registry.IdentityUtils;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.lib.weighted.WeightValue;
 
@@ -24,4 +24,9 @@ public record AcousticConfig(
                 WeightValue.CODEC.optionalFieldOf("weight", DEFAULT_WEIGHT).forGetter(AcousticConfig::weight),
                 SoundEventType.CODEC.optionalFieldOf("type", SoundEventType.LOOP).forGetter(AcousticConfig::type)
             ).apply(instance, AcousticConfig::new));
+
+    @Override
+    public @NotNull String toString() {
+        return "%s (%s, weight %s, when %s)".formatted(this.factory, this.type.getName(), this.weight, this.conditions.asString());
+    }
 }

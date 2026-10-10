@@ -7,9 +7,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.main.GameConfig;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.sounds.MusicManager;
+import net.minecraft.sounds.Music;
 import net.minecraft.world.entity.player.Abilities;
+import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
-import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -17,6 +19,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 @Mixin(Minecraft.class)
@@ -25,16 +28,13 @@ public class MixinMinecraftClient {
     @Inject(method = "<init>(Lnet/minecraft/client/main/GameConfig;)V", at = @At(value = "RETURN"))
     public void dsurround$createMusicManager(GameConfig gameConfig, CallbackInfo ci) {
         if (MixinHelpers.musicOptions.replaceMusicManager) {
-            ReflectionHelper.cast(this, Minecraft.class)
-                    .ifPresentOrElse(minecraft -> {
-                                //noinspection ConstantConditions
-                                if (minecraft.musicManager != null && !minecraft.musicManager.getClass().equals(MusicManager.class)) {
-                                    MixinHelpers.LOGGER.warn("It looks like MusicManager was already replaced by '%s'. If this causes an issue disable Dynamic Surroundings music manager replacement in the configuration.".formatted(minecraft.musicManager.getClass().getName()));
-                                }
-                                minecraft.musicManager = new DSurroundMusicManager(minecraft);
-                                MixinHelpers.LOGGER.info("Replaced Minecraft's MusicManager");
-                            },
-                            () -> MixinHelpers.LOGGER.warn("Unable to replace Minecraft's MusicManager"));
+            var minecraft = (Minecraft) (Object) this;
+            //noinspection ConstantConditions
+            if (minecraft.musicManager != null && !minecraft.musicManager.getClass().equals(MusicManager.class)) {
+                MixinHelpers.LOGGER.warn("It looks like MusicManager was already replaced by '%s'. If this causes an issue disable Dynamic Surroundings music manager replacement in the configuration.".formatted(minecraft.musicManager.getClass().getName()));
+            }
+            minecraft.musicManager = new DSurroundMusicManager(minecraft);
+            MixinHelpers.LOGGER.info("Replaced Minecraft's MusicManager");
         } else {
             MixinHelpers.LOGGER.info("Not configured to replace MusicManager");
         }
@@ -57,5 +57,23 @@ public class MixinMinecraftClient {
             return this.dsurround$cachedAbilities.get();
         }
         return original.call(instance);
+    }
+
+    /**
+     * Hooks the biome's background music when Minecraft picks the situational music. Music configured for the
+     * biome is chosen alongside the biome's own track. Only the music Minecraft plays is affected: other callers of
+     * Biome.getBackgroundMusic() still see the game's value.
+     *
+     * The music manager asks every tick, but the choice only matters when a track starts. Our music manager says
+     * when that is, and the choice is kept until then; with the game's music manager a choice is made each time.
+     */
+    @WrapOperation(method = "getSituationalMusic()Lnet/minecraft/sounds/Music;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/biome/Biome;getBackgroundMusic()Ljava/util/Optional;"))
+    private Optional<Music> dsurround$biomeMusic(Biome biome, Operation<Optional<Music>> original) {
+        var vanilla = original.call(biome);
+        var info = MixinHelpers.biomeLibrary().findBiomeInfo(biome);
+        if (info == null)
+            return vanilla;
+        var chooseAgain = !(((Minecraft) (Object) this).getMusicManager() instanceof DSurroundMusicManager mm) || mm.isTrackStarting();
+        return MixinHelpers.BIOME_MUSIC.select(info, vanilla, Randomizer.current(), chooseAgain);
     }
 }

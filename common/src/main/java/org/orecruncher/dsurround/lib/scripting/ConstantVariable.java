@@ -20,6 +20,6 @@ public record ConstantVariable<T>(T value) implements IScriptVariable {
         return new ConstantVariable<>(value);
     }
 
-    public static ConstantVariable<Boolean> TRUE = of(Boolean.TRUE);
-    public static ConstantVariable<Boolean> FALSE = of(Boolean.FALSE);
+    public static final ConstantVariable<Boolean> TRUE = of(Boolean.TRUE);
+    public static final ConstantVariable<Boolean> FALSE = of(Boolean.FALSE);
 }

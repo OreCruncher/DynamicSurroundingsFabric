@@ -1,11 +1,16 @@
 package org.orecruncher.dsurround.processing;
 
+import java.util.function.BiConsumer;
+import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.eventing.IClientConnect;
+import org.orecruncher.dsurround.eventing.IClientDisconnect;
+import org.orecruncher.dsurround.eventing.IClientTickEnd;
+import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.Cacheable;
@@ -13,12 +18,11 @@ import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
-import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
-import org.orecruncher.dsurround.lib.threading.IClientTasking;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.processing.accents.FootstepAccents;
+import org.orecruncher.dsurround.processing.fog.HolisticFogRangeCalculator;
 import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
 import org.orecruncher.dsurround.processing.scanner.VillageScanner;
@@ -30,22 +34,22 @@ public class Handlers {
 
     private final Configuration config;
     private final IModLog logger;
-    private final IClientTasking tasking;
     private final ITickCount tickCount;
     private final ISoundLibrary soundLibrary;
     private final IAudioPlayer audioPlayer;
     private final ObjectArray<AbstractClientHandler> effectHandlers = new ObjectArray<>();
     private final LoggingTimerEMA handlerTimer = new LoggingTimerEMA("Handlers");
+    private final LogThrottle<String> handlerFailures;
     private boolean isConnected = false;
     private boolean startupSoundPlayed = false;
 
-    public Handlers(Configuration config, IModLog logger, IClientTasking tasking, ITickCount tickCount, ISoundLibrary soundLibrary, IAudioPlayer audioPlayer) {
+    public Handlers(Configuration config, IModLog logger, ITickCount tickCount, ISoundLibrary soundLibrary, IAudioPlayer audioPlayer) {
         this.config = config;
         this.logger = logger;
-        this.tasking = tasking;
         this.tickCount = tickCount;
         this.soundLibrary = soundLibrary;
         this.audioPlayer = audioPlayer;
+        this.handlerFailures = LogThrottle.oncePerKey(logger, "handler errors", "the next connect");
         init();
     }
 
@@ -71,25 +75,26 @@ public class Handlers {
         this.register(AreaBlockEffects.class);
         this.register(StepAccentGenerator.class);
         this.register(FogHandler.class);
+        this.register(AuroraHandler.class);
 
-        ClientState.CLIENT_TICK_END_EVENT.register(this::tick);
-        ClientState.CLIENT_CONNECT_EVENT.register(this::onConnect);
-        ClientState.CLIENT_DISCONNECT_EVENT.register(this::onDisconnect);
+        IClientTickEnd.EVENT.register(this::tick);
+        IClientConnect.EVENT.register(this::onConnect);
+        IClientDisconnect.EVENT.register(this::onDisconnect);
 
-        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.register(this::gatherDiagnostics, HandlerPriority.HIGH);
+        ICollectDiagnostics.EVENT.register(this::gatherDiagnostics, HandlerPriority.HIGH);
     }
 
+    // Connect and disconnect are raised from the client tick, so these run on the client thread
     private void onConnect(Minecraft client) {
         try {
-            this.tasking.execute(() -> {
-                this.logger.info("Handlers connecting...");
-                if (this.isConnected) {
-                    this.logger.warn("Attempt to connect when already connected; disconnecting first");
-                    this.onDisconnect(client);
-                }
-                this.effectHandlers.forEach(AbstractClientHandler::connect0);
-                this.isConnected = true;
-            });
+            this.logger.info("Handlers connecting...");
+            if (this.isConnected) {
+                this.logger.warn("Attempt to connect when already connected; disconnecting first");
+                this.onDisconnect(client);
+            }
+            this.handlerFailures.reset();
+            this.effectHandlers.forEach(AbstractClientHandler::connect0);
+            this.isConnected = true;
         } catch (Exception ex) {
             this.logger.error(ex, "Unable to perform client connect");
         }
@@ -97,11 +102,9 @@ public class Handlers {
 
     private void onDisconnect(Minecraft client) {
         try {
-            this.tasking.execute(() -> {
-                this.logger.info("Client disconnecting...");
-                this.isConnected = false;
-                this.effectHandlers.forEach(AbstractClientHandler::disconnect0);
-            });
+            this.logger.info("Client disconnecting...");
+            this.isConnected = false;
+            this.effectHandlers.forEach(AbstractClientHandler::disconnect0);
         } catch (Exception ex) {
             this.logger.error(ex, "Unable to perform client disconnect");
         }
@@ -129,14 +132,33 @@ public class Handlers {
 
         this.handlerTimer.begin();
         final long tick = this.tickCount.getTickCount();
+        final Player player = getPlayer();
 
         for (final AbstractClientHandler handler : this.effectHandlers) {
             final long mark = System.nanoTime();
-            if (handler.doTick(tick))
-                handler.process(getPlayer());
+            tickHandler(handler, tick, player, this::handlerFailed);
             handler.updateTimer(System.nanoTime() - mark);
         }
         this.handlerTimer.end();
+    }
+
+    /**
+     * Ticks one handler. If it throws, {@code onFailure} is told and the caller goes on to the next handler, so one
+     * broken handler doesn't stop the rest. Errors the JVM can't recover from are rethrown.
+     */
+    static void tickHandler(AbstractClientHandler handler, long tick, Player player, BiConsumer<AbstractClientHandler, Throwable> onFailure) {
+        try {
+            if (handler.doTick(tick))
+                handler.process(player);
+        } catch (VirtualMachineError fatal) {
+            throw fatal;
+        } catch (Throwable t) {
+            onFailure.accept(handler, t);
+        }
+    }
+
+    private void handlerFailed(AbstractClientHandler handler, Throwable t) {
+        this.handlerFailures.error(handler.getHandlerName(), t, "Handler [%s] failed", handler.getHandlerName());
     }
 
     private void handleStartupSound() {
@@ -178,7 +200,9 @@ public class Handlers {
             .registerSingleton(AreaBlockEffects.class)
             .registerSingleton(FootstepAccents.class)
             .registerSingleton(StepAccentGenerator.class)
+            .registerSingleton(HolisticFogRangeCalculator.class)
             .registerSingleton(FogHandler.class)
+            .registerSingleton(AuroraHandler.class)
             .registerSingleton(Handlers.class);
     }
 }

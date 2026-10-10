@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.lib.scanner;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
@@ -36,16 +34,17 @@ public final class ScanContext {
         return this.logger;
     }
 
-    public ResourceLocation getWorldReference() {
-        return this.getWorld().dimension().registry();
+    /**
+     * The lowest y that holds blocks.
+     */
+    public int getMinY() {
+        return this.getWorld().getMinBuildHeight();
     }
 
-    public boolean isOutOfHeightLimit(int y) {
-        return this.getWorld().isOutsideBuildHeight(y);
-    }
-
-    public int clampHeight(int y) {
-        var world = this.getWorld();
-        return Mth.clamp(y, world.getMinBuildHeight(), world.getMaxBuildHeight());
+    /**
+     * The highest y that holds blocks. getMaxBuildHeight() is exclusive, so this is one less.
+     */
+    public int getMaxY() {
+        return this.getWorld().getMaxBuildHeight() - 1;
     }
 }

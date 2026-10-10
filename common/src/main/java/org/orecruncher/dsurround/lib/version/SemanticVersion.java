@@ -331,6 +331,11 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
         return here.compareTo(there); // Number compare
     }
 
+    /**
+     * Parses a semantic version, e.g. "1.2.3-beta.1+build.5".
+     *
+     * @throws ParseException if it isn't one; the error offset is where the problem was found
+     */
     public static SemanticVersion parse(String versionString) throws ParseException {
         var parser = new Parser();
         if (parser.parse(versionString)) {
@@ -343,6 +348,19 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
         }
         throw new ParseException(versionString, parser.errPos);
     }
+
+    /**
+     * Parses a Minecraft version. Minecraft leaves out a zero patch number ("1.21" rather than "1.21.0"), which
+     * semantic versions can't, so it is added: "1.21" is 1.21.0 and "1.21-rc.1" is 1.21.0-rc.1.
+     *
+     * @throws ParseException if it isn't a version, e.g. a snapshot such as "24w14a"
+     */
+    public static SemanticVersion parseMinecraft(String versionString) throws ParseException {
+        return parse(MISSING_PATCH.matcher(versionString).replaceFirst("$1.0"));
+    }
+
+    // major.minor, then the end or a pre-release or build part
+    private static final Pattern MISSING_PATCH = Pattern.compile("^(\\d+\\.\\d+)(?=$|[-+])");
 
     private static class Parser {
 
@@ -366,6 +384,17 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
             return this.stateMajor();
         }
 
+        /**
+         * The digits from {@code start} to {@code end} as a number, or -1 if it is too big for an int.
+         */
+        private int number(int start, int end) {
+            try {
+                return Integer.parseInt(new String(this.input, start, end - start), 10);
+            } catch (NumberFormatException e) {
+                return -1;
+            }
+        }
+
         private boolean stateMajor() {
             int pos = 0;
             while (pos < this.input.length && this.input[pos] >= '0' && this.input[pos] <= '9') {
@@ -378,12 +407,16 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
                 return false;
             }
 
-            this.vParts[0] = Integer.parseInt(new String(this.input, 0, pos), 10);
+            this.vParts[0] = this.number(0, pos);
+            if (this.vParts[0] < 0) { // Too big for an int
+                return false;
+            }
 
-            if (this.input[pos] == '.') {
+            if (pos < this.input.length && this.input[pos] == '.') {
                 return stateMinor(pos + 1);
             }
 
+            this.errPos = pos;
             return false;
         }
 
@@ -400,9 +433,13 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
                 this.errPos = index;
                 return false;
             }
-            this.vParts[1] = Integer.parseInt(new String(this.input, index, pos - index), 10);
+            this.vParts[1] = this.number(index, pos);
+            if (this.vParts[1] < 0) { // Too big for an int
+                this.errPos = index;
+                return false;
+            }
 
-            if (this.input[pos] == '.') {
+            if (pos < this.input.length && this.input[pos] == '.') {
                 return statePatch(pos + 1);
             }
 
@@ -424,7 +461,11 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
                 return false;
             }
 
-            this.vParts[2] = Integer.parseInt(new String(this.input, index, pos - index), 10);
+            this.vParts[2] = this.number(index, pos);
+            if (this.vParts[2] < 0) { // Too big for an int
+                this.errPos = index;
+                return false;
+            }
 
             if (pos == this.input.length) { // We have a clean version string
                 return true;

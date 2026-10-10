@@ -10,7 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.MinecraftClock;
+import org.orecruncher.dsurround.lib.time.MinecraftClock;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.gui.ColorGradient;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
@@ -54,6 +54,9 @@ public final class ClockOverlay extends AbstractOverlay {
             var offHandItem = player.getOffhandItem();
 
             this.showClock = this.doShowClock(mainHandItem) || this.doShowClock(offHandItem) || this.doShowClock(GameUtils.getMC().crosshairPickEntity);
+            if (!this.showClock)
+                return;
+
             this.clock.update(player.level());
 
             this.clockDisplay.clear();
@@ -68,18 +71,25 @@ public final class ClockOverlay extends AbstractOverlay {
             this.renderHeight = this.clockDisplay.size() == 1 ? textRender.lineHeight - 2 : textRender.lineHeight * 2;
 
             // Calculate the color this tick
-            var world = player.level();
-            // 0 is noon, 180 is midnight. Need to normalize so that midnight 0.
-            var angleDegrees = world.getTimeOfDay(1F)* 360F + 180;
-            // Wrap
-            if (angleDegrees >= 360)
-                angleDegrees -= 360;
-            // Are we to decrease rather than increase toward noon?
-            if (angleDegrees >= 180)
-                angleDegrees = 360 - angleDegrees;
-
-            this.color = this.gradient.getRGBColor(angleDegrees);
+            this.color = textColor(this.gradient, player.level().getTimeOfDay(1F));
         }
+    }
+
+    /**
+     * The clock text's color for the time of day (0 to 1, from Level.getTimeOfDay): along the gradient from
+     * midnight (0 degrees) to noon (180), and back. Fully opaque: newer versions draw text with zero alpha
+     * invisibly, where this one makes it opaque.
+     */
+    static int textColor(ColorGradient gradient, float timeOfDay) {
+        // 0 is noon, 180 is midnight. Need to normalize so that midnight 0.
+        var angleDegrees = timeOfDay * 360F + 180;
+        // Wrap
+        if (angleDegrees >= 360)
+            angleDegrees -= 360;
+        // Are we to decrease rather than increase toward noon?
+        if (angleDegrees >= 180)
+            angleDegrees = 360 - angleDegrees;
+        return 0xFF000000 | gradient.getRGBColor(angleDegrees);
     }
 
     private boolean doShowClock(ItemStack stack) {

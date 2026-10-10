@@ -16,6 +16,6 @@ public final class GlobalVariables extends VariableSet {
 
     @Override
     public void configure(IConfigureDefinition config) {
-        config.defineFunction(id("allowScary"), l -> this.config.soundOptions.allowScarySounds);
+        config.property(id("allowScary"), () -> this.config.soundOptions.allowScarySounds);
     }
 }

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.BiomeTrait;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
@@ -14,8 +15,8 @@ import java.util.stream.Collectors;
 public final class BiomeTraits {
 
     private static final IModLog LOGGER = ContainerManager.memoize(IModLog.class);
+    // Run after the tag analysis, in this order
     private static final List<IBiomeTraitAnalyzer> TRAIT_ANALYZERS = ImmutableList.of(
-            new BiomeTagAnalyzer(),
             new BiomeNameFallbackAnalyzer(),
             new BiomeTraitAnalyzer(),
             // This one should run last
@@ -29,15 +30,25 @@ public final class BiomeTraits {
         this.traits = set;
     }
 
-    public static BiomeTraits from(ResourceLocation id, Biome biome) {
+    /**
+     * Works out a biome's traits: from its tags first, then its name and climate, then traits that follow from the
+     * others, then cleaning up any that conflict.
+     *
+     * @param tagLibrary answers which tags the biome has
+     */
+    public static BiomeTraits from(ResourceLocation id, Biome biome, ITagLibrary tagLibrary) {
         EnumSet<BiomeTrait> traits = EnumSet.noneOf(BiomeTrait.class);
-        for (var analyzer : TRAIT_ANALYZERS) {
-            int before = traits.size();
-            analyzer.analyze(id, biome, traits);
-            int after = traits.size();
-            LOGGER.debug("[%s] %s: %d traits (%d delta)", analyzer.name(), id, after, after - before);
-        }
+        analyze(new BiomeTagAnalyzer(tagLibrary), id, biome, traits);
+        for (var analyzer : TRAIT_ANALYZERS)
+            analyze(analyzer, id, biome, traits);
         return new BiomeTraits(traits);
+    }
+
+    private static void analyze(IBiomeTraitAnalyzer analyzer, ResourceLocation id, Biome biome, Set<BiomeTrait> traits) {
+        int before = traits.size();
+        analyzer.analyze(id, biome, traits);
+        int after = traits.size();
+        LOGGER.debug("[%s] %s: %d traits (%d delta)", analyzer.name(), id, after, after - before);
     }
 
     public static BiomeTraits of(BiomeTrait... traits) {

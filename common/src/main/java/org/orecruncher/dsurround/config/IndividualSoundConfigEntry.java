@@ -6,7 +6,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
-import org.orecruncher.dsurround.lib.Comparers;
+import org.orecruncher.dsurround.lib.registry.Comparers;
 
 public class IndividualSoundConfigEntry implements Comparable<IndividualSoundConfigEntry> {
 

@@ -1,9 +1,7 @@
 package org.orecruncher.dsurround.config;
 
-import com.google.common.base.MoreObjects;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.weighted.WeightTable;
-import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.lib.weighted.WeightValue;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
@@ -11,18 +9,22 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 
 public final class AcousticEntry extends WeightTable.Entry<ISoundFactory> {
 
-    private static final IConditionEvaluator CONDITION_EVALUATOR = ContainerManager.resolve(IConditionEvaluator.class);
     private static final WeightValue DEFAULT_WEIGHT = WeightValue.of(10);
 
     private final Script conditions;
+    private final IConditionEvaluator conditionEvaluator;
 
-    public AcousticEntry(final ISoundFactory acoustic, @Nullable final Script condition) {
-        this(acoustic, condition, DEFAULT_WEIGHT);
+    /**
+     * @param conditionEvaluator evaluates {@code condition}, to decide whether the entry can be chosen
+     */
+    public AcousticEntry(final ISoundFactory acoustic, @Nullable final Script condition, final IConditionEvaluator conditionEvaluator) {
+        this(acoustic, condition, DEFAULT_WEIGHT, conditionEvaluator);
     }
 
-    public AcousticEntry(final ISoundFactory acoustic, @Nullable final Script condition, final WeightValue weight) {
+    public AcousticEntry(final ISoundFactory acoustic, @Nullable final Script condition, final WeightValue weight, final IConditionEvaluator conditionEvaluator) {
         super(acoustic, weight);
         this.conditions = condition != null ? condition : Script.TRUE;
+        this.conditionEvaluator = conditionEvaluator;
     }
 
     public ISoundFactory getAcoustic() {
@@ -34,7 +36,7 @@ public final class AcousticEntry extends WeightTable.Entry<ISoundFactory> {
     }
 
     public boolean matches() {
-        return this.conditions == Script.TRUE || CONDITION_EVALUATOR.check(this.conditions);
+        return this.conditions == Script.TRUE || this.conditionEvaluator.check(this.conditions);
     }
 
     @Override

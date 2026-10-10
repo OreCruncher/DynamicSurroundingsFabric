@@ -5,7 +5,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.eventing.handlers.BlockUpdateHandler;
-import org.orecruncher.dsurround.lib.reflection.ReflectionHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,7 +19,7 @@ public class MixinWorld {
      */
     @Inject(method = "onBlockStateChange(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("HEAD"))
     public void dsurround$onBlockChanged(BlockPos pos, BlockState oldBlock, BlockState newBlock, CallbackInfo ci) {
-        ReflectionHelper.cast(this, ClientLevel.class)
-            .ifPresent(level -> BlockUpdateHandler.blockPositionUpdate(level, pos, oldBlock, newBlock));
+        if ((Object) this instanceof ClientLevel level)
+            BlockUpdateHandler.blockPositionUpdate(level, pos, oldBlock, newBlock);
     }
 }

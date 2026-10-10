@@ -2,14 +2,17 @@ package org.orecruncher.dsurround.gui.overlay.plugins;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.eventing.IClientTickEnd;
+import org.orecruncher.dsurround.eventing.IClientTickStart;
+import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
+import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
-import org.orecruncher.dsurround.eventing.ClientState;
 
+@Cacheable
 public final class ClientProfilerPlugin implements IDiagnosticPlugin {
 
     private final TimerEMA clientTick = new TimerEMA("Client Tick");
@@ -19,9 +22,9 @@ public final class ClientProfilerPlugin implements IDiagnosticPlugin {
     private float tps = 0;
 
     public ClientProfilerPlugin() {
-        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.register(this::onCollect, HandlerPriority.VERY_HIGH);
-        ClientState.CLIENT_TICK_START_EVENT.register(this::tickStart, HandlerPriority.VERY_HIGH);
-        ClientState.CLIENT_TICK_END_EVENT.register(this::tickEnd, HandlerPriority.VERY_LOW);
+        ICollectDiagnostics.EVENT.register(this::onCollect, HandlerPriority.VERY_HIGH);
+        IClientTickStart.EVENT.register(this::tickStart, HandlerPriority.VERY_HIGH);
+        IClientTickEnd.EVENT.register(this::tickEnd, HandlerPriority.VERY_LOW);
     }
 
     private void tickStart(Minecraft client) {
@@ -47,7 +50,8 @@ public final class ClientProfilerPlugin implements IDiagnosticPlugin {
 
             @Override
             public String toString() {
-                return String.format("Client TPS:%7.3fms", this.getMSecs());
+                // Ticks per second, not a time
+                return String.format("Client TPS:%7.3f", this.getMSecs());
             }
         };
 

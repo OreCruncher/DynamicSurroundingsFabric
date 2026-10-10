@@ -1,5 +1,7 @@
 package org.orecruncher.dsurround.effects.blocks.producers;
 
+import org.orecruncher.dsurround.runtime.IConditionEvaluator;
+import org.jetbrains.annotations.Nullable;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -24,10 +26,17 @@ public class BlockParticleEffectProducer extends BlockEffectProducer {
         this.supplier = particleSupplier;
     }
 
+    public BlockParticleEffectProducer(IConditionEvaluator conditionEvaluator, Script chance, Script conditions, IParticleSupplier particleSupplier) {
+        super(conditionEvaluator, chance, conditions);
+        this.supplier = particleSupplier;
+    }
+
     @Override
     final protected Optional<IBlockEffect> produceImpl(Level world, BlockState state, BlockPos pos, IRandomizer rand) {
         var particle = this.supplier.create(world, state, pos, rand);
-        this.addParticle(particle);
+        // A supplier's vanilla fallback can come back empty; the particle engine doesn't take null
+        if (particle != null)
+            this.addParticle(particle);
         return Optional.empty();
     }
 
@@ -37,6 +46,6 @@ public class BlockParticleEffectProducer extends BlockEffectProducer {
 
     @FunctionalInterface
     public interface IParticleSupplier {
-        Particle create(Level world, BlockState state, BlockPos pos, IRandomizer rand);
+        @Nullable Particle create(Level world, BlockState state, BlockPos pos, IRandomizer rand);
     }
 }

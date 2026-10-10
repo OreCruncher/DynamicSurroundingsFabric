@@ -15,8 +15,8 @@ public record Binary(Expression left, Token operator, Expression right, IBinaryO
 
     private static IBinaryOperationHandler getFunction(Token operator) {
         return switch (operator.type()) {
-            case NOT_EQUAL -> (l, r) -> !isEqual(l.eval(), r.eval());
-            case EQUAL_EQUAL -> (l, r) -> isEqual(l.eval(), r.eval());
+            case NOT_EQUAL -> (l, r) -> !ScriptHelpers.isEqual(l.eval(), r.eval());
+            case EQUAL_EQUAL -> (l, r) -> ScriptHelpers.isEqual(l.eval(), r.eval());
             case GREATER -> (l, r) -> toDouble(operator, l.eval(), true) > toDouble(operator, r.eval(), false);
             case GREATER_EQUAL -> (l, r) -> toDouble(operator, l.eval(), true) >= toDouble(operator, r.eval(), false);
             case LESS -> (l, r) -> toDouble(operator, l.eval(), true) < toDouble(operator, r.eval(), false);
@@ -30,7 +30,7 @@ public record Binary(Expression left, Token operator, Expression right, IBinaryO
                 }
 
                 if (leftValue instanceof String || rightValue instanceof String) {
-                    return leftValue.toString() + rightValue.toString();
+                    return ScriptHelpers.toStringValue(leftValue) + ScriptHelpers.toStringValue(rightValue);
                 }
                 ScriptException.throwException(operator, "Incompatible operands for operator '%s'".formatted(operator.lexeme()));
                 return null;
@@ -48,8 +48,8 @@ public record Binary(Expression left, Token operator, Expression right, IBinaryO
 
     @Override
     public Object eval() {
-        // Defer evaluation of operands. Depending on the operand both may not need to be
-        // evaluated (such as && or lib.oneOf).
+        // Defer evaluation of operands. Depending on the operator both may not need to be
+        // evaluated (such as && and ||).
         return this.function.eval(this.left, this.right);
     }
 
@@ -60,28 +60,25 @@ public record Binary(Expression left, Token operator, Expression right, IBinaryO
                 .toString();
     }
 
-    private static boolean isEqual(Object a, Object b) {
-        if (a == null && b == null)
-            return true;
-        if (a == null)
-            return false;
-        return a.equals(b);
-    }
+    // Conversions do not use exceptions internally: a failure throws exactly one ScriptException, with the
+    // operator's location. Numbers take a fast path that avoids boxing.
 
     private static double toDouble(Token operator, Object value, boolean leftOperand) {
-        try {
-            return ScriptHelpers.toDouble(value);
-        } catch (Throwable ignored) {
-        }
+        if (value instanceof Number n)
+            return n.doubleValue();
+        var converted = ScriptHelpers.tryToDouble(value);
+        if (converted != null)
+            return converted;
         ScriptException.throwException(operator, "%s operand must be a number or value that converts to a number".formatted(leftOperand ? "Left" : "Right"));
         return 0D;
     }
 
     private static boolean toBoolean(Token operator, Object value, boolean leftOperand) {
-        try {
-            return ScriptHelpers.toBoolean(value);
-        } catch (Throwable ignored) {
-        }
+        if (value instanceof Boolean b)
+            return b;
+        var converted = ScriptHelpers.tryToBoolean(value);
+        if (converted != null)
+            return converted;
         ScriptException.throwException(operator, "%s operand must be a boolean or value that converts to a boolean".formatted(leftOperand ? "Left" : "Right"));
         return false;
     }

@@ -6,8 +6,10 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.EXTEfx;
+import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.random.Randomizer;
-import org.orecruncher.dsurround.runtime.audio.effects.Effects;
+import org.orecruncher.dsurround.runtime.audio.effects.Efx;
 import org.orecruncher.dsurround.runtime.audio.effects.LowPassData;
 import org.orecruncher.dsurround.runtime.audio.effects.SourcePropertyFloat;
 
@@ -15,14 +17,13 @@ import java.util.concurrent.Callable;
 
 public final class SourceContext implements Callable<Void> {
 
+    private static final LogThrottle<Object> CALCULATION_ERRORS = LogThrottle.firstN(Library.LOGGER, "sound effect calculation errors", null, 10);
+
     // Frequency of sound effect updates in thread schedule ticks.  Works out to be 3 times a second.
     private static final int UPDATE_FEQUENCY_TICKS = 7;
 
     private final Object sync = new Object();
-    private final LowPassData lowPass0;
-    private final LowPassData lowPass1;
-    private final LowPassData lowPass2;
-    private final LowPassData lowPass3;
+    private final LowPassData[] sends = new LowPassData[Efx.SENDS];
     private final LowPassData direct;
     private final SourcePropertyFloat airAbsorb;
     private final SoundFXUtils fxProcessor;
@@ -38,10 +39,8 @@ public final class SourceContext implements Callable<Void> {
 
     public SourceContext(int sourceId) {
         this.sourceId = sourceId;
-        this.lowPass0 = new LowPassData();
-        this.lowPass1 = new LowPassData();
-        this.lowPass2 = new LowPassData();
-        this.lowPass3 = new LowPassData();
+        for (int i = 0; i < this.sends.length; i++)
+            this.sends[i] = new LowPassData();
         this.direct = new LowPassData();
         this.airAbsorb = new SourcePropertyFloat(EXTEfx.AL_AIR_ABSORPTION_FACTOR, EXTEfx.AL_DEFAULT_AIR_ABSORPTION_FACTOR, EXTEfx.AL_MIN_AIR_ABSORPTION_FACTOR, EXTEfx.AL_MAX_AIR_ABSORPTION_FACTOR);
         this.pos = Vec3.ZERO;
@@ -64,20 +63,11 @@ public final class SourceContext implements Callable<Void> {
         this.isEnabled = true;
     }
 
-    public LowPassData getLowPass0() {
-        return this.lowPass0;
-    }
-
-    public LowPassData getLowPass1() {
-        return this.lowPass1;
-    }
-
-    public LowPassData getLowPass2() {
-        return this.lowPass2;
-    }
-
-    public LowPassData getLowPass3() {
-        return this.lowPass3;
+    /**
+     * The filter for a reverb send, 0 to {@link Efx#SENDS} - 1.
+     */
+    public LowPassData getSend(int send) {
+        return this.sends[send];
     }
 
     public LowPassData getDirect() {
@@ -115,14 +105,9 @@ public final class SourceContext implements Callable<Void> {
     public void tick() {
         if (this.isEnabled()) {
             synchronized (this.sync()) {
-                // Upload the data
-                Effects.filter0.apply(this.sourceId, this.lowPass0, 0, Effects.auxSlot0);
-                Effects.filter1.apply(this.sourceId, this.lowPass1, 1, Effects.auxSlot1);
-                Effects.filter2.apply(this.sourceId, this.lowPass2, 2, Effects.auxSlot2);
-                Effects.filter3.apply(this.sourceId, this.lowPass3, 3, Effects.auxSlot3);
-                Effects.direct.apply(this.sourceId, this.direct);
-
-                this.airAbsorb.apply(sourceId);
+                // Upload what changed since the last tick
+                Efx.uploadIfChanged(this.sourceId, this.sends, this.direct);
+                this.airAbsorb.apply(this.sourceId);
 
                 AudioUtilities.validate("SourceHandler::tick");
             }
@@ -158,11 +143,11 @@ public final class SourceContext implements Callable<Void> {
 
     private void updateImpl() {
         try {
-            //if (this.sound.getId().getPath().contains("stone"))
-                this.fxProcessor.calculate(SoundFXProcessor.getWorldContext());
-        } catch (final Throwable ignore) {
-            // Suppress.  Times that I have seen this fire was due to a world unloading and the background
-            // processing threads tripping over dead objects.
+            this.fxProcessor.calculate(SoundFXProcessor.getWorldContext());
+        } catch (final Exception e) {
+            // Usually a world unloading while the background threads are using it, which is harmless. Logged
+            // (a limited number of times) so that anything else, like a calculation that always fails, is seen.
+            CALCULATION_ERRORS.error(e, "Unable to calculate sound effects for %s", this.sound == null ? "?" : this.sound.getLocation());
         }
     }
 

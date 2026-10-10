@@ -19,8 +19,30 @@ dependencies {
         exclude(group: "net.fabricmc.fabric-api")
     }
 
+    // Generates the event invokers (see lib.events.GenerateInvoker). Build time only; nothing is shipped.
+    annotationProcessor project(':processor')
+    testAnnotationProcessor project(':processor')
+
     testImplementation "net.fabricmc:fabric-loader-junit:$rootProject.fabric_loader_version"
     testImplementation(project(path: ':common', configuration: 'namedElements'))
+}
+
+processResources {
+    // The mod's links, kept in gradle.properties with its other details (see ModInformation)
+    var links = [
+            mod_homepage_url: rootProject.mod_homepage_url,
+            mod_issues_url: rootProject.mod_issues_url,
+            mod_update_url: rootProject.mod_update_url,
+            mod_discussions_url: rootProject.mod_discussions_url,
+            mod_curseforge_url: rootProject.mod_curseforge_url,
+            mod_modrinth_url: rootProject.mod_modrinth_url
+    ]
+
+    inputs.properties(links)
+
+    filesMatching('assets/dsurround/mod_links.properties') {
+        expand links
+    }
 }
 
 loom {

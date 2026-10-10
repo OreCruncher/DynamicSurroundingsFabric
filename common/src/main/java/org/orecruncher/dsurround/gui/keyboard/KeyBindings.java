@@ -7,14 +7,13 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.eventing.IClientTickEnd;
 import org.orecruncher.dsurround.gui.overlay.DiagnosticsOverlay;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.IConfigScreenFactoryProvider;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.eventing.ClientState;
-import org.orecruncher.dsurround.sound.IAudioPlayer;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -32,7 +31,7 @@ public final class KeyBindings {
                 () -> ContainerManager.resolve(IConfigScreenFactoryProvider.class)
                         .getModConfigScreenFactory(Configuration.class)
                         .ifPresentOrElse(
-                                f -> f.create(null),
+                                f -> GameUtils.setScreen(f.create(null)),
                                 () -> Library.LOGGER.info("Configuration GUI libraries not present")
                         )
         );
@@ -40,12 +39,8 @@ public final class KeyBindings {
         registerKeyBinding(
                 "individualSoundConfig",
                 InputConstants.UNKNOWN.getValue(),
-                () -> {
-                    final boolean singlePlayer = GameUtils.isSinglePlayer();
-                    GameUtils.setScreen(new IndividualSoundControlScreen(null, singlePlayer));
-                    if (singlePlayer)
-                        ContainerManager.resolve(IAudioPlayer.class).stopAll();
-                }
+                // The screen handles stopping sounds and pausing the music itself
+                () -> GameUtils.setScreen(new IndividualSoundControlScreen(null, GameUtils.isSinglePlayer()))
         );
 
         registerKeyBinding(
@@ -54,7 +49,7 @@ public final class KeyBindings {
                 () -> ContainerManager.resolve(DiagnosticsOverlay.class).toggleCollection()
         );
 
-        ClientState.CLIENT_TICK_END_EVENT.register(KeyBindings::handleMenuKeyPress);
+        IClientTickEnd.EVENT.register(KeyBindings::handleMenuKeyPress);
     }
 
     private static void registerKeyBinding(String translationKey, int code, Runnable handler) {

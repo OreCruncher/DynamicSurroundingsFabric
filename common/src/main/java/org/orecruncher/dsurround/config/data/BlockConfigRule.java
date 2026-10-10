@@ -4,8 +4,9 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.world.level.block.state.BlockState;
-import org.orecruncher.dsurround.lib.CodecExtensions;
-import org.orecruncher.dsurround.lib.IMatcher;
+import org.jetbrains.annotations.NotNull;
+import org.orecruncher.dsurround.lib.codec.CodecExtensions;
+import org.orecruncher.dsurround.lib.codec.IMatcher;
 import org.orecruncher.dsurround.lib.scripting.Script;
 
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.Optional;
 
 public record BlockConfigRule(
         List<IMatcher<BlockState>> blocks,
-        Boolean clearSounds,
+        boolean clearSounds,
         Optional<Script> soundChance,
         List<AcousticConfig> acoustics,
         List<BlockEffectConfigRule> effects) {
@@ -37,7 +38,7 @@ public record BlockConfigRule(
     }
 
     @Override
-    public String toString() {
+    public @NotNull String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("Blocks [\n");
         for (var matcher : this.blocks)

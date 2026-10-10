@@ -31,6 +31,8 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
     private final Object2FloatOpenHashMap<ISoundFactory> workMap = new Object2FloatOpenHashMap<>(8, Hash.DEFAULT_LOAD_FACTOR);
     // List of emitters that are managing the currently playing biome-related sounds
     private final ObjectArray<BiomeSoundEmitter> emitters = new ObjectArray<>(8);
+    // Scratch list of the sounds from the PLAYER and VILLAGE synthetic biomes
+    private final ObjectArray<ISoundFactory> playerSounds = new ObjectArray<>(8);
 
     public BiomeSoundHandler(IBiomeLibrary biomeLibrary, IAudioPlayer audioPlayer, ITickCount tickCount, Scanners scanner, Configuration config, IModLog logger) {
         super("Biome Sounds", config, logger);
@@ -39,10 +41,6 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
         this.tickCount = tickCount;
         this.scanner = scanner;
         this.workMap.defaultReturnValue(0F);
-    }
-
-    private boolean doBiomeSounds() {
-        return true; //!Scanners.isInside() || BiomeScanner.getDimInfo().alwaysOutside();
     }
 
     private void generateBiomeSounds() {
@@ -85,14 +83,12 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
         // Only gather data if the player is alive. If the player is dead, the biome sounds will cease playing.
         if (player.isAlive()) {
 
-            final boolean biomeSounds = doBiomeSounds();
-
-            if (biomeSounds)
-                generateBiomeSounds();
+            generateBiomeSounds();
 
             // The following will look at the PLAYER and VILLAGE biomes, two artificial biomes
             // that are used to configure effects.
-            final ObjectArray<ISoundFactory> playerSounds = new ObjectArray<>();
+            final ObjectArray<ISoundFactory> playerSounds = this.playerSounds;
+            playerSounds.clear();
 
             // Defensive code in case biome information is not obtained for PLAYER or VILLAGE. This is an
             // attempt at compatibility with The Aether mod.
@@ -109,12 +105,9 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
             playerSounds.forEach(fx -> this.workMap.put(fx, 1.0F));
 
             // This will cause extra spot sounds to play, like birds chirping, wolves growling, etc.
-            if (biomeSounds) {
-                BiomeInfo playerBiome = this.scanner.playerLogicBiomeInfo();
-                handleAddOnSounds(player, playerBiome);
-                handleAddOnSounds(player, internalPlayerBiomeInfo);
-                handleAddOnSounds(player, internalVillageBiomeInfo);
-            }
+            handleAddOnSounds(player, this.scanner.playerLogicBiomeInfo());
+            handleAddOnSounds(player, internalPlayerBiomeInfo);
+            handleAddOnSounds(player, internalVillageBiomeInfo);
         }
 
         // At this point, we trigger the examination of the existing emitters list, comparing it to the

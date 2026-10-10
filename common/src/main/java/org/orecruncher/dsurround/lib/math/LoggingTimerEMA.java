@@ -26,6 +26,9 @@ public class LoggingTimerEMA extends TimerEMA {
         return this.lastSample;
     }
 
+    /**
+     * The last sample in whole milliseconds, rounded down (a 0.9ms sample is 0).
+     */
     public long getLastSampleMSecs() {
         return this.lastSample / 1000000;
     }

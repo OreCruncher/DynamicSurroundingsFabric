@@ -1,11 +1,12 @@
 package org.orecruncher.dsurround.lib;
 
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.eventing.IClientStarted;
+import org.orecruncher.dsurround.eventing.IClientStopping;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.platform.*;
-import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.system.ISystemClock;
 import org.orecruncher.dsurround.lib.system.ITickCount;
@@ -33,8 +34,8 @@ public final class Library {
         configureServiceDependencies();
 
         // Hook server lifecycle so logs get emitted
-        ClientState.CLIENT_START_EVENT.register((ignore -> LOGGER.info("Client starting")), HandlerPriority.VERY_HIGH);
-        ClientState.CLIENT_STOP_EVENT.register(ignore -> LOGGER.info("Client stopping"), HandlerPriority.VERY_HIGH);
+        IClientStarted.EVENT.register((ignore -> LOGGER.info("Client starting")), HandlerPriority.VERY_HIGH);
+        IClientStopping.EVENT.register(ignore -> LOGGER.info("Client stopping"), HandlerPriority.VERY_HIGH);
     }
 
     private static void configureServiceDependencies() {

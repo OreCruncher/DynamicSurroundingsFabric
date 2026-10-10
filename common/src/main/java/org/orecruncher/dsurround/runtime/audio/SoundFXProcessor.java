@@ -1,38 +1,41 @@
 package org.orecruncher.dsurround.runtime.audio;
 
 import com.mojang.blaze3d.audio.Channel;
-import com.mojang.blaze3d.audio.SoundBuffer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.ChannelAccess;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
 import org.apache.commons.lang3.StringUtils;
-import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.eventing.ClientEventHooks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
-import org.orecruncher.dsurround.lib.SingletonSupplier;
+import org.orecruncher.dsurround.eventing.IClientTickStart;
+import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
+import org.orecruncher.dsurround.lib.function.SingletonSupplier;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.eventing.ClientState;
+import org.orecruncher.dsurround.lib.logging.LogThrottle;
+import org.orecruncher.dsurround.lib.threading.Tasks;
 import org.orecruncher.dsurround.lib.threading.Worker;
-import org.orecruncher.dsurround.runtime.audio.effects.Effects;
+import org.orecruncher.dsurround.runtime.audio.effects.Efx;
 
-import java.util.Arrays;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public final class SoundFXProcessor {
 
     private static final IModLog LOGGER = ContainerManager.memoize(IModLog.class);
     private static final int SOUND_PROCESS_ITERATION = 1000 / 20;   // Match MC client tick rate
+    private static final LogThrottle<Object> TASK_ERRORS = LogThrottle.firstN(LOGGER, "enhanced sound task errors", null, 10);
 
     static boolean isAvailable;
 
-    // Sparse array to hold references to the SoundContexts of playing sounds
-    private static SourceContext[] sources;
-    private static final Object sourcesLock = new Object();
+    // The context of the sound playing on each OpenAL source, indexed by source ID - 1. An atomic array so the
+    // worker thread sees each context fully set up: contexts are stored by the client thread and read by the sound
+    // engine and worker threads. Each entry belongs to one sound at a time: its stop hook clears it before the
+    // source is deleted, so before the ID can be reused. Replaced when the sound engine starts, null while stopped.
+    private static volatile AtomicReferenceArray<SourceContext> sources;
 
     private static Worker soundProcessor;
     private static String diagnosticString = StringUtils.EMPTY;
@@ -45,14 +48,18 @@ public final class SoundFXProcessor {
         if (threads == 0)
             threads = 2;
         LOGGER.info("Threads allocated to enhanced sound processor: %d", threads);
-        return Executors.newFixedThreadPool(threads);
+        // Named daemon threads: identifiable in thread dumps and profilers, and they can't keep the game's process
+        // alive after it exits. The pool lives as long as the game.
+        return Executors.newFixedThreadPool(threads, Worker.threadFactory("Enhanced Sound Task"));
     });
 
     private static WorldContext worldContext = new WorldContext();
 
     static {
-        ClientEventHooks.COLLECT_DIAGNOSTICS_EVENT.register(SoundFXProcessor::onGatherText);
-        ClientState.CLIENT_TICK_START_EVENT.register(SoundFXProcessor::clientTick);
+        ICollectDiagnostics.EVENT.register(SoundFXProcessor::onGatherText);
+        IClientTickStart.EVENT.register(SoundFXProcessor::clientTick);
+        // Lets sounds reuse their ray traced results until something in the world changes
+        WorldChangeTracker.register();
     }
 
     public static WorldContext getWorldContext() {
@@ -69,9 +76,9 @@ public final class SoundFXProcessor {
     }
 
     public static void initialize() {
-        Effects.initialize();
+        Efx.initialize();
 
-        sources = new SourceContext[AudioUtilities.getMaxSounds()];
+        sources = new AtomicReferenceArray<>(AudioUtilities.getMaxSounds());
 
         if (soundProcessor == null) {
             soundProcessor = new Worker(
@@ -90,15 +97,27 @@ public final class SoundFXProcessor {
         if (isAvailable()) {
             isAvailable = false;
             if (soundProcessor != null) {
+                // Waits for a run in progress to finish, so it isn't using the sources or effects cleared below
                 soundProcessor.stop();
                 soundProcessor = null;
             }
-            if (sources != null) {
-                Arrays.fill(sources, null);
-                sources = null;
-            }
-            Effects.deinitialize();
+            sources = null;
+            Efx.deinitialize();
         }
+    }
+
+    /**
+     * The context of the sound playing on the channel's source, or null if none (or the processor is stopped).
+     */
+    private static SourceContext contextFor(final Channel channel) {
+        final var current = sources;
+        return current == null ? null : current.get(channel.source - 1);
+    }
+
+    private static void setContext(final int sourceId, final SourceContext ctx) {
+        final var current = sources;
+        if (current != null)
+            current.set(sourceId - 1, ctx);
     }
 
     private static boolean shouldIgnoreSound(SoundInstance sound) {
@@ -127,9 +146,7 @@ public final class SoundFXProcessor {
             final SourceContext ctx = new SourceContext(id);
             ctx.attachSound(sound);
             ctx.enable();
-            synchronized (sourcesLock) {
-                sources[id - 1] = ctx;
-            }
+            setContext(id, ctx);
         }
     }
 
@@ -141,10 +158,7 @@ public final class SoundFXProcessor {
         if (!isAvailable())
             return;
 
-        SourceContext context = null;
-        synchronized (sourcesLock) {
-            context = sources[source.source - 1];
-        }
+        final SourceContext context = contextFor(source);
         if (context != null) {
             context.exec();
         }
@@ -160,10 +174,7 @@ public final class SoundFXProcessor {
         if (!isAvailable())
             return;
 
-        SourceContext context = null;
-        synchronized (sourcesLock) {
-            context = sources[source.source - 1];
-        }
+        final SourceContext context = contextFor(source);
         if (context != null) {
             context.tick();
         }
@@ -178,37 +189,7 @@ public final class SoundFXProcessor {
         if (!isAvailable())
             return;
 
-        synchronized (sourcesLock) {
-            sources[source.source - 1] = null;
-        }
-    }
-
-    /**
-     * Injected into SoundSource and will be invoked when a non-streaming sound data stream is attached to the
-     * SoundSource.  Take the opportunity to convert the audio stream into mono format if needed.  Note that
-     * conversion will take place only if it is enabled in the configuration and the sound is playing
-     * non-attenuated.
-     *
-     * @param source SoundSource for which the audio buffer is being generated
-     * @param buffer The buffer in question.
-     */
-
-    public static void doMonoConversion(final Channel source, final SoundBuffer buffer) {
-
-        // If disabled, return
-        if (!isAvailable() || !Client.Config.enhancedSounds.enableMonoConversion)
-            return;
-
-        SourceContext sourceContext = null;
-        synchronized (sourcesLock) {
-            sourceContext = sources[source.source - 1];
-        }
-
-        if (sourceContext != null) {
-            var s = sourceContext.getSound();
-            if (s != null && s.getAttenuation() != SoundInstance.Attenuation.NONE && !s.isRelative())
-                Conversion.convert(buffer);
-        }
+        setContext(source.source, null);
     }
 
     /**
@@ -229,11 +210,17 @@ public final class SoundFXProcessor {
             final ExecutorService pool = threadPool.get();
             assert pool != null;
 
-            final ObjectArray<Future<?>> tasks = new ObjectArray<>(sources.length);
+            // Read once: deinitialize() may clear it from the client thread
+            final AtomicReferenceArray<SourceContext> current = sources;
+            if (current == null)
+                return;
+
+            final ObjectArray<Future<?>> tasks = new ObjectArray<>(current.length());
 
             // Each source will be examined once per 7 ticks. See
             // SourceContext.UPDATE_FREQUENCY_TICKS for the current interval.
-            for (final SourceContext ctx : sources) {
+            for (int i = 0; i < current.length(); i++) {
+                final SourceContext ctx = current.get(i);
                 if (ctx != null && ctx.shouldExecute()) {
                     tasks.add(pool.submit(ctx));
                 }
@@ -241,18 +228,12 @@ public final class SoundFXProcessor {
 
             diagnosticString = "(ticked: %d)".formatted(tasks.size());
 
-            tasks.forEach(task -> {
-                try {
-                    // This will cause this thread to block waiting for
-                    // a result. Since they are processed in order, the amount
-                    // of time spent blocking will be minimal.
-                    task.get();
-                } catch (InterruptedException | ExecutionException ignored) {
-                }
-            });
+            // SourceContext catches and logs its own exceptions, so a task failing here threw an Error (a game class
+            // changed under it, say)
+            Tasks.awaitAll(tasks, TASK_ERRORS, "An enhanced sound task");
 
         } catch (final Throwable t) {
-            LOGGER.error(t, "Error in SoundContext ForkJoinPool");
+            LOGGER.error(t, "Error in the enhanced sound processor");
         }
     }
 

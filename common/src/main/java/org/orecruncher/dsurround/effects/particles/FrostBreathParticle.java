@@ -73,10 +73,12 @@ public class FrostBreathParticle extends TextureSheetParticle {
         return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
     }
 
-    public float getSize(float tickDelta) {
+    @Override
+    public float getQuadSize(float tickDelta) {
         return this.quadSize * Mth.clamp(((float)this.age + tickDelta) / (float)this.lifetime * 32.0F, 0.0F, 1.0F);
     }
 
+    @Override
     public void tick() {
         this.xo = this.x;
         this.yo = this.y;
