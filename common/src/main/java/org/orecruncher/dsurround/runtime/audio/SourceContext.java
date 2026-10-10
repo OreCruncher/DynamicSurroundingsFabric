@@ -147,7 +147,7 @@ public final class SourceContext implements Callable<Void> {
         } catch (final Exception e) {
             // Usually a world unloading while the background threads are using it, which is harmless. Logged
             // (a limited number of times) so that anything else, like a calculation that always fails, is seen.
-            CALCULATION_ERRORS.error(e, "Unable to calculate sound effects for %s", this.sound == null ? "?" : this.sound.getLocation());
+            CALCULATION_ERRORS.error(e, "Unable to calculate sound effects for %s", this.sound == null ? "?" : this.sound.getIdentifier());
         }
     }
 

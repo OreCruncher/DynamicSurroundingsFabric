@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.gui.sound;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
@@ -120,7 +120,7 @@ public class IndividualSoundControlList extends ContainerObjectSelectionList<Ind
 
     private Collection<IndividualSoundConfigEntry> getSortedSoundConfigurations() {
 
-        final Map<ResourceLocation, IndividualSoundConfigEntry> map = new HashMap<>();
+        final Map<Identifier, IndividualSoundConfigEntry> map = new HashMap<>();
 
         // Get a list of all registered sounds.  We don't use the vanilla registries since
         // we will have more sounds than are registered.

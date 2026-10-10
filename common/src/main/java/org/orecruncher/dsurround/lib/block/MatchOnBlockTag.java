@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.block;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -21,7 +21,7 @@ final class MatchOnBlockTag extends BlockStateMatcher {
 
     private final TagKey<Block> tagId;
 
-    MatchOnBlockTag(ResourceLocation tagId) {
+    MatchOnBlockTag(Identifier tagId) {
         this.tagId = TagKey.create(Registries.BLOCK, tagId);
     }
 

@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.config.libraries.impl;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
@@ -112,7 +112,7 @@ public class BlockLibrary implements IBlockLibrary {
             Blocks.GLASS_PANE);
 
     private static TagKey<Block> conventionTag(String path) {
-        return TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", path));
+        return TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", path));
     }
 
     private final Collection<BlockConfigRule> blockConfigs = new ObjectArray<>();
@@ -283,7 +283,7 @@ public class BlockLibrary implements IBlockLibrary {
     public Stream<String> dumpBlocks(boolean noStates) {
         var blockRegistry = RegistryUtils.getRegistry(Registries.BLOCK).orElseThrow();
         var entrySet = blockRegistry.entrySet();
-        return entrySet.stream().map(kvp -> formatBlockOutput(kvp.getKey().location(), kvp.getValue(), noStates)).sorted();
+        return entrySet.stream().map(kvp -> formatBlockOutput(kvp.getKey().identifier(), kvp.getValue(), noStates)).sorted();
     }
 
     @Override
@@ -310,7 +310,7 @@ public class BlockLibrary implements IBlockLibrary {
         return builder.toString();
     }
 
-    private String formatBlockOutput(ResourceLocation id, Block block, boolean noStates) {
+    private String formatBlockOutput(Identifier id, Block block, boolean noStates) {
         var entry = RegistryUtils.getRegistryEntry(Registries.BLOCK, block).orElseThrow();
 
         var t = this.tagLibrary.streamTags(entry);

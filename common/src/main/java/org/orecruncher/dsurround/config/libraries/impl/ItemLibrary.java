@@ -2,8 +2,9 @@ package org.orecruncher.dsurround.config.libraries.impl;
 
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -106,7 +107,7 @@ public class ItemLibrary implements IItemLibrary {
     @Override
     public Stream<String> dump() {
         var itemRegistry = RegistryUtils.getRegistry(Registries.ITEM).map(Registry::entrySet).orElseThrow();
-        return itemRegistry.stream().map(kvp -> formatItemOutput(kvp.getKey().location(), kvp.getValue())).sorted();
+        return itemRegistry.stream().map(kvp -> formatItemOutput(kvp.getKey().identifier(), kvp.getValue())).sorted();
     }
 
     private static @Nullable ISoundFactory resolveEquipableStepSound(ItemStack stack) {
@@ -149,9 +150,9 @@ public class ItemLibrary implements IItemLibrary {
     @Nullable
     private static SoundEvent getEquipableSoundEvent(ItemStack stack) {
         SoundEvent itemEquipSound = null;
-        var equipable = Equipable.get(stack);
+        var equipable = stack.getComponents().get(DataComponents.EQUIPPABLE);
         if (equipable != null) {
-            itemEquipSound = equipable.getEquipSound().value();
+            itemEquipSound = equipable.equipSound().value();
         }
         return itemEquipSound;
     }
@@ -211,7 +212,7 @@ public class ItemLibrary implements IItemLibrary {
         return ItemClassType.NONE;
     }
 
-    private String formatItemOutput(ResourceLocation id, Item item) {
+    private String formatItemOutput(Identifier id, Item item) {
         var tags = RegistryUtils.getRegistryEntry(Registries.ITEM, item)
                 .map(e -> {
                     var t = this.tagLibrary.streamTags(e);

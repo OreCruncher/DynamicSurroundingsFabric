@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.processing;
 
-import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.client.renderer.fog.FogData;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
@@ -12,14 +12,14 @@ import org.orecruncher.dsurround.processing.fog.HolisticFogRangeCalculator;
 public class FogHandler extends AbstractClientHandler {
 
     private final HolisticFogRangeCalculator fogCalculator;
-    private FogRenderer.FogData lastData;
+    private FogData lastData;
 
     public FogHandler(HolisticFogRangeCalculator fogCalculator, Configuration config, IModLog logger) {
         super("Fog Handler", config, logger);
 
         this.fogCalculator = fogCalculator;
-        this.lastData = new FogRenderer.FogData(FogRenderer.FogMode.FOG_TERRAIN);
-        this.lastData.start = this.lastData.end = 192F;
+        this.lastData = new FogData();
+        this.lastData.environmentalStart = this.lastData.environmentalEnd = 192F;
 
         IFogRender.EVENT.register(this::renderFog);
     }
@@ -35,21 +35,19 @@ public class FogHandler extends AbstractClientHandler {
         this.fogCalculator.disconnect();
     }
 
-    private void renderFog(FogRenderer.FogData data, float renderDistance, float partialTick) {
-        var result = data;
+    private void renderFog(FogData data, float renderDistance, float partialTick) {
         if (this.fogCalculator.enabled()) {
-            result = this.fogCalculator.render(data, renderDistance, partialTick);
-            FogCompat.applyShaderFog(result);
+            this.lastData = this.fogCalculator.render(data, renderDistance, partialTick);
+            FogCompat.applyRange(data, this.lastData);
+        } else {
+            // Preserve for diagnostic trace even though action was not taken
+            this.lastData = data;
         }
-
-        // The diagnostic trace shows the terrain fog, even when no action was taken; the sky's is set too
-        if (data.mode == FogRenderer.FogMode.FOG_TERRAIN)
-            this.lastData = result;
     }
 
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
-        var text = "Fog: %f/%f, %s, %s ".formatted(this.lastData.start, this.lastData.end, this.lastData.shape, this.lastData.mode);
+        var text = "Fog: %f/%f".formatted(this.lastData.environmentalStart, this.lastData.environmentalEnd);
         var disabledText = this.fogCalculator.getDisabledText();
         if (disabledText.isPresent())
             text += disabledText.get();

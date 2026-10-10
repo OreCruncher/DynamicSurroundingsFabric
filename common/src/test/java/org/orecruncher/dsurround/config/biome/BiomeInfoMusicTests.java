@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.config.biome;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
@@ -41,19 +41,19 @@ public class BiomeInfoMusicTests {
         Bootstrap.bootStrap();
     }
 
-    static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath("test", path);
+    static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath("test", path);
     }
 
-    static Music music(ResourceLocation location) {
+    static Music music(Identifier location) {
         return new Music(Holder.direct(SoundEvent.createVariableRangeEvent(location)), 100, 200, false);
     }
 
-    static ResourceLocation location(Music music) {
-        return music.getEvent().value().getLocation();
+    static Identifier location(Music music) {
+        return music.sound().value().location();
     }
 
-    private static ISoundFactory soundFactory(ResourceLocation location) {
+    private static ISoundFactory soundFactory(Identifier location) {
         var asMusic = music(location);
         return Fakes.of(ISoundFactory.class, Map.of(
                 "getLocation", args -> location,
@@ -61,7 +61,7 @@ public class BiomeInfoMusicTests {
     }
 
     private static final ISoundLibrary SOUNDS = Fakes.of(ISoundLibrary.class, Map.of(
-            "getSoundFactoryOrDefault", args -> soundFactory((ResourceLocation) args[0]),
+            "getSoundFactoryOrDefault", args -> soundFactory((Identifier) args[0]),
             "getSoundFactoryForMusic", args -> soundFactory(location((Music) args[0]))));
 
     private static final IConditionEvaluator CONDITIONS = Fakes.of(IConditionEvaluator.class, Map.of(
@@ -87,7 +87,7 @@ public class BiomeInfoMusicTests {
                 Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), acoustics);
     }
 
-    private static Set<ResourceLocation> choices(BiomeInfo info, Optional<Music> vanilla) {
+    private static Set<Identifier> choices(BiomeInfo info, Optional<Music> vanilla) {
         return info.getMusicChoices(vanilla).stream()
                 .map(e -> e.getAcoustic().getLocation())
                 .collect(Collectors.toSet());

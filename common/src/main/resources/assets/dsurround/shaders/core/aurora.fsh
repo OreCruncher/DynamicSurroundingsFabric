@@ -1,4 +1,4 @@
-#version 150
+#version 330
 
 // Dynamic Surroundings aurora: one curtain of light, drawn with additive blending.
 //
@@ -10,11 +10,14 @@
 //  - colour by height: BottomColor at the edge, through MiddleColor, to TopColor where it fades out
 //  - patches of brightness travelling along the curtain, and a faint flicker
 
-uniform float AuroraTime;  // seconds
-uniform vec3 BottomColor;
-uniform vec3 MiddleColor;
-uniform vec3 TopColor;
-uniform float Alpha;       // overall strength, 0 to 1
+// Colours are vec4 for std140 layout; only rgb is used
+layout(std140) uniform AuroraInfo {
+    vec4 BottomColor;
+    vec4 MiddleColor;
+    vec4 TopColor;
+    float AuroraTime;  // seconds
+    float Alpha;       // overall strength, 0 to 1
+};
 
 in vec2 texCoord0;
 in float vertexAlpha;
@@ -76,8 +79,8 @@ void main() {
     float intensity = profile * (0.25 + 0.75 * rays) * pulse * flicker * vertexAlpha * Alpha;
 
     vec3 color = v < 0.3
-        ? mix(BottomColor, MiddleColor, smoothstep(0.0, 0.3, v))
-        : mix(MiddleColor, TopColor, smoothstep(0.3, 0.7, v));
+        ? mix(BottomColor.rgb, MiddleColor.rgb, smoothstep(0.0, 0.3, v))
+        : mix(MiddleColor.rgb, TopColor.rgb, smoothstep(0.3, 0.7, v));
     // The lower edge burns a little whiter
     color = mix(color, vec3(1.0), 0.25 * lower * glow);
 

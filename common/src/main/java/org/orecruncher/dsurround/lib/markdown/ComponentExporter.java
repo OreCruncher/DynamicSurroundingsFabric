@@ -2,9 +2,13 @@ package org.orecruncher.dsurround.lib.markdown;
 
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FontDescription;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
+import org.jetbrains.annotations.Nullable;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 /**
@@ -48,10 +52,22 @@ final class ComponentExporter {
             style = style.withStrikethrough(s.strikethrough());
         }
         if (s.clickEventUrl() != null) {
-            style = style.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, s.clickEventUrl()))
-                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverContents(s, options)));
+            // A URL that isn't valid keeps its hover text but can't be clicked
+            var uri = parseUri(s.clickEventUrl());
+            if (uri != null)
+                style = style.withClickEvent(new ClickEvent.OpenUrl(uri));
+            style = style.withHoverEvent(new HoverEvent.ShowText(hoverContents(s, options)));
         }
         return style;
+    }
+
+    @Nullable
+    private static URI parseUri(String url) {
+        try {
+            return new URI(url);
+        } catch (URISyntaxException e) {
+            return null;
+        }
     }
 
     /**
@@ -84,7 +100,7 @@ final class ComponentExporter {
     private static net.minecraft.network.chat.Style fontOnly(Style s) {
         var style = net.minecraft.network.chat.Style.EMPTY;
         if (s.font() != null) {
-            style = style.withFont(s.font());
+            style = style.withFont(new FontDescription.Resource(s.font()));
         }
         return style;
     }

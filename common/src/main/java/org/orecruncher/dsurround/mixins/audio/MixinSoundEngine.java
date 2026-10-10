@@ -22,6 +22,7 @@ import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(SoundEngine.class)
 public abstract class MixinSoundEngine {
@@ -39,7 +40,7 @@ public abstract class MixinSoundEngine {
     @Unique
     private SoundInstance dsurround$currentSoundInstance;
 
-    @Inject(method = "loadLibrary()V", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/audio/Library;init(Ljava/lang/String;Z)V", shift = At.Shift.AFTER))
+    @Inject(method = "loadLibrary()V", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/audio/Library;init(Ljava/lang/String;Lcom/mojang/blaze3d/audio/DeviceList;Z)V", shift = At.Shift.AFTER))
     public void dsurround$init(CallbackInfo ci) {
         AudioUtilities.initialize(this.library);
     }
@@ -56,38 +57,38 @@ public abstract class MixinSoundEngine {
      * Only the channel handle is taken from play()'s locals, found by its type (there is one), so a change to play()'s
      * other locals, by a Minecraft update, a NeoForge patch or another mod, doesn't stop this applying.
      */
-    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/ChannelAccess$ChannelHandle;execute(Ljava/util/function/Consumer;)V", shift = At.Shift.AFTER))
-    public void dsurround$onSoundPlay(SoundInstance soundInstance, CallbackInfo ci, @Local ChannelAccess.ChannelHandle channelHandle) {
+    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)Lnet/minecraft/client/sounds/SoundEngine$PlayResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/ChannelAccess$ChannelHandle;execute(Ljava/util/function/Consumer;)V", shift = At.Shift.AFTER))
+    public void dsurround$onSoundPlay(SoundInstance instance, CallbackInfoReturnable<SoundEngine.PlayResult> cir, @Local ChannelAccess.ChannelHandle handle) {
         try {
-            SoundFXProcessor.onSoundPlay(soundInstance, channelHandle);
-            AudioUtilities.onSoundPlay(soundInstance);
+            SoundFXProcessor.onSoundPlay(instance, handle);
+            AudioUtilities.onSoundPlay(instance);
         } catch(final Throwable t) {
             MixinHelpers.LOGGER.error(t, "Error in dsurround_onSoundPlay()!");
         }
     }
 
-    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At("HEAD"), cancellable = true)
-    private void dsurround$play(SoundInstance sound, CallbackInfo ci) {
+    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)Lnet/minecraft/client/sounds/SoundEngine$PlayResult;", at = @At("HEAD"), cancellable = true)
+    private void dsurround$play(SoundInstance instance, CallbackInfoReturnable<SoundEngine.PlayResult> cir) {
         try {
             // Ensure the sound is being played on the client thread. If it isn't cancel
             // the play and emit a message indicating such. This should also protect
             // dsurround$currentSoundInstance.
             if (dsurround$compatibleSoundDiscardEnvironment && MixinHelpers.soundOptions.discardNonClientSoundPlays && !GameUtils.getMC().isSameThread()) {
-                MixinHelpers.LOGGER.warn("Attempt to play sound (%s) from non-client thread; discarding".formatted(sound.getLocation()));
+                MixinHelpers.LOGGER.warn("Attempt to play sound (%s) from non-client thread; discarding".formatted(instance.getIdentifier()));
                 if (MixinHelpers.soundOptions.logStacktraceWhenDiscarding) {
                     MixinHelpers.LOGGER.warn(StringUtils.generateStackTrace(Thread.currentThread().getStackTrace()));
                 }
-                ci.cancel();
+                cir.setReturnValue(SoundEngine.PlayResult.NOT_STARTED);
             }
             // Check to see if the sound is blocked or being culled
-            else if (SoundInstanceHandler.shouldBlockSoundPlay(sound))
-                ci.cancel();
+            else if (SoundInstanceHandler.shouldBlockSoundPlay(instance))
+                cir.setReturnValue(SoundEngine.PlayResult.NOT_STARTED);
             // Attempt a remapping if configured to do so
-            else if (SoundInstanceHandler.remapSoundPlay(sound))
-                ci.cancel();
+            else if (SoundInstanceHandler.remapSoundPlay(instance))
+                cir.setReturnValue(SoundEngine.PlayResult.NOT_STARTED);
             // Looks like it is going to play
             else
-                this.dsurround$currentSoundInstance = sound;
+                this.dsurround$currentSoundInstance = instance;
         } catch (final Exception t) {
             MixinHelpers.LOGGER.error(t, "Error in dsurround_play()!");
         }
@@ -97,28 +98,28 @@ public abstract class MixinSoundEngine {
      * Update the volume based on current settings and environment. Note the documentation above for the
      * dsurround$currentSoundInstance field.
      */
-    @WrapOperation(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/SoundEngine;calculateVolume(FLnet/minecraft/sounds/SoundSource;)F"), remap = false)
-    private float dsurround$calculateVolume(SoundEngine soundEngine, float f, SoundSource soundsource, Operation<Float> original) {
+    @WrapOperation(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)Lnet/minecraft/client/sounds/SoundEngine$PlayResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/SoundEngine;calculateVolume(FLnet/minecraft/sounds/SoundSource;)F"), remap = false)
+    private float dsurround$calculateVolume(SoundEngine soundEngine, float volume, SoundSource source, Operation<Float> original) {
         try {
             if (this.dsurround$currentSoundInstance != null) {
                 var instance = this.dsurround$currentSoundInstance;
                 this.dsurround$currentSoundInstance = null;
-                return SoundVolumeEvaluator.getAdjustedVolume(instance, soundsource);
+                return SoundVolumeEvaluator.getAdjustedVolume(instance, source);
             }
         } catch (Throwable ex) {
             // Something went wrong. Since the call was not canceled, it will continue with the existing implementation.
             MixinHelpers.LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, "Error calculating sound volume: %s", ex);
         }
-        return original.call(soundEngine, f, soundsource);
+        return original.call(soundEngine, volume, source);
     }
 
-    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;<init>(DDD)V"), cancellable = true)
-    private void dsurround$soundRangeCheck(SoundInstance soundInstance, CallbackInfo ci) {
+    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)Lnet/minecraft/client/sounds/SoundEngine$PlayResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;<init>(DDD)V"), cancellable = true)
+    private void dsurround$soundRangeCheck(SoundInstance instance, CallbackInfoReturnable<SoundEngine.PlayResult> cir) {
         if (MixinHelpers.soundSystemConfig.enableSoundPruning) {
             // If not in range of the listener, cancel.
-            if (!SoundInstanceHandler.inRange(AudioUtilities.getSoundListener().getTransform().position(), soundInstance, 4)) {
-                MixinHelpers.LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> "TOO FAR: " + AudioUtilities.debugString(soundInstance));
-                ci.cancel();
+            if (!SoundInstanceHandler.inRange(AudioUtilities.getSoundListener().getTransform().position(), instance, 4)) {
+                MixinHelpers.LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> "TOO FAR: " + AudioUtilities.debugString(instance));
+                cir.setReturnValue(SoundEngine.PlayResult.NOT_STARTED);
             }
         }
     }

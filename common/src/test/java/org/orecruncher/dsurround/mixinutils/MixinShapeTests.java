@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.mixinutils;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.ChannelAccess;
 import org.junit.jupiter.api.Test;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,7 +23,8 @@ public class MixinShapeTests {
                 .filter(m -> m.getName().equals("dsurround$onSoundPlay"))
                 .findFirst()
                 .orElseThrow();
-        assertEquals(List.of(SoundInstance.class, CallbackInfo.class, ChannelAccess.ChannelHandle.class),
+        // play() returns a PlayResult in 26.2, so the hook gets a CallbackInfoReturnable
+        assertEquals(List.of(SoundInstance.class, CallbackInfoReturnable.class, ChannelAccess.ChannelHandle.class),
                 List.of(hook.getParameterTypes()));
     }
 

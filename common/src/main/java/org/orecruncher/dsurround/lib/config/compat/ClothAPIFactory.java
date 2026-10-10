@@ -9,7 +9,7 @@ import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.text.Localization;
@@ -28,15 +28,15 @@ import java.util.List;
  */
 public class ClothAPIFactory implements IScreenFactory<Screen> {
 
-    private static final ResourceLocation[] BACKGROUNDS = {
-            ResourceLocation.parse("minecraft:textures/block/cobblestone.png"),
-            ResourceLocation.parse("minecraft:textures/block/bedrock.png"),
-            ResourceLocation.parse("minecraft:textures/block/bricks.png"),
-            ResourceLocation.parse("minecraft:textures/block/sandstone.png"),
-            ResourceLocation.parse("minecraft:textures/block/stone.png"),
-            ResourceLocation.parse("minecraft:textures/block/oak_planks.png"),
-            ResourceLocation.parse("minecraft:textures/block/gilded_blackstone.png"),
-            ResourceLocation.parse("minecraft:textures/block/dirt.png")
+    private static final Identifier[] BACKGROUNDS = {
+            Identifier.parse("minecraft:textures/block/cobblestone.png"),
+            Identifier.parse("minecraft:textures/block/bedrock.png"),
+            Identifier.parse("minecraft:textures/block/bricks.png"),
+            Identifier.parse("minecraft:textures/block/sandstone.png"),
+            Identifier.parse("minecraft:textures/block/stone.png"),
+            Identifier.parse("minecraft:textures/block/oak_planks.png"),
+            Identifier.parse("minecraft:textures/block/gilded_blackstone.png"),
+            Identifier.parse("minecraft:textures/block/dirt.png")
     };
 
     private static final Style TITLE_STYLE = Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE);
@@ -53,7 +53,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
     private static final Component EMPTY_LINE = Component.literal(" ");
 
     private final ConfigurationData configData;
-    private final ResourceLocation background;
+    private final Identifier background;
 
     public ClothAPIFactory(ConfigurationData config) {
         this.configData = config;

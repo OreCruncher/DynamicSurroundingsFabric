@@ -4,7 +4,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import dev.architectury.platform.Platform;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
@@ -29,13 +29,15 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 /***
- * Our debug and diagnostics overlay.  Derived from DebugHud.
+ * Our debug and diagnostics overlay.  Derived from Minecraft's debug overlay.
  */
 public final class DiagnosticsOverlay extends AbstractOverlay {
 
-    private static final int BACKGROUND_COLOR = 0x90505050;     // Very dark gray with alpha
-    // Fully opaque: newer versions draw text with zero alpha invisibly, where this one makes it opaque
-    private static final int FOREGROUND_COLOR = 0xFFE0E0E0;     // Very light gray
+    // With 26.2, text rendering accepts alpha on color, and will elide text rendering which have
+    // no/low alpha. Main thing is getting through the gatekeeper and let the color specified within the
+    // text component do the work.
+    private static final int BACKGROUND_COLOR = ColorPalette.withAlpha(ColorPalette.DEBUG_TEXT_BACKGROUND, 144); // Very dark gray with alpha
+    private static final int FOREGROUND_COLOR = ColorPalette.forTextRender(ColorPalette.DEBUG_TEXT_FOREGROUND); // Very light gray
 
     private static final Style BIOME_DIAGNOSTIC_TITLE_COLOR = Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE).withUnderlined(true);
     private static final Style BIOME_DIAGNOSTIC_HEADER_COLOR = Style.EMPTY.withColor(ColorPalette.AQUAMARINE);
@@ -274,9 +276,10 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
     }
 
     @Override
-    public void render(GuiGraphics context, float partialTick) {
+    public void render(GuiGraphicsExtractor context, float partialTick) {
         this.rendering.begin();
         if (this.renderHud) {
+            context.nextStratum();
             switch (this.mode) {
                 case DEBUG -> {
                     this.drawText(context, this.left, true);
@@ -298,7 +301,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
     /**
      * Draws the lines down the left or right edge, each on its own background. A null line is a blank gap.
      */
-    private void drawText(GuiGraphics context, ObjectArray<FormattedCharSequence> text, boolean left) {
+    private void drawText(GuiGraphicsExtractor context, ObjectArray<FormattedCharSequence> text, boolean left) {
         var textRenderer = GameUtils.getTextRenderer();
         int lineHeight = textRenderer.lineHeight;
         for (int line = 0; line < text.size(); ++line) {
@@ -309,7 +312,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
             int x = left ? 2 : context.guiWidth() - 2 - width;
             int y = 2 + lineHeight * line;
             context.fill(x - 1, y - 1, x + width + 1, y + lineHeight - 1, BACKGROUND_COLOR);
-            context.drawString(textRenderer, component, x, y, FOREGROUND_COLOR, false);
+            context.text(textRenderer, component, x, y, FOREGROUND_COLOR, false);
         }
     }
 }

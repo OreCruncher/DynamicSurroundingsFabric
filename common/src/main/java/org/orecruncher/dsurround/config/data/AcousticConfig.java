@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.config.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.lib.registry.IdentityUtils;
@@ -10,7 +10,7 @@ import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.lib.weighted.WeightValue;
 
 public record AcousticConfig(
-        ResourceLocation factory,
+        Identifier factory,
         Script conditions,
         WeightValue weight,
         SoundEventType type) {

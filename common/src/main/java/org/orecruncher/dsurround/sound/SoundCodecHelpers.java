@@ -67,9 +67,9 @@ public final class SoundCodecHelpers {
 
     private static DataResult<Either<Float, RangeProperty>> fromFloatProvider(FloatProvider provider) {
         if (provider instanceof ConstantFloat constant)
-            return DataResult.success(Either.left(constant.getValue()));
+            return DataResult.success(Either.left(constant.value()));
         if (provider instanceof UniformFloat uniform)
-            return DataResult.success(Either.right(new RangeProperty(uniform.getMinValue(), uniform.getMaxValue())));
+            return DataResult.success(Either.right(new RangeProperty(uniform.min(), uniform.max())));
         return DataResult.error(() -> "Only fixed values and uniform ranges can be written: " + provider);
     }
 

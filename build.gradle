@@ -1,5 +1,5 @@
 plugins {
-    id 'dev.architectury.loom' version '1.17-SNAPSHOT' apply false
+    id 'dev.architectury.loom-no-remap' version '1.17-SNAPSHOT' apply false
     id 'architectury-plugin' version '3.5-SNAPSHOT'
     id 'com.gradleup.shadow' version '9.4.3' apply false
 }
@@ -15,7 +15,7 @@ allprojects {
 
 // Every subproject is a Minecraft module except the annotation processor, which is plain Java used at build time
 configure(subprojects.findAll { it.name != 'processor' }) {
-    apply plugin: 'dev.architectury.loom'
+    apply plugin: 'dev.architectury.loom-no-remap'
     apply plugin: 'architectury-plugin'
     apply plugin: 'maven-publish'
 
@@ -42,7 +42,6 @@ configure(subprojects.findAll { it.name != 'processor' }) {
 
     dependencies {
         minecraft "net.minecraft:minecraft:$rootProject.minecraft_version"
-        mappings loom.officialMojangMappings()
     }
 
     java {
@@ -51,12 +50,12 @@ configure(subprojects.findAll { it.name != 'processor' }) {
         // If you remove this line, sources will not be generated.
         withSourcesJar()
 
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
     }
 
     tasks.withType(JavaCompile).configureEach {
-        it.options.release = 21
+        it.options.release = 25
     }
 
     tasks.register('copyJarToMain', Sync) {
@@ -64,7 +63,8 @@ configure(subprojects.findAll { it.name != 'processor' }) {
         if (project.name != "common" && project.name != "stubs") {
             // Only publish jars to the shared folder once the tests (all in common) have passed
             dependsOn ':common:test'
-            from remapJar
+            // No remapJar on 26.2 (unobfuscated); the shaded jar is the one that ships
+            from tasks.named('shadowJar')
             into "../build/libs"
             // Every loader syncs into the same folder: only replace this loader's jars for this Minecraft version
             def ownJars = "${base.archivesName.get()}-*"

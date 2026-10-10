@@ -1,16 +1,21 @@
-#version 150
+#version 330
 
 // Dynamic Surroundings firefly light: a small point light, lighting whatever is near it on screen. All four vertices
 // of a light are at its centre; this spreads them into a square facing the camera that covers the light's sphere
 // on screen. When the camera is in or right next to the sphere, the square covers the whole screen instead.
 
+#moj_import <minecraft:dynamictransforms.glsl>
+#moj_import <minecraft:projection.glsl>
+
+layout(std140) uniform FireflyLightInfo {
+    // 1 if clip space depth runs 0 to 1, 0 if it runs -1 to 1
+    float DepthZeroToOne;
+    float LightRadius;
+};
+
 in vec3 Position;  // the light's centre, relative to the camera
 in vec2 UV0;       // which corner: -1 or 1 on each axis
 in vec4 Color;     // the light's colour; alpha is its strength
-
-uniform mat4 ModelViewMat;
-uniform mat4 ProjMat;
-uniform float LightRadius;
 
 flat out vec3 lightCenter;  // in view space
 flat out vec4 lightColor;

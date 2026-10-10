@@ -7,7 +7,7 @@ import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.time.MinecraftClock;
+import org.orecruncher.dsurround.runtime.oracle.IMinecraftClock;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
 import org.orecruncher.dsurround.lib.scripting.Script;
@@ -35,11 +35,12 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
         DIAGNOSTIC_SCRIPTS = SCRIPTS.stream().map(Script::new).collect(ImmutableList.toImmutableList());
     }
 
-    private final MinecraftClock clock = new MinecraftClock();
+    private final IMinecraftClock clock;
     private final IConditionEvaluator conditionEvaluator;
     private final ISeasonalInformation seasonalInformation;
 
-    public RuntimeDiagnosticsPlugin(IConditionEvaluator conditionEvaluator, ISeasonalInformation seasonalInformation) {
+    public RuntimeDiagnosticsPlugin(IMinecraftClock clock, IConditionEvaluator conditionEvaluator, ISeasonalInformation seasonalInformation) {
+        this.clock = clock;
         this.conditionEvaluator = conditionEvaluator;
         this.seasonalInformation = seasonalInformation;
         ICollectDiagnostics.EVENT.register(this::onCollect, HandlerPriority.HIGH);
@@ -47,8 +48,6 @@ public class RuntimeDiagnosticsPlugin implements IDiagnosticPlugin {
 
     public void onCollect(CollectDiagnosticsEvent event) {
         if (GameUtils.isInGame()) {
-            var world = GameUtils.getWorld().orElseThrow();
-            this.clock.update(world);
             event.add(CollectDiagnosticsEvent.Section.Header, this.clock.getFormattedTime());
 
             var seasonInfo = this.seasonalInformation.getCurrentSeasonTranslated().orElse(Component.literal("UNKNOWN"));

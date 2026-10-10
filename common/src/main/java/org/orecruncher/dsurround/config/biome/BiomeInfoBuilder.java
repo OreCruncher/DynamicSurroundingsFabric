@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import dev.architectury.hooks.level.biome.BiomeHooks;
 import dev.architectury.hooks.level.biome.BiomeProperties;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Biome;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -28,7 +28,7 @@ public final class BiomeInfoBuilder implements IBiomeIdentity {
 
     final int version;
     final ConfigServices services;
-    final ResourceLocation biomeId;
+    final Identifier biomeId;
     final String biomeName;
     @Nullable
     final Biome biome;
@@ -50,14 +50,14 @@ public final class BiomeInfoBuilder implements IBiomeIdentity {
     /**
      * For a synthetic biome, which has no game biome behind it
      */
-    public BiomeInfoBuilder(final int version, final ResourceLocation id, final String name, BiomeTraits traits, ConfigServices services) {
+    public BiomeInfoBuilder(final int version, final Identifier id, final String name, BiomeTraits traits, ConfigServices services) {
         this(version, id, name, traits, null, services);
     }
 
     /**
      * @param services what the info uses, from the library that builds it
      */
-    public BiomeInfoBuilder(final int version, final ResourceLocation id, final String name, BiomeTraits traits, @Nullable Biome biome, ConfigServices services) {
+    public BiomeInfoBuilder(final int version, final Identifier id, final String name, BiomeTraits traits, @Nullable Biome biome, ConfigServices services) {
         this.version = version;
         this.services = services;
         this.biomeId = id;
@@ -68,7 +68,7 @@ public final class BiomeInfoBuilder implements IBiomeIdentity {
     }
 
     @Override
-    public ResourceLocation getBiomeId() {
+    public Identifier getBiomeId() {
         return this.biomeId;
     }
 

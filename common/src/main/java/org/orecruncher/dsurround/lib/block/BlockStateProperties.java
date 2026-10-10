@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -23,11 +24,20 @@ final class BlockStateProperties {
     private final Map<Property<?>, Comparable<?>> props;
 
     BlockStateProperties(final BlockState state) {
-        this(state.getValues());
+        this(valuesOf(state));
     }
 
     BlockStateProperties(final Map<Property<?>, Comparable<?>> props) {
         this.props = ImmutableMap.copyOf(props);
+    }
+
+    /**
+     * The state's property values, in the order the state lists them.
+     */
+    private static Map<Property<?>, Comparable<?>> valuesOf(final BlockState state) {
+        final Map<Property<?>, Comparable<?>> values = new LinkedHashMap<>();
+        state.getValues().forEach(v -> values.put(v.property(), v.value()));
+        return values;
     }
 
     /**

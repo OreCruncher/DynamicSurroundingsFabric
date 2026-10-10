@@ -7,7 +7,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -25,7 +25,7 @@ import java.util.Optional;
 import static org.orecruncher.dsurround.sound.SoundCodecHelpers.SOUND_PROPERTY_RANGE;
 
 public record SoundFactory(
-        Optional<ResourceLocation> location,
+        Optional<Identifier> location,
         SoundEvent soundEvent,
         FloatProvider volume,
         FloatProvider pitch,
@@ -52,7 +52,7 @@ public record SoundFactory(
 
     // Music instances by sound event ID and settings: factories that agree share one, and different (or reloaded)
     // settings get their own. The ID, as SoundEvent instances aren't compared by value.
-    private record MusicKey(ResourceLocation event, MusicSettings settings) {
+    private record MusicKey(Identifier event, MusicSettings settings) {
     }
 
     private static final Map<MusicKey, Music> MUSIC_MAP = new ConcurrentHashMap<>();
@@ -69,8 +69,8 @@ public record SoundFactory(
     }
 
     @Override
-    public ResourceLocation getLocation() {
-        return this.location.orElse(this.soundEvent.getLocation());
+    public Identifier getLocation() {
+        return this.location.orElse(this.soundEvent.location());
     }
 
     @Override
@@ -90,7 +90,7 @@ public record SoundFactory(
     @Override
     public SimpleSoundInstance createAsAdditional() {
         return new SimpleSoundInstance(
-                this.soundEvent.getLocation(),
+                this.soundEvent.location(),
                 this.category,
                 this.getVolume(),
                 this.getPitch(),
@@ -128,7 +128,7 @@ public record SoundFactory(
         // sound at world coordinates would be heard as coming from far off in that direction
         final boolean relative = this.global;
         return new SimpleSoundInstance(
-                this.soundEvent.getLocation(),
+                this.soundEvent.location(),
                 this.category,
                 this.getVolume() * volumeScale,
                 this.getPitch(),
@@ -144,7 +144,7 @@ public record SoundFactory(
 
     @Override
     public Music createAsMusic() {
-        return MUSIC_MAP.computeIfAbsent(new MusicKey(this.soundEvent.getLocation(), this.musicSettings), key ->
+        return MUSIC_MAP.computeIfAbsent(new MusicKey(this.soundEvent.location(), this.musicSettings), key ->
                 new Music(Holder.direct(this.soundEvent), key.settings().minDelay(), key.settings().maxDelay(), key.settings().replaceCurrentMusic()));
     }
 
@@ -175,7 +175,7 @@ public record SoundFactory(
 
     @Override
     public @NotNull String toString() {
-        return "Factory {loc=%s, evt=%s}".formatted(this.getLocation(), this.soundEvent().getLocation());
+        return "Factory {loc=%s, evt=%s}".formatted(this.getLocation(), this.soundEvent().location());
     }
 
     static ISoundFactory from(SoundFactoryBuilder builder) {

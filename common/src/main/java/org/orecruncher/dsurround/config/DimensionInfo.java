@@ -1,9 +1,12 @@
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
+import net.minecraft.world.attribute.EnvironmentAttributes;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.data.DimensionConfigRule;
@@ -26,7 +29,7 @@ public class DimensionInfo {
 
     protected final boolean isFlatWorld;
     // Attributes about the dimension. This information is loaded from local configs.
-    protected ResourceLocation name;
+    protected Identifier name;
     protected int seaLevel;
     protected int skyHeight;
     protected int cloudHeight;
@@ -34,6 +37,8 @@ public class DimensionInfo {
     protected boolean alwaysOutside = false;
     protected boolean playBiomeSounds = true;
     protected boolean compassWobble = false;
+    // TODO: Expose in configs
+    protected boolean natural = true;
 
     // The dimension's own cloud height, used unless a rule sets one
     private final int defaultCloudHeight;
@@ -49,7 +54,7 @@ public class DimensionInfo {
 
     public DimensionInfo(final Level world) {
         // Attributes that come from the world object itself. Set now because the config may override.
-        this.name = world.dimension().location();
+        this.name = world.dimension().identifier();
         this.seaLevel = world.getSeaLevel();
         this.skyHeight = world.getHeight();
         this.isFlatWorld = LevelCompat.isSuperFlat(world);
@@ -59,7 +64,8 @@ public class DimensionInfo {
         if (this.isFlatWorld)
             this.seaLevel = -60;
 
-        this.compassWobble = !world.dimensionType().natural();
+        this.natural = world.dimensionType().skybox() == DimensionType.Skybox.OVERWORLD;
+        this.compassWobble = !this.natural;
 
         // Valid even if finish() is never called
         this.finish();
@@ -67,15 +73,14 @@ public class DimensionInfo {
 
     /**
      * The height vanilla draws this dimension's clouds at (192 for the overworld), or NO_CLOUDS for a dimension
-     * without clouds (the nether and the end).
+     * without clouds (the nether and the end). Both are environment attributes; vanilla draws no clouds when their
+     * color is fully transparent. Read at the world's origin, as the dimension's own values.
      */
     private static int vanillaCloudHeight(final Level world) {
-        if (world instanceof ClientLevel clientLevel) {
-            float height = clientLevel.effects().getCloudHeight();
-            if (!Float.isNaN(height))
-                return Mth.floor(height);
-        }
-        return NO_CLOUDS;
+        var attributes = world.environmentAttributes();
+        if (ARGB.alpha(attributes.getValue(EnvironmentAttributes.CLOUD_COLOR, Vec3.ZERO)) == 0)
+            return NO_CLOUDS;
+        return Mth.floor(attributes.getValue(EnvironmentAttributes.CLOUD_HEIGHT, Vec3.ZERO));
     }
 
     /**
@@ -102,7 +107,7 @@ public class DimensionInfo {
         return this;
     }
 
-    public ResourceLocation getName() {
+    public Identifier getName() {
         return this.name;
     }
 
@@ -136,6 +141,10 @@ public class DimensionInfo {
 
     public boolean getCompassWobble() {
         return this.compassWobble;
+    }
+
+    public boolean natural() {
+        return this.natural;
     }
 
 }

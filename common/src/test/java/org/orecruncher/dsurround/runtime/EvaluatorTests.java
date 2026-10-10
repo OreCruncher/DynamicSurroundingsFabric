@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.runtime;
 
 import net.minecraft.SharedConstants;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeGenerationSettings;
@@ -98,7 +98,7 @@ public class EvaluatorTests {
         }
 
         @Override
-        public String getBiomeName(ResourceLocation id) {
+        public String getBiomeName(Identifier id) {
             return "";
         }
 
@@ -128,7 +128,7 @@ public class EvaluatorTests {
                 .temperature(0.8F)
                 .downfall(0.5F)
                 .specialEffects(new BiomeSpecialEffects.Builder()
-                        .fogColor(0).waterColor(0).waterFogColor(0).skyColor(0)
+                        .waterColor(0)
                         .build())
                 .mobSpawnSettings(MobSpawnSettings.EMPTY)
                 .generationSettings(BiomeGenerationSettings.EMPTY)

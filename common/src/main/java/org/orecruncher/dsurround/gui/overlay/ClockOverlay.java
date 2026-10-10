@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.gui.overlay;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
@@ -9,8 +9,9 @@ import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
+import org.orecruncher.dsurround.lib.time.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.time.MinecraftClock;
+import org.orecruncher.dsurround.runtime.oracle.IMinecraftClock;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.gui.ColorGradient;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
@@ -27,8 +28,8 @@ public final class ClockOverlay extends AbstractOverlay {
 
     private final ITagLibrary tagLibrary;
     private final ISeasonalInformation seasonalInformation;
+    private final IMinecraftClock clock;
     private final Configuration config;
-    private final MinecraftClock clock;
     private final ColorGradient gradient;
     private final ObjectArray<Component> clockDisplay = new ObjectArray<>(2);
     private boolean showClock;
@@ -36,11 +37,11 @@ public final class ClockOverlay extends AbstractOverlay {
     private int renderHeight;
     private int color;
 
-    public ClockOverlay(Configuration config, ITagLibrary tagLibrary, ISeasonalInformation seasonalInformation) {
+    public ClockOverlay(Configuration config, ITagLibrary tagLibrary, ISeasonalInformation seasonalInformation, IMinecraftClock clock) {
         this.tagLibrary = tagLibrary;
         this.seasonalInformation = seasonalInformation;
+        this.clock = clock;
         this.config = config;
-        this.clock = new MinecraftClock();
         this.gradient = new ColorGradient(ColorPalette.DARK_VIOLET, ColorPalette.SUN_GLOW, 180F);
         this.showClock = false;
     }
@@ -57,8 +58,6 @@ public final class ClockOverlay extends AbstractOverlay {
             if (!this.showClock)
                 return;
 
-            this.clock.update(player.level());
-
             this.clockDisplay.clear();
             this.clockDisplay.add(this.clock.getFormattedTime());
             this.seasonalInformation.getCurrentSeasonTranslated().ifPresent(this.clockDisplay::add);
@@ -71,14 +70,14 @@ public final class ClockOverlay extends AbstractOverlay {
             this.renderHeight = this.clockDisplay.size() == 1 ? textRender.lineHeight - 2 : textRender.lineHeight * 2;
 
             // Calculate the color this tick
-            this.color = textColor(this.gradient, player.level().getTimeOfDay(1F));
+            // The sun angle is in degrees, 0 at noon
+            this.color = textColor(this.gradient, DayCycle.getCelestialAngle(player.level(), player.position()) / 360F);
         }
     }
 
     /**
-     * The clock text's color for the time of day (0 to 1, from Level.getTimeOfDay): along the gradient from
-     * midnight (0 degrees) to noon (180), and back. Fully opaque: newer versions draw text with zero alpha
-     * invisibly, where this one makes it opaque.
+     * The clock text's color for the time of day (0 to 1, starting at noon): along the gradient from midnight
+     * (0 degrees) to noon (180), and back. Fully opaque: text drawn with zero alpha is invisible.
      */
     static int textColor(ColorGradient gradient, float timeOfDay) {
         // 0 is noon, 180 is midnight. Need to normalize so that midnight 0.
@@ -105,7 +104,7 @@ public final class ClockOverlay extends AbstractOverlay {
     }
 
     @Override
-    public void render(GuiGraphics context, float partialTick) {
+    public void render(GuiGraphicsExtractor context, float partialTick) {
         if (!this.showClock)
             return;
 
@@ -118,9 +117,9 @@ public final class ClockOverlay extends AbstractOverlay {
 
         // Don't use renderTooltip. It uses a Z which pushes the rendering to the top of the Z stack and can
         // and can interfere with renders.
-        TooltipRenderUtil.renderTooltipBackground(context, x - this.renderWidth / 2, y, this.renderWidth, this.renderHeight, 0);
-        context.drawCenteredString(textRender, this.clockDisplay.get(0), x, y, this.color);
+        TooltipRenderUtil.extractTooltipBackground(context, x - this.renderWidth / 2, y, this.renderWidth, this.renderHeight, null);
+        context.centeredText(textRender, this.clockDisplay.get(0), x, y, this.color);
         if (this.clockDisplay.size() == 2)
-            context.drawCenteredString(textRender, this.clockDisplay.get(1), x, y + textRender.lineHeight, this.color);
+            context.centeredText(textRender, this.clockDisplay.get(1), x, y + textRender.lineHeight, this.color);
     }
 }

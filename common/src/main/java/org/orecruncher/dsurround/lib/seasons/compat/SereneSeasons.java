@@ -1,12 +1,11 @@
 package org.orecruncher.dsurround.lib.seasons.compat;
 
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.biome.Biome;
-import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
 import org.orecruncher.dsurround.eventing.IClientTickStart;
 import org.orecruncher.dsurround.lib.function.CachingSupplier;
+import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 import sereneseasons.api.season.ISeasonState;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
@@ -17,7 +16,6 @@ import java.util.Optional;
 
 public class SereneSeasons extends AbstractSeasonProvider {
 
-    // Looked up once per tick; the season queries are made many times a tick
     private final CachingSupplier<ISeasonState> seasonStateCache;
 
     // Cache for previously computed data
@@ -25,11 +23,8 @@ public class SereneSeasons extends AbstractSeasonProvider {
     private Season.TropicalSeason tropicalSeason;
     private Component computed;
 
-    private final IDimensionInformation dimensionInformation;
-
-    public SereneSeasons(IDimensionInformation dimensionInformation) {
-        super("Serene Seasons");
-        this.dimensionInformation = dimensionInformation;
+    public SereneSeasons(ILevelOracle levelOracle) {
+        super("Serene Seasons", levelOracle);
         this.seasonStateCache = CachingSupplier.from(() -> SeasonHelper.getSeasonState(this.level()));
         IClientTickStart.EVENT.register(ignored -> this.seasonStateCache.clear());
     }
@@ -78,36 +73,30 @@ public class SereneSeasons extends AbstractSeasonProvider {
     }
 
     public boolean isEarly() {
-        var subSeason = this.seasonStateCache.get().getSubSeason();
-        return subSeason == Season.SubSeason.EARLY_AUTUMN || Season.SubSeason.EARLY_SPRING == subSeason ||  Season.SubSeason.EARLY_SUMMER == subSeason || Season.SubSeason.EARLY_WINTER == subSeason;
+        var currentSubSeason = this.seasonStateCache.get().getSubSeason();
+        return Season.SubSeason.EARLY_AUTUMN == currentSubSeason || Season.SubSeason.EARLY_SPRING == currentSubSeason || Season.SubSeason.EARLY_SUMMER == currentSubSeason || Season.SubSeason.EARLY_WINTER == currentSubSeason;
     }
 
     public boolean isMiddle() {
-        var subSeason = this.seasonStateCache.get().getSubSeason();
-        return subSeason == Season.SubSeason.MID_AUTUMN || Season.SubSeason.MID_SPRING == subSeason ||  Season.SubSeason.MID_SUMMER == subSeason || Season.SubSeason.MID_WINTER == subSeason;
+        var currentSubSeason = this.seasonStateCache.get().getSubSeason();
+        return Season.SubSeason.MID_AUTUMN == currentSubSeason || Season.SubSeason.MID_SPRING == currentSubSeason ||  Season.SubSeason.MID_SUMMER == currentSubSeason || Season.SubSeason.MID_WINTER == currentSubSeason;
     }
 
     public boolean isLate() {
-        var subSeason = this.seasonStateCache.get().getSubSeason();
-        return subSeason == Season.SubSeason.LATE_AUTUMN || Season.SubSeason.LATE_SPRING == subSeason ||  Season.SubSeason.LATE_SUMMER == subSeason || Season.SubSeason.LATE_WINTER == subSeason;
+        var currentSubSeason = this.seasonStateCache.get().getSubSeason();
+        return Season.SubSeason.LATE_AUTUMN == currentSubSeason || Season.SubSeason.LATE_SPRING == currentSubSeason ||  Season.SubSeason.LATE_SUMMER == currentSubSeason || Season.SubSeason.LATE_WINTER == currentSubSeason;
     }
 
     @Override
     public Biome.Precipitation getPrecipitationAt(BlockPos blockPos) {
-        var level = this.level();
-        var biome = level.getBiome(blockPos);
-        return SeasonHooks.getPrecipitationAtSeasonal(level, biome, blockPos);
+        var level = this.levelOracle.level();
+        var biome = this.levelOracle.biomeHolder(blockPos);
+        return SeasonHooks.getPrecipitationAtSeasonal(level, biome, blockPos, this.levelOracle.seaLevel());
     }
 
     @Override
-    public float getTemperature(BlockPos blockPos) {
-        var level = this.level();
-        var biome = level.getBiome(blockPos);
-        return SeasonHooks.getBiomeTemperature(level, biome, blockPos);
-    }
-
-    @Override
-    public ClientLevel level() {
-        return this.dimensionInformation.level();
+    public float getTemperatureAt(BlockPos blockPos) {
+        var biome = this.levelOracle.biomeHolder(blockPos);
+        return SeasonHooks.getBiomeTemperature(this.levelOracle.level(), biome, blockPos, this.levelOracle.seaLevel());
     }
 }

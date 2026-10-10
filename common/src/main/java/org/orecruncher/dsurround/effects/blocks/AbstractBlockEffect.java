@@ -53,7 +53,7 @@ public abstract class AbstractBlockEffect implements IBlockEffect {
      * Squared distance from the camera to this effect, for comparing with {@link #PARTICLE_RANGE_SQ}.
      */
     protected double cameraDistanceSq() {
-        return GameUtils.getMC().gameRenderer.getMainCamera().getPosition().distanceToSqr(this.posX, this.posY, this.posZ);
+        return GameUtils.getMC().gameRenderer.mainCamera().position().distanceToSqr(this.posX, this.posY, this.posZ);
     }
 
     /**

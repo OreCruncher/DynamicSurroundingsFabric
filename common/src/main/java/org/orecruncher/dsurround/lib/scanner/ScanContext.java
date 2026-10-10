@@ -38,13 +38,13 @@ public final class ScanContext {
      * The lowest y that holds blocks.
      */
     public int getMinY() {
-        return this.getWorld().getMinBuildHeight();
+        return this.getWorld().getMinY();
     }
 
     /**
-     * The highest y that holds blocks. getMaxBuildHeight() is exclusive, so this is one less.
+     * The highest y that holds blocks (Level.getMaxY() is inclusive).
      */
     public int getMaxY() {
-        return this.getWorld().getMaxBuildHeight() - 1;
+        return this.getWorld().getMaxY();
     }
 }

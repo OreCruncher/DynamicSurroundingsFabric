@@ -1,14 +1,14 @@
 package org.orecruncher.dsurround.sound;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SoundCullTrackerTests {
 
-    private static final ResourceLocation STEP = ResourceLocation.parse("minecraft:block.stone.step");
-    private static final ResourceLocation SPLASH = ResourceLocation.parse("minecraft:entity.generic.splash");
+    private static final Identifier STEP = Identifier.parse("minecraft:block.stone.step");
+    private static final Identifier SPLASH = Identifier.parse("minecraft:entity.generic.splash");
     private static final int INTERVAL = 20;
 
     @Test

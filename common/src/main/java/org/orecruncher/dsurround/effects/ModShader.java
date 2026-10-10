@@ -1,96 +1,92 @@
 package org.orecruncher.dsurround.effects;
 
-import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.Constants;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.lib.compat.IrisCompat;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
-import java.util.function.Supplier;
-
 /**
- * One of the mod's core shaders, and the effect drawn with it. Each platform registers the shader with its own API
- * (see {@link ModShaders}) and hands over the result: {@link #onLoaded} on each resource reload, or {@link #onFailed}
- * if it couldn't be compiled, in which case the effect isn't drawn rather than the error stopping the game from
- * loading its resources.
+ * One of the mod's render pipelines (its shaders and drawing state), and the effect drawn with it.
+ * <p>
+ * The pipeline is not added to vanilla's list of pipelines: those are compiled on every resource reload, and one that
+ * fails stops the reload. Instead, once the game's shaders have reloaded (see MixinShaderManager), each pipeline is
+ * compiled here and {@link #validate} reports the result: if it couldn't be compiled the effect isn't drawn, rather
+ * than the error stopping the game from loading its resources.
  * <p>
  * Drawing goes through {@link #run}, which turns the effect off if drawing fails (see {@link RenderFailSafe}); a
  * reload turns it back on. Everything here runs on the render thread.
  */
 public final class ModShader {
 
-    private final ResourceLocation id;
-    private final VertexFormat format;
+    private final RenderPipeline pipeline;
     private final String withoutIt;
     private final IModLog logger;
     private final RenderFailSafe failSafe;
-    @Nullable
-    private ShaderInstance instance;
-    private final Supplier<ShaderInstance> supplier = () -> this.instance;
+    private boolean loaded;
 
     /**
-     * @param name      the shader's name: its files are shaders/core/name.json, .vsh and .fsh in the mod's assets
-     * @param format    the vertex format it is drawn with
+     * @param pipeline  the pipeline; its shaders are in the mod's assets, shaders/core
      * @param effect    what is drawn with it, for the log ("the aurora")
      * @param withoutIt what happens without it, for the log ("auroras will not be drawn")
      * @param logger    where to report loading and failures
      */
-    public ModShader(String name, VertexFormat format, String effect, String withoutIt, IModLog logger) {
-        this.id = Constants.asId(name);
-        this.format = format;
+    public ModShader(RenderPipeline pipeline, String effect, String withoutIt, IModLog logger) {
+        this.pipeline = pipeline;
         this.withoutIt = withoutIt;
         this.logger = logger;
         this.failSafe = new RenderFailSafe(effect, logger);
     }
 
-    public ResourceLocation id() {
-        return this.id;
+    public Identifier id() {
+        return this.pipeline.getLocation();
     }
 
-    public VertexFormat format() {
-        return this.format;
+    public RenderPipeline pipeline() {
+        return this.pipeline;
     }
 
     /**
-     * Called by the platform when the shader has been loaded. Also turns the effect back on if drawing it failed
-     * before: reloading resources is how a fix would be picked up.
+     * Compiles the pipeline with the shaders just loaded, and records whether that worked. Also turns the effect back
+     * on if drawing it failed before: reloading resources is how a fix would be picked up.
      */
-    public void onLoaded(ShaderInstance loaded) {
-        this.instance = loaded;
-        this.failSafe.reset();
-        this.logger.info("Loaded the %s shader", this.id);
+    public void validate() {
+        boolean valid;
+        try {
+            valid = RenderSystem.getDevice().precompilePipeline(this.pipeline).isValid();
+        } catch (Throwable t) {
+            this.onFailed(t);
+            return;
+        }
+        this.onCompiled(valid);
     }
 
     /**
-     * Called by the platform when the shader couldn't be loaded.
+     * Records the result of compiling the pipeline.
      */
-    public void onFailed(Throwable error) {
-        this.instance = null;
-        this.logger.error(error, "Unable to load the %s shader; %s", this.id, this.withoutIt);
+    void onCompiled(boolean valid) {
+        if (valid) {
+            this.loaded = true;
+            this.failSafe.reset();
+            this.logger.info("Loaded the %s shader", this.id());
+        } else {
+            this.onFailed(new IllegalStateException("The pipeline did not compile; the game log has the shader errors"));
+        }
     }
 
     /**
-     * The loaded shader, or null if it isn't loaded.
+     * Records that the pipeline couldn't be compiled.
      */
-    @Nullable
-    public ShaderInstance get() {
-        return this.instance;
+    void onFailed(Throwable error) {
+        this.loaded = false;
+        this.logger.error(error, "Unable to load the %s shader; %s", this.id(), this.withoutIt);
     }
 
     /**
-     * For RenderSystem.setShader.
-     */
-    public Supplier<ShaderInstance> supplier() {
-        return this.supplier;
-    }
-
-    /**
-     * Whether the effect can be drawn: the shader loaded, and drawing hasn't failed since.
+     * Whether the effect can be drawn: the pipeline compiled, and drawing hasn't failed since.
      */
     public boolean isAvailable() {
-        return this.instance != null && !this.failSafe.isFailed();
+        return this.loaded && !this.failSafe.isFailed();
     }
 
     /**

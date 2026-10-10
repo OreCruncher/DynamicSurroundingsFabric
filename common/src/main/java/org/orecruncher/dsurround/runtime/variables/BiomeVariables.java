@@ -40,7 +40,7 @@ public final class BiomeVariables extends VariableSet {
      */
     public BiomeVariables(IBiomeLibrary biomeLibrary) {
         this(biomeLibrary, biome -> GameUtils.getPlayer()
-                .map(p -> biome.getPrecipitationAt(p.blockPosition()))
+                .map(p -> biome.getPrecipitationAt(p.blockPosition(), p.level().getSeaLevel()))
                 .orElse(Biome.Precipitation.NONE));
     }
 

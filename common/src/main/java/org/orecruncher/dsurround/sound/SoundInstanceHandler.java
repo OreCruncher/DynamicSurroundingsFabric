@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.sound;
 
 import net.minecraft.client.resources.sounds.ElytraOnPlayerSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.Configuration;
@@ -29,15 +29,15 @@ public final class SoundInstanceHandler {
 
     private static final SoundCullTracker SOUND_CULL = new SoundCullTracker();
 
-    private static boolean isSoundBlocked(final ResourceLocation id) {
+    private static boolean isSoundBlocked(final Identifier id) {
         return SOUND_LIBRARY.isBlocked(id);
     }
 
-    private static boolean isSoundCulled(final ResourceLocation id) {
+    private static boolean isSoundCulled(final Identifier id) {
         return SOUND_LIBRARY.isCulled(id);
     }
 
-    private static boolean isSoundCulledLogical(final ResourceLocation sound) {
+    private static boolean isSoundCulledLogical(final Identifier sound) {
         int cullInterval = SOUND_SYSTEM_CONFIG.cullInterval;
         return cullInterval > 0
                 && isSoundCulled(sound)
@@ -58,7 +58,7 @@ public final class SoundInstanceHandler {
         if (theSound instanceof ConfigSoundInstance)
             return false;
 
-        final ResourceLocation id = theSound.getLocation();
+        final Identifier id = theSound.getIdentifier();
         return isSoundBlocked(id) || isSoundCulledLogical(id);
     }
 

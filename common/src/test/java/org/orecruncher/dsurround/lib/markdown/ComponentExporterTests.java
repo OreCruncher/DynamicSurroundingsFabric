@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.lib.markdown;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.FontDescription;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.TextColor;
@@ -169,7 +170,7 @@ class ComponentExporterTests {
     void fontOptionIsApplied() {
         Component c = onlyChild(build("x", Options.UNIFORM));
 
-        assertEquals(Options.BuiltinFonts.UNIFORM, c.getStyle().getFont());
+        assertEquals(new FontDescription.Resource(Options.BuiltinFonts.UNIFORM), c.getStyle().getFont());
     }
 
     // ---- Links -----------------------------------------------------------------------------------------------
@@ -183,8 +184,8 @@ class ComponentExporterTests {
 
         ClickEvent click = link.getStyle().getClickEvent();
         assertNotNull(click);
-        assertEquals(ClickEvent.Action.OPEN_URL, click.getAction());
-        assertEquals("https://example.com", click.getValue());
+        assertEquals(ClickEvent.Action.OPEN_URL, click.action());
+        assertEquals("https://example.com", urlOf(click));
     }
 
     @Test
@@ -193,8 +194,8 @@ class ComponentExporterTests {
 
         HoverEvent hover = link.getStyle().getHoverEvent();
         assertNotNull(hover);
-        assertEquals(HoverEvent.Action.SHOW_TEXT, hover.getAction());
-        assertNotNull(hover.getValue(HoverEvent.Action.SHOW_TEXT));
+        assertEquals(HoverEvent.Action.SHOW_TEXT, hover.action());
+        assertNotNull(hoverTextOf(hover));
     }
 
     @Test
@@ -202,7 +203,7 @@ class ComponentExporterTests {
         Options options = Options.builder().linkHoverTranslationKey("").linkHoverTemplate("Open %s").build();
         Component link = build("[site](https://example.com)", options).getSiblings().get(0);
 
-        Component hoverText = link.getStyle().getHoverEvent().getValue(HoverEvent.Action.SHOW_TEXT);
+        Component hoverText = hoverTextOf(link.getStyle().getHoverEvent());
         assertEquals("Open https://example.com", hoverText.getString());
     }
 
@@ -210,9 +211,9 @@ class ComponentExporterTests {
     void linkTitleIsTheHoverText() {
         Component link = build("[site](https://example.com \"Go there\")").getSiblings().get(0);
 
-        Component hoverText = link.getStyle().getHoverEvent().getValue(HoverEvent.Action.SHOW_TEXT);
+        Component hoverText = hoverTextOf(link.getStyle().getHoverEvent());
         assertEquals("Go there", hoverText.getString());
-        assertEquals("https://example.com", link.getStyle().getClickEvent().getValue());
+        assertEquals("https://example.com", urlOf(link.getStyle().getClickEvent()));
     }
 
     @Test
@@ -220,7 +221,7 @@ class ComponentExporterTests {
         Options options = Options.builder().linkHoverTranslationKey("").linkHoverTemplate("100% of %s").build();
         Component link = build("[site](https://example.com)", options).getSiblings().get(0);
 
-        Component hoverText = link.getStyle().getHoverEvent().getValue(HoverEvent.Action.SHOW_TEXT);
+        Component hoverText = hoverTextOf(link.getStyle().getHoverEvent());
         assertEquals("100% of https://example.com", hoverText.getString());
     }
 
@@ -246,5 +247,13 @@ class ComponentExporterTests {
         for (Component c : root.getSiblings()) {
             assertNull(c.getStyle().getClickEvent());
         }
+    }
+    // ClickEvent and HoverEvent are records per action in 26.2
+    private static String urlOf(ClickEvent click) {
+        return ((ClickEvent.OpenUrl) click).uri().toString();
+    }
+
+    private static Component hoverTextOf(HoverEvent hover) {
+        return ((HoverEvent.ShowText) hover).value();
     }
 }

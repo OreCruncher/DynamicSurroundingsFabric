@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.resources;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.lib.codec.CodecExtensions;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
@@ -38,7 +38,7 @@ public abstract class AbstractResourceFinder implements IResourceFinder {
      * @param namespace whose it is, recorded with the result
      * @param where     where it was found, for the log
      */
-    protected <T> void readInto(ResourceLocation location, String namespace, Object where, Opener opener, Codec<T> codec,
+    protected <T> void readInto(Identifier location, String namespace, Object where, Opener opener, Codec<T> codec,
                                 Collection<DiscoveredResource<T>> results) {
         this.logger.debug(RESOURCE_LOADING, "[%s] - Processing %s", location, where);
         try (var stream = opener.open()) {
@@ -50,7 +50,7 @@ public abstract class AbstractResourceFinder implements IResourceFinder {
         }
     }
 
-    protected <T> Optional<T> decode(ResourceLocation location, String content, Codec<T> decoder) {
+    protected <T> Optional<T> decode(Identifier location, String content, Codec<T> decoder) {
         this.logger.debug(RESOURCE_LOADING, "[%s] - Decoding resource", location);
         var result = CodecExtensions.deserialize(location.toString(), content, decoder);
         if (this.logger.isTracing(RESOURCE_LOADING))

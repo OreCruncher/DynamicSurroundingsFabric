@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
@@ -36,7 +36,7 @@ public final class BiomeTraits {
      *
      * @param tagLibrary answers which tags the biome has
      */
-    public static BiomeTraits from(ResourceLocation id, Biome biome, ITagLibrary tagLibrary) {
+    public static BiomeTraits from(Identifier id, Biome biome, ITagLibrary tagLibrary) {
         EnumSet<BiomeTrait> traits = EnumSet.noneOf(BiomeTrait.class);
         analyze(new BiomeTagAnalyzer(tagLibrary), id, biome, traits);
         for (var analyzer : TRAIT_ANALYZERS)
@@ -44,7 +44,7 @@ public final class BiomeTraits {
         return new BiomeTraits(traits);
     }
 
-    private static void analyze(IBiomeTraitAnalyzer analyzer, ResourceLocation id, Biome biome, Set<BiomeTrait> traits) {
+    private static void analyze(IBiomeTraitAnalyzer analyzer, Identifier id, Biome biome, Set<BiomeTrait> traits) {
         int before = traits.size();
         analyzer.analyze(id, biome, traits);
         int after = traits.size();

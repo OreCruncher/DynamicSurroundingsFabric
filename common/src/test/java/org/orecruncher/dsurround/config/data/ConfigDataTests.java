@@ -7,7 +7,7 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.TagEntry;
@@ -247,7 +247,7 @@ public class ConfigDataTests {
 
         assertEquals(List.of("minecraft:villager", "minecraft:wandering_trader"), entries);
         for (var entry : entries)
-            assertTrue(BuiltInRegistries.ENTITY_TYPE.containsKey(ResourceLocation.parse(entry)), entry + " isn't an entity type");
+            assertTrue(BuiltInRegistries.ENTITY_TYPE.containsKey(Identifier.parse(entry)), entry + " isn't an entity type");
     }
 
     @Test

@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config.block;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.AcousticEntryCollection;
 import org.orecruncher.dsurround.config.ConfigServices;
@@ -23,7 +23,7 @@ public final class BlockInfo {
     // What it uses, from the library that built it: kept as one reference, as there is an info for every block state
     private final ConfigServices services;
     @Nullable
-    private final ResourceLocation stepSound;
+    private final Identifier stepSound;
     private final AcousticEntryCollection sounds;
     private final Collection<IBlockEffectProducer> blockEffects;
     private final Script soundChance;

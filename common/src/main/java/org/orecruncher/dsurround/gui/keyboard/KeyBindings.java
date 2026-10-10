@@ -23,9 +23,13 @@ public final class KeyBindings {
     private static final Map<KeyMapping, Runnable> keyPressHandlers = new IdentityHashMap<>();
 
     public static void register() {
+
+        // Register KeyBinding stuff
+        var category = KeyMapping.Category.register(Constants.asId("category"));
         var modMenuKey = Platform.isModLoaded(Constants.MODMENU) ? InputConstants.UNKNOWN.getValue() : InputConstants.KEY_EQUALS;
 
         registerKeyBinding(
+                category,
                 "modConfigurationMenu",
                 modMenuKey,
                 () -> ContainerManager.resolve(IConfigScreenFactoryProvider.class)
@@ -37,6 +41,7 @@ public final class KeyBindings {
         );
 
         registerKeyBinding(
+                category,
                 "individualSoundConfig",
                 InputConstants.UNKNOWN.getValue(),
                 // The screen handles stopping sounds and pausing the music itself
@@ -44,6 +49,7 @@ public final class KeyBindings {
         );
 
         registerKeyBinding(
+                category,
                 "diagnosticHud",
                 InputConstants.UNKNOWN.getValue(),
                 () -> ContainerManager.resolve(DiagnosticsOverlay.class).toggleCollection()
@@ -52,8 +58,8 @@ public final class KeyBindings {
         IClientTickEnd.EVENT.register(KeyBindings::handleMenuKeyPress);
     }
 
-    private static void registerKeyBinding(String translationKey, int code, Runnable handler) {
-        var mapping = new KeyMapping("dsurround.text.keybind." + translationKey, code, "dsurround.text.keybind.section");
+    private static void registerKeyBinding(KeyMapping.Category category, String translationKey, int code, Runnable handler) {
+        var mapping = new KeyMapping("dsurround.text.keybind." + translationKey, code, category);
         KeyMappingRegistry.register(mapping);
         keyPressHandlers.put(mapping, handler);
     }

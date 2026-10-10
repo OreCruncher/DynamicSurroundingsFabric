@@ -1,14 +1,15 @@
 package org.orecruncher.dsurround.gui.overlay;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.Randomizer;
@@ -25,21 +26,21 @@ public final class CompassOverlay extends AbstractOverlay {
     // The texture is 512x512. Each style has two rows of bands: the first half of the heading on the first, the
     // second half on the second.
     private static final int TEXTURE_SIZE = 512;
-    private static final int HALF_TEXTURE_SIZE = TEXTURE_SIZE / 2;
     private static final int BAND_WIDTH = 65 * 2;
     private static final int BAND_HEIGHT = 12 * 2;
-    private static final ResourceLocation COMPASS_TEXTURE = Constants.asId("textures/compass.png");
+    private static final int HALF_TEXTURE_SIZE = TEXTURE_SIZE / 2;
+    private static final Identifier COMPASS_TEXTURE = Constants.asId("textures/compass.png");
 
     private final ITagLibrary tagLibrary;
-    private final IDimensionInformation dimensionInformation;
+    private final IDimensionOracle dimensionInformation;
     private final Configuration config;
     private final CompassWobble wobbler;
     private boolean showCompass;
     private boolean spinRandomly;
     private float scale;
-    private float spriteOffset;
+    private int spriteOffset;
 
-    public CompassOverlay(Configuration config, ITagLibrary tagLibrary, IDimensionInformation dimensionInformation) {
+    public CompassOverlay(Configuration config, ITagLibrary tagLibrary, IDimensionOracle dimensionInformation) {
         this.tagLibrary = tagLibrary;
         this.dimensionInformation = dimensionInformation;
         this.config = config;
@@ -88,11 +89,12 @@ public final class CompassOverlay extends AbstractOverlay {
     }
 
     @Override
-    public void render(GuiGraphics context, float partialTick) {
+    public void render(GuiGraphicsExtractor context, float partialTick) {
         if (!this.showCompass)
             return;
 
         float rotation;
+
         if (this.spinRandomly) {
             rotation = this.wobbler.getRandomlySpinningRotation(partialTick);
         } else {
@@ -113,17 +115,14 @@ public final class CompassOverlay extends AbstractOverlay {
         float y = (context.guiHeight() - CROSSHAIR_OFFSET - BAND_HEIGHT * this.scale) / 2F;
 
         var pose = context.pose();
-        pose.pushPose();
+        pose.pushMatrix();
         try {
-            pose.translate(x, y, 0F);
-            pose.scale(this.scale, this.scale, 1F);
-            // The transparent styles need blending; this version's blit doesn't set it up itself
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            context.blit(COMPASS_TEXTURE, 0, 0, u, v, BAND_WIDTH, BAND_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE);
-            RenderSystem.disableBlend();
+            pose.translate(x, y);
+            pose.scale(this.scale, this.scale);
+            // The textured GUI pipeline blends, so the transparent styles need nothing more
+            context.blit(RenderPipelines.GUI_TEXTURED, COMPASS_TEXTURE, 0, 0, u, v, BAND_WIDTH, BAND_HEIGHT, BAND_WIDTH, BAND_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE);
         } finally {
-            pose.popPose();
+            pose.popMatrix();
         }
     }
 

@@ -3,14 +3,14 @@
   "minVersion": "0.8",
   "package": "org.orecruncher.dsurround.mixins",
   "plugin": "org.orecruncher.dsurround.mixinutils.DSurroundMixinPlugin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "mixins": [
   ],
   "client": [
     "audio.MixinChannelHandleAccessor",
     "audio.MixinSoundEngine",
     "audio.MixinSoundEvent",
-    "audio.MixinSoundLibrary",
+    "audio.MixinLibrary",
     "audio.MixinSource",
     "core.MixinBiome",
     "core.MixinClientLevel",
@@ -18,15 +18,16 @@
     "core.MixinDebugRenderer",
     "core.MixinEntity",
     "core.MixinEntityArrow",
-    "core.MixinFogRenderer",
-    "core.MixinLevelRenderer",
+    "core.MixinAtmosphericFogEnvironment",
+    "core.MixinSkyRenderer",
+    "core.MixinShaderManager",
+    "core.MixinQuadParticleFeatureRenderer",
     "core.MixinMinecraftClient",
     "core.MixinMusic",
-    "core.MixinParticleEngine",
     "core.MixinRainSplashParticle",
     "core.MixinSoundOptionsScreen",
-    "core.MixinTagCollector",
-    "core.MixinWorld"
+    "core.MixinClientPacketListener",
+    "core.MixinRegistryDataCollector"
   ],
   "server": [],
   "injectors": {

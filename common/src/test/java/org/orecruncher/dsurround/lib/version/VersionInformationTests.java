@@ -128,9 +128,9 @@ public class VersionInformationTests {
         var links = new ArrayList<String>();
         component.visit((style, text) -> {
             var click = style.getClickEvent();
-            if (click != null && click.getAction() == ClickEvent.Action.OPEN_URL) {
-                var hover = style.getHoverEvent().getValue(HoverEvent.Action.SHOW_TEXT).getString();
-                var link = click.getValue() + " | " + hover + " | " + style.getColor().formatValue();
+            if (click != null && click.action() == ClickEvent.Action.OPEN_URL) {
+                var hover = hoverTextOf(style.getHoverEvent()).getString();
+                var link = urlOf(click) + " | " + hover + " | " + style.getColor().formatValue();
                 if (!links.contains(link))
                     links.add(link);
             }
@@ -193,5 +193,13 @@ public class VersionInformationTests {
         assertEquals("unable to fetch https://example.com", VersionCheckException.describe(new CompletionException(cause)));
         assertEquals("the check timed out", VersionCheckException.describe(new CompletionException(new TimeoutException())));
         assertEquals("IllegalStateException", VersionCheckException.describe(new IllegalStateException()));
+    }
+    // ClickEvent and HoverEvent are records per action in 26.2
+    private static String urlOf(ClickEvent click) {
+        return ((ClickEvent.OpenUrl) click).uri().toString();
+    }
+
+    private static Component hoverTextOf(HoverEvent hover) {
+        return ((HoverEvent.ShowText) hover).value();
     }
 }

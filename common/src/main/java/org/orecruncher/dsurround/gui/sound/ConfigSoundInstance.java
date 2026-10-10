@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.gui.sound;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.resources.sounds.TickableSoundInstance;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundSource;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
@@ -20,7 +20,7 @@ public class ConfigSoundInstance extends SimpleSoundInstance implements Tickable
 
     private final Supplier<Float> volumeScale;
 
-    ConfigSoundInstance(ResourceLocation id, SoundSource category, Supplier<Float> volumeScale) {
+    ConfigSoundInstance(Identifier id, SoundSource category, Supplier<Float> volumeScale) {
         // Base volume is 1: getVolume() applies the scale, so passing it here as well would apply it twice
         super(id, category, 1F, 1F, Randomizer.current(), false, 0, SoundInstance.Attenuation.NONE, 0.0D, 0.0D, 0.0D, true);
 
@@ -32,7 +32,7 @@ public class ConfigSoundInstance extends SimpleSoundInstance implements Tickable
         return super.getVolume() * this.volumeScale.get();
     }
 
-    public static ConfigSoundInstance create(ResourceLocation location, SoundSource category, Supplier<Float> volumeScale) {
+    public static ConfigSoundInstance create(Identifier location, SoundSource category, Supplier<Float> volumeScale) {
         return new ConfigSoundInstance(location, category, volumeScale);
     }
 

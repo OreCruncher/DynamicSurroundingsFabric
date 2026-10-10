@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.state.BlockState;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.config.data.SoundMappingConfigRule;
@@ -18,10 +18,10 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class SoundMappingTests {
 
-    private static final ResourceLocation SOUND = ResourceLocation.parse("minecraft:block.stone.step");
+    private static final Identifier SOUND = Identifier.parse("minecraft:block.stone.step");
 
-    private static ResourceLocation factory(String name) {
-        return ResourceLocation.parse("dsurround:" + name);
+    private static Identifier factory(String name) {
+        return Identifier.parse("dsurround:" + name);
     }
 
     private static List<IMatcher<BlockState>> blocks(int count) {
@@ -31,8 +31,8 @@ public class SoundMappingTests {
         return list;
     }
 
-    private static List<ResourceLocation> factories(SoundMapping mapping) {
-        var list = new ArrayList<ResourceLocation>();
+    private static List<Identifier> factories(SoundMapping mapping) {
+        var list = new ArrayList<Identifier>();
         mapping.rules().forEach(r -> list.add(r.factory()));
         return list;
     }

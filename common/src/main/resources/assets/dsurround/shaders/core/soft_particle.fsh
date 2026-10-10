@@ -1,40 +1,36 @@
-#version 150
+#version 330
 
 // Vanilla's particle fragment shader (shaders/core/particle.fsh), made "soft": the particle fades out as it nears
 // whatever is behind it (terrain, the surface of water), so where it passes into them it blends away instead of
-// being cut off in a hard line. linear_fog from fog.glsl is copied in rather than imported.
+// being cut off in a hard line.
+//
+// SOFT_DISTANCE, set by the pipeline, is how far in front of what is behind it, in blocks, the particle is at full
+// strength.
+
+#moj_import <minecraft:fog.glsl>
+#moj_import <minecraft:dynamictransforms.glsl>
+#moj_import <minecraft:projection.glsl>
 
 uniform sampler2D Sampler0;
 // A copy of the scene's depth, made just before the particles are drawn
 uniform sampler2D DepthSampler;
 
-uniform vec4 ColorModulator;
-uniform float FogStart;
-uniform float FogEnd;
-uniform vec4 FogColor;
-uniform mat4 ProjMat;
-// How far in front of what is behind it, in blocks, the particle is at full strength
-uniform float SoftDistance;
+layout(std140) uniform SoftParticleInfo {
+    // 1 if clip space depth runs 0 to 1, 0 if it runs -1 to 1
+    float DepthZeroToOne;
+};
 
-in float vertexDistance;
+in float sphericalVertexDistance;
+in float cylindricalVertexDistance;
 in vec2 texCoord0;
 in vec4 vertexColor;
 
 out vec4 fragColor;
 
-vec4 linear_fog(vec4 inColor, float vertexDistance, float fogStart, float fogEnd, vec4 fogColor) {
-    if (vertexDistance <= fogStart) {
-        return inColor;
-    }
-
-    float fogValue = vertexDistance < fogEnd ? smoothstep(fogStart, fogEnd, vertexDistance) : 1.0;
-    return vec4(mix(inColor.rgb, fogColor.rgb, fogValue * fogColor.a), inColor.a);
-}
-
 // A depth buffer value as a distance from the camera in blocks, along the view direction. Inverts the perspective
-// projection: for a view space z, depth = (m22 * z + m32) / -z in normalized device coordinates.
-float linear_depth(float depth) {
-    float ndc = depth * 2.0 - 1.0;
+// projection: for a view space z, ndc = (m22 * z + m32) / -z. Holds whichever way round the depth range runs.
+float view_distance(float depth) {
+    float ndc = DepthZeroToOne > 0.5 ? depth : depth * 2.0 - 1.0;
     return ProjMat[3][2] / (ndc + ProjMat[2][2]);
 }
 
@@ -49,9 +45,9 @@ void main() {
     }
     vec4 color = texel * vertexColor * ColorModulator;
 
-    float sceneDistance = linear_depth(texelFetch(DepthSampler, ivec2(gl_FragCoord.xy), 0).r);
-    float particleDistance = linear_depth(gl_FragCoord.z);
-    color.a *= clamp((sceneDistance - particleDistance) / SoftDistance, 0.0, 1.0);
+    float sceneDistance = view_distance(texelFetch(DepthSampler, ivec2(gl_FragCoord.xy), 0).r);
+    float particleDistance = view_distance(gl_FragCoord.z);
+    color.a *= clamp((sceneDistance - particleDistance) / SOFT_DISTANCE, 0.0, 1.0);
 
-    fragColor = linear_fog(color, vertexDistance, FogStart, FogEnd, FogColor);
+    fragColor = apply_fog(color, sphericalVertexDistance, cylindricalVertexDistance, FogEnvironmentalStart, FogEnvironmentalEnd, FogRenderDistanceStart, FogRenderDistanceEnd, FogColor);
 }

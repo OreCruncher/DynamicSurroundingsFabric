@@ -8,7 +8,7 @@ import org.orecruncher.dsurround.lib.events.HandlerPriority;
 
 /**
  * Connects the platform's client events (through Architectury) to the mod's: tick start and end, client started and
- * stopping. Also raises {@link IClientConnect} and {@link IClientDisconnect}, by watching for the player instance at
+ * stopping, level load. Also raises {@link IClientConnect} and {@link IClientDisconnect}, by watching for the player instance at
  * the start of each tick.
  * <p>
  * {@link #initialize()} must be called during mod initialization, before the client starts.
@@ -34,6 +34,7 @@ public final class ClientState {
 
         ClientLifecycleEvent.CLIENT_STARTED.register(mc -> IClientStarted.EVENT.invoker().onStart(mc));
         ClientLifecycleEvent.CLIENT_STOPPING.register(mc -> IClientStopping.EVENT.invoker().onStopping(mc));
+        ClientLifecycleEvent.CLIENT_LEVEL_LOAD.register(level -> IClientLevelLoad.EVENT.invoker().onLevelLoad(level));
 
         // Connection detection is the first thing that processes, period.
         IClientTickStart.EVENT.register(ClientState::connectionDetector, HandlerPriority.VERY_HIGH);

@@ -1,12 +1,9 @@
 package org.orecruncher.dsurround.processing;
 
-import net.minecraft.client.Camera;
-import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.util.Mth;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.material.FogType;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -37,6 +34,7 @@ public class AuroraHandler extends AbstractClientHandler {
     private static final float FADE_PER_TICK = 1F / 200F;
     // Game ticks wrap at this for the shader's time, keeping it precise as a float; the jump comes every 14.5 hours
     private static final long TIME_WRAP = (1L << 20) - 1;
+    private static final long TICKS_PER_DAY = 24000L;
 
     private final IBiomeLibrary biomeLibrary;
 
@@ -58,7 +56,8 @@ public class AuroraHandler extends AbstractClientHandler {
         this.prevStrength = this.strength;
 
         var level = player.level();
-        var night = level.getDayTime() / Level.TICKS_PER_DAY;
+        // The day clock (what /time set changes), so a night lasts from one day to the next
+        var night = level.getDefaultClockTime() / TICKS_PER_DAY;
         var wanted = this.wanted(player, night);
 
         // Once faded out, start tonight's aurora, if there is one
@@ -93,7 +92,7 @@ public class AuroraHandler extends AbstractClientHandler {
             this.status = "shader pack in use";
         } else if (level.dimension() != Level.OVERWORLD) {
             this.status = "not the Overworld";
-        } else if (!isDark(level)) {
+        } else if (!isDark(player)) {
             this.status = "daytime";
         } else if (!Aurora.appears(night, options.chance)) {
             this.status = "none tonight";
@@ -106,8 +105,8 @@ public class AuroraHandler extends AbstractClientHandler {
         return false;
     }
 
-    private static boolean isDark(Level level) {
-        var cycle = DayCycle.getCycle(level);
+    private static boolean isDark(Player player) {
+        var cycle = DayCycle.getCycle(player.level(), player.position());
         return cycle == DayCycle.NIGHTTIME || cycle == DayCycle.SUNSET;
     }
 
@@ -117,31 +116,30 @@ public class AuroraHandler extends AbstractClientHandler {
         return info.hasTrait(BiomeTrait.COLD) || info.hasTrait(BiomeTrait.TAIGA) || info.hasTrait(BiomeTrait.SNOWY) || info.hasTrait(BiomeTrait.ICY);
     }
 
-    private void renderSky(Matrix4f frustumMatrix, float partialTick, Camera camera, boolean isFoggy) {
+    private void renderSky(Matrix4f viewMatrix, float partialTick, float starBrightness, float rainBrightness) {
         var current = this.aurora;
-        if (current == null || isFoggy)
+        if (current == null)
             return;
 
         var level = GameUtils.getWorld().orElse(null);
-        if (level == null || level.effects().skyType() != DimensionSpecialEffects.SkyType.NORMAL)
+        if (level == null || level.dimensionType().skybox() != DimensionType.Skybox.OVERWORLD)
             return;
-        // Vanilla doesn't draw the sky from inside a fluid or powder snow, nor when blinded
+        // Vanilla doesn't draw the sky from inside lava or powder snow, nor when blinded; the aurora isn't drawn
+        // from inside water either
+        var camera = GameUtils.getMC().gameRenderer.mainCamera();
         if (camera.getFluidInCamera() != FogType.NONE)
-            return;
-        if (camera.getEntity() instanceof LivingEntity living && (living.hasEffect(MobEffects.BLINDNESS) || living.hasEffect(MobEffects.DARKNESS)))
             return;
         if (IrisCompat.isShaderPackInUse())
             return;
 
         // Stars are at half brightness at the darkest of night; the aurora shows as they do, and less in rain
-        var stars = Math.clamp(level.getStarBrightness(partialTick) * 2F, 0F, 1F);
-        var clear = 1F - level.getRainLevel(partialTick);
-        var alpha = Mth.lerp(partialTick, this.prevStrength, this.strength) * stars * clear;
+        var stars = Math.clamp(starBrightness * 2F, 0F, 1F);
+        var alpha = Mth.lerp(partialTick, this.prevStrength, this.strength) * stars * rainBrightness;
         if (alpha <= 0F)
             return;
 
         var time = ((level.getGameTime() & TIME_WRAP) + partialTick) / 20F;
-        AuroraRenderer.render(current, alpha, frustumMatrix, time);
+        AuroraRenderer.render(current, alpha, viewMatrix, time);
     }
 
     @Override

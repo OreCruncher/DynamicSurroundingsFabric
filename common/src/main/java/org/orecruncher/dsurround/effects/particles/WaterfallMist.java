@@ -1,14 +1,13 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
+import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.particle.SpriteSet;
-import net.minecraft.client.particle.TextureSheetParticle;
+import net.minecraft.client.particle.SingleQuadParticle;
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.FastColor;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
@@ -27,7 +26,7 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
  * Uses the waterfall_mist sprites (textures/particle/waterfall_mist_0 to 5), one picked at random and kept for the
  * puff's life rather than animated.
  */
-public class WaterfallMist extends TextureSheetParticle {
+public class WaterfallMist extends SingleQuadParticle {
 
     // Fractions of its life spent fading in at the start and out at the end
     private static final float FADE_IN = 0.15F;
@@ -90,7 +89,7 @@ public class WaterfallMist extends TextureSheetParticle {
     protected WaterfallMist(ClientLevel level, double x, double y, double z, double xd, double yd, double zd,
                             double centerX, double surfaceY, double centerZ, SpriteSet sprites, int strength) {
         // The constructor without velocity: the one with it adds a random velocity of its own
-        super(level, x, y, z);
+        super(level, x, y, z, sprites.get(level.getRandom()));
         this.xd = xd;
         this.yd = yd;
         this.zd = zd;
@@ -102,7 +101,7 @@ public class WaterfallMist extends TextureSheetParticle {
         this.ringHeight = RING_HEIGHT + strength * RING_HEIGHT_PER_STRENGTH;
         this.churn = CHURN * (1D + strength * 0.05D);
 
-        var random = level.random;
+        var random = level.getRandom();
         this.lifetime = 20 + random.nextInt(40);
         // Half the puff's width, as quadSize is; 0.2 to 0.4 blocks, 15% more for each block of drop. Every waterfall
         // makes the same number of puffs, so a bigger one fills its bigger cloud with bigger puffs: its ring (see
@@ -130,19 +129,19 @@ public class WaterfallMist extends TextureSheetParticle {
         this.wobblePhaseY = random.nextFloat() * Mth.TWO_PI;
         this.wobblePhaseZ = random.nextFloat() * Mth.TWO_PI;
 
-        this.setSprite(sprites.get(random));
 
         // The biome's water color, shifted toward white
         var biomeColor = level.getBiome(BlockPos.containing(x, y, z)).value().getWaterColor();
-        var colorRgb = FastColor.ARGB32.lerp(WHITENESS, biomeColor, ColorPalette.MC_WHITE.getValue());
+        var colorRgb = ARGB.srgbLerp(WHITENESS, biomeColor, ColorPalette.MC_WHITE.getValue());
         this.rCol = ColorPalette.getRed(colorRgb) / 255F;
         this.gCol = ColorPalette.getGreen(colorRgb) / 255F;
         this.bCol = ColorPalette.getBlue(colorRgb) / 255F;
     }
 
     @Override
-    public @NotNull ParticleRenderType getRenderType() {
-        return DSurroundParticleRenderType.PARTICLE_SHEET_WATERFALL_MIST;
+    public @NotNull SingleQuadParticle.Layer getLayer() {
+        // Drawn soft (see SoftParticles) if it can be
+        return SoftParticles.mistLayer();
     }
 
     @Override
@@ -210,11 +209,11 @@ public class WaterfallMist extends TextureSheetParticle {
     }
 
     @Override
-    public void render(@NotNull VertexConsumer buffer, @NotNull Camera camera, float partialTick) {
+    public void extract(@NotNull QuadParticleRenderState state, @NotNull Camera camera, float partialTick) {
         // Set each frame, so the fades are smooth rather than stepping once a tick
         float life = this.lifeFraction(partialTick);
         float fade = Math.min(life / FADE_IN, (1F - life) / FADE_OUT);
         this.alpha = this.peakAlpha * Mth.clamp(fade, 0F, 1F);
-        super.render(buffer, camera, partialTick);
+        super.extract(state, camera, partialTick);
     }
 }

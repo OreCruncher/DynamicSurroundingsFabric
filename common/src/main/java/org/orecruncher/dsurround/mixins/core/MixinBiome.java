@@ -15,6 +15,7 @@ public abstract class MixinBiome {
      *
      * @param cir Mixin callback result
      */
+    /*
     @Inject(method = "getFogColor()I", at = @At("HEAD"), cancellable = true)
     public void dsurround$getFogColor(CallbackInfoReturnable<Integer> cir) {
         if (MixinHelpers.fogOptions.enableFogEffects && MixinHelpers.fogOptions.enableBiomeFog) {
@@ -27,4 +28,6 @@ public abstract class MixinBiome {
             }
         }
     }
+
+     */
 }
