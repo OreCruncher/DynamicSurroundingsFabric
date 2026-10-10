@@ -1,9 +1,7 @@
 As an FYI there are other versions of my mod floating around the various mod distribution sites. They appear to be forks
 from various versions of my mod, and have had AI extensively used to rework to fit modern Minecraft/loaders, and extend the
 feature set. I cannot attest to the quality, and I have no involvement with those efforts. The source of my mod is licensed
-MIT so they are free to do this with proper attribution. Unfortunately my mod ID is being reused, and the JAR files on
-disk are very much similar to what I produce. At this moment the best I can do is make you aware. My hope is that any
-quality issue those mods have will not tarnish my efforts. :\
+MIT so they are free to do this with proper attribution.
 
 <span style="color:#2dc26b">If you are looking for a Fabric 1.20.x versions, please refer to the <a style="color:#2dc26b" href="https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings-fabric-edition" target="_blank" rel="nofollow">Dynamic Surroundings: Fabric Edition</a> project.</span>
 
