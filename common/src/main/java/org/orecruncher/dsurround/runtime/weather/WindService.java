@@ -41,7 +41,10 @@ public final class WindService {
         this.options = options;
 
         IClientTickEnd.EVENT.register(this::tick);
-        IClientDisconnect.EVENT.register(client -> SceneWind.clear());
+        IClientDisconnect.EVENT.register(client -> {
+            SceneWind.clear();
+            this.wind.clearSet();
+        });
         ICollectDiagnostics.EVENT.register(this::gatherDiagnostics);
     }
 
@@ -60,8 +63,8 @@ public final class WindService {
      * The wind's line on the diagnostics overlay: its speed, the way it blows, and whether a gust is passing
      */
     static String diagnosticText(Wind wind) {
-        return String.format(Locale.ROOT, "Wind: %.2f toward %s (%.0f)%s", wind.speed(), Wind.compassPoint(wind.bearing()),
-                wind.bearing(), wind.isGusting() ? " gusting" : "");
+        return String.format(Locale.ROOT, "Wind: %.2f toward %s (%.0f)%s%s", wind.speed(), Wind.compassPoint(wind.bearing()),
+                wind.bearing(), wind.isGusting() ? " gusting" : "", wind.isSet() ? " (set)" : "");
     }
 
     private void tick(Minecraft client) {

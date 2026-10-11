@@ -1,14 +1,17 @@
 package org.orecruncher.dsurround.commands.handlers;
 
 import net.minecraft.network.chat.Component;
+import org.orecruncher.dsurround.effects.precipitation.Wind;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
+import org.orecruncher.dsurround.runtime.weather.WindService;
 
 import java.util.Locale;
 
 /**
  * /dsweather: shows the storm's strength, and sets it, for seeing how storms of a strength look. Strengths are percents
- * of full strength, as the storm strength options are.
+ * of full strength, as the storm strength options are. /dsweather wind does the same for the wind's speed, as a percent
+ * of a full storm's wind, and the way it blows.
  */
 public class WeatherCommandHandler {
 
@@ -26,8 +29,50 @@ public class WeatherCommandHandler {
         return clear(simulation());
     }
 
+    public static Component windStatus() {
+        return windStatus(wind());
+    }
+
+    public static Component windSpeed(int percent) {
+        return windSpeed(wind(), percent);
+    }
+
+    public static Component windDirection(float bearing) {
+        return windDirection(wind(), bearing);
+    }
+
+    public static Component windClear() {
+        return windClear(wind());
+    }
+
     private static IWeatherSimulation simulation() {
         return ContainerManager.resolve(IWeatherSimulation.class);
+    }
+
+    private static Wind wind() {
+        return ContainerManager.resolve(WindService.class).wind();
+    }
+
+    static Component windStatus(Wind wind) {
+        var bearing = Math.round(wind.bearing()) % 360;
+        return Component.translatable(KEY + (wind.isSet() ? "wind.status.set" : "wind.status"),
+                Wind.percentOfFullStorm(wind.speed()), Wind.compassPoint(wind.bearing()), bearing);
+    }
+
+    static Component windSpeed(Wind wind, int percent) {
+        wind.setSpeed(Wind.speedOfPercent(percent));
+        return Component.translatable(KEY + "wind.speed.success", percent);
+    }
+
+    static Component windDirection(Wind wind, float bearing) {
+        wind.setBearing(bearing);
+        return Component.translatable(KEY + "wind.direction.success", Wind.compassPoint(bearing), Math.round(bearing) % 360);
+    }
+
+    static Component windClear(Wind wind) {
+        var wasSet = wind.isSet();
+        wind.clearSet();
+        return Component.translatable(KEY + (wasSet ? "wind.clear.success" : "wind.clear.notset"));
     }
 
     static Component status(IWeatherSimulation simulation) {

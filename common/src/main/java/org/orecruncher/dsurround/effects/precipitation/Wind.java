@@ -4,6 +4,8 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import org.orecruncher.dsurround.lib.random.Mixers;
 
+import java.util.List;
+
 /**
  * The wind that slants falling rain and snow. It blows steadily, from a direction that wanders slowly, and harder the
  * heavier the storm; every so often a gust passes through. A gust is a front: it reaches the upwind side of the area
@@ -55,6 +57,9 @@ public final class Wind {
     static final float DEFAULT_REACH = PrecipitationField.DEFAULT_RADIUS;
 
     private float reach = DEFAULT_REACH;
+    // Set by command, held until cleared, or NaN for none: the speed, and the angle it blows toward
+    private float speedSet = Float.NaN;
+    private float angleSet = Float.NaN;
     private float angle;
     private float wander;
     private float speed;
@@ -138,21 +143,30 @@ public final class Wind {
      * @param day         the day number, which sets the direction the wind starts from
      */
     public void tick(float rainLevel, boolean thundering, boolean dusty, long day, RandomSource random) {
-        if (day != this.day) {
-            // A new day, or the first tick: the day's own direction. Mid storm this swings the wind round, rarely.
+        if (!Float.isNaN(this.angleSet)) {
+            // Held where it was set: neither the day's direction nor wandering
             this.day = day;
-            this.angle = Mixers.splitMix64(day ^ WIND_SALT) / (float) Long.MAX_VALUE * Mth.PI;
+            this.angle = this.angleSet;
+        } else {
+            if (day != this.day) {
+                // A new day, or the first tick: the day's own direction. Mid storm this swings the wind round, rarely.
+                this.day = day;
+                this.angle = Mixers.splitMix64(day ^ WIND_SALT) / (float) Long.MAX_VALUE * Mth.PI;
+            }
+            this.wander = Mth.clamp(this.wander + (random.nextFloat() * 2F - 1F) * WANDER_CHANGE, -MAX_WANDER, MAX_WANDER);
+            this.angle += this.wander;
         }
 
-        this.wander = Mth.clamp(this.wander + (random.nextFloat() * 2F - 1F) * WANDER_CHANGE, -MAX_WANDER, MAX_WANDER);
-        this.angle += this.wander;
-
-        var target = rainLevel <= 0F ? BREEZE : MAX_SPEED * (CALM_FRACTION + (1F - CALM_FRACTION) * rainLevel);
-        if (thundering)
-            target *= THUNDER_FACTOR;
-        if (dusty)
-            target *= DUST_FACTOR;
-        this.speed += (target - this.speed) * EASE_PER_TICK;
+        if (!Float.isNaN(this.speedSet)) {
+            this.speed = this.speedSet;
+        } else {
+            var target = rainLevel <= 0F ? BREEZE : MAX_SPEED * (CALM_FRACTION + (1F - CALM_FRACTION) * rainLevel);
+            if (thundering)
+                target *= THUNDER_FACTOR;
+            if (dusty)
+                target *= DUST_FACTOR;
+            this.speed += (target - this.speed) * EASE_PER_TICK;
+        }
         this.updateVector();
 
         this.tickGust(random);
@@ -198,6 +212,86 @@ public final class Wind {
         this.angle = angle;
         this.speed = speed;
         this.updateVector();
+    }
+
+    /**
+     * Holds the wind at a speed, in blocks a tick, until {@link #clearSet}: for seeing how a wind looks. Gusts still
+     * come and go.
+     */
+    public void setSpeed(float speed) {
+        this.speedSet = Math.max(speed, 0F);
+        this.speed = this.speedSet;
+        this.updateVector();
+    }
+
+    /**
+     * Holds the wind blowing toward a compass bearing, in degrees clockwise from north, until {@link #clearSet}
+     */
+    public void setBearing(float bearing) {
+        this.angleSet = angleFor(bearing);
+        this.angle = this.angleSet;
+        this.updateVector();
+    }
+
+    /**
+     * Lets the wind go its own way again: its speed eases back to the storm's, and its direction wanders from where it
+     * is until the next day's
+     */
+    public void clearSet() {
+        this.speedSet = Float.NaN;
+        this.angleSet = Float.NaN;
+    }
+
+    /**
+     * Whether its speed or direction is held by {@link #setSpeed} or {@link #setBearing}
+     */
+    public boolean isSet() {
+        return !Float.isNaN(this.speedSet) || !Float.isNaN(this.angleSet);
+    }
+
+    public boolean isSpeedSet() {
+        return !Float.isNaN(this.speedSet);
+    }
+
+    public boolean isBearingSet() {
+        return !Float.isNaN(this.angleSet);
+    }
+
+    /**
+     * The direction angle, as {@link #x} and {@link #z} use it, for a compass bearing: degrees clockwise from north,
+     * which is toward negative z
+     */
+    static float angleFor(float bearing) {
+        var radians = Math.toRadians(bearing);
+        return (float) Math.atan2(-Math.cos(radians), Math.sin(radians));
+    }
+
+    /**
+     * A speed, in blocks a tick, as a percent of a full storm's steady wind
+     */
+    public static int percentOfFullStorm(float speed) {
+        return Math.round(speed / MAX_SPEED * 100F);
+    }
+
+    /**
+     * A percent of a full storm's steady wind, as a speed in blocks a tick
+     */
+    public static float speedOfPercent(int percent) {
+        return MAX_SPEED * percent / 100F;
+    }
+
+    /**
+     * The eight compass points, from north round to north-west
+     */
+    public static List<String> compassPoints() {
+        return List.of(COMPASS_POINTS);
+    }
+
+    /**
+     * The bearing of a compass point, in degrees clockwise from north
+     */
+    public static float bearingOf(String compassPoint) {
+        return compassPoints().indexOf(compassPoint) * 45F;
     }
 
     /**

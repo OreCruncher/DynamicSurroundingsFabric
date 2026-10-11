@@ -167,6 +167,69 @@ public class WindTests {
     }
 
     @Test
+    void aBearingTurnsIntoTheSameDirection() {
+        for (float bearing : new float[]{0F, 45F, 90F, 135F, 180F, 225F, 270F, 315F, 10F, 359F}) {
+            var wind = new Wind();
+            wind.setBearing(bearing);
+            assertEquals(bearing, wind.bearing(), 0.01F, "bearing " + bearing);
+        }
+    }
+
+    @Test
+    void aSetSpeedAndDirectionHold() {
+        var wind = new Wind();
+        wind.setSpeed(0.4F);
+        wind.setBearing(90F);
+        var random = Randomizer.create(17);
+        // A light storm would ease the speed down, the direction would wander, and a new day turn it: none of them do
+        for (int i = 0; i < 400; i++)
+            wind.tick(0.2F, false, false, i < 200 ? 1 : 2, random);
+        assertEquals(0.4F, wind.speed(), 1e-6F);
+        assertEquals(90F, wind.bearing(), 0.01F);
+        assertTrue(wind.isSet() && wind.isSpeedSet() && wind.isBearingSet());
+    }
+
+    @Test
+    void speedAndDirectionAreSetApart() {
+        var wind = new Wind();
+        wind.setBearing(180F);
+        var random = Randomizer.create(19);
+        for (int i = 0; i < 300; i++)
+            wind.tick(1F, false, false, 1, random);
+        assertTrue(wind.isBearingSet() && !wind.isSpeedSet());
+        assertEquals(Wind.MAX_SPEED, wind.speed(), 0.01F, "the speed still follows the storm");
+    }
+
+    @Test
+    void clearingLetsTheWindGoItsOwnWay() {
+        var wind = new Wind();
+        wind.setSpeed(0.6F);
+        wind.clearSet();
+        assertFalse(wind.isSet());
+        var random = Randomizer.create(23);
+        for (int i = 0; i < 500; i++)
+            wind.tick(1F, false, false, 1, random);
+        assertEquals(Wind.MAX_SPEED, wind.speed(), 0.01F, "eased back to the storm's");
+    }
+
+    @Test
+    void percentsAreOfAFullStormsWind() {
+        assertEquals(Wind.MAX_SPEED, Wind.speedOfPercent(100), 1e-6F);
+        assertEquals(100, Wind.percentOfFullStorm(Wind.MAX_SPEED));
+        assertEquals(250, Wind.percentOfFullStorm(Wind.speedOfPercent(250)));
+    }
+
+    @Test
+    void compassPointsHaveTheirBearings() {
+        assertEquals(8, Wind.compassPoints().size());
+        assertEquals(0F, Wind.bearingOf("N"));
+        assertEquals(90F, Wind.bearingOf("E"));
+        assertEquals(225F, Wind.bearingOf("SW"));
+        for (var point : Wind.compassPoints())
+            assertEquals(point, Wind.compassPoint(Wind.bearingOf(point)));
+    }
+
+    @Test
     void outsideAGustTheWindIsSteady() {
         var wind = new Wind();
         for (float along = -12F; along <= 12F; along += 1F)

@@ -18,24 +18,25 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Used to extend steam and flame jet effects, adding additional particles, shader, and lighting where appropriate
 
 **What's New**
+* Simulated wind affects movement and behavior of Dynamic Surroundings particles
+  * Includes mist, steam, flame jets, breath, and precipitation (see below)
+  * No effect on other particles in Minecraft, modded or otherwise (may change in future releases)
 * Client side storm simulation, based on older Dynamic Surroundings versions
   * Random seeds tied to the Minecraft day so all players using Dynamic Surroundings will experience the same effects
-  * When Minecraft starts raining, a random strength is generated and is used to determine weather effects as well as impacts on fog
-    * This simulated strength does not affect the mechanics of Minecraft's rain strength
+  * When precipitation starts, the storm simulator generates a strength value independent of Minecraft's rain strength
   * The precipitation effects are "particle" like rather than rendered texture sheets, though they are not true Minecraft particles
-  * A simulated wind is used to cause disturbances in the drop pattern and can change directions and speed
-    * Also has an effect on Dynamic Surroundings mist, steam, and flame jets when outside
-    * No effect on other particles in Minecraft, modded or otherwise (may change in future releases)
-  * Rain drops with a slight slant, and will change direction based on wind
-  * Snow drops more slowly, and the impact of wind is more visible
-    * Textures are sampled from Minecraft's snow.png texture at runtime, meaning the logic will sample any modded replacement
-  * Sleet (a mix of rain and snow) can occur in transition zones (like elevation)
-  * Dust storms will occur in deserts when raining, and particles will drift along the ground in the direction of wind
-    * The dust particles will climb small inclines as well giving the impression of flowing over elevations
+    * Rain drops with a slight slant, and will change direction based on wind
+    * Snow drops more slowly, and the impact of wind is more visible
+      * Textures are sampled from Minecraft's snow.png texture at runtime, meaning the logic will sample any modded replacement
+    * Sleet (a mix of rain and snow) can occur in transition zones (like elevation)
+    * Dust storms will occur in deserts when raining, and particles will drift along the ground in the direction of wind
+      * The dust particles will climb small inclines as well giving the impression of flowing over elevations
+    * These particles are affected by the wind simulator
   * Serene Seasons will affect whether rain or dust blows in some biomes, such as Biomes OPlenty's Lush Desert
   * Various parts of the system can be enabled/disabled in the Weather Options section
   * The weather system will auto disable if Particle Rain is installed
-* New /dsweather command to control aspects of the simulated storm (I use for testing but if you want to play around with it go ahead)
+* New /dsweather command to control aspects of simulated wind and storm
+  * I use for testing but if you want to play around with it go ahead - doesn't affect game mechanics
 
 **Changes**
 * Updated steam effect to utilize the core logic and rendering of waterfall mist
