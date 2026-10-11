@@ -50,6 +50,8 @@ dependencies {
     modImplementation "com.github.glitchfiend:BiomesOPlenty-neoforge:${minecraft_version}-${rootProject.bop_version}"
     // Testing only: in the dev client, not compiled against or published
     modLocalRuntime "curse.maven:twilightforest-227639:${rootProject.twilightforest_neoforge_file}"
+    modLocalRuntime "curse.maven:astralsorcery-241721:${rootProject.astralsorcery_neoforge_file}"
+    modLocalRuntime "curse.maven:observerlib-316833:${rootProject.observerlib_neoforge_file}"
 
     modApi("me.shedaniel.cloth:cloth-config-neoforge:${rootProject.clothapi_version}") {
         exclude(group: "net.fabricmc.fabric-api")

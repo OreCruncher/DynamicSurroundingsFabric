@@ -26,8 +26,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LevelRenderer.class)
 public class MixinLevelRenderer {
 
-    @Inject(method = "renderSky(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V", at = @At("RETURN"))
-    private void dsurround$renderSky(Matrix4f frustumMatrix, Matrix4f projectionMatrix, float partialTick, Camera camera, boolean isFoggy, Runnable skyFogSetup, CallbackInfo ci) {
+    /**
+     * What is drawn in the sky after it (the aurora), from where the level calls for the sky rather than from inside
+     * renderSky: a mod that draws a sky of its own may cancel renderSky at its start (Astral Sorcery does, for its
+     * constellations), and nothing at the end of renderSky would run.
+     */
+    @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSky(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V"))
+    private void dsurround$renderSky(LevelRenderer renderer, Matrix4f frustumMatrix, Matrix4f projectionMatrix, float partialTick, Camera camera, boolean isFoggy, Runnable skyFogSetup, Operation<Void> original) {
+        original.call(renderer, frustumMatrix, projectionMatrix, partialTick, camera, isFoggy, skyFogSetup);
         ISkyRender.EVENT.invoker().onRenderSky(frustumMatrix, partialTick, camera, isFoggy);
     }
 
@@ -43,7 +49,8 @@ public class MixinLevelRenderer {
 
     /**
      * Particle rain and snow, when on, are drawn in place of vanilla's weather. This comes before NeoForge's
-     * DimensionSpecialEffects hook, so it also replaces a dimension's own weather drawing.
+     * DimensionSpecialEffects hook, so particle weather is off in a dimension that draws its own (the guess in
+     * DimensionInfo, or a dimension rule), or it would replace it.
      */
     @Inject(method = "renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V", at = @At("HEAD"), cancellable = true)
     private void dsurround$renderPrecipitation(LightTexture lightTexture, float partialTick, double camX, double camY, double camZ, CallbackInfo ci) {
