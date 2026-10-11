@@ -214,6 +214,35 @@ public class ConfigDataTests {
     }
 
     @Test
+    void everyWindLoopFollowsTheWind() throws IOException {
+        // The wind sounds play as loud as the wind blows only through their factories' followsWind: a biome rule
+        // naming one without a factory would get a default factory, at a steady volume
+        var factories = Codec.list(SoundFactory.CODEC).parse(JsonOps.INSTANCE,
+                json(resource("/assets/dsurround/dsconfigs/sound_factories.json"))).getOrThrow();
+        var followsWind = factories.stream().filter(SoundFactory::followsWind)
+                .map(f -> f.location().orElseThrow().toString()).collect(java.util.stream.Collectors.toSet());
+        assertFalse(followsWind.isEmpty());
+
+        try (var files = java.nio.file.Files.walk(java.nio.file.Path.of("src/main/resources/assets"))) {
+            var biomeFiles = files.filter(f -> f.getFileName().toString().equals("biomes.json")).toList();
+            assertFalse(biomeFiles.isEmpty());
+            for (var file : biomeFiles) {
+                for (var rule : json(java.nio.file.Files.readString(file)).getAsJsonArray()) {
+                    var acoustics = rule.getAsJsonObject().getAsJsonArray("acoustics");
+                    if (acoustics == null)
+                        continue;
+                    for (var acoustic : acoustics) {
+                        var factory = acoustic.getAsJsonObject().get("factory").getAsString();
+                        var id = factory.contains(":") ? factory : "dsurround:" + factory;
+                        if (id.startsWith("dsurround:biome.wind"))
+                            assertTrue(followsWind.contains(id), file + ": " + id);
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
     void theTwilightForestIsAtSeaLevelZero() throws IOException {
         // Regression: the client always reports a sea level of 63 (the server's world generation setting isn't sent),
         // so in the Twilight Forest, whose sea level is 0, much of the surface counted as underground

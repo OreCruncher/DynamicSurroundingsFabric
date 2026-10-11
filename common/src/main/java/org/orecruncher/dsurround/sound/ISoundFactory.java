@@ -32,6 +32,13 @@ public interface ISoundFactory {
     EntityBoundSoundInstance attachToEntity(Entity entity, float volumeScale);
 
     /**
+     * Whether, as a biome's ambient loop, it plays as loud as the wind blows: wind sounds
+     */
+    default boolean followsWind() {
+        return false;
+    }
+
+    /**
      * Creates a sound instance that has no attenuation and that will repeat without any
      * delays.
      */

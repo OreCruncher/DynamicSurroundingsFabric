@@ -22,6 +22,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Simulated wind affects movement and behavior of Dynamic Surroundings particles
   * Includes mist, steam, flame jets, breath, and precipitation (see below)
   * No effect on other particles in Minecraft, modded or otherwise (may change in future releases)
+* Windy biome sound effects have volumes dynamically adjusted based on wind speed
+  * Becomes louder or quieter as time progresses
+  * Enhanced when it is storming
 * Client side storm simulation, based on older Dynamic Surroundings versions
   * Only works in dimensions where there are no modded hooks for weather rendering (like Twilight Forest)
   * Random seeds tied to the Minecraft day so all players using Dynamic Surroundings will experience the same effects
@@ -49,6 +52,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 **Fixes**
 * Water ripples are visible when looking from underwater. During the day they are faint rings; at night they are more visible.
 * Added Twilight Forest dimension configuration to set sea level.
+* Moved aurora render hook to avoid conflict with Astral Sorcery's sky render
 
 > ### DynamicSurroundings-1.21.1-0.4.6
 

@@ -1,5 +1,15 @@
 [
   {
+    "biomeSelector": "OVERWORLD && !(WINDSWEPT || MOUNTAIN || WASTELAND || DESERT || BADLANDS || (COLD && ICY) || UNDERGROUND)",
+    "_comment": "Storm wind, where the biome has no wind of its own: as loud as the wind blows",
+    "acoustics": [
+      {
+        "factory": "biome.wind",
+        "conditions": "weather.isStormWind()"
+      }
+    ]
+  },
+  {
     "biomeSelector": "WINDSWEPT",
     "_comment": "Wind for Windswept",
     "acoustics": [

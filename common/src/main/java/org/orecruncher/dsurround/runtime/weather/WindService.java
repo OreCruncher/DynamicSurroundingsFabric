@@ -58,8 +58,40 @@ public final class WindService {
         return this.wind;
     }
 
+    /**
+     * Whether the air is still here: the dimension has no wind
+     */
+    public boolean isStill() {
+        return GameUtils.isInGame() && !this.dimensionInformation.simulateWind();
+    }
+
+    /**
+     * The steady wind's speed, without gusts, in blocks a tick; none where the air is still
+     */
+    public float steadySpeed() {
+        return this.isStill() ? 0F : this.wind.speed();
+    }
+
+    /**
+     * The wind's speed where the player is, a passing gust included, in blocks a tick; none where the air is still
+     */
+    public float speedAtPlayer() {
+        return this.isStill() ? 0F : this.wind.speed() * this.wind.gustFactor(0F, 0F);
+    }
+
+    /**
+     * How loud the wind's ambient loops play now, for the wind where the player is and how open to the sky they are
+     */
+    public float loopScale() {
+        if (!GameUtils.isInGame() || this.isStill())
+            return 0F;
+        var player = GameUtils.getPlayer().orElseThrow();
+        var exposure = SceneWind.exposure(player.level(), BlockPos.containing(player.getEyePosition()));
+        return WindSounds.loopScale(this.speedAtPlayer(), exposure);
+    }
+
     private void gatherDiagnostics(CollectDiagnosticsEvent event) {
-        var still = GameUtils.isInGame() && !this.dimensionInformation.simulateWind();
+        var still = this.isStill();
         event.add(CollectDiagnosticsEvent.Section.Systems, still ? "Wind: none in this dimension" : diagnosticText(this.wind));
     }
 
