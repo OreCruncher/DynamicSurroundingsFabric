@@ -26,6 +26,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.MapColor;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
+import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.precipitation.IColumnSource;
@@ -90,6 +91,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private final IWeatherSimulation weatherSimulation;
     private final WindService windService;
     private final ISoundLibrary soundLibrary;
+    private final IDimensionInformation dimensionInformation;
     // Ticks since the dust sound last played, as vanilla counts for its rain sound
     private int dustSoundTime;
     private final ITagLibrary tagLibrary;
@@ -99,12 +101,13 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private final Snowflakes snowflakes;
     private final LevelColumns columns;
 
-    public PrecipitationHandler(IWeatherSimulation weatherSimulation, WindService windService, ISoundLibrary soundLibrary, ISeasonalInformation seasonalInformation,
+    public PrecipitationHandler(IWeatherSimulation weatherSimulation, WindService windService, ISoundLibrary soundLibrary, IDimensionInformation dimensionInformation, ISeasonalInformation seasonalInformation,
                                 ITagLibrary tagLibrary, IBiomeLibrary biomeLibrary, Configuration config, IModLog logger) {
         super("Precipitation Handler", config, logger);
         this.weatherSimulation = weatherSimulation;
         this.windService = windService;
         this.soundLibrary = soundLibrary;
+        this.dimensionInformation = dimensionInformation;
         this.tagLibrary = tagLibrary;
         this.columns = new LevelColumns(seasonalInformation, biomeLibrary, tagLibrary, config.weatherOptions);
         this.snowflakes = new Snowflakes(logger);
@@ -121,7 +124,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
      */
     public boolean isActive() {
         return isEnabled(this.config.weatherOptions.enableParticlePrecipitation, KnownMod.PARTICLE_RAIN.isInstalled())
-                && PrecipitationShaders.DROPS.isUsable();
+                && PrecipitationShaders.DROPS.isUsable()
+                && GameUtils.isInGame() && this.dimensionInformation.particleWeather();
     }
 
     /**

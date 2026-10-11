@@ -105,7 +105,8 @@ public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
         var fallingNow = this.seasons.getPrecipitationAt(pos);
 
         // In a dust storm the dust takes the place of the rain fog a dry biome would otherwise get
-        var dusty = DustStorms.enabled(this.weatherOptions) && DustStorms.isDusty(fallingNow, biome, this.biomeLibrary);
+        var dusty = this.precipitation.isActive() && DustStorms.enabled(this.weatherOptions)
+                && DustStorms.isDusty(fallingNow, biome, this.biomeLibrary);
         var target = dusty ? 0F : rainFogStrength(rainLevel, skyLight, fallingNow != Biome.Precipitation.NONE);
         var dustTarget = dusty ? dustFogStrength(rainLevel, skyLight) : 0F;
         if (dusty)

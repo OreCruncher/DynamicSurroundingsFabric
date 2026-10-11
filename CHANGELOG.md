@@ -23,6 +23,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Includes mist, steam, flame jets, breath, and precipitation (see below)
   * No effect on other particles in Minecraft, modded or otherwise (may change in future releases)
 * Client side storm simulation, based on older Dynamic Surroundings versions
+  * Only works in dimensions where there are no modded hooks for weather rendering (like Twilight Forest)
   * Random seeds tied to the Minecraft day so all players using Dynamic Surroundings will experience the same effects
   * When precipitation starts, the storm simulator generates a strength value independent of Minecraft's rain strength
   * The precipitation effects are "particle" like rather than rendered texture sheets, though they are not true Minecraft particles
@@ -47,6 +48,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 
 **Fixes**
 * Water ripples are visible when looking from underwater. During the day they are faint rings; at night they are more visible.
+* Added Twilight Forest dimension configuration to set sea level.
 
 > ### DynamicSurroundings-1.21.1-0.4.6
 

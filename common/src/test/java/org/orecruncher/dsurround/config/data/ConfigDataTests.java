@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -197,6 +198,39 @@ public class ConfigDataTests {
 
         assertNotEquals(a, b);
         assertEquals(a, c);
+    }
+
+    @Test
+    void dimensionRulesSetWeatherAndWind() {
+        var rule = parse(DimensionConfigRule.CODEC, "{\"dimId\": \"twilightforest:twilight_forest\", \"particleWeather\": true, \"simulateWind\": false}").getOrThrow();
+        assertEquals(Optional.of(true), rule.particleWeather());
+        assertEquals(Optional.of(false), rule.simulateWind());
+        var text = rule.toString();
+        assertTrue(text.contains("particleWeather: true") && text.contains("simulateWind: false"), text);
+
+        // Left out, they are left to the dimension's own guess
+        var plain = parse(DimensionConfigRule.CODEC, "{\"dimId\": \"minecraft:overworld\"}").getOrThrow();
+        assertTrue(plain.particleWeather().isEmpty() && plain.simulateWind().isEmpty());
+    }
+
+    @Test
+    void theTwilightForestIsAtSeaLevelZero() throws IOException {
+        // Regression: the client always reports a sea level of 63 (the server's world generation setting isn't sent),
+        // so in the Twilight Forest, whose sea level is 0, much of the surface counted as underground
+        var rules = Codec.list(DimensionConfigRule.CODEC).parse(JsonOps.INSTANCE,
+                json(resource("/assets/twilightforest/dsconfigs/dimensions.json"))).getOrThrow();
+        var rule = rules.stream().filter(r -> r.dimensionId().toString().equals("twilightforest:twilight_forest")).findFirst().orElseThrow();
+        assertEquals(Optional.of(0), rule.seaLevel());
+    }
+
+    @Test
+    void theNetherAndEndHaveNoWind() throws IOException {
+        var rules = Codec.list(DimensionConfigRule.CODEC).parse(JsonOps.INSTANCE,
+                json(resource("/assets/dsurround/dsconfigs/dimensions.json"))).getOrThrow();
+        for (var dimension : List.of("minecraft:the_nether", "minecraft:the_end")) {
+            var rule = rules.stream().filter(r -> r.dimensionId().toString().equals(dimension)).findFirst().orElseThrow();
+            assertEquals(Optional.of(false), rule.simulateWind(), dimension);
+        }
     }
 
     // ---- Error reporting -------------------------------------------------------------------------------------

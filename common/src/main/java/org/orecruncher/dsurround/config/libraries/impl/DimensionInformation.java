@@ -51,6 +51,14 @@ public class DimensionInformation implements IDimensionInformation {
         return this.getInfo().getCompassWobble();
     }
 
+    public boolean particleWeather() {
+        return this.getInfo().particleWeather();
+    }
+
+    public boolean simulateWind() {
+        return this.getInfo().simulateWind();
+    }
+
     private DimensionInfo getInfo() {
         return this.info.get(this.level(), this.dimensionLibrary.getVersion(), this.dimensionLibrary::getData);
     }

@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
+import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
 import org.orecruncher.dsurround.effects.precipitation.DustStorms;
 import org.orecruncher.dsurround.effects.precipitation.Wind;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
@@ -31,10 +32,12 @@ public final class WindService {
     private final ISeasonalInformation seasons;
     private final IBiomeLibrary biomeLibrary;
     private final Configuration.WeatherOptions options;
+    private final IDimensionInformation dimensionInformation;
     private final Wind wind = new Wind();
 
     public WindService(IWeatherSimulation weatherSimulation, ISeasonalInformation seasons, IBiomeLibrary biomeLibrary,
-                       Configuration.WeatherOptions options) {
+                       Configuration.WeatherOptions options, IDimensionInformation dimensionInformation) {
+        this.dimensionInformation = dimensionInformation;
         this.weatherSimulation = weatherSimulation;
         this.seasons = seasons;
         this.biomeLibrary = biomeLibrary;
@@ -56,7 +59,8 @@ public final class WindService {
     }
 
     private void gatherDiagnostics(CollectDiagnosticsEvent event) {
-        event.add(CollectDiagnosticsEvent.Section.Systems, diagnosticText(this.wind));
+        var still = GameUtils.isInGame() && !this.dimensionInformation.simulateWind();
+        event.add(CollectDiagnosticsEvent.Section.Systems, still ? "Wind: none in this dimension" : diagnosticText(this.wind));
     }
 
     /**
@@ -70,6 +74,11 @@ public final class WindService {
     private void tick(Minecraft client) {
         if (!GameUtils.isInGame() || GameUtils.isPaused())
             return;
+        if (!this.dimensionInformation.simulateWind()) {
+            // Still air: nothing drifts
+            SceneWind.clear();
+            return;
+        }
         var level = GameUtils.getWorld().orElseThrow();
         var camera = client.gameRenderer.getMainCamera();
         var pos = camera.isInitialized() ? camera.getPosition() : GameUtils.getPlayer().orElseThrow().position();
@@ -77,6 +86,7 @@ public final class WindService {
         var rainLevel = this.weatherSimulation.rainLevel(level.getRainLevel(1F));
         var at = BlockPos.containing(pos);
         var dusty = rainLevel > 0F
+                && this.dimensionInformation.particleWeather()
                 && DustStorms.enabled(this.options)
                 && DustStorms.isDusty(this.seasons.getPrecipitationAt(at), level.getBiome(at).value(), this.biomeLibrary);
         this.wind.setReach(this.options.precipitationRange);

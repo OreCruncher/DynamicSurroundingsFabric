@@ -48,6 +48,8 @@ dependencies {
     modImplementation "com.github.glitchfiend:GlitchCore-neoforge:${minecraft_version}-${rootProject.glitchcore_version}"
     modImplementation "com.github.glitchfiend:SereneSeasons-neoforge:${minecraft_version}-${rootProject.serene_seasons_version}"
     modImplementation "com.github.glitchfiend:BiomesOPlenty-neoforge:${minecraft_version}-${rootProject.bop_version}"
+    // Testing only: in the dev client, not compiled against or published
+    modLocalRuntime "curse.maven:twilightforest-227639:${rootProject.twilightforest_neoforge_file}"
 
     modApi("me.shedaniel.cloth:cloth-config-neoforge:${rootProject.clothapi_version}") {
         exclude(group: "net.fabricmc.fabric-api")
