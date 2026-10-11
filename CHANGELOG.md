@@ -16,6 +16,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 **AI Disclosure**
 * Used to extend the storm simulation system for rendering and handling (see What's New)
 * Used to extend steam and flame jet effects, adding additional particles, shader, and lighting where appropriate
+* Identified the cause of water ripples being invisible while player is underwater and helped with a fix
 
 **What's New**
 * Simulated wind affects movement and behavior of Dynamic Surroundings particles
@@ -45,6 +46,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Updated aurora rendering to utilize the simulated rain strength and weather fog effects, meaning that for light precipitation the aurora will still render though a bit muted
 
 **Fixes**
+* Water ripples are visible when looking from underwater. During the day they are faint rings; at night they are more visible.
 
 > ### DynamicSurroundings-1.21.1-0.4.6
 
