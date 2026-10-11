@@ -15,7 +15,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
-import org.orecruncher.dsurround.effects.precipitation.StormSounds;
+import org.orecruncher.dsurround.runtime.weather.StormSounds;
 import org.orecruncher.dsurround.eventing.ISkyRender;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.spongepowered.asm.mixin.Mixin;

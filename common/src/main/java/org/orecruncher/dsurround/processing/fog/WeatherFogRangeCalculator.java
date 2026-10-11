@@ -8,7 +8,7 @@ import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.effects.precipitation.DustStorms;
+import org.orecruncher.dsurround.runtime.weather.DustStorms;
 import org.orecruncher.dsurround.effects.precipitation.IColumnSource;
 import org.orecruncher.dsurround.processing.PrecipitationHandler;
 import org.orecruncher.dsurround.lib.GameUtils;

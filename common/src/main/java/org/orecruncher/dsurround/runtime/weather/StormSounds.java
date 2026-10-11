@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.effects.precipitation;
+package org.orecruncher.dsurround.runtime.weather;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;

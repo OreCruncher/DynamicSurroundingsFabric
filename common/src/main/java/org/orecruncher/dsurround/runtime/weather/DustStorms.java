@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.effects.precipitation;
+package org.orecruncher.dsurround.runtime.weather;
 
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.material.MapColor;
@@ -6,6 +6,7 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
+import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
 import org.orecruncher.dsurround.lib.platform.KnownMod;
 
 /**

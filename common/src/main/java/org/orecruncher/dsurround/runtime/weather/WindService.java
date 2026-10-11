@@ -6,8 +6,6 @@ import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
-import org.orecruncher.dsurround.effects.precipitation.DustStorms;
-import org.orecruncher.dsurround.effects.precipitation.Wind;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IClientDisconnect;
 import org.orecruncher.dsurround.eventing.IClientTickEnd;

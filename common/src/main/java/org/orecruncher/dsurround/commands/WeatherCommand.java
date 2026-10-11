@@ -6,7 +6,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import dev.architectury.event.events.client.ClientCommandRegistrationEvent;
 import net.minecraft.commands.CommandBuildContext;
 import org.orecruncher.dsurround.commands.handlers.WeatherCommandHandler;
-import org.orecruncher.dsurround.effects.precipitation.Wind;
+import org.orecruncher.dsurround.runtime.weather.Wind;
 
 /**
  * /dsweather shows the storm's strength; /dsweather strength 0-100 sets it, as a percent of full strength, until

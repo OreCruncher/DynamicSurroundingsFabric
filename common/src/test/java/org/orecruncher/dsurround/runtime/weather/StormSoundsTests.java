@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.effects.precipitation;
+package org.orecruncher.dsurround.runtime.weather;
 
 import com.google.gson.JsonParser;
 import org.junit.jupiter.api.Test;

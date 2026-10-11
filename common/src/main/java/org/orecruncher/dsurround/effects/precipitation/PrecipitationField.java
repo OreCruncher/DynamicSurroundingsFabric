@@ -1,5 +1,7 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
+import org.orecruncher.dsurround.runtime.weather.Wind;
+
 import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;

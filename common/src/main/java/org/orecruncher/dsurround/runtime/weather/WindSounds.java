@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.runtime.weather;
 
 import net.minecraft.util.Mth;
-import org.orecruncher.dsurround.effects.precipitation.Wind;
 
 /**
  * How loud the wind's ambient loops play for the wind there is: the sounds whose factories follow the wind (see

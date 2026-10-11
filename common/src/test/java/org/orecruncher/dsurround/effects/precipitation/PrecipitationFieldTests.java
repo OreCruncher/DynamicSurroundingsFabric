@@ -3,6 +3,8 @@ package org.orecruncher.dsurround.effects.precipitation;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.lib.random.Randomizer;
+import org.orecruncher.dsurround.runtime.weather.Wind;
+import org.orecruncher.dsurround.runtime.weather.WindAccess;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -103,7 +105,7 @@ public class PrecipitationFieldTests {
         for (int i = 0; i < 300; i++) {
             wind.tick(1F, false, false, 4, random);
         }
-        wind.gust(0, 0F);
+        WindAccess.gust(wind, 0, 0F);
         return wind;
     }
 
@@ -265,7 +267,7 @@ public class PrecipitationFieldTests {
         tick(snow, new Columns(GROUND, Integer.MIN_VALUE, Integer.MIN_VALUE), 0, 0, 1F, wind, 5);
 
         // A gust doubles the wind; one tick later, rain has gone further toward it than snow has
-        wind.gust(40, 1F);
+        WindAccess.gust(wind, 40, 1F);
         for (int t = 0; t < 30; t++) {
             wind.tick(1F, false, false, 4, Randomizer.create(t));
         }
@@ -483,7 +485,7 @@ public class PrecipitationFieldTests {
      */
     private static Wind eastWind(float speed) {
         var wind = new Wind();
-        wind.set(0F, speed, 1);
+        WindAccess.setSteady(wind, 0F, speed);
         return wind;
     }
 
@@ -517,7 +519,7 @@ public class PrecipitationFieldTests {
         // A one in one slope, in the strongest dust storm wind: the puffs keep up with the ground rather than being
         // left behind in it and taken for blown into a wall
         var columns = new Slope(-12, 1);
-        var wind = eastWind(Wind.MAX_SPEED * Wind.DUST_FACTOR * Wind.THUNDER_FACTOR);
+        var wind = eastWind(WindAccess.strongest());
         var field = new PrecipitationField(1000);
         var random = Randomizer.create(37);
         // Long enough that every puff now has climbed from where it spawned

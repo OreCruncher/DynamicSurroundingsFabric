@@ -2,8 +2,6 @@ package org.orecruncher.dsurround.runtime.weather;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.orecruncher.dsurround.effects.precipitation.Wind;
-import org.orecruncher.dsurround.effects.precipitation.WindAccess;
 
 import static org.junit.jupiter.api.Assertions.*;
 

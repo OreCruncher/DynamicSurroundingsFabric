@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.commands.handlers;
 
 import net.minecraft.network.chat.Component;
-import org.orecruncher.dsurround.effects.precipitation.Wind;
+import org.orecruncher.dsurround.runtime.weather.Wind;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WindService;

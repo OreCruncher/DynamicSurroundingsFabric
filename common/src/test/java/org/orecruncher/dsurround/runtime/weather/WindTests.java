@@ -1,6 +1,7 @@
-package org.orecruncher.dsurround.effects.precipitation;
+package org.orecruncher.dsurround.runtime.weather;
 
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.effects.precipitation.PrecipitationField;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -164,6 +165,11 @@ public class WindTests {
             wind.tick(1F, false, false, 1, random);
         assertTrue(wind.isGusting());
         assertTrue(wind.gustFactor(24F, 0F) > 1.5F, "reached the far side");
+    }
+
+    @Test
+    void gustsStartAtTheEdgeOfTheDefaultRange() {
+        assertEquals(PrecipitationField.DEFAULT_RADIUS, Wind.DEFAULT_REACH, 1e-6F);
     }
 
     @Test

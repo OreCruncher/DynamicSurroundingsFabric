@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.effects.precipitation;
+package org.orecruncher.dsurround.runtime.weather;
 
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -52,9 +52,10 @@ public final class Wind {
      */
     static final float GUST_TRAVEL = 0.6F;
     /**
-     * How far upwind of the camera a gust's front starts, unless set to another: the edge of the area with drops
+     * How far upwind of the camera a gust's front starts, unless set to another: the edge of the area with drops, at
+     * the default range. The wind service sets it to the range in use every tick.
      */
-    static final float DEFAULT_REACH = PrecipitationField.DEFAULT_RADIUS;
+    static final float DEFAULT_REACH = 12F;
 
     private float reach = DEFAULT_REACH;
     // Set by command, held until cleared, or NaN for none: the speed, and the angle it blows toward

@@ -64,6 +64,20 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   (currently Cloth Config).
 - Tags in `dsconfigs/tags/<registry>/...` are client-side tag definitions. Reference other tags with `#`
   (`#c:is_cold`); a plain `c:` entry is a mistake (a test checks).
+- Weather. `runtime/weather` is what the weather is (nothing there draws); `effects/precipitation` draws it; each has
+  a `package-info.java` map.
+  - `WeatherSimulation.rainLevel(vanilla)` is the storm's strength: use it, not the world's rain level, for anything
+    that should follow the storm (fog, sounds, scripts, particles, aurora). A mixin feeds it into vanilla's weather.
+  - `WindService` ticks `Wind` and publishes it via static `SceneWind` for particles to drift; `WindSounds` scales
+    sound factories marked `followsWind`. `DustStorms` decides where storms raise dust.
+  - `processing/PrecipitationHandler` runs particle weather (`PrecipitationField`, `LevelColumns`, `Landings`) and
+    stands aside for shader packs, a failed shader, the Particle Rain mod (`KnownMod`) and dimensions that draw their
+    own weather.
+  - Per dimension (`dimensions.json`): `particleWeather` and `simulateWind`, guessed when absent
+    (`DimensionInfo.hasVanillaWeather`, sky light). The client always reports sea level 63, so a modded dimension
+    with another needs a `seaLevel` rule.
+  - `/dsweather` holds the storm strength and the wind's speed and direction for testing; disconnecting clears them.
+  - Weather script variables live in `runtime/variables/WeatherVariables` (`weather.*`).
 
 ## Environment gotchas
 - Git Bash mangles backslash escapes inside heredocs passed to Python (`'\\'`, `§`, `\s`): use the Edit/Write

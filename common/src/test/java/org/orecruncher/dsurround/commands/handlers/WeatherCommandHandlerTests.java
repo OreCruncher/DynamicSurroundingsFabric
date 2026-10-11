@@ -3,8 +3,8 @@ package org.orecruncher.dsurround.commands.handlers;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import org.junit.jupiter.api.Test;
-import org.orecruncher.dsurround.effects.precipitation.WindAccess;
-import org.orecruncher.dsurround.effects.precipitation.Wind;
+import org.orecruncher.dsurround.runtime.weather.WindAccess;
+import org.orecruncher.dsurround.runtime.weather.Wind;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.runtime.weather.WeatherSimulationAccess;
 

@@ -4,7 +4,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
-import org.orecruncher.dsurround.effects.precipitation.Wind;
 
 /**
  * The wind around the player, for effects to lean with: waterfall mist, steam, breath. Set each tick by the

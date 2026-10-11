@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.runtime.variables;
 
-import org.orecruncher.dsurround.effects.precipitation.Wind;
+import org.orecruncher.dsurround.runtime.weather.Wind;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.math.Hysteresis;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
