@@ -1,0 +1,72 @@
+package org.orecruncher.dsurround.effects.precipitation;
+
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.material.MapColor;
+import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.config.BiomeTrait;
+import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
+import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
+import org.orecruncher.dsurround.lib.platform.KnownMod;
+
+/**
+ * Where storms bring dust: where nothing falls, in a biome that is a desert, badlands, or dry and sandy. A storm there
+ * blows dust along the ground and thickens the fog, in place of the rain other biomes get. Shared by the particles and
+ * the fog, so both agree.
+ * <p>
+ * "Nothing falls" is what falls there now, as the season provider says, not the biome's own setting: with Serene
+ * Seasons a tropical biome gets no rain in the dry season even if it otherwise has rain (Biomes O' Plenty's lush
+ * desert), and rain in the wet season even if it otherwise has none (the desert).
+ */
+public final class DustStorms {
+
+    /**
+     * The colours of the dust a biome is known for, as sand and red sand show on maps, 0xRRGGBB
+     */
+    public static final int SAND_COLOR = MapColor.SAND.col;
+    public static final int RED_SAND_COLOR = MapColor.COLOR_ORANGE.col;
+
+    private DustStorms() {
+    }
+
+    /**
+     * Whether dust storms are on: they are part of particle rain and snow, so need it on too, and stand aside, as it
+     * does, for the Particle Rain mod
+     */
+    public static boolean enabled(Configuration.WeatherOptions options) {
+        return enabled(options, KnownMod.PARTICLE_RAIN.isInstalled());
+    }
+
+    static boolean enabled(Configuration.WeatherOptions options, boolean particleRainInstalled) {
+        return options.enableParticlePrecipitation && options.enableDustStorms && !particleRainInstalled;
+    }
+
+    /**
+     * Whether a storm brings dust to a place in the biome
+     *
+     * @param fallingNow what falls there now, as the season provider says
+     */
+    public static boolean isDusty(Biome.Precipitation fallingNow, Biome biome, IBiomeLibrary biomeLibrary) {
+        return fallingNow == Biome.Precipitation.NONE && isDusty(biomeLibrary.getBiomeInfo(biome).getTraits());
+    }
+
+    static boolean isDusty(Biome.Precipitation fallingNow, BiomeTraits traits) {
+        return fallingNow == Biome.Precipitation.NONE && isDusty(traits);
+    }
+
+    /**
+     * The colour of the dust a biome is known for: red sand's in badlands, sand's elsewhere
+     */
+    public static int dustColor(Biome biome, IBiomeLibrary biomeLibrary) {
+        return dustColor(biomeLibrary.getBiomeInfo(biome).getTraits());
+    }
+
+    static int dustColor(BiomeTraits traits) {
+        return traits.contains(BiomeTrait.BADLANDS) ? RED_SAND_COLOR : SAND_COLOR;
+    }
+
+    static boolean isDusty(BiomeTraits traits) {
+        return traits.contains(BiomeTrait.DESERT)
+                || traits.contains(BiomeTrait.BADLANDS)
+                || (traits.contains(BiomeTrait.DRY) && traits.contains(BiomeTrait.SANDY));
+    }
+}

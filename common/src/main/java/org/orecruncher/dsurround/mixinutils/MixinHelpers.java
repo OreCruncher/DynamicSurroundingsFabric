@@ -7,6 +7,9 @@ import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.processing.FogHandler;
+import org.orecruncher.dsurround.processing.PrecipitationHandler;
+import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 
 /**
  * Static class definitions with mixins do not work well. Any statics have been placed
@@ -33,6 +36,33 @@ public class MixinHelpers {
 
     public static IBiomeLibrary biomeLibrary() {
         return BiomeLibraryHolder.INSTANCE;
+    }
+
+    // Read twice a frame and once a tick by the weather renderer
+    private static final class WeatherSimulationHolder {
+        static final IWeatherSimulation INSTANCE = ContainerManager.resolve(IWeatherSimulation.class);
+    }
+
+    public static IWeatherSimulation weatherSimulation() {
+        return WeatherSimulationHolder.INSTANCE;
+    }
+
+    // Asked every frame to tint the fog's colour
+    private static final class FogHandlerHolder {
+        static final FogHandler INSTANCE = ContainerManager.resolve(FogHandler.class);
+    }
+
+    public static FogHandler fogHandler() {
+        return FogHandlerHolder.INSTANCE;
+    }
+
+    // Asked every frame whether it draws the weather
+    private static final class PrecipitationHolder {
+        static final PrecipitationHandler INSTANCE = ContainerManager.resolve(PrecipitationHandler.class);
+    }
+
+    public static PrecipitationHandler precipitation() {
+        return PrecipitationHolder.INSTANCE;
     }
 
 }

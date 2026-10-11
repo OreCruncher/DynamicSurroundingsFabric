@@ -4,14 +4,13 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.audio.Library;
-import dev.architectury.platform.Platform;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.ChannelAccess;
 import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.sounds.SoundSource;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.platform.KnownMod;
 import org.orecruncher.dsurround.lib.text.StringUtils;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
@@ -27,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinSoundEngine {
 
     @Unique
-    private static final boolean dsurround$compatibleSoundDiscardEnvironment = !Platform.isModLoaded(Constants.RAISE_SOUND_LIMIT_SIMPLIFIED);
+    private static final boolean dsurround$compatibleSoundDiscardEnvironment = !KnownMod.RAISE_SOUND_LIMIT_SIMPLIFIED.isInstalled();
 
     @Final
     @Shadow

@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.lib.compat;
 
-import dev.architectury.platform.Platform;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.function.ThrottledBooleanSupplier;
+import org.orecruncher.dsurround.lib.platform.KnownMod;
 
 import java.lang.reflect.Method;
 
@@ -18,11 +18,15 @@ public final class IrisCompat {
     private static final Object API;
     @Nullable
     private static final Method IS_SHADER_PACK_IN_USE;
+    // Asked by every effect drawn with a shader of ours, many times a frame; a player changes it now and then
+    private static final long SHADER_PACK_CHECK_NANOS = 50_000_000L;
+    private static final ThrottledBooleanSupplier SHADER_PACK_IN_USE =
+            new ThrottledBooleanSupplier(IrisCompat::askShaderPackInUse, SHADER_PACK_CHECK_NANOS, System::nanoTime);
 
     static {
         Object api = null;
         Method method = null;
-        if (Platform.isModLoaded(Constants.IRIS) || Platform.isModLoaded(Constants.OCULUS)) {
+        if (KnownMod.IRIS.isInstalled()) {
             try {
                 var apiClass = Class.forName("net.irisshaders.iris.api.v0.IrisApi");
                 api = apiClass.getMethod("getInstance").invoke(null);
@@ -38,9 +42,17 @@ public final class IrisCompat {
     private IrisCompat() {
     }
 
+    /**
+     * Whether an Iris shader pack is in use. Kept for a short while (a tick or so) rather than asked by reflection on
+     * every call.
+     */
     public static boolean isShaderPackInUse() {
         if (API == null || IS_SHADER_PACK_IN_USE == null)
             return false;
+        return SHADER_PACK_IN_USE.getAsBoolean();
+    }
+
+    private static boolean askShaderPackInUse() {
         try {
             return (boolean) IS_SHADER_PACK_IN_USE.invoke(API);
         } catch (ReflectiveOperationException | RuntimeException e) {

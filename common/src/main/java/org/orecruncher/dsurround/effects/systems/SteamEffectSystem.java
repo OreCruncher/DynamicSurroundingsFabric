@@ -13,6 +13,7 @@ import org.orecruncher.dsurround.effects.blocks.AbstractParticleEmitterEffect;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.runtime.weather.SceneWind;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 
 import java.util.Collection;
@@ -163,13 +164,17 @@ public class SteamEffectSystem extends AbstractEffectSystem implements IEffectSy
         protected Collection<Particle> produceParticles() {
             var x = RANDOM.triangle(this.posX, JITTER);
             var z = RANDOM.triangle(this.posZ, JITTER);
-            var particle = this.createParticle(ParticleTypes.CLOUD, x, this.posY, z, 0, VERTICAL_SPEED, 0D);
+            // Vanilla's cloud particle can't be steered once made, so the steam sets off with the wind it will have
+            var exposure = GameUtils.getWorld().map(level -> SceneWind.exposure(level, BlockPos.containing(x, this.posY, z))).orElse(0F);
+            var windX = SceneWind.x(x, z) * SceneWind.CARRIED_SHARE * exposure;
+            var windZ = SceneWind.z(x, z) * SceneWind.CARRIED_SHARE * exposure;
+            var particle = this.createParticle(ParticleTypes.CLOUD, x, this.posY, z, windX, VERTICAL_SPEED, windZ);
             return particle.map(
                     p -> {
                     p.setLifetime(p.getLifetime() * 2);
                     if (this.isSolid) {
                         p.scale(0.5F);
-                        p.setParticleSpeed(0, VERTICAL_SPEED / 2, 0);
+                        p.setParticleSpeed(windX, VERTICAL_SPEED / 2, windZ);
                     }
                     return List.of(p);
                 })

@@ -12,6 +12,7 @@ import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
+import org.orecruncher.dsurround.runtime.weather.SceneWind;
 
 /**
  * A puff of mist thrown up where a waterfall lands. Many of them overlapping make the mist, so each is small and
@@ -87,6 +88,9 @@ public class WaterfallMist extends TextureSheetParticle {
                 DSurroundParticleSprites.WATERFALL_MIST, strength);
     }
 
+    // How much of the wind reaches it, 0 to 1, from where it began
+    private final float windExposure;
+
     protected WaterfallMist(ClientLevel level, double x, double y, double z, double xd, double yd, double zd,
                             double centerX, double surfaceY, double centerZ, SpriteSet sprites, int strength) {
         // The constructor without velocity: the one with it adds a random velocity of its own
@@ -116,6 +120,7 @@ public class WaterfallMist extends TextureSheetParticle {
         // Drifts through blocks rather than stopping at them: the soft shader fades it where it meets them
         this.hasPhysics = false;
         this.friction = 0.92F;
+        this.windExposure = SceneWind.exposure(level, BlockPos.containing(x, y, z));
         // Negative gravity: it rises, slowly
         this.gravity = -0.015F;
         this.roll = this.oRoll = random.nextFloat() * Mth.TWO_PI;
@@ -149,6 +154,9 @@ public class WaterfallMist extends TextureSheetParticle {
     public void tick() {
         this.churn();
         this.wobble();
+        // Drifts downwind, as far as it is out in the open
+        this.xd += SceneWind.push(SceneWind.x(this.x, this.z), this.windExposure, this.friction);
+        this.zd += SceneWind.push(SceneWind.z(this.x, this.z), this.windExposure, this.friction);
         // Ages it (removing it at the end of its life) and moves it, with drag and the slow rise
         super.tick();
         this.oRoll = this.roll;

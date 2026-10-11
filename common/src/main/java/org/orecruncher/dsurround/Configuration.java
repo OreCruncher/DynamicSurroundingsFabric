@@ -7,6 +7,7 @@ import org.orecruncher.dsurround.lib.config.ConfigurationData.*;
 
 @ConfigPlacement(folderName = Constants.MOD_ID, fileName = Constants.MOD_ID)
 @TranslationRoot(Constants.MOD_ID + ".config")
+@SuppressWarnings("unused")
 public class Configuration extends ConfigurationData {
 
     @Property
@@ -48,6 +49,10 @@ public class Configuration extends ConfigurationData {
     @Property
     @Comment("Configuration options for the compass and clock overlay")
     public final CompassAndClockOptions compassAndClockOptions = new CompassAndClockOptions();
+
+    @Property
+    @Comment("Configuration options for weather")
+    public final WeatherOptions weatherOptions = new WeatherOptions();
 
     @Property
     @Comment("Configuration options for fog effects")
@@ -341,6 +346,45 @@ public class Configuration extends ConfigurationData {
         @Comment("Scales the display by the specified amount")
         @DoubleSlider(min = 0.5D, max = 4D, step = 0.1D)
         public double scale = 1D;
+    }
+
+    public static class WeatherOptions {
+        @Property
+        @Comment("Enable/disable simulated storms, each storm has its own strength, from a drizzle to a downpour")
+        public boolean enableStormSimulation = true;
+
+        @Property
+        @Slider(min = 1, max = 100)
+        @Comment("The weakest a storm can be, as a percent of full strength")
+        public int minStormIntensity = 10;
+
+        @Property
+        @Slider(min = 1, max = 100)
+        @Comment("The strongest a storm can be, as a percent of full strength")
+        public int maxStormIntensity = 100;
+
+        @Property
+        @Slider(min = 0, max = 100)
+        @Comment("How far a storm eases off between its surges, as a percent of its peak")
+        public int stormVariation = 40;
+
+        @Property
+        @Comment("Draw rain and snow as individual drops instead of vanilla's sheets")
+        public boolean enableParticlePrecipitation = true;
+
+        @Property
+        @Slider(min = 25, max = 100)
+        @Comment("How many drops of particle rain and snow there are, as a percent of the most")
+        public int precipitationDensity = 100;
+
+        @Property
+        @Slider(min = 8, max = 32)
+        @Comment("How far from the player, in blocks, particle rain, snow and dust are drawn")
+        public int precipitationRange = 12;
+
+        @Property
+        @Comment("With particle rain and snow on, storms in deserts and badlands blow dust and thicken the fog")
+        public boolean enableDustStorms = true;
     }
 
     public static class FogOptions {

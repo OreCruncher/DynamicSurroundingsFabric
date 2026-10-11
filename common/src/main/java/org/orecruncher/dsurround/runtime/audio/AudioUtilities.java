@@ -3,19 +3,18 @@ package org.orecruncher.dsurround.runtime.audio;
 import com.google.common.base.Suppliers;
 import com.mojang.blaze3d.audio.Library;
 import com.mojang.blaze3d.audio.Listener;
-import dev.architectury.platform.Platform;
 import net.minecraft.client.resources.sounds.AbstractSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.SoundEngine;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.*;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.platform.KnownMod;
 
 import java.util.function.Supplier;
 
@@ -23,16 +22,17 @@ public final class AudioUtilities {
     private static final IModLog LOGGER = ContainerManager.memoize(IModLog.class);
 
     // If these mods are present, enhanced sound processing will be disabled.
-    private static final ObjectArray<String> autoDisabledBecauseOf = new ObjectArray<>();
+    private static final ObjectArray<KnownMod> autoDisabledBecauseOf = new ObjectArray<>();
 
     private static final Supplier<Boolean> advancedProcessingEnabled = Suppliers.memoize(() -> {
         // First check general settings
         var config = ContainerManager.resolve(Configuration.EnhancedSounds.class);
         if (config.enableEnhancedSounds) {
             // Next check to see if any present mods are in our exclusion list
-            for (var modId : autoDisabledBecauseOf) {
-                if (Platform.isModLoaded(modId)) {
-                    LOGGER.warn("Enhanced sound processing is auto disabled due to the presence of the mod \"%s\"", modId);
+            for (var mod : autoDisabledBecauseOf) {
+                var modId = mod.installedId();
+                if (modId.isPresent()) {
+                    LOGGER.warn("Enhanced sound processing is auto disabled due to the presence of the mod \"%s\"", modId.get());
                     return false;
                 }
             }
@@ -45,7 +45,7 @@ public final class AudioUtilities {
     private static int MAX_SOUNDS = 0;
 
     static {
-        autoDisabledBecauseOf.add(Constants.MOD_SOUND_PHYSICS_REMASTERED);
+        autoDisabledBecauseOf.add(KnownMod.SOUND_PHYSICS_REMASTERED);
     }
 
     public static int getMaxSounds() {

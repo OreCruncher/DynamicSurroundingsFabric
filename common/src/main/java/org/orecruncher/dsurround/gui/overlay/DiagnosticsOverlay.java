@@ -9,7 +9,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.util.FormattedCharSequence;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
@@ -21,6 +20,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
+import org.orecruncher.dsurround.lib.platform.KnownMod;
 import org.orecruncher.dsurround.processing.AreaBlockEffects;
 
 import java.util.EnumMap;
@@ -50,9 +50,9 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
 
     private static final Supplier<List<Component>> SPECIAL_MODS_INSTALLED = Suppliers.memoize(() -> {
         var builder = ImmutableList.<Component>builder();
-        for (var modId : Constants.SPECIAL_MODS)
-            if (Platform.isModLoaded(modId))
-                builder.add(Component.literal("MOD: " + modId).withStyle(SPECIAL_MOD_STYLE));
+        for (var mod : KnownMod.values())
+            if (mod.showInDiagnostics())
+                mod.installedId().ifPresent(modId -> builder.add(Component.literal("MOD: " + modId).withStyle(SPECIAL_MOD_STYLE)));
         return builder.build();
     });
 

@@ -1,16 +1,15 @@
 package org.orecruncher.dsurround.processing.accents;
 
-import dev.architectury.platform.Platform;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.platform.KnownMod;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
 public class FootstepAccents {
@@ -22,7 +21,7 @@ public class FootstepAccents {
         this.providers.add(new FloorSqueakAccent(config, soundLibrary, tagLibrary));
 
         // Only register these providers if Presence Footsteps is not installed
-        if (!Platform.isModLoaded(Constants.MOD_PRESENCE_FOOTSTEPS)) {
+        if (!KnownMod.PRESENCE_FOOTSTEPS.isInstalled()) {
             this.providers.add(new WaterySurfaceAccent(config, soundLibrary, tagLibrary));
         }
     }

@@ -3,13 +3,12 @@ package org.orecruncher.dsurround.config;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 
-import dev.architectury.platform.Platform;
 import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.effects.entity.*;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.platform.KnownMod;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -74,7 +73,7 @@ public enum EntityEffectType {
         ITEM_SWING.setConfigProvider(() -> config.enableSwingEffect);
 
         // Do not do brush step effects if Presence Footsteps is installed
-        if (Platform.isModLoaded(Constants.MOD_PRESENCE_FOOTSTEPS))
+        if (KnownMod.PRESENCE_FOOTSTEPS.isInstalled())
             BRUSH_STEP.setConfigProvider(() -> false);
         else
             BRUSH_STEP.setConfigProvider(() -> config.enableBrushStepEffect);

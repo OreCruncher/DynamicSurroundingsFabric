@@ -100,6 +100,13 @@ public class SereneSeasons extends AbstractSeasonProvider {
     }
 
     @Override
+    public boolean hasPrecipitationAt(BlockPos blockPos) {
+        // A tropical biome's dry and wet seasons decide, rather than the biome's own setting
+        var level = this.level();
+        return SeasonHooks.hasPrecipitationSeasonal(level, level.getBiome(blockPos));
+    }
+
+    @Override
     public float getTemperature(BlockPos blockPos) {
         var level = this.level();
         var biome = level.getBiome(blockPos);

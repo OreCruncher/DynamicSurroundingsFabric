@@ -76,6 +76,7 @@ public class Handlers {
         this.register(StepAccentGenerator.class);
         this.register(FogHandler.class);
         this.register(AuroraHandler.class);
+        this.register(PrecipitationHandler.class);
 
         IClientTickEnd.EVENT.register(this::tick);
         IClientConnect.EVENT.register(this::onConnect);

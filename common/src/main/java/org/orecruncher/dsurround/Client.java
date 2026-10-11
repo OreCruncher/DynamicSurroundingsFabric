@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround;
 
 import dev.architectury.event.events.client.ClientCommandRegistrationEvent;
-import dev.architectury.platform.Platform;
 import dev.architectury.registry.ReloadListenerRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.sounds.SoundManager;
@@ -27,6 +26,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
+import org.orecruncher.dsurround.lib.platform.KnownMod;
 import org.orecruncher.dsurround.lib.registry.ReloadListener;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
@@ -38,6 +38,9 @@ import org.orecruncher.dsurround.lib.version.VersionResult;
 import org.orecruncher.dsurround.processing.Handlers;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
+import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
+import org.orecruncher.dsurround.runtime.weather.WeatherSimulation;
+import org.orecruncher.dsurround.runtime.weather.WindService;
 import org.orecruncher.dsurround.sound.AudioPlayerDebug;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.AudioPlayer;
@@ -102,7 +105,7 @@ public final class Client {
         Library.LOGGER.info("[%s] Client initializing", Constants.MOD_ID);
 
         if (Client.Config.logging.registerCommands) {
-            if (!Platform.isModLoaded(Constants.QUILTED_LOADER))
+            if (!KnownMod.QUILTED_LOADER.isInstalled())
                 ClientCommandRegistrationEvent.EVENT.register(Commands::register);
             else
                 Library.LOGGER.info("Not registering client commands as mod is running in Quilt environment");
@@ -131,6 +134,8 @@ public final class Client {
                 .registerSingleton(IBlockLibrary.class, BlockLibrary.class)
                 .registerSingleton(IItemLibrary.class, ItemLibrary.class)
                 .registerSingleton(IEntityEffectLibrary.class, EntityEffectLibrary.class)
+                .registerSingleton(IWeatherSimulation.class, WeatherSimulation.class)
+                .registerSingleton(WindService.class)
                 .registerSingleton(OverlayManager.class);
 
         // Depending on debug settings, enable the appropriate player

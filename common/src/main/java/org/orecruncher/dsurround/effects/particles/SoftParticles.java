@@ -65,7 +65,15 @@ public final class SoftParticles {
      * drawing particles that needs to know what is behind them.
      */
     public static void bindSceneDepth(ShaderInstance target) {
-        var renderTarget = particleTarget();
+        bindSceneDepth(target, particleTarget());
+    }
+
+    /**
+     * Copies the depth of {@code renderTarget} as it is now, and gives the copy to {@code target} as its DepthSampler,
+     * for a shader that needs to know what is behind what it draws. Leaves {@code renderTarget} bound for drawing:
+     * it should be the target being drawn to, such as the weather's own with Fabulous graphics.
+     */
+    public static void bindSceneDepth(ShaderInstance target, RenderTarget renderTarget) {
         var copy = depthCopyFor(renderTarget);
         copy.copyDepthFrom(renderTarget);
         // Copying leaves no frame buffer bound

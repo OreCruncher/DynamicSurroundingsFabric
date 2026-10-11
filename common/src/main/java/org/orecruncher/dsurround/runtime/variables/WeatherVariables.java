@@ -4,10 +4,12 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
+import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 
 public final class WeatherVariables extends VariableSet {
 
     private final ISeasonalInformation seasonalInformation;
+    private final IWeatherSimulation weatherSimulation;
 
     // Numeric values are stored boxed when updated each tick, so that reading them from scripts does not allocate
     private Float temperature = 0F;
@@ -18,9 +20,10 @@ public final class WeatherVariables extends VariableSet {
     private boolean isFrosty;
     private boolean canWaterFreeze;
 
-    public WeatherVariables(ISeasonalInformation seasonalInformation) {
+    public WeatherVariables(ISeasonalInformation seasonalInformation, IWeatherSimulation weatherSimulation) {
         super("weather");
         this.seasonalInformation = seasonalInformation;
+        this.weatherSimulation = weatherSimulation;
     }
 
     @Override
@@ -28,7 +31,8 @@ public final class WeatherVariables extends VariableSet {
         if (GameUtils.isInGame()) {
             final var player = GameUtils.getPlayer().orElseThrow();
             final var world = player.level();
-            this.rainIntensity = world.getRainLevel(1F);
+            // The storm's strength. Whether it is raining at all is the world's: a light storm is still rain.
+            this.rainIntensity = this.weatherSimulation.rainLevel(world.getRainLevel(1F));
             this.thunderIntensity = world.getThunderLevel(1F);
             this.isRaining = world.isRaining();
             this.isThundering = world.isThundering();

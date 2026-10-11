@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.effects;
 import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
 import org.orecruncher.dsurround.effects.particles.FireflyLights;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
+import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
 
 import java.util.List;
 
@@ -15,7 +16,9 @@ public final class ModShaders {
     public static final List<ModShader> SHADERS = List.of(
             SoftParticles.SHADER,
             AuroraRenderer.SHADER,
-            FireflyLights.SHADER);
+            FireflyLights.SHADER,
+            PrecipitationShaders.DROPS,
+            PrecipitationShaders.DAMP_SPOTS);
 
     private ModShaders() {
     }

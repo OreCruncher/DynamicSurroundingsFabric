@@ -1,0 +1,257 @@
+package org.orecruncher.dsurround.effects.precipitation;
+
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.Camera;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.util.Mth;
+import org.joml.Vector3f;
+
+import java.util.List;
+
+/**
+ * Draws a {@link PrecipitationField}: rain as thin streaks along the way each drop falls, slanted by the wind and
+ * turned toward the camera, snow as flakes facing it, turning slowly as they fall, and dust as large faint puffs the
+ * colour of the ground it was blown from. The streaks are a plain colour that fades out toward their tail; the flakes
+ * are cut from the game's own snow texture ({@link Snowflakes}), and the puffs are sprites from the particle atlas.
+ * All are lit by the lightmap, like vanilla's weather. Also draws {@link DampSpots}, flat on the ground. Positions are
+ * relative to the camera, as for particles and vanilla's weather. Render thread only.
+ */
+final class PrecipitationRenderer {
+
+    // A rain streak's length, half width and alpha: for the smallest drop, and how much more for the largest. Small
+    // drops are shown smaller mostly by being shorter and fainter: much thinner than the smallest width, a streak a few
+    // blocks off is under a pixel wide and flickers.
+    static final float RAIN_MIN_LENGTH = 0.35F;
+    static final float RAIN_LENGTH_RANGE = 0.65F;
+    static final float RAIN_MIN_HALF_WIDTH = 0.015F;
+    static final float RAIN_HALF_WIDTH_RANGE = 0.015F;
+    static final float RAIN_MIN_ALPHA = 0.25F;
+    static final float RAIN_ALPHA_RANGE = 0.25F;
+    static final float RAIN_RED = 0.72F, RAIN_GREEN = 0.78F, RAIN_BLUE = 0.88F;
+    // A flake's half size: the smallest, and how much more the largest is. Most are small (see snowSize).
+    static final float SNOW_MIN_HALF_SIZE = 0.05F;
+    static final float SNOW_HALF_SIZE_RANGE = 0.07F;
+    static final float SNOW_ALPHA = 0.9F;
+    // How fast a flake turns, as a fraction of how fast it sways: about half a turn a second
+    static final float SNOW_SPIN = 0.25F;
+    // A puff of dust's half size: the smallest, and how much more the largest is
+    static final float DUST_MIN_HALF_SIZE = 0.5F;
+    static final float DUST_HALF_SIZE_RANGE = 0.6F;
+    // Faint: the air fills with many overlapping puffs
+    static final float DUST_ALPHA = 0.22F;
+    // Dust is paler than the ground it is blown from: this fraction of the way to white
+    static final float DUST_PALENESS = 0.25F;
+    // How fast a puff turns, as a fraction of how fast it rises and falls
+    static final float DUST_SPIN = 0.1F;
+    /**
+     * How far behind the camera a drop can be and still reach into view: the largest puff's half size, or the length
+     * of the longest streak, with room to spare. Drops further behind are not drawn.
+     */
+    static final float BEHIND_MARGIN = 2F;
+    /**
+     * Rain and snow far off are thinned out: all are drawn out to this share of the way to the edge of the cylinder,
+     * then a share falling off steadily to {@link #THIN_KEEP_AT_EDGE} at the edge. Far drops are small on screen and
+     * partly fogged, and the outer ring holds most of them, so this spares about a third of the drawing. Dust, far
+     * fewer and making the haze, is not thinned.
+     */
+    static final float THIN_FROM_SHARE = 1F / 3F;
+    static final float THIN_KEEP_AT_EDGE = 0.2F;
+    // A drop being left out, or let back in, as the camera moves fades over this much of the share, rather than popping
+    static final float THIN_FADE = 0.1F;
+    // A texture coordinate the drops shader takes as "no texture", for the rain streaks
+    static final float NO_TEXTURE = -1F;
+    // Drops this close to the cylinder's edge fade out, so they don't vanish all at once as the camera moves
+    static final float EDGE_FADE = 2F;
+    // A damp spot's colour where the ground can't be darkened, so it is laid over it instead
+    static final float DAMP_RED = 0.08F, DAMP_GREEN = 0.08F, DAMP_BLUE = 0.1F;
+
+    private PrecipitationRenderer() {
+    }
+
+    /**
+     * Builds the drops into a buffer and draws it with whatever shader is current, which should take
+     * {@link DefaultVertexFormat#PARTICLE}, with the particle atlas bound. The dust and the falling rain and snow are
+     * drawn apart, as the dust is drawn soft and they are not.
+     *
+     * @param dustOnly   true to draw just the dust; false to draw just the rain and snow
+     * @param snowflakes the flakes of the snow texture, which must be bound when drawing rain and snow; each falling
+     *                   flake keeps one for its whole fall. Empty to draw plain flakes.
+     * @param largest    the largest of them, in pixels: the others are drawn in proportion
+     * @param dust       the dust sprites, from the particle atlas, which must be bound when drawing dust; each puff
+     *                   keeps one
+     */
+    static void draw(PrecipitationField field, Tesselator tesselator, Camera camera, float partialTick, boolean dustOnly,
+                     List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust) {
+        if (field.count == 0 || (dustOnly && field.dustCount() == 0) || (!dustOnly && field.dustCount() == field.count))
+            return;
+
+        var cam = camera.getPosition();
+        Vector3f left = camera.getLeftVector();
+        Vector3f up = camera.getUpVector();
+        Vector3f look = camera.getLookVector();
+        float radius = field.radius();
+        BufferBuilder builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
+
+        for (int i = 0; i < field.count; i++) {
+            if ((field.kind[i] == PrecipitationField.DUST) != dustOnly)
+                continue;
+            float x = (float) (Mth.lerp(partialTick, field.prevX[i], field.x[i]) - cam.x);
+            float y = (float) (Mth.lerp(partialTick, field.prevY[i], field.y[i]) - cam.y);
+            float z = (float) (Mth.lerp(partialTick, field.prevZ[i], field.z[i]) - cam.z);
+            if (isBehind(x, y, z, look))
+                continue;
+            float distance = Mth.sqrt(x * x + z * z);
+            float fade = field.fade(i, partialTick) * Mth.clamp((radius - distance) / EDGE_FADE, 0F, 1F);
+            if (!dustOnly)
+                fade *= thinned(field.thinning[i], distance, radius);
+            if (fade <= 0F)
+                continue;
+            int light = field.light[i];
+
+            if (field.kind[i] == PrecipitationField.DUST) {
+                var sprite = dust[field.variant(i, dust.length)];
+                float size = DUST_MIN_HALF_SIZE + DUST_HALF_SIZE_RANGE * field.dustSize(i);
+                float spin = (field.phase[i] + partialTick * PrecipitationField.DUST_TURBULENCE_RATE) * DUST_SPIN;
+                int c = field.color[i];
+                float r = Mth.lerp(DUST_PALENESS, ((c >> 16) & 0xFF) / 255F, 1F);
+                float g = Mth.lerp(DUST_PALENESS, ((c >> 8) & 0xFF) / 255F, 1F);
+                float b = Mth.lerp(DUST_PALENESS, (c & 0xFF) / 255F, 1F);
+                billboard(builder, x, y, z, left, up, spin, size, sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(),
+                        r, g, b, DUST_ALPHA * fade, light);
+            } else if (field.kind[i] == PrecipitationField.SNOW) {
+                float a = SNOW_ALPHA * fade;
+                float spin = (field.phase[i] + partialTick * PrecipitationField.SNOW_SWAY_RATE) * SNOW_SPIN;
+                float size = SNOW_MIN_HALF_SIZE + SNOW_HALF_SIZE_RANGE * field.snowSize(i);
+                if (snowflakes.isEmpty()) {
+                    billboard(builder, x, y, z, left, up, spin, size, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, 1F, 1F, 1F, a, light);
+                } else {
+                    // A flake of a pixel is drawn smaller than one of three, in proportion
+                    var flake = snowflakes.get(field.variant(i, snowflakes.size()));
+                    size *= flake.size() / (float) largest;
+                    billboard(builder, x, y, z, left, up, spin, size, flake.u0(), flake.v0(), flake.u1(), flake.v1(), 1F, 1F, 1F, a, light);
+                }
+            } else {
+                float dropSize = field.rainSize(i);
+                float length = RAIN_MIN_LENGTH + RAIN_LENGTH_RANGE * dropSize;
+                float halfWidth = RAIN_MIN_HALF_WIDTH + RAIN_HALF_WIDTH_RANGE * dropSize;
+                // Along the way the drop is moving, its tail trailing up and upwind, turned about its own length to
+                // face the camera
+                float vx = field.windX[i], vy = -field.speed[i], vz = field.windZ[i];
+                float inverse = Mth.invSqrt(vx * vx + vy * vy + vz * vz);
+                vx *= inverse;
+                vy *= inverse;
+                vz *= inverse;
+                // Across the streak: square to both its length and the line to the camera
+                float sx = vy * z - vz * y, sy = vz * x - vx * z, sz = vx * y - vy * x;
+                float across = sx * sx + sy * sy + sz * sz;
+                if (across > 1.0E-6F) {
+                    float scale = halfWidth * Mth.invSqrt(across);
+                    sx *= scale;
+                    sy *= scale;
+                    sz *= scale;
+                } else {
+                    // Looking straight along the streak, where any turn will do
+                    sx = left.x() * halfWidth;
+                    sy = left.y() * halfWidth;
+                    sz = left.z() * halfWidth;
+                }
+                float tx = x - vx * length, ty = y - vy * length, tz = z - vz * length;
+                float a = (RAIN_MIN_ALPHA + RAIN_ALPHA_RANGE * dropSize) * fade;
+                builder.addVertex(x - sx, y - sy, z - sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(RAIN_RED, RAIN_GREEN, RAIN_BLUE, a).setLight(light);
+                builder.addVertex(tx - sx, ty - sy, tz - sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(RAIN_RED, RAIN_GREEN, RAIN_BLUE, 0F).setLight(light);
+                builder.addVertex(tx + sx, ty + sy, tz + sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(RAIN_RED, RAIN_GREEN, RAIN_BLUE, 0F).setLight(light);
+                builder.addVertex(x + sx, y + sy, z + sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(RAIN_RED, RAIN_GREEN, RAIN_BLUE, a).setLight(light);
+            }
+        }
+
+        var mesh = builder.build();
+        if (mesh != null)
+            BufferUploader.drawWithShader(mesh);
+    }
+
+    /**
+     * The share of the rain and snow drawn at a distance from the camera, horizontally: all of it near, falling off
+     * steadily to {@link #THIN_KEEP_AT_EDGE} at the edge of the cylinder
+     *
+     * @param radius the cylinder's radius
+     */
+    static float shareDrawn(float distance, float radius) {
+        float from = radius * THIN_FROM_SHARE;
+        float across = (distance - from) / (radius - from);
+        return Mth.lerp(Mth.clamp(across, 0F, 1F), 1F, THIN_KEEP_AT_EDGE);
+    }
+
+    /**
+     * How much of a drop is drawn at a distance, 0 to 1: drops whose fixed random number is under the share drawn
+     * there are drawn whole, those over it not at all, and those near it fade, so as the camera moves a drop slips out
+     * of view rather than popping
+     *
+     * @param thinning the drop's own random number, 0 to 1
+     * @param radius   the cylinder's radius
+     */
+    static float thinned(float thinning, float distance, float radius) {
+        return Mth.clamp((shareDrawn(distance, radius) - thinning) / THIN_FADE + 1F, 0F, 1F);
+    }
+
+    /**
+     * Whether a drop, relative to the camera, is far enough behind it that nothing of it can be seen
+     */
+    static boolean isBehind(float x, float y, float z, Vector3f look) {
+        return x * look.x() + y * look.y() + z * look.z() < -BEHIND_MARGIN;
+    }
+
+    /**
+     * A textured square facing the camera, turned in its plane by {@code spin}
+     */
+    private static void billboard(BufferBuilder builder, float x, float y, float z, Vector3f left, Vector3f up, float spin,
+                                  float halfSize, float u0, float v0, float u1, float v1, float r, float g, float b,
+                                  float a, int light) {
+        float cos = Mth.cos(spin) * halfSize, sin = Mth.sin(spin) * halfSize;
+        float ax = left.x() * cos + up.x() * sin, ay = left.y() * cos + up.y() * sin, az = left.z() * cos + up.z() * sin;
+        float bx = up.x() * cos - left.x() * sin, by = up.y() * cos - left.y() * sin, bz = up.z() * cos - left.z() * sin;
+        builder.addVertex(x - ax - bx, y - ay - by, z - az - bz).setUv(u1, v1).setColor(r, g, b, a).setLight(light);
+        builder.addVertex(x - ax + bx, y - ay + by, z - az + bz).setUv(u1, v0).setColor(r, g, b, a).setLight(light);
+        builder.addVertex(x + ax + bx, y + ay + by, z + az + bz).setUv(u0, v0).setColor(r, g, b, a).setLight(light);
+        builder.addVertex(x + ax - bx, y + ay - by, z + az - bz).setUv(u0, v1).setColor(r, g, b, a).setLight(light);
+    }
+
+    /**
+     * Builds the damp spots into a buffer and draws it with whatever shader is current, which should take
+     * {@link DefaultVertexFormat#POSITION_TEX_COLOR}.
+     *
+     * @param darkening true when the blend darkens the ground by the spot's alpha, so its colour doesn't matter;
+     *                  false to lay a dark colour over the ground with an ordinary blend
+     */
+    static void draw(DampSpots spots, Tesselator tesselator, Camera camera, float partialTick, TextureAtlasSprite sprite, boolean darkening) {
+        if (spots.count == 0)
+            return;
+
+        var cam = camera.getPosition();
+        float r = darkening ? 1F : DAMP_RED, g = darkening ? 1F : DAMP_GREEN, b = darkening ? 1F : DAMP_BLUE;
+        float u0 = sprite.getU0(), u1 = sprite.getU1(), v0 = sprite.getV0(), v1 = sprite.getV1();
+        BufferBuilder builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+
+        for (int i = 0; i < spots.count; i++) {
+            float a = spots.darkness(i, partialTick);
+            if (a <= 0F)
+                continue;
+            float x = (float) (spots.x[i] - cam.x);
+            float y = (float) (spots.y[i] - cam.y);
+            float z = (float) (spots.z[i] - cam.z);
+            // The corners, each a quarter turn from the last
+            float cx = spots.cornerX[i], cz = spots.cornerZ[i];
+            builder.addVertex(x + cx, y, z + cz).setUv(u0, v0).setColor(r, g, b, a);
+            builder.addVertex(x - cz, y, z + cx).setUv(u0, v1).setColor(r, g, b, a);
+            builder.addVertex(x - cx, y, z - cz).setUv(u1, v1).setColor(r, g, b, a);
+            builder.addVertex(x + cz, y, z - cx).setUv(u1, v0).setColor(r, g, b, a);
+        }
+
+        var mesh = builder.build();
+        if (mesh != null)
+            BufferUploader.drawWithShader(mesh);
+    }
+}

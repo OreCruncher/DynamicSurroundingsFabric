@@ -2,7 +2,9 @@ package org.orecruncher.dsurround.effects;
 
 import com.google.gson.JsonParser;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import net.minecraft.SharedConstants;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -15,6 +17,13 @@ import java.util.HashSet;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ModShaderTests {
+
+    // Constants, which a shader's id comes from, needs the game's registries. Run first on its own, this class
+    // otherwise fails to load Constants and takes every later test that uses it down too.
+    static {
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+    }
 
     /**
      * A ShaderInstance can't be built without a GL context; ModShader only keeps hold of it, so an empty one made
@@ -111,6 +120,6 @@ public class ModShaderTests {
                 assertEquals(shader.id().toString(), json.get("fragment").getAsString());
             }
         }
-        assertEquals(3, ids.size());
+        assertEquals(5, ids.size());
     }
 }

@@ -1,3 +1,43 @@
+> ### DynamicSurroundings-1.21.1-0.4.7
+
+Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
+
+**All Loaders**
+* JAVA 21+
+* Architectury 13.0.8+
+
+**Fabric**
+* Fabric Loader >= 0.16.9
+* Fabric API >= 0.110.0+1.21.
+
+**NeoForge**
+* NeoForge 21.1.84+
+
+**AI Disclosure**
+* AI was used to produce a good portion of the new logic for rendering and handling of the weather system.
+
+**What's New**
+* Client side storm simulation, based on older Dynamic Surroundings versions
+  * Random seeds tied to the Minecraft day so all players using Dynamic Surroundings will experience the same effects
+  * When Minecraft starts raining, a random strength is generated and is used to determine weather effects as well as impacts on fog
+    * This simulated strength does not affect the mechanics of Minecraft's rain strength
+  * The precipitation effects are "particle" base, though they are not true Minecraft particles
+  * A simulated wind is used to cause disturbances in the drop pattern and can change directions and speed
+    * Also has an effect on Dynamic Surroundings mist and steam when outside
+    * No effect on other particles in Minecraft, modded or otherwise (may change in future releases)
+  * Rain drops with a slight slant, and will change direction based on wind
+  * Snow drops more slowly, and the impact of wind is more visible
+  * Dust storms will occur in deserts when raining, and particles will drift along the ground in the direction of wind
+    * The particles will climb small inclines as well
+  * Serene Seasons will affect whether rain or dust blows in some biomes, such as Biomes OPlenty's Lush Desert
+  * Various parts of the system can be enabled/disabled in the Weather Options section
+  * The weather system will auto disable if Particle Rain is installed
+* New /dsweather command to control aspects of the simulated storm (I use for testing but if you want to play around with it go ahead)
+
+**Changes**
+
+**Fixes**
+
 > ### DynamicSurroundings-1.21.1-0.4.6
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.

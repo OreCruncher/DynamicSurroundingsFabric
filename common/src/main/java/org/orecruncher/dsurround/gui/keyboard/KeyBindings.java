@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.gui.keyboard;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import dev.architectury.platform.Platform;
 import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -14,6 +13,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.IConfigScreenFactoryProvider;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.platform.KnownMod;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -23,7 +23,7 @@ public final class KeyBindings {
     private static final Map<KeyMapping, Runnable> keyPressHandlers = new IdentityHashMap<>();
 
     public static void register() {
-        var modMenuKey = Platform.isModLoaded(Constants.MODMENU) ? InputConstants.UNKNOWN.getValue() : InputConstants.KEY_EQUALS;
+        var modMenuKey = KnownMod.MODMENU.isInstalled() ? InputConstants.UNKNOWN.getValue() : InputConstants.KEY_EQUALS;
 
         registerKeyBinding(
                 "modConfigurationMenu",

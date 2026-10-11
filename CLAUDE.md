@@ -29,6 +29,11 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   (`has moved to`).
 - Stopping the Gradle task leaves the game JVM running; kill it (PowerShell):
   `Get-CimInstance Win32_Process -Filter "Name='java.exe' or Name='javaw.exe'" | Where-Object { $_.CommandLine -match 'KnotClient|devlaunchinjector|net.fabricmc.loader.impl.launch' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`
+  That doesn't match the NeoForge client (`:neoforge:runClient`). Both run as Architectury's `TransformerRuntime`, so
+  match NeoForge's by its platform folder in `-Darchitectury.main.class`:
+  `Get-CimInstance Win32_Process -Filter "Name='java.exe' or Name='javaw.exe'" | Where-Object { $_.CommandLine -match '\\neoforge\\\.gradle\\architectury' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`
+  The user may have their own client running: check what is running (and when it started) before killing, and stop
+  only the one you launched.
 - The dev config is `fabric/run/config/dsurround/dsurround.json`. Don't edit the user's dev settings to force a case;
   cover it with a test.
 - `defaultRequire: 1` in `dsurround.mixins.json`: a mixin that doesn't match crashes at startup, so a clean launch
@@ -68,15 +73,15 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   `en_us` (`LanguageFileTests`).
 - The user commits; don't commit unless asked.
 
-## Planned: 26.2 migration
-Expect the most work in rendering (the code notes `ParticleRenderType` becomes a record and particle rendering is
-reworked; the aurora, soft particles and firefly lights use `ShaderInstance`, core shader JSON, `RenderSystem`,
-`Tesselator`, `BufferUploader`), mixin target signatures (`LevelRenderer.renderSky`, `SoundEngine.play`,
-`ParticleEngine` render order, `FogRenderer`), the sound engine hooks, and availability of Architectury, Cloth Config
-and Mod Menu for 26.2. NeoForge 26.2's client launch class is `net.neoforged.fml.startup.Client`. Work on its own
-branch or worktree, area by area, verifying APIs against the 26.2 jars, keeping progress in a `MIGRATION.md`.
+## 26.2 port
+Branch `OreCruncher/26.2` (Minecraft 26.2, NeoForge 26.2.0.82, Architectury 21.1.10, Cloth Config 26.2.155), checked
+out in the worktree `C:\repos\DynamicSurroundingsFabric-26.2`. Its build files and adapted code are the reference for
+26.2 APIs: read them with `git show OreCruncher/26.2:<path>`. The areas that differ most are rendering (aurora, soft
+particles and firefly lights: shaders, `RenderSystem`, particle render types), mixin target signatures
+(`LevelRenderer.renderSky`, `SoundEngine.play`, `ParticleEngine` render order, `FogRenderer`) and the sound engine
+hooks. NeoForge 26.2's client launch class is `net.neoforged.fml.startup.Client`.
 
-A working 26.2 port exists: branch `OreCruncher/26.2` (Minecraft 26.2, NeoForge 26.2.0.82, Architectury 21.1.10,
-Cloth Config 26.2.155), split from 0.4.5. Its build files and adapted code are the reference for 26.2 APIs. The plan is
-to port this branch's later changes onto it (in a worktree), not to migrate this branch from scratch: read it with
-`git show OreCruncher/26.2:<path>` and compare with `git diff <merge-base> HEAD`.
+1.21.1 work lands on `main` (0.4.6 was squash-merged as `4808dca`); start each 1.21.1 release branch from `main`.
+`main` is merged into 26.2 (as of 0.4.6, `4808dca`), so `git diff $(git merge-base main OreCruncher/26.2) main` lists
+the 1.21.1 changes still to port. Port them in the worktree by merging `main` into `OreCruncher/26.2` and resolving
+against 26.2's APIs (see its `MIGRATION.md`), never by rebasing the 26.2 branch.
