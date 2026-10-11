@@ -1,24 +1,19 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.particle.SpriteSet;
-import net.minecraft.client.particle.TextureSheetParticle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
-import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.runtime.weather.SceneWind;
 
 /**
  * A puff of mist thrown up where a waterfall lands. Many of them overlapping make the mist, so each is small and
  * simple: it is thrown out from the impact, slowed by drag while slowly rising (it is lighter than air), grows as it
- * spreads, turns, and fades in quickly and out slowly. Drawn soft (see {@link SoftParticles}), so it fades into the
- * water and rock instead of cutting through them.
+ * spreads, turns, and fades in quickly and out slowly, as a {@link SoftPuffParticle} does, drawn soft so it fades into
+ * the water and rock instead of cutting through them.
  * <p>
  * What makes it churn: the roll of air a waterfall drives where it lands. The falling water drags air down; it spreads
  * out along the surface, rises further out, and is drawn back in toward the falling water above, and down again.
@@ -28,7 +23,7 @@ import org.orecruncher.dsurround.runtime.weather.SceneWind;
  * Uses the waterfall_mist sprites (textures/particle/waterfall_mist_0 to 5), one picked at random and kept for the
  * puff's life rather than animated.
  */
-public class WaterfallMist extends TextureSheetParticle {
+public class WaterfallMist extends SoftPuffParticle {
 
     // Fractions of its life spent fading in at the start and out at the end
     private static final float FADE_IN = 0.15F;
@@ -52,10 +47,6 @@ public class WaterfallMist extends TextureSheetParticle {
 
     // Turbulence: each puff's own wobble, in blocks per tick per tick
     private static final double WOBBLE = 0.003D;
-
-    private final float startSize;
-    private final float peakAlpha;
-    private final float rollSpeed;
 
     // Where the waterfall lands (the center of the impact, on the water's surface), and its ring
     private final double centerX;
@@ -93,8 +84,7 @@ public class WaterfallMist extends TextureSheetParticle {
 
     protected WaterfallMist(ClientLevel level, double x, double y, double z, double xd, double yd, double zd,
                             double centerX, double surfaceY, double centerZ, SpriteSet sprites, int strength) {
-        // The constructor without velocity: the one with it adds a random velocity of its own
-        super(level, x, y, z);
+        super(level, x, y, z, FADE_IN, FADE_OUT, GROWTH);
         this.xd = xd;
         this.yd = yd;
         this.zd = zd;
@@ -115,10 +105,7 @@ public class WaterfallMist extends TextureSheetParticle {
         this.startSize = (0.2F + random.nextFloat() * 0.2F) * (1F + strength * 0.15F);
         this.quadSize = this.startSize;
         this.peakAlpha = 0.2F + random.nextFloat() * 0.2F;
-        this.alpha = 0F;
 
-        // Drifts through blocks rather than stopping at them: the soft shader fades it where it meets them
-        this.hasPhysics = false;
         this.friction = 0.92F;
         this.windExposure = SceneWind.exposure(level, BlockPos.containing(x, y, z));
         // Negative gravity: it rises, slowly
@@ -146,21 +133,14 @@ public class WaterfallMist extends TextureSheetParticle {
     }
 
     @Override
-    public @NotNull ParticleRenderType getRenderType() {
-        return DSurroundParticleRenderType.PARTICLE_SHEET_WATERFALL_MIST;
-    }
-
-    @Override
     public void tick() {
         this.churn();
         this.wobble();
         // Drifts downwind, as far as it is out in the open
         this.xd += SceneWind.push(SceneWind.x(this.x, this.z), this.windExposure, this.friction);
         this.zd += SceneWind.push(SceneWind.z(this.x, this.z), this.windExposure, this.friction);
-        // Ages it (removing it at the end of its life) and moves it, with drag and the slow rise
+        // Ages it (removing it at the end of its life), moves it with drag and the slow rise, and turns it
         super.tick();
-        this.oRoll = this.roll;
-        this.roll += this.rollSpeed;
     }
 
     /**
@@ -205,24 +185,4 @@ public class WaterfallMist extends TextureSheetParticle {
         this.zd += Mth.sin(this.age * this.wobbleRateZ + this.wobblePhaseZ) * WOBBLE;
     }
 
-    /**
-     * How far through its life it is, 0 to 1, between ticks.
-     */
-    private float lifeFraction(float partialTick) {
-        return Mth.clamp((this.age + partialTick) / this.lifetime, 0F, 1F);
-    }
-
-    @Override
-    public float getQuadSize(float partialTick) {
-        return this.startSize * (1F + GROWTH * this.lifeFraction(partialTick));
-    }
-
-    @Override
-    public void render(@NotNull VertexConsumer buffer, @NotNull Camera camera, float partialTick) {
-        // Set each frame, so the fades are smooth rather than stepping once a tick
-        float life = this.lifeFraction(partialTick);
-        float fade = Math.min(life / FADE_IN, (1F - life) / FADE_OUT);
-        this.alpha = this.peakAlpha * Mth.clamp(fade, 0F, 1F);
-        super.render(buffer, camera, partialTick);
-    }
 }

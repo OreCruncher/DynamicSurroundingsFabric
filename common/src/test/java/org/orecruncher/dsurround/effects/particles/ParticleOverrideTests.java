@@ -42,16 +42,22 @@ public class ParticleOverrideTests {
         assertOverrides(FireflyParticle.class, "tick");
         assertOverrides(WaterRippleParticle.class, "tick");
         assertOverrides(WaterfallMist.class, "tick");
+        assertOverrides(SteamPuff.class, "tick");
+        assertOverrides(SoftPuffParticle.class, "tick");
         assertOverrides(WaterFoam.class, "tick");
     }
 
     @Test
-    void mistAndFoamOverrideSizeAndRendering() {
-        // Both grow over their life and set their fade (and foam its tilt) as they are drawn
-        for (var type : new Class<?>[]{WaterfallMist.class, WaterFoam.class}) {
+    void puffsAndFoamOverrideSizeAndRendering() {
+        // Puffs of mist and steam, and foam, grow over their life and set their fade (and foam its tilt) as they are
+        // drawn: the puffs through the class they share
+        for (var type : new Class<?>[]{SoftPuffParticle.class, WaterFoam.class}) {
             assertOverrides(type, "getQuadSize", float.class);
             assertOverrides(type, "render", VertexConsumer.class, Camera.class, float.class);
         }
+        assertOverrides(SoftPuffParticle.class, "getRenderType");
+        assertEquals(SoftPuffParticle.class, WaterfallMist.class.getSuperclass());
+        assertEquals(SoftPuffParticle.class, SteamPuff.class.getSuperclass());
     }
 
     @Test

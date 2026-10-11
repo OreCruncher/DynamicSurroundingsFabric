@@ -35,6 +35,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * New /dsweather command to control aspects of the simulated storm (I use for testing but if you want to play around with it go ahead)
 
 **Changes**
+* Updated steam effect to utilize the core logic and rendering of waterfall mist
 
 **Fixes**
 

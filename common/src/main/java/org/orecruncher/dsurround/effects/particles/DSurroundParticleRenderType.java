@@ -13,9 +13,10 @@ import org.jetbrains.annotations.NotNull;
 public class DSurroundParticleRenderType {
 
     /**
-     * Waterfall mist: small puffs, so a short fade, or a puff near the water would be mostly faded out.
+     * Puffs of mist and steam (see {@link SoftPuffParticle}): small, so a short fade, or a puff near the water would be
+     * mostly faded out.
      */
-    public static final ParticleRenderType PARTICLE_SHEET_WATERFALL_MIST = softSheet("PARTICLE_SHEET_WATERFALL_MIST", 0.4F);
+    public static final ParticleRenderType PARTICLE_SHEET_MIST = softSheet("PARTICLE_SHEET_MIST", 0.4F);
 
     /**
      * Fireflies, with their halos. Vanilla's translucent sheet with depth writes off; before the fireflies, it draws
