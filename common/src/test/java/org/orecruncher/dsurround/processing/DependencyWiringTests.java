@@ -51,6 +51,12 @@ public class DependencyWiringTests {
     }
 
     @Test
+    void theAuroraFadesWithTheSimulatedStorm() {
+        // It dims by the storm's strength, not the game's own rain level, so it needs the weather simulation
+        assertNeeds(problemsFor(AuroraHandler.class), AuroraHandler.class, IWeatherSimulation.class);
+    }
+
+    @Test
     void footstepAccentsNeedTheirLibraries() {
         var problems = problemsFor(FootstepAccents.class);
 

@@ -14,7 +14,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * NeoForge 21.1.84+
 
 **AI Disclosure**
-* Used to produce a good portion of the new logic for rendering and handling of the storm simulation system
+* Used to extend the storm simulation system for rendering and handling (see What's New)
 * Used to extend steam and flame jet effects, adding additional particles, shader, and lighting where appropriate
 
 **What's New**
@@ -28,6 +28,8 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
     * No effect on other particles in Minecraft, modded or otherwise (may change in future releases)
   * Rain drops with a slight slant, and will change direction based on wind
   * Snow drops more slowly, and the impact of wind is more visible
+    * Textures are sampled from Minecraft's snow.png texture at runtime, meaning the logic will sample any modded replacement
+  * Sleet (a mix of rain and snow) can occur in transition zones (like elevation)
   * Dust storms will occur in deserts when raining, and particles will drift along the ground in the direction of wind
     * The dust particles will climb small inclines as well giving the impression of flowing over elevations
   * Serene Seasons will affect whether rain or dust blows in some biomes, such as Biomes OPlenty's Lush Desert
@@ -39,6 +41,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Updated steam effect to utilize the core logic and rendering of waterfall mist
 * Reworked the flame jet effect, reusing the mist particle with color tinting and smoke
   * Configuration options for flame jet were moved into its own configuration section
+* Updated aurora rendering to utilize the simulated rain strength and weather fog effects, meaning that for light precipitation the aurora will still render though a bit muted
 
 **Fixes**
 
