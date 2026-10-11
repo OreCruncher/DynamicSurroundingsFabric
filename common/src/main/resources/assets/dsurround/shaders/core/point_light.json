@@ -1,6 +1,6 @@
 {
-    "vertex": "dsurround:firefly_light",
-    "fragment": "dsurround:firefly_light",
+    "vertex": "dsurround:point_light",
+    "fragment": "dsurround:point_light",
     "samplers": [
         { "name": "DepthSampler" }
     ],
@@ -8,7 +8,6 @@
         { "name": "ModelViewMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
         { "name": "ProjMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
         { "name": "InverseProjMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
-        { "name": "ScreenSize", "type": "float", "count": 2, "values": [ 1.0, 1.0 ] },
-        { "name": "LightRadius", "type": "float", "count": 1, "values": [ 1.75 ] }
+        { "name": "ScreenSize", "type": "float", "count": 2, "values": [ 1.0, 1.0 ] }
     ]
 }

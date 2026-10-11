@@ -31,6 +31,10 @@ public class Configuration extends ConfigurationData {
     public final WaterfallOptions waterfallOptions = new WaterfallOptions();
 
     @Property
+    @Comment("Configuration options for flame jets")
+    public final FlameJetOptions flameJetOptions = new FlameJetOptions();
+
+    @Property
     @Comment("Configuration options for fireflies")
     public final FireflyOptions fireflyOptions = new FireflyOptions();
 
@@ -211,16 +215,24 @@ public class Configuration extends ConfigurationData {
         public boolean steamColumnEnabled = true;
 
         @Property
-        @Comment("Enable/disable flame jets produced over lava, etc.")
-        public boolean flameJetEnabled = true;
-
-        @Property
         @Comment("Enable/disable bubble columns generated underwater")
         public boolean bubbleColumnEnabled = true;
 
         @Property
         @Comment("The style of water ripple to render when a drop hits a fluid")
         public WaterRippleStyle waterRippleStyle = WaterRippleStyle.PIXELATED_CIRCLE;
+    }
+
+    public static class FlameJetOptions {
+        @Property
+        @MovedFrom("blockEffects.flameJetEnabled")
+        @Comment("Enable/disable flame jets over lava and nether wart")
+        public boolean enableFlameJets = true;
+
+        @Property
+        @MovedFrom("blockEffects.flameJetLight")
+        @Comment("Enable/disable the flicker of flame jets' light on their surroundings")
+        public boolean enableLight = true;
     }
 
     public static class WaterfallOptions {

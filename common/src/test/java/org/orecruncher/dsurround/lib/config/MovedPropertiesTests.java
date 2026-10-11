@@ -148,7 +148,7 @@ public class MovedPropertiesTests {
 
     @Test
     void theBlockEffectSettingsAreCarriedOver() throws IOException {
-        // Waterfalls and fireflies used to be switched in the block effects
+        // Waterfalls, fireflies and flame jets used to be switched in the block effects
         var config = loadModConfig("""
                 {
                   "blockEffects": {
@@ -156,7 +156,9 @@ public class MovedPropertiesTests {
                     "enableWaterfallSounds": false,
                     "enableWaterfallParticles": false,
                     "firefliesEnabled": false,
-                    "flameJetEnabled": false
+                    "flameJetEnabled": false,
+                    "flameJetLight": false,
+                    "steamColumnEnabled": false
                   }
                 }
                 """);
@@ -164,11 +166,14 @@ public class MovedPropertiesTests {
         assertFalse(config.waterfallOptions.enableSounds);
         assertFalse(config.waterfallOptions.enableParticles);
         assertFalse(config.fireflyOptions.enableFireflies);
+        assertFalse(config.flameJetOptions.enableFlameJets);
+        assertFalse(config.flameJetOptions.enableLight);
         // Settings that stayed are read as before
-        assertFalse(config.blockEffects.flameJetEnabled);
+        assertFalse(config.blockEffects.steamColumnEnabled);
 
         var blockEffects = written("dsurround.json").getAsJsonObject("blockEffects");
-        assertFalse(blockEffects.has("waterfallsEnabled") || blockEffects.has("firefliesEnabled"), "old settings still written");
+        assertFalse(blockEffects.has("waterfallsEnabled") || blockEffects.has("firefliesEnabled") || blockEffects.has("flameJetEnabled"),
+                "old settings still written");
     }
 
     @Test

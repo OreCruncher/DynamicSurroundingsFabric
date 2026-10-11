@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.mixins.core;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.particle.ParticleRenderType;
 import org.orecruncher.dsurround.effects.particles.DSurroundParticleRenderType;
@@ -33,10 +34,25 @@ public abstract class MixinParticleEngine {
                 // ordering list.
                 listBuilder.add(DSurroundParticleRenderType.PARTICLE_SHEET_MIST);
                 listBuilder.add(DSurroundParticleRenderType.PARTICLE_SHEET_FIREFLY);
+                listBuilder.add(DSurroundParticleRenderType.PARTICLE_SHEET_FLAME);
             }
             listBuilder.add(entry);
         }
 
         RENDER_ORDER = listBuilder.build();
+    }
+
+    /**
+     * Puts the usual blend back once the particles are drawn: flames are drawn adding their light, and a render type
+     * can't undo that itself. Whatever is drawn next and turns blending on without setting how (vanilla's rain, for
+     * one) would otherwise add too. NeoForge draws particles through a render method of its own, which its own calls
+     * too; either way this runs once they are all drawn.
+     */
+    @Inject(method = {
+            "render(Lnet/minecraft/client/renderer/LightTexture;Lnet/minecraft/client/Camera;F)V",
+            "render(Lnet/minecraft/client/renderer/LightTexture;Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/culling/Frustum;Ljava/util/function/Predicate;)V"
+    }, at = @At("TAIL"), require = 1)
+    private void dsurround$restoreBlend(CallbackInfo ci) {
+        RenderSystem.defaultBlendFunc();
     }
 }

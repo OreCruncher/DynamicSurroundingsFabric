@@ -55,7 +55,7 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
 - `ConfigServices` is handed by `BlockLibrary`/`BiomeLibrary` to the `BlockInfo`/`BiomeInfo` they build.
   `BiomeLibrary` resolves the condition evaluator lazily: evaluator → `BiomeVariables` → biome library is a cycle.
 - Shaders: one `effects/ModShader` per core shader (`SoftParticles.SHADER`, `AuroraRenderer.SHADER`,
-  `FireflyLights.SHADER`), listed in `ModShaders.SHADERS`, registered by both platforms. Drawing goes through
+  `PointLights.SHADER`), listed in `ModShaders.SHADERS`, registered by both platforms. Drawing goes through
   `ModShader.run` / `RenderFailSafe`: a failure is logged once, state restored, and the effect turned off until
   resources reload.
 - Config: moving a property between groups → annotate the new field `@MovedFrom({"newest.old.path", "older.path"})`;

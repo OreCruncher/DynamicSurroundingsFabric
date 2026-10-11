@@ -1,16 +1,16 @@
 #version 150
 
-// Dynamic Surroundings firefly light: lights the scene already drawn, near the light. For each pixel, where in the
-// world it is comes from a copy of the scene's depth, so this lights the grass, leaves and ground around a firefly
-// rather than a flat disc. Drawn with additive blending.
+// Dynamic Surroundings point light (a firefly's, a flame jet's): lights the scene already drawn, near the light. For
+// each pixel, where in the world it is comes from a copy of the scene's depth, so this lights the grass, leaves and
+// ground around the light rather than a flat disc. Drawn with additive blending.
 
 uniform sampler2D DepthSampler;
 uniform mat4 InverseProjMat;
 uniform vec2 ScreenSize;
-uniform float LightRadius;
 
 flat in vec3 lightCenter;
 flat in vec4 lightColor;
+flat in float lightRadius;
 
 out vec4 fragColor;
 
@@ -28,12 +28,12 @@ void main() {
 
     vec3 toLight = lightCenter - position;
     float dist = length(toLight);
-    if (dist >= LightRadius) {
+    if (dist >= lightRadius) {
         discard;
     }
 
     // Fades smoothly to nothing at the radius
-    float falloff = 1.0 - dist / LightRadius;
+    float falloff = 1.0 - dist / lightRadius;
     falloff *= falloff;
 
     // Which way the surface faces, from how its position changes between neighbouring pixels; turned toward the

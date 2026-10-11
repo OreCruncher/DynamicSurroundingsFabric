@@ -43,6 +43,9 @@ public class ParticleOverrideTests {
         assertOverrides(WaterRippleParticle.class, "tick");
         assertOverrides(WaterfallMist.class, "tick");
         assertOverrides(SteamPuff.class, "tick");
+        assertOverrides(FlameTongue.class, "tick");
+        assertOverrides(SmokePuff.class, "tick");
+        assertOverrides(FlameSpark.class, "tick");
         assertOverrides(SoftPuffParticle.class, "tick");
         assertOverrides(WaterFoam.class, "tick");
     }
@@ -58,6 +61,25 @@ public class ParticleOverrideTests {
         assertOverrides(SoftPuffParticle.class, "getRenderType");
         assertEquals(SoftPuffParticle.class, WaterfallMist.class.getSuperclass());
         assertEquals(SoftPuffParticle.class, SteamPuff.class.getSuperclass());
+        assertEquals(SoftPuffParticle.class, SmokePuff.class.getSuperclass());
+        assertEquals(SoftPuffParticle.class, FlameTongue.class.getSuperclass());
+    }
+
+    @Test
+    void flameDrawsItsOwnWay() {
+        // It flickers, sets its colour as it is drawn, lights itself, and is drawn adding its light
+        assertOverrides(FlameTongue.class, "getQuadSize", float.class);
+        assertOverrides(FlameTongue.class, "render", VertexConsumer.class, Camera.class, float.class);
+        assertOverrides(FlameTongue.class, "getLightColor", float.class);
+        assertOverrides(FlameTongue.class, "getRenderType");
+    }
+
+    @Test
+    void sparkDrawsItsOwnWay() {
+        // Drawn as a streak along its path, lit by itself, adding its light as the flames do
+        assertOverrides(FlameSpark.class, "render", VertexConsumer.class, Camera.class, float.class);
+        assertOverrides(FlameSpark.class, "getLightColor", float.class);
+        assertOverrides(FlameSpark.class, "getRenderType");
     }
 
     @Test
