@@ -105,11 +105,11 @@ public record SoundFactory(
     }
 
     @Override
-    public EntityBoundSoundInstance attachToEntity(Entity entity) {
+    public EntityBoundSoundInstance attachToEntity(Entity entity, float volumeScale) {
         return new EntityBoundSoundInstance(
                 this.soundEvent,
                 this.category,
-                this.getVolume(),
+                this.getVolume() * volumeScale,
                 this.getPitch(),
                 entity,
                 Randomizer.current().nextLong()

@@ -397,6 +397,10 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("With particle rain and snow on, storms in deserts and badlands blow dust and thicken the fog")
         public boolean enableDustStorms = true;
+
+        @Property
+        @Comment("Rain sounds that follow the storm's strength, from a patter to a roar, and the sound of blowing dust")
+        public boolean enableStormSounds = true;
     }
 
     public static class FogOptions {

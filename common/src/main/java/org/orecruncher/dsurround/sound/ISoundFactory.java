@@ -21,7 +21,15 @@ public interface ISoundFactory {
      * Creates an attenuated sound instance that is attached to the entity and will move as
      * the entity moves.  The sound instance is not repeated.
      */
-    EntityBoundSoundInstance attachToEntity(Entity entity);
+    default EntityBoundSoundInstance attachToEntity(Entity entity) {
+        return this.attachToEntity(entity, 1F);
+    }
+
+    /**
+     * Creates an attenuated sound instance that is attached to the entity and will move as the entity moves. The
+     * provided factor scales the sound volume. The sound instance is not repeated.
+     */
+    EntityBoundSoundInstance attachToEntity(Entity entity, float volumeScale);
 
     /**
      * Creates a sound instance that has no attenuation and that will repeat without any

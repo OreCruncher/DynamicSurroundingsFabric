@@ -1462,5 +1462,18 @@
 		"sounds": [
 			"dsurround:ambient/silence"
 		]
+	},
+	"weather.rain": {
+		"sounds": [
+			"dsurround:ambient/weather/rain_calm1",
+			"dsurround:ambient/weather/rain_calm2",
+			"dsurround:ambient/weather/rain_calm3",
+			"dsurround:ambient/weather/rain_calm4"
+		]
+	},
+	"weather.dust": {
+		"sounds": [
+			"dsurround:ambient/weather/dust"
+		]
 	}
 }

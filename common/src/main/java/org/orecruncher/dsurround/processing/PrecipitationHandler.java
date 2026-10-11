@@ -15,6 +15,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -25,6 +26,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.MapColor;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
+import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.precipitation.IColumnSource;
 import org.orecruncher.dsurround.effects.particles.DSurroundParticleSprites;
@@ -35,6 +37,7 @@ import org.orecruncher.dsurround.effects.precipitation.PrecipitationKind;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationField;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
 import org.orecruncher.dsurround.effects.precipitation.Snowflakes;
+import org.orecruncher.dsurround.effects.precipitation.StormSounds;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -86,6 +89,9 @@ public class PrecipitationHandler extends AbstractClientHandler {
 
     private final IWeatherSimulation weatherSimulation;
     private final WindService windService;
+    private final ISoundLibrary soundLibrary;
+    // Ticks since the dust sound last played, as vanilla counts for its rain sound
+    private int dustSoundTime;
     private final ITagLibrary tagLibrary;
     private final BlockPos.MutableBlockPos landingPos = new BlockPos.MutableBlockPos();
     private PrecipitationField field = new PrecipitationField(MAX_DROPS);
@@ -93,11 +99,12 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private final Snowflakes snowflakes;
     private final LevelColumns columns;
 
-    public PrecipitationHandler(IWeatherSimulation weatherSimulation, WindService windService, ISeasonalInformation seasonalInformation,
+    public PrecipitationHandler(IWeatherSimulation weatherSimulation, WindService windService, ISoundLibrary soundLibrary, ISeasonalInformation seasonalInformation,
                                 ITagLibrary tagLibrary, IBiomeLibrary biomeLibrary, Configuration config, IModLog logger) {
         super("Precipitation Handler", config, logger);
         this.weatherSimulation = weatherSimulation;
         this.windService = windService;
+        this.soundLibrary = soundLibrary;
         this.tagLibrary = tagLibrary;
         this.columns = new LevelColumns(seasonalInformation, biomeLibrary, tagLibrary, config.weatherOptions);
         this.snowflakes = new Snowflakes(logger);
@@ -149,6 +156,31 @@ public class PrecipitationHandler extends AbstractClientHandler {
         this.fitRange(this.config.weatherOptions.precipitationRange);
         this.field.tick(this.columns, pos.x, pos.y, pos.z, rainLevel, density(this.config.weatherOptions.precipitationDensity, particles), this.windService.wind(), RANDOM);
         this.splash(level);
+        this.dustSound(level, pos.x, pos.z, rainLevel);
+    }
+
+    /**
+     * The sound of blowing dust, as vanilla plays its rain: every few ticks, on the ground somewhere near the player
+     * where the storm brings dust. Vanilla's own rain sound stays quiet there, as nothing falls.
+     */
+    private void dustSound(ClientLevel level, double cameraX, double cameraZ, float rainLevel) {
+        if (!this.config.weatherOptions.enableStormSounds || this.field.dustCount() == 0)
+            return;
+        if (!StormSounds.isTimeForSound(RANDOM.nextInt(StormSounds.SOUND_CHANCE), this.dustSoundTime++))
+            return;
+        // A few tries for a spot with dust; at the edge of a desert, most of the area may have none
+        int radius = this.field.radius();
+        for (int tries = 0; tries < 4; tries++) {
+            double x = cameraX + RANDOM.nextInt(radius * 2 + 1) - radius;
+            double z = cameraZ + RANDOM.nextInt(radius * 2 + 1) - radius;
+            if (!this.field.isDustAt(x, z))
+                continue;
+            this.dustSoundTime = 0;
+            double y = this.columns.groundHeight(Mth.floor(x), Mth.floor(z)) + 0.1D;
+            level.playLocalSound(x, y, z, this.soundLibrary.getSound(StormSounds.DUST), SoundSource.WEATHER,
+                    StormSounds.dustVolume(rainLevel), StormSounds.dustPitch(RANDOM.nextFloat()), false);
+            return;
+        }
     }
 
     /**

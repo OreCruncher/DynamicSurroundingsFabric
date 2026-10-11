@@ -2,14 +2,20 @@ package org.orecruncher.dsurround.mixins.core;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
+import org.orecruncher.dsurround.effects.precipitation.StormSounds;
 import org.orecruncher.dsurround.eventing.ISkyRender;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.spongepowered.asm.mixin.Mixin;
@@ -52,6 +58,25 @@ public class MixinLevelRenderer {
     @WrapWithCondition(method = "tickRain(Lnet/minecraft/client/Camera;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;addParticle(Lnet/minecraft/core/particles/ParticleOptions;DDDDDD)V"))
     private boolean dsurround$vanillaRainSplash(ClientLevel level, ParticleOptions particle, double x, double y, double z, double xd, double yd, double zd) {
         return !MixinHelpers.precipitation().isActive();
+    }
+
+    /**
+     * The rain sound, as 1.12.2 had it: the mod's calm rain, louder as the storm strengthens, with vanilla's heavier
+     * rain blended in from a moderate storm up. Both calls, the rain in the open and on a roof above, come through
+     * here; each keeps vanilla's volume and pitch for where it is, scaled.
+     */
+    @WrapOperation(method = "tickRain(Lnet/minecraft/client/Camera;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;playLocalSound(Lnet/minecraft/core/BlockPos;Lnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FFZ)V"))
+    private void dsurround$rainSound(ClientLevel level, BlockPos pos, SoundEvent sound, SoundSource source, float volume, float pitch, boolean distanceDelay, Operation<Void> original) {
+        if (!MixinHelpers.weatherOptions.enableStormSounds) {
+            original.call(level, pos, sound, source, volume, pitch, distanceDelay);
+            return;
+        }
+        var rainLevel = MixinHelpers.weatherSimulation().rainLevel(level.getRainLevel(1F));
+        var calm = MixinHelpers.SOUND_LIBRARY.getSound(StormSounds.RAIN);
+        level.playLocalSound(pos, calm, source, volume * StormSounds.calmShare(rainLevel), pitch, distanceDelay);
+        var heavy = StormSounds.heavyShare(rainLevel);
+        if (heavy > 0F)
+            original.call(level, pos, sound, source, volume * heavy, pitch, distanceDelay);
     }
 
     /**
