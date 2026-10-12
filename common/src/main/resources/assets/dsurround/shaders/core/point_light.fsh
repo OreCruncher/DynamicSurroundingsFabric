@@ -7,6 +7,9 @@
 uniform sampler2D DepthSampler;
 uniform mat4 InverseProjMat;
 uniform vec2 ScreenSize;
+// With Fabulous graphics, 1: the light's colour comes scaled by its strength, with next to no alpha, for adding as it
+// is (see PointLights)
+uniform float AddOnly;
 
 flat in vec3 lightCenter;
 flat in vec4 lightColor;
@@ -45,5 +48,6 @@ void main() {
     }
     float facing = clamp((dot(normal, toLight / max(dist, 0.0001)) + 0.25) / 1.25, 0.0, 1.0);
 
-    fragColor = vec4(lightColor.rgb, lightColor.a * falloff * facing);
+    float strength = lightColor.a * falloff * facing;
+    fragColor = AddOnly > 0.5 ? vec4(lightColor.rgb * strength, 1.0 / 255.0) : vec4(lightColor.rgb, strength);
 }

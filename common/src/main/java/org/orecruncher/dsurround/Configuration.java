@@ -401,6 +401,10 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Rain sounds that follow the storm's strength, from a patter to a roar, and the sound of blowing dust")
         public boolean enableStormSounds = true;
+
+        @Property
+        @Comment("Mist lying low over the ground in swamps and eerie biomes")
+        public boolean enableGroundFog = true;
     }
 
     public static class FogOptions {

@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.commands.handlers;
 import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.runtime.weather.Wind;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.processing.GroundFogHandler;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WindService;
 
@@ -43,6 +44,35 @@ public class WeatherCommandHandler {
 
     public static Component windClear() {
         return windClear(wind());
+    }
+
+    public static Component groundFog(int percent) {
+        return groundFog(ContainerManager.resolve(GroundFogHandler.class), percent);
+    }
+
+    public static Component groundFogStatus() {
+        return groundFogStatus(ContainerManager.resolve(GroundFogHandler.class));
+    }
+
+    static Component groundFogStatus(GroundFogHandler handler) {
+        return handler.forced()
+                .map(thickness -> Component.translatable(KEY + "groundfog.status.set", percent(thickness)))
+                .orElseGet(() -> Component.translatable(KEY + "groundfog.status"));
+    }
+
+    public static Component groundFogClear() {
+        return groundFogClear(ContainerManager.resolve(GroundFogHandler.class));
+    }
+
+    static Component groundFog(GroundFogHandler handler, int percent) {
+        handler.setForced(percent / 100F);
+        return Component.translatable(KEY + "groundfog.success", percent);
+    }
+
+    static Component groundFogClear(GroundFogHandler handler) {
+        var wasSet = handler.forced().isPresent();
+        handler.clearForced();
+        return Component.translatable(KEY + (wasSet ? "groundfog.clear.success" : "groundfog.clear.notset"));
     }
 
     private static IWeatherSimulation simulation() {

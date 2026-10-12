@@ -60,6 +60,15 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   resources reload.
 - Config: moving a property between groups → annotate the new field `@MovedFrom({"newest.old.path", "older.path"})`;
   old values carry over on load. Translation keys follow `dsurround.config.<group>.<field>[.tooltip]`.
+- Fabulous graphics draws translucent things, particles and weather to targets of their own, which vanilla's
+  `transparency` post shader lays over the scene sorted by each target's depth, taking colours as premultiplied:
+  `behind * (1 - alpha) + colour`, and skipping alpha 0. So anything we draw there must leave sensible alpha and depth:
+  - The weather target is cleared but gets no copy of the scene's depth: read the main target's, and write depth (ground
+    fog, damp spots), or the scene is laid over it.
+  - The particles target's depth is the scene's from before water; the translucent target's has the water's surface.
+    Soft particles fade against the translucent depth and write it (`WriteSceneDepth`) so water isn't laid over them.
+  - Blend alpha as "over" (`ONE, ONE_MINUS_SRC_ALPHA`), not the default's `ONE, ZERO`, or piled-up colour outgrows its
+    alpha; additive light needs colour already scaled and a tiny non-zero alpha (`PointLights`).
 - Mixin plugin (`mixinutils/DSurroundMixinPlugin`) skips mixins whose target belongs to a mod that isn't installed
   (currently Cloth Config).
 - Tags in `dsconfigs/tags/<registry>/...` are client-side tag definitions. Reference other tags with `#`
@@ -73,10 +82,17 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   - `processing/PrecipitationHandler` runs particle weather (`PrecipitationField`, `LevelColumns`, `Landings`) and
     stands aside for shader packs, a failed shader, the Particle Rain mod (`KnownMod`) and dimensions that draw their
     own weather.
-  - Per dimension (`dimensions.json`): `particleWeather` and `simulateWind`, guessed when absent
+  - Ground fog (`effects/groundfog`, run by `processing/GroundFogHandler`): mist in biomes with `groundFog` in
+    `biomes.json`, drawn by a ray-marched screen pass (`GroundFogVolume`) over a per-column grid (`GroundFogField`),
+    scaled by `GroundFogConditions` (time of day, wind, rain, shelter). Ground heights come from the client's
+    `MOTION_BLOCKING` heightmap: the server never sends `MOTION_BLOCKING_NO_LEAVES`, so on the client it is empty.
+    Noise positions wrap at `GroundFogVolume.NOISE_WRAP`, a whole number of every noise's cells (a test checks), or a
+    wrap shows as a jump.
+  - Per dimension (`dimensions.json`): `particleWeather`, `simulateWind` and `groundFog`, guessed when absent
     (`DimensionInfo.hasVanillaWeather`, sky light). The client always reports sea level 63, so a modded dimension
     with another needs a `seaLevel` rule.
-  - `/dsweather` holds the storm strength and the wind's speed and direction for testing; disconnecting clears them.
+  - `/dsweather` holds the storm strength, the wind's speed and direction, and a ground fog thickness for testing;
+    disconnecting clears them.
   - Weather script variables live in `runtime/variables/WeatherVariables` (`weather.*`).
 
 ## Environment gotchas

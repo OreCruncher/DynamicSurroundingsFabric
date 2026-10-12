@@ -59,6 +59,10 @@ public class DimensionInformation implements IDimensionInformation {
         return this.getInfo().simulateWind();
     }
 
+    public boolean groundFog() {
+        return this.getInfo().groundFog();
+    }
+
     private DimensionInfo getInfo() {
         return this.info.get(this.level(), this.dimensionLibrary.getVersion(), this.dimensionLibrary::getData);
     }

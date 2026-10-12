@@ -39,6 +39,8 @@ public class DimensionInfo {
     protected boolean particleWeather = true;
     // Whether the wind blows here: it drifts the weather, mist, steam, smoke and flames
     protected boolean simulateWind = true;
+    // Whether mist lies on the ground here, in the biomes given it
+    protected boolean groundFog = true;
 
     // The dimension's own cloud height, used unless a rule sets one
     private final int defaultCloudHeight;
@@ -66,9 +68,10 @@ public class DimensionInfo {
 
         this.compassWobble = !world.dimensionType().natural();
 
-        // Guesses, which a rule can overrule: a dimension with a sky has wind, and one that draws its weather as
-        // vanilla does gets particle weather in its place
+        // Guesses, which a rule can overrule: a dimension with a sky has wind and ground fog, and one that draws its
+        // weather as vanilla does gets particle weather in its place
         this.simulateWind = world.dimensionType().hasSkyLight();
+        this.groundFog = world.dimensionType().hasSkyLight();
         this.particleWeather = !(world instanceof ClientLevel clientLevel) || hasVanillaWeather(clientLevel.effects());
 
         // Valid even if finish() is never called
@@ -113,6 +116,7 @@ public class DimensionInfo {
             config.compassWobble().ifPresent(v -> this.compassWobble = v);
             config.particleWeather().ifPresent(v -> this.particleWeather = v);
             config.simulateWind().ifPresent(v -> this.simulateWind = v);
+            config.groundFog().ifPresent(v -> this.groundFog = v);
         }
     }
 
@@ -168,6 +172,10 @@ public class DimensionInfo {
 
     public boolean simulateWind() {
         return this.simulateWind;
+    }
+
+    public boolean groundFog() {
+        return this.groundFog;
     }
 
 }

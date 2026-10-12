@@ -77,6 +77,7 @@ public class Handlers {
         this.register(FogHandler.class);
         this.register(AuroraHandler.class);
         this.register(PrecipitationHandler.class);
+        this.register(GroundFogHandler.class);
 
         IClientTickEnd.EVENT.register(this::tick);
         IClientConnect.EVENT.register(this::onConnect);

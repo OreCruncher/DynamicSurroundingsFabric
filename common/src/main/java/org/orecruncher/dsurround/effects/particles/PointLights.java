@@ -125,12 +125,22 @@ public final class PointLights {
     private static void drawLights(Tesselator tesselator, ShaderInstance current, int n) {
         SoftParticles.bindSceneDepth(current);
         current.safeGetUniform("InverseProjMat").set(RenderSystem.getProjectionMatrix().invert(new Matrix4f()));
+        boolean fabulous = Minecraft.useShaderTransparency();
+        current.safeGetUniform("AddOnly").set(fabulous ? 1F : 0F);
         RenderSystem.setShader(SHADER.supplier());
 
         // The shader finds what each light reaches itself, so nothing is tested against depth; and its squares
         // may face either way
         RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
+        if (fabulous) {
+            // Light is added to the particles' own target, which the transparency pass lays over the scene as
+            // behind * (1 - alpha) + colour: with the usual adding, the alpha piles up too and the lit ground is
+            // replaced by the light's colour, a flat white. The shader gives its light already scaled by its strength,
+            // and next to no alpha (not none, or the pass skips the pixel), and both are simply added.
+            RenderSystem.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE);
+        } else {
+            RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
+        }
         RenderSystem.depthMask(false);
         RenderSystem.disableDepthTest();
         RenderSystem.disableCull();

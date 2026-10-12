@@ -6,13 +6,15 @@
     "dimId": "minecraft:the_nether",
     "seaLevel": 0,
     "alwaysOutside": true,
-    "simulateWind": false
+    "simulateWind": false,
+    "groundFog": false
   },
   {
     "dimId": "minecraft:the_end",
     "seaLevel": 0,
     "cloudHeight": 128,
     "alwaysOutside": true,
-    "simulateWind": false
+    "simulateWind": false,
+    "groundFog": false
   }
 ]

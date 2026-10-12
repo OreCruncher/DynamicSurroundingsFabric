@@ -202,15 +202,16 @@ public class ConfigDataTests {
 
     @Test
     void dimensionRulesSetWeatherAndWind() {
-        var rule = parse(DimensionConfigRule.CODEC, "{\"dimId\": \"twilightforest:twilight_forest\", \"particleWeather\": true, \"simulateWind\": false}").getOrThrow();
+        var rule = parse(DimensionConfigRule.CODEC, "{\"dimId\": \"twilightforest:twilight_forest\", \"particleWeather\": true, \"simulateWind\": false, \"groundFog\": true}").getOrThrow();
         assertEquals(Optional.of(true), rule.particleWeather());
         assertEquals(Optional.of(false), rule.simulateWind());
+        assertEquals(Optional.of(true), rule.groundFog());
         var text = rule.toString();
-        assertTrue(text.contains("particleWeather: true") && text.contains("simulateWind: false"), text);
+        assertTrue(text.contains("particleWeather: true") && text.contains("simulateWind: false") && text.contains("groundFog: true"), text);
 
         // Left out, they are left to the dimension's own guess
         var plain = parse(DimensionConfigRule.CODEC, "{\"dimId\": \"minecraft:overworld\"}").getOrThrow();
-        assertTrue(plain.particleWeather().isEmpty() && plain.simulateWind().isEmpty());
+        assertTrue(plain.particleWeather().isEmpty() && plain.simulateWind().isEmpty() && plain.groundFog().isEmpty());
     }
 
     @Test
@@ -253,12 +254,13 @@ public class ConfigDataTests {
     }
 
     @Test
-    void theNetherAndEndHaveNoWind() throws IOException {
+    void theNetherAndEndHaveNoWindOrGroundFog() throws IOException {
         var rules = Codec.list(DimensionConfigRule.CODEC).parse(JsonOps.INSTANCE,
                 json(resource("/assets/dsurround/dsconfigs/dimensions.json"))).getOrThrow();
         for (var dimension : List.of("minecraft:the_nether", "minecraft:the_end")) {
             var rule = rules.stream().filter(r -> r.dimensionId().toString().equals(dimension)).findFirst().orElseThrow();
             assertEquals(Optional.of(false), rule.simulateWind(), dimension);
+            assertEquals(Optional.of(false), rule.groundFog(), dimension);
         }
     }
 

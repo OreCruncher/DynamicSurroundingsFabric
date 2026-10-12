@@ -22,6 +22,7 @@ class WeatherCommand extends AbstractClientCommand {
     private static final String SPEED = "speed";
     private static final String DIRECTION = "direction";
     private static final String DEGREES_PARAMETER = "degrees";
+    private static final String GROUND_FOG = "groundfog";
     // A full storm's wind is 100: thunderstorms and dust storms blow harder
     private static final int MAX_WIND_PERCENT = 300;
 
@@ -34,7 +35,21 @@ class WeatherCommand extends AbstractClientCommand {
                                 .executes(ctx -> this.execute(ctx,
                                         () -> WeatherCommandHandler.strength(IntegerArgumentType.getInteger(ctx, PERCENT_PARAMETER))))))
                 .then(subCommand(CLEAR, WeatherCommandHandler::clear))
-                .then(this.windCommand()));
+                .then(this.windCommand())
+                .then(this.groundFogCommand()));
+    }
+
+    /**
+     * /dsweather groundfog 0-100 gives the ground fog that thickness everywhere, as a percent of the thickest; clear
+     * goes back to the biomes'
+     */
+    private LiteralArgumentBuilder<ClientCommandRegistrationEvent.ClientCommandSourceStack> groundFogCommand() {
+        return ClientCommandRegistrationEvent.literal(GROUND_FOG)
+                .executes(ctx -> this.execute(ctx, WeatherCommandHandler::groundFogStatus))
+                .then(ClientCommandRegistrationEvent.argument(PERCENT_PARAMETER, IntegerArgumentType.integer(0, 100))
+                        .executes(ctx -> this.execute(ctx,
+                                () -> WeatherCommandHandler.groundFog(IntegerArgumentType.getInteger(ctx, PERCENT_PARAMETER)))))
+                .then(subCommand(CLEAR, WeatherCommandHandler::groundFogClear));
     }
 
     /**

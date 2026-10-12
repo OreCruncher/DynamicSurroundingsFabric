@@ -227,8 +227,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
     }
 
     /**
-     * The dust first, behind the rain and snow, and soft: it reads a copy of the scene's depth, taken from the target
-     * the weather is drawn to. Then the rain and snow, drawn hard.
+     * The dust first, behind the rain and snow, and soft: it reads a copy of the scene's depth, water included (see
+     * SoftParticles.sceneDepthTarget). Then the rain and snow, drawn hard.
      */
     private void drawDrops(Tesselator tesselator, Camera camera, float partialTick) {
         var shader = Objects.requireNonNull(PrecipitationShaders.DROPS.get());
@@ -241,7 +241,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
 
         if (this.field.dustCount() > 0) {
             RenderSystem.setShaderTexture(0, particleAtlas());
-            SoftParticles.bindSceneDepth(shader, weatherTarget());
+            // The scene's depth, water included: the weather's own target has none with Fabulous graphics
+            SoftParticles.bindSceneDepth(shader, SoftParticles.sceneDepthTarget(), weatherTarget());
             shader.safeGetUniform("SoftDistance").set(DUST_SOFT_DISTANCE);
             this.field.draw(tesselator, camera, partialTick, true, flakes, largest, dust);
         }
@@ -253,8 +254,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
     }
 
     /**
-     * Where the weather is drawn: with Fabulous graphics, a target of its own, which holds a copy of the scene's depth;
-     * otherwise the main target
+     * Where the weather is drawn: with Fabulous graphics, a target of its own, which vanilla clears but gives no copy of
+     * the scene's depth (read the main target's for that); otherwise the main target
      */
     private static RenderTarget weatherTarget() {
         var minecraft = GameUtils.getMC();
@@ -264,7 +265,10 @@ public class PrecipitationHandler extends AbstractClientHandler {
 
     private void drawDampSpots(Tesselator tesselator, Camera camera, float partialTick) {
         var darkening = !Minecraft.useShaderTransparency();
-        RenderSystem.depthMask(false);
+        // With Fabulous graphics their depth is written: the weather's target has none of its own, and the transparency
+        // pass sorts it by depth, so without it the scene is laid over them. They lie on the ground, so it hides
+        // nothing that the ground wouldn't.
+        RenderSystem.depthMask(!darkening);
         RenderSystem.setShader(PrecipitationShaders.DAMP_SPOTS.supplier());
         RenderSystem.setShaderTexture(0, particleAtlas());
         // What is drawn there is scaled by one less the spot's alpha

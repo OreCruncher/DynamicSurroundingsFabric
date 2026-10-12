@@ -16,7 +16,8 @@ public record DimensionConfigRule(
         Optional<Boolean> playBiomeSounds,
         Optional<Boolean> compassWobble,
         Optional<Boolean> particleWeather,
-        Optional<Boolean> simulateWind) {
+        Optional<Boolean> simulateWind,
+        Optional<Boolean> groundFog) {
 
     public static final Codec<DimensionConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
                 ResourceLocation.CODEC.fieldOf("dimId").forGetter(DimensionConfigRule::dimensionId),
@@ -27,7 +28,8 @@ public record DimensionConfigRule(
                 Codec.BOOL.optionalFieldOf("playBiomeSounds").forGetter(DimensionConfigRule::playBiomeSounds),
                 Codec.BOOL.optionalFieldOf("compassWobble").forGetter(DimensionConfigRule::compassWobble),
                 Codec.BOOL.optionalFieldOf("particleWeather").forGetter(DimensionConfigRule::particleWeather),
-                Codec.BOOL.optionalFieldOf("simulateWind").forGetter(DimensionConfigRule::simulateWind))
+                Codec.BOOL.optionalFieldOf("simulateWind").forGetter(DimensionConfigRule::simulateWind),
+                Codec.BOOL.optionalFieldOf("groundFog").forGetter(DimensionConfigRule::groundFog))
                 .apply(instance, DimensionConfigRule::new));
 
     @Override
@@ -42,6 +44,7 @@ public record DimensionConfigRule(
         this.compassWobble.ifPresent(v -> builder.append(" compassWobble: ").append(v));
         this.particleWeather.ifPresent(v -> builder.append(" particleWeather: ").append(v));
         this.simulateWind.ifPresent(v -> builder.append(" simulateWind: ").append(v));
+        this.groundFog.ifPresent(v -> builder.append(" groundFog: ").append(v));
         return builder.toString();
     }
 

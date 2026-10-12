@@ -15,6 +15,11 @@ uniform vec4 FogColor;
 uniform mat4 ProjMat;
 // How far in front of what is behind it, in blocks, the particle is at full strength
 uniform float SoftDistance;
+// With Fabulous graphics, 1: the particle writes the scene's depth where it is drawn, not its own. The transparency
+// pass sorts the particles' target by its depth, which otherwise is the ground's under any water, so the water is laid
+// over the particles and dims them there and nowhere else. The scene's depth, water's surface included, puts them in
+// front of it; and as every particle at a place writes the same, none hides another.
+uniform float WriteSceneDepth;
 
 in float vertexDistance;
 in vec2 texCoord0;
@@ -49,9 +54,15 @@ void main() {
     }
     vec4 color = texel * vertexColor * ColorModulator;
 
-    float sceneDistance = linear_depth(texelFetch(DepthSampler, ivec2(gl_FragCoord.xy), 0).r);
+    float sceneDepth = texelFetch(DepthSampler, ivec2(gl_FragCoord.xy), 0).r;
+    float sceneDistance = linear_depth(sceneDepth);
     float particleDistance = linear_depth(gl_FragCoord.z);
     color.a *= clamp((sceneDistance - particleDistance) / SoftDistance, 0.0, 1.0);
+    // Behind the scene, or faded to nothing against it: nothing drawn, and no depth written
+    if (color.a <= 0.0) {
+        discard;
+    }
 
+    gl_FragDepth = WriteSceneDepth > 0.5 ? sceneDepth : gl_FragCoord.z;
     fragColor = linear_fog(color, vertexDistance, FogStart, FogEnd, FogColor);
 }

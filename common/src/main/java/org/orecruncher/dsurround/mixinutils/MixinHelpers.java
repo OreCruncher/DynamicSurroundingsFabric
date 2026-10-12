@@ -8,6 +8,7 @@ import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.processing.FogHandler;
+import org.orecruncher.dsurround.processing.GroundFogHandler;
 import org.orecruncher.dsurround.processing.PrecipitationHandler;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 
@@ -64,6 +65,15 @@ public class MixinHelpers {
 
     public static PrecipitationHandler precipitation() {
         return PrecipitationHolder.INSTANCE;
+    }
+
+    // Asked every frame to draw the mist
+    private static final class GroundFogHolder {
+        static final GroundFogHandler INSTANCE = ContainerManager.resolve(GroundFogHandler.class);
+    }
+
+    public static GroundFogHandler groundFog() {
+        return GroundFogHolder.INSTANCE;
     }
 
 }

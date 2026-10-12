@@ -234,7 +234,8 @@
     "biomeSelector": "SWAMP && !FOREST",
     "_comment": "Basic Swamp Fog",
     "fogColor": "#406040",
-    "fogDensity": "medium"
+    "fogDensity": "medium",
+    "groundFog": "medium"
   },
   {
     "biomeSelector": "SWAMP && !(FOREST || DEAD || COLD)",
@@ -377,8 +378,9 @@
   },
   {
     "biomeSelector": "SPOOKY && !(NETHER || END || UNDERGROUND)",
-    "_comment": "Fog density for spooky biomes, above ground: fog is the sky's, and a spooky cave (the deep dark, Biomes O' Plenty's spider nest) would fill with it",
-    "fogDensity": "heavy"
+    "_comment": "Fog density for spooky biomes, above ground: fog is the sky's, and a spooky cave (the deep dark, Biomes O' Plenty's spider nest) would fill with it. Mist lies on the ground.",
+    "fogDensity": "medium",
+    "groundFog": "heavy"
   },
   {
     "biomeSelector": "UNDERGROUND",

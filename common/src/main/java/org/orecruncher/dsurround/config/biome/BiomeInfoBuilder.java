@@ -43,6 +43,7 @@ public final class BiomeInfoBuilder implements IBiomeIdentity {
     @Nullable
     TextColor fogColor;
     FogDensity fogDensity = FogDensity.NONE;
+    FogDensity groundFog = FogDensity.NONE;
     Script additionalSoundChance = DEFAULT_SOUND_CHANCE;
     Script moodSoundChance = DEFAULT_SOUND_CHANCE;
     private boolean built;
@@ -113,6 +114,7 @@ public final class BiomeInfoBuilder implements IBiomeIdentity {
         entry.comment().ifPresent(this::addComment);
         entry.fogColor().ifPresent(color -> this.fogColor = color);
         entry.fogDensity().ifPresent(density -> this.fogDensity = density);
+        entry.groundFog().ifPresent(density -> this.groundFog = density);
         entry.additionalSoundChance().ifPresent(chance -> this.additionalSoundChance = chance);
         entry.moodSoundChance().ifPresent(chance -> this.moodSoundChance = chance);
 

@@ -43,4 +43,9 @@ public interface IDimensionInformation {
      * Whether the wind blows here
      */
     boolean simulateWind();
+
+    /**
+     * Whether mist lies on the ground here, in the biomes given it
+     */
+    boolean groundFog();
 }

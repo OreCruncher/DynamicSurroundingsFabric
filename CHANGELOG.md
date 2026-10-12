@@ -16,6 +16,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 **AI Disclosure**
 * Used to extend the storm simulation system for rendering and handling (see What's New)
 * Used to extend steam and flame jet effects, adding additional particles, shader, and lighting where appropriate
+* Assisted in the creation of the ground fog feature (see What's New)
 * Identified the cause of water ripples being invisible while player is underwater and helped with a fix
 
 **What's New**
@@ -40,6 +41,11 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Serene Seasons will affect whether rain or dust blows in some biomes, such as Biomes OPlenty's Lush Desert
   * Various parts of the system can be enabled/disabled in the Weather Options section
   * The weather system will auto disable if Particle Rain or Simple Weather is installed
+* [WIP] Ground fog in swamps and spooky biomes like Dark Forest and BOPs Ominous Forest
+  * Heavy rains can thin it out, higher density between midnight and morning
+  * Wind can shift the drift direction
+  * Should clear when inside
+  * Let me know what you think on my Github!
 * New /dsweather command to control aspects of simulated wind and storm
   * I use for testing but if you want to play around with it go ahead - doesn't affect game mechanics
 
@@ -54,6 +60,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Added Twilight Forest dimension configuration to set sea level.
 * Moved aurora render hook to avoid conflict with Astral Sorcery's sky render
 * Fog being applied to SPOOKY underground biomes, like BOPs spider nest
+* Rendering issues when Fabulous! graphics enabled
 
 > ### DynamicSurroundings-1.21.1-0.4.6
 

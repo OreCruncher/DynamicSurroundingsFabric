@@ -54,8 +54,21 @@ public class MixinLevelRenderer {
      */
     @Inject(method = "renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V", at = @At("HEAD"), cancellable = true)
     private void dsurround$renderPrecipitation(LightTexture lightTexture, float partialTick, double camX, double camY, double camZ, CallbackInfo ci) {
+        // The mist on the ground first, under the rain; with Fabulous graphics after it (below)
+        MixinHelpers.groundFog().renderBeforeWeather(lightTexture, partialTick);
         if (MixinHelpers.precipitation().render(lightTexture, partialTick))
             ci.cancel();
+    }
+
+    /**
+     * With Fabulous graphics, the mist on the ground after the weather (see GroundFogHandler.renderAfterWeather): from
+     * where the level calls for the weather, rather than inside it, so it is drawn however the weather's drawing ends,
+     * cancelled by us or another mod (Simple Weather cancels it) or left early by NeoForge for a dimension's own.
+     */
+    @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V"))
+    private void dsurround$groundFogAfterWeather(LevelRenderer renderer, LightTexture lightTexture, float partialTick, double camX, double camY, double camZ, Operation<Void> original) {
+        original.call(renderer, lightTexture, partialTick, camX, camY, camZ);
+        MixinHelpers.groundFog().renderAfterWeather(lightTexture, partialTick);
     }
 
     /**

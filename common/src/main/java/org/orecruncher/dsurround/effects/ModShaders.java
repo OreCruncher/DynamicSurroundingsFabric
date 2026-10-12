@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.effects;
 import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
 import org.orecruncher.dsurround.effects.particles.PointLights;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
+import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
 
 import java.util.List;
@@ -18,7 +19,8 @@ public final class ModShaders {
             AuroraRenderer.SHADER,
             PointLights.SHADER,
             PrecipitationShaders.DROPS,
-            PrecipitationShaders.DAMP_SPOTS);
+            PrecipitationShaders.DAMP_SPOTS,
+            GroundFogVolume.SHADER);
 
     private ModShaders() {
     }

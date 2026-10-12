@@ -56,6 +56,7 @@ public final class SoftParticles {
             bindSceneDepth(current);
             // The shader is shared by every soft render type, so each sets its own fade distance
             current.safeGetUniform("SoftDistance").set(softDistance);
+            current.safeGetUniform("WriteSceneDepth").set(Minecraft.useShaderTransparency() ? 1F : 0F);
             RenderSystem.setShader(SHADER.supplier());
         }, SoftParticles::bindParticleTarget);
     }
@@ -65,7 +66,19 @@ public final class SoftParticles {
      * drawing particles that needs to know what is behind them.
      */
     public static void bindSceneDepth(ShaderInstance target) {
-        bindSceneDepth(target, particleTarget());
+        bindSceneDepth(target, sceneDepthTarget(), particleTarget());
+    }
+
+    /**
+     * Where the scene's depth is, water's surface included, for drawing that needs to know what is behind it: with
+     * Fabulous graphics, the translucent target, which holds a copy of the scene's depth and the water drawn over it.
+     * The particles' target has the scene's depth from before the water was drawn, and the weather's none at all.
+     * Otherwise the main target, which has both.
+     */
+    public static RenderTarget sceneDepthTarget() {
+        var minecraft = Minecraft.getInstance();
+        RenderTarget target = minecraft.levelRenderer.getTranslucentTarget();
+        return target != null ? target : minecraft.getMainRenderTarget();
     }
 
     /**
@@ -74,10 +87,20 @@ public final class SoftParticles {
      * it should be the target being drawn to, such as the weather's own with Fabulous graphics.
      */
     public static void bindSceneDepth(ShaderInstance target, RenderTarget renderTarget) {
-        var copy = depthCopyFor(renderTarget);
-        copy.copyDepthFrom(renderTarget);
+        bindSceneDepth(target, renderTarget, renderTarget);
+    }
+
+    /**
+     * Copies the depth of {@code from} as it is now, and gives the copy to {@code target} as its DepthSampler; then
+     * binds {@code drawTo} for drawing. For drawing to one target with another's depth: with Fabulous graphics, the
+     * weather's target has no copy of the scene's depth (vanilla only clears it), so what is drawn there reads the
+     * main target's.
+     */
+    public static void bindSceneDepth(ShaderInstance target, RenderTarget from, RenderTarget drawTo) {
+        var copy = depthCopyFor(from);
+        copy.copyDepthFrom(from);
         // Copying leaves no frame buffer bound
-        renderTarget.bindWrite(false);
+        drawTo.bindWrite(false);
 
         target.setSampler("DepthSampler", copy.getDepthTextureId());
     }
@@ -92,7 +115,7 @@ public final class SoftParticles {
 
     /**
      * Where particles are drawn: with Fabulous graphics, a target of their own (which holds a copy of the scene's
-     * depth); otherwise the main target.
+     * depth, from before the water was drawn); otherwise the main target.
      */
     private static RenderTarget particleTarget() {
         var minecraft = Minecraft.getInstance();
