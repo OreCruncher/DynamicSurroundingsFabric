@@ -395,6 +395,20 @@ public abstract class ConfigElement<T> {
         public Class<? extends Enum<?>> getEnumClass() {
             return this.enumClass;
         }
+
+        @Override
+        public Component getDefaultValueTooltip() {
+            return Component.translatable("dsurround.config.tooltip.defaultValue", displayName(this.defaultValue())).withStyle(STYLE_DEFAULT);
+        }
+
+        /**
+         * How a value is shown: its own translation if it has one (see {@link ITranslatedEnum}), otherwise its name
+         */
+        public static Component displayName(Enum<?> value) {
+            return value instanceof ITranslatedEnum translated
+                    ? Component.translatable(translated.translationKey())
+                    : Component.literal(value.name());
+        }
     }
 
     public interface IRangeTooltip {

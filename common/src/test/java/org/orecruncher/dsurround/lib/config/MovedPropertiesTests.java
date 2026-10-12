@@ -6,6 +6,7 @@ import com.google.gson.JsonPrimitive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.config.GroundFogQuality;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -34,6 +35,15 @@ public class MovedPropertiesTests {
             @Property
             @MovedFrom("oldGroup.enabled")
             public boolean enabled = true;
+
+            // Was a switch: off becomes OFF, and on gets the default
+            @Property
+            @MovedFrom(value = "oldGroup.switched", values = "false=OFF")
+            public Mode mode = Mode.HIGH;
+        }
+
+        public enum Mode {
+            OFF, LOW, HIGH
         }
 
         @Property
@@ -113,6 +123,21 @@ public class MovedPropertiesTests {
     void laterOldPlacesAreFallbacks() throws IOException {
         // A file from before the first move
         assertEquals(4, load("{\"oldGroup\": {\"ancient\": 4}}").twice);
+    }
+
+    @Test
+    void aValueIsConvertedAsItsPairSays() throws IOException {
+        assertEquals(MovedConfig.Mode.OFF, load("{\"oldGroup\": {\"switched\": false}}").newGroup.mode);
+        assertFalse(written("moved.json").getAsJsonObject("oldGroup").has("switched"), "the old place is still written");
+    }
+
+    @Test
+    void aValueWithNoPairGetsTheDefault() throws IOException {
+        // Regression: a switch's true carried over as it was can't be read as an enum, and the whole file was set aside
+        assertEquals(MovedConfig.Mode.HIGH, load("{\"oldGroup\": {\"switched\": true, \"other\": 2}}").newGroup.mode);
+        try (var files = Files.list(this.folder)) {
+            assertFalse(files.anyMatch(f -> f.getFileName().toString().endsWith(".bad")), "the file was set aside");
+        }
     }
 
     // ---- The JSON paths
@@ -204,6 +229,15 @@ public class MovedPropertiesTests {
         assertFalse(config.waterfallOptions.enableMist);
         assertTrue(config.fireflyOptions.enableLight);
         assertFalse(written("dsurround.json").has("particleEffects"));
+    }
+
+    @Test
+    void theGroundFogSwitchBecomesItsQuality() throws IOException {
+        assertEquals(GroundFogQuality.NONE,
+                loadModConfig("{\"weatherOptions\": {\"enableGroundFog\": false}}").weatherOptions.groundFogQuality);
+        assertEquals(GroundFogQuality.FANCY,
+                loadModConfig("{\"weatherOptions\": {\"enableGroundFog\": true}}").weatherOptions.groundFogQuality);
+        assertFalse(written("dsurround.json").getAsJsonObject("weatherOptions").has("enableGroundFog"));
     }
 
     @Test

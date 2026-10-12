@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround;
 
 import org.orecruncher.dsurround.config.CompassStyle;
+import org.orecruncher.dsurround.config.GroundFogQuality;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.lib.config.Comment;
 import org.orecruncher.dsurround.lib.config.ConfigPlacement;
@@ -414,8 +415,9 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @Experimental
-        @Comment("Mist lying low over the ground in swamps and eerie biomes")
-        public boolean enableGroundFog = true;
+        @MovedFrom(value = "weatherOptions.enableGroundFog", values = "false=NONE")
+        @Comment("Mist lying low over the ground in swamps and eerie biomes: off, or how finely it is drawn. Fast costs least; Fabulous costs several times Fancy")
+        public GroundFogQuality groundFogQuality = GroundFogQuality.FANCY;
     }
 
     public static class FogOptions {

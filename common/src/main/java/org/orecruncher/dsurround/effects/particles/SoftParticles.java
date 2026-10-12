@@ -97,12 +97,21 @@ public final class SoftParticles {
      * main target's.
      */
     public static void bindSceneDepth(ShaderInstance target, RenderTarget from, RenderTarget drawTo) {
+        target.setSampler("DepthSampler", copySceneDepth(from, drawTo));
+    }
+
+    /**
+     * Copies the depth of {@code from} as it is now, then binds {@code drawTo} for drawing; for drawing that reads the
+     * copy in more than one shader.
+     *
+     * @return the copy's depth texture, which stays as it is until the next copy
+     */
+    public static int copySceneDepth(RenderTarget from, RenderTarget drawTo) {
         var copy = depthCopyFor(from);
         copy.copyDepthFrom(from);
         // Copying leaves no frame buffer bound
         drawTo.bindWrite(false);
-
-        target.setSampler("DepthSampler", copy.getDepthTextureId());
+        return copy.getDepthTextureId();
     }
 
     /**

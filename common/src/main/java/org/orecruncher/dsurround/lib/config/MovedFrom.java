@@ -16,4 +16,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MovedFrom {
     String[] value();
+
+    /**
+     * For a property whose values changed along with its place, how an old value becomes a new one: "old=new" pairs,
+     * matched against the old value as written ("false=NONE"). An old value with no pair isn't carried over, and the
+     * property keeps its default. Empty (the usual) carries the old value over as it is.
+     */
+    String[] values() default {};
 }

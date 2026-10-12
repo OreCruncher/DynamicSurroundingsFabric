@@ -22,6 +22,8 @@ public class GroundFogFieldTests {
         final int fogBelowX;
         final Map<Long, Integer> heights = new HashMap<>();
         int looks;
+        int lightReads;
+        int light = 0xF000F0;
 
         Ground(int fogBelowX) {
             this.fogBelowX = fogBelowX;
@@ -49,7 +51,8 @@ public class GroundFogFieldTests {
 
         @Override
         public int light(int x, int y, int z) {
-            return 0xF000F0;
+            this.lightReads++;
+            return this.light;
         }
     }
 
@@ -136,15 +139,55 @@ public class GroundFogFieldTests {
     }
 
     @Test
-    void theMistFadesOutAtTheEdgeOfTheArea() {
+    void thereIsNoMistOutsideTheArea() {
+        // The thinning toward the edge is the shader's, from where the camera is exactly; the cells only stop at the
+        // area's circle, so they stay the same as the camera moves within a block
         var field = new GroundFogField(16);
         field.update(new Ground(Integer.MAX_VALUE), 0.5, 0.5, Float.NaN);
         int m = middle(field);
         assertEquals(0.8F, field.density(m, m), 1e-6F, "thick in the middle");
-        assertEquals(0F, field.density(0, m), 1e-6F, "none at the edge");
+        assertEquals(0.8F, field.density(0, m), 1e-6F, "at the edge of the circle");
         assertEquals(0F, field.density(0, 0), 1e-6F, "none in the corners");
         assertEquals(0.8F, field.peak(), 1e-6F);
         assertFalse(field.isEmpty());
+    }
+
+    @Test
+    void theCellsAreOnlyWorkedOutAgainWhenSomethingChanges() {
+        // The cost per tick came from working out every cell again each tick
+        var ground = new Ground(Integer.MAX_VALUE);
+        var field = new GroundFogField(8);
+        field.update(ground, 0.5, 0.5, Float.NaN);
+        int version = field.version();
+
+        for (int t = 0; t < GroundFogField.REFRESH_TICKS; t++)
+            field.update(ground, 0.5 + 0.4 * t / GroundFogField.REFRESH_TICKS, 0.5, Float.NaN);
+        assertEquals(version, field.version(), "staying in the same block, with nothing changed");
+
+        field.update(ground, 1.5, 0.5, Float.NaN);
+        assertNotEquals(version, field.version(), "into the next block");
+        version = field.version();
+
+        // A block placed
+        ground.column(2, 0, GROUND + 1);
+        field.columnChanged(2, 0);
+        field.update(ground, 1.5, 0.5, Float.NaN);
+        assertNotEquals(version, field.version(), "a column changed");
+        assertEquals(GROUND + 1, field.height(middle(field) + 1, middle(field)), 1e-6F);
+
+        // Light changed, as from a torch placed nearby
+        version = field.version();
+        ground.light = 0xF000E0;
+        for (int t = 0; t < GroundFogField.REFRESH_TICKS && field.version() == version; t++)
+            field.update(ground, 1.5, 0.5, Float.NaN);
+        assertNotEquals(version, field.version(), "the light changed");
+
+        version = field.version();
+        field.update(ground, 1.5, 0.5, 0.5F);
+        assertNotEquals(version, field.version(), "a thickness set");
+        version = field.version();
+        field.clear();
+        assertNotEquals(version, field.version(), "cleared");
     }
 
     @Test
@@ -176,13 +219,67 @@ public class GroundFogFieldTests {
     }
 
     @Test
-    void everyColumnIsLookedAtAgainNowAndThen() {
+    void onlyTheLightIsReadAgainNowAndThen() {
+        // Looking at a column (down through leaves to the ground, its biome) costs; it is only done when something in
+        // it changed. Its light is cheap, and spreads from a change into columns that didn't, so it is read again
         var ground = new Ground(Integer.MAX_VALUE);
         var field = new GroundFogField(8);
         field.update(ground, 0.5, 0.5, Float.NaN);
         ground.looks = 0;
+        ground.lightReads = 0;
         for (int t = 0; t < GroundFogField.REFRESH_TICKS; t++)
             field.update(ground, 0.5, 0.5, Float.NaN);
-        assertTrue(ground.looks >= field.size() * field.size(), "every column, staying put");
+        assertEquals(0, ground.looks, "no column looked at, staying put");
+        assertTrue(ground.lightReads >= field.size() * field.size(), "every column's light read");
+    }
+
+    @Test
+    void theLightIsReadAgainWhereTheLightEngineChangedIt() {
+        // Regression: a torch's light reached the mist up to two seconds late, waiting for its row's turn
+        var ground = new Ground(Integer.MAX_VALUE);
+        var field = new GroundFogField(8);
+        field.update(ground, 0.5, 0.5, Float.NaN);
+        int m = middle(field);
+        int version = field.version();
+
+        // A section above the ground: the light read just above the ground isn't in it
+        ground.lightReads = 0;
+        field.lightChanged(0, (GROUND >> 4) + 1, 0);
+        field.update(ground, 0.5, 0.5, Float.NaN);
+        int rowsPerTick = (int) Math.ceil(field.size() / (float) GroundFogField.REFRESH_TICKS);
+        assertEquals(rowsPerTick * field.size(), ground.lightReads, "only the rolling refresh");
+
+        // The ground's section: its columns in the area, x and z 0 to 8 of the area's -8 to 8, beside the refresh
+        ground.light = 0xF000E0;
+        ground.lightReads = 0;
+        field.lightChanged(0, GROUND >> 4, 0);
+        field.update(ground, 0.5, 0.5, Float.NaN);
+        assertTrue(ground.lightReads >= 9 * 9 && ground.lightReads <= 9 * 9 + rowsPerTick * field.size(),
+                "read " + ground.lightReads);
+        assertEquals(0xF000E0, field.light(m + 1, m + 1));
+        assertNotEquals(version, field.version(), "worked out again with the new light");
+    }
+
+    @Test
+    void changedColumnsAreLookedAtAgain() {
+        var ground = new Ground(Integer.MAX_VALUE);
+        var field = new GroundFogField(8);
+        field.update(ground, 0.5, 0.5, Float.NaN);
+        int m = middle(field);
+
+        ground.column(1, 1, GROUND + 1);
+        ground.looks = 0;
+        field.columnChanged(1, 1);
+        // Outside the area: nothing to look at
+        field.columnChanged(500, 500);
+        field.update(ground, 0.5, 0.5, Float.NaN);
+        assertEquals(1, ground.looks);
+        assertEquals(GROUND + 1, field.height(m + 1, m + 1), 1e-6F);
+
+        // A chunk arriving: its columns in the area, x and z 0 to 8 of the area's -8 to 8
+        ground.looks = 0;
+        field.chunkChanged(0, 0);
+        field.update(ground, 0.5, 0.5, Float.NaN);
+        assertEquals(9 * 9, ground.looks);
     }
 }

@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.lib.config;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -38,9 +39,12 @@ final class MovedProperties {
                 for (var oldPath : movedFrom.get().value()) {
                     var old = get(root, oldPath);
                     if (old != null) {
-                        set(root, path, old.deepCopy());
-                        onMove.accept(oldPath, path);
-                        moved++;
+                        var value = convert(old, movedFrom.get().values());
+                        if (value != null) {
+                            set(root, path, value);
+                            onMove.accept(oldPath, path);
+                            moved++;
+                        }
                         break;
                     }
                 }
@@ -49,6 +53,24 @@ final class MovedProperties {
                 moved += apply(root, group.getChildren(), path + ".", onMove);
         }
         return moved;
+    }
+
+    /**
+     * The value to carry over for an old one: the old one as it is, or as {@code values} pairs it with a new one
+     * (see {@link MovedFrom#values}); null if it has no pair, to leave the default.
+     */
+    static @Nullable JsonElement convert(JsonElement old, String[] values) {
+        if (values.length == 0)
+            return old.deepCopy();
+        if (!old.isJsonPrimitive())
+            return null;
+        var written = old.getAsString();
+        for (var pair : values) {
+            int equals = pair.indexOf('=');
+            if (equals > 0 && pair.substring(0, equals).equals(written))
+                return new JsonPrimitive(pair.substring(equals + 1));
+        }
+        return null;
     }
 
     /**

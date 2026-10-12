@@ -120,6 +120,6 @@ public class ModShaderTests {
                 assertEquals(shader.id().toString(), json.get("fragment").getAsString());
             }
         }
-        assertEquals(6, ids.size());
+        assertEquals(8, ids.size());
     }
 }

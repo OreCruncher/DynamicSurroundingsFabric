@@ -20,7 +20,9 @@ public final class ModShaders {
             PointLights.SHADER,
             PrecipitationShaders.DROPS,
             PrecipitationShaders.DAMP_SPOTS,
-            GroundFogVolume.SHADER);
+            GroundFogVolume.SHADER,
+            GroundFogVolume.SMOOTH,
+            GroundFogVolume.COMPOSITE);
 
     private ModShaders() {
     }

@@ -15,7 +15,10 @@ import java.util.Arrays;
  * area.
  * <p>
  * Columns are kept in a cache that wraps around as the camera moves, so only those coming into the area are looked
- * at; each is looked at again every so often, a few rows a tick, for changes to the ground.
+ * at, and those {@linkplain #columnChanged changed} (a block placed or broken, a chunk arriving). Light spreads from a
+ * change and is worked out a little after it, so a column's light alone is read again when the light engine
+ * {@linkplain #lightChanged changes it}, and every so often, a few rows a tick, for any it doesn't tell of. The cells are only worked out again when the camera moves into another block or a column has changed, and
+ * {@link #version} counts the times.
  */
 public final class GroundFogField {
 
@@ -24,13 +27,15 @@ public final class GroundFogField {
      */
     public static final int DEFAULT_RADIUS = 40;
     /**
-     * The mist thins to nothing over this outer share of the radius
+     * The mist thins to nothing over this outer share of the radius. The shader does the thinning, from where the camera
+     * is exactly, so the cells needn't be worked out again as the camera moves within a block
      */
-    static final float EDGE_FADE = 0.3F;
+    public static final float EDGE_FADE = 0.3F;
     /**
-     * Ticks in which every column is looked at again, for blocks placed and broken
+     * Ticks in which every column's light is read again, for any change the light engine doesn't tell of (see
+     * {@link #lightChanged}): rarely needed, so slowly
      */
-    static final int REFRESH_TICKS = 40;
+    static final int REFRESH_TICKS = 200;
     /**
      * A column more than this many blocks above the middle of the eight around it stands in the mist rather than
      * holding it up
@@ -57,6 +62,9 @@ public final class GroundFogField {
     private final int[] slotHeight;
     private final float[] slotDensity;
     private final int[] slotLight;
+    // Slots whose column has changed since it was looked at, and whose light has
+    private final boolean[] slotStale;
+    private final boolean[] slotRelight;
 
     // The area as of the last update, cell (i, j) at column (originX + i, originZ + j)
     private final float[] height;
@@ -75,6 +83,7 @@ public final class GroundFogField {
     private float forced = Float.NaN;
     private float peak;
     private int foggyCells;
+    private int version;
 
     public GroundFogField() {
         this(DEFAULT_RADIUS);
@@ -89,6 +98,8 @@ public final class GroundFogField {
         this.slotHeight = new int[cells];
         this.slotDensity = new float[cells];
         this.slotLight = new int[cells];
+        this.slotStale = new boolean[cells];
+        this.slotRelight = new boolean[cells];
         this.height = new float[cells];
         this.smoothHeight = new float[cells];
         this.density = new float[cells];
@@ -110,8 +121,11 @@ public final class GroundFogField {
             this.forced = forced;
             this.forget();
         }
-        this.originX = Mth.floor(cameraX) - this.radius;
-        this.originZ = Mth.floor(cameraZ) - this.radius;
+        int originX = Mth.floor(cameraX) - this.radius;
+        int originZ = Mth.floor(cameraZ) - this.radius;
+        boolean changed = originX != this.originX || originZ != this.originZ;
+        this.originX = originX;
+        this.originZ = originZ;
 
         // Every row gets a fresh look once in REFRESH_TICKS
         int rowsPerTick = Math.max(1, Mth.ceil(this.size / (float) REFRESH_TICKS));
@@ -124,20 +138,83 @@ public final class GroundFogField {
             for (int i = 0; i < this.size; i++) {
                 int x = this.originX + i;
                 int slot = this.slot(x, z);
-                if (refresh || this.slotX[slot] != x || this.slotZ[slot] != z)
-                    this.look(source, slot, x, z);
+                if (this.slotStale[slot] || this.slotX[slot] != x || this.slotZ[slot] != z)
+                    changed |= this.look(source, slot, x, z);
+                else if (refresh || this.slotRelight[slot])
+                    changed |= this.relight(source, slot, x, z);
             }
         }
-        this.prepare(cameraX, cameraZ);
+        if (changed)
+            this.prepare();
     }
 
-    private void look(IGroundFogSource source, int slot, int x, int z) {
+    /**
+     * Looks at a column, keeping what is found in its slot
+     *
+     * @return whether anything is different from what the slot held
+     */
+    private boolean look(IGroundFogSource source, int slot, int x, int z) {
         int ground = source.groundHeight(x, z);
+        float density = Float.isNaN(this.forced) ? Mth.clamp(source.density(x, ground, z), 0F, 1F) : this.forced;
+        int light = source.light(x, ground, z);
+        boolean changed = this.slotX[slot] != x || this.slotZ[slot] != z || this.slotHeight[slot] != ground
+                || this.slotDensity[slot] != density || this.slotLight[slot] != light;
         this.slotX[slot] = x;
         this.slotZ[slot] = z;
         this.slotHeight[slot] = ground;
-        this.slotDensity[slot] = Float.isNaN(this.forced) ? Mth.clamp(source.density(x, ground, z), 0F, 1F) : this.forced;
-        this.slotLight[slot] = source.light(x, ground, z);
+        this.slotDensity[slot] = density;
+        this.slotLight[slot] = light;
+        this.slotStale[slot] = false;
+        this.slotRelight[slot] = false;
+        return changed;
+    }
+
+    /**
+     * Reads a column's light again, at the ground already found
+     *
+     * @return whether it is different
+     */
+    private boolean relight(IGroundFogSource source, int slot, int x, int z) {
+        int light = source.light(x, this.slotHeight[slot], z);
+        boolean changed = this.slotLight[slot] != light;
+        this.slotLight[slot] = light;
+        this.slotRelight[slot] = false;
+        return changed;
+    }
+
+    /**
+     * Has the light read again on the next update in the columns of a section whose light has changed, those in the
+     * area whose ground is in the section: the light is read just above the ground
+     */
+    public void lightChanged(int sectionX, int sectionY, int sectionZ) {
+        int fromX = sectionX << 4, fromZ = sectionZ << 4;
+        for (int z = fromZ; z < fromZ + 16; z++) {
+            for (int x = fromX; x < fromX + 16; x++) {
+                int slot = this.slot(x, z);
+                if (this.slotX[slot] == x && this.slotZ[slot] == z && this.slotHeight[slot] >> 4 == sectionY)
+                    this.slotRelight[slot] = true;
+            }
+        }
+    }
+
+    /**
+     * Has a column looked at again on the next update, if it is in the area: a block in it was placed or broken
+     */
+    public void columnChanged(int x, int z) {
+        int slot = this.slot(x, z);
+        if (this.slotX[slot] == x && this.slotZ[slot] == z)
+            this.slotStale[slot] = true;
+    }
+
+    /**
+     * Has the columns of a chunk looked at again on the next update, those in the area: it has arrived from the
+     * server, and any looked at before it did found no ground
+     */
+    public void chunkChanged(int chunkX, int chunkZ) {
+        int fromX = chunkX << 4, fromZ = chunkZ << 4;
+        for (int z = fromZ; z < fromZ + 16; z++)
+            for (int x = fromX; x < fromX + 16; x++)
+                this.columnChanged(x, z);
     }
 
     private int slot(int x, int z) {
@@ -147,7 +224,8 @@ public final class GroundFogField {
     /**
      * Works out, for each cell of the area, the height the mist lies at and how thick it is
      */
-    private void prepare(double cameraX, double cameraZ) {
+    private void prepare() {
+        this.version++;
         int size = this.size;
         // Heights and thicknesses as found, in the area's order
         for (int j = 0; j < size; j++) {
@@ -185,12 +263,19 @@ public final class GroundFogField {
         for (int k = 0; k < this.smoothHeight.length; k++)
             this.smoothHeight[k] = Mth.clamp(this.smoothHeight[k], this.height[k] - SMOOTH_BELOW, this.height[k] + SMOOTH_ABOVE);
 
-        // Blurred with the neighbours at the same level, and thinned toward the edge of the area
+        // Blurred with the neighbours at the same level. None outside the area's circle: the shader thins the mist to
+        // nothing a block inside it, so the cells beyond are never seen, and would only raise the highest ground under
+        // any mist
         float peak = 0F;
         int foggy = 0;
         for (int j = 0; j < size; j++) {
             for (int i = 0; i < size; i++) {
                 int k = j * size + i;
+                int fromMiddleX = i - this.radius, fromMiddleZ = j - this.radius;
+                if (fromMiddleX * fromMiddleX + fromMiddleZ * fromMiddleZ > this.radius * this.radius) {
+                    this.density[k] = 0F;
+                    continue;
+                }
                 float h = this.height[k];
                 float sum = 0F;
                 int count = 0;
@@ -209,7 +294,7 @@ public final class GroundFogField {
                         }
                     }
                 }
-                float d = sum / count * this.edgeFade(i, j, cameraX, cameraZ);
+                float d = sum / count;
                 this.density[k] = d;
                 if (d > 0F) {
                     foggy++;
@@ -247,19 +332,11 @@ public final class GroundFogField {
         }
     }
 
-    /**
-     * How much of the mist is left at a cell for its distance from the camera: all of it inside, none at the edge
-     */
-    private float edgeFade(int i, int j, double cameraX, double cameraZ) {
-        float dx = (float) (this.originX + i + 0.5D - cameraX);
-        float dz = (float) (this.originZ + j + 0.5D - cameraZ);
-        float distance = Mth.sqrt(dx * dx + dz * dz);
-        return Mth.clamp((this.radius - distance) / (this.radius * EDGE_FADE), 0F, 1F);
-    }
-
     private void forget() {
         Arrays.fill(this.slotX, Integer.MIN_VALUE);
         Arrays.fill(this.slotZ, Integer.MIN_VALUE);
+        Arrays.fill(this.slotStale, false);
+        Arrays.fill(this.slotRelight, false);
     }
 
     /**
@@ -270,6 +347,14 @@ public final class GroundFogField {
         Arrays.fill(this.density, 0F);
         this.peak = 0F;
         this.foggyCells = 0;
+        this.version++;
+    }
+
+    /**
+     * Goes up each time the cells are worked out again or cleared: while it stays the same, so do they
+     */
+    public int version() {
+        return this.version;
     }
 
     /**

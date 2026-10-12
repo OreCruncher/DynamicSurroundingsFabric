@@ -45,6 +45,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Heavy rains can thin it out, higher density between midnight and morning
   * Wind can shift the drift direction
   * Should clear when inside
+  * There is a quality setting in Weather Options that allow you to control the ground fog rendering behavior
+    * OFF, Fast, Fancy, and Fabulous; defaults to Fancy
+    * Fast is fast and has some artifacting; Fabulous looks much better but will be computationally intensive (of course NONE is the most performant :D)
   * Let me know what you think on my Github!
 * New /dsweather command to control aspects of simulated wind and storm
   * I use for testing but if you want to play around with it go ahead - doesn't affect game mechanics

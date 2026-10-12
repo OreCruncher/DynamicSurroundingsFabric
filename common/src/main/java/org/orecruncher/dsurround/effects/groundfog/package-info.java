@@ -8,9 +8,10 @@
  *     level through an {@link org.orecruncher.dsurround.effects.groundfog.IGroundFogSource}: in the game, the player's
  *     level; in tests, a fake.</li>
  *     <li>{@link org.orecruncher.dsurround.effects.groundfog.GroundFogVolume} draws it: the grid is handed to a shader
- *     as a small texture, and one pass over the screen follows each pixel's line of sight through the mist, adding it
+ *     as a small texture, and a pass over the screen follows each pixel's line of sight through the mist, adding it
  *     up. So it thickens the more of it is looked through, and has no edges to show. Noise drifting with the wind
- *     breaks it into patches and wisps.</li>
+ *     breaks it into patches and wisps. That pass is drawn at half size, a second smooths it there, blending
+ *     neighbouring pixels that looked about as far, and a third lays it over the scene.</li>
  *     <li>{@link org.orecruncher.dsurround.effects.groundfog.GroundFogConditions}: how strong it is for the time of day,
  *     the wind, rain and being out in it, as a share of what the biomes give it.</li>
  * </ul>

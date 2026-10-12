@@ -1,12 +1,16 @@
 package org.orecruncher.dsurround.processing;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
+import it.unimi.dsi.fastutil.longs.LongCollection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.jetbrains.annotations.Nullable;
@@ -18,6 +22,9 @@ import org.orecruncher.dsurround.effects.groundfog.GroundFogField;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
 import org.orecruncher.dsurround.effects.groundfog.IGroundFogSource;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.eventing.IBlockUpdates;
+import org.orecruncher.dsurround.eventing.IChunkLoad;
+import org.orecruncher.dsurround.eventing.ILightUpdate;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
@@ -77,13 +84,33 @@ public class GroundFogHandler extends AbstractClientHandler {
         this.weatherSimulation = weatherSimulation;
         this.dimensionInformation = dimensionInformation;
         this.source = new LevelSource(biomeLibrary);
+        // Columns are looked at again only when something in them changes
+        IBlockUpdates.EVENT.register(this::blockUpdates);
+        IChunkLoad.EVENT.register(this::chunkLoaded);
+        ILightUpdate.EVENT.register(this::lightUpdated);
+    }
+
+    private void blockUpdates(LongCollection blockPositions) {
+        var it = blockPositions.iterator();
+        while (it.hasNext()) {
+            long pos = it.nextLong();
+            this.field.columnChanged(BlockPos.getX(pos), BlockPos.getZ(pos));
+        }
+    }
+
+    private void chunkLoaded(ClientLevel level, ChunkPos chunkPos) {
+        this.field.chunkChanged(chunkPos.x, chunkPos.z);
+    }
+
+    private void lightUpdated(LightLayer layer, SectionPos section) {
+        this.field.lightChanged(section.x(), section.y(), section.z());
     }
 
     /**
      * Whether the mist is drawn
      */
     public boolean isActive() {
-        return this.config.weatherOptions.enableGroundFog && this.shaderUsable()
+        return this.config.weatherOptions.groundFogQuality.isEnabled() && this.shaderUsable()
                 && GameUtils.isInGame() && this.dimensionInformation.groundFog();
     }
 
@@ -157,7 +184,8 @@ public class GroundFogHandler extends AbstractClientHandler {
         float seconds = ((this.ticks % 72000) + partialTick) / 20F;
         lightTexture.turnOnLightLayer();
         try {
-            GroundFogVolume.render(this.field, camera, weatherTarget(), fabulous, this.strength, this.driftX, this.driftZ, seconds);
+            GroundFogVolume.render(this.field, camera, weatherTarget(), fabulous, this.config.weatherOptions.groundFogQuality,
+                    this.strength, this.driftX, this.driftZ, seconds);
         } finally {
             lightTexture.turnOffLightLayer();
         }
@@ -190,22 +218,29 @@ public class GroundFogHandler extends AbstractClientHandler {
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
         String text;
-        if (!this.config.weatherOptions.enableGroundFog)
+        var quality = this.config.weatherOptions.groundFogQuality;
+        if (!quality.isEnabled())
             text = "Ground fog: off";
         else if (!this.shaderUsable())
             text = "Ground fog: off (shader unavailable, failed, or a shader pack in use)";
         else {
             // The ground under the middle of the grid, which is where the camera is
             int middle = this.field.size() / 2;
-            text = String.format(Locale.ROOT, "Ground fog: strength %.2f (for %.2f), %d cells, peak %.2f, ground Y %.1f%s",
-                    this.strength, this.target, this.field.foggyCells(), this.field.peak(), this.field.height(middle, middle),
+            text = String.format(Locale.ROOT, "Ground fog: %s, strength %.2f (for %.2f), %d cells, peak %.2f, ground Y %.1f%s",
+                    quality, this.strength, this.target, this.field.foggyCells(), this.field.peak(), this.field.height(middle, middle),
                     Float.isNaN(this.forced) ? "" : String.format(Locale.ROOT, " (set to %.0f%%)", this.forced * 100F));
         }
         event.add(CollectDiagnosticsEvent.Section.Systems, text);
+        if (this.isActive()) {
+            event.add(GroundFogVolume.GPU_TIMER);
+            event.add(GroundFogVolume.MARCH_TIMER);
+            event.add(GroundFogVolume.SMOOTH_TIMER);
+            event.add(GroundFogVolume.COMPOSITE_TIMER);
+        }
     }
 
     private boolean shaderUsable() {
-        return GroundFogVolume.SHADER.isUsable();
+        return GroundFogVolume.isUsable();
     }
 
     /**

@@ -172,6 +172,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
                     .setSaveConsumer(value -> v.setValue(instance, value));
             case ConfigElement.EnumValue v -> fieldBuilder = builder
                     .startEnumSelector(name, (Class<Enum<?>>) v.getEnumClass(), v.getValue(instance))
+                    .setEnumNameProvider(ConfigElement.EnumValue::displayName)
                     .setTooltip(tooltip)
                     .setDefaultValue(v.defaultValue())
                     .setSaveConsumer(value -> v.setValue(instance, value));
