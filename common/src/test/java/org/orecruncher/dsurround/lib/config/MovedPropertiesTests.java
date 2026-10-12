@@ -6,9 +6,6 @@ import com.google.gson.JsonPrimitive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.ConfigPlacement;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.MovedFrom;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.Property;
 
 import java.io.IOException;
 import java.io.StringReader;

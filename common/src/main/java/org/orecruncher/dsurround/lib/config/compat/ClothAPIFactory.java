@@ -44,10 +44,12 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
     private static final Style PROPERTY_STYLE = Style.EMPTY.withColor(ColorPalette.WHEAT);
     private static final Style TOOLTIP_STYLE = Style.EMPTY.withColor(ColorPalette.SEASHELL);
     private static final Style RESTART_STYLE = Style.EMPTY.withColor(ColorPalette.RED);
+    private static final Style EXPERIMENTAL_STYLE = Style.EMPTY.withColor(ColorPalette.ORCHID);
     private static final int TOOLTIP_WIDTH = 300;
 
     private static final Component CLIENT_RESTART_REQUIRED = Component.translatable("dsurround.config.tooltip.clientRestartRequired").withStyle(RESTART_STYLE);
     private static final Component WORLD_RESTART_REQUIRED = Component.translatable("dsurround.config.tooltip.worldRestartRequired").withStyle(RESTART_STYLE);
+    private static final Component EXPERIMENTAL = Component.translatable("dsurround.config.tooltip.experimental");
     // Use a string with a single space as an empty line. Some config UI frameworks elide Component.empty() entries
     // and the tooltip logic uses empty lines as part of its formatting.
     private static final Component EMPTY_LINE = Component.literal(" ");
@@ -91,8 +93,8 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
 
     private SubCategoryBuilder generate(ConfigEntryBuilder builder, ConfigElement.PropertyGroup propertyGroup, Object instance) {
         SubCategoryBuilder categoryBuilder = builder
-                .startSubCategory(text(propertyGroup.getLanguageKey(), styleOr(propertyGroup.getTextStyle(), GROUP_STYLE)))
-                .setTooltip(wrap(propertyGroup.getTooltip(TOOLTIP_STYLE)).toArray(new Component[0]));
+                .startSubCategory(text(propertyGroup.getLanguageKey(), nameStyle(propertyGroup, GROUP_STYLE)))
+                .setTooltip(description(propertyGroup).toArray(new Component[0]));
 
         // Can't have categories within categories, so we ignore the case of where a config is set up that way
         for (var prop : propertyGroup.getChildren()) {
@@ -110,7 +112,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
     private @Nullable FieldBuilder<?, ? extends AbstractConfigListEntry<?>, ?> generate(ConfigEntryBuilder builder, ConfigElement.PropertyValue<?> pv, Object instance) {
         FieldBuilder<?, ? extends AbstractConfigListEntry<?>, ?> fieldBuilder = null;
 
-        var name = text(pv.getLanguageKey(), styleOr(pv.getTextStyle(), PROPERTY_STYLE));
+        var name = text(pv.getLanguageKey(), nameStyle(pv, PROPERTY_STYLE));
         var tooltip = tooltip(pv);
 
         switch (pv) {
@@ -190,7 +192,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
      * A property's tooltip: its description, default value, range, and whether a restart is needed.
      */
     private static Component[] tooltip(ConfigElement.PropertyValue<?> pv) {
-        var lines = wrap(pv.getTooltip(TOOLTIP_STYLE));
+        var lines = description(pv);
         lines.add(EMPTY_LINE);
         lines.add(pv.getDefaultValueTooltip());
 
@@ -209,14 +211,41 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
     }
 
     /**
+     * An element's description for its tooltip, followed by a notice if it is experimental. The list can be added to.
+     */
+    private static List<Component> description(ConfigElement<?> element) {
+        var lines = wrap(element.getTooltip(TOOLTIP_STYLE));
+        if (element.isExperimental()) {
+            lines.add(EMPTY_LINE);
+            lines.addAll(wrap(EXPERIMENTAL, EXPERIMENTAL_STYLE));
+        }
+        return lines;
+    }
+
+    /**
      * The text split into lines that fit a tooltip. The list can be added to.
      */
     private static List<Component> wrap(Component text) {
-        return new ArrayList<>(GuiHelpers.getTrimmedTextCollection(text, TOOLTIP_WIDTH, TOOLTIP_STYLE));
+        return wrap(text, TOOLTIP_STYLE);
+    }
+
+    /**
+     * The text split into lines that fit a tooltip, each in {@code style}. The list can be added to.
+     */
+    private static List<Component> wrap(Component text, Style style) {
+        return new ArrayList<>(GuiHelpers.getTrimmedTextCollection(text, TOOLTIP_WIDTH, style));
     }
 
     private static Component text(String key, Style style) {
         return Component.literal(Localization.load(key)).withStyle(style);
+    }
+
+    /**
+     * The style of an element's name: its own TextStyle if it has one, otherwise the experimental colour if it is
+     * experimental, otherwise {@code fallback}.
+     */
+    private static Style nameStyle(ConfigElement<?> element, Style fallback) {
+        return styleOr(element.getTextStyle(), element.isExperimental() ? EXPERIMENTAL_STYLE : fallback);
     }
 
     /**

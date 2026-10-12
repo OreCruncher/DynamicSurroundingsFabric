@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.lib.config;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.MovedFrom;
 
 import java.util.Collection;
 import java.util.function.BiConsumer;

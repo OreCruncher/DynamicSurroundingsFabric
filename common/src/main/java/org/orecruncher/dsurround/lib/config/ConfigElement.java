@@ -36,7 +36,7 @@ public abstract class ConfigElement<T> {
         this.languageKey = elementNameKey;
         this.field = field;
         this.field.setAccessible(true);
-        this.textStyle = parseTextStyle(field.getAnnotation(ConfigurationData.TextStyle.class), field);
+        this.textStyle = parseTextStyle(field.getAnnotation(TextStyle.class), field);
     }
 
     public String getLanguageKey() {
@@ -73,18 +73,18 @@ public abstract class ConfigElement<T> {
      * Retrieve the comment, if any, associated with the property.
      */
     public Optional<String> getComment() {
-        var comment = this.getAnnotation(ConfigurationData.Comment.class);
-        return comment.map(ConfigurationData.Comment::value);
+        var comment = this.getAnnotation(Comment.class);
+        return comment.map(Comment::value);
     }
 
     /**
-     * The style from the property's {@link ConfigurationData.TextStyle} annotation, or {@link Style#EMPTY}.
+     * The style from the property's {@link TextStyle} annotation, or {@link Style#EMPTY}.
      */
     public Style getTextStyle() {
         return this.textStyle;
     }
 
-    private static Style parseTextStyle(ConfigurationData.TextStyle textStyle, Field field) {
+    private static Style parseTextStyle(TextStyle textStyle, Field field) {
         if (textStyle == null)
             return Style.EMPTY;
 
@@ -100,6 +100,13 @@ public abstract class ConfigElement<T> {
                 Library.LOGGER.warn("Configuration property '%s' has an invalid TextStyle color '%s'", field.getName(), textStyle.color());
         }
         return style;
+    }
+
+    /**
+     * Whether the element is marked {@link Experimental}: part of a feature that may change or be removed.
+     */
+    public boolean isExperimental() {
+        return this.hasAnnotation(Experimental.class);
     }
 
     @SuppressWarnings("unchecked")
@@ -205,8 +212,8 @@ public abstract class ConfigElement<T> {
          * (i.e., restart the Minecraft application).
          */
         public boolean isClientRestartRequired() {
-            var annotation = this.getAnnotation(ConfigurationData.RestartRequired.class);
-            return annotation.map(ConfigurationData.RestartRequired::client).orElse(false);
+            var annotation = this.getAnnotation(RestartRequired.class);
+            return annotation.map(RestartRequired::client).orElse(false);
         }
 
         /**
@@ -214,7 +221,7 @@ public abstract class ConfigElement<T> {
          * (i.e., exit current world and then rejoin).
          */
         public boolean isWorldRestartRequired() {
-            var annotation = this.getAnnotation(ConfigurationData.RestartRequired.class);
+            var annotation = this.getAnnotation(RestartRequired.class);
             return annotation.map(a -> !a.client()).orElse(false);
         }
 
@@ -281,11 +288,11 @@ public abstract class ConfigElement<T> {
         }
 
         /**
-         * Whether the property is edited with a slider. The {@link ConfigurationData.Slider} annotation holds its
+         * Whether the property is edited with a slider. The {@link Slider} annotation holds its
          * range, so the range is always bounded.
          */
         public boolean useSlider() {
-            return this.hasAnnotation(ConfigurationData.Slider.class);
+            return this.hasAnnotation(Slider.class);
         }
 
         @Override
@@ -335,7 +342,7 @@ public abstract class ConfigElement<T> {
         }
 
         /**
-         * Whether the property is edited with a slider; see {@link ConfigurationData.DoubleSlider}.
+         * Whether the property is edited with a slider; see {@link DoubleSlider}.
          */
         public boolean useSlider() {
             return this.sliderScale != null;

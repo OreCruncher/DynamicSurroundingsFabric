@@ -12,11 +12,6 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.Comment;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.DoubleSlider;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.DoubleRange;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.IntegerRange;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.Slider;
 
 import java.io.IOException;
 import java.io.Reader;

@@ -2,8 +2,18 @@ package org.orecruncher.dsurround;
 
 import org.orecruncher.dsurround.config.CompassStyle;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
+import org.orecruncher.dsurround.lib.config.Comment;
+import org.orecruncher.dsurround.lib.config.ConfigPlacement;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.*;
+import org.orecruncher.dsurround.lib.config.DoubleSlider;
+import org.orecruncher.dsurround.lib.config.Experimental;
+import org.orecruncher.dsurround.lib.config.IntegerRange;
+import org.orecruncher.dsurround.lib.config.MovedFrom;
+import org.orecruncher.dsurround.lib.config.Property;
+import org.orecruncher.dsurround.lib.config.RestartRequired;
+import org.orecruncher.dsurround.lib.config.Slider;
+import org.orecruncher.dsurround.lib.config.TextStyle;
+import org.orecruncher.dsurround.lib.config.TranslationRoot;
 
 @ConfigPlacement(folderName = Constants.MOD_ID, fileName = Constants.MOD_ID)
 @TranslationRoot(Constants.MOD_ID + ".config")
@@ -403,6 +413,7 @@ public class Configuration extends ConfigurationData {
         public boolean enableStormSounds = true;
 
         @Property
+        @Experimental
         @Comment("Mist lying low over the ground in swamps and eerie biomes")
         public boolean enableGroundFog = true;
     }

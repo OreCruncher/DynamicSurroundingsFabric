@@ -8,7 +8,6 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.*;
 
 import java.io.IOException;
 import java.io.StringReader;

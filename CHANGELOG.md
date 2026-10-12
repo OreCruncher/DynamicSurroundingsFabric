@@ -54,6 +54,8 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Reworked the flame jet effect, reusing the mist particle with color tinting and smoke
   * Configuration options for flame jet were moved into its own configuration section
 * Updated aurora rendering to utilize the simulated rain strength and weather fog effects, meaning that for light precipitation the aurora will still render though a bit muted
+* Config settings for experimental features are colored "orchid" to distinguish from other options
+  * Experimental options/features are subject to change and may be removed in a future release
 
 **Fixes**
 * Water ripples are visible when looking from underwater. During the day they are faint rings; at night they are more visible.

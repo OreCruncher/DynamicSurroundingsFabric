@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.Objects;
 
 /**
- * Builds the specification of a configuration class from its {@link ConfigurationData.Property} fields, and checks
+ * Builds the specification of a configuration class from its {@link Property} fields, and checks
  * loaded values against it.
  */
 public final class ConfigProcessor {
@@ -95,7 +95,7 @@ public final class ConfigProcessor {
 
             for (var f : this.clazz.getFields()) {
                 // See if it is marked as a property.  If not continue.
-                var property = f.getAnnotation(ConfigurationData.Property.class);
+                var property = f.getAnnotation(Property.class);
                 if (property == null || Modifier.isStatic(f.getModifiers()))
                     continue;
 
@@ -107,13 +107,13 @@ public final class ConfigProcessor {
             return elements;
         }
 
-        private ConfigElement<?> process(ConfigurationData.Property property, Object prototype, Field f) {
+        private ConfigElement<?> process(Property property, Object prototype, Field f) {
             var type = f.getType();
             var key = this.calculateLangKey(property, f);
 
-            if (f.isAnnotationPresent(ConfigurationData.Slider.class) && type != int.class && type != Integer.class)
+            if (f.isAnnotationPresent(Slider.class) && type != int.class && type != Integer.class)
                 throw new IllegalStateException(String.format("Configuration property '%s' in %s has @Slider, which is only supported on int properties; use @DoubleSlider for a double", f.getName(), this.clazz.getName()));
-            if (f.isAnnotationPresent(ConfigurationData.DoubleSlider.class) && type != double.class && type != Double.class)
+            if (f.isAnnotationPresent(DoubleSlider.class) && type != double.class && type != Double.class)
                 throw new IllegalStateException(String.format("Configuration property '%s' in %s has @DoubleSlider, which is only supported on double properties", f.getName(), this.clazz.getName()));
 
             if (type == boolean.class || type == Boolean.class)
@@ -145,8 +145,8 @@ public final class ConfigProcessor {
 
         private ConfigElement<?> processInteger(Object prototype, String key, Field f) {
             var element = new ConfigElement.IntegerValue(prototype, key, f);
-            var range = f.getAnnotation(ConfigurationData.IntegerRange.class);
-            var slider = f.getAnnotation(ConfigurationData.Slider.class);
+            var range = f.getAnnotation(IntegerRange.class);
+            var slider = f.getAnnotation(Slider.class);
             if (range != null && slider != null)
                 throw new IllegalStateException(String.format("Configuration property '%s' in %s has both @IntegerRange and @Slider; @Slider holds the range", f.getName(), this.clazz.getName()));
             if (range != null)
@@ -161,8 +161,8 @@ public final class ConfigProcessor {
 
         private ConfigElement<?> processDouble(Object prototype, String key, Field f) {
             var element = new ConfigElement.DoubleValue(prototype, key, f);
-            var range = f.getAnnotation(ConfigurationData.DoubleRange.class);
-            var slider = f.getAnnotation(ConfigurationData.DoubleSlider.class);
+            var range = f.getAnnotation(DoubleRange.class);
+            var slider = f.getAnnotation(DoubleSlider.class);
             if (range != null && slider != null)
                 throw new IllegalStateException(String.format("Configuration property '%s' in %s has both @DoubleRange and @DoubleSlider; @DoubleSlider holds the range", f.getName(), this.clazz.getName()));
             if (range != null)
@@ -182,7 +182,7 @@ public final class ConfigProcessor {
             return element;
         }
 
-        private String calculateLangKey(ConfigurationData.Property property, Field f) {
+        private String calculateLangKey(Property property, Field f) {
             var segment = property.value().isEmpty() ? f.getName() : property.value();
             return this.translationRoot + "." + segment;
         }
