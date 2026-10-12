@@ -18,9 +18,9 @@ import org.lwjgl.opengl.GL11;
 import org.orecruncher.dsurround.config.GroundFogQuality;
 import org.orecruncher.dsurround.effects.GpuTimer;
 import org.orecruncher.dsurround.effects.ModShader;
+import org.orecruncher.dsurround.effects.NoiseTexture;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
 import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.random.Randomizer;
 
 /**
  * Draws the ground fog as a volume: a pass over the screen that follows each pixel's line of sight from the camera
@@ -357,23 +357,11 @@ public final class GroundFogVolume {
     }
 
     /**
-     * The noise texture, made the first time: a random value a texel, the same each time, read smoothly between texels
-     * and repeating
+     * The noise texture, made the first time
      */
     private static DynamicTexture noiseTexture() {
-        if (noise == null) {
-            noise = new DynamicTexture(NOISE_SIZE, NOISE_SIZE, false);
-            var pixels = noise.getPixels();
-            var random = Randomizer.create(0x6D697374L);
-            for (int j = 0; j < NOISE_SIZE; j++) {
-                for (int i = 0; i < NOISE_SIZE; i++) {
-                    int value = random.nextInt(256);
-                    pixels.setPixelRGBA(i, j, 0xFF000000 | value);
-                }
-            }
-            noise.upload();
-            noise.setFilter(true, false);
-        }
+        if (noise == null)
+            noise = NoiseTexture.create(NOISE_SIZE, 0x6D697374L);
         return noise;
     }
 }

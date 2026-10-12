@@ -41,11 +41,11 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Serene Seasons will affect whether rain or dust blows in some biomes, such as Biomes OPlenty's Lush Desert
   * Various parts of the system can be enabled/disabled in the Weather Options section
   * The weather system will auto disable if Particle Rain or Simple Weather is installed
-* [WIP] Ground fog in swamps and spooky biomes like Dark Forest and BOPs Ominous Forest
+* [Experimental] Ground fog in swamps and spooky biomes like Dark Forest and BOPs Ominous Forest
   * Heavy rains can thin it out, higher density between midnight and morning
-  * Wind can shift the drift direction
+  * Wind can shift the drift direction and speed
   * Should clear when inside
-  * There is a quality setting in Weather Options that allow you to control the ground fog rendering behavior
+  * There is a quality setting in Weather Options that allow you to control the ground fog rendering parameters
     * OFF, Fast, Fancy, and Fabulous; defaults to Fancy
     * Fast is fast and has some artifacting; Fabulous looks much better but will be computationally intensive (of course NONE is the most performant :D)
   * Let me know what you think on my Github!
@@ -59,6 +59,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Updated aurora rendering to utilize the simulated rain strength and weather fog effects, meaning that for light precipitation the aurora will still render though a bit muted
 * Config settings for experimental features are colored "orchid" to distinguish from other options
   * Experimental options/features are subject to change and may be removed in a future release
+* Aurora shader was modified to use a noise map rather than hashing in the shader. Result is that the style of aurora could change between computers that are running different versions of Dynamic Surroundings.
 
 **Fixes**
 * Water ripples are visible when looking from underwater. During the day they are faint rings; at night they are more visible.

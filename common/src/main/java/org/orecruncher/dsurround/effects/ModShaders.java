@@ -16,6 +16,7 @@ public final class ModShaders {
 
     public static final List<ModShader> SHADERS = List.of(
             SoftParticles.SHADER,
+            SoftParticles.SCENE_DEPTH_SHADER,
             AuroraRenderer.SHADER,
             PointLights.SHADER,
             PrecipitationShaders.DROPS,

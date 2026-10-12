@@ -66,7 +66,8 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   - The weather target is cleared but gets no copy of the scene's depth: read the main target's, and write depth (ground
     fog, damp spots), or the scene is laid over it.
   - The particles target's depth is the scene's from before water; the translucent target's has the water's surface.
-    Soft particles fade against the translucent depth and write it (`WriteSceneDepth`) so water isn't laid over them.
+    Soft particles fade against the translucent depth and write it (`soft_particle_scene_depth`, Fabulous only: a
+    shader that writes depth loses early depth testing) so water isn't laid over them.
   - Blend alpha as "over" (`ONE, ONE_MINUS_SRC_ALPHA`), not the default's `ONE, ZERO`, or piled-up colour outgrows its
     alpha; additive light needs colour already scaled and a tiny non-zero alpha (`PointLights`).
 - Mixin plugin (`mixinutils/DSurroundMixinPlugin`) skips mixins whose target belongs to a mod that isn't installed

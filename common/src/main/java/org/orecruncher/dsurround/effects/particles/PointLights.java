@@ -47,12 +47,29 @@ public final class PointLights {
      */
     public static final float FIREFLY_STRENGTH = 0.45F;
 
+    /**
+     * The most lights drawn: the nearest, which are the brightest on screen and cost the most to draw (each is a
+     * square over the pixels it may light, the whole screen when the camera is inside its reach). A swamp full of
+     * fireflies could otherwise draw hundreds.
+     */
+    static final int MAX_DRAWN = 64;
+    /**
+     * From this far down the nearest, the lights fade, to nothing at {@link #MAX_DRAWN}: one moving across that limit
+     * fades in or out rather than switching.
+     */
+    static final int FADE_FROM = 48;
+    // A light this faint changes no pixel: under half a step of an 8 bit colour, at its brightest
+    static final float MIN_STRENGTH = 0.5F / 255F;
+
     // Lights recorded longer ago than this weren't from the last frame (nothing lit was drawn since), so are dropped
     private static final long STALE_NANOS = 250_000_000L;
     // x, y, z, red, green, blue, strength, radius
-    private static final int STRIDE = 8;
+    static final int STRIDE = 8;
 
     private static float[] lights = new float[STRIDE * 64];
+    // For sorting the lights nearest first: each one's distance and index, and the lights in that order
+    private static long[] sortKeys = new long[64];
+    private static float[] sorted = new float[STRIDE * 64];
     private static int count;
     private static long lastAdded;
 
@@ -89,7 +106,7 @@ public final class PointLights {
      * @param radius   how far it reaches, in blocks
      */
     public static void add(double x, double y, double z, float red, float green, float blue, float strength, float radius) {
-        if (strength <= 0F || radius <= 0F)
+        if (strength < MIN_STRENGTH || radius <= 0F)
             return;
         if ((count + 1) * STRIDE > lights.length)
             lights = Arrays.copyOf(lights, lights.length * 2);
@@ -152,13 +169,19 @@ public final class PointLights {
         try {
             // Positions relative to the camera, as for all particles
             var camera = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+            // Enough that some fade or are left out: the nearest first
+            if (n > FADE_FROM)
+                sortNearest(lights, n, camera.x, camera.y, camera.z);
             var builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-            for (int l = 0; l < n; l++) {
+            for (int l = 0; l < Math.min(n, MAX_DRAWN); l++) {
                 int i = l * STRIDE;
+                float a = lights[i + 6] * rankFade(l);
+                if (a < MIN_STRENGTH)
+                    continue;
                 float x = (float) (lights[i] - camera.x);
                 float y = (float) (lights[i + 1] - camera.y);
                 float z = (float) (lights[i + 2] - camera.z);
-                float r = lights[i + 3], g = lights[i + 4], b = lights[i + 5], a = lights[i + 6];
+                float r = lights[i + 3], g = lights[i + 4], b = lights[i + 5];
                 // All four at the centre; the vertex shader spreads them out. Each corner is given at the light's
                 // radius, which is how the shader knows it.
                 float radius = lights[i + 7];
@@ -176,5 +199,35 @@ public final class PointLights {
             RenderSystem.defaultBlendFunc();
             RenderSystem.setShader(GameRenderer::getParticleShader);
         }
+    }
+
+    /**
+     * How much the light {@code rank} lights down the nearest is drawn at: in full up to {@link #FADE_FROM}, fading
+     * to nothing at {@link #MAX_DRAWN}.
+     */
+    static float rankFade(int rank) {
+        if (rank < FADE_FROM)
+            return 1F;
+        return Math.max(0F, (float) (MAX_DRAWN - rank) / (MAX_DRAWN - FADE_FROM));
+    }
+
+    /**
+     * Puts the first {@code n} lights in {@code lights} in order of how near each is to the camera, nearest first.
+     */
+    static void sortNearest(float[] lights, int n, double cameraX, double cameraY, double cameraZ) {
+        if (sortKeys.length < n)
+            sortKeys = new long[lights.length / STRIDE];
+        if (sorted.length < n * STRIDE)
+            sorted = new float[lights.length];
+        // Each light's distance squared, then its index: a float's bits order as it does when it isn't negative
+        for (int l = 0; l < n; l++) {
+            int i = l * STRIDE;
+            double x = lights[i] - cameraX, y = lights[i + 1] - cameraY, z = lights[i + 2] - cameraZ;
+            sortKeys[l] = ((long) Float.floatToIntBits((float) (x * x + y * y + z * z)) << 32) | l;
+        }
+        Arrays.sort(sortKeys, 0, n);
+        for (int r = 0; r < n; r++)
+            System.arraycopy(lights, (int) sortKeys[r] * STRIDE, sorted, r * STRIDE, STRIDE);
+        System.arraycopy(sorted, 0, lights, 0, n * STRIDE);
     }
 }

@@ -3,6 +3,10 @@
 // Vanilla's particle fragment shader (shaders/core/particle.fsh), made "soft": the particle fades out as it nears
 // whatever is behind it (terrain, the surface of water), so where it passes into them it blends away instead of
 // being cut off in a hard line. linear_fog from fog.glsl is copied in rather than imported.
+//
+// Without Fabulous graphics. soft_particle_scene_depth is this, writing depth, for Fabulous: kept apart because a
+// shader that writes depth at all can't have it tested before it runs, so particles hidden behind terrain would run it
+// too. The two are the same apart from that (a test checks).
 
 uniform sampler2D Sampler0;
 // A copy of the scene's depth, made just before the particles are drawn
@@ -15,11 +19,6 @@ uniform vec4 FogColor;
 uniform mat4 ProjMat;
 // How far in front of what is behind it, in blocks, the particle is at full strength
 uniform float SoftDistance;
-// With Fabulous graphics, 1: the particle writes the scene's depth where it is drawn, not its own. The transparency
-// pass sorts the particles' target by its depth, which otherwise is the ground's under any water, so the water is laid
-// over the particles and dims them there and nowhere else. The scene's depth, water's surface included, puts them in
-// front of it; and as every particle at a place writes the same, none hides another.
-uniform float WriteSceneDepth;
 
 in float vertexDistance;
 in vec2 texCoord0;
@@ -58,11 +57,10 @@ void main() {
     float sceneDistance = linear_depth(sceneDepth);
     float particleDistance = linear_depth(gl_FragCoord.z);
     color.a *= clamp((sceneDistance - particleDistance) / SoftDistance, 0.0, 1.0);
-    // Behind the scene, or faded to nothing against it: nothing drawn, and no depth written
+    // Behind the scene, or faded to nothing against it: nothing drawn
     if (color.a <= 0.0) {
         discard;
     }
 
-    gl_FragDepth = WriteSceneDepth > 0.5 ? sceneDepth : gl_FragCoord.z;
     fragColor = linear_fog(color, vertexDistance, FogStart, FogEnd, FogColor);
 }

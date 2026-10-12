@@ -17,7 +17,8 @@ import java.lang.reflect.Method;
  * passes into terrain or the surface of water it blends away instead of ending in a hard line. The shader needs the
  * scene's depth, so a copy of it is made just before the particles are drawn.
  * <p>
- * The shader ({@link #SHADER}) is registered by each platform. If it isn't available, because it failed to load or an Iris shader pack is in use (which
+ * The shaders ({@link #SHADER}, and {@link #SCENE_DEPTH_SHADER} with Fabulous graphics) are registered by each
+ * platform. If the one needed isn't available, because it failed to load or an Iris shader pack is in use (which
  * replaces the rendering, so a shader of ours wouldn't fit in), particles are drawn the vanilla way instead.
  * <p>
  * Everything here runs on the render thread.
@@ -26,6 +27,13 @@ public final class SoftParticles {
 
     public static final ModShader SHADER = new ModShader("soft_particle", DefaultVertexFormat.PARTICLE,
             "soft particles", "particles will be drawn without it", Library.LOGGER);
+    /**
+     * The same, writing the scene's depth, for Fabulous graphics (see soft_particle_scene_depth.fsh). Apart from
+     * {@link #SHADER} because a shader that writes depth can't have it tested before it runs.
+     */
+    public static final ModShader SCENE_DEPTH_SHADER = new ModShader("soft_particle_scene_depth",
+            DefaultVertexFormat.PARTICLE, "soft particles", "particles will be drawn without it with Fabulous graphics",
+            Library.LOGGER);
 
     // The copy of the scene's depth the shader reads; can't be the depth buffer being drawn to
     @Nullable
@@ -47,17 +55,17 @@ public final class SoftParticles {
      * @return true if particles will be drawn soft
      */
     public static boolean begin(float softDistance) {
-        var current = SHADER.get();
-        if (current == null || !SHADER.isUsable())
+        var shader = Minecraft.useShaderTransparency() ? SCENE_DEPTH_SHADER : SHADER;
+        var current = shader.get();
+        if (current == null || !shader.isUsable())
             return false;
 
         // On a failure the vanilla particle shader is still current, so the particles are drawn the vanilla way
-        return SHADER.run(() -> {
+        return shader.run(() -> {
             bindSceneDepth(current);
             // The shader is shared by every soft render type, so each sets its own fade distance
             current.safeGetUniform("SoftDistance").set(softDistance);
-            current.safeGetUniform("WriteSceneDepth").set(Minecraft.useShaderTransparency() ? 1F : 0F);
-            RenderSystem.setShader(SHADER.supplier());
+            RenderSystem.setShader(shader.supplier());
         }, SoftParticles::bindParticleTarget);
     }
 

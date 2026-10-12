@@ -65,9 +65,6 @@ const float STEPS_PER_BLOCK = 2.0;
 // Once this much mist has been looked through (at Thickness), what is behind it is 99% hidden: the rest of the line
 // of sight can't change the pixel
 const float OPAQUE = 4.6;
-// How the steps lengthen along the line of sight: at 1.5, over the furthest 48 blocks, the first is under half a block
-// and the last 3 blocks
-const float STEP_SPREAD = 1.5;
 const float MAX_DISTANCE = 48.0;
 const vec3 MIST_COLOR = vec3(0.92, 0.93, 0.95);
 // How far below the smoothed ground mist is still found: it may be a block above the ground itself (see
@@ -96,6 +93,12 @@ const float WISP_FLOOR = 0.25;
 const float WISP_MEAN = 0.5 * (1.0 + WISP_FLOOR);
 // How much the tufts thin and thicken the mist, either way: they leave it as thick on average
 const float FINE_DEPTH = 0.45;
+
+// How the steps lengthen along the line of sight: how far along it, 0 to 1, a share of the steps reaches, as that share
+// to the power 1.5. Over the furthest 48 blocks, the first step is under half a block and the last 3 blocks
+float spread(float share) {
+    return share * sqrt(share);
+}
 
 float linear_fog_fade(float vertexDistance, float fogStart, float fogEnd) {
     if (vertexDistance <= fogStart) {
@@ -163,25 +166,35 @@ float mist(vec3 p, float fromCamera, float stepLength) {
     if (edge <= 0.0) {
         return 0.0;
     }
-    // Thickest at the ground, thinning to nothing at the top
-    float profile = pow(1.0 - above / MistDepth, 1.5);
+    // Thickest at the ground, thinning to nothing at the top: to the power 1.5
+    float below = 1.0 - above / MistDepth;
+    float profile = below * sqrt(below);
     // Large slow patches it gathers in, and wisps drifting and churning across them, a little different at each
     // height; both where the point is in the world, so they stay put as the camera moves
     vec2 at = p.xz + NoiseOrigin - Drift.xy;
     float patches = 0.35 + 0.65 * smoothstep(0.25, 0.75, noise(at / 11.0 + vec2(Drift.z * 0.02, 0.0)));
+    float m = smoothed.g * edge * profile * patches;
+    // Where the steps are too long for the wisps and tufts, or (the wisps) further off, they are only their average:
+    // their noise needn't be read. Often, as the steps lengthen with distance
+    float wispDetail = (1.0 - smoothstep(WISP_FADE.x, WISP_FADE.y, stepLength))
+            * (1.0 - smoothstep(WISP_DISTANCE.x, WISP_DISTANCE.y, fromCamera));
+    float tuftDetail = 1.0 - smoothstep(TUFT_FADE.x, TUFT_FADE.y, stepLength);
+    if (wispDetail <= 0.0 && tuftDetail <= 0.0) {
+        return m * 0.5;
+    }
     // The wisps are pushed about by a slowly changing field, so they curl and eddy rather than only sliding along
     vec2 swirl = vec2(noise(at / 7.0 + vec2(Drift.z * 0.04, 0.0)),
                       noise(at / 7.0 + vec2(19.0, -Drift.z * 0.04))) - 0.5;
-    float wisps = noise((at + swirl * SWIRL) / 3.5 + vec2((p.y + BaseY) * WISP_LEAN, Drift.z * 0.09));
     // Never clearing entirely between them, and scaled so the mist is as thick on average as without the floor. Half,
     // their average, where the steps are too long for them, and further off
-    float wisp = 0.5 * mix(WISP_FLOOR, 1.0, smoothstep(0.2, 0.8, wisps)) / WISP_MEAN;
-    float wispDetail = (1.0 - smoothstep(WISP_FADE.x, WISP_FADE.y, stepLength))
-            * (1.0 - smoothstep(WISP_DISTANCE.x, WISP_DISTANCE.y, fromCamera));
-    float m = smoothed.g * edge * profile * patches * mix(0.5, wisp, wispDetail);
+    float wisp = 0.5;
+    if (wispDetail > 0.0) {
+        float wisps = noise((at + swirl * SWIRL) / 3.5 + vec2((p.y + BaseY) * WISP_LEAN, Drift.z * 0.09));
+        wisp = mix(0.5, 0.5 * mix(WISP_FLOOR, 1.0, smoothstep(0.2, 0.8, wisps)) / WISP_MEAN, wispDetail);
+    }
+    m *= wisp;
     // Close by, small tufts within the wisps, churning faster and changing more with height, so the mist near the
     // camera has texture and keeps changing where it is rather than only sliding past
-    float tuftDetail = 1.0 - smoothstep(TUFT_FADE.x, TUFT_FADE.y, stepLength);
     if (m > 0.0 && tuftDetail > 0.0) {
         float tufts = noise((at + swirl * SWIRL) / 1.75 + vec2((p.y + BaseY) * 0.3, Drift.z * 0.25));
         m *= 1.0 + tuftDetail * FINE_DEPTH * (tufts * 2.0 - 1.0);
@@ -222,7 +235,7 @@ void main() {
 
     // Stepping through, offset a little per pixel so the steps don't show as bands: interleaved gradient noise, which
     // spreads the offsets evenly between neighbouring pixels rather than at random, so it shows as less grain. The
-    // steps lengthen with distance (STEP_SPREAD): short close by, where the wisps and tufts are seen, and long further
+    // steps lengthen with distance (spread): short close by, where the wisps and tufts are seen, and long further
     // off, where only the patches are. Steps too long for what they pass over show as a stipple
     float span = t1 - t0;
     float jitter = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
@@ -239,12 +252,16 @@ void main() {
     float begins = -1.0;
     int steps = int(clamp(ceil(span * STEPS_PER_BLOCK), float(MIN_STEPS), min(MaxSteps, float(STEPS))));
     float stepCount = float(steps);
+    // How far along the line, 0 to 1, this step begins: where the last ended
+    float stepStart = 0.0;
     for (int i = 0; i < STEPS; i++) {
         if (i >= steps || amount * Thickness > OPAQUE) {
             break;
         }
-        float t = t0 + span * pow((float(i) + jitter) / stepCount, STEP_SPREAD);
-        float stepLength = span * (pow(float(i + 1) / stepCount, STEP_SPREAD) - pow(float(i) / stepCount, STEP_SPREAD));
+        float t = t0 + span * spread((float(i) + jitter) / stepCount);
+        float stepEnd = spread(float(i + 1) / stepCount);
+        float stepLength = span * (stepEnd - stepStart);
+        stepStart = stepEnd;
         vec3 p = start + dir * t;
         float m = mist(p, t, stepLength);
         amount += m * stepLength;

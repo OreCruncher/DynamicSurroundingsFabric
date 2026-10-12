@@ -92,7 +92,7 @@ public class DSurroundParticleRenderType {
                     translucentBlend();
                 // The particle engine made its particle shader current just before this; replace it if we can.
                 // With Fabulous graphics depth is written, but only by the soft shader, which writes the scene's, not
-                // the particle's: there it sorts the particles in front of water (see soft_particle.fsh). The vanilla
+                // the particle's: there it sorts the particles in front of water (see soft_particle_scene_depth.fsh). The vanilla
                 // shader, if it couldn't be replaced, would write the particles' own, and they would cut into each
                 // other.
                 if (SoftParticles.begin(softDistance) && Minecraft.useShaderTransparency())

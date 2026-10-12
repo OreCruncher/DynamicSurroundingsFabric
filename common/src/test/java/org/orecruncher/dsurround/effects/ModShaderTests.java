@@ -4,6 +4,7 @@ import com.google.gson.JsonParser;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.Constants;
@@ -13,6 +14,7 @@ import org.orecruncher.dsurround.lib.threading.RecordingLog;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -110,16 +112,40 @@ public class ModShaderTests {
         for (var shader : ModShaders.SHADERS) {
             assertTrue(ids.add(shader.id()), "registered twice: " + shader.id());
             var base = "assets/" + shader.id().getNamespace() + "/shaders/core/" + shader.id().getPath();
-            for (var extension : new String[]{".json", ".vsh", ".fsh"})
-                assertNotNull(getClass().getClassLoader().getResource(base + extension), "missing " + base + extension);
+            assertNotNull(getClass().getClassLoader().getResource(base + ".json"), "missing " + base + ".json");
 
-            // The definition names this shader's own programs
+            // The definition names this shader's own fragment program, and a vertex program that is there (it may
+            // share another's)
             try (var reader = new InputStreamReader(getClass().getClassLoader().getResourceAsStream(base + ".json"), StandardCharsets.UTF_8)) {
                 var json = JsonParser.parseReader(reader).getAsJsonObject();
-                assertEquals(shader.id().toString(), json.get("vertex").getAsString());
                 assertEquals(shader.id().toString(), json.get("fragment").getAsString());
+                assertNotNull(getClass().getClassLoader().getResource(base + ".fsh"), "missing " + base + ".fsh");
+                var vertex = ResourceLocation.parse(json.get("vertex").getAsString());
+                var vertexPath = "assets/" + vertex.getNamespace() + "/shaders/core/" + vertex.getPath() + ".vsh";
+                assertNotNull(getClass().getClassLoader().getResource(vertexPath), "missing " + vertexPath);
             }
         }
-        assertEquals(8, ids.size());
+        assertEquals(9, ids.size());
+    }
+
+    private String codeOf(String shader) throws Exception {
+        try (var in = getClass().getClassLoader().getResourceAsStream("assets/dsurround/shaders/core/" + shader)) {
+            assertNotNull(in, shader);
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8).lines()
+                    .map(line -> line.replaceAll("//.*", "").strip())
+                    .filter(line -> !line.isEmpty())
+                    .collect(Collectors.joining("\n"));
+        }
+    }
+
+    @Test
+    void theSoftParticleShadersDifferOnlyInWritingDepth() throws Exception {
+        // Regression: the depth write was chosen by a uniform, so the shader wrote depth on every setting, and early
+        // depth testing was lost even where nothing was written. The Fabulous one is apart; it must not drift
+        var plain = codeOf("soft_particle.fsh");
+        var sceneDepth = codeOf("soft_particle_scene_depth.fsh");
+        assertFalse(plain.contains("gl_FragDepth"), "soft_particle.fsh writes depth");
+        assertTrue(sceneDepth.contains("gl_FragDepth = sceneDepth;"));
+        assertEquals(plain, sceneDepth.replace("gl_FragDepth = sceneDepth;\n", ""));
     }
 }
