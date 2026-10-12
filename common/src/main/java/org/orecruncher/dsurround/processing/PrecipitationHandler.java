@@ -208,16 +208,24 @@ public class PrecipitationHandler extends AbstractClientHandler {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
+        PrecipitationShaders.GPU_TIMER.begin();
         try {
-            if (this.dampSpots.count() > 0 && PrecipitationShaders.DAMP_SPOTS.isUsable())
+            if (this.dampSpots.count() > 0 && PrecipitationShaders.DAMP_SPOTS.isUsable()) {
+                PrecipitationShaders.DAMP_SPOTS_TIMER.begin();
                 PrecipitationShaders.DAMP_SPOTS.run(() -> this.drawDampSpots(tesselator, camera, partialTick), tesselator::clear);
+                PrecipitationShaders.DAMP_SPOTS_TIMER.end();
+            }
 
             // If the drops fail to draw, vanilla's weather is drawn in their place, this frame and after
-            return PrecipitationShaders.DROPS.run(() -> this.drawDrops(tesselator, camera, partialTick), () -> {
+            PrecipitationShaders.DROPS_TIMER.begin();
+            boolean drawn = PrecipitationShaders.DROPS.run(() -> this.drawDrops(tesselator, camera, partialTick), () -> {
                 tesselator.clear();
                 weatherTarget().bindWrite(false);
             });
+            PrecipitationShaders.DROPS_TIMER.end();
+            return drawn;
         } finally {
+            PrecipitationShaders.GPU_TIMER.end();
             RenderSystem.enableCull();
             RenderSystem.defaultBlendFunc();
             RenderSystem.disableBlend();

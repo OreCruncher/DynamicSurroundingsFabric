@@ -231,12 +231,6 @@ public class GroundFogHandler extends AbstractClientHandler {
                     Float.isNaN(this.forced) ? "" : String.format(Locale.ROOT, " (set to %.0f%%)", this.forced * 100F));
         }
         event.add(CollectDiagnosticsEvent.Section.Systems, text);
-        if (this.isActive()) {
-            event.add(GroundFogVolume.GPU_TIMER);
-            event.add(GroundFogVolume.MARCH_TIMER);
-            event.add(GroundFogVolume.SMOOTH_TIMER);
-            event.add(GroundFogVolume.COMPOSITE_TIMER);
-        }
     }
 
     private boolean shaderUsable() {

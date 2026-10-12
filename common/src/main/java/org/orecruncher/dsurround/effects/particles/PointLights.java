@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.joml.Matrix4f;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.effects.GpuTimer;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.lib.Library;
 
@@ -34,6 +35,8 @@ public final class PointLights {
 
     public static final ModShader SHADER = new ModShader("point_light", DefaultVertexFormat.POSITION_TEX_COLOR,
             "point lights", "fireflies and flame jets will not light their surroundings", Library.LOGGER);
+
+    public static final GpuTimer GPU_TIMER = new GpuTimer("Point Lights");
 
     /**
      * How far a firefly's light reaches, in blocks.
@@ -114,12 +117,14 @@ public final class PointLights {
         if (n == 0 || current == null || System.nanoTime() - lastAdded > STALE_NANOS || !isAvailable())
             return;
 
+        GPU_TIMER.begin();
         SHADER.run(() -> drawLights(tesselator, current, n), () -> {
             // Leave things as the particles drawn next expect them
             tesselator.clear();
             SoftParticles.bindParticleTarget();
             RenderSystem.setShader(GameRenderer::getParticleShader);
         });
+        GPU_TIMER.end();
     }
 
     private static void drawLights(Tesselator tesselator, ShaderInstance current, int n) {

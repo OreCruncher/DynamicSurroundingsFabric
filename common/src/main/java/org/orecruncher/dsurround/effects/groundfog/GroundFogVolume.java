@@ -61,7 +61,7 @@ public final class GroundFogVolume {
      * How long the GPU takes over all the passes, for the diagnostics overlay, and over each: the march (with the depth
      * copy it reads), the smoothing and the composite
      */
-    public static final GpuTimer GPU_TIMER = new GpuTimer("Ground Fog GPU");
+    public static final GpuTimer GPU_TIMER = new GpuTimer("Ground Fog");
     public static final GpuTimer MARCH_TIMER = new GpuTimer("- March");
     public static final GpuTimer SMOOTH_TIMER = new GpuTimer("- Smooth");
     public static final GpuTimer COMPOSITE_TIMER = new GpuTimer("- Composite");

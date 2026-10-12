@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.orecruncher.dsurround.effects.GpuTimer;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.lib.Library;
 
@@ -25,6 +26,8 @@ public final class AuroraRenderer {
 
     public static final ModShader SHADER = new ModShader("aurora", DefaultVertexFormat.POSITION_TEX_COLOR,
             "the aurora", "auroras will not be drawn", Library.LOGGER);
+
+    public static final GpuTimer GPU_TIMER = new GpuTimer("Aurora");
 
     // Quads along each curtain
     private static final int SEGMENTS = 96;
@@ -55,7 +58,9 @@ public final class AuroraRenderer {
         if (current == null || alpha <= 0F)
             return;
         // A failure part way through would leave vertices in the shared buffer
+        GPU_TIMER.begin();
         SHADER.run(() -> draw(current, aurora, alpha, frustumMatrix, time), () -> Tesselator.getInstance().clear());
+        GPU_TIMER.end();
     }
 
     private static void draw(ShaderInstance current, Aurora aurora, float alpha, Matrix4f frustumMatrix, float time) {

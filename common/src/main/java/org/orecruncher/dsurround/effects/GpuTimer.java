@@ -19,6 +19,8 @@ public final class GpuTimer implements ITimer {
 
     // Frames whose results may still be on the way
     private static final int FRAMES = 4;
+    // How long since it last measured before the diagnostics overlay stops showing it
+    private static final long RECENT_NANOS = 1_000_000_000L;
 
     private final TimerEMA average;
     private final int[] starts = new int[FRAMES];
@@ -26,6 +28,8 @@ public final class GpuTimer implements ITimer {
     private final boolean[] pending = new boolean[FRAMES];
     private int frame;
     private boolean measuring;
+    // When it last measured, by System.nanoTime; 0 if it never has
+    private long lastMeasured;
     // Not yet known until there is a GL context: null, then whether queries could be made
     private Boolean supported;
 
@@ -57,6 +61,15 @@ public final class GpuTimer implements ITimer {
         this.measuring = false;
         this.pending[this.frame] = true;
         this.frame = (this.frame + 1) % FRAMES;
+        this.lastMeasured = System.nanoTime();
+    }
+
+    /**
+     * Whether it has measured in the last second: if not, what it measures isn't being drawn, and its average is
+     * left over from when it was
+     */
+    public boolean isRecent() {
+        return this.lastMeasured != 0 && System.nanoTime() - this.lastMeasured < RECENT_NANOS;
     }
 
     /**

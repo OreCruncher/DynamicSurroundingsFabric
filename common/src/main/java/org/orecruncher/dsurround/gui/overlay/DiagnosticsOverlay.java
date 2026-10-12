@@ -61,6 +61,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Systems, ColorPalette.GREEN);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Particles, ColorPalette.HOT_PINK);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Timers, ColorPalette.KEY_LIME);
+        COLOR_MAP.put(CollectDiagnosticsEvent.Section.GPU, ColorPalette.GOLD);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Environment, ColorPalette.AQUAMARINE);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Emitters, ColorPalette.SEASHELL);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Sounds, ColorPalette.APRICOT);
@@ -79,6 +80,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
         LEFT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Sounds);
 
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Timers);
+        RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.GPU);
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Survey);
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Misc);
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.HeldItem);
@@ -117,6 +119,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
 
         this.plugins = ImmutableList.of(
                 ContainerManager.resolve(ClientProfilerPlugin.class),
+                ContainerManager.resolve(GpuTimersPlugin.class),
                 ContainerManager.resolve(ViewerPlugin.class),
                 ContainerManager.resolve(RuntimeDiagnosticsPlugin.class),
                 ContainerManager.resolve(SoundEngineDiagnosticsPlugin.class)
