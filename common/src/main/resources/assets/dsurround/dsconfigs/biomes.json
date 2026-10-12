@@ -376,8 +376,8 @@
     "clearSounds": true
   },
   {
-    "biomeSelector": "SPOOKY && !(NETHER || END)",
-    "_comment": "Fog density for spooky biomes",
+    "biomeSelector": "SPOOKY && !(NETHER || END || UNDERGROUND)",
+    "_comment": "Fog density for spooky biomes, above ground: fog is the sky's, and a spooky cave (the deep dark, Biomes O' Plenty's spider nest) would fill with it",
     "fogDensity": "heavy"
   },
   {

@@ -193,12 +193,28 @@ public class PrecipitationFieldTests {
     }
 
     @Test
+    void aWiderFieldKeepsLandingsForItsArea() {
+        // Regression: at a wide range only the first 128 landings a tick splashed, so splashes thinned out
+        assertEquals(PrecipitationField.MAX_LANDINGS, new PrecipitationField(1000).maxLandings(), "the default range");
+        assertEquals(PrecipitationField.MAX_LANDINGS * 4, new PrecipitationField(1000, PrecipitationField.DEFAULT_RADIUS * 2).maxLandings());
+        assertTrue(new PrecipitationField(1000, 8).maxLandings() < PrecipitationField.MAX_LANDINGS, "narrower, fewer");
+    }
+
+    @Test
+    void numbersScaleWithTheArea() {
+        assertEquals(16, PrecipitationField.forArea(16, PrecipitationField.DEFAULT_RADIUS));
+        assertEquals(64, PrecipitationField.forArea(16, PrecipitationField.DEFAULT_RADIUS * 2));
+        assertEquals(Math.round(16 * (32F / 12F) * (32F / 12F)), PrecipitationField.forArea(16, 32));
+        assertEquals(1, PrecipitationField.forArea(1, 1), "never none");
+    }
+
+    @Test
     void rainDropsLandOnTheGround() {
         var field = new PrecipitationField(1000);
         // Long enough for drops to fall from the top of the cylinder to the ground
         tick(field, RAIN_EVERYWHERE, 0, 0, 1F, 30);
         assertTrue(field.landings() > 0);
-        assertTrue(field.landings() <= PrecipitationField.MAX_LANDINGS);
+        assertTrue(field.landings() <= field.maxLandings());
         float radius = PrecipitationField.DEFAULT_RADIUS;
         for (int i = 0; i < field.landings(); i++) {
             assertEquals(GROUND, field.landingGround(i));

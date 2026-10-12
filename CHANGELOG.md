@@ -39,7 +39,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
     * These particles are affected by the wind simulator
   * Serene Seasons will affect whether rain or dust blows in some biomes, such as Biomes OPlenty's Lush Desert
   * Various parts of the system can be enabled/disabled in the Weather Options section
-  * The weather system will auto disable if Particle Rain is installed
+  * The weather system will auto disable if Particle Rain or Simple Weather is installed
 * New /dsweather command to control aspects of simulated wind and storm
   * I use for testing but if you want to play around with it go ahead - doesn't affect game mechanics
 
@@ -53,6 +53,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Water ripples are visible when looking from underwater. During the day they are faint rings; at night they are more visible.
 * Added Twilight Forest dimension configuration to set sea level.
 * Moved aurora render hook to avoid conflict with Astral Sorcery's sky render
+* Fog being applied to SPOOKY underground biomes, like BOPs spider nest
 
 > ### DynamicSurroundings-1.21.1-0.4.6
 

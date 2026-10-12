@@ -91,40 +91,8 @@ public class FlameSpark extends TextureSheetParticle {
         float alpha = brightness(life) * twinkle;
         if (alpha <= 0F)
             return;
-        var color = colorAt(life);
-
-        // Its head, relative to the camera, and its tail trailing back along the way it came
-        var cam = camera.getPosition();
-        float hx = (float) (Mth.lerp(partialTick, this.xo, this.x) - cam.x);
-        float hy = (float) (Mth.lerp(partialTick, this.yo, this.y) - cam.y);
-        float hz = (float) (Mth.lerp(partialTick, this.zo, this.z) - cam.z);
-        float tx = hx - (float) (this.x - this.xo) * STREAK;
-        float ty = hy - (float) (this.y - this.yo) * STREAK;
-        float tz = hz - (float) (this.z - this.zo) * STREAK;
-
-        // Across the streak: square to its length and the line to the camera
-        float lx = hx - tx, ly = hy - ty, lz = hz - tz;
-        float sx = ly * hz - lz * hy, sy = lz * hx - lx * hz, sz = lx * hy - ly * hx;
-        float across = sx * sx + sy * sy + sz * sz;
-        if (across < 1.0E-10F) {
-            // Still, or coming straight at the camera: a dot facing it
-            var left = camera.getLeftVector();
-            sx = left.x();
-            sy = left.y();
-            sz = left.z();
-            across = 1F;
-        }
-        float scale = HALF_WIDTH * Mth.invSqrt(across);
-        sx *= scale;
-        sy *= scale;
-        sz *= scale;
-
-        float u0 = this.getU0(), u1 = this.getU1(), v0 = this.getV0(), v1 = this.getV1();
-        int light = this.getLightColor(partialTick);
-        buffer.addVertex(hx - sx, hy - sy, hz - sz).setUv(u1, v1).setColor(color[0], color[1], color[2], alpha).setLight(light);
-        buffer.addVertex(tx - sx, ty - sy, tz - sz).setUv(u1, v0).setColor(color[0], color[1], color[2], 0F).setLight(light);
-        buffer.addVertex(tx + sx, ty + sy, tz + sz).setUv(u0, v0).setColor(color[0], color[1], color[2], 0F).setLight(light);
-        buffer.addVertex(hx + sx, hy + sy, hz + sz).setUv(u0, v1).setColor(color[0], color[1], color[2], alpha).setLight(light);
+        Streaks.draw(buffer, camera, partialTick, this.xo, this.yo, this.zo, this.x, this.y, this.z, STREAK, HALF_WIDTH,
+                colorAt(life), alpha, this.getLightColor(partialTick), this.getU0(), this.getU1(), this.getV0(), this.getV1());
     }
 
     /**

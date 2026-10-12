@@ -9,6 +9,7 @@ import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.particles.FlameSpark;
 import org.orecruncher.dsurround.effects.particles.FlameTongue;
+import org.orecruncher.dsurround.effects.particles.LavaDroplet;
 import org.orecruncher.dsurround.effects.particles.SmokePuff;
 import org.orecruncher.dsurround.lib.GameUtils;
 
@@ -34,6 +35,11 @@ public class FlameJetEffect extends AbstractParticleEmitterEffect {
     // The chance each time it emits that sparks fly, at full burn, and how many at most
     private static final float SPARK_CHANCE = 0.35F;
     private static final int MAX_SPARKS = 2;
+    // A lava jet: how far from its middle droplets are thrown up, how fast sideways, and the chance each time it
+    // emits of a vanilla lava pop, at full burn
+    private static final double DROPLET_SPREAD = 0.15D;
+    private static final double DROPLET_SCATTER = 0.035D;
+    private static final float LAVA_POP_CHANCE = 0.08F;
 
     public FlameJetEffect(final int strength, final Level world, final double x, final double y, final double z, boolean isNonLiquidBlock) {
         super(strength, world, x, y, z, EMIT_TICKS);
@@ -57,8 +63,6 @@ public class FlameJetEffect extends AbstractParticleEmitterEffect {
 
     @Override
     protected Collection<Particle> produceParticles() {
-        if (this.isLava)
-            return this.lavaPop();
         if (!(this.world instanceof ClientLevel level))
             return List.of();
 
@@ -68,6 +72,8 @@ public class FlameJetEffect extends AbstractParticleEmitterEffect {
         float burn = FlameJetBurn.burn(this.age, this.ageLimit);
         if (burn <= 0F)
             return List.of();
+        if (this.isLava)
+            return this.lavaJet(level, burn, share);
 
         // A small source (a single block that isn't a full one) burns smaller and lower
         boolean small = this.isNonLiquidBlock && this.strength == 1;
@@ -112,11 +118,25 @@ public class FlameJetEffect extends AbstractParticleEmitterEffect {
     }
 
     /**
-     * Lava throws up a pop now and then, as vanilla's lava does
+     * Lava throws up droplets of molten rock that arc over and fall back, more the deeper the lava, and now and then a
+     * pop as vanilla's lava does
      */
-    private Collection<Particle> lavaPop() {
-        return this.createParticle(ParticleTypes.LAVA, this.posX, this.posY, this.posZ, 0D, 0D, 0D)
-                .map(List::of)
-                .orElse(List.of());
+    private Collection<Particle> lavaJet(ClientLevel level, float burn, float share) {
+        int droplets = FlameJetBurn.droplets(this.strength, burn, share, RANDOM.nextFloat(), RANDOM.nextFloat());
+        boolean pop = RANDOM.nextFloat() < LAVA_POP_CHANCE * burn;
+        if (droplets == 0 && !pop)
+            return List.of();
+
+        var particles = new ArrayList<Particle>(droplets + 1);
+        for (int i = 0; i < droplets; i++) {
+            double up = FlameJetBurn.dropletSpeed(this.strength, burn, RANDOM.nextFloat());
+            double x = this.posX + RANDOM.nextGaussian() * DROPLET_SPREAD;
+            double z = this.posZ + RANDOM.nextGaussian() * DROPLET_SPREAD;
+            particles.add(LavaDroplet.create(level, x, this.posY, z,
+                    RANDOM.nextGaussian() * DROPLET_SCATTER, up, RANDOM.nextGaussian() * DROPLET_SCATTER));
+        }
+        if (pop)
+            this.createParticle(ParticleTypes.LAVA, this.posX, this.posY, this.posZ, 0D, 0D, 0D).ifPresent(particles::add);
+        return particles;
     }
 }

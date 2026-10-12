@@ -30,6 +30,11 @@ public enum KnownMod {
      */
     PARTICLE_RAIN(true, "particlerain"),
     /**
+     * Draws rain and snow as particles (NeoForge only), so the mod's particle rain, snow and dust storms stand aside.
+     * Its drops splash as vanilla's do, so the mod's water ripples still take their place on water.
+     */
+    SIMPLE_WEATHER(true, "simple_weather"),
+    /**
      * Raises the sound limit itself, so the mod doesn't discard sounds to stay under it
      */
     RAISE_SOUND_LIMIT_SIMPLIFIED(true, "rsls"),
@@ -105,5 +110,21 @@ public enum KnownMod {
      */
     Optional<String> installedId(Predicate<String> isModLoaded) {
         return this.ids.stream().filter(isModLoaded).findFirst();
+    }
+
+    /**
+     * The mods that draw rain and snow as particles of their own, for which the mod's particle weather stands aside
+     */
+    public static final List<KnownMod> PARTICLE_WEATHER = List.of(PARTICLE_RAIN, SIMPLE_WEATHER);
+
+    /**
+     * An installed mod that draws rain and snow as particles of its own, if there is one: the mod's particle rain,
+     * snow and dust storms are off, and left to it
+     */
+    public static Optional<KnownMod> particleWeatherMod() {
+        for (var mod : PARTICLE_WEATHER)
+            if (mod.isInstalled())
+                return Optional.of(mod);
+        return Optional.empty();
     }
 }

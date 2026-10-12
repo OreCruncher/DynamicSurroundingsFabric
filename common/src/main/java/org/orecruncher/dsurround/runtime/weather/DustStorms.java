@@ -31,16 +31,16 @@ public final class DustStorms {
 
     /**
      * Whether dust storms are on: they are part of particle rain and snow, so need it on too, and stand aside, as it
-     * does, for the Particle Rain mod. They are off whenever its drops aren't being drawn (the shader didn't load or
-     * failed, or a shader pack is in use): the dust's fog, its tint on the fog and sky, and the harder wind go with the
-     * dust, rather than staying without it.
+     * does, for a mod that draws the weather as particles of its own (Particle Rain, Simple Weather). They are off
+     * whenever its drops aren't being drawn (the shader didn't load or failed, or a shader pack is in use): the dust's
+     * fog, its tint on the fog and sky, and the harder wind go with the dust, rather than staying without it.
      */
     public static boolean enabled(Configuration.WeatherOptions options) {
-        return enabled(options, KnownMod.PARTICLE_RAIN.isInstalled()) && PrecipitationShaders.DROPS.isUsable();
+        return enabled(options, KnownMod.particleWeatherMod().isPresent()) && PrecipitationShaders.DROPS.isUsable();
     }
 
-    static boolean enabled(Configuration.WeatherOptions options, boolean particleRainInstalled) {
-        return options.enableParticlePrecipitation && options.enableDustStorms && !particleRainInstalled;
+    static boolean enabled(Configuration.WeatherOptions options, boolean weatherModInstalled) {
+        return options.enableParticlePrecipitation && options.enableDustStorms && !weatherModInstalled;
     }
 
     /**

@@ -25,7 +25,7 @@ import org.orecruncher.dsurround.tags.BlockEffectTags;
 public final class Landings {
 
     /**
-     * Damp spots a tick at most
+     * Damp spots a tick at most, at the default range; as many more for the area at a wider one
      */
     static final int MAX_DAMP_SPOTS_PER_TICK = 16;
     /**
@@ -56,6 +56,7 @@ public final class Landings {
         if (status == ParticleStatus.MINIMAL)
             return;
         int landings = status == ParticleStatus.DECREASED ? field.landings() / 2 : field.landings();
+        int maxSpots = PrecipitationField.forArea(MAX_DAMP_SPOTS_PER_TICK, field.radius());
         int spots = 0;
 
         for (int i = 0; i < landings; i++) {
@@ -72,7 +73,7 @@ public final class Landings {
             if (fluid.is(FluidTags.LAVA) || state.is(Blocks.MAGMA_BLOCK) || CampfireBlock.isLitCampfire(state)) {
                 level.addParticle(ParticleTypes.SMOKE, x, y, z, 0D, 0D, 0D);
             } else if (fluid.isEmpty() && this.tagLibrary.is(BlockEffectTags.RAIN_ABSORBING, state)) {
-                if (spots++ < MAX_DAMP_SPOTS_PER_TICK)
+                if (spots++ < maxSpots)
                     dampSpots.add(x, y, z, field.landingSize(i), random);
             } else if (!fluid.isEmpty() || random.nextFloat() < splashChance(field.landingSize(i))) {
                 // On water, the mod's ripple takes the splash's place. Every drop makes one there: drizzle on a

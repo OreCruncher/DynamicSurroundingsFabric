@@ -48,8 +48,8 @@ import java.util.Objects;
  * <p>
  * Off while an Iris shader pack is in use, whose own weather drawing would not see the drops, when the drops' shader
  * didn't load, and after a failure to draw them until resources are reloaded; vanilla's weather is drawn instead.
- * Off too when the Particle Rain mod is installed: it draws rain and snow as particles of its own, and two of them
- * would both be drawn.
+ * Off too when a mod that draws rain and snow as particles of its own is installed (Particle Rain, Simple Weather):
+ * both would be drawn.
  */
 public class PrecipitationHandler extends AbstractClientHandler {
 
@@ -59,7 +59,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
      */
     static final int MAX_DROPS = 6000;
     /**
-     * Damp spots at once. They last a few seconds, so the most made a tick bounds this in practice.
+     * Damp spots at once, at the default range; as many more for the area at a wider one. They last a few seconds, so
+     * the most made a tick bounds this in practice.
      */
     static final int MAX_DAMP_SPOTS = 2048;
     /**
@@ -73,7 +74,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private final IDimensionInformation dimensionInformation;
     private final Landings landings;
     private PrecipitationField field = new PrecipitationField(MAX_DROPS);
-    private final DampSpots dampSpots = new DampSpots(MAX_DAMP_SPOTS);
+    private DampSpots dampSpots = new DampSpots(MAX_DAMP_SPOTS);
     private final Snowflakes snowflakes;
     private final LevelColumns columns;
 
@@ -87,8 +88,9 @@ public class PrecipitationHandler extends AbstractClientHandler {
         this.landings = new Landings(tagLibrary, soundLibrary, config.weatherOptions);
         this.snowflakes = new Snowflakes(logger);
 
-        if (KnownMod.PARTICLE_RAIN.isInstalled() && config.weatherOptions.enableParticlePrecipitation)
-            logger.info("Particle Rain is installed: particle rain, snow and dust storms are off, and left to it");
+        if (config.weatherOptions.enableParticlePrecipitation)
+            KnownMod.particleWeatherMod().ifPresent(mod -> logger.info(
+                    "%s is installed: particle rain, snow and dust storms are off, and left to it", mod.installedId().orElseThrow()));
 
         // A resource pack may bring other snow
         IReloadEvent.EVENT.register((resources, scope) -> this.snowflakes.reload());
@@ -98,16 +100,17 @@ public class PrecipitationHandler extends AbstractClientHandler {
      * Whether the drops are drawn in place of vanilla's weather
      */
     public boolean isActive() {
-        return isEnabled(this.config.weatherOptions.enableParticlePrecipitation, KnownMod.PARTICLE_RAIN.isInstalled())
+        return isEnabled(this.config.weatherOptions.enableParticlePrecipitation, KnownMod.particleWeatherMod().isPresent())
                 && PrecipitationShaders.DROPS.isUsable()
                 && GameUtils.isInGame() && this.dimensionInformation.particleWeather();
     }
 
     /**
-     * Whether particle rain and snow are wanted: turned on, and not left to the Particle Rain mod
+     * Whether particle rain and snow are wanted: turned on, and not left to a mod that draws the weather as particles
+     * of its own (see {@link KnownMod#PARTICLE_WEATHER})
      */
-    static boolean isEnabled(boolean optionOn, boolean particleRainInstalled) {
-        return optionOn && !particleRainInstalled;
+    static boolean isEnabled(boolean optionOn, boolean weatherModInstalled) {
+        return optionOn && !weatherModInstalled;
     }
 
     @Override
@@ -154,12 +157,14 @@ public class PrecipitationHandler extends AbstractClientHandler {
     }
 
     /**
-     * Makes the field again if the range it is drawn to has changed. The drops of the old field go with it; the new
-     * one fills in a few ticks.
+     * Makes the field and the damp spots again if the range they are drawn to has changed, sized for its area. The
+     * drops and spots of the old ones go with them; the new field fills in a few ticks.
      */
     private void fitRange(int range) {
-        if (this.field.radius() != range)
+        if (this.field.radius() != range) {
             this.field = new PrecipitationField(capacityFor(range), range);
+            this.dampSpots = new DampSpots(PrecipitationField.forArea(MAX_DAMP_SPOTS, range));
+        }
     }
 
     /**
@@ -167,8 +172,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
      * as its area is larger
      */
     static int capacityFor(int range) {
-        float scale = range / (float) PrecipitationField.DEFAULT_RADIUS;
-        return Math.round(MAX_DROPS * scale * scale);
+        return PrecipitationField.forArea(MAX_DROPS, range);
     }
 
     /**
@@ -287,8 +291,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
         String text;
         if (!this.config.weatherOptions.enableParticlePrecipitation)
             text = "Precipitation: vanilla";
-        else if (KnownMod.PARTICLE_RAIN.isInstalled())
-            text = "Precipitation: off (Particle Rain installed)";
+        else if (KnownMod.particleWeatherMod().isPresent())
+            text = "Precipitation: off (%s installed)".formatted(KnownMod.particleWeatherMod().get().installedId().orElseThrow());
         else if (!PrecipitationShaders.DROPS.isUsable())
             text = "Precipitation: vanilla (shader unavailable, failed, or a shader pack in use)";
         else

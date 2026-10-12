@@ -45,14 +45,21 @@ public abstract class MixinParticleEngine {
     /**
      * Puts the usual blend back once the particles are drawn: flames are drawn adding their light, and a render type
      * can't undo that itself. Whatever is drawn next and turns blending on without setting how (vanilla's rain, for
-     * one) would otherwise add too. NeoForge draws particles through a render method of its own, which its own calls
-     * too; either way this runs once they are all drawn.
+     * one) would otherwise add too.
      */
-    @Inject(method = {
-            "render(Lnet/minecraft/client/renderer/LightTexture;Lnet/minecraft/client/Camera;F)V",
-            "render(Lnet/minecraft/client/renderer/LightTexture;Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/culling/Frustum;Ljava/util/function/Predicate;)V"
-    }, at = @At("TAIL"), require = 1)
+    @Inject(method = "render(Lnet/minecraft/client/renderer/LightTexture;Lnet/minecraft/client/Camera;F)V", at = @At("TAIL"))
     private void dsurround$restoreBlend(CallbackInfo ci) {
+        RenderSystem.defaultBlendFunc();
+    }
+
+    /**
+     * The same, for NeoForge, whose level renderer draws particles through a render method of its own. Vanilla has no
+     * such method, so it isn't remapped (NeoForge runs on these names) and isn't required (Fabric hasn't got it):
+     * otherwise the common module's build warns it can't be found.
+     */
+    @Inject(method = "render(Lnet/minecraft/client/renderer/LightTexture;Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/culling/Frustum;Ljava/util/function/Predicate;)V",
+            at = @At("TAIL"), remap = false, require = 0)
+    private void dsurround$restoreBlendNeoForge(CallbackInfo ci) {
         RenderSystem.defaultBlendFunc();
     }
 }

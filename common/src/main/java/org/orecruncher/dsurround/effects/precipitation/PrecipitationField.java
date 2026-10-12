@@ -94,8 +94,9 @@ public final class PrecipitationField {
     static final int DUST_FADE = 20;
 
     /**
-     * The most rain drop landings kept from a tick, for splashes. More land at full strength, but more splashes than
-     * this would not be seen as more.
+     * The most rain drop landings kept from a tick, for splashes, at the default range. More land at full strength,
+     * but more splashes than this would not be seen as more. A field at another range keeps as many for its area, so
+     * splashes are as dense at any range (see {@link #forArea}).
      */
     public static final int MAX_LANDINGS = 128;
 
@@ -124,10 +125,11 @@ public final class PrecipitationField {
     private int dustCount;
 
     // Where rain drops landed this tick: x and z, the height of the ground they landed on, and how big they were
-    private final float[] landingX = new float[MAX_LANDINGS];
-    private final float[] landingZ = new float[MAX_LANDINGS];
-    private final int[] landingGround = new int[MAX_LANDINGS];
-    private final float[] landingSize = new float[MAX_LANDINGS];
+    private final int maxLandings;
+    private final float[] landingX;
+    private final float[] landingZ;
+    private final int[] landingGround;
+    private final float[] landingSize;
     private int landings;
 
     public PrecipitationField(int capacity) {
@@ -141,6 +143,11 @@ public final class PrecipitationField {
         this.capacity = capacity;
         this.radius = radius;
         this.columns = new PrecipitationColumns(radius);
+        this.maxLandings = forArea(MAX_LANDINGS, radius);
+        this.landingX = new float[this.maxLandings];
+        this.landingZ = new float[this.maxLandings];
+        this.landingGround = new int[this.maxLandings];
+        this.landingSize = new float[this.maxLandings];
         // Fills from empty in a few ticks; the rain level itself builds up more slowly than that
         this.maxSpawnPerTick = Math.max(1, capacity / 4);
         this.x = new float[capacity];
@@ -169,6 +176,23 @@ public final class PrecipitationField {
     /**
      * How far from the camera, horizontally, there are drops, in blocks
      */
+    /**
+     * The most rain drop landings it keeps from a tick: {@link #MAX_LANDINGS} at the default range, as many for the
+     * area at another
+     */
+    public int maxLandings() {
+        return this.maxLandings;
+    }
+
+    /**
+     * A number that suits the default range ({@link #DEFAULT_RADIUS}), for a field reaching {@code radius}: as many
+     * more as its area is larger, or fewer as it is smaller, so whatever it counts is as dense at any range
+     */
+    public static int forArea(int atDefaultRange, int radius) {
+        float scale = radius / (float) DEFAULT_RADIUS;
+        return Math.max(1, Math.round(atDefaultRange * scale * scale));
+    }
+
     public int radius() {
         return this.radius;
     }
@@ -224,7 +248,7 @@ public final class PrecipitationField {
     }
 
     /**
-     * How many rain drops landed in the last tick, up to {@link #MAX_LANDINGS}. Snow and dust land without a trace.
+     * How many rain drops landed in the last tick, up to {@link #maxLandings}. Snow and dust land without a trace.
      */
     public int landings() {
         return this.landings;
@@ -484,7 +508,7 @@ public final class PrecipitationField {
     }
 
     private void landed(float x, float z, int ground, float size) {
-        if (this.landings == MAX_LANDINGS)
+        if (this.landings == this.maxLandings)
             return;
         this.landingX[this.landings] = x;
         this.landingZ[this.landings] = z;

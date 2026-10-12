@@ -16,7 +16,7 @@
  *     {@link org.orecruncher.dsurround.effects.precipitation.Snowflakes}: drawing.</li>
  * </ul>
  * It stands aside, and vanilla's weather is drawn, when turned off, with a shader pack in use, when its shader fails,
- * in a dimension that draws its own weather (its dimension info's {@code particleWeather}), and when the Particle Rain
- * mod is installed.
+ * and in a dimension that draws its own weather (its dimension info's {@code particleWeather}). It is off when a mod
+ * that draws the weather as particles of its own is installed (Particle Rain, Simple Weather).
  */
 package org.orecruncher.dsurround.effects.precipitation;
