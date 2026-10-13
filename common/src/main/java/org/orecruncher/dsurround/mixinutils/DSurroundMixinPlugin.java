@@ -24,7 +24,8 @@ public final class DSurroundMixinPlugin implements IMixinConfigPlugin {
      * Mixins whose target belongs to an optional mod: applied only when the target is present.
      */
     static final Map<String, String> OPTIONAL = Map.of(
-            "org.orecruncher.dsurround.mixins.core.MixinClothAbstractConfigEntry", "me.shedaniel.clothconfig2.api.AbstractConfigEntry");
+            "org.orecruncher.dsurround.mixins.core.MixinClothAbstractConfigEntry", "me.shedaniel.clothconfig2.api.AbstractConfigEntry",
+            "org.orecruncher.dsurround.mixins.core.MixinClothCategoryLabelWidget", "me.shedaniel.clothconfig2.gui.entries.SubCategoryListEntry$CategoryLabelWidget");
 
     /**
      * Whether to apply a mixin.

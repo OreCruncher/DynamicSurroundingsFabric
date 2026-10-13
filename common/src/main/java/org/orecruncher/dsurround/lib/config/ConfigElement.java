@@ -46,7 +46,7 @@ public abstract class ConfigElement<T> {
     /**
      * The name of the field this element is held in: also its name in the config file.
      */
-    String fieldName() {
+    public String fieldName() {
         return this.field.getName();
     }
 

@@ -16,6 +16,7 @@
     "core.MixinClientChunkCache",
     "core.MixinClientLevel",
     "core.MixinClothAbstractConfigEntry",
+    "core.MixinClothCategoryLabelWidget",
     "core.MixinDebugRenderer",
     "core.MixinEntity",
     "core.MixinEntityArrow",

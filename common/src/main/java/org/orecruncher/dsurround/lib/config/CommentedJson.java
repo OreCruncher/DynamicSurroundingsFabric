@@ -175,6 +175,8 @@ final class CommentedJson {
          * The comment lines for a field: its comment, then a line with its range and default, either of which
          * may be missing.
          */
+        // TODO: Also emit a line when the field is marked @RestartRequired, saying whether a restart of Minecraft
+        //  (client = true) or rejoining the world (client = false) is needed for a change to take effect.
         List<String> commentLines(@Nullable Field field, JsonElement value, @Nullable Object fieldDefault) {
             var lines = new ArrayList<String>();
             if (field == null)

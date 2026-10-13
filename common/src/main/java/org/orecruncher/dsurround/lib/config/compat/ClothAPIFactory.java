@@ -7,7 +7,10 @@ import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.impl.builders.FieldBuilder;
 import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
@@ -22,6 +25,7 @@ import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Builds a Cloth Config screen for a configuration from its specification.
@@ -45,7 +49,16 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
     private static final Style TOOLTIP_STYLE = Style.EMPTY.withColor(ColorPalette.SEASHELL);
     private static final Style RESTART_STYLE = Style.EMPTY.withColor(ColorPalette.RED);
     private static final Style EXPERIMENTAL_STYLE = Style.EMPTY.withColor(ColorPalette.ORCHID);
+    private static final Style LINK_STYLE = Style.EMPTY.withColor(ColorPalette.MC_AQUA).withUnderlined(true);
+    // A chain link drawn by the mod's own font (assets/dsurround/font/icons.json), so it is text Cloth draws with
+    // the name, and resource packs can replace it.
+    private static final Style LINK_ICON_STYLE = Style.EMPTY.withColor(ColorPalette.MC_AQUA).withFont(ResourceLocation.parse("dsurround:icons"));
+    private static final String LINK_ICON = "\uE000";
     private static final int TOOLTIP_WIDTH = 300;
+
+    // The documentation's page for the config file. Each group has a section headed with its name in the file, which
+    // ReadTheDocs turns into an anchor in lower case.
+    private static final String DOCS_URL = "https://dynamic-surroundings.readthedocs.io/en/latest/config/modconfiguration.html";
 
     private static final Component CLIENT_RESTART_REQUIRED = Component.translatable("dsurround.config.tooltip.clientRestartRequired").withStyle(RESTART_STYLE);
     private static final Component WORLD_RESTART_REQUIRED = Component.translatable("dsurround.config.tooltip.worldRestartRequired").withStyle(RESTART_STYLE);
@@ -79,6 +92,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
 
         ConfigCategory root = builder.getOrCreateCategory(title);
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
+        root.addEntry(docsLink(entryBuilder, "dsurround.config.docs.page", DOCS_URL));
         for (var prop : this.configData.getSpecification()) {
             if (prop instanceof ConfigElement.PropertyGroup group) {
                 root.addEntry(this.generate(entryBuilder, group, this.configData).build());
@@ -92,8 +106,13 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
     }
 
     private SubCategoryBuilder generate(ConfigEntryBuilder builder, ConfigElement.PropertyGroup propertyGroup, Object instance) {
+        // The name ends with a link to the group's documentation. Cloth doesn't act on clicks in a group's name, so
+        // MixinClothCategoryLabelWidget does.
+        var name = text(propertyGroup.getLanguageKey(), nameStyle(propertyGroup, GROUP_STYLE))
+                .append(" ")
+                .append(Component.literal(LINK_ICON).withStyle(linkStyle(LINK_ICON_STYLE, docsUrl(propertyGroup))));
         SubCategoryBuilder categoryBuilder = builder
-                .startSubCategory(text(propertyGroup.getLanguageKey(), nameStyle(propertyGroup, GROUP_STYLE)))
+                .startSubCategory(name)
                 .setTooltip(description(propertyGroup).toArray(new Component[0]));
 
         // Can't have categories within categories, so we ignore the case of where a config is set up that way
@@ -190,6 +209,30 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
     }
 
     /**
+     * A line of text that opens {@code url} when clicked, once the player confirms (Cloth asks with vanilla's link
+     * screen). Hovering shows the address.
+     */
+    private static AbstractConfigListEntry<?> docsLink(ConfigEntryBuilder builder, String key, String url) {
+        return builder.startTextDescription(Component.translatable(key).withStyle(linkStyle(LINK_STYLE, url))).build();
+    }
+
+    /**
+     * {@code style} made to open {@code url} when clicked, showing the address on hover.
+     */
+    private static Style linkStyle(Style style, String url) {
+        return style
+                .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url))
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(url)));
+    }
+
+    /**
+     * The address of a group's section in the documentation.
+     */
+    private static String docsUrl(ConfigElement.PropertyGroup group) {
+        return DOCS_URL + "#" + group.fieldName().toLowerCase(Locale.ROOT);
+    }
+
+    /**
      * A property's tooltip: its description, default value, range, and whether a restart is needed.
      */
     private static Component[] tooltip(ConfigElement.PropertyValue<?> pv) {
@@ -237,7 +280,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
         return new ArrayList<>(GuiHelpers.getTrimmedTextCollection(text, TOOLTIP_WIDTH, style));
     }
 
-    private static Component text(String key, Style style) {
+    private static MutableComponent text(String key, Style style) {
         return Component.literal(Localization.load(key)).withStyle(style);
     }
 
