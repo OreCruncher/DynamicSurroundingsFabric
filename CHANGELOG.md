@@ -27,7 +27,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Becomes louder or quieter as time progresses
   * Enhanced when it is storming
 * Client side storm simulation, based on older Dynamic Surroundings versions
-  * Only works in dimensions where there are no modded hooks for weather rendering (like Twilight Forest)
+  * Only works in dimensions where there are no modded hooks for weather rendering
   * Random seeds tied to the Minecraft day so all players using Dynamic Surroundings will experience the same effects
   * When precipitation starts, the storm simulator generates a strength value independent of Minecraft's rain strength
   * The precipitation effects are "particle" like rather than rendered texture sheets, though they are not true Minecraft particles
