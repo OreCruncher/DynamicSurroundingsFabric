@@ -608,10 +608,40 @@ public class PrecipitationFieldTests {
     void dropsWellBehindTheCameraAreNotDrawn() {
         // Looking north, toward negative z
         var look = new Vector3f(0F, 0F, -1F);
-        assertFalse(PrecipitationRenderer.isBehind(0F, 0F, -5F, look), "ahead");
-        assertFalse(PrecipitationRenderer.isBehind(4F, 0F, 0F, look), "beside");
-        assertFalse(PrecipitationRenderer.isBehind(0F, 0F, PrecipitationRenderer.BEHIND_MARGIN - 0.1F, look), "just behind: a streak could reach into view");
-        assertTrue(PrecipitationRenderer.isBehind(0F, 0F, 5F, look), "well behind");
+        var margin = PrecipitationRenderer.behindMargin(DropScales.USUAL);
+        assertFalse(PrecipitationRenderer.isBehind(0F, 0F, -5F, look, margin), "ahead");
+        assertFalse(PrecipitationRenderer.isBehind(4F, 0F, 0F, look, margin), "beside");
+        assertFalse(PrecipitationRenderer.isBehind(0F, 0F, margin - 0.1F, look, margin), "just behind: a streak could reach into view");
+        assertTrue(PrecipitationRenderer.isBehind(0F, 0F, 5F, look, margin), "well behind");
+    }
+
+    @Test
+    void theMarginBehindTheCameraCoversTheLargestDropAtAnyScale() {
+        for (var scales : new DropScales[]{DropScales.USUAL, new DropScales(0.5F, 0.5F), new DropScales(2.5F, 2F)}) {
+            var margin = PrecipitationRenderer.behindMargin(scales);
+            var dust = PrecipitationRenderer.DUST_MIN_HALF_SIZE + PrecipitationRenderer.DUST_HALF_SIZE_RANGE;
+            var snow = (PrecipitationRenderer.SNOW_MIN_HALF_SIZE + PrecipitationRenderer.SNOW_HALF_SIZE_RANGE) * scales.snow();
+            assertTrue(margin > PrecipitationRenderer.rainLength(1F, scales.rain()), "the longest streak, at " + scales);
+            assertTrue(margin > dust, "the largest puff, at " + scales);
+            assertTrue(margin > snow, "the largest flake, at " + scales);
+        }
+        assertTrue(PrecipitationRenderer.behindMargin(new DropScales(2.5F, 1F)) > PrecipitationRenderer.behindMargin(DropScales.USUAL),
+                "grows with long streaks");
+    }
+
+    @Test
+    void smallerRainIsShorterButNoThinner() {
+        assertEquals(PrecipitationRenderer.rainLength(0.5F, 1F) * 0.5F, PrecipitationRenderer.rainLength(0.5F, 0.5F), 1.0E-6F);
+        assertEquals(PrecipitationRenderer.rainHalfWidth(0.5F, 1F), PrecipitationRenderer.rainHalfWidth(0.5F, 0.5F), 1.0E-6F,
+                "thinner would flicker");
+    }
+
+    @Test
+    void largerRainWidensLessThanItLengthens() {
+        var length = PrecipitationRenderer.rainLength(0.5F, 2F) / PrecipitationRenderer.rainLength(0.5F, 1F);
+        var width = PrecipitationRenderer.rainHalfWidth(0.5F, 2F) / PrecipitationRenderer.rainHalfWidth(0.5F, 1F);
+        assertEquals(2F, length, 1.0E-5F);
+        assertTrue(width > 1F && width < length, "wider, but less: " + width);
     }
 
     @Test

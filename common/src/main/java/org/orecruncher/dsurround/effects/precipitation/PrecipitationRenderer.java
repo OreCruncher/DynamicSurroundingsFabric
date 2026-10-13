@@ -48,10 +48,10 @@ final class PrecipitationRenderer {
     // How fast a puff turns, as a fraction of how fast it rises and falls
     static final float DUST_SPIN = 0.1F;
     /**
-     * How far behind the camera a drop can be and still reach into view: the largest puff's half size, or the length
-     * of the longest streak, with room to spare. Drops further behind are not drawn.
+     * How far behind the camera a drop can be and still reach into view, beyond the largest puff's half size, the
+     * length of the longest streak or the largest flake's half size: room to spare. See {@link #behindMargin}.
      */
-    static final float BEHIND_MARGIN = 2F;
+    static final float BEHIND_SPARE = 0.9F;
     /**
      * Rain and snow far off are thinned out: all are drawn out to this share of the way to the edge of the cylinder,
      * then a share falling off steadily to {@link #THIN_KEEP_AT_EDGE} at the edge. Far drops are small on screen and
@@ -83,9 +83,10 @@ final class PrecipitationRenderer {
      * @param largest    the largest of them, in pixels: the others are drawn in proportion
      * @param dust       the dust sprites, from the particle atlas, which must be bound when drawing dust; each puff
      *                   keeps one
+     * @param scales     how big rain and snow are drawn
      */
     static void draw(PrecipitationField field, Tesselator tesselator, Camera camera, float partialTick, boolean dustOnly,
-                     List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust) {
+                     List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales) {
         if (field.count == 0 || (dustOnly && field.dustCount() == 0) || (!dustOnly && field.dustCount() == field.count))
             return;
 
@@ -94,6 +95,7 @@ final class PrecipitationRenderer {
         Vector3f up = camera.getUpVector();
         Vector3f look = camera.getLookVector();
         float radius = field.radius();
+        float margin = behindMargin(scales);
         // How much further each snowflake and puff has turned since its last tick: the same for all of a kind, so
         // worked out once, and added to each one's own turn (see PrecipitationField.spinCos)
         float snowTurn = partialTick * PrecipitationField.SNOW_SWAY_RATE * SNOW_SPIN;
@@ -108,7 +110,7 @@ final class PrecipitationRenderer {
             float x = (float) (Mth.lerp(partialTick, field.prevX[i], field.x[i]) - cam.x);
             float y = (float) (Mth.lerp(partialTick, field.prevY[i], field.y[i]) - cam.y);
             float z = (float) (Mth.lerp(partialTick, field.prevZ[i], field.z[i]) - cam.z);
-            if (isBehind(x, y, z, look))
+            if (isBehind(x, y, z, look, margin))
                 continue;
             float distance = Mth.sqrt(x * x + z * z);
             float fade = field.fade(i, partialTick) * Mth.clamp((radius - distance) / EDGE_FADE, 0F, 1F);
@@ -133,7 +135,7 @@ final class PrecipitationRenderer {
                 float a = SNOW_ALPHA * fade;
                 float cos = field.spinCos[i] * snowCos - field.spinSin[i] * snowSin;
                 float sin = field.spinSin[i] * snowCos + field.spinCos[i] * snowSin;
-                float size = SNOW_MIN_HALF_SIZE + SNOW_HALF_SIZE_RANGE * field.snowSize(i);
+                float size = (SNOW_MIN_HALF_SIZE + SNOW_HALF_SIZE_RANGE * field.snowSize(i)) * scales.snow();
                 if (snowflakes.isEmpty()) {
                     billboard(builder, x, y, z, left, up, cos, sin, size, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, 1F, 1F, 1F, a, light);
                 } else {
@@ -144,8 +146,8 @@ final class PrecipitationRenderer {
                 }
             } else {
                 float dropSize = field.rainSize(i);
-                float length = RAIN_MIN_LENGTH + RAIN_LENGTH_RANGE * dropSize;
-                float halfWidth = RAIN_MIN_HALF_WIDTH + RAIN_HALF_WIDTH_RANGE * dropSize;
+                float length = rainLength(dropSize, scales.rain());
+                float halfWidth = rainHalfWidth(dropSize, scales.rain());
                 // Along the way the drop is moving, its tail trailing up and upwind, turned about its own length to
                 // face the camera
                 float vx = field.windX[i], vy = -field.speed[i], vz = field.windZ[i];
@@ -206,10 +208,39 @@ final class PrecipitationRenderer {
     }
 
     /**
-     * Whether a drop, relative to the camera, is far enough behind it that nothing of it can be seen
+     * A rain streak's length, for a drop of the given size, 0 to 1, drawn at the given scale
      */
-    static boolean isBehind(float x, float y, float z, Vector3f look) {
-        return x * look.x() + y * look.y() + z * look.z() < -BEHIND_MARGIN;
+    static float rainLength(float dropSize, float scale) {
+        return (RAIN_MIN_LENGTH + RAIN_LENGTH_RANGE * dropSize) * scale;
+    }
+
+    /**
+     * A rain streak's half width, for a drop of the given size, 0 to 1, drawn at the given scale. Smaller than usual
+     * is shown by the streak being shorter only: thinner, a streak a few blocks off is under a pixel wide and
+     * flickers. Larger widens it less than it lengthens it, so a big streak doesn't look like a rod.
+     */
+    static float rainHalfWidth(float dropSize, float scale) {
+        return (RAIN_MIN_HALF_WIDTH + RAIN_HALF_WIDTH_RANGE * dropSize) * Mth.sqrt(Math.max(scale, 1F));
+    }
+
+    /**
+     * How far behind the camera a drop can be and still reach into view, at the given scales: the largest of a puff's
+     * half size, a streak's length and a flake's half size, with room to spare. Drops further behind are not drawn.
+     */
+    static float behindMargin(DropScales scales) {
+        float dust = DUST_MIN_HALF_SIZE + DUST_HALF_SIZE_RANGE;
+        float rain = rainLength(1F, scales.rain());
+        float snow = (SNOW_MIN_HALF_SIZE + SNOW_HALF_SIZE_RANGE) * scales.snow();
+        return Math.max(dust, Math.max(rain, snow)) + BEHIND_SPARE;
+    }
+
+    /**
+     * Whether a drop, relative to the camera, is far enough behind it that nothing of it can be seen
+     *
+     * @param margin how far behind a drop can be and still reach into view (see {@link #behindMargin})
+     */
+    static boolean isBehind(float x, float y, float z, Vector3f look, float margin) {
+        return x * look.x() + y * look.y() + z * look.z() < -margin;
     }
 
     /**

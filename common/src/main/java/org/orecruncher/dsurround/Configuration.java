@@ -406,6 +406,16 @@ public class Configuration extends ConfigurationData {
         public int precipitationRange = 12;
 
         @Property
+        @Slider(min = 50, max = 250)
+        @Comment("How big particle rain drops are drawn, as a percent of their usual size")
+        public int rainDropScale = 100;
+
+        @Property
+        @Slider(min = 50, max = 200)
+        @Comment("How big particle snowflakes are drawn, as a percent of their usual size")
+        public int snowflakeScale = 100;
+
+        @Property
         @Comment("With particle rain and snow on, storms in deserts and badlands blow dust and thicken the fog")
         public boolean enableDustStorms = true;
 

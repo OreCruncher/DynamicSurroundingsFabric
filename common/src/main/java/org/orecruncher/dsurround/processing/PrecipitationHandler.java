@@ -21,6 +21,7 @@ import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.particles.DSurroundParticleSprites;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
 import org.orecruncher.dsurround.effects.precipitation.DampSpots;
+import org.orecruncher.dsurround.effects.precipitation.DropScales;
 import org.orecruncher.dsurround.effects.precipitation.IColumnSource;
 import org.orecruncher.dsurround.effects.precipitation.Landings;
 import org.orecruncher.dsurround.effects.precipitation.LevelColumns;
@@ -246,6 +247,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
         var flakes = this.snowflakes.flakes(GameUtils.getResourceManager());
         var largest = this.snowflakes.largest();
         var dust = DSurroundParticleSprites.DUST.sprites();
+        var options = this.config.weatherOptions;
+        var scales = new DropScales(options.rainDropScale / 100F, options.snowflakeScale / 100F);
         // As vanilla's weather: depth is written only with Fabulous graphics, which draws weather to its own target
         RenderSystem.depthMask(Minecraft.useShaderTransparency());
         RenderSystem.setShader(PrecipitationShaders.DROPS.supplier());
@@ -255,13 +258,13 @@ public class PrecipitationHandler extends AbstractClientHandler {
             // The scene's depth, water included: the weather's own target has none with Fabulous graphics
             SoftParticles.bindSceneDepth(shader, SoftParticles.sceneDepthTarget(), weatherTarget());
             shader.safeGetUniform("SoftDistance").set(DUST_SOFT_DISTANCE);
-            this.field.draw(tesselator, camera, partialTick, true, flakes, largest, dust);
+            this.field.draw(tesselator, camera, partialTick, true, flakes, largest, dust, scales);
         }
 
         // The rain is untextured; the snow is cut from the game's snow texture
         RenderSystem.setShaderTexture(0, Snowflakes.TEXTURE);
         shader.safeGetUniform("SoftDistance").set(0F);
-        this.field.draw(tesselator, camera, partialTick, false, flakes, largest, dust);
+        this.field.draw(tesselator, camera, partialTick, false, flakes, largest, dust, scales);
     }
 
     /**

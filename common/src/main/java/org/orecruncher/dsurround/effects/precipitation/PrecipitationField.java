@@ -570,10 +570,11 @@ public final class PrecipitationField {
      * @param snowflakes the flakes of the snow texture to choose from, or none to draw plain flakes
      * @param largest    the largest of them, in pixels
      * @param dust       the dust sprites to choose from
+     * @param scales     how big rain and snow are drawn, from the player's settings
      */
     public void draw(Tesselator tesselator, Camera camera, float partialTick, boolean dustOnly, List<Snowflakes.Flake> snowflakes,
-                     int largest, TextureAtlasSprite[] dust) {
-        PrecipitationRenderer.draw(this, tesselator, camera, partialTick, dustOnly, snowflakes, largest, dust);
+                     int largest, TextureAtlasSprite[] dust, DropScales scales) {
+        PrecipitationRenderer.draw(this, tesselator, camera, partialTick, dustOnly, snowflakes, largest, dust, scales);
     }
 
     /**
