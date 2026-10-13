@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
+import net.minecraft.util.Mth;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.lib.random.Randomizer;
@@ -159,6 +160,31 @@ public class PrecipitationFieldTests {
         var field = new PrecipitationField(1000);
         tick(field, new Columns((int) CAMERA_Y + PrecipitationField.ABOVE + 1, Integer.MAX_VALUE, Integer.MIN_VALUE), 0, 0, 1F, 10);
         assertEquals(0, field.count());
+    }
+
+    @Test
+    void eachFlakeAndPuffKeepsTheTurnOfItsPhase() {
+        // The turn is worked out as a drop ticks, not as it is drawn; it must follow the phase through spawning,
+        // ticking, and drops being moved about in the arrays as others go. Snow, rain and dust, enough ticks for
+        // plenty to land or settle and be replaced
+        var snow = new PrecipitationField(1000);
+        tick(snow, new Columns(GROUND, 0, Integer.MIN_VALUE), 0, 0, 1F, 120);
+        var dust = new PrecipitationField(1000);
+        tick(dust, new Desert(GROUND, 0), 0, 0, 1F, 120);
+        int checked = 0;
+        for (var field : new PrecipitationField[]{snow, dust}) {
+            for (int i = 0; i < field.count(); i++) {
+                if (field.kind[i] == PrecipitationField.RAIN)
+                    continue;
+                float spin = field.phase[i] * (field.kind[i] == PrecipitationField.DUST
+                        ? PrecipitationRenderer.DUST_SPIN : PrecipitationRenderer.SNOW_SPIN);
+                assertEquals(Mth.cos(spin), field.spinCos[i], 1e-6F, "drop " + i);
+                assertEquals(Mth.sin(spin), field.spinSin[i], 1e-6F, "drop " + i);
+                checked++;
+            }
+        }
+        assertTrue(snow.dustCount() == 0 && dust.dustCount() > 0);
+        assertTrue(checked > 100, checked + " checked");
     }
 
     @Test

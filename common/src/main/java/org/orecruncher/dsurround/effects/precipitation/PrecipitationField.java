@@ -112,6 +112,9 @@ public final class PrecipitationField {
     // The drop's horizontal speed, carried by the wind, and how strongly the wind carries it
     final float[] windX, windZ, drift;
     final float[] phase;
+    // The cos and sin of how far a snowflake or puff of dust has turned (see PrecipitationRenderer), as of its last
+    // tick: worked out as its phase changes, a tick at a time, rather than for each drop in each frame drawn
+    final float[] spinCos, spinSin;
     // A random number for each drop, 0 to 1, that doesn't change: which drops are left out when thinning those far
     // off, so the same ones are, frame after frame
     final float[] thinning;
@@ -161,6 +164,8 @@ public final class PrecipitationField {
         this.windZ = new float[capacity];
         this.drift = new float[capacity];
         this.phase = new float[capacity];
+        this.spinCos = new float[capacity];
+        this.spinSin = new float[capacity];
         this.thinning = new float[capacity];
         this.age = new int[capacity];
         this.light = new int[capacity];
@@ -330,6 +335,7 @@ public final class PrecipitationField {
         this.y[i] -= this.speed[i];
         if (this.kind[i] == SNOW) {
             this.phase[i] += SNOW_SWAY_RATE;
+            this.turned(i);
             this.x[i] += Mth.sin(this.phase[i]) * SNOW_SWAY;
             this.z[i] += Mth.cos(this.phase[i] * 0.7F) * SNOW_SWAY;
         }
@@ -361,6 +367,7 @@ public final class PrecipitationField {
     private boolean moveDust(int i, double cameraX, double cameraY, double cameraZ) {
         float before = Mth.sin(this.phase[i]);
         this.phase[i] += DUST_TURBULENCE_RATE;
+        this.turned(i);
         this.y[i] += (Mth.sin(this.phase[i]) - before) * DUST_TURBULENCE_HEIGHT;
 
         int column = this.inCylinder(i, cameraX, cameraZ);
@@ -483,6 +490,7 @@ public final class PrecipitationField {
             this.windX[i] = wind.x() * carried;
             this.windZ[i] = wind.z() * carried;
             this.phase[i] = random.nextFloat() * Mth.TWO_PI;
+            this.turned(i);
             this.thinning[i] = random.nextFloat();
             this.age[i] = 0;
             this.light[i] = this.columns.light(column);
@@ -517,6 +525,15 @@ public final class PrecipitationField {
         this.landings++;
     }
 
+    /**
+     * Works out a drop's turn from its phase: snowflakes turn as they sway, puffs of dust as they rise and fall
+     */
+    private void turned(int i) {
+        float spin = this.phase[i] * (this.kind[i] == DUST ? PrecipitationRenderer.DUST_SPIN : PrecipitationRenderer.SNOW_SPIN);
+        this.spinCos[i] = Mth.cos(spin);
+        this.spinSin[i] = Mth.sin(spin);
+    }
+
     // Moves the last drop into the gap, so the drops stay packed at the front of the arrays
     private void remove(int i) {
         if (this.kind[i] == DUST)
@@ -535,6 +552,8 @@ public final class PrecipitationField {
         this.windZ[i] = this.windZ[last];
         this.drift[i] = this.drift[last];
         this.phase[i] = this.phase[last];
+        this.spinCos[i] = this.spinCos[last];
+        this.spinSin[i] = this.spinSin[last];
         this.thinning[i] = this.thinning[last];
         this.age[i] = this.age[last];
         this.light[i] = this.light[last];

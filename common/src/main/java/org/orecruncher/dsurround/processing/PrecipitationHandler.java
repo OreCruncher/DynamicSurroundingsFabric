@@ -32,6 +32,7 @@ import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.platform.KnownMod;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WindService;
@@ -136,9 +137,11 @@ public class PrecipitationHandler extends AbstractClientHandler {
         }
         var particles = GameUtils.getGameSettings().particles().get();
         this.fitRange(this.config.weatherOptions.precipitationRange);
-        this.field.tick(this.columns, pos.x, pos.y, pos.z, rainLevel, density(this.config.weatherOptions.precipitationDensity, particles), this.windService.wind(), RANDOM);
-        this.landings.splash(level, this.field, this.dampSpots, particles, RANDOM);
-        this.landings.dustSound(level, this.field, this.columns, pos.x, pos.z, rainLevel, RANDOM);
+        // Thousands of numbers a tick: this thread's generator, rather than looking it up for each
+        var random = Randomizer.forThisThread();
+        this.field.tick(this.columns, pos.x, pos.y, pos.z, rainLevel, density(this.config.weatherOptions.precipitationDensity, particles), this.windService.wind(), random);
+        this.landings.splash(level, this.field, this.dampSpots, particles, random);
+        this.landings.dustSound(level, this.field, this.columns, pos.x, pos.z, rainLevel, random);
     }
 
     /**

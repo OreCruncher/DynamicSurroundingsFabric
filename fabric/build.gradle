@@ -70,8 +70,11 @@ processResources {
         expand expandProps
     }
 
-    into('/assets') {
+    // Read by the sound credits screen. In our own assets folder, not straight in assets, where Minecraft takes each
+    // entry for a namespace and warns about one that isn't; lower case, as resource paths must be
+    into("/assets/$rootProject.name") {
         from("$projectDir/../CREDITS.md")
+        rename { 'credits.md' }
     }
 }
 

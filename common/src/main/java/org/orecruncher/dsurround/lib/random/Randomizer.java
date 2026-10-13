@@ -29,6 +29,15 @@ public final class Randomizer implements IRandomizer {
     }
 
     /**
+     * The calling thread's own generator, the one the shared randomizer hands that thread's calls to: for many numbers
+     * in a row (a loop over thousands of particles), each call through the shared one looks it up again. Use it
+     * there and then, on this thread; don't keep it or hand it to another thread.
+     */
+    public static IRandomizer forThisThread() {
+        return THREAD_LOCAL.get();
+    }
+
+    /**
      * A new randomizer with a sequence of its own, starting from {@code seed}: the same seed always gives the same
      * numbers. Unlike the shared randomizer, it isn't safe to use from more than one thread at a time.
      */

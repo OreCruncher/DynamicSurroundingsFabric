@@ -80,6 +80,8 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
     that should follow the storm (fog, sounds, scripts, particles, aurora). A mixin feeds it into vanilla's weather.
   - `WindService` ticks `Wind` and publishes it via static `SceneWind` for particles to drift; `WindSounds` scales
     sound factories marked `followsWind`. `DustStorms` decides where storms raise dust.
+  - Our weather and ground fog replace `renderSnowAndRain` only when `renderLevel` calls it (a flag set by the
+    `MixinLevelRenderer` wrap). Other mods call it themselves (Ars Nouveau, into its sky texture); those get vanilla's.
   - `processing/PrecipitationHandler` runs particle weather (`PrecipitationField`, `LevelColumns`, `Landings`) and
     stands aside for shader packs, a failed shader, the Particle Rain mod (`KnownMod`) and dimensions that draw their
     own weather.

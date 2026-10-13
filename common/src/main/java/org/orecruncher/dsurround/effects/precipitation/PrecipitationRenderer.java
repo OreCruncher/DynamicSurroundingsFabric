@@ -94,6 +94,12 @@ final class PrecipitationRenderer {
         Vector3f up = camera.getUpVector();
         Vector3f look = camera.getLookVector();
         float radius = field.radius();
+        // How much further each snowflake and puff has turned since its last tick: the same for all of a kind, so
+        // worked out once, and added to each one's own turn (see PrecipitationField.spinCos)
+        float snowTurn = partialTick * PrecipitationField.SNOW_SWAY_RATE * SNOW_SPIN;
+        float snowCos = Mth.cos(snowTurn), snowSin = Mth.sin(snowTurn);
+        float dustTurn = partialTick * PrecipitationField.DUST_TURBULENCE_RATE * DUST_SPIN;
+        float dustCos = Mth.cos(dustTurn), dustSin = Mth.sin(dustTurn);
         BufferBuilder builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
 
         for (int i = 0; i < field.count; i++) {
@@ -115,24 +121,26 @@ final class PrecipitationRenderer {
             if (field.kind[i] == PrecipitationField.DUST) {
                 var sprite = dust[field.variant(i, dust.length)];
                 float size = DUST_MIN_HALF_SIZE + DUST_HALF_SIZE_RANGE * field.dustSize(i);
-                float spin = (field.phase[i] + partialTick * PrecipitationField.DUST_TURBULENCE_RATE) * DUST_SPIN;
+                float cos = field.spinCos[i] * dustCos - field.spinSin[i] * dustSin;
+                float sin = field.spinSin[i] * dustCos + field.spinCos[i] * dustSin;
                 int c = field.color[i];
                 float r = Mth.lerp(DUST_PALENESS, ((c >> 16) & 0xFF) / 255F, 1F);
                 float g = Mth.lerp(DUST_PALENESS, ((c >> 8) & 0xFF) / 255F, 1F);
                 float b = Mth.lerp(DUST_PALENESS, (c & 0xFF) / 255F, 1F);
-                billboard(builder, x, y, z, left, up, spin, size, sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(),
+                billboard(builder, x, y, z, left, up, cos, sin, size, sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(),
                         r, g, b, DUST_ALPHA * fade, light);
             } else if (field.kind[i] == PrecipitationField.SNOW) {
                 float a = SNOW_ALPHA * fade;
-                float spin = (field.phase[i] + partialTick * PrecipitationField.SNOW_SWAY_RATE) * SNOW_SPIN;
+                float cos = field.spinCos[i] * snowCos - field.spinSin[i] * snowSin;
+                float sin = field.spinSin[i] * snowCos + field.spinCos[i] * snowSin;
                 float size = SNOW_MIN_HALF_SIZE + SNOW_HALF_SIZE_RANGE * field.snowSize(i);
                 if (snowflakes.isEmpty()) {
-                    billboard(builder, x, y, z, left, up, spin, size, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, 1F, 1F, 1F, a, light);
+                    billboard(builder, x, y, z, left, up, cos, sin, size, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, 1F, 1F, 1F, a, light);
                 } else {
                     // A flake of a pixel is drawn smaller than one of three, in proportion
                     var flake = snowflakes.get(field.variant(i, snowflakes.size()));
                     size *= flake.size() / (float) largest;
-                    billboard(builder, x, y, z, left, up, spin, size, flake.u0(), flake.v0(), flake.u1(), flake.v1(), 1F, 1F, 1F, a, light);
+                    billboard(builder, x, y, z, left, up, cos, sin, size, flake.u0(), flake.v0(), flake.u1(), flake.v1(), 1F, 1F, 1F, a, light);
                 }
             } else {
                 float dropSize = field.rainSize(i);
@@ -205,12 +213,12 @@ final class PrecipitationRenderer {
     }
 
     /**
-     * A textured square facing the camera, turned in its plane by {@code spin}
+     * A textured square facing the camera, turned in its plane by the angle whose cos and sin are given
      */
-    private static void billboard(BufferBuilder builder, float x, float y, float z, Vector3f left, Vector3f up, float spin,
-                                  float halfSize, float u0, float v0, float u1, float v1, float r, float g, float b,
-                                  float a, int light) {
-        float cos = Mth.cos(spin) * halfSize, sin = Mth.sin(spin) * halfSize;
+    private static void billboard(BufferBuilder builder, float x, float y, float z, Vector3f left, Vector3f up,
+                                  float turnCos, float turnSin, float halfSize, float u0, float v0, float u1, float v1,
+                                  float r, float g, float b, float a, int light) {
+        float cos = turnCos * halfSize, sin = turnSin * halfSize;
         float ax = left.x() * cos + up.x() * sin, ay = left.y() * cos + up.y() * sin, az = left.z() * cos + up.z() * sin;
         float bx = up.x() * cos - left.x() * sin, by = up.y() * cos - left.y() * sin, bz = up.z() * cos - left.z() * sin;
         builder.addVertex(x - ax - bx, y - ay - by, z - az - bz).setUv(u1, v1).setColor(r, g, b, a).setLight(light);

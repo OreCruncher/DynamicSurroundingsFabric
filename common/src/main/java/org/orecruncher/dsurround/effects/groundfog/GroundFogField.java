@@ -187,9 +187,14 @@ public final class GroundFogField {
      * area whose ground is in the section: the light is read just above the ground
      */
     public void lightChanged(int sectionX, int sectionY, int sectionZ) {
-        int fromX = sectionX << 4, fromZ = sectionZ << 4;
-        for (int z = fromZ; z < fromZ + 16; z++) {
-            for (int x = fromX; x < fromX + 16; x++) {
+        // Light changes come by the hundred as chunks load, mostly well away from the area: only its columns are
+        // looked at
+        if (this.originX == Integer.MIN_VALUE)
+            return;
+        int fromX = Math.max(sectionX << 4, this.originX), toX = Math.min((sectionX << 4) + 16, this.originX + this.size);
+        int fromZ = Math.max(sectionZ << 4, this.originZ), toZ = Math.min((sectionZ << 4) + 16, this.originZ + this.size);
+        for (int z = fromZ; z < toZ; z++) {
+            for (int x = fromX; x < toX; x++) {
                 int slot = this.slot(x, z);
                 if (this.slotX[slot] == x && this.slotZ[slot] == z && this.slotHeight[slot] >> 4 == sectionY)
                     this.slotRelight[slot] = true;
@@ -211,9 +216,12 @@ public final class GroundFogField {
      * server, and any looked at before it did found no ground
      */
     public void chunkChanged(int chunkX, int chunkZ) {
-        int fromX = chunkX << 4, fromZ = chunkZ << 4;
-        for (int z = fromZ; z < fromZ + 16; z++)
-            for (int x = fromX; x < fromX + 16; x++)
+        if (this.originX == Integer.MIN_VALUE)
+            return;
+        int fromX = Math.max(chunkX << 4, this.originX), toX = Math.min((chunkX << 4) + 16, this.originX + this.size);
+        int fromZ = Math.max(chunkZ << 4, this.originZ), toZ = Math.min((chunkZ << 4) + 16, this.originZ + this.size);
+        for (int z = fromZ; z < toZ; z++)
+            for (int x = fromX; x < toX; x++)
                 this.columnChanged(x, z);
     }
 
@@ -333,6 +341,9 @@ public final class GroundFogField {
     }
 
     private void forget() {
+        // No area until the next update: nothing is remembered for a change to be noted against
+        this.originX = Integer.MIN_VALUE;
+        this.originZ = Integer.MIN_VALUE;
         Arrays.fill(this.slotX, Integer.MIN_VALUE);
         Arrays.fill(this.slotZ, Integer.MIN_VALUE);
         Arrays.fill(this.slotStale, false);

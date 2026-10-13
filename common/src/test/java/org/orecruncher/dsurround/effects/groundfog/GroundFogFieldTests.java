@@ -261,6 +261,42 @@ public class GroundFogFieldTests {
     }
 
     @Test
+    void onlyTheAreasPartOfASectionIsLookedAt() {
+        // Light and chunk changes only look at the columns of theirs that are in the area: the section west and north of
+        // the middle, x and z -16 to -1, has x and z -8 to -1 of the area's -8 to 8
+        var ground = new Ground(Integer.MAX_VALUE);
+        var field = new GroundFogField(8);
+        field.update(ground, 0.5, 0.5, Float.NaN);
+        int m = middle(field);
+
+        ground.light = 0xF000E0;
+        ground.lightReads = 0;
+        field.lightChanged(-1, GROUND >> 4, -1);
+        // Well away: nothing
+        field.lightChanged(40, GROUND >> 4, 40);
+        field.update(ground, 0.5, 0.5, Float.NaN);
+        int rowsPerTick = (int) Math.ceil(field.size() / (float) GroundFogField.REFRESH_TICKS);
+        assertTrue(ground.lightReads >= 8 * 8 && ground.lightReads <= 8 * 8 + rowsPerTick * field.size(),
+                "read " + ground.lightReads);
+        assertEquals(0xF000E0, field.light(m - 1, m - 1));
+        assertEquals(0xF000E0, field.light(m - 8, m - 8));
+
+        ground.looks = 0;
+        field.chunkChanged(-1, -1);
+        field.chunkChanged(40, 40);
+        field.update(ground, 0.5, 0.5, Float.NaN);
+        assertEquals(8 * 8, ground.looks);
+
+        // Cleared, nothing is in the area until the next update, which looks at every column anyway
+        field.clear();
+        field.lightChanged(0, GROUND >> 4, 0);
+        field.chunkChanged(0, 0);
+        ground.looks = 0;
+        field.update(ground, 0.5, 0.5, Float.NaN);
+        assertEquals(field.size() * field.size(), ground.looks);
+    }
+
+    @Test
     void changedColumnsAreLookedAtAgain() {
         var ground = new Ground(Integer.MAX_VALUE);
         var field = new GroundFogField(8);

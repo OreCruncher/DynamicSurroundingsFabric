@@ -19,6 +19,7 @@ import org.orecruncher.dsurround.runtime.weather.StormSounds;
 import org.orecruncher.dsurround.eventing.ISkyRender;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -48,12 +49,23 @@ public class MixinLevelRenderer {
     }
 
     /**
+     * Whether the weather being drawn is the level's own, called for by renderLevel (see below). Another mod may call
+     * renderSnowAndRain itself: Ars Nouveau draws the sky and its weather into a texture of its own, for its blocks
+     * that show the sky. That is left to vanilla's weather: ours binds the scene's targets and reads its depth, so it
+     * would be drawn over the screen, at the wrong moment and turned by that mod's view, and the mist with it.
+     */
+    @Unique
+    private static boolean dsurround$levelWeather;
+
+    /**
      * Particle rain and snow, when on, are drawn in place of vanilla's weather. This comes before NeoForge's
      * DimensionSpecialEffects hook, so particle weather is off in a dimension that draws its own (the guess in
      * DimensionInfo, or a dimension rule), or it would replace it.
      */
     @Inject(method = "renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V", at = @At("HEAD"), cancellable = true)
     private void dsurround$renderPrecipitation(LightTexture lightTexture, float partialTick, double camX, double camY, double camZ, CallbackInfo ci) {
+        if (!dsurround$levelWeather)
+            return;
         // The mist on the ground first, under the rain; with Fabulous graphics after it (below)
         MixinHelpers.groundFog().renderBeforeWeather(lightTexture, partialTick);
         if (MixinHelpers.precipitation().render(lightTexture, partialTick))
@@ -67,7 +79,12 @@ public class MixinLevelRenderer {
      */
     @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V"))
     private void dsurround$groundFogAfterWeather(LevelRenderer renderer, LightTexture lightTexture, float partialTick, double camX, double camY, double camZ, Operation<Void> original) {
-        original.call(renderer, lightTexture, partialTick, camX, camY, camZ);
+        dsurround$levelWeather = true;
+        try {
+            original.call(renderer, lightTexture, partialTick, camX, camY, camZ);
+        } finally {
+            dsurround$levelWeather = false;
+        }
         MixinHelpers.groundFog().renderAfterWeather(lightTexture, partialTick);
     }
 
