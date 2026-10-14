@@ -38,6 +38,8 @@ MIT so they are free to do this with proper attribution.
 * Compatibility with Serene Seasons - variations in seasons and temperatures can influence effects.
 * Compass and clock display when holding a compass or clock
   * Compass shown as a band that slides with the heading, or as a compass rose laid flat in front of the player (1.21.1-0.4.7+)
+  * Clock shown as text, or as a worn pocket watch whose hands tick from minute to minute, with windows for day or night and the season or moon phase (1.21.1-0.4.7+)
+  * Either can be turned off, and their textures replaced by resource packs (1.21.1-0.4.7+)
 * Custom debug HUD that can be accessed by key bind. Moves the Dynamic Surroundings clutter out of the traditional F3 display.
 * Dynamic Surroundings is compatible when connecting to a Vanilla servers (a feature of both Fabric and NeoForge loaders).
 

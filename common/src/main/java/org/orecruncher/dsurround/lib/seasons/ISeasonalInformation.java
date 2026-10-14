@@ -27,6 +27,13 @@ public interface ISeasonalInformation {
     Optional<Component> getCurrentSeasonTranslated();
 
     /**
+     * Whether a mod provides seasons. Without one, the season is always reported as spring.
+     */
+    default boolean hasSeasons() {
+        return true;
+    }
+
+    /**
      * Indicates if the current season is considered Spring.
      */
     default boolean isSpring() {

@@ -6,6 +6,8 @@ import com.google.gson.JsonPrimitive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.config.ClockStyle;
+import org.orecruncher.dsurround.config.CompassStyle;
 import org.orecruncher.dsurround.config.GroundFogQuality;
 
 import java.io.IOException;
@@ -40,6 +42,11 @@ public class MovedPropertiesTests {
             @Property
             @MovedFrom(value = "oldGroup.switched", values = "false=OFF")
             public Mode mode = Mode.HIGH;
+
+            // A switch folded into a property that was already there: off replaces it, on leaves it
+            @Property
+            @MovedFrom(value = "oldGroup.shown", values = "false=OFF", replaces = true)
+            public Mode style = Mode.HIGH;
         }
 
         public enum Mode {
@@ -140,6 +147,19 @@ public class MovedPropertiesTests {
         }
     }
 
+    @Test
+    void aReplacingValueOverridesTheNewPlace() throws IOException {
+        var config = load("{\"oldGroup\": {\"shown\": false}, \"newGroup\": {\"style\": \"LOW\"}}");
+        assertEquals(MovedConfig.Mode.OFF, config.newGroup.style);
+        assertFalse(written("moved.json").getAsJsonObject("oldGroup").has("shown"), "the old place is still written");
+    }
+
+    @Test
+    void aReplacingValueWithNoPairLeavesTheNewPlace() throws IOException {
+        assertEquals(MovedConfig.Mode.LOW, load("{\"oldGroup\": {\"shown\": true}, \"newGroup\": {\"style\": \"LOW\"}}").newGroup.style);
+        assertEquals(MovedConfig.Mode.HIGH, load("{\"oldGroup\": {\"shown\": true}}").newGroup.style, "nothing there: the default");
+    }
+
     // ---- The JSON paths
 
     @Test
@@ -238,6 +258,25 @@ public class MovedPropertiesTests {
         assertEquals(GroundFogQuality.FANCY,
                 loadModConfig("{\"weatherOptions\": {\"enableGroundFog\": true}}").weatherOptions.groundFogQuality);
         assertFalse(written("dsurround.json").getAsJsonObject("weatherOptions").has("enableGroundFog"));
+    }
+
+    @Test
+    void theCompassSwitchBecomesItsStyle() throws IOException {
+        // Off wins over the style that was set beside it; on keeps that style
+        assertEquals(CompassStyle.NONE, loadModConfig(
+                "{\"compassAndClockOptions\": {\"enableCompass\": false, \"compassStyle\": \"ROSE_1\"}}").compassAndClockOptions.compassStyle);
+        assertEquals(CompassStyle.ROSE_1, loadModConfig(
+                "{\"compassAndClockOptions\": {\"enableCompass\": true, \"compassStyle\": \"ROSE_1\"}}").compassAndClockOptions.compassStyle);
+        assertFalse(written("dsurround.json").getAsJsonObject("compassAndClockOptions").has("enableCompass"));
+    }
+
+    @Test
+    void theClockSwitchBecomesItsStyle() throws IOException {
+        assertEquals(ClockStyle.NONE,
+                loadModConfig("{\"compassAndClockOptions\": {\"enableClock\": false}}").compassAndClockOptions.clockStyle);
+        assertEquals(ClockStyle.POCKET_WATCH,
+                loadModConfig("{\"compassAndClockOptions\": {\"enableClock\": true}}").compassAndClockOptions.clockStyle);
+        assertFalse(written("dsurround.json").getAsJsonObject("compassAndClockOptions").has("enableClock"));
     }
 
     @Test

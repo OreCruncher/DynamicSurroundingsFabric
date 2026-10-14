@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround;
 
+import org.orecruncher.dsurround.config.ClockStyle;
 import org.orecruncher.dsurround.config.CompassStyle;
 import org.orecruncher.dsurround.config.GroundFogQuality;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
@@ -361,17 +362,17 @@ public class Configuration extends ConfigurationData {
     }
 
     public static class CompassAndClockOptions {
+        // Each was a switch and a style; the switch is now the style's NONE. The compass style already existed, so
+        // its switch being off has to replace whatever style was there.
         @Property
-        @Comment("Enable/disable display of the clock display when holding a clock item")
-        public boolean enableClock = true;
-
-        @Property
-        @Comment("Enable/disable display of the compass display when holding a compass item")
-        public boolean enableCompass = true;
-
-        @Property
-        @Comment("Style of compass rendering")
+        @Comment("Style of compass rendering, or NONE for no compass display")
+        @MovedFrom(value = "compassAndClockOptions.enableCompass", values = "false=NONE", replaces = true)
         public CompassStyle compassStyle = CompassStyle.TRANSPARENT_WITH_INDICATOR;
+
+        @Property
+        @Comment("Style of clock rendering, or NONE for no clock display")
+        @MovedFrom(value = "compassAndClockOptions.enableClock", values = "false=NONE")
+        public ClockStyle clockStyle = ClockStyle.POCKET_WATCH;
 
         @Property
         @Comment("Scales the display by the specified amount")

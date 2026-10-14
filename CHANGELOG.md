@@ -18,6 +18,8 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Assisted in the creation of the ground fog feature
 * Helped with integrating Simple Voice Chat
 * Used to extend steam and flame jet effects, adding additional particles, shader, and lighting where appropriate
+* Rebuilt the clock overlay to use an old pocket watch texture with embedded indicators for diurnal cycle, seasons or mooon phase (depending on if Serene Seasons is installed)
+* Integrated older compass rose textures as possible selections for the compass, and cleaning up the textures
 * Identified root causes of several issues and help with the fix
 
 **What's New**
@@ -45,6 +47,13 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Brought back the compass rose textures from older mod versions
   * There are 3 rose styles to choose from
   * Textures were cleaned up from the originals
+* New pocket watch clock display, styled after Minecraft's clock
+  * Shown above the crosshair (beside the compass if both are shown), with hour and minute hands that tick from minute to minute
+  * Has some wear like an heirloom handed down: tarnish, scratches, a dent or two, and a hairline crack in the dial
+  * A window under XII shows day or night, like Minecraft's clock, to tell noon from midnight
+  * A window above VI shows the season when Serene Seasons is installed, or the moon's phase without it
+  * Clock style option in Compass and Clock Options: text, pocket watch, or both; the Render scaling option applies to it as well
+* The compass and clock on/off switches are now a NONE choice in their styles; a switch that was off carries over as NONE
 * [Experimental] Ground fog in swamps and spooky biomes like Dark Forest and BOPs Ominous Forest
   * Heavy rains can thin it out, higher density between midnight and morning
   * Wind can shift the drift direction and speed

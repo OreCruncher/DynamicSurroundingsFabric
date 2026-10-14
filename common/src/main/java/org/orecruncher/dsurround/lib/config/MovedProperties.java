@@ -20,7 +20,7 @@ final class MovedProperties {
     /**
      * For each moved property with no value at its new place in {@code root} but one at an old place, copies that
      * value to the new place (from the first old place listed that has one). A value already at the new place is
-     * kept.
+     * kept, unless the property {@link MovedFrom#replaces} it and the old value has a pair.
      *
      * @param onMove told the old and new path of each value carried over
      * @return how many values were carried over
@@ -34,7 +34,7 @@ final class MovedProperties {
         for (var element : elements) {
             var path = prefix + element.fieldName();
             var movedFrom = element.getAnnotation(MovedFrom.class);
-            if (movedFrom.isPresent() && get(root, path) == null) {
+            if (movedFrom.isPresent() && (movedFrom.get().replaces() || get(root, path) == null)) {
                 // The first old place with a value
                 for (var oldPath : movedFrom.get().value()) {
                     var old = get(root, oldPath);

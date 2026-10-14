@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.gui.overlay;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
+import net.minecraft.util.Mth;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.config.CompassStyle;
@@ -12,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for the overlay logic that doesn't need rendering: which compass spins, the compass wobble, the clock
- * color and the diagnostics modes.
+ * color, the pocket watch's hands and discs, and the diagnostics modes.
  */
 public class OverlayTests {
 
@@ -51,6 +52,8 @@ public class OverlayTests {
     @Test
     void everyCompassStyleHasItsTexture() {
         for (var style : CompassStyle.values()) {
+            if (!style.isShown())
+                continue;
             var texture = style.getTexture();
             var path = "/assets/" + texture.getNamespace() + "/" + texture.getPath();
             assertNotNull(OverlayTests.class.getResource(path), style + ": " + path);
@@ -120,6 +123,92 @@ public class OverlayTests {
         assertEquals(0xFF000000 | ColorPalette.DARK_VIOLET.getValue(), ClockOverlay.textColor(GRADIENT, 0.5F), "midnight");
         assertEquals(ClockOverlay.textColor(GRADIENT, 0.25F), ClockOverlay.textColor(GRADIENT, 0.75F),
                 "dusk and dawn are the same point on the gradient");
+    }
+
+    // ---- Pocket watch ----------------------------------------------------------------------------------------
+
+    @Test
+    void pocketWatchHasItsTexture() {
+        var texture = ClockOverlay.TEXTURE;
+        var path = "/assets/" + texture.getNamespace() + "/" + texture.getPath();
+        assertNotNull(OverlayTests.class.getResource(path), path);
+    }
+
+    @Test
+    void handsShowTheTimeOfDay() {
+        // Day time 0 is 6 AM, and an hour is 1000 ticks
+        assertEquals(180F, ClockOverlay.hourHandAngle(0), 0.001F, "6 AM: hour hand at six");
+        assertEquals(0F, ClockOverlay.minuteHandAngle(0), 0.001F, "on the hour");
+        assertEquals(0F, ClockOverlay.hourHandAngle(6000), 0.001F, "noon");
+        assertEquals(0F, ClockOverlay.hourHandAngle(18000), 0.001F, "midnight");
+        assertEquals(135F, ClockOverlay.hourHandAngle(22500), 0.001F, "4:30 AM: halfway from four to five");
+        assertEquals(180F, ClockOverlay.minuteHandAngle(22500), 0.001F, "half past");
+        assertEquals(ClockOverlay.hourHandAngle(1234), ClockOverlay.hourHandAngle(1234 + 24000 * 5), 0.001F, "later days");
+    }
+
+    @Test
+    void handsTickFromMinuteToMinute() {
+        for (double time = 0; time < 2000; time += 0.37) {
+            var ticked = ClockOverlay.tickedTime(time);
+            assertTrue(ticked <= time && time - ticked < ClockOverlay.GAME_MINUTE, "time " + time);
+            float minute = ClockOverlay.minuteHandAngle(ticked);
+            float mark = Math.round(minute / 6F) * 6F;
+            assertEquals(mark, minute, 0.01F, "on a minute mark at " + time);
+        }
+        assertEquals(6F, ClockOverlay.minuteHandAngle(ClockOverlay.tickedTime(ClockOverlay.GAME_MINUTE * 1.5)), 0.01F, "one minute in");
+    }
+
+    @Test
+    void minuteHandOvershootsAndSettles() {
+        double tick = ClockOverlay.GAME_MINUTE * 30;
+        assertEquals(ClockOverlay.TICK_OVERSHOOT, ClockOverlay.tickOvershoot(tick), 0.01F, "just ticked: past the mark");
+        assertTrue(ClockOverlay.tickOvershoot(tick + 0.5) < ClockOverlay.tickOvershoot(tick + 0.1), "settling");
+        assertEquals(0F, ClockOverlay.tickOvershoot(tick + ClockOverlay.GAME_MINUTE * 0.5), "settled by mid minute");
+    }
+
+    @Test
+    void dayDiscTellsNoonFromMidnight() {
+        // The hands are the same at both; the dome window isn't
+        assertEquals(ClockOverlay.hourHandAngle(6000), ClockOverlay.hourHandAngle(18000), 0.001F);
+        assertEquals(0F, ClockOverlay.dayDiscAngle(6000), 0.001F, "noon: the disc's top (the sun) up in the window");
+        assertEquals(180F, ClockOverlay.dayDiscAngle(18000), 0.001F, "midnight: the moon");
+        assertEquals(270F, ClockOverlay.dayDiscAngle(0), 0.001F, "6 AM: three quarters around, the sun rising");
+        assertEquals(ClockOverlay.dayDiscAngle(500), ClockOverlay.dayDiscAngle(500 + 24000 * 3), 0.001F, "later days");
+    }
+
+    @Test
+    void moonDiscBringsEachPhaseToTheWindow() {
+        assertEquals(0F, ClockOverlay.moonDiscAngle(0), 0.001F, "full moon");
+        assertEquals(180F, ClockOverlay.moonDiscAngle(4), 0.001F, "new moon");
+        assertEquals(315F, ClockOverlay.moonDiscAngle(7), 0.001F, "waxing gibbous");
+        assertEquals(ClockOverlay.moonDiscAngle(1), ClockOverlay.moonDiscAngle(9), 0.001F, "phases repeat");
+    }
+
+    @Test
+    void seasonDiscCentersTheSeasonMidSeason() {
+        assertEquals(0F, ClockOverlay.seasonDiscAngle(0, 0), 0.001F, "mid spring");
+        assertEquals(90F, ClockOverlay.seasonDiscAngle(1, 0), 0.001F, "mid summer");
+        assertEquals(180F, ClockOverlay.seasonDiscAngle(2, 0), 0.001F, "mid autumn");
+        assertEquals(270F, ClockOverlay.seasonDiscAngle(3, 0), 0.001F, "mid winter");
+        assertEquals(360F - ClockOverlay.SUB_SEASON_TURN, ClockOverlay.seasonDiscAngle(0, -1), 0.001F, "early spring");
+        assertEquals(270F + ClockOverlay.SUB_SEASON_TURN, ClockOverlay.seasonDiscAngle(3, 1), 0.001F, "late winter");
+    }
+
+    @Test
+    void seasonDiscEasesForwardFromLateWinterToEarlySpring() {
+        // The short way: forward through 360, not back through summer and autumn
+        float angle = ClockOverlay.seasonDiscAngle(3, 1);
+        float target = ClockOverlay.seasonDiscAngle(0, -1);
+        int ticks = 0;
+        while (angle != target && ticks < 1000) {
+            float next = ClockOverlay.turnToward(angle, target, ClockOverlay.DISC_TURN_PER_TICK);
+            assertTrue(Math.abs(Mth.wrapDegrees(next - angle)) <= ClockOverlay.DISC_TURN_PER_TICK + 0.001F, "step " + angle + " to " + next);
+            assertTrue(Mth.wrapDegrees(next - angle) > 0, "forward from " + angle);
+            angle = next;
+            ticks++;
+        }
+        assertEquals(target, angle, 0.001F);
+        assertEquals(Math.round(ClockOverlay.SUB_SEASON_TURN / ClockOverlay.DISC_TURN_PER_TICK), ticks);
     }
 
     // ---- Diagnostics modes -----------------------------------------------------------------------------------

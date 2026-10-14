@@ -23,4 +23,11 @@ public @interface MovedFrom {
      * property keeps its default. Empty (the usual) carries the old value over as it is.
      */
     String[] values() default {};
+
+    /**
+     * Whether a paired old value (see {@link #values}) replaces one already at the new place, rather than only filling
+     * an empty one: for a switch folded into a property that already existed, so that off still means off
+     * ("false=NONE" on a style that gained a NONE). Old values with no pair leave the new place as it is.
+     */
+    boolean replaces() default false;
 }

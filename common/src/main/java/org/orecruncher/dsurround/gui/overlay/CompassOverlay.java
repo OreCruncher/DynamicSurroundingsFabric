@@ -60,9 +60,9 @@ public final class CompassOverlay extends AbstractOverlay {
         this.showCompass = false;
         this.spinRandomly = false;
 
-        if (this.config.compassAndClockOptions.enableCompass && GameUtils.isInGame()) {
+        this.style = this.config.compassAndClockOptions.compassStyle;
+        if (this.style.isShown() && GameUtils.isInGame()) {
             this.scale = (float) this.config.compassAndClockOptions.scale;
-            this.style = this.config.compassAndClockOptions.compassStyle;
 
             var player = GameUtils.getPlayer().orElseThrow();
             var mainHandItem = player.getMainHandItem();
@@ -84,6 +84,20 @@ public final class CompassOverlay extends AbstractOverlay {
      */
     static boolean shouldSpin(boolean mainHandCompass, boolean mainHandWobbles, boolean offHandCompass, boolean offHandWobbles) {
         return (mainHandCompass && mainHandWobbles) || (offHandCompass && offHandWobbles);
+    }
+
+    /**
+     * Whether the compass is shown this tick: the pocket watch moves aside for it
+     */
+    public boolean isShowing() {
+        return this.showCompass;
+    }
+
+    /**
+     * Half the compass's width on screen, from the center of the screen
+     */
+    public float halfWidth() {
+        return (this.style.isRose() ? ROSE_SIZE * ROSE_DRAW_SCALE : BAND_WIDTH) * this.scale / 2F;
     }
 
     private boolean doShowCompass(ItemStack stack) {

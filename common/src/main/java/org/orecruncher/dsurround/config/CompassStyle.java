@@ -4,6 +4,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.orecruncher.dsurround.Constants;
 
 public enum CompassStyle {
+    NONE,
     OPAQUE(0),
     TRANSPARENT(1),
     OPAQUE_WITH_INDICATOR(2),
@@ -15,6 +16,15 @@ public enum CompassStyle {
     private final ResourceLocation texture;
     private final int spriteNumber;
     private final boolean isRose;
+
+    /**
+     * No compass display
+     */
+    CompassStyle() {
+        this.texture = null;
+        this.spriteNumber = 0;
+        this.isRose = false;
+    }
 
     /**
      * A band: one of the styles in the band texture
@@ -34,6 +44,16 @@ public enum CompassStyle {
         this.isRose = true;
     }
 
+    /**
+     * Whether the compass is displayed at all
+     */
+    public boolean isShown() {
+        return this != NONE;
+    }
+
+    /**
+     * The style's texture; null for NONE
+     */
     public ResourceLocation getTexture() {
         return this.texture;
     }
