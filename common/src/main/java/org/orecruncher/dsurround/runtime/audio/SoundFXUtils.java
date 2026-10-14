@@ -196,10 +196,10 @@ public final class SoundFXUtils {
                 SHARED.increment();
             } else {
                 TRACED.increment();
-                traces.attach(ctx.world);
+                traces.attach(ctx.blocks);
                 try {
                     // Need to offset sound toward player if it is in a solid block or fluid
-                    this.traced.soundPos = SoundGeometry.offsetPositionIfNeeded(ctx.world, this.source.getPosition(), ctx.playerEyePosition);
+                    this.traced.soundPos = SoundGeometry.offsetPositionIfNeeded(ctx.blocks, this.source.getPosition(), ctx.playerEyePosition);
                     this.traced.occlusion = occlusion ? this.calculateOcclusion(ctx, traces.occlusionHits, this.traced.soundPos, ctx.playerEyePosition) : 0F;
                     this.traceReverb(ctx, traces.reverb, this.traced.soundPos);
                 } finally {
@@ -258,7 +258,7 @@ public final class SoundFXUtils {
             // Secondary ray bounces
             for (int j = 0; j < REVERB_RAY_BOUNCES; j++) {
 
-                final float blockReflectivity = getReflectivity(ctx.world.getBlockState(lastHitBlock));
+                final float blockReflectivity = getReflectivity(ctx.blocks.getBlockState(lastHitBlock));
                 final float energyTowardsPlayer = blockReflectivity * ENERGY_COEFF + ENERGY_CONST;
 
                 final Vec3 newRayDir = MathStuff.reflection(lastRayDir, lastHitNormal);
@@ -353,7 +353,7 @@ public final class SoundFXUtils {
         float factor = 0F;
 
         Vec3 lastHit = origin;
-        BlockState lastState = ctx.world.getBlockState(BlockPos.containing(lastHit.x(), lastHit.y(), lastHit.z()));
+        BlockState lastState = ctx.blocks.getBlockState(BlockPos.containing(lastHit.x(), lastHit.y(), lastHit.z()));
         var itr = hits.restart(origin, target);
         for (int i = 0; i < OCCLUSION_SEGMENTS && itr.hasNext(); i++) {
             var result = itr.next();
@@ -362,7 +362,7 @@ public final class SoundFXUtils {
             // Occlusion is scaled by the distance traveled through the block.
             factor += (float) (occlusion * distance);
             lastHit = result.getLocation();
-            lastState = ctx.world.getBlockState(result.getBlockPos());
+            lastState = ctx.blocks.getBlockState(result.getBlockPos());
         }
 
         return factor;

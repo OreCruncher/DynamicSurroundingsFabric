@@ -74,6 +74,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Moved aurora render hook to avoid conflict with Astral Sorcery's sky render
 * Fog being applied to SPOOKY underground biomes, like BOPs spider nest
 * Rendering issues when Fabulous! graphics enabled
+* [MAYBE] Infrequent crash in fastutil collection rendering entities
 
 > ### DynamicSurroundings-1.21.1-0.4.6
 

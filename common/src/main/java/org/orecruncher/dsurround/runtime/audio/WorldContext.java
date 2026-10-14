@@ -3,9 +3,11 @@ package org.orecruncher.dsurround.runtime.audio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.block.NoBlockEntityView;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.function.SingletonSupplier;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
@@ -27,6 +29,11 @@ public final class WorldContext {
      * Reference to the player's world
      */
     public final Level world;
+    /**
+     * The world's blocks, for the worker threads to trace through: never its block entities, which reading from
+     * another thread can create (see {@link NoBlockEntityView})
+     */
+    public final BlockGetter blocks;
     /**
      * Position of the player.
      */
@@ -59,6 +66,7 @@ public final class WorldContext {
     public WorldContext() {
         if (GameUtils.isInGame()) {
             this.world = GameUtils.getWorld().orElseThrow();
+            this.blocks = new NoBlockEntityView(this.world);
             this.player = GameUtils.getPlayer().orElseThrow();
             this.isPrecipitating = this.world.isRaining();
             this.playerPosition = this.player.getPosition(1F);
@@ -74,6 +82,7 @@ public final class WorldContext {
             this.mc = null;
             this.player = null;
             this.world = null;
+            this.blocks = null;
             this.isPrecipitating = false;
             this.playerPosition = Vec3.ZERO;
             this.playerEyePosition = Vec3.ZERO;

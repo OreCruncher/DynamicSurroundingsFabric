@@ -73,7 +73,9 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
 - Enhanced sounds: a `SourceContext` per playing source, built from an `ISoundEmitter` (a game sound's
   `InstanceEmitter`, or a voice) and its OpenAL context's `Efx`. Uploads happen on the thread where that context is
   current (`Efx.isCurrent`, asserted). The worker recalculates whatever the `ISourceProvider`s registered with
-  `SourceProviders` hand it.
+  `SourceProviders` hand it. Worker threads read the world only through `WorldContext.blocks`
+  (`lib/block/NoBlockEntityView`): on the client `Level.getBlockEntity` can create a block entity from any thread,
+  and mod blocks call it from shape methods, which corrupted chunk maps (#166).
 - Simple Voice Chat (`runtime/audio/voicechat`): voices play in its own OpenAL context, so they get their own `Efx`
   (made in its `CreateOpenALContextEvent`). `VoiceSounds` keeps the channels (tested with a fake `Backend`);
   `OpenALBackend` does the OpenAL side. `VoiceChatPlugin` is the only class using its API (compile-only; loaded by the
