@@ -70,6 +70,14 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
     shader that writes depth loses early depth testing) so water isn't laid over them.
   - Blend alpha as "over" (`ONE, ONE_MINUS_SRC_ALPHA`), not the default's `ONE, ZERO`, or piled-up colour outgrows its
     alpha; additive light needs colour already scaled and a tiny non-zero alpha (`PointLights`).
+- Enhanced sounds: a `SourceContext` per playing source, built from an `ISoundEmitter` (a game sound's
+  `InstanceEmitter`, or a voice) and its OpenAL context's `Efx`. Uploads happen on the thread where that context is
+  current (`Efx.isCurrent`, asserted). The worker recalculates whatever the `ISourceProvider`s registered with
+  `SourceProviders` hand it.
+- Simple Voice Chat (`runtime/audio/voicechat`): voices play in its own OpenAL context, so they get their own `Efx`
+  (made in its `CreateOpenALContextEvent`). `VoiceSounds` keeps the channels (tested with a fake `Backend`);
+  `OpenALBackend` does the OpenAL side. `VoiceChatPlugin` is the only class using its API (compile-only; loaded by the
+  `voicechat` entrypoint / NeoForge annotation), so nothing else may reference it.
 - Mixin plugin (`mixinutils/DSurroundMixinPlugin`) skips mixins whose target belongs to a mod that isn't installed
   (currently Cloth Config).
 - Tags in `dsconfigs/tags/<registry>/...` are client-side tag definitions. Reference other tags with `#`

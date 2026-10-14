@@ -54,6 +54,10 @@ dependencies {
     //modLocalRuntime "curse.maven:observerlib-316833:${rootProject.observerlib_neoforge_file}"
     //modLocalRuntime "curse.maven:simpleweather-983390:${rootProject.simpleweather_neoforge_file}"
 
+    // Simple Voice Chat: its plugin API to remap the common classes against; the mod itself in the dev client only
+    compileOnly "de.maxhenkel.voicechat:voicechat-api:$rootProject.voicechat_api_version"
+    modLocalRuntime "curse.maven:simple-voice-chat-416089:${rootProject.voicechat_neoforge_file}"
+
     modApi("me.shedaniel.cloth:cloth-config-neoforge:${rootProject.clothapi_version}") {
         exclude(group: "net.fabricmc.fabric-api")
     }

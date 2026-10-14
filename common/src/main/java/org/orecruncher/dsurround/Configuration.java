@@ -118,6 +118,11 @@ public class Configuration extends ConfigurationData {
         @RestartRequired
         @Comment("Enable/disable registration of client side commands")
         public boolean registerCommands = true;
+
+        @Property
+        @Comment("Play your own Simple Voice Chat voice back to you, with enhanced sound processing, for testing")
+        @Experimental
+        public boolean voiceChatHearSelf = false;
     }
 
     public static class SoundSystem {
@@ -152,6 +157,11 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable sound occlusion processing (sound muffling behind blocks)")
         public boolean enableOcclusionProcessing = false;
+
+        @Property
+        @Comment("Apply enhanced sound processing to players' voices from Simple Voice Chat")
+        @Experimental
+        public boolean enableVoiceChatProcessing = true;
 
         @Property
         @Comment("Check whether reflections reach the player only from each reverb ray's last reflection, instead of from every reflection. Cheaper; may sound different")

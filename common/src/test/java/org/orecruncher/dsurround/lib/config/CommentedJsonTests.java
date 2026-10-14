@@ -116,6 +116,16 @@ public class CommentedJsonTests {
         @Property
         public Map<String, Integer> map = new LinkedHashMap<>(Map.of("k", 1));
 
+        @Property
+        @Comment("Threads to use")
+        @IntegerRange(min = 1, max = 8)
+        @RestartRequired
+        public int threads = 2;
+
+        @Property
+        @RestartRequired(client = false)
+        public boolean perWorld = false;
+
         public String nothing = null;
     }
 
@@ -150,6 +160,23 @@ public class CommentedJsonTests {
         var lines = lines(write(new CommentedConfig()));
 
         assertEquals(List.of("// Turns the feature on", "// Default: true"), commentsAbove(lines, "\"flag\": true,"));
+    }
+
+    @Test
+    void aRestartIsNotedLast() {
+        var lines = lines(write(new CommentedConfig()));
+
+        assertEquals(List.of("// Threads to use", "// Range: 1 - 8, default: 2",
+                        "// Changes take effect after restarting Minecraft"),
+                commentsAbove(lines, "\"threads\": 2,"));
+    }
+
+    @Test
+    void aWorldRestartIsNotedAsRejoining() {
+        var lines = lines(write(new CommentedConfig()));
+
+        assertEquals(List.of("// Default: false", "// Changes take effect after leaving and rejoining the world"),
+                commentsAbove(lines, "\"perWorld\": false"));
     }
 
     @Test

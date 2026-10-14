@@ -22,6 +22,7 @@ import org.orecruncher.dsurround.runtime.audio.effects.Efx;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.function.Consumer;
 
 public final class SoundFXProcessor {
 
@@ -36,6 +37,9 @@ public final class SoundFXProcessor {
     // engine and worker threads. Each entry belongs to one sound at a time: its stop hook clears it before the
     // source is deleted, so before the ID can be reused. Replaced when the sound engine starts, null while stopped.
     private static volatile AtomicReferenceArray<SourceContext> sources;
+
+    // The effects in the sound engine's context; null while stopped
+    private static Efx efx;
 
     private static Worker soundProcessor;
     private static String diagnosticString = StringUtils.EMPTY;
@@ -60,6 +64,8 @@ public final class SoundFXProcessor {
         IClientTickStart.EVENT.register(SoundFXProcessor::clientTick);
         // Lets sounds reuse their ray traced results until something in the world changes
         WorldChangeTracker.register();
+        // The game's own sounds; integrations register theirs
+        SourceProviders.register(SoundFXProcessor::forEachDueSource);
     }
 
     public static WorldContext getWorldContext() {
@@ -75,8 +81,13 @@ public final class SoundFXProcessor {
         return isAvailable;
     }
 
-    public static void initialize() {
-        Efx.initialize();
+    /**
+     * Sets up processing when the sound engine starts. Called on its thread, with its context current.
+     *
+     * @param auxSends the auxiliary sends each source has
+     */
+    public static void initialize(int auxSends) {
+        efx = Efx.create(auxSends);
 
         sources = new AtomicReferenceArray<>(AudioUtilities.getMaxSounds());
 
@@ -102,7 +113,7 @@ public final class SoundFXProcessor {
                 soundProcessor = null;
             }
             sources = null;
-            Efx.deinitialize();
+            efx = null;
         }
     }
 
@@ -143,10 +154,7 @@ public final class SoundFXProcessor {
         assert entry.channel != null;
         int id = entry.channel.source;
         if (id > 0) {
-            final SourceContext ctx = new SourceContext(id);
-            ctx.attachSound(sound);
-            ctx.enable();
-            setContext(id, ctx);
+            setContext(id, new SourceContext(id, efx, new InstanceEmitter(sound)));
         }
     }
 
@@ -210,21 +218,8 @@ public final class SoundFXProcessor {
             final ExecutorService pool = threadPool.get();
             assert pool != null;
 
-            // Read once: deinitialize() may clear it from the client thread
-            final AtomicReferenceArray<SourceContext> current = sources;
-            if (current == null)
-                return;
-
-            final ObjectArray<Future<?>> tasks = new ObjectArray<>(current.length());
-
-            // Each source will be examined once per 7 ticks. See
-            // SourceContext.UPDATE_FREQUENCY_TICKS for the current interval.
-            for (int i = 0; i < current.length(); i++) {
-                final SourceContext ctx = current.get(i);
-                if (ctx != null && ctx.shouldExecute()) {
-                    tasks.add(pool.submit(ctx));
-                }
-            }
+            final ObjectArray<Future<?>> tasks = new ObjectArray<>(AudioUtilities.getMaxSounds());
+            SourceProviders.forEachDue(task -> tasks.add(pool.submit(task)));
 
             diagnosticString = "(ticked: %d)".formatted(tasks.size());
 
@@ -234,6 +229,22 @@ public final class SoundFXProcessor {
 
         } catch (final Throwable t) {
             LOGGER.error(t, "Error in the enhanced sound processor");
+        }
+    }
+
+    /**
+     * The game's sounds due a recalculation. Each source will be examined once per 7 ticks. See
+     * SourceContext.UPDATE_FREQUENCY_TICKS for the current interval.
+     */
+    private static void forEachDueSource(Consumer<Callable<?>> action) {
+        // Read once: deinitialize() may clear it from the client thread
+        final AtomicReferenceArray<SourceContext> current = sources;
+        if (current == null)
+            return;
+        for (int i = 0; i < current.length(); i++) {
+            final SourceContext ctx = current.get(i);
+            if (ctx != null && ctx.shouldExecute())
+                action.accept(ctx);
         }
     }
 

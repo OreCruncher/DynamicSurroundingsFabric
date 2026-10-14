@@ -9,6 +9,7 @@ import org.lwjgl.openal.SOFTOutputLimiter;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
+import org.orecruncher.dsurround.runtime.audio.effects.Efx;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.*;
 
@@ -35,8 +36,8 @@ public class MixinSoundLibrary {
             attrList.clear();
             // From the original code
             attrList.put(SOFTOutputLimiter.ALC_OUTPUT_LIMITER_SOFT).put(ALC10.ALC_TRUE);
-            // Increase sends channels
-            attrList.put(EXTEfx.ALC_MAX_AUXILIARY_SENDS).put(4);
+            // A send per reverb
+            attrList.put(EXTEfx.ALC_MAX_AUXILIARY_SENDS).put(Efx.SENDS);
             // Done!
             attrList.put(0);
             attrList.flip();

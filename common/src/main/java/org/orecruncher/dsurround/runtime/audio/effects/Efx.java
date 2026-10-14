@@ -2,17 +2,22 @@ package org.orecruncher.dsurround.runtime.audio.effects;
 
 import org.lwjgl.openal.AL10;
 import org.lwjgl.openal.AL11;
+import org.lwjgl.openal.ALC10;
 import org.lwjgl.openal.EXTEfx;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
 
-import java.util.Arrays;
-
 /**
- * The OpenAL effects (EFX) used by enhanced sounds: four reverbs of increasing length, each in an auxiliary effect
- * slot that sounds send to, and low-pass filters for those sends and for each sound's direct path.
+ * The OpenAL effects (EFX) used by enhanced sounds in one OpenAL context: four reverbs of increasing length, each in
+ * an auxiliary effect slot that sounds send to, and low-pass filters for those sends and for each sound's direct path.
+ * The game's sounds have one; Simple Voice Chat plays voices in a context of its own, which gets another.
  * <p>
- * The filter objects are shared by all sounds: a filter's settings are copied into a source when it is attached,
- * so each upload sets the filter and attaches it in turn. All calls are made on the sound engine's thread.
+ * A context can have fewer sends than reverbs (voice chat's, if the device won't give it more): sounds then only send
+ * to the longest reverbs, as many as it has, which are what makes a space sound large.
+ * <p>
+ * The filter objects are shared by all sounds in the context: a filter's settings are copied into a source when it is
+ * attached, so each upload sets the filter and attaches it in turn. Every call must be made on a thread where the
+ * context is current, and by one thread at a time. Source IDs are only unique within a context: made from another, an
+ * upload would change that context's source with the same ID, so uploads check (with assertions on).
  * <p>
  * Every OpenAL call is checked; an error throws an IllegalStateException naming the step (see
  * {@link AudioUtilities#validate}).
@@ -20,7 +25,7 @@ import java.util.Arrays;
 public final class Efx {
 
     /**
-     * Number of reverb sends.
+     * Number of reverbs, and so the most sends a sound uses.
      */
     public static final int SENDS = 4;
 
@@ -39,57 +44,86 @@ public final class Efx {
             new Reverb(4.142F, 0.4F * 0.85F * GLOBAL_REVERB_MULTIPLIER, 0.89F)
     };
 
-    private static final int[] auxSlots = new int[SENDS];
-    private static final int[] reverbEffects = new int[SENDS];
-    private static final int[] sendFilters = new int[SENDS];
-    private static int directFilter;
-    private static boolean initialized;
+    // The context the effects were made in, which every upload must be made in
+    private final long context;
+    private final int sends;
+    // The send that carries each reverb, or -1 if none does
+    private final int[] sendOfReverb = new int[SENDS];
+    private final int[] auxSlots;
+    private final int[] sendFilters;
+    private final int directFilter;
 
-    private Efx() {
-    }
+    private Efx(int sends) {
+        this.context = ALC10.alcGetCurrentContext();
+        this.sends = sends;
+        this.auxSlots = new int[sends];
+        this.sendFilters = new int[sends];
+        for (int reverb = 0; reverb < SENDS; reverb++)
+            this.sendOfReverb[reverb] = sendOfReverb(reverb, sends);
 
-    /**
-     * Creates the effects. Call when the sound engine starts; calling again does nothing until
-     * {@link #deinitialize()}.
-     */
-    public static void initialize() {
-        if (initialized)
-            return;
-
-        for (int i = 0; i < SENDS; i++) {
-            auxSlots[i] = EXTEfx.alGenAuxiliaryEffectSlots();
+        for (int i = 0; i < sends; i++) {
+            this.auxSlots[i] = EXTEfx.alGenAuxiliaryEffectSlots();
             AudioUtilities.validate("Efx generate aux slot");
-            EXTEfx.alAuxiliaryEffectSloti(auxSlots[i], EXTEfx.AL_EFFECTSLOT_AUXILIARY_SEND_AUTO, AL10.AL_TRUE);
+            EXTEfx.alAuxiliaryEffectSloti(this.auxSlots[i], EXTEfx.AL_EFFECTSLOT_AUXILIARY_SEND_AUTO, AL10.AL_TRUE);
             AudioUtilities.validate("Efx aux slot send auto");
 
-            reverbEffects[i] = EXTEfx.alGenEffects();
+            int reverbEffect = EXTEfx.alGenEffects();
             AudioUtilities.validate("Efx generate reverb");
             // Setting the type resets every parameter to its default; only these differ
-            EXTEfx.alEffecti(reverbEffects[i], EXTEfx.AL_EFFECT_TYPE, EXTEfx.AL_EFFECT_EAXREVERB);
-            var reverb = REVERBS[i];
-            EXTEfx.alEffectf(reverbEffects[i], EXTEfx.AL_EAXREVERB_DECAY_TIME, reverb.decayTime());
-            EXTEfx.alEffectf(reverbEffects[i], EXTEfx.AL_EAXREVERB_GAIN, reverb.gain());
-            EXTEfx.alEffectf(reverbEffects[i], EXTEfx.AL_EAXREVERB_GAINHF, reverb.gainHF());
+            EXTEfx.alEffecti(reverbEffect, EXTEfx.AL_EFFECT_TYPE, EXTEfx.AL_EFFECT_EAXREVERB);
+            var reverb = REVERBS[reverbOfSend(i, sends)];
+            EXTEfx.alEffectf(reverbEffect, EXTEfx.AL_EAXREVERB_DECAY_TIME, reverb.decayTime());
+            EXTEfx.alEffectf(reverbEffect, EXTEfx.AL_EAXREVERB_GAIN, reverb.gain());
+            EXTEfx.alEffectf(reverbEffect, EXTEfx.AL_EAXREVERB_GAINHF, reverb.gainHF());
             AudioUtilities.validate("Efx configure reverb");
 
-            EXTEfx.alAuxiliaryEffectSloti(auxSlots[i], EXTEfx.AL_EFFECTSLOT_EFFECT, reverbEffects[i]);
+            // The slot keeps its own copy of the effect's settings
+            EXTEfx.alAuxiliaryEffectSloti(this.auxSlots[i], EXTEfx.AL_EFFECTSLOT_EFFECT, reverbEffect);
             AudioUtilities.validate("Efx load reverb into aux slot");
 
-            sendFilters[i] = newLowPassFilter();
+            this.sendFilters[i] = newLowPassFilter();
         }
-        directFilter = newLowPassFilter();
-        initialized = true;
+        this.directFilter = newLowPassFilter();
     }
 
     /**
-     * Forgets the effects when the sound engine shuts down. The OpenAL objects go with the engine's context.
+     * Creates the effects in the OpenAL context current on this thread. They go with the context, so there is
+     * nothing to release.
+     *
+     * @param sends the auxiliary sends each source has in the context; up to {@link #SENDS} are used
      */
-    public static void deinitialize() {
-        initialized = false;
-        Arrays.fill(auxSlots, 0);
-        Arrays.fill(reverbEffects, 0);
-        Arrays.fill(sendFilters, 0);
-        directFilter = 0;
+    public static Efx create(int sends) {
+        return new Efx(Math.max(0, Math.min(sends, SENDS)));
+    }
+
+    /**
+     * The sends sounds use in this context, at most {@link #SENDS}.
+     */
+    public int sends() {
+        return this.sends;
+    }
+
+    /**
+     * Whether its context is the one current on this thread (the thread's own context, if it has one, else the
+     * process's).
+     */
+    public boolean isCurrent() {
+        return ALC10.alcGetCurrentContext() == this.context;
+    }
+
+    /**
+     * The reverb a send carries, in a context with this many sends: the longest reverbs, as many as there are sends.
+     */
+    static int reverbOfSend(int send, int sends) {
+        return SENDS - sends + send;
+    }
+
+    /**
+     * The send that carries a reverb, in a context with this many sends, or -1 if none does.
+     */
+    static int sendOfReverb(int reverb, int sends) {
+        int send = reverb - (SENDS - sends);
+        return send < 0 ? -1 : send;
     }
 
     private static int newLowPassFilter() {
@@ -103,26 +137,27 @@ public final class Efx {
     /**
      * Sends a sound's filter settings to OpenAL, for those that changed since the last upload.
      *
-     * @param sends  one per reverb send
-     * @param direct the direct path
+     * @param reverbs one per reverb ({@link #SENDS}), shortest first; those without a send in this context are skipped
+     * @param direct  the direct path
      */
-    public static void uploadIfChanged(int sourceId, LowPassData[] sends, LowPassData direct) {
-        if (!initialized)
-            return;
-        for (int send = 0; send < SENDS; send++) {
-            if (sends[send].takeChanged())
-                uploadSend(sourceId, send, sends[send]);
+    public void uploadIfChanged(int sourceId, LowPassData[] reverbs, LowPassData direct) {
+        assert this.isCurrent() : "Efx used outside the OpenAL context it was made in";
+        for (int reverb = 0; reverb < SENDS; reverb++) {
+            // Taken even when unused, so it doesn't stay pending
+            int send = this.sendOfReverb[reverb];
+            if (reverbs[reverb].takeChanged() && send >= 0)
+                this.uploadSend(sourceId, send, reverbs[reverb]);
         }
         if (direct.takeChanged())
-            uploadDirect(sourceId, direct);
+            this.uploadDirect(sourceId, direct);
     }
 
-    private static void uploadSend(int sourceId, int send, LowPassData data) {
+    private void uploadSend(int sourceId, int send, LowPassData data) {
         if (data.isEnabled()) {
-            int filter = sendFilters[send];
+            int filter = this.sendFilters[send];
             EXTEfx.alFilterf(filter, EXTEfx.AL_LOWPASS_GAIN, data.gain());
             EXTEfx.alFilterf(filter, EXTEfx.AL_LOWPASS_GAINHF, data.gainHF());
-            AL11.alSource3i(sourceId, EXTEfx.AL_AUXILIARY_SEND_FILTER, auxSlots[send], send, filter);
+            AL11.alSource3i(sourceId, EXTEfx.AL_AUXILIARY_SEND_FILTER, this.auxSlots[send], send, filter);
             AudioUtilities.validate("Efx send filter upload");
         } else {
             AL11.alSource3i(sourceId, EXTEfx.AL_AUXILIARY_SEND_FILTER, EXTEfx.AL_EFFECTSLOT_NULL, send, EXTEfx.AL_FILTER_NULL);
@@ -130,11 +165,11 @@ public final class Efx {
         }
     }
 
-    private static void uploadDirect(int sourceId, LowPassData data) {
+    private void uploadDirect(int sourceId, LowPassData data) {
         if (data.isEnabled()) {
-            EXTEfx.alFilterf(directFilter, EXTEfx.AL_LOWPASS_GAIN, data.gain());
-            EXTEfx.alFilterf(directFilter, EXTEfx.AL_LOWPASS_GAINHF, data.gainHF());
-            AL11.alSourcei(sourceId, EXTEfx.AL_DIRECT_FILTER, directFilter);
+            EXTEfx.alFilterf(this.directFilter, EXTEfx.AL_LOWPASS_GAIN, data.gain());
+            EXTEfx.alFilterf(this.directFilter, EXTEfx.AL_LOWPASS_GAINHF, data.gainHF());
+            AL11.alSourcei(sourceId, EXTEfx.AL_DIRECT_FILTER, this.directFilter);
             AudioUtilities.validate("Efx direct filter upload");
         } else {
             AL11.alSourcei(sourceId, EXTEfx.AL_DIRECT_FILTER, EXTEfx.AL_FILTER_NULL);

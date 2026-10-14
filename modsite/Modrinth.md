@@ -14,7 +14,7 @@ MIT so they are free to do this with proper attribution.
     * Rain, snow, and dust particle like effects in applicable biomes
     * Varying storm intensity which drives the number of particles
     * Simulated wind affects direction and velocity of precipitation particles
-* Ground fog in swamps and erie biomes (experimental) (1.21.1-0.4.7+)
+* Ground fog in swamps and eerie biomes (experimental) (1.21.1-0.4.7+)
     * Hugs the ground, and drifts a bit based on wind
     * Intense rain will diminish the effect, but will come back once rain has finished
 * Sky fog density changes driven by biome, time of day, and weather.
@@ -28,6 +28,7 @@ MIT so they are free to do this with proper attribution.
 * Hot block effects such as flame jets over lava, and steam where water hits a hot block
     * Hot blocks are things Lava, Magma, campfires, and a cauldron containing lava
 * Enhanced Sound processing - sounds playing in 3d space will have a reverb effect based on the surrounding materials
+    * Simple Voice Chat support (experimental) (1.21.1-0.4.7+) - nearby players' voices get the same reverb and occlusion
 * Individual Sound Control - Set a key bind and activate in-game
     * Use this feature to block, cull, and control the volume at which sounds play
 * Replace Minecraft's thunder sound with improved versions.
@@ -42,6 +43,7 @@ MIT so they are free to do this with proper attribution.
 * [Mod Menu](https://modrinth.com/mod/modmenu)
 * [ClothConfig API](https://modrinth.com/mod/cloth-config)
 * Want more detailed footsteps sounds?  Check out [Presence Footsteps](https://modrinth.com/mod/presence-footsteps).
+* Want voices to echo in caves too? With [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat) installed, nearby players' voices get the same reverb and occlusion as other sounds.
 
 ### Links
 * [Documentation on ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html)

@@ -50,6 +50,7 @@ Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
 * For Config UI support, Cloth Config API [(CurseForge)](https://www.curseforge.com/minecraft/mc-mods/cloth-config) or [(Modrinth)](https://modrinth.com/mod/cloth-config) is supported. If not present, the in-game mod configuration pages will not be available.
 * On Fabric, Mod Menu [(Modrinth)](https://modrinth.com/mod/modmenu) to get in-game mod configuration menu listings.
 * Presence Footsteps [(Modrinth)](https://modrinth.com/mod/presence-footsteps) for detailed footstep acoustics.
+* Simple Voice Chat [(CurseForge)](https://www.curseforge.com/minecraft/mc-mods/simple-voice-chat) or [(Modrinth)](https://modrinth.com/plugin/simple-voice-chat) to have nearby players' voices processed like other sounds (reverb, occlusion).
 
 ## Videos
 * Steam, Fire Jets, and Waterfalls [(YouTube)](https://youtu.be/guMuLeG3lck)
@@ -67,7 +68,7 @@ Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
   * Rain, snow, and dust particle like effects in applicable biomes
   * Varying storm intensity which drives the number of particles
   * Simulated wind affects direction and velocity of precipitation particles
-* Ground fog in swamps and erie biomes (experimental) (1.21.1-0.4.7+)
+* Ground fog in swamps and eerie biomes (experimental) (1.21.1-0.4.7+)
   * Hugs the ground, and drifts a bit based on wind
   * Intense rain will diminish the effect, but will come back once rain has finished
 * Sky fog density changes driven by biome, time of day, and weather.
@@ -81,6 +82,7 @@ Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
 * Hot block effects such as flame jets over lava, and steam where water hits a hot block
   * Hot blocks are things Lava, Magma, campfires, and a cauldron containing lava
 * Enhanced Sound processing - sounds playing in 3d space will have a reverb effect based on the surrounding materials
+  * Simple Voice Chat support (experimental) (1.21.1-0.4.7+) - nearby players' voices get the same reverb and occlusion
 * Individual Sound Control - Set a key bind and activate in-game
   * Use this feature to block, cull, and control the volume at which sounds play
 * Replace Minecraft's thunder sound with improved versions.

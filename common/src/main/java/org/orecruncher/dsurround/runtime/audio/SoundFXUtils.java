@@ -18,7 +18,6 @@ import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.lib.math.ReusableRaycastContext;
 import org.orecruncher.dsurround.lib.math.ReusableRaycastIterator;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
-import org.orecruncher.dsurround.sound.SoundInstanceHandler;
 
 import java.util.Arrays;
 
@@ -153,11 +152,10 @@ public final class SoundFXUtils {
 
         assert ctx.player != null;
         assert ctx.world != null;
-        assert this.source.getSound() != null;
 
         if (ctx.isNotValid()
                 || !this.source.isEnabled()
-                || !SoundInstanceHandler.inRange(ctx.playerEyePosition, this.source.getSound())
+                || !this.source.inRange(ctx.playerEyePosition)
                 || this.source.getPosition().equals(Vec3.ZERO)) {
             this.cache.invalidate();
             this.clearSettings();
@@ -300,7 +298,7 @@ public final class SoundFXUtils {
     private void apply(final AcousticFilters.Result filters, final float airAbsorptionFactor) {
         synchronized (this.source.sync()) {
             for (int c = 0; c < AcousticFilters.CHANNELS; c++)
-                this.source.getSend(c).set(filters.sendGain()[c], filters.sendCutoff()[c]);
+                this.source.getReverb(c).set(filters.sendGain()[c], filters.sendCutoff()[c]);
             this.source.getDirect().set(filters.directGain(), filters.directCutoff());
 
             final var airAbsorb = this.source.getAirAbsorb();
@@ -312,7 +310,7 @@ public final class SoundFXUtils {
     private void clearSettings() {
         synchronized (this.source.sync()) {
             for (int c = 0; c < AcousticFilters.CHANNELS; c++)
-                this.source.getSend(c).disable();
+                this.source.getReverb(c).disable();
             this.source.getDirect().disable();
             this.source.getAirAbsorb().setProcess(false);
         }

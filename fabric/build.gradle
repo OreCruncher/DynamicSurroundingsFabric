@@ -50,6 +50,10 @@ dependencies {
     }
 
     modImplementation "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+
+    // Simple Voice Chat: its plugin API to remap the common classes against; the mod itself in the dev client only
+    compileOnly "de.maxhenkel.voicechat:voicechat-api:$rootProject.voicechat_api_version"
+    modLocalRuntime "curse.maven:simple-voice-chat-416089:${rootProject.voicechat_fabric_file}"
 }
 
 processResources {

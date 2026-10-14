@@ -128,9 +128,11 @@ public final class AudioUtilities {
             // Calculate the number of source slots available
             MAX_SOUNDS = ALC11.alcGetInteger(devicePointer, ALC11.ALC_MONO_SOURCES);
 
+            final int auxSendsConfigured = ALC11.alcGetInteger(devicePointer, EXTEfx.ALC_MAX_AUXILIARY_SENDS);
+
             // Do this last because it is dependent on the sound calculations
             if (doEnhancedSounds())
-                SoundFXProcessor.initialize();
+                SoundFXProcessor.initialize(auxSendsConfigured);
             else
                 LOGGER.warn("Enhanced sound processing is disabled");
 
@@ -140,7 +142,6 @@ public final class AudioUtilities {
             final String extensions = AL10.alGetString(AL10.AL_EXTENSIONS);
 
             final int frequency = ALC11.alcGetInteger(devicePointer, ALC11.ALC_FREQUENCY);
-            final int auxSendsConfigured = ALC11.alcGetInteger(devicePointer, EXTEfx.ALC_MAX_AUXILIARY_SENDS);
 
             LOGGER.info("Vendor: %s", vendor);
             LOGGER.info("Version: %s", version);
@@ -155,7 +156,6 @@ public final class AudioUtilities {
         }
     }
 
-    @SuppressWarnings("DataFlowIssue")
     public static boolean doEnhancedSounds() {
         return advancedProcessingEnabled.get();
     }

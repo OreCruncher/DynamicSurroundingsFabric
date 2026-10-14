@@ -14,9 +14,10 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * NeoForge 21.1.84+
 
 **AI Disclosure**
-* Used to extend the storm simulation system for rendering and handling (see What's New)
+* Used to extend the storm simulation system for rendering and handling
+* Assisted in the creation of the ground fog feature
+* Helped with integrating Simple Voice Chat
 * Used to extend steam and flame jet effects, adding additional particles, shader, and lighting where appropriate
-* Assisted in the creation of the ground fog feature (see What's New)
 * Identified the cause of water ripples being invisible while player is underwater and helped with a fix
 
 **What's New**
@@ -49,6 +50,10 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
     * OFF, Fast, Fancy, and Fabulous; defaults to Fancy
     * Fast is fast and has some artifacting; Fabulous looks much better but will be computationally intensive (of course NONE is the most performant :D)
   * Let me know what you think on my Github!
+* [Experimental] Support for Simple Voice Chat with enhanced sound processing
+  * On by default; setting can be found in the Enhanced Sounds configuration options
+  * Hear Self diagnostics setting can be found in the Diagnostics Settings config section; disabled by default
+  * Will auto disable if enhanced sound processing is not available (ex, Sound Physics Remastered is installed)
 * New /dsweather command to control aspects of simulated wind and storm
   * I use for testing but if you want to play around with it go ahead - doesn't affect game mechanics
 
@@ -59,6 +64,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Updated aurora rendering to utilize the simulated rain strength and weather fog effects, meaning that for light precipitation the aurora will still render though a bit muted
 * Config settings for experimental features are colored "orchid" to distinguish from other options
   * Experimental options/features are subject to change and may be removed in a future release
+* The config file (dsurround.json) now notes settings that only take effect after restarting Minecraft or rejoining the world
 * Aurora shader was modified to use a noise map rather than hashing in the shader. Result is that the style of aurora could change between computers that are running different versions of Dynamic Surroundings.
 
 **Fixes**
