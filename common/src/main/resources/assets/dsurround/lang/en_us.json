@@ -216,6 +216,8 @@
   "dsurround.config.particleTweaks.suppressPlayerParticles.tooltip": "Enable/disable suppressing the current players potion particles when in first person view",
   "dsurround.config.particleTweaks.suppressProjectileParticleTrails": "Suppress Projectile Particle Trails",
   "dsurround.config.particleTweaks.suppressProjectileParticleTrails.tooltip": "Enable/disable showing of projectile particle trails on critical strikes",
+  "dsurround.config.particleTweaks.windBlowsParticles": "Wind Blows Particles",
+  "dsurround.config.particleTweaks.windBlowsParticles.tooltip": "Smoke, ash, falling leaves and spores, from the game and other mods, drift downwind out in the open. Under cover they stay as they are.",
   "dsurround.config.compassAndClockOptions": "Compass and Clock Options",
   "dsurround.config.compassAndClockOptions.tooltip": "Configuration options for the compass and clock overlay",
   "dsurround.config.compassAndClockOptions.enableClock": "Clock display",

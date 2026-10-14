@@ -24,6 +24,7 @@
     "core.MixinLevelRenderer",
     "core.MixinMinecraftClient",
     "core.MixinMusic",
+    "core.MixinParticle",
     "core.MixinParticleEngine",
     "core.MixinRainSplashParticle",
     "core.MixinSoundOptionsScreen",

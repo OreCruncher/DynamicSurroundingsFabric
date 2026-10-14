@@ -2,9 +2,17 @@ package org.orecruncher.dsurround.mixins.core;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.particle.ParticleRenderType;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleOptions;
 import org.orecruncher.dsurround.effects.particles.DSurroundParticleRenderType;
+import org.orecruncher.dsurround.mixinutils.IWindBlown;
+import org.orecruncher.dsurround.mixinutils.MixinHelpers;
+import org.orecruncher.dsurround.runtime.weather.SceneWind;
+import org.orecruncher.dsurround.tags.ParticleTags;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -12,6 +20,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
@@ -22,6 +31,9 @@ public abstract class MixinParticleEngine {
     @Final
     @Mutable
     private static List<ParticleRenderType> RENDER_ORDER;
+
+    @Shadow
+    protected ClientLevel level;
 
     @Inject(method="<clinit>", at = @At("TAIL"))
     private static void dsurround$registerRenderTypes(CallbackInfo ci) {
@@ -40,6 +52,23 @@ public abstract class MixinParticleEngine {
         }
 
         RENDER_ORDER = listBuilder.build();
+    }
+
+    /**
+     * Marks the particles the wind carries, as they are made: this is the only place a particle's type is known.
+     * Particles handed straight to {@code add} (the mod's own, block breaking) have none, so are never marked.
+     */
+    @Inject(method = "makeParticle(Lnet/minecraft/core/particles/ParticleOptions;DDDDDD)Lnet/minecraft/client/particle/Particle;", at = @At("RETURN"))
+    private void dsurround$markWindBlown(ParticleOptions options, double x, double y, double z, double dx, double dy, double dz, CallbackInfoReturnable<Particle> cir) {
+        var particle = cir.getReturnValue();
+        if (particle == null || !MixinHelpers.particleTweaksConfig.windBlowsParticles)
+            return;
+        if (!MixinHelpers.TAG_LIBRARY.is(ParticleTags.WIND_BLOWN, options.getType()))
+            return;
+        // Sheltered where it was made: indoors or in a cave, it stays as it is
+        var exposure = SceneWind.exposure(this.level, BlockPos.containing(x, y, z));
+        if (exposure > 0F)
+            ((IWindBlown) particle).dsurround$blowInWind(exposure);
     }
 
     /**

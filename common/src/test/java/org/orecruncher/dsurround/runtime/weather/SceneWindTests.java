@@ -59,4 +59,51 @@ public class SceneWindTests {
         }
         assertEquals(0F, SceneWind.push(0.2F, 0F, 0.92F), "sheltered: no push");
     }
+
+    @Test
+    void aDriftCatchesTheWindAndGoesNoFurther() {
+        // Whatever the particle does with its own speed, the drift alone never outruns the wind's carrying speed
+        var carried = 0.2F * SceneWind.CARRIED_SHARE;
+        float drift = 0F;
+        float last = 0F;
+        for (int t = 0; t < 2000; t++) {
+            drift = SceneWind.drift(drift, 0.2F, 1F);
+            assertTrue(drift >= last && drift <= carried, "tick " + t + ": " + drift);
+            last = drift;
+        }
+        assertEquals(carried, drift, 1e-5F);
+    }
+
+    @Test
+    void aNewParticleCatchesTheWindAsTheModsSmokeDoes() {
+        // The smoke's speed under push and drag, beside a drift, from still air: close all the way
+        var friction = 0.93F;
+        var carried = 0.2F * SceneWind.CARRIED_SHARE;
+        float speed = 0F;
+        float drift = 0F;
+        for (int t = 1; t <= 60; t++) {
+            speed = (speed + SceneWind.push(0.2F, 1F, friction)) * friction;
+            drift = SceneWind.drift(drift, 0.2F, 1F);
+            assertEquals(speed, drift, carried * 0.1F, "tick " + t);
+        }
+        assertTrue(SceneWind.drift(0F, 0.2F, 1F) < carried * 0.1F, "not at once");
+    }
+
+    @Test
+    void aGustEasesInAndOut() {
+        var drift = 0.1F * SceneWind.CARRIED_SHARE;
+        var gusting = SceneWind.drift(drift, 0.2F, 1F);
+        assertTrue(gusting > drift && gusting < 0.2F * SceneWind.CARRIED_SHARE * 0.6F, "a step, not a jump");
+        var easing = SceneWind.drift(gusting, 0.1F, 1F);
+        assertTrue(easing < gusting && easing > drift, "dies away");
+    }
+
+    @Test
+    void outOfTheWindADriftDiesAway() {
+        float drift = 0.1F;
+        for (int t = 0; t < 200; t++)
+            drift = SceneWind.drift(drift, 0.2F, 0F);
+        assertEquals(0F, drift, 1e-5F);
+        assertEquals(0F, SceneWind.drift(0F, 0F, 1F), "still air: none");
+    }
 }

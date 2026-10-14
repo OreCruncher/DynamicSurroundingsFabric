@@ -23,7 +23,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 **What's New**
 * Simulated wind affects movement and behavior of Dynamic Surroundings particles
   * Includes mist, steam, flame jets, breath, and precipitation (see below)
-  * No effect on other particles in Minecraft, modded or otherwise (may change in future releases)
+  * Also includes a select group of particles such as Minecraft's smoke, ash, and falling leaves
 * Windy biome sound effects have volumes dynamically adjusted based on wind speed
   * Becomes louder or quieter as time progresses
   * Enhanced when it is storming

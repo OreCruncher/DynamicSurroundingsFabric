@@ -360,6 +360,10 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable showing of projectile particle trails")
         public boolean suppressProjectileParticleTrails = false;
+
+        @Property
+        @Comment("Smoke, ash, leaves and spores, from the game and other mods, drift with the wind out in the open")
+        public boolean windBlowsParticles = true;
     }
 
     public static class CompassAndClockOptions {
