@@ -4,6 +4,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.config.CompassStyle;
 import org.orecruncher.dsurround.lib.gui.ColorGradient;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
@@ -43,6 +44,27 @@ public class OverlayTests {
         // spinning, because nothing reset the earlier answer
         assertTrue(CompassOverlay.shouldSpin(true, true, false, false), "before: wobbling compass in the main hand");
         assertFalse(CompassOverlay.shouldSpin(false, false, true, false), "after: normal compass in the off hand");
+    }
+
+    // ---- Compass styles --------------------------------------------------------------------------------------
+
+    @Test
+    void everyCompassStyleHasItsTexture() {
+        for (var style : CompassStyle.values()) {
+            var texture = style.getTexture();
+            var path = "/assets/" + texture.getNamespace() + "/" + texture.getPath();
+            assertNotNull(OverlayTests.class.getResource(path), style + ": " + path);
+        }
+    }
+
+    @Test
+    void roseTurnsTheHeadingToTheTop() {
+        // Turning clockwise on screen moves the top of the texture (north) to the right
+        assertEquals(180F, Math.abs(CompassOverlay.roseAngle(0F)), 0.001F, "facing south: north at the bottom");
+        assertEquals(0F, CompassOverlay.roseAngle(180F), 0.001F, "facing north: north at the top");
+        assertEquals(-90F, CompassOverlay.roseAngle(-90F), 0.001F, "facing east: north to the left");
+        assertEquals(90F, CompassOverlay.roseAngle(90F), 0.001F, "facing west: north to the right");
+        assertEquals(CompassOverlay.roseAngle(90F), CompassOverlay.roseAngle(90F + 720F), 0.001F, "whole turns");
     }
 
     // ---- Compass wobble --------------------------------------------------------------------------------------

@@ -3,6 +3,9 @@
 Textures in assets/dsurround/textures/ not credited below are © OreCruncher and contributors, licensed under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
 
 * [compass.png](https://github.com/bspkrs/DirectionHUD/tree/master/src/main/resources/assets/directionhud/textures/gui) from DirectionHUD by [bspkrs](https://github.com/bspkrs) | License: CC BY-NC-SA | Modified: upscaled to 512×512
+* [compass_rose_1.png](https://openclipart.org/detail/7449/compass-rose) from Openclipart by [freedo](https://openclipart.org/artist/freedo) | License: [CC0](https://creativecommons.org/publicdomain/zero/1.0/) | Modified: light outline added, downscaled to 256×256, centered on the hub
+* [compass_rose_2.png](https://openclipart.org/detail/233063/compass-rose-2) from Openclipart by [Firkin](https://openclipart.org/artist/Firkin) | License: [CC0](https://creativecommons.org/publicdomain/zero/1.0/) | Modified: light outline added, downscaled to 256×256, centered on the hub
+* [compass_rose_3.png](https://openclipart.org/detail/302462/wind-rose-bw) from Openclipart by [Basurero](https://openclipart.org/artist/Basurero) | License: [CC0](https://creativecommons.org/publicdomain/zero/1.0/) | Modified: light outline added, downscaled to 256×256, centered on the hub
 
 > ### Sound Attributions
 

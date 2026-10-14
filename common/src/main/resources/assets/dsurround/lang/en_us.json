@@ -225,7 +225,7 @@
   "dsurround.config.compassAndClockOptions.enableCompass": "Compass display",
   "dsurround.config.compassAndClockOptions.enableCompass.tooltip": "Enable/disable display of the compass display when holding a compass item. Compass heading will be displayed above the crosshair.",
   "dsurround.config.compassAndClockOptions.compassStyle": "Compass style",
-  "dsurround.config.compassAndClockOptions.compassStyle.tooltip": "Style of compass rendering",
+  "dsurround.config.compassAndClockOptions.compassStyle.tooltip": "Style of compass rendering: a band that slides with your heading, or a compass rose laid flat that turns with it",
   "dsurround.config.compassAndClockOptions.scale": "Render scaling",
   "dsurround.config.compassAndClockOptions.scale.tooltip": "Scales the compass rendering by the specified amount",
   "dsurround.config.enhancedSounds": "Enhanced Sound Processing",

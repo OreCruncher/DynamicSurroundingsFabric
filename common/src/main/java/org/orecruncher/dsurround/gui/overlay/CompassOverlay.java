@@ -1,13 +1,13 @@
 package org.orecruncher.dsurround.gui.overlay;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.config.CompassStyle;
 import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -15,7 +15,8 @@ import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
 
 /**
- * Shows a compass band above the crosshair while a compass is held.
+ * Shows a compass above the crosshair while a compass is held: a band that slides with the heading, or a rose
+ * laid flat in front of the player that turns with it.
  */
 public final class CompassOverlay extends AbstractOverlay {
 
@@ -28,7 +29,13 @@ public final class CompassOverlay extends AbstractOverlay {
     private static final int HALF_TEXTURE_SIZE = TEXTURE_SIZE / 2;
     private static final int BAND_WIDTH = 65 * 2;
     private static final int BAND_HEIGHT = 12 * 2;
-    private static final ResourceLocation COMPASS_TEXTURE = Constants.asId("textures/compass.png");
+
+    // Rose textures are 256x256, drawn at three quarters size and sampled smoothly (their .mcmeta). Tilting a rose
+    // back 70 degrees under the GUI's orthographic projection only squashes it vertically, so a scale does it (and
+    // works with 26.2's 2D GUI pose).
+    private static final int ROSE_SIZE = 256;
+    private static final float ROSE_DRAW_SCALE = 0.75F;
+    private static final float ROSE_TILT = Mth.cos(65F * Mth.DEG_TO_RAD);
 
     private final ITagLibrary tagLibrary;
     private final IDimensionInformation dimensionInformation;
@@ -37,7 +44,7 @@ public final class CompassOverlay extends AbstractOverlay {
     private boolean showCompass;
     private boolean spinRandomly;
     private float scale;
-    private float spriteOffset;
+    private CompassStyle style;
 
     public CompassOverlay(Configuration config, ITagLibrary tagLibrary, IDimensionInformation dimensionInformation) {
         this.tagLibrary = tagLibrary;
@@ -45,7 +52,7 @@ public final class CompassOverlay extends AbstractOverlay {
         this.config = config;
         this.wobbler = new CompassWobble();
         this.showCompass = false;
-        this.spriteOffset = this.config.compassAndClockOptions.compassStyle.getSpriteNumber();
+        this.style = this.config.compassAndClockOptions.compassStyle;
         this.scale = (float) this.config.compassAndClockOptions.scale;
     }
 
@@ -55,7 +62,7 @@ public final class CompassOverlay extends AbstractOverlay {
 
         if (this.config.compassAndClockOptions.enableCompass && GameUtils.isInGame()) {
             this.scale = (float) this.config.compassAndClockOptions.scale;
-            this.spriteOffset = this.config.compassAndClockOptions.compassStyle.getSpriteNumber();
+            this.style = this.config.compassAndClockOptions.compassStyle;
 
             var player = GameUtils.getPlayer().orElseThrow();
             var mainHandItem = player.getMainHandItem();
@@ -100,9 +107,20 @@ public final class CompassOverlay extends AbstractOverlay {
             rotation = player.getViewYRot(partialTick);
         }
 
+        // The transparent styles and the roses need blending; this version's blit doesn't set it up itself
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        if (this.style.isRose())
+            this.renderRose(context, rotation);
+        else
+            this.renderBand(context, rotation);
+        RenderSystem.disableBlend();
+    }
+
+    private void renderBand(GuiGraphics context, float rotation) {
         // Which part of the band to show: the heading, as a position across the texture
         int u = Mth.floor(((rotation * TEXTURE_SIZE) / 360F) + 0.5D) & (TEXTURE_SIZE - 1);
-        float v = this.spriteOffset * (BAND_HEIGHT * 2);
+        float v = this.style.getSpriteNumber() * (BAND_HEIGHT * 2);
         if (u >= HALF_TEXTURE_SIZE) {
             u -= HALF_TEXTURE_SIZE;
             v += BAND_HEIGHT;
@@ -117,14 +135,36 @@ public final class CompassOverlay extends AbstractOverlay {
         try {
             pose.translate(x, y, 0F);
             pose.scale(this.scale, this.scale, 1F);
-            // The transparent styles need blending; this version's blit doesn't set it up itself
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            context.blit(COMPASS_TEXTURE, 0, 0, u, v, BAND_WIDTH, BAND_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE);
-            RenderSystem.disableBlend();
+            context.blit(this.style.getTexture(), 0, 0, u, v, BAND_WIDTH, BAND_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE);
         } finally {
             pose.popPose();
         }
+    }
+
+    private void renderRose(GuiGraphics context, float rotation) {
+        // Centered where the band's center is, above the crosshair
+        float x = context.guiWidth() / 2F;
+        float y = (context.guiHeight() - CROSSHAIR_OFFSET) / 2F;
+        float size = this.scale * ROSE_DRAW_SCALE;
+
+        var pose = context.pose();
+        pose.pushPose();
+        try {
+            pose.translate(x, y, 0F);
+            pose.scale(size, size * ROSE_TILT, 1F);
+            pose.mulPose(Axis.ZP.rotationDegrees(roseAngle(rotation)));
+            context.blit(this.style.getTexture(), -ROSE_SIZE / 2, -ROSE_SIZE / 2, 0, 0, ROSE_SIZE, ROSE_SIZE, ROSE_SIZE, ROSE_SIZE);
+        } finally {
+            pose.popPose();
+        }
+    }
+
+    /**
+     * How far to turn a rose, in degrees clockwise on screen, so the heading points to the top of the screen (away
+     * from the player). A yaw of 0 faces south.
+     */
+    static float roseAngle(float yaw) {
+        return -Mth.wrapDegrees(yaw + 180F);
     }
 
     /**

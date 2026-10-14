@@ -90,6 +90,8 @@ Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
   * Other players and humanoid mobs will also have these step sound remaps!
 * Various "DS" client side commands for dumping configuration information. Useful for authors wanting to see how things are configured at runtime.
 * Compatibility with Serene Seasons - variations in seasons and temperatures can influence effects.
+* Compass and clock display when holding a compass or clock
+  * Compass shown as a band that slides with the heading, or as a compass rose laid flat in front of the player (1.21.1-0.4.7+)
 * Custom debug HUD that can be accessed by key bind. Moves the Dynamic Surroundings clutter out of the traditional F3 display.
 * Dynamic Surroundings is compatible when connecting to a Vanilla servers (a feature of both Fabric and NeoForge loaders).
 

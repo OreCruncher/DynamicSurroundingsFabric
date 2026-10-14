@@ -42,6 +42,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Serene Seasons will affect whether rain or dust blows in some biomes, such as Biomes OPlenty's Lush Desert
   * Various parts of the system can be enabled/disabled in the Weather Options section
   * The weather system will auto disable if Particle Rain or Simple Weather is installed
+* Brought back the compass rose textures from older mod versions
+  * There are 3 rose styles to choose from
+  * Textures were cleaned up from the originals
 * [Experimental] Ground fog in swamps and spooky biomes like Dark Forest and BOPs Ominous Forest
   * Heavy rains can thin it out, higher density between midnight and morning
   * Wind can shift the drift direction and speed
