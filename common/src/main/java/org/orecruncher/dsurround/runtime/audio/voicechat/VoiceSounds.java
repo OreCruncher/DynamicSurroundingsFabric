@@ -7,7 +7,7 @@ import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.runtime.audio.ISourceProvider;
-import org.orecruncher.dsurround.runtime.audio.SoundFXProcessor;
+import org.orecruncher.dsurround.runtime.audio.EnhancedSoundProcessor;
 import org.orecruncher.dsurround.runtime.audio.SourceProviders;
 
 import java.util.Map;
@@ -26,7 +26,7 @@ import java.util.function.LongSupplier;
  * {@link Backend} sets up the effects in it. Voice chat tells us about every packet it is about to play, on the
  * channel's speaker thread with its context current: there the voice's position is updated and changed filters are
  * uploaded. As a {@link ISourceProvider}, it hands the voices to the worker threads to recalculate, as the game's
- * sounds are (see {@link SoundFXProcessor}).
+ * sounds are (see {@link EnhancedSoundProcessor}).
  * <p>
  * Free of voice chat's classes, which only {@link VoiceChatPlugin} uses.
  */
@@ -67,6 +67,12 @@ public final class VoiceSounds implements ISourceProvider {
          * The reverb sends voices have in the context.
          */
         int sends();
+
+        /**
+         * Voice chat is about to destroy the context: silences what is still ringing in it. Does nothing unless the
+         * context is current on this thread.
+         */
+        void close();
     }
 
     /**
@@ -142,12 +148,21 @@ public final class VoiceSounds implements ISourceProvider {
     }
 
     /**
-     * Voice chat is about to destroy its OpenAL context, and the effects in it.
+     * Voice chat is about to destroy its OpenAL context, and the effects in it; current on this thread unless voice
+     * chat didn't say which context it was. Its voices have stopped by now.
      */
     public void onContextDestroyed() {
+        final var currentFactory = this.factory;
         this.hasContext = false;
         this.factory = null;
         this.channels.clear();
+        if (currentFactory != null) {
+            try {
+                currentFactory.close();
+            } catch (final Throwable t) {
+                this.errors.error(t, "Unable to silence voice chat's effects");
+            }
+        }
     }
 
     /**

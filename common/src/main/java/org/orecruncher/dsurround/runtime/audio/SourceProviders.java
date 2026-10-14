@@ -6,7 +6,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 /**
- * The {@link ISourceProvider}s the enhanced sound processor asks for sounds. Apart from {@link SoundFXProcessor}, so
+ * The {@link ISourceProvider}s the enhanced sound processor asks for sounds. Apart from {@link EnhancedSoundProcessor}, so
  * an integration can register while its mod starts, before the processor is set up.
  */
 public final class SourceProviders {

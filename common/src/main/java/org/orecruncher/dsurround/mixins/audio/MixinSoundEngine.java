@@ -14,7 +14,7 @@ import org.orecruncher.dsurround.lib.platform.KnownMod;
 import org.orecruncher.dsurround.lib.text.StringUtils;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
-import org.orecruncher.dsurround.runtime.audio.SoundFXProcessor;
+import org.orecruncher.dsurround.runtime.audio.EnhancedSoundProcessor;
 import org.orecruncher.dsurround.sound.SoundInstanceHandler;
 import org.orecruncher.dsurround.sound.SoundVolumeEvaluator;
 import org.spongepowered.asm.mixin.*;
@@ -31,12 +31,6 @@ public abstract class MixinSoundEngine {
     @Final
     @Shadow
     public Library library;
-
-    // A bit of hackery to work around the fact that NeoForge does not like mixin Redirect. When a sound is played
-    // the reference is cached so that later on in processing it can be used to calculate the sound volume based
-    // on configuration settings. It's a bit brittle but should work.
-    @Unique
-    private SoundInstance dsurround$currentSoundInstance;
 
     @Inject(method = "loadLibrary()V", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/audio/Library;init(Ljava/lang/String;Z)V", shift = At.Shift.AFTER))
     public void dsurround$init(CallbackInfo ci) {
@@ -58,7 +52,7 @@ public abstract class MixinSoundEngine {
     @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/ChannelAccess$ChannelHandle;execute(Ljava/util/function/Consumer;)V", shift = At.Shift.AFTER))
     public void dsurround$onSoundPlay(SoundInstance soundInstance, CallbackInfo ci, @Local ChannelAccess.ChannelHandle channelHandle) {
         try {
-            SoundFXProcessor.onSoundPlay(soundInstance, channelHandle);
+            EnhancedSoundProcessor.onSoundPlay(soundInstance, channelHandle);
             AudioUtilities.onSoundPlay(soundInstance);
         } catch(final Throwable t) {
             MixinHelpers.LOGGER.error(t, "Error in dsurround_onSoundPlay()!");
@@ -69,8 +63,7 @@ public abstract class MixinSoundEngine {
     private void dsurround$play(SoundInstance sound, CallbackInfo ci) {
         try {
             // Ensure the sound is being played on the client thread. If it isn't cancel
-            // the play and emit a message indicating such. This should also protect
-            // dsurround$currentSoundInstance.
+            // the play and emit a message indicating such.
             if (dsurround$compatibleSoundDiscardEnvironment && MixinHelpers.soundOptions.discardNonClientSoundPlays && !GameUtils.getMC().isSameThread()) {
                 MixinHelpers.LOGGER.warn("Attempt to play sound (%s) from non-client thread; discarding".formatted(sound.getLocation()));
                 if (MixinHelpers.soundOptions.logStacktraceWhenDiscarding) {
@@ -84,26 +77,19 @@ public abstract class MixinSoundEngine {
             // Attempt a remapping if configured to do so
             else if (SoundInstanceHandler.remapSoundPlay(sound))
                 ci.cancel();
-            // Looks like it is going to play
-            else
-                this.dsurround$currentSoundInstance = sound;
         } catch (final Exception t) {
             MixinHelpers.LOGGER.error(t, "Error in dsurround_play()!");
         }
     }
 
     /**
-     * Update the volume based on current settings and environment. Note the documentation above for the
-     * dsurround$currentSoundInstance field.
+     * Update the volume based on current settings and environment. The sound is play()'s own parameter, so it is
+     * always the one being played.
      */
     @WrapOperation(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/SoundEngine;calculateVolume(FLnet/minecraft/sounds/SoundSource;)F"), remap = false)
-    private float dsurround$calculateVolume(SoundEngine soundEngine, float f, SoundSource soundsource, Operation<Float> original) {
+    private float dsurround$calculateVolume(SoundEngine soundEngine, float f, SoundSource soundsource, Operation<Float> original, @Local(argsOnly = true) SoundInstance sound) {
         try {
-            if (this.dsurround$currentSoundInstance != null) {
-                var instance = this.dsurround$currentSoundInstance;
-                this.dsurround$currentSoundInstance = null;
-                return SoundVolumeEvaluator.getAdjustedVolume(instance, soundsource);
-            }
+            return SoundVolumeEvaluator.getAdjustedVolume(sound, soundsource);
         } catch (Throwable ex) {
             // Something went wrong. Since the call was not canceled, it will continue with the existing implementation.
             MixinHelpers.LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, "Error calculating sound volume: %s", ex);

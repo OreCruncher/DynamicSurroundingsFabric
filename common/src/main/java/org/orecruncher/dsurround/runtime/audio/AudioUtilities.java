@@ -132,7 +132,7 @@ public final class AudioUtilities {
 
             // Do this last because it is dependent on the sound calculations
             if (doEnhancedSounds())
-                SoundFXProcessor.initialize(auxSendsConfigured);
+                EnhancedSoundProcessor.initialize(auxSendsConfigured);
             else
                 LOGGER.warn("Enhanced sound processing is disabled");
 
@@ -162,7 +162,7 @@ public final class AudioUtilities {
 
     public static void deinitialize(final Library ignore) {
         if (doEnhancedSounds())
-            SoundFXProcessor.deinitialize();
+            EnhancedSoundProcessor.deinitialize();
     }
 
     /**

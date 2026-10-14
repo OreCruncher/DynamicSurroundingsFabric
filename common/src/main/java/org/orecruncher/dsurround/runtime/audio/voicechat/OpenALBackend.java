@@ -10,7 +10,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.function.SingletonSupplier;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
-import org.orecruncher.dsurround.runtime.audio.SoundFXProcessor;
+import org.orecruncher.dsurround.runtime.audio.EnhancedSoundProcessor;
 import org.orecruncher.dsurround.runtime.audio.SourceContext;
 import org.orecruncher.dsurround.runtime.audio.effects.Efx;
 
@@ -21,6 +21,9 @@ final class OpenALBackend implements VoiceSounds.Backend {
 
     // Resolved on first use: voice chat may load its plugins before the mod's container is ready
     private static final SingletonSupplier<Configuration.EnhancedSounds> CONFIG = SingletonSupplier.from(() -> ContainerManager.resolve(Configuration.EnhancedSounds.class));
+
+    // The longest leaving a world waits for muted reverbs to go quiet
+    private static final long MAX_MUTE_WAIT_MILLIS = 100;
 
     private final IModLog logger;
 
@@ -46,6 +49,19 @@ final class OpenALBackend implements VoiceSounds.Backend {
                 public int sends() {
                     return efx.sends();
                 }
+
+                @Override
+                public void close() {
+                    if (!efx.isCurrent())
+                        return;
+                    efx.mute();
+                    // Two updates: the one being mixed may have started before the mute
+                    try {
+                        Thread.sleep(Math.min(2 * efx.updateMillis(), MAX_MUTE_WAIT_MILLIS));
+                    } catch (final InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
             };
         } catch (final Throwable t) {
             this.logger.error(t, "Unable to set up enhanced sound processing for voice chat; voices will play without it");
@@ -55,7 +71,7 @@ final class OpenALBackend implements VoiceSounds.Backend {
 
     @Override
     public boolean isActive() {
-        return CONFIG.get().enableVoiceChatProcessing && SoundFXProcessor.isAvailable();
+        return CONFIG.get().enableVoiceChatProcessing && EnhancedSoundProcessor.isAvailable();
     }
 
     /**

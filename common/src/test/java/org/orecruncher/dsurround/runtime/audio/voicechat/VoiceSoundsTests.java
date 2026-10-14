@@ -71,24 +71,39 @@ public class VoiceSoundsTests {
     }
 
     /**
-     * Makes voices with the given maker, in a context with four sends.
+     * Makes voices with the given maker, in a context with four sends, and counts how often it is closed.
      */
-    private static VoiceSounds.VoiceFactory factory(BiFunction<Integer, Vec3, VoiceSounds.Voice> maker) {
-        return new VoiceSounds.VoiceFactory() {
-            @Override
-            public VoiceSounds.Voice create(int sourceId, Vec3 position) {
-                return maker.apply(sourceId, position);
-            }
+    private static class FakeFactory implements VoiceSounds.VoiceFactory {
+        private final BiFunction<Integer, Vec3, VoiceSounds.Voice> maker;
+        int closed;
 
-            @Override
-            public int sends() {
-                return 4;
-            }
-        };
+        FakeFactory(BiFunction<Integer, Vec3, VoiceSounds.Voice> maker) {
+            this.maker = maker;
+        }
+
+        @Override
+        public VoiceSounds.Voice create(int sourceId, Vec3 position) {
+            return this.maker.apply(sourceId, position);
+        }
+
+        @Override
+        public int sends() {
+            return 4;
+        }
+
+        @Override
+        public void close() {
+            this.closed++;
+        }
+    }
+
+    private static VoiceSounds.VoiceFactory factory(BiFunction<Integer, Vec3, VoiceSounds.Voice> maker) {
+        return new FakeFactory(maker);
     }
 
     private static final class FakeBackend implements VoiceSounds.Backend {
         final List<FakeVoice> made = new ArrayList<>();
+        final List<FakeFactory> opened = new ArrayList<>();
         boolean opens = true;
         boolean active = true;
 
@@ -96,11 +111,13 @@ public class VoiceSoundsTests {
         public VoiceSounds.VoiceFactory open(long device) {
             if (!this.opens)
                 return null;
-            return factory((sourceId, position) -> {
+            var factory = new FakeFactory((sourceId, position) -> {
                 var voice = new FakeVoice(sourceId, position);
                 this.made.add(voice);
                 return voice;
             });
+            this.opened.add(factory);
+            return factory;
         }
 
         @Override
@@ -241,6 +258,47 @@ public class VoiceSoundsTests {
 
         assertTrue(this.due().isEmpty());
         assertEquals(1, this.backend.made.size(), "nothing is started without a context");
+    }
+
+    @Test
+    void destroyingTheContextSilencesItsEffectsOnce() {
+        // So reverbs still ringing aren't cut off when voice chat destroys the context
+        this.sounds.onContextCreated(0L);
+        this.sounds.onSound(PLAYER, 1, HERE);
+
+        this.sounds.onContextDestroyed();
+        this.sounds.onContextDestroyed();
+
+        assertEquals(1, this.backend.opened.getFirst().closed);
+    }
+
+    @Test
+    void failingToSilenceTheEffectsIsLoggedNotThrown() {
+        // Thrown on the thread leaving the world, it would stop voice chat closing its device
+        var sounds = new VoiceSounds(new VoiceSounds.Backend() {
+            @Override
+            public VoiceSounds.VoiceFactory open(long device) {
+                return new FakeFactory(FakeVoice::new) {
+                    @Override
+                    public void close() {
+                        throw new IllegalStateException("OpenAL error");
+                    }
+                };
+            }
+
+            @Override
+            public boolean isActive() {
+                return true;
+            }
+        }, () -> 0L, this.log);
+        sounds.onContextCreated(0L);
+
+        assertDoesNotThrow(sounds::onContextDestroyed);
+
+        var errors = this.log.at(IModLog.Level.ERROR);
+        assertEquals(1, errors.size());
+        assertInstanceOf(IllegalStateException.class, errors.getFirst().throwable());
+        assertEquals("Voice chat: not connected", sounds.diagnostics());
     }
 
     @Test

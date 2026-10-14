@@ -30,7 +30,7 @@ public final class SourceContext implements Callable<Void> {
     private final LowPassData[] reverbs = new LowPassData[Efx.SENDS];
     private final LowPassData direct;
     private final SourcePropertyFloat airAbsorb;
-    private final SoundFXUtils fxProcessor;
+    private final SourceAcoustics acoustics;
 
     private final int sourceId;
     private final Efx efx;
@@ -57,7 +57,7 @@ public final class SourceContext implements Callable<Void> {
         this.direct = new LowPassData();
         this.airAbsorb = new SourcePropertyFloat(EXTEfx.AL_AIR_ABSORPTION_FACTOR, EXTEfx.AL_DEFAULT_AIR_ABSORPTION_FACTOR, EXTEfx.AL_MIN_AIR_ABSORPTION_FACTOR, EXTEfx.AL_MAX_AIR_ABSORPTION_FACTOR);
         this.pos = emitter.position();
-        this.fxProcessor = new SoundFXUtils(this);
+        this.acoustics = new SourceAcoustics(this);
     }
 
     public Object sync() {
@@ -168,7 +168,7 @@ public final class SourceContext implements Callable<Void> {
 
     private void updateImpl() {
         try {
-            this.fxProcessor.calculate(SoundFXProcessor.getWorldContext());
+            this.acoustics.calculate(EnhancedSoundProcessor.getWorldContext());
         } catch (final Exception e) {
             // Usually a world unloading while the background threads are using it, which is harmless. Logged
             // (a limited number of times) so that anything else, like a calculation that always fails, is seen.

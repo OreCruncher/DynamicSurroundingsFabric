@@ -88,7 +88,7 @@ public final class Efx {
 
     /**
      * Creates the effects in the OpenAL context current on this thread. They go with the context, so there is
-     * nothing to release.
+     * nothing to release (but see {@link #mute}).
      *
      * @param sends the auxiliary sends each source has in the context; up to {@link #SENDS} are used
      */
@@ -124,6 +124,26 @@ public final class Efx {
     static int sendOfReverb(int reverb, int sends) {
         int send = reverb - (SENDS - sends);
         return send < 0 ? -1 : send;
+    }
+
+    /**
+     * Mutes the reverbs, which ring on for up to a few seconds after their sounds stop: destroyed while ringing, a
+     * context cuts them off mid-stream. The mixer applies it on its next update, so wait for that before destroying.
+     */
+    public void mute() {
+        assert this.isCurrent() : "Efx used outside the OpenAL context it was made in";
+        for (int slot : this.auxSlots)
+            EXTEfx.alAuxiliaryEffectSlotf(slot, EXTEfx.AL_EFFECTSLOT_GAIN, 0F);
+        AudioUtilities.validate("Efx mute aux slots");
+    }
+
+    /**
+     * How long the device takes to mix one update, in milliseconds.
+     */
+    public long updateMillis() {
+        int refresh = ALC10.alcGetInteger(ALC10.alcGetContextsDevice(this.context), ALC10.ALC_REFRESH);
+        // OpenAL Soft's default is about 50 updates a second
+        return 1000L / (refresh > 0 ? refresh : 50);
     }
 
     private static int newLowPassFilter() {

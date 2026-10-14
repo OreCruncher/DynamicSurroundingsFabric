@@ -18,7 +18,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Assisted in the creation of the ground fog feature
 * Helped with integrating Simple Voice Chat
 * Used to extend steam and flame jet effects, adding additional particles, shader, and lighting where appropriate
-* Identified the cause of water ripples being invisible while player is underwater and helped with a fix
+* Identified root causes of several issues and help with the fix
 
 **What's New**
 * Simulated wind affects movement and behavior of Dynamic Surroundings particles
@@ -74,7 +74,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Moved aurora render hook to avoid conflict with Astral Sorcery's sky render
 * Fog being applied to SPOOKY underground biomes, like BOPs spider nest
 * Rendering issues when Fabulous! graphics enabled
-* [MAYBE] Infrequent crash in fastutil collection rendering entities
+* [MAYBE] Infrequent crash in fastutil collection when rendering block entities, seen with Create belts
 
 > ### DynamicSurroundings-1.21.1-0.4.6
 

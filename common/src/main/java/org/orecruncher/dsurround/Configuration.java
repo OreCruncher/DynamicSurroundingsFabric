@@ -308,32 +308,26 @@ public class Configuration extends ConfigurationData {
         public int entityEffectRange = 24;
 
         @Property
-        @RestartRequired(client = false)
         @Comment("Enable/disable bow pull sound effect")
         public boolean enableBowPull = true;
 
         @Property
-        @RestartRequired(client = false)
         @Comment("Enable/disable breath effect in cold biomes and underwater")
         public boolean enableBreathEffect = true;
 
         @Property
-        @RestartRequired(client = false)
         @Comment("Enable/disable player toolbar sound effects")
         public boolean enablePlayerToolbarEffect = true;
 
         @Property
-        @RestartRequired(client = false)
         @Comment("Enable/disable sound effects for blocks on the toolbar")
         public boolean enableToolbarBlockSounds = false;
 
         @Property
-        @RestartRequired(client = false)
         @Comment("Enable/disable item swing sound effects from players and mobs")
         public boolean enableSwingEffect = true;
 
         @Property
-        @RestartRequired(client = false)
         @Comment("Enable/disable sound effect when walking through dense brush")
         public boolean enableBrushStepEffect = true;
     }

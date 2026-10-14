@@ -12,7 +12,7 @@ public class AcousticFiltersTests {
     private static final int RAYS = 32;
 
     /**
-     * The arithmetic as it was in SoundFXUtils.calculate before it moved to AcousticFilters, copied verbatim
+     * The arithmetic as it was in SourceAcoustics.calculate (then SoundFXUtils) before it moved to AcousticFilters, copied verbatim
      * (with 4 bounces, the only count it worked with).
      */
     private static AcousticFilters.Result original(float occlusionAccumulation, float[] gains, float[] bounceTotals,

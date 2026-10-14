@@ -24,7 +24,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.function.Consumer;
 
-public final class SoundFXProcessor {
+public final class EnhancedSoundProcessor {
 
     private static final IModLog LOGGER = ContainerManager.memoize(IModLog.class);
     private static final int SOUND_PROCESS_ITERATION = 1000 / 20;   // Match MC client tick rate
@@ -68,12 +68,12 @@ public final class SoundFXProcessor {
     private static WorldContext worldContext = new WorldContext();
 
     static {
-        ICollectDiagnostics.EVENT.register(SoundFXProcessor::onGatherText);
-        IClientTickStart.EVENT.register(SoundFXProcessor::clientTick);
+        ICollectDiagnostics.EVENT.register(EnhancedSoundProcessor::onGatherText);
+        IClientTickStart.EVENT.register(EnhancedSoundProcessor::clientTick);
         // Lets sounds reuse their ray traced results until something in the world changes
         WorldChangeTracker.register();
         // The game's own sounds; integrations register theirs
-        SourceProviders.register(SoundFXProcessor::forEachDueSource);
+        SourceProviders.register(EnhancedSoundProcessor::forEachDueSource);
     }
 
     public static WorldContext getWorldContext() {
@@ -81,7 +81,7 @@ public final class SoundFXProcessor {
     }
 
     /**
-     * Indicates if the SoundFX feature is available.
+     * Indicates if enhanced sound processing is available.
      *
      * @return true if the feature is available, false otherwise.
      */
@@ -102,7 +102,7 @@ public final class SoundFXProcessor {
         if (soundProcessor == null) {
             soundProcessor = new Worker(
                     "Enhanced Sound Processor",
-                    SoundFXProcessor::processSounds,
+                    EnhancedSoundProcessor::processSounds,
                     SOUND_PROCESS_ITERATION,
                     LOGGER
             );
@@ -222,8 +222,8 @@ public final class SoundFXProcessor {
      * Moves the last tick's trace counts into the one second window.
      */
     private static void updateTraceCounts() {
-        final int traced = SoundFXUtils.takeTracedCount();
-        final int shared = SoundFXUtils.takeSharedCount();
+        final int traced = SourceAcoustics.takeTracedCount();
+        final int shared = SourceAcoustics.takeSharedCount();
         final int i = traceWindowIndex;
         tracedPerSecond += traced - tracedWindow[i];
         sharedPerSecond += shared - sharedWindow[i];

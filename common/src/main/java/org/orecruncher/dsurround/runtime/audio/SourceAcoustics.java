@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.LongAdder;
  * under the same conditions (see {@link SharedTraces}); the cheap per-update factors (weather, being under water,
  * dampened hearing) are applied every time.
  */
-public final class SoundFXUtils {
+public final class SourceAcoustics {
 
     private static final IBlockLibrary BLOCK_LIBRARY = ContainerManager.resolve(IBlockLibrary.class);
     private static final ISeasonalInformation SEASONAL_INFORMATION = ContainerManager.resolve(ISeasonalInformation.class);
@@ -152,7 +152,7 @@ public final class SoundFXUtils {
     private final TraceCache cache = new TraceCache();
     private final TraceResult traced = new TraceResult(AcousticFilters.CHANNELS, REVERB_RAY_BOUNCES);
 
-    public SoundFXUtils(final SourceContext source) {
+    public SourceAcoustics(final SourceContext source) {
         this.source = source;
     }
 

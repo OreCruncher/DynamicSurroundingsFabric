@@ -51,7 +51,7 @@ public final class VoiceChatPlugin implements VoicechatPlugin {
     @Override
     public void registerEvents(EventRegistration registration) {
         registration.registerEvent(CreateOpenALContextEvent.class, this::onCreateContext);
-        registration.registerEvent(DestroyOpenALContextEvent.class, event -> this.voices.onContextDestroyed());
+        registration.registerEvent(DestroyOpenALContextEvent.class, this::onDestroyContext);
         // Each packet raises Pre, then this, then Post: once is enough
         registration.registerEvent(OpenALSoundEvent.class, this::onSound);
         registration.registerEvent(ClientVoicechatConnectionEvent.class, this::onConnection);
@@ -86,6 +86,23 @@ public final class VoiceChatPlugin implements VoicechatPlugin {
         EXTThreadLocalContext.alcSetThreadContext(event.getContext());
         try {
             this.voices.onContextCreated(event.getDevice());
+        } finally {
+            EXTThreadLocalContext.alcSetThreadContext(previous);
+        }
+    }
+
+    private void onDestroyContext(DestroyOpenALContextEvent event) {
+        // Raised on the thread leaving the world, where voice chat's context isn't current. It may not say which
+        // context: then the effects are left as they are
+        long context = event.getContext();
+        if (context == 0L) {
+            this.voices.onContextDestroyed();
+            return;
+        }
+        long previous = EXTThreadLocalContext.alcGetThreadContext();
+        EXTThreadLocalContext.alcSetThreadContext(context);
+        try {
+            this.voices.onContextDestroyed();
         } finally {
             EXTThreadLocalContext.alcSetThreadContext(previous);
         }
