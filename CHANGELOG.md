@@ -66,6 +66,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Experimental options/features are subject to change and may be removed in a future release
 * The config file (dsurround.json) now notes settings that only take effect after restarting Minecraft or rejoining the world
 * Aurora shader was modified to use a noise map rather than hashing in the shader. Result is that the style of aurora could change between computers that are running different versions of Dynamic Surroundings.
+* Reuse reverb calculations between sounds that have their source close to each other
 
 **Fixes**
 * Water ripples are visible when looking from underwater. During the day they are faint rings; at night they are more visible.

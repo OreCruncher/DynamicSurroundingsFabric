@@ -20,13 +20,15 @@ import org.orecruncher.dsurround.lib.math.ReusableRaycastIterator;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * Calculates the occlusion, reverb and air absorption filters for one playing sound.
  * <p>
  * The expensive part is ray tracing: rays cast around the sound and bounced off surfaces for reverb, and one cast
  * towards the player for occlusion. Its results are reused while the sound and the player stay in the same blocks
- * and the world hasn't changed (see {@link TraceCache}); the cheap per-update factors (weather, being under water,
+ * and the world hasn't changed (see {@link TraceCache}), and taken from another sound traced in the same block
+ * under the same conditions (see {@link SharedTraces}); the cheap per-update factors (weather, being under water,
  * dampened hearing) are applied every time.
  */
 public final class SoundFXUtils {
@@ -107,6 +109,11 @@ public final class SoundFXUtils {
     }
 
     /**
+     * How many recent results each thread keeps for other sounds to share.
+     */
+    private static final int SHARED_TRACES = 32;
+
+    /**
      * The ray trace contexts for the current thread. Calculations run on the worker pool, and a sound's first one on
      * the sound engine's thread, so each thread keeps its own rather than creating them for every trace.
      */
@@ -121,6 +128,8 @@ public final class SoundFXUtils {
         final ReusableRaycastContext occlusion = new ReusableRaycastContext(null, ClipContext.Block.VISUAL, ClipContext.Fluid.ANY);
         // The blocks between a sound and the player, traced with the occlusion context
         final ReusableRaycastIterator occlusionHits = ReusableRaycastIterator.unstarted(this.occlusion);
+        // Results this thread traced recently, for other sounds in the same blocks
+        final SharedTraces shared = new SharedTraces(SHARED_TRACES, AcousticFilters.CHANNELS, REVERB_RAY_BOUNCES);
 
         void attach(BlockGetter world) {
             this.reverb.setWorld(world);
@@ -133,19 +142,32 @@ public final class SoundFXUtils {
         }
     }
 
+    // Calculations that traced, and ones that took another sound's result instead, since last taken (diagnostics)
+    private static final LongAdder TRACED = new LongAdder();
+    private static final LongAdder SHARED = new LongAdder();
+
     private final SourceContext source;
 
     // Ray traced results, reused while the cache says nothing relevant has changed
     private final TraceCache cache = new TraceCache();
-    private Vec3 tracedSoundPos = Vec3.ZERO;
-    private float tracedOcclusion;
-    private final float[] tracedSendGains = new float[AcousticFilters.CHANNELS];
-    private final float[] tracedBounceTotals = new float[REVERB_RAY_BOUNCES];
-    private float tracedSharedAirspace;
-    private int tracedAirspaceChecks = 1;
+    private final TraceResult traced = new TraceResult(AcousticFilters.CHANNELS, REVERB_RAY_BOUNCES);
 
     public SoundFXUtils(final SourceContext source) {
         this.source = source;
+    }
+
+    /**
+     * How many calculations traced since the last call, for diagnostics.
+     */
+    static int takeTracedCount() {
+        return (int) TRACED.sumThenReset();
+    }
+
+    /**
+     * How many calculations took another sound's result since the last call, for diagnostics.
+     */
+    static int takeSharedCount() {
+        return (int) SHARED.sumThenReset();
     }
 
     public void calculate(final @NotNull WorldContext ctx) {
@@ -169,24 +191,31 @@ public final class SoundFXUtils {
 
         if (!this.cache.matches(ctx.world, soundBlock, eyeBlock, generation)) {
             var traces = TRACE_CONTEXTS.get();
-            traces.attach(ctx.world);
-            try {
-                // Need to offset sound toward player if it is in a solid block or fluid
-                this.tracedSoundPos = SoundGeometry.offsetPositionIfNeeded(ctx.world, this.source.getPosition(), ctx.playerEyePosition);
-                this.tracedOcclusion = this.calculateOcclusion(ctx, traces.occlusionHits, this.tracedSoundPos, ctx.playerEyePosition);
-                this.traceReverb(ctx, traces.reverb, this.tracedSoundPos);
-            } finally {
-                traces.detach();
+            final boolean occlusion = !skipOcclusion(this.source.getCategory());
+            if (traces.shared.find(ctx.world, soundBlock, eyeBlock, generation, occlusion, this.traced)) {
+                SHARED.increment();
+            } else {
+                TRACED.increment();
+                traces.attach(ctx.world);
+                try {
+                    // Need to offset sound toward player if it is in a solid block or fluid
+                    this.traced.soundPos = SoundGeometry.offsetPositionIfNeeded(ctx.world, this.source.getPosition(), ctx.playerEyePosition);
+                    this.traced.occlusion = occlusion ? this.calculateOcclusion(ctx, traces.occlusionHits, this.traced.soundPos, ctx.playerEyePosition) : 0F;
+                    this.traceReverb(ctx, traces.reverb, this.traced.soundPos);
+                } finally {
+                    traces.detach();
+                }
+                traces.shared.store(ctx.world, soundBlock, eyeBlock, generation, occlusion, this.traced);
             }
             this.cache.update(ctx.world, soundBlock, eyeBlock, generation);
         }
 
-        final float airAbsorptionFactor = calculateWeatherAbsorption(ctx, this.tracedSoundPos, ctx.playerEyePosition);
+        final float airAbsorptionFactor = calculateWeatherAbsorption(ctx, this.traced.soundPos, ctx.playerEyePosition);
         final var filters = AcousticFilters.compute(
-                this.tracedOcclusion,
-                this.tracedSendGains,
-                AcousticFilters.channelRatios(this.tracedBounceTotals, REVERB_RAYS),
-                AcousticFilters.sharedAirspace(this.tracedSharedAirspace, this.tracedAirspaceChecks),
+                this.traced.occlusion,
+                this.traced.sendGains,
+                AcousticFilters.channelRatios(this.traced.bounceTotals, REVERB_RAYS),
+                AcousticFilters.sharedAirspace(this.traced.sharedAirspace, this.traced.airspaceChecks),
                 ctx.submersion);
 
         this.apply(filters, airAbsorptionFactor);
@@ -200,8 +229,8 @@ public final class SoundFXUtils {
      * ray's last one (up to a quarter as many rays with 4 bounces).
      */
     private void traceReverb(final WorldContext ctx, final ReusableRaycastContext traceContext, final Vec3 soundPos) {
-        final float[] sendGains = this.tracedSendGains;
-        final float[] bounceTotals = this.tracedBounceTotals;
+        final float[] sendGains = this.traced.sendGains;
+        final float[] bounceTotals = this.traced.bounceTotals;
         Arrays.fill(sendGains, 0F);
         Arrays.fill(bounceTotals, 0F);
         float sharedAirspace = 0F;
@@ -283,8 +312,8 @@ public final class SoundFXUtils {
             }
         }
 
-        this.tracedSharedAirspace = sharedAirspace;
-        this.tracedAirspaceChecks = checkLastReflectionOnly ? REVERB_RAYS : REVERB_RAYS * REVERB_RAY_BOUNCES;
+        this.traced.sharedAirspace = sharedAirspace;
+        this.traced.airspaceChecks = checkLastReflectionOnly ? REVERB_RAYS : REVERB_RAYS * REVERB_RAY_BOUNCES;
     }
 
     /**
@@ -317,10 +346,6 @@ public final class SoundFXUtils {
     }
 
     private float calculateOcclusion(final WorldContext ctx, final ReusableRaycastIterator hits, final Vec3 origin, final Vec3 target) {
-
-        // Shortcut if occlusion isn't to happen for this sound
-        if (skipOcclusion(this.source.getCategory()))
-            return 0F;
 
         assert ctx.world != null;
         assert ctx.player != null;

@@ -44,6 +44,14 @@ public final class SoundFXProcessor {
     private static Worker soundProcessor;
     private static String diagnosticString = StringUtils.EMPTY;
 
+    // Traces and shared results per client tick over the last second, and their sums (client thread only)
+    private static final int TRACE_WINDOW_TICKS = 20;
+    private static final int[] tracedWindow = new int[TRACE_WINDOW_TICKS];
+    private static final int[] sharedWindow = new int[TRACE_WINDOW_TICKS];
+    private static int traceWindowIndex;
+    private static int tracedPerSecond;
+    private static int sharedPerSecond;
+
     // Use our own thread pool avoiding the common pool.  Thread allocation is better controlled, and we won't run
     // into/cause any problems with other tasks in the common pool.
     private static final SingletonSupplier<ExecutorService> threadPool = SingletonSupplier.from(() -> {
@@ -207,6 +215,21 @@ public final class SoundFXProcessor {
         if (isAvailable()) {
             worldContext = new WorldContext();
         }
+        updateTraceCounts();
+    }
+
+    /**
+     * Moves the last tick's trace counts into the one second window.
+     */
+    private static void updateTraceCounts() {
+        final int traced = SoundFXUtils.takeTracedCount();
+        final int shared = SoundFXUtils.takeSharedCount();
+        final int i = traceWindowIndex;
+        tracedPerSecond += traced - tracedWindow[i];
+        sharedPerSecond += shared - sharedWindow[i];
+        tracedWindow[i] = traced;
+        sharedWindow[i] = shared;
+        traceWindowIndex = (i + 1) % TRACE_WINDOW_TICKS;
     }
 
     /**
@@ -255,6 +278,7 @@ public final class SoundFXProcessor {
         if (isAvailable() && soundProcessor != null) {
             final String msg = soundProcessor.getDiagnosticString() + " " + diagnosticString;
             event.add(CollectDiagnosticsEvent.Section.Systems, msg);
+            event.add(CollectDiagnosticsEvent.Section.Systems, "Sound traces/s: %d (shared: %d)".formatted(tracedPerSecond, sharedPerSecond));
         } else {
             event.getSectionText(CollectDiagnosticsEvent.Section.Systems).add(Component.literal("Enhanced sound processing disabled"));
         }
