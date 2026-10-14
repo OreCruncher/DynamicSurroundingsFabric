@@ -1,9 +1,15 @@
-> ### Sound Credit and Attribution
+> ### Texture Attributions
+
+Textures in assets/dsurround/textures/ not credited below are © OreCruncher and contributors, licensed under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
+
+* [compass.png](https://github.com/bspkrs/DirectionHUD/tree/master/src/main/resources/assets/directionhud/textures/gui) from DirectionHUD by [bspkrs](https://github.com/bspkrs) | License: CC BY-NC-SA | Modified: upscaled to 512×512
+
+> ### Sound Attributions
 
 The sounds provided with Dynamic Surroundings are from the public domain or have Creative Common/Attribution
 requirements. These requirements may impact whether "let's plays" can be monetized on the various streaming services.
 
-##### Modifications
+**__Modifications__**
 
 Sounds may have been modified from the original, specifically:
 
@@ -11,7 +17,11 @@ Sounds may have been modified from the original, specifically:
 * Converted to mono if the original was in stereo
 * May have been sampled (snip extracted, audio properties modified, etc.)
 
-##### Credits
+**__Credits__**
+
+* Footstep sounds from [Presence Footsteps](https://github.com/Hurricaaane/Presence-Footsteps) by Hurricaaane (Ha3) | License: [WTFPL v2](https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/minecraft-mods/1290546-presence-footsteps-an-overly-complicated-sound)
+
+Others:
 
 *dsurround:biome.beach*
 
