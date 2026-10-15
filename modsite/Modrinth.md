@@ -38,7 +38,7 @@ MIT so they are free to do this with proper attribution.
 * Compatibility with Serene Seasons - variations in seasons and temperatures can influence effects.
 * Compass and clock display when holding a compass or clock
   * Compass shown as a band that slides with the heading, or as a compass rose laid flat in front of the player (1.21.1-0.4.7+)
-  * Clock shown as text, or as a worn pocket watch whose hands tick from minute to minute, with windows for day or night and the season or moon phase (1.21.1-0.4.7+)
+  * Clock shown as text, or as a pocket watch (worn and round, or square in pixel art) whose hands tick from minute to minute, with windows for day or night and the season or moon phase (1.21.1-0.4.7+)
   * Optionally shown in a side or corner of the screen while a compass or clock is in the hot bar (1.21.1-0.4.7+)
   * Either can be turned off, and their textures replaced by resource packs (1.21.1-0.4.7+)
 * Light level overlay, turned on and off by key bind, showing the light on the blocks around the player colored by whether monsters can spawn there, with an on screen legend (1.21.1-0.4.7+)

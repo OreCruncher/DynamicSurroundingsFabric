@@ -14,7 +14,6 @@ import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.ClockStyle;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -39,12 +38,12 @@ public final class ClockOverlay extends AbstractOverlay {
      */
     private static final int BOTTOM_OFFSET = 68 + 20;
 
-    // The pocket watch atlas, sampled smoothly (its .mcmeta). Laid out here in units of a 256x256 grid; the file
-    // has twice that resolution, which blit's UVs (fractions of the size given) don't need to know. The watch is
+    // The pocket watch atlas, one per PocketWatchStyle, each sampled smoothly (its .mcmeta) and all laid out the
+    // same way. Laid out here in units of a 256x256 grid; the files have twice that resolution, which blit's UVs
+    // (fractions of the size given) don't need to know. The watch is
     // the top left 128x128, its dial centered at (64, 74); the glass (hub cap and glare) is the 128x128 below it.
     // The season and moon discs are 64x64 and turn about their centers, on the dial's center; the day disc is 32x32
     // and turns about its center, 10 above the dial's. The hands are 16x64, pointing up, and turn about (8, 48).
-    static final ResourceLocation TEXTURE = Constants.asId("textures/pocket_watch.png");
     private static final int ATLAS_SIZE = 256;
     private static final int WATCH_SIZE = 128;
     private static final int DIAL_X = 64;
@@ -103,6 +102,7 @@ public final class ClockOverlay extends AbstractOverlay {
     private int color;
 
     private boolean watchShown;
+    private ResourceLocation texture;
     private boolean inMargin;
     private float scale;
     private int side;
@@ -121,6 +121,7 @@ public final class ClockOverlay extends AbstractOverlay {
         this.clock = new MinecraftClock();
         this.gradient = new ColorGradient(ColorPalette.DARK_VIOLET, ColorPalette.SUN_GLOW, 180F);
         this.style = this.config.compassAndClockOptions.clockStyle;
+        this.texture = this.config.compassAndClockOptions.watchStyle.getTexture();
     }
 
     public void tick(Minecraft client) {
@@ -178,6 +179,7 @@ public final class ClockOverlay extends AbstractOverlay {
 
     private void tickWatch(Player player, boolean justShown) {
         this.scale = (float) this.config.compassAndClockOptions.scale;
+        this.texture = this.config.compassAndClockOptions.watchStyle.getTexture();
 
         // The hands follow the day time between ticks; a jump (the time being set) moves them straight there
         var time = player.level().getDayTime();
@@ -348,10 +350,10 @@ public final class ClockOverlay extends AbstractOverlay {
             // The discs show through the windows in the dial, so they go first; the glass goes over the hands
             this.drawTurned(context, disc, 0, this.seasonDisc ? SEASON_DISC_U : MOON_DISC_U, 0, DISC_SIZE, DISC_SIZE, DISC_SIZE / 2, DISC_SIZE / 2);
             this.drawTurned(context, dayDiscAngle(time), DAY_DISC_Y, DAY_DISC_U, DAY_DISC_V, DAY_DISC_SIZE, DAY_DISC_SIZE, DAY_DISC_SIZE / 2, DAY_DISC_SIZE / 2);
-            context.blit(TEXTURE, -DIAL_X, -DIAL_Y, 0, 0, WATCH_SIZE, WATCH_SIZE, ATLAS_SIZE, ATLAS_SIZE);
+            context.blit(this.texture, -DIAL_X, -DIAL_Y, 0, 0, WATCH_SIZE, WATCH_SIZE, ATLAS_SIZE, ATLAS_SIZE);
             this.drawTurned(context, hourHandAngle(handTime), 0, HOUR_HAND_U, HANDS_V, HAND_WIDTH, HAND_HEIGHT, HAND_PIVOT_X, HAND_PIVOT_Y);
             this.drawTurned(context, minuteHandAngle(handTime) + overshoot, 0, MINUTE_HAND_U, HANDS_V, HAND_WIDTH, HAND_HEIGHT, HAND_PIVOT_X, HAND_PIVOT_Y);
-            context.blit(TEXTURE, -DIAL_X, -DIAL_Y, 0, GLASS_V, WATCH_SIZE, WATCH_SIZE, ATLAS_SIZE, ATLAS_SIZE);
+            context.blit(this.texture, -DIAL_X, -DIAL_Y, 0, GLASS_V, WATCH_SIZE, WATCH_SIZE, ATLAS_SIZE, ATLAS_SIZE);
         } finally {
             pose.popPose();
             RenderSystem.disableBlend();
@@ -368,7 +370,7 @@ public final class ClockOverlay extends AbstractOverlay {
         try {
             pose.translate(0F, y, 0F);
             pose.mulPose(Axis.ZP.rotationDegrees(degrees));
-            context.blit(TEXTURE, -pivotX, -pivotY, u, v, width, height, ATLAS_SIZE, ATLAS_SIZE);
+            context.blit(this.texture, -pivotX, -pivotY, u, v, width, height, ATLAS_SIZE, ATLAS_SIZE);
         } finally {
             pose.popPose();
         }

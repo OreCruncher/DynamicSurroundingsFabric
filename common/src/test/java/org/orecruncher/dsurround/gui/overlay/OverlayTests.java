@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.CompassStyle;
+import org.orecruncher.dsurround.config.PocketWatchStyle;
 import org.orecruncher.dsurround.config.MarginPosition;
 import org.orecruncher.dsurround.lib.gui.ColorGradient;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
@@ -130,10 +131,12 @@ public class OverlayTests {
     // ---- Pocket watch ----------------------------------------------------------------------------------------
 
     @Test
-    void pocketWatchHasItsTexture() {
-        var texture = ClockOverlay.TEXTURE;
-        var path = "/assets/" + texture.getNamespace() + "/" + texture.getPath();
-        assertNotNull(OverlayTests.class.getResource(path), path);
+    void everyPocketWatchStyleHasItsTexture() {
+        for (var style : PocketWatchStyle.values()) {
+            var texture = style.getTexture();
+            var path = "/assets/" + texture.getNamespace() + "/" + texture.getPath();
+            assertNotNull(OverlayTests.class.getResource(path), style + ": " + path);
+        }
     }
 
     @Test

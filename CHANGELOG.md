@@ -55,6 +55,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * A window under XII shows day or night, like Minecraft's clock, to tell noon from midnight
   * A window above VI shows the season when Serene Seasons is installed, or the moon's phase without it
   * Clock style option in Compass and Clock Options: text, pocket watch, or both; the Render scaling option applies to it as well
+  * Pocket watch style option picks the look: CLASSIC (the worn round watch) or SQUARE (a square brass watch in pixel art)
 * The compass and clock on/off switches are now a NONE choice in their styles; a switch that was off carries over as NONE
 * Option to show the compass and pocket watch in a side or corner of the screen while one is in the hot bar or off hand, rather than above the crosshair while held
   * Show in screen margin option in Compass and Clock Options turns it on; Screen margin position picks one of the four sides or four corners (left by default)

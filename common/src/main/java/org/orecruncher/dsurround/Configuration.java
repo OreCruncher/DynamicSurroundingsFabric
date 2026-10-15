@@ -6,6 +6,7 @@ import org.orecruncher.dsurround.config.GroundFogQuality;
 import org.orecruncher.dsurround.config.LightLevelColors;
 import org.orecruncher.dsurround.config.LightLevelMode;
 import org.orecruncher.dsurround.config.MarginPosition;
+import org.orecruncher.dsurround.config.PocketWatchStyle;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.lib.config.Comment;
 import org.orecruncher.dsurround.lib.config.ConfigPlacement;
@@ -380,6 +381,10 @@ public class Configuration extends ConfigurationData {
         @Comment("Style of clock rendering, or NONE for no clock display")
         @MovedFrom(value = "compassAndClockOptions.enableClock", values = "false=NONE")
         public ClockStyle clockStyle = ClockStyle.POCKET_WATCH;
+
+        @Property
+        @Comment("Look of the pocket watch: CLASSIC (a worn round watch) or SQUARE (a pixel art square watch)")
+        public PocketWatchStyle watchStyle = PocketWatchStyle.CLASSIC;
 
         @Property
         @Comment("Shows the compass and pocket watch in a side or corner of the screen while one is in the hot bar or off hand, rather than above the crosshair while held")
