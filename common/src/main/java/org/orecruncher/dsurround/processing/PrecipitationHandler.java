@@ -32,7 +32,7 @@ import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.lib.platform.KnownMod;
+import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
@@ -90,10 +90,6 @@ public class PrecipitationHandler extends AbstractClientHandler {
         this.landings = new Landings(tagLibrary, soundLibrary, config.weatherOptions);
         this.snowflakes = new Snowflakes(logger);
 
-        if (config.weatherOptions.enableParticlePrecipitation)
-            KnownMod.particleWeatherMod().ifPresent(mod -> logger.info(
-                    "%s is installed: particle rain, snow and dust storms are off, and left to it", mod.installedId().orElseThrow()));
-
         // A resource pack may bring other snow
         // A tag sync (each server join) can't change the snow texture
         IReloadEvent.EVENT.register((resources, scope) -> {
@@ -106,14 +102,14 @@ public class PrecipitationHandler extends AbstractClientHandler {
      * Whether the drops are drawn in place of vanilla's weather
      */
     public boolean isActive() {
-        return isEnabled(this.config.weatherOptions.enableParticlePrecipitation, KnownMod.particleWeatherMod().isPresent())
+        return isEnabled(this.config.weatherOptions.enableParticlePrecipitation, FeatureConflict.PARTICLE_WEATHER.isBlocked())
                 && PrecipitationShaders.DROPS.isUsable()
                 && GameUtils.isInGame() && this.dimensionInformation.particleWeather();
     }
 
     /**
      * Whether particle rain and snow are wanted: turned on, and not left to a mod that draws the weather as particles
-     * of its own (see {@link KnownMod#PARTICLE_WEATHER})
+     * of its own (see {@link FeatureConflict#PARTICLE_WEATHER})
      */
     static boolean isEnabled(boolean optionOn, boolean weatherModInstalled) {
         return optionOn && !weatherModInstalled;
@@ -313,8 +309,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
         String text;
         if (!this.config.weatherOptions.enableParticlePrecipitation)
             text = "Precipitation: vanilla";
-        else if (KnownMod.particleWeatherMod().isPresent())
-            text = "Precipitation: off (%s installed)".formatted(KnownMod.particleWeatherMod().get().installedId().orElseThrow());
+        else if (FeatureConflict.PARTICLE_WEATHER.isBlocked())
+            text = "Precipitation: off (%s installed)".formatted(FeatureConflict.PARTICLE_WEATHER.blockingMod().orElseThrow().installedId().orElseThrow());
         else if (!PrecipitationShaders.DROPS.isUsable())
             text = "Precipitation: vanilla (shader unavailable, failed, or a shader pack in use)";
         else

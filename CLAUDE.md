@@ -82,6 +82,9 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   `voicechat` entrypoint / NeoForge annotation), so nothing else may reference it.
 - Mixin plugin (`mixinutils/DSurroundMixinPlugin`) skips mixins whose target belongs to a mod that isn't installed
   (currently Cloth Config).
+- Features that turn themselves off for another mod are listed in `lib/platform/FeatureConflict` (checked with
+  `isBlocked()`), not by skipping mixins: it logs them at startup and feeds the diagnostics overlay and `/dsconflicts`.
+  A new one needs a `dsurround.conflict.<name>` entry in `en_us` (a test checks).
 - Tags in `dsconfigs/tags/<registry>/...` are client-side tag definitions. Reference other tags with `#`
   (`#c:is_cold`); a plain `c:` entry is a mistake (a test checks).
 - Weather. `runtime/weather` is what the weather is (nothing there draws); `effects/precipitation` draws it; each has
@@ -93,7 +96,7 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   - Our weather and ground fog replace `renderSnowAndRain` only when `renderLevel` calls it (a flag set by the
     `MixinLevelRenderer` wrap). Other mods call it themselves (Ars Nouveau, into its sky texture); those get vanilla's.
   - `processing/PrecipitationHandler` runs particle weather (`PrecipitationField`, `LevelColumns`, `Landings`) and
-    stands aside for shader packs, a failed shader, the Particle Rain mod (`KnownMod`) and dimensions that draw their
+    stands aside for shader packs, a failed shader, mods that draw weather as particles (`FeatureConflict`, the table of features that stand aside for other mods) and dimensions that draw their
     own weather.
   - Ground fog (`effects/groundfog`, run by `processing/GroundFogHandler`): mist in biomes with `groundFog` in
     `biomes.json`, drawn by a ray-marched screen pass (`GroundFogVolume`) over a per-column grid (`GroundFogField`),

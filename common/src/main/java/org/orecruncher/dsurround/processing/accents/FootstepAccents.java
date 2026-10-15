@@ -9,7 +9,7 @@ import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.platform.KnownMod;
+import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 
 public class FootstepAccents {
@@ -20,8 +20,7 @@ public class FootstepAccents {
         this.providers.add(new ArmorAccents(config, itemLibrary));
         this.providers.add(new FloorSqueakAccent(config, soundLibrary, tagLibrary));
 
-        // Only register these providers if Presence Footsteps is not installed
-        if (!KnownMod.PRESENCE_FOOTSTEPS.isInstalled()) {
+        if (!FeatureConflict.FOOTSTEP_EFFECTS.isBlocked()) {
             this.providers.add(new WaterySurfaceAccent(config, soundLibrary, tagLibrary, weatherSimulation));
         }
     }

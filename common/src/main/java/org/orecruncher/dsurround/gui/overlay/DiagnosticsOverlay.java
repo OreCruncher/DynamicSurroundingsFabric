@@ -20,6 +20,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
+import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.lib.platform.KnownMod;
 import org.orecruncher.dsurround.processing.AreaBlockEffects;
 
@@ -53,6 +54,8 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
         for (var mod : KnownMod.values())
             if (mod.showInDiagnostics())
                 mod.installedId().ifPresent(modId -> builder.add(Component.literal("MOD: " + modId).withStyle(SPECIAL_MOD_STYLE)));
+        for (var conflict : FeatureConflict.values())
+            conflict.describe().ifPresent(line -> builder.add(Component.literal(line).withStyle(SPECIAL_MOD_STYLE)));
         return builder.build();
     });
 

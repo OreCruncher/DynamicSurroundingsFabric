@@ -7,7 +7,7 @@ import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
-import org.orecruncher.dsurround.lib.platform.KnownMod;
+import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 
 /**
  * Where storms bring dust: where nothing falls, in a biome that is a desert, badlands, or dry and sandy. A storm there
@@ -36,7 +36,7 @@ public final class DustStorms {
      * fog, its tint on the fog and sky, and the harder wind go with the dust, rather than staying without it.
      */
     public static boolean enabled(Configuration.WeatherOptions options) {
-        return enabled(options, KnownMod.particleWeatherMod().isPresent()) && PrecipitationShaders.DROPS.isUsable();
+        return enabled(options, FeatureConflict.PARTICLE_WEATHER.isBlocked()) && PrecipitationShaders.DROPS.isUsable();
     }
 
     static boolean enabled(Configuration.WeatherOptions options, boolean weatherModInstalled) {

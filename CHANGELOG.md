@@ -85,6 +85,8 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Will auto disable if enhanced sound processing is not available (ex, Sound Physics Remastered is installed)
 * New /dsweather command to control aspects of simulated wind and storm
   * I use for testing but if you want to play around with it go ahead - doesn't affect game mechanics
+* New /dsconflicts command lists in chat the Dynamic Surroundings features turned off because another mod is installed, and which mod
+  * For example, Particle Rain turns off the particle weather and water ripples; Presence Footsteps turns off the wet surface accents and brush step effect
 
 **Changes**
 * Updated steam effect to utilize the core logic and rendering of waterfall mist
@@ -96,6 +98,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * The config file (dsurround.json) now notes settings that only take effect after restarting Minecraft or rejoining the world
 * Aurora shader was modified to use a noise map rather than hashing in the shader. Result is that the style of aurora could change between computers that are running different versions of Dynamic Surroundings.
 * Reuse reverb calculations between sounds that have their source close to each other
+* Features turned off because of another mod are now listed together: in the log at startup, and in the diagnostics overlay
 
 **Fixes**
 * Water ripples are visible when looking from underwater. During the day they are faint rings; at night they are more visible.

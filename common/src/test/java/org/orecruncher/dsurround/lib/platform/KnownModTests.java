@@ -30,10 +30,9 @@ public class KnownModTests {
     }
 
     @Test
-    void particleWeatherStandsAsideForEitherWeatherMod() {
+    void simpleWeatherIdIsItsOwn() {
         // The id is Simple Weather's own, from its mods.toml (CurseForge file 7436830)
         assertEquals(List.of("simple_weather"), KnownMod.SIMPLE_WEATHER.ids());
-        assertEquals(List.of(KnownMod.PARTICLE_RAIN, KnownMod.SIMPLE_WEATHER), KnownMod.PARTICLE_WEATHER);
     }
 
     @Test

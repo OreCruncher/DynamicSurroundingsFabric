@@ -26,7 +26,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
-import org.orecruncher.dsurround.lib.platform.KnownMod;
+import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.lib.registry.ReloadListener;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
@@ -104,12 +104,10 @@ public final class Client {
     public static void initializeClient() {
         Library.LOGGER.info("[%s] Client initializing", Constants.MOD_ID);
 
-        if (Client.Config.logging.registerCommands) {
-            if (!KnownMod.QUILTED_LOADER.isInstalled())
-                ClientCommandRegistrationEvent.EVENT.register(Commands::register);
-            else
-                Library.LOGGER.info("Not registering client commands as mod is running in Quilt environment");
-        }
+        FeatureConflict.logBlocked(Library.LOGGER);
+
+        if (Client.Config.logging.registerCommands && !FeatureConflict.CLIENT_COMMANDS.isBlocked())
+            ClientCommandRegistrationEvent.EVENT.register(Commands::register);
 
         // Register the resource listener
         ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new ReloadListener(), Constants.asId("reload_listener"));

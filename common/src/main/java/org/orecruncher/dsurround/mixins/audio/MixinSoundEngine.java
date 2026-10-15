@@ -10,7 +10,7 @@ import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.sounds.SoundSource;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.platform.KnownMod;
+import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.lib.text.StringUtils;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinSoundEngine {
 
     @Unique
-    private static final boolean dsurround$compatibleSoundDiscardEnvironment = !KnownMod.RAISE_SOUND_LIMIT_SIMPLIFIED.isInstalled();
+    private static final boolean dsurround$compatibleSoundDiscardEnvironment = !FeatureConflict.OFF_THREAD_SOUND_DISCARD.isBlocked();
 
     @Final
     @Shadow

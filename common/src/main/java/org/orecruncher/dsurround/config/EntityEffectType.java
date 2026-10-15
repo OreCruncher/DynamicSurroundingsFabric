@@ -8,7 +8,7 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.effects.entity.*;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.lib.platform.KnownMod;
+import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -72,8 +72,7 @@ public enum EntityEffectType {
         PLAYER_TOOLBAR.setConfigProvider(() -> config.enablePlayerToolbarEffect);
         ITEM_SWING.setConfigProvider(() -> config.enableSwingEffect);
 
-        // Do not do brush step effects if Presence Footsteps is installed
-        if (KnownMod.PRESENCE_FOOTSTEPS.isInstalled())
+        if (FeatureConflict.FOOTSTEP_EFFECTS.isBlocked())
             BRUSH_STEP.setConfigProvider(() -> false);
         else
             BRUSH_STEP.setConfigProvider(() -> config.enableBrushStepEffect);
