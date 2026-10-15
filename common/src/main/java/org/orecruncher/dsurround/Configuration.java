@@ -3,6 +3,8 @@ package org.orecruncher.dsurround;
 import org.orecruncher.dsurround.config.ClockStyle;
 import org.orecruncher.dsurround.config.CompassStyle;
 import org.orecruncher.dsurround.config.GroundFogQuality;
+import org.orecruncher.dsurround.config.LightLevelColors;
+import org.orecruncher.dsurround.config.LightLevelMode;
 import org.orecruncher.dsurround.config.MarginPosition;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.lib.config.Comment;
@@ -66,6 +68,10 @@ public class Configuration extends ConfigurationData {
     @Property
     @Comment("Configuration options for the compass and clock overlay")
     public final CompassAndClockOptions compassAndClockOptions = new CompassAndClockOptions();
+
+    @Property
+    @Comment("Configuration options for the light level overlay")
+    public final LightLevelOptions lightLevelOptions = new LightLevelOptions();
 
     @Property
     @Comment("Configuration options for weather")
@@ -387,6 +393,29 @@ public class Configuration extends ConfigurationData {
         @Comment("Scales the display by the specified amount")
         @DoubleSlider(min = 0.5D, max = 4D, step = 0.1D)
         public double scale = 1D;
+    }
+
+    public static class LightLevelOptions {
+        @Property
+        @Comment("The light shown on each block: BLOCK (torches and other lights), SKY (as it is now), or BLOCK_SKY (the brighter of the two)")
+        public LightLevelMode mode = LightLevelMode.BLOCK;
+
+        @Property
+        @Comment("The colors for the numbers: BRIGHT or DARK")
+        public LightLevelColors colors = LightLevelColors.BRIGHT;
+
+        @Property
+        @Slider(min = 8, max = 32)
+        @Comment("How many blocks out from the player light levels are shown")
+        public int range = 16;
+
+        @Property
+        @Comment("Shows numbers only where monsters can spawn")
+        public boolean hideSafe = false;
+
+        @Property
+        @Comment("Shows what the colors mean in the bottom right corner of the screen while light levels are shown")
+        public boolean showLegend = true;
     }
 
     public static class WeatherOptions {

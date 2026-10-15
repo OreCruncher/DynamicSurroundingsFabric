@@ -21,6 +21,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Rebuilt the clock overlay to use an old pocket watch texture with embedded indicators for diurnal cycle, seasons or mooon phase (depending on if Serene Seasons is installed)
   * Added the option to show the compass and pocket watch in a side or corner of the screen
 * Integrated older compass rose textures as possible selections for the compass, and cleaning up the textures
+* Ported the light level HUD from older versions as a light level overlay, drawn from a texture for speed
 * Identified root causes of several issues and help with the fix
 
 **What's New**
@@ -61,6 +62,14 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * The compass rose is upright there, turning with your heading; the compass band is drawn at half size
   * Clock text is still shown only while a clock is held
 * The compass band texture is now smoothed, so it no longer flickers as it slides at small sizes
+* Light level overlay, back from older versions: numbers on the blocks around the player that monsters could stand on, colored by whether they can spawn there
+  * Turned on and off with the Light Level Overlay key (unbound to start with, under Dynamic Surroundings in the controls)
+  * Red where monsters can spawn now, yellow where they can at night, green where it is too bright, aqua where they can never spawn; DARK colors also available
+  * Spawning follows the dimension's own rules: in the Overworld any block light keeps monsters away, in the Nether it goes by light level 7
+  * Shows block light, sky light, or the brighter of the two; range of 8 to 32 blocks; can hide the safe blocks
+  * A legend in the bottom right corner of the screen says what the colors mean, and can be turned off
+  * The numbers are drawn with the game's font, so a resource pack that changes the font changes them too
+  * Light Level Options in the configuration
 * [Experimental] Ground fog in swamps and spooky biomes like Dark Forest and BOPs Ominous Forest
   * Heavy rains can thin it out, higher density between midnight and morning
   * Wind can shift the drift direction and speed

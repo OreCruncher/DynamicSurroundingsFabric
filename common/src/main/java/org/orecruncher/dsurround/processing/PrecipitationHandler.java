@@ -95,7 +95,11 @@ public class PrecipitationHandler extends AbstractClientHandler {
                     "%s is installed: particle rain, snow and dust storms are off, and left to it", mod.installedId().orElseThrow()));
 
         // A resource pack may bring other snow
-        IReloadEvent.EVENT.register((resources, scope) -> this.snowflakes.reload());
+        // A tag sync (each server join) can't change the snow texture
+        IReloadEvent.EVENT.register((resources, scope) -> {
+            if (scope != IReloadEvent.Scope.TAGS)
+                this.snowflakes.reload();
+        });
     }
 
     /**

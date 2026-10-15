@@ -279,6 +279,34 @@ public class OverlayTests {
         }
     }
 
+    @Test
+    void bottomRightReachClearsTheCompassAndWatch() {
+        // The light level legend goes above them when they share its corner
+        var layout = new MarginLayout();
+        layout.setCompass(64F, 48F);
+        layout.setWatch(32F, 32F);
+        float reach = layout.bottomRightReach(MarginPosition.BOTTOM_RIGHT);
+        assertEquals(MarginLayout.EDGE_GAP + 48F + MarginLayout.ITEM_GAP + 32F, reach, 1e-4);
+
+        // Where place puts the top of the pair is that far up
+        var p = MarginLayout.place(MarginPosition.BOTTOM_RIGHT, W, H, 64F, 48F, 32F, 32F);
+        assertEquals(H - reach, p.compassY() - 24F, 1e-4);
+    }
+
+    @Test
+    void bottomRightReachIsNothingElsewhereOrWhenHidden() {
+        var layout = new MarginLayout();
+        layout.setCompass(64F, 48F);
+        assertEquals(0F, layout.bottomRightReach(MarginPosition.BOTTOM_LEFT));
+        assertEquals(0F, layout.bottomRightReach(MarginPosition.RIGHT));
+
+        layout.setCompass(0F, 0F);
+        assertEquals(0F, layout.bottomRightReach(MarginPosition.BOTTOM_RIGHT), "not in the margin");
+
+        layout.setWatch(32F, 32F);
+        assertEquals(MarginLayout.EDGE_GAP + 32F, layout.bottomRightReach(MarginPosition.BOTTOM_RIGHT), 1e-4, "the watch alone");
+    }
+
     // ---- Diagnostics modes -----------------------------------------------------------------------------------
 
     @Test

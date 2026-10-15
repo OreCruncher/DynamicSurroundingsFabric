@@ -22,6 +22,7 @@
     "core.MixinEntityArrow",
     "core.MixinFogRenderer",
     "core.MixinLevelRenderer",
+    "core.MixinLevelRendererAccessor",
     "core.MixinMinecraftClient",
     "core.MixinMusic",
     "core.MixinParticle",

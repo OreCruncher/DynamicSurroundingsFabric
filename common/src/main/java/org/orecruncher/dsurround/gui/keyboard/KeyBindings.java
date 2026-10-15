@@ -8,6 +8,7 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.eventing.IClientTickEnd;
 import org.orecruncher.dsurround.gui.overlay.DiagnosticsOverlay;
+import org.orecruncher.dsurround.gui.overlay.lightlevel.LightLevelOverlay;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
@@ -47,6 +48,12 @@ public final class KeyBindings {
                 "diagnosticHud",
                 InputConstants.UNKNOWN.getValue(),
                 () -> ContainerManager.resolve(DiagnosticsOverlay.class).toggleCollection()
+        );
+
+        registerKeyBinding(
+                "lightLevelHud",
+                InputConstants.UNKNOWN.getValue(),
+                () -> ContainerManager.resolve(LightLevelOverlay.class).toggle()
         );
 
         IClientTickEnd.EVENT.register(KeyBindings::handleMenuKeyPress);
