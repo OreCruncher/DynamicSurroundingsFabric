@@ -19,6 +19,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Helped with integrating Simple Voice Chat
 * Used to extend steam and flame jet effects, adding additional particles, shader, and lighting where appropriate
 * Rebuilt the clock overlay to use an old pocket watch texture with embedded indicators for diurnal cycle, seasons or mooon phase (depending on if Serene Seasons is installed)
+  * Added the option to show the compass and pocket watch in a side or corner of the screen
 * Integrated older compass rose textures as possible selections for the compass, and cleaning up the textures
 * Identified root causes of several issues and help with the fix
 
@@ -54,6 +55,12 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * A window above VI shows the season when Serene Seasons is installed, or the moon's phase without it
   * Clock style option in Compass and Clock Options: text, pocket watch, or both; the Render scaling option applies to it as well
 * The compass and clock on/off switches are now a NONE choice in their styles; a switch that was off carries over as NONE
+* Option to show the compass and pocket watch in a side or corner of the screen while one is in the hot bar or off hand, rather than above the crosshair while held
+  * Show in screen margin option in Compass and Clock Options turns it on; Screen margin position picks one of the four sides or four corners (left by default)
+  * Shown together, they sit one above the other on the sides and corners, and side by side at the top and bottom
+  * The compass rose is upright there, turning with your heading; the compass band is drawn at half size
+  * Clock text is still shown only while a clock is held
+* The compass band texture is now smoothed, so it no longer flickers as it slides at small sizes
 * [Experimental] Ground fog in swamps and spooky biomes like Dark Forest and BOPs Ominous Forest
   * Heavy rains can thin it out, higher density between midnight and morning
   * Wind can shift the drift direction and speed

@@ -28,7 +28,8 @@ import org.orecruncher.dsurround.tags.ItemEffectTags;
 /**
  * Shows the time while a clock is held or looked at in an item frame: as text above the hot bar, or as a pocket
  * watch above the crosshair: its hands at the time, a dome window under twelve showing day or night (as Minecraft's
- * clock does), and a window above six showing the season (or, without a seasons mod, the moon's phase).
+ * clock does), and a window above six showing the season (or, without a seasons mod, the moon's phase). With the
+ * margin option the watch is shown in a side or corner of the screen instead, while a clock is in the hot bar.
  */
 public final class ClockOverlay extends AbstractOverlay {
 
@@ -72,6 +73,8 @@ public final class ClockOverlay extends AbstractOverlay {
     // Space between the bottom of the watch and the crosshair, and between the watch and the compass beside it
     private static final float CROSSHAIR_GAP = 10F;
     private static final float COMPASS_GAP = 8F;
+    // In the margin the watch is smaller: 64 GUI pixels across at a scale of 1
+    private static final float MARGIN_WATCH_DRAW_SCALE = 0.5F;
 
     // The season disc turns a quarter per season; early and late turn it a third of that either side, so the
     // icon is arriving or leaving the window. The moon disc turns an eighth per phase. Both ease to a new position
@@ -89,16 +92,18 @@ public final class ClockOverlay extends AbstractOverlay {
     private final ISeasonalInformation seasonalInformation;
     private final Configuration config;
     private final CompassOverlay compass;
+    private final MarginLayout marginLayout;
     private final MinecraftClock clock;
     private final ColorGradient gradient;
     private final ObjectArray<Component> clockDisplay = new ObjectArray<>(2);
-    private boolean showClock;
+    private boolean textShown;
     private ClockStyle style;
     private int renderWidth;
     private int renderHeight;
     private int color;
 
     private boolean watchShown;
+    private boolean inMargin;
     private float scale;
     private int side;
     private long lastDayTime;
@@ -107,41 +112,49 @@ public final class ClockOverlay extends AbstractOverlay {
     private float lastDiscAngle;
     private float discAngle;
 
-    public ClockOverlay(Configuration config, ITagLibrary tagLibrary, ISeasonalInformation seasonalInformation, CompassOverlay compass) {
+    public ClockOverlay(Configuration config, ITagLibrary tagLibrary, ISeasonalInformation seasonalInformation, CompassOverlay compass, MarginLayout marginLayout) {
         this.tagLibrary = tagLibrary;
         this.seasonalInformation = seasonalInformation;
         this.config = config;
         this.compass = compass;
+        this.marginLayout = marginLayout;
         this.clock = new MinecraftClock();
         this.gradient = new ColorGradient(ColorPalette.DARK_VIOLET, ColorPalette.SUN_GLOW, 180F);
-        this.showClock = false;
         this.style = this.config.compassAndClockOptions.clockStyle;
     }
 
     public void tick(Minecraft client) {
         boolean watchWasShown = this.watchShown;
-        this.showClock = false;
+        this.textShown = false;
         this.watchShown = false;
+        this.inMargin = this.config.compassAndClockOptions.showInMargin;
 
         this.style = this.config.compassAndClockOptions.clockStyle;
         if (this.style.isShown() && GameUtils.isInGame()) {
             var player = GameUtils.getPlayer().orElseThrow();
             var mainHandShow = this.doShowClock(player.getMainHandItem());
             var offHandShow = this.doShowClock(player.getOffhandItem());
+            var held = mainHandShow || offHandShow || this.doShowClock(GameUtils.getMC().crosshairPickEntity);
 
-            this.showClock = mainHandShow || offHandShow || this.doShowClock(GameUtils.getMC().crosshairPickEntity);
-            if (!this.showClock)
-                return;
-
-            if (this.style.showText())
+            // The text stays with holding the clock; in the margin the watch shows while one is in the hot bar
+            if (held && this.style.showText()) {
                 this.tickText(player);
-            if (this.style.showWatch()) {
+                this.textShown = true;
+            }
+            if (this.style.showWatch() && (held || this.inMargin && MarginLayout.carries(player, this::doShowClock))) {
                 // Beside the compass, if it is showing, on the side of the hand holding the clock
                 var arm = mainHandShow ? player.getMainArm() : offHandShow ? player.getMainArm().getOpposite() : HumanoidArm.RIGHT;
                 this.side = arm == HumanoidArm.RIGHT ? 1 : -1;
                 this.tickWatch(player, !watchWasShown);
                 this.watchShown = true;
             }
+        }
+
+        if (this.watchShown && this.inMargin) {
+            float size = WATCH_SIZE * this.scale * MARGIN_WATCH_DRAW_SCALE;
+            this.marginLayout.setWatch(size, size);
+        } else {
+            this.marginLayout.setWatch(0F, 0F);
         }
     }
 
@@ -292,24 +305,30 @@ public final class ClockOverlay extends AbstractOverlay {
 
     @Override
     public void render(GuiGraphics context, float partialTick) {
-        if (!this.showClock)
-            return;
-
-        if (this.watchShown)
-            this.renderWatch(context, partialTick);
-        if (this.style.showText())
+        if (this.watchShown) {
+            if (this.inMargin) {
+                // The placement is the watch's center; the dial is below it
+                float size = this.scale * MARGIN_WATCH_DRAW_SCALE;
+                var placement = this.marginLayout.place(this.config.compassAndClockOptions.marginPosition, context.guiWidth(), context.guiHeight());
+                this.renderWatch(context, partialTick, placement.watchX(), placement.watchY() + (DIAL_Y - WATCH_SIZE / 2F) * size, size);
+            } else {
+                // Above the crosshair, its bottom just clear of it; beside the compass if that is showing
+                float size = this.scale * WATCH_DRAW_SCALE;
+                float x = context.guiWidth() / 2F;
+                if (this.compass.isShowing())
+                    x += this.side * (this.compass.halfWidth() + COMPASS_GAP + WATCH_SIZE * size / 2F);
+                float y = context.guiHeight() / 2F - CROSSHAIR_GAP - (WATCH_SIZE - DIAL_Y) * size * WATCH_TILT;
+                this.renderWatch(context, partialTick, x, y, size);
+            }
+        }
+        if (this.textShown)
             this.renderText(context);
     }
 
-    private void renderWatch(GuiGraphics context, float partialTick) {
-        float size = this.scale * WATCH_DRAW_SCALE;
-
-        // Above the crosshair, its bottom just clear of it; beside the compass if that is showing
-        float x = context.guiWidth() / 2F;
-        if (this.compass.isShowing())
-            x += this.side * (this.compass.halfWidth() + COMPASS_GAP + WATCH_SIZE * size / 2F);
-        float y = context.guiHeight() / 2F - CROSSHAIR_GAP - (WATCH_SIZE - DIAL_Y) * size * WATCH_TILT;
-
+    /**
+     * Draws the watch with its dial's center at x, y
+     */
+    private void renderWatch(GuiGraphics context, float partialTick, float x, float y, float size) {
         var time = Mth.lerp(partialTick, (double) this.lastDayTime, (double) this.dayTime);
         float disc = Mth.rotLerp(partialTick, this.lastDiscAngle, this.discAngle);
         // The hands tick; the overshoot only while time runs, or a stopped clock would hold it

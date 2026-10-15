@@ -3,6 +3,7 @@ package org.orecruncher.dsurround;
 import org.orecruncher.dsurround.config.ClockStyle;
 import org.orecruncher.dsurround.config.CompassStyle;
 import org.orecruncher.dsurround.config.GroundFogQuality;
+import org.orecruncher.dsurround.config.MarginPosition;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.lib.config.Comment;
 import org.orecruncher.dsurround.lib.config.ConfigPlacement;
@@ -373,6 +374,14 @@ public class Configuration extends ConfigurationData {
         @Comment("Style of clock rendering, or NONE for no clock display")
         @MovedFrom(value = "compassAndClockOptions.enableClock", values = "false=NONE")
         public ClockStyle clockStyle = ClockStyle.POCKET_WATCH;
+
+        @Property
+        @Comment("Shows the compass and pocket watch in a side or corner of the screen while one is in the hot bar or off hand, rather than above the crosshair while held")
+        public boolean showInMargin = false;
+
+        @Property
+        @Comment("The side or corner of the screen for the compass and pocket watch when shown there")
+        public MarginPosition marginPosition = MarginPosition.LEFT;
 
         @Property
         @Comment("Scales the display by the specified amount")

@@ -16,7 +16,8 @@ import org.orecruncher.dsurround.tags.ItemEffectTags;
 
 /**
  * Shows a compass above the crosshair while a compass is held: a band that slides with the heading, or a rose
- * laid flat in front of the player that turns with it.
+ * laid flat in front of the player that turns with it. Or, with the margin option, in a side or corner of the
+ * screen while a compass is in the hot bar, the rose upright.
  */
 public final class CompassOverlay extends AbstractOverlay {
 
@@ -24,7 +25,8 @@ public final class CompassOverlay extends AbstractOverlay {
     private static final int CROSSHAIR_OFFSET = 60;
 
     // The texture is 512x512. Each style has two rows of bands: the first half of the heading on the first, the
-    // second half on the second.
+    // second half on the second. The rows touch and the texture is sampled smoothly (its .mcmeta), so a band is
+    // read half a texel in from its top and bottom, or its neighbors show along its edges.
     private static final int TEXTURE_SIZE = 512;
     private static final int HALF_TEXTURE_SIZE = TEXTURE_SIZE / 2;
     private static final int BAND_WIDTH = 65 * 2;
@@ -36,18 +38,25 @@ public final class CompassOverlay extends AbstractOverlay {
     private static final int ROSE_SIZE = 256;
     private static final float ROSE_DRAW_SCALE = 0.75F;
     private static final float ROSE_TILT = Mth.cos(65F * Mth.DEG_TO_RAD);
+    // In the margin the rose is upright, and smaller: 64 GUI pixels across at a scale of 1
+    private static final float MARGIN_ROSE_DRAW_SCALE = 0.25F;
+    // And the band at half size, about the width of the watch beside it
+    private static final float MARGIN_BAND_DRAW_SCALE = 0.5F;
 
     private final ITagLibrary tagLibrary;
     private final IDimensionInformation dimensionInformation;
     private final Configuration config;
+    private final MarginLayout marginLayout;
     private final CompassWobble wobbler;
     private boolean showCompass;
+    private boolean inMargin;
     private boolean spinRandomly;
     private float scale;
     private CompassStyle style;
 
-    public CompassOverlay(Configuration config, ITagLibrary tagLibrary, IDimensionInformation dimensionInformation) {
+    public CompassOverlay(Configuration config, ITagLibrary tagLibrary, IDimensionInformation dimensionInformation, MarginLayout marginLayout) {
         this.tagLibrary = tagLibrary;
+        this.marginLayout = marginLayout;
         this.dimensionInformation = dimensionInformation;
         this.config = config;
         this.wobbler = new CompassWobble();
@@ -59,23 +68,36 @@ public final class CompassOverlay extends AbstractOverlay {
     public void tick(Minecraft client) {
         this.showCompass = false;
         this.spinRandomly = false;
+        this.inMargin = this.config.compassAndClockOptions.showInMargin;
 
         this.style = this.config.compassAndClockOptions.compassStyle;
         if (this.style.isShown() && GameUtils.isInGame()) {
             this.scale = (float) this.config.compassAndClockOptions.scale;
 
             var player = GameUtils.getPlayer().orElseThrow();
-            var mainHandItem = player.getMainHandItem();
-            var offHandItem = player.getOffhandItem();
+            if (this.inMargin) {
+                // Spins unless one of the compasses carried works here
+                this.showCompass = MarginLayout.carries(player, this::doShowCompass);
+                this.spinRandomly = this.showCompass
+                        && !MarginLayout.carries(player, stack -> this.doShowCompass(stack) && !this.doCompassSpin(stack));
+            } else {
+                var mainHandItem = player.getMainHandItem();
+                var offHandItem = player.getOffhandItem();
 
-            var mainHandShow = this.doShowCompass(mainHandItem);
-            var offHandShow = this.doShowCompass(offHandItem);
-            this.showCompass = mainHandShow || offHandShow;
-            this.spinRandomly = shouldSpin(mainHandShow, mainHandShow && this.doCompassSpin(mainHandItem),
-                    offHandShow, offHandShow && this.doCompassSpin(offHandItem));
+                var mainHandShow = this.doShowCompass(mainHandItem);
+                var offHandShow = this.doShowCompass(offHandItem);
+                this.showCompass = mainHandShow || offHandShow;
+                this.spinRandomly = shouldSpin(mainHandShow, mainHandShow && this.doCompassSpin(mainHandItem),
+                        offHandShow, offHandShow && this.doCompassSpin(offHandItem));
+            }
 
             this.wobbler.update(player.level().getGameTime());
         }
+
+        if (this.showCompass && this.inMargin)
+            this.marginLayout.setCompass(this.width(), this.height());
+        else
+            this.marginLayout.setCompass(0F, 0F);
     }
 
     /**
@@ -87,17 +109,31 @@ public final class CompassOverlay extends AbstractOverlay {
     }
 
     /**
-     * Whether the compass is shown this tick: the pocket watch moves aside for it
+     * Whether the compass is shown above the crosshair this tick: the pocket watch moves aside for it
      */
     public boolean isShowing() {
-        return this.showCompass;
+        return this.showCompass && !this.inMargin;
     }
 
     /**
      * Half the compass's width on screen, from the center of the screen
      */
     public float halfWidth() {
-        return (this.style.isRose() ? ROSE_SIZE * ROSE_DRAW_SCALE : BAND_WIDTH) * this.scale / 2F;
+        return this.width() / 2F;
+    }
+
+    private float width() {
+        if (!this.style.isRose())
+            return BAND_WIDTH * this.bandScale();
+        return ROSE_SIZE * this.scale * (this.inMargin ? MARGIN_ROSE_DRAW_SCALE : ROSE_DRAW_SCALE);
+    }
+
+    private float height() {
+        return this.style.isRose() ? this.width() : BAND_HEIGHT * this.bandScale();
+    }
+
+    private float bandScale() {
+        return this.inMargin ? this.scale * MARGIN_BAND_DRAW_SCALE : this.scale;
     }
 
     private boolean doShowCompass(ItemStack stack) {
@@ -124,14 +160,23 @@ public final class CompassOverlay extends AbstractOverlay {
         // The transparent styles and the roses need blending; this version's blit doesn't set it up itself
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        if (this.style.isRose())
-            this.renderRose(context, rotation);
-        else
-            this.renderBand(context, rotation);
+        if (this.inMargin) {
+            var placement = this.marginLayout.place(this.config.compassAndClockOptions.marginPosition, context.guiWidth(), context.guiHeight());
+            if (this.style.isRose())
+                this.renderRose(context, rotation, placement.compassX(), placement.compassY(), this.scale * MARGIN_ROSE_DRAW_SCALE, 1F);
+            else
+                this.renderBand(context, rotation, placement.compassX() - this.width() / 2F, placement.compassY() - this.height() / 2F);
+        } else if (this.style.isRose()) {
+            // Centered where the band's center is, above the crosshair
+            this.renderRose(context, rotation, context.guiWidth() / 2F, (context.guiHeight() - CROSSHAIR_OFFSET) / 2F, this.scale * ROSE_DRAW_SCALE, ROSE_TILT);
+        } else {
+            // Centered horizontally, above the crosshair
+            this.renderBand(context, rotation, (context.guiWidth() - this.width()) / 2F, (context.guiHeight() - CROSSHAIR_OFFSET - this.height()) / 2F);
+        }
         RenderSystem.disableBlend();
     }
 
-    private void renderBand(GuiGraphics context, float rotation) {
+    private void renderBand(GuiGraphics context, float rotation, float x, float y) {
         // Which part of the band to show: the heading, as a position across the texture
         int u = Mth.floor(((rotation * TEXTURE_SIZE) / 360F) + 0.5D) & (TEXTURE_SIZE - 1);
         float v = this.style.getSpriteNumber() * (BAND_HEIGHT * 2);
@@ -140,32 +185,23 @@ public final class CompassOverlay extends AbstractOverlay {
             v += BAND_HEIGHT;
         }
 
-        // Centered horizontally, above the crosshair, at the configured scale
-        float x = (context.guiWidth() - BAND_WIDTH * this.scale) / 2F;
-        float y = (context.guiHeight() - CROSSHAIR_OFFSET - BAND_HEIGHT * this.scale) / 2F;
-
         var pose = context.pose();
         pose.pushPose();
         try {
             pose.translate(x, y, 0F);
-            pose.scale(this.scale, this.scale, 1F);
-            context.blit(this.style.getTexture(), 0, 0, u, v, BAND_WIDTH, BAND_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE);
+            pose.scale(this.bandScale(), this.bandScale(), 1F);
+            context.blit(this.style.getTexture(), 0, 0, BAND_WIDTH, BAND_HEIGHT, u, v + 0.5F, BAND_WIDTH, BAND_HEIGHT - 1, TEXTURE_SIZE, TEXTURE_SIZE);
         } finally {
             pose.popPose();
         }
     }
 
-    private void renderRose(GuiGraphics context, float rotation) {
-        // Centered where the band's center is, above the crosshair
-        float x = context.guiWidth() / 2F;
-        float y = (context.guiHeight() - CROSSHAIR_OFFSET) / 2F;
-        float size = this.scale * ROSE_DRAW_SCALE;
-
+    private void renderRose(GuiGraphics context, float rotation, float x, float y, float size, float tilt) {
         var pose = context.pose();
         pose.pushPose();
         try {
             pose.translate(x, y, 0F);
-            pose.scale(size, size * ROSE_TILT, 1F);
+            pose.scale(size, size * tilt, 1F);
             pose.mulPose(Axis.ZP.rotationDegrees(roseAngle(rotation)));
             context.blit(this.style.getTexture(), -ROSE_SIZE / 2, -ROSE_SIZE / 2, 0, 0, ROSE_SIZE, ROSE_SIZE, ROSE_SIZE, ROSE_SIZE);
         } finally {

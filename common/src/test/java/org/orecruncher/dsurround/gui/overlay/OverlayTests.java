@@ -5,7 +5,9 @@ import net.minecraft.server.Bootstrap;
 import net.minecraft.util.Mth;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.CompassStyle;
+import org.orecruncher.dsurround.config.MarginPosition;
 import org.orecruncher.dsurround.lib.gui.ColorGradient;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
@@ -209,6 +211,72 @@ public class OverlayTests {
         }
         assertEquals(target, angle, 0.001F);
         assertEquals(Math.round(ClockOverlay.SUB_SEASON_TURN / ClockOverlay.DISC_TURN_PER_TICK), ticks);
+    }
+
+    // ---- Screen margin ---------------------------------------------------------------------------------------
+
+    private static final float W = 640F;
+    private static final float H = 360F;
+    private static final float GAP = MarginLayout.EDGE_GAP;
+
+    @Test
+    void marginDefaultsToTheLeftSide() {
+        assertEquals(MarginPosition.LEFT, new Configuration().compassAndClockOptions.marginPosition);
+        assertFalse(new Configuration().compassAndClockOptions.showInMargin, "off unless asked for");
+    }
+
+    @Test
+    void leftSideStacksCompassAboveWatchAgainstTheEdge() {
+        var p = MarginLayout.place(MarginPosition.LEFT, W, H, 64F, 64F, 64F, 64F);
+        assertEquals(GAP + 32F, p.compassX(), 1e-4);
+        assertEquals(GAP + 32F, p.watchX(), 1e-4);
+        // Centered vertically as a group, the compass first
+        assertEquals(H / 2F, (p.compassY() + p.watchY()) / 2F, 1e-4);
+        assertEquals(64F + MarginLayout.ITEM_GAP, p.watchY() - p.compassY(), 1e-4);
+    }
+
+    @Test
+    void aloneEachIsCenteredOnTheSide() {
+        var compass = MarginLayout.place(MarginPosition.RIGHT, W, H, 64F, 64F, 0F, 0F);
+        assertEquals(W - GAP - 32F, compass.compassX(), 1e-4);
+        assertEquals(H / 2F, compass.compassY(), 1e-4);
+
+        var watch = MarginLayout.place(MarginPosition.RIGHT, W, H, 0F, 0F, 64F, 64F);
+        assertEquals(W - GAP - 32F, watch.watchX(), 1e-4);
+        assertEquals(H / 2F, watch.watchY(), 1e-4);
+    }
+
+    @Test
+    void narrowerItemHugsItsEdgeInAColumn() {
+        // A band (130 wide) over the watch, on the right: both against the right edge
+        var p = MarginLayout.place(MarginPosition.TOP_RIGHT, W, H, 130F, 24F, 64F, 64F);
+        assertEquals(W - GAP - 65F, p.compassX(), 1e-4);
+        assertEquals(W - GAP - 32F, p.watchX(), 1e-4);
+        assertEquals(GAP + 12F, p.compassY(), 1e-4);
+    }
+
+    @Test
+    void topAndBottomCenterSitSideBySide() {
+        var top = MarginLayout.place(MarginPosition.TOP, W, H, 64F, 64F, 64F, 64F);
+        assertEquals(GAP + 32F, top.compassY(), 1e-4);
+        assertEquals(top.compassY(), top.watchY(), 1e-4);
+        assertEquals(W / 2F, (top.compassX() + top.watchX()) / 2F, 1e-4);
+        assertTrue(top.compassX() < top.watchX(), "compass first");
+
+        // Clear of the hot bar
+        var bottom = MarginLayout.place(MarginPosition.BOTTOM, W, H, 64F, 64F, 64F, 64F);
+        assertEquals(H - MarginLayout.HOT_BAR_CLEARANCE - 32F, bottom.compassY(), 1e-4);
+    }
+
+    @Test
+    void everyPositionKeepsBothOnScreen() {
+        for (var position : MarginPosition.values()) {
+            var p = MarginLayout.place(position, W, H, 64F, 64F, 64F, 64F);
+            for (var c : new float[][]{{p.compassX(), p.compassY()}, {p.watchX(), p.watchY()}}) {
+                assertTrue(c[0] - 32F >= 0F && c[0] + 32F <= W, position + " x " + c[0]);
+                assertTrue(c[1] - 32F >= 0F && c[1] + 32F <= H, position + " y " + c[1]);
+            }
+        }
     }
 
     // ---- Diagnostics modes -----------------------------------------------------------------------------------
