@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:glass",
+    "minecraft:glass_pane",
+    "#c:glass_blocks/colorless",
+    "#c:glass_panes/colorless"
+  ]
+}

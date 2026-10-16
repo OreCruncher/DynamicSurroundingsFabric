@@ -180,7 +180,7 @@ public final class Landings {
         if (hit == null || !hit.getDirection().getAxis().isHorizontal())
             return;
         var state = level.getBlockState(hit.getBlockPos());
-        if (!this.tagLibrary.is(BlockEffectTags.RAIN_STREAKS, state))
+        if (!this.tagLibrary.is(BlockEffectTags.WINDOWS, state))
             return;
         this.startStreak(level, hit.getBlockPos(), hit.getDirection(), hit.getLocation(), field.landingSize(i), streaks, random);
     }
@@ -234,7 +234,7 @@ public final class Landings {
      */
     private @Nullable BlockPos findWindow(ClientLevel level, int x, int cameraY, int z) {
         for (int y = cameraY + WINDOW_SEED_HEIGHT; y >= cameraY - WINDOW_SEED_HEIGHT; y--) {
-            if (this.tagLibrary.is(BlockEffectTags.RAIN_STREAKS, level.getBlockState(this.scanPos.set(x, y, z))))
+            if (this.tagLibrary.is(BlockEffectTags.WINDOWS, level.getBlockState(this.scanPos.set(x, y, z))))
                 return this.scanPos.immutable();
         }
         return null;
@@ -268,7 +268,7 @@ public final class Landings {
     private void startStreak(ClientLevel level, BlockPos window, Direction side, Vec3 at, float size, WindowStreaks streaks, RandomSource random) {
         // Down the glass to where it ends: a drop runs down a window of several blocks, then drips off its bottom edge
         // or runs onto what is below
-        int bottomY = window.getY() - glassBelow(level, window, side, at, state -> this.tagLibrary.is(BlockEffectTags.RAIN_STREAKS, state));
+        int bottomY = window.getY() - glassBelow(level, window, side, at, state -> this.tagLibrary.is(BlockEffectTags.WINDOWS, state));
         boolean drips = dripsOff(level, at, side, bottomY);
         double bottom = bottomY + (drips ? WINDOW_DRIP_MARGIN : WINDOW_BOTTOM_MARGIN);
         int light = LevelRenderer.getLightColor(level, this.landingPos.setWithOffset(window, side));

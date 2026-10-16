@@ -4,6 +4,7 @@ import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.runtime.weather.Wind;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.processing.GroundFogHandler;
+import org.orecruncher.dsurround.processing.WindowFrostHandler;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WindService;
 
@@ -73,6 +74,35 @@ public class WeatherCommandHandler {
         var wasSet = handler.forced().isPresent();
         handler.clearForced();
         return Component.translatable(KEY + (wasSet ? "groundfog.clear.success" : "groundfog.clear.notset"));
+    }
+
+    public static Component frost(int percent) {
+        return frost(ContainerManager.resolve(WindowFrostHandler.class), percent);
+    }
+
+    public static Component frostStatus() {
+        return frostStatus(ContainerManager.resolve(WindowFrostHandler.class));
+    }
+
+    public static Component frostClear() {
+        return frostClear(ContainerManager.resolve(WindowFrostHandler.class));
+    }
+
+    static Component frostStatus(WindowFrostHandler handler) {
+        return handler.forced()
+                .map(frost -> Component.translatable(KEY + "frost.status.set", percent(frost)))
+                .orElseGet(() -> Component.translatable(KEY + "frost.status"));
+    }
+
+    static Component frost(WindowFrostHandler handler, int percent) {
+        handler.setForced(percent / 100F);
+        return Component.translatable(KEY + "frost.success", percent);
+    }
+
+    static Component frostClear(WindowFrostHandler handler) {
+        var wasSet = handler.forced().isPresent();
+        handler.clearForced();
+        return Component.translatable(KEY + (wasSet ? "frost.clear.success" : "frost.clear.notset"));
     }
 
     private static IWeatherSimulation simulation() {

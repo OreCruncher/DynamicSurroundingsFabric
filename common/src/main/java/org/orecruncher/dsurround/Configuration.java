@@ -493,6 +493,10 @@ public class Configuration extends ConfigurationData {
         public boolean enableWindowStreaks = true;
 
         @Property
+        @Comment("Frost forms on the outside of clear glass windows when it is cold")
+        public boolean enableWindowFrost = true;
+
+        @Property
         @Experimental
         @MovedFrom(value = "weatherOptions.enableGroundFog", values = "false=NONE")
         @Comment("Mist lying low over the ground in swamps and eerie biomes: off, or how finely it is drawn. Fast costs least; Fabulous costs several times Fancy")

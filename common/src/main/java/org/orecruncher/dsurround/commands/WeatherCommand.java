@@ -10,7 +10,8 @@ import org.orecruncher.dsurround.runtime.weather.Wind;
 
 /**
  * /dsweather shows the storm's strength; /dsweather strength 0-100 sets it, as a percent of full strength, until
- * /dsweather clear. /dsweather wind does the same for the wind.
+ * /dsweather clear. /dsweather wind does the same for the wind; groundfog and frost set the ground fog's thickness and
+ * the frost on windows.
  */
 class WeatherCommand extends AbstractClientCommand {
 
@@ -23,6 +24,7 @@ class WeatherCommand extends AbstractClientCommand {
     private static final String DIRECTION = "direction";
     private static final String DEGREES_PARAMETER = "degrees";
     private static final String GROUND_FOG = "groundfog";
+    private static final String FROST = "frost";
     // A full storm's wind is 100: thunderstorms and dust storms blow harder
     private static final int MAX_WIND_PERCENT = 300;
 
@@ -36,7 +38,8 @@ class WeatherCommand extends AbstractClientCommand {
                                         () -> WeatherCommandHandler.strength(IntegerArgumentType.getInteger(ctx, PERCENT_PARAMETER))))))
                 .then(subCommand(CLEAR, WeatherCommandHandler::clear))
                 .then(this.windCommand())
-                .then(this.groundFogCommand()));
+                .then(this.groundFogCommand())
+                .then(this.frostCommand()));
     }
 
     /**
@@ -50,6 +53,19 @@ class WeatherCommand extends AbstractClientCommand {
                         .executes(ctx -> this.execute(ctx,
                                 () -> WeatherCommandHandler.groundFog(IntegerArgumentType.getInteger(ctx, PERCENT_PARAMETER)))))
                 .then(subCommand(CLEAR, WeatherCommandHandler::groundFogClear));
+    }
+
+    /**
+     * /dsweather frost 0-100 gives every window that much frost, as a percent of the most; clear goes back to the
+     * weather's
+     */
+    private LiteralArgumentBuilder<ClientCommandRegistrationEvent.ClientCommandSourceStack> frostCommand() {
+        return ClientCommandRegistrationEvent.literal(FROST)
+                .executes(ctx -> this.execute(ctx, WeatherCommandHandler::frostStatus))
+                .then(ClientCommandRegistrationEvent.argument(PERCENT_PARAMETER, IntegerArgumentType.integer(0, 100))
+                        .executes(ctx -> this.execute(ctx,
+                                () -> WeatherCommandHandler.frost(IntegerArgumentType.getInteger(ctx, PERCENT_PARAMETER)))))
+                .then(subCommand(CLEAR, WeatherCommandHandler::frostClear));
     }
 
     /**

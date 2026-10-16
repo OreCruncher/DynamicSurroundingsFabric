@@ -50,6 +50,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Snowflakes lie where they land for a moment, then shrink and fade as they melt; blown by the wind into the side of a wall or tree trunk, they stick to it (Snow sticks to sides option in Weather Options)
   * Rain blown onto windows (glass blocks and panes) clings, then runs down the glass in short rushes, leaving a wet trail that dries, and drips off a bottom edge over open air; windows facing the wind and open to the sky get the most. Rain on windows option in Weather Options
   * For a while after rain stops, water drips from the lowest leaves of trees and from overhanging edges like eaves, less and less as things dry; edges drip while it rains too. Drips after rain option in Weather Options; works even with particle rain off
+  * In the cold, frost grows on the outside of clear glass windows, in from the window's edges, thickest before sunrise; the sun melts it from east facing windows in the morning and west facing ones in the evening. Frost on windows option in Weather Options; `/dsweather frost 0-100` sets it for testing
   * The weather system will auto disable if Particle Rain or Simple Weather is installed
 * Brought back the compass rose textures from older mod versions
   * There are 3 rose styles to choose from

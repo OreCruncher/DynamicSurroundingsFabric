@@ -10,6 +10,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.processing.FogHandler;
 import org.orecruncher.dsurround.processing.GroundFogHandler;
 import org.orecruncher.dsurround.processing.PrecipitationHandler;
+import org.orecruncher.dsurround.processing.WindowFrostHandler;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 
 /**
@@ -74,6 +75,15 @@ public class MixinHelpers {
 
     public static GroundFogHandler groundFog() {
         return GroundFogHolder.INSTANCE;
+    }
+
+    // Asked every frame to draw the frost on windows
+    private static final class WindowFrostHolder {
+        static final WindowFrostHandler INSTANCE = ContainerManager.resolve(WindowFrostHandler.class);
+    }
+
+    public static WindowFrostHandler windowFrost() {
+        return WindowFrostHolder.INSTANCE;
     }
 
 }

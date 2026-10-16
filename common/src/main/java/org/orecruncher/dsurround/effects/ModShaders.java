@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.effects;
 
 import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
+import org.orecruncher.dsurround.effects.frost.FrostRenderer;
 import org.orecruncher.dsurround.effects.particles.PointLights;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
@@ -23,7 +24,8 @@ public final class ModShaders {
             PrecipitationShaders.DAMP_SPOTS,
             GroundFogVolume.SHADER,
             GroundFogVolume.SMOOTH,
-            GroundFogVolume.COMPOSITE);
+            GroundFogVolume.COMPOSITE,
+            FrostRenderer.SHADER);
 
     private ModShaders() {
     }

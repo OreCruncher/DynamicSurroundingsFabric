@@ -194,7 +194,7 @@ public class RainOnWindowsTests {
 
     @Test
     void glassIsTaggedForStreaks() throws Exception {
-        try (var stream = RainOnWindowsTests.class.getResourceAsStream("/assets/dsurround/dsconfigs/tags/block/effects/rain_streaks.json")) {
+        try (var stream = RainOnWindowsTests.class.getResourceAsStream("/assets/dsurround/dsconfigs/tags/block/effects/windows.json")) {
             assertNotNull(stream);
             var json = com.google.gson.JsonParser.parseReader(new java.io.InputStreamReader(stream, java.nio.charset.StandardCharsets.UTF_8)).getAsJsonObject();
             var values = json.getAsJsonArray("values").toString();
