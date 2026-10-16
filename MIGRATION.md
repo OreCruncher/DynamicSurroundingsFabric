@@ -76,6 +76,10 @@ What changed to fit 26.2:
   `GroundFogField` does: moving looks up only the columns that came into the area, a few rows are looked at again each
   tick (all within `REFRESH_TICKS`) instead of the whole area every 10 ticks, and the rain, snow and dust shares and the
   regional dust colour are running totals.
+- **Drop vertices**: the falling drops (rain, snow, dust) are written straight into native memory by `ParticleQuads`
+  (vanilla's particle layout, packed as BufferBuilder packs it; `ParticleQuadsTests` compares the bytes) and drawn with
+  `MeshDraw.drawQuads`, instead of four BufferBuilder calls a corner. Snow flecks, window streaks and damp spots,
+  hundreds rather than thousands, still use BufferBuilder.
 - **Vanilla tags**: 26.2's `minecraft:dirt` no longer holds grass blocks, podzol, mycelium, moss or mud; they are in
   `grass_blocks`, `mud` and `moss_blocks`, all under `substrate_overworld`, which `rain_absorbing` (damp spots) and
   `BlockLibrary`'s acoustic seed tags now use. `minecraft:tall_flowers` is gone; `brush_step` lists its five flowers.

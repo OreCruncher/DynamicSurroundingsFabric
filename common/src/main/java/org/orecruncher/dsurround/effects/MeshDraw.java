@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.effects;
 
+import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -40,22 +41,35 @@ public final class MeshDraw implements AutoCloseable {
      */
     public void draw(MeshData mesh, RenderPipeline pipeline, RenderTarget target, Consumer<RenderPass> bind) {
         try (mesh) {
-            int indexCount = mesh.drawState().indexCount();
-            var buffer = this.upload(mesh.vertexBuffer());
-            var indices = RenderSystem.getSequentialBuffer(mesh.drawState().primitiveTopology());
-            var indexBuffer = indices.getBuffer(indexCount);
-            var transforms = RenderSystem.getDynamicUniforms().writeTransform(RenderSystem.getModelViewMatrixCopy());
+            this.draw(mesh.vertexBuffer(), mesh.drawState().indexCount(), mesh.drawState().primitiveTopology(), pipeline, target, bind);
+        }
+    }
 
-            try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder()
-                    .createRenderPass(() -> "Dynamic Surroundings " + this.name, target.getColorTextureView(), Optional.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
-                pass.setPipeline(pipeline);
-                RenderSystem.bindDefaultUniforms(pass);
-                pass.setUniform("DynamicTransforms", transforms);
-                bind.accept(pass);
-                pass.setVertexBuffer(0, buffer.slice());
-                pass.setIndexBuffer(indexBuffer, indices.type());
-                pass.drawIndexed(indexCount, 1, 0, 0, 0);
-            }
+    /**
+     * Draws quads already laid out in memory, as {@code pipeline}'s vertex format has them
+     *
+     * @param vertexCount how many corners there are: four a quad
+     */
+    public void drawQuads(ByteBuffer vertices, int vertexCount, RenderPipeline pipeline, RenderTarget target, Consumer<RenderPass> bind) {
+        if (vertexCount > 0)
+            this.draw(vertices, vertexCount / 4 * 6, PrimitiveTopology.QUADS, pipeline, target, bind);
+    }
+
+    private void draw(ByteBuffer vertices, int indexCount, PrimitiveTopology topology, RenderPipeline pipeline, RenderTarget target, Consumer<RenderPass> bind) {
+        var buffer = this.upload(vertices);
+        var indices = RenderSystem.getSequentialBuffer(topology);
+        var indexBuffer = indices.getBuffer(indexCount);
+        var transforms = RenderSystem.getDynamicUniforms().writeTransform(RenderSystem.getModelViewMatrixCopy());
+
+        try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder()
+                .createRenderPass(() -> "Dynamic Surroundings " + this.name, target.getColorTextureView(), Optional.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
+            pass.setPipeline(pipeline);
+            RenderSystem.bindDefaultUniforms(pass);
+            pass.setUniform("DynamicTransforms", transforms);
+            bind.accept(pass);
+            pass.setVertexBuffer(0, buffer.slice());
+            pass.setIndexBuffer(indexBuffer, indices.type());
+            pass.drawIndexed(indexCount, 1, 0, 0, 0);
         }
     }
 

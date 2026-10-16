@@ -32,6 +32,7 @@ import org.orecruncher.dsurround.effects.precipitation.DropScales;
 import org.orecruncher.dsurround.effects.precipitation.IColumnSource;
 import org.orecruncher.dsurround.effects.precipitation.Landings;
 import org.orecruncher.dsurround.effects.precipitation.LevelColumns;
+import org.orecruncher.dsurround.effects.precipitation.ParticleQuads;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationField;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
 import org.orecruncher.dsurround.effects.precipitation.RainColor;
@@ -105,6 +106,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private final LevelColumns columns;
     // Drawing: made on first use, on the render thread
     private ByteBufferBuilder meshBytes;
+    private final ParticleQuads quads = new ParticleQuads();
     private final MeshDraw dampSpotDraw = new MeshDraw("damp spots");
     private final MeshDraw dustDraw = new MeshDraw("dust");
     private final MeshDraw dropDraw = new MeshDraw("rain and snow");
@@ -309,12 +311,13 @@ public class PrecipitationHandler extends AbstractClientHandler {
             var depthSource = fabulous ? GameUtils.getMC().levelRenderer.translucentTarget() : target;
             boolean isSoft = soft.isUsable() && depthSource != null && SoftParticles.captureDepth(depthSource);
             var dustPipeline = isSoft ? soft.pipeline() : pipeline;
-            this.field.draw(this.meshBytes, mesh -> this.dustDraw.draw(mesh, dustPipeline, target, pass -> {
+            this.field.draw(this.quads, camera, partialTick, true, flakes, largest, dust, scales, rainColor);
+            this.dustDraw.drawQuads(this.quads.vertices(), this.quads.vertexCount(), dustPipeline, target, pass -> {
                 pass.bindTexture("Sampler0", atlas.getTextureView(), atlas.getSampler());
                 pass.bindTexture("Sampler2", lightmap, lightmapSampler);
                 if (isSoft)
                     SoftParticles.bindSoftDepth(pass);
-            }), camera, partialTick, true, flakes, largest, dust, scales, rainColor);
+            });
         }
 
         // The rain is untextured; the snow is cut from the game's snow texture
@@ -323,7 +326,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
             pass.bindTexture("Sampler0", snow.getTextureView(), snow.getSampler());
             pass.bindTexture("Sampler2", lightmap, lightmapSampler);
         };
-        this.field.draw(this.meshBytes, mesh -> this.dropDraw.draw(mesh, pipeline, target, bind), camera, partialTick, false, flakes, largest, dust, scales, rainColor);
+        this.field.draw(this.quads, camera, partialTick, false, flakes, largest, dust, scales, rainColor);
+        this.dropDraw.drawQuads(this.quads.vertices(), this.quads.vertexCount(), pipeline, target, bind);
         this.snowFlecks.draw(this.meshBytes, mesh -> this.fleckDraw.draw(mesh, pipeline, target, bind), camera, partialTick, flakes, largest, scales.snow());
         this.windowStreaks.draw(this.meshBytes, mesh -> this.streakDraw.draw(mesh, pipeline, target, bind), camera, partialTick, rainColor);
     }

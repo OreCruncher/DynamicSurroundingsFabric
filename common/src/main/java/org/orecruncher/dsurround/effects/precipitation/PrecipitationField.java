@@ -2,15 +2,12 @@ package org.orecruncher.dsurround.effects.precipitation;
 
 import org.orecruncher.dsurround.runtime.weather.Wind;
 
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
-import com.mojang.blaze3d.vertex.MeshData;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * The rain drops, snowflakes and dust falling or blowing around the camera. How many there are follows the rain
@@ -676,8 +673,8 @@ public final class PrecipitationField {
     }
 
     /**
-     * Draws the drops with the current shader, which should be {@link PrecipitationShaders#DROPS}, and the particle
-     * atlas bound. Render thread only.
+     * Writes the drops into {@code quads}, for drawing with {@link PrecipitationShaders#DROPS} (or the dust's
+     * pipeline). Render thread only.
      *
      * @param dustOnly   true to draw just the dust, false to draw just the rain and snow
      * @param snowflakes the flakes of the snow texture to choose from, or none to draw plain flakes
@@ -685,9 +682,9 @@ public final class PrecipitationField {
      * @param dust       the dust sprites to choose from
      * @param scales     how big rain and snow are drawn, from the player's settings
      */
-    public void draw(ByteBufferBuilder bytes, Consumer<MeshData> drawer, Camera camera, float partialTick, boolean dustOnly, List<Snowflakes.Flake> snowflakes,
+    public void draw(ParticleQuads quads, Camera camera, float partialTick, boolean dustOnly, List<Snowflakes.Flake> snowflakes,
                      int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
-        PrecipitationRenderer.draw(this, bytes, drawer, camera, partialTick, dustOnly, snowflakes, largest, dust, scales, rainColor);
+        PrecipitationRenderer.draw(this, quads, camera, partialTick, dustOnly, snowflakes, largest, dust, scales, rainColor);
     }
 
     /**
