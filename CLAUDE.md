@@ -76,7 +76,9 @@ checking in game.
 - The user commits; don't commit unless asked.
 
 ## Branches
-- `OreCruncher/0.4.6`: the 1.21.1 line. Later 1.21.1 changes are ported here by merging that branch in and resolving
-  against 26.2's APIs, as was done for 0.4.6 (see `MIGRATION.md`).
-- `OreCruncher/26.2`: the original 26.2 port of 0.4.5 (NeoForge 26.2.0.82, Architectury 21.1.10, Cloth Config
-  26.2.155). NeoForge 26.2's client launch class is `net.neoforged.fml.startup.Client`.
+- `main`: the 1.21.1 line (0.4.6 was squash-merged as `4808dca`; each 1.21.1 release branches from `main`). `main` is
+  merged into this branch as of `4808dca`, so `git diff $(git merge-base main OreCruncher/26.2) main` lists the 1.21.1
+  changes still to port. Port them by merging `main` in and resolving against 26.2's APIs (see `MIGRATION.md`); never
+  rebase this branch.
+- `OreCruncher/26.2`: the 26.2 port, started from 0.4.5 and carrying 0.4.6 (NeoForge 26.2.0.82, Architectury 21.1.10,
+  Cloth Config 26.2.155). NeoForge 26.2's client launch class is `net.neoforged.fml.startup.Client`.
