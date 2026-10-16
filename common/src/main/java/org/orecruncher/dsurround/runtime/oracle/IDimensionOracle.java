@@ -40,4 +40,19 @@ public interface IDimensionOracle {
      * Indicates whether the world is super flat
      */
     boolean isSuperFlat();
+
+    /**
+     * Whether the mod's particle rain, snow and dust storms are drawn here, in place of the dimension's own weather
+     */
+    boolean particleWeather();
+
+    /**
+     * Whether the wind blows here
+     */
+    boolean simulateWind();
+
+    /**
+     * Whether mist lies on the ground here, in the biomes given it
+     */
+    boolean groundFog();
 }

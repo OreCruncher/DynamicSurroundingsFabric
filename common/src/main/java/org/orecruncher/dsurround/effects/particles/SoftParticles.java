@@ -7,6 +7,7 @@ import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.pipeline.BindGroupLayout;
 import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.platform.BlendFactor;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
@@ -52,6 +53,8 @@ public final class SoftParticles {
             .withSampler(DEPTH_SAMPLER)
             .build();
 
+    // Light added to what is behind, as much as the particle is opaque
+    private static final BlendFunction ADDITIVE = new BlendFunction(BlendFactor.SRC_ALPHA, BlendFactor.ONE);
     // Vanilla's translucent particles, with depth writes off so the puffs don't hide each other
     private static final DepthStencilState TEST_ONLY = new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false);
 
@@ -66,10 +69,27 @@ public final class SoftParticles {
     // The same, drawn the vanilla way
     private static final RenderPipeline MIST_FALLBACK_PIPELINE = particlePipeline("pipeline/waterfall_mist_vanilla", null).build();
 
+    /**
+     * Tongues of flame, sparks and molten droplets: soft, with a shorter fade (0.3 blocks), and adding their light to
+     * what is behind them, so overlapping flames burn brighter.
+     */
+    private static final RenderPipeline FLAME_PIPELINE = particlePipeline("pipeline/flame", Constants.asId("core/soft_particle"))
+            .withShaderDefine("SOFT_DISTANCE", 0.3F)
+            .withBindGroupLayout(SOFT_PARTICLE_LAYOUT)
+            .withColorTargetState(new ColorTargetState(ADDITIVE))
+            .build();
+    // The same, drawn the vanilla way
+    private static final RenderPipeline FLAME_FALLBACK_PIPELINE = particlePipeline("pipeline/flame_vanilla", null)
+            .withColorTargetState(new ColorTargetState(ADDITIVE))
+            .build();
+
     public static final ModShader SHADER = new ModShader(MIST_PIPELINE, "soft particles", "particles will be drawn without it", Library.LOGGER);
+    public static final ModShader FLAME_SHADER = new ModShader(FLAME_PIPELINE, "soft flames", "flames will be drawn without it", Library.LOGGER);
 
     public static final SingleQuadParticle.Layer WATERFALL_MIST = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, MIST_PIPELINE);
     public static final SingleQuadParticle.Layer WATERFALL_MIST_FALLBACK = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, MIST_FALLBACK_PIPELINE);
+    public static final SingleQuadParticle.Layer FLAME = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, FLAME_PIPELINE);
+    public static final SingleQuadParticle.Layer FLAME_FALLBACK = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, FLAME_FALLBACK_PIPELINE);
 
     // The copy of the scene's depth the shaders read; can't be the depth buffer being drawn to
     @Nullable
@@ -106,10 +126,18 @@ public final class SoftParticles {
     }
 
     /**
-     * The layer for waterfall mist: soft if the shader can be used, otherwise drawn the vanilla way.
+     * The layer for puffs of mist, steam and smoke: soft if the shader can be used, otherwise drawn the vanilla way.
      */
     public static SingleQuadParticle.Layer mistLayer() {
         return SHADER.isUsable() ? WATERFALL_MIST : WATERFALL_MIST_FALLBACK;
+    }
+
+    /**
+     * The layer for flames, sparks and molten droplets: soft if the shader can be used, otherwise drawn the vanilla
+     * way; either way adding their light.
+     */
+    public static SingleQuadParticle.Layer flameLayer() {
+        return FLAME_SHADER.isUsable() ? FLAME : FLAME_FALLBACK;
     }
 
     /**
@@ -119,7 +147,7 @@ public final class SoftParticles {
      */
     public static void captureSceneDepth(RenderTarget target) {
         depthCaptured = false;
-        if (!SHADER.isUsable() && !FireflyLights.isActive())
+        if (!SHADER.isUsable() && !FLAME_SHADER.isUsable() && !PointLights.isActive())
             return;
         SHADER.run(() -> {
             var copy = depthCopyFor(target);
@@ -153,6 +181,8 @@ public final class SoftParticles {
     public static RenderPipeline choosePipeline(RenderPipeline pipeline) {
         if (pipeline == MIST_PIPELINE && !hasSceneDepth())
             return MIST_FALLBACK_PIPELINE;
+        if (pipeline == FLAME_PIPELINE && !hasSceneDepth())
+            return FLAME_FALLBACK_PIPELINE;
         return pipeline;
     }
 
@@ -160,7 +190,7 @@ public final class SoftParticles {
      * Called once a particle layer's pipeline is set; binds what a soft pipeline needs.
      */
     public static void bind(RenderPass pass, RenderPipeline pipeline) {
-        if (pipeline == MIST_PIPELINE) {
+        if (pipeline == MIST_PIPELINE || pipeline == FLAME_PIPELINE) {
             bindSceneDepth(pass);
             pass.setUniform(SOFT_PARTICLE_INFO, depthInfo.currentBuffer());
         }

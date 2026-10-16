@@ -7,7 +7,7 @@ import com.mojang.blaze3d.systems.RenderPass;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.feature.FeatureFrameContext;
 import net.minecraft.client.renderer.feature.QuadParticleFeatureRenderer;
-import org.orecruncher.dsurround.effects.particles.FireflyLights;
+import org.orecruncher.dsurround.effects.particles.PointLights;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,7 +24,7 @@ public class MixinQuadParticleFeatureRenderer {
 
     /**
      * Before translucent particles are drawn, and outside their render pass: copy the scene's depth, and draw the
-     * firefly lights, so the fireflies drawn next are on top of their own light.
+     * point lights, so the fireflies and flames drawn next are on top of their own light.
      */
     @Inject(method = "executeGroup(Lnet/minecraft/client/renderer/feature/FeatureFrameContext;ILjava/util/List;Z)V", at = @At("HEAD"))
     private void dsurround$beforeGroup(FeatureFrameContext context, int groupIndex, List<QuadParticleFeatureRenderer.Submit> submits, boolean strictlyOrdered, CallbackInfo ci) {
@@ -35,7 +35,7 @@ public class MixinQuadParticleFeatureRenderer {
         var particleTarget = minecraft.levelRenderer.particlesTarget();
         var target = particleTarget != null ? particleTarget : minecraft.gameRenderer.mainRenderTarget();
         SoftParticles.captureSceneDepth(target);
-        FireflyLights.draw(target);
+        PointLights.draw(target);
     }
 
     /**

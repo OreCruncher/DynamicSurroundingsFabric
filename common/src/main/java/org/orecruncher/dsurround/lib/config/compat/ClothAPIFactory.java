@@ -7,7 +7,11 @@ import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.impl.builders.FieldBuilder;
 import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.FontDescription;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -20,8 +24,10 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.gui.GuiHelpers;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Builds a Cloth Config screen for a configuration from its specification.
@@ -44,10 +50,21 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
     private static final Style PROPERTY_STYLE = Style.EMPTY.withColor(ColorPalette.WHEAT);
     private static final Style TOOLTIP_STYLE = Style.EMPTY.withColor(ColorPalette.SEASHELL);
     private static final Style RESTART_STYLE = Style.EMPTY.withColor(ColorPalette.RED);
+    private static final Style EXPERIMENTAL_STYLE = Style.EMPTY.withColor(ColorPalette.ORCHID);
+    private static final Style LINK_STYLE = Style.EMPTY.withColor(ColorPalette.MC_AQUA).withUnderlined(true);
+    // A chain link drawn by the mod's own font (assets/dsurround/font/icons.json), so it is text Cloth draws with
+    // the name, and resource packs can replace it.
+    private static final Style LINK_ICON_STYLE = Style.EMPTY.withColor(ColorPalette.MC_AQUA).withFont(new FontDescription.Resource(Identifier.parse("dsurround:icons")));
+    private static final String LINK_ICON = "\uE000";
     private static final int TOOLTIP_WIDTH = 300;
+
+    // The documentation's page for the config file. Each group has a section headed with its name in the file, which
+    // ReadTheDocs turns into an anchor in lower case.
+    private static final String DOCS_URL = "https://dynamic-surroundings.readthedocs.io/en/latest/config/modconfiguration.html";
 
     private static final Component CLIENT_RESTART_REQUIRED = Component.translatable("dsurround.config.tooltip.clientRestartRequired").withStyle(RESTART_STYLE);
     private static final Component WORLD_RESTART_REQUIRED = Component.translatable("dsurround.config.tooltip.worldRestartRequired").withStyle(RESTART_STYLE);
+    private static final Component EXPERIMENTAL = Component.translatable("dsurround.config.tooltip.experimental");
     // Use a string with a single space as an empty line. Some config UI frameworks elide Component.empty() entries
     // and the tooltip logic uses empty lines as part of its formatting.
     private static final Component EMPTY_LINE = Component.literal(" ");
@@ -77,6 +94,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
 
         ConfigCategory root = builder.getOrCreateCategory(title);
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
+        root.addEntry(docsLink(entryBuilder, "dsurround.config.docs.page", DOCS_URL));
         for (var prop : this.configData.getSpecification()) {
             if (prop instanceof ConfigElement.PropertyGroup group) {
                 root.addEntry(this.generate(entryBuilder, group, this.configData).build());
@@ -90,9 +108,14 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
     }
 
     private SubCategoryBuilder generate(ConfigEntryBuilder builder, ConfigElement.PropertyGroup propertyGroup, Object instance) {
+        // The name ends with a link to the group's documentation. Cloth doesn't act on clicks in a group's name, so
+        // MixinClothCategoryLabelWidget does.
+        var name = text(propertyGroup.getLanguageKey(), nameStyle(propertyGroup, GROUP_STYLE))
+                .append(" ")
+                .append(Component.literal(LINK_ICON).withStyle(linkStyle(LINK_ICON_STYLE, docsUrl(propertyGroup))));
         SubCategoryBuilder categoryBuilder = builder
-                .startSubCategory(text(propertyGroup.getLanguageKey(), styleOr(propertyGroup.getTextStyle(), GROUP_STYLE)))
-                .setTooltip(wrap(propertyGroup.getTooltip(TOOLTIP_STYLE)).toArray(new Component[0]));
+                .startSubCategory(name)
+                .setTooltip(description(propertyGroup).toArray(new Component[0]));
 
         // Can't have categories within categories, so we ignore the case of where a config is set up that way
         for (var prop : propertyGroup.getChildren()) {
@@ -110,7 +133,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
     private @Nullable FieldBuilder<?, ? extends AbstractConfigListEntry<?>, ?> generate(ConfigEntryBuilder builder, ConfigElement.PropertyValue<?> pv, Object instance) {
         FieldBuilder<?, ? extends AbstractConfigListEntry<?>, ?> fieldBuilder = null;
 
-        var name = text(pv.getLanguageKey(), styleOr(pv.getTextStyle(), PROPERTY_STYLE));
+        var name = text(pv.getLanguageKey(), nameStyle(pv, PROPERTY_STYLE));
         var tooltip = tooltip(pv);
 
         switch (pv) {
@@ -170,6 +193,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
                     .setSaveConsumer(value -> v.setValue(instance, value));
             case ConfigElement.EnumValue v -> fieldBuilder = builder
                     .startEnumSelector(name, (Class<Enum<?>>) v.getEnumClass(), v.getValue(instance))
+                    .setEnumNameProvider(ConfigElement.EnumValue::displayName)
                     .setTooltip(tooltip)
                     .setDefaultValue(v.defaultValue())
                     .setSaveConsumer(value -> v.setValue(instance, value));
@@ -187,10 +211,34 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
     }
 
     /**
+     * A line of text that opens {@code url} when clicked, once the player confirms (Cloth asks with vanilla's link
+     * screen). Hovering shows the address.
+     */
+    private static AbstractConfigListEntry<?> docsLink(ConfigEntryBuilder builder, String key, String url) {
+        return builder.startTextDescription(Component.translatable(key).withStyle(linkStyle(LINK_STYLE, url))).build();
+    }
+
+    /**
+     * {@code style} made to open {@code url} when clicked, showing the address on hover.
+     */
+    private static Style linkStyle(Style style, String url) {
+        return style
+                .withClickEvent(new ClickEvent.OpenUrl(URI.create(url)))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal(url)));
+    }
+
+    /**
+     * The address of a group's section in the documentation.
+     */
+    private static String docsUrl(ConfigElement.PropertyGroup group) {
+        return DOCS_URL + "#" + group.fieldName().toLowerCase(Locale.ROOT);
+    }
+
+    /**
      * A property's tooltip: its description, default value, range, and whether a restart is needed.
      */
     private static Component[] tooltip(ConfigElement.PropertyValue<?> pv) {
-        var lines = wrap(pv.getTooltip(TOOLTIP_STYLE));
+        var lines = description(pv);
         lines.add(EMPTY_LINE);
         lines.add(pv.getDefaultValueTooltip());
 
@@ -209,14 +257,41 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
     }
 
     /**
+     * An element's description for its tooltip, followed by a notice if it is experimental. The list can be added to.
+     */
+    private static List<Component> description(ConfigElement<?> element) {
+        var lines = wrap(element.getTooltip(TOOLTIP_STYLE));
+        if (element.isExperimental()) {
+            lines.add(EMPTY_LINE);
+            lines.addAll(wrap(EXPERIMENTAL, EXPERIMENTAL_STYLE));
+        }
+        return lines;
+    }
+
+    /**
      * The text split into lines that fit a tooltip. The list can be added to.
      */
     private static List<Component> wrap(Component text) {
-        return new ArrayList<>(GuiHelpers.getTrimmedTextCollection(text, TOOLTIP_WIDTH, TOOLTIP_STYLE));
+        return wrap(text, TOOLTIP_STYLE);
     }
 
-    private static Component text(String key, Style style) {
+    /**
+     * The text split into lines that fit a tooltip, each in {@code style}. The list can be added to.
+     */
+    private static List<Component> wrap(Component text, Style style) {
+        return new ArrayList<>(GuiHelpers.getTrimmedTextCollection(text, TOOLTIP_WIDTH, style));
+    }
+
+    private static MutableComponent text(String key, Style style) {
         return Component.literal(Localization.load(key)).withStyle(style);
+    }
+
+    /**
+     * The style of an element's name: its own TextStyle if it has one, otherwise the experimental colour if it is
+     * experimental, otherwise {@code fallback}.
+     */
+    private static Style nameStyle(ConfigElement<?> element, Style fallback) {
+        return styleOr(element.getTextStyle(), element.isExperimental() ? EXPERIMENTAL_STYLE : fallback);
     }
 
     /**

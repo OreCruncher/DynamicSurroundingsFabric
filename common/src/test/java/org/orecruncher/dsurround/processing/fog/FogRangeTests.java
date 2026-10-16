@@ -6,6 +6,7 @@ import net.minecraft.client.renderer.fog.FogData;
 import org.joml.Vector4f;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.lib.compat.FogCompat;
+import org.orecruncher.dsurround.effects.precipitation.IColumnSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -147,6 +148,49 @@ public class FogRangeTests {
 
         assertEquals(11F, result.environmentalStart, 0.01F);
         assertTrue(result.environmentalEnd > 11F);
+    }
+
+    @Test
+    void dustStormsThickenTheFogUnderTheSky() {
+        assertEquals(1F, WeatherFogRangeCalculator.dustFogStrength(1F, 1F));
+        assertEquals(0.5F, WeatherFogRangeCalculator.dustFogStrength(0.5F, 1F));
+        assertEquals(0F, WeatherFogRangeCalculator.dustFogStrength(1F, 0F), "no dust fog away from the open sky");
+        assertEquals(0F, WeatherFogRangeCalculator.dustFogStrength(0F, 1F));
+    }
+
+    @Test
+    void dustTurnsTheFogItsColourAtTheFogsOwnBrightness() {
+        // A daytime blue-grey fog, turned all the way to sand: sand's hue, at the fog's brightness
+        var rgb = new float[]{0.6F, 0.7F, 0.8F};
+        WeatherFogRangeCalculator.tint(rgb, 0xF7E9A3, 1F);
+        assertEquals(0.8F, Math.max(rgb[0], Math.max(rgb[1], rgb[2])), 1e-4F, "kept the fog's brightness");
+        assertTrue(rgb[0] > rgb[1] && rgb[1] > rgb[2], "sandy: more red than green, more green than blue");
+
+        // At night the fog is dark, and so is the dust in it
+        var night = new float[]{0.02F, 0.02F, 0.05F};
+        WeatherFogRangeCalculator.tint(night, 0xF7E9A3, 1F);
+        assertTrue(Math.max(night[0], Math.max(night[1], night[2])) <= 0.05F + 1e-4F, "dust glowing at night");
+    }
+
+    @Test
+    void theFogTakesTheColourOfTheDustAroundThePlayer() {
+        // The puffs' colour, from the ground around, when dust is being drawn; the biome's otherwise
+        assertEquals(0xD87F33, WeatherFogRangeCalculator.fogDustColor(0xD87F33, 0xF7E9A3));
+        assertEquals(0xF7E9A3, WeatherFogRangeCalculator.fogDustColor(IColumnSource.NOT_A_DUST_SOURCE, 0xF7E9A3));
+    }
+
+    @Test
+    void dustTintsTheFogPartWay() {
+        var rgb = new float[]{0.6F, 0.7F, 0.8F};
+        WeatherFogRangeCalculator.tint(rgb, 0xF7E9A3, 0F);
+        assertArrayEquals(new float[]{0.6F, 0.7F, 0.8F}, rgb, "no dust, no change");
+
+        var half = new float[]{0.6F, 0.7F, 0.8F};
+        var full = new float[]{0.6F, 0.7F, 0.8F};
+        WeatherFogRangeCalculator.tint(half, 0xF7E9A3, 0.5F);
+        WeatherFogRangeCalculator.tint(full, 0xF7E9A3, 1F);
+        for (int i = 0; i < 3; i++)
+            assertEquals((0.6F + 0.1F * i + full[i]) / 2F, half[i], 1e-4F);
     }
 
     @Test

@@ -5,6 +5,7 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.orecruncher.dsurround.eventing.IClientTickEnd;
+import org.orecruncher.dsurround.gui.overlay.lightlevel.LightLevelOverlay;
 import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 
@@ -19,7 +20,8 @@ public final class OverlayManager {
         this.overlays = ImmutableList.of(
                 ContainerManager.resolve(DiagnosticsOverlay.class),
                 ContainerManager.resolve(CompassOverlay.class),
-                ContainerManager.resolve(ClockOverlay.class)
+                ContainerManager.resolve(ClockOverlay.class),
+                ContainerManager.resolve(LightLevelOverlay.class)
         );
 
         IClientTickEnd.EVENT.register(this::tick);

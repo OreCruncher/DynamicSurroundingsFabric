@@ -19,14 +19,16 @@ import org.orecruncher.dsurround.lib.time.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.compat.IrisCompat;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 
 /**
  * Auroras: on some nights, over cold places, curtains of light in the sky.
  * <p>
  * Whether a night has one, and what it looks like, comes from the night's number, so everyone in a world sees the
  * same aurora. It shows in the Overworld from sunset through the night, while the player is in a cold biome, and
- * fades in and out rather than appearing at once. It shows less as the sky brightens and in rain. It isn't drawn
- * while an Iris shader pack is in use, as the pack replaces the sky rendering.
+ * fades in and out rather than appearing at once. It shows less as the sky brightens, in rain (as much as the storm is
+ * strong: a drizzle dims it, a downpour hides it), and in fog, as the stars do. It isn't drawn while an Iris shader
+ * pack is in use, as the pack replaces the sky rendering.
  */
 public class AuroraHandler extends AbstractClientHandler {
 
@@ -35,8 +37,14 @@ public class AuroraHandler extends AbstractClientHandler {
     // Game ticks wrap at this for the shader's time, keeping it precise as a float; the jump comes every 14.5 hours
     private static final long TIME_WRAP = (1L << 20) - 1;
     private static final long TICKS_PER_DAY = 24000L;
+    // How far the sky's fog reaches, as a share of the usual (the render distance): the aurora is hidden once the fog
+    // has closed in to the first, and shows fully from the second
+    static final float FOG_HIDES_AT = 0.3F;
+    static final float FOG_CLEAR_AT = 0.9F;
 
     private final IBiomeLibrary biomeLibrary;
+    private final IWeatherSimulation weatherSimulation;
+    private final FogHandler fogHandler;
 
     @Nullable
     private Aurora aurora;
@@ -44,9 +52,11 @@ public class AuroraHandler extends AbstractClientHandler {
     private float prevStrength;
     private String status = "none";
 
-    public AuroraHandler(IBiomeLibrary biomeLibrary, Configuration config, IModLog logger) {
+    public AuroraHandler(IBiomeLibrary biomeLibrary, IWeatherSimulation weatherSimulation, FogHandler fogHandler, Configuration config, IModLog logger) {
         super("Aurora Handler", config, logger);
         this.biomeLibrary = biomeLibrary;
+        this.weatherSimulation = weatherSimulation;
+        this.fogHandler = fogHandler;
 
         ISkyRender.EVENT.register(this::renderSky);
     }
@@ -132,14 +142,32 @@ public class AuroraHandler extends AbstractClientHandler {
         if (IrisCompat.isShaderPackInUse())
             return;
 
-        // Stars are at half brightness at the darkest of night; the aurora shows as they do, and less in rain
+        // Stars are at half brightness at the darkest of night; the aurora shows as they do, less the stronger the
+        // storm, and less in fog. The sky's fog for this frame is set by now, with the mod's own thickening.
         var stars = Math.clamp(starBrightness * 2F, 0F, 1F);
-        var alpha = Mth.lerp(partialTick, this.prevStrength, this.strength) * stars * rainBrightness;
+        var clear = 1F - this.weatherSimulation.rainLevel(level.getRainLevel(partialTick));
+        var renderDistance = GameUtils.getMC().options.getEffectiveRenderDistance() * 16F;
+        var fog = fogVisibility(this.fogHandler.skyFogEnd(), renderDistance);
+        var alpha = Mth.lerp(partialTick, this.prevStrength, this.strength) * stars * clear * fog;
         if (alpha <= 0F)
             return;
 
         var time = ((level.getGameTime() & TIME_WRAP) + partialTick) / 20F;
         AuroraRenderer.render(current, alpha, viewMatrix, time);
+    }
+
+    /**
+     * How much of the aurora shows through the sky's fog, 0 to 1: all of it while the fog reaches as far as usual,
+     * fading as it closes in, and none once it is down to {@link #FOG_HIDES_AT} of that
+     *
+     * @param fogEnd         how far the sky's fog reaches, in blocks
+     * @param renderDistance how far it usually reaches: the render distance, in blocks
+     */
+    static float fogVisibility(float fogEnd, float renderDistance) {
+        if (renderDistance <= 0F)
+            return 1F;
+        var reach = fogEnd / renderDistance;
+        return Mth.clamp((reach - FOG_HIDES_AT) / (FOG_CLEAR_AT - FOG_HIDES_AT), 0F, 1F);
     }
 
     @Override

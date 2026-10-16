@@ -1,8 +1,63 @@
 # 0.4.6 → 26.2 port
 
-Branch `OreCruncher/26.2`: the 26.2 port of 0.4.5 with `OreCruncher/0.4.6` merged in. Game APIs follow the 26.2
+Branch `OreCruncher/26.2`: the 26.2 port of 0.4.5 with `OreCruncher/0.4.6` merged in, and `OreCruncher/0.4.7` merged
+in after it (see "0.4.7 merge" below). Game APIs follow the 26.2
 branch; behaviour follows 0.4.6 unless noted. Checked so far: everything compiles on common, Fabric and NeoForge; the
 common tests pass; both clients start with all three shaders compiled and join a world without errors.
+
+## 0.4.7 merge
+
+`OreCruncher/0.4.7` (through `f7ddfdb`) merged in, staged: everything compiles on common, Fabric and NeoForge, the
+common tests pass, and both clients start with every pipeline compiled and every optional hook applied. Four of 0.4.7's
+new systems need a renderer of their own on 26.2 and stand aside until they are rebuilt, one at a time (0.4.7's code is
+the reference: `git show origin/OreCruncher/0.4.7:<path>`):
+
+- **Particle weather** (`PrecipitationShaders.isAvailable()` is false, so vanilla's weather is drawn). The simulation,
+  landings and sounds are in, and so is the dust storm's fog and sky tint; but dust storms are part of particle
+  weather (as on 0.4.7, `WeatherFogRangeCalculator` asks `PrecipitationHandler.isActive()`), so none of them shows until
+  it is rebuilt. The vertex building takes a `ByteBufferBuilder` and hands the mesh
+  to a consumer. Still to build: the drops' and damp spots' pipelines (`precipitation`, `damp_spot` shaders are still
+  1.21.1's with their JSON), and the hook drawing them in place of vanilla's weather (`WeatherEffectRenderer.render`,
+  the weather target with Fabulous graphics).
+- **Ground fog** (`GroundFogVolume.isUsable()` is false). The field, conditions and handler tick; the three screen passes
+  (`ground_fog_volume`, `_smooth`, `_composite`) and their targets are still to build.
+- **Window frost** (`FrostRenderer.isAvailable()` is false). The field ticks and `FrostTexture` is already a 26.2 GPU
+  texture; the pipeline (`window_frost`) and the hooks (after the translucent layer, or before the weather with
+  Fabulous graphics) are still to build.
+- **Light level overlay** (`LightLevelAtlas.isReady()` is false, so it stays off). The field and classification carry
+  over; the atlas's render-to-texture and the in-world drawing (not gizmos: a pipeline's quads) are still to build.
+
+Also pending: the soft particles' depth-writing variant for Fabulous graphics (`soft_particle_scene_depth`, and its
+`ModShaderTests` check), and streaks for sparks and lava droplets, which need a particle group of their own (they are
+drawn as small glowing points for now).
+
+What changed to fit 26.2:
+- **Point lights**: 0.4.7's `PointLights` (any light: fireflies, flame jets) replaces `FireflyLights`, on its 26.2
+  pass. Each light carries its radius in its corner UVs; the shader gives light already scaled by its strength, with
+  next to no alpha, and one pipeline adds both (`ONE, ONE`), which also suits Fabulous graphics' particle target.
+- **Flames**: a soft, additive particle layer (`SoftParticles.flameLayer()`, `pipeline/flame`, fade 0.3) beside the
+  mist's. Steam, smoke, mist and flame tongues share `SoftPuffParticle` (a `SingleQuadParticle`).
+- **Hooks** (0.4.7's `MixinLevelRenderer`, `MixinFogRenderer` and `MixinParticleEngine` targets are gone): storm strength
+  in drawn rain (`MixinWeatherEffectRenderer`), in ticked rain, rain sounds and vanilla splash hiding
+  (`ClientLevel.tickWeatherEffects`, `MixinClientLevel`), in vanilla's rain fog (`MixinAtmosphericFogEnvironment`); dust
+  tint of the sky (`SkyRenderer.extractRenderState`) and fog (`FogRenderer.computeFogColor`, which the clear colour
+  follows); wind-blown marking (`ParticleEngine.makeParticle`). All in `OptionalHook`.
+- **Weather fog**: rain's fog is vanilla's own on 26.2 (given the storm's strength); `WeatherFogRangeCalculator` adds
+  only a dust storm's, and is on again (it was left out of the 26.2 port).
+- **Dimensions**: `DimensionInformation` is gone; its 0.4.7 values (`particleWeather`, `simulateWind`, `groundFog`) are
+  on `IDimensionOracle`. Whether a dimension draws its own weather is NeoForge's custom weather renderer
+  (`DimensionInfo.drawsOwnWeather`, set by `NeoForgeMod`); nothing replaces it on Fabric.
+- **GPU timing**: `RenderTimer` takes its timestamps through the device's query pool, so it works on either backend.
+- **Aurora**: reads 0.4.7's noise texture (`NoiseSampler`, linear and repeating) in place of hashing.
+- **Seasons**: `ISeasonalInformation` keeps 26.2's names (`getTemperatureAt`); 0.4.7 adds `SNOW_TEMPERATURE` and
+  `hasPrecipitationAt` (Serene Seasons: `SeasonHooks.hasPrecipitationSeasonal`).
+- **Clock, compass and light level legend**: 0.4.7's overlays on `GuiGraphicsExtractor`; the watch reads the day clock
+  and the moon's phase from the `MOON_PHASE` attribute.
+- **Simple Voice Chat**: the plugin as in 0.4.7; the dev clients get voice chat 2.6.24 for 26.2 from Modrinth's Maven.
+
+To check in game (both platforms), besides the list below: storm rain and snow with the storm's strength and sounds,
+wind drifting smoke and leaves, flame jets (soft, additive, lighting their surroundings),
+steam and smoke puffs, the pocket watch and compass roses (and in the margin), the aurora, and voice chat processing.
 
 ## Later 0.4.6 merges
 

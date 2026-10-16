@@ -34,7 +34,8 @@ public record SoundFactory(
         int repeatDelay,
         boolean global,
         SoundInstance.Attenuation attenuation,
-        MusicSettings musicSettings) implements Comparable<ISoundFactory>, ISoundFactory {
+        MusicSettings musicSettings,
+        boolean followsWind) implements Comparable<ISoundFactory>, ISoundFactory {
 
     public static final Codec<SoundFactory> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
@@ -47,7 +48,8 @@ public record SoundFactory(
                     Codec.INT.optionalFieldOf("repeatDelay", 0).forGetter(SoundFactory::repeatDelay),
                     Codec.BOOL.optionalFieldOf("global", false).forGetter(SoundFactory::global),
                     SoundCodecHelpers.ATTENUATION_CODEC.optionalFieldOf("attenuation", SoundInstance.Attenuation.LINEAR).forGetter(SoundFactory::attenuation),
-                    MusicSettings.CODEC.optionalFieldOf("music", MusicSettings.DEFAULT).forGetter(SoundFactory::musicSettings)
+                    MusicSettings.CODEC.optionalFieldOf("music", MusicSettings.DEFAULT).forGetter(SoundFactory::musicSettings),
+                    Codec.BOOL.optionalFieldOf("followsWind", false).forGetter(SoundFactory::followsWind)
             ).apply(instance, SoundFactory::new));
 
     // Music instances by sound event ID and settings: factories that agree share one, and different (or reloaded)
@@ -105,11 +107,11 @@ public record SoundFactory(
     }
 
     @Override
-    public EntityBoundSoundInstance attachToEntity(Entity entity) {
+    public EntityBoundSoundInstance attachToEntity(Entity entity, float volumeScale) {
         return new EntityBoundSoundInstance(
                 this.soundEvent,
                 this.category,
-                this.getVolume(),
+                this.getVolume() * volumeScale,
                 this.getPitch(),
                 entity,
                 Randomizer.current().nextLong()
@@ -189,7 +191,8 @@ public record SoundFactory(
                 builder.repeatDelay,
                 builder.global,
                 builder.attenuation,
-                new MusicSettings(builder.musicMinDelay, builder.musicMaxDelay, builder.musicReplaceMusic));
+                new MusicSettings(builder.musicMinDelay, builder.musicMaxDelay, builder.musicReplaceMusic),
+                false);
     }
 
     public record MusicSettings(int minDelay, int maxDelay, boolean replaceCurrentMusic) {

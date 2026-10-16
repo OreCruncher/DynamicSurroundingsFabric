@@ -3,7 +3,9 @@ package org.orecruncher.dsurround.effects;
 import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import net.minecraft.SharedConstants;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -14,6 +16,13 @@ import java.util.HashSet;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ModShaderTests {
+
+    // Constants, which a shader's id comes from, needs the game's registries. Run first on its own, this class
+    // otherwise fails to load Constants and takes every later test that uses it down too.
+    static {
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+    }
 
     /**
      * Pipelines can't be compiled without a GPU device, so these tests hand ModShader the result of compiling one.
@@ -107,7 +116,7 @@ public class ModShaderTests {
             assertResource(pipeline.getVertexShader(), ".vsh");
             assertResource(pipeline.getFragmentShader(), ".fsh");
         }
-        assertEquals(3, ids.size());
+        assertEquals(ModShaders.SHADERS.size(), ids.size());
     }
 
     private void assertResource(Identifier shaderId, String extension) {

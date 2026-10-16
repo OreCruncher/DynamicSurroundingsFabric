@@ -22,6 +22,13 @@ public interface ISeasonalInformation {
      */
     Optional<Component> getCurrentSeasonTranslated();
     /**
+     * Whether a mod provides seasons. Without one, the season is always reported as spring.
+     */
+    default boolean hasSeasons() {
+        return true;
+    }
+
+    /**
      * Indicates if the current season is considered Spring.
      */
     boolean isSpring();
@@ -62,6 +69,16 @@ public interface ISeasonalInformation {
      * Indicates whether the temperature at the given position is considered cold enough for snow.
      */
     boolean isSnowTemperature(BlockPos blockPos);
+
+    /**
+     * Below this temperature, precipitation falls as snow; at it and above, as rain. Vanilla's threshold.
+     */
+    float SNOW_TEMPERATURE = 0.15F;
+
+    /**
+     * Whether rain or snow falls at the position now, whichever it is: the biome's own setting, or its season's
+     */
+    boolean hasPrecipitationAt(BlockPos blockPos);
     /**
      * Gets the Y on the XZ plane at which precipitation will strike.
      */

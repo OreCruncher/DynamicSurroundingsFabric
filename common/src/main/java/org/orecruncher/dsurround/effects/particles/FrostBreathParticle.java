@@ -4,6 +4,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.client.particle.SingleQuadParticle;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
@@ -11,8 +12,16 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
+import org.orecruncher.dsurround.runtime.weather.SceneWind;
+import org.orecruncher.dsurround.runtime.weather.Shelter;
 
 public class FrostBreathParticle extends SingleQuadParticle {
+
+    // The share of its speed it keeps each tick
+    private static final float DRAG = 0.96F;
+
+    // How much of the wind reaches it, 0 to 1; below 0 until found, on its first tick
+    private float windExposure = -1F;
 
     private final SpriteSet spriteProvider;
 
@@ -86,10 +95,15 @@ public class FrostBreathParticle extends SingleQuadParticle {
             this.remove();
         } else {
             this.setSpriteFromAge(this.spriteProvider);
+            // Drifts downwind, as far as it is out in the open; found where it is first breathed out
+            if (this.windExposure < 0F)
+                this.windExposure = Shelter.exposure(this.level, BlockPos.containing(this.x, this.y, this.z));
+            this.xd += SceneWind.push(SceneWind.x(this.x, this.z), this.windExposure, DRAG);
+            this.zd += SceneWind.push(SceneWind.z(this.x, this.z), this.windExposure, DRAG);
             this.move(this.xd, this.yd, this.zd);
-            this.xd *= 0.96F;
-            this.yd *= 0.96F;
-            this.zd *= 0.96F;
+            this.xd *= DRAG;
+            this.yd *= DRAG;
+            this.zd *= DRAG;
 
             if (this.onGround) {
                 this.xd *= 0.7F;

@@ -18,7 +18,7 @@ public class FireflyParticle extends SimpleAnimatedParticle {
     private static final IRandomizer RANDOM = Randomizer.current();
 
     // Fireflies, with their halos: vanilla's translucent particles with depth writes off, so halos don't hide each
-    // other. The lights they cast are drawn just before them (see FireflyLights).
+    // other. The lights they cast are drawn just before them (see PointLights).
     private static final SingleQuadParticle.Layer LAYER = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES,
             SoftParticles.particlePipeline("pipeline/firefly", null).build());
     private static final float XZ_MOTION_DELTA = 0.03F; //0.04F;
@@ -122,13 +122,13 @@ public class FireflyParticle extends SimpleAnimatedParticle {
         this.alpha = glow;
         super.extract(state, camera, partialTicks);
 
-        if (FireflyLights.isActive()) {
-            FireflyLights.add(
+        if (PointLights.fireflyLightsOn()) {
+            PointLights.add(
                     Mth.lerp(partialTicks, this.xo, this.x),
                     Mth.lerp(partialTicks, this.yo, this.y),
                     Mth.lerp(partialTicks, this.zo, this.z),
                     this.rCol, this.gCol, this.bCol,
-                    FireflyLights.STRENGTH * glow);
+                    PointLights.FIREFLY_STRENGTH * glow, PointLights.FIREFLY_RADIUS);
         }
     }
 

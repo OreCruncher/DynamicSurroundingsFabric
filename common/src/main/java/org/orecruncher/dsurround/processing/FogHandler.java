@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.processing;
 
 import net.minecraft.client.renderer.fog.FogData;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.util.ARGB;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IFogRender;
@@ -13,6 +14,8 @@ public class FogHandler extends AbstractClientHandler {
 
     private final HolisticFogRangeCalculator fogCalculator;
     private FogData lastData;
+    // The sky's colour while it is tinted; the sky is drawn on the render thread only
+    private final float[] skyColor = new float[3];
 
     public FogHandler(HolisticFogRangeCalculator fogCalculator, Configuration config, IModLog logger) {
         super("Fog Handler", config, logger);
@@ -43,6 +46,35 @@ public class FogHandler extends AbstractClientHandler {
             // Preserve for diagnostic trace even though action was not taken
             this.lastData = data;
         }
+    }
+
+    /**
+     * How far the sky's fog reaches this frame, in blocks, with the mod's own thickening
+     */
+    public float skyFogEnd() {
+        return this.lastData.skyEnd;
+    }
+
+    /**
+     * Turns the fog's colour toward the dust's in a dust storm. Called from the game's fog colour set up.
+     *
+     * @param rgb the fog's colour, red, green and blue from 0 to 1; changed in place
+     */
+    public void tintFogColor(float[] rgb, float partialTick) {
+        this.fogCalculator.tintFogColor(rgb, partialTick);
+    }
+
+    /**
+     * The sky's colour, 0xAARRGGBB, turned toward the dust's in a dust storm as the fog's is. Called as the sky is
+     * set up for drawing.
+     */
+    public int tintSkyColor(int color, float partialTick) {
+        var rgb = this.skyColor;
+        rgb[0] = ARGB.redFloat(color);
+        rgb[1] = ARGB.greenFloat(color);
+        rgb[2] = ARGB.blueFloat(color);
+        this.fogCalculator.tintFogColor(rgb, partialTick);
+        return ARGB.colorFromFloat(ARGB.alphaFloat(color), rgb[0], rgb[1], rgb[2]);
     }
 
     @Override

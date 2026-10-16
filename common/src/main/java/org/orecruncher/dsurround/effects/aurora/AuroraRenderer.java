@@ -12,17 +12,21 @@ import com.mojang.blaze3d.platform.BlendFactor;
 import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.MappableRingBuffer;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.effects.ModShader;
+import org.orecruncher.dsurround.effects.NoiseTexture;
 import org.orecruncher.dsurround.lib.Library;
 
 import java.nio.ByteBuffer;
@@ -41,7 +45,11 @@ public final class AuroraRenderer {
     // The shader's uniforms other than vanilla's: three colours and the time and strength
     private static final String AURORA_INFO = "AuroraInfo";
     private static final int AURORA_INFO_SIZE = new Std140SizeCalculator().putVec4().putVec4().putVec4().putFloat().putFloat().get();
-    private static final BindGroupLayout AURORA_INFO_LAYOUT = BindGroupLayout.builder().withUniform(AURORA_INFO, UniformType.UNIFORM_BUFFER).build();
+    private static final String NOISE_SAMPLER = "NoiseSampler";
+    private static final BindGroupLayout AURORA_INFO_LAYOUT = BindGroupLayout.builder()
+            .withUniform(AURORA_INFO, UniformType.UNIFORM_BUFFER)
+            .withSampler(NOISE_SAMPLER)
+            .build();
 
     // Light adds to the sky behind it. Curtains are seen from both sides, and nothing is tested against or written to
     // the depth buffer, so the world drawn after the sky covers them.
@@ -60,8 +68,21 @@ public final class AuroraRenderer {
 
     public static final ModShader SHADER = new ModShader(PIPELINE, "the aurora", "auroras will not be drawn", Library.LOGGER);
 
+    public static final RenderTimer RENDER_TIMER = new RenderTimer("Aurora");
+
+    /**
+     * The noise texture's size, in cells, which it repeats at (see {@link NoiseTexture}). Wider than a curtain's finest
+     * noise: 23 cells to a unit along a curtain up to 10 across, and folded up to 0.675 either way, about 260; any
+     * fewer and the rays would repeat within one.
+     */
+    public static final int NOISE_SIZE = 512;
+
     // Quads along each curtain
     private static final int SEGMENTS = 96;
+
+    // Made on first use, on the render thread
+    @Nullable
+    private static DynamicTexture noise;
 
     private static final Vector3f BOTTOM = new Vector3f();
     private static final Vector3f TOP = new Vector3f();
@@ -95,7 +116,9 @@ public final class AuroraRenderer {
     public static void render(Aurora aurora, float alpha, Matrix4f viewMatrix, float time) {
         if (alpha <= 0F || !SHADER.isAvailable())
             return;
+        RENDER_TIMER.begin();
         SHADER.run(() -> draw(aurora, alpha, viewMatrix, time), () -> {});
+        RENDER_TIMER.end();
     }
 
     private static void draw(Aurora aurora, float alpha, Matrix4f viewMatrix, float time) {
@@ -137,6 +160,7 @@ public final class AuroraRenderer {
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", transforms);
             pass.setUniform(AURORA_INFO, auroraInfo.currentBuffer());
+            pass.bindTexture(NOISE_SAMPLER, noise().getTextureView(), RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
             pass.setVertexBuffer(0, vertexBuffer.slice());
             pass.setIndexBuffer(indexBuffer, indices.type());
             pass.drawIndexed(indexCount, 1, 0, 0, 0);
@@ -188,5 +212,11 @@ public final class AuroraRenderer {
 
     private static void vertex(BufferBuilder builder, float x, float y, float z, float u, float v, float alpha) {
         builder.addVertex(x * Aurora.SCALE, y * Aurora.SCALE, z * Aurora.SCALE).setUv(u, v).setColor(1F, 1F, 1F, alpha);
+    }
+
+    private static DynamicTexture noise() {
+        if (noise == null)
+            noise = NoiseTexture.create(NOISE_SIZE, 0x6175726FL);
+        return noise;
     }
 }

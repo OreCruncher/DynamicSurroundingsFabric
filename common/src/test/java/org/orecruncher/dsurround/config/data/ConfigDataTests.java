@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -197,6 +198,108 @@ public class ConfigDataTests {
 
         assertNotEquals(a, b);
         assertEquals(a, c);
+    }
+
+    @Test
+    void dimensionRulesSetWeatherAndWind() {
+        var rule = parse(DimensionConfigRule.CODEC, "{\"dimId\": \"twilightforest:twilight_forest\", \"particleWeather\": true, \"simulateWind\": false, \"groundFog\": true}").getOrThrow();
+        assertEquals(Optional.of(true), rule.particleWeather());
+        assertEquals(Optional.of(false), rule.simulateWind());
+        assertEquals(Optional.of(true), rule.groundFog());
+        var text = rule.toString();
+        assertTrue(text.contains("particleWeather: true") && text.contains("simulateWind: false") && text.contains("groundFog: true"), text);
+
+        // Left out, they are left to the dimension's own guess
+        var plain = parse(DimensionConfigRule.CODEC, "{\"dimId\": \"minecraft:overworld\"}").getOrThrow();
+        assertTrue(plain.particleWeather().isEmpty() && plain.simulateWind().isEmpty() && plain.groundFog().isEmpty());
+    }
+
+    @Test
+    void everyWindLoopFollowsTheWind() throws IOException {
+        // The wind sounds play as loud as the wind blows only through their factories' followsWind: a biome rule
+        // naming one without a factory would get a default factory, at a steady volume
+        var factories = Codec.list(SoundFactory.CODEC).parse(JsonOps.INSTANCE,
+                json(resource("/assets/dsurround/dsconfigs/sound_factories.json"))).getOrThrow();
+        var followsWind = factories.stream().filter(SoundFactory::followsWind)
+                .map(f -> f.location().orElseThrow().toString()).collect(java.util.stream.Collectors.toSet());
+        assertFalse(followsWind.isEmpty());
+
+        try (var files = java.nio.file.Files.walk(java.nio.file.Path.of("src/main/resources/assets"))) {
+            var biomeFiles = files.filter(f -> f.getFileName().toString().equals("biomes.json")).toList();
+            assertFalse(biomeFiles.isEmpty());
+            for (var file : biomeFiles) {
+                for (var rule : json(java.nio.file.Files.readString(file)).getAsJsonArray()) {
+                    var acoustics = rule.getAsJsonObject().getAsJsonArray("acoustics");
+                    if (acoustics == null)
+                        continue;
+                    for (var acoustic : acoustics) {
+                        var factory = acoustic.getAsJsonObject().get("factory").getAsString();
+                        var id = factory.contains(":") ? factory : "dsurround:" + factory;
+                        if (id.startsWith("dsurround:biome.wind"))
+                            assertTrue(followsWind.contains(id), file + ": " + id);
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    void theTwilightForestIsAtSeaLevelZero() throws IOException {
+        // Regression: the client always reports a sea level of 63 (the server's world generation setting isn't sent),
+        // so in the Twilight Forest, whose sea level is 0, much of the surface counted as underground
+        var rules = Codec.list(DimensionConfigRule.CODEC).parse(JsonOps.INSTANCE,
+                json(resource("/assets/twilightforest/dsconfigs/dimensions.json"))).getOrThrow();
+        var rule = rules.stream().filter(r -> r.dimensionId().toString().equals("twilightforest:twilight_forest")).findFirst().orElseThrow();
+        assertEquals(Optional.of(0), rule.seaLevel());
+    }
+
+    @Test
+    void theNetherAndEndHaveNoWindOrGroundFog() throws IOException {
+        var rules = Codec.list(DimensionConfigRule.CODEC).parse(JsonOps.INSTANCE,
+                json(resource("/assets/dsurround/dsconfigs/dimensions.json"))).getOrThrow();
+        for (var dimension : List.of("minecraft:the_nether", "minecraft:the_end")) {
+            var rule = rules.stream().filter(r -> r.dimensionId().toString().equals(dimension)).findFirst().orElseThrow();
+            assertEquals(Optional.of(false), rule.simulateWind(), dimension);
+            assertEquals(Optional.of(false), rule.groundFog(), dimension);
+        }
+    }
+
+    // ---- Ids -------------------------------------------------------------------------------------------------
+
+    @Test
+    void badIdsAreErrorsNotExceptions() {
+        // Regression (found by DsConfigFuzzTests): the id codec threw, or decoded to null, for an id that isn't
+        // valid. Thrown, the whole file was lost; null in an optional field threw from inside the codec.
+        for (var id : List.of("NaN", "a:B", "minecraft:oak_log[axis=up]", "", "#", "@", "#@", "a b")) {
+            var json = "{\"factory\": \"" + id + "\"}";
+            var result = assertDoesNotThrow(() -> parse(AcousticConfig.CODEC, json), id);
+            assertTrue(result.isError(), id);
+            assertTrue(errorOf(result).contains("Not a valid id"), errorOf(result));
+        }
+        var optional = assertDoesNotThrow(() -> parse(SoundFactory.CODEC, "{\"location\": \"NaN\", \"soundEvent\": \"minecraft:a\"}"));
+        assertTrue(optional.isError() || optional.result().orElseThrow().location().isEmpty());
+    }
+
+    @Test
+    void idsStillReadTheirShortForms() {
+        assertEquals(Identifier.fromNamespaceAndPath("dsurround", "a"), parse(AcousticConfig.CODEC, "{\"factory\": \"a\"}").getOrThrow().factory());
+        assertEquals(Identifier.withDefaultNamespace("a"), parse(AcousticConfig.CODEC, "{\"factory\": \"@a\"}").getOrThrow().factory());
+        assertEquals(Identifier.fromNamespaceAndPath("c", "a"), parse(AcousticConfig.CODEC, "{\"factory\": \"#c:a\"}").getOrThrow().factory());
+    }
+
+    @Test
+    void aBadIdDropsOnlyItsEntry() {
+        var content = """
+                [
+                  {"factory": "dsurround:first"},
+                  {"factory": "Bad:Id"},
+                  {"factory": "dsurround:third"}
+                ]
+                """;
+
+        var result = CodecExtensions.deserialize("test.json", content, Codec.list(AcousticConfig.CODEC)).orElseThrow();
+
+        assertEquals(List.of("dsurround:first", "dsurround:third"), result.stream().map(a -> a.factory().toString()).toList());
     }
 
     // ---- Error reporting -------------------------------------------------------------------------------------

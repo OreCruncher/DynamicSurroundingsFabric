@@ -20,7 +20,7 @@ public class ConfigurationGroupsTests {
     private static List<Field> groupFields() {
         var fields = new ArrayList<Field>();
         for (var field : Configuration.class.getFields()) {
-            if (!field.isAnnotationPresent(ConfigurationData.Property.class) || Modifier.isStatic(field.getModifiers()))
+            if (!field.isAnnotationPresent(Property.class) || Modifier.isStatic(field.getModifiers()))
                 continue;
             if (field.getType().getDeclaringClass() == Configuration.class)
                 fields.add(field);

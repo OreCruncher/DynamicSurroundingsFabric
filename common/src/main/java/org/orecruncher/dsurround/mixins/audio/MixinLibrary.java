@@ -5,6 +5,7 @@ import org.lwjgl.openal.EXTEfx;
 import org.lwjgl.system.MemoryStack;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.runtime.audio.effects.Efx;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -21,7 +22,7 @@ public class MixinLibrary {
      */
     @Inject(method = "createAttributes(Lorg/lwjgl/system/MemoryStack;Z)Ljava/nio/IntBuffer;", at = @At(value= "INVOKE", target="Lorg/lwjgl/openal/ALC10;alcGetInteger(JI)I", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILSOFT)
     private void dsurround$setChannels(MemoryStack stack, boolean enableHrtf, CallbackInfoReturnable<IntBuffer> cir, int maxAttributes, IntBuffer attr) {
-        attr.put(EXTEfx.ALC_MAX_AUXILIARY_SENDS).put(4);
+        attr.put(EXTEfx.ALC_MAX_AUXILIARY_SENDS).put(Efx.SENDS);
     }
 
     /**

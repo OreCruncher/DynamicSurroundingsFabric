@@ -23,6 +23,9 @@
     ],
     "modmenu": [
       "org.orecruncher.fabric.ModConfigMenu"
+    ],
+    "voicechat": [
+      "org.orecruncher.dsurround.runtime.audio.voicechat.VoiceChatPlugin"
     ]
   },
   "mixins": [

@@ -49,6 +49,10 @@ dependencies {
     implementation "com.github.glitchfiend:SereneSeasons-neoforge:${minecraft_version}-${rootProject.serene_seasons_version}"
     implementation "com.github.glitchfiend:BiomesOPlenty-neoforge:${minecraft_version}-${rootProject.bop_version}"
 
+    // Simple Voice Chat: its plugin API to compile the common classes against; the mod itself in the dev client only
+    compileOnly "de.maxhenkel.voicechat:voicechat-api:$rootProject.voicechat_api_version"
+    localRuntime "maven.modrinth:simple-voice-chat:${rootProject.voicechat_neoforge_version}"
+
     api("me.shedaniel.cloth:cloth-config-neoforge:${rootProject.clothapi_version}") {
         exclude(group: "net.fabricmc.fabric-api")
     }
@@ -72,8 +76,11 @@ processResources {
         expand expandProps
     }
 
-    into('/assets') {
+    // Read by the sound credits screen. In our own assets folder, not straight in assets, where Minecraft takes each
+    // entry for a namespace and warns about one that isn't; lower case, as resource paths must be
+    into("/assets/$rootProject.name") {
         from("$projectDir/../CREDITS.md")
+        rename { 'credits.md' }
     }
 }
 

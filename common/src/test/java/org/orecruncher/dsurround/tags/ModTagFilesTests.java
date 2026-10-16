@@ -1,7 +1,9 @@
 package org.orecruncher.dsurround.tags;
 
 import net.minecraft.SharedConstants;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -123,6 +125,34 @@ public class ModTagFilesTests {
             }
         }
         assertTrue(missing.isEmpty(), "convention tags referenced without '#': " + missing);
+    }
+
+    @Test
+    void particleTypeTagsNameRealVanillaParticles() throws IOException {
+        // A misspelled particle quietly isn't blown; and the mod's own particles take the wind themselves, so a
+        // dsurround entry would only be ignored (they never pass through the path that reads the tag)
+        var entry = Pattern.compile("\"([a-z0-9_.-]+):([a-z0-9_/.-]+)\"");
+        var wrong = new ArrayList<String>();
+        var checked = 0;
+        try (var files = Files.walk(assets)) {
+            for (var path : files.filter(p -> p.toString().endsWith(".json")).toList()) {
+                var relative = assets.relativize(path).toString().replace('\\', '/');
+                if (!relative.contains("/dsconfigs/tags/particle_type/"))
+                    continue;
+                var matcher = entry.matcher(Files.readString(path));
+                while (matcher.find()) {
+                    var namespace = matcher.group(1);
+                    var id = Identifier.fromNamespaceAndPath(namespace, matcher.group(2));
+                    if (namespace.equals(Constants.MOD_ID))
+                        wrong.add(relative + " -> " + id + " (the mod's own)");
+                    else if (namespace.equals("minecraft") && !BuiltInRegistries.PARTICLE_TYPE.containsKey(id))
+                        wrong.add(relative + " -> " + id + " (no such particle)");
+                    checked++;
+                }
+            }
+        }
+        assertTrue(checked > 0, "found no particle type tag entries");
+        assertTrue(wrong.isEmpty(), "particle type tag entries that can't be blown: " + wrong);
     }
 
     /**

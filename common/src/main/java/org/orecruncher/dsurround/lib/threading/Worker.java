@@ -33,8 +33,9 @@ public final class Worker {
     private final ScheduledExecutorService executorService;
     private boolean started;
 
-    // Written by the worker thread, read when diagnostics are shown
-    private volatile String timing = "";
+    // Written by the worker thread, read when diagnostics are shown: the average run time, negative before the first
+    // run. Formatted only when asked for, not on every run
+    private volatile double averageMsecs = -1;
     private volatile long lastRunMsecs;
 
     /**
@@ -78,7 +79,7 @@ public final class Worker {
         }
         this.timeTrack.end();
         this.lastRunMsecs = this.timeTrack.getLastSampleMSecs();
-        this.timing = this.timeTrack.toString();
+        this.averageMsecs = this.timeTrack.getMSecs();
     }
 
     /**
@@ -124,11 +125,11 @@ public final class Worker {
      * @return String for logging or display
      */
     public String getDiagnosticString() {
-        var timing = this.timing;
-        if (timing.isEmpty())
+        var average = this.averageMsecs;
+        if (average < 0)
             return "";
         long sleepTime = this.frequency - this.lastRunMsecs;
-        var text = "%s (idle for %dmsecs)".formatted(timing, Math.max(sleepTime, 0));
+        var text = "%s:%7.3fms (idle for %dmsecs)".formatted(this.name, average, Math.max(sleepTime, 0));
         if (sleepTime < 0)
             text += "; running behind %dms".formatted(-sleepTime);
         return text;

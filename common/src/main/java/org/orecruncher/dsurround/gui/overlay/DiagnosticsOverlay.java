@@ -9,7 +9,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.util.FormattedCharSequence;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
@@ -21,6 +20,9 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
+import org.orecruncher.dsurround.lib.platform.FeatureConflict;
+import org.orecruncher.dsurround.lib.platform.KnownMod;
+import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.processing.AreaBlockEffects;
 
 import java.util.EnumMap;
@@ -52,9 +54,13 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
 
     private static final Supplier<List<Component>> SPECIAL_MODS_INSTALLED = Suppliers.memoize(() -> {
         var builder = ImmutableList.<Component>builder();
-        for (var modId : Constants.SPECIAL_MODS)
-            if (Platform.isModLoaded(modId))
-                builder.add(Component.literal("MOD: " + modId).withStyle(SPECIAL_MOD_STYLE));
+        for (var mod : KnownMod.values())
+            if (mod.showInDiagnostics())
+                mod.installedId().ifPresent(modId -> builder.add(Component.literal("MOD: " + modId).withStyle(SPECIAL_MOD_STYLE)));
+        for (var conflict : FeatureConflict.values())
+            conflict.describe().ifPresent(line -> builder.add(Component.literal(line).withStyle(SPECIAL_MOD_STYLE)));
+        for (var hook : OptionalHook.values())
+            hook.describe().ifPresent(line -> builder.add(Component.literal(line).withStyle(SPECIAL_MOD_STYLE)));
         return builder.build();
     });
 
@@ -63,6 +69,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Systems, ColorPalette.GREEN);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Particles, ColorPalette.HOT_PINK);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Timers, ColorPalette.KEY_LIME);
+        COLOR_MAP.put(CollectDiagnosticsEvent.Section.Render, ColorPalette.GOLD);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Environment, ColorPalette.AQUAMARINE);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Emitters, ColorPalette.SEASHELL);
         COLOR_MAP.put(CollectDiagnosticsEvent.Section.Sounds, ColorPalette.APRICOT);
@@ -81,6 +88,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
         LEFT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Sounds);
 
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Timers);
+        RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Render);
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Survey);
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.Misc);
         RIGHT_SIDE_LAYOUT.add(CollectDiagnosticsEvent.Section.HeldItem);
@@ -119,6 +127,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
 
         this.plugins = ImmutableList.of(
                 ContainerManager.resolve(ClientProfilerPlugin.class),
+                ContainerManager.resolve(RenderTimersPlugin.class),
                 ContainerManager.resolve(ViewerPlugin.class),
                 ContainerManager.resolve(RuntimeDiagnosticsPlugin.class),
                 ContainerManager.resolve(SoundEngineDiagnosticsPlugin.class)

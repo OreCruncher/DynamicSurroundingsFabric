@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:sand",
+    "minecraft:red_sand",
+    "minecraft:suspicious_sand",
+    "minecraft:coarse_dirt",
+    "#minecraft:terracotta",
+    {
+      "id": "#c:sands",
+      "required": false
+    }
+  ]
+}

@@ -62,4 +62,16 @@ public final class DimensionOracle implements IDimensionOracle {
     public boolean isSuperFlat() {
         return this.dimensionInfo.get().isFlatWorld();
     }
+
+    public boolean particleWeather() {
+        return this.dimensionInfo.get().particleWeather();
+    }
+
+    public boolean simulateWind() {
+        return this.dimensionInfo.get().simulateWind();
+    }
+
+    public boolean groundFog() {
+        return this.dimensionInfo.get().groundFog();
+    }
 }

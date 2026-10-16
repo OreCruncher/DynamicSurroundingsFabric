@@ -62,7 +62,12 @@ public abstract class AbstractSeasonProvider implements ISeasonalInformation {
 
     @Override
     public boolean isSnowTemperature(BlockPos blockPos) {
-        return this.getTemperatureAt(blockPos) < 0.15F;
+        return this.getTemperatureAt(blockPos) < SNOW_TEMPERATURE;
+    }
+
+    @Override
+    public boolean hasPrecipitationAt(BlockPos blockPos) {
+        return this.levelOracle.biomeHolder(blockPos).value().hasPrecipitation();
     }
 
     @Override

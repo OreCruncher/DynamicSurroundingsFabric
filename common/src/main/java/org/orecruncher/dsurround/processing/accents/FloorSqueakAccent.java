@@ -8,9 +8,7 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
-import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.random.Randomizer;
-import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 
 class FloorSqueakAccent implements IFootstepAccentProvider {
@@ -28,7 +26,7 @@ class FloorSqueakAccent implements IFootstepAccentProvider {
     }
 
     @Override
-    public void collect(LivingEntity entity, BlockPos pos, BlockState state, boolean isWaterLogged, ObjectArray<ISoundFactory> acoustics) {
+    public void collect(LivingEntity entity, BlockPos pos, BlockState state, boolean isWaterLogged, StepAccents acoustics) {
         // Check for waterlogged.  Don't want to squeak if waterlogged.
         if (isWaterLogged)
             return;
