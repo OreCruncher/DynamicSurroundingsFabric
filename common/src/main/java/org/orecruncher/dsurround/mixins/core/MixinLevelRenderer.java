@@ -9,6 +9,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.sounds.SoundEvent;
@@ -71,14 +72,25 @@ public class MixinLevelRenderer {
     }
 
     /**
-     * Frost on windows and the mist on the ground before the weather, so the rain and snow are drawn over them; with
+     * Frost on windows, without Fabulous graphics, after the last of the translucent blocks (tripwire) and before the
+     * particles: those write depth, and breath or smoke in front of a window would cut the frost behind it out.
+     */
+    @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSectionLayer(Lnet/minecraft/client/renderer/RenderType;DDDLorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V"))
+    private void dsurround$afterSectionLayer(LevelRenderer renderer, RenderType renderType, double camX, double camY, double camZ, Matrix4f frustumMatrix, Matrix4f projectionMatrix, Operation<Void> original, @Local(argsOnly = true) LightTexture lightTexture) {
+        original.call(renderer, renderType, camX, camY, camZ, frustumMatrix, projectionMatrix);
+        if (renderType == RenderType.tripwire())
+            MixinHelpers.windowFrost().renderBeforeParticles(lightTexture);
+    }
+
+    /**
+     * Frost on windows (with Fabulous graphics; see above for without) and the mist on the ground before the weather, so the rain and snow are drawn over them; with
      * Fabulous graphics the mist after it instead (see GroundFogHandler.renderAfterWeather). All from where the level
      * calls for the weather, rather than inside it, so they are drawn however the weather's drawing ends, cancelled by
      * us or another mod (Simple Weather cancels it) or left early by NeoForge for a dimension's own.
      */
     @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V"))
     private void dsurround$aroundWeather(LevelRenderer renderer, LightTexture lightTexture, float partialTick, double camX, double camY, double camZ, Operation<Void> original) {
-        MixinHelpers.windowFrost().render(lightTexture);
+        MixinHelpers.windowFrost().renderBeforeWeather(lightTexture);
         MixinHelpers.groundFog().renderBeforeWeather(lightTexture, partialTick);
         dsurround$levelWeather = true;
         try {

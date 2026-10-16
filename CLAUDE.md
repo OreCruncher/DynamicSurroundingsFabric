@@ -114,8 +114,10 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
     disconnecting clears them.
   - Weather script variables live in `runtime/variables/WeatherVariables` (`weather.*`).
   - Window frost (`effects/frost`, run by `processing/WindowFrostHandler`): on the outside of clear glass
-    (`effects/frosted_windows` tag; `effects/windows` is all glass, for rain streaks). Drawn in the `renderSnowAndRain`
-    wrap before the weather, independent of particle weather: clear glass is cutout, so frost behind it shows through.
+    (`effects/frosted_windows` tag; `effects/windows` is all glass, for rain streaks). Drawn after the translucent blocks,
+    independent of particle weather: clear glass is cutout, so frost behind it shows through. Without Fabulous, right
+    after the tripwire layer and before particles (they write depth: breath in front cut it out); with Fabulous, in the
+    `renderSnowAndRain` wrap before the weather, to the weather target.
     "Outside" uses the `MOTION_BLOCKING` heightmap, then sky light on either side (`canSeeSky` is only sky light 15,
     which a glass roof doesn't reduce).
 

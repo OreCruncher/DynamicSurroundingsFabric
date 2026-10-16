@@ -38,10 +38,11 @@ import java.util.Optional;
 
 /**
  * Frost on the outside of windows when it is cold (see {@link FrostConditions}): on clear glass blocks and panes near
- * the player ({@link FrostField}), drawn where vanilla draws its weather, before it, so the rain and snow are drawn
- * over it. That is also after the translucent blocks: clear glass is cut out, so where it is clear it writes no depth,
- * and frost on its far side shows through. With Fabulous graphics, it goes to the weather's own target, which vanilla
- * clears and lays over the scene by depth, so its depth is written there, as the falling rain's is.
+ * the player ({@link FrostField}), drawn after the translucent blocks: clear glass is cut out, so where it is clear it
+ * writes no depth, and frost on its far side shows through. Without Fabulous graphics, before the particles, which
+ * write depth and would cut it out behind them (breath in front of a window), and so before the rain and snow. With
+ * Fabulous graphics, where vanilla draws its weather and before it, to the weather's own target, which vanilla clears
+ * and lays over the scene by depth, so its depth is written there, as the falling rain's is.
  * <p>
  * Nothing is looked for where it is too warm for frost near the player. Off while an Iris shader pack is in use, when
  * its shader didn't load, and after a failure to draw it until resources are reloaded.
@@ -114,9 +115,24 @@ public class WindowFrostHandler extends AbstractClientHandler {
     }
 
     /**
-     * Draws the frost, where vanilla draws its weather and before it
+     * Draws the frost without Fabulous graphics, after the translucent blocks and before the particles, which write
+     * depth: drawn after them, a cloud of breath in front of a window cut the frost out behind it
      */
-    public void render(LightTexture lightTexture) {
+    public void renderBeforeParticles(LightTexture lightTexture) {
+        if (!Minecraft.useShaderTransparency())
+            this.render(lightTexture);
+    }
+
+    /**
+     * Draws the frost with Fabulous graphics, where vanilla draws its weather and before it: to the weather's target,
+     * which is laid over the particles' by depth
+     */
+    public void renderBeforeWeather(LightTexture lightTexture) {
+        if (Minecraft.useShaderTransparency())
+            this.render(lightTexture);
+    }
+
+    private void render(LightTexture lightTexture) {
         this.drawn = 0;
         if (!this.isActive() || this.field.faceCount() == 0)
             return;
