@@ -127,28 +127,83 @@ public class PrecipitationColumnsTests {
     }
 
     @Test
-    void theColumnsAreLookedUpAgainOnlyWhenNeeded() {
+    void standingStillAFewRowsAreLookedAtAgainEachTick() {
         var source = new Changing();
         var columns = new PrecipitationColumns(RADIUS);
         assertTrue(columns.refresh(source, 0, 70, 0), "the first look");
-        int reads = source.heightReads;
+        int size = 2 * RADIUS + 1;
+        assertEquals(size * size, source.heightReads, "every column, the first time");
 
-        // Standing still, nothing is read until the refresh interval is up
-        for (int t = 1; t < PrecipitationColumns.REFRESH_TICKS; t++)
-            assertFalse(columns.refresh(source, 0, 70, 0));
-        assertEquals(reads, source.heightReads);
-        assertTrue(columns.refresh(source, 0, 70, 0), "the interval is up");
+        // The ground changes; a few rows see it each tick, and all of them within the refresh interval
+        source.ground = 66;
+        for (int t = 0; t < PrecipitationColumns.REFRESH_TICKS; t++) {
+            int before = source.heightReads;
+            columns.refresh(source, 0, 70, 0);
+            assertEquals(PrecipitationColumns.rowsPerTick(size) * size, source.heightReads - before, "a few rows a tick");
+        }
+        for (int z = -RADIUS; z <= RADIUS; z++)
+            for (int x = -RADIUS; x <= RADIUS; x++)
+                assertEquals(66, columns.ground(columns.index(x, z)), "column " + x + ", " + z);
     }
 
     @Test
-    void movingIntoAnotherColumnLooksAgainAtOnce() {
+    void movingLooksUpOnlyTheColumnsThatCameIntoTheArea() {
         var source = new Changing();
         var columns = new PrecipitationColumns(RADIUS);
         columns.refresh(source, 0, 70, 0);
+        int size = 2 * RADIUS + 1;
+
+        // A column east: one new column of the area, besides the rows due a fresh look
+        int before = source.heightReads;
         assertTrue(columns.refresh(source, 1, 70, 0));
-        // Jumping, or climbing stairs, would look the whole area up again for little: the interval catches it
-        assertFalse(columns.refresh(source, 1, 71, 0), "up a block is the same column");
-        assertTrue(columns.refresh(source, 1, 71, 1));
+        int rows = PrecipitationColumns.rowsPerTick(size);
+        assertEquals(size + rows * size - rows, source.heightReads - before);
+        assertTrue(columns.index(1 + RADIUS, 0) >= 0, "the new edge is in the area");
+        assertEquals(-1, columns.index(-RADIUS, 0), "the old edge has left it");
+    }
+
+    @Test
+    void theRunningTotalsMatchAFreshLookAfterMoving() {
+        // Rain to the west, and a desert of red sand and sand to the east: walking east changes every share
+        IColumnSource mixed = new IColumnSource() {
+            @Override
+            public int groundHeight(int x, int z) {
+                return 64;
+            }
+
+            @Override
+            public PrecipitationKind precipitation(int x, int y, int z) {
+                return x < 0 ? PrecipitationKind.RAIN : PrecipitationKind.DUST;
+            }
+
+            @Override
+            public int light(int x, int y, int z) {
+                return 0xF000F0;
+            }
+
+            @Override
+            public int dustColor(int x, int y, int z) {
+                return z < 3 ? RED_SAND : (x % 3 == 0 ? IColumnSource.NOT_A_DUST_SOURCE : SAND);
+            }
+
+            @Override
+            public int fallbackDustColor(int x, int y, int z) {
+                return FALLBACK;
+            }
+        };
+        var walked = new PrecipitationColumns(RADIUS);
+        walked.refresh(mixed, -20, 70, 0);
+        for (int x = -19; x <= 15; x++)
+            walked.refresh(mixed, x, 70, x / 3);
+
+        var fresh = new PrecipitationColumns(RADIUS);
+        fresh.update(mixed, 15, 70, 5);
+        assertEquals(fresh.fallingShare(), walked.fallingShare(), 1e-6F);
+        assertEquals(fresh.dustShare(), walked.dustShare(), 1e-6F);
+        assertEquals(fresh.regionalDustColor(), walked.regionalDustColor());
+        for (int z = 5 - RADIUS; z <= 5 + RADIUS; z++)
+            for (int x = 15 - RADIUS; x <= 15 + RADIUS; x++)
+                assertEquals(fresh.kind(fresh.index(x, z)), walked.kind(walked.index(x, z)), "column " + x + ", " + z);
     }
 
     @Test

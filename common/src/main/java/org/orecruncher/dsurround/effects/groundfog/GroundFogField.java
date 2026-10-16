@@ -66,7 +66,9 @@ public final class GroundFogField {
     private final boolean[] slotStale;
     private final boolean[] slotRelight;
 
-    // The area as of the last update, cell (i, j) at column (originX + i, originZ + j)
+    // The area as of the last update, cell (i, j) at column (originX + i, originZ + j): the ground as found, and as the
+    // mist lies on it (obstacles taken out)
+    private final int[] found;
     private final float[] height;
     // The ground smoothed over a few blocks, for the shape of the mist: it banks up against a step and thins toward a
     // ledge, rather than changing at a column's edge
@@ -100,6 +102,7 @@ public final class GroundFogField {
         this.slotLight = new int[cells];
         this.slotStale = new boolean[cells];
         this.slotRelight = new boolean[cells];
+        this.found = new int[cells];
         this.height = new float[cells];
         this.smoothHeight = new float[cells];
         this.density = new float[cells];
@@ -240,13 +243,15 @@ public final class GroundFogField {
             for (int i = 0; i < size; i++) {
                 int slot = this.slot(this.originX + i, this.originZ + j);
                 int k = j * size + i;
+                this.found[k] = this.slotHeight[slot];
                 this.height[k] = this.slotHeight[slot];
                 this.scratch[k] = this.slotDensity[slot];
                 this.light[k] = this.slotLight[slot];
             }
         }
 
-        // A column standing well above all around it is an obstacle: the mist is at the height around it
+        // A column standing well above all around it is an obstacle: the mist is at the height around it. The
+        // neighbours are read in the area's order, a step either way, rather than each found in its slot
         for (int j = 1; j + 1 < size; j++) {
             for (int i = 1; i + 1 < size; i++) {
                 int k = j * size + i;
@@ -254,7 +259,7 @@ public final class GroundFogField {
                 for (int dj = -1; dj <= 1; dj++)
                     for (int di = -1; di <= 1; di++)
                         if (di != 0 || dj != 0)
-                            this.around[n++] = this.slotHeight[this.slot(this.originX + i + di, this.originZ + j + dj)];
+                            this.around[n++] = this.found[k + dj * size + di];
                 Arrays.sort(this.around);
                 float middle = (this.around[3] + this.around[4]) * 0.5F;
                 if (this.height[k] > middle + OBSTACLE_HEIGHT)

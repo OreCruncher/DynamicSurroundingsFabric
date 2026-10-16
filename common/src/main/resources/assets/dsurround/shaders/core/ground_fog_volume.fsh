@@ -25,11 +25,18 @@ uniform sampler2D FogGrid;
 uniform sampler2D Sampler2;
 uniform sampler2D NoiseSampler;
 
-// From positions relative to the camera to the screen, and back (ground_fog_screen)
+// From positions relative to the camera to the screen, and back, and two rows of the projection's inverse
+// (ground_fog_screen)
 flat in mat4 viewProj;
 flat in mat4 invViewProj;
+flat in vec4 depthRowZ;
+flat in vec4 depthRowW;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
+// How far along the view this pixel's line of sight goes (distance_at), for the smoothing and the composite, so they
+// needn't work it out again from the depth for each of the pixels around theirs. Written for every pixel, mist or
+// none: those without count too when the mist is blended
+layout(location = 1) out float sceneDistance;
 
 // The most steps along a line of sight, and the fewest: a short stretch through the mist (looking down into it close
 // by) needs fewer, about STEPS_PER_BLOCK for each block of it
@@ -183,6 +190,10 @@ void main() {
     // same)
     ivec2 pixel = min(ivec2(gl_FragCoord.xy) * int(Scale), ivec2(FullSize) - 1);
     float depth = texelFetch(DepthSampler, pixel, 0).r;
+    sceneDistance = distance_at(DepthSampler, pixel, depthRowZ, depthRowW);
+    // No mist, and where it would begin as far as can be (the depth is reversed), unless there is some
+    fragColor = vec4(0.0);
+    gl_FragDepth = 0.0;
     vec2 screenNdc = (vec2(pixel) + 0.5) / FullSize * 2.0 - 1.0;
     // The way the line of sight goes, from a point on it far off (the depth is reversed: near is 1, the sky 0), and how
     // far it goes: as far as can be through the sky. Not from a point near the camera: view bobbing moves the eye a few
@@ -195,7 +206,7 @@ void main() {
         length_ = length(viewed.xyz / viewed.w);
     }
     if (length_ <= 0.0) {
-        discard;
+        return;
     }
     vec3 start = CameraLocal;
 
@@ -204,14 +215,14 @@ void main() {
     float t1 = min(length_, MAX_DISTANCE);
     if (start.y > MistTop) {
         if (dir.y >= 0.0) {
-            discard;
+            return;
         }
         t0 = (MistTop - start.y) / dir.y;
     } else if (dir.y > 0.0) {
         t1 = min(t1, (MistTop - start.y) / dir.y);
     }
     if (t1 <= t0) {
-        discard;
+        return;
     }
 
     // Stepping through, offset a little per pixel so the steps don't show as bands: interleaved gradient noise, which
@@ -255,7 +266,7 @@ void main() {
     }
     float alpha = 1.0 - exp(-amount * Thickness);
     if (alpha <= 0.002) {
-        discard;
+        return;
     }
 
     // Where the mist begins: with Fabulous graphics, the composite writes it to the weather's target, which vanilla's

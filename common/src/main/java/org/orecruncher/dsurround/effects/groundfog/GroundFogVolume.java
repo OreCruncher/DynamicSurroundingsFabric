@@ -16,6 +16,9 @@ import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.RenderPass;
+import com.mojang.blaze3d.systems.RenderPassDescriptor;
+import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import net.minecraft.client.Camera;
@@ -75,25 +78,37 @@ public final class GroundFogVolume {
     private static final String NOISE_SAMPLER = "NoiseSampler";
     private static final String MIST_SAMPLER = "MistSampler";
     private static final String MIST_DEPTH_SAMPLER = "MistDepthSampler";
+    private static final String DISTANCE_SAMPLER = "DistanceSampler";
     private static final BindGroupLayout MARCH_LAYOUT = BindGroupLayout.builder()
             .withUniform(INFO, UniformType.UNIFORM_BUFFER)
             .withSampler(DEPTH_SAMPLER)
             .withSampler(FOG_GRID)
             .withSampler(NOISE_SAMPLER)
             .build();
-    private static final BindGroupLayout BLEND_LAYOUT = BindGroupLayout.builder()
+    private static final BindGroupLayout SMOOTH_LAYOUT = BindGroupLayout.builder()
+            .withUniform(INFO, UniformType.UNIFORM_BUFFER)
+            .withSampler(MIST_SAMPLER)
+            .withSampler(MIST_DEPTH_SAMPLER)
+            .withSampler(DISTANCE_SAMPLER)
+            .build();
+    private static final BindGroupLayout COMPOSITE_LAYOUT = BindGroupLayout.builder()
             .withUniform(INFO, UniformType.UNIFORM_BUFFER)
             .withSampler(MIST_SAMPLER)
             .withSampler(MIST_DEPTH_SAMPLER)
             .withSampler(DEPTH_SAMPLER)
+            .withSampler(DISTANCE_SAMPLER)
             .build();
+    // Far off, where nothing was drawn (no pixel is left so: the march writes every one)
+    private static final Vector4f CLEAR_DISTANCE = new Vector4f(1.0e6F, 0F, 0F, 0F);
     private static final Vector4f CLEAR = new Vector4f(0F, 0F, 0F, 0F);
     // Each pass writes every pixel's depth itself, where the mist begins along its line of sight
     private static final DepthStencilState WRITE_DEPTH = new DepthStencilState(CompareOp.ALWAYS_PASS, true);
 
     /**
      * Draws the mist, at a share of the screen's size, replacing what was there: its colour, already multiplied by its
-     * alpha, and the depth where it begins. Without it, there is none.
+     * alpha, and the depth where it begins; and, to a target of its own, how far each pixel's line of sight goes, which
+     * the smoothing and the composite read rather than work it out from the depth for each pixel around theirs.
+     * Without it, there is none.
      */
     public static final ModShader SHADER = new ModShader(
             screenPass("pipeline/ground_fog_volume", "core/ground_fog_volume")
@@ -101,6 +116,7 @@ public final class GroundFogVolume {
                     .withBindGroupLayout(BindGroupLayouts.SAMPLER2)
                     .withBindGroupLayout(MARCH_LAYOUT)
                     .withColorTargetState(ColorTargetState.DEFAULT)
+                    .withColorTargetState(1, new ColorTargetState(Optional.empty(), GpuFormat.R32_FLOAT, ColorTargetState.WRITE_RED))
                     .withDepthStencilState(WRITE_DEPTH)
                     .build(),
             "ground fog", "there will be no ground fog", Library.LOGGER);
@@ -109,7 +125,7 @@ public final class GroundFogVolume {
      */
     public static final ModShader SMOOTH = new ModShader(
             screenPass("pipeline/ground_fog_smooth", "core/ground_fog_smooth")
-                    .withBindGroupLayout(BLEND_LAYOUT)
+                    .withBindGroupLayout(SMOOTH_LAYOUT)
                     .withColorTargetState(ColorTargetState.DEFAULT)
                     .withDepthStencilState(WRITE_DEPTH)
                     .build(),
@@ -189,6 +205,11 @@ public final class GroundFogVolume {
     // The same, smoothed
     @Nullable
     private static TextureTarget smoothed;
+    // How far each of the mist's pixels' line of sight goes, at the same size
+    @Nullable
+    private static GpuTexture distances;
+    @Nullable
+    private static GpuTextureView distancesView;
     @Nullable
     private static MappableRingBuffer info;
 
@@ -247,6 +268,7 @@ public final class GroundFogVolume {
         int scale = quality.scale();
         var reduced = marched = reducedFor(marched, "Dynamic Surroundings ground fog", target, scale);
         var smoothedReduced = smoothed = reducedFor(smoothed, "Dynamic Surroundings ground fog, smoothed", target, scale);
+        var distance = distancesFor(reduced);
         writeInfo(field, camera, target, fabulous, quality, strength, driftX, driftZ, seconds);
         var transforms = RenderSystem.getDynamicUniforms().writeTransform(RenderSystem.getModelViewMatrixCopy());
         var encoder = RenderSystem.getDevice().createCommandEncoder();
@@ -255,8 +277,11 @@ public final class GroundFogVolume {
 
         // The mist at a share of the screen's size, replacing what was there: its colour and where it begins
         MARCH_TIMER.begin();
-        try (RenderPass pass = encoder.createRenderPass(() -> "Dynamic Surroundings ground fog march", reduced.getColorTextureView(),
-                Optional.of(CLEAR), reduced.getDepthTextureView(), OptionalDouble.of(0D))) {
+        try (RenderPass pass = encoder.createRenderPass(RenderPassDescriptor.create(() -> "Dynamic Surroundings ground fog march")
+                .withColorAttachment(reduced.getColorTextureView(), Optional.of(CLEAR))
+                .withColorAttachment(distance, Optional.of(CLEAR_DISTANCE))
+                .withDepthAttachment(reduced.getDepthTextureView(), OptionalDouble.of(0D))
+                .withRenderArea(new RenderPass.RenderArea(0, 0, reduced.width, reduced.height)))) {
             begin(pass, SHADER.pipeline(), transforms);
             SoftParticles.bindSceneDepth(pass);
             // Read smoothly between columns, ground heights and thickness both: the mist rounds off over ledges
@@ -275,7 +300,7 @@ public final class GroundFogVolume {
             begin(pass, SMOOTH.pipeline(), transforms);
             pass.bindTexture(MIST_SAMPLER, reduced.getColorTextureView(), nearest);
             pass.bindTexture(MIST_DEPTH_SAMPLER, reduced.getDepthTextureView(), nearest);
-            SoftParticles.bindSceneDepth(pass);
+            pass.bindTexture(DISTANCE_SAMPLER, distance, nearest);
             pass.draw(3, 1, 0, 0);
         } finally {
             SMOOTH_TIMER.end();
@@ -289,6 +314,7 @@ public final class GroundFogVolume {
             pass.bindTexture(MIST_SAMPLER, smoothedReduced.getColorTextureView(), nearest);
             pass.bindTexture(MIST_DEPTH_SAMPLER, smoothedReduced.getDepthTextureView(), nearest);
             SoftParticles.bindSceneDepth(pass);
+            pass.bindTexture(DISTANCE_SAMPLER, distance, nearest);
             pass.draw(3, 1, 0, 0);
         } finally {
             COMPOSITE_TIMER.end();
@@ -353,7 +379,7 @@ public final class GroundFogVolume {
 
     private static RenderPipeline.Builder composite(String location) {
         return screenPass(location, "core/ground_fog_composite")
-                .withBindGroupLayout(BLEND_LAYOUT)
+                .withBindGroupLayout(COMPOSITE_LAYOUT)
                 .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA));
     }
 
@@ -371,6 +397,25 @@ public final class GroundFogVolume {
         else if (existing.width != width || existing.height != height)
             existing.resize(width, height);
         return existing;
+    }
+
+    /**
+     * The texture the march writes each pixel's distance to, created or made again to match {@code reduced}'s size
+     */
+    private static GpuTextureView distancesFor(TextureTarget reduced) {
+        if (distances != null && (distances.getWidth(0) != reduced.width || distances.getHeight(0) != reduced.height)) {
+            distancesView.close();
+            distances.close();
+            distances = null;
+        }
+        if (distances == null) {
+            var device = RenderSystem.getDevice();
+            distances = device.createTexture(() -> "Dynamic Surroundings ground fog distances",
+                    GpuTexture.USAGE_RENDER_ATTACHMENT | GpuTexture.USAGE_TEXTURE_BINDING, GpuFormat.R32_FLOAT,
+                    reduced.width, reduced.height, 1, 1);
+            distancesView = device.createTextureView(distances);
+        }
+        return distancesView;
     }
 
     /**

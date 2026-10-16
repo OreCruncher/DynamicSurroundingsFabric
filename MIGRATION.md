@@ -67,8 +67,15 @@ What changed to fit 26.2:
   taken from a point far off (`DIRECTION_DEPTH`): view bobbing shifts the eye in the projection by about as much as the
   near plane is from it, so a near point turned the lines wildly while walking (the mist blinked). The depth copy is `SoftParticles.captureDepth` (translucent target with Fabulous). Drawn at the start
   of the weather pass without Fabulous; with it, after the weather and before the world border (optional hook
-  `GROUND_FOG`). Still open from the 0.4.7 review: storing each march pixel's distance for smooth/composite, the grid
-  shift, 3D noise.
+  `GROUND_FOG`). The march also writes each pixel's distance (`distance_at`) to an `R32_FLOAT` target, a second colour
+  attachment, for the smooth (no depth reads) and composite (its own pixel only); it writes every pixel, returning
+  clear colour instead of discarding, as pixels without mist still count when blending. 3D noise was dropped (no banding
+  found on 26.2). `GroundFogField.prepare` reads the obstacle check's neighbours in area order rather than through the
+  ring's slots.
+- **Precipitation columns**: `PrecipitationColumns` keeps each column in a slot keyed by its world position, as
+  `GroundFogField` does: moving looks up only the columns that came into the area, a few rows are looked at again each
+  tick (all within `REFRESH_TICKS`) instead of the whole area every 10 ticks, and the rain, snow and dust shares and the
+  regional dust colour are running totals.
 - **Vanilla tags**: 26.2's `minecraft:dirt` no longer holds grass blocks, podzol, mycelium, moss or mud; they are in
   `grass_blocks`, `mud` and `moss_blocks`, all under `substrate_overworld`, which `rain_absorbing` (damp spots) and
   `BlockLibrary`'s acoustic seed tags now use. `minecraft:tall_flowers` is gone; `brush_step` lists its five flowers.
