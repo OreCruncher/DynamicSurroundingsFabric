@@ -250,12 +250,131 @@ public class PrecipitationFieldTests {
     }
 
     @Test
-    void snowLandsWithoutATrace() {
+    void snowLandsAsSnowForTheFlecks() {
         var field = new PrecipitationField(1000);
         // Snow everywhere, on ground just below the camera so flakes reach it quickly
         tick(field, new Columns((int) CAMERA_Y - 1, Integer.MIN_VALUE, Integer.MIN_VALUE), 0, 0, 1F, 200);
         assertTrue(field.count() > 0);
-        assertEquals(0, field.landings());
+        assertTrue(field.landings() > 0);
+        for (int i = 0; i < field.landings(); i++) {
+            assertTrue(field.landingIsSnow(i));
+            assertTrue(field.landingSize(i) >= 0F && field.landingSize(i) <= 1F);
+            assertTrue(field.landingVariant(i) >= 0F && field.landingVariant(i) <= 1F);
+        }
+    }
+
+    @Test
+    void snowCarriedIntoTheSideOfSomethingTallerHitsTheSideNotTheTop() {
+        // Every other column a pillar topping out above the cylinder, so no drop starts over one: any landing on a
+        // pillar's top would be a flake that swayed into its side
+        int low = (int) CAMERA_Y - 1, tall = (int) CAMERA_Y + PrecipitationField.ABOVE + 10;
+        var pillars = new IColumnSource() {
+            @Override
+            public int groundHeight(int x, int z) {
+                return (x & 1) == 0 ? low : tall;
+            }
+
+            @Override
+            public PrecipitationKind precipitation(int x, int y, int z) {
+                return PrecipitationKind.SNOW;
+            }
+
+            @Override
+            public int light(int x, int y, int z) {
+                return 0xF000F0;
+            }
+
+            @Override
+            public int dustColor(int x, int y, int z) {
+                return SAND;
+            }
+
+            @Override
+            public int fallbackDustColor(int x, int y, int z) {
+                return SAND;
+            }
+        };
+        var field = new PrecipitationField(1000);
+        var random = Randomizer.create(42);
+        int landedOnLow = 0, hitSides = 0;
+        for (int t = 0; t < 200; t++) {
+            field.tick(pillars, 0, CAMERA_Y, 0, 1F, 1F, new Wind(), random);
+            for (int i = 0; i < field.landings(); i++) {
+                if (!field.landingBlownIn(i)) {
+                    assertEquals(low, field.landingGround(i), "landed on top of a pillar it hit the side of");
+                    landedOnLow++;
+                    continue;
+                }
+                hitSides++;
+                // Followed on from the gap it was in, moving into a pillar's column, below the pillar's top
+                float x = field.landingX(i);
+                assertEquals(low, pillars.groundHeight(Mth.floor(x), 0), "should start out in the open");
+                assertEquals(tall, pillars.groundHeight(Mth.floor(x + field.landingMotionX(i)), 0), "should be moving into a pillar");
+                assertTrue(field.landingY(i) <= tall);
+            }
+        }
+        assertTrue(landedOnLow > 0, "flakes should still land between the pillars");
+        assertTrue(hitSides > 0, "swaying flakes should hit the pillars' sides");
+    }
+
+    @Test
+    void rainBlownIntoTheSideOfSomethingIsFollowedOnForTheWindows() {
+        // A checkerboard of pillars topping out above the cylinder: in any wind, rain crosses into them from the side
+        int low = (int) CAMERA_Y - 1, tall = (int) CAMERA_Y + PrecipitationField.ABOVE + 10;
+        var pillars = new IColumnSource() {
+            @Override
+            public int groundHeight(int x, int z) {
+                return ((x ^ z) & 1) == 0 ? low : tall;
+            }
+
+            @Override
+            public PrecipitationKind precipitation(int x, int y, int z) {
+                return PrecipitationKind.RAIN;
+            }
+
+            @Override
+            public int light(int x, int y, int z) {
+                return 0xF000F0;
+            }
+
+            @Override
+            public int dustColor(int x, int y, int z) {
+                return SAND;
+            }
+
+            @Override
+            public int fallbackDustColor(int x, int y, int z) {
+                return SAND;
+            }
+        };
+        var field = new PrecipitationField(1000);
+        var wind = steadyWind();
+        var random = Randomizer.create(42);
+        int blownIn = 0;
+        for (int t = 0; t < 40; t++) {
+            field.tick(pillars, 0, CAMERA_Y, 0, 1F, 1F, wind, random);
+            for (int i = 0; i < field.landings(); i++) {
+                if (!field.landingBlownIn(i))
+                    continue;
+                blownIn++;
+                assertFalse(field.landingIsSnow(i));
+                float x = field.landingX(i), z = field.landingZ(i);
+                assertEquals(low, pillars.groundHeight(Mth.floor(x), Mth.floor(z)), "should start out in the open");
+                assertEquals(tall, pillars.groundHeight(Mth.floor(x + field.landingMotionX(i)), Mth.floor(z + field.landingMotionZ(i))),
+                        "should be moving into a pillar");
+                assertTrue(field.landingMotionY(i) < 0F, "falling");
+            }
+        }
+        assertTrue(blownIn > 0, "wind-blown rain should hit the pillars' sides");
+    }
+
+    @Test
+    void rainLandsAsRain() {
+        var field = new PrecipitationField(1000);
+        tick(field, RAIN_EVERYWHERE, 0, 0, 1F, 30);
+        assertTrue(field.landings() > 0);
+        for (int i = 0; i < field.landings(); i++)
+            assertFalse(field.landingIsSnow(i));
     }
 
     @Test

@@ -94,8 +94,8 @@ public final class PrecipitationField {
     static final int DUST_FADE = 20;
 
     /**
-     * The most rain drop landings kept from a tick, for splashes, at the default range. More land at full strength,
-     * but more splashes than this would not be seen as more. A field at another range keeps as many for its area, so
+     * The most rain drop and snowflake landings kept from a tick, for splashes and flecks, at the default range. More
+     * land at full strength, but more splashes than this would not be seen as more. A field at another range keeps as many for its area, so
      * splashes are as dense at any range (see {@link #forArea}).
      */
     public static final int MAX_LANDINGS = 128;
@@ -127,12 +127,19 @@ public final class PrecipitationField {
     int count;
     private int dustCount;
 
-    // Where rain drops landed this tick: x and z, the height of the ground they landed on, and how big they were
+    // Where rain drops and snowflakes landed this tick: x and z, the height of the ground they landed on, how big they
+    // were, and what they were. A snowflake also keeps which flake it was drawn as, and its light; and either, when it
+    // was carried into the side of something, where it was the tick before (x, y, z) and how it was moving.
     private final int maxLandings;
     private final float[] landingX;
     private final float[] landingZ;
     private final int[] landingGround;
     private final float[] landingSize;
+    private final byte[] landingKind;
+    private final float[] landingVariant;
+    private final int[] landingLight;
+    private final boolean[] landingBlownIn;
+    private final float[] landingY, landingMotionX, landingMotionY, landingMotionZ;
     private int landings;
 
     public PrecipitationField(int capacity) {
@@ -151,6 +158,14 @@ public final class PrecipitationField {
         this.landingZ = new float[this.maxLandings];
         this.landingGround = new int[this.maxLandings];
         this.landingSize = new float[this.maxLandings];
+        this.landingKind = new byte[this.maxLandings];
+        this.landingVariant = new float[this.maxLandings];
+        this.landingLight = new int[this.maxLandings];
+        this.landingBlownIn = new boolean[this.maxLandings];
+        this.landingY = new float[this.maxLandings];
+        this.landingMotionX = new float[this.maxLandings];
+        this.landingMotionY = new float[this.maxLandings];
+        this.landingMotionZ = new float[this.maxLandings];
         // Fills from empty in a few ticks; the rain level itself builds up more slowly than that
         this.maxSpawnPerTick = Math.max(1, capacity / 4);
         this.x = new float[capacity];
@@ -182,7 +197,7 @@ public final class PrecipitationField {
      * How far from the camera, horizontally, there are drops, in blocks
      */
     /**
-     * The most rain drop landings it keeps from a tick: {@link #MAX_LANDINGS} at the default range, as many for the
+     * The most landings it keeps from a tick: {@link #MAX_LANDINGS} at the default range, as many for the
      * area at another
      */
     public int maxLandings() {
@@ -253,7 +268,8 @@ public final class PrecipitationField {
     }
 
     /**
-     * How many rain drops landed in the last tick, up to {@link #maxLandings}. Snow and dust land without a trace.
+     * How many rain drops and snowflakes landed in the last tick, up to {@link #maxLandings}. Dust settles without a
+     * trace.
      */
     public int landings() {
         return this.landings;
@@ -275,10 +291,63 @@ public final class PrecipitationField {
     }
 
     /**
-     * How big the drop that landed was, 0 to 1
+     * How big the drop or flake that landed was, 0 to 1
      */
     public float landingSize(int i) {
         return this.landingSize[i];
+    }
+
+    /**
+     * Whether what landed was a snowflake rather than a rain drop
+     */
+    public boolean landingIsSnow(int i) {
+        return this.landingKind[i] == SNOW;
+    }
+
+    /**
+     * For a snowflake that landed: which flake it was drawn as, 0 to 1, as {@link #variant} picks one
+     */
+    public float landingVariant(int i) {
+        return this.landingVariant[i];
+    }
+
+    /**
+     * For a snowflake that landed: its packed light as of its last tick
+     */
+    public int landingLight(int i) {
+        return this.landingLight[i];
+    }
+
+    /**
+     * Whether it was carried into a column below its top: into the side of something taller, or in under
+     * an overhang or a canopy. Where it ends up is for the world to say, along its way from where it was the tick before:
+     * {@link #landingX}, {@link #landingY} and {@link #landingZ}, moving by {@link #landingMotionX} and the others a
+     * tick. Otherwise it landed on top of its column's ground.
+     */
+    public boolean landingBlownIn(int i) {
+        return this.landingBlownIn[i];
+    }
+
+    /**
+     * For a drop or snowflake blown in: its height the tick before
+     */
+    public float landingY(int i) {
+        return this.landingY[i];
+    }
+
+    /**
+     * For a drop or snowflake blown in: how far it moved in its last tick
+     */
+    public float landingMotionX(int i) {
+        return this.landingMotionX[i];
+    }
+
+    public float landingMotionY(int i) {
+        return this.landingMotionY[i];
+    }
+
+    public float landingMotionZ(int i) {
+        return this.landingMotionZ[i];
     }
 
     /**
@@ -347,8 +416,18 @@ public final class PrecipitationField {
         if (what != PrecipitationKind.RAIN && what != PrecipitationKind.SNOW)
             return false;
         if (this.y[i] <= this.columns.ground(column)) {
-            if (this.kind[i] == RAIN)
-                this.landed(this.x[i], this.z[i], this.columns.ground(column), this.rainSize(i));
+            // Still above the ground on its last tick: it came down on top. Otherwise it was carried into the side of
+            // something taller, a wall or a tree, or in under an overhang or a canopy: it goes on to wherever the world
+            // says it ends up (a snowflake may stick there, a rain drop may run down a window). It doesn't land on the
+            // column's top.
+            if (this.prevY[i] <= this.columns.ground(column)) {
+                this.blownIn(i, this.columns.ground(column));
+            } else if (this.kind[i] == RAIN) {
+                this.landed(this.x[i], this.z[i], this.columns.ground(column), this.rainSize(i), RAIN, 0F, 0);
+            } else {
+                this.landed(this.x[i], this.z[i], this.columns.ground(column), this.snowSize(i), SNOW,
+                        (this.drift[i] - MIN_DRIFT) / DRIFT_RANGE, this.light[i]);
+            }
             return false;
         }
         if (this.y[i] <= cameraY - BELOW)
@@ -515,14 +594,46 @@ public final class PrecipitationField {
         return Mth.clamp((this.speed[i] - RAIN_SPEED_MIN) / RAIN_SPEED_RANGE, 0F, 1F);
     }
 
-    private void landed(float x, float z, int ground, float size) {
-        if (this.landings == this.maxLandings)
+    /**
+     * Notes a rain drop or snowflake carried from one column into the next below its top: where it was the tick before, out in the
+     * open, and how it was moving, for the world to follow it from. A flake that didn't move into another column (the
+     * ground rose under it) wasn't blown in.
+     */
+    private void blownIn(int i, int ground) {
+        if (Mth.floor(this.prevX[i]) == Mth.floor(this.x[i]) && Mth.floor(this.prevZ[i]) == Mth.floor(this.z[i]))
             return;
+        boolean landed = this.kind[i] == RAIN
+                ? this.landed(this.prevX[i], this.prevZ[i], ground, this.rainSize(i), RAIN, 0F, 0)
+                : this.landed(this.prevX[i], this.prevZ[i], ground, this.snowSize(i), SNOW, (this.drift[i] - MIN_DRIFT) / DRIFT_RANGE, this.light[i]);
+        if (!landed)
+            return;
+        int at = this.landings - 1;
+        this.landingBlownIn[at] = true;
+        this.landingY[at] = this.prevY[i];
+        this.landingMotionX[at] = this.x[i] - this.prevX[i];
+        this.landingMotionY[at] = this.y[i] - this.prevY[i];
+        this.landingMotionZ[at] = this.z[i] - this.prevZ[i];
+    }
+
+    /**
+     * Notes a landing on top of a column's ground
+     *
+     * @param variant a snowflake's choice of flake, 0 to 1 (see {@link #variant})
+     * @return false if there was no room to
+     */
+    private boolean landed(float x, float z, int ground, float size, byte kind, float variant, int light) {
+        if (this.landings == this.maxLandings)
+            return false;
         this.landingX[this.landings] = x;
         this.landingZ[this.landings] = z;
         this.landingGround[this.landings] = ground;
         this.landingSize[this.landings] = size;
+        this.landingKind[this.landings] = kind;
+        this.landingVariant[this.landings] = variant;
+        this.landingLight[this.landings] = light;
+        this.landingBlownIn[this.landings] = false;
         this.landings++;
+        return true;
     }
 
     /**
@@ -573,8 +684,8 @@ public final class PrecipitationField {
      * @param scales     how big rain and snow are drawn, from the player's settings
      */
     public void draw(Tesselator tesselator, Camera camera, float partialTick, boolean dustOnly, List<Snowflakes.Flake> snowflakes,
-                     int largest, TextureAtlasSprite[] dust, DropScales scales) {
-        PrecipitationRenderer.draw(this, tesselator, camera, partialTick, dustOnly, snowflakes, largest, dust, scales);
+                     int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
+        PrecipitationRenderer.draw(this, tesselator, camera, partialTick, dustOnly, snowflakes, largest, dust, scales, rainColor);
     }
 
     /**

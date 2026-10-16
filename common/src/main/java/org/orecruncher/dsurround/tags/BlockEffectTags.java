@@ -23,6 +23,7 @@ public class BlockEffectTags {
     public static final TagKey<Block> HEAT_PRODUCERS = of("heat_producers");
     public static final TagKey<Block> RAIN_ABSORBING = of("rain_absorbing");
     public static final TagKey<Block> DUST_SOURCES = of("dust_sources");
+    public static final TagKey<Block> RAIN_STREAKS = of("rain_streaks");
 
     private static TagKey<Block> of(String id) {
         var tagKey = TagKey.create(Registries.BLOCK, Constants.asId("effects/" + id));

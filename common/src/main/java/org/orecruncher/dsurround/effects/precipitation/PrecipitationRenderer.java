@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -17,7 +18,8 @@ import java.util.List;
  * turned toward the camera, snow as flakes facing it, turning slowly as they fall, and dust as large faint puffs the
  * colour of the ground it was blown from. The streaks are a plain colour that fades out toward their tail; the flakes
  * are cut from the game's own snow texture ({@link Snowflakes}), and the puffs are sprites from the particle atlas.
- * All are lit by the lightmap, like vanilla's weather. Also draws {@link DampSpots}, flat on the ground. Positions are
+ * All are lit by the lightmap, like vanilla's weather. Also draws {@link DampSpots} and {@link SnowFlecks}, flat on
+ * the ground. Positions are
  * relative to the camera, as for particles and vanilla's weather. Render thread only.
  */
 final class PrecipitationRenderer {
@@ -31,7 +33,6 @@ final class PrecipitationRenderer {
     static final float RAIN_HALF_WIDTH_RANGE = 0.015F;
     static final float RAIN_MIN_ALPHA = 0.25F;
     static final float RAIN_ALPHA_RANGE = 0.25F;
-    static final float RAIN_RED = 0.72F, RAIN_GREEN = 0.78F, RAIN_BLUE = 0.88F;
     // A flake's half size: the smallest, and how much more the largest is. Most are small (see snowSize).
     static final float SNOW_MIN_HALF_SIZE = 0.05F;
     static final float SNOW_HALF_SIZE_RANGE = 0.07F;
@@ -66,6 +67,13 @@ final class PrecipitationRenderer {
     static final float NO_TEXTURE = -1F;
     // Drops this close to the cylinder's edge fade out, so they don't vanish all at once as the camera moves
     static final float EDGE_FADE = 2F;
+    // A drop on a window: the bead's half size, for the smallest drop and how much more for the largest, and alpha;
+    // its trail's width as a share of the bead's, and alpha as a share of the bead's at its bottom
+    static final float STREAK_BEAD_MIN_HALF_SIZE = 0.018F;
+    static final float STREAK_BEAD_HALF_SIZE_RANGE = 0.017F;
+    static final float STREAK_BEAD_ALPHA = 0.6F;
+    static final float STREAK_TRAIL_WIDTH = 0.45F;
+    static final float STREAK_TRAIL_ALPHA = 0.5F;
     // A damp spot's colour where the ground can't be darkened, so it is laid over it instead
     static final float DAMP_RED = 0.08F, DAMP_GREEN = 0.08F, DAMP_BLUE = 0.1F;
 
@@ -84,9 +92,10 @@ final class PrecipitationRenderer {
      * @param dust       the dust sprites, from the particle atlas, which must be bound when drawing dust; each puff
      *                   keeps one
      * @param scales     how big rain and snow are drawn
+     * @param rainColor  the rain's colour
      */
     static void draw(PrecipitationField field, Tesselator tesselator, Camera camera, float partialTick, boolean dustOnly,
-                     List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales) {
+                     List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
         if (field.count == 0 || (dustOnly && field.dustCount() == 0) || (!dustOnly && field.dustCount() == field.count))
             return;
 
@@ -171,10 +180,10 @@ final class PrecipitationRenderer {
                 }
                 float tx = x - vx * length, ty = y - vy * length, tz = z - vz * length;
                 float a = (RAIN_MIN_ALPHA + RAIN_ALPHA_RANGE * dropSize) * fade;
-                builder.addVertex(x - sx, y - sy, z - sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(RAIN_RED, RAIN_GREEN, RAIN_BLUE, a).setLight(light);
-                builder.addVertex(tx - sx, ty - sy, tz - sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(RAIN_RED, RAIN_GREEN, RAIN_BLUE, 0F).setLight(light);
-                builder.addVertex(tx + sx, ty + sy, tz + sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(RAIN_RED, RAIN_GREEN, RAIN_BLUE, 0F).setLight(light);
-                builder.addVertex(x + sx, y + sy, z + sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(RAIN_RED, RAIN_GREEN, RAIN_BLUE, a).setLight(light);
+                builder.addVertex(x - sx, y - sy, z - sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), a).setLight(light);
+                builder.addVertex(tx - sx, ty - sy, tz - sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), 0F).setLight(light);
+                builder.addVertex(tx + sx, ty + sy, tz + sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), 0F).setLight(light);
+                builder.addVertex(x + sx, y + sy, z + sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), a).setLight(light);
             }
         }
 
@@ -256,6 +265,122 @@ final class PrecipitationRenderer {
         builder.addVertex(x - ax + bx, y - ay + by, z - az + bz).setUv(u1, v0).setColor(r, g, b, a).setLight(light);
         builder.addVertex(x + ax + bx, y + ay + by, z + az + bz).setUv(u0, v0).setColor(r, g, b, a).setLight(light);
         builder.addVertex(x + ax - bx, y + ay - by, z + az - bz).setUv(u0, v1).setColor(r, g, b, a).setLight(light);
+    }
+
+    /**
+     * Builds the snow flecks into a buffer and draws it with whatever shader is current, which should take
+     * {@link DefaultVertexFormat#PARTICLE}, with the snow texture bound. Each lies flat on the face it landed on, the
+     * top of a block or a side it was blown into, as the flake it fell as, at the flake's size, fading and shrinking as
+     * it melts.
+     *
+     * @param snowflakes the flakes of the snow texture; empty to draw plain flecks
+     * @param largest    the largest of them, in pixels: the others are drawn in proportion
+     * @param scale      how big snowflakes are drawn
+     */
+    static void draw(SnowFlecks flecks, Tesselator tesselator, Camera camera, float partialTick, List<Snowflakes.Flake> snowflakes,
+                     int largest, float scale) {
+        if (flecks.count == 0)
+            return;
+
+        var cam = camera.getPosition();
+        BufferBuilder builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
+
+        for (int i = 0; i < flecks.count; i++) {
+            float remaining = flecks.remaining(i, partialTick);
+            if (remaining <= 0F)
+                continue;
+            float x = (float) (flecks.x[i] - cam.x);
+            float y = (float) (flecks.y[i] - cam.y);
+            float z = (float) (flecks.z[i] - cam.z);
+            float half = (SNOW_MIN_HALF_SIZE + SNOW_HALF_SIZE_RANGE * flecks.size[i]) * scale * SnowFlecks.sizeFor(remaining);
+            float u0 = NO_TEXTURE, v0 = NO_TEXTURE, u1 = NO_TEXTURE, v1 = NO_TEXTURE;
+            if (!snowflakes.isEmpty()) {
+                int variant = Mth.clamp((int) (flecks.variant[i] * snowflakes.size()), 0, snowflakes.size() - 1);
+                var flake = snowflakes.get(variant);
+                half *= flake.size() / (float) largest;
+                u0 = flake.u0();
+                v0 = flake.v0();
+                u1 = flake.u1();
+                v1 = flake.v1();
+            }
+            float a = SNOW_ALPHA * remaining;
+            int light = flecks.light[i];
+            // The corners, each a quarter turn from the last, as far out as a falling flake's (see billboard), in the
+            // plane of the face it lies on
+            float corner = half * Mth.SQRT_OF_TWO;
+            float cu = flecks.turnCos[i] * corner, cv = flecks.turnSin[i] * corner;
+            byte face = flecks.face[i];
+            fleckCorner(builder, face, x, y, z, cu, cv).setUv(u0, v0).setColor(1F, 1F, 1F, a).setLight(light);
+            fleckCorner(builder, face, x, y, z, -cv, cu).setUv(u0, v1).setColor(1F, 1F, 1F, a).setLight(light);
+            fleckCorner(builder, face, x, y, z, -cu, -cv).setUv(u1, v1).setColor(1F, 1F, 1F, a).setLight(light);
+            fleckCorner(builder, face, x, y, z, cv, -cu).setUv(u1, v0).setColor(1F, 1F, 1F, a).setLight(light);
+        }
+
+        var mesh = builder.build();
+        if (mesh != null)
+            BufferUploader.drawWithShader(mesh);
+    }
+
+    /**
+     * Builds the drops running down windows into a buffer and draws it with whatever shader is current, which should
+     * take {@link DefaultVertexFormat#PARTICLE}. Untextured, in the rain's colour: a bead, and above it the wet trail
+     * it has left, fading toward its top.
+     */
+    static void draw(WindowStreaks streaks, Tesselator tesselator, Camera camera, float partialTick, RainColor rainColor) {
+        if (streaks.count == 0)
+            return;
+
+        var cam = camera.getPosition();
+        BufferBuilder builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
+
+        for (int i = 0; i < streaks.count; i++) {
+            float fade = streaks.fade(i, partialTick);
+            if (fade <= 0F)
+                continue;
+            float x = (float) (streaks.x[i] - cam.x);
+            float y = (float) (Mth.lerp(partialTick, streaks.prevY[i], streaks.y[i]) - cam.y);
+            float z = (float) (streaks.z[i] - cam.z);
+            float trailTop = (float) (Mth.lerp(partialTick, streaks.prevTrailTop[i], streaks.trailTop[i]) - cam.y);
+            byte face = streaks.face[i];
+            int light = streaks.light[i];
+            float size = streaks.size[i];
+            float half = STREAK_BEAD_MIN_HALF_SIZE + STREAK_BEAD_HALF_SIZE_RANGE * size;
+            float a = STREAK_BEAD_ALPHA * fade;
+
+            // The bead
+            fleckCorner(builder, face, x, y, z, -half, -half).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), a).setLight(light);
+            fleckCorner(builder, face, x, y, z, half, -half).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), a).setLight(light);
+            fleckCorner(builder, face, x, y, z, half, half).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), a).setLight(light);
+            fleckCorner(builder, face, x, y, z, -half, half).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), a).setLight(light);
+
+            // The trail above it, narrower and fainter, fading out toward its top
+            float trail = trailTop - y - half;
+            if (trail > 0F) {
+                float width = half * STREAK_TRAIL_WIDTH;
+                float ta = a * STREAK_TRAIL_ALPHA;
+                fleckCorner(builder, face, x, y, z, -width, half).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), ta).setLight(light);
+                fleckCorner(builder, face, x, y, z, width, half).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), ta).setLight(light);
+                fleckCorner(builder, face, x, y, z, width, half + trail).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), 0F).setLight(light);
+                fleckCorner(builder, face, x, y, z, -width, half + trail).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), 0F).setLight(light);
+            }
+        }
+
+        var mesh = builder.build();
+        if (mesh != null)
+            BufferUploader.drawWithShader(mesh);
+    }
+
+    /**
+     * Adds a corner of something lying on a face, a snow fleck or a drop on a window, offset from its centre by (u, v)
+     * in the plane of the face: x and z on the top of a block, z and y on a west or east side, x and y on a north or
+     * south side
+     */
+    private static VertexConsumer fleckCorner(BufferBuilder builder, byte face, float x, float y, float z, float u, float v) {
+        return switch (face) {
+            case SnowFlecks.FACE_WEST, SnowFlecks.FACE_EAST -> builder.addVertex(x, y + v, z + u);
+            case SnowFlecks.FACE_NORTH, SnowFlecks.FACE_SOUTH -> builder.addVertex(x + u, y + v, z);
+            default -> builder.addVertex(x + u, y, z + v);
+        };
     }
 
     /**

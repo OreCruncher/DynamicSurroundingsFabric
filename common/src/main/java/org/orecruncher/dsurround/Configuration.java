@@ -463,6 +463,11 @@ public class Configuration extends ConfigurationData {
         public int rainDropScale = 100;
 
         @Property
+        @Slider(min = 0, max = 100)
+        @Comment("How blue particle rain is: 0 is a nearly colourless pale grey, 100 a deep blue")
+        public int rainTint = 15;
+
+        @Property
         @Slider(min = 50, max = 200)
         @Comment("How big particle snowflakes are drawn, as a percent of their usual size")
         public int snowflakeScale = 100;
@@ -474,6 +479,18 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Rain sounds that follow the storm's strength, from a patter to a roar, and the sound of blowing dust")
         public boolean enableStormSounds = true;
+
+        @Property
+        @Comment("Water drips from leaves and overhanging edges for a while after the rain stops")
+        public boolean enableAfterRainDrips = true;
+
+        @Property
+        @Comment("With particle snow on, snowflakes blown by the wind against a wall or tree trunk stick to it for a moment")
+        public boolean enableSnowOnSides = true;
+
+        @Property
+        @Comment("With particle rain on, rain drops run down the outside of windows in stick-and-slide streaks")
+        public boolean enableWindowStreaks = true;
 
         @Property
         @Experimental

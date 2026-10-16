@@ -22,6 +22,17 @@ public class LandingsTests {
     }
 
     @Test
+    void aFleckLiesOnTheFaceThatWasHit() {
+        for (var direction : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+            byte face = Landings.face(direction);
+            assertEquals(direction.getStepX(), SnowFlecks.normalX(face), direction::toString);
+            assertEquals(direction.getStepZ(), SnowFlecks.normalZ(face), direction::toString);
+        }
+        assertEquals(SnowFlecks.FACE_TOP, Landings.face(net.minecraft.core.Direction.UP));
+        assertEquals(-1, Landings.face(net.minecraft.core.Direction.DOWN), "nothing settles on an underside");
+    }
+
+    @Test
     void onBlocksTheSplashIsOnTheirShape() {
         assertEquals(1D, Landings.surfaceTop(1D, 0F));
         assertEquals(0.5D, Landings.surfaceTop(0.5D, 0F), "a bottom slab");

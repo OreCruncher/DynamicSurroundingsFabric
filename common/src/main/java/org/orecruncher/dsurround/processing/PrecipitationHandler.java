@@ -10,6 +10,7 @@ import net.minecraft.client.ParticleStatus;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -20,6 +21,7 @@ import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.particles.DSurroundParticleSprites;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
+import org.orecruncher.dsurround.effects.precipitation.AfterRainDrips;
 import org.orecruncher.dsurround.effects.precipitation.DampSpots;
 import org.orecruncher.dsurround.effects.precipitation.DropScales;
 import org.orecruncher.dsurround.effects.precipitation.IColumnSource;
@@ -27,7 +29,10 @@ import org.orecruncher.dsurround.effects.precipitation.Landings;
 import org.orecruncher.dsurround.effects.precipitation.LevelColumns;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationField;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
+import org.orecruncher.dsurround.effects.precipitation.RainColor;
+import org.orecruncher.dsurround.effects.precipitation.SnowFlecks;
 import org.orecruncher.dsurround.effects.precipitation.Snowflakes;
+import org.orecruncher.dsurround.effects.precipitation.WindowStreaks;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -38,13 +43,17 @@ import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WindService;
 
+import java.util.Locale;
 import java.util.Objects;
 
 /**
  * Rain and snow drawn as individual drops in place of vanilla's sheets of falling texture (see
  * {@link PrecipitationField}). How many drops there are follows the storm's strength. Where rain drops land they
  * splash, as vanilla's rain does, or on soft ground (grass, dirt, sand, wool) leave a damp spot that darkens it and
- * dries ({@link DampSpots}); see {@link Landings}. What falls where comes from {@link LevelColumns}. Vanilla's own
+ * dries ({@link DampSpots}); on windows they run down the glass ({@link WindowStreaks}); snowflakes leave a fleck that
+ * melts away ({@link SnowFlecks}); see {@link Landings}.
+ * After rain, leaves and overhanging edges drip for a while ({@link AfterRainDrips}): those are vanilla's own drips,
+ * so they don't need the drops drawn. What falls where comes from {@link LevelColumns}. Vanilla's own
  * splashes, scattered at random around the player, are left out while the drops are drawn; its rain sound carries on.
  * The distance is left to the weather fog.
  * <p>
@@ -66,6 +75,17 @@ public class PrecipitationHandler extends AbstractClientHandler {
      */
     static final int MAX_DAMP_SPOTS = 2048;
     /**
+     * Snow flecks at once, at the default range; as many more for the area at a wider one. Snow lands far more slowly
+     * than rain, and the flecks melt in a few seconds.
+     */
+    static final int MAX_SNOW_FLECKS = 1024;
+    /**
+     * Drops running down windows at once, at the default range; as many more for the area at a wider one
+     */
+    static final int MAX_WINDOW_STREAKS = 384;
+    // How far under a window's bottom edge a drop that runs off it hangs, as a drip
+    static final double DRIP_BELOW_EDGE = 0.05D;
+    /**
      * How far in front of the ground, in blocks, a puff of dust is at full strength: closer, it fades, so a puff
      * partly in the ground blends into it rather than showing a hard edge
      */
@@ -77,6 +97,9 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private final Landings landings;
     private PrecipitationField field = new PrecipitationField(MAX_DROPS);
     private DampSpots dampSpots = new DampSpots(MAX_DAMP_SPOTS);
+    private SnowFlecks snowFlecks = new SnowFlecks(MAX_SNOW_FLECKS);
+    private WindowStreaks windowStreaks = new WindowStreaks(MAX_WINDOW_STREAKS);
+    private final AfterRainDrips drips = new AfterRainDrips();
     private final Snowflakes snowflakes;
     private final LevelColumns columns;
 
@@ -117,10 +140,12 @@ public class PrecipitationHandler extends AbstractClientHandler {
 
     @Override
     public void process(final Player player) {
-        if (!this.isActive()) {
+        var active = this.isActive();
+        if (!active) {
             this.field.clear();
             this.dampSpots.clear();
-            return;
+            this.snowFlecks.clear();
+            this.windowStreaks.clear();
         }
 
         var camera = GameUtils.getMC().gameRenderer.getMainCamera();
@@ -130,7 +155,18 @@ public class PrecipitationHandler extends AbstractClientHandler {
         var pos = camera.getPosition();
         var rainLevel = this.weatherSimulation.rainLevel(level.getRainLevel(1F));
         this.columns.setLevel(level);
+        // Vanilla's own particles: they need no drops drawn, so drip even when the drops are off
+        if (this.config.weatherOptions.enableAfterRainDrips)
+            this.drips.tick(level, this.columns, pos.x, pos.y, pos.z, rainLevel, Randomizer.forThisThread());
+        else
+            this.drips.clear();
+        if (!active)
+            return;
+
         this.dampSpots.tick();
+        this.snowFlecks.tick();
+        // A drop running off the bottom of a window over open air hangs there as vanilla's dripping water, and falls
+        this.windowStreaks.tick(Randomizer.forThisThread(), (x, y, z) -> level.addParticle(ParticleTypes.DRIPPING_WATER, x, y - DRIP_BELOW_EDGE, z, 0D, 0D, 0D));
         // Between storms, with nothing left falling, the field is left alone: looking up the columns is the costly part
         if (this.field.isIdle(rainLevel)) {
             this.field.idle();
@@ -141,7 +177,9 @@ public class PrecipitationHandler extends AbstractClientHandler {
         // Thousands of numbers a tick: this thread's generator, rather than looking it up for each
         var random = Randomizer.forThisThread();
         this.field.tick(this.columns, pos.x, pos.y, pos.z, rainLevel, density(this.config.weatherOptions.precipitationDensity, particles), this.windService.wind(), random);
-        this.landings.splash(level, this.field, this.dampSpots, particles, random);
+        this.landings.splash(level, this.field, this.dampSpots, this.snowFlecks, this.windowStreaks, particles, random);
+        if (particles != ParticleStatus.MINIMAL)
+            this.landings.seedWindows(level, this.columns, pos.x, pos.y, pos.z, rainLevel, this.windService.wind(), this.windowStreaks, random);
         this.landings.dustSound(level, this.field, this.columns, pos.x, pos.z, rainLevel, random);
     }
 
@@ -157,17 +195,22 @@ public class PrecipitationHandler extends AbstractClientHandler {
     public void onDisconnect() {
         this.field.clear();
         this.dampSpots.clear();
+        this.snowFlecks.clear();
+        this.windowStreaks.clear();
+        this.drips.clear();
         this.columns.setLevel(null);
     }
 
     /**
-     * Makes the field and the damp spots again if the range they are drawn to has changed, sized for its area. The
+     * Makes the field, the damp spots, the snow flecks and the window streaks again if the range they are drawn to has changed, sized for its area. The
      * drops and spots of the old ones go with them; the new field fills in a few ticks.
      */
     private void fitRange(int range) {
         if (this.field.radius() != range) {
             this.field = new PrecipitationField(capacityFor(range), range);
             this.dampSpots = new DampSpots(PrecipitationField.forArea(MAX_DAMP_SPOTS, range));
+            this.snowFlecks = new SnowFlecks(PrecipitationField.forArea(MAX_SNOW_FLECKS, range));
+            this.windowStreaks = new WindowStreaks(PrecipitationField.forArea(MAX_WINDOW_STREAKS, range));
         }
     }
 
@@ -240,7 +283,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
 
     /**
      * The dust first, behind the rain and snow, and soft: it reads a copy of the scene's depth, water included (see
-     * SoftParticles.sceneDepthTarget). Then the rain and snow, drawn hard.
+     * SoftParticles.sceneDepthTarget). Then the rain and snow, drawn hard, and the snow flecks on the ground, which are
+     * cut from the same texture.
      */
     private void drawDrops(Tesselator tesselator, Camera camera, float partialTick) {
         var shader = Objects.requireNonNull(PrecipitationShaders.DROPS.get());
@@ -249,6 +293,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
         var dust = DSurroundParticleSprites.DUST.sprites();
         var options = this.config.weatherOptions;
         var scales = new DropScales(options.rainDropScale / 100F, options.snowflakeScale / 100F);
+        var rainColor = RainColor.ofTint(options.rainTint);
         // As vanilla's weather: depth is written only with Fabulous graphics, which draws weather to its own target
         RenderSystem.depthMask(Minecraft.useShaderTransparency());
         RenderSystem.setShader(PrecipitationShaders.DROPS.supplier());
@@ -258,13 +303,15 @@ public class PrecipitationHandler extends AbstractClientHandler {
             // The scene's depth, water included: the weather's own target has none with Fabulous graphics
             SoftParticles.bindSceneDepth(shader, SoftParticles.sceneDepthTarget(), weatherTarget());
             shader.safeGetUniform("SoftDistance").set(DUST_SOFT_DISTANCE);
-            this.field.draw(tesselator, camera, partialTick, true, flakes, largest, dust, scales);
+            this.field.draw(tesselator, camera, partialTick, true, flakes, largest, dust, scales, rainColor);
         }
 
         // The rain is untextured; the snow is cut from the game's snow texture
         RenderSystem.setShaderTexture(0, Snowflakes.TEXTURE);
         shader.safeGetUniform("SoftDistance").set(0F);
-        this.field.draw(tesselator, camera, partialTick, false, flakes, largest, dust, scales);
+        this.field.draw(tesselator, camera, partialTick, false, flakes, largest, dust, scales, rainColor);
+        this.snowFlecks.draw(tesselator, camera, partialTick, flakes, largest, scales.snow());
+        this.windowStreaks.draw(tesselator, camera, partialTick, rainColor);
     }
 
     /**
@@ -314,8 +361,11 @@ public class PrecipitationHandler extends AbstractClientHandler {
         else if (!PrecipitationShaders.DROPS.isUsable())
             text = "Precipitation: vanilla (shader unavailable, failed, or a shader pack in use)";
         else
-            text = "Precipitation: %d/%d drops (%d dust), %d damp spots, range %d".formatted(this.field.count(),
-                    this.field.capacity(), this.field.dustCount(), this.dampSpots.count(), this.field.radius());
+            text = "Precipitation: %d/%d drops (%d dust), %d damp spots, %d snow flecks, %d window streaks, range %d".formatted(this.field.count(),
+                    this.field.capacity(), this.field.dustCount(), this.dampSpots.count(), this.snowFlecks.count(), this.windowStreaks.count(),
+                    this.field.radius());
+        if (this.config.weatherOptions.enableAfterRainDrips && this.drips.strength() > 0F)
+            text += String.format(Locale.ROOT, ", drips %.2f", this.drips.strength());
         event.add(CollectDiagnosticsEvent.Section.Systems, text);
     }
 }

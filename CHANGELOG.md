@@ -35,8 +35,10 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Only works in dimensions where there are no modded hooks for weather rendering
   * Random seeds tied to the Minecraft day so all players using Dynamic Surroundings will experience the same effects
   * When precipitation starts, the storm simulator generates a strength value independent of Minecraft's rain strength
+  * During a storm the strength surges and eases off below its peak, changing every half minute or so; how far it can ease is the Storm variation option in Weather Options
   * The precipitation effects are "particle" like rather than rendered texture sheets, though they are not true Minecraft particles
     * Rain drops with a slight slant, and will change direction based on wind
+      * Rain tint option in Weather Options sets how blue the rain is, from a nearly colourless grey to a deep blue
     * Snow drops more slowly, and the impact of wind is more visible
       * Textures are sampled from Minecraft's snow.png texture at runtime, meaning the logic will sample any modded replacement
     * Sleet (a mix of rain and snow) can occur in transition zones (like elevation)
@@ -45,6 +47,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
     * These particles are affected by the wind simulator
   * Serene Seasons will affect whether rain or dust blows in some biomes, such as Biomes OPlenty's Lush Desert
   * Various parts of the system can be enabled/disabled in the Weather Options section
+  * Snowflakes lie where they land for a moment, then shrink and fade as they melt; blown by the wind into the side of a wall or tree trunk, they stick to it (Snow sticks to sides option in Weather Options)
+  * Rain blown onto windows (glass blocks and panes) clings, then runs down the glass in short rushes, leaving a wet trail that dries, and drips off a bottom edge over open air; windows facing the wind and open to the sky get the most. Rain on windows option in Weather Options
+  * For a while after rain stops, water drips from the lowest leaves of trees and from overhanging edges like eaves, less and less as things dry; edges drip while it rains too. Drips after rain option in Weather Options; works even with particle rain off
   * The weather system will auto disable if Particle Rain or Simple Weather is installed
 * Brought back the compass rose textures from older mod versions
   * There are 3 rose styles to choose from

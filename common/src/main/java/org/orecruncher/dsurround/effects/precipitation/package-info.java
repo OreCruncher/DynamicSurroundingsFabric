@@ -10,7 +10,12 @@
  *     {@link org.orecruncher.dsurround.effects.precipitation.IColumnSource}: in the game,
  *     {@link org.orecruncher.dsurround.effects.precipitation.LevelColumns}; in tests, a fake.</li>
  *     <li>{@link org.orecruncher.dsurround.effects.precipitation.Landings}: what happens where drops land (splashes,
- *     smoke, {@link org.orecruncher.dsurround.effects.precipitation.DampSpots}), and the dust storm's sound.</li>
+ *     smoke, {@link org.orecruncher.dsurround.effects.precipitation.DampSpots}, and
+ *     {@link org.orecruncher.dsurround.effects.precipitation.SnowFlecks} where snowflakes land, and
+ *     {@link org.orecruncher.dsurround.effects.precipitation.WindowStreaks} where rain is blown onto windows), and the
+ *     dust storm's sound.</li>
+ *     <li>{@link org.orecruncher.dsurround.effects.precipitation.AfterRainDrips}: leaves and overhanging edges drip
+ *     for a while after the rain, as vanilla's own dripping water. Not drawn here, so it runs with the drops off.</li>
  *     <li>{@link org.orecruncher.dsurround.effects.precipitation.PrecipitationRenderer},
  *     {@link org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders} and
  *     {@link org.orecruncher.dsurround.effects.precipitation.Snowflakes}: drawing.</li>
