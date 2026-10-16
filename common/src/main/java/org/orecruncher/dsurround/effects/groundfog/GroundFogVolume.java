@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 import org.orecruncher.dsurround.config.GroundFogQuality;
-import org.orecruncher.dsurround.effects.GpuTimer;
+import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.NoiseTexture;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
@@ -61,10 +61,10 @@ public final class GroundFogVolume {
      * How long the GPU takes over all the passes, for the diagnostics overlay, and over each: the march (with the depth
      * copy it reads), the smoothing and the composite
      */
-    public static final GpuTimer GPU_TIMER = new GpuTimer("Ground Fog");
-    public static final GpuTimer MARCH_TIMER = new GpuTimer("- March");
-    public static final GpuTimer SMOOTH_TIMER = new GpuTimer("- Smooth");
-    public static final GpuTimer COMPOSITE_TIMER = new GpuTimer("- Composite");
+    public static final RenderTimer RENDER_TIMER = new RenderTimer("Ground Fog");
+    public static final RenderTimer MARCH_TIMER = new RenderTimer("- March");
+    public static final RenderTimer SMOOTH_TIMER = new RenderTimer("- Smooth");
+    public static final RenderTimer COMPOSITE_TIMER = new RenderTimer("- Composite");
 
     /**
      * How deep the mist is over the ground, in blocks: it thins to nothing at this height
@@ -171,7 +171,7 @@ public final class GroundFogVolume {
             return SHADER.run(() -> {
                 // How far each pixel's line of sight goes: the scene's depth, water's surface included, which with
                 // Fabulous graphics isn't in the weather's target. Both passes read it
-                GPU_TIMER.begin();
+                RENDER_TIMER.begin();
                 MARCH_TIMER.begin();
                 int sceneDepth = SoftParticles.copySceneDepth(SoftParticles.sceneDepthTarget(), target);
 
@@ -254,12 +254,12 @@ public final class GroundFogVolume {
                 RenderSystem.setShader(COMPOSITE.supplier());
                 drawScreenQuad(tesselator);
                 COMPOSITE_TIMER.end();
-                GPU_TIMER.end();
+                RENDER_TIMER.end();
             }, () -> {
                 MARCH_TIMER.end();
                 SMOOTH_TIMER.end();
                 COMPOSITE_TIMER.end();
-                GPU_TIMER.end();
+                RENDER_TIMER.end();
                 tesselator.clear();
                 target.bindWrite(true);
             });

@@ -1,7 +1,8 @@
 package org.orecruncher.dsurround.gui.overlay.plugins;
 
-import org.orecruncher.dsurround.effects.GpuTimer;
+import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
+import org.orecruncher.dsurround.effects.frost.FrostRenderer;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
 import org.orecruncher.dsurround.effects.particles.PointLights;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
@@ -13,32 +14,40 @@ import org.orecruncher.dsurround.lib.di.Cacheable;
 import java.util.List;
 
 /**
- * How long the GPU takes to draw the mod's heavier effects (see {@link GpuTimer}), in a section of their own. Only
+ * How long the GPU takes to draw the mod's heavier effects (see {@link RenderTimer}), in a section of their own. Only
  * those drawn in the last second are shown.
  */
 @Cacheable
-public final class GpuTimersPlugin implements IDiagnosticPlugin {
+public final class RenderTimersPlugin implements IDiagnosticPlugin {
 
     // In the order shown; a "- " name is part of the one before it
-    private static final List<GpuTimer> TIMERS = List.of(
-            AuroraRenderer.GPU_TIMER,
-            PrecipitationShaders.GPU_TIMER,
+    private static final List<RenderTimer> TIMERS = List.of(
+            AuroraRenderer.RENDER_TIMER,
+            PrecipitationShaders.RENDER_TIMER,
             PrecipitationShaders.DAMP_SPOTS_TIMER,
             PrecipitationShaders.DROPS_TIMER,
-            GroundFogVolume.GPU_TIMER,
+            GroundFogVolume.RENDER_TIMER,
             GroundFogVolume.MARCH_TIMER,
             GroundFogVolume.SMOOTH_TIMER,
             GroundFogVolume.COMPOSITE_TIMER,
-            PointLights.GPU_TIMER);
+            FrostRenderer.RENDER_TIMER,
+            PointLights.RENDER_TIMER);
 
-    public GpuTimersPlugin() {
+    public RenderTimersPlugin() {
         ICollectDiagnostics.EVENT.register(this::onCollect);
     }
 
     @Override
     public void onCollect(CollectDiagnosticsEvent event) {
-        for (var timer : TIMERS)
-            if (timer.isRecent())
-                event.add(CollectDiagnosticsEvent.Section.GPU, timer);
+        boolean labelled = false;
+        for (var timer : TIMERS) {
+            if (!timer.isRecent())
+                continue;
+            if (!labelled) {
+                event.add(CollectDiagnosticsEvent.Section.Render, "ms per frame: CPU avg, peak / GPU avg, peak");
+                labelled = true;
+            }
+            event.add(CollectDiagnosticsEvent.Section.Render, timer);
+        }
     }
 }

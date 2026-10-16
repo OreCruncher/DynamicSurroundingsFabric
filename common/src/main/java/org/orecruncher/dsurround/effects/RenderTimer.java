@@ -7,40 +7,48 @@ import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
 
 /**
- * How long the GPU takes to draw something, for the diagnostics overlay: the timers there measure the CPU, which only
- * hands the drawing over. A GPU timestamp is taken before and after, and the difference averaged.
+ * How long drawing something takes, for the diagnostics overlay: on the CPU, building and handing over the drawing
+ * (vertices, uploads, state), and on the GPU, doing it. The two don't add up to a frame's time: the GPU works on a
+ * frame while the CPU builds the next. A GPU timestamp is taken before and after, and the difference averaged.
  * <p>
  * Timestamps rather than an elapsed time query: only one of those can run at a time, and vanilla runs one around
  * the whole frame for its GPU figure. The results come a frame or more later; waiting for them would hold the CPU up
  * until the GPU caught up, so a few frames' are kept, and read once ready. Render thread only. Does nothing where timer
  * queries aren't supported.
  */
-public final class GpuTimer implements ITimer {
+public final class RenderTimer implements ITimer {
 
     // Frames whose results may still be on the way
     private static final int FRAMES = 4;
     // How long since it last measured before the diagnostics overlay stops showing it
     private static final long RECENT_NANOS = 1_000_000_000L;
 
-    private final TimerEMA average;
+    private final String name;
+    private final TimerEMA cpu;
+    private final TimerEMA gpu;
     private final int[] starts = new int[FRAMES];
     private final int[] ends = new int[FRAMES];
     private final boolean[] pending = new boolean[FRAMES];
     private int frame;
     private boolean measuring;
+    // When the CPU started, by System.nanoTime; 0 if not measuring
+    private long cpuStart;
     // When it last measured, by System.nanoTime; 0 if it never has
     private long lastMeasured;
     // Not yet known until there is a GL context: null, then whether queries could be made
     private Boolean supported;
 
-    public GpuTimer(String name) {
-        this.average = new TimerEMA(name);
+    public RenderTimer(String name) {
+        this.name = name;
+        this.cpu = new TimerEMA(name);
+        this.gpu = new TimerEMA(name);
     }
 
     /**
      * Marks the start of what is measured
      */
     public void begin() {
+        this.cpuStart = System.nanoTime();
         if (!this.isSupported())
             return;
         this.collect();
@@ -55,13 +63,18 @@ public final class GpuTimer implements ITimer {
      * Marks the end of what is measured, if {@link #begin} started measuring
      */
     public void end() {
+        if (this.cpuStart != 0) {
+            long now = System.nanoTime();
+            this.cpu.update(now - this.cpuStart);
+            this.cpuStart = 0;
+            this.lastMeasured = now;
+        }
         if (!this.measuring)
             return;
         GL33.glQueryCounter(this.ends[this.frame], GL33.GL_TIMESTAMP);
         this.measuring = false;
         this.pending[this.frame] = true;
         this.frame = (this.frame + 1) % FRAMES;
-        this.lastMeasured = System.nanoTime();
     }
 
     /**
@@ -83,7 +96,7 @@ public final class GpuTimer implements ITimer {
             long end = GL33.glGetQueryObjecti64(this.ends[i], GL15.GL_QUERY_RESULT);
             this.pending[i] = false;
             if (end >= start)
-                this.average.update(end - start);
+                this.gpu.update(end - start);
         }
     }
 
@@ -99,13 +112,27 @@ public final class GpuTimer implements ITimer {
         return this.supported;
     }
 
+    /**
+     * The GPU's time, in milliseconds
+     */
     @Override
     public double getMSecs() {
-        return this.average.getMSecs();
+        return this.gpu.getMSecs();
+    }
+
+    /**
+     * The CPU's time, in milliseconds
+     */
+    public double getCpuMSecs() {
+        return this.cpu.getMSecs();
     }
 
     @Override
     public String toString() {
-        return this.average.toString();
+        // Each as its average and peak. No GPU figures where timer queries aren't supported
+        var cpu = String.format("%s:%7.3f,%7.3f", this.name, this.cpu.getMSecs(), this.cpu.getPeakMSecs());
+        if (Boolean.FALSE.equals(this.supported))
+            return cpu + " /    n/a";
+        return String.format("%s /%7.3f,%7.3f", cpu, this.gpu.getMSecs(), this.gpu.getPeakMSecs());
     }
 }

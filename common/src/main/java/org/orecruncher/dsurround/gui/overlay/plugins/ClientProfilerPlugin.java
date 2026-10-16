@@ -17,6 +17,9 @@ public final class ClientProfilerPlugin implements IDiagnosticPlugin {
 
     private final TimerEMA clientTick = new TimerEMA("Client Tick");
     private final TimerEMA lastTick = new TimerEMA("Last Tick");
+    // Vanilla's time for rendering a frame, up to putting it on screen: not the client tick run before it (that is
+    // Client Tick), nor waiting for vsync or the frame rate limit. Sampled once a tick, from the frame before.
+    private final TimerEMA frameTime = new TimerEMA("Frame Render");
     private long lastTickMark = -1;
     private long timeMark = 0;
     private float tps = 0;
@@ -39,6 +42,7 @@ public final class ClientProfilerPlugin implements IDiagnosticPlugin {
     private void tickEnd(Minecraft client) {
         final long delta = System.nanoTime() - this.timeMark;
         this.clientTick.update(delta);
+        this.frameTime.update(client.getFrameTimeNs());
     }
 
     public void onCollect(CollectDiagnosticsEvent event) {
@@ -55,6 +59,21 @@ public final class ClientProfilerPlugin implements IDiagnosticPlugin {
             }
         };
 
+        var fpsTimer = new ITimer() {
+            @Override
+            public double getMSecs() {
+                return Minecraft.getInstance().getFps();
+            }
+
+            @Override
+            public String toString() {
+                // Frames per second, not a time
+                return String.format("FPS:%4d", (int) this.getMSecs());
+            }
+        };
+
+        event.add(fpsTimer);
+        event.add(this.frameTime);
         event.add(tpsTimer);
         event.add(clientTick);
         event.add(lastTick);

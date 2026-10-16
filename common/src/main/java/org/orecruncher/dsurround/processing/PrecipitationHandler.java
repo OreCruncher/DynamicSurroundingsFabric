@@ -255,7 +255,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
-        PrecipitationShaders.GPU_TIMER.begin();
+        PrecipitationShaders.RENDER_TIMER.begin();
         try {
             if (this.dampSpots.count() > 0 && PrecipitationShaders.DAMP_SPOTS.isUsable()) {
                 PrecipitationShaders.DAMP_SPOTS_TIMER.begin();
@@ -272,7 +272,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
             PrecipitationShaders.DROPS_TIMER.end();
             return drawn;
         } finally {
-            PrecipitationShaders.GPU_TIMER.end();
+            PrecipitationShaders.RENDER_TIMER.end();
             RenderSystem.enableCull();
             RenderSystem.defaultBlendFunc();
             RenderSystem.disableBlend();

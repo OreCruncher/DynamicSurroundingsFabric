@@ -14,7 +14,7 @@ public final class CollectDiagnosticsEvent {
         Systems,
         Particles,
         Timers(false),
-        GPU,
+        Render,
         Environment(false),
         Emitters,
         Sounds,

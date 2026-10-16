@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import org.orecruncher.dsurround.effects.GpuTimer;
+import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.lib.Library;
 
@@ -24,9 +24,9 @@ public final class PrecipitationShaders {
     public static final ModShader DAMP_SPOTS = new ModShader("damp_spot", DefaultVertexFormat.POSITION_TEX_COLOR,
             "damp spots", "rain will not leave damp spots", Library.LOGGER);
 
-    public static final GpuTimer GPU_TIMER = new GpuTimer("Precipitation");
-    public static final GpuTimer DAMP_SPOTS_TIMER = new GpuTimer("- Damp Spots");
-    public static final GpuTimer DROPS_TIMER = new GpuTimer("- Drops");
+    public static final RenderTimer RENDER_TIMER = new RenderTimer("Precipitation");
+    public static final RenderTimer DAMP_SPOTS_TIMER = new RenderTimer("- Damp Spots");
+    public static final RenderTimer DROPS_TIMER = new RenderTimer("- Drops");
 
     private PrecipitationShaders() {
     }

@@ -12,7 +12,7 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import org.orecruncher.dsurround.effects.GpuTimer;
+import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.NoiseTexture;
 import org.orecruncher.dsurround.lib.Library;
@@ -30,7 +30,7 @@ public final class AuroraRenderer {
     public static final ModShader SHADER = new ModShader("aurora", DefaultVertexFormat.POSITION_TEX_COLOR,
             "the aurora", "auroras will not be drawn", Library.LOGGER);
 
-    public static final GpuTimer GPU_TIMER = new GpuTimer("Aurora");
+    public static final RenderTimer RENDER_TIMER = new RenderTimer("Aurora");
 
     /**
      * The noise texture's size, in cells, which it repeats at (see {@link NoiseTexture}). Wider than a curtain's finest
@@ -71,9 +71,9 @@ public final class AuroraRenderer {
         if (current == null || alpha <= 0F)
             return;
         // A failure part way through would leave vertices in the shared buffer
-        GPU_TIMER.begin();
+        RENDER_TIMER.begin();
         SHADER.run(() -> draw(current, aurora, alpha, frustumMatrix, time), () -> Tesselator.getInstance().clear());
-        GPU_TIMER.end();
+        RENDER_TIMER.end();
     }
 
     private static void draw(ShaderInstance current, Aurora aurora, float alpha, Matrix4f frustumMatrix, float time) {

@@ -136,7 +136,7 @@ public class WindowFrostHandler extends AbstractClientHandler {
         RenderSystem.enableDepthTest();
         // As vanilla's weather: depth is written only with Fabulous graphics, which draws weather to its own target
         RenderSystem.depthMask(Minecraft.useShaderTransparency());
-        FrostRenderer.GPU_TIMER.begin();
+        FrostRenderer.RENDER_TIMER.begin();
         try {
             FrostRenderer.SHADER.run(() -> {
                 var shader = Objects.requireNonNull(FrostRenderer.SHADER.get());
@@ -146,7 +146,7 @@ public class WindowFrostHandler extends AbstractClientHandler {
                 this.drawn = FrostRenderer.draw(this.field, tesselator, camera);
             }, tesselator::clear);
         } finally {
-            FrostRenderer.GPU_TIMER.end();
+            FrostRenderer.RENDER_TIMER.end();
             RenderSystem.enableCull();
             RenderSystem.defaultBlendFunc();
             RenderSystem.disableBlend();

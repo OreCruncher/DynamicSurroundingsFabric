@@ -8,7 +8,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Camera;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
-import org.orecruncher.dsurround.effects.GpuTimer;
+import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.lib.Library;
 
@@ -23,7 +23,7 @@ public final class FrostRenderer {
 
     public static final ModShader SHADER = new ModShader("window_frost", DefaultVertexFormat.PARTICLE,
             "window frost", "windows will not frost", Library.LOGGER);
-    public static final GpuTimer GPU_TIMER = new GpuTimer("Window Frost");
+    public static final RenderTimer RENDER_TIMER = new RenderTimer("Window Frost");
 
     // The size of a cell of the grid a face is drawn as, in blocks
     static final float CELL = 0.25F;
@@ -70,8 +70,11 @@ public final class FrostRenderer {
     }
 
     private static void drawFace(BufferBuilder builder, FrostFace face, double camX, double camY, double camZ) {
-        int cellsU = Math.max(1, Mth.ceil((face.u1 - face.u0) / CELL));
-        int cellsV = Math.max(1, Mth.ceil((face.v1 - face.v0) / CELL));
+        // Fully frosted, the frost is the same all over, so one quad does: a window frosts fully on cold nights, and
+        // the grid's quads were most of drawing it
+        boolean uniform = isUniform(face);
+        int cellsU = uniform ? 1 : Math.max(1, Mth.ceil((face.u1 - face.u0) / CELL));
+        int cellsV = uniform ? 1 : Math.max(1, Mth.ceil((face.v1 - face.v0) / CELL));
         float stepU = (face.u1 - face.u0) / cellsU;
         float stepV = (face.v1 - face.v0) / cellsV;
         // The texture's origin: on a whole number of its repeats, and moved along by an amount of the window's own, so
@@ -104,6 +107,13 @@ public final class FrostRenderer {
         float texU = (u - originU) / TEXTURE_BLOCKS + offsetU;
         float texV = (originV - v) / TEXTURE_BLOCKS + offsetV;
         builder.addVertex(x, y, z).setUv(texU, texV).setColor(RED, GREEN, BLUE, grown(face, u, v)).setLight(face.light);
+    }
+
+    /**
+     * Whether the frost has grown as far as it goes everywhere on a face (see {@link #grown})
+     */
+    static boolean isUniform(FrostFace face) {
+        return face.shown >= 1F;
     }
 
     /**
