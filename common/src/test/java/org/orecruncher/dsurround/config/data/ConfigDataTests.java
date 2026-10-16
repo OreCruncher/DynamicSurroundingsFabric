@@ -264,6 +264,44 @@ public class ConfigDataTests {
         }
     }
 
+    // ---- Ids -------------------------------------------------------------------------------------------------
+
+    @Test
+    void badIdsAreErrorsNotExceptions() {
+        // Regression (found by DsConfigFuzzTests): the id codec threw, or decoded to null, for an id that isn't
+        // valid. Thrown, the whole file was lost; null in an optional field threw from inside the codec.
+        for (var id : List.of("NaN", "a:B", "minecraft:oak_log[axis=up]", "", "#", "@", "#@", "a b")) {
+            var json = "{\"factory\": \"" + id + "\"}";
+            var result = assertDoesNotThrow(() -> parse(AcousticConfig.CODEC, json), id);
+            assertTrue(result.isError(), id);
+            assertTrue(errorOf(result).contains("Not a valid id"), errorOf(result));
+        }
+        var optional = assertDoesNotThrow(() -> parse(SoundFactory.CODEC, "{\"location\": \"NaN\", \"soundEvent\": \"minecraft:a\"}"));
+        assertTrue(optional.isError() || optional.result().orElseThrow().location().isEmpty());
+    }
+
+    @Test
+    void idsStillReadTheirShortForms() {
+        assertEquals(ResourceLocation.fromNamespaceAndPath("dsurround", "a"), parse(AcousticConfig.CODEC, "{\"factory\": \"a\"}").getOrThrow().factory());
+        assertEquals(ResourceLocation.withDefaultNamespace("a"), parse(AcousticConfig.CODEC, "{\"factory\": \"@a\"}").getOrThrow().factory());
+        assertEquals(ResourceLocation.fromNamespaceAndPath("c", "a"), parse(AcousticConfig.CODEC, "{\"factory\": \"#c:a\"}").getOrThrow().factory());
+    }
+
+    @Test
+    void aBadIdDropsOnlyItsEntry() {
+        var content = """
+                [
+                  {"factory": "dsurround:first"},
+                  {"factory": "Bad:Id"},
+                  {"factory": "dsurround:third"}
+                ]
+                """;
+
+        var result = CodecExtensions.deserialize("test.json", content, Codec.list(AcousticConfig.CODEC)).orElseThrow();
+
+        assertEquals(List.of("dsurround:first", "dsurround:third"), result.stream().map(a -> a.factory().toString()).toList());
+    }
+
     // ---- Error reporting -------------------------------------------------------------------------------------
 
     @Test
