@@ -1,4 +1,4 @@
-#version 150
+#version 330
 
 // Lays the ground fog, drawn and smoothed at a share of the screen's size (ground_fog_volume, ground_fog_smooth), over
 // the scene at its full size. Each pixel blends the two by two of the mist's pixels around it, by how near each is, as
@@ -9,32 +9,22 @@
 // The mist's pixel at (i, j) followed the line of sight to the screen's pixel at (Scale i, Scale j), so how far that
 // went is read from the scene's depth there.
 
+#moj_import <dsurround:ground_fog.glsl>
+
 uniform sampler2D MistSampler;
 uniform sampler2D MistDepthSampler;
 uniform sampler2D DepthSampler;
 
-// Two rows of the projection's inverse: for a pixel at (x, y, depth) on the screen, how far along the view it is
-uniform vec4 DepthRowZ;
-uniform vec4 DepthRowW;
-// The screen's size in pixels
-uniform vec2 FullSize;
-// The screen's pixels each way for each of the mist's (GroundFogQuality): 1 at the screen's size, 2 at half, 3 at a
-// third
-uniform float Scale;
-// With Fabulous graphics, 1: the mist writes the depth where it begins along the line of sight, which vanilla's
-// transparency pass sorts the weather's target by. Otherwise 0, and nothing is written.
-uniform float WriteDepth;
+// Two rows of the projection's inverse (ground_fog_screen): for a pixel at (x, y, depth) on the screen, how far along
+// the view it is
+flat in vec4 depthRowZ;
+flat in vec4 depthRowW;
 
 out vec4 fragColor;
 
-// How far along the view the line of sight through a screen pixel goes, in blocks: enough to tell whether two pixels
-// looked about as far
+// How far along the view the line of sight through a screen pixel goes, in blocks
 float distanceAt(ivec2 pixel) {
-    pixel = clamp(pixel, ivec2(0), ivec2(FullSize) - 1);
-    float depth = texelFetch(DepthSampler, pixel, 0).r;
-    vec2 uv = (vec2(pixel) + 0.5) / FullSize;
-    vec4 screen = vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
-    return -dot(DepthRowZ, screen) / dot(DepthRowW, screen);
+    return distance_at(DepthSampler, pixel, depthRowZ, depthRowW);
 }
 
 void main() {

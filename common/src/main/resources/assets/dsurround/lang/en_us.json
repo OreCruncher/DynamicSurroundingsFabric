@@ -120,6 +120,7 @@
   "dsurround.hook.storm_rain": "Storm strength in vanilla's rain and snow",
   "dsurround.hook.rain_sounds": "Storm rain sounds",
   "dsurround.hook.rain_splashes": "Hiding vanilla's rain splashes under particle rain",
+  "dsurround.hook.ground_fog": "Ground fog with Fabulous graphics",
   "dsurround.hook.window_frost": "Window frost without Fabulous graphics",
   "dsurround.hook.wind_blown_particles": "Wind blowing particles",
   "dsurround.config.title": "Dynamic Surroundings Configuration Options",

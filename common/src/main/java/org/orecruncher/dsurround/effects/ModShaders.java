@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.effects;
 
 import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
 import org.orecruncher.dsurround.effects.frost.FrostRenderer;
+import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
 import org.orecruncher.dsurround.effects.particles.PointLights;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
@@ -20,7 +21,7 @@ public final class ModShaders {
                     SoftParticles.FLAME_SHADER,
                     AuroraRenderer.SHADER,
                     PointLights.SHADER),
-            Stream.concat(PrecipitationShaders.SHADERS.stream(), FrostRenderer.SHADERS.stream())).toList();
+            Stream.of(PrecipitationShaders.SHADERS, FrostRenderer.SHADERS, GroundFogVolume.SHADERS).flatMap(List::stream)).toList();
 
     private ModShaders() {
     }

@@ -1,11 +1,9 @@
 package org.orecruncher.dsurround.processing;
 
 import net.minecraft.util.LightCoordsUtil;
-import com.mojang.blaze3d.pipeline.RenderTarget;
 import it.unimi.dsi.fastutil.longs.LongCollection;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.rendertype.OutputTarget;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.tags.BlockTags;
@@ -156,6 +154,40 @@ public class GroundFogHandler extends AbstractClientHandler {
             this.target = 1F;
         }
         this.strength += (this.target - this.strength) * EASE_PER_TICK;
+    }
+
+    /**
+     * Draws the mist, at the start of the weather pass: before the rain, so the rain is drawn over it, except with
+     * Fabulous graphics, where it is drawn after (see {@link #renderAfterWeather})
+     */
+    public void renderBeforeWeather() {
+        if (!fabulous())
+            this.render(false);
+    }
+
+    /**
+     * Draws the mist after the rain, with Fabulous graphics: there it writes the depth vanilla's transparency pass sorts
+     * the weather by, and rain drawn after it would be hidden behind it. Drawn over the rain, the rain behind the mist
+     * is misted, as it should be.
+     */
+    public void renderAfterWeather() {
+        if (fabulous())
+            this.render(true);
+    }
+
+    private static boolean fabulous() {
+        return GameUtils.getMC().gameRenderer.gameRenderState().useShaderTransparency();
+    }
+
+    private void render(boolean fabulous) {
+        if (!this.isActive() || this.field.isEmpty() || this.strength < MIN_STRENGTH)
+            return;
+        var minecraft = GameUtils.getMC();
+        var camera = minecraft.gameRenderer.mainCamera();
+        var partialTick = minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false);
+        float seconds = ((this.ticks % 72000) + partialTick) / 20F;
+        GroundFogVolume.render(this.field, camera, OutputTarget.WEATHER_TARGET.getRenderTarget(), fabulous,
+                this.config.weatherOptions.groundFogQuality, this.strength, this.driftX, this.driftZ, seconds);
     }
 
     /**

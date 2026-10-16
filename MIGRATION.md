@@ -9,10 +9,9 @@ common tests pass; both clients start with all three shaders compiled and join a
 
 `OreCruncher/0.4.7` (through `f7ddfdb`) merged in, staged: everything compiles on common, Fabric and NeoForge, the
 common tests pass, and both clients start with every pipeline compiled and every optional hook applied. Four of 0.4.7's
-new systems needed a renderer of their own on 26.2 and stood aside until rebuilt, one at a time (the light level overlay,
-particle weather and window frost are done; ground fog remains). 0.4.7's code is the reference: `git show origin/OreCruncher/0.4.7:<path>`.
-- **Ground fog** (`GroundFogVolume.isUsable()` is false). The field, conditions and handler tick; the three screen passes
-  (`ground_fog_volume`, `_smooth`, `_composite`) and their targets are still to build.
+new systems needed a renderer of their own on 26.2 and stood aside until rebuilt, one at a time; all four are rebuilt
+(the light level overlay, particle weather, window frost and ground fog). 0.4.7's code is the reference:
+`git show origin/OreCruncher/0.4.7:<path>`.
 
 Also pending: the soft particles' depth-writing variant for Fabulous graphics (`soft_particle_scene_depth`, and its
 `ModShaderTests` check), and streaks for sparks and lava droplets, which need a particle group of their own (they are
@@ -60,6 +59,16 @@ What changed to fit 26.2:
   the translucent terrain, so frost can't be both after the water and before the particles, as on 1.21.1; it keeps the
   particles from cutting it out (breath at a window), and water or stained glass behind a window now covers its frost.
   With Fabulous, at the start of the weather pass, to the weather target. The shader's fade distance is a define.
+- **Ground fog**: rebuilt. Four pipelines in `GroundFogVolume` (march, smooth, composite, and the composite writing
+  depth for Fabulous), each a triangle from the vertex index (`ground_fog_screen.vsh`, no vertex buffer), sharing a
+  `GroundFogInfo` uniform block (`shaders/include/ground_fog.glsl`). The vertex shader inverts `ProjMat`/`ModelViewMat`
+  itself, as 26.2 adds view bobbing to the projection on the GPU side only. Depth is reversed: the sky (depth 0) is
+  treated as far away (`FAR_AWAY`), and depth is turned into NDC by `DepthZeroToOne`. A line of sight's direction is
+  taken from a point far off (`DIRECTION_DEPTH`): view bobbing shifts the eye in the projection by about as much as the
+  near plane is from it, so a near point turned the lines wildly while walking (the mist blinked). The depth copy is `SoftParticles.captureDepth` (translucent target with Fabulous). Drawn at the start
+  of the weather pass without Fabulous; with it, after the weather and before the world border (optional hook
+  `GROUND_FOG`). Still open from the 0.4.7 review: storing each march pixel's distance for smooth/composite, the grid
+  shift, 3D noise.
 - **Vanilla tags**: 26.2's `minecraft:dirt` no longer holds grass blocks, podzol, mycelium, moss or mud; they are in
   `grass_blocks`, `mud` and `moss_blocks`, all under `substrate_overworld`, which `rain_absorbing` (damp spots) and
   `BlockLibrary`'s acoustic seed tags now use. `minecraft:tall_flowers` is gone; `brush_step` lists its five flowers.
@@ -72,7 +81,8 @@ What changed to fit 26.2:
 To check in game (both platforms), besides the list below: particle rain, snow and dust (with and without Fabulous
 graphics; dust fading into the ground, fog and sky tinted), damp spots darkening the ground, snow flecks, drops on
 windows, and vanilla's weather back when particle weather is turned off; window frost (`/dsweather` can set it) with
-and without Fabulous graphics, breath in front of a frosted window; storm rain and snow with the storm's strength and sounds,
+and without Fabulous graphics, breath in front of a frosted window; ground fog (`/dsweather` can set it) with and
+without Fabulous, against the sky, water and trees, at each quality, while bobbing and with nausea; storm rain and snow with the storm's strength and sounds,
 wind drifting smoke and leaves, flame jets (soft, additive, lighting their surroundings),
 steam and smoke puffs, the pocket watch and compass roses (and in the margin), the aurora, and voice chat processing.
 

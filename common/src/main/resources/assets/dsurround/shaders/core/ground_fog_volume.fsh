@@ -1,4 +1,4 @@
-#version 150
+#version 330
 
 // Ground fog as a volume. Each pixel follows its line of sight from the camera to what it shows (from a copy of the
 // scene's depth) and adds up the mist along the way, a few steps through the part of it low enough to be in the mist.
@@ -17,41 +17,17 @@
 // camera in whole blocks, alpha the part of a block over; the ground is smoothed over a few blocks, so the mist banks
 // up against a step and thins toward a ledge. Green is the mist's thickness, blue the block and sky light (16 each).
 
+#moj_import <minecraft:fog.glsl>
+#moj_import <dsurround:ground_fog.glsl>
+
 uniform sampler2D DepthSampler;
 uniform sampler2D FogGrid;
 uniform sampler2D Sampler2;
 uniform sampler2D NoiseSampler;
 
-uniform vec4 ColorModulator;
-uniform float FogStart;
-uniform float FogEnd;
-// From the screen back to positions relative to the camera, and the other way
-uniform mat4 InvViewProj;
-uniform mat4 ViewProj;
-// The screen's size in pixels, which the scene's depth is
-uniform vec2 FullSize;
-// The screen's pixels each way for each of the mist's (GroundFogQuality): 1 at the screen's size, 2 at half, 3 at a
-// third
-uniform float Scale;
-// The most steps along a line of sight, for the quality: no more than STEPS
-uniform float MaxSteps;
-// The camera in the grid's terms: a block to a texel, heights above the grid's base
-uniform vec3 CameraLocal;
-// Where the grid's first column is in the world, wrapped at WRAP, so the noise stays put as the grid moves
-uniform vec2 NoiseOrigin;
-// How far the mist has drifted, in blocks, and a time in seconds for it to churn
-uniform vec3 Drift;
-// Where the grid's base is in the world, for noise that stays put as the camera goes up and down
-uniform float BaseY;
-uniform float GridSize;
-// Where the mist has thinned to nothing, in blocks from the camera across the ground, and over how many blocks before
-// that it thins
-uniform vec2 EdgeFade;
-// The top of the mist anywhere, above the base: nothing is looked for above it
-uniform float MistTop;
-uniform float MistDepth;
-// How quickly the mist hides what is behind it, for each block of it at full thickness looked through
-uniform float Thickness;
+// From positions relative to the camera to the screen, and back (ground_fog_screen)
+flat in mat4 viewProj;
+flat in mat4 invViewProj;
 
 out vec4 fragColor;
 
@@ -66,6 +42,9 @@ const float STEPS_PER_BLOCK = 2.0;
 // of sight can't change the pixel
 const float OPAQUE = 4.6;
 const float MAX_DISTANCE = 48.0;
+// A depth far enough off, hundreds of blocks, that view bobbing's shift of the eye doesn't change the way a line of
+// sight to it goes
+const float DIRECTION_DEPTH = 1.0e-5;
 const vec3 MIST_COLOR = vec3(0.92, 0.93, 0.95);
 // How far below the smoothed ground mist is still found: it may be a block above the ground itself (see
 // GroundFogField.SMOOTH_ABOVE), so this much below it is still over the ground
@@ -100,14 +79,11 @@ float spread(float share) {
     return share * sqrt(share);
 }
 
-float linear_fog_fade(float vertexDistance, float fogStart, float fogEnd) {
-    if (vertexDistance <= fogStart) {
-        return 1.0;
-    } else if (vertexDistance >= fogEnd) {
-        return 0.0;
-    }
-
-    return smoothstep(fogEnd, fogStart, vertexDistance);
+// How much of the mist this far off shows through the distance fog: all of it before the fog starts, none past where it
+// ends
+float fog_fade(float distance) {
+    float fog = total_fog_value(distance, distance, FogEnvironmentalStart, FogEnvironmentalEnd, FogRenderDistanceStart, FogRenderDistanceEnd);
+    return 1.0 - smoothstep(0.0, 1.0, fog);
 }
 
 // Smooth value noise, 0 to 1, a cell to a texel of the noise texture, repeating every NOISE_SIZE cells: where things
@@ -207,15 +183,20 @@ void main() {
     // same)
     ivec2 pixel = min(ivec2(gl_FragCoord.xy) * int(Scale), ivec2(FullSize) - 1);
     float depth = texelFetch(DepthSampler, pixel, 0).r;
-    vec2 screenUV = (vec2(pixel) + 0.5) / FullSize;
-    vec4 clip = vec4(screenUV * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
-    vec4 viewed = InvViewProj * clip;
-    vec3 end = viewed.xyz / viewed.w;
-    float length_ = length(end);
+    vec2 screenNdc = (vec2(pixel) + 0.5) / FullSize * 2.0 - 1.0;
+    // The way the line of sight goes, from a point on it far off (the depth is reversed: near is 1, the sky 0), and how
+    // far it goes: as far as can be through the sky. Not from a point near the camera: view bobbing moves the eye a few
+    // hundredths of a block in the projection, as much as the near plane is from it, which would turn the line wildly
+    vec4 farPoint = invViewProj * vec4(screenNdc, depth_to_ndc(DIRECTION_DEPTH), 1.0);
+    vec3 dir = normalize(farPoint.xyz / farPoint.w);
+    float length_ = FAR_AWAY;
+    if (depth > 0.0) {
+        vec4 viewed = invViewProj * vec4(screenNdc, depth_to_ndc(depth), 1.0);
+        length_ = length(viewed.xyz / viewed.w);
+    }
     if (length_ <= 0.0) {
         discard;
     }
-    vec3 dir = end / length_;
     vec3 start = CameraLocal;
 
     // Only the part of the line low enough to be in the mist
@@ -279,8 +260,8 @@ void main() {
 
     // Where the mist begins: with Fabulous graphics, the composite writes it to the weather's target, which vanilla's
     // transparency pass sorts by
-    vec4 clipAt = ViewProj * vec4(dir * max(begins, t0), 1.0);
-    gl_FragDepth = clamp(clipAt.z / clipAt.w * 0.5 + 0.5, 0.0, 1.0);
+    vec4 clipAt = viewProj * vec4(dir * max(begins, t0), 1.0);
+    gl_FragDepth = clamp(ndc_to_depth(clipAt.z / clipAt.w), 0.0, 1.0);
 
     // Lit where the mist passed is on the whole, in each stretch, blended by how much each is seen: as much as it
     // hides, less what the mist in front of it hides. Not at any one point along the way: each pixel's steps are offset
@@ -299,7 +280,6 @@ void main() {
         hiddenBefore += amounts[s];
     }
     light /= max(seen, 1e-6);
-    alpha *= linear_fog_fade(t0 + (t1 - t0) * 0.5, FogStart, FogEnd);
-    fragColor = vec4(MIST_COLOR * light, alpha) * ColorModulator;
-    fragColor.rgb *= fragColor.a;
+    alpha *= fog_fade(t0 + (t1 - t0) * 0.5);
+    fragColor = vec4(MIST_COLOR * light * alpha, alpha);
 }

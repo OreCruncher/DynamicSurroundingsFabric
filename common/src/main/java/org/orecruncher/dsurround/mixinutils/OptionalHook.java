@@ -36,6 +36,8 @@ public enum OptionalHook {
             site("core.MixinWeatherEffectRenderer", "dsurround$renderPrecipitation"),
             site("core.MixinLevelRenderer", "dsurround$enterWeatherPass"),
             site("core.MixinLevelRenderer", "dsurround$leaveWeatherPass")),
+    GROUND_FOG("Ground fog with Fabulous graphics",
+            site("core.MixinLevelRenderer", "dsurround$groundFogAfterWeather")),
     WINDOW_FROST("Window frost without Fabulous graphics",
             site("core.MixinLevelRenderer", "dsurround$frostBeforeTranslucent")),
     STORM_RAIN("Storm strength in vanilla's rain and snow",

@@ -1,8 +1,8 @@
 # Dynamic Surroundings — working notes
 
 Client-side Minecraft mod (MIT). Minecraft 26.2, Fabric and NeoForge through Architectury. Versions are in
-`gradle.properties`. This branch is the 26.2 port, carrying 0.4.7; `MIGRATION.md` records what changed, what still needs
-checking in game, and the 0.4.7 system not yet drawn on 26.2 (ground fog), which stands aside until rebuilt.
+`gradle.properties`. This branch is the 26.2 port, carrying 0.4.7; `MIGRATION.md` records what changed and what still needs
+checking in game.
 
 ## Layout
 - `common/` — almost all code, resources and tests (`org.orecruncher.dsurround`).
@@ -61,9 +61,13 @@ checking in game, and the 0.4.7 system not yet drawn on 26.2 (ground fog), which
 - `ConfigServices` is handed by `BlockLibrary`/`BiomeLibrary` to the `BlockInfo`/`BiomeInfo` they build.
   `BiomeLibrary` resolves the condition evaluator lazily: evaluator → `BiomeVariables` → biome library is a cycle.
 - Shaders: one `effects/ModShader` per `RenderPipeline` (`SoftParticles.SHADER` and `FLAME_SHADER`,
-  `AuroraRenderer.SHADER`, `PointLights.SHADER`, `PrecipitationShaders.SHADERS`), listed in `ModShaders.SHADERS`. Not added to vanilla's `RenderPipelines` (a failure there
+  `AuroraRenderer.SHADER`, `PointLights.SHADER`, `PrecipitationShaders.SHADERS`, `FrostRenderer.SHADERS`,
+  `GroundFogVolume.SHADERS`), listed in `ModShaders.SHADERS`. Not added to vanilla's `RenderPipelines` (a failure there
   rejects the reload); `MixinShaderManager` compiles them after each shader reload. Drawing goes through
   `ModShader.run` / `RenderFailSafe`: a failure is logged once and the effect turned off until resources reload.
+- Uniform blocks: `Std140Builder.putVec3` always takes 16 bytes, but std140 puts a following `float` in a `vec3`'s
+  fourth slot. Write a `vec3` and the `float` after it as one `putVec4` (and `putVec4()` in the size), or every value
+  after it is read 4 bytes off (ground fog drew nothing until this was found).
 - Rendering is 26.2's: pipelines, `RenderPass`, GPU buffers, uniform blocks (std140, `MappableRingBuffer`), particle
   layers and extraction. Depth is reverse-Z (cleared to 0). See `MIGRATION.md` for how the aurora, soft particles and
   point lights hook in. GPU timings (`RenderTimer`) go through the device's timestamp queries: no raw OpenGL, as 26.2
@@ -121,7 +125,9 @@ checking in game, and the 0.4.7 system not yet drawn on 26.2 (ground fog), which
     scaled by `GroundFogConditions` (time of day, wind, rain, shelter). Ground heights come from the client's
     `MOTION_BLOCKING` heightmap: the server never sends `MOTION_BLOCKING_NO_LEAVES`, so on the client it is empty.
     Noise positions wrap at `GroundFogVolume.NOISE_WRAP`, a whole number of every noise's cells (a test checks), or a
-    wrap shows as a jump.
+    wrap shows as a jump. Three fullscreen passes (march, smooth, composite) share `shaders/include/ground_fog.glsl`;
+    their vertex shader inverts the matrices the world was drawn with (26.2 puts view bobbing in the projection). Drawn
+    at the start of the weather pass, or with Fabulous after the weather and before the world border.
   - Per dimension (`dimensions.json`): `particleWeather`, `simulateWind` and `groundFog`, guessed when absent
     (`DimensionInfo.drawsOwnWeather`: NeoForge's custom weather renderer for the dimension; sky light). The client always reports sea level 63, so a modded dimension
     with another needs a `seaLevel` rule.

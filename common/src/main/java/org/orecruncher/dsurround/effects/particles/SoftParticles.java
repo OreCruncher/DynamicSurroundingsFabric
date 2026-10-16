@@ -206,7 +206,7 @@ public final class SoftParticles {
     /**
      * Binds the depth copy, as DepthSampler, to a pass whose pipeline reads it.
      */
-    static void bindSceneDepth(RenderPass pass) {
+    public static void bindSceneDepth(RenderPass pass) {
         pass.bindTexture(DEPTH_SAMPLER, depthCopy.getDepthTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
     }
 
