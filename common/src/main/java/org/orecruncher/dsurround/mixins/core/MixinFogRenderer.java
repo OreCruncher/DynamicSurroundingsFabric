@@ -33,7 +33,7 @@ public class MixinFogRenderer {
      * tinted colour as the game has just done with its own. Only in the open air: under water or in lava the fog is
      * the fluid's.
      */
-    @Inject(method = "setupColor(Lnet/minecraft/client/Camera;FLnet/minecraft/client/multiplayer/ClientLevel;IF)V", at = @At("TAIL"))
+    @Inject(method = "setupColor(Lnet/minecraft/client/Camera;FLnet/minecraft/client/multiplayer/ClientLevel;IF)V", at = @At("TAIL"), require = 0)
     private static void dsurround$tintFogColor(Camera camera, float partialTick, ClientLevel level, int renderDistance, float darkenWorldAmount, CallbackInfo ci) {
         if (camera.getFluidInCamera() != FogType.NONE)
             return;
@@ -41,7 +41,9 @@ public class MixinFogRenderer {
         rgb[0] = fogRed;
         rgb[1] = fogGreen;
         rgb[2] = fogBlue;
-        MixinHelpers.fogHandler().tintFogColor(rgb, partialTick);
+        // A colour half tinted when it failed is left out: the game's stands
+        if (!MixinHelpers.FOG_TINT_GUARD.run(() -> MixinHelpers.fogHandler().tintFogColor(rgb, partialTick)))
+            return;
         if (rgb[0] != fogRed || rgb[1] != fogGreen || rgb[2] != fogBlue) {
             fogRed = rgb[0];
             fogGreen = rgb[1];

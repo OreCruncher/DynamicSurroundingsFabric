@@ -21,7 +21,7 @@ public class MixinSource {
         try {
             EnhancedSoundProcessor.onSourcePlay((Channel) (Object) this);
         } catch(final Throwable t) {
-            MixinHelpers.LOGGER.error(t, "Error in dsurround_onSourcePlay()!");
+            MixinHelpers.SOUND_START_GUARD.failed(t);
         }
     }
 
@@ -35,7 +35,7 @@ public class MixinSource {
         try {
             EnhancedSoundProcessor.tick((Channel) (Object) this);
         } catch(final Throwable t) {
-            MixinHelpers.LOGGER.error(t, "Error in dsurround_onSourceTick()!");
+            MixinHelpers.SOUND_TICK_GUARD.failed(t);
         }
     }
 
@@ -48,7 +48,7 @@ public class MixinSource {
         try {
             EnhancedSoundProcessor.stopSoundPlay((Channel) (Object) this);
         } catch(final Throwable t) {
-            MixinHelpers.LOGGER.error(t, "Error in dsurround_onSourceStop()!");
+            MixinHelpers.SOUND_STOP_GUARD.failed(t);
         }
     }
 }

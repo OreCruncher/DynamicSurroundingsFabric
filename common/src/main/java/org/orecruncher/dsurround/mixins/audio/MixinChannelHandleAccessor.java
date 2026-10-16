@@ -19,7 +19,7 @@ public abstract class MixinChannelHandleAccessor {
                 EnhancedSoundProcessor.stopSoundPlay(channel);
             }
         } catch (Throwable t) {
-            MixinHelpers.LOGGER.error(t, "Unable to stop sound play");
+            MixinHelpers.SOUND_STOP_GUARD.failed(t);
         }
     }
 }

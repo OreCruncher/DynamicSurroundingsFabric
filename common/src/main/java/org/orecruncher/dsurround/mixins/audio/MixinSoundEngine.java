@@ -55,7 +55,7 @@ public abstract class MixinSoundEngine {
             EnhancedSoundProcessor.onSoundPlay(soundInstance, channelHandle);
             AudioUtilities.onSoundPlay(soundInstance);
         } catch(final Throwable t) {
-            MixinHelpers.LOGGER.error(t, "Error in dsurround_onSoundPlay()!");
+            MixinHelpers.SOUND_START_GUARD.failed(t);
         }
     }
 
@@ -77,8 +77,8 @@ public abstract class MixinSoundEngine {
             // Attempt a remapping if configured to do so
             else if (SoundInstanceHandler.remapSoundPlay(sound))
                 ci.cancel();
-        } catch (final Exception t) {
-            MixinHelpers.LOGGER.error(t, "Error in dsurround_play()!");
+        } catch (final Throwable t) {
+            MixinHelpers.SOUND_FILTER_GUARD.failed(t);
         }
     }
 
@@ -90,21 +90,26 @@ public abstract class MixinSoundEngine {
     private float dsurround$calculateVolume(SoundEngine soundEngine, float f, SoundSource soundsource, Operation<Float> original, @Local(argsOnly = true) SoundInstance sound) {
         try {
             return SoundVolumeEvaluator.getAdjustedVolume(sound, soundsource);
-        } catch (Throwable ex) {
-            // Something went wrong. Since the call was not canceled, it will continue with the existing implementation.
-            MixinHelpers.LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, "Error calculating sound volume: %s", ex);
+        } catch (Throwable t) {
+            // Something went wrong: the game's own volume is used
+            MixinHelpers.SOUND_VOLUME_GUARD.failed(t);
+            return original.call(soundEngine, f, soundsource);
         }
-        return original.call(soundEngine, f, soundsource);
     }
 
     @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;<init>(DDD)V"), cancellable = true)
     private void dsurround$soundRangeCheck(SoundInstance soundInstance, CallbackInfo ci) {
-        if (MixinHelpers.soundSystemConfig.enableSoundPruning) {
-            // If not in range of the listener, cancel.
-            if (!SoundInstanceHandler.inRange(AudioUtilities.getSoundListener().getTransform().position(), soundInstance, 4)) {
-                MixinHelpers.LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> "TOO FAR: " + AudioUtilities.debugString(soundInstance));
-                ci.cancel();
+        try {
+            if (MixinHelpers.soundSystemConfig.enableSoundPruning) {
+                // If not in range of the listener, cancel.
+                if (!SoundInstanceHandler.inRange(AudioUtilities.getSoundListener().getTransform().position(), soundInstance, 4)) {
+                    MixinHelpers.LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> "TOO FAR: " + AudioUtilities.debugString(soundInstance));
+                    ci.cancel();
+                }
             }
+        } catch (Throwable t) {
+            // The sound plays as the game would have it
+            MixinHelpers.SOUND_RANGE_GUARD.failed(t);
         }
     }
 }

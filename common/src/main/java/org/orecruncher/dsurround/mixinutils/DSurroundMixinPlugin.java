@@ -12,7 +12,8 @@ import java.util.function.Predicate;
 
 /**
  * Skips the mixins for mods that are optional, when the mod isn't installed. Otherwise Mixin reports their missing
- * target class as an error on every launch, which is harmless but alarming.
+ * target class as an error on every launch, which is harmless but alarming. Also keeps the classes the optional hooks
+ * are applied to, for {@link OptionalHook} to see whether they applied.
  * <p>
  * Whether the target is there is asked of Mixin's own class lookup, which reads the class without loading it, so
  * this works the same on Fabric and NeoForge. (This class can't be in the mixin package: Mixin doesn't allow
@@ -75,5 +76,7 @@ public final class DSurroundMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+        // Kept to see later whether the optional hooks applied
+        OptionalHook.record(mixinClassName, targetClass);
     }
 }

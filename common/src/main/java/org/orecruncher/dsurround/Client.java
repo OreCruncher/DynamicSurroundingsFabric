@@ -1,8 +1,13 @@
 package org.orecruncher.dsurround;
 
 import dev.architectury.event.events.client.ClientCommandRegistrationEvent;
+import dev.architectury.platform.Platform;
 import dev.architectury.registry.ReloadListenerRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.particle.Particle;
+import net.minecraft.client.particle.ParticleEngine;
+import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.PackType;
@@ -35,6 +40,7 @@ import org.orecruncher.dsurround.lib.version.IVersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionCheckException;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionResult;
+import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.processing.Handlers;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
@@ -45,6 +51,7 @@ import org.orecruncher.dsurround.sound.AudioPlayerDebug;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.AudioPlayer;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -204,7 +211,20 @@ public final class Client {
         // of the dependencies to be initialized.
         container.resolve(Handlers.class);
 
+        checkOptionalHooks();
+
         Library.LOGGER.info("[%s] Finalization complete", Constants.MOD_ID);
+    }
+
+    /**
+     * Logs the optional game hooks that didn't apply because another mod changed the code they hook (in development,
+     * stops the launch). The classes they are in are loaded first, so their mixins have been applied: naming a class
+     * loads it.
+     */
+    private static void checkOptionalHooks() {
+        var hooked = List.of(LevelRenderer.class, FogRenderer.class, ParticleEngine.class, Particle.class);
+        Library.LOGGER.debug("Checking the optional hooks in %d classes", hooked.size());
+        OptionalHook.check(Library.LOGGER, Platform.isDevelopmentEnvironment());
     }
 
     private static void onConnect(Minecraft minecraftClient) {

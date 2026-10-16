@@ -22,6 +22,7 @@ import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.lib.platform.KnownMod;
+import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.processing.AreaBlockEffects;
 
 import java.util.EnumMap;
@@ -56,6 +57,8 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
                 mod.installedId().ifPresent(modId -> builder.add(Component.literal("MOD: " + modId).withStyle(SPECIAL_MOD_STYLE)));
         for (var conflict : FeatureConflict.values())
             conflict.describe().ifPresent(line -> builder.add(Component.literal(line).withStyle(SPECIAL_MOD_STYLE)));
+        for (var hook : OptionalHook.values())
+            hook.describe().ifPresent(line -> builder.add(Component.literal(line).withStyle(SPECIAL_MOD_STYLE)));
         return builder.build();
     });
 

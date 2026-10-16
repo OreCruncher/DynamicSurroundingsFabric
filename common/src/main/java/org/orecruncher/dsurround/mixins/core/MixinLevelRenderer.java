@@ -44,9 +44,9 @@ public class MixinLevelRenderer {
      * reads the sky's colour too, from the level, and is tinted on its own.
      */
     @ModifyExpressionValue(method = "renderSky(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getSkyColor(Lnet/minecraft/world/phys/Vec3;F)Lnet/minecraft/world/phys/Vec3;"))
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getSkyColor(Lnet/minecraft/world/phys/Vec3;F)Lnet/minecraft/world/phys/Vec3;"), require = 0)
     private Vec3 dsurround$tintSkyColor(Vec3 color, @Local(argsOnly = true) float partialTick) {
-        return MixinHelpers.fogHandler().tintSkyColor(color, partialTick);
+        return MixinHelpers.SKY_TINT_GUARD.get(() -> MixinHelpers.fogHandler().tintSkyColor(color, partialTick), color);
     }
 
     /**
@@ -75,7 +75,7 @@ public class MixinLevelRenderer {
      * Frost on windows, without Fabulous graphics, after the last of the translucent blocks (tripwire) and before the
      * particles: those write depth, and breath or smoke in front of a window would cut the frost behind it out.
      */
-    @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSectionLayer(Lnet/minecraft/client/renderer/RenderType;DDDLorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V"))
+    @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSectionLayer(Lnet/minecraft/client/renderer/RenderType;DDDLorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V"), require = 0)
     private void dsurround$afterSectionLayer(LevelRenderer renderer, RenderType renderType, double camX, double camY, double camZ, Matrix4f frustumMatrix, Matrix4f projectionMatrix, Operation<Void> original, @Local(argsOnly = true) LightTexture lightTexture) {
         original.call(renderer, renderType, camX, camY, camZ, frustumMatrix, projectionMatrix);
         if (renderType == RenderType.tripwire())
@@ -105,9 +105,9 @@ public class MixinLevelRenderer {
      * While particle rain is drawn, its drops splash where they land, so vanilla's splashes, scattered at random
      * around the player, are left out. Vanilla's rain sound, played from the same method, is kept.
      */
-    @WrapWithCondition(method = "tickRain(Lnet/minecraft/client/Camera;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;addParticle(Lnet/minecraft/core/particles/ParticleOptions;DDDDDD)V"))
+    @WrapWithCondition(method = "tickRain(Lnet/minecraft/client/Camera;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;addParticle(Lnet/minecraft/core/particles/ParticleOptions;DDDDDD)V"), require = 0)
     private boolean dsurround$vanillaRainSplash(ClientLevel level, ParticleOptions particle, double x, double y, double z, double xd, double yd, double zd) {
-        return !MixinHelpers.precipitation().isActive();
+        return MixinHelpers.RAIN_SPLASH_GUARD.get(() -> !MixinHelpers.precipitation().isActive(), true);
     }
 
     /**
@@ -115,16 +115,27 @@ public class MixinLevelRenderer {
      * rain blended in from a moderate storm up. Both calls, the rain in the open and on a roof above, come through
      * here; each keeps vanilla's volume and pitch for where it is, scaled.
      */
-    @WrapOperation(method = "tickRain(Lnet/minecraft/client/Camera;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;playLocalSound(Lnet/minecraft/core/BlockPos;Lnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FFZ)V"))
+    @WrapOperation(method = "tickRain(Lnet/minecraft/client/Camera;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;playLocalSound(Lnet/minecraft/core/BlockPos;Lnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FFZ)V"), require = 0)
     private void dsurround$rainSound(ClientLevel level, BlockPos pos, SoundEvent sound, SoundSource source, float volume, float pitch, boolean distanceDelay, Operation<Void> original) {
         if (!MixinHelpers.weatherOptions.enableStormSounds) {
             original.call(level, pos, sound, source, volume, pitch, distanceDelay);
             return;
         }
-        var rainLevel = MixinHelpers.weatherSimulation().rainLevel(level.getRainLevel(1F));
-        var calm = MixinHelpers.SOUND_LIBRARY.getSound(StormSounds.RAIN);
-        level.playLocalSound(pos, calm, source, volume * StormSounds.calmShare(rainLevel), pitch, distanceDelay);
-        var heavy = StormSounds.heavyShare(rainLevel);
+        // The shares are worked out before anything plays, so a failure leaves vanilla's sound, played once
+        float calmVolume;
+        float heavy;
+        SoundEvent calm;
+        try {
+            var rainLevel = MixinHelpers.weatherSimulation().rainLevel(level.getRainLevel(1F));
+            calm = MixinHelpers.SOUND_LIBRARY.getSound(StormSounds.RAIN);
+            calmVolume = volume * StormSounds.calmShare(rainLevel);
+            heavy = StormSounds.heavyShare(rainLevel);
+        } catch (Throwable t) {
+            MixinHelpers.RAIN_SOUND_GUARD.failed(t);
+            original.call(level, pos, sound, source, volume, pitch, distanceDelay);
+            return;
+        }
+        level.playLocalSound(pos, calm, source, calmVolume, pitch, distanceDelay);
         if (heavy > 0F)
             original.call(level, pos, sound, source, volume * heavy, pitch, distanceDelay);
     }
@@ -133,13 +144,29 @@ public class MixinLevelRenderer {
      * The storm's strength in place of the world's rain level where the rain is drawn (how opaque the rain and snow
      * are) and ticked (how many splashes, and the rain sound). The world's level itself is left alone, so the sky,
      * isRaining() and everything else reading it are unchanged. NeoForge's DimensionSpecialEffects hooks come first
-     * in both methods; a dimension that draws its own weather is left to it.
+     * in both methods; a dimension that draws its own weather is left to it. A handler for each, so OptionalHook can
+     * tell if either is lost.
      */
-    @ModifyExpressionValue(method = {
-            "renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V",
-            "tickRain(Lnet/minecraft/client/Camera;)V"
-    }, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getRainLevel(F)F"))
-    private float dsurround$stormRainLevel(float vanillaLevel) {
-        return MixinHelpers.weatherSimulation().rainLevel(vanillaLevel);
+    @ModifyExpressionValue(method = "renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getRainLevel(F)F"), require = 0)
+    private float dsurround$stormRainLevelDrawn(float vanillaLevel) {
+        return dsurround$stormRainLevel(vanillaLevel);
+    }
+
+    @ModifyExpressionValue(method = "tickRain(Lnet/minecraft/client/Camera;)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getRainLevel(F)F"), require = 0)
+    private float dsurround$stormRainLevelTicked(float vanillaLevel) {
+        return dsurround$stormRainLevel(vanillaLevel);
+    }
+
+    @Unique
+    private static float dsurround$stormRainLevel(float vanillaLevel) {
+        // Read a few times a frame and a tick: no lambda
+        try {
+            return MixinHelpers.weatherSimulation().rainLevel(vanillaLevel);
+        } catch (Throwable t) {
+            MixinHelpers.STORM_RAIN_LEVEL_GUARD.failed(t);
+            return vanillaLevel;
+        }
     }
 }

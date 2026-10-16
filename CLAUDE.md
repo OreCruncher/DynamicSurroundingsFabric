@@ -38,6 +38,9 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   cover it with a test.
 - `defaultRequire: 1` in `dsurround.mixins.json`: a mixin that doesn't match crashes at startup, so a clean launch
   means every early-loaded mixin applied. Cloth's mixin only applies when a config screen first opens.
+  Exception: features hooked into code other mods often replace are `require = 0` and listed in
+  `mixinutils/OptionalHook`, which checks at client start whether each applied (logs it, shows it in `/dsconflicts`
+  and diagnostics, and fails the launch in dev). A new optional hook goes in that list (a test checks its handler).
 
 ## Test conventions
 - Anything touching `Blocks`, `BiomeTrait`, tag classes, etc. needs the game bootstrapped first. Use a static block
