@@ -2,8 +2,7 @@
 
 Client-side Minecraft mod (MIT). Minecraft 26.2, Fabric and NeoForge through Architectury. Versions are in
 `gradle.properties`. This branch is the 26.2 port, carrying 0.4.7; `MIGRATION.md` records what changed, what still needs
-checking in game, and the 0.4.7 systems not yet drawn on 26.2 (ground fog, window frost), which stand aside until
-rebuilt.
+checking in game, and the 0.4.7 system not yet drawn on 26.2 (ground fog), which stands aside until rebuilt.
 
 ## Layout
 - `common/` — almost all code, resources and tests (`org.orecruncher.dsurround`).
@@ -130,10 +129,11 @@ rebuilt.
     disconnecting clears them.
   - Weather script variables live in `runtime/variables/WeatherVariables` (`weather.*`).
   - Window frost (`effects/frost`, run by `processing/WindowFrostHandler`): on the outside of clear glass
-    (`effects/frosted_windows` tag; `effects/windows` is all glass, for rain streaks). Drawn after the translucent blocks,
-    independent of particle weather: clear glass is cutout, so frost behind it shows through. Without Fabulous, right
-    after the tripwire layer and before particles (they write depth: breath in front cut it out); with Fabulous, before
-    the weather, to the weather target (1.21.1's hooks; 26.2's are still to build).
+    (`effects/frosted_windows` tag; `effects/windows` is all glass, for rain streaks). Drawn after the opaque terrain,
+    independent of particle weather: clear glass is cutout, so frost behind it shows through. Without Fabulous, in the
+    main pass before the translucent features (particles write depth: breath in front cut it out); 26.2 draws the
+    translucent terrain after those, so water behind a window covers its frost. With Fabulous, at the start of the
+    weather pass, to the weather target (`MixinLevelRenderer`).
     "Outside" uses the `MOTION_BLOCKING` heightmap, then sky light on either side (`canSeeSky` is only sky light 15,
     which a glass roof doesn't reduce).
 

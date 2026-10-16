@@ -8,7 +8,7 @@ import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.client.renderer.rendertype.OutputTarget;
-import org.orecruncher.dsurround.effects.precipitation.MeshDraw;
+import org.orecruncher.dsurround.effects.MeshDraw;
 import java.util.function.Consumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;

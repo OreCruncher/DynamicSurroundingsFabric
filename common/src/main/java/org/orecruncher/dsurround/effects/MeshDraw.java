@@ -1,4 +1,4 @@
-package org.orecruncher.dsurround.effects.precipitation;
+package org.orecruncher.dsurround.effects;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
@@ -14,9 +14,10 @@ import java.util.OptionalDouble;
 import java.util.function.Consumer;
 
 /**
- * Draws one kind of the weather's meshes (the dust, the drops, the damp spots) each frame, in a render pass of its own,
- * from a vertex buffer of its own that is kept from frame to frame and grown as needed. Each kind has its own buffer
- * so a later draw in the frame never writes over vertices an earlier one is still to read. Render thread only.
+ * Draws one kind of mesh each frame (the weather's dust, drops and damp spots; the frost on windows), in a render pass
+ * of its own, from a vertex buffer of its own that is kept from frame to frame and grown as needed. Each kind has its
+ * own buffer so a later draw in the frame never writes over vertices an earlier one is still to read. Render thread
+ * only.
  */
 public final class MeshDraw implements AutoCloseable {
 
@@ -32,8 +33,8 @@ public final class MeshDraw implements AutoCloseable {
     }
 
     /**
-     * Draws a mesh, then closes it. Positions are relative to the camera, as for vanilla's weather; the fog and the
-     * other default uniforms are those set for the pass this is called from.
+     * Draws a mesh, then closes it. Positions are relative to the camera; the fog and the other default uniforms are
+     * those set for the pass this is called from.
      *
      * @param bind binds what the pipeline needs besides the defaults: textures, and any uniforms of its own
      */

@@ -1,15 +1,25 @@
 package org.orecruncher.dsurround.effects.frost;
 
 import com.mojang.blaze3d.PrimitiveTopology;
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.ColorTargetState;
+import com.mojang.blaze3d.pipeline.DepthStencilState;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
 import net.minecraft.client.Camera;
+import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
+import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.RenderTimer;
+import org.orecruncher.dsurround.lib.Library;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -19,10 +29,22 @@ import java.util.function.Consumer;
  * bottom, where it gathers, than in its middle. The shader ({@code window_frost}) shows the texels of the
  * {@link FrostTexture} that have frosted by then. Positions are relative to the camera. Render thread only.
  * <p>
- * 26.2 port: the frost's pipeline, and the hooks that draw it, aren't built yet (0.4.7's are the reference), so
- * windows don't frost.
+ * Two pipelines: as vanilla's weather, depth is written only with Fabulous graphics, where the frost is drawn to the
+ * weather's own target, which the transparency pass lays over the scene by depth.
  */
 public final class FrostRenderer {
+
+    public static final ModShader SHADER = new ModShader(
+            pipeline("pipeline/window_frost").withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false)).build(),
+            "window frost", "windows will not frost", Library.LOGGER);
+    public static final ModShader SHADER_DEPTH = new ModShader(
+            pipeline("pipeline/window_frost_depth_write").withDepthStencilState(DepthStencilState.DEFAULT).build(),
+            "window frost (Fabulous)", "windows will not frost", Library.LOGGER);
+
+    /**
+     * Both, for {@code ModShaders}
+     */
+    public static final List<ModShader> SHADERS = List.of(SHADER, SHADER_DEPTH);
 
     public static final RenderTimer RENDER_TIMER = new RenderTimer("Window Frost");
 
@@ -44,10 +66,36 @@ public final class FrostRenderer {
     }
 
     /**
-     * Whether the frost can be drawn. Not yet on 26.2.
+     * Whether the frost can be drawn: both pipelines compiled, drawing hasn't failed, and no shader pack is in use
      */
     public static boolean isAvailable() {
-        return false;
+        return SHADER.isUsable() && SHADER_DEPTH.isUsable();
+    }
+
+    /**
+     * The pipeline for the graphics mode
+     *
+     * @param fabulous whether Fabulous graphics are on
+     */
+    public static ModShader shader(boolean fabulous) {
+        return fabulous ? SHADER_DEPTH : SHADER;
+    }
+
+    // Premultiplied, "over" (see the shader); seen from both sides
+    private static RenderPipeline.Builder pipeline(String location) {
+        return RenderPipeline.builder()
+                .withLocation(Constants.asId(location))
+                .withVertexShader(Constants.asId("core/window_frost"))
+                .withFragmentShader(Constants.asId("core/window_frost"))
+                .withShaderDefine("FADE_DISTANCE", (float) FrostField.RANGE)
+                .withBindGroupLayout(BindGroupLayouts.GLOBALS)
+                .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+                .withBindGroupLayout(BindGroupLayouts.FOG)
+                .withBindGroupLayout(BindGroupLayouts.SAMPLER0_SAMPLER2)
+                .withVertexBinding(0, DefaultVertexFormat.PARTICLE)
+                .withPrimitiveTopology(PrimitiveTopology.QUADS)
+                .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA))
+                .withCull(false);
     }
 
     /**

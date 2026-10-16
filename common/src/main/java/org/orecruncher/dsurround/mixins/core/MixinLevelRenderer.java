@@ -30,6 +30,18 @@ public class MixinLevelRenderer {
     @Inject(method = "lambda$addWeatherPass$0", at = @At("HEAD"), require = 0)
     private void dsurround$enterWeatherPass(CallbackInfo ci) {
         MixinHelpers.inLevelWeatherPass = true;
+        // Frost on windows with Fabulous graphics, before the weather, so the rain and snow are drawn over it
+        MixinHelpers.WINDOW_FROST_GUARD.run(() -> MixinHelpers.windowFrost().renderBeforeWeather());
+    }
+
+    /**
+     * Frost on windows without Fabulous graphics: in the main pass, after the opaque terrain and solid features, and
+     * before the translucent features, particles among them (see WindowFrostHandler.renderBeforeTranslucent). The pass
+     * runs as a lambda; matched by name, as its arguments differ on NeoForge.
+     */
+    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeTranslucent()V"), require = 0)
+    private void dsurround$frostBeforeTranslucent(CallbackInfo ci) {
+        MixinHelpers.WINDOW_FROST_GUARD.run(() -> MixinHelpers.windowFrost().renderBeforeTranslucent());
     }
 
     @Inject(method = "lambda$addWeatherPass$0", at = @At("RETURN"), require = 0)

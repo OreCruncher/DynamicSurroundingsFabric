@@ -1,10 +1,14 @@
 package org.orecruncher.dsurround.processing;
 
 import net.minecraft.util.LightCoordsUtil;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import it.unimi.dsi.fastutil.longs.LongCollection;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.rendertype.OutputTarget;
+import org.orecruncher.dsurround.effects.MeshDraw;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
@@ -31,12 +35,11 @@ import org.orecruncher.dsurround.lib.time.DayCycle;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 
-import java.util.Objects;
 import java.util.Optional;
 
 /**
  * Frost on the outside of windows when it is cold (see {@link FrostConditions}): on clear glass blocks and panes near
- * the player ({@link FrostField}), drawn after the translucent blocks: clear glass is cut out, so where it is clear it
+ * the player ({@link FrostField}), drawn after the opaque terrain: clear glass is cut out, so where it is clear it
  * writes no depth, and frost on its far side shows through. Without Fabulous graphics, before the particles, which
  * write depth and would cut it out behind them (breath in front of a window), and so before the rain and snow. With
  * Fabulous graphics, where vanilla draws its weather and before it, to the weather's own target, which vanilla clears
@@ -61,6 +64,9 @@ public class WindowFrostHandler extends AbstractClientHandler {
     private ClientLevel level;
     private float forced = Float.NaN;
     private int drawn;
+    // Drawing: made on first use, on the render thread
+    private ByteBufferBuilder meshBytes;
+    private final MeshDraw frostDraw = new MeshDraw("window frost");
 
     public WindowFrostHandler(ISeasonalInformation seasonalInformation, IWeatherSimulation weatherSimulation, ITagLibrary tagLibrary,
                               Configuration config, IModLog logger) {
@@ -111,6 +117,56 @@ public class WindowFrostHandler extends AbstractClientHandler {
         // Set by /dsweather: shown as it is set, without growing or melting into it
         if (isForced)
             this.field.forEachFace(face -> face.show(this.forced));
+    }
+
+    /**
+     * Draws the frost without Fabulous graphics: in the level's main pass, after the opaque terrain (clear glass is
+     * among it, cut out) and the solid features, and before the translucent ones, particles among them, which write
+     * depth and would cut the frost out behind them (breath in front of a window). Water and stained glass behind a
+     * window are drawn after, over it: on 26.2 the translucent terrain comes after the particles.
+     */
+    public void renderBeforeTranslucent() {
+        if (!fabulous())
+            this.render(GameUtils.getMC().gameRenderer.mainRenderTarget(), false);
+    }
+
+    /**
+     * Draws the frost with Fabulous graphics, in the weather pass and before the weather: to the weather's target,
+     * which is laid over the scene by depth
+     */
+    public void renderBeforeWeather() {
+        if (fabulous())
+            this.render(OutputTarget.WEATHER_TARGET.getRenderTarget(), true);
+    }
+
+    private static boolean fabulous() {
+        return GameUtils.getMC().gameRenderer.gameRenderState().useShaderTransparency();
+    }
+
+    private void render(RenderTarget target, boolean fabulous) {
+        this.drawn = 0;
+        if (!this.isActive() || this.field.faceCount() == 0)
+            return;
+
+        // Made the first time, on a thread of its own: no frost until it is ready
+        var texture = FrostTexture.view();
+        if (texture == null)
+            return;
+
+        var shader = FrostRenderer.shader(fabulous);
+        var camera = GameUtils.getMC().gameRenderer.mainCamera();
+        var lightmap = GameUtils.getMC().gameRenderer.lightmap();
+        if (this.meshBytes == null)
+            this.meshBytes = new ByteBufferBuilder(4096);
+        FrostRenderer.RENDER_TIMER.begin();
+        try {
+            shader.run(() -> this.drawn = FrostRenderer.draw(this.field, this.meshBytes, mesh -> this.frostDraw.draw(mesh, shader.pipeline(), target, pass -> {
+                pass.bindTexture("Sampler0", texture, RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR, true));
+                pass.bindTexture("Sampler2", lightmap, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
+            }), camera), () -> {});
+        } finally {
+            FrostRenderer.RENDER_TIMER.end();
+        }
     }
 
     /**

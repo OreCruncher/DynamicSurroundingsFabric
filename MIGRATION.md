@@ -9,13 +9,10 @@ common tests pass; both clients start with all three shaders compiled and join a
 
 `OreCruncher/0.4.7` (through `f7ddfdb`) merged in, staged: everything compiles on common, Fabric and NeoForge, the
 common tests pass, and both clients start with every pipeline compiled and every optional hook applied. Four of 0.4.7's
-new systems needed a renderer of their own on 26.2 and stood aside until rebuilt, one at a time (the light level overlay
-and particle weather are done; two remain). 0.4.7's code is the reference: `git show origin/OreCruncher/0.4.7:<path>`.
+new systems needed a renderer of their own on 26.2 and stood aside until rebuilt, one at a time (the light level overlay,
+particle weather and window frost are done; ground fog remains). 0.4.7's code is the reference: `git show origin/OreCruncher/0.4.7:<path>`.
 - **Ground fog** (`GroundFogVolume.isUsable()` is false). The field, conditions and handler tick; the three screen passes
   (`ground_fog_volume`, `_smooth`, `_composite`) and their targets are still to build.
-- **Window frost** (`FrostRenderer.isAvailable()` is false). The field ticks and `FrostTexture` is already a 26.2 GPU
-  texture; the pipeline (`window_frost`) and the hooks (after the translucent layer, or before the weather with
-  Fabulous graphics) are still to build.
 
 Also pending: the soft particles' depth-writing variant for Fabulous graphics (`soft_particle_scene_depth`, and its
 `ModShaderTests` check), and streaks for sparks and lava droplets, which need a particle group of their own (they are
@@ -57,6 +54,12 @@ What changed to fit 26.2:
   calling the weather renderer itself gets vanilla's. Each kind of mesh has its own vertex buffer (`MeshDraw`).
   Optional hook `PRECIPITATION`: if it doesn't apply, particle weather stands aside. Dust storms (fog, sky tint) come
   back with it.
+- **Window frost**: rebuilt. Two pipelines in `FrostRenderer` (depth written only with Fabulous graphics), drawn with
+  `MeshDraw` (moved to `effects`, shared with the weather). Without Fabulous, `MixinLevelRenderer` draws it in the main
+  pass before `executeTranslucent` (optional hook `WINDOW_FROST`): 26.2 draws translucent features (particles) before
+  the translucent terrain, so frost can't be both after the water and before the particles, as on 1.21.1; it keeps the
+  particles from cutting it out (breath at a window), and water or stained glass behind a window now covers its frost.
+  With Fabulous, at the start of the weather pass, to the weather target. The shader's fade distance is a define.
 - **Vanilla tags**: 26.2's `minecraft:dirt` no longer holds grass blocks, podzol, mycelium, moss or mud; they are in
   `grass_blocks`, `mud` and `moss_blocks`, all under `substrate_overworld`, which `rain_absorbing` (damp spots) and
   `BlockLibrary`'s acoustic seed tags now use. `minecraft:tall_flowers` is gone; `brush_step` lists its five flowers.
@@ -68,7 +71,8 @@ What changed to fit 26.2:
 
 To check in game (both platforms), besides the list below: particle rain, snow and dust (with and without Fabulous
 graphics; dust fading into the ground, fog and sky tinted), damp spots darkening the ground, snow flecks, drops on
-windows, and vanilla's weather back when particle weather is turned off; storm rain and snow with the storm's strength and sounds,
+windows, and vanilla's weather back when particle weather is turned off; window frost (`/dsweather` can set it) with
+and without Fabulous graphics, breath in front of a frosted window; storm rain and snow with the storm's strength and sounds,
 wind drifting smoke and leaves, flame jets (soft, additive, lighting their surroundings),
 steam and smoke puffs, the pocket watch and compass roses (and in the margin), the aurora, and voice chat processing.
 
