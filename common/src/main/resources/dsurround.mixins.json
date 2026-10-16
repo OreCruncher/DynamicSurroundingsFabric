@@ -27,6 +27,7 @@
     "core.MixinMinecraftClient",
     "core.MixinMusic",
     "core.MixinFogRenderer",
+    "core.MixinLevelRenderer",
     "core.MixinParticle",
     "core.MixinParticleEngine",
     "core.MixinWeatherEffectRenderer",

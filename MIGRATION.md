@@ -9,7 +9,8 @@ common tests pass; both clients start with all three shaders compiled and join a
 
 `OreCruncher/0.4.7` (through `f7ddfdb`) merged in, staged: everything compiles on common, Fabric and NeoForge, the
 common tests pass, and both clients start with every pipeline compiled and every optional hook applied. Four of 0.4.7's
-new systems need a renderer of their own on 26.2 and stand aside until they are rebuilt, one at a time (0.4.7's code is
+new systems needed a renderer of their own on 26.2 and stood aside until rebuilt, one at a time (the light level overlay
+is done; three remain) (0.4.7's code is
 the reference: `git show origin/OreCruncher/0.4.7:<path>`):
 
 - **Particle weather** (`PrecipitationShaders.isAvailable()` is false, so vanilla's weather is drawn). The simulation,
@@ -24,8 +25,6 @@ the reference: `git show origin/OreCruncher/0.4.7:<path>`):
 - **Window frost** (`FrostRenderer.isAvailable()` is false). The field ticks and `FrostTexture` is already a 26.2 GPU
   texture; the pipeline (`window_frost`) and the hooks (after the translucent layer, or before the weather with
   Fabulous graphics) are still to build.
-- **Light level overlay** (`LightLevelAtlas.isReady()` is false, so it stays off). The field and classification carry
-  over; the atlas's render-to-texture and the in-world drawing (not gizmos: a pipeline's quads) are still to build.
 
 Also pending: the soft particles' depth-writing variant for Fabulous graphics (`soft_particle_scene_depth`, and its
 `ModShaderTests` check), and streaks for sparks and lava droplets, which need a particle group of their own (they are
@@ -51,6 +50,12 @@ What changed to fit 26.2:
 - **Aurora**: reads 0.4.7's noise texture (`NoiseSampler`, linear and repeating) in place of hashing.
 - **Seasons**: `ISeasonalInformation` keeps 26.2's names (`getTemperatureAt`); 0.4.7 adds `SNOW_TEMPERATURE` and
   `hasPrecipitationAt` (Serene Seasons: `SeasonHooks.hasPrecipitationSeasonal`).
+- **Light level overlay**: rebuilt. `LightLevelAtlas` draws the font's digits straight into a GPU texture (no read
+  back), with the GUI text pipelines the glyphs name (`TextRenderable.guiPipeline`), outlines then numbers, and
+  registers it with the texture manager. `MixinLevelRenderer` (`submitFeatures` TAIL) has `LightLevelRenderer` submit
+  one quad per label with `submitCustomGeometry` and vanilla's `textPolygonOffset`, culled by the camera state's
+  frustum (0.4.7's frustum accessor is gone). The atlas is drawn there, on the render thread, not from the tick. A
+  texture drawn into is stored bottom row first, so the labels sample `1 - v` (`LightLevelAtlas.sampledV`).
 - **Clock, compass and light level legend**: 0.4.7's overlays on `GuiGraphicsExtractor`; the watch reads the day clock
   and the moon's phase from the `MOON_PHASE` attribute.
 - **Simple Voice Chat**: the plugin as in 0.4.7; the dev clients get voice chat 2.6.24 for 26.2 from Modrinth's Maven.

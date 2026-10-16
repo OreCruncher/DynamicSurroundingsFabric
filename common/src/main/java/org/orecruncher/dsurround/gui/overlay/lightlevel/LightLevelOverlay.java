@@ -31,7 +31,7 @@ import java.util.Locale;
 /**
  * Shows the light level on the blocks around the player that a monster could stand on, colored by whether one could
  * spawn there, turned on and off with a key. The numbers lie flat on the blocks, drawn in the world by
- * LightLevelRenderer (not yet on 26.2). On screen, a legend in the bottom right corner says what the colors mean: above the
+ * {@link LightLevelRenderer}. On screen, a legend in the bottom right corner says what the colors mean: above the
  * compass and watch if they are shown in that corner, and above the hot bar if the screen is too narrow for both.
  * <p>
  * The work is kept off the frame: {@link LightLevelField} keeps what it found a section at a time and looks again
@@ -108,10 +108,21 @@ public final class LightLevelOverlay extends AbstractOverlay {
     }
 
     /**
+     * Whether the overlay is on, in a world
+     */
+    boolean isOn() {
+        return this.enabled && this.level != null;
+    }
+
+    /**
      * Whether the numbers are drawn this frame
      */
     boolean isDrawing() {
-        return this.enabled && this.level != null && this.atlas.isReady();
+        return this.isOn() && this.atlas.isReady();
+    }
+
+    LightLevelAtlas atlas() {
+        return this.atlas;
     }
 
     LightLevelField field() {
@@ -177,8 +188,6 @@ public final class LightLevelOverlay extends AbstractOverlay {
         var dimension = current.dimensionType();
         LightLevels.fillTables(this.colors, this.values, options.mode, options.colors, options.hideSafe, skyDarken,
                 dimension.monsterSpawnBlockLightLimit(), dimension.monsterSpawnLightTest().maxInclusive());
-
-        this.atlas.refresh();
 
         // Out of the way of the F3 screen, as the diagnostics are
         this.legendShown = options.showLegend && this.atlas.isReady() && !client.getDebugOverlay().showDebugScreen();

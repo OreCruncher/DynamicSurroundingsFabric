@@ -2,8 +2,8 @@
 
 Client-side Minecraft mod (MIT). Minecraft 26.2, Fabric and NeoForge through Architectury. Versions are in
 `gradle.properties`. This branch is the 26.2 port, carrying 0.4.7; `MIGRATION.md` records what changed, what still needs
-checking in game, and the 0.4.7 systems not yet drawn on 26.2 (particle weather, ground fog, window frost, the light
-level overlay), which stand aside until rebuilt.
+checking in game, and the 0.4.7 systems not yet drawn on 26.2 (particle weather, ground fog, window frost), which stand
+aside until rebuilt.
 
 ## Layout
 - `common/` — almost all code, resources and tests (`org.orecruncher.dsurround`).
