@@ -5,6 +5,7 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.runtime.weather.SceneWind;
+import org.orecruncher.dsurround.runtime.weather.Shelter;
 
 /**
  * A puff of smoke rising from a fire. A {@link SoftPuffParticle}, as steam is, with the mist's sprites, but dark and
@@ -57,7 +58,7 @@ public class SmokePuff extends SoftPuffParticle {
         this.gravity = LIFT;
         var shade = MIN_SHADE + random.nextFloat() * SHADE_RANGE;
         this.rCol = this.gCol = this.bCol = shade;
-        this.windExposure = SceneWind.exposure(level, BlockPos.containing(x, y, z));
+        this.windExposure = Shelter.exposure(level, BlockPos.containing(x, y, z));
         this.wobbleRateX = 0.08F + random.nextFloat() * 0.13F;
         this.wobbleRateZ = 0.08F + random.nextFloat() * 0.13F;
         this.wobblePhaseX = random.nextFloat() * Mth.TWO_PI;

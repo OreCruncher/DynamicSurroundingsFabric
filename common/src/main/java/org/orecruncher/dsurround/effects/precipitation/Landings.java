@@ -54,10 +54,10 @@ public final class Landings {
      */
     static final double BLOWN_IN_REACH = 8D;
     /**
-     * Rain drops blown in that are followed a tick, at most, to see if they hit a window: heavy rain in a strong wind
-     * blows many into walls
+     * Rain drops and snowflakes blown in that are followed a tick, at most, to what they hit: heavy rain or snow in a
+     * strong wind blows many into walls and trees
      */
-    static final int MAX_RAIN_TRACES_PER_TICK = 32;
+    static final int MAX_TRACES_PER_TICK = 32;
     /**
      * Windows looked for a tick, at most: in a full storm with a full storm's wind. Each is a column near the camera;
      * the first window in it, on its windward side, gets a drop if the rain reaches it.
@@ -106,16 +106,18 @@ public final class Landings {
         int landings = status == ParticleStatus.DECREASED ? field.landings() / 2 : field.landings();
         int maxSpots = PrecipitationField.forArea(MAX_DAMP_SPOTS_PER_TICK, field.radius());
         int spots = 0;
-        int rainTraces = 0;
+        int traces = 0;
 
         for (int i = 0; i < landings; i++) {
             float x = field.landingX(i);
             float z = field.landingZ(i);
             if (field.landingBlownIn(i)) {
-                if (field.landingIsSnow(i))
-                    this.blownIn(level, field, i, flecks, random);
-                else if (this.options.enableWindowStreaks && rainTraces++ < MAX_RAIN_TRACES_PER_TICK)
+                if (field.landingIsSnow(i)) {
+                    if (traces++ < MAX_TRACES_PER_TICK)
+                        this.blownIn(level, field, i, flecks, random);
+                } else if (this.options.enableWindowStreaks && traces++ < MAX_TRACES_PER_TICK) {
                     this.rainBlownIn(level, field, i, streaks, random);
+                }
                 continue;
             }
             var pos = this.landingPos.set(Mth.floor(x), field.landingGround(i) - 1, Mth.floor(z));

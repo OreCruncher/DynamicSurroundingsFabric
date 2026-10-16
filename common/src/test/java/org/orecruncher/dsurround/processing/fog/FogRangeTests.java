@@ -103,20 +103,20 @@ public class FogRangeTests {
     @Test
     void rainAddsFogOnlyUnderTheSky() {
         // Regression: rain thickened the fog in caves, buildings and deserts as much as out in the open
-        assertEquals(1F, WeatherFogRangeCalculator.rainFogStrength(1F, 15, true));
-        assertEquals(0F, WeatherFogRangeCalculator.rainFogStrength(1F, 8, true), "no fog away from the open sky");
-        assertEquals(0F, WeatherFogRangeCalculator.rainFogStrength(1F, 0, true));
-        assertEquals(0.5F, WeatherFogRangeCalculator.rainFogStrength(1F, 15, false), "half in a biome that gets no rain");
-        assertEquals(0.25F, WeatherFogRangeCalculator.rainFogStrength(0.5F, 15, false));
-        assertEquals(0F, WeatherFogRangeCalculator.rainFogStrength(0F, 15, true));
+        assertEquals(1F, WeatherFogRangeCalculator.rainFogStrength(1F, 1F, true));
+        assertEquals(0F, WeatherFogRangeCalculator.rainFogStrength(1F, 0F, true), "no fog away from the open sky");
+        assertEquals(0.5F, WeatherFogRangeCalculator.rainFogStrength(1F, 0.5F, true), "as much as the player is out in it");
+        assertEquals(0.5F, WeatherFogRangeCalculator.rainFogStrength(1F, 1F, false), "half in a biome that gets no rain");
+        assertEquals(0.25F, WeatherFogRangeCalculator.rainFogStrength(0.5F, 1F, false));
+        assertEquals(0F, WeatherFogRangeCalculator.rainFogStrength(0F, 1F, true));
     }
 
     @Test
     void dustStormsThickenTheFogUnderTheSky() {
-        assertEquals(1F, WeatherFogRangeCalculator.dustFogStrength(1F, 15));
-        assertEquals(0.5F, WeatherFogRangeCalculator.dustFogStrength(0.5F, 15));
-        assertEquals(0F, WeatherFogRangeCalculator.dustFogStrength(1F, 8), "no dust fog away from the open sky");
-        assertEquals(0F, WeatherFogRangeCalculator.dustFogStrength(0F, 15));
+        assertEquals(1F, WeatherFogRangeCalculator.dustFogStrength(1F, 1F));
+        assertEquals(0.5F, WeatherFogRangeCalculator.dustFogStrength(0.5F, 1F));
+        assertEquals(0F, WeatherFogRangeCalculator.dustFogStrength(1F, 0F), "no dust fog away from the open sky");
+        assertEquals(0F, WeatherFogRangeCalculator.dustFogStrength(0F, 1F));
     }
 
     @Test

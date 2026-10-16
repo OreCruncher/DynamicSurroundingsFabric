@@ -5,6 +5,7 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.runtime.weather.SceneWind;
+import org.orecruncher.dsurround.runtime.weather.Shelter;
 
 /**
  * A puff of steam rising from heated water. A {@link SoftPuffParticle}, as waterfall mist is, with the mist's sprites,
@@ -65,7 +66,7 @@ public class SteamPuff extends SoftPuffParticle {
 
         this.friction = DRAG;
         this.gravity = LIFT;
-        this.windExposure = SceneWind.exposure(level, BlockPos.containing(x, y, z));
+        this.windExposure = Shelter.exposure(level, BlockPos.containing(x, y, z));
         this.roll = this.oRoll = random.nextFloat() * Mth.TWO_PI;
         this.rollSpeed = (random.nextFloat() - 0.5F) * 0.1F;
 

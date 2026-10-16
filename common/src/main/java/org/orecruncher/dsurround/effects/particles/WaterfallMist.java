@@ -8,6 +8,7 @@ import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.runtime.weather.SceneWind;
+import org.orecruncher.dsurround.runtime.weather.Shelter;
 
 /**
  * A puff of mist thrown up where a waterfall lands. Many of them overlapping make the mist, so each is small and
@@ -107,7 +108,7 @@ public class WaterfallMist extends SoftPuffParticle {
         this.peakAlpha = 0.2F + random.nextFloat() * 0.2F;
 
         this.friction = 0.92F;
-        this.windExposure = SceneWind.exposure(level, BlockPos.containing(x, y, z));
+        this.windExposure = Shelter.exposure(level, BlockPos.containing(x, y, z));
         // Negative gravity: it rises, slowly
         this.gravity = -0.015F;
         this.roll = this.oRoll = random.nextFloat() * Mth.TWO_PI;

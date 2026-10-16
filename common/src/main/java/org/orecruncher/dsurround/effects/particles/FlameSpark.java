@@ -10,6 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.runtime.weather.SceneWind;
+import org.orecruncher.dsurround.runtime.weather.Shelter;
 
 /**
  * A spark thrown up from a fire. Shot up fast, it slows and arcs over as its weight tells, carries on the wind out in
@@ -62,7 +63,7 @@ public class FlameSpark extends TextureSheetParticle {
         // Flies through the air without stopping at blocks: the soft shader fades it where it meets them
         this.hasPhysics = false;
         this.twinklePhase = random.nextFloat() * Mth.TWO_PI;
-        this.windExposure = SceneWind.exposure(level, BlockPos.containing(x, y, z));
+        this.windExposure = Shelter.exposure(level, BlockPos.containing(x, y, z));
         this.setSprite(DSurroundParticleSprites.WATERFALL_MIST.get(random));
     }
 

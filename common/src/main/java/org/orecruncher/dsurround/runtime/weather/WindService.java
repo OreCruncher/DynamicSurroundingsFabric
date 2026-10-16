@@ -84,7 +84,7 @@ public final class WindService {
         if (!GameUtils.isInGame() || this.isStill())
             return 0F;
         var player = GameUtils.getPlayer().orElseThrow();
-        var exposure = SceneWind.exposure(player.level(), BlockPos.containing(player.getEyePosition()));
+        var exposure = Shelter.exposure(player.level(), BlockPos.containing(player.getEyePosition()));
         return WindSounds.loopScale(this.speedAtPlayer(), exposure);
     }
 

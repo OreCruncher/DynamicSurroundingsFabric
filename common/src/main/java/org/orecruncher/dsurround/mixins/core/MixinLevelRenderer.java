@@ -66,21 +66,20 @@ public class MixinLevelRenderer {
     private void dsurround$renderPrecipitation(LightTexture lightTexture, float partialTick, double camX, double camY, double camZ, CallbackInfo ci) {
         if (!dsurround$levelWeather)
             return;
-        // The mist on the ground first, under the rain; with Fabulous graphics after it (below)
-        MixinHelpers.groundFog().renderBeforeWeather(lightTexture, partialTick);
         if (MixinHelpers.precipitation().render(lightTexture, partialTick))
             ci.cancel();
     }
 
     /**
-     * Frost on windows before the weather, so the rain and snow are drawn over it; and with Fabulous graphics, the mist
-     * on the ground after the weather (see GroundFogHandler.renderAfterWeather). Both from where the level calls for
-     * the weather, rather than inside it, so they are drawn however the weather's drawing ends, cancelled by us or
-     * another mod (Simple Weather cancels it) or left early by NeoForge for a dimension's own.
+     * Frost on windows and the mist on the ground before the weather, so the rain and snow are drawn over them; with
+     * Fabulous graphics the mist after it instead (see GroundFogHandler.renderAfterWeather). All from where the level
+     * calls for the weather, rather than inside it, so they are drawn however the weather's drawing ends, cancelled by
+     * us or another mod (Simple Weather cancels it) or left early by NeoForge for a dimension's own.
      */
     @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V"))
     private void dsurround$aroundWeather(LevelRenderer renderer, LightTexture lightTexture, float partialTick, double camX, double camY, double camZ, Operation<Void> original) {
         MixinHelpers.windowFrost().render(lightTexture);
+        MixinHelpers.groundFog().renderBeforeWeather(lightTexture, partialTick);
         dsurround$levelWeather = true;
         try {
             original.call(renderer, lightTexture, partialTick, camX, camY, camZ);

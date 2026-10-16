@@ -9,6 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.runtime.weather.SceneWind;
+import org.orecruncher.dsurround.runtime.weather.Shelter;
 
 /**
  * A tongue of flame in a flame jet. Many small ones overlapping make the fire: each is a soft glowing puff, drawn
@@ -77,7 +78,7 @@ public class FlameTongue extends SoftPuffParticle {
         this.friction = DRAG;
         this.gravity = BUOYANCY;
         this.flickerPhase = random.nextFloat() * Mth.TWO_PI;
-        this.windExposure = SceneWind.exposure(level, BlockPos.containing(x, y, z));
+        this.windExposure = Shelter.exposure(level, BlockPos.containing(x, y, z));
         this.carriesLight = carriesLight;
         this.lightRadius = LIGHT_RADIUS * scale;
         this.setColor(HOT);

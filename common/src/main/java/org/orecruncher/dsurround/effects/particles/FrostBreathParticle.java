@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.runtime.weather.SceneWind;
+import org.orecruncher.dsurround.runtime.weather.Shelter;
 
 public class FrostBreathParticle extends TextureSheetParticle {
 
@@ -97,7 +98,7 @@ public class FrostBreathParticle extends TextureSheetParticle {
             this.setSpriteFromAge(this.spriteProvider);
             // Drifts downwind, as far as it is out in the open; found where it is first breathed out
             if (this.windExposure < 0F)
-                this.windExposure = SceneWind.exposure(this.level, BlockPos.containing(this.x, this.y, this.z));
+                this.windExposure = Shelter.exposure(this.level, BlockPos.containing(this.x, this.y, this.z));
             this.xd += SceneWind.push(SceneWind.x(this.x, this.z), this.windExposure, DRAG);
             this.zd += SceneWind.push(SceneWind.z(this.x, this.z), this.windExposure, DRAG);
             this.move(this.xd, this.yd, this.zd);

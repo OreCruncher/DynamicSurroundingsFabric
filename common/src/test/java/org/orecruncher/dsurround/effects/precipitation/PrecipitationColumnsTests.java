@@ -141,12 +141,14 @@ public class PrecipitationColumnsTests {
     }
 
     @Test
-    void movingIntoAnotherBlockLooksAgainAtOnce() {
+    void movingIntoAnotherColumnLooksAgainAtOnce() {
         var source = new Changing();
         var columns = new PrecipitationColumns(RADIUS);
         columns.refresh(source, 0, 70, 0);
         assertTrue(columns.refresh(source, 1, 70, 0));
-        assertTrue(columns.refresh(source, 1, 71, 0), "up a block is another block too");
+        // Jumping, or climbing stairs, would look the whole area up again for little: the interval catches it
+        assertFalse(columns.refresh(source, 1, 71, 0), "up a block is the same column");
+        assertTrue(columns.refresh(source, 1, 71, 1));
     }
 
     @Test

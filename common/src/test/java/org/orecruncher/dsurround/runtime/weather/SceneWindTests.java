@@ -1,17 +1,7 @@
 package org.orecruncher.dsurround.runtime.weather;
 
-import net.minecraft.SharedConstants;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.Bootstrap;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.LeavesBlock;
-import net.minecraft.world.level.block.state.BlockState;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,11 +9,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests for the wind other effects lean with.
  */
 public class SceneWindTests {
-
-    static {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
-    }
 
     @AfterEach
     void stillAir() {
@@ -54,108 +39,6 @@ public class SceneWindTests {
         assertEquals("Wind: 0.20 toward E (90)", WindService.diagnosticText(wind));
     }
 
-    @Test
-    void theOpenSkyLetsTheWindIn() {
-        assertEquals(1F, SceneWind.exposure(15));
-        assertEquals(0F, SceneWind.exposure(8), "in a cave or a building");
-        assertEquals(0F, SceneWind.exposure(0));
-        var part = SceneWind.exposure(11);
-        assertTrue(part > 0F && part < 1F);
-    }
-
-    @Test
-    void outUnderTheSkyAllOfTheWind() {
-        var world = new World();
-        world.put(0, 0, 0, Blocks.GRASS_BLOCK);
-        assertEquals(1F, SceneWind.shelter(world, new BlockPos(0, 1, 0)));
-    }
-
-    @Test
-    void aGlassRoofKeepsTheWindOut() {
-        // Glass lets all the sky light through, so the light alone would let it in
-        var world = new World();
-        world.room(Blocks.GLASS);
-        assertEquals(0F, SceneWind.shelter(world, new BlockPos(0, 1, 0)));
-    }
-
-    @Test
-    void treesLetSomeOfItThrough() {
-        var world = new World();
-        world.put(0, 5, 0, Blocks.OAK_LEAVES);
-        world.put(0, 7, 0, Blocks.OAK_LEAVES);
-        assertEquals(SceneWind.CANOPY_SHARE, SceneWind.shelter(world, new BlockPos(0, 1, 0)));
-        for (int x = -2; x <= 2; x++)
-            for (int z = -2; z <= 2; z++)
-                world.put(x, 3, z, Blocks.OAK_PLANKS);
-        assertEquals(0F, SceneWind.shelter(world, new BlockPos(0, 1, 0)), "a roof under the trees");
-    }
-
-    @Test
-    void underAnOverhangTheWindComesInFromTheSide() {
-        // A roof over x <= 0, open sky beyond
-        var world = new World();
-        for (int x = -5; x <= 0; x++)
-            for (int z = -5; z <= 5; z++)
-                world.put(x, 3, z, Blocks.STONE);
-        assertEquals(SceneWind.ROOF_SHARE, SceneWind.shelter(world, new BlockPos(0, 1, 0)), "at the edge");
-        assertEquals(SceneWind.ROOF_SHARE / 2, SceneWind.shelter(world, new BlockPos(-1, 1, 0)), "a block in");
-        assertEquals(0F, SceneWind.shelter(world, new BlockPos(-2, 1, 0)), "further in");
-    }
-
-    @Test
-    void aWallKeepsTheSideWindOut() {
-        var world = new World();
-        world.room(Blocks.STONE);
-        world.put(-2, 1, 0, Blocks.AIR);
-        assertEquals(SceneWind.ROOF_SHARE / 2, SceneWind.shelter(world, new BlockPos(-1, 1, 0)), "by an open door");
-        world.put(-2, 1, 0, Blocks.GLASS_PANE);
-        assertEquals(0F, SceneWind.shelter(world, new BlockPos(-1, 1, 0)), "by a window");
-    }
-
-    /**
-     * Blocks by position; the top of a column is above the highest that blocks motion, as the heightmap has it
-     */
-    private static final class World implements SceneWind.Columns {
-        private final Map<BlockPos, BlockState> blocks = new HashMap<>();
-
-        void put(int x, int y, int z, Block block) {
-            this.blocks.put(new BlockPos(x, y, z), block.defaultBlockState());
-        }
-
-        // A 3x3 room around (0, 1, 0): walls of stone two high at +-2, roofed with the given block at y 3
-        void room(Block roof) {
-            for (int x = -2; x <= 2; x++)
-                for (int z = -2; z <= 2; z++) {
-                    this.put(x, 3, z, roof);
-                    if (Math.abs(x) == 2 || Math.abs(z) == 2) {
-                        this.put(x, 1, z, Blocks.STONE);
-                        this.put(x, 2, z, Blocks.STONE);
-                    }
-                }
-        }
-
-        @Override
-        public int top(int x, int z) {
-            int top = 0;
-            for (var entry : this.blocks.entrySet()) {
-                var pos = entry.getKey();
-                if (pos.getX() == x && pos.getZ() == z && entry.getValue().blocksMotion())
-                    top = Math.max(top, pos.getY() + 1);
-            }
-            return top;
-        }
-
-        @Override
-        public BlockState state(BlockPos pos) {
-            return this.blocks.getOrDefault(pos.immutable(), Blocks.AIR.defaultBlockState());
-        }
-
-        // The game's tags aren't bound in tests
-        @Override
-        public boolean isLeaves(BlockState state) {
-            return state.getBlock() instanceof LeavesBlock;
-        }
-    }
 
     @Test
     void somethingLightIsCarriedAtAboutHalfTheWind() {

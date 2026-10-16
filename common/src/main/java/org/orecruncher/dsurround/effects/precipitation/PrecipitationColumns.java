@@ -12,8 +12,10 @@ import java.util.Arrays;
  * is blowing over. Dust over grass or water is still the desert's sand.
  * <p>
  * Looking the columns up takes thousands of reads of the world (heights, biomes, temperatures, light), so it is done
- * again only when the camera moves into another block, every {@link #REFRESH_TICKS} ticks to see blocks placed or
- * broken and light changing, or when {@link #invalidate} says the last look is out of date.
+ * again only when the camera moves into another column, every {@link #REFRESH_TICKS} ticks to see blocks placed or
+ * broken, light changing and the camera's height (which what falls is taken at), or when {@link #invalidate} says the
+ * last look is out of date. Moving up or down alone doesn't look again: jumping and climbing stairs would, a block at
+ * a time, for little.
  */
 final class PrecipitationColumns {
 
@@ -32,8 +34,8 @@ final class PrecipitationColumns {
     // The share of the columns rain or snow falls in, and the share dust blows in, 0 to 1
     private float fallingShare;
     private float dustShare;
-    // The camera's block when the columns were last looked up, and the ticks since
-    private int lastCameraX, lastCameraY, lastCameraZ;
+    // The camera's column when the columns were last looked up, and the ticks since
+    private int lastCameraX, lastCameraZ;
     private int ticksSinceRefresh;
     private boolean stale = true;
 
@@ -49,13 +51,13 @@ final class PrecipitationColumns {
     }
 
     /**
-     * Looks the columns up again if they are out of date: the camera is in another block, they were looked up
+     * Looks the columns up again if they are out of date: the camera is in another column, they were looked up
      * {@link #REFRESH_TICKS} ticks ago, or they were {@link #invalidate invalidated}. Called once a tick.
      *
      * @return true if they were looked up
      */
     boolean refresh(IColumnSource source, int cameraX, int cameraY, int cameraZ) {
-        boolean moved = cameraX != this.lastCameraX || cameraY != this.lastCameraY || cameraZ != this.lastCameraZ;
+        boolean moved = cameraX != this.lastCameraX || cameraZ != this.lastCameraZ;
         if (!this.stale && !moved && ++this.ticksSinceRefresh < REFRESH_TICKS)
             return false;
         this.update(source, cameraX, cameraY, cameraZ);
@@ -75,7 +77,6 @@ final class PrecipitationColumns {
      */
     void update(IColumnSource source, int cameraX, int cameraY, int cameraZ) {
         this.lastCameraX = cameraX;
-        this.lastCameraY = cameraY;
         this.lastCameraZ = cameraZ;
         this.ticksSinceRefresh = 0;
         this.stale = false;

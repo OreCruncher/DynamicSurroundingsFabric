@@ -8,7 +8,7 @@ public interface IWindBlown {
     /**
      * Starts the particle drifting with the wind, as far as it is out in it
      *
-     * @param exposure from {@code SceneWind.exposure}, where it was made: above 0
+     * @param exposure from {@code Shelter.exposure}, where it was made: above 0
      */
     void dsurround$blowInWind(float exposure);
 }

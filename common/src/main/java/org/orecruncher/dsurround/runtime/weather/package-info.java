@@ -8,6 +8,8 @@
  *     and gusts that sweep across from upwind. {@link org.orecruncher.dsurround.runtime.weather.WindService} ticks it
  *     and publishes it through {@link org.orecruncher.dsurround.runtime.weather.SceneWind}, which particles read to
  *     drift. A dimension can have none (its dimension info's {@code simulateWind}).</li>
+ *     <li>{@link org.orecruncher.dsurround.runtime.weather.Shelter}: how open to the weather a place is, from its sky
+ *     light and any roof over it. The wind, its sounds, the weather's fog and the ground fog reach only as far.</li>
  *     <li>{@link org.orecruncher.dsurround.runtime.weather.DustStorms}: where storms raise dust instead of rain, and
  *     its colour.</li>
  *     <li>{@link org.orecruncher.dsurround.runtime.weather.StormSounds} and

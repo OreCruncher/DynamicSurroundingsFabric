@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.processing.fog;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
@@ -14,6 +13,7 @@ import org.orecruncher.dsurround.processing.PrecipitationHandler;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
+import org.orecruncher.dsurround.runtime.weather.Shelter;
 
 /**
  * Fog from the weather: rain thickens it a little, and a dust storm (see {@link DustStorms}) a great deal, closing in
@@ -24,9 +24,6 @@ public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
     protected static final float START_IMPACT = 0.9F;
     protected static final float END_IMPACT = 0.4F;
 
-    // Sky light below which the weather adds no fog, and the range over which it builds to full
-    static final int MIN_SKY_LIGHT = 8;
-    static final float SKY_LIGHT_RANGE = 7F;
     // Rain fog where nothing falls on the player (a dry biome, or a dry season), though rain falls nearby
     static final float DRY_BIOME_FACTOR = 0.5F;
     // Fraction of the way to the target covered each tick
@@ -98,7 +95,8 @@ public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
         var pos = BlockPos.containing(GameUtils.getPlayer().orElseThrow().getEyePosition());
         var biome = world.getBiome(pos).value();
         var rainLevel = this.weatherSimulation.rainLevel(world.getRainLevel(1F));
-        var skyLight = world.getBrightness(LightLayer.SKY, pos);
+        // Out in the weather: caves and buildings keep its fog out
+        var exposure = Shelter.exposure(world, pos);
 
         // What falls here now, as the season provider says, as the particles go by: with Serene Seasons, a tropical
         // biome's season decides whether it rains, not the biome's own setting
@@ -107,8 +105,8 @@ public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
         // In a dust storm the dust takes the place of the rain fog a dry biome would otherwise get
         var dusty = this.precipitation.isActive() && DustStorms.enabled(this.weatherOptions)
                 && DustStorms.isDusty(fallingNow, biome, this.biomeLibrary);
-        var target = dusty ? 0F : rainFogStrength(rainLevel, skyLight, fallingNow != Biome.Precipitation.NONE);
-        var dustTarget = dusty ? dustFogStrength(rainLevel, skyLight) : 0F;
+        var target = dusty ? 0F : rainFogStrength(rainLevel, exposure, fallingNow != Biome.Precipitation.NONE);
+        var dustTarget = dusty ? dustFogStrength(rainLevel, exposure) : 0F;
         if (dusty)
             this.dustColor = fogDustColor(this.precipitation.regionalDustColor(), DustStorms.dustColor(biome, this.biomeLibrary));
 
@@ -166,27 +164,23 @@ public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
     }
 
     /**
-     * How much of the open sky the player is under, 0 to 1: caves and buildings keep the weather's fog out
-     */
-    static float skyExposure(int skyLight) {
-        return Mth.clamp((skyLight - MIN_SKY_LIGHT) / SKY_LIGHT_RANGE, 0F, 1F);
-    }
-
-    /**
      * How strongly rain thickens the fog where the player is: only out under the sky, as the game's own rain fog does
      * in later versions, so caves and buildings stay clear, and less where it isn't raining on the player.
      *
+     * @param exposure    how open to the weather the player is, 0 to 1 (see {@link Shelter#exposure})
      * @param fallingHere whether rain or snow falls where the player is now, by the biome and its season
      */
-    static float rainFogStrength(float rainLevel, int skyLight, boolean fallingHere) {
-        return rainLevel * skyExposure(skyLight) * (fallingHere ? 1F : DRY_BIOME_FACTOR);
+    static float rainFogStrength(float rainLevel, float exposure, boolean fallingHere) {
+        return rainLevel * Mth.clamp(exposure, 0F, 1F) * (fallingHere ? 1F : DRY_BIOME_FACTOR);
     }
 
     /**
      * How strongly a dust storm thickens the fog where the player is, 0 to 1: with the storm, and only out under the
      * sky
+     *
+     * @param exposure how open to the weather the player is, 0 to 1 (see {@link Shelter#exposure})
      */
-    static float dustFogStrength(float rainLevel, int skyLight) {
-        return Mth.clamp(rainLevel, 0F, 1F) * skyExposure(skyLight);
+    static float dustFogStrength(float rainLevel, float exposure) {
+        return Mth.clamp(rainLevel, 0F, 1F) * Mth.clamp(exposure, 0F, 1F);
     }
 }

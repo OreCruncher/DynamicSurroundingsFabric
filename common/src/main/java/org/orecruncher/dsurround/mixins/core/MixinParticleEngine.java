@@ -11,7 +11,7 @@ import net.minecraft.core.particles.ParticleOptions;
 import org.orecruncher.dsurround.effects.particles.DSurroundParticleRenderType;
 import org.orecruncher.dsurround.mixinutils.IWindBlown;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
-import org.orecruncher.dsurround.runtime.weather.SceneWind;
+import org.orecruncher.dsurround.runtime.weather.Shelter;
 import org.orecruncher.dsurround.tags.ParticleTags;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -66,7 +66,7 @@ public abstract class MixinParticleEngine {
         if (!MixinHelpers.TAG_LIBRARY.is(ParticleTags.WIND_BLOWN, options.getType()))
             return;
         // Sheltered where it was made: indoors or in a cave, it stays as it is
-        var exposure = SceneWind.exposure(this.level, BlockPos.containing(x, y, z));
+        var exposure = Shelter.exposure(this.level, BlockPos.containing(x, y, z));
         if (exposure > 0F)
             ((IWindBlown) particle).dsurround$blowInWind(exposure);
     }

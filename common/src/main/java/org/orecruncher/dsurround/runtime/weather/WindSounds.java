@@ -30,7 +30,7 @@ public final class WindSounds {
      * The volume scale for wind loops
      *
      * @param speed    the wind's speed where the player is, gusts included, in blocks a tick
-     * @param exposure how open to the sky the player is, 0 to 1, as {@link SceneWind#exposure} gives it
+     * @param exposure how open to the sky the player is, 0 to 1, as {@link Shelter#exposure} gives it
      */
     public static float loopScale(float speed, float exposure) {
         var share = Math.max(speed, 0F) / Wind.speedOfPercent(100);
