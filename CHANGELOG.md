@@ -18,7 +18,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Assisted in the creation of the ground fog feature
 * Helped with integrating Simple Voice Chat
 * Used to extend steam and flame jet effects, adding additional particles, shader, and lighting where appropriate
-* Rebuilt the clock overlay to use an old pocket watch texture with embedded indicators for diurnal cycle, seasons or mooon phase (depending on if Serene Seasons is installed)
+* Rebuilt the clock overlay to use an old pocket watch texture with embedded indicators for diurnal cycle, seasons or moon phase (depending on if Serene Seasons is installed)
   * Added the option to show the compass and pocket watch in a side or corner of the screen
 * Integrated older compass rose textures as possible selections for the compass, and cleaning up the textures
 * Ported the light level HUD from older versions as a light level overlay, drawn from a texture for speed
