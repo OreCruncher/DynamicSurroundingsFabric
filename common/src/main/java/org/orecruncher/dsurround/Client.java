@@ -9,6 +9,7 @@ import net.minecraft.client.particle.ParticleEngine;
 
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.SkyRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.WeatherEffectRenderer;
 import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.client.renderer.fog.environment.AtmosphericFogEnvironment;
@@ -234,7 +235,7 @@ public final class Client {
      * loads it.
      */
     private static void checkOptionalHooks() {
-        var hooked = List.of(ClientLevel.class, WeatherEffectRenderer.class, SkyRenderer.class, FogRenderer.class, AtmosphericFogEnvironment.class, ParticleEngine.class, Particle.class);
+        var hooked = List.of(ClientLevel.class, LevelRenderer.class, WeatherEffectRenderer.class, SkyRenderer.class, FogRenderer.class, AtmosphericFogEnvironment.class, ParticleEngine.class, Particle.class);
         Library.LOGGER.debug("Checking the optional hooks in %d classes", hooked.size());
         OptionalHook.check(Library.LOGGER, Platform.isDevelopmentEnvironment());
     }

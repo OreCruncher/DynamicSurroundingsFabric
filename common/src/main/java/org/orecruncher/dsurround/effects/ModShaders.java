@@ -3,8 +3,10 @@ package org.orecruncher.dsurround.effects;
 import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
 import org.orecruncher.dsurround.effects.particles.PointLights;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
+import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * The mod's render pipelines. MixinShaderManager compiles each of these once the game's shaders have reloaded; each
@@ -12,11 +14,12 @@ import java.util.List;
  */
 public final class ModShaders {
 
-    public static final List<ModShader> SHADERS = List.of(
-            SoftParticles.SHADER,
-            SoftParticles.FLAME_SHADER,
-            AuroraRenderer.SHADER,
-            PointLights.SHADER);
+    public static final List<ModShader> SHADERS = Stream.concat(Stream.of(
+                    SoftParticles.SHADER,
+                    SoftParticles.FLAME_SHADER,
+                    AuroraRenderer.SHADER,
+                    PointLights.SHADER),
+            PrecipitationShaders.SHADERS.stream()).toList();
 
     private ModShaders() {
     }

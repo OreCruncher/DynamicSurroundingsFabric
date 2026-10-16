@@ -109,6 +109,32 @@ public class ModTagFilesTests {
     }
 
     @Test
+    void everyVanillaTagReferenceInTheConfigurationExists() throws IOException {
+        // Vanilla's tags change between versions (26.2 took grass blocks out of minecraft:dirt and dropped
+        // minecraft:tall_flowers), and a reference to one that is gone quietly matches nothing
+        var vanillaReference = Pattern.compile("\"#minecraft:([a-z0-9_/]+)\"");
+        var missing = new ArrayList<String>();
+        var checked = 0;
+        try (var files = Files.walk(assets)) {
+            for (var path : files.filter(p -> p.toString().endsWith(".json")).toList()) {
+                var relative = assets.relativize(path).toString().replace('\\', '/');
+                var registryFolder = registryFolderFor(relative);
+                if (registryFolder == null)
+                    continue;
+                var matcher = vanillaReference.matcher(Files.readString(path));
+                while (matcher.find()) {
+                    var resource = "/data/minecraft/" + registryFolder + "/" + matcher.group(1) + ".json";
+                    if (ModTagFilesTests.class.getResource(resource) == null)
+                        missing.add(relative + " -> #minecraft:" + matcher.group(1));
+                    checked++;
+                }
+            }
+        }
+        assertTrue(checked > 0, "found no vanilla tag references");
+        assertTrue(missing.isEmpty(), "references to vanilla tags that don't exist: " + missing);
+    }
+
+    @Test
     void conventionTagsAreReferencedAsTags() throws IOException {
         // The "c" namespace only holds tags, so an entry there without its "#" names a biome or block that can't
         // exist, and quietly adds nothing (as dsurround:is_outer_end_island once did)

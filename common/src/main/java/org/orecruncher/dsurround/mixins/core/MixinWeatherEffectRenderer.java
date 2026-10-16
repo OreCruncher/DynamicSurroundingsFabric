@@ -5,6 +5,8 @@ import net.minecraft.client.renderer.WeatherEffectRenderer;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(WeatherEffectRenderer.class)
 public class MixinWeatherEffectRenderer {
@@ -19,5 +21,16 @@ public class MixinWeatherEffectRenderer {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getRainLevel(F)F"), require = 0)
     private float dsurround$stormRainLevelDrawn(float vanillaLevel) {
         return MixinHelpers.stormRainLevel(vanillaLevel);
+    }
+
+    /**
+     * Particle rain and snow in place of vanilla's, in the frame's weather pass only: another mod drawing the weather
+     * itself gets vanilla's (see MixinLevelRenderer). Matched by name alone: NeoForge's render takes the level's render
+     * state as well. Vanilla's is drawn if ours isn't (turned off, a shader pack, a failure).
+     */
+    @Inject(method = "render", at = @At("HEAD"), cancellable = true, require = 0)
+    private void dsurround$renderPrecipitation(CallbackInfo ci) {
+        if (MixinHelpers.inLevelWeatherPass && MixinHelpers.PRECIPITATION_GUARD.get(() -> MixinHelpers.precipitation().render(), false))
+            ci.cancel();
     }
 }

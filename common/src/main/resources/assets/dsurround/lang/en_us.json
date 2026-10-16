@@ -116,6 +116,7 @@
   "dsurround.conflict.client_commands": "Client commands",
   "dsurround.hook.sky_tint": "Dust storm sky colour",
   "dsurround.hook.fog_tint": "Dust storm fog colour",
+  "dsurround.hook.precipitation": "Particle rain and snow",
   "dsurround.hook.storm_rain": "Storm strength in vanilla's rain and snow",
   "dsurround.hook.rain_sounds": "Storm rain sounds",
   "dsurround.hook.rain_splashes": "Hiding vanilla's rain splashes under particle rain",

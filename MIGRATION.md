@@ -10,16 +10,7 @@ common tests pass; both clients start with all three shaders compiled and join a
 `OreCruncher/0.4.7` (through `f7ddfdb`) merged in, staged: everything compiles on common, Fabric and NeoForge, the
 common tests pass, and both clients start with every pipeline compiled and every optional hook applied. Four of 0.4.7's
 new systems needed a renderer of their own on 26.2 and stood aside until rebuilt, one at a time (the light level overlay
-is done; three remain) (0.4.7's code is
-the reference: `git show origin/OreCruncher/0.4.7:<path>`):
-
-- **Particle weather** (`PrecipitationShaders.isAvailable()` is false, so vanilla's weather is drawn). The simulation,
-  landings and sounds are in, and so is the dust storm's fog and sky tint; but dust storms are part of particle
-  weather (as on 0.4.7, `WeatherFogRangeCalculator` asks `PrecipitationHandler.isActive()`), so none of them shows until
-  it is rebuilt. The vertex building takes a `ByteBufferBuilder` and hands the mesh
-  to a consumer. Still to build: the drops' and damp spots' pipelines (`precipitation`, `damp_spot` shaders are still
-  1.21.1's with their JSON), and the hook drawing them in place of vanilla's weather (`WeatherEffectRenderer.render`,
-  the weather target with Fabulous graphics).
+and particle weather are done; two remain). 0.4.7's code is the reference: `git show origin/OreCruncher/0.4.7:<path>`.
 - **Ground fog** (`GroundFogVolume.isUsable()` is false). The field, conditions and handler tick; the three screen passes
   (`ground_fog_volume`, `_smooth`, `_composite`) and their targets are still to build.
 - **Window frost** (`FrostRenderer.isAvailable()` is false). The field ticks and `FrostTexture` is already a 26.2 GPU
@@ -56,11 +47,28 @@ What changed to fit 26.2:
   one quad per label with `submitCustomGeometry` and vanilla's `textPolygonOffset`, culled by the camera state's
   frustum (0.4.7's frustum accessor is gone). The atlas is drawn there, on the render thread, not from the tick. A
   texture drawn into is stored bottom row first, so the labels sample `1 - v` (`LightLevelAtlas.sampledV`).
+- **Particle weather**: rebuilt. Six pipelines in `PrecipitationShaders` (in `ModShaders.SHADERS`), each a pair, as
+  vanilla's weather writes depth only with Fabulous graphics: the drops (rain, snow, snow flecks, window streaks), the
+  soft dust (the `precipitation` shader with `SOFT_DISTANCE`, reading `SoftParticles`' depth copy, made again in the
+  weather pass by `SoftParticles.captureDepth` from the translucent target with Fabulous, the main one without), and
+  damp spots (darkening blend; with Fabulous, translucent with depth writes). `MixinWeatherEffectRenderer` cancels
+  `render` (matched by name: NeoForge's takes the level render state too) when `PrecipitationHandler.render` draws,
+  only inside the level renderer's weather pass (`MixinLevelRenderer` flags `lambda$addWeatherPass$0`), so a mod
+  calling the weather renderer itself gets vanilla's. Each kind of mesh has its own vertex buffer (`MeshDraw`).
+  Optional hook `PRECIPITATION`: if it doesn't apply, particle weather stands aside. Dust storms (fog, sky tint) come
+  back with it.
+- **Vanilla tags**: 26.2's `minecraft:dirt` no longer holds grass blocks, podzol, mycelium, moss or mud; they are in
+  `grass_blocks`, `mud` and `moss_blocks`, all under `substrate_overworld`, which `rain_absorbing` (damp spots) and
+  `BlockLibrary`'s acoustic seed tags now use. `minecraft:tall_flowers` is gone; `brush_step` lists its five flowers.
+  `ModTagFilesTests` checks every `#minecraft:` reference names a tag that exists (a shrunken tag still needs a look
+  when porting: compare the version's tag files).
 - **Clock, compass and light level legend**: 0.4.7's overlays on `GuiGraphicsExtractor`; the watch reads the day clock
   and the moon's phase from the `MOON_PHASE` attribute.
 - **Simple Voice Chat**: the plugin as in 0.4.7; the dev clients get voice chat 2.6.24 for 26.2 from Modrinth's Maven.
 
-To check in game (both platforms), besides the list below: storm rain and snow with the storm's strength and sounds,
+To check in game (both platforms), besides the list below: particle rain, snow and dust (with and without Fabulous
+graphics; dust fading into the ground, fog and sky tinted), damp spots darkening the ground, snow flecks, drops on
+windows, and vanilla's weather back when particle weather is turned off; storm rain and snow with the storm's strength and sounds,
 wind drifting smoke and leaves, flame jets (soft, additive, lighting their surroundings),
 steam and smoke puffs, the pocket watch and compass roses (and in the margin), the aurora, and voice chat processing.
 

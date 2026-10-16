@@ -48,7 +48,11 @@ public final class SoftParticles {
     private static final String SOFT_PARTICLE_INFO = "SoftParticleInfo";
     // Whether clip space depth runs 0 to 1 (1) or -1 to 1 (0), which the shader needs to turn depth into distance
     private static final int DEPTH_INFO_SIZE = new Std140SizeCalculator().putFloat().get();
-    private static final BindGroupLayout SOFT_PARTICLE_LAYOUT = BindGroupLayout.builder()
+    /**
+     * The depth copy and its information, as a soft shader reads them (DepthSampler, SoftParticleInfo); bound by
+     * {@link #bindSoftDepth}
+     */
+    public static final BindGroupLayout SOFT_DEPTH_LAYOUT = BindGroupLayout.builder()
             .withUniform(SOFT_PARTICLE_INFO, UniformType.UNIFORM_BUFFER)
             .withSampler(DEPTH_SAMPLER)
             .build();
@@ -64,7 +68,7 @@ public final class SoftParticles {
      */
     private static final RenderPipeline MIST_PIPELINE = particlePipeline("pipeline/waterfall_mist", Constants.asId("core/soft_particle"))
             .withShaderDefine("SOFT_DISTANCE", 0.4F)
-            .withBindGroupLayout(SOFT_PARTICLE_LAYOUT)
+            .withBindGroupLayout(SOFT_DEPTH_LAYOUT)
             .build();
     // The same, drawn the vanilla way
     private static final RenderPipeline MIST_FALLBACK_PIPELINE = particlePipeline("pipeline/waterfall_mist_vanilla", null).build();
@@ -75,7 +79,7 @@ public final class SoftParticles {
      */
     private static final RenderPipeline FLAME_PIPELINE = particlePipeline("pipeline/flame", Constants.asId("core/soft_particle"))
             .withShaderDefine("SOFT_DISTANCE", 0.3F)
-            .withBindGroupLayout(SOFT_PARTICLE_LAYOUT)
+            .withBindGroupLayout(SOFT_DEPTH_LAYOUT)
             .withColorTargetState(new ColorTargetState(ADDITIVE))
             .build();
     // The same, drawn the vanilla way
@@ -161,6 +165,38 @@ public final class SoftParticles {
     }
 
     /**
+     * Copies {@code source}'s depth now, for an effect drawn after the particles that fades against the scene (the
+     * weather's dust). Outside any render pass. The copy the particles read is used again: they are drawn by now.
+     *
+     * @return whether the copy is ready to bind with {@link #bindSoftDepth}
+     */
+    public static boolean captureDepth(RenderTarget source) {
+        depthCaptured = false;
+        try {
+            var copy = depthCopyFor(source);
+            copy.copyDepthFrom(source);
+            if (!depthInfoWritten) {
+                writeDepthInfo();
+                depthInfoWritten = true;
+            }
+            depthCaptured = true;
+        } catch (VirtualMachineError fatal) {
+            throw fatal;
+        } catch (Throwable t) {
+            Library.LOGGER.error(t, "Unable to copy the scene's depth");
+        }
+        return depthCaptured;
+    }
+
+    /**
+     * Binds the depth copy and its information to a pass whose pipeline has {@link #SOFT_DEPTH_LAYOUT}.
+     */
+    public static void bindSoftDepth(RenderPass pass) {
+        bindSceneDepth(pass);
+        pass.setUniform(SOFT_PARTICLE_INFO, depthInfo.currentBuffer());
+    }
+
+    /**
      * Whether a copy of this frame's depth is ready to be bound.
      */
     static boolean hasSceneDepth() {
@@ -190,10 +226,8 @@ public final class SoftParticles {
      * Called once a particle layer's pipeline is set; binds what a soft pipeline needs.
      */
     public static void bind(RenderPass pass, RenderPipeline pipeline) {
-        if (pipeline == MIST_PIPELINE || pipeline == FLAME_PIPELINE) {
-            bindSceneDepth(pass);
-            pass.setUniform(SOFT_PARTICLE_INFO, depthInfo.currentBuffer());
-        }
+        if (pipeline == MIST_PIPELINE || pipeline == FLAME_PIPELINE)
+            bindSoftDepth(pass);
     }
 
     /**

@@ -2,8 +2,8 @@
 
 Client-side Minecraft mod (MIT). Minecraft 26.2, Fabric and NeoForge through Architectury. Versions are in
 `gradle.properties`. This branch is the 26.2 port, carrying 0.4.7; `MIGRATION.md` records what changed, what still needs
-checking in game, and the 0.4.7 systems not yet drawn on 26.2 (particle weather, ground fog, window frost), which stand
-aside until rebuilt.
+checking in game, and the 0.4.7 systems not yet drawn on 26.2 (ground fog, window frost), which stand aside until
+rebuilt.
 
 ## Layout
 - `common/` — almost all code, resources and tests (`org.orecruncher.dsurround`).
@@ -62,7 +62,7 @@ aside until rebuilt.
 - `ConfigServices` is handed by `BlockLibrary`/`BiomeLibrary` to the `BlockInfo`/`BiomeInfo` they build.
   `BiomeLibrary` resolves the condition evaluator lazily: evaluator → `BiomeVariables` → biome library is a cycle.
 - Shaders: one `effects/ModShader` per `RenderPipeline` (`SoftParticles.SHADER` and `FLAME_SHADER`,
-  `AuroraRenderer.SHADER`, `PointLights.SHADER`), listed in `ModShaders.SHADERS`. Not added to vanilla's `RenderPipelines` (a failure there
+  `AuroraRenderer.SHADER`, `PointLights.SHADER`, `PrecipitationShaders.SHADERS`), listed in `ModShaders.SHADERS`. Not added to vanilla's `RenderPipelines` (a failure there
   rejects the reload); `MixinShaderManager` compiles them after each shader reload. Drawing goes through
   `ModShader.run` / `RenderFailSafe`: a failure is logged once and the effect turned off until resources reload.
 - Rendering is 26.2's: pipelines, `RenderPass`, GPU buffers, uniform blocks (std140, `MappableRingBuffer`), particle
@@ -112,8 +112,8 @@ aside until rebuilt.
     heightmap: glass counts, leaves and fluids don't). Wind, wind sounds, the weather's fog and ground fog all use it;
     don't gate weather on sky light alone, which leaks through windows and glass roofs.
   - On 1.21.1 our weather and ground fog replaced `renderSnowAndRain` only when `renderLevel` called it, as other mods
-    call it themselves (Ars Nouveau, into its sky texture). The 26.2 hook (`WeatherEffectRenderer.render`) is still to
-    build; keep that rule in mind there.
+    call it themselves (Ars Nouveau, into its sky texture). On 26.2 the same holds: particle weather cancels
+    `WeatherEffectRenderer.render` only inside the level renderer's weather pass (`MixinLevelRenderer`).
   - `processing/PrecipitationHandler` runs particle weather (`PrecipitationField`, `LevelColumns`, `Landings`) and
     stands aside for shader packs, a failed shader, mods that draw weather as particles (`FeatureConflict`, the table of features that stand aside for other mods) and dimensions that draw their
     own weather.

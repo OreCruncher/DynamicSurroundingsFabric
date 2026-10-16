@@ -37,6 +37,12 @@ public class MixinHelpers {
     public static final Guard SKY_TINT_GUARD = Guard.named("Sky colour tint");
     public static final Guard STORM_RAIN_LEVEL_GUARD = Guard.named("Storm rain level");
     public static final Guard RAIN_SOUND_GUARD = Guard.named("Storm rain sound");
+    /**
+     * Whether the level renderer's weather pass is running: particle weather is drawn in place of vanilla's only then
+     * (see MixinLevelRenderer). Render thread only.
+     */
+    public static boolean inLevelWeatherPass;
+    public static final Guard PRECIPITATION_GUARD = Guard.named("Drawing particle rain and snow");
     public static final Guard RAIN_SPLASH_GUARD = Guard.named("Vanilla rain splash suppression");
     public static final Guard WIND_BLOWN_GUARD = Guard.named("Marking wind blown particles");
     public static final Guard WIND_DRIFT_GUARD = Guard.named("Wind drift");
