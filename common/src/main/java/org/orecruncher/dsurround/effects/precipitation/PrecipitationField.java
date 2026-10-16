@@ -104,8 +104,10 @@ public final class PrecipitationField {
     private final int maxSpawnPerTick;
     private final PrecipitationColumns columns;
 
-    // Where each drop is now and was last tick, for drawing between ticks
-    final float[] x, y, z, prevX, prevY, prevZ;
+    // Where each drop is now and was last tick, for drawing between ticks. East-west and north-south as doubles: far
+    // from the world's middle a float moves in steps as large as half a block, which a drop's drift each tick is lost in
+    final double[] x, z, prevX, prevZ;
+    final float[] y, prevY;
     // How fast a rain drop or snowflake falls; not used for dust
     final float[] speed;
     // The drop's horizontal speed, carried by the wind, and how strongly the wind carries it
@@ -130,8 +132,8 @@ public final class PrecipitationField {
     // were, and what they were. A snowflake also keeps which flake it was drawn as, and its light; and either, when it
     // was carried into the side of something, where it was the tick before (x, y, z) and how it was moving.
     private final int maxLandings;
-    private final float[] landingX;
-    private final float[] landingZ;
+    private final double[] landingX;
+    private final double[] landingZ;
     private final int[] landingGround;
     private final float[] landingSize;
     private final byte[] landingKind;
@@ -153,8 +155,8 @@ public final class PrecipitationField {
         this.radius = radius;
         this.columns = new PrecipitationColumns(radius);
         this.maxLandings = forArea(MAX_LANDINGS, radius);
-        this.landingX = new float[this.maxLandings];
-        this.landingZ = new float[this.maxLandings];
+        this.landingX = new double[this.maxLandings];
+        this.landingZ = new double[this.maxLandings];
         this.landingGround = new int[this.maxLandings];
         this.landingSize = new float[this.maxLandings];
         this.landingKind = new byte[this.maxLandings];
@@ -167,12 +169,12 @@ public final class PrecipitationField {
         this.landingMotionZ = new float[this.maxLandings];
         // Fills from empty in a few ticks; the rain level itself builds up more slowly than that
         this.maxSpawnPerTick = Math.max(1, capacity / 4);
-        this.x = new float[capacity];
+        this.x = new double[capacity];
         this.y = new float[capacity];
-        this.z = new float[capacity];
-        this.prevX = new float[capacity];
+        this.z = new double[capacity];
+        this.prevX = new double[capacity];
         this.prevY = new float[capacity];
-        this.prevZ = new float[capacity];
+        this.prevZ = new double[capacity];
         this.speed = new float[capacity];
         this.windX = new float[capacity];
         this.windZ = new float[capacity];
@@ -274,11 +276,11 @@ public final class PrecipitationField {
         return this.landings;
     }
 
-    public float landingX(int i) {
+    public double landingX(int i) {
         return this.landingX[i];
     }
 
-    public float landingZ(int i) {
+    public double landingZ(int i) {
         return this.landingZ[i];
     }
 
@@ -542,9 +544,9 @@ public final class PrecipitationField {
                 what = PrecipitationKind.SNOW;
 
             int i = this.count++;
-            this.x[i] = this.prevX[i] = (float) px;
+            this.x[i] = this.prevX[i] = px;
             this.y[i] = this.prevY[i] = (float) py;
-            this.z[i] = this.prevZ[i] = (float) pz;
+            this.z[i] = this.prevZ[i] = pz;
             switch (what) {
                 case SNOW -> {
                     this.kind[i] = SNOW;
@@ -609,9 +611,9 @@ public final class PrecipitationField {
         int at = this.landings - 1;
         this.landingBlownIn[at] = true;
         this.landingY[at] = this.prevY[i];
-        this.landingMotionX[at] = this.x[i] - this.prevX[i];
+        this.landingMotionX[at] = (float) (this.x[i] - this.prevX[i]);
         this.landingMotionY[at] = this.y[i] - this.prevY[i];
-        this.landingMotionZ[at] = this.z[i] - this.prevZ[i];
+        this.landingMotionZ[at] = (float) (this.z[i] - this.prevZ[i]);
     }
 
     /**
@@ -620,7 +622,7 @@ public final class PrecipitationField {
      * @param variant a snowflake's choice of flake, 0 to 1 (see {@link #variant})
      * @return false if there was no room to
      */
-    private boolean landed(float x, float z, int ground, float size, byte kind, float variant, int light) {
+    private boolean landed(double x, double z, int ground, float size, byte kind, float variant, int light) {
         if (this.landings == this.maxLandings)
             return false;
         this.landingX[this.landings] = x;

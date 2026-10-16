@@ -80,6 +80,12 @@ What changed to fit 26.2:
   (vanilla's particle layout, packed as BufferBuilder packs it; `ParticleQuadsTests` compares the bytes) and drawn with
   `MeshDraw.drawQuads`, instead of four BufferBuilder calls a corner. Snow flecks, window streaks and damp spots,
   hundreds rather than thousands, still use BufferBuilder.
+- **Far from the origin**: the falling drops (`PrecipitationField`: positions and landings), damp spots, snow flecks
+  and drops on windows keep x and z as doubles (y stays a float),
+  and window frost keeps its faces' plane and extent across as doubles; each becomes a float only once the camera is
+  taken away. Point lights are stored relative to the camera when added (drawn the same frame). `FarFromOriginTests`
+  checks a quarter block survives at 8,000,000, and `PrecipitationFieldTests` that snow still drifts there (as floats
+  it fell straight down and jumped half a block now and then).
 - **Vanilla tags**: 26.2's `minecraft:dirt` no longer holds grass blocks, podzol, mycelium, moss or mud; they are in
   `grass_blocks`, `mud` and `moss_blocks`, all under `substrate_overworld`, which `rain_absorbing` (damp spots) and
   `BlockLibrary`'s acoustic seed tags now use. `minecraft:tall_flowers` is gone; `brush_step` lists its five flowers.

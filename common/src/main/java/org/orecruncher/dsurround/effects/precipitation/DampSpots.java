@@ -38,7 +38,8 @@ public final class DampSpots {
     static final float LIFT_RANGE = 0.004F;
 
     private final int capacity;
-    final float[] x, y, z;
+    final double[] x, z;
+    final float[] y;
     // Half the side of the square, turned by the spot's angle: the corners are the centre plus and minus these
     final float[] cornerX, cornerZ;
     final int[] age, lifetime;
@@ -48,9 +49,9 @@ public final class DampSpots {
 
     public DampSpots(int capacity) {
         this.capacity = capacity;
-        this.x = new float[capacity];
+        this.x = new double[capacity];
         this.y = new float[capacity];
-        this.z = new float[capacity];
+        this.z = new double[capacity];
         this.cornerX = new float[capacity];
         this.peak = new float[capacity];
         this.cornerZ = new float[capacity];
@@ -80,9 +81,9 @@ public final class DampSpots {
         float variation = 1F + (random.nextFloat() * 2F - 1F) * HALF_SIZE_VARIATION;
         float half = (MIN_HALF_SIZE + HALF_SIZE_PER_SIZE * dropSize) * variation;
         float angle = random.nextFloat() * Mth.HALF_PI;
-        this.x[i] = (float) x;
+        this.x[i] = x;
         this.y[i] = (float) surfaceY + LIFT + random.nextFloat() * LIFT_RANGE;
-        this.z[i] = (float) z;
+        this.z[i] = z;
         this.cornerX[i] = Mth.cos(angle) * half;
         this.cornerZ[i] = Mth.sin(angle) * half;
         this.age[i] = 0;

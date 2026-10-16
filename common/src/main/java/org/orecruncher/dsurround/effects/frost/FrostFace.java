@@ -8,16 +8,19 @@ import net.minecraft.core.Direction;
  * coordinates: the plane of the glass, lifted a little off it, and its extent across ({@code u}: x on a north or south
  * side, z on a west or east one) and up ({@code v}: y). The window's edges are found too, as far as
  * {@link FrostFaces#EDGE_REACH} beyond it: frost grows in from where the glass meets its frame, so a face in the middle
- * of a large window is bare when its edges are frosted.
+ * of a large window is bare when its edges are frosted. Across and the plane are held as doubles: they are x or z,
+ * which far from the world's middle a float can't hold finely enough.
  */
 public final class FrostFace {
 
     final int x, y, z;
     final Direction side;
-    final float plane;
-    final float u0, u1, v0, v1;
+    final double plane;
+    final double u0, u1;
+    final float v0, v1;
     // Where the window this face is part of ends, across and up; at most EDGE_REACH beyond the face
-    final float edgeU0, edgeU1, edgeV0, edgeV1;
+    final double edgeU0, edgeU1;
+    final float edgeV0, edgeV1;
     // Its packed light, and the sky light in front of it as a share of full, and the temperature there
     final int light;
     final float skyShare;
@@ -26,8 +29,8 @@ public final class FrostFace {
     float target;
     float shown;
 
-    FrostFace(int x, int y, int z, Direction side, float plane, float u0, float u1, float v0, float v1,
-              float edgeU0, float edgeU1, float edgeV0, float edgeV1, int light, float skyShare, float temperature) {
+    FrostFace(int x, int y, int z, Direction side, double plane, double u0, double u1, float v0, float v1,
+              double edgeU0, double edgeU1, float edgeV0, float edgeV1, int light, float skyShare, float temperature) {
         this.x = x;
         this.y = y;
         this.z = z;

@@ -22,7 +22,7 @@ public final class WindowStreaks {
      */
     @FunctionalInterface
     public interface Dripper {
-        void drip(float x, float y, float z);
+        void drip(double x, double y, double z);
     }
 
     // Ticks a drop lasts at most; how long it takes to fade in, and to fade out once it has run off onto what is below
@@ -47,7 +47,8 @@ public final class WindowStreaks {
 
     private final int capacity;
     // Where the bead is: x and z on the glass (lifted off it), y now and last tick; and the lowest it can go
-    final float[] x, z, y, prevY, bottom;
+    final double[] x, z;
+    final float[] y, prevY, bottom;
     // The top of its wet trail, now and last tick
     final float[] trailTop, prevTrailTop;
     // How far it has left to go in this run, and the ticks it has left to cling before the next
@@ -64,8 +65,8 @@ public final class WindowStreaks {
 
     public WindowStreaks(int capacity) {
         this.capacity = capacity;
-        this.x = new float[capacity];
-        this.z = new float[capacity];
+        this.x = new double[capacity];
+        this.z = new double[capacity];
         this.y = new float[capacity];
         this.prevY = new float[capacity];
         this.bottom = new float[capacity];
@@ -105,8 +106,8 @@ public final class WindowStreaks {
             return;
         int i = this.count++;
         float lift = LIFT + random.nextFloat() * LIFT_RANGE;
-        this.x[i] = (float) x + SnowFlecks.normalX(face) * lift;
-        this.z[i] = (float) z + SnowFlecks.normalZ(face) * lift;
+        this.x[i] = x + SnowFlecks.normalX(face) * lift;
+        this.z[i] = z + SnowFlecks.normalZ(face) * lift;
         this.y[i] = this.prevY[i] = (float) y;
         this.trailTop[i] = this.prevTrailTop[i] = (float) y;
         this.bottom[i] = (float) Math.min(bottom, y);

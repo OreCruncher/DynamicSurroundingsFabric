@@ -99,7 +99,8 @@ public final class PointLights {
 
     // Lights recorded longer ago than this weren't from this frame (nothing lit was drawn), so are dropped
     private static final long STALE_NANOS = 250_000_000L;
-    // x, y, z, red, green, blue, strength, radius
+    // x, y, z (relative to the camera: small enough for a float wherever the world is), red, green, blue, strength,
+    // radius
     static final int STRIDE = 8;
 
     private static float[] lights = new float[STRIDE * 64];
@@ -157,7 +158,8 @@ public final class PointLights {
     }
 
     /**
-     * Records a light to draw.
+     * Records a light to draw. Kept relative to the camera, which is where it is drawn from this frame: far from the
+     * world's middle, a float can't hold a position in the world finely enough, and the lights would jitter.
      *
      * @param x        where, in the world
      * @param strength 0 to 1
@@ -169,9 +171,10 @@ public final class PointLights {
         if ((count + 1) * STRIDE > lights.length)
             lights = Arrays.copyOf(lights, lights.length * 2);
         int i = count * STRIDE;
-        lights[i] = (float) x;
-        lights[i + 1] = (float) y;
-        lights[i + 2] = (float) z;
+        var camera = Minecraft.getInstance().gameRenderer.mainCamera().position();
+        lights[i] = (float) (x - camera.x);
+        lights[i + 1] = (float) (y - camera.y);
+        lights[i + 2] = (float) (z - camera.z);
         lights[i + 3] = red;
         lights[i + 4] = green;
         lights[i + 5] = blue;
@@ -198,11 +201,9 @@ public final class PointLights {
     private static void drawLights(RenderTarget target, int n) {
         var device = RenderSystem.getDevice();
 
-        // Positions relative to the camera, as for all particles
-        var camera = Minecraft.getInstance().gameRenderer.mainCamera().position();
-        // Enough that some fade or are left out: the nearest first
+        // Enough that some fade or are left out: the nearest first. Their positions are already relative to the camera
         if (n > FADE_FROM)
-            sortNearest(lights, n, camera.x, camera.y, camera.z);
+            sortNearest(lights, n, 0D, 0D, 0D);
         if (meshBytes == null)
             meshBytes = new ByteBufferBuilder(64 * 4 * DefaultVertexFormat.POSITION_TEX_COLOR.getVertexSize());
         var builder = new BufferBuilder(meshBytes, PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
@@ -211,9 +212,7 @@ public final class PointLights {
             float a = lights[i + 6] * rankFade(l);
             if (a < MIN_STRENGTH)
                 continue;
-            float x = (float) (lights[i] - camera.x);
-            float y = (float) (lights[i + 1] - camera.y);
-            float z = (float) (lights[i + 2] - camera.z);
+            float x = lights[i], y = lights[i + 1], z = lights[i + 2];
             float r = lights[i + 3], g = lights[i + 4], b = lights[i + 5];
             // All four at the centre; the vertex shader spreads them out. Each corner is given at the light's
             // radius, which is how the shader knows it.

@@ -110,8 +110,8 @@ public final class Landings {
         int traces = 0;
 
         for (int i = 0; i < landings; i++) {
-            float x = field.landingX(i);
-            float z = field.landingZ(i);
+            double x = field.landingX(i);
+            double z = field.landingZ(i);
             if (field.landingBlownIn(i)) {
                 if (field.landingIsSnow(i)) {
                     if (traces++ < MAX_TRACES_PER_TICK)

@@ -92,12 +92,12 @@ public final class FrostFaces {
         var lower = Direction.fromAxisAndDirection(across, Direction.AxisDirection.NEGATIVE);
         var upper = lower.getOpposite();
         int base = across == Direction.Axis.X ? pos.getX() : pos.getZ();
-        float u0 = (float) (base + box.min(across));
-        float u1 = (float) (base + box.max(across));
+        double u0 = base + box.min(across);
+        double u1 = base + box.max(across);
         float v0 = (float) (pos.getY() + box.minY);
         float v1 = (float) (pos.getY() + box.maxY);
         int planeBase = side.getAxis() == Direction.Axis.X ? pos.getX() : pos.getZ();
-        float lifted = (float) (planeBase + plane) + (side.getAxisDirection() == Direction.AxisDirection.POSITIVE ? LIFT : -LIFT);
+        double lifted = planeBase + plane + (side.getAxisDirection() == Direction.AxisDirection.POSITIVE ? LIFT : -LIFT);
         return new FrostFace(pos.getX(), pos.getY(), pos.getZ(), side, lifted, u0, u1, v0, v1,
                 u0 - reach(world, pos, side, box, plane, lower),
                 u1 + reach(world, pos, side, box, plane, upper),

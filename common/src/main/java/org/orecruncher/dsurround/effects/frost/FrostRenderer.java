@@ -129,9 +129,9 @@ public final class FrostRenderer {
         // Fully frosted, the frost is the same all over, so one quad does: a window frosts fully on cold nights, and
         // the grid's quads were most of drawing it
         boolean uniform = isUniform(face);
-        int cellsU = uniform ? 1 : Math.max(1, Mth.ceil((face.u1 - face.u0) / CELL));
+        int cellsU = uniform ? 1 : Math.max(1, Mth.ceil((float) (face.u1 - face.u0) / CELL));
         int cellsV = uniform ? 1 : Math.max(1, Mth.ceil((face.v1 - face.v0) / CELL));
-        float stepU = (face.u1 - face.u0) / cellsU;
+        double stepU = (face.u1 - face.u0) / cellsU;
         float stepV = (face.v1 - face.v0) / cellsV;
         // The texture's origin: on a whole number of its repeats, and moved along by an amount of the window's own, so
         // windows side by side don't show the same frost
@@ -146,7 +146,7 @@ public final class FrostRenderer {
         for (int j = 0; j < cellsV; j++) {
             float va = face.v0 + j * stepV, vb = va + stepV;
             for (int i = 0; i < cellsU; i++) {
-                float ua = face.u0 + i * stepU, ub = ua + stepU;
+                double ua = face.u0 + i * stepU, ub = ua + stepU;
                 corner(builder, face, alongX, ua, va, originU, originV, offsetU, offsetV, camX, camY, camZ);
                 corner(builder, face, alongX, ub, va, originU, originV, offsetU, offsetV, camX, camY, camZ);
                 corner(builder, face, alongX, ub, vb, originU, originV, offsetU, offsetV, camX, camY, camZ);
@@ -155,12 +155,12 @@ public final class FrostRenderer {
         }
     }
 
-    private static void corner(BufferBuilder builder, FrostFace face, boolean alongX, float u, float v, float originU,
+    private static void corner(BufferBuilder builder, FrostFace face, boolean alongX, double u, float v, float originU,
                                float originV, float offsetU, float offsetV, double camX, double camY, double camZ) {
         float x = (float) ((alongX ? u : face.plane) - camX);
         float y = (float) (v - camY);
         float z = (float) ((alongX ? face.plane : u) - camZ);
-        float texU = (u - originU) / TEXTURE_BLOCKS + offsetU;
+        float texU = (float) (u - originU) / TEXTURE_BLOCKS + offsetU;
         float texV = (originV - v) / TEXTURE_BLOCKS + offsetV;
         builder.addVertex(x, y, z).setUv(texU, texV).setColor(RED, GREEN, BLUE, grown(face, u, v)).setLight(face.light);
     }
@@ -176,8 +176,9 @@ public final class FrostRenderer {
      * How far the frost has grown at a point on a face, 0 to 1: the frost the face has, ahead of that at the window's
      * edges and behind it in its middle
      */
-    static float grown(FrostFace face, float u, float v) {
-        float edge = Math.min(Math.min(u - face.edgeU0, face.edgeU1 - u), Math.min((v - face.edgeV0) * BOTTOM_NEARER, face.edgeV1 - v));
+    static float grown(FrostFace face, double u, float v) {
+        float across = (float) Math.min(u - face.edgeU0, face.edgeU1 - u);
+        float edge = Math.min(across, Math.min((v - face.edgeV0) * BOTTOM_NEARER, face.edgeV1 - v));
         float edgeness = 1F - Mth.clamp(edge / FrostFaces.EDGE_REACH, 0F, 1F);
         return Mth.clamp(face.shown * (1F + EDGE_AHEAD * edgeness) - MIDDLE_BEHIND * (1F - edgeness) * (1F - face.shown), 0F, 1F);
     }
