@@ -19,6 +19,7 @@ import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.SingleQuadParticle;
 import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.MappableRingBuffer;
@@ -30,6 +31,7 @@ import org.orecruncher.dsurround.lib.Library;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.util.Optional;
 
 /**
  * "Soft" particles: drawn with a shader that fades a particle out as it nears whatever is behind it, so where it
@@ -61,6 +63,20 @@ public final class SoftParticles {
     private static final BlendFunction ADDITIVE = new BlendFunction(BlendFactor.SRC_ALPHA, BlendFactor.ONE);
     // Vanilla's translucent particles, with depth writes off so the puffs don't hide each other
     private static final DepthStencilState TEST_ONLY = new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false);
+    /*
+     * With Fabulous graphics, the particles' target is laid over the scene by its depth, which, where no particle
+     * writes its own, is the scene's from before the water was drawn: the ground under it. The water then sorts in front
+     * of mist over it, and dims it there and nowhere else. So a soft layer is drawn twice there (see
+     * MixinQuadParticleFeatureRenderer): first only its depth, tested as usual, which leaves the nearest puff's at each
+     * pixel (the particles aren't drawn in any order, so writing depth as they are drawn would leave whichever came
+     * last, in patches); then its colour, with no test and no writes, as it would be drawn otherwise: the fade against
+     * the scene's depth already hides what is behind the scene, and a test against the depth just written would cut one
+     * puff off behind another.
+     */
+    // The depth pass: nearest wins, and no colour
+    private static final ColorTargetState NO_COLOR = new ColorTargetState(Optional.empty(), GpuFormat.RGBA8_UNORM, ColorTargetState.WRITE_NONE);
+    // The colour pass after it
+    private static final DepthStencilState UNTESTED = new DepthStencilState(CompareOp.ALWAYS_PASS, false);
 
     /**
      * Waterfall mist: small puffs, so a short fade (0.4 blocks), or a puff near the water would be mostly faded out.
@@ -69,6 +85,19 @@ public final class SoftParticles {
     private static final RenderPipeline MIST_PIPELINE = particlePipeline("pipeline/waterfall_mist", Constants.asId("core/soft_particle"))
             .withShaderDefine("SOFT_DISTANCE", 0.4F)
             .withBindGroupLayout(SOFT_DEPTH_LAYOUT)
+            .build();
+    // The same, for Fabulous graphics: its depth, then its colour
+    private static final RenderPipeline MIST_DEPTH_PIPELINE = particlePipeline("pipeline/waterfall_mist_depth", Constants.asId("core/soft_particle"))
+            .withShaderDefine("SOFT_DISTANCE", 0.4F)
+            .withShaderDefine("WRITE_DEPTH")
+            .withBindGroupLayout(SOFT_DEPTH_LAYOUT)
+            .withColorTargetState(NO_COLOR)
+            .withDepthStencilState(DepthStencilState.DEFAULT)
+            .build();
+    private static final RenderPipeline MIST_FABULOUS_PIPELINE = particlePipeline("pipeline/waterfall_mist_fabulous", Constants.asId("core/soft_particle"))
+            .withShaderDefine("SOFT_DISTANCE", 0.4F)
+            .withBindGroupLayout(SOFT_DEPTH_LAYOUT)
+            .withDepthStencilState(UNTESTED)
             .build();
     // The same, drawn the vanilla way
     private static final RenderPipeline MIST_FALLBACK_PIPELINE = particlePipeline("pipeline/waterfall_mist_vanilla", null).build();
@@ -82,6 +111,20 @@ public final class SoftParticles {
             .withBindGroupLayout(SOFT_DEPTH_LAYOUT)
             .withColorTargetState(new ColorTargetState(ADDITIVE))
             .build();
+    // The same, for Fabulous graphics: its depth, then its colour
+    private static final RenderPipeline FLAME_DEPTH_PIPELINE = particlePipeline("pipeline/flame_depth", Constants.asId("core/soft_particle"))
+            .withShaderDefine("SOFT_DISTANCE", 0.3F)
+            .withShaderDefine("WRITE_DEPTH")
+            .withBindGroupLayout(SOFT_DEPTH_LAYOUT)
+            .withColorTargetState(NO_COLOR)
+            .withDepthStencilState(DepthStencilState.DEFAULT)
+            .build();
+    private static final RenderPipeline FLAME_FABULOUS_PIPELINE = particlePipeline("pipeline/flame_fabulous", Constants.asId("core/soft_particle"))
+            .withShaderDefine("SOFT_DISTANCE", 0.3F)
+            .withBindGroupLayout(SOFT_DEPTH_LAYOUT)
+            .withColorTargetState(new ColorTargetState(ADDITIVE))
+            .withDepthStencilState(UNTESTED)
+            .build();
     // The same, drawn the vanilla way
     private static final RenderPipeline FLAME_FALLBACK_PIPELINE = particlePipeline("pipeline/flame_vanilla", null)
             .withColorTargetState(new ColorTargetState(ADDITIVE))
@@ -89,6 +132,10 @@ public final class SoftParticles {
 
     public static final ModShader SHADER = new ModShader(MIST_PIPELINE, "soft particles", "particles will be drawn without it", Library.LOGGER);
     public static final ModShader FLAME_SHADER = new ModShader(FLAME_PIPELINE, "soft flames", "flames will be drawn without it", Library.LOGGER);
+    public static final ModShader DEPTH_SHADER = new ModShader(MIST_DEPTH_PIPELINE, "the depth of soft particles (Fabulous)", "water will be laid over mist above it", Library.LOGGER);
+    public static final ModShader FABULOUS_SHADER = new ModShader(MIST_FABULOUS_PIPELINE, "soft particles (Fabulous)", "water will be laid over mist above it", Library.LOGGER);
+    public static final ModShader FLAME_DEPTH_SHADER = new ModShader(FLAME_DEPTH_PIPELINE, "the depth of soft flames (Fabulous)", "water will be laid over flames above it", Library.LOGGER);
+    public static final ModShader FLAME_FABULOUS_SHADER = new ModShader(FLAME_FABULOUS_PIPELINE, "soft flames (Fabulous)", "water will be laid over flames above it", Library.LOGGER);
 
     public static final SingleQuadParticle.Layer WATERFALL_MIST = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, MIST_PIPELINE);
     public static final SingleQuadParticle.Layer WATERFALL_MIST_FALLBACK = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, MIST_FALLBACK_PIPELINE);
@@ -100,6 +147,9 @@ public final class SoftParticles {
     private static TextureTarget depthCopy;
     // Whether the copy holds this frame's depth
     private static boolean depthCaptured;
+    // The pipeline the particle layer being drawn was set to (see MixinQuadParticleFeatureRenderer)
+    @Nullable
+    private static RenderPipeline currentPipeline;
     @Nullable
     private static MappableRingBuffer depthInfo;
     // Whether the depth information has been written this frame
@@ -212,21 +262,56 @@ public final class SoftParticles {
 
     /**
      * Called as a particle layer's pipeline is about to be set. Returns the pipeline to use: a soft pipeline whose
-     * depth copy isn't ready is swapped for its vanilla equivalent.
+     * depth copy isn't ready is swapped for its vanilla equivalent, and with Fabulous graphics for the one writing its
+     * depth, if that can be used.
      */
     public static RenderPipeline choosePipeline(RenderPipeline pipeline) {
-        if (pipeline == MIST_PIPELINE && !hasSceneDepth())
-            return MIST_FALLBACK_PIPELINE;
-        if (pipeline == FLAME_PIPELINE && !hasSceneDepth())
-            return FLAME_FALLBACK_PIPELINE;
+        if (pipeline == MIST_PIPELINE)
+            return choose(pipeline, MIST_FALLBACK_PIPELINE, DEPTH_SHADER, FABULOUS_SHADER);
+        if (pipeline == FLAME_PIPELINE)
+            return choose(pipeline, FLAME_FALLBACK_PIPELINE, FLAME_DEPTH_SHADER, FLAME_FABULOUS_SHADER);
         return pipeline;
+    }
+
+    private static RenderPipeline choose(RenderPipeline soft, RenderPipeline fallback, ModShader depth, ModShader fabulous) {
+        if (!hasSceneDepth())
+            return fallback;
+        if (Minecraft.getInstance().gameRenderer.gameRenderState().useShaderTransparency() && depth.isUsable() && fabulous.isUsable())
+            return fabulous.pipeline();
+        return soft;
+    }
+
+    /**
+     * The pipeline the particle layer being drawn was set to, as chosen by {@link #choosePipeline}
+     */
+    @Nullable
+    public static RenderPipeline currentPipeline() {
+        return currentPipeline;
+    }
+
+    public static void setCurrentPipeline(@Nullable RenderPipeline pipeline) {
+        currentPipeline = pipeline;
+    }
+
+    /**
+     * The pipeline that draws the depth of a layer drawn with {@code pipeline}, first, with Fabulous graphics; null for
+     * one drawn in a single pass
+     */
+    @Nullable
+    public static RenderPipeline depthPassFor(RenderPipeline pipeline) {
+        if (pipeline == MIST_FABULOUS_PIPELINE)
+            return MIST_DEPTH_PIPELINE;
+        if (pipeline == FLAME_FABULOUS_PIPELINE)
+            return FLAME_DEPTH_PIPELINE;
+        return null;
     }
 
     /**
      * Called once a particle layer's pipeline is set; binds what a soft pipeline needs.
      */
     public static void bind(RenderPass pass, RenderPipeline pipeline) {
-        if (pipeline == MIST_PIPELINE || pipeline == FLAME_PIPELINE)
+        if (pipeline == MIST_PIPELINE || pipeline == FLAME_PIPELINE || pipeline == MIST_DEPTH_PIPELINE || pipeline == FLAME_DEPTH_PIPELINE
+                || pipeline == MIST_FABULOUS_PIPELINE || pipeline == FLAME_FABULOUS_PIPELINE)
             bindSoftDepth(pass);
     }
 
@@ -238,6 +323,7 @@ public final class SoftParticles {
             depthInfo.rotate();
         depthInfoWritten = false;
         depthCaptured = false;
+        currentPipeline = null;
     }
 
     private static void writeDepthInfo() {

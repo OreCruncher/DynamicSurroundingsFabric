@@ -82,8 +82,10 @@ checking in game.
   - The weather target is cleared but gets no copy of the scene's depth: read the main target's, and write depth (ground
     fog, damp spots), or the scene is laid over it.
   - The particles target's depth is the scene's from before water; the translucent target's has the water's surface.
-    Soft particles fade against the translucent depth and write it (`soft_particle_scene_depth`, Fabulous only: a
-    shader that writes depth loses early depth testing) so water isn't laid over them.
+    On 26.2 particles are drawn before the water, so its depth isn't there yet: with Fabulous a soft layer is drawn
+    twice (`MixinQuadParticleFeatureRenderer` wraps `drawIndexed`): its depth first, tested as usual, so the nearest
+    puff's is left (particles aren't drawn in order; writing depth as they come leaves patches), then its colour with no
+    test and no writes. Water then isn't laid over mist above it.
   - Blend alpha as "over" (`ONE, ONE_MINUS_SRC_ALPHA`), not the default's `ONE, ZERO`, or piled-up colour outgrows its
     alpha; additive light needs colour already scaled and a tiny non-zero alpha (`PointLights`).
 - Enhanced sounds: a `SourceContext` per playing source, built from an `ISoundEmitter` (a game sound's

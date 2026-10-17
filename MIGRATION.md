@@ -13,9 +13,8 @@ new systems needed a renderer of their own on 26.2 and stood aside until rebuilt
 (the light level overlay, particle weather, window frost and ground fog). 0.4.7's code is the reference:
 `git show origin/OreCruncher/0.4.7:<path>`.
 
-Also pending: the soft particles' depth-writing variant for Fabulous graphics (`soft_particle_scene_depth`, and its
-`ModShaderTests` check), and streaks for sparks and lava droplets, which need a particle group of their own (they are
-drawn as small glowing points for now).
+Also pending: streaks for sparks and lava droplets, which need a particle group of their own (they are drawn as small
+glowing points for now).
 
 What changed to fit 26.2:
 - **Point lights**: 0.4.7's `PointLights` (any light: fireflies, flame jets) replaces `FireflyLights`, on its 26.2
@@ -86,6 +85,14 @@ What changed to fit 26.2:
   taken away. Point lights are stored relative to the camera when added (drawn the same frame). `FarFromOriginTests`
   checks a quarter block survives at 8,000,000, and `PrecipitationFieldTests` that snow still drifts there (as floats
   it fell straight down and jumped half a block now and then).
+- **Soft particles with Fabulous graphics**: 0.4.7 wrote the translucent target's depth (the water's surface) from a
+  shader of its own; on 26.2 the particles are drawn before the water, so that depth doesn't exist yet. Instead the
+  mist and flame layers are drawn twice with Fabulous (`SoftParticles.choosePipeline`, `depthPassFor`, and
+  `MixinQuadParticleFeatureRenderer` wrapping `drawIndexed`): first only their depth (`*_depth`: no colour, the usual
+  test and writes, `WRITE_DEPTH` dropping what has faded to nothing), leaving the nearest puff's at each pixel; then
+  their colour (`*_fabulous`: no test, no writes). Writing depth in a single untested pass left whichever puff came
+  last, as particles aren't drawn in order, and showed as patches over a waterfall. Mist above water then sorts in front
+  of it in the transparency pass. `soft_particle_scene_depth` is gone.
 - **Vanilla tags**: 26.2's `minecraft:dirt` no longer holds grass blocks, podzol, mycelium, moss or mud; they are in
   `grass_blocks`, `mud` and `moss_blocks`, all under `substrate_overworld`, which `rain_absorbing` (damp spots) and
   `BlockLibrary`'s acoustic seed tags now use. `minecraft:tall_flowers` is gone; `brush_step` lists its five flowers.

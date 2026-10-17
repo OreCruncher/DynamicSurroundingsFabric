@@ -6,6 +6,9 @@
 //
 // SOFT_DISTANCE, set by the pipeline, is how far in front of what is behind it, in blocks, the particle is at full
 // strength.
+//
+// WRITE_DEPTH, set by the pipelines that draw only the particles' depth, first, with Fabulous graphics (see
+// SoftParticles): what has faded to nothing (behind the scene) is dropped, so it writes no depth.
 
 #moj_import <minecraft:fog.glsl>
 #moj_import <minecraft:dynamictransforms.glsl>
@@ -48,6 +51,11 @@ void main() {
     float sceneDistance = view_distance(texelFetch(DepthSampler, ivec2(gl_FragCoord.xy), 0).r);
     float particleDistance = view_distance(gl_FragCoord.z);
     color.a *= clamp((sceneDistance - particleDistance) / SOFT_DISTANCE, 0.0, 1.0);
+#ifdef WRITE_DEPTH
+    if (color.a <= 0.0) {
+        discard;
+    }
+#endif
 
     fragColor = apply_fog(color, sphericalVertexDistance, cylindricalVertexDistance, FogEnvironmentalStart, FogEnvironmentalEnd, FogRenderDistanceStart, FogRenderDistanceEnd, FogColor);
 }
