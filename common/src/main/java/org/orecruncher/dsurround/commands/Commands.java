@@ -17,6 +17,7 @@ public final class Commands {
         new ScriptCommand().register(dispatcher, registryAccess);
         new MusicManagerCommand().register(dispatcher, registryAccess);
         new VersionCommand().register(dispatcher, registryAccess);
+        new ProfileCommand().register(dispatcher, registryAccess);
         new WeatherCommand().register(dispatcher, registryAccess);
     }
 }

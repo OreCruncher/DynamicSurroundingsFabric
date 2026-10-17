@@ -113,6 +113,13 @@ public final class RenderTimer implements ITimer {
     }
 
     /**
+     * What it times, as the diagnostics overlay names it
+     */
+    public String name() {
+        return this.name;
+    }
+
+    /**
      * The GPU's time, in milliseconds
      */
     @Override
@@ -121,10 +128,24 @@ public final class RenderTimer implements ITimer {
     }
 
     /**
+     * The GPU's longest time lately, in milliseconds
+     */
+    public double getPeakMSecs() {
+        return this.gpu.getPeakMSecs();
+    }
+
+    /**
      * The CPU's time, in milliseconds
      */
     public double getCpuMSecs() {
         return this.cpu.getMSecs();
+    }
+
+    /**
+     * The CPU's longest time lately, in milliseconds
+     */
+    public double getCpuPeakMSecs() {
+        return this.cpu.getPeakMSecs();
     }
 
     @Override

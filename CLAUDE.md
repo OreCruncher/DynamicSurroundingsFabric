@@ -34,6 +34,12 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   `Get-CimInstance Win32_Process -Filter "Name='java.exe' or Name='javaw.exe'" | Where-Object { $_.CommandLine -match '\\neoforge\\\.gradle\\architectury' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`
   The user may have their own client running: check what is running (and when it started) before killing, and stop
   only the one you launched.
+- Profiling: `/dsprofile [scene] [seconds]` records a JFR file, zipped, to `config/dsurround/profiles` with the mod's
+  GPU/CPU render timers in it (`dsurround.RenderTimer` events) and what it was made on (`dsurround.Environment`); unzip
+  it and read it with the JDK's `jfr` (`jfr print --json --events ...`).
+  Players can make them too, so nothing private may get in: a new event type or a new `jdk.jfr` user needs a look at
+  `ProfileRecording.PRIVATE` and `Redaction`. Record under Run, not IntelliJ's Debug (its async stack trace agent
+  throws thousands of Throwables a second).
 - The dev config is `fabric/run/config/dsurround/dsurround.json`. Don't edit the user's dev settings to force a case;
   cover it with a test.
 - `defaultRequire: 1` in `dsurround.mixins.json`: a mixin that doesn't match crashes at startup, so a clean launch
