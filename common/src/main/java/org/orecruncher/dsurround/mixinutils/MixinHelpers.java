@@ -44,6 +44,7 @@ public class MixinHelpers {
     public static boolean inLevelWeatherPass;
     public static final Guard GROUND_FOG_GUARD = Guard.named("Drawing ground fog");
     public static final Guard WINDOW_FROST_GUARD = Guard.named("Drawing window frost");
+    public static final Guard WEATHER_DEPTH_GUARD = Guard.named("Giving the weather the scene's depth");
     public static final Guard PRECIPITATION_GUARD = Guard.named("Drawing particle rain and snow");
     public static final Guard RAIN_SPLASH_GUARD = Guard.named("Vanilla rain splash suppression");
     public static final Guard WIND_BLOWN_GUARD = Guard.named("Marking wind blown particles");

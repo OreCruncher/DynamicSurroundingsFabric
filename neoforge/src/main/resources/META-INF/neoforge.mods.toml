@@ -12,7 +12,8 @@ authors = "${mod_author}"
 description = '''
 ${mod_description}
 '''
-logoFile = "assets/dsurround/icon.png"
+iconFile = "assets/dsurround/icon.png"
+bannerFile = "assets/dsurround/icon.png"
 
 [[dependencies.${mod_id}]]
 modId = "neoforge"

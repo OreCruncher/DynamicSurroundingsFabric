@@ -84,5 +84,6 @@ public class MixinQuadParticleFeatureRenderer {
     private void dsurround$afterFrame(FeatureFrameContext context, CallbackInfo ci) {
         SoftParticles.endFrame();
         Streaks.endFrame();
+        PointLights.endFrame();
     }
 }

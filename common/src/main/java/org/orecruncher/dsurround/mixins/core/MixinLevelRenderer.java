@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.mixins.core;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
+import org.orecruncher.dsurround.effects.WeatherDepth;
 import org.orecruncher.dsurround.gui.overlay.lightlevel.LightLevelRenderer;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,6 +31,9 @@ public class MixinLevelRenderer {
     @Inject(method = "lambda$addWeatherPass$0", at = @At("HEAD"), require = 0)
     private void dsurround$enterWeatherPass(CallbackInfo ci) {
         MixinHelpers.inLevelWeatherPass = true;
+        // With Fabulous graphics, the scene's depth for what is drawn to the weather's target to be tested against
+        MixinHelpers.WEATHER_DEPTH_GUARD.run(() -> WeatherDepth.prepare(MixinHelpers.precipitation().isActive()
+                || MixinHelpers.windowFrost().isActive() || MixinHelpers.groundFog().isActive()));
         // Frost on windows with Fabulous graphics, and the ground fog without, before the weather, so the rain and
         // snow are drawn over them
         MixinHelpers.WINDOW_FROST_GUARD.run(() -> MixinHelpers.windowFrost().renderBeforeWeather());

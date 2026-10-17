@@ -25,10 +25,17 @@ public class MixinWeatherEffectRenderer {
 
     /**
      * Particle rain and snow in place of vanilla's, in the frame's weather pass only: another mod drawing the weather
-     * itself gets vanilla's (see MixinLevelRenderer). Matched by name alone: NeoForge's render takes the level's render
-     * state as well. Vanilla's is drawn if ours isn't (turned off, a shader pack, a failure).
+     * itself gets vanilla's (see MixinLevelRenderer). Vanilla's is drawn if ours isn't (turned off, a shader pack, a
+     * failure).
+     * <p>
+     * Both overloads are named: vanilla has the first; NeoForge adds the second, taking the level's render state, which
+     * its weather pass calls (the first only passes on to it). A name alone matches only one overload, the first, which
+     * NeoForge's weather pass never reaches.
      */
-    @Inject(method = "render", at = @At("HEAD"), cancellable = true, require = 0)
+    @Inject(method = {
+            "render(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/client/renderer/state/level/WeatherRenderState;)V",
+            "render(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/client/renderer/state/level/WeatherRenderState;Lnet/minecraft/client/renderer/state/level/LevelRenderState;)V"
+    }, at = @At("HEAD"), cancellable = true, require = 0)
     private void dsurround$renderPrecipitation(CallbackInfo ci) {
         if (MixinHelpers.inLevelWeatherPass && MixinHelpers.PRECIPITATION_GUARD.get(() -> MixinHelpers.precipitation().render(), false))
             ci.cancel();

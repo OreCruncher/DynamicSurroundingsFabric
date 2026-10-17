@@ -44,6 +44,10 @@ checking in game.
   Exception: features hooked into code other mods often replace are `require = 0` and listed in
   `mixinutils/OptionalHook`, which checks at client start whether each applied (logs it, shows it in `/dsconflicts`
   and diagnostics, and fails the launch in dev). A new optional hook goes in that list (a test checks its handler).
+- A mixin `method` given by name alone applies to the first overload only. NeoForge adds overloads (its
+  `WeatherEffectRenderer.render` takes the level render state too, and the vanilla one only forwards to it), so give
+  the descriptor, or every overload's, wherever NeoForge might add one: the injection still "applies", to a method
+  nothing calls, and neither `OptionalHook` nor a clean launch notices.
 
 ## Test conventions
 - Anything touching `Blocks`, `BiomeTrait`, tag classes, etc. needs the game bootstrapped first. Use a static block
@@ -85,8 +89,10 @@ checking in game.
   particles and weather to targets of their own, which vanilla's
   `transparency` post shader lays over the scene sorted by each target's depth, taking colours as premultiplied:
   `behind * (1 - alpha) + colour`, and skipping alpha 0. So anything we draw there must leave sensible alpha and depth:
-  - The weather target is cleared but gets no copy of the scene's depth: read the main target's, and write depth (ground
-    fog, damp spots), or the scene is laid over it.
+  - The weather target is cleared and gets no copy of the scene's depth from vanilla. It keeps one depth a pixel, the
+    nearest drawn, so rain behind a wall drawn with rain in front of it showed through the wall: `effects/WeatherDepth`
+    copies the main target's depth into it at the start of the weather pass while any of ours draws there. Write depth
+    (ground fog, damp spots), or the scene is laid over it.
   - The particles target's depth is the scene's from before water; the translucent target's has the water's surface.
     On 26.2 particles are drawn before the water, so its depth isn't there yet: with Fabulous a soft layer is drawn
     twice (`MixinQuadParticleFeatureRenderer` wraps `drawIndexed`): its depth first, tested as usual, so the nearest

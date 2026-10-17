@@ -28,7 +28,9 @@ What changed to fit 26.2:
   only a dust storm's, and is on again (it was left out of the 26.2 port).
 - **Dimensions**: `DimensionInformation` is gone; its 0.4.7 values (`particleWeather`, `simulateWind`, `groundFog`) are
   on `IDimensionOracle`. Whether a dimension draws its own weather is NeoForge's custom weather renderer
-  (`DimensionInfo.drawsOwnWeather`, set by `NeoForgeMod`); nothing replaces it on Fabric.
+  (`DimensionInfo.drawsOwnWeather`, set by `NeoForgeMod`); nothing replaces it on Fabric. Looked up once, at the
+  origin: NeoForge reads it from an environment attribute, which a biome could set, so custom weather in some biomes
+  only would be missed (none known). Checking at the player as the weather is drawn would catch it.
 - **GPU timing**: `RenderTimer` takes its timestamps through the device's query pool, so it works on either backend.
 - **Aurora**: reads 0.4.7's noise texture (`NoiseSampler`, linear and repeating) in place of hashing.
 - **Seasons**: `ISeasonalInformation` keeps 26.2's names (`getTemperatureAt`); 0.4.7 adds `SNOW_TEMPERATURE` and

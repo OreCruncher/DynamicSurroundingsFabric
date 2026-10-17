@@ -152,6 +152,14 @@ public final class PointLights {
     }
 
     /**
+     * The frame is done: any lights not drawn (no translucent particles were) are dropped, not carried into the next,
+     * where they would be placed from where the camera was
+     */
+    public static void endFrame() {
+        count = 0;
+    }
+
+    /**
      * Whether there are lights waiting to be drawn.
      */
     public static boolean hasLights() {

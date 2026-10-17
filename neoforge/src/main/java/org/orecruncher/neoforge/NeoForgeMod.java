@@ -23,7 +23,9 @@ public final class NeoForgeMod {
         modBus.addListener(this::onRegisterGuiLayersEvent);
 
         // A dimension with a weather renderer of its own keeps its weather (see DimensionInfo); looked up at the origin,
-        // as the dimension's own
+        // as the dimension's own. NeoForge takes it from an environment attribute, which a biome could set too: custom
+        // weather in some biomes only would be missed, and particle weather drawn over it there (none known; checking
+        // where the player is as the weather is drawn would catch it)
         DimensionInfo.drawsOwnWeather = level -> CustomEnvironmentEffectsRendererManager.getCustomWeatherEffectRenderer(level, Vec3.ZERO) != null;
 
         Client.initialize();
