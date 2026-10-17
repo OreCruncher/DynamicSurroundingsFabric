@@ -13,9 +13,6 @@ new systems needed a renderer of their own on 26.2 and stood aside until rebuilt
 (the light level overlay, particle weather, window frost and ground fog). 0.4.7's code is the reference:
 `git show origin/OreCruncher/0.4.7:<path>`.
 
-Also pending: streaks for sparks and lava droplets, which need a particle group of their own (they are drawn as small
-glowing points for now).
-
 What changed to fit 26.2:
 - **Point lights**: 0.4.7's `PointLights` (any light: fireflies, flame jets) replaces `FireflyLights`, on its 26.2
   pass. Each light carries its radius in its corner UVs; the shader gives light already scaled by its strength, with
@@ -93,6 +90,16 @@ What changed to fit 26.2:
   their colour (`*_fabulous`: no test, no writes). Writing depth in a single untested pass left whichever puff came
   last, as particles aren't drawn in order, and showed as patches over a waterfall. Mist above water then sorts in front
   of it in the transparency pass. `soft_particle_scene_depth` is gone.
+- **Spark and droplet streaks**: a 26.2 particle hands the engine a square facing the camera; a streak is a long quad
+  along its path, its head bright and its tail clear. `FlameSpark` and `LavaDroplet` add theirs to `Streaks` as they
+  are extracted (camera-relative, into `ParticleQuads`), and `Streaks.draw` draws them all just before the translucent
+  particles, beside the point lights, with the flame layer's pipeline for the frame (soft and additive; with Fabulous,
+  its depth pass first). Each particle also hands the engine a clear quad of its own: a group with no quads isn't
+  submitted, and the streaks are drawn when it is. Leftovers are dropped at the end of the frame (`finishExecute`).
+  Two traps found in game: the streaks and point lights take the particle renderer's own `dynamicTransforms` (by
+  then RenderSystem's model view isn't the camera's, which put everything behind it), and the streak corners wind
+  counter-clockwise (the flame pipeline culls back faces, which dropped every streak). The overlay's Render section
+  now starts with the graphics mode (`Graphics:`), and has a `Streaks` timer.
 - **Vanilla tags**: 26.2's `minecraft:dirt` no longer holds grass blocks, podzol, mycelium, moss or mud; they are in
   `grass_blocks`, `mud` and `moss_blocks`, all under `substrate_overworld`, which `rain_absorbing` (damp spots) and
   `BlockLibrary`'s acoustic seed tags now use. `minecraft:tall_flowers` is gone; `brush_step` lists its five flowers.
@@ -105,7 +112,7 @@ What changed to fit 26.2:
 To check in game (both platforms), besides the list below: particle rain, snow and dust (with and without Fabulous
 graphics; dust fading into the ground, fog and sky tinted), damp spots darkening the ground, snow flecks, drops on
 windows, and vanilla's weather back when particle weather is turned off; window frost (`/dsweather` can set it) with
-and without Fabulous graphics, breath in front of a frosted window; ground fog (`/dsweather` can set it) with and
+and without Fabulous graphics, breath in front of a frosted window; flame-jet sparks and lava droplets as streaks, with and without Fabulous; ground fog (`/dsweather` can set it) with and
 without Fabulous, against the sky, water and trees, at each quality, while bobbing and with nausea; storm rain and snow with the storm's strength and sounds,
 wind drifting smoke and leaves, flame jets (soft, additive, lighting their surroundings),
 steam and smoke puffs, the pocket watch and compass roses (and in the margin), the aurora, and voice chat processing.

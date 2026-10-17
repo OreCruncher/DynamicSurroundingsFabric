@@ -38,10 +38,10 @@ public final class PrecipitationShaders {
 
     // The rain, snow, snow flecks and window streaks: lit by the lightmap, the snow textured, seen from both sides
     private static final RenderPipeline DROPS_PIPELINE = drops("pipeline/precipitation").withDepthStencilState(TEST_ONLY).build();
-    private static final RenderPipeline DROPS_DEPTH_PIPELINE = drops("pipeline/precipitation_depth_write").build();
+    private static final RenderPipeline DROPS_DEPTH_PIPELINE = drops("pipeline/precipitation_depth_write").withDepthStencilState(DepthStencilState.DEFAULT).build();
     // The dust: as the drops, but soft, reading a copy of the scene's depth
     private static final RenderPipeline DUST_PIPELINE = dust("pipeline/precipitation_dust").withDepthStencilState(TEST_ONLY).build();
-    private static final RenderPipeline DUST_DEPTH_PIPELINE = dust("pipeline/precipitation_dust_depth_write").build();
+    private static final RenderPipeline DUST_DEPTH_PIPELINE = dust("pipeline/precipitation_dust_depth_write").withDepthStencilState(DepthStencilState.DEFAULT).build();
     // Damp spots: darkening the ground drawn under them; with Fabulous graphics, laid over it as a dark colour, as the
     // weather's own target starts out empty with nothing to darken. Their depth is written then: the transparency pass
     // sorts by it, and without it the scene is laid over them. They lie on the ground, so it hides nothing that the
@@ -50,7 +50,7 @@ public final class PrecipitationShaders {
             .withColorTargetState(new ColorTargetState(DARKEN))
             .withDepthStencilState(TEST_ONLY)
             .build();
-    private static final RenderPipeline DAMP_SPOTS_DEPTH_PIPELINE = dampSpots("pipeline/damp_spot_depth_write").build();
+    private static final RenderPipeline DAMP_SPOTS_DEPTH_PIPELINE = dampSpots("pipeline/damp_spot_depth_write").withDepthStencilState(DepthStencilState.DEFAULT).build();
 
     public static final ModShader DROPS = new ModShader(DROPS_PIPELINE, "particle rain and snow", "vanilla's rain and snow will be drawn instead", Library.LOGGER);
     public static final ModShader DROPS_DEPTH = new ModShader(DROPS_DEPTH_PIPELINE, "particle rain and snow (Fabulous)", "vanilla's rain and snow will be drawn instead", Library.LOGGER);

@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.effects.particles;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.pipeline.BlendFunction;
@@ -187,18 +188,20 @@ public final class PointLights {
     /**
      * Draws the lights recorded since the last call into {@code target}, then forgets them. Called outside any render
      * pass, after the scene's depth has been captured.
+     *
+     * @param transforms the camera's, as the particles are drawn with them (see MixinQuadParticleFeatureRenderer)
      */
-    public static void draw(RenderTarget target) {
+    public static void draw(RenderTarget target, GpuBufferSlice transforms) {
         int n = count;
         count = 0;
         if (n == 0 || System.nanoTime() - lastAdded > STALE_NANOS || !isAvailable() || !SoftParticles.hasSceneDepth())
             return;
         RENDER_TIMER.begin();
-        SHADER.run(() -> drawLights(target, n), () -> {});
+        SHADER.run(() -> drawLights(target, n, transforms), () -> {});
         RENDER_TIMER.end();
     }
 
-    private static void drawLights(RenderTarget target, int n) {
+    private static void drawLights(RenderTarget target, int n, GpuBufferSlice transforms) {
         var device = RenderSystem.getDevice();
 
         // Enough that some fade or are left out: the nearest first. Their positions are already relative to the camera
@@ -238,7 +241,6 @@ public final class PointLights {
             Std140Builder.intoBuffer(view.data()).putFloat(zeroToOne ? 1F : 0F);
         }
 
-        var transforms = RenderSystem.getDynamicUniforms().writeTransform(RenderSystem.getModelViewMatrixCopy());
         var indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
         var indexBuffer = indices.getBuffer(indexCount);
 

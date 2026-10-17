@@ -68,6 +68,12 @@ checking in game.
 - Uniform blocks: `Std140Builder.putVec3` always takes 16 bytes, but std140 puts a following `float` in a `vec3`'s
   fourth slot. Write a `vec3` and the `float` after it as one `putVec4` (and `putVec4()` in the size), or every value
   after it is read 4 bytes off (ground fog drew nothing until this was found).
+- `RenderPipeline.Builder` defaults to no depth state: no test and no writes. Set one on every pipeline that should
+  test or write depth; a Fabulous variant that writes none leaves its target "infinitely far", and the transparency
+  pass lays the scene over it (`ModShaderTests` checks the `*_depth`/`*_depth_write` pipelines).
+- Drawing our own geometry while particles draw (`MixinQuadParticleFeatureRenderer`): use the particle renderer's
+  `dynamicTransforms` (written in `finishPrepare`), not `RenderSystem.getModelViewMatrixCopy()`, which no longer holds
+  the camera's rotation then. Particle pipelines cull back faces: wind quads counter-clockwise as the camera sees them.
 - Rendering is 26.2's: pipelines, `RenderPass`, GPU buffers, uniform blocks (std140, `MappableRingBuffer`), particle
   layers and extraction. Depth is reverse-Z (cleared to 0). See `MIGRATION.md` for how the aurora, soft particles and
   point lights hook in. GPU timings (`RenderTimer`) go through the device's timestamp queries: no raw OpenGL, as 26.2

@@ -99,10 +99,11 @@ public class LavaDroplet extends SingleQuadParticle {
         float alpha = brightness(life);
         if (alpha <= 0F)
             return;
-        // A small glowing blob for now: drawing it as a streak along its path needs a particle group of its own
-        var color = colorAt(life);
-        this.setColor(color[0], color[1], color[2]);
-        this.setAlpha(alpha);
+        Streaks.add(camera, partialTick, this.xo, this.yo, this.zo, this.x, this.y, this.z, STREAK, HALF_WIDTH,
+                colorAt(life), alpha, this.getLightCoords(partialTick), this.getU0(), this.getU1(), this.getV0(), this.getV1());
+        // Its own quad as well, clear: the particle engine draws the flames' group only if something in it has a quad,
+        // and the streaks are drawn as that group is (see Streaks)
+        this.setAlpha(0F);
         super.extract(state, camera, partialTick);
     }
 

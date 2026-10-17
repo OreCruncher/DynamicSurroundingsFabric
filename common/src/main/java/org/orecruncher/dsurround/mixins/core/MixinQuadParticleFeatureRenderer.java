@@ -9,7 +9,10 @@ import net.minecraft.client.renderer.feature.FeatureFrameContext;
 import net.minecraft.client.renderer.feature.QuadParticleFeatureRenderer;
 import org.orecruncher.dsurround.effects.particles.PointLights;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
+import org.orecruncher.dsurround.effects.particles.Streaks;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -22,9 +25,15 @@ import java.util.List;
 @Mixin(QuadParticleFeatureRenderer.class)
 public class MixinQuadParticleFeatureRenderer {
 
+    // The camera's transforms the particles are drawn with, written as the frame was prepared: by the time the groups
+    // are drawn, the model view matrix RenderSystem holds is no longer the camera's
+    @Shadow
+    private GpuBufferSlice dynamicTransforms;
+
     /**
      * Before translucent particles are drawn, and outside their render pass: copy the scene's depth, and draw the
-     * point lights, so the fireflies and flames drawn next are on top of their own light.
+     * point lights, so the fireflies and flames drawn next are on top of their own light, and the streaks of sparks and
+     * molten droplets.
      */
     @Inject(method = "executeGroup(Lnet/minecraft/client/renderer/feature/FeatureFrameContext;ILjava/util/List;Z)V", at = @At("HEAD"))
     private void dsurround$beforeGroup(FeatureFrameContext context, int groupIndex, List<QuadParticleFeatureRenderer.Submit> submits, boolean strictlyOrdered, CallbackInfo ci) {
@@ -35,7 +44,10 @@ public class MixinQuadParticleFeatureRenderer {
         var particleTarget = minecraft.levelRenderer.particlesTarget();
         var target = particleTarget != null ? particleTarget : minecraft.gameRenderer.mainRenderTarget();
         SoftParticles.captureSceneDepth(target);
-        PointLights.draw(target);
+        if (this.dynamicTransforms != null) {
+            PointLights.draw(target, this.dynamicTransforms);
+            Streaks.draw(target, this.dynamicTransforms);
+        }
     }
 
     /**
@@ -71,5 +83,6 @@ public class MixinQuadParticleFeatureRenderer {
     @Inject(method = "finishExecute(Lnet/minecraft/client/renderer/feature/FeatureFrameContext;)V", at = @At("TAIL"))
     private void dsurround$afterFrame(FeatureFrameContext context, CallbackInfo ci) {
         SoftParticles.endFrame();
+        Streaks.endFrame();
     }
 }

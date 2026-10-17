@@ -119,6 +119,24 @@ public class ModShaderTests {
         assertEquals(ModShaders.SHADERS.size(), ids.size());
     }
 
+    @Test
+    void thoseForFabulousGraphicsWriteDepth() {
+        // With Fabulous graphics a target is laid over the scene by its depth; a pipeline that is meant to write it
+        // there and doesn't (a builder's default is no depth test and no writes) leaves its target as far as can be,
+        // and the scene is laid over everything it drew: rain only against the sky, damp spots not at all
+        int checked = 0;
+        for (var shader : ModShaders.SHADERS) {
+            var path = shader.id().getPath();
+            if (!path.endsWith("_depth_write") && !path.endsWith("_depth"))
+                continue;
+            var depth = shader.pipeline().getDepthStencilState();
+            assertNotNull(depth, path + " has no depth state");
+            assertTrue(depth.writeDepth(), path + " doesn't write depth");
+            checked++;
+        }
+        assertTrue(checked >= 7, "found only " + checked);
+    }
+
     private void assertResource(Identifier shaderId, String extension) {
         var path = "assets/" + shaderId.getNamespace() + "/shaders/" + shaderId.getPath() + extension;
         assertNotNull(getClass().getClassLoader().getResource(path), "missing " + path);

@@ -36,7 +36,7 @@ public final class ParticleQuads implements AutoCloseable {
     /**
      * Starts over, with room for at least this many quads
      */
-    void begin(int quads) {
+    public void begin(int quads) {
         int needed = Math.max(1, quads) * 4;
         if (this.buffer == null) {
             this.buffer = MemoryUtil.memAlloc(needed * VERTEX_SIZE);
@@ -52,9 +52,15 @@ public final class ParticleQuads implements AutoCloseable {
 
     /**
      * Writes a corner: where it is, its texture coordinates, its colour as {@link #color} packed it, and its packed
-     * light. No more corners than {@link #begin} made room for.
+     * light. Grows to fit, keeping what is written, past what {@link #begin} made room for.
      */
-    void vertex(float x, float y, float z, float u, float v, int color, int light) {
+    public void vertex(float x, float y, float z, float u, float v, int color, int light) {
+        if (this.vertices == this.capacity) {
+            int grown = Math.max(4, this.capacity + this.capacity / 2);
+            this.buffer = MemoryUtil.memRealloc(this.buffer, grown * VERTEX_SIZE);
+            this.address = MemoryUtil.memAddress(this.buffer);
+            this.capacity = grown;
+        }
         long p = this.address + (long) this.vertices * VERTEX_SIZE;
         MemoryUtil.memPutFloat(p, x);
         MemoryUtil.memPutFloat(p + 4, y);
@@ -75,7 +81,7 @@ public final class ParticleQuads implements AutoCloseable {
      * A colour, 0 to 1 each, packed as the vertex holds it: red, green, blue and alpha bytes in that order, rounded as
      * BufferBuilder rounds them
      */
-    static int color(float red, float green, float blue, float alpha) {
+    public static int color(float red, float green, float blue, float alpha) {
         int abgr = ARGB.toABGR(ARGB.colorFromFloat(alpha, red, green, blue));
         return LITTLE_ENDIAN ? abgr : Integer.reverseBytes(abgr);
     }

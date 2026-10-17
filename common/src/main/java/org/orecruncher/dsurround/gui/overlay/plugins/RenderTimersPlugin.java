@@ -5,6 +5,8 @@ import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
 import org.orecruncher.dsurround.effects.frost.FrostRenderer;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
 import org.orecruncher.dsurround.effects.particles.PointLights;
+import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.effects.particles.Streaks;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
@@ -31,7 +33,8 @@ public final class RenderTimersPlugin implements IDiagnosticPlugin {
             GroundFogVolume.SMOOTH_TIMER,
             GroundFogVolume.COMPOSITE_TIMER,
             FrostRenderer.RENDER_TIMER,
-            PointLights.RENDER_TIMER);
+            PointLights.RENDER_TIMER,
+            Streaks.RENDER_TIMER);
 
     public RenderTimersPlugin() {
         ICollectDiagnostics.EVENT.register(this::onCollect);
@@ -39,6 +42,13 @@ public final class RenderTimersPlugin implements IDiagnosticPlugin {
 
     @Override
     public void onCollect(CollectDiagnosticsEvent event) {
+        // The graphics mode: Fabulous's improved transparency draws translucent things, particles and weather to targets
+        // of their own, laid over the scene by depth, which the mod's effects draw differently for
+        var options = GameUtils.getGameSettings();
+        boolean layered = GameUtils.getMC().gameRenderer.gameRenderState().useShaderTransparency();
+        event.add(CollectDiagnosticsEvent.Section.Render, "Graphics: %s, improved transparency %s%s".formatted(
+                options.graphicsPreset().get(), options.improvedTransparency().get() ? "on" : "off",
+                layered ? " (layered by depth)" : ""));
         boolean labelled = false;
         for (var timer : TIMERS) {
             if (!timer.isRecent())
