@@ -8,4 +8,9 @@ public interface IMinecraftDirectories {
     Path getModDataDirectory();
 
     Path getModDumpDirectory();
+
+    /**
+     * Where /dsprofile writes its recordings
+     */
+    Path getModProfileDirectory();
 }

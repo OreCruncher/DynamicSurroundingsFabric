@@ -1,5 +1,7 @@
 package org.orecruncher.dsurround;
 
+import org.orecruncher.dsurround.config.AuroraQuality;
+import org.orecruncher.dsurround.config.AuroraStyle;
 import org.orecruncher.dsurround.config.ClockStyle;
 import org.orecruncher.dsurround.config.CompassStyle;
 import org.orecruncher.dsurround.config.GroundFogQuality;
@@ -532,9 +534,39 @@ public class Configuration extends ConfigurationData {
         public int chance = 33;
 
         @Property
+        @Comment("How auroras look: REALISTIC, modelled on real auroras, or CLASSIC, the original Dynamic Surroundings curtains")
+        public AuroraStyle style = AuroraStyle.REALISTIC;
+
+        @Property
+        @Comment("Settings for the classic aurora")
+        public final ClassicAurora classic = new ClassicAurora();
+
+        @Property
+        @Comment("Settings for the realistic aurora")
+        public final RealisticAurora realistic = new RealisticAurora();
+    }
+
+    public static class ClassicAurora {
+        @Property
         @Slider(min = 1, max = 3)
+        @MovedFrom("auroraOptions.maxBands")
         @Comment("The most curtains of light an aurora can have")
         public int maxBands = 3;
+    }
+
+    public static class RealisticAurora {
+        @Property
+        @Slider(min = 0, max = 100)
+        @Comment("Percent of aurora nights that build into a storm: brighter, redder, and able to reach overhead")
+        public int stormChance = 10;
+
+        @Property
+        @Comment("How finely the realistic aurora is drawn: FANCY at the screen's size, FAST at half (a quarter of the cost, its finest rays a little softer)")
+        public AuroraQuality quality = AuroraQuality.FANCY;
+
+        @Property
+        @Comment("A bright moon washes out faint auroras, as it does the real ones")
+        public boolean moonWashout = true;
     }
 
     public static class MusicManagerOptions {

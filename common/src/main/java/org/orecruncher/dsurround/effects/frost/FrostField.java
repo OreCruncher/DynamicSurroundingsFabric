@@ -74,9 +74,12 @@ public final class FrostField {
     }
 
     public void forEachFace(Consumer<FrostFace> action) {
-        for (var section : this.sections.values())
-            for (var face : section.faces)
-                action.accept(face);
+        // Called every frame: by index, as an iterator for each section's list was most of the mod's garbage
+        for (var section : this.sections.values()) {
+            var faces = section.faces;
+            for (int i = 0, n = faces.size(); i < n; i++)
+                action.accept(faces.get(i));
+        }
     }
 
     /**

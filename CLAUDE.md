@@ -36,6 +36,11 @@ checking in game.
   `Get-CimInstance Win32_Process -Filter "Name='java.exe' or Name='javaw.exe'" | Where-Object { $_.CommandLine -match '\\neoforge\\\.gradle\\architectury' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`
   The user may have their own client running: check what is running (and when it started) before killing, and stop
   only the one you launched.
+- Profiling: `/dsprofile [scene] [seconds]` records a JFR file to `config/dsurround/profiles` with the mod's GPU/CPU
+  render timers in it (`dsurround.RenderTimer` events); read it with the JDK's `jfr` (`jfr print --json --events ...`).
+  Players can make them too, so nothing private may get in: a new event type or a new `jdk.jfr` user needs a look at
+  `ProfileRecording.PRIVATE` and `Redaction`. Record under Run, not IntelliJ's Debug (its async stack trace agent
+  throws thousands of Throwables a second).
 - The dev config is `fabric/run/config/dsurround/dsurround.json`. Don't edit the user's dev settings to force a case;
   cover it with a test.
 - `defaultRequire: 1` in `dsurround.mixins.json`: a mixin that doesn't match crashes when its target loads, so a clean
@@ -65,13 +70,23 @@ checking in game.
 - `ConfigServices` is handed by `BlockLibrary`/`BiomeLibrary` to the `BlockInfo`/`BiomeInfo` they build.
   `BiomeLibrary` resolves the condition evaluator lazily: evaluator → `BiomeVariables` → biome library is a cycle.
 - Shaders: one `effects/ModShader` per `RenderPipeline` (`SoftParticles.SHADER` and `FLAME_SHADER`,
-  `AuroraRenderer.SHADER`, `PointLights.SHADER`, `PrecipitationShaders.SHADERS`, `FrostRenderer.SHADERS`,
+  `AuroraRenderer.SHADER`, `RealisticAuroraRenderer.SHADER`, `PointLights.SHADER`, `PrecipitationShaders.SHADERS`, `FrostRenderer.SHADERS`,
   `GroundFogVolume.SHADERS`), listed in `ModShaders.SHADERS`. Not added to vanilla's `RenderPipelines` (a failure there
   rejects the reload); `MixinShaderManager` compiles them after each shader reload. Drawing goes through
   `ModShader.run` / `RenderFailSafe`: a failure is logged once and the effect turned off until resources reload.
 - Uniform blocks: `Std140Builder.putVec3` always takes 16 bytes, but std140 puts a following `float` in a `vec3`'s
   fourth slot. Write a `vec3` and the `float` after it as one `putVec4` (and `putVec4()` in the size), or every value
   after it is read 4 bytes off (ground fog drew nothing until this was found).
+- Realistic aurora (`effects/aurora/RealisticAurora*`, `shaders/core/aurora_realistic.*`; MIGRATION.md has the
+  whole): the Java model mirrors the shader (`Arc.northAt` is `arc_north`, constants such as `FIELD_CELL`), and tests
+  check the shader's text and constants against it, so change both. Its uniform block is in
+  `shaders/include/aurora_realistic.glsl`, as both stages declare it and a block must match across them. Anything that
+  moves at a speed that changes goes through `RealisticAuroraMotion`, never `time × speed`. `/dsaurora activity|phase|
+  colour` holds a look to check it; a GLSL error (a redeclared name, say) turns the whole effect off, so check the log
+  for `Loaded the dsurround:pipeline/aurora_realistic shader` after any shader change.
+- View bobbing is in 26.2's projection matrix, and moves the camera a little as well as turning it. A screen pass that
+  turns pixels back into directions (the realistic aurora) takes each one between two unprojected points along the
+  pixel's line, not from the camera to one point near it, or every direction swings as the player walks.
 - `RenderPipeline.Builder` defaults to no depth state: no test and no writes. Set one on every pipeline that should
   test or write depth; a Fabulous variant that writes none leaves its target "infinitely far", and the transparency
   pass lays the scene over it (`ModShaderTests` checks the `*_depth`/`*_depth_write` pipelines).

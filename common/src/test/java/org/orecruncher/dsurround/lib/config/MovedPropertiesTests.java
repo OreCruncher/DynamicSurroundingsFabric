@@ -47,6 +47,16 @@ public class MovedPropertiesTests {
             @Property
             @MovedFrom(value = "oldGroup.shown", values = "false=OFF", replaces = true)
             public Mode style = Mode.HIGH;
+
+            @Property
+            public final InnerGroup inner = new InnerGroup();
+        }
+
+        // A group within a group, which a setting can move into
+        public static class InnerGroup {
+            @Property
+            @MovedFrom("newGroup.bands")
+            public int bands = 3;
         }
 
         public enum Mode {
@@ -109,6 +119,15 @@ public class MovedPropertiesTests {
     @Test
     void aTopLevelPropertyCanMove() throws IOException {
         assertEquals(11, load("{\"legacyTop\": 11}").top);
+    }
+
+    @Test
+    void aPropertyCanMoveIntoAGroupWithinAGroup() throws IOException {
+        var config = load("{\"newGroup\": {\"bands\": 1}}");
+        assertEquals(1, config.newGroup.inner.bands);
+        var json = written("moved.json").getAsJsonObject("newGroup");
+        assertFalse(json.has("bands"), "the old place is still written");
+        assertEquals(1, json.getAsJsonObject("inner").get("bands").getAsInt());
     }
 
     @Test
@@ -258,6 +277,14 @@ public class MovedPropertiesTests {
         assertEquals(GroundFogQuality.FANCY,
                 loadModConfig("{\"weatherOptions\": {\"enableGroundFog\": true}}").weatherOptions.groundFogQuality);
         assertFalse(written("dsurround.json").getAsJsonObject("weatherOptions").has("enableGroundFog"));
+    }
+
+    @Test
+    void theAuroraBandsMoveToTheClassicAurora() throws IOException {
+        assertEquals(1, loadModConfig("{\"auroraOptions\": {\"maxBands\": 1}}").auroraOptions.classic.maxBands);
+        var aurora = written("dsurround.json").getAsJsonObject("auroraOptions");
+        assertFalse(aurora.has("maxBands"));
+        assertEquals(1, aurora.getAsJsonObject("classic").get("maxBands").getAsInt());
     }
 
     @Test

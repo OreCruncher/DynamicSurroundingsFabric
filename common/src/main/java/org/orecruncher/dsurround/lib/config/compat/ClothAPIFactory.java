@@ -97,7 +97,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
         root.addEntry(docsLink(entryBuilder, "dsurround.config.docs.page", DOCS_URL));
         for (var prop : this.configData.getSpecification()) {
             if (prop instanceof ConfigElement.PropertyGroup group) {
-                root.addEntry(this.generate(entryBuilder, group, this.configData).build());
+                root.addEntry(this.generate(entryBuilder, group, this.configData, docsUrl(group)).build());
             } else if (prop instanceof ConfigElement.PropertyValue<?> pv) {
                 var result = this.generate(entryBuilder, pv, this.configData);
                 if (result != null)
@@ -107,20 +107,28 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
         return builder.build();
     }
 
-    private SubCategoryBuilder generate(ConfigEntryBuilder builder, ConfigElement.PropertyGroup propertyGroup, Object instance) {
+    /**
+     * A group's subcategory, with its settings and the groups within it, in the order they are declared.
+     *
+     * @param docsUrl where the group's name links to: the documentation has a section for each top-level group only,
+     *                so a group within one links to its top-level group's section
+     */
+    private SubCategoryBuilder generate(ConfigEntryBuilder builder, ConfigElement.PropertyGroup propertyGroup, Object instance, String docsUrl) {
         // The name ends with a link to the group's documentation. Cloth doesn't act on clicks in a group's name, so
         // MixinClothCategoryLabelWidget does.
         var name = text(propertyGroup.getLanguageKey(), nameStyle(propertyGroup, GROUP_STYLE))
                 .append(" ")
-                .append(Component.literal(LINK_ICON).withStyle(linkStyle(LINK_ICON_STYLE, docsUrl(propertyGroup))));
+                .append(Component.literal(LINK_ICON).withStyle(linkStyle(LINK_ICON_STYLE, docsUrl)));
         SubCategoryBuilder categoryBuilder = builder
                 .startSubCategory(name)
                 .setTooltip(description(propertyGroup).toArray(new Component[0]));
 
-        // Can't have categories within categories, so we ignore the case of where a config is set up that way
+        var groupInstance = propertyGroup.getInstance(instance);
         for (var prop : propertyGroup.getChildren()) {
-            if (prop instanceof ConfigElement.PropertyValue<?> pv) {
-                var result = this.generate(builder, pv, propertyGroup.getInstance(instance));
+            if (prop instanceof ConfigElement.PropertyGroup group) {
+                categoryBuilder.add(this.generate(builder, group, groupInstance, docsUrl).build());
+            } else if (prop instanceof ConfigElement.PropertyValue<?> pv) {
+                var result = this.generate(builder, pv, groupInstance);
                 if (result != null)
                     categoryBuilder.add(result.build());
             }

@@ -37,6 +37,7 @@ import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
+import org.orecruncher.dsurround.lib.platform.IMinecraftDirectories;
 import org.orecruncher.dsurround.lib.registry.ReloadListener;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
@@ -47,6 +48,7 @@ import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionResult;
 import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.processing.Handlers;
+import org.orecruncher.dsurround.profiling.ProfileFiles;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
 import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
@@ -223,6 +225,9 @@ public final class Client {
         // Force instantiation of the core Handler. This should cause the rest
         // of the dependencies to be initialized.
         container.resolve(Handlers.class);
+
+        // Only the newest profile recordings are kept (see /dsprofile)
+        ProfileFiles.prune(container.resolve(IMinecraftDirectories.class).getModProfileDirectory(), ProfileFiles.KEPT, Library.LOGGER);
 
         checkOptionalHooks();
 

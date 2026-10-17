@@ -10,6 +10,7 @@ public final class Commands {
         if (dispatcher == null)
             return;
 
+        new AuroraCommand().register(dispatcher, registryAccess);
         new BiomeCommand().register(dispatcher, registryAccess);
         new ConflictsCommand().register(dispatcher, registryAccess);
         new DumpCommand().register(dispatcher, registryAccess);
@@ -17,6 +18,7 @@ public final class Commands {
         new ScriptCommand().register(dispatcher, registryAccess);
         new MusicManagerCommand().register(dispatcher, registryAccess);
         new VersionCommand().register(dispatcher, registryAccess);
+        new ProfileCommand().register(dispatcher, registryAccess);
         new WeatherCommand().register(dispatcher, registryAccess);
     }
 }

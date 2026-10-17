@@ -195,6 +195,44 @@ render types are gone. What replaced them:
   replaces `getRenderType`. Fireflies have their own layer (vanilla particle shader, translucent, no depth writes).
 - **Effect diagnostics** (in-world boxes and labels) are gizmos emitted from `DebugRenderer.emitGizmos`.
 
+## New on 26.2: the realistic aurora
+
+Not a port: a second aurora, modelled on real ones, and the default style (`auroraOptions.style`: `REALISTIC` or
+`CLASSIC`; `maxBands` moved to `auroraOptions.classic`, `stormChance`, `quality` and `moonWashout` are in
+`auroraOptions.realistic`). The config screen shows groups within groups for it (`ClothAPIFactory`).
+
+- **Model** (`effects/aurora/RealisticAurora`): one night's arcs, in kilometres around a viewer on a round Earth, from
+  the night's number. Arcs run along magnetic east-west (`declination` from true north), bow at their ends, fold three
+  ways (large drifting folds, a travelling wave, small curls) and lean south up the magnetic field. A night has an
+  `AuroraActivity` (quiet to storm, storms at `stormChance`) and an `AuroraColour` character. `at(progress)` gives a
+  `Moment` for how far through the night it is (`DayCycle.getNightProgress`): growth, then a breakup (brighter, closer,
+  faster; a storm comes overhead), its height, and recovery (pulsing patches). Active nights and storms have a ray field.
+- **Motion** (`RealisticAuroraMotion`): waves, curls, rays and the ray field move frame by frame at the moment's speed,
+  wrapped where their patterns repeat; not `time × speed`, which leaps when the speed changes.
+- **Drawing** (`RealisticAuroraRenderer`, `shaders/core/aurora_realistic.*`): one screen pass after the stars, at
+  `ISkyRender`, adding light (no depth). Each pixel's line of sight goes through 80 to 450 km up; for each arc it steps
+  only through the band the sheet can be in, as many steps as the folds need, finds sign changes of the offset from the
+  sheet and narrows each crossing (regula falsi), and adds the light there at once: thickness over how squarely it is
+  crossed, so edge on is brighter. Light by height (green, red above the edge, a pink fringe, blue-violet above the
+  Earth's shadow), rays from noise along the arc, ragged ray tops and lower edge. The ray field is sampled along the
+  line, as many samples as show its rays. Brought into range by the brightest channel; a bright moon washes out the
+  faint parts. At `FAST` it is drawn at half size and laid over the sky (`aurora_composite`).
+- **Direction from the screen**: taken between two unprojected points, not from the camera, as 26.2's view bobbing in
+  the projection moves the camera too.
+- **`/dsaurora`**: status; `activity`, `phase` and `colour` hold one until `clear` (or disconnecting).
+- **`/dsprofile [scene] [seconds]`** (`profiling/`), for players too, to send when something is slow: sets up a
+  scene (`general`, the default, changes nothing; `aurora`, `ground_fog`, `weather`, `frost` hold an effect at its
+  costliest and send time/weather commands in single player only), records with Java Flight Recorder from inside the
+  game (2 minutes by default) and writes `dsurround-<scene>-<date-time>.jfr` to `config/dsurround/profiles`, with the
+  mod's render timers as `dsurround.RenderTimer` events once a second. An indicator at the top of the screen shows the
+  time left; the player is told when it is done (the file's name opens it). Only the newest 10 are kept: older ones
+  are deleted as the client starts. Without the `jdk.jfr` module the player is told so; only `ProfileRecording` and
+  `RenderTimerEvent` use it (a test checks). Nothing private: the events that carry it (command line, environment,
+  system properties, processes, paths, addresses, exception messages, the game's network events) are off and filtered
+  out again, and the home folder's path is redacted (`Redaction`).
+- Measured on Fabric at 2560×1369, Fancy: one arc looking north about 0.6 ms of GPU; a storm overhead about 1.2 to
+  1.35 ms; CPU about 0.03 ms.
+
 ## Fixes to the 26.2 branch found while porting
 
 - Fog had no effect: the calculators' result was never written back to the game's `FogData`.
@@ -213,6 +251,8 @@ render types are gone. What replaced them:
 
 - Mixins that apply only in a world: sky, fog, quad particle renderer, debug renderer, client level, sound engine.
 - Aurora: cold biome at night (`/dsurround` diagnostics shows its status); colours, strength, behind the world.
+- Realistic aurora on NeoForge (checked on Fabric): `/dsaurora activity storm`, `phase` and `colour` for each look;
+  Fast quality; moonlight washout under a full moon.
 - Waterfall mist fading into water and terrain (soft), with and without Fabulous graphics; firefly lights on grass.
 - Fog effects (biome, morning) now actually change the fog.
 - Sound configuration screen: layout, filter, play/stop, tooltips; credits/markdown screen links and hover text.

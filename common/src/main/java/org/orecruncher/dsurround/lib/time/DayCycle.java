@@ -44,6 +44,20 @@ public enum DayCycle {
         return DayCycle.DAYTIME;
     }
 
+    /**
+     * How far through the night it is, from 0 as sunset begins to 1 as sunrise begins; 0 before, and 1 after
+     */
+    public static float getNightProgress(final Level world, final Vec3 position) {
+        return nightProgress(getCelestialAngle(world, position));
+    }
+
+    /**
+     * How far through the night the given celestial angle is, in degrees: 0 as sunset begins, 1 as sunrise begins
+     */
+    public static float nightProgress(float angleDegrees) {
+        return Math.clamp((angleDegrees - SUNSET_THRESHOLD) / (SUNRISE_THRESHOLD - SUNSET_THRESHOLD), 0F, 1F);
+    }
+
     public static float getCelestialAngle(final Level world, final Vec3 position) {
         return world.environmentAttributes().getValue(EnvironmentAttributes.SUN_ANGLE, position);
     }
