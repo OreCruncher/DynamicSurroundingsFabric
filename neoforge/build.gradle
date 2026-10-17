@@ -48,6 +48,15 @@ dependencies {
     modImplementation "com.github.glitchfiend:GlitchCore-neoforge:${minecraft_version}-${rootProject.glitchcore_version}"
     modImplementation "com.github.glitchfiend:SereneSeasons-neoforge:${minecraft_version}-${rootProject.serene_seasons_version}"
     modImplementation "com.github.glitchfiend:BiomesOPlenty-neoforge:${minecraft_version}-${rootProject.bop_version}"
+    // Testing only: in the dev client, not compiled against or published
+    //modLocalRuntime "curse.maven:twilightforest-227639:${rootProject.twilightforest_neoforge_file}"
+    //modLocalRuntime "curse.maven:astralsorcery-241721:${rootProject.astralsorcery_neoforge_file}"
+    //modLocalRuntime "curse.maven:observerlib-316833:${rootProject.observerlib_neoforge_file}"
+    //modLocalRuntime "curse.maven:simpleweather-983390:${rootProject.simpleweather_neoforge_file}"
+
+    // Simple Voice Chat: its plugin API to remap the common classes against; the mod itself in the dev client only
+    compileOnly "de.maxhenkel.voicechat:voicechat-api:$rootProject.voicechat_api_version"
+    modLocalRuntime "curse.maven:simple-voice-chat-416089:${rootProject.voicechat_neoforge_file}"
 
     modApi("me.shedaniel.cloth:cloth-config-neoforge:${rootProject.clothapi_version}") {
         exclude(group: "net.fabricmc.fabric-api")
@@ -72,8 +81,11 @@ processResources {
         expand expandProps
     }
 
-    into('/assets') {
+    // Read by the sound credits screen. In our own assets folder, not straight in assets, where Minecraft takes each
+    // entry for a namespace and warns about one that isn't; lower case, as resource paths must be
+    into("/assets/$rootProject.name") {
         from("$projectDir/../CREDITS.md")
+        rename { 'credits.md' }
     }
 }
 

@@ -8,9 +8,13 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.effects.ModShader;
+import org.orecruncher.dsurround.effects.NoiseTexture;
 import org.orecruncher.dsurround.lib.Library;
 
 
@@ -26,8 +30,20 @@ public final class AuroraRenderer {
     public static final ModShader SHADER = new ModShader("aurora", DefaultVertexFormat.POSITION_TEX_COLOR,
             "the aurora", "auroras will not be drawn", Library.LOGGER);
 
+    public static final RenderTimer RENDER_TIMER = new RenderTimer("Aurora");
+
+    /**
+     * The noise texture's size, in cells, which it repeats at (see {@link NoiseTexture}). Wider than a curtain's finest
+     * noise: 23 cells to a unit along a curtain up to 10 across, and folded up to 0.675 either way, about 260; any
+     * fewer and the rays would repeat within one.
+     */
+    public static final int NOISE_SIZE = 512;
+
     // Quads along each curtain
     private static final int SEGMENTS = 96;
+
+    @Nullable
+    private static DynamicTexture noise;
 
     private static final Vector3f BOTTOM = new Vector3f();
     private static final Vector3f TOP = new Vector3f();
@@ -55,7 +71,9 @@ public final class AuroraRenderer {
         if (current == null || alpha <= 0F)
             return;
         // A failure part way through would leave vertices in the shared buffer
+        RENDER_TIMER.begin();
         SHADER.run(() -> draw(current, aurora, alpha, frustumMatrix, time), () -> Tesselator.getInstance().clear());
+        RENDER_TIMER.end();
     }
 
     private static void draw(ShaderInstance current, Aurora aurora, float alpha, Matrix4f frustumMatrix, float time) {
@@ -65,6 +83,9 @@ public final class AuroraRenderer {
         current.safeGetUniform("MiddleColor").set(palette.middle().red(), palette.middle().green(), palette.middle().blue());
         current.safeGetUniform("TopColor").set(palette.top().red(), palette.top().green(), palette.top().blue());
         current.safeGetUniform("Alpha").set(Math.clamp(alpha * aurora.brightness(), 0F, 1F));
+        if (noise == null)
+            noise = NoiseTexture.create(NOISE_SIZE, 0x6175726FL);
+        current.setSampler("NoiseSampler", noise.getId());
         RenderSystem.setShader(SHADER.supplier());
 
         // Light adds to the sky behind it. Curtains are seen from both sides, and nothing is drawn into the depth

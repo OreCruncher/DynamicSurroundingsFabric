@@ -1,16 +1,15 @@
 package org.orecruncher.dsurround.effects;
 
-import dev.architectury.platform.Platform;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.particles.WaterRippleParticle;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.tags.FluidTags;
 
 import java.util.Optional;
@@ -20,8 +19,7 @@ public class WaterRippleHandler {
     private static final Configuration.BlockEffects CONFIG = ContainerManager.resolve(Configuration.BlockEffects.class);
     private static final ITagLibrary TAG_LIBRARY = ContainerManager.resolve(ITagLibrary.class);
 
-    // Do not want to do rain ripples if particle rain is installed
-    private static final boolean compatibleEnvironment = !Platform.isModLoaded(Constants.MOD_PARTICLE_RAIN);
+    private static final boolean compatibleEnvironment = !FeatureConflict.RAIN_RIPPLES.isBlocked();
 
     // Fudge factor because the height algo is off.
     private static final double LIQUID_HEIGHT_ADJUST = (1D / 9D) + 0.1D;

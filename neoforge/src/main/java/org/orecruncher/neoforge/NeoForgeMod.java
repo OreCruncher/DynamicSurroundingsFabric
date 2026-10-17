@@ -4,7 +4,6 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 
 import net.minecraft.client.renderer.ShaderInstance;
@@ -16,6 +15,7 @@ import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.gui.overlay.OverlayManager;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.platform.KnownMod;
 
 @Mod(value = Constants.MOD_ID, dist = Dist.CLIENT)
 public final class NeoForgeMod {
@@ -27,7 +27,7 @@ public final class NeoForgeMod {
         Client.initialize();
         Client.initializeClient();
 
-        if (ModList.get().isLoaded(Constants.CLOTH_CONFIG_NEOFORGE))
+        if (KnownMod.CLOTH_CONFIG.isInstalled())
             container.registerExtensionPoint(IConfigScreenFactory.class, new ModConfigMenu());
 
     }

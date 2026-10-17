@@ -48,6 +48,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
     @Nullable
     private final TextColor fogColor;
     private final FogDensity fogDensity;
+    private final FogDensity groundFog;
     private final Script additionalSoundChance;
     private final Script moodSoundChance;
     // Built from the configured music and the game's track for the biome, which doesn't change
@@ -71,6 +72,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
         this.comments = builder.comments;
         this.fogColor = builder.fogColor;
         this.fogDensity = builder.fogDensity;
+        this.groundFog = builder.groundFog;
         this.additionalSoundChance = builder.additionalSoundChance;
         this.moodSoundChance = builder.moodSoundChance;
     }
@@ -111,6 +113,13 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
 
     public FogDensity getFogDensity() {
         return this.fogDensity;
+    }
+
+    /**
+     * How thick the mist lying on the ground is
+     */
+    public FogDensity getGroundFog() {
+        return this.groundFog;
     }
 
     @Override
@@ -221,6 +230,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
         builder.append("\n").append(getTraits().toString());
 
         builder.append("\nfogDensity: ").append(this.fogDensity.getName());
+        builder.append("\ngroundFog: ").append(this.groundFog.getName());
 
         if (this.fogColor != null) {
             builder.append(", fogColor: ").append(this.fogColor.formatValue());

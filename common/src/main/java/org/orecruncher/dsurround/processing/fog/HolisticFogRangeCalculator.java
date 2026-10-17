@@ -9,6 +9,8 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
+import org.orecruncher.dsurround.processing.PrecipitationHandler;
+import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,14 +20,16 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
     protected final IModLog logger;
     protected final Configuration.FogOptions fogOptions;
     protected final ObjectArray<IFogRangeCalculator> calculators = new ObjectArray<>(3);
+    private final WeatherFogRangeCalculator weather;
 
-    public HolisticFogRangeCalculator(IModLog logger, Configuration.FogOptions fogOptions, IBiomeLibrary biomeLibrary, ISeasonalInformation seasonInfo) {
+    public HolisticFogRangeCalculator(IModLog logger, Configuration.FogOptions fogOptions, IBiomeLibrary biomeLibrary, ISeasonalInformation seasonInfo, IWeatherSimulation weatherSimulation, Configuration.WeatherOptions weatherOptions, PrecipitationHandler precipitation) {
         this.logger = ModLog.createChild(logger, "HolisticFogRangeCalculator");
         this.fogOptions = fogOptions;
 
         this.calculators.add(new BiomeFogRangeCalculator(biomeLibrary, this.fogOptions));
         this.calculators.add(new MorningFogRangeCalculator(seasonInfo, this.fogOptions));
-        this.calculators.add(new WeatherFogRangeCalculator(this.fogOptions));
+        this.weather = new WeatherFogRangeCalculator(this.fogOptions, weatherSimulation, seasonInfo, biomeLibrary, weatherOptions, precipitation);
+        this.calculators.add(this.weather);
     }
 
     @Override
@@ -92,5 +96,15 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
         }
 
         return Optional.of("(DISABLED: " + result + ")");
+    }
+
+    /**
+     * Turns the fog's colour toward the dust's in a dust storm, if fog effects and the weather's fog are on
+     *
+     * @param rgb the fog's colour, red, green and blue from 0 to 1; changed in place
+     */
+    public void tintFogColor(float[] rgb, float partialTick) {
+        if (this.enabled() && this.weather.enabled())
+            this.weather.tintFogColor(rgb, partialTick);
     }
 }

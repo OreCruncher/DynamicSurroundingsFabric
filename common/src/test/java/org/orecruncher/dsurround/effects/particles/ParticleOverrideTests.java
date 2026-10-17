@@ -42,16 +42,44 @@ public class ParticleOverrideTests {
         assertOverrides(FireflyParticle.class, "tick");
         assertOverrides(WaterRippleParticle.class, "tick");
         assertOverrides(WaterfallMist.class, "tick");
+        assertOverrides(SteamPuff.class, "tick");
+        assertOverrides(FlameTongue.class, "tick");
+        assertOverrides(SmokePuff.class, "tick");
+        assertOverrides(FlameSpark.class, "tick");
+        assertOverrides(SoftPuffParticle.class, "tick");
         assertOverrides(WaterFoam.class, "tick");
     }
 
     @Test
-    void mistAndFoamOverrideSizeAndRendering() {
-        // Both grow over their life and set their fade (and foam its tilt) as they are drawn
-        for (var type : new Class<?>[]{WaterfallMist.class, WaterFoam.class}) {
+    void puffsAndFoamOverrideSizeAndRendering() {
+        // Puffs of mist and steam, and foam, grow over their life and set their fade (and foam its tilt) as they are
+        // drawn: the puffs through the class they share
+        for (var type : new Class<?>[]{SoftPuffParticle.class, WaterFoam.class}) {
             assertOverrides(type, "getQuadSize", float.class);
             assertOverrides(type, "render", VertexConsumer.class, Camera.class, float.class);
         }
+        assertOverrides(SoftPuffParticle.class, "getRenderType");
+        assertEquals(SoftPuffParticle.class, WaterfallMist.class.getSuperclass());
+        assertEquals(SoftPuffParticle.class, SteamPuff.class.getSuperclass());
+        assertEquals(SoftPuffParticle.class, SmokePuff.class.getSuperclass());
+        assertEquals(SoftPuffParticle.class, FlameTongue.class.getSuperclass());
+    }
+
+    @Test
+    void flameDrawsItsOwnWay() {
+        // It flickers, sets its colour as it is drawn, lights itself, and is drawn adding its light
+        assertOverrides(FlameTongue.class, "getQuadSize", float.class);
+        assertOverrides(FlameTongue.class, "render", VertexConsumer.class, Camera.class, float.class);
+        assertOverrides(FlameTongue.class, "getLightColor", float.class);
+        assertOverrides(FlameTongue.class, "getRenderType");
+    }
+
+    @Test
+    void sparkDrawsItsOwnWay() {
+        // Drawn as a streak along its path, lit by itself, adding its light as the flames do
+        assertOverrides(FlameSpark.class, "render", VertexConsumer.class, Camera.class, float.class);
+        assertOverrides(FlameSpark.class, "getLightColor", float.class);
+        assertOverrides(FlameSpark.class, "getRenderType");
     }
 
     @Test

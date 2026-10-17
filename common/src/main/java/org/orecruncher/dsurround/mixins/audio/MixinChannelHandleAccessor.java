@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.mixins.audio;
 
 import net.minecraft.client.sounds.ChannelAccess;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
-import org.orecruncher.dsurround.runtime.audio.SoundFXProcessor;
+import org.orecruncher.dsurround.runtime.audio.EnhancedSoundProcessor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -16,10 +16,10 @@ public abstract class MixinChannelHandleAccessor {
         try {
             var channel = ((ChannelAccess.ChannelHandle) (Object) this).channel;
             if (channel != null) {
-                SoundFXProcessor.stopSoundPlay(channel);
+                EnhancedSoundProcessor.stopSoundPlay(channel);
             }
         } catch (Throwable t) {
-            MixinHelpers.LOGGER.error(t, "Unable to stop sound play");
+            MixinHelpers.SOUND_STOP_GUARD.failed(t);
         }
     }
 }

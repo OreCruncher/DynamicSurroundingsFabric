@@ -6,8 +6,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
-import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.sound.ISoundFactory;
 
 class ArmorAccents implements IFootstepAccentProvider {
 
@@ -25,7 +23,7 @@ class ArmorAccents implements IFootstepAccentProvider {
     }
 
     @Override
-    public void collect(LivingEntity entity, BlockPos pos, BlockState posState, boolean isWaterLogged, ObjectArray<ISoundFactory> acoustics) {
+    public void collect(LivingEntity entity, BlockPos pos, BlockState posState, boolean isWaterLogged, StepAccents acoustics) {
         var footAccent = this.itemLibrary.getEquipableStepAccentSound(entity.getItemBySlot(EquipmentSlot.FEET));
         footAccent.ifPresent(acoustics::add);
 

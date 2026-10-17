@@ -22,8 +22,10 @@ public final class DSurroundParticleSprites {
             "water_foam_0", "water_foam_1", "water_foam_2",
             "water_foam_3", "water_foam_4", "water_foam_5");
     public static final AtlasSpriteSet FIREFLY_GLOW = AtlasSpriteSet.of("firefly_glow");
+    public static final AtlasSpriteSet DAMP_SPOT = AtlasSpriteSet.of("damp_spot");
+    public static final AtlasSpriteSet DUST = AtlasSpriteSet.of("dust_0", "dust_1", "dust_2");
 
-    static final List<AtlasSpriteSet> ALL = List.of(WATER_RIPPLE, WATER_RIPPLE_PIXELATED, WATERFALL_MIST, WATER_FOAM, FIREFLY_GLOW);
+    static final List<AtlasSpriteSet> ALL = List.of(WATER_RIPPLE, WATER_RIPPLE_PIXELATED, WATERFALL_MIST, WATER_FOAM, FIREFLY_GLOW, DAMP_SPOT, DUST);
 
     private DSurroundParticleSprites() {
     }

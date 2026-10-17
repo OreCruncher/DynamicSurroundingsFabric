@@ -121,6 +121,46 @@ public class ChangeTrackingTests {
     }
 
     @Test
+    void anUnprocessedPropertyIsNeverUploaded() {
+        // A new sound that isn't processed: its source keeps its default without being told
+        var prop = property();
+
+        assertNull(prop.takeUpload());
+        prop.setValue(4F);
+        assertNull(prop.takeUpload());
+    }
+
+    @Test
+    void aProcessedPropertyUploadsItsValueWhenItChanges() {
+        var prop = property();
+        prop.setProcess(true);
+        prop.setValue(4F);
+
+        assertEquals(4F, prop.takeUpload());
+        assertNull(prop.takeUpload(), "unchanged");
+
+        prop.setValue(6F);
+        assertEquals(6F, prop.takeUpload());
+    }
+
+    @Test
+    void disablingAfterAnUploadRestoresTheDefault() {
+        // A voice whose processing stops keeps playing: it mustn't keep our air absorption
+        var prop = property();
+        prop.setProcess(true);
+        prop.setValue(4F);
+        prop.takeUpload();
+
+        prop.setProcess(false);
+
+        assertEquals(1F, prop.takeUpload());
+        assertNull(prop.takeUpload(), "only once");
+
+        prop.setProcess(true);
+        assertEquals(4F, prop.takeUpload(), "enabled again, it has its value back");
+    }
+
+    @Test
     void propertyValueIsClamped() {
         var prop = property();
 

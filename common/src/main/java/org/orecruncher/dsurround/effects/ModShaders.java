@@ -1,8 +1,11 @@
 package org.orecruncher.dsurround.effects;
 
 import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
-import org.orecruncher.dsurround.effects.particles.FireflyLights;
+import org.orecruncher.dsurround.effects.frost.FrostRenderer;
+import org.orecruncher.dsurround.effects.particles.PointLights;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
+import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
+import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
 
 import java.util.List;
 
@@ -14,8 +17,15 @@ public final class ModShaders {
 
     public static final List<ModShader> SHADERS = List.of(
             SoftParticles.SHADER,
+            SoftParticles.SCENE_DEPTH_SHADER,
             AuroraRenderer.SHADER,
-            FireflyLights.SHADER);
+            PointLights.SHADER,
+            PrecipitationShaders.DROPS,
+            PrecipitationShaders.DAMP_SPOTS,
+            GroundFogVolume.SHADER,
+            GroundFogVolume.SMOOTH,
+            GroundFogVolume.COMPOSITE,
+            FrostRenderer.SHADER);
 
     private ModShaders() {
     }

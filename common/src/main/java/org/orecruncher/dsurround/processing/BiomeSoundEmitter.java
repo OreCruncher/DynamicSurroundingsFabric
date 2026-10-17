@@ -13,6 +13,9 @@ public final class BiomeSoundEmitter {
     private final BackgroundSoundLoop acousticSource;
 
     private boolean done = false;
+    // The volume its biomes give it, before the wind's scale, for a sound that follows the wind
+    private float baseScale = 1F;
+    private float windScale = 1F;
 
     public BiomeSoundEmitter(final IModLog logger, final IAudioPlayer audioPlayer, final ISoundFactory event) {
         this.logger = logger;
@@ -43,7 +46,23 @@ public final class BiomeSoundEmitter {
     }
 
     public void setVolumeScale(final float scale) {
-        this.acousticSource.setScaleTarget(scale);
+        this.baseScale = scale;
+        this.acousticSource.setScaleTarget(scale * this.windScale);
+    }
+
+    /**
+     * Whether its sound plays as loud as the wind blows
+     */
+    public boolean followsWind() {
+        return this.soundEvent.followsWind();
+    }
+
+    /**
+     * The wind's scale on its volume, for a sound that follows the wind; changed every tick, as gusts pass
+     */
+    public void setWindScale(final float scale) {
+        this.windScale = scale;
+        this.acousticSource.setScaleTarget(this.baseScale * scale);
     }
 
     public void fadeOut() {

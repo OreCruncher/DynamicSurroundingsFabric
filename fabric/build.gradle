@@ -50,6 +50,10 @@ dependencies {
     }
 
     modImplementation "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+
+    // Simple Voice Chat: its plugin API to remap the common classes against; the mod itself in the dev client only
+    compileOnly "de.maxhenkel.voicechat:voicechat-api:$rootProject.voicechat_api_version"
+    modLocalRuntime "curse.maven:simple-voice-chat-416089:${rootProject.voicechat_fabric_file}"
 }
 
 processResources {
@@ -70,8 +74,11 @@ processResources {
         expand expandProps
     }
 
-    into('/assets') {
+    // Read by the sound credits screen. In our own assets folder, not straight in assets, where Minecraft takes each
+    // entry for a namespace and warns about one that isn't; lower case, as resource paths must be
+    into("/assets/$rootProject.name") {
         from("$projectDir/../CREDITS.md")
+        rename { 'credits.md' }
     }
 }
 

@@ -54,12 +54,59 @@ public class EMATests {
         timer.update(2_500_000D);
 
         assertEquals(2.5D, timer.getMSecs(), 1.0E-9);
-        assertEquals("tick:  2.500ms", timer.toString());
+        assertEquals("tick:  2.500ms, peak  2.500", timer.toString());
     }
 
     @Test
     void timerBeforeAnySampleShowsZero() {
-        assertEquals("tick:  0.000ms", new TimerEMA("tick").toString());
+        assertEquals("tick:  0.000ms, peak  0.000", new TimerEMA("tick").toString());
+    }
+
+    @Test
+    void peakIsTheLargestRecentSample() {
+        long[] now = {0L};
+        var timer = new TimerEMA("frame", 100, () -> now[0]);
+        timer.update(1_000_000D);
+        timer.update(9_000_000D);
+        timer.update(2_000_000D);
+
+        assertEquals(9D, timer.getPeakMSecs(), 1.0E-9);
+        // The average barely notices it
+        assertTrue(timer.getMSecs() < 2D, "average " + timer.getMSecs());
+    }
+
+    @Test
+    void peakLastsIntoTheNextSecond() {
+        long[] now = {0L};
+        var timer = new TimerEMA("frame", 100, () -> now[0]);
+        timer.update(9_000_000D);
+        now[0] = TimerEMA.PEAK_WINDOW_NANOS + 1;
+        timer.update(1_000_000D);
+
+        assertEquals(9D, timer.getPeakMSecs(), 1.0E-9);
+    }
+
+    @Test
+    void peakIsForgottenAfterTwoSeconds() {
+        long[] now = {0L};
+        var timer = new TimerEMA("frame", 100, () -> now[0]);
+        timer.update(9_000_000D);
+        now[0] = TimerEMA.PEAK_WINDOW_NANOS + 1;
+        timer.update(1_000_000D);
+        now[0] = 2 * TimerEMA.PEAK_WINDOW_NANOS + 2;
+        timer.update(1_000_000D);
+
+        assertEquals(1D, timer.getPeakMSecs(), 1.0E-9);
+    }
+
+    @Test
+    void peakIsForgottenWhenSamplesStop() {
+        long[] now = {0L};
+        var timer = new TimerEMA("frame", 100, () -> now[0]);
+        timer.update(9_000_000D);
+        now[0] = 5 * TimerEMA.PEAK_WINDOW_NANOS;
+
+        assertEquals(0D, timer.getPeakMSecs(), 1.0E-9);
     }
 
     @Test

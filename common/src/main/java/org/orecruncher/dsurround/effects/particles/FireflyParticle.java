@@ -116,13 +116,13 @@ public class FireflyParticle extends SimpleAnimatedParticle {
         this.alpha = glow;
         super.render(buffer, camera, partialTicks);
 
-        if (FireflyLights.isActive()) {
-            FireflyLights.add(
+        if (PointLights.fireflyLightsOn()) {
+            PointLights.add(
                     Mth.lerp(partialTicks, this.xo, this.x),
                     Mth.lerp(partialTicks, this.yo, this.y),
                     Mth.lerp(partialTicks, this.zo, this.z),
                     this.rCol, this.gCol, this.bCol,
-                    FireflyLights.STRENGTH * glow);
+                    PointLights.FIREFLY_STRENGTH * glow, PointLights.FIREFLY_RADIUS);
         }
     }
 

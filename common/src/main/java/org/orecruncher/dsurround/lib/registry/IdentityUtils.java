@@ -2,6 +2,8 @@ package org.orecruncher.dsurround.lib.registry;
 
 import com.google.common.base.Preconditions;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import net.minecraft.ResourceLocationException;
 import net.minecraft.resources.ResourceLocation;
 import org.orecruncher.dsurround.Constants;
 
@@ -9,7 +11,24 @@ import java.util.Optional;
 
 public class IdentityUtils {
 
-    public static final Codec<ResourceLocation> CODEC = Codec.STRING.xmap(s -> IdentityUtils.resolveIdentifier(Constants.MOD_ID, s), ResourceLocation::toString).stable();
+    /**
+     * An id as {@link #resolveIdentifier(String, String)} reads it, in the mod's namespace if it has none. One that
+     * isn't valid is a decoding error, so it costs only the entry it is in rather than escaping as an exception and
+     * losing the whole file.
+     */
+    public static final Codec<ResourceLocation> CODEC = Codec.STRING.comapFlatMap(IdentityUtils::read, ResourceLocation::toString).stable();
+
+    static DataResult<ResourceLocation> read(String text) {
+        try {
+            // Empty, or only the prefix: nothing for resolveIdentifier to look at
+            var stripped = text.startsWith("#") ? text.substring(1) : text;
+            var id = stripped.isEmpty() || stripped.equals("@") ? null : resolveIdentifier(Constants.MOD_ID, text);
+            if (id != null)
+                return DataResult.success(id);
+        } catch (ResourceLocationException ignored) {
+        }
+        return DataResult.error(() -> "Not a valid id: '" + text + "'");
+    }
 
     /**
      * Parses a string into an Identifier based on the input.  If the input is prefixed with the tag signature '#'

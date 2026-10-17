@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.config.libraries;
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
+import net.minecraft.core.particles.ParticleType;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
@@ -30,6 +31,7 @@ public interface ITagLibrary extends ILibrary {
     boolean is(TagKey<Biome> tagKey, Biome entry);
     boolean is(TagKey<EntityType<?>> tagKey, EntityType<?> entry);
     boolean is(TagKey<Fluid> tagKey, FluidState entry);
+    boolean is(TagKey<ParticleType<?>> tagKey, ParticleType<?> entry);
 
     <T> String asString(Stream<TagKey<T>> tagStream);
     <T> Stream<Pair<TagKey<T>, Set<T>>> getEntriesByTag(ResourceKey<? extends Registry<T>> registry);

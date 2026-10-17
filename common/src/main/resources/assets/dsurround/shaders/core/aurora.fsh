@@ -15,33 +15,25 @@ uniform vec3 BottomColor;
 uniform vec3 MiddleColor;
 uniform vec3 TopColor;
 uniform float Alpha;       // overall strength, 0 to 1
+// A random value a texel, read smoothly between texels and repeating (NoiseTexture)
+uniform sampler2D NoiseSampler;
 
 in vec2 texCoord0;
 in float vertexAlpha;
 
 out vec4 fragColor;
 
-// Integer hash of a lattice point, 0 to 1
-float hash(ivec2 p) {
-    uint h = uint(p.x) * 0x8da6b343u ^ uint(p.y) * 0xd8163841u;
-    h ^= h >> 16;
-    h *= 0x7feb352du;
-    h ^= h >> 15;
-    h *= 0x846ca68bu;
-    h ^= h >> 16;
-    return float(h) * (1.0 / 4294967295.0);
-}
+// The noise texture's size, which it repeats at (AuroraRenderer.NOISE_SIZE): wider than a curtain's finest noise
+const float NOISE_SIZE = 512.0;
 
-// Smooth value noise, 0 to 1
+// Smooth value noise, 0 to 1, a cell to a texel of the noise texture. The texture is read between texels in a straight
+// line; moving the point within its cell along an S-curve first rounds that off, as working out the four corners would,
+// in one read
 float noise(vec2 p) {
-    ivec2 i = ivec2(floor(p));
+    vec2 cell = floor(p);
     vec2 f = fract(p);
-    vec2 u = f * f * (3.0 - 2.0 * f);
-    float a = hash(i);
-    float b = hash(i + ivec2(1, 0));
-    float c = hash(i + ivec2(0, 1));
-    float d = hash(i + ivec2(1, 1));
-    return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+    f = f * f * (3.0 - 2.0 * f);
+    return texture(NoiseSampler, (cell + f + 0.5) / NOISE_SIZE).r;
 }
 
 void main() {
