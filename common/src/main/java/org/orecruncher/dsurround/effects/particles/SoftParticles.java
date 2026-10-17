@@ -12,7 +12,6 @@ import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.RenderPass;
@@ -26,11 +25,10 @@ import net.minecraft.client.renderer.MappableRingBuffer;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.effects.DepthCopy;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.lib.Library;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.util.Optional;
 
 /**
@@ -143,8 +141,7 @@ public final class SoftParticles {
     public static final SingleQuadParticle.Layer FLAME_FALLBACK = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, FLAME_FALLBACK_PIPELINE);
 
     // The copy of the scene's depth the shaders read; can't be the depth buffer being drawn to
-    @Nullable
-    private static TextureTarget depthCopy;
+    private static final DepthCopy DEPTH_COPY = new DepthCopy("Dynamic Surroundings scene depth");
     // Whether the copy holds this frame's depth
     private static boolean depthCaptured;
     // The pipeline the particle layer being drawn was set to (see MixinQuadParticleFeatureRenderer)
@@ -204,8 +201,7 @@ public final class SoftParticles {
         if (!SHADER.isUsable() && !FLAME_SHADER.isUsable() && !PointLights.isActive())
             return;
         SHADER.run(() -> {
-            var copy = depthCopyFor(target);
-            copy.copyDepthFrom(target);
+            DEPTH_COPY.copyFrom(target);
             if (!depthInfoWritten) {
                 writeDepthInfo();
                 depthInfoWritten = true;
@@ -223,8 +219,7 @@ public final class SoftParticles {
     public static boolean captureDepth(RenderTarget source) {
         depthCaptured = false;
         try {
-            var copy = depthCopyFor(source);
-            copy.copyDepthFrom(source);
+            DEPTH_COPY.copyFrom(source);
             if (!depthInfoWritten) {
                 writeDepthInfo();
                 depthInfoWritten = true;
@@ -250,14 +245,14 @@ public final class SoftParticles {
      * Whether a copy of this frame's depth is ready to be bound.
      */
     static boolean hasSceneDepth() {
-        return depthCaptured && depthCopy != null;
+        return depthCaptured && DEPTH_COPY.view() != null;
     }
 
     /**
      * Binds the depth copy, as DepthSampler, to a pass whose pipeline reads it.
      */
     public static void bindSceneDepth(RenderPass pass) {
-        pass.bindTexture(DEPTH_SAMPLER, depthCopy.getDepthTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
+        pass.bindTexture(DEPTH_SAMPLER, DEPTH_COPY.view(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
     }
 
     /**
@@ -332,77 +327,6 @@ public final class SoftParticles {
         var zeroToOne = RenderSystem.getDevice().getDeviceInfo().isZZeroToOne();
         try (var view = depthInfo.currentBuffer().map(false, true)) {
             Std140Builder.intoBuffer(view.data()).putFloat(zeroToOne ? 1F : 0F);
-        }
-    }
-
-    /**
-     * The depth copy, created or resized to match {@code target}. A depth copy is only possible between textures of
-     * the same format, so it has a stencil buffer if the target does (see {@link StencilCompat}).
-     */
-    private static TextureTarget depthCopyFor(RenderTarget target) {
-        if (depthCopy != null && StencilCompat.hasStencil(depthCopy) != StencilCompat.hasStencil(target)) {
-            depthCopy.destroyBuffers();
-            depthCopy = null;
-        }
-        if (depthCopy == null) {
-            depthCopy = StencilCompat.create("Dynamic Surroundings scene depth", target.width, target.height, StencilCompat.hasStencil(target));
-        } else if (depthCopy.width != target.width || depthCopy.height != target.height) {
-            depthCopy.resize(target.width, target.height);
-        }
-        return depthCopy;
-    }
-
-    /**
-     * Render targets can have a stencil buffer on NeoForge, which adds a useStencil field to RenderTarget and a
-     * TextureTarget constructor taking it; another mod may turn it on for the main target. Vanilla (and so Fabric)
-     * has neither, so they are found by reflection, and targets are made without a stencil buffer where they don't
-     * exist.
-     */
-    private static final class StencilCompat {
-
-        @Nullable
-        private static final Field USE_STENCIL = findField();
-        @Nullable
-        private static final Constructor<TextureTarget> WITH_STENCIL = findConstructor();
-
-        @Nullable
-        private static Field findField() {
-            try {
-                return RenderTarget.class.getField("useStencil");
-            } catch (NoSuchFieldException e) {
-                return null;
-            }
-        }
-
-        @Nullable
-        private static Constructor<TextureTarget> findConstructor() {
-            try {
-                return TextureTarget.class.getConstructor(String.class, int.class, int.class, boolean.class, boolean.class, GpuFormat.class);
-            } catch (NoSuchMethodException e) {
-                return null;
-            }
-        }
-
-        static boolean hasStencil(RenderTarget target) {
-            if (USE_STENCIL == null)
-                return false;
-            try {
-                return USE_STENCIL.getBoolean(target);
-            } catch (ReflectiveOperationException | RuntimeException e) {
-                return false;
-            }
-        }
-
-        static TextureTarget create(String label, int width, int height, boolean stencil) {
-            if (stencil && WITH_STENCIL != null) {
-                try {
-                    return WITH_STENCIL.newInstance(label, width, height, true, true, GpuFormat.RGBA8_UNORM);
-                } catch (ReflectiveOperationException | RuntimeException e) {
-                    // Without a stencil buffer the formats differ and the depth copy fails, which turns the effects
-                    // off; but this only happens if reflection breaks
-                }
-            }
-            return new TextureTarget(label, width, height, true, GpuFormat.RGBA8_UNORM);
         }
     }
 }

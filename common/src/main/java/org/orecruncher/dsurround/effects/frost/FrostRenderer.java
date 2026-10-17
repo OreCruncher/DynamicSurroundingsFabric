@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.effects.frost;
 
 import com.mojang.blaze3d.PrimitiveTopology;
+import com.mojang.blaze3d.pipeline.BindGroupLayout;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
@@ -21,6 +22,7 @@ import org.orecruncher.dsurround.lib.Library;
 
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * Draws the frost on windows: each frosted face as a grid of small quads just off the glass, with the frost texture
@@ -34,8 +36,19 @@ import java.util.function.Consumer;
  */
 public final class FrostRenderer {
 
+    private static final BindGroupLayout DEPTH_COPY_LAYOUT = BindGroupLayout.builder().withSampler("DepthSampler").build();
+
+    /**
+     * Drawn after the translucent blocks (without Fabulous graphics all frost, with it the frost on stained glass), its
+     * depth tested in the shader against the scene's from before them (DEPTH_COPY, bound as DepthSampler), not by the
+     * depth buffer, which has the water and stained glass in it by then. Writes no depth.
+     */
     public static final ModShader SHADER = new ModShader(
-            pipeline("pipeline/window_frost").withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false)).build(),
+            pipeline("pipeline/window_frost")
+                    .withShaderDefine("DEPTH_COPY")
+                    .withBindGroupLayout(DEPTH_COPY_LAYOUT)
+                    .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
+                    .build(),
             "window frost", "windows will not frost", Library.LOGGER);
     public static final ModShader SHADER_DEPTH = new ModShader(
             pipeline("pipeline/window_frost_depth_write").withDepthStencilState(DepthStencilState.DEFAULT).build(),
@@ -47,6 +60,11 @@ public final class FrostRenderer {
     public static final List<ModShader> SHADERS = List.of(SHADER, SHADER_DEPTH);
 
     public static final RenderTimer RENDER_TIMER = new RenderTimer("Window Frost");
+
+    /**
+     * The sampler the copy of the scene's depth is bound as, without Fabulous graphics
+     */
+    public static final String DEPTH_SAMPLER = "DepthSampler";
 
     // The size of a cell of the grid a face is drawn as, in blocks
     static final float CELL = 0.25F;
@@ -72,15 +90,6 @@ public final class FrostRenderer {
         return SHADER.isUsable() && SHADER_DEPTH.isUsable();
     }
 
-    /**
-     * The pipeline for the graphics mode
-     *
-     * @param fabulous whether Fabulous graphics are on
-     */
-    public static ModShader shader(boolean fabulous) {
-        return fabulous ? SHADER_DEPTH : SHADER;
-    }
-
     // Premultiplied, "over" (see the shader); seen from both sides
     private static RenderPipeline.Builder pipeline(String location) {
         return RenderPipeline.builder()
@@ -104,14 +113,14 @@ public final class FrostRenderer {
      *
      * @return how many faces were drawn
      */
-    public static int draw(FrostField field, ByteBufferBuilder bytes, Consumer<MeshData> drawer, Camera camera) {
+    public static int draw(FrostField field, ByteBufferBuilder bytes, Consumer<MeshData> drawer, Camera camera, Predicate<FrostFace> which) {
         var cam = camera.position();
         float range = FrostField.RANGE;
         float rangeSq = range * range;
         BufferBuilder builder = new BufferBuilder(bytes, PrimitiveTopology.QUADS, DefaultVertexFormat.PARTICLE);
         int[] drawn = {0};
         field.forEachFace(face -> {
-            if (face.shown < MIN_SHOWN)
+            if (face.shown < MIN_SHOWN || !which.test(face))
                 return;
             double dx = face.x + 0.5D - cam.x, dy = face.y + 0.5D - cam.y, dz = face.z + 0.5D - cam.z;
             if (dx * dx + dy * dy + dz * dz > rangeSq)

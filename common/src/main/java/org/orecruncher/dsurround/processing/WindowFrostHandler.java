@@ -7,6 +7,12 @@ import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import it.unimi.dsi.fastutil.longs.LongCollection;
 import net.minecraft.client.renderer.rendertype.OutputTarget;
+import com.mojang.blaze3d.textures.GpuTextureView;
+import net.minecraft.client.resources.model.geometry.BakedQuad;
+import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.effects.DepthCopy;
+import org.orecruncher.dsurround.effects.ModShader;
+import org.orecruncher.dsurround.effects.frost.FrostFace;
 import org.orecruncher.dsurround.effects.MeshDraw;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -36,14 +42,15 @@ import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /**
- * Frost on the outside of windows when it is cold (see {@link FrostConditions}): on clear glass blocks and panes near
- * the player ({@link FrostField}), drawn after the opaque terrain: clear glass is cut out, so where it is clear it
- * writes no depth, and frost on its far side shows through. Without Fabulous graphics, before the particles, which
- * write depth and would cut it out behind them (breath in front of a window), and so before the rain and snow. With
- * Fabulous graphics, where vanilla draws its weather and before it, to the weather's own target, which vanilla clears
- * and lays over the scene by depth, so its depth is written there, as the falling rain's is.
+ * Frost on the outside of windows when it is cold (see {@link FrostConditions}): on glass blocks and panes near the
+ * player ({@link FrostField}), stained glass included. Without Fabulous graphics, after the translucent blocks, tested
+ * against the scene's depth from before them, so water and stained glass on either side of it don't hide it, and
+ * before the rain and snow. With Fabulous graphics, on clear glass where vanilla draws its weather and before it, to the
+ * weather's own target, which vanilla clears and lays over the scene by depth, so its depth is written there, as the
+ * falling rain's is; on stained glass, into the translucent target (see {@link #renderAfterTranslucentTerrain}).
  * <p>
  * Nothing is looked for where it is too warm for frost near the player. Off while an Iris shader pack is in use, when
  * its shader didn't load, and after a failure to draw it until resources are reloaded.
@@ -67,6 +74,11 @@ public class WindowFrostHandler extends AbstractClientHandler {
     // Drawing: made on first use, on the render thread
     private ByteBufferBuilder meshBytes;
     private final MeshDraw frostDraw = new MeshDraw("window frost");
+    // Frost on stained glass with Fabulous graphics, drawn in the same frame as the rest
+    private final MeshDraw translucentFrostDraw = new MeshDraw("window frost on stained glass");
+    // The scene's depth from before the translucent blocks, without Fabulous graphics, and whether it is this frame's
+    private final DepthCopy sceneDepth = new DepthCopy("Dynamic Surroundings window frost depth");
+    private boolean depthCopied;
 
     public WindowFrostHandler(ISeasonalInformation seasonalInformation, IWeatherSimulation weatherSimulation, ITagLibrary tagLibrary,
                               Configuration config, IModLog logger) {
@@ -120,53 +132,98 @@ public class WindowFrostHandler extends AbstractClientHandler {
     }
 
     /**
-     * Draws the frost without Fabulous graphics: in the level's main pass, after the opaque terrain (clear glass is
-     * among it, cut out) and the solid features, and before the translucent ones, particles among them, which write
-     * depth and would cut the frost out behind them (breath in front of a window). Water and stained glass behind a
-     * window are drawn after, over it: on 26.2 the translucent terrain comes after the particles.
+     * Draws the frost in the level's main pass, after the translucent terrain, tested in the shader against the scene's
+     * depth from before the translucent things, so those in front of it don't hide it. The frost is drawn over them
+     * (untinted), and over those behind it.
+     * <ul>
+     *     <li>Without Fabulous graphics, all of it, to the main target, against a copy of its depth (see
+     *     {@link #copyDepthBeforeTranslucent}). The particles are drawn before it on 26.2; the breath writes no depth (it
+     *     is drawn soft, see FrostBreathParticle), so it doesn't cut holes in the frost, though a particle that does
+     *     write depth (vanilla's smoke) still can.</li>
+     *     <li>With Fabulous graphics, the frost on stained glass, to the translucent target, against the main target's
+     *     depth (which never gets the translucent things). The translucent target holds one depth a pixel, the nearest:
+     *     seen through the stained glass the frost is on, that is the glass, so the water and ice behind it are one
+     *     layer with it, in front of frost drawn to the weather target, and would be laid over it. Drawn into that layer
+     *     instead, on top. The glass is always there, so the layer's depth stays right; not so for clear glass, which
+     *     isn't drawn there (see {@link #renderBeforeWeather}).</li>
+     * </ul>
      */
-    public void renderBeforeTranslucent() {
-        if (!fabulous())
-            this.render(GameUtils.getMC().gameRenderer.mainRenderTarget(), false);
+    public void renderAfterTranslucentTerrain() {
+        if (fabulous()) {
+            var translucent = GameUtils.getMC().levelRenderer.translucentTarget();
+            var main = GameUtils.getMC().gameRenderer.mainRenderTarget();
+            this.drawn = translucent == null ? 0
+                    : this.render(translucent, FrostRenderer.SHADER, this.translucentFrostDraw, main.getDepthTextureView(), FrostFace::translucent);
+        } else {
+            this.drawn = this.depthCopied
+                    ? this.render(GameUtils.getMC().gameRenderer.mainRenderTarget(), FrostRenderer.SHADER, this.frostDraw, this.sceneDepth.view(), face -> true)
+                    : 0;
+        }
+        this.depthCopied = false;
     }
 
     /**
-     * Draws the frost with Fabulous graphics, in the weather pass and before the weather: to the weather's target,
-     * which is laid over the scene by depth
+     * Copies the scene's depth before the translucent features and blocks are drawn, without Fabulous graphics, for the
+     * frost drawn after them to test against: water or stained glass in front of the frost then doesn't hide it, while
+     * what is solid still does. Only while there is frost to draw.
+     */
+    public void copyDepthBeforeTranslucent() {
+        this.depthCopied = false;
+        if (fabulous() || !this.isActive() || this.field.faceCount() == 0)
+            return;
+        FrostRenderer.SHADER.run(() -> {
+            this.sceneDepth.copyFrom(GameUtils.getMC().gameRenderer.mainRenderTarget());
+            this.depthCopied = true;
+        }, () -> this.depthCopied = false);
+    }
+
+    /**
+     * Draws the frost on clear glass with Fabulous graphics, in the weather pass and before the weather: to the
+     * weather's target, which is laid over the scene by depth, so its depth is written. The frost on stained glass is
+     * drawn before, to the translucent target (see {@link #renderAfterTranslucentTerrain}).
      */
     public void renderBeforeWeather() {
         if (fabulous())
-            this.render(OutputTarget.WEATHER_TARGET.getRenderTarget(), true);
+            this.drawn += this.render(OutputTarget.WEATHER_TARGET.getRenderTarget(), FrostRenderer.SHADER_DEPTH, this.frostDraw, null, face -> !face.translucent());
     }
 
     private static boolean fabulous() {
         return GameUtils.getMC().gameRenderer.gameRenderState().useShaderTransparency();
     }
 
-    private void render(RenderTarget target, boolean fabulous) {
-        this.drawn = 0;
+    /**
+     * Draws the faces {@code which} picks
+     *
+     * @param depth the depth the shader tests against, bound as {@link FrostRenderer#DEPTH_SAMPLER}, for
+     *              {@link FrostRenderer#SHADER}; null for {@link FrostRenderer#SHADER_DEPTH}
+     * @return how many faces were drawn
+     */
+    private int render(RenderTarget target, ModShader shader, MeshDraw meshDraw, @Nullable GpuTextureView depth, Predicate<FrostFace> which) {
         if (!this.isActive() || this.field.faceCount() == 0)
-            return;
+            return 0;
 
         // Made the first time, on a thread of its own: no frost until it is ready
         var texture = FrostTexture.view();
         if (texture == null)
-            return;
+            return 0;
 
-        var shader = FrostRenderer.shader(fabulous);
+        int[] drawn = {0};
         var camera = GameUtils.getMC().gameRenderer.mainCamera();
         var lightmap = GameUtils.getMC().gameRenderer.lightmap();
         if (this.meshBytes == null)
             this.meshBytes = new ByteBufferBuilder(4096);
         FrostRenderer.RENDER_TIMER.begin();
         try {
-            shader.run(() -> this.drawn = FrostRenderer.draw(this.field, this.meshBytes, mesh -> this.frostDraw.draw(mesh, shader.pipeline(), target, pass -> {
+            shader.run(() -> drawn[0] = FrostRenderer.draw(this.field, this.meshBytes, mesh -> meshDraw.draw(mesh, shader.pipeline(), target, pass -> {
                 pass.bindTexture("Sampler0", texture, RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR, true));
                 pass.bindTexture("Sampler2", lightmap, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
-            }), camera), () -> {});
+                if (depth != null)
+                    pass.bindTexture(FrostRenderer.DEPTH_SAMPLER, depth, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
+            }), camera, which), () -> {});
         } finally {
             FrostRenderer.RENDER_TIMER.end();
         }
+        return drawn[0];
     }
 
     /**
@@ -243,6 +300,11 @@ public class WindowFrostHandler extends AbstractClientHandler {
         @Override
         public boolean frosts(BlockState state) {
             return WindowFrostHandler.this.tagLibrary.is(BlockEffectTags.FROSTED_WINDOWS, state);
+        }
+
+        @Override
+        public boolean translucent(BlockState state) {
+            return GameUtils.getMC().getModelManager().getBlockStateModelSet().get(state).hasMaterialFlag(BakedQuad.FLAG_TRANSLUCENT);
         }
 
         @Override

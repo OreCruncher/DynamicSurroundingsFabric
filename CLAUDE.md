@@ -142,12 +142,15 @@ checking in game.
   - `/dsweather` holds the storm strength, the wind's speed and direction, and a ground fog thickness for testing;
     disconnecting clears them.
   - Weather script variables live in `runtime/variables/WeatherVariables` (`weather.*`).
-  - Window frost (`effects/frost`, run by `processing/WindowFrostHandler`): on the outside of clear glass
-    (`effects/frosted_windows` tag; `effects/windows` is all glass, for rain streaks). Drawn after the opaque terrain,
-    independent of particle weather: clear glass is cutout, so frost behind it shows through. Without Fabulous, in the
-    main pass before the translucent features (particles write depth: breath in front cut it out); 26.2 draws the
-    translucent terrain after those, so water behind a window covers its frost. With Fabulous, at the start of the
-    weather pass, to the weather target (`MixinLevelRenderer`).
+  - Window frost (`effects/frost`, run by `processing/WindowFrostHandler`): on the outside of glass, stained and tinted
+    included (`effects/frosted_windows` tag; `effects/windows`, the same glass, for rain streaks). Independent of
+    particle weather. Without Fabulous, in the main pass after the translucent terrain, so water and stained glass
+    behind a window are under its frost, its depth tested in the shader against a copy taken before the translucent
+    features and blocks (`effects/DepthCopy`), so those in front don't hide it; 26.2 draws particles before that, and
+    frost breath is soft (writes no depth), so it doesn't cut the frost out. With Fabulous, on clear glass at the start
+    of the weather pass, to the weather target (`MixinLevelRenderer`); on stained glass as without Fabulous, but into
+    the translucent target, tested against the main target's depth: a target holds one depth a pixel, so frost in the
+    weather target was covered by water behind stained glass, merged into one layer with it.
     "Outside" uses the `MOTION_BLOCKING` heightmap, then sky light on either side (`canSeeSky` is only sky light 15,
     which a glass roof doesn't reduce).
 

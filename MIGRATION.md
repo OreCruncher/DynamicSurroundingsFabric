@@ -51,10 +51,26 @@ What changed to fit 26.2:
   back with it.
 - **Window frost**: rebuilt. Two pipelines in `FrostRenderer` (depth written only with Fabulous graphics), drawn with
   `MeshDraw` (moved to `effects`, shared with the weather). Without Fabulous, `MixinLevelRenderer` draws it in the main
-  pass before `executeTranslucent` (optional hook `WINDOW_FROST`): 26.2 draws translucent features (particles) before
-  the translucent terrain, so frost can't be both after the water and before the particles, as on 1.21.1; it keeps the
-  particles from cutting it out (breath at a window), and water or stained glass behind a window now covers its frost.
-  With Fabulous, at the start of the weather pass, to the weather target. The shader's fade distance is a define.
+  pass after the translucent terrain, before `executeTranslucentAfterTerrain` (optional hook `WINDOW_FROST`), so water
+  and stained glass behind a window are under its frost. Its depth is tested in the shader (`DEPTH_COPY`) against a
+  copy of the scene's depth taken before `executeTranslucent` (`effects/DepthCopy`, only while there is frost), not
+  against the depth buffer, which by then has the water and stained glass in it: those in front of the frost don't
+  hide it, but are drawn under it rather than over it (untinted). 26.2 draws particles before that; frost breath now
+  uses the soft mist layer, which writes no depth, so it no longer cuts the frost out (vanilla particles that write
+  depth, such as smoke, still can).
+  With Fabulous, frost on clear glass at the start of the weather pass, to the weather target. The shader's fade
+  distance is a define.
+  Frost is on all glass now (`frosted_windows`: `#c:glass_blocks`, `#c:glass_panes`, as rain streaks), stained and
+  tinted included. Fabulous keeps one depth per target and pixel, so the water, ice and stained glass at a pixel are
+  one layer, at the nearest one's depth. Seen through the stained glass it is on, frost in the weather target sorted
+  behind that layer, and water or ice behind the window covered it. So with Fabulous, frost on stained glass
+  (`FrostFace.translucent`: the block's model has `BakedQuad.FLAG_TRANSLUCENT`) is drawn as without Fabulous: after the
+  translucent terrain, into the translucent target, tested against the main target's depth (which has no translucent
+  things). The glass is always in that layer there, so its depth stays right. Seen from inside, it is untinted, on
+  both settings (accepted).
+  Known limit, clear glass with Fabulous: through stained glass at a frosted clear window with water behind it, the
+  water is laid over the frost. Drawing clear glass's frost into the translucent target too would lose its depth where
+  nothing translucent is in front (rain behind a window would be laid over it), so it stays.
 - **Ground fog**: rebuilt. Four pipelines in `GroundFogVolume` (march, smooth, composite, and the composite writing
   depth for Fabulous), each a triangle from the vertex index (`ground_fog_screen.vsh`, no vertex buffer), sharing a
   `GroundFogInfo` uniform block (`shaders/include/ground_fog.glsl`). The vertex shader inverts `ProjMat`/`ModelViewMat`

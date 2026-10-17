@@ -46,13 +46,19 @@ public class MixinLevelRenderer {
     }
 
     /**
-     * Frost on windows without Fabulous graphics: in the main pass, after the opaque terrain and solid features, and
-     * before the translucent features, particles among them (see WindowFrostHandler.renderBeforeTranslucent). The pass
-     * runs as a lambda; matched by name, as its arguments differ on NeoForge.
+     * Frost on windows without Fabulous graphics: in the main pass, the scene's depth copied before the translucent
+     * features and blocks, then the frost drawn after the translucent blocks, tested against that copy, so water and
+     * stained glass behind a window are under its frost and those in front of it don't hide it (see
+     * WindowFrostHandler). The pass runs as a lambda; matched by name, as its arguments differ on NeoForge.
      */
     @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeTranslucent()V"), require = 0)
-    private void dsurround$frostBeforeTranslucent(CallbackInfo ci) {
-        MixinHelpers.WINDOW_FROST_GUARD.run(() -> MixinHelpers.windowFrost().renderBeforeTranslucent());
+    private void dsurround$frostDepthBeforeTranslucent(CallbackInfo ci) {
+        MixinHelpers.WINDOW_FROST_GUARD.run(() -> MixinHelpers.windowFrost().copyDepthBeforeTranslucent());
+    }
+
+    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeTranslucentAfterTerrain()V"), require = 0)
+    private void dsurround$frostAfterTranslucentTerrain(CallbackInfo ci) {
+        MixinHelpers.WINDOW_FROST_GUARD.run(() -> MixinHelpers.windowFrost().renderAfterTranslucentTerrain());
     }
 
     @Inject(method = "lambda$addWeatherPass$0", at = @At("RETURN"), require = 0)

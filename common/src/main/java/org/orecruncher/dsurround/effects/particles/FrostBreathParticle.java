@@ -78,7 +78,9 @@ public class FrostBreathParticle extends SingleQuadParticle {
 
     @Override
     public @NotNull Layer getLayer() {
-        return Layer.TRANSLUCENT;
+        // Soft, as the mist and steam are (see SoftParticles): fading where it meets a wall, and writing no depth, so a
+        // breath in front of a window doesn't cut holes in what is drawn there after it (the frost)
+        return SoftParticles.mistLayer();
     }
 
     @Override
