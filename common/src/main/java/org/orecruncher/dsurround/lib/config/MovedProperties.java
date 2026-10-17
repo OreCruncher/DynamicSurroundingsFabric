@@ -2,8 +2,8 @@ package org.orecruncher.dsurround.lib.config;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.MovedFrom;
 
 import java.util.Collection;
 import java.util.function.BiConsumer;
@@ -20,7 +20,7 @@ final class MovedProperties {
     /**
      * For each moved property with no value at its new place in {@code root} but one at an old place, copies that
      * value to the new place (from the first old place listed that has one). A value already at the new place is
-     * kept.
+     * kept, unless the property {@link MovedFrom#replaces} it and the old value has a pair.
      *
      * @param onMove told the old and new path of each value carried over
      * @return how many values were carried over
@@ -34,14 +34,17 @@ final class MovedProperties {
         for (var element : elements) {
             var path = prefix + element.fieldName();
             var movedFrom = element.getAnnotation(MovedFrom.class);
-            if (movedFrom.isPresent() && get(root, path) == null) {
+            if (movedFrom.isPresent() && (movedFrom.get().replaces() || get(root, path) == null)) {
                 // The first old place with a value
                 for (var oldPath : movedFrom.get().value()) {
                     var old = get(root, oldPath);
                     if (old != null) {
-                        set(root, path, old.deepCopy());
-                        onMove.accept(oldPath, path);
-                        moved++;
+                        var value = convert(old, movedFrom.get().values());
+                        if (value != null) {
+                            set(root, path, value);
+                            onMove.accept(oldPath, path);
+                            moved++;
+                        }
                         break;
                     }
                 }
@@ -50,6 +53,24 @@ final class MovedProperties {
                 moved += apply(root, group.getChildren(), path + ".", onMove);
         }
         return moved;
+    }
+
+    /**
+     * The value to carry over for an old one: the old one as it is, or as {@code values} pairs it with a new one
+     * (see {@link MovedFrom#values}); null if it has no pair, to leave the default.
+     */
+    static @Nullable JsonElement convert(JsonElement old, String[] values) {
+        if (values.length == 0)
+            return old.deepCopy();
+        if (!old.isJsonPrimitive())
+            return null;
+        var written = old.getAsString();
+        for (var pair : values) {
+            int equals = pair.indexOf('=');
+            if (equals > 0 && pair.substring(0, equals).equals(written))
+                return new JsonPrimitive(pair.substring(equals + 1));
+        }
+        return null;
     }
 
     /**

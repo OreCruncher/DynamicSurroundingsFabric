@@ -7,7 +7,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -25,7 +25,7 @@ import java.util.Optional;
 import static org.orecruncher.dsurround.sound.SoundCodecHelpers.SOUND_PROPERTY_RANGE;
 
 public record SoundFactory(
-        Optional<ResourceLocation> location,
+        Optional<Identifier> location,
         SoundEvent soundEvent,
         FloatProvider volume,
         FloatProvider pitch,
@@ -34,7 +34,8 @@ public record SoundFactory(
         int repeatDelay,
         boolean global,
         SoundInstance.Attenuation attenuation,
-        MusicSettings musicSettings) implements Comparable<ISoundFactory>, ISoundFactory {
+        MusicSettings musicSettings,
+        boolean followsWind) implements Comparable<ISoundFactory>, ISoundFactory {
 
     public static final Codec<SoundFactory> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
@@ -47,12 +48,13 @@ public record SoundFactory(
                     Codec.INT.optionalFieldOf("repeatDelay", 0).forGetter(SoundFactory::repeatDelay),
                     Codec.BOOL.optionalFieldOf("global", false).forGetter(SoundFactory::global),
                     SoundCodecHelpers.ATTENUATION_CODEC.optionalFieldOf("attenuation", SoundInstance.Attenuation.LINEAR).forGetter(SoundFactory::attenuation),
-                    MusicSettings.CODEC.optionalFieldOf("music", MusicSettings.DEFAULT).forGetter(SoundFactory::musicSettings)
+                    MusicSettings.CODEC.optionalFieldOf("music", MusicSettings.DEFAULT).forGetter(SoundFactory::musicSettings),
+                    Codec.BOOL.optionalFieldOf("followsWind", false).forGetter(SoundFactory::followsWind)
             ).apply(instance, SoundFactory::new));
 
     // Music instances by sound event ID and settings: factories that agree share one, and different (or reloaded)
     // settings get their own. The ID, as SoundEvent instances aren't compared by value.
-    private record MusicKey(ResourceLocation event, MusicSettings settings) {
+    private record MusicKey(Identifier event, MusicSettings settings) {
     }
 
     private static final Map<MusicKey, Music> MUSIC_MAP = new ConcurrentHashMap<>();
@@ -69,8 +71,8 @@ public record SoundFactory(
     }
 
     @Override
-    public ResourceLocation getLocation() {
-        return this.location.orElse(this.soundEvent.getLocation());
+    public Identifier getLocation() {
+        return this.location.orElse(this.soundEvent.location());
     }
 
     @Override
@@ -90,7 +92,7 @@ public record SoundFactory(
     @Override
     public SimpleSoundInstance createAsAdditional() {
         return new SimpleSoundInstance(
-                this.soundEvent.getLocation(),
+                this.soundEvent.location(),
                 this.category,
                 this.getVolume(),
                 this.getPitch(),
@@ -105,11 +107,11 @@ public record SoundFactory(
     }
 
     @Override
-    public EntityBoundSoundInstance attachToEntity(Entity entity) {
+    public EntityBoundSoundInstance attachToEntity(Entity entity, float volumeScale) {
         return new EntityBoundSoundInstance(
                 this.soundEvent,
                 this.category,
-                this.getVolume(),
+                this.getVolume() * volumeScale,
                 this.getPitch(),
                 entity,
                 Randomizer.current().nextLong()
@@ -128,7 +130,7 @@ public record SoundFactory(
         // sound at world coordinates would be heard as coming from far off in that direction
         final boolean relative = this.global;
         return new SimpleSoundInstance(
-                this.soundEvent.getLocation(),
+                this.soundEvent.location(),
                 this.category,
                 this.getVolume() * volumeScale,
                 this.getPitch(),
@@ -144,7 +146,7 @@ public record SoundFactory(
 
     @Override
     public Music createAsMusic() {
-        return MUSIC_MAP.computeIfAbsent(new MusicKey(this.soundEvent.getLocation(), this.musicSettings), key ->
+        return MUSIC_MAP.computeIfAbsent(new MusicKey(this.soundEvent.location(), this.musicSettings), key ->
                 new Music(Holder.direct(this.soundEvent), key.settings().minDelay(), key.settings().maxDelay(), key.settings().replaceCurrentMusic()));
     }
 
@@ -175,7 +177,7 @@ public record SoundFactory(
 
     @Override
     public @NotNull String toString() {
-        return "Factory {loc=%s, evt=%s}".formatted(this.getLocation(), this.soundEvent().getLocation());
+        return "Factory {loc=%s, evt=%s}".formatted(this.getLocation(), this.soundEvent().location());
     }
 
     static ISoundFactory from(SoundFactoryBuilder builder) {
@@ -189,7 +191,8 @@ public record SoundFactory(
                 builder.repeatDelay,
                 builder.global,
                 builder.attenuation,
-                new MusicSettings(builder.musicMinDelay, builder.musicMaxDelay, builder.musicReplaceMusic));
+                new MusicSettings(builder.musicMinDelay, builder.musicMaxDelay, builder.musicReplaceMusic),
+                false);
     }
 
     public record MusicSettings(int minDelay, int maxDelay, boolean replaceCurrentMusic) {

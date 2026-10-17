@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.effects.systems;
 
-import net.minecraft.client.ParticleStatus;
+import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -69,7 +69,7 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
         // distance checks, so apply them here. Minimal starts no effects; Decreased skips about one in three below.
         final ParticleStatus particles = GameUtils.getGameSettings().particles().get();
         final boolean effectsAllowed = particles != ParticleStatus.MINIMAL;
-        final var camera = GameUtils.getMC().gameRenderer.getMainCamera().getPosition();
+        final var camera = GameUtils.getMC().gameRenderer.mainCamera().position();
 
         final var pos = this.samplePos;
         for (int i = 0; i < ITERATION_COUNT; i++) {

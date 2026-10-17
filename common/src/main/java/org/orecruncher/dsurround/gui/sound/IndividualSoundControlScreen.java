@@ -1,17 +1,24 @@
 package org.orecruncher.dsurround.gui.sound;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
 import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
@@ -36,6 +43,9 @@ public class IndividualSoundControlScreen extends Screen {
 
     private static final int SEARCH_BAR_WIDTH = 200;
     private static final int SEARCH_BAR_HEIGHT = 20;
+    // Shown in the empty search bar. Vanilla's, as its social interactions screen shows it, so it is translated
+    private static final Component SEARCH_HINT = Component.translatable("gui.socialInteractions.search_hint")
+            .withStyle(ChatFormatting.ITALIC, ChatFormatting.GRAY);
 
     // Same as vanilla's OptionsList: 20px controls with a 5px gap between rows
     private static final int ROW_HEIGHT = 25;
@@ -76,7 +86,7 @@ public class IndividualSoundControlScreen extends Screen {
         LinearLayout header = this.layout.addToHeader(LinearLayout.vertical().spacing(HEADER_SPACING));
         header.defaultCellSetting().alignHorizontallyCenter();
         header.addChild(new StringWidget(this.title, this.font));
-        this.searchField = header.addChild(new EditBox(this.font, SEARCH_BAR_WIDTH, SEARCH_BAR_HEIGHT, Component.empty()));
+        this.searchField = header.addChild(new SearchBox(this.font, SEARCH_BAR_WIDTH, SEARCH_BAR_HEIGHT));
 
         this.soundConfigList = this.layout.addToContents(new IndividualSoundControlList(
                 GameUtils.getMC(),
@@ -102,10 +112,11 @@ public class IndividualSoundControlScreen extends Screen {
     @Override
     protected void repositionElements() {
         this.layout.arrangeElements();
-        this.soundConfigList.updateSize(this.width, this.layout);
         // Never narrower than the controls need, even if that means the rows don't fit a very small window
         int minRowWidth = this.soundConfigList.getMinimumRowWidth();
         this.soundConfigList.setRowWidth(Mth.clamp(this.width - 2 * ROW_SIDE_MARGIN, minRowWidth, Math.max(minRowWidth, MAX_ROW_WIDTH)));
+        // After the row width: this is what places the rows, and it centers them using that width
+        this.soundConfigList.updateSize(this.width, this.layout);
     }
 
     @Override
@@ -123,23 +134,24 @@ public class IndividualSoundControlScreen extends Screen {
     // Typing goes to the search box even when another control has focus
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return super.keyPressed(keyCode, scanCode, modifiers) || this.searchField.keyPressed(keyCode, scanCode, modifiers);
+    public boolean keyPressed(@NonNull KeyEvent event) {
+        return super.keyPressed(event) || this.searchField.keyPressed(event);
     }
 
     @Override
-    public boolean charTyped(char codePoint, int modifiers) {
-        return super.charTyped(codePoint, modifiers) || this.searchField.charTyped(codePoint, modifiers);
+    public boolean charTyped(@NonNull CharacterEvent event) {
+        return super.charTyped(event) || this.searchField.charTyped(event);
     }
 
     @Override
-    public void render(@NotNull GuiGraphics context, int mouseX, int mouseY, float partialTicks) {
-        super.render(context, mouseX, mouseY, partialTicks);
+    public void extractRenderState(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTicks) {
+        super.extractRenderState(context, mouseX, mouseY, partialTicks);
 
         // Offset downward so the tooltip doesn't cover the row's controls
         var entry = this.soundConfigList.getEntryAt(mouseX, mouseY);
         if (entry != null) {
-            context.renderTooltip(this.font, entry.getToolTip(mouseX, mouseY), mouseX, mouseY + TOOLTIP_Y_OFFSET);
+            var toolTip = entry.getToolTip(mouseX, mouseY).stream().map(ClientTooltipComponent::create).toList();
+            context.tooltip(this.font, toolTip, mouseX, mouseY + TOOLTIP_Y_OFFSET, DefaultTooltipPositioner.INSTANCE, null);
         }
     }
 
@@ -174,5 +186,31 @@ public class IndividualSoundControlScreen extends Screen {
     private static void setMusicPaused(boolean paused) {
         if (GameUtils.getMC().getMusicManager() instanceof DSurroundMusicManager m)
             m.setPaused(paused);
+    }
+
+    /**
+     * The search bar, showing {@link #SEARCH_HINT} while it is empty. Vanilla only draws a hint when the box isn't
+     * focused, and this one is focused from the moment the screen opens.
+     */
+    private static class SearchBox extends EditBox {
+
+        private final Font font;
+
+        SearchBox(Font font, int width, int height) {
+            super(font, width, height, SEARCH_HINT);
+            this.font = font;
+            this.setHint(SEARCH_HINT);
+        }
+
+        @Override
+        public void extractWidgetRenderState(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTicks) {
+            super.extractWidgetRenderState(context, mouseX, mouseY, partialTicks);
+            // Where vanilla draws the text, and its hint when unfocused
+            if (this.isVisible() && this.isFocused() && this.getValue().isEmpty()) {
+                int x = this.isBordered() ? this.getX() + 4 : this.getX();
+                int y = this.isBordered() ? this.getY() + (this.height - 8) / 2 : this.getY();
+                context.text(this.font, SEARCH_HINT, x, y, -1);
+            }
+        }
     }
 }

@@ -1,74 +1,137 @@
 package org.orecruncher.dsurround.lib.function;
 
 import com.google.common.base.Preconditions;
-import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.logging.LogThrottle;
+
+import java.util.function.Supplier;
 
 /**
- * Logic that supports guarded operations.  Exceptions encountered will be logged.
+ * Runs code whose failure should be logged and survived rather than thrown on: a mixin's body inside the game's frame
+ * or tick, say, where the game carries on as it would without the mod. Failures are logged up to a limit, which
+ * {@link #reset} lifts again (on a reload, say). The code keeps running after a failure, so something that failed
+ * once (a world unloading, say) carries on working. Errors the JVM can't recover from (running out of memory, say)
+ * are passed on rather than caught. Thread-safe.
  */
 public final class Guard {
 
+    /**
+     * Logs every failure: for code whose failures are few and each worth seeing
+     */
+    public static final int UNLIMITED = Integer.MAX_VALUE;
+
     private static final IModLog LOGGER = ContainerManager.memoize(IModLog.class);
+    // Failures logged by default; after that they are counted and dropped until reset
+    private static final int LOG_LIMIT = 10;
 
-    /**
-     * Executes the Runnable.  Exceptions are logged to the mod's logger and then suppressed.
-     *
-     * @param process Process to execute
-     */
-    public static void execute(Runnable process) {
-        executeImpl(process, LOGGER, false);
+    private final String name;
+    private final LogThrottle<Object> errors;
+
+    private Guard(String name, IModLog logger, int limit) {
+        this.name = name;
+        // No "until" in the notice: most guards are never reset, and those that are say when in their own code
+        this.errors = LogThrottle.firstN(logger, name + " errors", null, limit);
     }
 
     /**
-     * Executes the Runnable.  Exceptions are logged to the mod's logger and then rethrown.
+     * A guard logging to the mod's logger.
      *
-     * @param process Process to execute
+     * @param name what is guarded, for the log
      */
-    public static void executeWithThrow(Runnable process) {
-        executeImpl(process, LOGGER, true);
+    public static Guard named(String name) {
+        return named(name, LOGGER);
     }
 
     /**
-     * Executes the Runnable.  Exceptions are logged to the mod's logger and then suppressed.
+     * A guard logging to the given logger.
      *
-     * @param process Process to execute
+     * @param name   what is guarded, for the log
+     * @param logger where failures are logged
      */
-    public static void execute(Runnable process, IModLog logger) {
-        executeImpl(process, logger, false);
+    public static Guard named(String name, IModLog logger) {
+        return named(name, logger, LOG_LIMIT);
     }
 
     /**
-     * Executes the Runnable.  Exceptions are logged to the mod's logger and then rethrown.
+     * A guard logging to the given logger, up to a limit.
      *
-     * @param process Process to execute
+     * @param name   what is guarded, for the log
+     * @param logger where failures are logged
+     * @param limit  the most failures logged until {@link #reset}, or {@link #UNLIMITED}
      */
-    public static void executeWithThrow(Runnable process, IModLog logger) {
-        executeImpl(process, logger, true);
+    public static Guard named(String name, IModLog logger, int limit) {
+        return new Guard(Preconditions.checkNotNull(name), Preconditions.checkNotNull(logger), limit);
     }
 
     /**
-     * Executes the Runnable.  Exceptions are logged to the specified logger and then suppressed.
-     *
-     * @param process Process to execute
-     * @param logger  Logger to emit trace information if needed
+     * The body's value, or the fallback if it throws.
      */
-    private static void executeImpl(Runnable process, IModLog logger, boolean rethrow) {
-        Preconditions.checkNotNull(process);
-        Preconditions.checkNotNull(logger);
-
+    public <T> T get(Supplier<T> body, T fallback) {
         try {
-            process.run();
+            return body.get();
         } catch (Throwable t) {
-            logger.error(t, "Error processing request");
-            if (rethrow)
-                throw t;
+            this.failed(t);
+            return fallback;
         }
     }
 
-    public static void assertOnClientThread() {
-        if (!GameUtils.getMC().isSameThread())
-            throw new RuntimeException("Operation being performed on non-client thread");
+    /**
+     * Runs the body.
+     *
+     * @return true if it finished, false if it threw
+     */
+    public boolean run(Runnable body) {
+        try {
+            body.run();
+            return true;
+        } catch (Throwable t) {
+            this.failed(t);
+            return false;
+        }
+    }
+
+    /**
+     * Runs the body for something, named in the log if it fails.
+     *
+     * @param subject what the body was run for (a biome, say)
+     * @return true if it finished, false if it threw
+     */
+    public boolean run(Runnable body, Object subject) {
+        try {
+            body.run();
+            return true;
+        } catch (Throwable t) {
+            this.failed(t, subject);
+            return false;
+        }
+    }
+
+    /**
+     * Logs a failure caught by the caller, for code run too often to wrap in a lambda (each particle, each tick).
+     * Rethrows errors the JVM can't recover from.
+     */
+    public void failed(Throwable t) {
+        if (t instanceof VirtualMachineError fatal)
+            throw fatal;
+        this.errors.error(t, "%s failed; the game carries on without it", this.name);
+    }
+
+    /**
+     * Logs a failure for something, caught by the caller. Rethrows errors the JVM can't recover from.
+     *
+     * @param subject what failed (a biome, say)
+     */
+    public void failed(Throwable t, Object subject) {
+        if (t instanceof VirtualMachineError fatal)
+            throw fatal;
+        this.errors.error(t, "%s failed for %s", this.name, subject);
+    }
+
+    /**
+     * Logs failures again, up to the limit
+     */
+    public void reset() {
+        this.errors.reset();
     }
 }

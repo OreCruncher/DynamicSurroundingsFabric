@@ -1,10 +1,9 @@
 package org.orecruncher.dsurround.config.biome;
 
 import dev.architectury.hooks.level.biome.BiomeProperties;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.Nullable;
@@ -33,7 +32,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
 
     private final int version;
     private final ConfigServices services;
-    private final ResourceLocation biomeId;
+    private final Identifier biomeId;
     private final String biomeName;
     @Nullable
     private final Biome biome;
@@ -48,6 +47,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
     @Nullable
     private final TextColor fogColor;
     private final FogDensity fogDensity;
+    private final FogDensity groundFog;
     private final Script additionalSoundChance;
     private final Script moodSoundChance;
     // Built from the configured music and the game's track for the biome, which doesn't change
@@ -71,6 +71,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
         this.comments = builder.comments;
         this.fogColor = builder.fogColor;
         this.fogDensity = builder.fogDensity;
+        this.groundFog = builder.groundFog;
         this.additionalSoundChance = builder.additionalSoundChance;
         this.moodSoundChance = builder.moodSoundChance;
     }
@@ -96,7 +97,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
     }
 
     @Override
-    public ResourceLocation getBiomeId() {
+    public Identifier getBiomeId() {
         return this.biomeId;
     }
 
@@ -113,19 +114,16 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
         return this.fogDensity;
     }
 
+    /**
+     * How thick the mist lying on the ground is
+     */
+    public FogDensity getGroundFog() {
+        return this.groundFog;
+    }
+
     @Override
     public float getDownfall() {
         return BiomeInfoBuilder.downfall(this.properties);
-    }
-
-    public float getBaseTemperature() {
-        return this.properties != null ? this.properties.getClimateProperties().getTemperature() : 0.5F;
-    }
-
-    public float getTemperature(@Nullable BlockPos pos) {
-        if (this.biome == null || pos == null)
-            return this.getBaseTemperature();
-        return this.biome.getTemperature(pos);
     }
 
     @Override
@@ -221,6 +219,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
         builder.append("\n").append(getTraits().toString());
 
         builder.append("\nfogDensity: ").append(this.fogDensity.getName());
+        builder.append("\ngroundFog: ").append(this.groundFog.getName());
 
         if (this.fogColor != null) {
             builder.append(", fogColor: ").append(this.fogColor.formatValue());

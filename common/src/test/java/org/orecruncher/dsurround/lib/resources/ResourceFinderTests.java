@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.resources;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -37,7 +37,7 @@ public class ResourceFinderTests {
      * that has it). Lists the files under a folder as the real one does, and counts how often it is asked.
      */
     private static final class Packs {
-        final Map<ResourceLocation, List<Resource>> files = new LinkedHashMap<>();
+        final Map<Identifier, List<Resource>> files = new LinkedHashMap<>();
         int listings;
 
         Packs add(String location, String... contents) {
@@ -49,7 +49,7 @@ public class ResourceFinderTests {
          */
         Packs addFrom(String packId, String location, String... contents) {
             var pack = packId == null ? null : Fakes.of(PackResources.class, Map.of("packId", args -> packId));
-            var stack = this.files.computeIfAbsent(ResourceLocation.parse(location), l -> new ArrayList<>());
+            var stack = this.files.computeIfAbsent(Identifier.parse(location), l -> new ArrayList<>());
             for (var content : contents)
                 stack.add(new Resource(pack, () -> new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8))));
             return this;
@@ -62,15 +62,15 @@ public class ResourceFinderTests {
                         // Lists the files in a folder, as the real one does; a file's own path lists nothing, as
                         // with NeoForge's mod packs
                         var folder = (String) args[0];
-                        var result = new LinkedHashMap<ResourceLocation, List<Resource>>();
+                        var result = new LinkedHashMap<Identifier, List<Resource>>();
                         this.files.forEach((location, stack) -> {
                             if (location.getPath().startsWith(folder + "/"))
                                 result.put(location, stack);
                         });
                         return result;
                     },
-                    "getNamespaces", args -> this.files.keySet().stream().map(ResourceLocation::getNamespace).collect(Collectors.toSet()),
-                    "getResourceStack", args -> this.files.getOrDefault((ResourceLocation) args[0], List.of())));
+                    "getNamespaces", args -> this.files.keySet().stream().map(Identifier::getNamespace).collect(Collectors.toSet()),
+                    "getResourceStack", args -> this.files.getOrDefault((Identifier) args[0], List.of())));
         }
     }
 
@@ -191,8 +191,8 @@ public class ResourceFinderTests {
 
     @Test
     void assetsAreLookedUpNotListed() {
-        // Listing "sounds.json" finds nothing in packs that only list folders (NeoForge 26.2's mod packs), so none of
-        // the mod's own sounds would be known. Every pack's version of the file is read.
+        // Regression: listing "sounds.json" found nothing on NeoForge, whose mod packs only list folders, so none of
+        // the mod's own sounds were known. Every pack's version of the file is read.
         var packs = new Packs()
                 .add("dsurround:sounds.json", "{\"jar\": \"1\"}", "{\"pack\": \"2\"}")
                 .add("dsurround:sounds/other.json", "{\"c\": \"3\"}");

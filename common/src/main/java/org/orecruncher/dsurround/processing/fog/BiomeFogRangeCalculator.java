@@ -1,9 +1,12 @@
 package org.orecruncher.dsurround.processing.fog;
 
-import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.client.renderer.fog.FogData;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.QuartPos;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeManager;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
@@ -33,8 +36,8 @@ public class BiomeFogRangeCalculator extends VanillaFogRangeCalculator {
 
     @Override
     @NotNull
-    public FogRenderer.FogData render(@NotNull final FogRenderer.FogData data, float renderDistance, float partialTick) {
-        return thicken(data, this.scale.get(partialTick), 0F);
+    public FogData render(@NotNull final FogData data, float renderDistance, float partialTick) {
+        return thicken(data, renderDistance, this.scale.get(partialTick), 0F);
     }
 
     @Override
@@ -56,17 +59,48 @@ public class BiomeFogRangeCalculator extends VanillaFogRangeCalculator {
 
     private float sampleArea(BlockPos pos, int range) {
         var level = GameUtils.getWorld().orElseThrow();
-        var iterator = BlockPos.withinManhattan(pos, range, range, range).iterator();
-        float intensityAccum = 0F;
-        float intensityCount = 0;
-        while(iterator.hasNext()) {
-            var p = iterator.next();
-            final Biome b = level.getBiome(p).value();
+        return averageOverCells(pos, range, (qx, qy, qz) -> {
+            final Biome b = level.getNoiseBiome(qx, qy, qz).value();
             final BiomeInfo info = this.biomeLibrary.getBiomeInfo(b);
-            intensityAccum += info.getFogDensity().getIntensity();
-            intensityCount++;
-        }
+            return info.getFogDensity().getIntensity();
+        });
+    }
 
-        return intensityAccum / intensityCount;
+    /**
+     * A value of the biome cell (4 blocks each way) at quart position (qx, qy, qz)
+     */
+    @FunctionalInterface
+    interface CellValue {
+        float at(int qx, int qy, int qz);
+    }
+
+    /**
+     * The average over each block within {@code range} of {@code pos} each way of its biome cell's value. Biomes are
+     * stored a cell at a time, so each cell is read once and counted by how many of the blocks are in it: a few dozen
+     * reads rather than one a block, thousands. Vanilla's per-block blending of biomes at their borders is left out,
+     * which an average over this many blocks wouldn't show.
+     */
+    static float averageOverCells(BlockPos pos, int range, CellValue cells) {
+        float sum = 0F;
+        int fromQx = QuartPos.fromBlock(pos.getX() - range), toQx = QuartPos.fromBlock(pos.getX() + range);
+        int fromQy = QuartPos.fromBlock(pos.getY() - range), toQy = QuartPos.fromBlock(pos.getY() + range);
+        int fromQz = QuartPos.fromBlock(pos.getZ() - range), toQz = QuartPos.fromBlock(pos.getZ() + range);
+        for (int qy = fromQy; qy <= toQy; qy++) {
+            int wy = overlap(qy, pos.getY(), range);
+            for (int qz = fromQz; qz <= toQz; qz++) {
+                int wz = overlap(qz, pos.getZ(), range);
+                for (int qx = fromQx; qx <= toQx; qx++)
+                    sum += cells.at(qx, qy, qz) * (overlap(qx, pos.getX(), range) * wy * wz);
+            }
+        }
+        int side = 2 * range + 1;
+        return sum / (side * side * side);
+    }
+
+    // How many blocks of the cell q, along one axis, are within range of centre
+    private static int overlap(int q, int centre, int range) {
+        int from = Math.max(QuartPos.toBlock(q), centre - range);
+        int to = Math.min(QuartPos.toBlock(q) + 3, centre + range);
+        return to - from + 1;
     }
 }

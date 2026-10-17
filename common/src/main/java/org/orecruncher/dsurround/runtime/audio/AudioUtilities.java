@@ -3,50 +3,27 @@ package org.orecruncher.dsurround.runtime.audio;
 import com.google.common.base.Suppliers;
 import com.mojang.blaze3d.audio.Library;
 import com.mojang.blaze3d.audio.Listener;
-import dev.architectury.platform.Platform;
 import net.minecraft.client.resources.sounds.AbstractSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.SoundEngine;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.*;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 
 import java.util.function.Supplier;
 
 public final class AudioUtilities {
     private static final IModLog LOGGER = ContainerManager.memoize(IModLog.class);
 
-    // If these mods are present, enhanced sound processing will be disabled.
-    private static final ObjectArray<String> autoDisabledBecauseOf = new ObjectArray<>();
-
-    private static final Supplier<Boolean> advancedProcessingEnabled = Suppliers.memoize(() -> {
-        // First check general settings
-        var config = ContainerManager.resolve(Configuration.EnhancedSounds.class);
-        if (config.enableEnhancedSounds) {
-            // Next check to see if any present mods are in our exclusion list
-            for (var modId : autoDisabledBecauseOf) {
-                if (Platform.isModLoaded(modId)) {
-                    LOGGER.warn("Enhanced sound processing is auto disabled due to the presence of the mod \"%s\"", modId);
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        return false;
-    });
+    private static final Supplier<Boolean> advancedProcessingEnabled = Suppliers.memoize(() ->
+            ContainerManager.resolve(Configuration.EnhancedSounds.class).enableEnhancedSounds && !FeatureConflict.ENHANCED_SOUNDS.isBlocked());
 
     private static int MAX_SOUNDS = 0;
-
-    static {
-        autoDisabledBecauseOf.add(Constants.MOD_SOUND_PHYSICS_REMASTERED);
-    }
 
     public static int getMaxSounds() {
         return MAX_SOUNDS;
@@ -78,7 +55,7 @@ public final class AudioUtilities {
             sb.setLength(0);
 
             sb.append(sound.getClass().getSimpleName()).append("{");
-            sb.append(sound.getLocation());
+            sb.append(sound.getIdentifier());
             sb.append(", ").append(sound.getSource().getName());
             sb.append(", ").append(sound.getAttenuation());
             sb.append(String.format(", (%.2f,%.2f,%.2f)", sound.getX(), sound.getY(), sound.getZ()));
@@ -128,9 +105,11 @@ public final class AudioUtilities {
             // Calculate the number of source slots available
             MAX_SOUNDS = ALC11.alcGetInteger(devicePointer, ALC11.ALC_MONO_SOURCES);
 
+            final int auxSendsConfigured = ALC11.alcGetInteger(devicePointer, EXTEfx.ALC_MAX_AUXILIARY_SENDS);
+
             // Do this last because it is dependent on the sound calculations
             if (doEnhancedSounds())
-                SoundFXProcessor.initialize();
+                EnhancedSoundProcessor.initialize(auxSendsConfigured);
             else
                 LOGGER.warn("Enhanced sound processing is disabled");
 
@@ -140,7 +119,6 @@ public final class AudioUtilities {
             final String extensions = AL10.alGetString(AL10.AL_EXTENSIONS);
 
             final int frequency = ALC11.alcGetInteger(devicePointer, ALC11.ALC_FREQUENCY);
-            final int auxSendsConfigured = ALC11.alcGetInteger(devicePointer, EXTEfx.ALC_MAX_AUXILIARY_SENDS);
 
             LOGGER.info("Vendor: %s", vendor);
             LOGGER.info("Version: %s", version);
@@ -155,14 +133,13 @@ public final class AudioUtilities {
         }
     }
 
-    @SuppressWarnings("DataFlowIssue")
     public static boolean doEnhancedSounds() {
         return advancedProcessingEnabled.get();
     }
 
     public static void deinitialize(final Library ignore) {
         if (doEnhancedSounds())
-            SoundFXProcessor.deinitialize();
+            EnhancedSoundProcessor.deinitialize();
     }
 
     /**

@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.gui.sound;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.CycleButton;
@@ -10,13 +10,14 @@ import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -126,16 +127,14 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
         this.label = new TextWidget(0, 0, MIN_LABEL_WIDTH, font.lineHeight, Component.literal(data.soundEventId.toString()), font);
 
         int stateWidth = Arrays.stream(SoundState.values()).mapToInt(s -> font.width(s.label())).max().orElse(0) + BUTTON_TEXT_PADDING;
-        this.stateButton = CycleButton.builder(SoundState::label)
+        this.stateButton = CycleButton.builder(SoundState::label, SoundState.from(this.config))
                 .withValues(SoundState.values())
-                .withInitialValue(SoundState.from(this.config))
                 .displayOnlyValue()
                 .create(0, 0, stateWidth, CONTROL_HEIGHT, Component.empty(), (button, state) -> state.applyTo(this.config));
 
         if (enablePlay) {
             int playWidth = Math.max(font.width(SOUND_STOP), font.width(SOUND_PLAY)) + BUTTON_TEXT_PADDING;
-            this.playButton = CycleButton.booleanBuilder(SOUND_STOP, SOUND_PLAY)
-                    .withInitialValue(false)
+            this.playButton = CycleButton.booleanBuilder(SOUND_STOP, SOUND_PLAY, false)
                     .displayOnlyValue()
                     .create(0, 0, playWidth, CONTROL_HEIGHT, Component.empty(), (button, play) -> this.setPlaying(play));
         } else {
@@ -167,7 +166,9 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
      * Fits the row to the given width by stretching or shrinking the label, which never gets narrower than
      * {@link #MIN_LABEL_WIDTH}.
      */
+    @Override
     public void setWidth(int width) {
+        super.setWidth(width);
         this.label.setWidth(Math.max(MIN_LABEL_WIDTH, width - this.controlsWidth));
         this.row.arrangeElements();
     }
@@ -183,11 +184,11 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     }
 
     @Override
-    public void render(final @NotNull GuiGraphics context, int index, int rowTop, int rowLeft, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean mouseOver, float partialTick) {
+    public void extractContent(final @NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
         // Moving the layout moves its widgets; they were arranged when the width was set
-        this.row.setPosition(rowLeft, rowTop);
+        this.row.setPosition(this.getContentX(), this.getContentY());
         for (final AbstractWidget w : this.children)
-            w.render(context, mouseX, mouseY, partialTick);
+            w.extractRenderState(graphics, mouseX, mouseY, partialTick);
     }
 
     /**
@@ -266,7 +267,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
      * per row, which lives only as long as the screen.
      */
     private void buildSoundInfo(List<FormattedCharSequence> lines) {
-        ResourceLocation id = this.config.soundEventId;
+        Identifier id = this.config.soundEventId;
         this.resolveDisplayName(id.getNamespace())
                 .ifPresent(name -> lines.add(FormattedCharSequence.forward(Objects.requireNonNull(ChatFormatting.stripFormatting(name)), STYLE_MOD_NAME)));
 

@@ -16,7 +16,8 @@ public interface IAudioPlayer {
     boolean isPlaying(SoundInstance sound);
 
     /**
-     * Whether the sound engine is loaded and its audio device is still connected. Plays are skipped otherwise.
+     * Whether the sound engine is loaded. Plays are skipped otherwise. A lost audio device is noticed by the engine's
+     * own tick, which reloads it.
      */
     boolean isSoundSystemAvailable();
 }

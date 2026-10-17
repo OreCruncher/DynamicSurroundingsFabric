@@ -6,10 +6,11 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
+import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.*;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
@@ -47,7 +48,7 @@ import static java.util.stream.Collectors.*;
  * ({@link ModTags}) exist only on the client: their members are loaded from tag files by {@link ClientTagLoader}
  * and cached here.
  * <p>
- * For the mod's tags on blocks, items, fluids and entity types the cache holds the member objects themselves, so a
+ * For the mod's tags on blocks, items, fluids, entity types and particle types the cache holds the member objects themselves, so a
  * check is one map lookup and one identity-set lookup. These checks run for every block the area scanner reads
  * (heat sources, steam producers, occlusion), so they need to be cheap. Biomes come from a per-world registry, so
  * their tags stay keyed by id.
@@ -59,14 +60,14 @@ public class TagLibrary implements ITagLibrary {
     // Registries whose mod tags are cached as sets of the member objects. These registries are fixed for the
     // session, so the objects stay valid.
     private static final Set<ResourceKey<? extends Registry<?>>> OBJECT_REGISTRIES = Set.of(
-            Registries.BLOCK, Registries.ITEM, Registries.FLUID, Registries.ENTITY_TYPE);
+            Registries.BLOCK, Registries.ITEM, Registries.FLUID, Registries.ENTITY_TYPE, Registries.PARTICLE_TYPE);
 
     private final IModLog logger;
     private final ISystemClock systemClock;
     private final ClientTagLoader tagLoader;
 
     // The mod's tags and their members' ids. Every tag in ModTags has an entry once the cache is built.
-    private final Map<TagKey<?>, Collection<ResourceLocation>> tagCache = new Reference2ObjectOpenHashMap<>();
+    private final Map<TagKey<?>, Collection<Identifier>> tagCache = new Reference2ObjectOpenHashMap<>();
     // The same tags' members as objects, for the registries in OBJECT_REGISTRIES. Keyed by identity: TagKeys are
     // interned.
     private final Map<TagKey<?>, Set<Object>> memberObjects = new Reference2ObjectOpenHashMap<>();
@@ -125,7 +126,7 @@ public class TagLibrary implements ITagLibrary {
             if (e.is(tagKey))
                 return true;
             var ids = this.memberIds(tagKey);
-            return ids != null && ids.contains(e.key().location());
+            return ids != null && ids.contains(e.key().identifier());
         }
         return false;
     }
@@ -133,7 +134,7 @@ public class TagLibrary implements ITagLibrary {
     @Override
     public boolean is(TagKey<EntityType<?>> tagKey, EntityType<?> entry) {
         var members = this.memberObjects(tagKey);
-        return members != null ? members.contains(entry) : entry.is(tagKey);
+        return members != null ? members.contains(entry) : entry.arch$holder().is(tagKey);
     }
 
     @Override
@@ -142,6 +143,12 @@ public class TagLibrary implements ITagLibrary {
             return false;
         var members = this.memberObjects(tagKey);
         return members != null ? members.contains(entry.getType()) : entry.is(tagKey);
+    }
+
+    @Override
+    public boolean is(TagKey<ParticleType<?>> tagKey, ParticleType<?> entry) {
+        var members = this.memberObjects(tagKey);
+        return members != null ? members.contains(entry) : BuiltInRegistries.PARTICLE_TYPE.wrapAsHolder(entry).is(tagKey);
     }
 
     /**
@@ -199,7 +206,7 @@ public class TagLibrary implements ITagLibrary {
     @Override
     public <T> Stream<Pair<TagKey<T>, Set<T>>> getEntriesByTag(ResourceKey<? extends Registry<T>> registryKey) {
         var registry = RegistryUtils.getRegistry(registryKey).orElseThrow();
-        return registry.holders()
+        return registry.listElements()
                 .flatMap(e -> this.streamTags(e).map(tag -> Pair.of(tag, e.value())))
                 .collect(groupingBy(Pair::key, mapping(Pair::value, toSet())))
                 .entrySet().stream().map(e -> Pair.of(e.getKey(), e.getValue()));
@@ -209,7 +216,7 @@ public class TagLibrary implements ITagLibrary {
     @SuppressWarnings("unchecked")
     public <T> Stream<TagKey<T>> streamTags(Holder<T> registryEntry) {
         this.ensureCache();
-        var location = registryEntry.unwrapKey().orElseThrow().location();
+        var location = registryEntry.unwrapKey().orElseThrow().identifier();
         Set<TagKey<T>> tags = registryEntry.tags().collect(toSet());
         for (var kvp : this.tagCache.entrySet()) {
             if (kvp.getValue().contains(location))
@@ -269,7 +276,7 @@ public class TagLibrary implements ITagLibrary {
      * the mod's tags), so a check against the set alone matches checking both, as the id-based cache used to.
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private void buildMemberObjects(TagKey<?> tagKey, Collection<ResourceLocation> ids) {
+    private void buildMemberObjects(TagKey<?> tagKey, Collection<Identifier> ids) {
         if (!OBJECT_REGISTRIES.contains(tagKey.registry()))
             return;
         var found = RegistryUtils.getRegistry((ResourceKey) tagKey.registry());
@@ -280,7 +287,7 @@ public class TagLibrary implements ITagLibrary {
         Set<Object> members = new ReferenceOpenHashSet<>(ids.size());
         for (var id : ids)
             registry.getOptional(id).ifPresent(members::add);
-        registry.getTag((TagKey<Object>) tagKey).ifPresent(holders -> holders.forEach(h -> members.add(h.value())));
+        registry.getTagOrEmpty((TagKey<Object>) tagKey).forEach(h -> members.add(h.value()));
         this.memberObjects.put(tagKey, members);
     }
 
@@ -296,12 +303,12 @@ public class TagLibrary implements ITagLibrary {
     /**
      * The member ids if {@code tagKey} is one of the mod's tags, otherwise null.
      */
-    private @Nullable Collection<ResourceLocation> memberIds(TagKey<?> tagKey) {
+    private @Nullable Collection<Identifier> memberIds(TagKey<?> tagKey) {
         this.ensureCache();
         return this.tagCache.get(tagKey);
     }
 
-    private void formatHelper(StringBuilder builder, String entryName, Collection<ResourceLocation> data) {
+    private void formatHelper(StringBuilder builder, String entryName, Collection<Identifier> data) {
         builder.append("\n").append(entryName).append(" ");
         if (data.isEmpty())
             builder.append("NONE");

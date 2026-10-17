@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.config.biome.biometraits;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.level.biome.Biomes;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,7 @@ public class BiomeTraitAnalysisTests {
     private static Set<BiomeTrait> derive(BiomeTrait... traits) {
         var set = EnumSet.noneOf(BiomeTrait.class);
         set.addAll(List.of(traits));
-        var id = ResourceLocation.fromNamespaceAndPath("test", "biome");
+        var id = Identifier.fromNamespaceAndPath("test", "biome");
         new BiomeTraitAnalyzer().analyze(id, null, set);
         new BiomeTraitCleanup().analyze(id, null, set);
         return set;
@@ -54,7 +54,7 @@ public class BiomeTraitAnalysisTests {
         var names = new TreeSet<String>();
         for (var field : Biomes.class.getFields())
             if (Modifier.isStatic(field.getModifiers()) && field.get(null) instanceof ResourceKey<?> key)
-                names.add(key.location().getPath());
+                names.add(key.identifier().getPath());
         return names;
     }
 
@@ -92,7 +92,7 @@ public class BiomeTraitAnalysisTests {
     void vanillaBiomesUseTheTable() {
         var traits = EnumSet.noneOf(BiomeTrait.class);
         // The biome isn't looked at for a vanilla biome in the table
-        new BiomeNameFallbackAnalyzer().analyze(ResourceLocation.withDefaultNamespace("snowy_plains"), null, traits);
+        new BiomeNameFallbackAnalyzer().analyze(Identifier.withDefaultNamespace("snowy_plains"), null, traits);
         assertEquals(BiomeNameFallbackAnalyzer.VANILLA_TRAITS.get("snowy_plains"), traits);
     }
 

@@ -1,11 +1,11 @@
 package org.orecruncher.dsurround.processing.fog;
 
-import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.client.renderer.fog.FogData;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.time.MinecraftClock;
+import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
+import org.orecruncher.dsurround.runtime.oracle.IMinecraftClock;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.lib.weighted.WeightedList;
@@ -36,14 +36,16 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
             .build();
 
     protected final ISeasonalInformation seasonInfo;
-    protected final MinecraftClock clock;
+    protected final IMinecraftClock clock;
+    protected final ILevelOracle levelOracle;
     protected int fogDay = -1;
     protected FogDensity type = FogDensity.NONE;
 
-    public MorningFogRangeCalculator(ISeasonalInformation seasonInfo, Configuration.FogOptions fogOptions) {
+    public MorningFogRangeCalculator(ISeasonalInformation seasonInfo, IMinecraftClock clock, ILevelOracle levelOracle, Configuration.FogOptions fogOptions) {
         super("Morning", fogOptions);
         this.seasonInfo = seasonInfo;
-        this.clock = new MinecraftClock();
+        this.clock = clock;
+        this.levelOracle = levelOracle;
     }
 
     @Override
@@ -53,14 +55,14 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
 
     @Override
     @NotNull
-    public FogRenderer.FogData render(@NotNull final FogRenderer.FogData data, float renderDistance, float partialTick) {
+    public FogData render(@NotNull final FogData data, float renderDistance, float partialTick) {
 
         if (this.type != FogDensity.NONE) {
             var angle = this.getCelestialAngleDegrees();
             if (this.type.inRange(angle)) {
                 final float mid = (this.type.getStartAngle() + this.type.getEndAngle()) / 2F;
                 final float factor = (1F - Mth.abs(angle - mid) / (mid - this.type.getStartAngle())) * this.type.getIntensity();
-                return thicken(data, factor, this.type.getReserve() + 1);
+                return thicken(data, renderDistance, factor, this.type.getReserve() + 1);
             }
         }
         return data;
@@ -69,7 +71,6 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
     @Override
     public void tick() {
         // Determine if fog is going to be done this Minecraft day
-        GameUtils.getWorld().ifPresent(this.clock::update);
         final int day = this.clock.getDay();
         if (this.fogDay != day) {
             this.fogDay = day;
@@ -84,11 +85,11 @@ public class MorningFogRangeCalculator extends VanillaFogRangeCalculator {
     }
 
     private boolean isFogAllowed() {
-        return GameUtils.getWorld().map(w -> w.dimensionType().natural()).orElse(false);
+        return this.levelOracle.natural();
     }
 
     private float getCelestialAngleDegrees() {
-        return GameUtils.getWorld().map(w -> w.getTimeOfDay(1F) * 360F).orElseThrow();
+        return this.levelOracle.currentCelestialAngle();
     }
 
     @NotNull

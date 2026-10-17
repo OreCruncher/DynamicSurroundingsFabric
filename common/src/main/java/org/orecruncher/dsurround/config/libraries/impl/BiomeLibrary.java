@@ -6,7 +6,7 @@ import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.locale.Language;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.ConfigServices;
@@ -70,6 +70,10 @@ public final class BiomeLibrary implements IBiomeLibrary {
     // once per biome
     private final LogThrottle<BiomeConfigRule> ruleFailures;
 
+    // Applying the rules to a biome failing outside any one rule: a bug, so every one is logged, at most once per biome
+    // per reload
+    private final Guard applyRules;
+
     // Current version of the configs that are loaded.
     private int version = 0;
 
@@ -78,6 +82,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
         this.soundLibrary = soundLibrary;
         this.tagLibrary = tagLibrary;
         this.ruleFailures = LogThrottle.oncePerKey(this.logger, "biome rule failures", "the next reload");
+        this.applyRules = Guard.named("Applying biome rules", this.logger, Guard.UNLIMITED);
         this.biomeConditionEvaluator = new BiomeConditionEvaluator(this, this.logger, platformFunctions);
     }
 
@@ -89,6 +94,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
         // Every scope: biome info depends on tags as well as rules, and a tag sync follows every new biome registry
         this.biomes.clear();
         this.ruleFailures.reset();
+        this.applyRules.reset();
         this.biomeConditionEvaluator.reset();
 
         if (scope == IReloadEvent.Scope.TAGS) {
@@ -165,11 +171,12 @@ public final class BiomeLibrary implements IBiomeLibrary {
         final var builder = new BiomeInfoBuilder(this.version, id, name, traits, biome, this.services());
 
         // Collect any trait changes into the trait collection before applying
-        // general rules as these traits can influence decisions.
-        this.applyTraits(biome, builder);
+        // general rules as these traits can influence decisions. Each rule's own failure is reported by the rule; a
+        // failure outside them still leaves the biome built, so it isn't tried again on every lookup.
+        this.applyRules.run(() -> this.applyTraits(biome, builder), id);
 
         // Apply rule configs
-        Guard.execute(() -> applyRuleConfigs(biome, builder));
+        this.applyRules.run(() -> this.applyRuleConfigs(biome, builder), id);
 
         final var result = builder.build();
         this.biomes.put(biome, result);
@@ -192,58 +199,40 @@ public final class BiomeLibrary implements IBiomeLibrary {
         return this.biomeConditionEvaluator.eval(biome, info, script);
     }
 
+    // A rule that throws is reported once per reload and skipped; the rest still apply
     private void applyTraits(Biome biome, BiomeInfoBuilder builder) {
-        this.getNonSyntheticBiomeRules(rule -> !rule.traits().isEmpty())
-                .forEach(rule -> {
-                    try {
-                        var applies = this.biomeConditionEvaluator.check(biome, builder, rule.biomeSelector());
-                        if (applies) {
-                            builder.mergeTraits(rule);
-                        }
-                    } catch (Throwable t) {
-                        this.reportRuleFailure(rule, t, "Unable to apply traits from rule");
-                    }
-                });
+        RuleGuard.forEach(this.getNonSyntheticBiomeRules(rule -> !rule.traits().isEmpty()),
+                rule -> {
+                    if (this.biomeConditionEvaluator.check(biome, builder, rule.biomeSelector()))
+                        builder.mergeTraits(rule);
+                },
+                (rule, t) -> this.ruleFailures.error(rule, t, "Unable to apply traits from rule [%s]", rule));
     }
 
     private void applyRuleConfigs(Biome biome, BiomeInfoBuilder builder) {
-        this.getNonSyntheticBiomeRules(rule -> rule.traits().isEmpty())
-                .forEach(rule -> {
-                    try {
-                        var applies = this.biomeConditionEvaluator.check(biome, builder, rule.biomeSelector());
-                        if (applies) {
-                            builder.apply(rule);
-                        }
-                    } catch (Throwable t) {
-                        this.reportRuleFailure(rule, t, "Unable to process biome rule");
-                    }
-                });
+        RuleGuard.forEach(this.getNonSyntheticBiomeRules(rule -> rule.traits().isEmpty()),
+                rule -> {
+                    if (this.biomeConditionEvaluator.check(biome, builder, rule.biomeSelector()))
+                        builder.apply(rule);
+                },
+                (rule, t) -> this.ruleFailures.error(rule, t, "Unable to process biome rule [%s]", rule));
     }
 
-    /**
-     * Logs a rule's failure the first time it happens after a reload. Errors the JVM can't recover from (out of
-     * memory, stack overflow) are rethrown rather than swallowed.
-     */
-    private void reportRuleFailure(BiomeConfigRule rule, Throwable t, String message) {
-        if (t instanceof VirtualMachineError fatal)
-            throw fatal;
-        this.ruleFailures.error(rule, t, "%s [%s]", message, rule);
-    }
-
-    private Stream<BiomeConfigRule> getNonSyntheticBiomeRules(Predicate<BiomeConfigRule> filter) {
+    private Iterable<BiomeConfigRule> getNonSyntheticBiomeRules(Predicate<BiomeConfigRule> filter) {
         // Filter out synthetic biome data
         return this.biomeConfigs.stream()
                 .filter(c -> !c.biomeSelector().asString().startsWith("@"))
-                .filter(filter);
+                .filter(filter)
+                .toList();
     }
 
-    private static ResourceLocation getBiomeId(Biome biome) {
+    private static Identifier getBiomeId(Biome biome) {
         return RegistryUtils.getRegistryEntry(Registries.BIOME, biome)
-                .map(holder -> holder.unwrapKey().orElseThrow().location()).orElseThrow();
+                .map(holder -> holder.unwrapKey().orElseThrow().identifier()).orElseThrow();
     }
 
     @Override
-    public String getBiomeName(ResourceLocation id) {
+    public String getBiomeName(Identifier id) {
         final String fmt = String.format("biome.%s.%s", id.getNamespace(), id.getPath());
         return Language.getInstance().getOrDefault(fmt);
     }

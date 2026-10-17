@@ -3,8 +3,9 @@ package org.orecruncher.dsurround.gui.overlay;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.orecruncher.dsurround.eventing.IClientTickEnd;
+import org.orecruncher.dsurround.gui.overlay.lightlevel.LightLevelOverlay;
 import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 
@@ -19,13 +20,15 @@ public final class OverlayManager {
         this.overlays = ImmutableList.of(
                 ContainerManager.resolve(DiagnosticsOverlay.class),
                 ContainerManager.resolve(CompassOverlay.class),
-                ContainerManager.resolve(ClockOverlay.class)
+                ContainerManager.resolve(ClockOverlay.class),
+                ContainerManager.resolve(LightLevelOverlay.class),
+                ContainerManager.resolve(ProfileOverlay.class)
         );
 
         IClientTickEnd.EVENT.register(this::tick);
     }
 
-    public void render(GuiGraphics context, DeltaTracker deltaTracker) {
+    public void render(GuiGraphicsExtractor context, DeltaTracker deltaTracker) {
         var partialTick = deltaTracker.getGameTimeDeltaTicks();
         this.overlays.forEach(overlay -> overlay.render(context, partialTick));
     }

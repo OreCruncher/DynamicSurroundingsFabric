@@ -14,6 +14,7 @@ public final class CollectDiagnosticsEvent {
         Systems,
         Particles,
         Timers(false),
+        Render,
         Environment(false),
         Emitters,
         Sounds,
@@ -42,7 +43,11 @@ public final class CollectDiagnosticsEvent {
     private final Map<Section, Collection<Component>> data = new EnumMap<>(Section.class);
 
     public void add(ITimer timer) {
-        this.add(Section.Timers, timer.toString());
+        this.add(Section.Timers, timer);
+    }
+
+    public void add(Section panel, ITimer timer) {
+        this.add(panel, timer.toString());
     }
 
     public void add(Section panel, String text) {

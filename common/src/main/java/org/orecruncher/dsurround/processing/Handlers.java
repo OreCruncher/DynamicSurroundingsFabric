@@ -76,6 +76,9 @@ public class Handlers {
         this.register(StepAccentGenerator.class);
         this.register(FogHandler.class);
         this.register(AuroraHandler.class);
+        this.register(PrecipitationHandler.class);
+        this.register(GroundFogHandler.class);
+        this.register(WindowFrostHandler.class);
 
         IClientTickEnd.EVENT.register(this::tick);
         IClientConnect.EVENT.register(this::onConnect);
@@ -163,7 +166,7 @@ public class Handlers {
 
     private void handleStartupSound() {
         var client = GameUtils.getMC();
-        if (client.getOverlay() != null)
+        if (!client.isGameLoadFinished())
             return;
 
         this.startupSoundPlayed = true;

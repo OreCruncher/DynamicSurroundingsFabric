@@ -1,15 +1,14 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
+import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.particle.SpriteSet;
-import net.minecraft.client.particle.TextureSheetParticle;
+import net.minecraft.client.particle.SingleQuadParticle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.util.FastColor;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +28,7 @@ import java.util.function.Consumer;
  * <p>
  * Uses the water_foam sprites (textures/particle/water_foam_0 to 5): clusters of small bubbles, one picked at random.
  */
-public class WaterFoam extends TextureSheetParticle {
+public class WaterFoam extends SingleQuadParticle {
 
     // How far above the water's surface it rests, so it isn't hidden by it
     private static final double LIFT = 0.02D;
@@ -106,12 +105,12 @@ public class WaterFoam extends TextureSheetParticle {
 
     protected WaterFoam(ClientLevel level, double x, double y, double z, double xd, double zd, SpriteSet sprites) {
         // The constructor without velocity: the one with it adds a random velocity of its own
-        super(level, x, y, z);
+        super(level, x, y, z, sprites.get(level.getRandom()));
         this.xd = xd;
         this.yd = 0D;
         this.zd = zd;
 
-        var random = level.random;
+        var random = level.getRandom();
         this.lifetime = 20 + random.nextInt(30);
         // Half its width, as quadSize is: 0.16 to 0.36 blocks across
         this.startSize = 0.08F + random.nextFloat() * 0.1F;
@@ -126,18 +125,17 @@ public class WaterFoam extends TextureSheetParticle {
         this.roll = this.oRoll = random.nextFloat() * Mth.TWO_PI;
         this.rollSpeed = (random.nextFloat() - 0.5F) * 0.06F;
 
-        this.setSprite(sprites.get(random));
 
         var biomeColor = level.getBiome(BlockPos.containing(x, y, z)).value().getWaterColor();
-        var colorRgb = FastColor.ARGB32.lerp(WHITENESS, biomeColor, ColorPalette.MC_WHITE.getValue());
+        var colorRgb = ARGB.srgbLerp(WHITENESS, biomeColor, ColorPalette.MC_WHITE.getValue());
         this.rCol = ColorPalette.getRed(colorRgb) / 255F;
         this.gCol = ColorPalette.getGreen(colorRgb) / 255F;
         this.bCol = ColorPalette.getBlue(colorRgb) / 255F;
     }
 
     @Override
-    public @NotNull ParticleRenderType getRenderType() {
-        return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
+    public @NotNull SingleQuadParticle.Layer getLayer() {
+        return SingleQuadParticle.Layer.TRANSLUCENT;
     }
 
     @Override
@@ -243,7 +241,7 @@ public class WaterFoam extends TextureSheetParticle {
     }
 
     @Override
-    public void render(@NotNull VertexConsumer buffer, @NotNull Camera camera, float partialTick) {
+    public void extract(@NotNull QuadParticleRenderState state, @NotNull Camera camera, float partialTick) {
         // Set each frame, so the fades are smooth rather than stepping once a tick
         float life = this.lifeFraction(partialTick);
         float fade = Math.min(life / FADE_IN, (1F - life) / FADE_OUT);
@@ -253,7 +251,7 @@ public class WaterFoam extends TextureSheetParticle {
                 Mth.lerp(partialTick, this.oSlopeX, this.slopeX),
                 Mth.lerp(partialTick, this.oSlopeZ, this.slopeZ),
                 Mth.lerp(partialTick, this.oRoll, this.roll));
-        this.renderRotatedQuad(buffer, camera, rotation, partialTick);
+        this.extractRotatedQuad(state, camera, rotation, partialTick);
     }
 
     /**

@@ -12,6 +12,9 @@ body:
         if someone else has already reported your issue. To help move things along, provide as much detail as
         possible, and definitely include client logs. Most of the time the log will contain enough context information
         to identify the source of the issue.
+
+        See the [troubleshooting guide](https://dynamic-surroundings.readthedocs.io/en/latest/troubleshooting/troubleshooting.html)
+        for what to include, where to find the logs, and how to capture a flight recording for performance problems.
   - type: input
     id: dsversion
     attributes:
@@ -68,7 +71,7 @@ body:
     id: logs
     attributes:
       label: "Logs"
-      description: Please provide relevant Minecraft logs; 25MB limit
+      description: Please provide relevant Minecraft logs; 25MB limit. Put other files, such as a flight recording (.jfr), in a .zip file.
     validations:
       required: false
       accept: ".log,.gz,.txt,.zip"

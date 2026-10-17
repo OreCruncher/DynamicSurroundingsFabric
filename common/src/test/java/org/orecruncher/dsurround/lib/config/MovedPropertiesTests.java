@@ -6,9 +6,9 @@ import com.google.gson.JsonPrimitive;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.ConfigPlacement;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.MovedFrom;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.Property;
+import org.orecruncher.dsurround.config.ClockStyle;
+import org.orecruncher.dsurround.config.CompassStyle;
+import org.orecruncher.dsurround.config.GroundFogQuality;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -37,6 +37,30 @@ public class MovedPropertiesTests {
             @Property
             @MovedFrom("oldGroup.enabled")
             public boolean enabled = true;
+
+            // Was a switch: off becomes OFF, and on gets the default
+            @Property
+            @MovedFrom(value = "oldGroup.switched", values = "false=OFF")
+            public Mode mode = Mode.HIGH;
+
+            // A switch folded into a property that was already there: off replaces it, on leaves it
+            @Property
+            @MovedFrom(value = "oldGroup.shown", values = "false=OFF", replaces = true)
+            public Mode style = Mode.HIGH;
+
+            @Property
+            public final InnerGroup inner = new InnerGroup();
+        }
+
+        // A group within a group, which a setting can move into
+        public static class InnerGroup {
+            @Property
+            @MovedFrom("newGroup.bands")
+            public int bands = 3;
+        }
+
+        public enum Mode {
+            OFF, LOW, HIGH
         }
 
         @Property
@@ -98,6 +122,15 @@ public class MovedPropertiesTests {
     }
 
     @Test
+    void aPropertyCanMoveIntoAGroupWithinAGroup() throws IOException {
+        var config = load("{\"newGroup\": {\"bands\": 1}}");
+        assertEquals(1, config.newGroup.inner.bands);
+        var json = written("moved.json").getAsJsonObject("newGroup");
+        assertFalse(json.has("bands"), "the old place is still written");
+        assertEquals(1, json.getAsJsonObject("inner").get("bands").getAsInt());
+    }
+
+    @Test
     void theFileIsWrittenWithTheNewPlaceOnly() throws IOException {
         load("{\"oldGroup\": {\"speed\": 9, \"other\": 2}, \"legacyTop\": 11}");
         var json = written("moved.json");
@@ -116,6 +149,34 @@ public class MovedPropertiesTests {
     void laterOldPlacesAreFallbacks() throws IOException {
         // A file from before the first move
         assertEquals(4, load("{\"oldGroup\": {\"ancient\": 4}}").twice);
+    }
+
+    @Test
+    void aValueIsConvertedAsItsPairSays() throws IOException {
+        assertEquals(MovedConfig.Mode.OFF, load("{\"oldGroup\": {\"switched\": false}}").newGroup.mode);
+        assertFalse(written("moved.json").getAsJsonObject("oldGroup").has("switched"), "the old place is still written");
+    }
+
+    @Test
+    void aValueWithNoPairGetsTheDefault() throws IOException {
+        // Regression: a switch's true carried over as it was can't be read as an enum, and the whole file was set aside
+        assertEquals(MovedConfig.Mode.HIGH, load("{\"oldGroup\": {\"switched\": true, \"other\": 2}}").newGroup.mode);
+        try (var files = Files.list(this.folder)) {
+            assertFalse(files.anyMatch(f -> f.getFileName().toString().endsWith(".bad")), "the file was set aside");
+        }
+    }
+
+    @Test
+    void aReplacingValueOverridesTheNewPlace() throws IOException {
+        var config = load("{\"oldGroup\": {\"shown\": false}, \"newGroup\": {\"style\": \"LOW\"}}");
+        assertEquals(MovedConfig.Mode.OFF, config.newGroup.style);
+        assertFalse(written("moved.json").getAsJsonObject("oldGroup").has("shown"), "the old place is still written");
+    }
+
+    @Test
+    void aReplacingValueWithNoPairLeavesTheNewPlace() throws IOException {
+        assertEquals(MovedConfig.Mode.LOW, load("{\"oldGroup\": {\"shown\": true}, \"newGroup\": {\"style\": \"LOW\"}}").newGroup.style);
+        assertEquals(MovedConfig.Mode.HIGH, load("{\"oldGroup\": {\"shown\": true}}").newGroup.style, "nothing there: the default");
     }
 
     // ---- The JSON paths
@@ -148,7 +209,7 @@ public class MovedPropertiesTests {
 
     @Test
     void theBlockEffectSettingsAreCarriedOver() throws IOException {
-        // Waterfalls and fireflies used to be switched in the block effects
+        // Waterfalls, fireflies and flame jets used to be switched in the block effects
         var config = loadModConfig("""
                 {
                   "blockEffects": {
@@ -156,7 +217,9 @@ public class MovedPropertiesTests {
                     "enableWaterfallSounds": false,
                     "enableWaterfallParticles": false,
                     "firefliesEnabled": false,
-                    "flameJetEnabled": false
+                    "flameJetEnabled": false,
+                    "flameJetLight": false,
+                    "steamColumnEnabled": false
                   }
                 }
                 """);
@@ -164,11 +227,14 @@ public class MovedPropertiesTests {
         assertFalse(config.waterfallOptions.enableSounds);
         assertFalse(config.waterfallOptions.enableParticles);
         assertFalse(config.fireflyOptions.enableFireflies);
+        assertFalse(config.flameJetOptions.enableFlameJets);
+        assertFalse(config.flameJetOptions.enableLight);
         // Settings that stayed are read as before
-        assertFalse(config.blockEffects.flameJetEnabled);
+        assertFalse(config.blockEffects.steamColumnEnabled);
 
         var blockEffects = written("dsurround.json").getAsJsonObject("blockEffects");
-        assertFalse(blockEffects.has("waterfallsEnabled") || blockEffects.has("firefliesEnabled"), "old settings still written");
+        assertFalse(blockEffects.has("waterfallsEnabled") || blockEffects.has("firefliesEnabled") || blockEffects.has("flameJetEnabled"),
+                "old settings still written");
     }
 
     @Test
@@ -202,6 +268,42 @@ public class MovedPropertiesTests {
         assertFalse(config.waterfallOptions.enableMist);
         assertTrue(config.fireflyOptions.enableLight);
         assertFalse(written("dsurround.json").has("particleEffects"));
+    }
+
+    @Test
+    void theGroundFogSwitchBecomesItsQuality() throws IOException {
+        assertEquals(GroundFogQuality.NONE,
+                loadModConfig("{\"weatherOptions\": {\"enableGroundFog\": false}}").weatherOptions.groundFogQuality);
+        assertEquals(GroundFogQuality.FANCY,
+                loadModConfig("{\"weatherOptions\": {\"enableGroundFog\": true}}").weatherOptions.groundFogQuality);
+        assertFalse(written("dsurround.json").getAsJsonObject("weatherOptions").has("enableGroundFog"));
+    }
+
+    @Test
+    void theAuroraBandsMoveToTheClassicAurora() throws IOException {
+        assertEquals(1, loadModConfig("{\"auroraOptions\": {\"maxBands\": 1}}").auroraOptions.classic.maxBands);
+        var aurora = written("dsurround.json").getAsJsonObject("auroraOptions");
+        assertFalse(aurora.has("maxBands"));
+        assertEquals(1, aurora.getAsJsonObject("classic").get("maxBands").getAsInt());
+    }
+
+    @Test
+    void theCompassSwitchBecomesItsStyle() throws IOException {
+        // Off wins over the style that was set beside it; on keeps that style
+        assertEquals(CompassStyle.NONE, loadModConfig(
+                "{\"compassAndClockOptions\": {\"enableCompass\": false, \"compassStyle\": \"ROSE_1\"}}").compassAndClockOptions.compassStyle);
+        assertEquals(CompassStyle.ROSE_1, loadModConfig(
+                "{\"compassAndClockOptions\": {\"enableCompass\": true, \"compassStyle\": \"ROSE_1\"}}").compassAndClockOptions.compassStyle);
+        assertFalse(written("dsurround.json").getAsJsonObject("compassAndClockOptions").has("enableCompass"));
+    }
+
+    @Test
+    void theClockSwitchBecomesItsStyle() throws IOException {
+        assertEquals(ClockStyle.NONE,
+                loadModConfig("{\"compassAndClockOptions\": {\"enableClock\": false}}").compassAndClockOptions.clockStyle);
+        assertEquals(ClockStyle.POCKET_WATCH,
+                loadModConfig("{\"compassAndClockOptions\": {\"enableClock\": true}}").compassAndClockOptions.clockStyle);
+        assertFalse(written("dsurround.json").getAsJsonObject("compassAndClockOptions").has("enableClock"));
     }
 
     @Test

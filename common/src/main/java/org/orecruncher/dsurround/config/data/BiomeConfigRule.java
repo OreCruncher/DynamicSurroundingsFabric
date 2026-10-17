@@ -21,6 +21,7 @@ public record BiomeConfigRule(
         boolean resetFogColor,
         Optional<TextColor> fogColor,
         Optional<FogDensity> fogDensity,
+        Optional<FogDensity> groundFog,
         Optional<Script> additionalSoundChance,
         Optional<Script> moodSoundChance,
         List<AcousticConfig> acoustics) {
@@ -35,6 +36,7 @@ public record BiomeConfigRule(
                         Codec.BOOL.optionalFieldOf("resetFogColor", false).forGetter(BiomeConfigRule::resetFogColor),
                         TextColor.CODEC.optionalFieldOf("fogColor").forGetter(BiomeConfigRule::fogColor),
                         FogDensity.CODEC.optionalFieldOf("fogDensity").forGetter(BiomeConfigRule::fogDensity),
+                        FogDensity.CODEC.optionalFieldOf("groundFog").forGetter(BiomeConfigRule::groundFog),
                         Script.CODEC.optionalFieldOf("additionalSoundChance").forGetter(BiomeConfigRule::additionalSoundChance),
                         Script.CODEC.optionalFieldOf("moodSoundChance").forGetter(BiomeConfigRule::moodSoundChance),
                         Codec.list(AcousticConfig.CODEC).optionalFieldOf("acoustics", ImmutableList.of()).forGetter(BiomeConfigRule::acoustics))

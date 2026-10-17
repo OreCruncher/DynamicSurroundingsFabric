@@ -13,6 +13,7 @@ import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.runtime.weather.WindService;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
@@ -26,6 +27,7 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
     private final IAudioPlayer audioPlayer;
     private final ITickCount tickCount;
     private final Scanners scanner;
+    private final WindService windService;
 
     // Scratch map used for calculating what sounds need to be playing
     private final Object2FloatOpenHashMap<ISoundFactory> workMap = new Object2FloatOpenHashMap<>(8, Hash.DEFAULT_LOAD_FACTOR);
@@ -34,8 +36,9 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
     // Scratch list of the sounds from the PLAYER and VILLAGE synthetic biomes
     private final ObjectArray<ISoundFactory> playerSounds = new ObjectArray<>(8);
 
-    public BiomeSoundHandler(IBiomeLibrary biomeLibrary, IAudioPlayer audioPlayer, ITickCount tickCount, Scanners scanner, Configuration config, IModLog logger) {
+    public BiomeSoundHandler(IBiomeLibrary biomeLibrary, IAudioPlayer audioPlayer, ITickCount tickCount, Scanners scanner, WindService windService, Configuration config, IModLog logger) {
         super("Biome Sounds", config, logger);
+        this.windService = windService;
         this.audioPlayer = audioPlayer;
         this.biomeLibrary = biomeLibrary;
         this.tickCount = tickCount;
@@ -54,6 +57,9 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
             var acoustics = kvp.getKey().findBiomeSoundMatches();
             final float volume = 0.05F + 0.95F * (kvp.getIntValue() / area);
             for (var acoustic : acoustics) {
+                // Where the air is still, there is no wind to hear
+                if (acoustic.followsWind() && this.windService.isStill())
+                    continue;
                 this.workMap.addTo(acoustic, volume);
             }
         }
@@ -61,7 +67,13 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
 
     @Override
     public void process(final Player player) {
-        this.emitters.forEach(BiomeSoundEmitter::tick);
+        // Wind sounds rise and fall with the wind, and swell as gusts pass
+        var windScale = this.windService.loopScale();
+        this.emitters.forEach(emitter -> {
+            if (emitter.followsWind())
+                emitter.setWindScale(windScale);
+            emitter.tick();
+        });
         if ((this.tickCount.getTickCount() % SCAN_INTERVAL) == 0) {
             handleBiomeSounds(player);
         }
@@ -155,6 +167,8 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
         // Any sounds left in the list are new and need an emitter created.
         this.workMap.forEach((fx, volume) -> {
             final BiomeSoundEmitter e = new BiomeSoundEmitter(this.logger, this.audioPlayer, fx);
+            if (e.followsWind())
+                e.setWindScale(this.windService.loopScale());
             e.setVolumeScale(volume);
             this.emitters.add(e);
         });

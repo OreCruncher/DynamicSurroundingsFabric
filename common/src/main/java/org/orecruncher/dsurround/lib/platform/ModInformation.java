@@ -32,6 +32,7 @@ public final class ModInformation implements IMinecraftDirectories {
     private final Path modConfigDirectory;
     private final Path modDataDirectory;
     private final Path modDumpDirectory;
+    private final Path modProfileDirectory;
 
     public ModInformation(String modId, String displayName, SemanticVersion version) {
         this.modId = modId;
@@ -40,9 +41,11 @@ public final class ModInformation implements IMinecraftDirectories {
         this.modConfigDirectory = getConfigPath(modId);
         this.modDataDirectory = this.modConfigDirectory.resolve("configs");
         this.modDumpDirectory = this.modConfigDirectory.resolve("dumps");
+        this.modProfileDirectory = this.modConfigDirectory.resolve("profiles");
 
         createPath(this.modDataDirectory);
         createPath(this.modDumpDirectory);
+        createPath(this.modProfileDirectory);
     }
 
     public String modId() {
@@ -67,6 +70,10 @@ public final class ModInformation implements IMinecraftDirectories {
 
     public Path getModDumpDirectory() {
         return this.modDumpDirectory;
+    }
+
+    public Path getModProfileDirectory() {
+        return this.modProfileDirectory;
     }
 
     /**
@@ -124,7 +131,7 @@ public final class ModInformation implements IMinecraftDirectories {
     }
 
     public String getBranding() {
-        return String.format("%s %s-%s", this.displayName, SharedConstants.getCurrentVersion().getName(), this.version);
+        return String.format("%s %s-%s", this.displayName, SharedConstants.getCurrentVersion().name(), this.version);
     }
 
     public static Optional<ModInformation> getModInformation(String modId) {

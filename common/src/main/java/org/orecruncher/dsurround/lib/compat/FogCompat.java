@@ -1,11 +1,11 @@
 package org.orecruncher.dsurround.lib.compat;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.client.renderer.fog.FogData;
+import org.joml.Vector4f;
 
 /**
- * Reads and sets the fog the shaders use. Later Minecraft versions rebuild the fog pipeline, so this keeps the
- * render system calls in one place.
+ * Copies and applies fog ranges. The game builds a {@link FogData} for each frame and the fog environments adjust it
+ * in place, so the mod's changes take effect by writing them back into that object.
  */
 public final class FogCompat {
 
@@ -13,23 +13,29 @@ public final class FogCompat {
     }
 
     /**
-     * The fog range and shape currently configured for the shaders, in a new {@link FogRenderer.FogData} for
-     * {@code mode}.
+     * A copy of {@code data} with a new environmental range; everything else is kept.
      */
-    public static FogRenderer.FogData currentShaderFog(FogRenderer.FogMode mode) {
-        var data = new FogRenderer.FogData(mode);
-        data.start = RenderSystem.getShaderFogStart();
-        data.end = RenderSystem.getShaderFogEnd();
-        data.shape = RenderSystem.getShaderFogShape();
-        return data;
+    public static FogData withRange(FogData data, float start, float end) {
+        var result = new FogData();
+        result.environmentalStart = start;
+        result.renderDistanceStart = data.renderDistanceStart;
+        result.environmentalEnd = end;
+        result.renderDistanceEnd = data.renderDistanceEnd;
+        result.skyEnd = data.skyEnd;
+        result.cloudEnd = data.cloudEnd;
+        result.color = data.color == null ? null : new Vector4f(data.color);
+        return result;
     }
 
     /**
-     * Sets the shaders' fog range and shape from {@code data}.
+     * Sets the environmental range and the sky and cloud fog ends of {@code target}, the game's fog for this frame,
+     * from {@code source}. The render distance fog is set by the game after the fog environments run, so it is left
+     * alone.
      */
-    public static void applyShaderFog(FogRenderer.FogData data) {
-        RenderSystem.setShaderFogStart(data.start);
-        RenderSystem.setShaderFogEnd(data.end);
-        RenderSystem.setShaderFogShape(data.shape);
+    public static void applyRange(FogData target, FogData source) {
+        target.environmentalStart = source.environmentalStart;
+        target.environmentalEnd = source.environmentalEnd;
+        target.skyEnd = source.skyEnd;
+        target.cloudEnd = source.cloudEnd;
     }
 }

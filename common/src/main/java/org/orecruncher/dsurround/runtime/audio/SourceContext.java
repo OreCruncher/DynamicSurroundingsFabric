@@ -1,10 +1,8 @@
 package org.orecruncher.dsurround.runtime.audio;
 
 import com.google.common.base.MoreObjects;
-import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.EXTEfx;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.logging.LogThrottle;
@@ -15,6 +13,11 @@ import org.orecruncher.dsurround.runtime.audio.effects.SourcePropertyFloat;
 
 import java.util.concurrent.Callable;
 
+/**
+ * The enhanced sound processing of one sound playing on an OpenAL source: its filters, calculated by the worker
+ * threads ({@link #call()}) from where its {@link ISoundEmitter} is, and uploaded to the source by the thread that
+ * plays it ({@link #tick()}).
+ */
 public final class SourceContext implements Callable<Void> {
 
     private static final LogThrottle<Object> CALCULATION_ERRORS = LogThrottle.firstN(Library.LOGGER, "sound effect calculation errors", null, 10);
@@ -23,28 +26,38 @@ public final class SourceContext implements Callable<Void> {
     private static final int UPDATE_FEQUENCY_TICKS = 7;
 
     private final Object sync = new Object();
-    private final LowPassData[] sends = new LowPassData[Efx.SENDS];
+    // One per reverb, shortest first; Efx decides which of the context's sends carries each
+    private final LowPassData[] reverbs = new LowPassData[Efx.SENDS];
     private final LowPassData direct;
     private final SourcePropertyFloat airAbsorb;
-    private final SoundFXUtils fxProcessor;
+    private final SourceAcoustics acoustics;
 
     private final int sourceId;
+    private final Efx efx;
+    private final ISoundEmitter emitter;
 
-    private SoundInstance sound;
-    private Vec3 pos;
-    private SoundSource category = SoundSource.MASTER;
+    // The emitter's position, taken at the start of each calculation so it holds still during it
+    private volatile Vec3 pos;
 
-    private boolean isEnabled;
+    // Cleared by disable(), on the thread playing the sound; read by the worker threads
+    private volatile boolean isEnabled = true;
     private int updateCount;
 
-    public SourceContext(int sourceId) {
+    /**
+     * @param sourceId the OpenAL source the sound plays on
+     * @param efx      the effects of the OpenAL context the source belongs to
+     * @param emitter  what the sound comes from
+     */
+    public SourceContext(int sourceId, Efx efx, ISoundEmitter emitter) {
         this.sourceId = sourceId;
-        for (int i = 0; i < this.sends.length; i++)
-            this.sends[i] = new LowPassData();
+        this.efx = efx;
+        this.emitter = emitter;
+        for (int i = 0; i < this.reverbs.length; i++)
+            this.reverbs[i] = new LowPassData();
         this.direct = new LowPassData();
         this.airAbsorb = new SourcePropertyFloat(EXTEfx.AL_AIR_ABSORPTION_FACTOR, EXTEfx.AL_DEFAULT_AIR_ABSORPTION_FACTOR, EXTEfx.AL_MIN_AIR_ABSORPTION_FACTOR, EXTEfx.AL_MAX_AIR_ABSORPTION_FACTOR);
-        this.pos = Vec3.ZERO;
-        this.fxProcessor = new SoundFXUtils(this);
+        this.pos = emitter.position();
+        this.acoustics = new SourceAcoustics(this);
     }
 
     public Object sync() {
@@ -59,15 +72,28 @@ public final class SourceContext implements Callable<Void> {
         return this.isEnabled;
     }
 
-    public void enable() {
-        this.isEnabled = true;
+    /**
+     * Stops processing the sound and takes its filters off, for a source that plays on without them. Called where
+     * {@link #tick()} is.
+     */
+    public void disable() {
+        synchronized (this.sync()) {
+            this.isEnabled = false;
+            for (var reverb : this.reverbs)
+                reverb.disable();
+            this.direct.disable();
+            this.airAbsorb.setProcess(false);
+            this.efx.uploadIfChanged(this.sourceId, this.reverbs, this.direct);
+            this.airAbsorb.apply(this.sourceId);
+            AudioUtilities.validate("SourceHandler::disable");
+        }
     }
 
     /**
-     * The filter for a reverb send, 0 to {@link Efx#SENDS} - 1.
+     * The send filter for a reverb, 0 (the shortest) to {@link Efx#SENDS} - 1.
      */
-    public LowPassData getSend(int send) {
-        return this.sends[send];
+    public LowPassData getReverb(int reverb) {
+        return this.reverbs[reverb];
     }
 
     public LowPassData getDirect() {
@@ -78,35 +104,34 @@ public final class SourceContext implements Callable<Void> {
         return this.airAbsorb;
     }
 
+    /**
+     * Where the sound was at the start of the current calculation.
+     */
     public Vec3 getPosition() {
         return this.pos;
     }
 
-
     public SoundSource getCategory() {
-        return this.category;
-    }
-
-    public void attachSound(final SoundInstance sound) {
-        this.sound = sound;
-        this.category = sound.getSource();
-        captureState();
-    }
-
-    @Nullable
-    public SoundInstance getSound() {
-        return this.sound;
+        return this.emitter.category();
     }
 
     /**
-     * Called on the SoundSource update thread when updating status.  Do not call from the client thread or bad things
-     * can happen.
+     * Whether the listener is close enough to hear the sound.
+     */
+    public boolean inRange(final Vec3 listener) {
+        return this.emitter.inRange(listener);
+    }
+
+    /**
+     * Uploads what changed. Called on the thread that plays the sound, where its OpenAL context is current: the sound
+     * engine's thread or, for a voice, its speaker thread. Do not call from the client thread or bad things can
+     * happen.
      */
     public void tick() {
         if (this.isEnabled()) {
             synchronized (this.sync()) {
                 // Upload what changed since the last tick
-                Efx.uploadIfChanged(this.sourceId, this.sends, this.direct);
+                this.efx.uploadIfChanged(this.sourceId, this.reverbs, this.direct);
                 this.airAbsorb.apply(this.sourceId);
 
                 AudioUtilities.validate("SourceHandler::tick");
@@ -132,7 +157,7 @@ public final class SourceContext implements Callable<Void> {
     }
 
     /**
-     * Called by the thread pool when executing the task
+     * Calculates and uploads straight away, when the sound starts playing. Called where {@link #tick()} is.
      */
     public void exec() {
         this.captureState();
@@ -143,24 +168,22 @@ public final class SourceContext implements Callable<Void> {
 
     private void updateImpl() {
         try {
-            this.fxProcessor.calculate(SoundFXProcessor.getWorldContext());
+            this.acoustics.calculate(EnhancedSoundProcessor.getWorldContext());
         } catch (final Exception e) {
             // Usually a world unloading while the background threads are using it, which is harmless. Logged
             // (a limited number of times) so that anything else, like a calculation that always fails, is seen.
-            CALCULATION_ERRORS.error(e, "Unable to calculate sound effects for %s", this.sound == null ? "?" : this.sound.getLocation());
+            CALCULATION_ERRORS.error(e, "Unable to calculate sound effects for %s", this.emitter.describe());
         }
     }
 
     private void captureState() {
-        if (this.sound != null) {
-            this.pos = new Vec3(this.sound.getX(), this.sound.getY(), this.sound.getZ());
-        }
+        this.pos = this.emitter.position();
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .addValue(AudioUtilities.debugString(this.sound))
+                .addValue(this.emitter.describe())
                 .toString();
     }
 

@@ -1,13 +1,19 @@
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
+import net.minecraft.world.attribute.EnvironmentAttributes;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.resources.Identifier;
+
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.data.DimensionConfigRule;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
+
+import java.util.function.Predicate;
 
 /**
  * Settings for one dimension, built from the world itself and then adjusted by the matching dimension config rules.
@@ -20,13 +26,20 @@ import org.orecruncher.dsurround.lib.compat.LevelCompat;
 public class DimensionInfo {
 
     public static final DimensionInfo NONE = new DimensionInfo();
+
+    /**
+     * Whether a level's dimension draws its weather its own way: NeoForge lets a dimension register a renderer for it
+     * (set by the NeoForge platform). Particle weather drawn in its place would hide it, so it is left to the dimension
+     * unless a rule says otherwise. Nothing on Fabric replaces a dimension's weather.
+     */
+    public static Predicate<Level> drawsOwnWeather = level -> false;
     private static final int SPACE_HEIGHT_OFFSET = 32;
     // Cloud height for a dimension that has no clouds: never reached
     private static final int NO_CLOUDS = Integer.MAX_VALUE;
 
     protected final boolean isFlatWorld;
     // Attributes about the dimension. This information is loaded from local configs.
-    protected ResourceLocation name;
+    protected Identifier name;
     protected int seaLevel;
     protected int skyHeight;
     protected int cloudHeight;
@@ -34,6 +47,14 @@ public class DimensionInfo {
     protected boolean alwaysOutside = false;
     protected boolean playBiomeSounds = true;
     protected boolean compassWobble = false;
+    // TODO: Expose in configs
+    protected boolean natural = true;
+    // Whether the mod's particle rain, snow and dust storms take the place of the dimension's weather
+    protected boolean particleWeather = true;
+    // Whether the wind blows here: it drifts the weather, mist, steam, smoke and flames
+    protected boolean simulateWind = true;
+    // Whether mist lies on the ground here, in the biomes given it
+    protected boolean groundFog = true;
 
     // The dimension's own cloud height, used unless a rule sets one
     private final int defaultCloudHeight;
@@ -49,7 +70,7 @@ public class DimensionInfo {
 
     public DimensionInfo(final Level world) {
         // Attributes that come from the world object itself. Set now because the config may override.
-        this.name = world.dimension().location();
+        this.name = world.dimension().identifier();
         this.seaLevel = world.getSeaLevel();
         this.skyHeight = world.getHeight();
         this.isFlatWorld = LevelCompat.isSuperFlat(world);
@@ -59,7 +80,14 @@ public class DimensionInfo {
         if (this.isFlatWorld)
             this.seaLevel = -60;
 
-        this.compassWobble = !world.dimensionType().natural();
+        this.natural = world.dimensionType().skybox() == DimensionType.Skybox.OVERWORLD;
+        this.compassWobble = !this.natural;
+
+        // Guesses, which a rule can overrule: a dimension with a sky has wind and ground fog, and one that draws its
+        // weather as vanilla does gets particle weather in its place
+        this.simulateWind = world.dimensionType().hasSkyLight();
+        this.groundFog = world.dimensionType().hasSkyLight();
+        this.particleWeather = !drawsOwnWeather.test(world);
 
         // Valid even if finish() is never called
         this.finish();
@@ -67,15 +95,14 @@ public class DimensionInfo {
 
     /**
      * The height vanilla draws this dimension's clouds at (192 for the overworld), or NO_CLOUDS for a dimension
-     * without clouds (the nether and the end).
+     * without clouds (the nether and the end). Both are environment attributes; vanilla draws no clouds when their
+     * color is fully transparent. Read at the world's origin, as the dimension's own values.
      */
     private static int vanillaCloudHeight(final Level world) {
-        if (world instanceof ClientLevel clientLevel) {
-            float height = clientLevel.effects().getCloudHeight();
-            if (!Float.isNaN(height))
-                return Mth.floor(height);
-        }
-        return NO_CLOUDS;
+        var attributes = world.environmentAttributes();
+        if (ARGB.alpha(attributes.getValue(EnvironmentAttributes.CLOUD_COLOR, Vec3.ZERO)) == 0)
+            return NO_CLOUDS;
+        return Mth.floor(attributes.getValue(EnvironmentAttributes.CLOUD_HEIGHT, Vec3.ZERO));
     }
 
     /**
@@ -89,6 +116,9 @@ public class DimensionInfo {
             config.playBiomeSounds().ifPresent(v -> this.playBiomeSounds = v);
             config.cloudHeight().ifPresent(v -> this.configuredCloudHeight = v);
             config.compassWobble().ifPresent(v -> this.compassWobble = v);
+            config.particleWeather().ifPresent(v -> this.particleWeather = v);
+            config.simulateWind().ifPresent(v -> this.simulateWind = v);
+            config.groundFog().ifPresent(v -> this.groundFog = v);
         }
     }
 
@@ -102,7 +132,7 @@ public class DimensionInfo {
         return this;
     }
 
-    public ResourceLocation getName() {
+    public Identifier getName() {
         return this.name;
     }
 
@@ -136,6 +166,22 @@ public class DimensionInfo {
 
     public boolean getCompassWobble() {
         return this.compassWobble;
+    }
+
+    public boolean natural() {
+        return this.natural;
+    }
+
+    public boolean particleWeather() {
+        return this.particleWeather;
+    }
+
+    public boolean simulateWind() {
+        return this.simulateWind;
+    }
+
+    public boolean groundFog() {
+        return this.groundFog;
     }
 
 }

@@ -9,7 +9,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.eventing.IConfigChangedEvent;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -106,6 +105,10 @@ public class ConfigurationDataTests {
         @TextStyle(color = "not a color", bold = true)
         public boolean badlyStyled = true;
 
+        @Property
+        @Experimental
+        public boolean experimental = true;
+
         public int notAProperty = 7;
     }
 
@@ -161,6 +164,25 @@ public class ConfigurationDataTests {
         @Property
         @DoubleSlider(min = 0D, max = 1D, step = 0.1D)
         public double value = 0.35D;
+    }
+
+    public static class InnerGroup {
+        @Property
+        @IntegerRange(min = 0, max = 10)
+        public int depth = 4;
+    }
+
+    public static class OuterGroup {
+        @Property
+        public boolean on = true;
+
+        @Property
+        public final InnerGroup inner = new InnerGroup();
+    }
+
+    public static class NestedConfig extends ConfigurationData {
+        @Property
+        public final OuterGroup outer = new OuterGroup();
     }
 
     private Path configFile() {
@@ -385,6 +407,12 @@ public class ConfigurationDataTests {
         // An invalid colour is left out; the rest of the style still applies
         assertNull(badlyStyled.getColor());
         assertTrue(badlyStyled.isBold());
+    }
+
+    @Test
+    void experimentalIsMarked() {
+        assertTrue(element(spec(), "experimental").isExperimental());
+        assertFalse(element(spec(), "flag").isExperimental());
     }
 
     // ---- Values ----------------------------------------------------------------------------------------------
@@ -627,5 +655,53 @@ public class ConfigurationDataTests {
     @Test
     void writeWithoutAFileFails() {
         assertThrows(IOException.class, () -> new TestConfig().write());
+    }
+
+    // ---- Groups within groups --------------------------------------------------------------------------------
+
+    @Test
+    void aGroupCanHoldAGroup() {
+        var outer = assertInstanceOf(ConfigElement.PropertyGroup.class, element(ConfigurationData.getSpecification(NestedConfig.class), "outer"));
+        var inner = assertInstanceOf(ConfigElement.PropertyGroup.class, element(outer.getChildren(), "inner"));
+        assertEquals(Constants.MOD_ID + ".outer.inner", inner.getLanguageKey());
+        assertEquals(Constants.MOD_ID + ".outer.inner.depth", element(inner.getChildren(), "depth").getLanguageKey());
+    }
+
+    @Test
+    void anInnerGroupIsReadAndWritten() throws IOException {
+        this.writeFile("""
+                {"outer": {"on": false, "inner": {"depth": 7}}}
+                """);
+
+        var config = ConfigurationData.load(NestedConfig.class, this.configFile());
+        assertFalse(config.outer.on);
+        assertEquals(7, config.outer.inner.depth);
+
+        config.outer.inner.depth = 2;
+        config.save();
+        assertEquals(2, this.readFile().getAsJsonObject("outer").getAsJsonObject("inner").get("depth").getAsInt());
+    }
+
+    @Test
+    void anInnerGroupIsRepaired() throws IOException {
+        // Missing altogether, then out of range
+        this.writeFile("""
+                {"outer": {"on": false, "inner": null}}
+                """);
+        var config = ConfigurationData.load(NestedConfig.class, this.configFile());
+        assertFalse(config.outer.on);
+        assertEquals(4, config.outer.inner.depth);
+
+        this.writeFile("""
+                {"outer": {"inner": {"depth": 99}}}
+                """);
+        assertEquals(10, ConfigurationData.load(NestedConfig.class, this.configFile()).outer.inner.depth);
+    }
+
+    @Test
+    void onlyTopLevelGroupsAreRegistered() {
+        // A group within a group is reached through the group holding it
+        var config = new NestedConfig();
+        assertEquals(List.of(config.outer), config.getGroups());
     }
 }

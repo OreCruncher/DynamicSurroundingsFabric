@@ -11,6 +11,7 @@ import net.minecraft.client.gui.screens.options.SoundOptionsScreen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.gui.ComponentDisplayScreen;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -71,7 +72,7 @@ public abstract class MixinSoundOptionsScreen extends OptionsSubScreen {
 
     @Unique
     private void dsurround$activateCreditsScreen(Button button) {
-        String body = FileResourceUtil.readResourceFromJar("assets/CREDITS.md")
+        String body = FileResourceUtil.readResourceFromJar("assets/" + Constants.MOD_ID + "/credits.md")
                 .orElse(Localization.load("dsurround.text.config.resourcenotfound"));
         var screen = ComponentDisplayScreen.createFromMarkdown(this, Component.translatable("dsurround.text.config.credits.title").withStyle(dsurround$STYLE), body);
         GameUtils.setScreen(screen);

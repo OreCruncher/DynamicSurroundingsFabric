@@ -2,18 +2,14 @@ package org.orecruncher.dsurround.processing.scanner;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.config.libraries.IDimensionLibrary;
 import org.orecruncher.dsurround.config.DimensionInfo;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.compat.BlockCompat;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
+import org.orecruncher.dsurround.runtime.weather.Roofs;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,7 +22,6 @@ public final class CeilingScanner extends AbstractScanner {
     private static final float INSIDE_THRESHOLD = 1.0F - 65.0F / 176.0F;
     private static final Cell[] cells;
     private static final float TOTAL_POINTS;
-    private static final ObjectArray<TagKey<Block>> NON_CEILING = new ObjectArray<>();
 
     static {
 
@@ -44,12 +39,6 @@ public final class CeilingScanner extends AbstractScanner {
         for (final Cell c : cellList)
             totalPoints += c.potentialPoints();
         TOTAL_POINTS = totalPoints;
-
-        // Vanilla tags
-        NON_CEILING.add(BlockTags.LEAVES);
-        NON_CEILING.add(BlockTags.FENCE_GATES);
-        NON_CEILING.add(BlockTags.FENCES);
-        NON_CEILING.add(BlockTags.WALLS);
     }
 
     private final IDimensionLibrary dimensionLibrary;
@@ -154,15 +143,7 @@ public final class CeilingScanner extends AbstractScanner {
     }
 
     private boolean actsAsCeiling(final Level world, final BlockPos pos, final BlockState state) {
-        // Only blocks solid enough to be a roof count; small ones like lanterns and chains don't.
-        if (!BlockCompat.isCeilingSolid(world, pos, state))
-            return false;
-
-        // Test the block tags in our NON_CEILING set to see if any match
-        for (final TagKey<Block> tag : NON_CEILING) {
-            if (this.tagLibrary.is(tag, state))
-                return false;
-        }
-        return true;
+        // The same roofs as the weather's shelter, so the two agree about a building
+        return Roofs.isRoof(world, pos, state, this.tagLibrary);
     }
 }

@@ -1,8 +1,6 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import com.mojang.serialization.Codec;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.config.data.DimensionConfigRule;
 import org.orecruncher.dsurround.config.DimensionInfo;
@@ -24,9 +22,6 @@ public final class DimensionLibrary implements IDimensionLibrary {
 
     private final IModLog logger;
     private final ObjectArray<DimensionConfigRule> dimensionRules = new ObjectArray<>();
-    // Built from the world as well as the rules (sea level, height, superflat, clouds), so it only holds for the
-    // current world: cleared on every reload and whenever the client loads a world
-    private final Map<ResourceKey<Level>, DimensionInfo> configs = new Object2ObjectOpenHashMap<>();
     private int version = 0;
 
     public DimensionLibrary(IModLog logger) {
@@ -34,9 +29,8 @@ public final class DimensionLibrary implements IDimensionLibrary {
 
         // A different world can have different values for the same dimension key (a superflat overworld after a
         // normal one, say), so nothing carries over between worlds. Leaving a world (including a server transfer) is
-        // a disconnect; moving between dimensions within one needs nothing, as the cache is per dimension.
+        // a disconnect. The dimension oracle caches the built info per level.
         IClientDisconnect.EVENT.register(client -> {
-            this.configs.clear();
             this.version++;
         });
     }
@@ -45,7 +39,6 @@ public final class DimensionLibrary implements IDimensionLibrary {
     public void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
 
         this.version++;
-        this.configs.clear();
 
         if (scope == IReloadEvent.Scope.TAGS) {
             this.logger.info("received tag update notification; version is now %d", this.version);
@@ -67,13 +60,9 @@ public final class DimensionLibrary implements IDimensionLibrary {
 
     @Override
     public DimensionInfo getData(final Level world) {
-        return this.configs.computeIfAbsent(
-                world.dimension(),
-                key -> {
-                    var dimInfo = new DimensionInfo(world);
-                    this.dimensionRules.forEach(dimInfo::update);
-                    return dimInfo.finish();
-                });
+        var dimInfo = new DimensionInfo(world);
+        this.dimensionRules.forEach(dimInfo::update);
+        return dimInfo.finish();
     }
 
     @Override

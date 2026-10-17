@@ -2,7 +2,9 @@ package org.orecruncher.dsurround.config;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -28,8 +30,8 @@ public abstract class EntityTypeMatcher implements IMatcher<Entity> {
             }
             else if (entityTypeId.contains(":")) {
                 // If it looks like an Identifier, then it must be an EntityType
-                var type = EntityType.byString(entityTypeId);
-                return type.<DataResult<IMatcher<Entity>>>map(entityType -> DataResult.success(new MatchOnEntityType(entityType)))
+                var type = BuiltInRegistries.ENTITY_TYPE.get(Identifier.parse(entityTypeId));
+                return type.<DataResult<IMatcher<Entity>>>map(entityType -> DataResult.success(new MatchOnEntityType(entityType.value())))
                         .orElseGet(() -> DataResult.error(() -> String.format("Unknown entity type id %s", entityTypeId)));
             } else {
                 return DataResult.error(() -> String.format("Unknown entity class(s) %s", entityTypeId));
