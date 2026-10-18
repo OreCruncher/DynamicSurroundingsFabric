@@ -8,6 +8,22 @@
     {
       "id": "#forge:is_plains",
       "required": false
+    },
+    {
+      "id": "biomesoplenty:auroral_garden",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:snowy_fir_clearing",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:glistering_meadow",
+      "required": false
+    },
+    {
+      "id": "undergarden:frostfields",
+      "required": false
     }
   ]
 }

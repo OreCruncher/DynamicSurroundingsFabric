@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
-import net.minecraft.resources.Identifier;
-import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import static org.orecruncher.dsurround.config.BiomeTrait.*;
@@ -18,7 +16,7 @@ public final class BiomeTraitCleanup implements IBiomeTraitAnalyzer {
     }
 
     @Override
-    public void analyze(@NotNull Identifier id, @NotNull Biome biome, @NotNull Set<BiomeTrait> resultCollection) {
+    public void analyze(@NotNull BiomeEvidence biome, @NotNull Set<BiomeTrait> resultCollection) {
         if (resultCollection.contains(NETHER)) {
             resultCollection.removeAll(Set.of(OVERWORLD, END));
         }

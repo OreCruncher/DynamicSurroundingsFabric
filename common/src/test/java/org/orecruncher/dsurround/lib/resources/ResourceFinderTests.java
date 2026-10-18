@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -224,6 +226,25 @@ public class ResourceFinderTests {
         assertEquals(2, found.size());
         // Recorded under the tag's namespace
         assertEquals(Set.of("c"), namespaces(found));
+    }
+
+    @Test
+    void findsDataInAModsJar() throws IOException {
+        // Regression: on NeoForge a mod's path is its jar file, and its data folder was looked for beside it, so no
+        // tags were filled in from jars there. ModRoots opens the jar.
+        var jar = this.folder.resolve("modjar.jar");
+        try (var out = new ZipOutputStream(Files.newOutputStream(jar))) {
+            out.putNextEntry(new ZipEntry("data/c/tags/block/glass_blocks.json"));
+            out.write("{\"a\": \"1\"}".getBytes(StandardCharsets.UTF_8));
+            out.closeEntry();
+        }
+        var roots = ModRoots.of(List.of(jar));
+        assertEquals(1, roots.size());
+        var data = roots.getFirst().resolve("data");
+        assertTrue(Files.isDirectory(data));
+
+        var finder = new ServerResourceFinder(new RecordingLog(), () -> List.of(data));
+        assertEquals(1, finder.find(CODEC, "c:tags/block/glass_blocks").size());
     }
 
     @Test

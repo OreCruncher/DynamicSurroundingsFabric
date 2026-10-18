@@ -135,6 +135,37 @@ without Fabulous, against the sky, water and trees, at each quality, while bobbi
 wind drifting smoke and leaves, flame jets (soft, additive, lighting their surroundings),
 steam and smoke puffs, the pocket watch and compass roses (and in the margin), the aurora, and voice chat processing.
 
+### Second 0.4.7 merge (through `0dba507`)
+
+The biome trait rework, the ATM10 profile speedups, the tooltip delay, the Mesa shader and fog range fixes, and
+/dsprofile's environment event and zipped recordings. What changed to fit 26.2:
+- **Biome traits**: `BiomeEvidence.of` reads music and the ambient loop from the biome's `BACKGROUND_MUSIC` and
+  `AMBIENT_SOUNDS` environment attributes (the default track; only when the biome sets them itself, as
+  `MixinMinecraftClient` does), not Architectury's effects properties, which no longer carry sound. `BiomeLibrary`'s
+  level stem lookup is `lookupOrThrow`, and `ResourceKey.location()` is `identifier()`. `BiomeEffectsAnalyzer` knows
+  26.2's `music.overworld.sulfur_caves` (cave, like dripstone). The vanilla table already had 26.2's biomes.
+- **/dsprofile**: 26.2's `Profiler`, `ProfileScene`, `ProfileOverlay`, `RenderTimers` and `RenderTimersPlugin` kept,
+  with the environment capture and the zip added to `Profiler`. `ProfileEnvironment` asks the graphics device
+  (`DeviceInfo`), so the event's fields are `gpu`, `gpuVendor`, `gpuType` (discrete, integrated...), `driver` and
+  `backend` (OpenGL or Vulkan) where 1.21.1's are `glRenderer`, `glVendor` and `glVersion`; `graphics` is the preset
+  and improved transparency.
+- **Water foam**: the light read once a tick overrides 26.2's `getLightCoords` (1.21.1's `getLightColor`).
+- **Fog range**: 26.2 already allowed a negative start; `isValid` (non-finite rejected) and the once-per-calculator
+  warning came over, on `FogData`'s environmental range.
+- **Ground fog field**: 0.4.7's version taken whole; 26.2's own, smaller speedup of the obstacle check (`found`) is
+  superseded by it.
+- **Mod jars on NeoForge**: on 26.2 Architectury's `Mod.getFilePaths()` is the jar file itself on NeoForge (FML 11;
+  1.21.1's is the root inside the jar), so resolving a file against it, as `ServerResourceFinder` did for the tags a
+  server doesn't send and as `Mod.findResource` does, found nothing in any jar. `lib/resources/ModRoots` opens a jar
+  as a zip file system (a folder, or Fabric's jar root, is used as it is); both the tag fallback and the biome
+  definition reader go through it.
+- **English**: 26.2's aurora strings now use American spelling too (colors, modeled). The `/dsaurora colour` command
+  and its keys are unchanged.
+
+To check in game: `/dsdump biomes` (traits, sources and "Biomes to check"; in single player the dimensions' biome
+lists), config and individual sound screen tooltips waiting half a second, water foam (light and tilt), a /dsprofile
+recording zipped with a `dsurround.Environment` event naming the GPU and backend, and fog under water (no warnings).
+
 ## Later 0.4.6 merges
 
 Through `ceb6cd3` (tag sync on remote servers):

@@ -4,6 +4,10 @@
     {
       "id": "#c:is_ocean",
       "required": false
+    },
+    {
+      "id": "eternal_starlight:spiral_kelp_forest",
+      "required": false
     }
   ]
 }

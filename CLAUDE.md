@@ -36,8 +36,9 @@ checking in game.
   `Get-CimInstance Win32_Process -Filter "Name='java.exe' or Name='javaw.exe'" | Where-Object { $_.CommandLine -match '\\neoforge\\\.gradle\\architectury' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`
   The user may have their own client running: check what is running (and when it started) before killing, and stop
   only the one you launched.
-- Profiling: `/dsprofile [scene] [seconds]` records a JFR file to `config/dsurround/profiles` with the mod's GPU/CPU
-  render timers in it (`dsurround.RenderTimer` events); read it with the JDK's `jfr` (`jfr print --json --events ...`).
+- Profiling: `/dsprofile [scene] [seconds]` records a JFR file, zipped, to `config/dsurround/profiles` with the mod's
+  GPU/CPU render timers in it (`dsurround.RenderTimer` events) and what it was made on (`dsurround.Environment`); unzip
+  it and read it with the JDK's `jfr` (`jfr print --json --events ...`).
   Players can make them too, so nothing private may get in: a new event type or a new `jdk.jfr` user needs a look at
   `ProfileRecording.PRIVATE` and `Redaction`. Record under Run, not IntelliJ's Debug (its async stack trace agent
   throws thousands of Throwables a second).
@@ -132,6 +133,14 @@ checking in game.
   A new one needs a `dsurround.conflict.<name>` entry in `en_us` (a test checks).
 - Tags in `dsconfigs/tags/<registry>/...` are client-side tag definitions. Reference other tags with `#`
   (`#c:is_cold`); a plain `c:` entry is a mistake (a test checks).
+- Biome traits (`config/biome/biometraits`) hold tables of what vanilla has, so **on every Minecraft version upgrade
+  bring them up to date** from the new game's data (`data/minecraft/worldgen/biome/*.json` in the game jar, and its
+  biome tags): `VanillaBiomeAnalyzer` needs an entry for each new biome (and removed ones dropped);
+  `BiomeEffectsAnalyzer` each biome's `background_music` and ambient `loop` sound ids (unzip the biome files and grep
+  `"sound"`/`"loop"`: 26.2 added `music.overworld.sulfur_caves`); `BiomeNameFallbackAnalyzer` any new naming words;
+  the `dsconfigs/tags` `is_*` files any vanilla tag changes. Also check how the client gets music and climate:
+  `BiomeEvidence.of` reads music from environment attributes on 26.2 (it was `BiomeSpecialEffects` on 1.21.1).
+  `everySoundInTheTableIsVanillas` catches only removed ids, not new ones.
 - Weather. `runtime/weather` is what the weather is (nothing there draws); `effects/precipitation` draws it; each has
   a `package-info.java` map.
   - `WeatherSimulation.rainLevel(vanilla)` is the storm's strength: use it, not the world's rain level, for anything

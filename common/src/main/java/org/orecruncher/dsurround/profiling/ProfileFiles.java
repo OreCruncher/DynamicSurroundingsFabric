@@ -6,15 +6,20 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.nio.file.StandardCopyOption;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.Locale;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
- * The recordings /dsprofile writes, in the mod's profiles folder: {@code dsurround-<scene>-<date-time>.jfr}. Only the
- * newest {@link #KEPT} are kept: older ones are deleted as the client starts, with any left half written. Uses nothing
- * from {@code jdk.jfr}, so it runs whatever Java the game has.
+ * The recordings /dsprofile writes, in the mod's profiles folder: {@code dsurround-<scene>-<date-time>.zip}, holding
+ * the recording ({@code .jfr}) of the same name. Zipped, a recording is a third the size, and can be attached to an
+ * issue on GitHub, which takes zips but not recordings. Only the newest {@link #KEPT} are kept: older ones are deleted
+ * as the client starts, with any left half written. Uses nothing from {@code jdk.jfr}, so it runs whatever Java the game
+ * has.
  */
 public final class ProfileFiles {
 
@@ -25,7 +30,9 @@ public final class ProfileFiles {
 
     private static final String PREFIX = "dsurround-";
     private static final String EXTENSION = ".jfr";
-    // A recording as it is first written, before what is private is taken out of it (see ProfileRecording)
+    private static final String ZIPPED = ".zip";
+    // A recording as it is first written, before what is private is taken out of it (see ProfileRecording), and a zip
+    // as it is written
     static final String UNFINISHED = ".part";
     private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 
@@ -33,10 +40,37 @@ public final class ProfileFiles {
     }
 
     /**
-     * The name of a recording of a scene made at a time
+     * The name of a recording of a scene made at a time, before it is zipped (see {@link #zip})
      */
     public static String name(ProfileScene scene, LocalDateTime when) {
         return PREFIX + scene.name().toLowerCase(Locale.ROOT) + "-" + when.format(STAMP) + EXTENSION;
+    }
+
+    /**
+     * Zips a finished recording into a zip of the same name beside it, and deletes the recording. The zip is written
+     * under another name first, so a game stopped while writing it leaves no zip that looks finished.
+     *
+     * @return the zip
+     */
+    public static Path zip(Path recording) throws IOException {
+        var name = recording.getFileName().toString();
+        var stem = name.endsWith(EXTENSION) ? name.substring(0, name.length() - EXTENSION.length()) : name;
+        var zip = recording.resolveSibling(stem + ZIPPED);
+        var unfinished = recording.resolveSibling(stem + ZIPPED + UNFINISHED);
+        try {
+            try (var out = new ZipOutputStream(Files.newOutputStream(unfinished))) {
+                var entry = new ZipEntry(name);
+                entry.setLastModifiedTime(Files.getLastModifiedTime(recording));
+                out.putNextEntry(entry);
+                Files.copy(recording, out);
+                out.closeEntry();
+            }
+            Files.move(unfinished, zip, StandardCopyOption.REPLACE_EXISTING);
+        } finally {
+            Files.deleteIfExists(unfinished);
+        }
+        Files.delete(recording);
+        return zip;
     }
 
     /**
@@ -76,7 +110,10 @@ public final class ProfileFiles {
 
     private static boolean isOurs(Path file) {
         var name = file.getFileName().toString();
-        return name.startsWith(PREFIX) && (name.endsWith(EXTENSION) || name.endsWith(EXTENSION + UNFINISHED)) && Files.isRegularFile(file);
+        if (name.endsWith(UNFINISHED))
+            name = name.substring(0, name.length() - UNFINISHED.length());
+        // A recording left unzipped (by a game stopped before zipping it) counts too
+        return name.startsWith(PREFIX) && (name.endsWith(ZIPPED) || name.endsWith(EXTENSION)) && Files.isRegularFile(file);
     }
 
     private static long modified(Path file) {

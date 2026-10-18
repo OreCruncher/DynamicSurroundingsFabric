@@ -22,12 +22,15 @@ import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.config.IScreenFactory;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.gui.GuiHelpers;
+import org.orecruncher.dsurround.lib.gui.TooltipDelay;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Builds a Cloth Config screen for a configuration from its specification.
@@ -121,7 +124,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
                 .append(Component.literal(LINK_ICON).withStyle(linkStyle(LINK_ICON_STYLE, docsUrl)));
         SubCategoryBuilder categoryBuilder = builder
                 .startSubCategory(name)
-                .setTooltip(description(propertyGroup).toArray(new Component[0]));
+                .setTooltipSupplier(delayed(description(propertyGroup).toArray(new Component[0])));
 
         var groupInstance = propertyGroup.getInstance(instance);
         for (var prop : propertyGroup.getChildren()) {
@@ -150,13 +153,13 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
                     fieldBuilder = builder
                             .startIntSlider(name, v.getValue(instance), v.getMinValue(), v.getMaxValue())
                             .setTextGetter(i -> sliderText(Integer.toString(i)))
-                            .setTooltip(tooltip)
+                            .setTooltipSupplier(delayed(tooltip))
                             .setDefaultValue(v::defaultValue)
                             .setSaveConsumer(value -> v.setValue(instance, value));
                 } else {
                     fieldBuilder = builder
                             .startIntField(name, v.getValue(instance))
-                            .setTooltip(tooltip)
+                            .setTooltipSupplier(delayed(tooltip))
                             .setDefaultValue(v.defaultValue())
                             .setMin(v.getMinValue())
                             .setMax(v.getMaxValue())
@@ -173,7 +176,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
                     fieldBuilder = builder
                             .startIntSlider(name, scale.indexOf(v.getValue(instance)), 0, scale.lastIndex())
                             .setTextGetter(i -> sliderText(scale.format(i)))
-                            .setTooltip(tooltip)
+                            .setTooltipSupplier(delayed(tooltip))
                             .setDefaultValue(() -> scale.indexOf(v.defaultValue()))
                             .setSaveConsumer(i -> {
                                 if (i != scale.indexOf(v.getValue(instance)))
@@ -182,7 +185,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
                 } else {
                     fieldBuilder = builder
                             .startDoubleField(name, v.getValue(instance))
-                            .setTooltip(tooltip)
+                            .setTooltipSupplier(delayed(tooltip))
                             .setDefaultValue(v.defaultValue())
                             .setMin(v.getMinValue())
                             .setMax(v.getMaxValue())
@@ -191,18 +194,18 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
             }
             case ConfigElement.StringValue v -> fieldBuilder = builder
                     .startStrField(name, v.getValue(instance))
-                    .setTooltip(tooltip)
+                    .setTooltipSupplier(delayed(tooltip))
                     .setDefaultValue(v.defaultValue())
                     .setSaveConsumer(value -> v.setValue(instance, value));
             case ConfigElement.BooleanValue v -> fieldBuilder = builder
                     .startBooleanToggle(name, v.getValue(instance))
-                    .setTooltip(tooltip)
+                    .setTooltipSupplier(delayed(tooltip))
                     .setDefaultValue(v.defaultValue())
                     .setSaveConsumer(value -> v.setValue(instance, value));
             case ConfigElement.EnumValue v -> fieldBuilder = builder
                     .startEnumSelector(name, (Class<Enum<?>>) v.getEnumClass(), v.getValue(instance))
                     .setEnumNameProvider(ConfigElement.EnumValue::displayName)
-                    .setTooltip(tooltip)
+                    .setTooltipSupplier(delayed(tooltip))
                     .setDefaultValue(v.defaultValue())
                     .setSaveConsumer(value -> v.setValue(instance, value));
             default -> {
@@ -240,6 +243,16 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
      */
     private static String docsUrl(ConfigElement.PropertyGroup group) {
         return DOCS_URL + "#" + group.fieldName().toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * A tooltip that only shows once the mouse has rested on its entry for a moment, and not while a slider is being
+     * dragged (see {@link TooltipDelay}). Each entry gets its own: Cloth asks only the entry under the mouse.
+     */
+    private static Supplier<Optional<Component[]>> delayed(Component[] tooltip) {
+        var delay = new TooltipDelay();
+        var shown = Optional.of(tooltip);
+        return () -> delay.ready() ? shown : Optional.empty();
     }
 
     /**
@@ -295,7 +308,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
     }
 
     /**
-     * The style of an element's name: its own TextStyle if it has one, otherwise the experimental colour if it is
+     * The style of an element's name: its own TextStyle if it has one, otherwise the experimental color if it is
      * experimental, otherwise {@code fallback}.
      */
     private static Style nameStyle(ConfigElement<?> element, Style fallback) {

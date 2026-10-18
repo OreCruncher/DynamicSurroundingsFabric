@@ -115,7 +115,8 @@ public class GroundFogHandler extends AbstractClientHandler {
     @Override
     public void process(final Player player) {
         if (!this.isActive()) {
-            this.field.clear();
+            if (!this.field.isIdle())
+                this.field.clear();
             return;
         }
         var camera = GameUtils.getMC().gameRenderer.mainCamera();
@@ -140,10 +141,6 @@ public class GroundFogHandler extends AbstractClientHandler {
         this.driftZ = wrap(this.driftZ + dz);
         this.ticks++;
 
-        this.source.level = level;
-        var pos = camera.position();
-        this.field.update(this.source, pos.x, pos.z, this.forced);
-
         // The time of day, the wind, rain, and whether the player is out in it; all of it when set by command
         if (Float.isNaN(this.forced)) {
             var exposure = Shelter.exposure(level, BlockPos.containing(player.getEyePosition()));
@@ -154,6 +151,19 @@ public class GroundFogHandler extends AbstractClientHandler {
             this.target = 1F;
         }
         this.strength += (this.target - this.strength) * EASE_PER_TICK;
+
+        // Too faint to draw and not thickening (most of the day): the field isn't kept up, as working it out again
+        // each block walked was the handler's whole cost. It is looked at afresh when the mist returns, while the
+        // strength eases up from nothing, before any of it shows.
+        if (this.strength < MIN_STRENGTH && this.target < MIN_STRENGTH) {
+            if (!this.field.isIdle())
+                this.field.clear();
+            return;
+        }
+
+        this.source.level = level;
+        var pos = camera.position();
+        this.field.update(this.source, pos.x, pos.z, this.forced);
     }
 
     /**

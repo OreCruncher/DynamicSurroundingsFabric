@@ -102,7 +102,7 @@ public class RedactionTests {
     void aRedactedRecordingStillReads() throws Exception {
         // Overwrite something certain to be in any recording, a module's location, and read every event back
         var file = this.folder.resolve("test.jfr");
-        ProfileRecording.record(file, Duration.ofSeconds(1));
+        ProfileRecording.record(file, Duration.ofSeconds(1), ProfilingTests.environment());
         var before = Files.size(file);
         Redaction.redact(file, "jrt:/java.base");
         assertEquals(before, Files.size(file));

@@ -11,7 +11,7 @@ import java.util.Arrays;
  * <p>
  * A column standing well above all around it (a post, a tree trunk) is taken as the ground around it, so the mist
  * passes through it instead of sitting on top. A cell's thickness is its biome's ground fog, blurred with its
- * neighbours' so the mist thins at a biome's edge rather than stopping in a line, and faded out toward the edge of the
+ * neighbors' so the mist thins at a biome's edge rather than stopping in a line, and faded out toward the edge of the
  * area.
  * <p>
  * Columns are kept in a cache that wraps around as the camera moves, so only those coming into the area are looked
@@ -66,9 +66,9 @@ public final class GroundFogField {
     private final boolean[] slotStale;
     private final boolean[] slotRelight;
 
-    // The area as of the last update, cell (i, j) at column (originX + i, originZ + j): the ground as found, and as the
-    // mist lies on it (obstacles taken out)
-    private final int[] found;
+    // The area as of the last update, cell (i, j) at column (originX + i, originZ + j): the ground as found, and as
+    // the mist lies on it (obstacles taken out)
+    private final int[] ground;
     private final float[] height;
     // The ground smoothed over a few blocks, for the shape of the mist: it banks up against a step and thins toward a
     // ledge, rather than changing at a column's edge
@@ -77,6 +77,7 @@ public final class GroundFogField {
     private final int[] light;
     private final float[] scratch;
     private final float[] scratch2;
+    private final float[] rowSums;
     private final int[] around = new int[8];
 
     private int originX = Integer.MIN_VALUE;
@@ -102,13 +103,14 @@ public final class GroundFogField {
         this.slotLight = new int[cells];
         this.slotStale = new boolean[cells];
         this.slotRelight = new boolean[cells];
-        this.found = new int[cells];
+        this.ground = new int[cells];
         this.height = new float[cells];
         this.smoothHeight = new float[cells];
         this.density = new float[cells];
         this.light = new int[cells];
         this.scratch = new float[cells];
         this.scratch2 = new float[cells];
+        this.rowSums = new float[cells];
         this.forget();
     }
 
@@ -138,9 +140,14 @@ public final class GroundFogField {
         for (int j = 0; j < this.size; j++) {
             int z = this.originZ + j;
             boolean refresh = Math.floorMod(j - refreshFrom, this.size) < rowsPerTick;
+            // Along a row the slots run on from the first, wrapping around once: stepped through, not each worked out
+            int rowStart = Math.floorMod(z, this.size) * this.size;
+            int column = Math.floorMod(this.originX, this.size);
             for (int i = 0; i < this.size; i++) {
                 int x = this.originX + i;
-                int slot = this.slot(x, z);
+                int slot = rowStart + column;
+                if (++column == this.size)
+                    column = 0;
                 if (this.slotStale[slot] || this.slotX[slot] != x || this.slotZ[slot] != z)
                     changed |= this.look(source, slot, x, z);
                 else if (refresh || this.slotRelight[slot])
@@ -240,43 +247,53 @@ public final class GroundFogField {
         int size = this.size;
         // Heights and thicknesses as found, in the area's order
         for (int j = 0; j < size; j++) {
+            int rowStart = Math.floorMod(this.originZ + j, size) * size;
+            int column = Math.floorMod(this.originX, size);
             for (int i = 0; i < size; i++) {
-                int slot = this.slot(this.originX + i, this.originZ + j);
+                int slot = rowStart + column;
+                if (++column == size)
+                    column = 0;
                 int k = j * size + i;
-                this.found[k] = this.slotHeight[slot];
+                this.ground[k] = this.slotHeight[slot];
                 this.height[k] = this.slotHeight[slot];
                 this.scratch[k] = this.slotDensity[slot];
                 this.light[k] = this.slotLight[slot];
             }
         }
 
-        // A column standing well above all around it is an obstacle: the mist is at the height around it. The
-        // neighbours are read in the area's order, a step either way, rather than each found in its slot
+        // A column standing well above all around it is an obstacle: the mist is at the height around it
         for (int j = 1; j + 1 < size; j++) {
             for (int i = 1; i + 1 < size; i++) {
                 int k = j * size + i;
                 int n = 0;
+                int lowest = Integer.MAX_VALUE;
                 for (int dj = -1; dj <= 1; dj++)
                     for (int di = -1; di <= 1; di++)
-                        if (di != 0 || dj != 0)
-                            this.around[n++] = this.found[k + dj * size + di];
+                        if (di != 0 || dj != 0) {
+                            int h = this.ground[k + dj * size + di];
+                            this.around[n++] = h;
+                            lowest = Math.min(lowest, h);
+                        }
+                // The middle of the eight is no lower than the lowest of them, so a column within OBSTACLE_HEIGHT of
+                // that is no obstacle: nearly every column, which needn't have the eight sorted
+                if (this.ground[k] <= lowest + OBSTACLE_HEIGHT)
+                    continue;
                 Arrays.sort(this.around);
                 float middle = (this.around[3] + this.around[4]) * 0.5F;
-                if (this.height[k] > middle + OBSTACLE_HEIGHT)
+                if (this.ground[k] > middle + OBSTACLE_HEIGHT)
                     this.height[k] = middle;
             }
         }
 
         // The ground smoothed: twice over the nine around each column, which weighs the nearest the most
-        this.boxBlur(this.height, this.smoothHeight);
-        System.arraycopy(this.smoothHeight, 0, this.scratch2, 0, this.scratch2.length);
+        this.boxBlur(this.height, this.scratch2);
         this.boxBlur(this.scratch2, this.smoothHeight);
         // Kept near the ground itself: the mist banks up a step a little, not up the face of a cliff, and thins toward
         // a ledge without leaving it
         for (int k = 0; k < this.smoothHeight.length; k++)
             this.smoothHeight[k] = Mth.clamp(this.smoothHeight[k], this.height[k] - SMOOTH_BELOW, this.height[k] + SMOOTH_ABOVE);
 
-        // Blurred with the neighbours at the same level. None outside the area's circle: the shader thins the mist to
+        // Blurred with the neighbors at the same level. None outside the area's circle: the shader thins the mist to
         // nothing a block inside it, so the cells beyond are never seen, and would only raise the highest ground under
         // any mist
         float peak = 0F;
@@ -320,27 +337,34 @@ public final class GroundFogField {
     }
 
     /**
-     * The mean of the nine around each cell, as many of them as are in the area
+     * The mean of the nine around each cell, as many of them as are in the area. Summed in two passes, the three
+     * along each row and then three of those sums down each column: six additions a cell rather than nine
      */
     private void boxBlur(float[] from, float[] to) {
         int size = this.size;
+        float[] rows = this.rowSums;
         for (int j = 0; j < size; j++) {
+            int row = j * size;
             for (int i = 0; i < size; i++) {
-                float sum = 0F;
-                int count = 0;
-                for (int dj = -1; dj <= 1; dj++) {
-                    int nj = j + dj;
-                    if (nj < 0 || nj >= size)
-                        continue;
-                    for (int di = -1; di <= 1; di++) {
-                        int ni = i + di;
-                        if (ni < 0 || ni >= size)
-                            continue;
-                        sum += from[nj * size + ni];
-                        count++;
-                    }
-                }
-                to[j * size + i] = sum / count;
+                float sum = from[row + i];
+                if (i > 0)
+                    sum += from[row + i - 1];
+                if (i + 1 < size)
+                    sum += from[row + i + 1];
+                rows[row + i] = sum;
+            }
+        }
+        for (int j = 0; j < size; j++) {
+            int row = j * size;
+            int rowsIn = 1 + (j > 0 ? 1 : 0) + (j + 1 < size ? 1 : 0);
+            for (int i = 0; i < size; i++) {
+                float sum = rows[row + i];
+                if (j > 0)
+                    sum += rows[row - size + i];
+                if (j + 1 < size)
+                    sum += rows[row + size + i];
+                int columnsIn = 1 + (i > 0 ? 1 : 0) + (i + 1 < size ? 1 : 0);
+                to[row + i] = sum / (rowsIn * columnsIn);
             }
         }
     }
@@ -378,6 +402,13 @@ public final class GroundFogField {
      */
     public boolean isEmpty() {
         return this.foggyCells == 0;
+    }
+
+    /**
+     * Whether it has been cleared and not updated since: holding nothing, with nothing remembered
+     */
+    public boolean isIdle() {
+        return this.originX == Integer.MIN_VALUE && this.foggyCells == 0;
     }
 
     /**

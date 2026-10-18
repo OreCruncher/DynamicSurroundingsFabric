@@ -8,6 +8,7 @@ import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.orecruncher.dsurround.effects.RenderTimers;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.threading.RecordingLog;
 
 import java.io.IOException;
@@ -22,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
+import java.util.zip.ZipInputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -76,25 +78,54 @@ public class ProfilingTests {
 
     @Test
     void onlyTheNewestAreKept() throws IOException {
-        // Thirteen recordings a minute apart, one left half written, and a file of the player's own
+        // Twelve zipped recordings a minute apart, the newest left unzipped, one recording and one zip left half
+        // written, and a file of the player's own
         for (int i = 0; i < 13; i++) {
-            var file = Files.writeString(this.folder.resolve("dsurround-general-2026101709%02d00.jfr".formatted(i)), "x");
+            var extension = i == 12 ? ".jfr" : ".zip";
+            var file = Files.writeString(this.folder.resolve("dsurround-general-2026101709%02d00%s".formatted(i, extension)), "x");
             Files.setLastModifiedTime(file, FileTime.fromMillis(1_000_000L + i * 60_000L));
         }
         Files.writeString(this.folder.resolve("dsurround-aurora-20261017-100000.jfr" + ProfileFiles.UNFINISHED), "x");
+        Files.writeString(this.folder.resolve("dsurround-aurora-20261017-100000.zip" + ProfileFiles.UNFINISHED), "x");
         Files.writeString(this.folder.resolve("notes.txt"), "mine");
 
         var deleted = ProfileFiles.prune(this.folder, ProfileFiles.KEPT, new RecordingLog());
 
-        assertEquals(4, deleted);
+        assertEquals(5, deleted);
         try (Stream<Path> left = Files.list(this.folder)) {
             var names = left.map(p -> p.getFileName().toString()).sorted().toList();
             assertEquals(ProfileFiles.KEPT + 1, names.size());
             assertTrue(names.contains("notes.txt"));
+            assertTrue(names.contains("dsurround-general-20261017091200.jfr"), names.toString());
             // The oldest three went
             for (int i = 0; i < 3; i++)
-                assertFalse(names.contains("dsurround-general-2026101709%02d00.jfr".formatted(i)), names.toString());
+                assertFalse(names.contains("dsurround-general-2026101709%02d00.zip".formatted(i)), names.toString());
             assertTrue(names.stream().noneMatch(n -> n.endsWith(ProfileFiles.UNFINISHED)));
+        }
+    }
+
+    @Test
+    void aRecordingIsZipped() throws IOException {
+        var recording = this.folder.resolve(ProfileFiles.name(ProfileScene.FROST, LocalDateTime.of(2026, 10, 17, 11, 18, 31)));
+        var random = Randomizer.create(7);
+        var content = new byte[100_000];
+        for (int i = 0; i < content.length; i++)
+            content[i] = (byte) random.nextInt(256);
+        Files.write(recording, content);
+
+        var zip = ProfileFiles.zip(recording);
+
+        assertEquals("dsurround-frost-20261017-111831.zip", zip.getFileName().toString());
+        assertFalse(Files.exists(recording), "the recording is left beside its zip");
+        try (Stream<Path> left = Files.list(this.folder)) {
+            assertEquals(List.of(zip), left.toList());
+        }
+        try (var in = new ZipInputStream(Files.newInputStream(zip))) {
+            var entry = in.getNextEntry();
+            assertNotNull(entry);
+            assertEquals("dsurround-frost-20261017-111831.jfr", entry.getName());
+            assertArrayEquals(content, in.readAllBytes());
+            assertNull(in.getNextEntry(), "one file in it");
         }
     }
 
@@ -118,10 +149,17 @@ public class ProfilingTests {
         assertTrue(Profiler.isAvailable());
     }
 
+    // As the render thread captures it in the game, which tests can't: there is no OpenGL here
+    static ProfileEnvironment environment() {
+        return new ProfileEnvironment("Dynamic Surroundings 26.2-0.4.7 (Fabric)", 42, "Test GPU/PCIe/SSE2", "Test Vendor",
+                "discrete", "4.6.0 Test Driver 1.2.3", "OpenGL", "fabulous, improved transparency on", false, 12,
+                ProfileEnvironment.javaRuntime(), ProfileEnvironment.operatingSystem());
+    }
+
     @Test
     void aRecordingIsWrittenWithNothingPrivate() throws Exception {
         var file = this.folder.resolve("test.jfr");
-        ProfileRecording.record(file, Duration.ofSeconds(2));
+        ProfileRecording.record(file, Duration.ofSeconds(2), environment());
         assertTrue(Files.size(file) > 0);
         assertFalse(Files.exists(this.folder.resolve("test.jfr" + ProfileFiles.UNFINISHED)), "the unfinished file is left");
 
@@ -146,6 +184,43 @@ public class ProfilingTests {
     }
 
     @Test
+    void aRecordingSaysWhatItWasMadeOn() throws Exception {
+        var file = this.folder.resolve("test.jfr");
+        var environment = environment();
+        ProfileRecording.record(file, Duration.ofSeconds(1), environment);
+
+        var events = RecordingFile.readAllEvents(file).stream()
+                .filter(e -> e.getEventType().getName().equals("dsurround.Environment"))
+                .toList();
+        assertEquals(1, events.size(), "written once");
+        var event = events.getFirst();
+        assertEquals(environment.mod(), event.getString("mod"));
+        assertEquals(environment.mods(), event.getInt("mods"));
+        assertEquals(environment.gpu(), event.getString("gpu"));
+        assertEquals(environment.gpuVendor(), event.getString("gpuVendor"));
+        assertEquals(environment.gpuType(), event.getString("gpuType"));
+        assertEquals(environment.driver(), event.getString("driver"));
+        assertEquals(environment.backend(), event.getString("backend"));
+        assertEquals(environment.graphics(), event.getString("graphics"));
+        assertEquals(environment.shaderPack(), event.getBoolean("shaderPack"));
+        assertEquals(environment.renderDistance(), event.getInt("renderDistance"));
+        assertEquals(environment.java(), event.getString("java"));
+        assertEquals(environment.os(), event.getString("os"));
+    }
+
+    @Test
+    void theEnvironmentNamesNoOne() {
+        // Of the system, only Java's and the operating system's versions: nothing of the account, its folders or the
+        // machine's name
+        var system = ProfileEnvironment.javaRuntime() + " " + ProfileEnvironment.operatingSystem();
+        var personal = Stream.of(System.getProperty("user.name"), System.getProperty("user.home"), System.getenv("COMPUTERNAME"),
+                        System.getenv("HOSTNAME"), System.getenv("USERNAME"))
+                .filter(Objects::nonNull).filter(s -> s.length() >= 3).toList();
+        for (var text : personal)
+            assertFalse(system.contains(text), "the environment holds \"" + text + "\"");
+    }
+
+    @Test
     void onlyTheRecordingUsesJfr() throws IOException {
         // Anywhere else, a class using jdk.jfr would fail to load in a Java without that module, and could take the
         // game down with it
@@ -162,7 +237,7 @@ public class ProfilingTests {
                     .map(p -> p.getFileName().toString())
                     .sorted()
                     .toList();
-            assertEquals(List.of("ProfileRecording.java", "RenderTimerEvent.java"), users);
+            assertEquals(List.of("EnvironmentEvent.java", "ProfileRecording.java", "RenderTimerEvent.java"), users);
         }
     }
 }

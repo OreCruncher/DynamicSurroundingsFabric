@@ -8,6 +8,10 @@
     {
       "id": "#forge:is_spooky",
       "required": false
+    },
+    {
+      "id": "biomesoplenty:withered_abyss",
+      "required": false
     }
   ]
 }

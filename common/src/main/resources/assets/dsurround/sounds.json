@@ -225,7 +225,7 @@
 	"biome.plains": {
 		"ds_credits": [
 			{
-				"name": "Calm Morning Outdoor Ambiance",
+				"name": "Calm Morning Outdoor Ambience",
 				"author": "blouhond",
 				"website": "https://www.freesound.org/people/blouhond",
 				"license": "Attribution"
@@ -687,9 +687,9 @@
 	"biome.ocean.deep.under": {
 		"ds_credits": [
 			{
-				"name": "underwater ambience.wav",
-				"author": "AlienXXX",
-				"website": "https://www.freesound.org/people/AlienXXX",
+				"name": "ocean waves surround me.wav",
+				"author": "bohitomi",
+				"website": "https://www.freesound.org/people/bohitomi",
 				"license": "Attribution"
 			}
 		],
@@ -717,6 +717,14 @@
 		]
 	},
 	"biome.river.under": {
+		"ds_credits": [
+			{
+				"name": "underwater ambience.wav",
+				"author": "AlienXXX",
+				"website": "https://www.freesound.org/people/AlienXXX",
+				"license": "Attribution"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/underwater/river",
@@ -905,10 +913,10 @@
 	"waterfall.1": {
 		"ds_credits": [
 			{
-				"name": "Running-water-mountain-stream.mp3",
-				"author": "Alexander",
-				"website": "https://orangefreesounds.com/running-water-sound-mountain-stream",
-				"license": "Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)"
+				"name": "Waterfall, Small, B.wav",
+				"author": "InspectorJ",
+				"website": "https://www.freesound.org/people/InspectorJ",
+				"license": "Attribution"
 			}
 		],
 		"sounds": [
@@ -973,10 +981,10 @@
 	"waterfall.5": {
 		"ds_credits": [
 			{
-				"name": "Waterfall, Small, B.wav",
-				"author": "InspectorJ",
-				"website": "https://www.freesound.org/people/InspectorJ",
-				"license": "Attribution"
+				"name": "Running-water-mountain-stream.mp3",
+				"author": "Alexander",
+				"website": "https://orangefreesounds.com/running-water-sound-mountain-stream",
+				"license": "Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)"
 			}
 		],
 		"sounds": [
@@ -1046,7 +1054,7 @@
 	"dimension.nether": {
 		"ds_credits": [
 			{
-				"name": "Creepy Dungeon Ambiance",
+				"name": "Creepy Dungeon Ambience",
 				"author": "DrMinky",
 				"website": "https://www.freesound.org/people/DrMinky",
 				"license": "Attribution"
@@ -1157,6 +1165,14 @@
 	"footsteps.water_through": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.water_through",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/water/water_through1",
 			"dsurround:footsteps/water/water_through10",
@@ -1174,6 +1190,14 @@
 	"footsteps.floor_squeak": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.floor_squeak",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:footsteps/floor_squeak/floorsqueak1",
@@ -1192,6 +1216,14 @@
 	"footsteps.brush_through": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.brush_through",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/brush/brush_through1",
 			"dsurround:footsteps/brush/brush_through10",
@@ -1209,6 +1241,14 @@
 	"footsteps.leaves_through": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.leaves_through",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/leaves/leaves_through1",
 			"dsurround:footsteps/leaves/leaves_through2",
@@ -1222,6 +1262,14 @@
 	"footsteps.bluntwood": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.bluntwood",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/bluntwood/bluntwood_walk1",
 			"dsurround:footsteps/bluntwood/bluntwood_walk10",
@@ -1239,6 +1287,14 @@
 	"footsteps.dirt": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.dirt",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/dirt/dirt_walk1",
 			"dsurround:footsteps/dirt/dirt_walk10",
@@ -1256,6 +1312,14 @@
 	"footsteps.grass": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.grass",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/grass/grass_walk1",
 			"dsurround:footsteps/grass/grass_walk10",
@@ -1272,6 +1336,14 @@
 	"footsteps.gravel": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.gravel",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/gravel/gravel_walk1",
 			"dsurround:footsteps/gravel/gravel_walk10",
@@ -1289,6 +1361,14 @@
 	"footsteps.mud": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.mud",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/mud/mud_walk1",
 			"dsurround:footsteps/mud/mud_walk2",
@@ -1301,6 +1381,14 @@
 	"footsteps.muffledice": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.muffledice",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/muffledice/muffledice_walk1",
 			"dsurround:footsteps/muffledice/muffledice_walk10",
@@ -1317,6 +1405,14 @@
 	"footsteps.organic": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.organic",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/organic/organic_walk1",
 			"dsurround:footsteps/organic/organic_walk2",
@@ -1327,6 +1423,14 @@
 	"footsteps.sand": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.sand",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/sand/sand_walk1",
 			"dsurround:footsteps/sand/sand_walk10",
@@ -1344,6 +1448,14 @@
 	"footsteps.snow": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.snow",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/snow/snow_walk1",
 			"dsurround:footsteps/snow/snow_walk10",
@@ -1361,6 +1473,14 @@
 	"footsteps.stone": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.stone",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/stone/stone_walk1",
 			"dsurround:footsteps/stone/stone_walk10",
@@ -1378,6 +1498,14 @@
 	"footsteps.wood": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.wood",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/wood/wood_walk1",
 			"dsurround:footsteps/wood/wood_walk10",
@@ -1395,6 +1523,14 @@
 	"footsteps.log": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.log",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/wood/log_walk1",
 			"dsurround:footsteps/wood/log_walk10",
@@ -1412,6 +1548,14 @@
 	"footsteps.metalbox": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.metalbox",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/metalbox/metalbox_walk1",
 			"dsurround:footsteps/metalbox/metalbox_walk2",
@@ -1427,6 +1571,14 @@
 	"footsteps.metalbar": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.metalbar",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/metalbar/metalbar_walk1",
 			"dsurround:footsteps/metalbar/metalbar_walk10",
@@ -1444,6 +1596,14 @@
 	"footsteps.rug": {
 		"ds_category": "player",
 		"subtitle": "dsurround.sound.caption.footsteps.rug",
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:footsteps/rug/rug_walk1",
 			"dsurround:footsteps/rug/rug_walk10",

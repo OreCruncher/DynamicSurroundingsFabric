@@ -59,6 +59,8 @@ public class ParticleOverrideTests {
             assertOverrides(type, "extract", QuadParticleRenderState.class, Camera.class, float.class);
             assertOverrides(type, "getLayer");
         }
+        // Foam reads its light once a tick, not every frame
+        assertOverrides(WaterFoam.class, "getLightCoords", float.class);
         assertEquals(SoftPuffParticle.class, WaterfallMist.class.getSuperclass());
         assertEquals(SoftPuffParticle.class, SteamPuff.class.getSuperclass());
         assertEquals(SoftPuffParticle.class, SmokePuff.class.getSuperclass());
@@ -67,7 +69,7 @@ public class ParticleOverrideTests {
 
     @Test
     void flameDrawsItsOwnWay() {
-        // It flickers, sets its colour as it is drawn, lights itself, and is drawn adding its light
+        // It flickers, sets its color as it is drawn, lights itself, and is drawn adding its light
         assertOverrides(FlameTongue.class, "getQuadSize", float.class);
         assertOverrides(FlameTongue.class, "extract", QuadParticleRenderState.class, Camera.class, float.class);
         assertOverrides(FlameTongue.class, "getLightCoords", float.class);

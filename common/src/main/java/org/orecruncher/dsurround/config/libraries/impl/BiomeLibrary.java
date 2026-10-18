@@ -19,6 +19,7 @@ import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.IReloadEvent;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.function.Guard;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.LogThrottle;
@@ -37,6 +38,11 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public final class BiomeLibrary implements IBiomeLibrary {
+
+    // In the registry, but never generated, so left out of the biomes to check: TerraBlender's stands in for
+    // biomes it places later
+    private static final Set<Identifier> NOT_GENERATED = Set.of(
+            Identifier.fromNamespaceAndPath("terrablender", "deferred_placeholder"));
 
     private static final String FILE_NAME = "biomes.json";
     private static final Codec<List<BiomeConfigRule>> CODEC = Codec.list(BiomeConfigRule.CODEC);
@@ -250,6 +256,94 @@ public final class BiomeLibrary implements IBiomeLibrary {
                 .map(BiomeInfo::toString)
                 .sorted();
 
-        return Stream.of(realBiomes, fakeBiomes).flatMap(Function.identity());
+        return Stream.of(realBiomes, fakeBiomes, biomesToCheck()).flatMap(Function.identity());
+    }
+
+    /**
+     * The biomes whose traits should be checked (see {@link BiomeCheck}): guessed from music, grass or name, or no
+     * dimension or kind at all. Those a tag file would settle. By id, so each mod's are together. In single player,
+     * dimensions are checked against the world's generation, biomes it never generates are left out, and each
+     * dimension's biomes are listed after.
+     */
+    private Stream<String> biomesToCheck() {
+        var generation = generation();
+        var ownDimensions = new HashSet<String>();
+        RegistryUtils.getRegistry(Registries.DIMENSION_TYPE)
+                .ifPresent(types -> types.keySet().forEach(id -> ownDimensions.add(id.getNamespace())));
+        ownDimensions.remove("minecraft");
+
+        var notGenerated = new int[1];
+        var lines = getActiveRegistry()
+                .stream()
+                .map(this::getBiomeInfo)
+                .filter(info -> !NOT_GENERATED.contains(info.getBiomeId()))
+                .sorted(Comparator.comparing(info -> info.getBiomeId().toString()))
+                .<String>mapMulti((info, out) -> {
+                    Set<Identifier> generatedIn = null;
+                    if (generation != null) {
+                        generatedIn = generation.biomeDimensions().get(info.getBiomeId());
+                        if (generatedIn == null) {
+                            notGenerated[0]++;
+                            return;
+                        }
+                    }
+                    var notes = BiomeCheck.notes(info.getTraits(), generatedIn, ownDimensions.contains(info.getBiomeId().getNamespace()));
+                    if (!notes.isEmpty())
+                        out.accept("  " + info.getBiomeId() + ": " + String.join("; ", notes));
+                })
+                .toList();
+
+        var header = lines.isEmpty()
+                ? "Biomes to check: none"
+                : "Biomes to check (%d): traits guessed from music, grass or name, or no dimension or kind (a tag file would settle them)".formatted(lines.size());
+        var source = generation == null
+                ? "Dimensions are guessed in multiplayer; a dump in single player checks them against the world's generation"
+                : "Dimensions checked against this world's generation; %d %s it never generates %s left out".formatted(
+                        notGenerated[0], notGenerated[0] == 1 ? "biome" : "biomes", notGenerated[0] == 1 ? "is" : "are");
+        var result = Stream.concat(Stream.of(header, source), lines.stream());
+        if (generation != null)
+            result = Stream.concat(result, generation.describe());
+        return result;
+    }
+
+    /**
+     * Which biomes each dimension generates, from the integrated server; null in multiplayer, where the client isn't
+     * told. A dimension that hasn't been visited is included: its generator is set up with the world.
+     */
+    private static @Nullable Generation generation() {
+        var server = GameUtils.getMC().getSingleplayerServer();
+        if (server == null)
+            return null;
+        var dimensions = new TreeMap<Identifier, List<Identifier>>(Comparator.comparing(Identifier::toString));
+        var biomeDimensions = new HashMap<Identifier, Set<Identifier>>();
+        server.registryAccess().lookupOrThrow(Registries.LEVEL_STEM).entrySet().forEach(stem -> {
+            var dimension = stem.getKey().identifier();
+            var biomes = new ArrayList<Identifier>();
+            for (var biome : stem.getValue().generator().getBiomeSource().possibleBiomes())
+                biome.unwrapKey().ifPresent(key -> {
+                    biomes.add(key.identifier());
+                    biomeDimensions.computeIfAbsent(key.identifier(), k -> new HashSet<>()).add(dimension);
+                });
+            biomes.sort(Comparator.comparing(Identifier::toString));
+            dimensions.put(dimension, biomes);
+        });
+        return new Generation(dimensions, biomeDimensions);
+    }
+
+    /**
+     * @param dimensions      each dimension's biomes
+     * @param biomeDimensions each biome's dimensions
+     */
+    private record Generation(Map<Identifier, List<Identifier>> dimensions,
+                              Map<Identifier, Set<Identifier>> biomeDimensions) {
+        Stream<String> describe() {
+            var lines = new ArrayList<String>();
+            lines.add("Biomes each dimension generates (this world)");
+            this.dimensions.forEach((dimension, biomes) -> {
+                lines.add("  %s (%d)".formatted(dimension, biomes.size()));
+                biomes.forEach(biome -> lines.add("    " + biome));
+            });
+            return lines.stream();
+        }
     }
 }

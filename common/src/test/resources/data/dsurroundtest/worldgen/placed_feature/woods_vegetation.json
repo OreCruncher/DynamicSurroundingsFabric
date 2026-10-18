@@ -1,0 +1,16 @@
+{
+  "feature": "dsurroundtest:woods_vegetation",
+  "placement": [
+    {
+      "type": "minecraft:count",
+      "count": {
+        "type": "minecraft:uniform",
+        "min_inclusive": 4,
+        "max_inclusive": 8
+      }
+    },
+    {
+      "type": "minecraft:in_square"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.effects.particles;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -11,11 +12,13 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.FluidState;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
-import org.joml.Vector3f;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
+import java.lang.ref.WeakReference;
 import java.util.function.Consumer;
 
 /**
@@ -53,8 +56,6 @@ public class WaterFoam extends SingleQuadParticle {
     private static final float TILT_EASE = 0.3F;
     private static final double MAX_SLOPE = Math.tan(Math.toRadians(60D));
 
-    private static final Vector3f UP = new Vector3f(0F, 1F, 0F);
-
     private final float startSize;
     private final float peakAlpha;
     private final float rollSpeed;
@@ -65,7 +66,25 @@ public class WaterFoam extends SingleQuadParticle {
     private float slopeZ;
     private float oSlopeX;
     private float oSlopeZ;
-    private final BlockPos.MutableBlockPos probe = new BlockPos.MutableBlockPos();
+    // The block of water under it, found each tick
+    private final BlockPos.MutableBlockPos waterPos = new BlockPos.MutableBlockPos();
+    // Its light, read once a tick rather than every frame: it drifts slowly
+    private int light;
+    // Kept to be set again each frame, rather than made anew
+    private final Quaternionf rotation = new Quaternionf();
+
+    /**
+     * What foam needs to know of a block of water: the current, and the surface's height and slope
+     */
+    private record Surface(double flowX, double flowZ, double center, double slopeX, double slopeZ) {
+    }
+
+    // Worked out for a block once a tick and shared: a waterfall keeps dozens of patches on the same few blocks.
+    // Client thread only, as particles are ticked. The level is held weakly, so a world left isn't kept in memory.
+    private static final Long2ObjectOpenHashMap<Surface> SURFACES = new Long2ObjectOpenHashMap<>();
+    private static final BlockPos.MutableBlockPos PROBE = new BlockPos.MutableBlockPos();
+    private static WeakReference<Level> surfacesLevel = new WeakReference<>(null);
+    private static long surfacesTick = Long.MIN_VALUE;
 
     /**
      * Adds foam patches around falling water landing at {@code pos} (a waterfall, or a step): each starts on the water
@@ -125,6 +144,7 @@ public class WaterFoam extends SingleQuadParticle {
         this.roll = this.oRoll = random.nextFloat() * Mth.TWO_PI;
         this.rollSpeed = (random.nextFloat() - 0.5F) * 0.06F;
 
+        this.light = super.getLightCoords(0F);
 
         var biomeColor = level.getBiome(BlockPos.containing(x, y, z)).value().getWaterColor();
         var colorRgb = ARGB.srgbLerp(WHITENESS, biomeColor, ColorPalette.MC_WHITE.getValue());
@@ -148,9 +168,10 @@ public class WaterFoam extends SingleQuadParticle {
         this.oSlopeZ = this.slopeZ;
         if (this.removed)
             return;
+        this.light = super.getLightCoords(0F);
 
         // The water it is floating on: just under it, as it rests a little above the surface
-        var pos = BlockPos.containing(this.x, this.y - LIFT - 0.05D, this.z).mutable();
+        var pos = this.waterPos.set(this.x, this.y - LIFT - 0.05D, this.z);
         var fluid = this.level.getFluidState(pos);
 
         // Carried over the edge of a step, the water drops away: there is only air under it. Look down through the
@@ -166,35 +187,60 @@ public class WaterFoam extends SingleQuadParticle {
             return;
         }
 
+        var surface = surfaceAt(this.level, pos, fluid);
+
         // Turn toward the current, which carries it downstream (and pours it off the next step). Still water (a pool)
         // has no current: there it coasts on, slowing by drag alone, so foam thrown out from an impact spreads
         // across the pool rather than stopping where it started.
-        var flow = fluid.getFlow(this.level, pos);
-        if (flow.x * flow.x + flow.z * flow.z > 1.0E-6D) {
-            this.xd += (flow.x * CURRENT_SPEED - this.xd) * STEER;
-            this.zd += (flow.z * CURRENT_SPEED - this.zd) * STEER;
+        if (surface.flowX() * surface.flowX() + surface.flowZ() * surface.flowZ() > 1.0E-6D) {
+            this.xd += (surface.flowX() * CURRENT_SPEED - this.xd) * STEER;
+            this.zd += (surface.flowZ() * CURRENT_SPEED - this.zd) * STEER;
         }
 
+        // Settle to the surface, where it is on the slope rather than the block's height at its middle: flowing
+        // water gets shallower as it spreads, and drops away over the edge of a step
+        double height = surface.center() + LIFT
+                + surface.slopeX() * (this.x - (pos.getX() + 0.5D))
+                + surface.slopeZ() * (this.z - (pos.getZ() + 0.5D));
+        this.setPos(this.x, Mth.lerp(SETTLE, this.y, height), this.z);
+
+        // And tilt to lie along it, easing round rather than snapping
+        this.slopeX += ((float) surface.slopeX() - this.slopeX) * TILT_EASE;
+        this.slopeZ += ((float) surface.slopeZ() - this.slopeZ) * TILT_EASE;
+    }
+
+    /**
+     * The current and the surface of the water at {@code pos}, worked out the first time any foam asks this tick
+     */
+    private static Surface surfaceAt(Level level, BlockPos pos, FluidState fluid) {
+        long tick = level.getGameTime();
+        if (tick != surfacesTick || surfacesLevel.get() != level) {
+            SURFACES.clear();
+            surfacesTick = tick;
+            surfacesLevel = new WeakReference<>(level);
+        }
+        long key = pos.asLong();
+        var surface = SURFACES.get(key);
+        if (surface == null) {
+            surface = surface(level, pos, fluid);
+            SURFACES.put(key, surface);
+        }
+        return surface;
+    }
+
+    private static Surface surface(Level level, BlockPos pos, FluidState fluid) {
+        var flow = fluid.getFlow(level, pos);
+
         // The slope of the surface here, from the surface heights either side, east-west and north-south
-        double center = pos.getY() + fluid.getHeight(this.level, pos);
-        double slopeX = slope(this.surfaceHeight(pos, -1, 0), center, this.surfaceHeight(pos, 1, 0));
-        double slopeZ = slope(this.surfaceHeight(pos, 0, -1), center, this.surfaceHeight(pos, 0, 1));
+        double center = pos.getY() + fluid.getHeight(level, pos);
+        double slopeX = slope(surfaceHeight(level, pos, -1, 0), center, surfaceHeight(level, pos, 1, 0));
+        double slopeZ = slope(surfaceHeight(level, pos, 0, -1), center, surfaceHeight(level, pos, 0, 1));
         double steepness = Math.sqrt(slopeX * slopeX + slopeZ * slopeZ);
         if (steepness > MAX_SLOPE) {
             slopeX *= MAX_SLOPE / steepness;
             slopeZ *= MAX_SLOPE / steepness;
         }
-
-        // Settle to the surface, where it is on the slope rather than the block's height at its middle: flowing
-        // water gets shallower as it spreads, and drops away over the edge of a step
-        double surface = center + LIFT
-                + slopeX * (this.x - (pos.getX() + 0.5D))
-                + slopeZ * (this.z - (pos.getZ() + 0.5D));
-        this.setPos(this.x, Mth.lerp(SETTLE, this.y, surface), this.z);
-
-        // And tilt to lie along it, easing round rather than snapping
-        this.slopeX += ((float) slopeX - this.slopeX) * TILT_EASE;
-        this.slopeZ += ((float) slopeZ - this.slopeZ) * TILT_EASE;
+        return new Surface(flow.x, flow.z, center, slopeX, slopeZ);
     }
 
     /**
@@ -202,14 +248,14 @@ public class WaterFoam extends SingleQuadParticle {
      * water there to follow. Where that block is air with water below it, as past the edge of a step, it is the
      * surface below: so the slope dips over the edge as the water does.
      */
-    private double surfaceHeight(BlockPos pos, int dx, int dz) {
-        this.probe.setWithOffset(pos, dx, 0, dz);
-        var fluid = this.level.getFluidState(this.probe);
-        if (fluid.isEmpty() && this.level.getBlockState(this.probe).isAir()) {
-            this.probe.move(Direction.DOWN);
-            fluid = this.level.getFluidState(this.probe);
+    private static double surfaceHeight(Level level, BlockPos pos, int dx, int dz) {
+        PROBE.setWithOffset(pos, dx, 0, dz);
+        var fluid = level.getFluidState(PROBE);
+        if (fluid.isEmpty() && level.getBlockState(PROBE).isAir()) {
+            PROBE.move(Direction.DOWN);
+            fluid = level.getFluidState(PROBE);
         }
-        return fluid.isEmpty() ? Double.NaN : this.probe.getY() + fluid.getHeight(this.level, this.probe);
+        return fluid.isEmpty() ? Double.NaN : PROBE.getY() + fluid.getHeight(level, PROBE);
     }
 
     /**
@@ -250,8 +296,14 @@ public class WaterFoam extends SingleQuadParticle {
         var rotation = orientation(
                 Mth.lerp(partialTick, this.oSlopeX, this.slopeX),
                 Mth.lerp(partialTick, this.oSlopeZ, this.slopeZ),
-                Mth.lerp(partialTick, this.oRoll, this.roll));
+                Mth.lerp(partialTick, this.oRoll, this.roll),
+                this.rotation);
         this.extractRotatedQuad(state, camera, rotation, partialTick);
+    }
+
+    @Override
+    public int getLightCoords(float partialTick) {
+        return this.light;
     }
 
     /**
@@ -260,9 +312,16 @@ public class WaterFoam extends SingleQuadParticle {
      * (facing up), turn it about the vertical, then tilt it from facing straight up to facing out of the surface.
      */
     static Quaternionf orientation(float slopeX, float slopeZ, float spin) {
-        var surfaceNormal = new Vector3f(-slopeX, 1F, -slopeZ).normalize();
-        return new Quaternionf()
-                .rotateTo(UP, surfaceNormal)
+        return orientation(slopeX, slopeZ, spin, new Quaternionf());
+    }
+
+    /**
+     * As {@link #orientation(float, float, float)}, set in {@code into} and returned
+     */
+    static Quaternionf orientation(float slopeX, float slopeZ, float spin, Quaternionf into) {
+        float scale = (float) (1D / Math.sqrt(slopeX * slopeX + 1F + slopeZ * slopeZ));
+        return into.identity()
+                .rotateTo(0F, 1F, 0F, -slopeX * scale, scale, -slopeZ * scale)
                 .rotateY(spin)
                 .rotateX(-Mth.HALF_PI);
     }

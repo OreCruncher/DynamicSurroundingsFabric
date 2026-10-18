@@ -93,6 +93,13 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * I use for testing but if you want to play around with it go ahead - doesn't affect game mechanics
 * New /dsconflicts command lists in chat the Dynamic Surroundings features turned off because another mod is installed, and which mod
   * For example, Particle Rain turns off the particle weather and water ripples; Presence Footsteps turns off the wet surface accents and brush step effect
+* New /dsprofile command records a performance profile of the game, to send to the mod's authors when something seems slow
+  * Just `/dsprofile` records two minutes of play as usual; `/dsprofile <scene> [seconds]` picks a scene to record instead: `ground_fog`, `weather` or `frost` shows that effect at its heaviest
+  * A note at the top of the screen shows the time left, and chat says where the recording was saved when it is done (click the name to open it)
+  * Recordings are saved zipped, ready to attach to an issue on GitHub, in the dsurround config folder under `profiles`; only the newest 10 are kept
+  * Recordings note what they were made on: the graphics card and driver, the graphics settings, render distance, and the Java and Windows/Mac/Linux versions
+  * Personal information is left out of the recordings: no account names, folders, command line or network addresses
+  * Uses Java Flight Recorder, which comes with most Java installs; if yours doesn't have it, the command says so
 
 **Changes**
 * Updated steam effect to utilize the core logic and rendering of waterfall mist
@@ -105,6 +112,16 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Aurora shader was modified to use a noise map rather than hashing in the shader. Result is that the style of aurora could change between computers that are running different versions of Dynamic Surroundings.
 * Reuse reverb calculations between sounds that have their source close to each other
 * Features turned off because of another mod are now listed together: in the log at startup, and in the diagnostics overlay
+* Less work for ground fog, random block effects and waterfall foam (found by profiling a large modpack)
+* Tooltips on the config screen and the individual sound screen wait until the mouse rests for half a second, and stay hidden while a slider is dragged
+* Better biome traits for modded biomes missing tags
+  * A biome's tags are no longer overridden by guesses: a modded biome tagged cold stays cold even when its temperature looks temperate
+  * Guesses come from the biome's vanilla music, grass, and ambient sounds first, then its climate, then its name; names match whole words, so "alpine" isn't a pine forest
+  * Before guessing, the biome's definition in its mod's jar is read for how many trees it grows: a forest, or sparse vegetation, without a guess (works on servers too, as the mod is installed on the client)
+  * Vanilla biomes have the same traits on every server: the mod's own table settles their temperature, moisture and vegetation where Fabric's or NeoForge's tags disagree
+  * More biome names understood: fields, plains, meadows and prairies; seas; streams and lakes; savannas; plateaus; highlands; tundra and glaciers
+  * `/dsdump biomes` shows where each trait came from, and ends with a list of biomes to check: traits guessed from music, grass or name, or no dimension or kind at all, to help write tag files for them
+    * In single player it checks each biome's dimension against where the world generates it, and lists each dimension's biomes
 
 **Fixes**
 * Water ripples are visible when looking from underwater. During the day they are faint rings; at night they are more visible.
@@ -113,6 +130,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Fog being applied to SPOOKY underground biomes, like BOPs spider nest
 * Rendering issues when Fabulous! graphics enabled
 * [MAYBE] Infrequent crash in fastutil collection when rendering block entities, seen with Create belts
+* Underwater in vanilla's oceans (other than deep ones) used the plain underwater sounds rather than the ocean's when Fabric's or NeoForge's biome tags were present
+* Ground fog didn't work with Mesa graphics drivers (common on Linux): its shader used a word GLSL reserves
+* The log filled with "Fog calculator ... reporting invalid fog range" warnings under water, where vanilla's fog starts behind the camera
 
 > ### DynamicSurroundings-1.21.1-0.4.6
 

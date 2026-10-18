@@ -16,9 +16,9 @@ import java.util.Set;
 
 /**
  * A Java Flight Recorder recording of the running game, made in the game itself: the JDK's "profile" settings, without
- * anything that could tell who or where the player is ({@link #PRIVATE}), and with the mod's render timers written into
- * it once a second ({@link RenderTimerEvent}). The only class besides that event to use {@code jdk.jfr}, so nothing
- * loads it until a recording is made.
+ * anything that could tell who or where the player is ({@link #PRIVATE}), with what it was made on written into it once
+ * ({@link EnvironmentEvent}) and the mod's render timers once a second ({@link RenderTimerEvent}). The only class besides
+ * those events to use {@code jdk.jfr}, so nothing loads it until a recording is made.
  * <p>
  * Players may send recordings to the mod's authors, so what is private is kept out three times over: those events are
  * turned off for the recording, the file is written again without them, in case anything recorded them anyway, and the
@@ -84,9 +84,9 @@ final class ProfileRecording {
 
     /**
      * Records for {@code length}, then writes the recording to {@code file}, without what is private. Blocks the thread
-     * it is called on for that long, so not the render thread.
+     * it is called on for that long, so not the render thread: {@code environment} is captured there beforehand.
      */
-    static void record(Path file, Duration length) throws IOException, ParseException, InterruptedException {
+    static void record(Path file, Duration length, ProfileEnvironment environment) throws IOException, ParseException, InterruptedException {
         var settings = new HashMap<>(Configuration.getConfiguration("profile").getSettings());
         for (var type : PRIVATE)
             settings.put(type + "#enabled", "false");
@@ -99,7 +99,9 @@ final class ProfileRecording {
                 recording.setName("Dynamic Surroundings");
                 recording.setToDisk(true);
                 recording.enable(RenderTimerEvent.class).withPeriod(Duration.ofSeconds(1));
+                recording.enable(EnvironmentEvent.class);
                 recording.start();
+                EnvironmentEvent.write(environment);
                 Thread.sleep(length.toMillis());
                 recording.stop();
                 recording.dump(unfinished);

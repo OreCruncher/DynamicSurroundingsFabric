@@ -22,9 +22,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * /dsprofile: sets up a scene ({@link ProfileScene}), records the game with Java Flight Recorder while it shows, and
- * puts it back. The recording goes in the mod's profiles folder (see {@link ProfileFiles}), with the mod's render timers
- * in it and nothing private (see {@link ProfileRecording}); when it is done, the player is told where it is, with the
- * render timers, and the log says so too. While it waits and records, {@link #state} and {@link #secondsLeft} drive the
+ * puts it back. The recording goes in the mod's profiles folder, zipped (see {@link ProfileFiles}), with the mod's
+ * render timers and what it was made on in it, and nothing private (see {@link ProfileRecording}); when it is done, the
+ * player is told where it is, with the render timers, and the log says so too. While it waits and records, {@link #state} and {@link #secondsLeft} drive the
  * indicator on screen.
  * <p>
  * Java Flight Recorder needs the {@code jdk.jfr} module, which not every Java has: without it, the player is told, and
@@ -101,8 +101,10 @@ public final class Profiler {
             return List.of(Component.translatable(KEY + "busy"));
 
         var mc = Minecraft.getInstance();
+        ProfileEnvironment environment;
         Runnable undo;
         try {
+            environment = ProfileEnvironment.capture();
             undo = scene.setUp();
         } catch (RuntimeException e) {
             BUSY.set(false);
@@ -133,7 +135,7 @@ public final class Profiler {
         until = System.nanoTime() + scene.settle() * 1_000_000_000L;
         var thread = new Thread(() -> {
             try {
-                record(scene, file, seconds);
+                record(scene, file, seconds, environment);
             } finally {
                 state = State.IDLE;
                 mc.execute(() -> {
@@ -148,13 +150,14 @@ public final class Profiler {
         return lines;
     }
 
-    private static void record(ProfileScene scene, Path file, int seconds) {
+    private static void record(ProfileScene scene, Path file, int seconds, ProfileEnvironment environment) {
         try {
             Thread.sleep(scene.settle() * 1000L);
             state = State.RECORDING;
             until = System.nanoTime() + seconds * 1_000_000_000L;
-            ProfileRecording.record(file, Duration.ofSeconds(seconds));
-            Minecraft.getInstance().execute(() -> report(file));
+            ProfileRecording.record(file, Duration.ofSeconds(seconds), environment);
+            var zip = ProfileFiles.zip(file);
+            Minecraft.getInstance().execute(() -> report(zip));
         } catch (Throwable t) {
             Library.LOGGER.error(t, "Unable to record a profile");
             tell(Component.translatable(KEY + "failed", t.toString()));
