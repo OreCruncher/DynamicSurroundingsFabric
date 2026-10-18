@@ -114,6 +114,13 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Features turned off because of another mod are now listed together: in the log at startup, and in the diagnostics overlay
 * Less work for ground fog, random block effects and waterfall foam (found by profiling a large modpack)
 * Tooltips on the config screen and the individual sound screen wait until the mouse rests for half a second, and stay hidden while a slider is dragged
+* Better biome traits for modded biomes missing tags
+  * A biome's tags are no longer overridden by guesses: a modded biome tagged cold stays cold even when its temperature looks temperate
+  * Guesses come from the biome's vanilla music, grass, and ambient sounds first, then its climate, then its name; names match whole words, so "alpine" isn't a pine forest
+  * Vanilla biomes have the same traits on every server: the mod's own table settles their temperature, moisture and vegetation where Fabric's or NeoForge's tags disagree
+  * More biome names understood: fields, plains, meadows and prairies; seas; streams and lakes; savannas; plateaus; highlands; tundra and glaciers
+  * `/dsdump biomes` shows where each trait came from, and ends with a list of biomes to check: traits guessed from music, grass or name, or no dimension or kind at all, to help write tag files for them
+    * In single player it checks each biome's dimension against where the world generates it, and lists each dimension's biomes
 
 **Fixes**
 * Water ripples are visible when looking from underwater. During the day they are faint rings; at night they are more visible.
@@ -122,6 +129,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Fog being applied to SPOOKY underground biomes, like BOPs spider nest
 * Rendering issues when Fabulous! graphics enabled
 * [MAYBE] Infrequent crash in fastutil collection when rendering block entities, seen with Create belts
+* Underwater in vanilla's oceans (other than deep ones) used the plain underwater sounds rather than the ocean's when Fabric's or NeoForge's biome tags were present
+* Ground fog didn't work with Mesa graphics drivers (common on Linux): its shader used a word GLSL reserves
+* The log filled with "Fog calculator ... reporting invalid fog range" warnings under water, where vanilla's fog starts behind the camera
 
 > ### DynamicSurroundings-1.21.1-0.4.6
 

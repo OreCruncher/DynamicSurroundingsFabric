@@ -4,6 +4,14 @@
     {
       "id": "#c:is_jungle",
       "required": false
+    },
+    {
+      "id": "biomesoplenty:tropics",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:tropics",
+      "required": false
     }
   ]
 }

@@ -8,6 +8,18 @@
     {
       "id": "#forge:is_mountain",
       "required": false
+    },
+    {
+      "id": "regions_unexplored:chalk_cliffs",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:spires",
+      "required": false
+    },
+    {
+      "id": "undergarden:smog_spires",
+      "required": false
     }
   ]
 }

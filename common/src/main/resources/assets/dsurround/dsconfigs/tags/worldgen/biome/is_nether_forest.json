@@ -8,6 +8,10 @@
     {
       "id": "#c:is_nether_forest",
       "required": false
+    },
+    {
+      "id": "regions_unexplored:infernal_holt",
+      "required": false
     }
   ]
 }

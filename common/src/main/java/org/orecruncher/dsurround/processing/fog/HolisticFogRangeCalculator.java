@@ -7,6 +7,7 @@ import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.processing.PrecipitationHandler;
@@ -21,9 +22,12 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
     protected final Configuration.FogOptions fogOptions;
     protected final ObjectArray<IFogRangeCalculator> calculators = new ObjectArray<>(3);
     private final WeatherFogRangeCalculator weather;
+    // A bad range would be reported every frame: once for each calculator is enough
+    private final LogThrottle<String> invalidRanges;
 
     public HolisticFogRangeCalculator(IModLog logger, Configuration.FogOptions fogOptions, IBiomeLibrary biomeLibrary, ISeasonalInformation seasonInfo, IWeatherSimulation weatherSimulation, Configuration.WeatherOptions weatherOptions, PrecipitationHandler precipitation) {
         this.logger = ModLog.createChild(logger, "HolisticFogRangeCalculator");
+        this.invalidRanges = LogThrottle.oncePerKey(this.logger, "invalid fog ranges", "rejoining a world");
         this.fogOptions = fogOptions;
 
         this.calculators.add(new BiomeFogRangeCalculator(biomeLibrary, this.fogOptions));
@@ -57,8 +61,8 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
         for (final IFogRangeCalculator calc : this.calculators) {
             if (calc.enabled()) {
                 final FogRenderer.FogData result = calc.render(data, renderDistance, partialTick);
-                if (result.start > result.end || result.start < 0 || result.end < 0) {
-                    this.logger.warn("Fog calculator '%s' reporting invalid fog range (start %f, end %f); ignored", calc.getName(), result.start, result.end);
+                if (!isValid(result)) {
+                    this.invalidRanges.warn(calc.getName(), "Fog calculator '%s' reporting invalid fog range (start %f, end %f); ignored", calc.getName(), result.start, result.end);
                 } else if (result.end < end) {
                     start = result.start;
                     end = result.end;
@@ -73,6 +77,14 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
         return result;
     }
 
+    /**
+     * Whether a fog range can be used. The start may be negative: vanilla starts the fog behind the camera under water
+     * (-8), and calculators hand on the range they were given when they have nothing to change.
+     */
+    static boolean isValid(FogRenderer.FogData data) {
+        return Float.isFinite(data.start) && Float.isFinite(data.end) && data.end >= 0 && data.start <= data.end;
+    }
+
     @Override
     public void tick() {
         if (GameUtils.isInGame())
@@ -81,6 +93,7 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
 
     @Override
     public void disconnect() {
+        this.invalidRanges.reset();
         this.calculators.forEach(IFogRangeCalculator::disconnect);
     }
 

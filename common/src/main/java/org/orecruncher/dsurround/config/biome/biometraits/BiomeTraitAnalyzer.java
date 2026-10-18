@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import static org.orecruncher.dsurround.config.BiomeTrait.*;
@@ -20,7 +18,7 @@ public final class BiomeTraitAnalyzer implements IBiomeTraitAnalyzer {
     }
 
     @Override
-    public void analyze(@NotNull ResourceLocation id, @NotNull Biome biome, @NotNull Set<BiomeTrait> resultCollection) {
+    public void analyze(@NotNull BiomeEvidence biome, @NotNull Set<BiomeTrait> resultCollection) {
         if (resultCollection.contains(CAVE))
             resultCollection.add(UNDERGROUND);
 

@@ -85,8 +85,12 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
         return this.hasTrait(BiomeTrait.RIVER);
     }
 
+    /**
+     * Whether the biome is an ocean that isn't deep. Cleanup keeps one of OCEAN, SHALLOW_OCEAN and DEEP_OCEAN, and the
+     * convention tags make vanilla's oceans shallow, which takes their OCEAN away.
+     */
     public boolean isOcean() {
-        return this.hasTrait(BiomeTrait.OCEAN);
+        return this.hasTrait(BiomeTrait.OCEAN) || this.hasTrait(BiomeTrait.SHALLOW_OCEAN);
     }
 
     public boolean isDeepOcean() {
@@ -227,7 +231,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
         final StringBuilder builder = new StringBuilder();
         builder.append("Biome [").append(getBiomeName()).append('/').append(this.biomeId).append("]");
         builder.append("\nTags: ").append(tags);
-        builder.append("\n").append(getTraits().toString());
+        builder.append("\nTraits: ").append(getTraits().describe());
 
         builder.append("\nfogDensity: ").append(this.fogDensity.getName());
         builder.append("\ngroundFog: ").append(this.groundFog.getName());

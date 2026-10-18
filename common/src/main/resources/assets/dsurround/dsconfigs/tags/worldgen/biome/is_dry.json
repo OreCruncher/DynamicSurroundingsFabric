@@ -32,6 +32,10 @@
     {
       "id": "#forge:is_dry/overworld",
       "required": false
+    },
+    {
+      "id": "biomesoplenty:lush_desert",
+      "required": false
     }
   ]
 }

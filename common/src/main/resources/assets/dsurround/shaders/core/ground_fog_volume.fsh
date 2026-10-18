@@ -124,8 +124,9 @@ float noise(vec2 p) {
 // A column's light, from the lightmap
 vec3 columnLight(ivec2 cell) {
     cell = clamp(cell, ivec2(0), ivec2(int(GridSize) - 1));
-    float packed = floor(texelFetch(FogGrid, cell, 0).b * 255.0 + 0.5);
-    return texelFetch(Sampler2, ivec2(floor(packed / 16.0), mod(packed, 16.0)), 0).rgb;
+    // Not "packed", which GLSL reserves: Mesa refuses it (NVIDIA and AMD let it pass)
+    float lightCoords = floor(texelFetch(FogGrid, cell, 0).b * 255.0 + 0.5);
+    return texelFetch(Sampler2, ivec2(floor(lightCoords / 16.0), mod(lightCoords, 16.0)), 0).rgb;
 }
 
 // The light at a point, blended between the four nearest columns: one column's alone changes at each block's edge,
