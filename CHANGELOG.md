@@ -133,6 +133,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
     * `traits` and `clearTraits` in `biomes.json` are deprecated (a warning is logged): they are added after the guesses, where a tag file settles a trait before any guess
 
 **Fixes**
+* With a mod that turns the game's fog off (Distant Horizons), the log no longer fills with invalid fog range warnings, and the fog is left off: rain, morning and biome fog would only cover the game's own terrain, not the far terrain that mod draws, so they stand aside, and their work stops, while it is off (#201)
 * Particle rain, snow and damp spots turned themselves off in the overworld with Stellar View installed (NeoForge): it replaces the overworld's sky effects, which was taken to mean it draws its own weather. Now only a dimension whose effects draw or tick their own weather is left to them
 * Water ripples are visible when looking from underwater. During the day they are faint rings; at night they are more visible.
 * Added Twilight Forest dimension configuration to set sea level.

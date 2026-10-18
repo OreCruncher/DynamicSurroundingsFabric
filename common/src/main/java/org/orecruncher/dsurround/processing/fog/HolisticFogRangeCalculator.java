@@ -24,6 +24,8 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
     private final WeatherFogRangeCalculator weather;
     // A bad range would be reported every frame: once for each calculator is enough
     private final LogThrottle<String> invalidRanges;
+    // Whether another mod had the fog turned off when it was last drawn; the calculators rest until it is back
+    private boolean fogTurnedOff;
 
     public HolisticFogRangeCalculator(IModLog logger, Configuration.FogOptions fogOptions, IBiomeLibrary biomeLibrary, ISeasonalInformation seasonInfo, IWeatherSimulation weatherSimulation, Configuration.WeatherOptions weatherOptions, PrecipitationHandler precipitation) {
         this.logger = ModLog.createChild(logger, "HolisticFogRangeCalculator");
@@ -53,6 +55,12 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
         if (!this.enabled())
             return data;
 
+        // Another mod draws the distance itself (Distant Horizons): fog of ours would only cover the game's own
+        // terrain, a bubble around the player with clear country beyond, so the fog is left as that mod set it
+        this.fogTurnedOff = isTurnedOff(data);
+        if (this.fogTurnedOff)
+            return data;
+
         // The thickest fog wins: its start and end are kept together, so one calculator's start isn't paired with
         // another's end, which made fog thicker than any of them asked for
         float start = data.start;
@@ -61,6 +69,9 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
         for (final IFogRangeCalculator calc : this.calculators) {
             if (calc.enabled()) {
                 final FogRenderer.FogData result = calc.render(data, renderDistance, partialTick);
+                // Handed back as given: it has nothing to change, so there is no range of its own to judge
+                if (!changed(result, data))
+                    continue;
                 if (!isValid(result)) {
                     this.invalidRanges.warn(calc.getName(), "Fog calculator '%s' reporting invalid fog range (start %f, end %f); ignored", calc.getName(), result.start, result.end);
                 } else if (result.end < end) {
@@ -78,6 +89,21 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
     }
 
     /**
+     * Whether another mod has turned the fog off, by starting it past its end (Distant Horizons starts it at the
+     * largest float)
+     */
+    static boolean isTurnedOff(FogRenderer.FogData data) {
+        return data.start > data.end;
+    }
+
+    /**
+     * Whether a calculator changed the range it was given
+     */
+    static boolean changed(FogRenderer.FogData result, FogRenderer.FogData given) {
+        return result != given && (Float.compare(result.start, given.start) != 0 || Float.compare(result.end, given.end) != 0);
+    }
+
+    /**
      * Whether a fog range can be used. The start may be negative: vanilla starts the fog behind the camera under water
      * (-8), and calculators hand on the range they were given when they have nothing to change.
      */
@@ -87,13 +113,14 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
 
     @Override
     public void tick() {
-        if (GameUtils.isInGame())
+        if (GameUtils.isInGame() && !this.fogTurnedOff)
             this.calculators.forEach(IFogRangeCalculator::tick);
     }
 
     @Override
     public void disconnect() {
         this.invalidRanges.reset();
+        this.fogTurnedOff = false;
         this.calculators.forEach(IFogRangeCalculator::disconnect);
     }
 
@@ -117,7 +144,7 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
      * @param rgb the fog's colour, red, green and blue from 0 to 1; changed in place
      */
     public void tintFogColor(float[] rgb, float partialTick) {
-        if (this.enabled() && this.weather.enabled())
+        if (this.enabled() && !this.fogTurnedOff && this.weather.enabled())
             this.weather.tintFogColor(rgb, partialTick);
     }
 }
