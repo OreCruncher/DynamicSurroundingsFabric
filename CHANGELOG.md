@@ -112,6 +112,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Aurora shader was modified to use a noise map rather than hashing in the shader. Result is that the style of aurora could change between computers that are running different versions of Dynamic Surroundings.
 * Reuse reverb calculations between sounds that have their source close to each other
 * Features turned off because of another mod are now listed together: in the log at startup, and in the diagnostics overlay
+* Less work each tick for ground fog and random block effects (found by profiling a large modpack)
 
 **Fixes**
 * Water ripples are visible when looking from underwater. During the day they are faint rings; at night they are more visible.

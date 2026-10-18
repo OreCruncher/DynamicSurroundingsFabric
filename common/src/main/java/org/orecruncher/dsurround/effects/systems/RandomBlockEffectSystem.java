@@ -28,8 +28,6 @@ import java.util.function.Predicate;
  */
 public class RandomBlockEffectSystem extends AbstractEffectSystem {
 
-    protected static final IRandomizer RANDOM = Randomizer.current();
-
     public static final int NEAR_RANGE = 16;
     public static final int FAR_RANGE = 32;
     private static final int ITERATION_COUNT = 667;
@@ -71,12 +69,14 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
         final boolean effectsAllowed = particles != ParticleStatus.MINIMAL;
         final var camera = GameUtils.getMC().gameRenderer.getMainCamera().getPosition();
 
+        // 667 samples, each several random numbers: look up the thread's generator once, not on every call
+        final IRandomizer random = Randomizer.forThisThread();
         final var pos = this.samplePos;
         for (int i = 0; i < ITERATION_COUNT; i++) {
             pos.set(
-                    RANDOM.triangle(center.getX(), this.range),
-                    RANDOM.triangle(center.getY(), this.range),
-                    RANDOM.triangle(center.getZ(), this.range));
+                    random.triangle(center.getX(), this.range),
+                    random.triangle(center.getY(), this.range),
+                    random.triangle(center.getZ(), this.range));
 
             if (this.hasSystemAtPosition(pos))
                 continue;
@@ -94,9 +94,9 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
                     && effectsAllowed
                     && isWithin(pos, center, effectRange)
                     && camera.distanceToSqr(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D) <= AbstractBlockEffect.PARTICLE_RANGE_SQ
-                    && !(particles == ParticleStatus.DECREASED && RANDOM.nextInt(3) == 0)) {
+                    && !(particles == ParticleStatus.DECREASED && random.nextInt(3) == 0)) {
                 for (var producer : producers) {
-                    var effect = producer.produce(world, state, pos, RANDOM);
+                    var effect = producer.produce(world, state, pos, random);
                     if (effect.isPresent()) {
                         // Keyed by the sampled block, which is what hasSystemAtPosition() checks above. The effect's
                         // own position can differ (a flame jet on a solid block sits in the block above), and keying
@@ -108,7 +108,7 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
                 }
             }
 
-            info.getSoundToPlay(RANDOM).ifPresent(s -> this.audioPlayer.play(s.createAtLocation(pos)));
+            info.getSoundToPlay(random).ifPresent(s -> this.audioPlayer.play(s.createAtLocation(pos)));
         }
     }
 

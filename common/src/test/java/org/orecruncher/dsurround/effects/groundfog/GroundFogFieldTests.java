@@ -1,7 +1,9 @@
 package org.orecruncher.dsurround.effects.groundfog;
 
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -317,5 +319,101 @@ public class GroundFogFieldTests {
         field.chunkChanged(0, 0);
         field.update(ground, 0.5, 0.5, Float.NaN);
         assertEquals(9 * 9, ground.looks);
+    }
+
+    @Test
+    void theCellsAreAsThePlainWayWorksThemOut() {
+        // The field takes shortcuts (most columns can't be obstacles, so aren't sorted; the blur sums rows then
+        // columns; the slots are stepped through): on rough ground with posts and a biome's edge, after a move that
+        // wraps the cache, its cells are what the plain way gives
+        var random = Randomizer.create(1234);
+        var ground = new Ground(3);
+        for (int x = -24; x <= 24; x++)
+            for (int z = -24; z <= 24; z++)
+                ground.column(x, z, GROUND + random.nextInt(4) + (random.nextInt(10) == 0 ? 3 + random.nextInt(6) : 0));
+        var field = new GroundFogField(12);
+        field.update(ground, 0.5, 0.5, Float.NaN);
+        field.update(ground, 5.5, -3.5, Float.NaN);
+
+        int size = field.size(), radius = field.radius(), cells = size * size;
+        int[] found = new int[cells];
+        float[] thickness = new float[cells];
+        for (int j = 0; j < size; j++)
+            for (int i = 0; i < size; i++) {
+                int x = field.cellX(i), z = field.cellZ(j);
+                found[j * size + i] = ground.groundHeight(x, z);
+                thickness[j * size + i] = ground.density(x, 0, z);
+            }
+
+        float[] height = new float[cells];
+        for (int k = 0; k < cells; k++)
+            height[k] = found[k];
+        for (int j = 1; j + 1 < size; j++)
+            for (int i = 1; i + 1 < size; i++) {
+                int[] around = new int[8];
+                int n = 0;
+                for (int dj = -1; dj <= 1; dj++)
+                    for (int di = -1; di <= 1; di++)
+                        if (di != 0 || dj != 0)
+                            around[n++] = found[(j + dj) * size + i + di];
+                Arrays.sort(around);
+                float middle = (around[3] + around[4]) * 0.5F;
+                if (found[j * size + i] > middle + GroundFogField.OBSTACLE_HEIGHT)
+                    height[j * size + i] = middle;
+            }
+        float[] smooth = plainBlur(plainBlur(height, size), size);
+        for (int k = 0; k < cells; k++)
+            smooth[k] = Math.clamp(smooth[k], height[k] - GroundFogField.SMOOTH_BELOW, height[k] + GroundFogField.SMOOTH_ABOVE);
+
+        int obstacles = 0;
+        for (int j = 0; j < size; j++)
+            for (int i = 0; i < size; i++) {
+                int k = j * size + i;
+                if (height[k] != found[k])
+                    obstacles++;
+                float density = 0F;
+                int dx = i - radius, dz = j - radius;
+                if (dx * dx + dz * dz <= radius * radius) {
+                    float sum = 0F;
+                    int count = 0;
+                    for (int dj = -1; dj <= 1; dj++)
+                        for (int di = -1; di <= 1; di++) {
+                            int ni = i + di, nj = j + dj;
+                            if (ni >= 0 && ni < size && nj >= 0 && nj < size
+                                    && Math.abs(height[nj * size + ni] - height[k]) <= GroundFogField.SAME_LEVEL) {
+                                sum += thickness[nj * size + ni];
+                                count++;
+                            }
+                        }
+                    density = sum / count;
+                }
+                String at = "cell " + i + ", " + j;
+                assertEquals(height[k], field.height(i, j), 1e-6F, at);
+                assertEquals(smooth[k], field.smoothHeight(i, j), 1e-4F, at);
+                assertEquals(density, field.density(i, j), 1e-6F, at);
+            }
+        assertTrue(obstacles > 0, "the ground has posts standing in the mist");
+    }
+
+    /**
+     * The mean of the nine around each cell, as many as are in the area, added up one by one
+     */
+    private static float[] plainBlur(float[] from, int size) {
+        float[] to = new float[from.length];
+        for (int j = 0; j < size; j++)
+            for (int i = 0; i < size; i++) {
+                float sum = 0F;
+                int count = 0;
+                for (int dj = -1; dj <= 1; dj++)
+                    for (int di = -1; di <= 1; di++) {
+                        int ni = i + di, nj = j + dj;
+                        if (ni >= 0 && ni < size && nj >= 0 && nj < size) {
+                            sum += from[nj * size + ni];
+                            count++;
+                        }
+                    }
+                to[j * size + i] = sum / count;
+            }
+        return to;
     }
 }
