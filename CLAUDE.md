@@ -14,8 +14,8 @@ checking in game.
 
 ## Build and test (Git Bash on Windows; use absolute paths, `cd` can be reset between commands)
 - Compile everything: `./gradlew :common:compileJava :fabric:compileJava :neoforge:compileJava -q`
-- Tests (common only, ~1450): `./gradlew :common:test -q`, then read `common/build/test-results/test/*.xml` for
-  counts and failure messages (the console output is noisy).
+- Tests (common only, ~2100): `./gradlew :common:test -q` ends with `Tests: N run, N failed, N skipped`, after a
+  `FAILED <class>.<test>: <message>` line per failure; read `common/build/test-results/test/*.xml` only for a stack trace.
 - One class: `./gradlew :common:test --tests "*BlockInfoTests" -q`
 - Game jar for `javap` (check real signatures rather than assuming; 26.2 is unobfuscated):
   `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/26.2/minecraft-merged-deobf-26.2.jar`.
@@ -198,5 +198,11 @@ checking in game.
   Once squashed, check `git diff OreCruncher/0.4.7 main` is empty and record `main` with `git merge -s ours main` (a
   normal merge would reopen every conflict this branch resolved). Port 1.21.1 work by merging, resolving against 26.2's
   APIs (see `MIGRATION.md`); never rebase this branch.
+  - After `git merge OreCruncher/0.4.7` stops: `python scripts/port-merge.py merge --show` renames 1.21.1's names
+    (`scripts/port-renames.txt`) and merges each conflict again, staging what resolves (and files git merged with old
+    names in them), then prints only the conflicts left. Then compile; add any rename the compiler finds to the table
+    and run `port-merge.py check-table`. `port-merge.py convert --to 1.21.1 FILE...` renames code copied to 0.4.7.
+- Biome dumps: `python scripts/dump-diff.py OLD NEW [--sounds]` lists only what changed (traits, their sources, the
+  "Biomes to check" list); `--keep DUMP` saves a copy to `build/dumps` before the next dump overwrites it.
 - `OreCruncher/26.2`: the 26.2 port, started from 0.4.5 and carrying 0.4.6 and 0.4.7 (NeoForge 26.2.0.82, Architectury
   21.1.10, Cloth Config 26.2.155). NeoForge 26.2's client launch class is `net.neoforged.fml.startup.Client`.

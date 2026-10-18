@@ -1,0 +1,24 @@
+# Names that changed between Minecraft 1.21.1 (0.4.x on main) and 26.2, for scripts/port-merge.py.
+# Applied to Java files only, top to bottom.
+#
+#   Old = New                     a whole-word rename, applied both ways (convert --to 1.21.1 reverses it)
+#   re: <regex> => <replacement>  a regex for 1.21.1 code, applied going to 26.2 only (Python re syntax)
+#
+# Only add a rule that is always right: a method renamed on one class but not another of the same name (ResourceKey's
+# location() became identifier(), TagKey's didn't) needs a regex for each call shape seen. `port-merge.py check-table`
+# checks no rule matches 26.2's code.
+
+ResourceLocation = Identifier
+GuiGraphics = GuiGraphicsExtractor
+
+# ResourceKey.location() -> identifier() (TagKey.location() is unchanged)
+re: \b(registryKey|tResourceKey|resourceKey)\.location\(\) => \1.identifier()
+re: \b(OVERWORLD|NETHER|END)\.location\(\) => \1.identifier()
+re: \.dimension\(\)\.location\(\) => .dimension().identifier()
+re: \.unwrapKey\(\)\.orElseThrow\(\)\.location\(\) => .unwrapKey().orElseThrow().identifier()
+re: \.getKey\(\)\.location\(\) => .getKey().identifier()
+
+# SoundEvent.getLocation() -> location(); SoundInstance.getLocation() -> getIdentifier() (Sound.getLocation() is unchanged)
+re: \b(soundEvent|se)\.getLocation\(\) => \1.location()
+re: \.value\(\)\.getLocation\(\) => .value().location()
+re: \b(soundInstance|currentMusic|theSound)\.getLocation\(\) => \1.getIdentifier()

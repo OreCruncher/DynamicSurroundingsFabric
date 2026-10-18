@@ -67,4 +67,15 @@ test {
         showExceptions = true
         showCauses = true
         showStackTraces = true    }
+    // A summary that shows even with -q: each failure's first line, then the totals
+    afterTest { desc, result ->
+        if (result.resultType == TestResult.ResultType.FAILURE) {
+            def message = result.exception?.toString()?.readLines()?.find { it.trim() } ?: 'no message'
+            println "FAILED ${desc.className}.${desc.name}: ${message.take(400)}"
+        }
+    }
+    afterSuite { desc, result ->
+        if (desc.parent == null)
+            println "Tests: ${result.testCount} run, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped (${result.resultType})"
+    }
 }
