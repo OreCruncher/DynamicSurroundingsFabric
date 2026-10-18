@@ -3,7 +3,6 @@ package org.orecruncher.dsurround.config.biome.biometraits;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.levelgen.GenerationStep;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -13,8 +12,8 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Works out what a biome grows from its definition file (see {@link IDefinitionFiles}): how many trees its vegetation
- * step places in a chunk, and whether it is water: it grows seagrass or kelp, or spawns water creatures (squid,
+ * Works out what a biome grows from its definition file (see {@link IDefinitionFiles}): how many trees it places in
+ * a chunk, and whether it is water: it grows seagrass or kelp, or spawns water creatures (squid,
  * dolphins), as frozen oceans and rivers do with no seagrass to show.
  * <p>
  * Trees are told by name or type, as mods often register their configured features in code, where no file shows
@@ -26,7 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class BiomeDefinitions {
 
-    private static final int VEGETATION = GenerationStep.Decoration.VEGETAL_DECORATION.ordinal();
     // A selector picking among selectors is followed this far
     private static final int MAX_DEPTH = 4;
 
@@ -91,19 +89,22 @@ public final class BiomeDefinitions {
     }
 
     /**
-     * The placed features of a biome's vegetation step, by id; tags and features written out in place are left out
+     * The placed features of all a biome's steps, by id; tags and features written out in place are left out. Not
+     * only the vegetation step: a step only orders the features, and mods put trees in others (No Man's Land in the
+     * underground decoration and top layer steps). Underground placements are told by their rules instead.
      */
     private static List<ResourceLocation> vegetation(JsonObject biome) {
         var result = new ArrayList<ResourceLocation>();
         var steps = biome.get("features");
-        if (steps == null || !steps.isJsonArray() || steps.getAsJsonArray().size() <= VEGETATION)
+        if (steps == null || !steps.isJsonArray())
             return result;
-        var step = steps.getAsJsonArray().get(VEGETATION);
-        var entries = step.isJsonArray() ? step.getAsJsonArray().asList() : List.of(step);
-        for (var entry : entries) {
-            var id = id(entry);
-            if (id != null)
-                result.add(id);
+        for (var step : steps.getAsJsonArray()) {
+            var entries = step.isJsonArray() ? step.getAsJsonArray().asList() : List.of(step);
+            for (var entry : entries) {
+                var id = id(entry);
+                if (id != null)
+                    result.add(id);
+            }
         }
         return result;
     }

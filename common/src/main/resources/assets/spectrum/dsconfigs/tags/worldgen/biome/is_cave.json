@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "spectrum:deep_dripstone_caves",
+      "required": false
+    },
+    {
+      "id": "spectrum:noxshroom_forest",
+      "required": false
+    }
+  ]
+}

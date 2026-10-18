@@ -60,6 +60,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Has some wear like an heirloom handed down: tarnish, scratches, a dent or two, and a hairline crack in the dial
   * A window under XII shows day or night, like Minecraft's clock, to tell noon from midnight
   * A window above VI shows the season when Serene Seasons is installed, or the moon's phase without it
+  * Spins where the compass does (the Nether, the End), as Minecraft's clock does there; the clock text leaves out the time (`dsurround:effects/clock_wobble` picks which clocks)
   * Clock style option in Compass and Clock Options: text, pocket watch, or both; the Render scaling option applies to it as well
   * Pocket watch style option picks the look: CLASSIC (the worn round watch) or SQUARE (a square brass watch in pixel art)
 * The compass and clock on/off switches are now a NONE choice in their styles; a switch that was off carries over as NONE
@@ -119,16 +120,20 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Guesses come from the biome's vanilla music, grass, and ambient sounds first, then its climate, then its name; names match whole words, so "alpine" isn't a pine forest
   * Before guessing, the biome's definition in its mod's jar is read for how many trees it grows: dense or sparse vegetation, and a forest, without a guess (works on servers too, as the mod is installed on the client)
     * A biome playing swamp music or named a bog or swamp stays a swamp however many trees it has; caves and water biomes don't count trees
+    * Trees count in whichever generation step the mod places them (No Man's Land puts most of its forests' outside the vegetation step)
   * Vanilla biomes have the same traits on every server: the mod's own table settles their temperature, moisture and vegetation where Fabric's or NeoForge's tags disagree
+  * A biome named a shore is a beach but not wet, like vanilla's stony shore
   * More biome names understood: fields, plains, meadows and prairies; seas; streams and lakes; savannas; plateaus; highlands; tundra and glaciers
   * `/dsdump biomes` shows where each trait came from, and ends with a list of biomes to check: traits guessed from music, grass or name, or no dimension or kind at all, to help write tag files for them
     * In single player it checks each biome's dimension against where the world generates it, and lists each dimension's biomes
     * A biome only in modded dimensions (or, on a server, of a mod with dimensions of its own) isn't listed for having no kind: it is often its dimension's only biome
   * The traits shipped for other mods' biomes are now tag files in each mod's folder (`assets/<mod>/dsconfigs/tags/worldgen/biome/is_<trait>.json`), read only when that mod is installed
     * Nature's Spirit's alpine and highlands biomes are windswept, as intended: their tag file was misnamed and never read
+    * Tags for Spectrum's Deeper Down biomes its own tags leave out (deep dripstone caves, noxshroom forest), and No Man's Land's mud beach (a beach, not a swamp) and tropical beach
     * `traits` and `clearTraits` in `biomes.json` are deprecated (a warning is logged): they are added after the guesses, where a tag file settles a trait before any guess
 
 **Fixes**
+* Particle rain, snow and damp spots turned themselves off in the overworld with Stellar View installed (NeoForge): it replaces the overworld's sky effects, which was taken to mean it draws its own weather. Now only a dimension whose effects draw or tick their own weather is left to them
 * Water ripples are visible when looking from underwater. During the day they are faint rings; at night they are more visible.
 * Added Twilight Forest dimension configuration to set sea level.
 * Moved aurora render hook to avoid conflict with Astral Sorcery's sky render

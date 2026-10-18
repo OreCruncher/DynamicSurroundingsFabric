@@ -166,7 +166,9 @@ public class BiomeTraitAnalysisTests {
         assertTrue(fromName("snowy_coniferous_forest").containsAll(Set.of(COLD, SNOWY, FOREST, CONIFEROUS, TAIGA)));
         assertTrue(fromName("redwood_forest").containsAll(Set.of(FOREST, DENSE_VEGETATION)));
         assertTrue(fromName("bog").containsAll(Set.of(SWAMP, WET)));
-        assertTrue(fromName("rocky_shore").containsAll(Set.of(BEACH, WET)));
+        assertTrue(fromName("sandy_beach").containsAll(Set.of(BEACH, WET)));
+        assertTrue(fromName("rocky_shore").contains(BEACH));
+        assertFalse(fromName("rocky_shore").contains(WET), "a shore, like vanilla's stony shore, isn't wet");
         assertTrue(fromName("sulfur_springs").containsAll(Set.of(UNDERGROUND, CAVE, HOT, DRY)));
         assertTrue(fromName("mystic_grove").containsAll(Set.of(FOREST)));
         assertEquals(Set.of(PLAINS), fromName("lavender_field"), "a field, and not the End");

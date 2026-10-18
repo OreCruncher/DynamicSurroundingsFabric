@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "nomansland:tropical_beach",
+      "required": false
+    }
+  ]
+}

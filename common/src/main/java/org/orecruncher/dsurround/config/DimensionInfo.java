@@ -10,6 +10,11 @@ import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.data.DimensionConfigRule;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
 
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * Settings for one dimension, built from the world itself and then adjusted by the matching dimension config rules.
  * <p>
@@ -92,15 +97,37 @@ public class DimensionInfo {
     }
 
     /**
-     * Whether a dimension's effects are one of vanilla's own: the overworld's, the nether's or the end's. Any other,
-     * including a mod's subclass of one, may draw and tick its own weather (NeoForge lets it), and particle weather
-     * drawn first would hide it, so it is left to the dimension unless a rule says otherwise.
+     * The methods a dimension's effects override to draw or tick their own weather: NeoForge's renderSnowAndRain and
+     * tickRain (IDimensionSpecialEffectsExtension). None on Fabric, where effects can't.
+     */
+    private static final Set<String> WEATHER_HOOKS = Arrays.stream(DimensionSpecialEffects.class.getMethods())
+            .map(Method::getName)
+            .filter(name -> name.equals("renderSnowAndRain") || name.equals("tickRain"))
+            .collect(Collectors.toUnmodifiableSet());
+
+    /**
+     * Whether a dimension draws its weather as vanilla does. Vanilla's own effects (the overworld's, the nether's and
+     * the end's) do. A mod's effects (Stellar View replaces vanilla's, for its sky) do unless they override one of
+     * the platform's weather hooks; without hooks to look for, any mod's effects may draw their own. Particle weather
+     * drawn first would hide a dimension's own, so that is left to the dimension unless a rule says otherwise.
      */
     public static boolean hasVanillaWeather(DimensionSpecialEffects effects) {
+        return hasVanillaWeather(effects, WEATHER_HOOKS);
+    }
+
+    static boolean hasVanillaWeather(DimensionSpecialEffects effects, Set<String> weatherHooks) {
         var type = effects.getClass();
-        return type == DimensionSpecialEffects.OverworldEffects.class
+        if (type == DimensionSpecialEffects.OverworldEffects.class
                 || type == DimensionSpecialEffects.NetherEffects.class
-                || type == DimensionSpecialEffects.EndEffects.class;
+                || type == DimensionSpecialEffects.EndEffects.class)
+            return true;
+        if (weatherHooks.isEmpty())
+            return false;
+        for (Class<?> c = type; c != null && c != DimensionSpecialEffects.class; c = c.getSuperclass())
+            for (var method : c.getDeclaredMethods())
+                if (weatherHooks.contains(method.getName()))
+                    return false;
+        return true;
     }
 
     /**

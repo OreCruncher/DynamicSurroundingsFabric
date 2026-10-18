@@ -147,7 +147,9 @@ public final class BiomeNameFallbackAnalyzer implements IBiomeTraitAnalyzer {
 
         if (hasWord(path, "beach", "shore")) {
             results.add(BEACH);
-            results.add(WET);
+            // Vanilla's beach is wet; its stony shore isn't
+            if (hasWord(path, "beach"))
+                results.add(WET);
         }
 
         if (hasWord(path, "snow", "frozen", "ice", "icy")) {

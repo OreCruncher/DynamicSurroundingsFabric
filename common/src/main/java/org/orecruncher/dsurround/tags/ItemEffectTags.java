@@ -25,6 +25,7 @@ public class ItemEffectTags {
     public static final TagKey<Item> COMPASSES = of("is_compass");
     public static final TagKey<Item> COMPASS_WOBBLE = of("compass_wobble");
     public static final TagKey<Item> CLOCKS = of("is_clock");
+    public static final TagKey<Item> CLOCK_WOBBLE = of("clock_wobble");
 
     private static TagKey<Item> of(String id) {
         var tagKey = TagKey.create(Registries.ITEM, Constants.asId("effects/" + id));

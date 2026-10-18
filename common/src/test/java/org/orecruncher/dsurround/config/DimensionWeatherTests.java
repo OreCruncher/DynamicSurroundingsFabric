@@ -1,11 +1,16 @@
 package org.orecruncher.dsurround.config;
 
 import net.minecraft.SharedConstants;
+import net.minecraft.client.Camera;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,9 +50,47 @@ public class DimensionWeatherTests {
 
     @Test
     void aModsSubclassOfVanillasEffectsCountsAsItsOwn() {
-        // It may override how the weather is drawn
+        // Without the platform's weather hooks to look for (Fabric, and these tests), it may draw its own weather
         var subclass = new DimensionSpecialEffects.OverworldEffects() {
         };
-        assertFalse(DimensionInfo.hasVanillaWeather(subclass));
+        assertFalse(DimensionInfo.hasVanillaWeather(subclass, Set.of()));
+    }
+
+    @Test
+    void aModsEffectsThatLeaveTheWeatherAloneGetParticleWeather() {
+        // Regression: Stellar View replaces the overworld's effects for its sky, which turned particle weather off
+        var sky = new DimensionSpecialEffects.OverworldEffects() {
+            @Override
+            public float getCloudHeight() {
+                return 200F;
+            }
+        };
+        assertTrue(DimensionInfo.hasVanillaWeather(sky, HOOKS));
+    }
+
+    @Test
+    void aModsEffectsThatDrawOrTickWeatherAreLeftTheirWeather() {
+        assertFalse(DimensionInfo.hasVanillaWeather(new DrawsWeather(), HOOKS));
+        assertFalse(DimensionInfo.hasVanillaWeather(new TicksRain(), HOOKS));
+        // Inherited from a mod's class in between
+        assertFalse(DimensionInfo.hasVanillaWeather(new DrawsWeather() {
+        }, HOOKS));
+    }
+
+    // NeoForge's weather hooks; the test class path is vanilla's, so the effects here declare them themselves
+    private static final Set<String> HOOKS = Set.of("renderSnowAndRain", "tickRain");
+
+    private static class DrawsWeather extends DimensionSpecialEffects.OverworldEffects {
+        @SuppressWarnings("unused")
+        public boolean renderSnowAndRain(ClientLevel level, int ticks, float partialTick, LightTexture lightTexture, double camX, double camY, double camZ) {
+            return true;
+        }
+    }
+
+    private static class TicksRain extends DimensionSpecialEffects.OverworldEffects {
+        @SuppressWarnings("unused")
+        public boolean tickRain(ClientLevel level, int ticks, Camera camera) {
+            return true;
+        }
     }
 }
