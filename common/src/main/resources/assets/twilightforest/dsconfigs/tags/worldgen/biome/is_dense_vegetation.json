@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "twilightforest:snowy_forest",
+      "required": false
+    },
+    {
+      "id": "twilightforest:spooky_forest",
+      "required": false
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "profundis:frozen_caves",
+      "required": false
+    }
+  ]
+}

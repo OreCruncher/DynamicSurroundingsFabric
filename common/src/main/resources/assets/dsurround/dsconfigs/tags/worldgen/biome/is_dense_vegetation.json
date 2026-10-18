@@ -16,10 +16,6 @@
     {
       "id": "#forge:is_dense/overworld",
       "required": false
-    },
-    {
-      "id": "biomesoplenty:forested_field",
-      "required": false
     }
   ]
 }

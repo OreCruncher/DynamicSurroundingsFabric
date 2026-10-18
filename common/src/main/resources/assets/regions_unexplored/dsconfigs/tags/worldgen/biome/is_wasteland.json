@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "regions_unexplored:blackstone_basin",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:redstone_abyss",
+      "required": false
+    }
+  ]
+}

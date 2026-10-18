@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
  * <p>
  * Worked out in order of how much each source can be trusted: the biome's tags, then (for a vanilla biome) the mod's
  * table, which settles its dimension, temperature, moisture and vegetation, then what follows from those. Then, for a
- * biome not in the table, what its definition file says it grows (the trees), then guesses from its effects (the vanilla
- * music it plays, its grass), its climate and its name, each only filling in the groups ({@link TraitGroup}:
- * dimension, temperature, moisture, vegetation, kind) that what came before left empty, then what follows from the
- * guesses. Last, conflicting traits are cleaned up.
+ * biome not in the table, how dense its vegetation is from what its definition file says it grows (the trees), then
+ * guesses from its effects (the vanilla music it plays, its grass), its climate and its name, then whether its trees
+ * make it a forest, each only filling in the groups ({@link TraitGroup}: dimension, temperature, moisture, vegetation,
+ * kind) that what came before left empty, then what follows from the guesses. Last, conflicting traits are cleaned up.
  */
 public final class BiomeTraits {
 
@@ -31,12 +31,16 @@ public final class BiomeTraits {
     private static final IBiomeTraitAnalyzer CLEANUP = new BiomeTraitCleanup();
     // The mods' biome files, read once each: their jars don't change while the game runs
     private static final BiomeDefinitions DEFINITIONS = new BiomeDefinitions(IDefinitionFiles.installedMods());
+    // Kinds whose trees say nothing of what grows there
+    private static final Set<BiomeTrait> TREES_DONT_COUNT = EnumSet.of(BiomeTrait.CAVE, BiomeTrait.UNDERGROUND,
+            BiomeTrait.OCEAN, BiomeTrait.DEEP_OCEAN, BiomeTrait.RIVER);
     // Guesses, most trusted first
     private static final List<Map.Entry<TraitSource, IBiomeTraitAnalyzer>> GUESSES = List.of(
-            Map.entry(TraitSource.DEFINITION, new BiomeDefinitionAnalyzer()),
+            Map.entry(TraitSource.DEFINITION, BiomeDefinitionAnalyzer.vegetation()),
             Map.entry(TraitSource.EFFECTS, new BiomeEffectsAnalyzer()),
             Map.entry(TraitSource.CLIMATE, new BiomeClimateAnalyzer()),
-            Map.entry(TraitSource.NAME, new BiomeNameFallbackAnalyzer()));
+            Map.entry(TraitSource.NAME, new BiomeNameFallbackAnalyzer()),
+            Map.entry(TraitSource.DEFINITION, BiomeDefinitionAnalyzer.kind()));
 
     // In the traits' order, so toString() lists them as it always has
     private final EnumMap<BiomeTrait, TraitSource> traits;
@@ -74,6 +78,11 @@ public final class BiomeTraits {
             result.apply(DERIVE, TraitSource.DERIVED, biome);
             for (var guess : GUESSES)
                 result.apply(guess.getValue(), guess.getKey(), biome);
+            result.confirmByTrees(biome);
+            // A cave's trees are those of the surface above it, and an ocean's or river's mostly never grow: whatever
+            // told it was one (its tags, music or name), it is guessed again without them
+            if (TREES_DONT_COUNT.stream().anyMatch(result::contains) && result.traits.containsValue(TraitSource.DEFINITION))
+                return from(biome.withoutDefinition(), tags);
             result.apply(DERIVE, TraitSource.DERIVED_FROM_GUESS, biome);
         }
         result.apply(CLEANUP, null, biome);
@@ -110,6 +119,20 @@ public final class BiomeTraits {
             var group = TraitGroup.of(trait);
             if (group == null || !filled.contains(group))
                 this.traits.put(trait, source);
+        }
+    }
+
+    /**
+     * A kind guessed from the music or name that the trees agree with (a forest) is as certain as the trees, so isn't
+     * doubted
+     */
+    private void confirmByTrees(BiomeEvidence biome) {
+        var kind = EnumSet.noneOf(BiomeTrait.class);
+        BiomeDefinitionAnalyzer.kind().analyze(biome, kind);
+        for (var trait : kind) {
+            var source = this.traits.get(trait);
+            if (source != null && source.isGuess())
+                this.traits.put(trait, TraitSource.DEFINITION);
         }
     }
 

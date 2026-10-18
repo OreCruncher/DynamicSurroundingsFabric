@@ -117,11 +117,16 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Better biome traits for modded biomes missing tags
   * A biome's tags are no longer overridden by guesses: a modded biome tagged cold stays cold even when its temperature looks temperate
   * Guesses come from the biome's vanilla music, grass, and ambient sounds first, then its climate, then its name; names match whole words, so "alpine" isn't a pine forest
-  * Before guessing, the biome's definition in its mod's jar is read for how many trees it grows: a forest, or sparse vegetation, without a guess (works on servers too, as the mod is installed on the client)
+  * Before guessing, the biome's definition in its mod's jar is read for how many trees it grows: dense or sparse vegetation, and a forest, without a guess (works on servers too, as the mod is installed on the client)
+    * A biome playing swamp music or named a bog or swamp stays a swamp however many trees it has; caves and water biomes don't count trees
   * Vanilla biomes have the same traits on every server: the mod's own table settles their temperature, moisture and vegetation where Fabric's or NeoForge's tags disagree
   * More biome names understood: fields, plains, meadows and prairies; seas; streams and lakes; savannas; plateaus; highlands; tundra and glaciers
   * `/dsdump biomes` shows where each trait came from, and ends with a list of biomes to check: traits guessed from music, grass or name, or no dimension or kind at all, to help write tag files for them
     * In single player it checks each biome's dimension against where the world generates it, and lists each dimension's biomes
+    * A biome only in modded dimensions (or, on a server, of a mod with dimensions of its own) isn't listed for having no kind: it is often its dimension's only biome
+  * The traits shipped for other mods' biomes are now tag files in each mod's folder (`assets/<mod>/dsconfigs/tags/worldgen/biome/is_<trait>.json`), read only when that mod is installed
+    * Nature's Spirit's alpine and highlands biomes are windswept, as intended: their tag file was misnamed and never read
+    * `traits` and `clearTraits` in `biomes.json` are deprecated (a warning is logged): they are added after the guesses, where a tag file settles a trait before any guess
 
 **Fixes**
 * Water ripples are visible when looking from underwater. During the day they are faint rings; at night they are more visible.

@@ -17,9 +17,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Where a mod's files are: the roots its paths lead to. A mod's path is a folder (in a development run, or a jar's
- * root on Fabric) or a jar file (on NeoForge), which is opened as a zip file system. Resolving a file against a mod's
- * path directly, as Architectury's {@code Mod.findResource} does, looks for it beside the jar, inside a folder named for
- * it, so on NeoForge it never finds one in a jar.
+ * root on Fabric, and on NeoForge for 1.21.1) or a jar file (NeoForge for 26.2), which is opened as a zip file system.
+ * Resolving a file against a jar's path directly, as Architectury's {@code Mod.findResource} does, looks for it beside
+ * the jar, inside a folder named for it, so it never finds one in the jar.
  */
 public final class ModRoots {
 

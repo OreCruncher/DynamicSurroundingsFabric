@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "undergarden:gronglegrowth",
+      "required": false
+    },
+    {
+      "id": "undergarden:rogdorium_grove",
+      "required": false
+    }
+  ]
+}

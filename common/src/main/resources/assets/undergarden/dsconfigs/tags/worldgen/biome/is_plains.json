@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "undergarden:forgotten_field",
+      "required": false
+    },
+    {
+      "id": "undergarden:frostfields",
+      "required": false
+    }
+  ]
+}

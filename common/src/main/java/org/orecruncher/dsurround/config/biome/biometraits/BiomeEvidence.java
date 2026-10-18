@@ -56,6 +56,14 @@ public record BiomeEvidence(Identifier id, @Nullable Biome biome,
                 definition);
     }
 
+    /**
+     * The same, with no definition
+     */
+    public BiomeEvidence withoutDefinition() {
+        return new BiomeEvidence(this.id, this.biome, this.hasPrecipitation, this.temperature, this.frozen, this.downfall,
+                this.grassColorModifier, this.music, this.ambientLoop, Optional.empty());
+    }
+
     private static Identifier soundId(Holder<SoundEvent> sound) {
         return sound.value().location();
     }

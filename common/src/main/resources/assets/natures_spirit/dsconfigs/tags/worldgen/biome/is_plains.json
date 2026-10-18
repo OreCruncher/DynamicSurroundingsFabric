@@ -1,0 +1,29 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "natures_spirit:carnation_fields",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:flowering_shrubland",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:heather_fields",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:lavender_fields",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:marigold_meadows",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:xeric_plains",
+      "required": false
+    }
+  ]
+}

@@ -307,18 +307,36 @@ public class BiomeTraitSourcesTests {
     // ---- Definition
 
     @Test
-    void manyTreesMakeAFieldAForest() {
-        // Biomes O' Plenty's forested field places 9 trees a chunk: its name guessed both a forest and plains, and
-        // dense vegetation; the trees settle it a forest, and aren't doubted
-        var traits = Biome.named("forested_field").trees(9.1F, false).traits(OVERWORLD);
+    void manyTreesMakeAForest() {
+        // Where nothing else names its kind; dense vegetation and the forest aren't doubted
+        var traits = Biome.named("somewhere").trees(9.1F, false).traits(OVERWORLD);
         assertTrue(traits.contains(FOREST));
         assertTrue(traits.contains(DENSE_VEGETATION));
-        assertFalse(traits.contains(PLAINS));
         assertEquals(TraitSource.DEFINITION, traits.sourceOf(FOREST));
         assertEquals(TraitSource.DEFINITION, traits.sourceOf(DENSE_VEGETATION));
         assertFalse(traits.doubtfulGroups().containsKey(TraitGroup.KIND));
         assertFalse(traits.doubtfulGroups().containsKey(TraitGroup.VEGETATION));
         assertTrue(traits.describe().contains("(definition)"), traits.describe());
+    }
+
+    @Test
+    void treesConfirmAForestsName() {
+        // Regression: the Twilight Forest's forests, forests by name before the trees were counted, were listed to check
+        var traits = Biome.named("firefly_forest").trees(9.1F, false).traits(OVERWORLD);
+        assertEquals(TraitSource.DEFINITION, traits.sourceOf(FOREST));
+        assertFalse(traits.doubtfulGroups().containsKey(TraitGroup.KIND));
+        // Few trees confirm nothing
+        var sparse = Biome.named("skyroot_grove").trees(1.5F, false).traits(OVERWORLD);
+        assertEquals(TraitSource.NAME, sparse.sourceOf(FOREST));
+    }
+
+    @Test
+    void theNamesKindComesBeforeTheTrees() {
+        // Biomes O' Plenty's forested field places 9 trees a chunk: its name gives its kind (tag files settle it a
+        // forest), the trees its vegetation
+        var traits = Biome.named("forested_field").trees(9.1F, false).traits(OVERWORLD);
+        assertEquals(TraitSource.NAME, traits.sourceOf(PLAINS));
+        assertEquals(TraitSource.DEFINITION, traits.sourceOf(DENSE_VEGETATION));
     }
 
     @Test
@@ -342,6 +360,43 @@ public class BiomeTraitSourcesTests {
         var traits = Biome.named("spider_nest").trees(0.05F, false).traits(OVERWORLD, CAVE, UNDERGROUND);
         assertFalse(traits.contains(SPARSE_VEGETATION));
         assertNull(traits.sourceOf(SPARSE_VEGETATION));
+    }
+
+    @Test
+    void aCaveFoundByItsMusicDropsTheSurfacesTrees() {
+        // Regression: Regions Unexplored's redstone caves are caves only by their music, guessed after the trees
+        var traits = Biome.named("redstone_hollows").trees(0.05F, false).music("minecraft:music.overworld.lush_caves").traits(OVERWORLD);
+        assertTrue(traits.contains(CAVE));
+        assertFalse(traits.contains(SPARSE_VEGETATION));
+        // What the music says of its vegetation, which the trees came before, is had
+        assertEquals(TraitSource.EFFECTS, traits.sourceOf(DENSE_VEGETATION));
+    }
+
+    @Test
+    void anOceansTreesDontCount() {
+        // Regression: Regions Unexplored's rocky reef, an ocean, places 39 trees a chunk where the water is shallow
+        // enough, and was dense
+        var traits = Biome.named("rocky_reef").trees(39.1F, true).traits(OVERWORLD, OCEAN);
+        assertFalse(traits.contains(DENSE_VEGETATION));
+        assertNull(traits.sourceOf(DENSE_VEGETATION));
+    }
+
+    @Test
+    void swampMusicMakesManyTreesASwamp() {
+        // Regression: Regions Unexplored's old growth bayou places 7 trees a chunk and plays swamp music; it was a forest
+        var traits = Biome.named("old_growth_bayou").trees(7F, false).music("minecraft:music.overworld.swamp").traits(OVERWORLD);
+        assertTrue(traits.contains(SWAMP));
+        assertFalse(traits.contains(FOREST));
+        assertTrue(traits.contains(DENSE_VEGETATION));
+    }
+
+    @Test
+    void aBogsNameOutranksItsTrees() {
+        // Regression: the Undergarden's mushroom bogs place 8 trees a chunk, and were forests
+        var traits = Biome.named("ink_mushroom_bog").trees(8F, false).traits();
+        assertTrue(traits.contains(SWAMP));
+        assertFalse(traits.contains(FOREST));
+        assertEquals(TraitSource.DEFINITION, traits.sourceOf(DENSE_VEGETATION));
     }
 
     @Test

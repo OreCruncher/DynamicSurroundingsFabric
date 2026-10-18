@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "regions_unexplored:gravel_beach",
+      "required": false
+    }
+  ]
+}

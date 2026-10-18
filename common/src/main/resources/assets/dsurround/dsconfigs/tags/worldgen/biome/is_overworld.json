@@ -8,10 +8,6 @@
     {
       "id": "#c:in_the_overworld",
       "required": false
-    },
-    {
-      "id": "ars_elemental:vexing_caves",
-      "required": false
     }
   ]
 }

@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "natures_spirit:chaparral",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:golden_wilds",
+      "required": false
+    }
+  ]
+}

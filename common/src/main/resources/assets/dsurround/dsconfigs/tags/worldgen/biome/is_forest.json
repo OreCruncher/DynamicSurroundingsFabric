@@ -4,18 +4,6 @@
     {
       "id": "#c:is_forest",
       "required": false
-    },
-    {
-      "id": "biomesoplenty:forested_field",
-      "required": false
-    },
-    {
-      "id": "integrateddynamics:meneglin",
-      "required": false
-    },
-    {
-      "id": "undergarden:gronglegrowth",
-      "required": false
     }
   ]
 }

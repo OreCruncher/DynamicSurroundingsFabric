@@ -1,0 +1,81 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "natures_spirit:carnation_fields",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:chaparral",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:cypress_fields",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:fir_forest",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:flowering_shrubland",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:golden_wilds",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:heather_fields",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:lavender_fields",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:marigold_meadows",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:oak_savanna",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:prairie",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:snowy_fir_forest",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:sparse_tropical_woods",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:tropical_woods",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:tundra",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:white_cliffs",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:windswept_sugi_forest",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:wooded_drylands",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:xeric_plains",
+      "required": false
+    }
+  ]
+}

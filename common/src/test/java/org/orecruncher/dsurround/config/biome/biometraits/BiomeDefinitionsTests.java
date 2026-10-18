@@ -50,9 +50,7 @@ public class BiomeDefinitionsTests {
     }
 
     private static Set<BiomeTrait> traits(BiomeDefinition definition) {
-        var result = EnumSet.noneOf(BiomeTrait.class);
-        BiomeDefinitionAnalyzer.addTraits(definition, result);
-        return result;
+        return BiomeDefinitionAnalyzer.traits(definition);
     }
 
     // ---- Reading
@@ -113,8 +111,8 @@ public class BiomeDefinitionsTests {
 
     @Test
     void definitionsAreReadFromAJarAndFromAFolder(@TempDir Path folder) throws Exception {
-        // Regression: on NeoForge a mod's path is its jar, and Architectury's findResource looked beside it, so no
-        // definition was ever read there. A jar is opened; a folder (a development run, a jar's root on Fabric) is
+        // A mod's path may be its jar (NeoForge on 26.2), where Architectury's findResource looks beside it, so no
+        // definition would be read. A jar is opened; a folder (a development run, a jar's root on Fabric) is
         // read as it is.
         var file = IDefinitionFiles.resource("jarmod", "placed_feature", "trees_jar");
         var content = "{\"feature\":\"jarmod:trees\",\"placement\":[{\"type\":\"minecraft:count\",\"count\":7}]}";
@@ -174,6 +172,8 @@ public class BiomeDefinitionsTests {
         assertEquals(Set.of(SPARSE_VEGETATION), traits(new BiomeDefinition(2.1F, false)));
         assertEquals(Set.of(), traits(new BiomeDefinition(3.1F, false)), "in between says nothing");
         assertEquals(Set.of(), traits(new BiomeDefinition(2.1F, true)), "few trees in water aren't sparse");
+        // Regression: Biomes O' Plenty's wetland and tropics, water by their seagrass, lost their dense vegetation
+        assertEquals(Set.of(DENSE_VEGETATION), traits(new BiomeDefinition(9.1F, true)), "many trees in water are dense, not a forest");
         assertEquals(Set.of(), traits(new BiomeDefinition(Float.NaN, false)));
     }
 
