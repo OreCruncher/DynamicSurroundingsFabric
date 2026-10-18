@@ -20,6 +20,10 @@ checking in game.
 - Game jar for `javap` (check real signatures rather than assuming; 26.2 is unobfuscated):
   `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/26.2/minecraft-merged-deobf-26.2.jar`.
   NeoForge-patched classes: `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/neoforge-<version>-minecraft-merged-deobf/26.2/*.jar`.
+- Does the built mod link against another Minecraft version? `python scripts/version-compat.py BASE.jar OTHER.jar`
+  (Mojang client jars; compile first) lists every class, member, override and mixin target/`@At` call site that
+  resolves in BASE and not in OTHER. Behaviour changes and game data aren't covered. (26.2 → 26.3: no; 26.3 moved the
+  render API from `com.mojang.blaze3d` to `com.mojang.renderpearl`.)
 - Decompiled sources (to see how vanilla draws something): `./gradlew :common:genSources`, then the `-sources.jar`
   under `.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-merged-*/26.2/`.
 
