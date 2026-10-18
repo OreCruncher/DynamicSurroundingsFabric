@@ -15,6 +15,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.ClockStyle;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.time.DayCycle;
@@ -30,6 +31,10 @@ import org.orecruncher.dsurround.tags.ItemEffectTags;
  * watch above the crosshair: its hands at the time, a dome window under twelve showing day or night (as Minecraft's
  * clock does), and a window above six showing the season (or, without a seasons mod, the moon's phase). With the
  * margin option the watch is shown in a side or corner of the screen instead, while a clock is in the hot bar.
+ * <p>
+ * Where compasses wobble (a dimension that isn't natural, as vanilla's clock spins there), a clock that wobbles
+ * ({@code dsurround:effects/clock_wobble}) can't be read: the watch's hands and day disc spin, and the text leaves out
+ * the time.
  */
 public final class ClockOverlay extends AbstractOverlay {
 
@@ -89,11 +94,14 @@ public final class ClockOverlay extends AbstractOverlay {
     static final double TICK_SETTLE = 0.15D;
 
     private final ITagLibrary tagLibrary;
+    private final IDimensionOracle dimensionInformation;
     private final ISeasonalInformation seasonalInformation;
     private final Configuration config;
     private final CompassOverlay compass;
     private final MarginLayout marginLayout;
     private final IMinecraftClock clock;
+    private final CompassOverlay.CompassWobble wobbler = new CompassOverlay.CompassWobble();
+    private boolean spinRandomly;
     private final ColorGradient gradient;
     private final ObjectArray<Component> clockDisplay = new ObjectArray<>(2);
     private boolean textShown;
@@ -113,8 +121,9 @@ public final class ClockOverlay extends AbstractOverlay {
     private float lastDiscAngle;
     private float discAngle;
 
-    public ClockOverlay(Configuration config, ITagLibrary tagLibrary, ISeasonalInformation seasonalInformation, IMinecraftClock clock, CompassOverlay compass, MarginLayout marginLayout) {
+    public ClockOverlay(Configuration config, ITagLibrary tagLibrary, IDimensionOracle dimensionInformation, ISeasonalInformation seasonalInformation, IMinecraftClock clock, CompassOverlay compass, MarginLayout marginLayout) {
         this.tagLibrary = tagLibrary;
+        this.dimensionInformation = dimensionInformation;
         this.seasonalInformation = seasonalInformation;
         this.config = config;
         this.compass = compass;
@@ -129,6 +138,7 @@ public final class ClockOverlay extends AbstractOverlay {
         boolean watchWasShown = this.watchShown;
         this.textShown = false;
         this.watchShown = false;
+        this.spinRandomly = false;
         this.inMargin = this.config.compassAndClockOptions.showInMargin;
 
         this.style = this.config.compassAndClockOptions.clockStyle;
@@ -136,13 +146,21 @@ public final class ClockOverlay extends AbstractOverlay {
             var player = GameUtils.getPlayer().orElseThrow();
             var mainHandShow = this.doShowClock(player.getMainHandItem());
             var offHandShow = this.doShowClock(player.getOffhandItem());
-            var held = mainHandShow || offHandShow || this.doShowClock(GameUtils.getMC().crosshairPickEntity);
+            var framed = framedItem(GameUtils.getMC().crosshairPickEntity);
+            var framedShow = this.doShowClock(framed);
+            var held = mainHandShow || offHandShow || framedShow;
+            // Spins if a clock looked at wobbles here; in the margin, unless one of the clocks carried works here
+            if (!held && this.inMargin)
+                this.spinRandomly = !MarginLayout.carries(player, stack -> this.doShowClock(stack) && !this.doClockSpin(stack));
+            else
+                this.spinRandomly = CompassOverlay.shouldSpin(mainHandShow, mainHandShow && this.doClockSpin(player.getMainHandItem()),
+                        offHandShow, offHandShow && this.doClockSpin(player.getOffhandItem()))
+                        || framedShow && this.doClockSpin(framed);
+            this.wobbler.update(player.level().getGameTime());
 
             // The text stays with holding the clock; in the margin the watch shows while one is in the hot bar
-            if (held && this.style.showText()) {
-                this.tickText(player);
-                this.textShown = true;
-            }
+            if (held && this.style.showText())
+                this.textShown = this.tickText(player);
             if (this.style.showWatch() && (held || this.inMargin && MarginLayout.carries(player, this::doShowClock))) {
                 // Beside the compass, if it is showing, on the side of the hand holding the clock
                 var arm = mainHandShow ? player.getMainArm() : offHandShow ? player.getMainArm().getOpposite() : HumanoidArm.RIGHT;
@@ -160,10 +178,16 @@ public final class ClockOverlay extends AbstractOverlay {
         }
     }
 
-    private void tickText(Player player) {
+    /**
+     * Works out the text, if there is any: none for a spinning clock with no season to show
+     */
+    private boolean tickText(Player player) {
         this.clockDisplay.clear();
-        this.clockDisplay.add(this.clock.getFormattedTime());
+        if (!this.spinRandomly)
+            this.clockDisplay.add(this.clock.getFormattedTime());
         this.seasonalInformation.getCurrentSeasonTranslated().ifPresent(this.clockDisplay::add);
+        if (this.clockDisplay.isEmpty())
+            return false;
 
         var textRender = GameUtils.getTextRenderer();
         this.renderWidth = textRender.width(this.clockDisplay.get(0));
@@ -175,6 +199,7 @@ public final class ClockOverlay extends AbstractOverlay {
         // Calculate the color this tick
         // The sun angle is in degrees, 0 at noon
         this.color = textColor(this.gradient, DayCycle.getCelestialAngle(player.level(), player.position()) / 360F);
+        return true;
     }
 
     private void tickWatch(Player player, boolean justShown) {
@@ -304,12 +329,12 @@ public final class ClockOverlay extends AbstractOverlay {
         return this.tagLibrary.is(ItemEffectTags.CLOCKS, stack);
     }
 
-    private boolean doShowClock(Entity entity) {
-        if (entity instanceof ItemFrame frame) {
-            var itemInFrame = frame.getItem();
-            return this.doShowClock(itemInFrame);
-        }
-        return false;
+    private boolean doClockSpin(ItemStack stack) {
+        return this.dimensionInformation.getCompassWobble() && this.tagLibrary.is(ItemEffectTags.CLOCK_WOBBLE, stack);
+    }
+
+    private static ItemStack framedItem(Entity entity) {
+        return entity instanceof ItemFrame frame ? frame.getItem() : ItemStack.EMPTY;
     }
 
     @Override
@@ -343,6 +368,16 @@ public final class ClockOverlay extends AbstractOverlay {
         // The hands tick; the overshoot only while time runs, or a stopped clock would hold it
         var handTime = tickedTime(time);
         float overshoot = this.dayTime != this.lastDayTime ? tickOvershoot(time) : 0F;
+        float hourHand = hourHandAngle(handTime);
+        float minuteHand = minuteHandAngle(handTime) + overshoot;
+        float dayDisc = dayDiscAngle(time);
+        if (this.spinRandomly) {
+            // The hands and day disc turn together, as if the watch's works were running wild
+            float spin = this.wobbler.getRandomlySpinningRotation(partialTick);
+            hourHand = spin;
+            minuteHand = spin * 12F;
+            dayDisc = spin / 2F;
+        }
 
         // The textured GUI pipeline blends, so the atlas's soft edges need nothing more
         var pose = context.pose();
@@ -354,10 +389,10 @@ public final class ClockOverlay extends AbstractOverlay {
 
             // The discs show through the windows in the dial, so they go first; the glass goes over the hands
             this.drawTurned(context, disc, 0, this.seasonDisc ? SEASON_DISC_U : MOON_DISC_U, 0, DISC_SIZE, DISC_SIZE, DISC_SIZE / 2, DISC_SIZE / 2);
-            this.drawTurned(context, dayDiscAngle(time), DAY_DISC_Y, DAY_DISC_U, DAY_DISC_V, DAY_DISC_SIZE, DAY_DISC_SIZE, DAY_DISC_SIZE / 2, DAY_DISC_SIZE / 2);
+            this.drawTurned(context, dayDisc, DAY_DISC_Y, DAY_DISC_U, DAY_DISC_V, DAY_DISC_SIZE, DAY_DISC_SIZE, DAY_DISC_SIZE / 2, DAY_DISC_SIZE / 2);
             context.blit(RenderPipelines.GUI_TEXTURED, this.texture, -DIAL_X, -DIAL_Y, 0, 0, WATCH_SIZE, WATCH_SIZE, ATLAS_SIZE, ATLAS_SIZE);
-            this.drawTurned(context, hourHandAngle(handTime), 0, HOUR_HAND_U, HANDS_V, HAND_WIDTH, HAND_HEIGHT, HAND_PIVOT_X, HAND_PIVOT_Y);
-            this.drawTurned(context, minuteHandAngle(handTime) + overshoot, 0, MINUTE_HAND_U, HANDS_V, HAND_WIDTH, HAND_HEIGHT, HAND_PIVOT_X, HAND_PIVOT_Y);
+            this.drawTurned(context, hourHand, 0, HOUR_HAND_U, HANDS_V, HAND_WIDTH, HAND_HEIGHT, HAND_PIVOT_X, HAND_PIVOT_Y);
+            this.drawTurned(context, minuteHand, 0, MINUTE_HAND_U, HANDS_V, HAND_WIDTH, HAND_HEIGHT, HAND_PIVOT_X, HAND_PIVOT_Y);
             context.blit(RenderPipelines.GUI_TEXTURED, this.texture, -DIAL_X, -DIAL_Y, 0, GLASS_V, WATCH_SIZE, WATCH_SIZE, ATLAS_SIZE, ATLAS_SIZE);
         } finally {
             pose.popMatrix();

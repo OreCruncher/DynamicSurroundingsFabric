@@ -42,7 +42,9 @@ checking in game.
   only the one you launched.
 - Profiling: `/dsprofile [scene] [seconds]` records a JFR file, zipped, to `config/dsurround/profiles` with the mod's
   GPU/CPU render timers in it (`dsurround.RenderTimer` events) and what it was made on (`dsurround.Environment`); unzip
-  it and read it with the JDK's `jfr` (`jfr print --json --events ...`).
+  it and read it with the JDK's `jfr` (`jfr print --json --events ...`), or summarize it with
+  `python scripts/jfr-summary.py <zip or jfr>` (timers, threads, mod packages, our frames, allocation, GC;
+  `--callers <method>` for who calls something).
   Players can make them too, so nothing private may get in: a new event type or a new `jdk.jfr` user needs a look at
   `ProfileRecording.PRIVATE` and `Redaction`. Record under Run, not IntelliJ's Debug (its async stack trace agent
   throws thousands of Throwables a second).
