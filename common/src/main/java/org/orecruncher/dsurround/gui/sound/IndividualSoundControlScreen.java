@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.gui.TooltipDelay;
 import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
@@ -55,6 +56,10 @@ public class IndividualSoundControlScreen extends Screen {
     private final HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this, HEADER_HEIGHT, FOOTER_HEIGHT);
     private EditBox searchField;
     private IndividualSoundControlList soundConfigList;
+    // The row the mouse was last over, and how long it has rested on it
+    @Nullable
+    private IndividualSoundControlListEntry tooltipEntry;
+    private TooltipDelay tooltipDelay = new TooltipDelay();
 
     /**
      * @param parent     the screen to return to, or null to return to the game
@@ -141,9 +146,14 @@ public class IndividualSoundControlScreen extends Screen {
     public void render(@NotNull GuiGraphics context, int mouseX, int mouseY, float partialTicks) {
         super.render(context, mouseX, mouseY, partialTicks);
 
-        // Offset downward so the tooltip doesn't cover the row's controls
+        // Shown once the mouse rests on a row, not while it passes over the list or drags a slider. A row scrolled
+        // under a still mouse waits afresh. Offset downward so the tooltip doesn't cover the row's controls.
         var entry = this.soundConfigList.getEntryAt(mouseX, mouseY);
-        if (entry != null) {
+        if (entry != this.tooltipEntry) {
+            this.tooltipEntry = entry;
+            this.tooltipDelay = new TooltipDelay();
+        }
+        if (entry != null && this.tooltipDelay.ready()) {
             context.renderTooltip(this.font, entry.getToolTip(mouseX, mouseY), mouseX, mouseY + TOOLTIP_Y_OFFSET);
         }
     }

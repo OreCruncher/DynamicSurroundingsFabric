@@ -71,6 +71,19 @@ public class WaterFoamTests {
     }
 
     @Test
+    void aRotationSetAgainIsTheSameAsANewOne() {
+        // Each patch keeps its rotation and sets it again every frame: what it held before mustn't carry over
+        var kept = WaterFoam.orientation(0.7F, -0.4F, 2F);
+        for (float[] s : new float[][]{{0F, 0F, 0F}, {-0.5F, 0.3F, 1F}, {1.2F, 0F, -2.5F}}) {
+            var fresh = WaterFoam.orientation(s[0], s[1], s[2]);
+            var reused = WaterFoam.orientation(s[0], s[1], s[2], kept);
+            assertSame(kept, reused);
+            assertDirection(fresh.transform(new Vector3f(0F, 0F, 1F)), reused.transform(new Vector3f(0F, 0F, 1F)));
+            assertDirection(fresh.transform(new Vector3f(1F, 0F, 0F)), reused.transform(new Vector3f(1F, 0F, 0F)));
+        }
+    }
+
+    @Test
     void spinTurnsItAboutTheSurfaceNormal() {
         // The quad's edges stay in the surface: its +X edge is perpendicular to the normal, however it is spun
         var normal = new Vector3f(0.5F, 1F, 0F).normalize();
