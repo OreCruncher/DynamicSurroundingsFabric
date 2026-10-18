@@ -62,6 +62,15 @@ public class BiomeCheckTests {
     }
 
     @Test
+    void noKindInOnlyModdedDimensionsIsRight() {
+        // A dimension's only biome, as Allthemodium's mining dimension or the Bumblezone's hive: no kind describes it
+        assertEquals(List.of(), BiomeCheck.notes(BiomeTraits.of(WET), Set.of(TWILIGHT), false));
+        // Also in the Overworld, it is noted
+        assertEquals(List.of("no dimension, but generates in minecraft:overworld, twilightforest:twilight_forest", "no kind"),
+                BiomeCheck.notes(BiomeTraits.of(WET), Set.of(OVERWORLD_DIM, TWILIGHT), false));
+    }
+
+    @Test
     void aVoidIsntChecked() {
         // Vanilla's void, used by Iron's Spellbooks for its pocket dimension
         var pocket = ResourceLocation.fromNamespaceAndPath("irons_spellbooks", "pocket_dimension");
@@ -74,6 +83,12 @@ public class BiomeCheckTests {
     void withoutGenerationNoDimensionIsNotedUnlessTheModHasItsOwn() {
         assertEquals(List.of("no dimension"), BiomeCheck.notes(BiomeTraits.of(FOREST), null, false));
         assertEquals(List.of(), BiomeCheck.notes(BiomeTraits.of(FOREST), null, true));
+    }
+
+    @Test
+    void withoutGenerationNoKindIsNotedUnlessTheModHasItsOwnDimensions() {
+        assertEquals(List.of("no kind"), BiomeCheck.notes(BiomeTraits.of(OVERWORLD), null, false));
+        assertEquals(List.of(), BiomeCheck.notes(BiomeTraits.of(OVERWORLD), null, true));
     }
 
     @Test

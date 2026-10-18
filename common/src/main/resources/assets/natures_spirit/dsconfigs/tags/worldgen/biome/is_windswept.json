@@ -1,0 +1,29 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#natures_spirit:is_alpine",
+      "required": false
+    },
+    {
+      "id": "#natures_spirit:is_highlands",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:prairie",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:tundra",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:white_cliffs",
+      "required": false
+    },
+    {
+      "id": "natures_spirit:windswept_sugi_forest",
+      "required": false
+    }
+  ]
+}

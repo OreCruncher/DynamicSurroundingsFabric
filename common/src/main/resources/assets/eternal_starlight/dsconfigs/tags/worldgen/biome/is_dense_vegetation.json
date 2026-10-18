@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "eternal_starlight:spiral_kelp_forest",
+      "required": false
+    },
+    {
+      "id": "eternal_starlight:starlight_permafrost_forest",
+      "required": false
+    }
+  ]
+}

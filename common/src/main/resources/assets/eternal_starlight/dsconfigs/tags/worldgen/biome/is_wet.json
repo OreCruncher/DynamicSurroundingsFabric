@@ -1,0 +1,29 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "eternal_starlight:dark_swamp",
+      "required": false
+    },
+    {
+      "id": "eternal_starlight:ether_river",
+      "required": false
+    },
+    {
+      "id": "eternal_starlight:lush_shallow_sea",
+      "required": false
+    },
+    {
+      "id": "eternal_starlight:shimmer_river",
+      "required": false
+    },
+    {
+      "id": "eternal_starlight:starlit_sea",
+      "required": false
+    },
+    {
+      "id": "eternal_starlight:warm_shore",
+      "required": false
+    }
+  ]
+}

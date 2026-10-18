@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "aether:skyroot_grove",
+      "required": false
+    },
+    {
+      "id": "aether:skyroot_woodland",
+      "required": false
+    }
+  ]
+}

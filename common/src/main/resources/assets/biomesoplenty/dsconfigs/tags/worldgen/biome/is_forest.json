@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "biomesoplenty:forested_field",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:old_growth_woodland",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:origin_valley",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:wintry_origin_valley",
+      "required": false
+    }
+  ]
+}

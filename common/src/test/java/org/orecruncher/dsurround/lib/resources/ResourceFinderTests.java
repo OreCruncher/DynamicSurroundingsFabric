@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -191,8 +193,8 @@ public class ResourceFinderTests {
 
     @Test
     void assetsAreLookedUpNotListed() {
-        // Listing "sounds.json" finds nothing in packs that only list folders (NeoForge 26.2's mod packs), so none of
-        // the mod's own sounds would be known. Every pack's version of the file is read.
+        // Regression: listing "sounds.json" found nothing on NeoForge, whose mod packs only list folders, so none of
+        // the mod's own sounds were known. Every pack's version of the file is read.
         var packs = new Packs()
                 .add("dsurround:sounds.json", "{\"jar\": \"1\"}", "{\"pack\": \"2\"}")
                 .add("dsurround:sounds/other.json", "{\"c\": \"3\"}");
@@ -224,6 +226,25 @@ public class ResourceFinderTests {
         assertEquals(2, found.size());
         // Recorded under the tag's namespace
         assertEquals(Set.of("c"), namespaces(found));
+    }
+
+    @Test
+    void findsDataInAModsJar() throws IOException {
+        // A mod's path may be its jar file (NeoForge on 26.2), where its data folder would be looked for beside it, so no
+        // tags would be filled in from jars. ModRoots opens the jar.
+        var jar = this.folder.resolve("modjar.jar");
+        try (var out = new ZipOutputStream(Files.newOutputStream(jar))) {
+            out.putNextEntry(new ZipEntry("data/c/tags/block/glass_blocks.json"));
+            out.write("{\"a\": \"1\"}".getBytes(StandardCharsets.UTF_8));
+            out.closeEntry();
+        }
+        var roots = ModRoots.of(List.of(jar));
+        assertEquals(1, roots.size());
+        var data = roots.getFirst().resolve("data");
+        assertTrue(Files.isDirectory(data));
+
+        var finder = new ServerResourceFinder(new RecordingLog(), () -> List.of(data));
+        assertEquals(1, finder.find(CODEC, "c:tags/block/glass_blocks").size());
     }
 
     @Test

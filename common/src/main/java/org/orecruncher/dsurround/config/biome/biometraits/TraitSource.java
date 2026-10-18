@@ -18,6 +18,10 @@ public enum TraitSource {
      */
     DERIVED("derived", false),
     /**
+     * The biome's definition file: how many trees it grows (see {@link BiomeDefinitions})
+     */
+    DEFINITION("definition", true),
+    /**
      * The biome's effects: the vanilla music it plays, its grass color modifier, its ambient loop
      */
     EFFECTS("effects", true),

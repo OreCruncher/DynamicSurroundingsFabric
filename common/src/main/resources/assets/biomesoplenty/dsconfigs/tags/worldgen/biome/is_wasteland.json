@@ -1,0 +1,37 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "biomesoplenty:crystalline_chasm",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:end_corruption",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:end_flats",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:end_reef",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:end_wilds",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:erupting_inferno",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:visceral_heap",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:withered_abyss",
+      "required": false
+    }
+  ]
+}

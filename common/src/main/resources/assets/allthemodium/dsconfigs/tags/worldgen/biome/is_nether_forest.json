@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "allthemodium:crimson_forest",
+      "required": false
+    },
+    {
+      "id": "allthemodium:warped_forest",
+      "required": false
+    }
+  ]
+}

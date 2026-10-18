@@ -113,7 +113,14 @@ public final class BiomeLibrary implements IBiomeLibrary {
         this.biomeConfigs.clear();
 
         var findResults = resourceUtilities.findModResources(CODEC, FILE_NAME);
-        findResults.forEach(result -> this.biomeConfigs.addAll(result.resourceContent()));
+        findResults.forEach(result -> {
+            this.biomeConfigs.addAll(result.resourceContent());
+            // Still applied, but only added after the guesses: a tag file settles a trait before any guess
+            var withTraits = result.resourceContent().stream().filter(rule -> rule.clearTraits() || !rule.traits().isEmpty()).count();
+            if (withTraits > 0)
+                this.logger.warn("%d biome rules from %s set or clear traits, which is deprecated: use tag files (dsconfigs/tags/worldgen/biome/is_<trait>.json) instead",
+                        withTraits, result.namespace());
+        });
 
         // Ensure they are in priority order where the least is towards the beginning
         // of the list.

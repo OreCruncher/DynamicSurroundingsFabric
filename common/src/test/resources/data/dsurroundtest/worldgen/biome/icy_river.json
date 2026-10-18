@@ -1,0 +1,35 @@
+{
+  "carvers": [],
+  "downfall": 0.5,
+  "effects": {
+    "water_color": "#3938c9"
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "dsurroundtest:trees_rare"
+    ],
+    []
+  ],
+  "has_precipitation": true,
+  "temperature": 0.0,
+  "spawners": {
+    "water_creature": [
+      {
+        "type": "minecraft:squid",
+        "maxCount": 4,
+        "minCount": 1,
+        "weight": 2
+      }
+    ],
+    "creature": []
+  }
+}

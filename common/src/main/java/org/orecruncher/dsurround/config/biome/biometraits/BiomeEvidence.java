@@ -19,16 +19,18 @@ import java.util.Optional;
  * @param biome       the biome, for looking up its tags; null where there is none (in tests)
  * @param music       the music the biome plays, if any
  * @param ambientLoop the ambient sound looping in the biome, if any
+ * @param definition  what its definition file says it grows, if a mod's jar has one
  */
 public record BiomeEvidence(ResourceLocation id, @Nullable Biome biome,
                             boolean hasPrecipitation, float temperature, boolean frozen, float downfall,
                             BiomeSpecialEffects.GrassColorModifier grassColorModifier,
-                            Optional<ResourceLocation> music, Optional<ResourceLocation> ambientLoop) {
+                            Optional<ResourceLocation> music, Optional<ResourceLocation> ambientLoop,
+                            Optional<BiomeDefinition> definition) {
 
     /**
      * The evidence a game biome gives
      */
-    public static BiomeEvidence of(ResourceLocation id, Biome biome) {
+    public static BiomeEvidence of(ResourceLocation id, Biome biome, Optional<BiomeDefinition> definition) {
         // Initialization of BiomeInfo depends on this routine, so the biome's properties are read directly
         var properties = BiomeHooks.getBiomeProperties(biome);
         var climate = properties.getClimateProperties();
@@ -38,7 +40,16 @@ public record BiomeEvidence(ResourceLocation id, @Nullable Biome biome,
                 climate.getTemperatureModifier() == Biome.TemperatureModifier.FROZEN, climate.getDownfall(),
                 effects.getGrassColorModifier(),
                 effects.getBackgroundMusic().map(music -> soundId(music.getEvent())),
-                effects.getAmbientLoopSound().map(BiomeEvidence::soundId));
+                effects.getAmbientLoopSound().map(BiomeEvidence::soundId),
+                definition);
+    }
+
+    /**
+     * The same, with no definition
+     */
+    public BiomeEvidence withoutDefinition() {
+        return new BiomeEvidence(this.id, this.biome, this.hasPrecipitation, this.temperature, this.frozen, this.downfall,
+                this.grassColorModifier, this.music, this.ambientLoop, Optional.empty());
     }
 
     private static ResourceLocation soundId(Holder<SoundEvent> sound) {

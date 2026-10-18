@@ -55,7 +55,7 @@ public class BiomeTraitAnalysisTests {
 
     private static BiomeEvidence evidence(ResourceLocation id) {
         return new BiomeEvidence(id, null, true, 0.5F, false, 0.5F, BiomeSpecialEffects.GrassColorModifier.NONE,
-                Optional.empty(), Optional.empty());
+                Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     private static Set<String> vanillaBiomeNames() throws IllegalAccessException {

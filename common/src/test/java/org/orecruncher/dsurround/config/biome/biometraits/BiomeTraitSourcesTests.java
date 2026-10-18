@@ -36,47 +36,52 @@ public class BiomeTraitSourcesTests {
      * A biome in test:{@code path}: temperate, some rain, no effects; change what a test needs with the withers
      */
     private record Biome(String namespace, String path, boolean rain, float temperature, boolean frozen, float downfall,
-                         GrassColorModifier grass, String music, String loop) {
+                         GrassColorModifier grass, String music, String loop, BiomeDefinition definition) {
         static Biome named(String path) {
-            return new Biome("test", path, true, 0.5F, false, 0.5F, GrassColorModifier.NONE, null, null);
+            return new Biome("test", path, true, 0.5F, false, 0.5F, GrassColorModifier.NONE, null, null, null);
         }
 
         static Biome vanilla(String path) {
-            return new Biome("minecraft", path, true, 0.5F, false, 0.5F, GrassColorModifier.NONE, null, null);
+            return new Biome("minecraft", path, true, 0.5F, false, 0.5F, GrassColorModifier.NONE, null, null, null);
         }
 
         Biome temperature(float t) {
-            return new Biome(namespace, path, rain, t, frozen, downfall, grass, music, loop);
+            return new Biome(namespace, path, rain, t, frozen, downfall, grass, music, loop, definition);
         }
 
         Biome downfall(float d) {
-            return new Biome(namespace, path, rain, temperature, frozen, d, grass, music, loop);
+            return new Biome(namespace, path, rain, temperature, frozen, d, grass, music, loop, definition);
         }
 
         Biome noRain() {
-            return new Biome(namespace, path, false, temperature, frozen, downfall, grass, music, loop);
+            return new Biome(namespace, path, false, temperature, frozen, downfall, grass, music, loop, definition);
         }
 
         Biome frozenOver() {
-            return new Biome(namespace, path, rain, temperature, true, downfall, grass, music, loop);
+            return new Biome(namespace, path, rain, temperature, true, downfall, grass, music, loop, definition);
         }
 
         Biome grass(GrassColorModifier g) {
-            return new Biome(namespace, path, rain, temperature, frozen, downfall, g, music, loop);
+            return new Biome(namespace, path, rain, temperature, frozen, downfall, g, music, loop, definition);
         }
 
         Biome music(String m) {
-            return new Biome(namespace, path, rain, temperature, frozen, downfall, grass, m, loop);
+            return new Biome(namespace, path, rain, temperature, frozen, downfall, grass, m, loop, definition);
+        }
+
+        Biome trees(float perChunk, boolean aquatic) {
+            return new Biome(namespace, path, rain, temperature, frozen, downfall, grass, music, loop, new BiomeDefinition(perChunk, aquatic));
         }
 
         Biome loop(String l) {
-            return new Biome(namespace, path, rain, temperature, frozen, downfall, grass, music, l);
+            return new Biome(namespace, path, rain, temperature, frozen, downfall, grass, music, l, definition);
         }
 
         BiomeEvidence evidence() {
             return new BiomeEvidence(ResourceLocation.fromNamespaceAndPath(namespace, path), null,
                     rain, temperature, frozen, downfall, grass,
-                    Optional.ofNullable(music).map(ResourceLocation::parse), Optional.ofNullable(loop).map(ResourceLocation::parse));
+                    Optional.ofNullable(music).map(ResourceLocation::parse), Optional.ofNullable(loop).map(ResourceLocation::parse),
+                    Optional.ofNullable(definition));
         }
 
         BiomeTraits traits(BiomeTrait... tags) {
@@ -297,6 +302,123 @@ public class BiomeTraitSourcesTests {
             for (var group : List.of(TraitGroup.TEMPERATURE, TraitGroup.MOISTURE))
                 assertTrue(Collections.disjoint(traits, group.members()), id + " sets " + group);
         });
+    }
+
+    // ---- Definition
+
+    @Test
+    void manyTreesMakeAForest() {
+        // Where nothing else names its kind; dense vegetation and the forest aren't doubted
+        var traits = Biome.named("somewhere").trees(9.1F, false).traits(OVERWORLD);
+        assertTrue(traits.contains(FOREST));
+        assertTrue(traits.contains(DENSE_VEGETATION));
+        assertEquals(TraitSource.DEFINITION, traits.sourceOf(FOREST));
+        assertEquals(TraitSource.DEFINITION, traits.sourceOf(DENSE_VEGETATION));
+        assertFalse(traits.doubtfulGroups().containsKey(TraitGroup.KIND));
+        assertFalse(traits.doubtfulGroups().containsKey(TraitGroup.VEGETATION));
+        assertTrue(traits.describe().contains("(definition)"), traits.describe());
+    }
+
+    @Test
+    void treesConfirmAForestsName() {
+        // Regression: the Twilight Forest's forests, forests by name before the trees were counted, were listed to check
+        var traits = Biome.named("firefly_forest").trees(9.1F, false).traits(OVERWORLD);
+        assertEquals(TraitSource.DEFINITION, traits.sourceOf(FOREST));
+        assertFalse(traits.doubtfulGroups().containsKey(TraitGroup.KIND));
+        // Few trees confirm nothing
+        var sparse = Biome.named("skyroot_grove").trees(1.5F, false).traits(OVERWORLD);
+        assertEquals(TraitSource.NAME, sparse.sourceOf(FOREST));
+    }
+
+    @Test
+    void theNamesKindComesBeforeTheTrees() {
+        // Biomes O' Plenty's forested field places 9 trees a chunk: its name gives its kind (tag files settle it a
+        // forest), the trees its vegetation
+        var traits = Biome.named("forested_field").trees(9.1F, false).traits(OVERWORLD);
+        assertEquals(TraitSource.NAME, traits.sourceOf(PLAINS));
+        assertEquals(TraitSource.DEFINITION, traits.sourceOf(DENSE_VEGETATION));
+    }
+
+    @Test
+    void fewTreesMakeAForestSparse() {
+        // Biomes O' Plenty's Mediterranean forest: tagged a forest, two trees a chunk; its name guessed dense
+        var traits = Biome.named("mediterranean_forest").trees(2.1F, false).traits(FOREST);
+        assertTrue(traits.contains(SPARSE_VEGETATION));
+        assertFalse(traits.contains(DENSE_VEGETATION));
+    }
+
+    @Test
+    void aClearingKeepsTheKindItsNameGives() {
+        var traits = Biome.named("fir_clearing").trees(1.1F, false).traits(OVERWORLD);
+        assertEquals(TraitSource.DEFINITION, traits.sourceOf(SPARSE_VEGETATION));
+        assertEquals(TraitSource.NAME, traits.sourceOf(PLAINS));
+    }
+
+    @Test
+    void aCavesTreesAreTheSurfaces() {
+        // Biomes O' Plenty's spider nest and glowing grotto place the plains' trees, on the surface above them
+        var traits = Biome.named("spider_nest").trees(0.05F, false).traits(OVERWORLD, CAVE, UNDERGROUND);
+        assertFalse(traits.contains(SPARSE_VEGETATION));
+        assertNull(traits.sourceOf(SPARSE_VEGETATION));
+    }
+
+    @Test
+    void aCaveFoundByItsMusicDropsTheSurfacesTrees() {
+        // Regression: Regions Unexplored's redstone caves are caves only by their music, guessed after the trees
+        var traits = Biome.named("redstone_hollows").trees(0.05F, false).music("minecraft:music.overworld.lush_caves").traits(OVERWORLD);
+        assertTrue(traits.contains(CAVE));
+        assertFalse(traits.contains(SPARSE_VEGETATION));
+        // What the music says of its vegetation, which the trees came before, is had
+        assertEquals(TraitSource.EFFECTS, traits.sourceOf(DENSE_VEGETATION));
+    }
+
+    @Test
+    void anOceansTreesDontCount() {
+        // Regression: Regions Unexplored's rocky reef, an ocean, places 39 trees a chunk where the water is shallow
+        // enough, and was dense
+        var traits = Biome.named("rocky_reef").trees(39.1F, true).traits(OVERWORLD, OCEAN);
+        assertFalse(traits.contains(DENSE_VEGETATION));
+        assertNull(traits.sourceOf(DENSE_VEGETATION));
+    }
+
+    @Test
+    void swampMusicMakesManyTreesASwamp() {
+        // Regression: Regions Unexplored's old growth bayou places 7 trees a chunk and plays swamp music; it was a forest
+        var traits = Biome.named("old_growth_bayou").trees(7F, false).music("minecraft:music.overworld.swamp").traits(OVERWORLD);
+        assertTrue(traits.contains(SWAMP));
+        assertFalse(traits.contains(FOREST));
+        assertTrue(traits.contains(DENSE_VEGETATION));
+    }
+
+    @Test
+    void aBogsNameOutranksItsTrees() {
+        // Regression: the Undergarden's mushroom bogs place 8 trees a chunk, and were forests
+        var traits = Biome.named("ink_mushroom_bog").trees(8F, false).traits();
+        assertTrue(traits.contains(SWAMP));
+        assertFalse(traits.contains(FOREST));
+        assertEquals(TraitSource.DEFINITION, traits.sourceOf(DENSE_VEGETATION));
+    }
+
+    @Test
+    void tagsOutrankTheDefinition() {
+        var traits = Biome.named("orchard").trees(9.1F, false).traits(PLAINS, SPARSE_VEGETATION);
+        assertFalse(traits.contains(FOREST) && traits.sourceOf(FOREST) == TraitSource.DEFINITION);
+        assertFalse(traits.contains(DENSE_VEGETATION));
+    }
+
+    @Test
+    void theDefinitionOutranksTheMusic() {
+        // Desert music says sparse; twelve trees a chunk say otherwise
+        var traits = Biome.named("odd_place").trees(12F, false).music("minecraft:music.overworld.desert").traits(OVERWORLD);
+        assertTrue(traits.contains(DENSE_VEGETATION));
+        assertFalse(traits.contains(SPARSE_VEGETATION));
+    }
+
+    @Test
+    void aVanillaBiomeIgnoresADefinition() {
+        var traits = Biome.vanilla("plains").trees(20F, false).traits(OVERWORLD, PLAINS);
+        assertFalse(traits.contains(FOREST));
+        assertTrue(traits.contains(SPARSE_VEGETATION));
     }
 
     // ---- Climate

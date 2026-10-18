@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "the_bumblezone:floral_meadow",
+      "required": false
+    },
+    {
+      "id": "the_bumblezone:pollinated_fields",
+      "required": false
+    }
+  ]
+}

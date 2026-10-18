@@ -1,0 +1,25 @@
+{
+  "carvers": [],
+  "downfall": 0.5,
+  "effects": {
+    "water_color": "#3f76e4"
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:seagrass_swamp",
+      "dsurroundtest:trees_rare"
+    ],
+    []
+  ],
+  "has_precipitation": true,
+  "temperature": 0.7
+}

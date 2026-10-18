@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "eternal_starlight:dark_swamp",
+      "required": false
+    }
+  ]
+}

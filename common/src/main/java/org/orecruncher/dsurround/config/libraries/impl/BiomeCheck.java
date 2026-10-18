@@ -51,9 +51,20 @@ final class BiomeCheck {
             // describe (the Twilight Forest, the Undergarden, the Bumblezone)
             notes.add("no dimension");
         }
-        if (missing.contains(TraitGroup.KIND))
+        if (missing.contains(TraitGroup.KIND) && !onlyInModdedDimensions(generatedIn, modHasDimensions))
             notes.add("no kind");
         return notes;
+    }
+
+    /**
+     * Whether a biome is only in modded dimensions, where it is often the dimension's only biome, which no kind
+     * describes (Allthemodium's mining dimension, the Bumblezone's hive): where it generates, or, where that isn't
+     * known, whether its mod has dimensions of its own
+     */
+    private static boolean onlyInModdedDimensions(@Nullable Set<ResourceLocation> generatedIn, boolean modHasDimensions) {
+        if (generatedIn == null)
+            return modHasDimensions;
+        return !generatedIn.isEmpty() && generatedIn.stream().noneMatch(DIMENSION_TRAITS::containsKey);
     }
 
     /**

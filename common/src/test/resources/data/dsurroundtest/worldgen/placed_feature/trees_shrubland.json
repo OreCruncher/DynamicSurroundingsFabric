@@ -1,0 +1,12 @@
+{
+  "feature": "dsurroundtest:oak_bush",
+  "placement": [
+    {
+      "type": "minecraft:count",
+      "count": 6
+    },
+    {
+      "type": "minecraft:in_square"
+    }
+  ]
+}

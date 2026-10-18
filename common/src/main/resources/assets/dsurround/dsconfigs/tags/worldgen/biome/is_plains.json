@@ -8,14 +8,6 @@
     {
       "id": "#forge:is_plains",
       "required": false
-    },
-    {
-      "id": "regions_unexplored:glistering_meadow",
-      "required": false
-    },
-    {
-      "id": "undergarden:frostfields",
-      "required": false
     }
   ]
 }
