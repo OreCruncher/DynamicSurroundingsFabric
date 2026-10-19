@@ -38,7 +38,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * During a storm the strength surges and eases off below its peak, changing every half minute or so; how far it can ease is the Storm variation option in Weather Options
   * The precipitation effects are "particle" like rather than rendered texture sheets, though they are not true Minecraft particles
     * Rain drops with a slight slant, and will change direction based on wind
-      * Rain tint option in Weather Options sets how blue the rain is, from a nearly colourless grey to a deep blue
+      * Rain tint option in Weather Options sets how blue the rain is, from a nearly colorless gray to a deep blue
     * Snow drops more slowly, and the impact of wind is more visible
       * Textures are sampled from Minecraft's snow.png texture at runtime, meaning the logic will sample any modded replacement
     * Sleet (a mix of rain and snow) can occur in transition zones (like elevation)
@@ -74,19 +74,18 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Turned on and off with the Light Level Overlay key (unbound to start with, under Dynamic Surroundings in the controls)
   * Red where monsters can spawn now, yellow where they can at night, green where it is too bright, aqua where they can never spawn; DARK colors also available
   * Spawning follows the dimension's own rules: in the Overworld any block light keeps monsters away, in the Nether it goes by light level 7
-  * Shows block light, sky light, or the brighter of the two; range of 8 to 32 blocks; can hide the safe blocks
+  * Shows block light, skylight, or the brighter of the two; range of 8 to 32 blocks; can hide the safe blocks
   * A legend in the bottom right corner of the screen says what the colors mean, and can be turned off
   * The numbers are drawn with the game's font, so a resource pack that changes the font changes them too
   * Light Level Options in the configuration
-* [Experimental] Ground fog in swamps and spooky biomes like Dark Forest and BOPs Ominous Forest
+* **[Experimental]** Ground fog in swamps and spooky biomes like Dark Forest and BOPs Ominous Forest
   * Heavy rains can thin it out, higher density between midnight and morning
   * Wind can shift the drift direction and speed
   * Should clear when inside
   * There is a quality setting in Weather Options that allow you to control the ground fog rendering parameters
     * OFF, Fast, Fancy, and Fabulous; defaults to Fancy
-    * Fast is fast and has some artifacting; Fabulous looks much better but will be computationally intensive (of course NONE is the most performant :D)
-  * Let me know what you think on my Github!
-* [Experimental] Support for Simple Voice Chat with enhanced sound processing
+    * Fast has some artifacting; Fabulous looks much better but will be computationally intensive (of course NONE is the most performant :D)
+* **[Experimental]** Support for Simple Voice Chat with enhanced sound processing
   * On by default; setting can be found in the Enhanced Sounds configuration options
   * Hear Self diagnostics setting can be found in the Diagnostics Settings config section; disabled by default
   * Will auto disable if enhanced sound processing is not available (ex, Sound Physics Remastered is installed)
@@ -141,9 +140,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Fog being applied to SPOOKY underground biomes, like BOPs spider nest
 * Rendering issues when Fabulous! graphics enabled
 * [MAYBE] Infrequent crash in fastutil collection when rendering block entities, seen with Create belts
-* Underwater in vanilla's oceans (other than deep ones) used the plain underwater sounds rather than the ocean's when Fabric's or NeoForge's biome tags were present
+* Underwater in vanilla's oceans (other than deep ones) used the plain underwater sounds rather than the oceans when Fabric's or NeoForge's biome tags were present
 * Ground fog didn't work with Mesa graphics drivers (common on Linux): its shader used a word GLSL reserves
-* The log filled with "Fog calculator ... reporting invalid fog range" warnings under water, where vanilla's fog starts behind the camera
+* The log filled with "Fog calculator ... reporting invalid fog range" warnings underwater, where vanilla's fog starts behind the camera
 
 > ### DynamicSurroundings-1.21.1-0.4.6
 
