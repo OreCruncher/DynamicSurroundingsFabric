@@ -5,6 +5,9 @@ MIT so they are free to do this with proper attribution.
 
 <span style="color:#2dc26b">If you are looking for a Fabric 1.20.x versions, please refer to the <a style="color:#2dc26b" href="https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings-fabric-edition" target="_blank" rel="nofollow">Dynamic Surroundings: Fabric Edition</a> project.</span>
 
+Dynamic Surroundings is a 100% client side mod that alters the fabric of Minecraft experience by weaving a tapestry of
+sound and visual effects.
+
 ### Features
 * Biome sounds - Various atmospheric sounds that play based on biomes in the area
     * Seamless blending of sounds as the player moves throughout the world
