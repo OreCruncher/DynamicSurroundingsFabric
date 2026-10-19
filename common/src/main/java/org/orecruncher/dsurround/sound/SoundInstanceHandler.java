@@ -78,29 +78,41 @@ public final class SoundInstanceHandler {
     }
 
     /**
-     * Determines if a sound is in range of a listener based on the sound's properties.
+     * Determines if a sound is in range of a listener based on the sound's properties. Client thread only: see
+     * {@link #hearingRangeSq}.
      *
      * @param listener Location of the listener
      * @param sound    The sound that is to be evaluated
      * @param pad      Additional distance to add when evaluating
-     * @return true if the sound is within the attenuation distance; false otherwise
+     * @return true if the sound is within the distance it can be heard at (see {@link SoundRange}); false otherwise
      */
     public static boolean inRange(final Vec3 listener, final SoundInstance sound, final int pad) {
-        // Do not cancel if:
-        // - The sound is global. Distance is not a factor.
-        // - Weather related (thunder, lightning strike)
-        if (sound.isRelative() || sound.getAttenuation() == SoundInstance.Attenuation.NONE || sound.getSource() == SoundSource.WEATHER)
-            return true;
-
-        // Do not cancel if it is the elytra flying sound. Due to the derpy implementation, the location of the
-        // sound is at Origin after construction. Could mixin the class to correct, but this is safer.
-        if (sound instanceof ElytraOnPlayerSoundInstance)
-            return true;
-
         // If for some reason the sound is at origin let it through. Some mods submit sound instances attached to a
         // location, but do not initialize the location until it starts ticking.
         if (sound.getX() == 0 && sound.getY() == 0 && sound.getZ() == 0)
             return true;
+        return listener.distanceToSqr(sound.getX(), sound.getY(), sound.getZ()) < hearingRangeSq(sound, pad);
+    }
+
+    /**
+     * The square of the distance a sound can be heard within (see {@link SoundRange}), plus a pad; infinite when
+     * distance isn't a factor or can't be told. Client thread only: the volume is drawn from the sound's own random
+     * source, which the sound engine draws from on the client thread too, and which throws when two threads use it at
+     * once. Worker threads use a range taken when the sound started.
+     *
+     * @param pad Additional distance, as a player may move into hearing range before the sound terminates
+     */
+    public static double hearingRangeSq(final SoundInstance sound, final int pad) {
+        // Not limited if:
+        // - The sound is global. Distance is not a factor.
+        // - Weather related (thunder, lightning strike)
+        if (sound.isRelative() || sound.getAttenuation() == SoundInstance.Attenuation.NONE || sound.getSource() == SoundSource.WEATHER)
+            return Double.POSITIVE_INFINITY;
+
+        // Not limited if it is the elytra flying sound. Due to the derpy implementation, the location of the
+        // sound is at Origin after construction. Could mixin the class to correct, but this is safer.
+        if (sound instanceof ElytraOnPlayerSoundInstance)
+            return Double.POSITIVE_INFINITY;
 
         // Make sure a sound is assigned so that the volume check can work
         //noinspection ConstantValue
@@ -116,20 +128,10 @@ public final class SoundInstanceHandler {
         // Still unresolved (resolving timed out or failed): no range to check against, so let it through
         //noinspection ConstantValue
         if (sound.getSound() == null)
-            return true;
+            return Double.POSITIVE_INFINITY;
 
-        // If it is a loud sound, let it through
-        if (sound.getVolume() > 1F)
-            return true;
-
-        // Get the max sound range. Pad is added because a player may move into hearing
-        // range before the sound terminates.
-        int distSq = sound.getSound().getAttenuationDistance() + pad;
-        distSq *= distSq;
-        return listener.distanceToSqr(sound.getX(), sound.getY(), sound.getZ()) < distSq;
-    }
-
-    public static boolean inRange(final Vec3 listener, final SoundInstance sound) {
-        return inRange(listener, sound, 0);
+        // Where the game fades the sound to nothing
+        double range = SoundRange.audibleRange(sound.getVolume(), sound.getSound().getAttenuationDistance()) + pad;
+        return range * range;
     }
 }

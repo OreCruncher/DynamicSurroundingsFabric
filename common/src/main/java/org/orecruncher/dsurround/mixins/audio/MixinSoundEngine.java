@@ -16,11 +16,13 @@ import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
 import org.orecruncher.dsurround.runtime.audio.EnhancedSoundProcessor;
 import org.orecruncher.dsurround.sound.SoundInstanceHandler;
+import org.orecruncher.dsurround.sound.SoundRange;
 import org.orecruncher.dsurround.sound.SoundVolumeEvaluator;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(SoundEngine.class)
 public abstract class MixinSoundEngine {
@@ -84,12 +86,13 @@ public abstract class MixinSoundEngine {
 
     /**
      * Update the volume based on current settings and environment. The sound is play()'s own parameter, so it is
-     * always the one being played.
+     * always the one being played. The volume play() read is used, not read again: reading draws a new random sample,
+     * and play() works out the sound's range from the one it read.
      */
     @WrapOperation(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/SoundEngine;calculateVolume(FLnet/minecraft/sounds/SoundSource;)F"), remap = false)
     private float dsurround$calculateVolume(SoundEngine soundEngine, float f, SoundSource soundsource, Operation<Float> original, @Local(argsOnly = true) SoundInstance sound) {
         try {
-            return SoundVolumeEvaluator.getAdjustedVolume(sound, soundsource);
+            return SoundVolumeEvaluator.getAdjustedVolume(sound, f, soundsource);
         } catch (Throwable t) {
             // Something went wrong: the game's own volume is used
             MixinHelpers.SOUND_VOLUME_GUARD.failed(t);
@@ -97,11 +100,27 @@ public abstract class MixinSoundEngine {
         }
     }
 
+    /**
+     * The volume of a sound already playing: set every tick for a ticking sound (the mod's own loops are), and for
+     * every playing sound when a volume slider moves. Without this they would drop the configured scale after their
+     * first tick.
+     */
+    @Inject(method = "calculateVolume(Lnet/minecraft/client/resources/sounds/SoundInstance;)F", at = @At("HEAD"), cancellable = true)
+    private void dsurround$calculatePlayingVolume(SoundInstance sound, CallbackInfoReturnable<Float> cir) {
+        try {
+            cir.setReturnValue(SoundVolumeEvaluator.getAdjustedVolume(sound, null));
+        } catch (Throwable t) {
+            // Something went wrong: the game's own volume is used
+            MixinHelpers.SOUND_VOLUME_GUARD.failed(t);
+        }
+    }
+
     @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;<init>(DDD)V"), cancellable = true)
     private void dsurround$soundRangeCheck(SoundInstance soundInstance, CallbackInfo ci) {
         try {
-            if (MixinHelpers.soundSystemConfig.enableSoundPruning) {
-                // If not in range of the listener, cancel.
+            // A sound out of range plays silently in the game, so one that is over before it could be heard is
+            // dropped; one that lasts is kept, as the listener or the sound may come closer
+            if (MixinHelpers.soundSystemConfig.enableSoundPruning && !SoundRange.lasts(soundInstance)) {
                 if (!SoundInstanceHandler.inRange(AudioUtilities.getSoundListener().getTransform().position(), soundInstance, 4)) {
                     MixinHelpers.LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> "TOO FAR: " + AudioUtilities.debugString(soundInstance));
                     ci.cancel();

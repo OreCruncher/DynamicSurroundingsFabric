@@ -132,6 +132,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
     * `traits` and `clearTraits` in `biomes.json` are deprecated (a warning is logged): they are added after the guesses, where a tag file settles a trait before any guess
 
 **Fixes**
+* Individual sound volumes and the ambient volume option now hold for sounds that tick, the mod's own biome loops among them (they fell back to the game's volume after their first tick, and every playing sound did when a volume slider moved); turning down a loud sound, such as an explosion, now makes it quieter
+* Possible crash with Enhanced Sounds ("Accessed LegacyRandomSource from multiple threads"): its worker threads read a playing sound's volume, which draws on the same random source the game uses for it each tick; each sound's hearing range is now taken once, on the client thread, when it starts
+* Sound pruning no longer drops sounds that could still be heard: looping, moving and streamed ones (a music disc started out of range, a machine's hum) play as the game would, and fade in as you come closer; a sound louder than 1 is given the game's longer range rather than let through
 * With a mod that turns the game's fog off (Distant Horizons), the log no longer fills with invalid fog range warnings, and the fog is left off: rain, morning and biome fog would only cover the game's own terrain, not the far terrain that mod draws, so they stand aside, and their work stops, while it is off (#201)
 * Particle rain, snow and damp spots turned themselves off in the overworld with Stellar View installed (NeoForge): it replaces the overworld's sky effects, which was taken to mean it draws its own weather. Now only a dimension whose effects draw or tick their own weather is left to them
 * Water ripples are visible when looking from underwater. During the day they are faint rings; at night they are more visible.
