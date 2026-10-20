@@ -240,8 +240,8 @@ public final class LightLevelOverlay extends AbstractOverlay {
         context.drawString(font, this.legendText.get(0), x, y, LEGEND_TEXT, false);
         for (int i = 1; i < this.legendText.size(); i++) {
             y += lineHeight;
-            // A swatch with a dark edge, as the numbers have
-            int swatchTop = y + (lineHeight - 1 - SWATCH_SIZE) / 2;
+            // A swatch with a dark edge, as the numbers have; as tall as a capital letter, so level with the text
+            int swatchTop = y;
             context.fill(x, swatchTop, x + SWATCH_SIZE, swatchTop + SWATCH_SIZE, 0xFF000000);
             context.fill(x + 1, swatchTop + 1, x + SWATCH_SIZE - 1, swatchTop + SWATCH_SIZE - 1, this.legendColors[i - 1]);
             context.drawString(font, this.legendText.get(i), x + SWATCH_SIZE + SWATCH_GAP, y, LEGEND_TEXT, false);

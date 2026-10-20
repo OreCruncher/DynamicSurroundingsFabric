@@ -95,7 +95,8 @@ final class LightLevelAtlas {
      * The top of a number's cell, as a fraction of the texture
      */
     static float cellV(int value) {
-        return (value / CELLS) / (float) CELLS;
+        int row = value / CELLS;
+        return row / (float) CELLS;
     }
 
     /**
@@ -166,8 +167,10 @@ final class LightLevelAtlas {
         // A font's width includes the space after the last character; its line height a pixel under the baseline
         float width = (textWidth(font, value) - 1) * scale;
         float height = (font.lineHeight - 1) * scale;
-        float x = (value % CELLS) * CELL_SIZE + Math.round((CELL_SIZE - width) / 2F);
-        float y = (value / CELLS) * CELL_SIZE + Math.round((CELL_SIZE - height) / 2F);
+        int column = value % CELLS;
+        int row = value / CELLS;
+        float x = column * CELL_SIZE + Math.round((CELL_SIZE - width) / 2F);
+        float y = row * CELL_SIZE + Math.round((CELL_SIZE - height) / 2F);
         return new Matrix4f().translate(x, y, 0F).scale(scale, scale, 1F);
     }
 

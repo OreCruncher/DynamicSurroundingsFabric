@@ -24,7 +24,7 @@ public final class RenderTimersPlugin implements IDiagnosticPlugin {
     public void onCollect(CollectDiagnosticsEvent event) {
         boolean labelled = false;
         for (var timer : RenderTimers.ALL) {
-            if (!timer.isRecent())
+            if (timer.isStale())
                 continue;
             if (!labelled) {
                 event.add(CollectDiagnosticsEvent.Section.Render, "ms per frame: CPU avg, peak / GPU avg, peak");

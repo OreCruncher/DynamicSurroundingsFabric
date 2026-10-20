@@ -63,6 +63,8 @@ public final class ModRoots {
         return result;
     }
 
+    // Not closed: the root is cached in JARS and read through for as long as the game runs
+    @SuppressWarnings("resource")
     private static Optional<Path> open(Path jar) {
         try {
             var fileSystem = FileSystems.newFileSystem(jar);

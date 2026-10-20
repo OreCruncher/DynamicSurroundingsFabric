@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.effects;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
@@ -25,8 +26,7 @@ public final class NoiseTexture {
      * A noise texture {@code size} texels each way, the same each time for a seed
      */
     public static DynamicTexture create(int size, long seed) {
-        var texture = new DynamicTexture(size, size, false);
-        var pixels = texture.getPixels();
+        var pixels = new NativeImage(size, size, false);
         var random = Randomizer.create(seed);
         for (int j = 0; j < size; j++) {
             for (int i = 0; i < size; i++) {
@@ -34,7 +34,8 @@ public final class NoiseTexture {
                 pixels.setPixelRGBA(i, j, 0xFF000000 | value);
             }
         }
-        texture.upload();
+        // Uploads the image, which the texture then owns
+        var texture = new DynamicTexture(pixels);
         texture.setFilter(true, false);
         return texture;
     }
