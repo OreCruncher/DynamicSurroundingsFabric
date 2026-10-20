@@ -2,6 +2,7 @@
   "replace": false,
   "values": [
     "#minecraft:dirt",
+    "#minecraft:leaves",
     "#minecraft:sand",
     "#minecraft:wool",
     "#minecraft:wool_carpets",
