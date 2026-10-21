@@ -147,6 +147,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Ground fog didn't work with Mesa graphics drivers (common on Linux): its shader used a word GLSL reserves
 * The log filled with "Fog calculator ... reporting invalid fog range" warnings underwater, where vanilla's fog starts behind the camera
 * With the audio device gone (headphones turned off) and nothing else to play on, the game tried to restart sound every tick and logged a stack trace each time, growing the log by gigabytes overnight. It now tries every few seconds and logs the failure once; sound comes back as before once a device is there (Sound System option "Throttle Audio Device Retries", on by default)
+* With Veil installed, the log showed "Couldn't load vanilla shader from dsurround:shaders/core/point_light.vsh" with a stack trace at each resource reload: Veil's shader parser can't read a return without a value. The lights always worked; the shader no longer uses one
 
 > ### DynamicSurroundings-1.21.1-0.4.6
 

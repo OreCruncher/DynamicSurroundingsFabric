@@ -13,7 +13,11 @@ import org.orecruncher.dsurround.lib.threading.RecordingLog;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -135,6 +139,25 @@ public class ModShaderTests {
                     .map(line -> line.replaceAll("//.*", "").strip())
                     .filter(line -> !line.isEmpty())
                     .collect(Collectors.joining("\n"));
+        }
+    }
+
+    @Test
+    void noShaderReturnsWithoutAValue() throws Exception {
+        // Veil re-reads every core shader to add its buffers, and its parser (glsl-processor) fails on "return;",
+        // logging an error with a stack trace at every resource reload
+        var anchor = getClass().getClassLoader().getResource("assets/dsurround/shaders/core/aurora.fsh");
+        assertNotNull(anchor);
+        var folder = Path.of(anchor.toURI()).getParent().getParent();
+        List<Path> programs;
+        try (var files = Files.walk(folder)) {
+            programs = files.filter(file -> file.toString().matches(".*\\.(vsh|fsh|glsl)")).toList();
+        }
+        assertFalse(programs.isEmpty());
+        var bareReturn = Pattern.compile("\\breturn\\s*;");
+        for (var program : programs) {
+            var code = codeOf(folder.resolve("core").relativize(program).toString().replace('\\', '/'));
+            assertFalse(bareReturn.matcher(code).find(), program.getFileName() + " has a return without a value");
         }
     }
 

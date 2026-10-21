@@ -24,18 +24,18 @@ void main() {
     lightColor = Color;
     lightRadius = radius;
 
+    // No early return: Veil's shader parser (glsl-processor) fails on a return without a value
     float dist = length(center);
     if (dist < radius * 1.05) {
         gl_Position = vec4(corner, 0.0, 1.0);
-        return;
+    } else {
+        // A square through the centre, square to the view of it, as wide as the sphere looks from here
+        vec3 dir = center / dist;
+        vec3 up = abs(dir.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+        vec3 right = normalize(cross(dir, up));
+        up = cross(right, dir);
+        float halfSize = radius * dist / sqrt(dist * dist - radius * radius);
+        vec3 cornerPosition = center + (right * corner.x + up * corner.y) * halfSize;
+        gl_Position = ProjMat * vec4(cornerPosition, 1.0);
     }
-
-    // A square through the centre, square to the view of it, as wide as the sphere looks from here
-    vec3 dir = center / dist;
-    vec3 up = abs(dir.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
-    vec3 right = normalize(cross(dir, up));
-    up = cross(right, dir);
-    float halfSize = radius * dist / sqrt(dist * dist - radius * radius);
-    vec3 cornerPosition = center + (right * corner.x + up * corner.y) * halfSize;
-    gl_Position = ProjMat * vec4(cornerPosition, 1.0);
 }
