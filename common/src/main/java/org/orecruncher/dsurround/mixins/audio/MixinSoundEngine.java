@@ -13,11 +13,14 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.lib.text.StringUtils;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
+import org.orecruncher.dsurround.runtime.audio.AudioDeviceRetry;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
 import org.orecruncher.dsurround.runtime.audio.EnhancedSoundProcessor;
 import org.orecruncher.dsurround.sound.SoundInstanceHandler;
 import org.orecruncher.dsurround.sound.SoundRange;
 import org.orecruncher.dsurround.sound.SoundVolumeEvaluator;
+import org.slf4j.Logger;
+import org.slf4j.Marker;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -34,9 +37,52 @@ public abstract class MixinSoundEngine {
     @Shadow
     public Library library;
 
+    @Unique
+    private static final AudioDeviceRetry dsurround$deviceRetry = new AudioDeviceRetry(() -> MixinHelpers.soundSystemConfig.throttleDeviceRetries, System::nanoTime);
+
     @Inject(method = "loadLibrary()V", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/audio/Library;init(Ljava/lang/String;Z)V", shift = At.Shift.AFTER))
     public void dsurround$init(CallbackInfo ci) {
+        dsurround$deviceRetry.started();
         AudioUtilities.initialize(this.library);
+    }
+
+    /**
+     * Once a restart after losing the device has failed, the closed device still reads as lost every tick: restart
+     * only once a while until one starts (see {@link AudioDeviceRetry})
+     */
+    @WrapOperation(method = "shouldChangeDevice()Z", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/audio/Library;isCurrentDeviceDisconnected()Z"))
+    private boolean dsurround$deviceLost(Library library, Operation<Boolean> original) {
+        return dsurround$deviceRetry.shouldRestart(original.call(library));
+    }
+
+    /**
+     * "Audio device was lost!", said once rather than at each retry
+     */
+    @WrapOperation(method = "shouldChangeDevice()Z", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;info(Ljava/lang/String;)V", remap = false))
+    private void dsurround$deviceLostLog(Logger logger, String message, Operation<Void> original) {
+        if (dsurround$deviceRetry.shouldLogRestart())
+            original.call(logger, message);
+    }
+
+    /**
+     * The sound events without sounds, listed at every restart, not again at each retry
+     */
+    @WrapOperation(method = "reload()V", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;)V", remap = false))
+    private void dsurround$missingSoundLog(Logger logger, String message, Object event, Operation<Void> original) {
+        if (dsurround$deviceRetry.shouldLogRestart())
+            original.call(logger, message, event);
+    }
+
+    /**
+     * The failure to start, with its stack trace, logged once while the engine stays down
+     */
+    @WrapOperation(method = "loadLibrary()V", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;error(Lorg/slf4j/Marker;Ljava/lang/String;Ljava/lang/Throwable;)V", remap = false))
+    private void dsurround$startFailedLog(Logger logger, Marker marker, String message, Throwable error, Operation<Void> original) {
+        if (dsurround$deviceRetry.startFailed()) {
+            original.call(logger, marker, message, error);
+            if (dsurround$deviceRetry.isEnabled())
+                MixinHelpers.LOGGER.warn("Sound is off until an audio device can be opened; trying again every few seconds, without logging each try");
+        }
     }
 
     @Inject(method = "destroy()V", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/audio/Library;cleanup()V", shift = At.Shift.BEFORE))

@@ -146,6 +146,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Underwater in vanilla's oceans (other than deep ones) used the plain underwater sounds rather than the oceans when Fabric's or NeoForge's biome tags were present
 * Ground fog didn't work with Mesa graphics drivers (common on Linux): its shader used a word GLSL reserves
 * The log filled with "Fog calculator ... reporting invalid fog range" warnings underwater, where vanilla's fog starts behind the camera
+* With the audio device gone (headphones turned off) and nothing else to play on, the game tried to restart sound every tick and logged a stack trace each time, growing the log by gigabytes overnight. It now tries every few seconds and logs the failure once; sound comes back as before once a device is there (Sound System option "Throttle Audio Device Retries", on by default)
 
 > ### DynamicSurroundings-1.21.1-0.4.6
 
