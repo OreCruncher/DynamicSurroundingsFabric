@@ -1,5 +1,15 @@
 [
   {
+    "biomeSelector": "OVERWORLD && !(WINDSWEPT || MOUNTAIN || WASTELAND || DESERT || BADLANDS || (COLD && ICY) || UNDERGROUND)",
+    "_comment": "Storm wind, where the biome has no wind of its own: as loud as the wind blows",
+    "acoustics": [
+      {
+        "factory": "biome.wind",
+        "conditions": "weather.isStormWind()"
+      }
+    ]
+  },
+  {
     "biomeSelector": "WINDSWEPT",
     "_comment": "Wind for Windswept",
     "acoustics": [
@@ -224,7 +234,8 @@
     "biomeSelector": "SWAMP && !FOREST",
     "_comment": "Basic Swamp Fog",
     "fogColor": "#406040",
-    "fogDensity": "medium"
+    "fogDensity": "medium",
+    "groundFog": "medium"
   },
   {
     "biomeSelector": "SWAMP && !(FOREST || DEAD || COLD)",
@@ -366,9 +377,10 @@
     "clearSounds": true
   },
   {
-    "biomeSelector": "SPOOKY && !(NETHER || END)",
-    "_comment": "Fog density for spooky biomes",
-    "fogDensity": "heavy"
+    "biomeSelector": "SPOOKY && !(NETHER || END || UNDERGROUND)",
+    "_comment": "Fog density for spooky biomes, above ground: fog is the sky's, and a spooky cave (the deep dark, Biomes O' Plenty's spider nest) would fill with it. Mist lies on the ground.",
+    "fogDensity": "medium",
+    "groundFog": "heavy"
   },
   {
     "biomeSelector": "UNDERGROUND",

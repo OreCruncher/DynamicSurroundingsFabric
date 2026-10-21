@@ -4,6 +4,10 @@ import dev.architectury.event.events.client.ClientCommandRegistrationEvent;
 import dev.architectury.platform.Platform;
 import dev.architectury.registry.ReloadListenerRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.particle.Particle;
+import net.minecraft.client.particle.ParticleEngine;
+import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.PackType;
@@ -27,6 +31,8 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.ModLog;
+import org.orecruncher.dsurround.lib.platform.FeatureConflict;
+import org.orecruncher.dsurround.lib.platform.IMinecraftDirectories;
 import org.orecruncher.dsurround.lib.registry.ReloadListener;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
@@ -35,13 +41,19 @@ import org.orecruncher.dsurround.lib.version.IVersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionCheckException;
 import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionResult;
+import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.processing.Handlers;
+import org.orecruncher.dsurround.profiling.ProfileFiles;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
+import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
+import org.orecruncher.dsurround.runtime.weather.WeatherSimulation;
+import org.orecruncher.dsurround.runtime.weather.WindService;
 import org.orecruncher.dsurround.sound.AudioPlayerDebug;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.AudioPlayer;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -101,12 +113,10 @@ public final class Client {
     public static void initializeClient() {
         Library.LOGGER.info("[%s] Client initializing", Constants.MOD_ID);
 
-        if (Client.Config.logging.registerCommands) {
-            if (!Platform.isModLoaded(Constants.QUILTED_LOADER))
-                ClientCommandRegistrationEvent.EVENT.register(Commands::register);
-            else
-                Library.LOGGER.info("Not registering client commands as mod is running in Quilt environment");
-        }
+        FeatureConflict.logBlocked(Library.LOGGER);
+
+        if (Client.Config.logging.registerCommands && !FeatureConflict.CLIENT_COMMANDS.isBlocked())
+            ClientCommandRegistrationEvent.EVENT.register(Commands::register);
 
         // Register the resource listener
         ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new ReloadListener(), Constants.asId("reload_listener"));
@@ -131,6 +141,8 @@ public final class Client {
                 .registerSingleton(IBlockLibrary.class, BlockLibrary.class)
                 .registerSingleton(IItemLibrary.class, ItemLibrary.class)
                 .registerSingleton(IEntityEffectLibrary.class, EntityEffectLibrary.class)
+                .registerSingleton(IWeatherSimulation.class, WeatherSimulation.class)
+                .registerSingleton(WindService.class)
                 .registerSingleton(OverlayManager.class);
 
         // Depending on debug settings, enable the appropriate player
@@ -201,7 +213,23 @@ public final class Client {
         // of the dependencies to be initialized.
         container.resolve(Handlers.class);
 
+        // Only the newest profile recordings are kept (see /dsprofile)
+        ProfileFiles.prune(container.resolve(IMinecraftDirectories.class).getModProfileDirectory(), ProfileFiles.KEPT, Library.LOGGER);
+
+        checkOptionalHooks();
+
         Library.LOGGER.info("[%s] Finalization complete", Constants.MOD_ID);
+    }
+
+    /**
+     * Logs the optional game hooks that didn't apply because another mod changed the code they hook (in development,
+     * stops the launch). The classes they are in are loaded first, so their mixins have been applied: naming a class
+     * loads it.
+     */
+    private static void checkOptionalHooks() {
+        var hooked = List.of(LevelRenderer.class, FogRenderer.class, ParticleEngine.class, Particle.class);
+        Library.LOGGER.debug("Checking the optional hooks in %d classes", hooked.size());
+        OptionalHook.check(Library.LOGGER, Platform.isDevelopmentEnvironment());
     }
 
     private static void onConnect(Minecraft minecraftClient) {

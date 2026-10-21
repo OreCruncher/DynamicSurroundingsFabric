@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "ars_elemental:vexing_caves",
+      "required": false
+    }
+  ]
+}

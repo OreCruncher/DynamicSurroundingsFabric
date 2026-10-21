@@ -9,7 +9,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.eventing.IConfigChangedEvent;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -105,6 +104,10 @@ public class ConfigurationDataTests {
         @Property
         @TextStyle(color = "not a color", bold = true)
         public boolean badlyStyled = true;
+
+        @Property
+        @Experimental
+        public boolean experimental = true;
 
         public int notAProperty = 7;
     }
@@ -385,6 +388,12 @@ public class ConfigurationDataTests {
         // An invalid colour is left out; the rest of the style still applies
         assertNull(badlyStyled.getColor());
         assertTrue(badlyStyled.isBold());
+    }
+
+    @Test
+    void experimentalIsMarked() {
+        assertTrue(element(spec(), "experimental").isExperimental());
+        assertFalse(element(spec(), "flag").isExperimental());
     }
 
     // ---- Values ----------------------------------------------------------------------------------------------

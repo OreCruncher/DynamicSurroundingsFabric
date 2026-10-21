@@ -1,15 +1,16 @@
 package org.orecruncher.dsurround.effects.systems;
 
 import net.minecraft.client.ParticleStatus;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.effects.IEffectSystem;
 import org.orecruncher.dsurround.effects.blocks.AbstractParticleEmitterEffect;
+import org.orecruncher.dsurround.effects.particles.SteamPuff;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -122,7 +123,6 @@ public class SteamEffectSystem extends AbstractEffectSystem implements IEffectSy
 
     private static class SteamEffect extends AbstractParticleEmitterEffect {
 
-        private static final double VERTICAL_SPEED = 0.08D;
         private static final double JITTER = 0.4D;
 
         // A solid source (water cauldron) gives smaller, slower puffs than open water. Can't change without the
@@ -161,19 +161,12 @@ public class SteamEffectSystem extends AbstractEffectSystem implements IEffectSy
 
         @Override
         protected Collection<Particle> produceParticles() {
+            if (!(this.world instanceof ClientLevel level))
+                return List.of();
             var x = RANDOM.triangle(this.posX, JITTER);
             var z = RANDOM.triangle(this.posZ, JITTER);
-            var particle = this.createParticle(ParticleTypes.CLOUD, x, this.posY, z, 0, VERTICAL_SPEED, 0D);
-            return particle.map(
-                    p -> {
-                    p.setLifetime(p.getLifetime() * 2);
-                    if (this.isSolid) {
-                        p.scale(0.5F);
-                        p.setParticleSpeed(0, VERTICAL_SPEED / 2, 0);
-                    }
-                    return List.of(p);
-                })
-           .orElse(List.of());
+            // Drawn as waterfall mist is; it rises and drifts with the wind on its own
+            return List.of(SteamPuff.create(level, x, this.posY, z, this.isSolid));
         }
     }
 }

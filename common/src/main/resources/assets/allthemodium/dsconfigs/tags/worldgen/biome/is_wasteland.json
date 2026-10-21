@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "allthemodium:basalt_deltas",
+      "required": false
+    },
+    {
+      "id": "allthemodium:soul_sand_valley",
+      "required": false
+    }
+  ]
+}

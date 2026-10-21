@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "aether:skyroot_woodland",
+      "required": false
+    }
+  ]
+}

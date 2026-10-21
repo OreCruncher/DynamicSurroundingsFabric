@@ -1,7 +1,9 @@
 package org.orecruncher.dsurround.tags;
 
 import net.minecraft.SharedConstants;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -107,6 +109,53 @@ public class ModTagFilesTests {
     }
 
     @Test
+    void everyTagFileIsForADeclaredTag() throws IOException {
+        // A tag's files are found by their path, whichever mod's folder they are in, so one named for no tag the
+        // mod reads is never read (Nature's Spirit's "windswept", for the tag "is_windswept")
+        var declared = new HashSet<String>();
+        for (var tag : ModTags.getModTags())
+            declared.add(Registries.tagsDirPath(tag.registry()) + "/" + tag.location().getPath());
+        for (var trait : BiomeTrait.values())
+            declared.add(Registries.tagsDirPath(Registries.BIOME) + "/" + trait.getBiomeTag().location().getPath());
+
+        var unread = new TreeSet<String>();
+        try (var files = Files.walk(assets)) {
+            for (var path : files.filter(p -> p.toString().endsWith(".json")).toList()) {
+                var relative = assets.relativize(path).toString().replace('\\', '/');
+                var marker = "/dsconfigs/";
+                var at = relative.indexOf(marker);
+                if (at < 0 || !relative.startsWith("tags/", at + marker.length()))
+                    continue;
+                var file = relative.substring(at + marker.length(), relative.length() - ".json".length());
+                // A file of the mod's own may be a tag only other tag files refer to
+                if (!declared.contains(file) && !relative.startsWith(Constants.MOD_ID + "/"))
+                    unread.add(relative);
+            }
+        }
+        assertTrue(unread.isEmpty(), "tag files no tag of the mod's reads: " + unread);
+    }
+
+    @Test
+    void aModsBiomesAreInItsOwnFolder() throws IOException {
+        // The mod's own biome tag files hold the convention tags and vanilla's biomes; another mod's biomes go in
+        // its folder (assets/<mod>/dsconfigs/tags/worldgen/biome), read only when it is installed
+        var entry = Pattern.compile("\"id\": \"([a-z0-9_.-]+):[a-z0-9_/.-]+\"");
+        var misplaced = new ArrayList<String>();
+        var folder = assets.resolve(Constants.MOD_ID).resolve("dsconfigs/tags/worldgen/biome");
+        try (var files = Files.list(folder)) {
+            for (var path : files.filter(p -> p.toString().endsWith(".json")).toList()) {
+                var matcher = entry.matcher(Files.readString(path));
+                while (matcher.find()) {
+                    var namespace = matcher.group(1);
+                    if (!namespace.equals("minecraft") && !namespace.equals(Constants.MOD_ID))
+                        misplaced.add(path.getFileName() + " -> " + matcher.group());
+                }
+            }
+        }
+        assertTrue(misplaced.isEmpty(), "other mods' biomes in the mod's own tag files: " + misplaced);
+    }
+
+    @Test
     void conventionTagsAreReferencedAsTags() throws IOException {
         // The "c" namespace only holds tags, so an entry there without its "#" names a biome or block that can't
         // exist, and quietly adds nothing (as dsurround:is_outer_end_island once did)
@@ -123,6 +172,34 @@ public class ModTagFilesTests {
             }
         }
         assertTrue(missing.isEmpty(), "convention tags referenced without '#': " + missing);
+    }
+
+    @Test
+    void particleTypeTagsNameRealVanillaParticles() throws IOException {
+        // A misspelled particle quietly isn't blown; and the mod's own particles take the wind themselves, so a
+        // dsurround entry would only be ignored (they never pass through the path that reads the tag)
+        var entry = Pattern.compile("\"([a-z0-9_.-]+):([a-z0-9_/.-]+)\"");
+        var wrong = new ArrayList<String>();
+        var checked = 0;
+        try (var files = Files.walk(assets)) {
+            for (var path : files.filter(p -> p.toString().endsWith(".json")).toList()) {
+                var relative = assets.relativize(path).toString().replace('\\', '/');
+                if (!relative.contains("/dsconfigs/tags/particle_type/"))
+                    continue;
+                var matcher = entry.matcher(Files.readString(path));
+                while (matcher.find()) {
+                    var namespace = matcher.group(1);
+                    var id = ResourceLocation.fromNamespaceAndPath(namespace, matcher.group(2));
+                    if (namespace.equals(Constants.MOD_ID))
+                        wrong.add(relative + " -> " + id + " (the mod's own)");
+                    else if (namespace.equals("minecraft") && !BuiltInRegistries.PARTICLE_TYPE.containsKey(id))
+                        wrong.add(relative + " -> " + id + " (no such particle)");
+                    checked++;
+                }
+            }
+        }
+        assertTrue(checked > 0, "found no particle type tag entries");
+        assertTrue(wrong.isEmpty(), "particle type tag entries that can't be blown: " + wrong);
     }
 
     /**

@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "undergarden:ancient_sea",
+      "required": false
+    },
+    {
+      "id": "undergarden:dead_sea",
+      "required": false
+    },
+    {
+      "id": "undergarden:icy_sea",
+      "required": false
+    }
+  ]
+}

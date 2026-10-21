@@ -1,0 +1,25 @@
+{
+  "carvers": [],
+  "downfall": 0.5,
+  "effects": {
+    "water_color": "#3f76e4"
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "dsurroundtest:flower_patch",
+      "#dsurroundtest:some_tag"
+    ],
+    []
+  ],
+  "has_precipitation": true,
+  "temperature": 0.7
+}

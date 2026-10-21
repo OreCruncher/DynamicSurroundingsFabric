@@ -4,13 +4,16 @@ import net.minecraft.SharedConstants;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.Bootstrap;
+import net.minecraft.world.level.biome.BiomeSpecialEffects;
 import net.minecraft.world.level.biome.Biomes;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.config.BiomeTrait;
 
 import java.lang.reflect.Modifier;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -44,10 +47,15 @@ public class BiomeTraitAnalysisTests {
     private static Set<BiomeTrait> derive(BiomeTrait... traits) {
         var set = EnumSet.noneOf(BiomeTrait.class);
         set.addAll(List.of(traits));
-        var id = ResourceLocation.fromNamespaceAndPath("test", "biome");
-        new BiomeTraitAnalyzer().analyze(id, null, set);
-        new BiomeTraitCleanup().analyze(id, null, set);
+        var biome = evidence(ResourceLocation.fromNamespaceAndPath("test", "biome"));
+        new BiomeTraitAnalyzer().analyze(biome, set);
+        new BiomeTraitCleanup().analyze(biome, set);
         return set;
+    }
+
+    private static BiomeEvidence evidence(ResourceLocation id) {
+        return new BiomeEvidence(id, null, true, 0.5F, false, 0.5F, BiomeSpecialEffects.GrassColorModifier.NONE,
+                Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     private static Set<String> vanillaBiomeNames() throws IllegalAccessException {
@@ -65,13 +73,13 @@ public class BiomeTraitAnalysisTests {
         var names = vanillaBiomeNames();
         assertTrue(names.size() > 50, "didn't find the vanilla biomes");
         var missing = new TreeSet<>(names);
-        missing.removeAll(BiomeNameFallbackAnalyzer.VANILLA_TRAITS.keySet());
+        missing.removeAll(VanillaBiomeAnalyzer.VANILLA_TRAITS.keySet());
         assertTrue(missing.isEmpty(), "vanilla biomes without traits: " + missing);
     }
 
     @Test
     void eachVanillaBiomeIsInOneDimension() {
-        BiomeNameFallbackAnalyzer.VANILLA_TRAITS.forEach((name, traits) -> {
+        VanillaBiomeAnalyzer.VANILLA_TRAITS.forEach((name, traits) -> {
             var dims = EnumSet.noneOf(BiomeTrait.class);
             dims.addAll(traits);
             dims.retainAll(DIMENSIONS);
@@ -80,9 +88,16 @@ public class BiomeTraitAnalysisTests {
     }
 
     @Test
+    void eachVanillaBiomeHasAKind() {
+        // So a vanilla server, sending none of the c: tags, leaves none of them in the dump's biomes to check
+        VanillaBiomeAnalyzer.VANILLA_TRAITS.forEach((name, traits) ->
+                assertFalse(Collections.disjoint(traits, TraitGroup.KIND.members()), name + " has no kind"));
+    }
+
+    @Test
     void noVanillaBiomeHasContradictoryTraits() {
         // Cleanup would quietly drop one of each pair, hiding a mistake in the table
-        BiomeNameFallbackAnalyzer.VANILLA_TRAITS.forEach((name, traits) -> {
+        VanillaBiomeAnalyzer.VANILLA_TRAITS.forEach((name, traits) -> {
             for (var pair : CONFLICTS)
                 assertFalse(traits.containsAll(pair), name + " has both of " + pair);
         });
@@ -92,8 +107,8 @@ public class BiomeTraitAnalysisTests {
     void vanillaBiomesUseTheTable() {
         var traits = EnumSet.noneOf(BiomeTrait.class);
         // The biome isn't looked at for a vanilla biome in the table
-        new BiomeNameFallbackAnalyzer().analyze(ResourceLocation.withDefaultNamespace("snowy_plains"), null, traits);
-        assertEquals(BiomeNameFallbackAnalyzer.VANILLA_TRAITS.get("snowy_plains"), traits);
+        new VanillaBiomeAnalyzer().analyze(evidence(ResourceLocation.withDefaultNamespace("snowy_plains")), traits);
+        assertEquals(VanillaBiomeAnalyzer.VANILLA_TRAITS.get("snowy_plains"), traits);
     }
 
     @Test
@@ -101,7 +116,7 @@ public class BiomeTraitAnalysisTests {
         // The aurora shows over these
         for (var name : List.of("snowy_plains", "ice_spikes", "snowy_taiga", "grove", "snowy_slopes", "frozen_peaks",
                 "jagged_peaks", "frozen_river", "snowy_beach", "frozen_ocean", "deep_frozen_ocean"))
-            assertTrue(BiomeNameFallbackAnalyzer.VANILLA_TRAITS.get(name).contains(COLD), name + " isn't cold");
+            assertTrue(VanillaBiomeAnalyzer.VANILLA_TRAITS.get(name).contains(COLD), name + " isn't cold");
     }
 
     // ---- Names
@@ -116,25 +131,77 @@ public class BiomeTraitAnalysisTests {
     }
 
     @Test
-    void hasWordSplitsOnUnderscoresAndSlashes() {
-        assertTrue(BiomeNameFallbackAnalyzer.hasWord("end", "end"));
-        assertTrue(BiomeNameFallbackAnalyzer.hasWord("islands/end/outer", "end"));
-        assertFalse(BiomeNameFallbackAnalyzer.hasWord("lavender_field", "end"));
-        assertFalse(BiomeNameFallbackAnalyzer.hasWord("ending", "end"));
+    void hasExactWordSplitsOnUnderscoresAndSlashes() {
+        assertTrue(BiomeNameFallbackAnalyzer.hasExactWord("end", "end"));
+        assertTrue(BiomeNameFallbackAnalyzer.hasExactWord("islands/end/outer", "end"));
+        assertFalse(BiomeNameFallbackAnalyzer.hasExactWord("lavender_field", "end"));
+        assertFalse(BiomeNameFallbackAnalyzer.hasExactWord("ending", "end"));
+    }
+
+    @Test
+    void wordsMayHaveCommonEndings() {
+        assertTrue(BiomeNameFallbackAnalyzer.hasWord("snowy_hills", "snow"));
+        assertTrue(BiomeNameFallbackAnalyzer.hasWord("crystal_caves", "cave"));
+        assertTrue(BiomeNameFallbackAnalyzer.hasWord("pinelands", "pine"));
+        assertTrue(BiomeNameFallbackAnalyzer.hasWord("pinewood_grove", "pine"));
+        assertTrue(BiomeNameFallbackAnalyzer.hasWord("salt_marshes", "marsh"));
+    }
+
+    @Test
+    void wordsArentFoundInsideOtherWords() {
+        // Regression: names were searched for the letters anywhere
+        assertFalse(fromName("alpine_meadow").contains(CONIFEROUS), "alpine");
+        assertFalse(fromName("spine_ridge").contains(CONIFEROUS), "spine");
+        assertFalse(fromName("dice_fields").contains(SNOWY), "dice");
+        assertFalse(fromName("spice_grove").contains(COLD), "spice");
+        assertFalse(fromName("palette_hills").contains(SPOOKY), "palette");
+        assertFalse(fromName("rice_paddies").contains(COLD), "rice");
     }
 
     @Test
     void namesSuggestTraits() {
         assertTrue(fromName("nether_garden").containsAll(Set.of(NETHER, HOT, DRY)));
-        assertTrue(fromName("deep_warm_ocean").containsAll(Set.of(OVERWORLD, OCEAN, DEEP_OCEAN, WET)));
+        assertTrue(fromName("deep_warm_ocean").containsAll(Set.of(OCEAN, DEEP_OCEAN, WET)));
         assertTrue(fromName("crystal_caves").containsAll(Set.of(UNDERGROUND, CAVE)));
         assertTrue(fromName("snowy_coniferous_forest").containsAll(Set.of(COLD, SNOWY, FOREST, CONIFEROUS, TAIGA)));
-        assertTrue(fromName("redwood_forest").containsAll(Set.of(OVERWORLD, FOREST, DENSE_VEGETATION)));
+        assertTrue(fromName("redwood_forest").containsAll(Set.of(FOREST, DENSE_VEGETATION)));
         assertTrue(fromName("bog").containsAll(Set.of(SWAMP, WET)));
-        assertTrue(fromName("rocky_shore").containsAll(Set.of(OVERWORLD, BEACH, WET)));
+        assertTrue(fromName("sandy_beach").containsAll(Set.of(BEACH, WET)));
+        assertTrue(fromName("rocky_shore").contains(BEACH));
+        assertFalse(fromName("rocky_shore").contains(WET), "a shore, like vanilla's stony shore, isn't wet");
         assertTrue(fromName("sulfur_springs").containsAll(Set.of(UNDERGROUND, CAVE, HOT, DRY)));
         assertTrue(fromName("mystic_grove").containsAll(Set.of(FOREST)));
-        assertTrue(fromName("lavender_field").isEmpty(), "lavender_field: " + fromName("lavender_field"));
+        assertEquals(Set.of(PLAINS), fromName("lavender_field"), "a field, and not the End");
+    }
+
+    @Test
+    void namesSayPlainsSeasRiversAndMore() {
+        for (var name : List.of("barley_fields", "forgotten_field", "clover_plains", "dread_plain", "prairie", "grassland",
+                "rocky_meadow", "steppe", "clearing", "shrubland"))
+            assertTrue(fromName(name).contains(PLAINS), name);
+        for (var name : List.of("ancient_sea", "starlit_sea", "lush_shallow_sea"))
+            assertTrue(fromName(name).contains(OCEAN), name);
+        for (var name : List.of("stream", "lake"))
+            assertTrue(fromName(name).contains(RIVER), name);
+        assertTrue(fromName("oak_savannah").contains(SAVANNA));
+        assertTrue(fromName("final_plateau").contains(PLATEAU));
+        assertTrue(fromName("highlands").contains(HILL));
+        assertTrue(fromName("frozen_tundra").containsAll(Set.of(PLAINS, SNOWY)));
+        assertTrue(fromName("glacier").containsAll(Set.of(SNOWY, ICY)));
+    }
+
+    @Test
+    void newWordsArentFoundInsideOthers() {
+        assertFalse(fromName("grassy_beach").contains(PLAINS), "grassy");
+        assertFalse(fromName("seasonal_forest").contains(OCEAN), "seasonal");
+        assertFalse(fromName("fieldstone_ridge").contains(PLAINS), "fieldstone");
+    }
+
+    @Test
+    void namesDontSayTheOverworld() {
+        // Regression: the Twilight Forest's and the Undergarden's forests, rivers and shores were made Overworld
+        for (var name : List.of("dense_forest", "ether_river", "warm_shore", "deep_ocean", "sulfur_caves"))
+            assertFalse(fromName(name).contains(OVERWORLD), name);
     }
 
     // ---- Climate
@@ -159,7 +226,7 @@ public class BiomeTraitAnalysisTests {
 
     private static Set<BiomeTrait> climate(float temperature, float downfall) {
         var traits = EnumSet.noneOf(BiomeTrait.class);
-        BiomeNameFallbackAnalyzer.addClimateTraits(temperature, downfall, traits);
+        BiomeClimateAnalyzer.addClimateTraits(true, temperature, false, downfall, traits);
         return traits;
     }
 
@@ -192,7 +259,7 @@ public class BiomeTraitAnalysisTests {
 
     @Test
     void cleanedUpVanillaBiomesHaveNoConflicts() {
-        BiomeNameFallbackAnalyzer.VANILLA_TRAITS.forEach((name, traits) -> {
+        VanillaBiomeAnalyzer.VANILLA_TRAITS.forEach((name, traits) -> {
             var result = derive(traits.toArray(new BiomeTrait[0]));
             for (var pair : CONFLICTS)
                 assertFalse(result.containsAll(pair), name + " ends up with both of " + pair);
@@ -201,7 +268,7 @@ public class BiomeTraitAnalysisTests {
 
     @Test
     void frozenRiverEndsUpColdAndIcyWater() {
-        var traits = derive(BiomeNameFallbackAnalyzer.VANILLA_TRAITS.get("frozen_river").toArray(new BiomeTrait[0]));
+        var traits = derive(VanillaBiomeAnalyzer.VANILLA_TRAITS.get("frozen_river").toArray(new BiomeTrait[0]));
         assertTrue(traits.containsAll(Set.of(OVERWORLD, RIVER, AQUATIC, AQUATIC_ICY, COLD, ICY)));
     }
 }

@@ -3,6 +3,10 @@
 // Vanilla's particle fragment shader (shaders/core/particle.fsh), made "soft": the particle fades out as it nears
 // whatever is behind it (terrain, the surface of water), so where it passes into them it blends away instead of
 // being cut off in a hard line. linear_fog from fog.glsl is copied in rather than imported.
+//
+// Without Fabulous graphics. soft_particle_scene_depth is this, writing depth, for Fabulous: kept apart because a
+// shader that writes depth at all can't have it tested before it runs, so particles hidden behind terrain would run it
+// too. The two are the same apart from that (a test checks).
 
 uniform sampler2D Sampler0;
 // A copy of the scene's depth, made just before the particles are drawn
@@ -49,9 +53,14 @@ void main() {
     }
     vec4 color = texel * vertexColor * ColorModulator;
 
-    float sceneDistance = linear_depth(texelFetch(DepthSampler, ivec2(gl_FragCoord.xy), 0).r);
+    float sceneDepth = texelFetch(DepthSampler, ivec2(gl_FragCoord.xy), 0).r;
+    float sceneDistance = linear_depth(sceneDepth);
     float particleDistance = linear_depth(gl_FragCoord.z);
     color.a *= clamp((sceneDistance - particleDistance) / SoftDistance, 0.0, 1.0);
+    // Behind the scene, or faded to nothing against it: nothing drawn
+    if (color.a <= 0.0) {
+        discard;
+    }
 
     fragColor = linear_fog(color, vertexDistance, FogStart, FogEnd, FogColor);
 }

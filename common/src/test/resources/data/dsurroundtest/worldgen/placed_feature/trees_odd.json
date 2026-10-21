@@ -1,0 +1,11 @@
+{
+  "feature": "dsurroundtest:trees_odd",
+  "placement": [
+    {
+      "type": "minecraft:count",
+      "count": {
+        "type": "dsurroundtest:custom"
+      }
+    }
+  ]
+}

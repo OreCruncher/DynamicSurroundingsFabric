@@ -1,89 +1,28 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
-import dev.architectury.hooks.level.biome.BiomeHooks;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.BiomeTrait;
 
-import java.util.*;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
-import static java.util.Map.entry;
 import static org.orecruncher.dsurround.config.BiomeTrait.*;
 
 /**
- * Generates biome traits for a biome based on the biome ID
+ * Traits suggested by the words of a biome's id: the last thing looked at, for what nothing else said.
+ * <p>
+ * A name doesn't say which dimension a biome is in, beyond "nether" and "end": a forest, river or beach may be in
+ * the Twilight Forest or the Undergarden as well as the Overworld.
+ * <p>
+ * A name is split into words at underscores and slashes, and a word must be one looked for, or one with a common
+ * ending added ({@link #ENDINGS}): "snowy" and "caves" count, but "ice" isn't found in "dice", "pine" in "alpine" or
+ * "pale" in "palette", as they were when names were searched for the letters anywhere.
  */
 public final class BiomeNameFallbackAnalyzer implements IBiomeTraitAnalyzer {
 
-    static final Map<String, Set<BiomeTrait>> VANILLA_TRAITS = Map.<String, Set<BiomeTrait>>ofEntries(
-            entry("plains", traits(OVERWORLD, PLAINS, TEMPERATE, SPARSE_VEGETATION)),
-            entry("sunflower_plains", traits(OVERWORLD, PLAINS, TEMPERATE, FLORAL, SPARSE_VEGETATION)),
-            entry("snowy_plains", traits(OVERWORLD, PLAINS, COLD, SNOWY, SPARSE_VEGETATION)),
-            entry("ice_spikes", traits(OVERWORLD, PLAINS, COLD, SNOWY, ICY, RARE, SPARSE_VEGETATION)),
-            entry("desert", traits(OVERWORLD, DESERT, HOT, DRY, SANDY, SPARSE_VEGETATION)),
-            entry("swamp", traits(OVERWORLD, SWAMP, TEMPERATE, WET, DENSE_VEGETATION)),
-            entry("mangrove_swamp", traits(OVERWORLD, SWAMP, HOT, WET, DENSE_VEGETATION)),
-            entry("forest", traits(OVERWORLD, FOREST, TEMPERATE, DECIDUOUS, DENSE_VEGETATION)),
-            entry("flower_forest", traits(OVERWORLD, FOREST, TEMPERATE, DECIDUOUS, FLORAL, DENSE_VEGETATION)),
-            entry("birch_forest", traits(OVERWORLD, FOREST, TEMPERATE, DECIDUOUS, DENSE_VEGETATION)),
-            entry("dark_forest", traits(OVERWORLD, FOREST, TEMPERATE, DECIDUOUS, DENSE_VEGETATION, SPOOKY)),
-            entry("old_growth_birch_forest", traits(OVERWORLD, FOREST, TEMPERATE, DECIDUOUS, DENSE_VEGETATION, RARE)),
-            entry("old_growth_pine_taiga", traits(OVERWORLD, FOREST, TAIGA, COLD, CONIFEROUS, DENSE_VEGETATION, RARE)),
-            entry("old_growth_spruce_taiga", traits(OVERWORLD, FOREST, TAIGA, COLD, CONIFEROUS, DENSE_VEGETATION, RARE)),
-            entry("taiga", traits(OVERWORLD, FOREST, TAIGA, COLD, CONIFEROUS, DENSE_VEGETATION)),
-            entry("snowy_taiga", traits(OVERWORLD, FOREST, TAIGA, COLD, SNOWY, CONIFEROUS, DENSE_VEGETATION)),
-            entry("savanna", traits(OVERWORLD, SAVANNA, HOT, DRY, SPARSE_VEGETATION)),
-            entry("savanna_plateau", traits(OVERWORLD, SAVANNA, PLATEAU, HOT, DRY, SPARSE_VEGETATION)),
-            entry("windswept_hills", traits(OVERWORLD, HILL, MOUNTAIN, WINDSWEPT, TEMPERATE, SPARSE_VEGETATION)),
-            entry("windswept_gravelly_hills", traits(OVERWORLD, HILL, MOUNTAIN, WINDSWEPT, TEMPERATE, SPARSE_VEGETATION)),
-            entry("windswept_forest", traits(OVERWORLD, FOREST, HILL, MOUNTAIN, WINDSWEPT, TEMPERATE, SPARSE_VEGETATION)),
-            entry("windswept_savanna", traits(OVERWORLD, SAVANNA, HILL, WINDSWEPT, HOT, DRY, SPARSE_VEGETATION)),
-            entry("jungle", traits(OVERWORLD, JUNGLE, FOREST, HOT, WET, DENSE_VEGETATION)),
-            entry("sparse_jungle", traits(OVERWORLD, JUNGLE, FOREST, HOT, WET, SPARSE_VEGETATION)),
-            entry("bamboo_jungle", traits(OVERWORLD, JUNGLE, FOREST, HOT, WET, DENSE_VEGETATION)),
-            entry("badlands", traits(OVERWORLD, BADLANDS, WASTELAND, HOT, DRY, SPARSE_VEGETATION, SANDY)),
-            entry("eroded_badlands", traits(OVERWORLD, BADLANDS, WASTELAND, HOT, DRY, SPARSE_VEGETATION, SANDY, RARE)),
-            entry("wooded_badlands", traits(OVERWORLD, BADLANDS, WASTELAND, HOT, DRY, SPARSE_VEGETATION, SANDY)),
-            entry("meadow", traits(OVERWORLD, PLAINS, MOUNTAIN, TEMPERATE, FLORAL, SPARSE_VEGETATION)),
-            entry("cherry_grove", traits(OVERWORLD, FOREST, MOUNTAIN, TEMPERATE, FLORAL, DECIDUOUS, DENSE_VEGETATION)),
-            entry("grove", traits(OVERWORLD, FOREST, MOUNTAIN, COLD, SNOWY, CONIFEROUS, DENSE_VEGETATION)),
-            entry("snowy_slopes", traits(OVERWORLD, MOUNTAIN, COLD, SNOWY, SPARSE_VEGETATION)),
-            entry("frozen_peaks", traits(OVERWORLD, MOUNTAIN, COLD, SNOWY, ICY, SPARSE_VEGETATION)),
-            entry("jagged_peaks", traits(OVERWORLD, MOUNTAIN, COLD, SNOWY, SPARSE_VEGETATION)),
-            entry("stony_peaks", traits(OVERWORLD, MOUNTAIN, HOT, DRY, SPARSE_VEGETATION)),
-            entry("river", traits(OVERWORLD, RIVER, WET, TEMPERATE)),
-            entry("frozen_river", traits(OVERWORLD, RIVER, WET, COLD, SNOWY, ICY)),
-            entry("beach", traits(OVERWORLD, BEACH, WET, TEMPERATE, SANDY, SPARSE_VEGETATION)),
-            entry("snowy_beach", traits(OVERWORLD, BEACH, WET, COLD, SNOWY, SANDY, SPARSE_VEGETATION)),
-            entry("stony_shore", traits(OVERWORLD, BEACH, WET, TEMPERATE, SPARSE_VEGETATION)),
-            entry("warm_ocean", traits(OVERWORLD, OCEAN, WET, HOT, WET)),
-            entry("lukewarm_ocean", traits(OVERWORLD, OCEAN, WET, TEMPERATE, WET)),
-            entry("deep_lukewarm_ocean", traits(OVERWORLD, OCEAN, WET, DEEP_OCEAN, TEMPERATE, WET)),
-            entry("ocean", traits(OVERWORLD, OCEAN, WET, TEMPERATE, WET)),
-            entry("deep_ocean", traits(OVERWORLD, OCEAN, WET, DEEP_OCEAN, TEMPERATE, WET)),
-            entry("cold_ocean", traits(OVERWORLD, OCEAN, WET, COLD, WET)),
-            entry("deep_cold_ocean", traits(OVERWORLD, OCEAN, WET, DEEP_OCEAN, COLD, WET)),
-            entry("frozen_ocean", traits(OVERWORLD, OCEAN, WET, COLD, WET, ICY)),
-            entry("deep_frozen_ocean", traits(OVERWORLD, OCEAN, WET, DEEP_OCEAN, COLD, WET, ICY)),
-            entry("mushroom_fields", traits(OVERWORLD, MUSHROOM, MAGICAL, TEMPERATE, RARE, DENSE_VEGETATION)),
-            entry("dripstone_caves", traits(OVERWORLD, UNDERGROUND, CAVE, TEMPERATE, DRY)),
-            entry("lush_caves", traits(OVERWORLD, UNDERGROUND, CAVE, LUSH, TEMPERATE, WET, DENSE_VEGETATION)),
-            entry("deep_dark", traits(OVERWORLD, UNDERGROUND, CAVE, SPOOKY, RARE, TEMPERATE)),
-            entry("pale_garden", traits(OVERWORLD, FOREST, SPOOKY, RARE, TEMPERATE, DECIDUOUS, DENSE_VEGETATION)),
-            entry("sulfur_caves", traits(OVERWORLD, UNDERGROUND, CAVE, HOT, DRY, WASTELAND, RARE)),
-            entry("nether_wastes", traits(NETHER, HOT, DRY, WASTELAND)),
-            entry("crimson_forest", traits(NETHER, HOT, DRY)),
-            entry("warped_forest", traits(NETHER, HOT, DRY)),
-            entry("soul_sand_valley", traits(NETHER, HOT, DRY, WASTELAND, SPOOKY)),
-            entry("basalt_deltas", traits(NETHER, HOT, DRY, WASTELAND)),
-            entry("the_end", traits(END, DRY, WASTELAND)),
-            entry("end_highlands", traits(END, DRY, WASTELAND)),
-            entry("end_midlands", traits(END, DRY, WASTELAND)),
-            entry("small_end_islands", traits(END, DRY, WASTELAND)),
-            entry("end_barrens", traits(END, DRY, WASTELAND)),
-            entry("the_void", traits(VOID, DRY, WASTELAND))
-    );
+    // Endings a word may have past the one looked for: plurals, -y (snowy), -ed (iced), -lands (pinelands)...
+    static final List<String> ENDINGS = List.of("", "s", "es", "y", "ies", "ed", "ing", "ous", "land", "lands", "wood", "woods");
 
     @Override
     public String name() {
@@ -91,47 +30,29 @@ public final class BiomeNameFallbackAnalyzer implements IBiomeTraitAnalyzer {
     }
 
     @Override
-    public void analyze(@NotNull ResourceLocation id, @NotNull Biome biome, @NotNull Set<BiomeTrait> resultCollection) {
-        String path = id.getPath().toLowerCase(Locale.ROOT);
-
-        // If it is a vanilla biome it should be in our map
-        if ("minecraft".equals(id.getNamespace())) {
-            var vanillaTraits = VANILLA_TRAITS.get(path);
-            if (vanillaTraits != null) {
-                resultCollection.addAll(vanillaTraits);
-                return;
-            }
-        }
-
-        // Only do the following analysis if it was not found in the map
-        addNameBasedTraits(path, resultCollection);
-        addClimateTraits(biome, resultCollection);
+    public void analyze(@NotNull BiomeEvidence biome, @NotNull Set<BiomeTrait> resultCollection) {
+        addNameBasedTraits(biome.id().getPath().toLowerCase(Locale.ROOT), resultCollection);
     }
 
-    /**
-     * Traits suggested by a biome's name. Short words that turn up inside other words are matched as whole words
-     * in the name (the parts between underscores and slashes): "end" would otherwise make lavender_field an End
-     * biome.
-     */
     static void addNameBasedTraits(String path, @NotNull Set<BiomeTrait> results) {
-        if (path.contains("nether")) {
+        if (hasWord(path, "nether")) {
             results.add(NETHER);
             results.add(HOT);
             results.add(DRY);
         }
 
-        if (hasWord(path, "end")) {
+        // Matched exactly: "endless" and "ending" aren't the End
+        if (hasExactWord(path, "end")) {
             results.add(END);
             results.add(DRY);
         }
 
-        if (path.contains("cave") || path.contains("caves") || path.contains("underground")) {
+        if (hasWord(path, "cave", "cavern", "underground")) {
             results.add(UNDERGROUND);
             results.add(CAVE);
         }
 
-        if (path.contains("sulfur") || path.contains("sulphur")) {
-            results.add(OVERWORLD);
+        if (hasWord(path, "sulfur", "sulphur")) {
             results.add(UNDERGROUND);
             results.add(CAVE);
             results.add(HOT);
@@ -139,124 +60,139 @@ public final class BiomeNameFallbackAnalyzer implements IBiomeTraitAnalyzer {
             results.add(WASTELAND);
         }
 
-        if (path.contains("ocean")) {
-            results.add(OVERWORLD);
+        if (hasWord(path, "ocean")) {
             results.add(OCEAN);
             results.add(WET);
-            if (path.contains("deep")) {
+            if (hasWord(path, "deep")) {
                 results.add(DEEP_OCEAN);
             }
         }
 
-        if (path.contains("river")) {
-            results.add(OVERWORLD);
+        if (hasWord(path, "river")) {
             results.add(RIVER);
             results.add(WET);
         }
 
-        if (path.contains("forest") || path.contains("woods") || path.contains("grove")) {
-            results.add(OVERWORLD);
+        if (hasWord(path, "forest", "wood", "grove")) {
             results.add(FOREST);
             results.add(DENSE_VEGETATION);
         }
 
-        if (path.contains("taiga") || path.contains("pine") || path.contains("spruce") || path.contains("conifer")) {
+        if (hasWord(path, "taiga", "pine", "spruce", "conifer")) {
             results.add(TAIGA);
             results.add(CONIFEROUS);
         }
 
-        if (path.contains("jungle")) {
+        if (hasWord(path, "jungle")) {
             results.add(JUNGLE);
             results.add(HOT);
             results.add(WET);
         }
 
-        if (path.contains("swamp") || path.contains("bog") || path.contains("marsh")) {
+        if (hasWord(path, "swamp", "bog", "marsh")) {
             results.add(SWAMP);
             results.add(WET);
         }
 
-        if (path.contains("desert")) {
+        if (hasWord(path, "sea")) {
+            results.add(OCEAN);
+            results.add(WET);
+        }
+
+        if (hasWord(path, "stream", "lake")) {
+            results.add(RIVER);
+            results.add(WET);
+        }
+
+        // "grassland" whole, not "grass": grassy_beach is a beach
+        if (hasWord(path, "field", "plain", "prairie", "grassland", "meadow", "steppe", "clearing", "shrub")) {
+            results.add(PLAINS);
+        }
+
+        if (hasWord(path, "savanna", "savannah")) {
+            results.add(SAVANNA);
+        }
+
+        if (hasWord(path, "plateau")) {
+            results.add(PLATEAU);
+        }
+
+        if (hasWord(path, "highland")) {
+            results.add(HILL);
+        }
+
+        if (hasWord(path, "tundra")) {
+            results.add(PLAINS);
+            results.add(SNOWY);
+        }
+
+        if (hasWord(path, "glacier")) {
+            results.add(SNOWY);
+            results.add(ICY);
+        }
+
+        if (hasWord(path, "desert")) {
             results.add(DESERT);
             results.add(HOT);
             results.add(DRY);
             results.add(SANDY);
         }
 
-        if (path.contains("badlands") || path.contains("wasteland")) {
+        if (hasWord(path, "badland", "wasteland")) {
             results.add(BADLANDS);
             results.add(WASTELAND);
             results.add(HOT);
             results.add(DRY);
         }
 
-        if (path.contains("beach") || path.contains("shore")) {
-            results.add(OVERWORLD);
+        if (hasWord(path, "beach", "shore")) {
             results.add(BEACH);
-            results.add(WET);
+            // Vanilla's beach is wet; its stony shore isn't
+            if (hasWord(path, "beach"))
+                results.add(WET);
         }
 
-        if (path.contains("snow") || path.contains("frozen") || path.contains("ice")) {
+        if (hasWord(path, "snow", "frozen", "ice", "icy")) {
             results.add(COLD);
             results.add(SNOWY);
         }
 
-        if (path.contains("peak") || path.contains("slope") || path.contains("mountain")) {
+        if (hasWord(path, "peak", "slope", "mountain")) {
             results.add(MOUNTAIN);
         }
 
-        if (path.contains("flower") || path.contains("meadow") || path.contains("cherry")) {
+        if (hasWord(path, "flower", "meadow", "cherry")) {
             results.add(FLORAL);
         }
 
-        if (path.contains("dark") || path.contains("ominous") || path.contains("pale")) {
+        if (hasWord(path, "dark", "ominous", "pale")) {
             results.add(SPOOKY);
         }
 
-        if (path.contains("magic") || path.contains("magik")) {
+        if (hasWord(path, "magic", "magical", "magik")) {
             results.add(MAGICAL);
         }
     }
 
-    private static void addClimateTraits(Biome biome, Set<BiomeTrait> results) {
-        // Initialization of BiomeInfo depends on this routine. We need to use the
-        // biome property information directly.
-        var properties = BiomeHooks.getBiomeProperties(biome);
-        addClimateTraits(properties.getClimateProperties().getTemperature(), properties.getClimateProperties().getDownfall(), results);
+    /**
+     * Whether one of the words of {@code path} (the parts between underscores and slashes) is one of {@code words},
+     * possibly with one of the {@link #ENDINGS}
+     */
+    static boolean hasWord(String path, String... words) {
+        for (var part : path.split("[_/]"))
+            for (var word : words)
+                if (part.startsWith(word) && ENDINGS.contains(part.substring(word.length())))
+                    return true;
+        return false;
     }
 
     /**
-     * Traits from a biome's climate: cold, temperate or hot by its temperature, and dry or wet by its downfall.
+     * Whether {@code word} is one of the words of {@code path}, as it is
      */
-    static void addClimateTraits(float temperature, float downfall, Set<BiomeTrait> results) {
-        if (temperature <= 0.15F) {
-            results.add(COLD);
-        } else if (temperature >= 0.95F) {
-            results.add(HOT);
-        } else {
-            results.add(TEMPERATE);
-        }
-
-        if (downfall <= 0.15F) {
-            results.add(DRY);
-        } else if (downfall >= 0.70F) {
-            results.add(WET);
-        }
-    }
-
-    /**
-     * Whether {@code word} is one of the words of {@code path}: the parts between underscores and slashes.
-     */
-    static boolean hasWord(String path, String word) {
+    static boolean hasExactWord(String path, String word) {
         for (var part : path.split("[_/]"))
             if (part.equals(word))
                 return true;
         return false;
-    }
-
-    private static Set<BiomeTrait> traits(BiomeTrait... traits) {
-        var result = EnumSet.noneOf(BiomeTrait.class);
-        Collections.addAll(result, traits);
-        return result;
     }
 }

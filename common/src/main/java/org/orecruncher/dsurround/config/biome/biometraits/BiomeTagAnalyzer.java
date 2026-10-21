@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.NotNull;
@@ -33,11 +32,13 @@ public final class BiomeTagAnalyzer implements IBiomeTraitAnalyzer {
     }
 
     @Override
-    public void analyze(@NotNull ResourceLocation id, @NotNull Biome biome, @NotNull Set<BiomeTrait> resultCollection) {
+    public void analyze(@NotNull BiomeEvidence biome, @NotNull Set<BiomeTrait> resultCollection) {
+        if (biome.biome() == null)
+            return;
         // Have to do it this way so that the client side tagging has a chance.  When connecting to
         // vanilla servers, they will ONLY have the Minecraft tags, not the Fabric ones.
         for (var tagEntry : tagToTraitMap.entrySet())
-            if (this.tagLibrary.is(tagEntry.getKey(), biome))
+            if (this.tagLibrary.is(tagEntry.getKey(), biome.biome()))
                 resultCollection.add(tagEntry.getValue());
     }
 }

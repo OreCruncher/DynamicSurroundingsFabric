@@ -2,7 +2,10 @@ package org.orecruncher.dsurround.effects;
 
 import com.google.gson.JsonParser;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import net.minecraft.SharedConstants;
 import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -10,11 +13,23 @@ import org.orecruncher.dsurround.lib.threading.RecordingLog;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ModShaderTests {
+
+    // Constants, which a shader's id comes from, needs the game's registries. Run first on its own, this class
+    // otherwise fails to load Constants and takes every later test that uses it down too.
+    static {
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+    }
 
     /**
      * A ShaderInstance can't be built without a GL context; ModShader only keeps hold of it, so an empty one made
@@ -101,16 +116,59 @@ public class ModShaderTests {
         for (var shader : ModShaders.SHADERS) {
             assertTrue(ids.add(shader.id()), "registered twice: " + shader.id());
             var base = "assets/" + shader.id().getNamespace() + "/shaders/core/" + shader.id().getPath();
-            for (var extension : new String[]{".json", ".vsh", ".fsh"})
-                assertNotNull(getClass().getClassLoader().getResource(base + extension), "missing " + base + extension);
+            assertNotNull(getClass().getClassLoader().getResource(base + ".json"), "missing " + base + ".json");
 
-            // The definition names this shader's own programs
+            // The definition names this shader's own fragment program, and a vertex program that is there (it may
+            // share another's)
             try (var reader = new InputStreamReader(getClass().getClassLoader().getResourceAsStream(base + ".json"), StandardCharsets.UTF_8)) {
                 var json = JsonParser.parseReader(reader).getAsJsonObject();
-                assertEquals(shader.id().toString(), json.get("vertex").getAsString());
                 assertEquals(shader.id().toString(), json.get("fragment").getAsString());
+                assertNotNull(getClass().getClassLoader().getResource(base + ".fsh"), "missing " + base + ".fsh");
+                var vertex = ResourceLocation.parse(json.get("vertex").getAsString());
+                var vertexPath = "assets/" + vertex.getNamespace() + "/shaders/core/" + vertex.getPath() + ".vsh";
+                assertNotNull(getClass().getClassLoader().getResource(vertexPath), "missing " + vertexPath);
             }
         }
-        assertEquals(3, ids.size());
+        assertEquals(10, ids.size());
+    }
+
+    private String codeOf(String shader) throws Exception {
+        try (var in = getClass().getClassLoader().getResourceAsStream("assets/dsurround/shaders/core/" + shader)) {
+            assertNotNull(in, shader);
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8).lines()
+                    .map(line -> line.replaceAll("//.*", "").strip())
+                    .filter(line -> !line.isEmpty())
+                    .collect(Collectors.joining("\n"));
+        }
+    }
+
+    @Test
+    void noShaderReturnsWithoutAValue() throws Exception {
+        // Veil re-reads every core shader to add its buffers, and its parser (glsl-processor) fails on "return;",
+        // logging an error with a stack trace at every resource reload
+        var anchor = getClass().getClassLoader().getResource("assets/dsurround/shaders/core/aurora.fsh");
+        assertNotNull(anchor);
+        var folder = Path.of(anchor.toURI()).getParent().getParent();
+        List<Path> programs;
+        try (var files = Files.walk(folder)) {
+            programs = files.filter(file -> file.toString().matches(".*\\.(vsh|fsh|glsl)")).toList();
+        }
+        assertFalse(programs.isEmpty());
+        var bareReturn = Pattern.compile("\\breturn\\s*;");
+        for (var program : programs) {
+            var code = codeOf(folder.resolve("core").relativize(program).toString().replace('\\', '/'));
+            assertFalse(bareReturn.matcher(code).find(), program.getFileName() + " has a return without a value");
+        }
+    }
+
+    @Test
+    void theSoftParticleShadersDifferOnlyInWritingDepth() throws Exception {
+        // Regression: the depth write was chosen by a uniform, so the shader wrote depth on every setting, and early
+        // depth testing was lost even where nothing was written. The Fabulous one is apart; it must not drift
+        var plain = codeOf("soft_particle.fsh");
+        var sceneDepth = codeOf("soft_particle_scene_depth.fsh");
+        assertFalse(plain.contains("gl_FragDepth"), "soft_particle.fsh writes depth");
+        assertTrue(sceneDepth.contains("gl_FragDepth = sceneDepth;"));
+        assertEquals(plain, sceneDepth.replace("gl_FragDepth = sceneDepth;\n", ""));
     }
 }

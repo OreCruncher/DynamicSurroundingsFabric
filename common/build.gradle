@@ -19,6 +19,9 @@ dependencies {
         exclude(group: "net.fabricmc.fabric-api")
     }
 
+    // Simple Voice Chat's plugin API, for runtime.audio.voicechat. Voice chat provides it at runtime
+    compileOnly "de.maxhenkel.voicechat:voicechat-api:$rootProject.voicechat_api_version"
+
     // Generates the event invokers (see lib.events.GenerateInvoker). Build time only; nothing is shipped.
     annotationProcessor project(':processor')
     testAnnotationProcessor project(':processor')

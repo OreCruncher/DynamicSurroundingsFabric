@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "twilightforest:highlands_underground",
+      "required": false
+    },
+    {
+      "id": "twilightforest:underground",
+      "required": false
+    }
+  ]
+}

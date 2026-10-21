@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.lib.compat;
 
-import dev.architectury.platform.Platform;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.function.ThrottledBooleanSupplier;
+import org.orecruncher.dsurround.lib.platform.KnownMod;
 
 import java.lang.reflect.Method;
 
@@ -14,35 +14,42 @@ import java.lang.reflect.Method;
  */
 public final class IrisCompat {
 
+    // Asked by every effect drawn with a shader of ours, many times a frame; a player changes it now and then
+    private static final long SHADER_PACK_CHECK_NANOS = 50_000_000L;
+    // Only when the API was reached
     @Nullable
-    private static final Object API;
-    @Nullable
-    private static final Method IS_SHADER_PACK_IN_USE;
+    private static final ThrottledBooleanSupplier SHADER_PACK_IN_USE;
 
     static {
-        Object api = null;
-        Method method = null;
-        if (Platform.isModLoaded(Constants.IRIS) || Platform.isModLoaded(Constants.OCULUS)) {
+        ThrottledBooleanSupplier inUse = null;
+        if (KnownMod.IRIS.isInstalled()) {
             try {
                 var apiClass = Class.forName("net.irisshaders.iris.api.v0.IrisApi");
-                api = apiClass.getMethod("getInstance").invoke(null);
-                method = apiClass.getMethod("isShaderPackInUse");
+                Object api = apiClass.getMethod("getInstance").invoke(null);
+                Method method = apiClass.getMethod("isShaderPackInUse");
+                inUse = new ThrottledBooleanSupplier(() -> askShaderPackInUse(api, method), SHADER_PACK_CHECK_NANOS,
+                        System::nanoTime);
             } catch (ReflectiveOperationException | LinkageError e) {
                 Library.LOGGER.warn("Unable to reach the Iris API; effects drawn with shaders may not suit shader packs: %s", e);
             }
         }
-        API = api;
-        IS_SHADER_PACK_IN_USE = method;
+        SHADER_PACK_IN_USE = inUse;
     }
 
     private IrisCompat() {
     }
 
+    /**
+     * Whether an Iris shader pack is in use. Kept for a short while (a tick or so) rather than asked by reflection on
+     * every call.
+     */
     public static boolean isShaderPackInUse() {
-        if (API == null || IS_SHADER_PACK_IN_USE == null)
-            return false;
+        return SHADER_PACK_IN_USE != null && SHADER_PACK_IN_USE.getAsBoolean();
+    }
+
+    private static boolean askShaderPackInUse(Object api, Method method) {
         try {
-            return (boolean) IS_SHADER_PACK_IN_USE.invoke(API);
+            return (boolean) method.invoke(api);
         } catch (ReflectiveOperationException | RuntimeException e) {
             return false;
         }

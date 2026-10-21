@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "the_bumblezone:howling_constructs",
+      "required": false
+    }
+  ]
+}

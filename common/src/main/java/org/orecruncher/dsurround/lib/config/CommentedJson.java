@@ -12,11 +12,6 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.Comment;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.DoubleSlider;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.DoubleRange;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.IntegerRange;
-import org.orecruncher.dsurround.lib.config.ConfigurationData.Slider;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -31,7 +26,8 @@ import java.util.List;
  * <p>
  * Writing lays the JSON out as Gson's pretty printing does, with {@code //} comments above each field: its
  * {@link Comment}, then its range ({@link IntegerRange}, {@link Slider}, {@link DoubleRange}, {@link DoubleSlider}),
- * the values an enum can take, and the default value. Gson builds the JSON, so it is the same as Gson would write; only the comments are added.
+ * the values an enum can take, the default value, and whether a change needs a restart ({@link RestartRequired}).
+ * Gson builds the JSON, so it is the same as Gson would write; only the comments are added.
  * <p>
  * A field without a comment of its own uses its type's only if the type's comment is marked
  * {@link Comment#inherit()}. Defaults come from a newly constructed instance of the object, so they are only shown
@@ -180,6 +176,8 @@ final class CommentedJson {
          * The comment lines for a field: its comment, then a line with its range and default, either of which
          * may be missing.
          */
+        // TODO: Also emit a line when the field is marked @RestartRequired, saying whether a restart of Minecraft
+        //  (client = true) or rejoining the world (client = false) is needed for a change to take effect.
         List<String> commentLines(@Nullable Field field, JsonElement value, @Nullable Object fieldDefault) {
             var lines = new ArrayList<String>();
             if (field == null)
@@ -207,6 +205,10 @@ final class CommentedJson {
                     lines.add(Character.toUpperCase(line.charAt(0)) + line.substring(1));
                 }
             }
+
+            var restart = restartNoteOf(field);
+            if (restart != null)
+                lines.add(restart);
             return lines;
         }
 
@@ -268,6 +270,18 @@ final class CommentedJson {
                     : "range: " + formatNumber(doubleRange.min()) + " - " + formatNumber(doubleRange.max());
 
         return null;
+    }
+
+    /**
+     * What a change to the field needs before it takes effect ({@link RestartRequired}), or null if nothing.
+     */
+    static @Nullable String restartNoteOf(Field field) {
+        var restart = field.getAnnotation(RestartRequired.class);
+        if (restart == null)
+            return null;
+        return restart.client()
+                ? "Changes take effect after restarting Minecraft"
+                : "Changes take effect after leaving and rejoining the world";
     }
 
     /**

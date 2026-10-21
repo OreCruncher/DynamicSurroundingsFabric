@@ -33,4 +33,19 @@ public interface IDimensionInformation {
      * Indicates whether the compass should "wobble" making the bearing unreadable
      */
     boolean getCompassWobble();
+
+    /**
+     * Whether the mod's particle rain, snow and dust storms are drawn here, in place of the dimension's own weather
+     */
+    boolean particleWeather();
+
+    /**
+     * Whether the wind blows here
+     */
+    boolean simulateWind();
+
+    /**
+     * Whether mist lies on the ground here, in the biomes given it
+     */
+    boolean groundFog();
 }

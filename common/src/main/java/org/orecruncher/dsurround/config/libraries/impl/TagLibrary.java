@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
+import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -47,7 +48,7 @@ import static java.util.stream.Collectors.*;
  * ({@link ModTags}) exist only on the client: their members are loaded from tag files by {@link ClientTagLoader}
  * and cached here.
  * <p>
- * For the mod's tags on blocks, items, fluids and entity types the cache holds the member objects themselves, so a
+ * For the mod's tags on blocks, items, fluids, entity types and particle types the cache holds the member objects themselves, so a
  * check is one map lookup and one identity-set lookup. These checks run for every block the area scanner reads
  * (heat sources, steam producers, occlusion), so they need to be cheap. Biomes come from a per-world registry, so
  * their tags stay keyed by id.
@@ -59,7 +60,7 @@ public class TagLibrary implements ITagLibrary {
     // Registries whose mod tags are cached as sets of the member objects. These registries are fixed for the
     // session, so the objects stay valid.
     private static final Set<ResourceKey<? extends Registry<?>>> OBJECT_REGISTRIES = Set.of(
-            Registries.BLOCK, Registries.ITEM, Registries.FLUID, Registries.ENTITY_TYPE);
+            Registries.BLOCK, Registries.ITEM, Registries.FLUID, Registries.ENTITY_TYPE, Registries.PARTICLE_TYPE);
 
     private final IModLog logger;
     private final ISystemClock systemClock;
@@ -142,6 +143,12 @@ public class TagLibrary implements ITagLibrary {
             return false;
         var members = this.memberObjects(tagKey);
         return members != null ? members.contains(entry.getType()) : entry.is(tagKey);
+    }
+
+    @Override
+    public boolean is(TagKey<ParticleType<?>> tagKey, ParticleType<?> entry) {
+        var members = this.memberObjects(tagKey);
+        return members != null ? members.contains(entry) : BuiltInRegistries.PARTICLE_TYPE.wrapAsHolder(entry).is(tagKey);
     }
 
     /**

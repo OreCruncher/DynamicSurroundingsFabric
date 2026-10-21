@@ -19,6 +19,7 @@ import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.IReloadEvent;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.function.Guard;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.LogThrottle;
@@ -37,6 +38,11 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public final class BiomeLibrary implements IBiomeLibrary {
+
+    // In the registry, but never generated, so left out of the biomes to check: TerraBlender's stands in for
+    // biomes it places later
+    private static final Set<ResourceLocation> NOT_GENERATED = Set.of(
+            ResourceLocation.fromNamespaceAndPath("terrablender", "deferred_placeholder"));
 
     private static final String FILE_NAME = "biomes.json";
     private static final Codec<List<BiomeConfigRule>> CODEC = Codec.list(BiomeConfigRule.CODEC);
@@ -70,6 +76,10 @@ public final class BiomeLibrary implements IBiomeLibrary {
     // once per biome
     private final LogThrottle<BiomeConfigRule> ruleFailures;
 
+    // Applying the rules to a biome failing outside any one rule: a bug, so every one is logged, at most once per biome
+    // per reload
+    private final Guard applyRules;
+
     // Current version of the configs that are loaded.
     private int version = 0;
 
@@ -78,6 +88,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
         this.soundLibrary = soundLibrary;
         this.tagLibrary = tagLibrary;
         this.ruleFailures = LogThrottle.oncePerKey(this.logger, "biome rule failures", "the next reload");
+        this.applyRules = Guard.named("Applying biome rules", this.logger, Guard.UNLIMITED);
         this.biomeConditionEvaluator = new BiomeConditionEvaluator(this, this.logger, platformFunctions);
     }
 
@@ -89,6 +100,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
         // Every scope: biome info depends on tags as well as rules, and a tag sync follows every new biome registry
         this.biomes.clear();
         this.ruleFailures.reset();
+        this.applyRules.reset();
         this.biomeConditionEvaluator.reset();
 
         if (scope == IReloadEvent.Scope.TAGS) {
@@ -101,7 +113,14 @@ public final class BiomeLibrary implements IBiomeLibrary {
         this.biomeConfigs.clear();
 
         var findResults = resourceUtilities.findModResources(CODEC, FILE_NAME);
-        findResults.forEach(result -> this.biomeConfigs.addAll(result.resourceContent()));
+        findResults.forEach(result -> {
+            this.biomeConfigs.addAll(result.resourceContent());
+            // Still applied, but only added after the guesses: a tag file settles a trait before any guess
+            var withTraits = result.resourceContent().stream().filter(rule -> rule.clearTraits() || !rule.traits().isEmpty()).count();
+            if (withTraits > 0)
+                this.logger.warn("%d biome rules from %s set or clear traits, which is deprecated: use tag files (dsconfigs/tags/worldgen/biome/is_<trait>.json) instead",
+                        withTraits, result.namespace());
+        });
 
         // Ensure they are in priority order where the least is towards the beginning
         // of the list.
@@ -165,11 +184,12 @@ public final class BiomeLibrary implements IBiomeLibrary {
         final var builder = new BiomeInfoBuilder(this.version, id, name, traits, biome, this.services());
 
         // Collect any trait changes into the trait collection before applying
-        // general rules as these traits can influence decisions.
-        this.applyTraits(biome, builder);
+        // general rules as these traits can influence decisions. Each rule's own failure is reported by the rule; a
+        // failure outside them still leaves the biome built, so it isn't tried again on every lookup.
+        this.applyRules.run(() -> this.applyTraits(biome, builder), id);
 
         // Apply rule configs
-        Guard.execute(() -> applyRuleConfigs(biome, builder));
+        this.applyRules.run(() -> this.applyRuleConfigs(biome, builder), id);
 
         final var result = builder.build();
         this.biomes.put(biome, result);
@@ -192,49 +212,31 @@ public final class BiomeLibrary implements IBiomeLibrary {
         return this.biomeConditionEvaluator.eval(biome, info, script);
     }
 
+    // A rule that throws is reported once per reload and skipped; the rest still apply
     private void applyTraits(Biome biome, BiomeInfoBuilder builder) {
-        this.getNonSyntheticBiomeRules(rule -> !rule.traits().isEmpty())
-                .forEach(rule -> {
-                    try {
-                        var applies = this.biomeConditionEvaluator.check(biome, builder, rule.biomeSelector());
-                        if (applies) {
-                            builder.mergeTraits(rule);
-                        }
-                    } catch (Throwable t) {
-                        this.reportRuleFailure(rule, t, "Unable to apply traits from rule");
-                    }
-                });
+        RuleGuard.forEach(this.getNonSyntheticBiomeRules(rule -> !rule.traits().isEmpty()),
+                rule -> {
+                    if (this.biomeConditionEvaluator.check(biome, builder, rule.biomeSelector()))
+                        builder.mergeTraits(rule);
+                },
+                (rule, t) -> this.ruleFailures.error(rule, t, "Unable to apply traits from rule [%s]", rule));
     }
 
     private void applyRuleConfigs(Biome biome, BiomeInfoBuilder builder) {
-        this.getNonSyntheticBiomeRules(rule -> rule.traits().isEmpty())
-                .forEach(rule -> {
-                    try {
-                        var applies = this.biomeConditionEvaluator.check(biome, builder, rule.biomeSelector());
-                        if (applies) {
-                            builder.apply(rule);
-                        }
-                    } catch (Throwable t) {
-                        this.reportRuleFailure(rule, t, "Unable to process biome rule");
-                    }
-                });
+        RuleGuard.forEach(this.getNonSyntheticBiomeRules(rule -> rule.traits().isEmpty()),
+                rule -> {
+                    if (this.biomeConditionEvaluator.check(biome, builder, rule.biomeSelector()))
+                        builder.apply(rule);
+                },
+                (rule, t) -> this.ruleFailures.error(rule, t, "Unable to process biome rule [%s]", rule));
     }
 
-    /**
-     * Logs a rule's failure the first time it happens after a reload. Errors the JVM can't recover from (out of
-     * memory, stack overflow) are rethrown rather than swallowed.
-     */
-    private void reportRuleFailure(BiomeConfigRule rule, Throwable t, String message) {
-        if (t instanceof VirtualMachineError fatal)
-            throw fatal;
-        this.ruleFailures.error(rule, t, "%s [%s]", message, rule);
-    }
-
-    private Stream<BiomeConfigRule> getNonSyntheticBiomeRules(Predicate<BiomeConfigRule> filter) {
+    private Iterable<BiomeConfigRule> getNonSyntheticBiomeRules(Predicate<BiomeConfigRule> filter) {
         // Filter out synthetic biome data
         return this.biomeConfigs.stream()
                 .filter(c -> !c.biomeSelector().asString().startsWith("@"))
-                .filter(filter);
+                .filter(filter)
+                .toList();
     }
 
     private static ResourceLocation getBiomeId(Biome biome) {
@@ -261,6 +263,94 @@ public final class BiomeLibrary implements IBiomeLibrary {
                 .map(BiomeInfo::toString)
                 .sorted();
 
-        return Stream.of(realBiomes, fakeBiomes).flatMap(Function.identity());
+        return Stream.of(realBiomes, fakeBiomes, biomesToCheck()).flatMap(Function.identity());
+    }
+
+    /**
+     * The biomes whose traits should be checked (see {@link BiomeCheck}): guessed from music, grass or name, or no
+     * dimension or kind at all. Those a tag file would settle. By id, so each mod's are together. In single player,
+     * dimensions are checked against the world's generation, biomes it never generates are left out, and each
+     * dimension's biomes are listed after.
+     */
+    private Stream<String> biomesToCheck() {
+        var generation = generation();
+        var ownDimensions = new HashSet<String>();
+        RegistryUtils.getRegistry(Registries.DIMENSION_TYPE)
+                .ifPresent(types -> types.keySet().forEach(id -> ownDimensions.add(id.getNamespace())));
+        ownDimensions.remove("minecraft");
+
+        var notGenerated = new int[1];
+        var lines = getActiveRegistry()
+                .stream()
+                .map(this::getBiomeInfo)
+                .filter(info -> !NOT_GENERATED.contains(info.getBiomeId()))
+                .sorted(Comparator.comparing(info -> info.getBiomeId().toString()))
+                .<String>mapMulti((info, out) -> {
+                    Set<ResourceLocation> generatedIn = null;
+                    if (generation != null) {
+                        generatedIn = generation.biomeDimensions().get(info.getBiomeId());
+                        if (generatedIn == null) {
+                            notGenerated[0]++;
+                            return;
+                        }
+                    }
+                    var notes = BiomeCheck.notes(info.getTraits(), generatedIn, ownDimensions.contains(info.getBiomeId().getNamespace()));
+                    if (!notes.isEmpty())
+                        out.accept("  " + info.getBiomeId() + ": " + String.join("; ", notes));
+                })
+                .toList();
+
+        var header = lines.isEmpty()
+                ? "Biomes to check: none"
+                : "Biomes to check (%d): traits guessed from music, grass or name, or no dimension or kind (a tag file would settle them)".formatted(lines.size());
+        var source = generation == null
+                ? "Dimensions are guessed in multiplayer; a dump in single player checks them against the world's generation"
+                : "Dimensions checked against this world's generation; %d %s it never generates %s left out".formatted(
+                        notGenerated[0], notGenerated[0] == 1 ? "biome" : "biomes", notGenerated[0] == 1 ? "is" : "are");
+        var result = Stream.concat(Stream.of(header, source), lines.stream());
+        if (generation != null)
+            result = Stream.concat(result, generation.describe());
+        return result;
+    }
+
+    /**
+     * Which biomes each dimension generates, from the integrated server; null in multiplayer, where the client isn't
+     * told. A dimension that hasn't been visited is included: its generator is set up with the world.
+     */
+    private static @Nullable Generation generation() {
+        var server = GameUtils.getMC().getSingleplayerServer();
+        if (server == null)
+            return null;
+        var dimensions = new TreeMap<ResourceLocation, List<ResourceLocation>>(Comparator.comparing(ResourceLocation::toString));
+        var biomeDimensions = new HashMap<ResourceLocation, Set<ResourceLocation>>();
+        server.registryAccess().registryOrThrow(Registries.LEVEL_STEM).entrySet().forEach(stem -> {
+            var dimension = stem.getKey().location();
+            var biomes = new ArrayList<ResourceLocation>();
+            for (var biome : stem.getValue().generator().getBiomeSource().possibleBiomes())
+                biome.unwrapKey().ifPresent(key -> {
+                    biomes.add(key.location());
+                    biomeDimensions.computeIfAbsent(key.location(), k -> new HashSet<>()).add(dimension);
+                });
+            biomes.sort(Comparator.comparing(ResourceLocation::toString));
+            dimensions.put(dimension, biomes);
+        });
+        return new Generation(dimensions, biomeDimensions);
+    }
+
+    /**
+     * @param dimensions      each dimension's biomes
+     * @param biomeDimensions each biome's dimensions
+     */
+    private record Generation(Map<ResourceLocation, List<ResourceLocation>> dimensions,
+                              Map<ResourceLocation, Set<ResourceLocation>> biomeDimensions) {
+        Stream<String> describe() {
+            var lines = new ArrayList<String>();
+            lines.add("Biomes each dimension generates (this world)");
+            this.dimensions.forEach((dimension, biomes) -> {
+                lines.add("  %s (%d)".formatted(dimension, biomes.size()));
+                biomes.forEach(biome -> lines.add("    " + biome));
+            });
+            return lines.stream();
+        }
     }
 }

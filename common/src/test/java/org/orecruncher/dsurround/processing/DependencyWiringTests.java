@@ -17,6 +17,8 @@ import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.processing.accents.FootstepAccents;
 import org.orecruncher.dsurround.processing.fog.HolisticFogRangeCalculator;
 import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
+import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
+import org.orecruncher.dsurround.runtime.variables.WeatherVariables;
 
 import java.util.List;
 
@@ -45,6 +47,13 @@ public class DependencyWiringTests {
 
         assertNeeds(problems, HolisticFogRangeCalculator.class, IBiomeLibrary.class);
         assertNeeds(problems, HolisticFogRangeCalculator.class, ISeasonalInformation.class);
+        assertNeeds(problems, HolisticFogRangeCalculator.class, IWeatherSimulation.class);
+    }
+
+    @Test
+    void theAuroraFadesWithTheSimulatedStorm() {
+        // It dims by the storm's strength, not the game's own rain level, so it needs the weather simulation
+        assertNeeds(problemsFor(AuroraHandler.class), AuroraHandler.class, IWeatherSimulation.class);
     }
 
     @Test
@@ -71,6 +80,7 @@ public class DependencyWiringTests {
         var problems = problemsFor(ConditionEvaluator.class);
         assertNeeds(problems, PlatformFunctions.class, ISystemClock.class);
         assertNeeds(problems, BiomeVariables.class, IBiomeLibrary.class);
+        assertNeeds(problems, WeatherVariables.class, IWeatherSimulation.class);
         // Each missing type is reported once, by whichever variable set reaches it first
         var seasons = "needs '" + ISeasonalInformation.class.getName() + "'";
         assertTrue(problems.stream().anyMatch(p -> p.contains(seasons)), () -> "expected " + seasons + " in " + problems);

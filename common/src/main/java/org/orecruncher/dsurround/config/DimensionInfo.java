@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.config;
 
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
@@ -8,6 +9,11 @@ import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.data.DimensionConfigRule;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
+
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Settings for one dimension, built from the world itself and then adjusted by the matching dimension config rules.
@@ -34,6 +40,12 @@ public class DimensionInfo {
     protected boolean alwaysOutside = false;
     protected boolean playBiomeSounds = true;
     protected boolean compassWobble = false;
+    // Whether the mod's particle rain, snow and dust storms take the place of the dimension's weather
+    protected boolean particleWeather = true;
+    // Whether the wind blows here: it drifts the weather, mist, steam, smoke and flames
+    protected boolean simulateWind = true;
+    // Whether mist lies on the ground here, in the biomes given it
+    protected boolean groundFog = true;
 
     // The dimension's own cloud height, used unless a rule sets one
     private final int defaultCloudHeight;
@@ -61,6 +73,12 @@ public class DimensionInfo {
 
         this.compassWobble = !world.dimensionType().natural();
 
+        // Guesses, which a rule can overrule: a dimension with a sky has wind and ground fog, and one that draws its
+        // weather as vanilla does gets particle weather in its place
+        this.simulateWind = world.dimensionType().hasSkyLight();
+        this.groundFog = world.dimensionType().hasSkyLight();
+        this.particleWeather = !(world instanceof ClientLevel clientLevel) || hasVanillaWeather(clientLevel.effects());
+
         // Valid even if finish() is never called
         this.finish();
     }
@@ -79,6 +97,40 @@ public class DimensionInfo {
     }
 
     /**
+     * The methods a dimension's effects override to draw or tick their own weather: NeoForge's renderSnowAndRain and
+     * tickRain (IDimensionSpecialEffectsExtension). None on Fabric, where effects can't.
+     */
+    private static final Set<String> WEATHER_HOOKS = Arrays.stream(DimensionSpecialEffects.class.getMethods())
+            .map(Method::getName)
+            .filter(name -> name.equals("renderSnowAndRain") || name.equals("tickRain"))
+            .collect(Collectors.toUnmodifiableSet());
+
+    /**
+     * Whether a dimension draws its weather as vanilla does. Vanilla's own effects (the overworld's, the nether's and
+     * the end's) do. A mod's effects (Stellar View replaces vanilla's, for its sky) do unless they override one of
+     * the platform's weather hooks; without hooks to look for, any mod's effects may draw their own. Particle weather
+     * drawn first would hide a dimension's own, so that is left to the dimension unless a rule says otherwise.
+     */
+    public static boolean hasVanillaWeather(DimensionSpecialEffects effects) {
+        return hasVanillaWeather(effects, WEATHER_HOOKS);
+    }
+
+    static boolean hasVanillaWeather(DimensionSpecialEffects effects, Set<String> weatherHooks) {
+        var type = effects.getClass();
+        if (type == DimensionSpecialEffects.OverworldEffects.class
+                || type == DimensionSpecialEffects.NetherEffects.class
+                || type == DimensionSpecialEffects.EndEffects.class)
+            return true;
+        if (weatherHooks.isEmpty())
+            return false;
+        for (Class<?> c = type; c != null && c != DimensionSpecialEffects.class; c = c.getSuperclass())
+            for (var method : c.getDeclaredMethods())
+                if (weatherHooks.contains(method.getName()))
+                    return false;
+        return true;
+    }
+
+    /**
      * Applies a dimension config rule, if it is for this dimension. Only the values the rule specifies change.
      */
     public void update(DimensionConfigRule config) {
@@ -89,6 +141,9 @@ public class DimensionInfo {
             config.playBiomeSounds().ifPresent(v -> this.playBiomeSounds = v);
             config.cloudHeight().ifPresent(v -> this.configuredCloudHeight = v);
             config.compassWobble().ifPresent(v -> this.compassWobble = v);
+            config.particleWeather().ifPresent(v -> this.particleWeather = v);
+            config.simulateWind().ifPresent(v -> this.simulateWind = v);
+            config.groundFog().ifPresent(v -> this.groundFog = v);
         }
     }
 
@@ -136,6 +191,18 @@ public class DimensionInfo {
 
     public boolean getCompassWobble() {
         return this.compassWobble;
+    }
+
+    public boolean particleWeather() {
+        return this.particleWeather;
+    }
+
+    public boolean simulateWind() {
+        return this.simulateWind;
+    }
+
+    public boolean groundFog() {
+        return this.groundFog;
     }
 
 }

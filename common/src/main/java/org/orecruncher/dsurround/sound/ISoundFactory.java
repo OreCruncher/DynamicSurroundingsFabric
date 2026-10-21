@@ -21,7 +21,22 @@ public interface ISoundFactory {
      * Creates an attenuated sound instance that is attached to the entity and will move as
      * the entity moves.  The sound instance is not repeated.
      */
-    EntityBoundSoundInstance attachToEntity(Entity entity);
+    default EntityBoundSoundInstance attachToEntity(Entity entity) {
+        return this.attachToEntity(entity, 1F);
+    }
+
+    /**
+     * Creates an attenuated sound instance that is attached to the entity and will move as the entity moves. The
+     * provided factor scales the sound volume. The sound instance is not repeated.
+     */
+    EntityBoundSoundInstance attachToEntity(Entity entity, float volumeScale);
+
+    /**
+     * Whether, as a biome's ambient loop, it plays as loud as the wind blows: wind sounds
+     */
+    default boolean followsWind() {
+        return false;
+    }
 
     /**
      * Creates a sound instance that has no attenuation and that will repeat without any

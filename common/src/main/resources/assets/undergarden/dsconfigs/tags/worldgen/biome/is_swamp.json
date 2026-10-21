@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "undergarden:blood_mushroom_bog",
+      "required": false
+    },
+    {
+      "id": "undergarden:indigo_mushroom_bog",
+      "required": false
+    },
+    {
+      "id": "undergarden:ink_mushroom_bog",
+      "required": false
+    },
+    {
+      "id": "undergarden:veil_mushroom_bog",
+      "required": false
+    }
+  ]
+}

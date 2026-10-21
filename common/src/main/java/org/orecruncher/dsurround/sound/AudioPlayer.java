@@ -34,6 +34,8 @@ public class AudioPlayer implements IAudioPlayer {
 
     @Override
     public boolean isSoundSystemAvailable() {
-        return this.manager.soundEngine.loaded && !this.manager.soundEngine.library.isCurrentDeviceDisconnected();
+        // Not asking OpenAL whether the device is still connected: the sound engine asks every tick and reloads when
+        // it is lost, and the query waits whenever another thread is opening a device (voice chat's microphone, say)
+        return this.manager.soundEngine.loaded;
     }
 }

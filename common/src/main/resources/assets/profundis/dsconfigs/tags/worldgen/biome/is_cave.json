@@ -1,0 +1,37 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "profundis:amethyst_caves",
+      "required": false
+    },
+    {
+      "id": "profundis:arid_caves",
+      "required": false
+    },
+    {
+      "id": "profundis:black_caves",
+      "required": false
+    },
+    {
+      "id": "profundis:dirt_caves",
+      "required": false
+    },
+    {
+      "id": "profundis:floral_lush_caves",
+      "required": false
+    },
+    {
+      "id": "profundis:frozen_caves",
+      "required": false
+    },
+    {
+      "id": "profundis:molten_caves",
+      "required": false
+    },
+    {
+      "id": "profundis:mushroom_caves",
+      "required": false
+    }
+  ]
+}

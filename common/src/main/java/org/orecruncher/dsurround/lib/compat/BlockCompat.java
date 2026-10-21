@@ -34,8 +34,9 @@ public class BlockCompat {
 
     /**
      * True if the block is solid enough to count as a roof: its collision shape is large (average side at least
-     * about 0.73 of a block) or full height. Small blocks with collision, such as lanterns, chains, candles and end
-     * rods, don't count.
+     * about 0.73 of a block) or full height. Small blocks with collision, such as lanterns, candles and chains or end
+     * rods lying flat, don't count; but anything full height does, however thin (an upright chain or end rod, iron
+     * bars, a pane): see the runtime's Roofs, which also asks for a roof to cover its block.
      * <p>
      * This is the size rule behind the deprecated BlockState.isSolid() and blocksMotion(), applied to the block's
      * actual collision shape at {@code pos}. Vanilla also forces the flag on or off for some blocks, through
