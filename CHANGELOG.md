@@ -1,3 +1,26 @@
+> ### DynamicSurroundings-1.21.1-0.4.8
+
+Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
+
+**All Loaders**
+* JAVA 21+
+* Architectury 13.0.8+
+
+**Fabric**
+* Fabric Loader >= 0.16.9
+* Fabric API >= 0.110.0+1.21.
+
+**NeoForge**
+* NeoForge 21.1.84+
+
+**AI Disclosure**
+
+**What's New**
+
+**Changes**
+
+**Fixes**
+
 > ### DynamicSurroundings-1.21.1-0.4.7
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
