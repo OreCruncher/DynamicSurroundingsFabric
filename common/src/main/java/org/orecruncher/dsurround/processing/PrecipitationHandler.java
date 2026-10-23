@@ -9,7 +9,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.ParticleStatus;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -43,6 +45,7 @@ import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WindService;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -282,9 +285,12 @@ public class PrecipitationHandler extends AbstractClientHandler {
     }
 
     /**
-     * The dust first, behind the rain and snow, and soft: it reads a copy of the scene's depth, water included (see
-     * SoftParticles.sceneDepthTarget). Then the rain and snow, drawn hard, and the snow flecks on the ground, which are
-     * cut from the same texture.
+     * The rain and snow, drawn hard, the snow flecks on the ground, which are cut from the same texture, and the drops
+     * on windows; and the dust, soft: it reads a copy of the scene's depth, water included (see
+     * SoftParticles.sceneDepthTarget). Without Fabulous graphics nothing here writes depth, so the dust goes first,
+     * behind the rest. With it, everything writes depth, the dust too, even where it has faded to almost nothing as it
+     * nears the ground, so it goes last: drawn first, it hid the snow flecks lying under it, and they blinked as it
+     * drifted.
      */
     private void drawDrops(Tesselator tesselator, Camera camera, float partialTick) {
         var shader = Objects.requireNonNull(PrecipitationShaders.DROPS.get());
@@ -295,16 +301,12 @@ public class PrecipitationHandler extends AbstractClientHandler {
         var scales = new DropScales(options.rainDropScale / 100F, options.snowflakeScale / 100F);
         var rainColor = RainColor.ofTint(options.rainTint);
         // As vanilla's weather: depth is written only with Fabulous graphics, which draws weather to its own target
-        RenderSystem.depthMask(Minecraft.useShaderTransparency());
+        boolean fabulous = Minecraft.useShaderTransparency();
+        RenderSystem.depthMask(fabulous);
         RenderSystem.setShader(PrecipitationShaders.DROPS.supplier());
 
-        if (this.field.dustCount() > 0) {
-            RenderSystem.setShaderTexture(0, particleAtlas());
-            // The scene's depth, water included: the weather's own target has none with Fabulous graphics
-            SoftParticles.bindSceneDepth(shader, SoftParticles.sceneDepthTarget(), weatherTarget());
-            shader.safeGetUniform("SoftDistance").set(DUST_SOFT_DISTANCE);
-            this.field.draw(tesselator, camera, partialTick, true, flakes, largest, dust, scales, rainColor);
-        }
+        if (!fabulous)
+            this.drawDust(tesselator, camera, partialTick, shader, flakes, largest, dust, scales, rainColor);
 
         // The rain is untextured; the snow is cut from the game's snow texture
         RenderSystem.setShaderTexture(0, Snowflakes.TEXTURE);
@@ -312,6 +314,21 @@ public class PrecipitationHandler extends AbstractClientHandler {
         this.field.draw(tesselator, camera, partialTick, false, flakes, largest, dust, scales, rainColor);
         this.snowFlecks.draw(tesselator, camera, partialTick, flakes, largest, scales.snow());
         this.windowStreaks.draw(tesselator, camera, partialTick, rainColor);
+
+        if (fabulous)
+            this.drawDust(tesselator, camera, partialTick, shader, flakes, largest, dust, scales, rainColor);
+    }
+
+    private void drawDust(Tesselator tesselator, Camera camera, float partialTick, ShaderInstance shader,
+                          List<Snowflakes.Flake> flakes, int largest, TextureAtlasSprite[] dust, DropScales scales,
+                          RainColor rainColor) {
+        if (this.field.dustCount() == 0)
+            return;
+        RenderSystem.setShaderTexture(0, particleAtlas());
+        // The scene's depth, water included: the weather's own target has none with Fabulous graphics
+        SoftParticles.bindSceneDepth(shader, SoftParticles.sceneDepthTarget(), weatherTarget());
+        shader.safeGetUniform("SoftDistance").set(DUST_SOFT_DISTANCE);
+        this.field.draw(tesselator, camera, partialTick, true, flakes, largest, dust, scales, rainColor);
     }
 
     /**

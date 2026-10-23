@@ -3,10 +3,11 @@ package org.orecruncher.dsurround.effects.footprints;
 import net.minecraft.client.ParticleStatus;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.FootprintStyle;
@@ -37,9 +38,12 @@ public class FootprintEffect extends EntityEffectBase {
     // How far the top of that block may be from the feet and still take a print, in blocks: past the edge of a
     // block, the foot is over the one below
     private static final double SURFACE_TOLERANCE = 0.1D;
-    // How much bigger the prints of those in the large footprints tag are, and those in the small one
+    // How far below the drawn top of a block feet may sink into it, in blocks: a layer of snow, soul sand, mud
+    private static final double MAX_SINK = 0.25D;
+    // How much bigger the prints of those in the large footprints tag are, and those in the small and tiny ones
     static final float LARGE = 1.25F;
     static final float SMALL = 0.75F;
+    static final float TINY = 0.5F;
 
     private final Configuration.EntityEffects config;
     private final IBlockLibrary blockLibrary;
@@ -64,6 +68,8 @@ public class FootprintEffect extends EntityEffectBase {
         var type = entity.getType();
         if (this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_LARGE, type))
             this.sizeBoost = LARGE;
+        else if (this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_TINY, type))
+            this.sizeBoost = TINY;
         else if (this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_SMALL, type))
             this.sizeBoost = SMALL;
         else
@@ -130,17 +136,50 @@ public class FootprintEffect extends EntityEffectBase {
         double z = entity.getZ() - Math.sin(radians) * side;
         double feet = entity.getY();
 
+        // The block the feet sink into (a snow layer, soul sand), else the one they stand on
         var level = entity.level();
-        var ground = BlockPos.containing(x, feet - PROBE, z);
+        var ground = BlockPos.containing(x, feet, z);
         var state = level.getBlockState(ground);
-        if (!this.blockLibrary.getBlockInfo(state).takesFootprints())
-            return;
-        var shape = state.getCollisionShape(level, ground);
-        double top = ground.getY() + (shape.isEmpty() ? 1D : shape.max(Direction.Axis.Y));
-        if (Math.abs(top - feet) > SURFACE_TOLERANCE)
-            return;
+        double top = this.surface(level, ground, state, feet);
+        if (Double.isNaN(top)) {
+            ground = BlockPos.containing(x, feet - PROBE, z);
+            state = level.getBlockState(ground);
+            top = this.surface(level, ground, state, feet);
+            if (Double.isNaN(top))
+                return;
+        }
 
-        this.footprints.add(level, x, top, z, yaw, scaleFor(width) * this.sizeBoost, style, rightFoot, ground, state.is(BlockTags.SNOW));
+        this.footprints.add(level, x, top, z, yaw, scaleFor(width) * this.sizeBoost, style, rightFoot, ground, state);
+    }
+
+    /**
+     * Where a print goes on a block the feet are on or in, if it takes prints; NaN if it doesn't or they aren't
+     */
+    private double surface(Level level, BlockPos pos, BlockState state, double feet) {
+        if (!this.blockLibrary.getBlockInfo(state).takesFootprints())
+            return Double.NaN;
+        var collision = state.getCollisionShape(level, pos);
+        var drawn = state.getShape(level, pos);
+        double y = pos.getY();
+        double standsAt = collision.isEmpty() ? y : y + collision.max(Direction.Axis.Y);
+        double drawnTop = drawn.isEmpty() ? standsAt : y + drawn.max(Direction.Axis.Y);
+        return printHeight(feet, standsAt, drawnTop);
+    }
+
+    /**
+     * The height of a print, on top of the block as it is drawn: snow layers, soul sand and mud are drawn higher than
+     * feet rest in them, and a print where the feet rest would be hidden inside. NaN if the feet aren't on or in it.
+     *
+     * @param feet     the height of the feet
+     * @param standsAt the top of the block as feet collide with it (its bottom, if they don't)
+     * @param drawnTop the top of the block as it is drawn
+     */
+    static double printHeight(double feet, double standsAt, double drawnTop) {
+        if (standsAt > feet + SURFACE_TOLERANCE)
+            return Double.NaN;
+        if (drawnTop < feet - SURFACE_TOLERANCE || drawnTop > feet + MAX_SINK)
+            return Double.NaN;
+        return drawnTop;
     }
 
     /**

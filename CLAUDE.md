@@ -75,7 +75,8 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   `transparency` post shader lays over the scene sorted by each target's depth, taking colours as premultiplied:
   `behind * (1 - alpha) + colour`, and skipping alpha 0. So anything we draw there must leave sensible alpha and depth:
   - The weather target is cleared but gets no copy of the scene's depth: read the main target's, and write depth (ground
-    fog, damp spots), or the scene is laid over it.
+    fog, damp spots), or the scene is laid over it. Something soft that writes depth where it has all but faded hides
+    what is drawn behind it after: the dust goes after the snow and its flecks there, or they blinked.
   - The particles target's depth is the scene's from before water; the translucent target's has the water's surface.
     Soft particles fade against the translucent depth and write it (`soft_particle_scene_depth`, Fabulous only: a
     shader that writes depth loses early depth testing) so water isn't laid over them.

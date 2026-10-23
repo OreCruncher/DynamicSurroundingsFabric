@@ -7,12 +7,13 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Matrix4f;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.FootprintStyle;
-import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.lib.compat.IrisCompat;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.runtime.weather.Shelter;
@@ -51,13 +52,11 @@ public final class Footprints {
     // Not drawn farther than this from the camera, in blocks
     private static final double DRAW_RANGE_SQ = 64D * 64D;
 
-    private final IBlockLibrary blockLibrary;
     private final WeatherSimulation weather;
     private final ArrayDeque<Print> prints = new ArrayDeque<>();
     private int untilCheck = CHECK_INTERVAL;
 
-    public Footprints(IBlockLibrary blockLibrary, WeatherSimulation weather) {
-        this.blockLibrary = blockLibrary;
+    public Footprints(WeatherSimulation weather) {
         this.weather = weather;
     }
 
@@ -71,13 +70,15 @@ public final class Footprints {
         final float u0, u1;
         final int light;
         final BlockPos ground;
+        // The ground as it was pressed: a print goes when it changes (snow added or melted)
+        final BlockState groundState;
         // How much the rain washes it: 0 under cover or where it doesn't rain, to 1 in the open
         final float washing;
         final float life;
         float age;
 
         Print(double x, double y, double z, float yawDegrees, float scale, FootprintStyle style, boolean rightFoot,
-              int light, BlockPos ground, float washing, float life) {
+              int light, BlockPos ground, BlockState groundState, float washing, float life) {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -85,6 +86,7 @@ public final class Footprints {
             this.u1 = style.u1(rightFoot);
             this.light = light;
             this.ground = ground;
+            this.groundState = groundState;
             this.washing = washing;
             this.life = life;
             layOut(this.corners, yawDegrees, HALF_WIDTH * scale, HALF_LENGTH * scale);
@@ -115,19 +117,21 @@ public final class Footprints {
     /**
      * Leaves a print.
      *
+     * @param y      the top of the ground as it is drawn
      * @param ground the block it is pressed into
-     * @param snow   whether that block is snow, where prints last longer
+     * @param state  that block; in snow prints last longer
      */
     void add(Level level, double x, double y, double z, float yawDegrees, float scale, FootprintStyle style,
-             boolean rightFoot, BlockPos ground, boolean snow) {
+             boolean rightFoot, BlockPos ground, BlockState state) {
         if (this.prints.size() >= MAX)
             this.prints.pollFirst();
-        var above = ground.above();
+        // Where the print is: above a full block, in a snow layer
+        var above = BlockPos.containing(x, y, z);
         int light = LevelRenderer.getLightColor(level, above);
         boolean rains = level.getBiome(above).value().getPrecipitationAt(above) == Biome.Precipitation.RAIN;
         float washing = rains ? Shelter.exposure(level, above) : 0F;
         this.prints.addLast(new Print(x, y + LIFT, z, yawDegrees, scale, style, rightFoot, light, ground.immutable(),
-                washing, snow ? SNOW_LIFE : LIFE));
+                state, washing, state.is(BlockTags.SNOW) ? SNOW_LIFE : LIFE));
     }
 
     /**
@@ -144,13 +148,13 @@ public final class Footprints {
         for (var it = this.prints.iterator(); it.hasNext(); ) {
             var print = it.next();
             print.age += agingRate(rain, print.washing);
-            if (print.age >= print.life || check && !this.groundHolds(level, print.ground))
+            if (print.age >= print.life || check && !groundHolds(level, print))
                 it.remove();
         }
     }
 
-    private boolean groundHolds(Level level, BlockPos ground) {
-        return level.isLoaded(ground) && this.blockLibrary.getBlockInfo(level.getBlockState(ground)).takesFootprints();
+    private static boolean groundHolds(Level level, Print print) {
+        return level.isLoaded(print.ground) && level.getBlockState(print.ground) == print.groundState;
     }
 
     /**

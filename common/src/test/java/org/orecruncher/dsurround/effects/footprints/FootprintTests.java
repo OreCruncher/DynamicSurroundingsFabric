@@ -146,6 +146,33 @@ public class FootprintTests {
         assertTrue(Footprints.SNOW_LIFE > Footprints.LIFE * 3);
     }
 
+    // ---- Where a print goes --------------------------------------------------------------------------------
+
+    @Test
+    void onAFullBlockAPrintIsOnItsTop() {
+        assertEquals(65D, FootprintEffect.printHeight(65D, 65D, 65D), 1.0E-9D);
+    }
+
+    @Test
+    void inSnowAPrintIsOnTheSnowNotWhereTheFeetRest() {
+        // Three layers: feet rest on two, three are drawn
+        assertEquals(64.375D, FootprintEffect.printHeight(64.25D, 64.25D, 64.375D), 1.0E-9D);
+        // One layer collides with nothing: feet rest on the block under it
+        assertEquals(64.125D, FootprintEffect.printHeight(64D, 64D, 64.125D), 1.0E-9D);
+        // Soul sand and mud: feet sink an eighth
+        assertEquals(65D, FootprintEffect.printHeight(64.875D, 64.875D, 65D), 1.0E-9D);
+    }
+
+    @Test
+    void aBlockTheFeetAreNotOnOrInTakesNoPrint() {
+        // Snow beside a higher block the feet are on: drawn below them
+        assertTrue(Double.isNaN(FootprintEffect.printHeight(64.5D, 64D, 64.25D)));
+        // Deep snow beside a lower block the feet are on: it would hold them higher
+        assertTrue(Double.isNaN(FootprintEffect.printHeight(64.5D, 64.75D, 64.875D)));
+        // A block whose top is far above where the feet are
+        assertTrue(Double.isNaN(FootprintEffect.printHeight(64D, 64D, 65D)));
+    }
+
     // ---- Fit to the body -------------------------------------------------------------------------------------
 
     @Test
