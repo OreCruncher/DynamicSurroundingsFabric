@@ -88,6 +88,14 @@ public final class LevelColumns implements IColumnSource {
     }
 
     @Override
+    public boolean isOpen(int x, int y, int z) {
+        this.pos.set(x, y, z);
+        var level = this.level();
+        var state = level.getBlockState(this.pos);
+        return state.getFluidState().isEmpty() && state.getCollisionShape(level, this.pos).isEmpty();
+    }
+
+    @Override
     public int light(int x, int y, int z) {
         return LevelRenderer.getLightColor(this.level(), this.pos.set(x, y, z));
     }
