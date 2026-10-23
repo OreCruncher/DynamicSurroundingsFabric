@@ -23,6 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
+import org.orecruncher.dsurround.config.SoundAction;
 import org.orecruncher.dsurround.config.SoundMapping;
 import org.orecruncher.dsurround.config.data.SoundMappingConfigRule;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
@@ -412,25 +413,24 @@ public final class SoundLibrary implements ISoundLibrary {
     }
 
     private void addSoundConfigDefaults() {
-        this.addSoundConfig("minecraft:entity.sheep.ambient", 100, false, true);
-        this.addSoundConfig("minecraft:entity.chicken.ambient", 100, false, true);
-        this.addSoundConfig("minecraft:entity.cow.ambient", 100, false, true);
-        this.addSoundConfig("minecraft:entity.pig.ambient", 100, false, true);
-        this.addSoundConfig("minecraft:entity.llama.ambient", 100, false, true);
-        this.addSoundConfig("minecraft:entity.wither.spawn", 10, false, true);
-        this.addSoundConfig("minecraft:entity.wither.death", 10, false, true);
-        this.addSoundConfig("minecraft:entity.ender_dragon.death", 10, false, true);
+        this.addSoundConfig("minecraft:entity.sheep.ambient", 100, SoundAction.CULL);
+        this.addSoundConfig("minecraft:entity.chicken.ambient", 100, SoundAction.CULL);
+        this.addSoundConfig("minecraft:entity.cow.ambient", 100, SoundAction.CULL);
+        this.addSoundConfig("minecraft:entity.pig.ambient", 100, SoundAction.CULL);
+        this.addSoundConfig("minecraft:entity.llama.ambient", 100, SoundAction.CULL);
+        this.addSoundConfig("minecraft:entity.wither.spawn", 10, SoundAction.CULL);
+        this.addSoundConfig("minecraft:entity.wither.death", 10, SoundAction.CULL);
+        this.addSoundConfig("minecraft:entity.ender_dragon.death", 10, SoundAction.CULL);
 
         // Since we have waterfall sounds
-        this.addSoundConfig("minecraft:block.water.ambient", 100, true, false);
+        this.addSoundConfig("minecraft:block.water.ambient", 100, SoundAction.BLOCK);
     }
 
-    private void addSoundConfig(final String id, int volumeScale, boolean block, boolean cull) {
+    private void addSoundConfig(final String id, int volumeScale, SoundAction action) {
         var entry = new IndividualSoundConfigEntry(
                 ResourceLocation.parse(id),
                 volumeScale,
-                block,
-                cull);
+                action);
         this.soundConfiguration.add(entry);
     }
 
@@ -458,9 +458,9 @@ public final class SoundLibrary implements ISoundLibrary {
         // Insert the entries into our lookup collections
         this.soundConfiguration.forEach(e -> {
             this.individualSoundConfiguration.put(e.soundEventId, e);
-            if (e.block || e.volumeScale == 0)
+            if (e.action == SoundAction.BLOCK || e.volumeScale == 0)
                 this.blockedSounds.add(e.soundEventId);
-            if (e.cull)
+            if (e.action == SoundAction.CULL)
                 this.culledSounds.add(e.soundEventId);
         });
     }
