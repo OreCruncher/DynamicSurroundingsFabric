@@ -35,7 +35,7 @@ public class WaterRippleHandler {
 
             if (fluidState.isSource() && TAG_LIBRARY.is(FluidTags.WATER_RIPPLES, fluidState)) {
                 final float actualHeight = fluidState.getHeight(world, pos) + pos.getY();
-                return Optional.ofNullable(WaterRippleParticle.create(CONFIG.waterRippleStyle, world, position.x, actualHeight + LIQUID_HEIGHT_ADJUST, position.z));
+                return Optional.of(WaterRippleParticle.create(CONFIG.waterRippleStyle, world, position.x, actualHeight + LIQUID_HEIGHT_ADJUST, position.z));
             }
         }
         return Optional.empty();

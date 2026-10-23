@@ -11,7 +11,11 @@ import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.threading.RecordingLog;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.List;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -135,6 +139,25 @@ public class ModShaderTests {
             checked++;
         }
         assertTrue(checked >= 7, "found only " + checked);
+    }
+
+    @Test
+    void noShaderReturnsWithoutAValue() throws Exception {
+        // Veil re-reads every core shader to add its buffers, and its parser (glsl-processor) fails on "return;",
+        // logging an error with a stack trace at every resource reload
+        var anchor = getClass().getClassLoader().getResource("assets/dsurround/shaders/core/aurora.fsh");
+        assertNotNull(anchor);
+        var folder = Path.of(anchor.toURI()).getParent().getParent();
+        List<Path> programs;
+        try (var files = Files.walk(folder)) {
+            programs = files.filter(file -> file.toString().matches(".*\\.(vsh|fsh|glsl)")).toList();
+        }
+        assertFalse(programs.isEmpty());
+        var bareReturn = Pattern.compile("\\breturn\\s*;");
+        for (var program : programs) {
+            var code = Files.readString(program);
+            assertFalse(bareReturn.matcher(code).find(), program.getFileName() + " has a return without a value");
+        }
     }
 
     private void assertResource(Identifier shaderId, String extension) {

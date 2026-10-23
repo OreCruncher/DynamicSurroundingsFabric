@@ -3,6 +3,9 @@ from various versions of my mod, and have had AI extensively used to rework to f
 feature set. I cannot attest to the quality, and I have no involvement with those efforts. The source of my mod is licensed
 MIT so they are free to do this with proper attribution.
 
+Dynamic Surroundings is a 100% client side mod that alters the fabric of Minecraft experience by weaving a tapestry of
+sound and visual effects.
+
 ### Features
 * Biome sounds - Various atmospheric sounds that play based on biomes in the area
     * Seamless blending of sounds as the player moves throughout the world

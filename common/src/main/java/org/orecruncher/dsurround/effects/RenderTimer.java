@@ -22,7 +22,7 @@ public final class RenderTimer implements ITimer {
     // Frames whose results may still be on the way
     private static final int FRAMES = 4;
     // How long since it last measured before the diagnostics overlay stops showing it
-    private static final long RECENT_NANOS = 1_000_000_000L;
+    private static final long STALE_AFTER_NANOS = 1_000_000_000L;
 
     private final String name;
     private final TimerEMA cpu;
@@ -80,11 +80,11 @@ public final class RenderTimer implements ITimer {
     }
 
     /**
-     * Whether it has measured in the last second: if not, what it measures isn't being drawn, and its average is
-     * left over from when it was
+     * Whether it hasn't measured in the last second: what it measures isn't being drawn, and its average is left over
+     * from when it was
      */
-    public boolean isRecent() {
-        return this.lastMeasured != 0 && System.nanoTime() - this.lastMeasured < RECENT_NANOS;
+    public boolean isStale() {
+        return this.lastMeasured == 0 || System.nanoTime() - this.lastMeasured >= STALE_AFTER_NANOS;
     }
 
     /**

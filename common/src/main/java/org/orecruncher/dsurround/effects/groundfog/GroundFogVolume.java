@@ -14,6 +14,7 @@ import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.CompareOp;
+import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderPassDescriptor;
@@ -190,6 +191,9 @@ public final class GroundFogVolume {
 
     @Nullable
     private static DynamicTexture grid;
+    // The grid texture's image, which it owns and closes
+    @Nullable
+    private static NativeImage gridPixels;
     @Nullable
     private static DynamicTexture noise;
     private static int gridSize;
@@ -438,15 +442,17 @@ public final class GroundFogVolume {
      */
     private static float upload(GroundFogField field, int baseY) {
         int size = field.size();
-        if (grid == null || gridSize != size) {
+        var pixels = gridPixels;
+        if (grid == null || pixels == null || gridSize != size) {
             if (grid != null)
                 grid.close();
-            grid = new DynamicTexture(() -> "Dynamic Surroundings ground fog grid", size, size, true);
+            pixels = new NativeImage(size, size, true);
+            grid = new DynamicTexture(() -> "Dynamic Surroundings ground fog grid", pixels);
+            gridPixels = pixels;
             gridSize = size;
         }
 
         float highest = Float.NEGATIVE_INFINITY;
-        var pixels = grid.getPixels();
         for (int j = 0; j < size; j++) {
             for (int i = 0; i < size; i++) {
                 float density = field.density(i, j);

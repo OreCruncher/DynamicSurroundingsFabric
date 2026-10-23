@@ -7,8 +7,19 @@ import org.orecruncher.dsurround.sound.SoundInstanceHandler;
 
 /**
  * A game sound, played by the sound engine from a {@link SoundInstance}.
+ *
+ * @param hearingRangeSq the square of the distance it can be heard within, taken on the client thread when it started
+ *                       (see {@link SoundInstanceHandler#hearingRangeSq}): working it out draws on the sound's random
+ *                       source, which the sound engine uses on the client thread, so a worker mustn't
  */
-record InstanceEmitter(SoundInstance sound) implements ISoundEmitter {
+record InstanceEmitter(SoundInstance sound, double hearingRangeSq) implements ISoundEmitter {
+
+    /**
+     * Client thread only
+     */
+    InstanceEmitter(SoundInstance sound) {
+        this(sound, SoundInstanceHandler.hearingRangeSq(sound, 0));
+    }
 
     @Override
     public Vec3 position() {
@@ -22,7 +33,7 @@ record InstanceEmitter(SoundInstance sound) implements ISoundEmitter {
 
     @Override
     public boolean inRange(Vec3 listener) {
-        return SoundInstanceHandler.inRange(listener, this.sound);
+        return listener.distanceToSqr(this.sound.getX(), this.sound.getY(), this.sound.getZ()) < this.hearingRangeSq;
     }
 
     @Override

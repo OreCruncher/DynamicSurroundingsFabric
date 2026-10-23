@@ -177,7 +177,7 @@ public final class Profiler {
         tell(Component.translatable(KEY + "done", name, fps));
         Library.LOGGER.info("Profile recorded to %s (%d FPS)", file, fps);
         for (var timer : RenderTimers.ALL) {
-            if (!timer.isRecent())
+            if (timer.isStale())
                 continue;
             var gpu = "%.3f".formatted(timer.getMSecs());
             var peak = "%.3f".formatted(timer.getPeakMSecs());

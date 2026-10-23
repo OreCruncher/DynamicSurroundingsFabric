@@ -38,7 +38,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * During a storm the strength surges and eases off below its peak, changing every half minute or so; how far it can ease is the Storm variation option in Weather Options
   * The precipitation effects are "particle" like rather than rendered texture sheets, though they are not true Minecraft particles
     * Rain drops with a slight slant, and will change direction based on wind
-      * Rain tint option in Weather Options sets how blue the rain is, from a nearly colourless grey to a deep blue
+      * Rain tint option in Weather Options sets how blue the rain is, from a nearly colorless gray to a deep blue
     * Snow drops more slowly, and the impact of wind is more visible
       * Textures are sampled from Minecraft's snow.png texture at runtime, meaning the logic will sample any modded replacement
     * Sleet (a mix of rain and snow) can occur in transition zones (like elevation)
@@ -60,6 +60,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Has some wear like an heirloom handed down: tarnish, scratches, a dent or two, and a hairline crack in the dial
   * A window under XII shows day or night, like Minecraft's clock, to tell noon from midnight
   * A window above VI shows the season when Serene Seasons is installed, or the moon's phase without it
+  * Spins where the compass does (the Nether, the End), as Minecraft's clock does there; the clock text leaves out the time (`dsurround:effects/clock_wobble` picks which clocks)
   * Clock style option in Compass and Clock Options: text, pocket watch, or both; the Render scaling option applies to it as well
   * Pocket watch style option picks the look: CLASSIC (the worn round watch) or SQUARE (a square brass watch in pixel art)
 * The compass and clock on/off switches are now a NONE choice in their styles; a switch that was off carries over as NONE
@@ -73,19 +74,18 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Turned on and off with the Light Level Overlay key (unbound to start with, under Dynamic Surroundings in the controls)
   * Red where monsters can spawn now, yellow where they can at night, green where it is too bright, aqua where they can never spawn; DARK colors also available
   * Spawning follows the dimension's own rules: in the Overworld any block light keeps monsters away, in the Nether it goes by light level 7
-  * Shows block light, sky light, or the brighter of the two; range of 8 to 32 blocks; can hide the safe blocks
+  * Shows block light, skylight, or the brighter of the two; range of 8 to 32 blocks; can hide the safe blocks
   * A legend in the bottom right corner of the screen says what the colors mean, and can be turned off
   * The numbers are drawn with the game's font, so a resource pack that changes the font changes them too
   * Light Level Options in the configuration
-* [Experimental] Ground fog in swamps and spooky biomes like Dark Forest and BOPs Ominous Forest
+* **[Experimental]** Ground fog in swamps and spooky biomes like Dark Forest and BOPs Ominous Forest
   * Heavy rains can thin it out, higher density between midnight and morning
   * Wind can shift the drift direction and speed
   * Should clear when inside
   * There is a quality setting in Weather Options that allow you to control the ground fog rendering parameters
     * OFF, Fast, Fancy, and Fabulous; defaults to Fancy
-    * Fast is fast and has some artifacting; Fabulous looks much better but will be computationally intensive (of course NONE is the most performant :D)
-  * Let me know what you think on my Github!
-* [Experimental] Support for Simple Voice Chat with enhanced sound processing
+    * Fast has some artifacting; Fabulous looks much better but will be computationally intensive (of course NONE is the most performant :D)
+* **[Experimental]** Support for Simple Voice Chat with enhanced sound processing
   * On by default; setting can be found in the Enhanced Sounds configuration options
   * Hear Self diagnostics setting can be found in the Diagnostics Settings config section; disabled by default
   * Will auto disable if enhanced sound processing is not available (ex, Sound Physics Remastered is installed)
@@ -119,25 +119,35 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Guesses come from the biome's vanilla music, grass, and ambient sounds first, then its climate, then its name; names match whole words, so "alpine" isn't a pine forest
   * Before guessing, the biome's definition in its mod's jar is read for how many trees it grows: dense or sparse vegetation, and a forest, without a guess (works on servers too, as the mod is installed on the client)
     * A biome playing swamp music or named a bog or swamp stays a swamp however many trees it has; caves and water biomes don't count trees
+    * Trees count in whichever generation step the mod places them (No Man's Land puts most of its forests' outside the vegetation step)
   * Vanilla biomes have the same traits on every server: the mod's own table settles their temperature, moisture and vegetation where Fabric's or NeoForge's tags disagree
+  * A biome named a shore is a beach but not wet, like vanilla's stony shore
   * More biome names understood: fields, plains, meadows and prairies; seas; streams and lakes; savannas; plateaus; highlands; tundra and glaciers
   * `/dsdump biomes` shows where each trait came from, and ends with a list of biomes to check: traits guessed from music, grass or name, or no dimension or kind at all, to help write tag files for them
     * In single player it checks each biome's dimension against where the world generates it, and lists each dimension's biomes
     * A biome only in modded dimensions (or, on a server, of a mod with dimensions of its own) isn't listed for having no kind: it is often its dimension's only biome
   * The traits shipped for other mods' biomes are now tag files in each mod's folder (`assets/<mod>/dsconfigs/tags/worldgen/biome/is_<trait>.json`), read only when that mod is installed
     * Nature's Spirit's alpine and highlands biomes are windswept, as intended: their tag file was misnamed and never read
+    * Tags for Spectrum's Deeper Down biomes its own tags leave out (deep dripstone caves, noxshroom forest), and No Man's Land's mud beach (a beach, not a swamp) and tropical beach
     * `traits` and `clearTraits` in `biomes.json` are deprecated (a warning is logged): they are added after the guesses, where a tag file settles a trait before any guess
 
 **Fixes**
+* Individual sound volumes and the ambient volume option now hold for sounds that tick, the mod's own biome loops among them (they fell back to the game's volume after their first tick, and every playing sound did when a volume slider moved); turning down a loud sound, such as an explosion, now makes it quieter
+* Possible crash with Enhanced Sounds ("Accessed LegacyRandomSource from multiple threads"): its worker threads read a playing sound's volume, which draws on the same random source the game uses for it each tick; each sound's hearing range is now taken once, on the client thread, when it starts
+* Sound pruning no longer drops sounds that could still be heard: looping, moving and streamed ones (a music disc started out of range, a machine's hum) play as the game would, and fade in as you come closer; a sound louder than 1 is given the game's longer range rather than let through
+* With a mod that turns the game's fog off (Distant Horizons), the log no longer fills with invalid fog range warnings, and the fog is left off: rain, morning and biome fog would only cover the game's own terrain, not the far terrain that mod draws, so they stand aside, and their work stops, while it is off (#201)
+* Particle rain, snow and damp spots turned themselves off in the overworld with Stellar View installed (NeoForge): it replaces the overworld's sky effects, which was taken to mean it draws its own weather. Now only a dimension whose effects draw or tick their own weather is left to them
 * Water ripples are visible when looking from underwater. During the day they are faint rings; at night they are more visible.
 * Added Twilight Forest dimension configuration to set sea level.
 * Moved aurora render hook to avoid conflict with Astral Sorcery's sky render
 * Fog being applied to SPOOKY underground biomes, like BOPs spider nest
 * Rendering issues when Fabulous! graphics enabled
 * [MAYBE] Infrequent crash in fastutil collection when rendering block entities, seen with Create belts
-* Underwater in vanilla's oceans (other than deep ones) used the plain underwater sounds rather than the ocean's when Fabric's or NeoForge's biome tags were present
+* Underwater in vanilla's oceans (other than deep ones) used the plain underwater sounds rather than the oceans when Fabric's or NeoForge's biome tags were present
 * Ground fog didn't work with Mesa graphics drivers (common on Linux): its shader used a word GLSL reserves
-* The log filled with "Fog calculator ... reporting invalid fog range" warnings under water, where vanilla's fog starts behind the camera
+* The log filled with "Fog calculator ... reporting invalid fog range" warnings underwater, where vanilla's fog starts behind the camera
+* With the audio device gone (headphones turned off) and nothing else to play on, the game tried to restart sound every tick and logged a stack trace each time, growing the log by gigabytes overnight. It now tries every few seconds and logs the failure once; sound comes back as before once a device is there (Sound System option "Throttle Audio Device Retries", on by default)
+* With Veil installed, the log showed "Couldn't load vanilla shader from dsurround:shaders/core/point_light.vsh" with a stack trace at each resource reload: Veil's shader parser can't read a return without a value. The lights always worked; the shader no longer uses one
 
 > ### DynamicSurroundings-1.21.1-0.4.6
 

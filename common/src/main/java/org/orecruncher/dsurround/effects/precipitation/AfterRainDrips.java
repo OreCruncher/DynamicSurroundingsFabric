@@ -76,7 +76,7 @@ public final class AfterRainDrips {
      */
     void soak(float rainLevel) {
         if (rainLevel > 0F) {
-            this.wetness = Math.max(this.wetness, Math.min(rainLevel, 1F));
+            this.wetness = Math.clamp(rainLevel, this.wetness, 1F);
             this.dryTicks = 0;
         } else if (this.dryTicks < DRY_TICKS) {
             if (++this.dryTicks == DRY_TICKS)

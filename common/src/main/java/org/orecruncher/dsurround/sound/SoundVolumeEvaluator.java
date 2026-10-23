@@ -14,33 +14,52 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
  * Special hook into the Minecraft SoundSystem.  This logic scales the volume of a sound
  * based on configuration information.  This allows tuning of sound volumes on a per-sound
  * basis.
+ * <p>
+ * It scales the game's gain for a sound everywhere the game works one out: when it starts, every tick for a ticking
+ * sound (the mod's own loops among them), and for every playing sound when a volume slider moves. The game's gain
+ * already holds the master and category sliders and a category's fade (the music's), so only the configured scale is
+ * applied here.
  */
 public final class SoundVolumeEvaluator {
 
-    private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
+    private SoundVolumeEvaluator() {
+    }
+
+    // Resolved on first use, so the arithmetic can be tested without the container
+    private static final class Holder {
+        static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
+    }
 
     /**
-     * This guy is hooked by a Mixin to replace getClampedVolume() in Minecraft code.
+     * The sound's gain, for diagnostics: the game's worked out as SoundEngine.calculateVolume does, without a fade in
+     * progress, then scaled. Client thread only: reading the volume draws on the sound's random source.
      */
     public static float getAdjustedVolume(final SoundInstance sound, @Nullable SoundSource soundSource) {
         Preconditions.checkNotNull(sound);
-
-        float volume = sound.getVolume();
-
-        // Scale the volume based on Minecraft's volume scaling selections.
         final SoundSource category = soundSource != null ? soundSource : sound.getSource();
-        var categoryFactor =  category == SoundSource.MASTER ? 1F : GameUtils.getGameSettings().getSoundSourceVolume(category);
-        volume *= categoryFactor;
+        float sliders = Mth.clamp(GameUtils.getGameSettings().getFinalSoundSourceVolume(category), 0F, 1F);
+        return scaleGain(sound, Mth.clamp(sound.getVolume(), 0F, 1F) * sliders, soundSource);
+    }
 
-        // Config sounds are played from the config menu.  Do not scale volume
-        // with category adjustments.
-        if (!(sound instanceof ConfigSoundInstance)) {
-            // Further scale based on the sound's configuration within the mod data set. It's possible that this
-            // could result in a sound volume of 0.
-            var volumeScale = SOUND_LIBRARY.getVolumeScale(category, sound.getIdentifier());
-            volume *= volumeScale;
-        }
+    /**
+     * The game's gain for a sound with its configured scale applied
+     */
+    public static float scaleGain(final SoundInstance sound, float gameGain, @Nullable SoundSource soundSource) {
+        Preconditions.checkNotNull(sound);
+        final SoundSource category = soundSource != null ? soundSource : sound.getSource();
+        // Config sounds are played from the config menu: their volume already carries the slider's scale, so the
+        // configured one isn't applied again.
+        var volumeScale = sound instanceof ConfigSoundInstance ? 1F : Holder.SOUND_LIBRARY.getVolumeScale(category, sound.getIdentifier());
+        return gain(gameGain, volumeScale);
+    }
 
-        return Mth.clamp(volume, 0, 1F);
+    /**
+     * The gain for the game's gain and a configured scale. The game's gain is at most 1: a volume above 1 carries the
+     * sound further rather than making it louder (explosions are 4). The configured scale applies to that gain, so
+     * turning a loud sound down quietens it; it may raise a quiet one, up to 1. A scale of 1 leaves the game's gain as
+     * it is.
+     */
+    static float gain(float gameGain, float volumeScale) {
+        return Mth.clamp(gameGain * volumeScale, 0F, 1F);
     }
 }

@@ -186,28 +186,13 @@ float mist(vec3 p, float fromCamera, float stepLength) {
     return m;
 }
 
-void main() {
-    // The screen's pixel this one stands for: the first of its Scale by Scale (the smoothing and composite read the
-    // same)
-    ivec2 pixel = min(ivec2(gl_FragCoord.xy) * int(Scale), ivec2(FullSize) - 1);
-    float depth = texelFetch(DepthSampler, pixel, 0).r;
-    sceneDistance = distance_at(DepthSampler, pixel, depthRowZ, depthRowW);
-    // No mist, and where it would begin as far as can be (the depth is reversed), unless there is some
-    fragColor = vec4(0.0);
-    gl_FragDepth = 0.0;
-    vec2 screenNdc = (vec2(pixel) + 0.5) / FullSize * 2.0 - 1.0;
-    // The way the line of sight goes, from a point on it far off (the depth is reversed: near is 1, the sky 0), and how
-    // far it goes: as far as can be through the sky. Not from a point near the camera: view bobbing moves the eye a few
-    // hundredths of a block in the projection, as much as the near plane is from it, which would turn the line wildly
-    vec4 farPoint = invViewProj * vec4(screenNdc, depth_to_ndc(DIRECTION_DEPTH), 1.0);
-    vec3 dir = normalize(farPoint.xyz / farPoint.w);
-    float length_ = FAR_AWAY;
-    if (depth > 0.0) {
-        vec4 viewed = invViewProj * vec4(screenNdc, depth_to_ndc(depth), 1.0);
-        length_ = length(viewed.xyz / viewed.w);
-    }
+// The mist seen along the line of sight from the camera, the way dir goes for length_ blocks, and where it begins as
+// a depth (as far as can be, 0, where there is none). Returned rather than written where there is none: Veil's
+// parser fails on a return without a value, and every pixel must still write the scene's distance
+vec4 mist_along(vec3 dir, float length_, out float mistDepth) {
+    mistDepth = 0.0;
     if (length_ <= 0.0) {
-        return;
+        return vec4(0.0);
     }
     vec3 start = CameraLocal;
 
@@ -216,14 +201,14 @@ void main() {
     float t1 = min(length_, MAX_DISTANCE);
     if (start.y > MistTop) {
         if (dir.y >= 0.0) {
-            return;
+            return vec4(0.0);
         }
         t0 = (MistTop - start.y) / dir.y;
     } else if (dir.y > 0.0) {
         t1 = min(t1, (MistTop - start.y) / dir.y);
     }
     if (t1 <= t0) {
-        return;
+        return vec4(0.0);
     }
 
     // Stepping through, offset a little per pixel so the steps don't show as bands: interleaved gradient noise, which
@@ -267,13 +252,13 @@ void main() {
     }
     float alpha = 1.0 - exp(-amount * Thickness);
     if (alpha <= 0.002) {
-        return;
+        return vec4(0.0);
     }
 
     // Where the mist begins: with Fabulous graphics, the composite writes it to the weather's target, which vanilla's
     // transparency pass sorts by
     vec4 clipAt = viewProj * vec4(dir * max(begins, t0), 1.0);
-    gl_FragDepth = clamp(ndc_to_depth(clipAt.z / clipAt.w), 0.0, 1.0);
+    mistDepth = clamp(ndc_to_depth(clipAt.z / clipAt.w), 0.0, 1.0);
 
     // Lit where the mist passed is on the whole, in each stretch, blended by how much each is seen: as much as it
     // hides, less what the mist in front of it hides. Not at any one point along the way: each pixel's steps are offset
@@ -293,5 +278,28 @@ void main() {
     }
     light /= max(seen, 1e-6);
     alpha *= fog_fade(t0 + (t1 - t0) * 0.5);
-    fragColor = vec4(MIST_COLOR * light * alpha, alpha);
+    return vec4(MIST_COLOR * light * alpha, alpha);
+}
+
+void main() {
+    // The screen's pixel this one stands for: the first of its Scale by Scale (the smoothing and composite read the
+    // same)
+    ivec2 pixel = min(ivec2(gl_FragCoord.xy) * int(Scale), ivec2(FullSize) - 1);
+    float depth = texelFetch(DepthSampler, pixel, 0).r;
+    sceneDistance = distance_at(DepthSampler, pixel, depthRowZ, depthRowW);
+    vec2 screenNdc = (vec2(pixel) + 0.5) / FullSize * 2.0 - 1.0;
+    // The way the line of sight goes, from a point on it far off (the depth is reversed: near is 1, the sky 0), and how
+    // far it goes: as far as can be through the sky. Not from a point near the camera: view bobbing moves the eye a few
+    // hundredths of a block in the projection, as much as the near plane is from it, which would turn the line wildly
+    vec4 farPoint = invViewProj * vec4(screenNdc, depth_to_ndc(DIRECTION_DEPTH), 1.0);
+    vec3 dir = normalize(farPoint.xyz / farPoint.w);
+    float length_ = FAR_AWAY;
+    if (depth > 0.0) {
+        vec4 viewed = invViewProj * vec4(screenNdc, depth_to_ndc(depth), 1.0);
+        length_ = length(viewed.xyz / viewed.w);
+    }
+    // Where the mist would begin is as far as can be where there is none (the depth is reversed)
+    float mistDepth;
+    fragColor = mist_along(dir, length_, mistDepth);
+    gl_FragDepth = mistDepth;
 }

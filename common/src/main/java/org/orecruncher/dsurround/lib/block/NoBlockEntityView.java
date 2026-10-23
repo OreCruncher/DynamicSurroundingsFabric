@@ -5,6 +5,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -19,17 +20,17 @@ import org.jetbrains.annotations.Nullable;
 public record NoBlockEntityView(BlockGetter level) implements BlockGetter {
 
     @Override
-    public @Nullable BlockEntity getBlockEntity(BlockPos pos) {
+    public @Nullable BlockEntity getBlockEntity(@NotNull BlockPos pos) {
         return null;
     }
 
     @Override
-    public BlockState getBlockState(BlockPos pos) {
+    public @NotNull BlockState getBlockState(@NotNull BlockPos pos) {
         return this.level.getBlockState(pos);
     }
 
     @Override
-    public FluidState getFluidState(BlockPos pos) {
+    public @NotNull FluidState getFluidState(@NotNull BlockPos pos) {
         return this.level.getFluidState(pos);
     }
 

@@ -151,6 +151,10 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enables/disables cancellation of sound that a player will not hear")
         public boolean enableSoundPruning = true;
+
+        @Property
+        @Comment("When the audio device is lost and can't be opened again, try again every few seconds and log the failure once, rather than every tick")
+        public boolean throttleDeviceRetries = true;
     }
 
     public static class EnhancedSounds {

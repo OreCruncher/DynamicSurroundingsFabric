@@ -166,6 +166,37 @@ To check in game: `/dsdump biomes` (traits, sources and "Biomes to check"; in si
 lists), config and individual sound screen tooltips waiting half a second, water foam (light and tilt), a /dsprofile
 recording zipped with a `dsurround.Environment` event naming the GPU and backend, and fog under water (no warnings).
 
+### Last 0.4.7 merge (through `4539400`, as released)
+
+Clock wobble, the #201 fog stand-aside, sound volume and pruning fixes, leaves absorbing rain, warning cleanups, the
+audio device retry and the Veil bare-return fix. 0.4.7 then went to `main` as `f3edc2f`. What changed to fit 26.2:
+- **Clock wobble**: 26.2 already had its own (`IDimensionOracle`, `IMinecraftClock`, `RenderPipelines`);
+  `ClockOverlay` is 26.2's.
+- **Weather drawn by a dimension**: 0.4.7 looks for overrides of NeoForge's `renderSnowAndRain`/`tickRain` on a
+  dimension's effects (Stellar View swaps the effects for its sky only). 26.2 has no `DimensionSpecialEffects`: NeoForge
+  registers weather renderers apart from sky renderers (`CustomWeatherEffectRenderer`), so a sky mod can't turn particle
+  weather off, and `DimensionInfo.drawsOwnWeather` stays as it was.
+- **Fog stand-aside (#201)**: on `FogData`'s environmental range: turned off is `environmentalStart >
+  environmentalEnd`; a calculator changed the range if any of the environmental start/end, sky end or cloud end
+  differ. Unchecked: what Distant Horizons for 26.2 sets to turn the fog off.
+- **Sound volume**: 26.2's `calculateVolume(float, SoundSource)` is the clamped volume times the final slider (master
+  folded in: there is no listener gain) times the category's gain (the music manager's fades). Rather than work that
+  out again, one wrap round that call in `play()` and in `calculateVolume(SoundInstance)` (ticking sounds, sliders)
+  scales the game's gain by the configured scale (`SoundVolumeEvaluator.scaleGain`). Before this, 26.2 used only the
+  category slider: the master slider and music fades didn't reach sounds through the hook.
+- **Audio device retry**: same hooks; 26.2's `Library.init` takes a `DeviceList`, and `shouldChangeDevice` has four info
+  messages, so the "lost" wrap is `ordinal = 0`.
+- **Veil bare returns**: `ground_fog_volume.fsh` can't `discard` as 1.21.1 does (every pixel writes the scene's distance
+  to the second target), so the march is `mist_along`, returning no mist where `main` returned. `ModShaderTests` reads
+  each program with `Files.readString`.
+- **Textures**: `NoiseTexture` and the ground fog grid fill their own `NativeImage`, handed to the labelled
+  `DynamicTexture(Supplier<String>, NativeImage)` (it uploads).
+- **Rain absorbing**: `#minecraft:substrate_overworld` (26.2's) and 0.4.7's `#minecraft:leaves`.
+
+To check in game: the master slider and a music fade (menu → world) with Enhanced Sounds on; a per-sound volume
+change while a loop plays; ground fog still drawn (the shader restructure); leaves without splash
+particles; unplugging the audio device (one "lost" line, retries every 5 s).
+
 ## Later 0.4.6 merges
 
 Through `ceb6cd3` (tag sync on remote servers):

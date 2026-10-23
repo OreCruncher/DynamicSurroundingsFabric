@@ -124,7 +124,7 @@ final class ProfileRecording {
      */
     private static void writeTimers() {
         for (var timer : RenderTimers.ALL) {
-            if (!timer.isRecent())
+            if (timer.isStale())
                 continue;
             var event = new RenderTimerEvent();
             event.effect = timer.name();

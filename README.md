@@ -11,17 +11,14 @@ A Minecraft Mod that alters the fabric of Minecraft experience by weaving a tape
     <a href="https://modrinth.com/mod/dynamicsurroundingsfabric"><img src="https://img.shields.io/modrinth/dt/H7fshfpD?style=flat&logo=modrinth&label=downloads" alt="Modrinth"></a>
  </div>
 
-This mod is a successor to the Forge-based Dynamic Surroundings series. Though a lot of the functionality is similar, the
-ultimate feature set will be different. My focus is on extending the Vanilla aspect of gameplay rather than introducing
-anything radical.
-
-The mod is 100% client side. You can add to any mod pack, whether you play standalone or multiplayer.
+This mod is a successor to the Forge-based Dynamic Surroundings series. The mod is 100% client side. You can add to any
+mod pack, whether you play standalone or multiplayer.
 
 NeoForge is supported, in addition to Fabric, with versions 1.21.1+.
 
-Online documentation: https://dynamic-surroundings.readthedocs.io/en/latest/index.html. This documentation is comprehensive and covers settings for players as well as modpack/resource pack authors.
-
-Documentation repository: https://github.com/OreCruncher/DynamicSurroundingsDocs
+Online documentation: https://dynamic-surroundings.readthedocs.io/en/latest/index.html. This documentation is comprehensive
+and covers settings for players as well as modpack/resource pack authors. The repository for documentation is located at
+https://github.com/OreCruncher/DynamicSurroundingsDocs.
 
 ### Minecraft 1.21.1 Requirements
 * JAVA 21+

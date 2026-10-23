@@ -83,6 +83,13 @@ public class BiomeDefinitionsTests {
     }
 
     @Test
+    void treesInAnyStepAreCounted() {
+        // Regression: No Man's Land puts most of its forests' trees in the underground decoration step, and some in
+        // the top layer step, not the vegetation step
+        assertEquals(1F, this.read("dsurroundtest", "early_trees").treesPerChunk(), 1e-4F);
+    }
+
+    @Test
     void aCountThatCantBeWorkedOutLeavesTheTreesUnknown() {
         assertFalse(this.read("dsurroundtest", "odd_count").treesKnown(), "a mod's own count rule");
         assertFalse(this.read("dsurroundtest", "missing_trees").treesKnown(), "a tree feature with no file");
