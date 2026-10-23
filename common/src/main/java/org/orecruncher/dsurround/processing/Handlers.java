@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
+import org.orecruncher.dsurround.effects.footprints.Footprints;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IClientConnect;
 import org.orecruncher.dsurround.eventing.IClientDisconnect;
@@ -74,6 +75,7 @@ public class Handlers {
         this.register(BiomeSoundHandler.class);
         this.register(AreaBlockEffects.class);
         this.register(StepAccentGenerator.class);
+        this.register(FootprintHandler.class);
         this.register(FogHandler.class);
         this.register(AuroraHandler.class);
         this.register(PrecipitationHandler.class);
@@ -203,6 +205,8 @@ public class Handlers {
             .registerSingleton(AreaBlockEffects.class)
             .registerSingleton(FootstepAccents.class)
             .registerSingleton(StepAccentGenerator.class)
+            .registerSingleton(Footprints.class)
+            .registerSingleton(FootprintHandler.class)
             .registerSingleton(HolisticFogRangeCalculator.class)
             .registerSingleton(FogHandler.class)
             .registerSingleton(AuroraHandler.class)

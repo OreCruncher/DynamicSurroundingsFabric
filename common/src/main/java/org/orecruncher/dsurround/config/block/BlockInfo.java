@@ -29,6 +29,7 @@ public final class BlockInfo {
     private final Script soundChance;
     private final float soundReflectivity;
     private final float soundOcclusion;
+    private final boolean takesFootprints;
 
     BlockInfo(BlockInfoBuilder builder, Collection<IBlockEffectProducer> blockEffects) {
         this.version = builder.version;
@@ -39,6 +40,7 @@ public final class BlockInfo {
         this.soundChance = builder.soundChance;
         this.soundReflectivity = builder.soundReflectivity;
         this.soundOcclusion = builder.soundOcclusion;
+        this.takesFootprints = builder.takesFootprints;
     }
 
     public int getVersion() {
@@ -51,6 +53,13 @@ public final class BlockInfo {
 
     public float getSoundOcclusion() {
         return this.soundOcclusion;
+    }
+
+    /**
+     * Whether feet leave prints in it
+     */
+    public boolean takesFootprints() {
+        return this.takesFootprints;
     }
 
     public boolean hasSoundsOrEffects() {
@@ -80,6 +89,7 @@ public final class BlockInfo {
                 .append(this.soundReflectivity)
                 .append("; occlusion: ")
                 .append(this.soundOcclusion)
+                .append(this.takesFootprints ? "; takes footprints" : "")
                 .append("\n");
 
         if (this.stepSound != null) {

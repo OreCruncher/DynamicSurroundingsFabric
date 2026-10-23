@@ -7,6 +7,7 @@ import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.effects.entity.*;
+import org.orecruncher.dsurround.effects.footprints.FootprintEffect;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 
@@ -25,7 +26,8 @@ public enum EntityEffectType {
     ITEM_SWING("item_swing", entity -> getInstance(ItemSwingEffect.class)),
     BRUSH_STEP("brush_step", entity -> getInstance(StepThroughBrushEffect.class)),
     BURNING("burning", entity -> getInstance(BurningEffect.class)),
-    HEALTH_POPOFF("health_popoff", entity -> getInstance(HealthPopoffEffect.class));
+    HEALTH_POPOFF("health_popoff", entity -> getInstance(HealthPopoffEffect.class)),
+    FOOTPRINTS("footprints", entity -> getInstance(FootprintEffect.class));
 
     private static IEntityEffect getInstance(Class<? extends IEntityEffect> clazz) {
         return ContainerManager.resolve(clazz);
@@ -75,6 +77,7 @@ public enum EntityEffectType {
         ITEM_SWING.setConfigProvider(() -> config.enableSwingEffect);
         BURNING.setConfigProvider(() -> config.enableBurningEffect);
         HEALTH_POPOFF.setConfigProvider(() -> config.enableDamagePopoffs);
+        FOOTPRINTS.setConfigProvider(() -> config.enableFootprints);
 
         if (FeatureConflict.FOOTSTEP_EFFECTS.isBlocked())
             BRUSH_STEP.setConfigProvider(() -> false);

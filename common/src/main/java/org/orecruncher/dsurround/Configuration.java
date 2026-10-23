@@ -2,6 +2,7 @@ package org.orecruncher.dsurround;
 
 import org.orecruncher.dsurround.config.ClockStyle;
 import org.orecruncher.dsurround.config.CompassStyle;
+import org.orecruncher.dsurround.config.FootprintStyle;
 import org.orecruncher.dsurround.config.GroundFogQuality;
 import org.orecruncher.dsurround.config.LightLevelColors;
 import org.orecruncher.dsurround.config.LightLevelMode;
@@ -355,6 +356,14 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable a comic book word over a heavy blow's number")
         public boolean showCritWords = true;
+
+        @Property
+        @Comment("Enable/disable footprints left by players and mobs walking on soft ground: dirt, sand, gravel, snow, mud")
+        public boolean enableFootprints = true;
+
+        @Property
+        @Comment("The look of players' footprints")
+        public FootprintStyle footprintStyle = FootprintStyle.SQUARE;
     }
 
     public static class FootstepAccents {

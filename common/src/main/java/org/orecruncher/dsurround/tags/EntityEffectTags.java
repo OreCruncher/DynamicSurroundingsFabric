@@ -21,6 +21,14 @@ public class EntityEffectTags {
     public static final TagKey<EntityType<?>> VANILLA_FIRE = of("vanilla_fire");
     // Also the reverse: entities whose health changes don't pop off
     public static final TagKey<EntityType<?>> NO_HEALTH_POPOFFS = of("no_health_popoffs");
+    // The footprints mobs leave, by style; players' style is in the config
+    public static final TagKey<EntityType<?>> FOOTPRINTS_SQUARE = of("footprints/square");
+    public static final TagKey<EntityType<?>> FOOTPRINTS_PAW = of("footprints/paw");
+    public static final TagKey<EntityType<?>> FOOTPRINTS_HOOF = of("footprints/hoof");
+    public static final TagKey<EntityType<?>> FOOTPRINTS_BIRD = of("footprints/bird");
+    // Whose prints are bigger than their size alone gives (bears), or smaller (skeletons' bony feet)
+    public static final TagKey<EntityType<?>> FOOTPRINTS_LARGE = of("footprints/large");
+    public static final TagKey<EntityType<?>> FOOTPRINTS_SMALL = of("footprints/small");
 
     private static TagKey<EntityType<?>> of(String id) {
         var tagKey = TagKey.create(Registries.ENTITY_TYPE, Constants.asId("effects/" + id));

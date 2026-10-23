@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.AcousticEntry;
@@ -15,6 +16,7 @@ import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.scripting.Script;
+import org.orecruncher.dsurround.tags.BlockEffectTags;
 import org.orecruncher.dsurround.tags.OcclusionTags;
 import org.orecruncher.dsurround.tags.ReflectanceTags;
 
@@ -60,6 +62,7 @@ public final class BlockInfoBuilder {
     Script soundChance = DEFAULT_SOUND_CHANCE;
     final float soundReflectivity;
     final float soundOcclusion;
+    final boolean takesFootprints;
     private boolean built;
 
     /**
@@ -71,6 +74,7 @@ public final class BlockInfoBuilder {
         this.stepSound = null;
         this.soundReflectivity = Reflectance.DEFAULT;
         this.soundOcclusion = Occlusion.DEFAULT;
+        this.takesFootprints = false;
     }
 
     /**
@@ -82,6 +86,7 @@ public final class BlockInfoBuilder {
         this.soundOcclusion = getSoundOcclusionSetting(state, services.tagLibrary());
         this.soundReflectivity = getSoundReflectionSetting(state, services.tagLibrary());
         this.stepSound = state.getSoundType().getStepSound().getLocation();
+        this.takesFootprints = takesFootprints(state, services.tagLibrary());
     }
 
     /**
@@ -95,7 +100,8 @@ public final class BlockInfoBuilder {
     public boolean isDefault() {
         return this.sounds.isEmpty() && this.blockEffects.isEmpty()
                 && this.soundReflectivity == Reflectance.DEFAULT
-                && this.soundOcclusion == Occlusion.DEFAULT;
+                && this.soundOcclusion == Occlusion.DEFAULT
+                && !this.takesFootprints;
     }
 
     public void apply(BlockConfigRule config) {
@@ -135,6 +141,19 @@ public final class BlockInfoBuilder {
 
     private void checkNotBuilt() {
         Preconditions.checkState(!this.built, "BlockInfo has already been built");
+    }
+
+    /**
+     * Whether feet leave prints in it: blocks in the footprints tag, and any that sound soft underfoot (sand, gravel,
+     * snow, mud, soul sand and soil), as mod blocks of those kinds usually borrow vanilla's sounds
+     */
+    static boolean takesFootprints(BlockState state, ITagLibrary tags) {
+        if (tags.is(BlockEffectTags.FOOTPRINTS, state))
+            return true;
+        var sound = state.getSoundType();
+        return sound == SoundType.SAND || sound == SoundType.GRAVEL || sound == SoundType.SNOW
+                || sound == SoundType.POWDER_SNOW || sound == SoundType.MUD || sound == SoundType.SOUL_SAND
+                || sound == SoundType.SOUL_SOIL || sound == SoundType.SUSPICIOUS_SAND || sound == SoundType.SUSPICIOUS_GRAVEL;
     }
 
     private static float getSoundReflectionSetting(BlockState state, ITagLibrary tags) {

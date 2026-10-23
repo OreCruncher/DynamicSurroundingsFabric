@@ -207,6 +207,12 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
             effectTypes.add(EntityEffectType.BURNING);
         if (!this.tagLibrary.is(EntityEffectTags.NO_HEALTH_POPOFFS, entityType))
             effectTypes.add(EntityEffectType.HEALTH_POPOFF);
+        if (entityType == EntityType.PLAYER
+                || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_SQUARE, entityType)
+                || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_PAW, entityType)
+                || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_HOOF, entityType)
+                || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_BIRD, entityType))
+            effectTypes.add(EntityEffectType.FOOTPRINTS);
 
         return effectTypes;
     }

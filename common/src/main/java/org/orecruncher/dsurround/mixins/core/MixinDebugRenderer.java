@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.debug.DebugRenderer;
 import org.orecruncher.dsurround.effects.entity.HealthPopoffs;
+import org.orecruncher.dsurround.effects.footprints.Footprints;
 import org.orecruncher.dsurround.gui.overlay.EffectSystemsRenderer;
 import org.orecruncher.dsurround.gui.overlay.lightlevel.LightLevelRenderer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,8 +13,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Draws the diagnostics overlay's in-world view of tracked effects, the light level overlay's numbers, and health
- * pop-offs, along with
+ * Draws footprints, the diagnostics overlay's in-world view of tracked effects, the light level overlay's numbers,
+ * and health pop-offs, along with
  * vanilla's debug renderers: during world
  * rendering, with the camera position and buffers those use. The same on both platforms, so no render event of either
  * is needed.
@@ -23,6 +24,7 @@ public class MixinDebugRenderer {
 
     @Inject(method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;DDD)V", at = @At("RETURN"))
     private void dsurround$renderTrackedEffects(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, double camX, double camY, double camZ, CallbackInfo ci) {
+        Footprints.render(poseStack, bufferSource, camX, camY, camZ);
         LightLevelRenderer.render(poseStack, bufferSource, camX, camY, camZ);
         EffectSystemsRenderer.render(poseStack, bufferSource, camX, camY, camZ);
         HealthPopoffs.render(poseStack, bufferSource, camX, camY, camZ);
