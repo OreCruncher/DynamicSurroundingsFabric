@@ -351,6 +351,14 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable dark mist where a mob's body vanishes when it dies, in place of vanilla's white puffs")
         public boolean enableDeathPuffs = true;
+
+        @Property
+        @Comment("Enable/disable numbers popping off mobs and players when their health changes: red for damage, green for healing")
+        public boolean enableDamagePopoffs = true;
+
+        @Property
+        @Comment("Enable/disable a comic book word over a heavy blow's number")
+        public boolean showCritWords = true;
     }
 
     public static class FootstepAccents {

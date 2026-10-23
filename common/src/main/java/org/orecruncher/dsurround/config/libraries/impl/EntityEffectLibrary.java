@@ -205,6 +205,8 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
         // Anything can burn; the tag lists those that keep vanilla's fire
         if (!this.tagLibrary.is(EntityEffectTags.VANILLA_FIRE, entityType))
             effectTypes.add(EntityEffectType.BURNING);
+        if (!this.tagLibrary.is(EntityEffectTags.NO_HEALTH_POPOFFS, entityType))
+            effectTypes.add(EntityEffectType.HEALTH_POPOFF);
 
         return effectTypes;
     }

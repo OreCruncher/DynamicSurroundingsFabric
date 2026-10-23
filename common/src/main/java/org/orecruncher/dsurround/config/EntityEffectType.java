@@ -24,7 +24,8 @@ public enum EntityEffectType {
     PLAYER_TOOLBAR("player_toolbar", entity -> getInstance(ToolbarEffect.class)),
     ITEM_SWING("item_swing", entity -> getInstance(ItemSwingEffect.class)),
     BRUSH_STEP("brush_step", entity -> getInstance(StepThroughBrushEffect.class)),
-    BURNING("burning", entity -> getInstance(BurningEffect.class));
+    BURNING("burning", entity -> getInstance(BurningEffect.class)),
+    HEALTH_POPOFF("health_popoff", entity -> getInstance(HealthPopoffEffect.class));
 
     private static IEntityEffect getInstance(Class<? extends IEntityEffect> clazz) {
         return ContainerManager.resolve(clazz);
@@ -73,6 +74,7 @@ public enum EntityEffectType {
         PLAYER_TOOLBAR.setConfigProvider(() -> config.enablePlayerToolbarEffect);
         ITEM_SWING.setConfigProvider(() -> config.enableSwingEffect);
         BURNING.setConfigProvider(() -> config.enableBurningEffect);
+        HEALTH_POPOFF.setConfigProvider(() -> config.enableDamagePopoffs);
 
         if (FeatureConflict.FOOTSTEP_EFFECTS.isBlocked())
             BRUSH_STEP.setConfigProvider(() -> false);

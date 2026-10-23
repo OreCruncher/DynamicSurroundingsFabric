@@ -19,6 +19,8 @@ public class EntityEffectTags {
     public static final TagKey<EntityType<?>> BRUSH_STEP = of ("brush_step");
     // The reverse of the others: entities that keep vanilla's fire rather than get the burning effect
     public static final TagKey<EntityType<?>> VANILLA_FIRE = of("vanilla_fire");
+    // Also the reverse: entities whose health changes don't pop off
+    public static final TagKey<EntityType<?>> NO_HEALTH_POPOFFS = of("no_health_popoffs");
 
     private static TagKey<EntityType<?>> of(String id) {
         var tagKey = TagKey.create(Registries.ENTITY_TYPE, Constants.asId("effects/" + id));

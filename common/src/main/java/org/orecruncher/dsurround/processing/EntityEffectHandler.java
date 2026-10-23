@@ -8,6 +8,7 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
 import org.orecruncher.dsurround.effects.entity.BurningEntities;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
+import org.orecruncher.dsurround.effects.entity.HealthPopoffs;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
@@ -96,10 +97,11 @@ public class EntityEffectHandler extends AbstractClientHandler {
     @Override
     public void onDisconnect() {
         this.entityEffectLibrary.clearCache();
+        HealthPopoffs.clear();
     }
 
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
-        event.add(CollectDiagnosticsEvent.Section.Systems, "Entity effects (range %d/%d): entities %d, ticked %d, burning %d".formatted(this.effectRange(), this.scanRange(), this.entityCount, this.entityEffectsTicked, BurningEntities.count()));
+        event.add(CollectDiagnosticsEvent.Section.Systems, "Entity effects (range %d/%d): entities %d, ticked %d, burning %d, pop-offs %d".formatted(this.effectRange(), this.scanRange(), this.entityCount, this.entityEffectsTicked, BurningEntities.count(), HealthPopoffs.count()));
     }
 }
