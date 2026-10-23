@@ -23,7 +23,8 @@ public enum EntityEffectType {
     FROST_BREATH("frost_breath", entity -> getInstance(BreathEffect.class)),
     PLAYER_TOOLBAR("player_toolbar", entity -> getInstance(ToolbarEffect.class)),
     ITEM_SWING("item_swing", entity -> getInstance(ItemSwingEffect.class)),
-    BRUSH_STEP("brush_step", entity -> getInstance(StepThroughBrushEffect.class));
+    BRUSH_STEP("brush_step", entity -> getInstance(StepThroughBrushEffect.class)),
+    BURNING("burning", entity -> getInstance(BurningEffect.class));
 
     private static IEntityEffect getInstance(Class<? extends IEntityEffect> clazz) {
         return ContainerManager.resolve(clazz);
@@ -71,6 +72,7 @@ public enum EntityEffectType {
         FROST_BREATH.setConfigProvider(() -> config.enableBreathEffect);
         PLAYER_TOOLBAR.setConfigProvider(() -> config.enablePlayerToolbarEffect);
         ITEM_SWING.setConfigProvider(() -> config.enableSwingEffect);
+        BURNING.setConfigProvider(() -> config.enableBurningEffect);
 
         if (FeatureConflict.FOOTSTEP_EFFECTS.isBlocked())
             BRUSH_STEP.setConfigProvider(() -> false);

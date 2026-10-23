@@ -265,7 +265,7 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @MovedFrom("blockEffects.flameJetLight")
-        @Comment("Enable/disable the flicker of flame jets' light on their surroundings")
+        @Comment("Enable/disable the flicker of flame jets' and burning mobs' light on their surroundings")
         public boolean enableLight = true;
     }
 
@@ -343,6 +343,14 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable sound effect when walking through dense brush")
         public boolean enableBrushStepEffect = true;
+
+        @Property
+        @Comment("Enable/disable flames like a flame jet's on burning mobs, in place of vanilla's flat fire. Vanilla's fire stays past the entity effect range, with Particles on Minimal and while a shader pack is in use")
+        public boolean enableBurningEffect = true;
+
+        @Property
+        @Comment("Enable/disable dark mist where a mob's body vanishes when it dies, in place of vanilla's white puffs")
+        public boolean enableDeathPuffs = true;
     }
 
     public static class FootstepAccents {

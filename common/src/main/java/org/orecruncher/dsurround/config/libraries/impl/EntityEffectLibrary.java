@@ -202,6 +202,9 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
             effectTypes.add(EntityEffectType.PLAYER_TOOLBAR);
         if (this.tagLibrary.is(EntityEffectTags.BRUSH_STEP, entityType))
             effectTypes.add(EntityEffectType.BRUSH_STEP);
+        // Anything can burn; the tag lists those that keep vanilla's fire
+        if (!this.tagLibrary.is(EntityEffectTags.VANILLA_FIRE, entityType))
+            effectTypes.add(EntityEffectType.BURNING);
 
         return effectTypes;
     }

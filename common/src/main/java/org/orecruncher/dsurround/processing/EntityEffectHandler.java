@@ -6,6 +6,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
+import org.orecruncher.dsurround.effects.entity.BurningEntities;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -68,13 +69,19 @@ public class EntityEffectHandler extends AbstractClientHandler {
                 info = this.entityEffectLibrary.getEntityEffectInfo(entity);
             }
 
-            if (info != null) {
-                if (inRange && entity.isAlive() && !entity.isSpectator()) {
+            if (info != null && inRange && !entity.isSpectator()) {
+                if (entity.isAlive()) {
                     tickedEntities.add(entity.getId());
                     if (!info.isDefault()) {
                         this.entityEffectsTicked++;
                         info.tick(entity);
                     }
+                } else if (hasInfo && entity.isDeadOrDying()) {
+                    // Its body stays a second, tipping over, before it is removed: effects that show on the body
+                    // (a burning mob's flames) keep going until then
+                    tickedEntities.add(entity.getId());
+                    if (!info.isDefault())
+                        info.tickDying(entity);
                 }
             }
         }
@@ -93,6 +100,6 @@ public class EntityEffectHandler extends AbstractClientHandler {
 
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
-        event.add(CollectDiagnosticsEvent.Section.Systems, "Entity effects (range %d/%d): entities %d, ticked %d".formatted(this.effectRange(), this.scanRange(), this.entityCount, this.entityEffectsTicked));
+        event.add(CollectDiagnosticsEvent.Section.Systems, "Entity effects (range %d/%d): entities %d, ticked %d, burning %d".formatted(this.effectRange(), this.scanRange(), this.entityCount, this.entityEffectsTicked, BurningEntities.count()));
     }
 }

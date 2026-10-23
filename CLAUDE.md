@@ -14,8 +14,8 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
 
 ## Build and test (Git Bash on Windows; use absolute paths, `cd` can be reset between commands)
 - Compile everything: `./gradlew :common:compileJava :fabric:compileJava :neoforge:compileJava -q`
-- Tests (common only, ~1450): `./gradlew :common:test -q`, then read `common/build/test-results/test/*.xml` for
-  counts and failure messages (the console output is noisy).
+- Tests (common only, ~2100): `./gradlew :common:test -q > /dev/null 2>&1; python scripts/test-summary.py` (counts
+  and each failure's message from `common/build/test-results/test/*.xml`; the console output is noisy).
 - One class: `./gradlew :common:test --tests "*BlockInfoTests" -q`
 - Mapped game jar for `javap` (check real signatures rather than assuming):
   `.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-merged-*/1.21.1-*/minecraft-merged-*.jar`.

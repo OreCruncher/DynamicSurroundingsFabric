@@ -44,7 +44,11 @@ public enum OptionalHook {
     WIND_BLOWN_PARTICLES("Wind blowing particles",
             site("core.MixinParticleEngine", "dsurround$markWindBlown"),
             site("core.MixinParticle", "dsurround$driftX"),
-            site("core.MixinParticle", "dsurround$driftZ"));
+            site("core.MixinParticle", "dsurround$driftZ")),
+    BURNING_ENTITIES("Flames on burning mobs",
+            site("core.MixinEntityRenderDispatcher", "dsurround$vanillaFire")),
+    DEATH_PUFFS("Dark mist when mobs die",
+            site("core.MixinLivingEntity", "dsurround$deathPuffs"));
 
     /**
      * Whether a hook applied

@@ -17,6 +17,8 @@ public class EntityEffectTags {
     public static final TagKey<EntityType<?>> ITEM_SWING = of("item_swing");
     public static final TagKey<EntityType<?>> TOOLBAR = of("toolbar");
     public static final TagKey<EntityType<?>> BRUSH_STEP = of ("brush_step");
+    // The reverse of the others: entities that keep vanilla's fire rather than get the burning effect
+    public static final TagKey<EntityType<?>> VANILLA_FIRE = of("vanilla_fire");
 
     private static TagKey<EntityType<?>> of(String id) {
         var tagKey = TagKey.create(Registries.ENTITY_TYPE, Constants.asId("effects/" + id));
