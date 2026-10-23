@@ -4,8 +4,6 @@ import java.util.function.BiConsumer;
 import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
-import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.effects.footprints.Footprints;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IClientConnect;
@@ -27,29 +25,20 @@ import org.orecruncher.dsurround.processing.fog.HolisticFogRangeCalculator;
 import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
 import org.orecruncher.dsurround.processing.scanner.VillageScanner;
-import org.orecruncher.dsurround.sound.IAudioPlayer;
-import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 @Cacheable
 public class Handlers {
 
-    private final Configuration config;
     private final IModLog logger;
     private final ITickCount tickCount;
-    private final ISoundLibrary soundLibrary;
-    private final IAudioPlayer audioPlayer;
     private final ObjectArray<AbstractClientHandler> effectHandlers = new ObjectArray<>();
     private final LoggingTimerEMA handlerTimer = new LoggingTimerEMA("Handlers");
     private final LogThrottle<String> handlerFailures;
     private boolean isConnected = false;
-    private boolean startupSoundPlayed = false;
 
-    public Handlers(Configuration config, IModLog logger, ITickCount tickCount, ISoundLibrary soundLibrary, IAudioPlayer audioPlayer) {
-        this.config = config;
+    public Handlers(IModLog logger, ITickCount tickCount) {
         this.logger = logger;
         this.tickCount = tickCount;
-        this.soundLibrary = soundLibrary;
-        this.audioPlayer = audioPlayer;
         this.handlerFailures = LogThrottle.oncePerKey(logger, "handler errors", "the next connect");
         init();
     }
@@ -65,10 +54,6 @@ public class Handlers {
     }
 
     private void init() {
-
-        // If the user disabled the startup sound flag it as having
-        // been performed.
-        this.startupSoundPlayed = !this.config.otherOptions.playRandomSoundOnStartup;
 
         this.register(Scanners.class);           // Must be first
         this.register(EntityEffectHandler.class);
@@ -129,9 +114,6 @@ public class Handlers {
     }
 
     public void tick(Minecraft client) {
-        if (!this.startupSoundPlayed)
-            handleStartupSound();
-
         if (!doTick())
             return;
 
@@ -164,24 +146,6 @@ public class Handlers {
 
     private void handlerFailed(AbstractClientHandler handler, Throwable t) {
         this.handlerFailures.error(handler.getHandlerName(), t, "Handler [%s] failed", handler.getHandlerName());
-    }
-
-    private void handleStartupSound() {
-        var client = GameUtils.getMC();
-        if (client.getOverlay() != null)
-            return;
-
-        this.startupSoundPlayed = true;
-
-        this.soundLibrary
-            .getRandomStartupSound()
-            .ifPresent(id -> {
-                var sound = SoundFactoryBuilder
-                        .create(id)
-                        .build()
-                        .createAsAdditional();
-                this.audioPlayer.play(sound);
-            });
     }
 
     public void gatherDiagnostics(CollectDiagnosticsEvent event) {

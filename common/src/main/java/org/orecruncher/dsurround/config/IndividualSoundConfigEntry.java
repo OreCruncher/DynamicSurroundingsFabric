@@ -15,8 +15,7 @@ public class IndividualSoundConfigEntry implements Comparable<IndividualSoundCon
                     ResourceLocation.CODEC.fieldOf("soundEventId").forGetter(info -> info.soundEventId),
                     Codec.intRange(0, 400).optionalFieldOf("volumeScale", 100).forGetter(info -> info.volumeScale),
                     Codec.BOOL.optionalFieldOf("block", false).forGetter(info -> info.block),
-                    Codec.BOOL.optionalFieldOf("cull", false).forGetter(info -> info.cull),
-                    Codec.BOOL.optionalFieldOf("startup", false).forGetter(info -> info.startup)
+                    Codec.BOOL.optionalFieldOf("cull", false).forGetter(info -> info.cull)
             ).apply(instance, IndividualSoundConfigEntry::new));
 
     public ResourceLocation soundEventId;
@@ -24,15 +23,13 @@ public class IndividualSoundConfigEntry implements Comparable<IndividualSoundCon
     public int volumeScale;
     public boolean block;
     public boolean cull;
-    public boolean startup;
 
-    public IndividualSoundConfigEntry(ResourceLocation id, Integer volumeScale, Boolean block, Boolean cull, Boolean startup) {
+    public IndividualSoundConfigEntry(ResourceLocation id, Integer volumeScale, Boolean block, Boolean cull) {
         this.soundEventId = id;
         this.soundEventIdProjected = id.toString();
         this.volumeScale = Mth.clamp(volumeScale, 0, 400);
         this.block = block;
         this.cull = cull;
-        this.startup = startup;
     }
 
     IndividualSoundConfigEntry(IndividualSoundConfigEntry source) {
@@ -41,11 +38,10 @@ public class IndividualSoundConfigEntry implements Comparable<IndividualSoundCon
         this.volumeScale = source.volumeScale;
         this.block = source.block;
         this.cull = source.cull;
-        this.startup = source.startup;
     }
 
     public IndividualSoundConfigEntry(ResourceLocation id) {
-        this(id, 100, false, false, false);
+        this(id, 100, false, false);
     }
 
     public static IndividualSoundConfigEntry createDefault(final SoundEvent event) {
@@ -57,7 +53,7 @@ public class IndividualSoundConfigEntry implements Comparable<IndividualSoundCon
     }
 
     public boolean isNotDefault() {
-        return this.volumeScale != 100 || this.block || this.cull || this.startup;
+        return this.volumeScale != 100 || this.block || this.cull;
     }
 
     @Override
@@ -68,8 +64,6 @@ public class IndividualSoundConfigEntry implements Comparable<IndividualSoundCon
             builder.append("cull ");
         if (this.block)
             builder.append("block ");
-        if (this.startup)
-            builder.append("startup");
         builder.append("}");
         return builder.toString();
     }

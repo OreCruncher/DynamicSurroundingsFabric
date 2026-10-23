@@ -96,10 +96,6 @@ public class Configuration extends ConfigurationData {
     @TextStyle(color = "#0078D4", italic = true)
     public final Logging logging = new Logging();
 
-    @Property
-    @Comment("Configuration options for other things")
-    public final OtherOptions otherOptions = new OtherOptions();
-
     public static class Flags {
         public static final int AUDIO_PLAYER = 0x1;
         public static final int BASIC_SOUND_PLAY = 0x2;
@@ -586,11 +582,5 @@ public class Configuration extends ConfigurationData {
         @Slider(min = 0, max = 100)
         @Comment("Reduce the wait time between music plays by a percentage")
         public int reduceWaitTime = 0;
-    }
-
-    public static class OtherOptions {
-        @Property
-        @Comment("Enable/disable playing random sound at the Minecraft finish loading to main screen")
-        public boolean playRandomSoundOnStartup = true;
     }
 }
