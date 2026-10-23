@@ -151,7 +151,9 @@ particles and firefly lights: shaders, `RenderSystem`, particle render types), m
 (`LevelRenderer.renderSky`, `SoundEngine.play`, `ParticleEngine` render order, `FogRenderer`) and the sound engine
 hooks. NeoForge 26.2's client launch class is `net.neoforged.fml.startup.Client`.
 
-1.21.1 work lands on `main` (0.4.6 was squash-merged as `4808dca`); start each 1.21.1 release branch from `main`.
-`main` is merged into 26.2 (as of 0.4.6, `4808dca`), so `git diff $(git merge-base main OreCruncher/26.2) main` lists
-the 1.21.1 changes still to port. Port them in the worktree by merging `main` into `OreCruncher/26.2` and resolving
-against 26.2's APIs (see its `MIGRATION.md`), never by rebasing the 26.2 branch.
+1.21.1 work lands on `main` (0.4.7 was squash-merged as `f3edc2f`); start each 1.21.1 release branch from `main`.
+`main` is merged into 26.2 (as of 0.4.7, `f3edc2f`, recorded with `-s ours`), so
+`git diff $(git merge-base main OreCruncher/26.2) main` lists the 1.21.1 changes still to port. The release branch in
+progress (`OreCruncher/0.4.8`) is merged into `OreCruncher/26.2` directly, in the worktree, resolving against 26.2's
+APIs (see its `MIGRATION.md`; `scripts/port-merge.py` there redoes the renames), never by rebasing the 26.2 branch.
+After its squash to `main`, record `main` in 26.2 with `git merge -s ours main`.
