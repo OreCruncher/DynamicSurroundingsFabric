@@ -241,7 +241,7 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @Slider(min = 16, max = 64)
-        @Comment("Distance that will be scanned when generating block effects")
+        @Comment("Radius around the player, in blocks, where block effects (waterfalls, steam, random block effects) are found and shown. Past 32, effects show farther than vanilla particles, at more cost.")
         public int blockEffectRange = 32;
 
         @Property

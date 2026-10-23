@@ -2,301 +2,238 @@ package org.orecruncher.dsurround.lib.scanner;
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import net.minecraft.SharedConstants;
-import net.minecraft.core.BlockBox;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
-import net.minecraft.core.Vec3i;
-import net.minecraft.server.Bootstrap;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
+import java.util.function.IntPredicate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for the scanner's geometry: walking a cuboid, the slabs entering and leaving range when the volume moves,
- * splitting a volume into chunk sections, and the bookkeeping of a queued job.
+ * Tests for the scanner's geometry: the sphere's rows, and the jobs that walk the parts of a sphere entering and
+ * leaving range, checked against brute force over every position.
  * <p>
- * The key property for movement: for two volumes A and B, the complement of A against their intersection, plus the
- * intersection itself, covers A exactly once. That is what lets the scanner process only the blocks entering and
- * leaving range when the player moves.
+ * The key property for movement: the new sphere's positions are exactly those of the move's job plus those the old
+ * sphere already had. That is what lets the scanner process only the blocks entering range when the player moves.
  */
 class ScannerGeometryTests {
 
-    // Need this to bootstrap the Minecraft environment so tests run
-    @BeforeAll
-    static void beforeAll() {
-        SharedConstants.tryDetectVersion();
-        Bootstrap.bootStrap();
-    }
+    private static final int NO_FLOOR = -10_000;
+    private static final int NO_CEILING = 10_000;
 
     // ---- Helpers ---------------------------------------------------------------------------------------------
 
     /**
-     * Every point the iterator produces. Fails if any point is produced twice.
+     * Every position the job produces, walked section by section. Fails if a position is produced twice, lies
+     * outside the section being walked, or if a section's count doesn't match what was walked in it.
      */
-    private static LongSet collect(CuboidPointIterator iterator) {
+    private static LongSet drain(ScanJob job) {
         LongSet points = new LongOpenHashSet();
         var pos = new BlockPos.MutableBlockPos();
-        while (iterator.next(pos)) {
-            assertTrue(points.add(pos.asLong()), () -> "point produced twice: " + pos);
+        while (!job.isDone()) {
+            long section = job.currentSection();
+            long before = job.remaining();
+            int walked = 0;
+            while (job.next(pos)) {
+                assertEquals(section, SectionPos.asLong(pos), () -> "position outside its section: " + pos);
+                assertTrue(points.add(pos.asLong()), () -> "position produced twice: " + pos);
+                walked++;
+            }
+            assertTrue(walked > 0, "a section with nothing in it was queued");
+            job.finishSection();
+            assertEquals(before - walked, job.remaining(), "section count differs from what was walked");
         }
+        assertEquals(0, job.remaining());
         return points;
     }
 
     /**
-     * Every point in the boxes. Fails if any point is in more than one box.
+     * Brute force: the positions of {@code sphere} within the heights {@code minY} to {@code maxY} that pass
+     * {@code keep}.
      */
-    private static LongSet collect(List<BlockBox> boxes) {
+    private static LongSet pointsOf(ScanSphere sphere, int minY, int maxY, PositionFilter keep) {
         LongSet points = new LongOpenHashSet();
-        for (var box : boxes) {
-            for (long p : collect(new CuboidPointIterator(box)))
-                assertTrue(points.add(p), () -> "point in more than one box: " + BlockPos.of(p) + " in " + boxes);
+        int r = sphere.radius();
+        for (int y = sphere.y() - r; y <= sphere.y() + r; y++) {
+            if (y < minY || y > maxY)
+                continue;
+            for (int z = sphere.z() - r; z <= sphere.z() + r; z++)
+                for (int x = sphere.x() - r; x <= sphere.x() + r; x++)
+                    if (sphere.contains(x, y, z) && keep.test(x, y, z))
+                        points.add(BlockPos.asLong(x, y, z));
         }
         return points;
     }
 
-    /**
-     * Reference implementation using vanilla's iterator.
-     */
-    private static LongSet pointsOf(BlockBox box) {
-        LongSet points = new LongOpenHashSet();
-        for (var pos : BlockPos.betweenClosed(box.min(), box.max()))
-            points.add(pos.asLong());
-        return points;
+    private static LongSet pointsOf(ScanSphere sphere) {
+        return pointsOf(sphere, NO_FLOOR, NO_CEILING, (x, y, z) -> true);
     }
 
-    private static BlockBox box(int x0, int y0, int z0, int x1, int y1, int z1) {
-        return BlockBox.of(new BlockPos(x0, y0, z0), new BlockPos(x1, y1, z1));
+    @FunctionalInterface
+    private interface PositionFilter {
+        boolean test(int x, int y, int z);
     }
 
-    /**
-     * The complement of {@code volume} against {@code intersect}, combined with {@code intersect}, must be exactly
-     * {@code volume}, with no point in both.
-     */
-    private static void assertComplementCovers(BlockBox volume, BlockBox intersect) {
-        LongSet complement = collect(Cuboid.complement(volume, intersect));
-        LongSet inside = pointsOf(intersect);
-
-        for (long p : complement) {
-            assertFalse(inside.contains(p), () -> "complement includes intersect point " + BlockPos.of(p)
-                    + " for volume " + volume + " and intersect " + intersect);
-        }
-
-        LongSet union = new LongOpenHashSet(complement);
-        union.addAll(inside);
-        assertEquals(pointsOf(volume), union, () -> "complement + intersect != volume for " + volume + ", " + intersect);
-    }
-
-    // ---- CuboidPointIterator ---------------------------------------------------------------------------------
+    // ---- ScanSphere ------------------------------------------------------------------------------------------
 
     @Test
-    void cuboidVisitsEveryPointExactlyOnce() {
-        var box = box(-2, -1, 3, 1, 2, 5);
-
-        LongSet points = collect(new CuboidPointIterator(box));
-
-        assertEquals(Cuboid.volumeOf(box), points.size());
-        assertEquals(pointsOf(box), points);
+    void rowsMatchTheSphere() {
+        var sphere = new ScanSphere(5, -3, 17, 9);
+        for (int y = -3 - 11; y <= -3 + 11; y++)
+            for (int z = 17 - 11; z <= 17 + 11; z++) {
+                int w = sphere.halfWidth(y, z);
+                for (int x = 5 - 11; x <= 5 + 11; x++)
+                    assertEquals(sphere.contains(x, y, z), w >= 0 && Math.abs(x - 5) <= w,
+                            "row (%d, %d) at x %d".formatted(y, z, x));
+            }
     }
 
     @Test
-    void cornersMayBeGivenInEitherOrder() {
-        var a = new BlockPos(4, 10, -3);
-        var b = new BlockPos(-1, 7, 2);
-
-        assertEquals(collect(new CuboidPointIterator(a, b)), collect(new CuboidPointIterator(b, a)));
+    void volumeCountsEveryPosition() {
+        for (int r : new int[]{0, 1, 2, 7, 16})
+            assertEquals(pointsOf(new ScanSphere(0, 0, 0, r)).size(), ScanSphere.volumeOf(r), "radius " + r);
     }
 
     @Test
-    void singlePointCuboidProducesOnePoint() {
-        var p = new BlockPos(5, 64, -7);
-
-        LongSet points = collect(new CuboidPointIterator(p, p));
-
-        assertEquals(1, points.size());
-        assertTrue(points.contains(p.asLong()));
+    void sphereIsAboutHalfTheCube() {
+        // What a longer range costs: a 48 sphere is under twice a 32 cube
+        long sphere48 = ScanSphere.volumeOf(48);
+        long cube32 = 65L * 65 * 65;
+        assertEquals(4.0 / 3.0 * Math.PI * 48 * 48 * 48, sphere48, sphere48 * 0.01);
+        assertTrue(sphere48 < 2 * cube32);
     }
 
     @Test
-    void firstAndLastPointsAreIncluded() {
-        // Regression: the old iterator shared BlockPos.betweenClosed's mutable cursor, skipping the first point and
-        // producing the last one twice.
-        var min = new BlockPos(0, 0, 0);
-        var max = new BlockPos(2, 2, 2);
-
-        LongSet points = collect(new CuboidPointIterator(min, max));
-
-        assertTrue(points.contains(min.asLong()));
-        assertTrue(points.contains(max.asLong()));
-    }
-
-    @Test
-    void exhaustedIteratorLeavesTheOutputUnchanged() {
-        var it = new CuboidPointIterator(BlockPos.ZERO, BlockPos.ZERO);
-        var pos = new BlockPos.MutableBlockPos();
-
-        assertTrue(it.next(pos));
-        pos.set(9, 9, 9);
-        assertFalse(it.next(pos));
-        assertEquals(new BlockPos(9, 9, 9), pos);
-    }
-
-    @Test
-    void emptyIteratorHasNoPoints() {
-        assertFalse(CuboidPointIterator.EMPTY.next(new BlockPos.MutableBlockPos()));
-    }
-
-    // ---- Cuboid.complement -----------------------------------------------------------------------------------
-
-    @Test
-    void complementOfIdenticalVolumesIsEmpty() {
-        var box = box(0, 0, 0, 4, 4, 4);
-
-        assertTrue(Cuboid.complement(box, box).isEmpty());
-    }
-
-    @Test
-    void oneStepMoveTouchesOnlyTheEdgeLayers() {
-        // Regression: the slabs used to include a layer of the intersect, so a one block move scanned two layers
-        // and unscanned a layer that was still in range.
-        var oldVolume = box(0, 0, 0, 10, 10, 10);
-        var newVolume = oldVolume.offset(new Vec3i(1, 0, 0));
-        var intersect = Cuboid.intersection(oldVolume, newVolume);
-        assertNotNull(intersect);
-
-        LongSet leaving = collect(Cuboid.complement(oldVolume, intersect));
-        LongSet entering = collect(Cuboid.complement(newVolume, intersect));
-
-        assertEquals(11 * 11, leaving.size());
-        assertEquals(11 * 11, entering.size());
-        leaving.forEach(p -> assertEquals(0, BlockPos.getX(p)));
-        entering.forEach(p -> assertEquals(11, BlockPos.getX(p)));
-    }
-
-    @Test
-    void complementCoversEveryMoveExactlyOnce() {
-        // Same-size volumes, as the scanner uses, moved by every offset up to beyond their size on each axis
-        var oldVolume = box(-3, 60, 7, 2, 64, 13);
-        int checked = 0;
-
-        for (int dx = -7; dx <= 7; dx++)
-            for (int dy = -6; dy <= 6; dy++)
-                for (int dz = -8; dz <= 8; dz++) {
-                    var newVolume = oldVolume.offset(new Vec3i(dx, dy, dz));
-                    var intersect = Cuboid.intersection(oldVolume, newVolume);
-                    if (intersect == null)
-                        continue;
-
-                    assertComplementCovers(oldVolume, intersect);
-                    assertComplementCovers(newVolume, intersect);
-                    checked++;
-                }
-
-        assertTrue(checked > 0);
-    }
-
-    @Test
-    void complementCoversVolumesClampedAtTheBuildLimit() {
-        // Near the top or bottom of the world the scanner clamps the volume, so old and new can differ in height
-        var oldVolume = box(0, 300, 0, 8, 319, 8);   // clamped at the top
-        var newVolume = box(2, 296, -1, 10, 312, 7); // moved down, not clamped
-        var intersect = Cuboid.intersection(oldVolume, newVolume);
-        assertNotNull(intersect);
-
-        assertComplementCovers(oldVolume, intersect);
-        assertComplementCovers(newVolume, intersect);
-    }
-
-    // ---- Cuboid.splitBySection -------------------------------------------------------------------------------
-
-    @Test
-    void sectionPiecesCoverTheBoxExactlyOnce() {
-        // Crosses section boundaries on every axis, including into negative coordinates
-        var box = box(-20, -5, -1, 17, 40, 33);
-
-        var pieces = Cuboid.splitBySection(box);
-
-        assertEquals(pointsOf(box), collect(pieces));
-    }
-
-    @Test
-    void eachSectionPieceLiesWithinOneSection() {
-        var box = box(-20, -5, -1, 17, 40, 33);
-
-        for (var piece : Cuboid.splitBySection(box)) {
-            assertEquals(SectionPos.of(piece.min()), SectionPos.of(piece.max()), () -> "piece spans sections: " + piece);
-        }
-    }
-
-    @Test
-    void boxInsideOneSectionIsNotSplit() {
-        var box = box(1, 2, 3, 14, 15, 12);
-
-        assertEquals(List.of(box), Cuboid.splitBySection(box));
-    }
-
-    @Test
-    void sectionAlignedBoxSplitsIntoWholeSections() {
-        var box = box(0, 0, 0, 31, 15, 47);
-
-        var pieces = Cuboid.splitBySection(box);
-
-        assertEquals(2 * 1 * 3, pieces.size());
-        pieces.forEach(p -> assertEquals(16 * 16 * 16, Cuboid.volumeOf(p)));
+    void overlapIsTwoRadii() {
+        var sphere = new ScanSphere(0, 0, 0, 10);
+        assertTrue(sphere.overlaps(new ScanSphere(20, 0, 0, 10)));
+        assertFalse(sphere.overlaps(new ScanSphere(21, 0, 0, 10)));
+        assertFalse(sphere.overlaps(new ScanSphere(15, 15, 0, 10)));
     }
 
     // ---- ScanJob ---------------------------------------------------------------------------------------------
 
     @Test
-    void jobVisitsEveryPointAndCountsDown() {
-        var region = box(-3, 10, 14, 20, 12, 18);
-        var job = new ScanJob(false, region);
-        assertEquals(Cuboid.volumeOf(region), job.remaining());
-
-        LongSet points = new LongOpenHashSet();
-        var pos = new BlockPos.MutableBlockPos();
-        while (!job.isDone()) {
-            var points0 = job.points();
-            while (points0.next(pos))
-                assertTrue(points.add(pos.asLong()));
-            job.finishBox();
-        }
-
-        assertEquals(pointsOf(region), points);
-        assertEquals(0, job.remaining());
-        assertNull(job.currentBox());
+    void fullScanVisitsTheWholeSphere() {
+        var sphere = new ScanSphere(-7, 70, 22, 20);
+        var job = ScanJob.full(sphere, NO_FLOOR, NO_CEILING);
+        assertEquals(ScanSphere.volumeOf(20), job.remaining());
+        assertEquals(pointsOf(sphere), drain(job));
     }
 
     @Test
-    void jobResumesPartWayThroughABox() {
-        var region = box(0, 0, 0, 3, 3, 3);
-        var job = new ScanJob(true, region);
+    void fullScanStaysInsideTheWorld() {
+        var sphere = new ScanSphere(3, -60, 3, 12);
+        var job = ScanJob.full(sphere, -64, 319);
+        assertEquals(pointsOf(sphere, -64, 319, (x, y, z) -> true), drain(job));
+    }
+
+    @Test
+    void moveVisitsExactlyWhatEnteredRange() {
+        var from = new ScanSphere(100, 64, -40, 12);
+        int[][] moves = {
+                {1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1},
+                {1, 1, 0}, {-1, 0, 1}, {1, -1, -1}, {3, 0, 2}, {-5, 4, 7}, {11, 0, 0}, {0, 23, 0}, {24, 0, 0}
+        };
+        for (int[] m : moves) {
+            var to = new ScanSphere(from.x() + m[0], from.y() + m[1], from.z() + m[2], from.radius());
+            var entering = drain(ScanJob.difference(false, to, from, NO_FLOOR, NO_CEILING));
+            var expected = pointsOf(to, NO_FLOOR, NO_CEILING, (x, y, z) -> !from.contains(x, y, z));
+            assertEquals(expected, entering, () -> "move by " + m[0] + ", " + m[1] + ", " + m[2]);
+
+            var leaving = ScanJob.difference(true, from, to, NO_FLOOR, NO_CEILING);
+            assertTrue(leaving.isUnscan());
+            assertEquals(pointsOf(from, NO_FLOOR, NO_CEILING, (x, y, z) -> !to.contains(x, y, z)), drain(leaving));
+        }
+    }
+
+    @Test
+    void oneStepTouchesOnlyAShell() {
+        var from = new ScanSphere(0, 0, 0, 48);
+        var to = new ScanSphere(1, 0, 0, 48);
+        var job = ScanJob.difference(false, to, from, NO_FLOOR, NO_CEILING);
+        // One block per row of the leading half: the sphere's cross-section, about pi * r^2
+        assertEquals(Math.PI * 48 * 48, job.remaining(), Math.PI * 48 * 48 * 0.02);
+    }
+
+    @Test
+    void moveAgainstTheBuildLimit() {
+        var from = new ScanSphere(0, 310, 0, 12);
+        var to = new ScanSphere(0, 309, 1, 12);
+        var entering = drain(ScanJob.difference(false, to, from, -64, 319));
+        assertEquals(pointsOf(to, -64, 319, (x, y, z) -> !from.contains(x, y, z)), entering);
+    }
+
+    @Test
+    void columnIsTheSphereWithinIt() {
+        var sphere = new ScanSphere(10, 64, 10, 20);
+        var job = ScanJob.column(sphere, NO_FLOOR, NO_CEILING, 15, 32, -1, 16);
+        IntPredicate inX = x -> x >= 15 && x <= 32;
+        IntPredicate inZ = z -> z >= -1 && z <= 16;
+        assertEquals(pointsOf(sphere, NO_FLOOR, NO_CEILING, (x, y, z) -> inX.test(x) && inZ.test(z)), drain(job));
+    }
+
+    @Test
+    void columnOutsideTheSphereHasNothing() {
+        var sphere = new ScanSphere(0, 64, 0, 20);
+        assertTrue(ScanJob.column(sphere, NO_FLOOR, NO_CEILING, 40, 55, 40, 55).isDone());
+        // Inside the sphere's box but past its surface
+        var corner = ScanJob.column(sphere, NO_FLOOR, NO_CEILING, 16, 20, 16, 20);
+        assertTrue(corner.isDone());
+        assertEquals(0, corner.remaining());
+    }
+
+    @Test
+    void sectionsAreVisitedNearestFirst() {
+        var sphere = new ScanSphere(37, 80, -5, 40);
+        var job = ScanJob.full(sphere, NO_FLOOR, NO_CEILING);
+        double last = -1;
+        while (!job.isDone()) {
+            long section = job.currentSection();
+            double dx = SectionPos.sectionToBlockCoord(SectionPos.x(section)) + 7.5 - sphere.x();
+            double dy = SectionPos.sectionToBlockCoord(SectionPos.y(section)) + 7.5 - sphere.y();
+            double dz = SectionPos.sectionToBlockCoord(SectionPos.z(section)) + 7.5 - sphere.z();
+            double distance = dx * dx + dy * dy + dz * dz;
+            assertTrue(distance >= last, "section visited out of order");
+            last = distance;
+            job.finishSection();
+        }
+    }
+
+    @Test
+    void jobResumesPartWayThroughASection() {
+        var sphere = new ScanSphere(8, 8, 8, 5);
+        var job = ScanJob.full(sphere, NO_FLOOR, NO_CEILING);
         var pos = new BlockPos.MutableBlockPos();
 
         // Read a few points, as if the tick's budget ran out, then carry on
         LongSet points = new LongOpenHashSet();
         for (int i = 0; i < 5; i++) {
-            assertTrue(job.points().next(pos));
+            assertTrue(job.next(pos));
             points.add(pos.asLong());
         }
-        while (job.points().next(pos))
+        while (job.next(pos))
             assertTrue(points.add(pos.asLong()));
+        job.finishSection();
 
-        assertEquals(pointsOf(region), points);
-        assertTrue(job.isUnscan());
+        // The sphere lies within one section
+        assertTrue(job.isDone());
+        assertEquals(pointsOf(sphere), points);
     }
 
     @Test
-    void skippingABoxCountsItsBlocksAsDone() {
-        var region = box(0, 0, 0, 31, 0, 0); // two sections along X
-        var job = new ScanJob(false, region);
+    void skippingASectionCountsItsBlocksAsDone() {
+        var sphere = new ScanSphere(16, 8, 8, 3); // straddles two sections along X
+        var job = ScanJob.full(sphere, NO_FLOOR, NO_CEILING);
+        long total = job.remaining();
+        long first = job.currentSection();
 
-        job.finishBox();
+        job.finishSection();
 
-        assertEquals(16, job.remaining());
-        assertEquals(box(16, 0, 0, 31, 0, 0), job.currentBox());
+        var rest = drain(job);
+        assertEquals(total, pointsOf(sphere).size());
+        long skipped = pointsOf(sphere).longStream().filter(p -> SectionPos.asLong(BlockPos.of(p)) == first).count();
+        assertEquals(total - skipped, rest.size());
     }
 }

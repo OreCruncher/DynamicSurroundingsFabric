@@ -84,6 +84,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
         this.effectSystems.addEffectSystem(new WaterStepEffectSystem(this.logger, this.config, this.audioPlayer));
         this.effectSystems.addEffectSystem(new RandomBlockEffectSystem(this.logger, this.config, this.blockLibrary, this.audioPlayer, RandomBlockEffectSystem.NEAR_RANGE));
         this.effectSystems.addEffectSystem(new RandomBlockEffectSystem(this.logger, this.config, this.blockLibrary, this.audioPlayer, RandomBlockEffectSystem.FAR_RANGE));
+        this.effectSystems.addEffectSystem(RandomBlockEffectSystem.beyondFar(this.logger, this.config, this.blockLibrary, this.audioPlayer));
 
         this.isConnected = true;
     }
@@ -102,7 +103,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
     }
 
     private void blockUpdates(LongCollection blockPositions) {
-        // Need to pump the updates through to the effect system. The cuboid scanner
+        // Need to pump the updates through to the effect system. The scanner
         // will handle the details for filtering and applying updates via blockScan().
         var count = blockPositions.size();
         this.maxUpdateCount = Math.max(count, this.maxUpdateCount);

@@ -4,6 +4,7 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.world.level.Level;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -21,14 +22,23 @@ public abstract class AbstractBlockEffect implements IBlockEffect {
     protected static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
     protected static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
 
-    /**
-     * Vanilla doesn't show ordinary particles more than 32 blocks from the camera (LevelRenderer drops them).
-     * Effects create particles through ParticleEngine directly, which skips that check, so effects should apply it
-     * themselves via {@link #cameraDistanceSq()}. Public so effect systems can apply the same limit before creating
-     * effects.
-     */
-    public static final double PARTICLE_RANGE_SQ = 32 * 32;
+    private static final Configuration.BlockEffects BLOCK_EFFECTS = ContainerManager.resolve(Configuration.BlockEffects.class);
 
+    /**
+     * How far from the camera vanilla shows ordinary particles (LevelRenderer drops them past it).
+     */
+    public static final int VANILLA_PARTICLE_RANGE = 32;
+
+    /**
+     * The squared distance from the camera within which effects make particles: vanilla's, or the block effect
+     * range when that is set farther. Effects create particles through ParticleEngine directly, which skips
+     * vanilla's check, so they apply this themselves via {@link #cameraDistanceSq()}. Public so effect systems can
+     * apply the same limit before creating effects.
+     */
+    public static double particleRangeSq() {
+        final int range = Math.max(VANILLA_PARTICLE_RANGE, BLOCK_EFFECTS.blockEffectRange);
+        return range * range;
+    }
 
     protected final Level world;
     protected final double posX;
@@ -50,7 +60,7 @@ public abstract class AbstractBlockEffect implements IBlockEffect {
     }
 
     /**
-     * Squared distance from the camera to this effect, for comparing with {@link #PARTICLE_RANGE_SQ}.
+     * Squared distance from the camera to this effect, for comparing with {@link #particleRangeSq()}.
      */
     protected double cameraDistanceSq() {
         return GameUtils.getMC().gameRenderer.getMainCamera().getPosition().distanceToSqr(this.posX, this.posY, this.posZ);

@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.processing.scanner;
 
-import net.minecraft.core.BlockBox;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
@@ -12,7 +11,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
-import org.orecruncher.dsurround.lib.scanner.CuboidScanner;
+import org.orecruncher.dsurround.lib.scanner.SphereScanner;
 import org.orecruncher.dsurround.lib.scanner.ScanContext;
 
 import java.util.ArrayList;
@@ -22,7 +21,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 @Cacheable
-public class SystemsScanner extends CuboidScanner {
+public class SystemsScanner extends SphereScanner {
 
     private static final Predicate<IBlockEffect> EFFECT_PREDICATE = system -> {
         system.tick();
@@ -93,12 +92,9 @@ public class SystemsScanner extends CuboidScanner {
 
         if (!sittingStill) {
             // This is how effects leaving range are removed: every tick the player moves, anything outside the
-            // range is dropped. That is why the scanner doesn't need to unscan the blocks that left range.
-            var range = this.config.blockEffects.blockEffectRange;
-            var blockBox = BlockBox.of(current.offset(-range, -range, -range), current.offset(range, range, range));
-
+            // scanned sphere is dropped. That is why the scanner doesn't need to unscan the blocks that left range.
             filter = system -> {
-                if (blockBox.contains(system.getPos())) {
+                if (this.isInRange(system.getPos())) {
                     system.tick();
                 } else {
                     system.remove();
