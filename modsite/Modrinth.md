@@ -18,6 +18,7 @@ sound and visual effects.
     * Varying storm intensity which drives the number of particles
     * Simulated wind affects direction and velocity of precipitation particles
     * Rain, snow, and dust blown in under overhangs drift a little way in and fade (1.21.1-0.4.8+)
+    * Rain and snow stop on top of blocks from other mods that Minecraft's own rain falls through, such as Mekanism's energy cube (1.21.1-0.4.8+)
 * Ground fog in swamps and eerie biomes (experimental) (1.21.1-0.4.7+)
     * Hugs the ground, and drifts a bit based on wind
     * Intense rain will diminish the effect, but will come back once rain has finished

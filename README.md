@@ -66,6 +66,7 @@ https://github.com/OreCruncher/DynamicSurroundingsDocs.
   * Varying storm intensity which drives the number of particles
   * Simulated wind affects direction and velocity of precipitation particles
   * Rain, snow, and dust blown in under overhangs drift a little way in and fade (1.21.1-0.4.8+)
+  * Rain and snow stop on top of blocks from other mods that Minecraft's own rain falls through, such as Mekanism's energy cube (1.21.1-0.4.8+)
 * Ground fog in swamps and eerie biomes (experimental) (1.21.1-0.4.7+)
   * Hugs the ground, and drifts a bit based on wind
   * Intense rain will diminish the effect, but will come back once rain has finished
@@ -115,6 +116,10 @@ https://github.com/OreCruncher/DynamicSurroundingsDocs.
 ## FAQ 
 * Do you use AI for features in the mod?
   * AI is used for a variety of tasks, including code creation, review, bug fixing, performance analysis, and mod conflict analysis.
+
+## Contributing
+Pull requests are welcome. See [CONTRIB.md](CONTRIB.md) for the ground rules, including what to say when AI was used,
+and where textures and sounds may come from.
 
 > # License
 The MIT License (MIT)
