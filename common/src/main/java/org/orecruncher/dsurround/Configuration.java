@@ -133,6 +133,20 @@ public class Configuration extends ConfigurationData {
         @Comment("Play your own Simple Voice Chat voice back to you, with enhanced sound processing, for testing")
         @Experimental
         public boolean voiceChatHearSelf = false;
+
+        @Property
+        @Comment("Fixes for problems other mods cause, each of which can be turned off should it cause a problem of its own")
+        public final Guards guards = new Guards();
+    }
+
+    /**
+     * Fixes for problems other mods cause. Each can be turned off, in case one causes a problem of its own.
+     */
+    public static class Guards {
+
+        @Property
+        @Comment("Put back the drawing state another mod's particle changes while Minecraft's particles are drawn, which draws them as squares, and draw that particle on its own. Turn off if it causes a problem")
+        public boolean repairParticleBatches = true;
     }
 
     public static class SoundSystem {

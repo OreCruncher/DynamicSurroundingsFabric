@@ -99,7 +99,7 @@ class ConfigurationFuzzTests {
     // The same, by the kind of value they hold, so a kind with few settings (there is one double) is edited as
     // often as the others
     private static final List<List<String>> PATHS_BY_KIND = new ArrayList<>();
-    // The groups, by their key in the file
+    // The groups, by their dotted path in the file, groups within groups included
     private static final List<String> GROUPS = new ArrayList<>();
     // The old places of settings that have moved, as @MovedFrom names them
     private static final List<String> OLD_PATHS = new ArrayList<>();
@@ -141,8 +141,7 @@ class ConfigurationFuzzTests {
                     REPLACED_BY_OLD_PATHS.add(path);
             });
             if (element instanceof ConfigElement.PropertyGroup group) {
-                if (prefix.isEmpty())
-                    GROUPS.add(path);
+                GROUPS.add(path);
                 collect(group.getChildren(), path + ".");
             } else if (element instanceof ConfigElement.PropertyValue<?> value) {
                 VALUES.put(path, value);
@@ -277,11 +276,18 @@ class ConfigurationFuzzTests {
     }
 
     private static @Nullable Object valueAt(Configuration config, String path) {
-        var dot = path.indexOf('.');
+        // Down through the groups the path names, to the one holding the setting
         Object group = config;
-        for (var element : ConfigurationData.getSpecification(Configuration.class)) {
-            if (element instanceof ConfigElement.PropertyGroup g && element.fieldName().equals(path.substring(0, dot)))
-                group = g.getInstance(config);
+        var elements = ConfigurationData.getSpecification(Configuration.class);
+        var parts = path.split("\\.");
+        for (int i = 0; i < parts.length - 1; i++) {
+            for (var element : elements) {
+                if (element instanceof ConfigElement.PropertyGroup g && element.fieldName().equals(parts[i])) {
+                    group = g.getInstance(group);
+                    elements = g.getChildren();
+                    break;
+                }
+            }
         }
         return VALUES.get(path).getValue(group);
     }
@@ -314,8 +320,8 @@ class ConfigurationFuzzTests {
                 case 4 -> remove(tree, path);
                 case 5 -> {
                     // Same name in another case, which Gson doesn't match
-                    var parts = path.split("\\.");
-                    var renamed = parts[0] + "." + flipCase(random, parts[1]);
+                    var dot = path.lastIndexOf('.');
+                    var renamed = path.substring(0, dot + 1) + flipCase(random, path.substring(dot + 1));
                     var value = MovedProperties.get(tree, path);
                     remove(tree, path);
                     if (value != null)
@@ -324,9 +330,9 @@ class ConfigurationFuzzTests {
                 case 6 -> {
                     var group = pick(random, GROUPS);
                     if (random.nextBoolean())
-                        tree.remove(group);
+                        remove(tree, group);
                     else
-                        tree.add(group, raw(pick(random, ODD_VALUES)));
+                        MovedProperties.set(tree, group, raw(pick(random, ODD_VALUES)));
                 }
                 case 7 -> {
                     var where = random.nextBoolean() ? tree : objectAt(tree, pick(random, GROUPS));
@@ -488,7 +494,7 @@ class ConfigurationFuzzTests {
 
     private static void remove(JsonObject tree, String path) {
         var dot = path.lastIndexOf('.');
-        var parent = objectAt(tree, path.substring(0, dot));
+        var parent = dot < 0 ? tree : objectAt(tree, path.substring(0, dot));
         if (parent != null)
             parent.remove(path.substring(dot + 1));
     }

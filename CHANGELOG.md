@@ -52,6 +52,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Removed the option for sound effects when selecting blocks on the hotbar
 
 **Fixes**
+* Minecraft's particles (such as campfire smoke) and the mod's waterfall foam could draw as white squares when another mod's particle changed the drawing state while particles were being drawn; the state is now put back before they are drawn, the log names the particle responsible once, and that particle is drawn on its own from then on so it looks right too (seen with the Rainbows mod); Repair Particle Batches, in a new Guards section of Diagnostic Options, turns this off
 
 > ### DynamicSurroundings-1.21.1-0.4.7
 

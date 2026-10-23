@@ -25,6 +25,7 @@ public class MixinHelpers {
     public static final Configuration.SoundSystem soundSystemConfig = ContainerManager.resolve(Configuration.SoundSystem.class);
     public static final Configuration.FootstepAccents footstepAccentsConfig = ContainerManager.resolve(Configuration.FootstepAccents.class);
     public static final Configuration.ParticleTweaks particleTweaksConfig = ContainerManager.resolve(Configuration.ParticleTweaks.class);
+    public static final Configuration.Guards guardsConfig = ContainerManager.resolve(Configuration.Logging.class).guards;
     public static final Configuration.SoundOptions soundOptions = ContainerManager.resolve(Configuration.SoundOptions.class);
     public static final Configuration.FogOptions fogOptions = ContainerManager.resolve(Configuration.FogOptions.class);
     public static final Configuration.WeatherOptions weatherOptions = ContainerManager.resolve(Configuration.WeatherOptions.class);
@@ -42,6 +43,7 @@ public class MixinHelpers {
     public static final Guard WIND_DRIFT_GUARD = Guard.named("Wind drift");
     public static final Guard VANILLA_FIRE_GUARD = Guard.named("Vanilla fire suppression on burning mobs");
     public static final Guard DEATH_PUFF_GUARD = Guard.named("Death mist");
+    public static final Guard PARTICLE_BATCH_GUARD = Guard.named("Particle batch repair");
     // The sound engine's hooks: each sound as it plays, and each playing sound on every tick of the sound engine
     public static final Guard SOUND_FILTER_GUARD = Guard.named("Blocking, culling and remapping sounds");
     public static final Guard SOUND_RANGE_GUARD = Guard.named("Pruning sounds out of range");
