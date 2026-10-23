@@ -14,10 +14,39 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * NeoForge 21.1.84+
 
 **AI Disclosure**
+* Used to build the burning mob flames, death mist, and footprints
+* Ported the damage pop-offs from older versions, drawing them as batched text rather than particles
+* Reworked block effect scanning into a sphere, and let precipitation drift in undercover
+* Reviewed performance profiles for the new features
 
 **What's New**
+* Burning mobs are wreathed in flames like a flame jet's (tongues of flame, sparks, and smoke) in place of Minecraft's flat fire sheets
+  * The fire fits the mob: more flames for a bigger body, larger ones for a broader body
+  * Flames keep up with a running mob, and burn on through its death until the body is gone
+  * In lava, flames only rise from the part above the surface
+  * Fewer flames farther away, and burning mobs share a budget, so a crowd of undead burning at dawn thins out evenly
+  * The flames light up the area around the mob, unless LambDynamicLights or RyoamicLights is installed, which already does
+  * Minecraft's fire is kept beyond the entity effect range, with Particles on Minimal, while a shader pack is in use, and for your own body in first person
+  * Burning Mob Flames option in Entity Effects; mobs tagged `dsurround:effects/vanilla_fire` keep Minecraft's fire
+* A mob's body vanishes into dark mist when it dies, in place of Minecraft's white puffs
+  * Death Mist option in Entity Effects
+* Damage pop-offs are back from older versions: numbers pop off mobs and players when their health changes, red for damage and green for healing
+  * A heavy blow (40% or more of the mob's health) gets a comic book word over the number, such as KAPOW!
+  * Drawn as text rather than particles, so a busy fight costs little
+  * Damage Pop-offs and Crit Words options in Entity Effects
+* Footprints: players and mobs leave prints in soft ground (dirt, grass, sand, gravel, snow, mud, soul sand)
+  * Players' prints are square by default; Footprint Style in Entity Effects picks another
+  * Mobs leave prints that fit their feet: square for humanoids, paws for wolves, cats, foxes and bears, hooves for horses, cows, sheep, pigs and goats, and bird tracks for chickens; tags set which, and modpacks can add their own mobs
+  * Prints fade after 10 seconds, or a minute in snow, and wash away faster in the rain where they are out in the open
+  * No prints while sneaking
+  * Footprints option in Entity Effects
+* Rain, snow, and dust blown in under an overhang drift a little way in out of the wind and fade, instead of stopping at the roof's edge; snowflakes that reach the ground under the overhang lie there, and rain splashes on a porch floor
 
 **Changes**
+* Block effects (waterfalls, steam, flame jets, and other random block effects) are now found in a sphere around the player rather than a cube
+  * Block Effect Range is now a radius, and the scan finds the nearest blocks first, so effects close by show up first after a teleport
+  * Setting it past 32 shows effects farther away than Minecraft shows particles, at more cost; waterfalls thin their splashes past 32 blocks
+* Removed the option for sound effects when selecting blocks on the hotbar
 
 **Fixes**
 
