@@ -114,7 +114,8 @@ def owner(frame):
 
 
 def number(value):
-    match = re.match(r"[-\d.]+", value or "")
+    # jfr prints small doubles in scientific notation (1.0E-4); without the exponent they read thousands of times too big
+    match = re.match(r"-?[\d.]+(?:[eE][-+]?\d+)?", value or "")
     return float(match.group(0)) if match else 0.0
 
 
