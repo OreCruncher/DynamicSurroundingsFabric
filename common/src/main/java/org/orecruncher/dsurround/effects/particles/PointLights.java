@@ -16,6 +16,8 @@ import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.lib.Library;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Small point lights, lighting the grass, leaves and ground near them: around fireflies, and the flicker of a flame
@@ -72,6 +74,16 @@ public final class PointLights {
     private static float[] sorted = new float[STRIDE * 64];
     private static int count;
     private static long lastAdded;
+    // Run just before the lights are drawn, to add lights gathered during the frame (see addSource)
+    private static final List<Runnable> SOURCES = new CopyOnWriteArrayList<>();
+
+    /**
+     * Registers something that adds its lights just before they are drawn, rather than as it goes: to pick the ones
+     * worth drawing once all of the frame's are known (burning mobs light only the nearest few). Render thread.
+     */
+    public static void addSource(Runnable source) {
+        SOURCES.add(source);
+    }
 
     private PointLights() {
     }
@@ -128,6 +140,9 @@ public final class PointLights {
      * apart from the shader, which is set back to the vanilla particle shader.
      */
     public static void draw(Tesselator tesselator) {
+        // Lights gathered elsewhere during the frame, to be added now that it is known which are wanted
+        for (int i = 0; i < SOURCES.size(); i++)
+            SOURCES.get(i).run();
         int n = count;
         count = 0;
         var current = SHADER.get();

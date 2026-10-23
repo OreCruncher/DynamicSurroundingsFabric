@@ -16,8 +16,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 **AI Disclosure**
 * Used to build the burning mob flames, death mist, and footprints
 * Ported the damage pop-offs from older versions, drawing them as batched text rather than particles
-* Reworked block effect scanning into a sphere, and let precipitation drift in undercover
-* Reviewed performance profiles for the new features
+* Reworked block effect scanning into a sphere, and let precipitation drift under blocks
+* Reviewed performance profiles for the new features, and cut the work waterfall foam does each tick
+* Tracked down particles drawing as squares in a large modpack to another mod's particle, and built the guard that repairs it
 
 **What's New**
 * Burning mobs are wreathed in flames like a flame jet's (tongues of flame, sparks, and smoke) in place of Minecraft's flat fire sheets
@@ -25,7 +26,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Flames keep up with a running mob, and burn on through its death until the body is gone
   * In lava, flames only rise from the part above the surface
   * Fewer flames farther away, and burning mobs share a budget, so a crowd of undead burning at dawn thins out evenly
-  * The flames light up the area around the mob, unless LambDynamicLights or RyoamicLights is installed, which already does
+  * One flickering light per mob lights up the surrounding area (one light for the whole fire, so a crowd stays affordable to draw), unless LambDynamicLights or RyoamicLights is installed, which already does
   * Minecraft's fire is kept beyond the entity effect range, with Particles on Minimal, while a shader pack is in use, and for your own body in first person
   * Burning Mob Flames option in Entity Effects; mobs tagged `dsurround:effects/vanilla_fire` keep Minecraft's fire
 * A mob's body vanishes into dark mist when it dies, in place of Minecraft's white puffs
@@ -50,8 +51,12 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * The default Entity Effect Range is now 32, up from 24, as the new entity effects are cheap and still visible that far out
   * Existing configurations keep the values already saved in them; set the new defaults in the options to use them
 * Removed the option for sound effects when selecting blocks on the hotbar
+* Waterfall foam, mist, steam, and smoke do less work: each block's water surface is worked out once every half second and shared by all the foam on it, and foam and the soft puffs read their light every few ticks instead of every frame; noticeable in large modpacks with many waterfalls nearby
+* A new Guards section in Diagnostic Options holds fixes for problems other mods cause, each of which can be turned off should it cause a problem of its own
+* Rain landing on snow soaks in and leaves a damp spot, as on dirt and sand, instead of splashing
 
 **Fixes**
+* Particle rain and snow fell through blocks from other mods whose shape depends on the world, such as Mekanism's energy cube (Minecraft's own rain does too: such blocks are left out of the height map it stops at); they now stop on top of them
 * Minecraft's particles (such as campfire smoke) and the mod's waterfall foam could draw as white squares when another mod's particle changed the drawing state while particles were being drawn; the state is now put back before they are drawn, the log names the particle responsible once, and that particle is drawn on its own from then on so it looks right too (seen with the Rainbows mod); Repair Particle Batches, in a new Guards section of Diagnostic Options, turns this off
 
 > ### DynamicSurroundings-1.21.1-0.4.7

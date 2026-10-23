@@ -105,6 +105,7 @@ https://github.com/OreCruncher/DynamicSurroundingsDocs.
   * Optionally shown in a side or corner of the screen while a compass or clock is in the hot bar (1.21.1-0.4.7+)
   * Either can be turned off, and their textures replaced by resource packs (1.21.1-0.4.7+)
 * Light level overlay, turned on and off by key bind, showing the light on the blocks around the player colored by whether monsters can spawn there, with an on screen legend (1.21.1-0.4.7+)
+* Guards that repair problems other mods cause, such as particles drawn as squares, naming the mod responsible in the log; each can be turned off (1.21.1-0.4.8+)
 * Custom debug HUD that can be accessed by key bind. Moves the Dynamic Surroundings clutter out of the traditional F3 display.
 * Dynamic Surroundings is compatible when connecting to a Vanilla servers (a feature of both Fabric and NeoForge loaders).
 

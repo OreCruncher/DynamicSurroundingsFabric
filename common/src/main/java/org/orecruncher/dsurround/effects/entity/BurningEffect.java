@@ -11,18 +11,17 @@ import org.orecruncher.dsurround.effects.particles.FlameTongue;
 import org.orecruncher.dsurround.effects.particles.SmokePuff;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.compat.IrisCompat;
-import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
-import org.orecruncher.dsurround.lib.random.Mixers;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.mixinutils.OptionalHook;
 
 /**
- * A burning entity's fire, drawn as a flame jet's is (tongues of flame, sparks and smoke, the tongues lighting what is
- * around them) in place of vanilla's two flat sheets. Vanilla's are left off for the entity while this draws (see
- * {@link BurningEntities}) and kept wherever it doesn't: past the entity effect range, with Particles on Minimal,
- * with a shader pack, and for the player's own body in first person, where vanilla's overlay on the screen stays.
+ * A burning entity's fire, drawn as a flame jet's is (tongues of flame, sparks and smoke) in place of vanilla's two
+ * flat sheets, with one flickering light for the whole fire ({@link BurningLight}). Vanilla's are left off for the
+ * entity while this draws (see {@link BurningEntities}) and kept wherever it doesn't: past the entity effect range,
+ * with Particles on Minimal, with a shader pack, and for the player's own body in first person, where vanilla's
+ * overlay on the screen stays.
  * <p>
  * The fire fits the entity: more tongues for a bigger body, and bigger ones for a broader one. Tongues start along the
  * path the entity moved this tick and move with it, so a running mob's fire keeps up instead of strewing gaps behind
@@ -60,18 +59,12 @@ public class BurningEffect extends EntityEffectBase {
 
     private final Configuration.EntityEffects config;
     private final ITickCount tickCount;
-    private int seed;
     // Whether vanilla's fire is left off for the entity because this draws it
     private boolean drawing;
 
     public BurningEffect(Configuration.EntityEffects config, ITickCount tickCount) {
         this.config = config;
         this.tickCount = tickCount;
-    }
-
-    @Override
-    public void activate(final EntityEffectInfo info) {
-        this.seed = Mixers.fmix32(info.getEntityId()) & 0xFFFF;
     }
 
     @Override
@@ -157,9 +150,6 @@ public class BurningEffect extends EntityEffectBase {
         final float scale = scaleFor(width);
         final double spread = width * SPREAD;
         final double maxSpread = width * MAX_SPREAD;
-        // As a flame jet's, one tongue in every other tick's batch carries the light
-        final boolean light = ((this.tickCount.getTickCount() + this.seed) & 1) == 0
-                && !FeatureConflict.BURNING_MOB_LIGHT.isBlocked();
 
         for (int i = 0; i < tongues; i++) {
             double along = RANDOM.nextDouble();
@@ -172,7 +162,7 @@ public class BurningEffect extends EntityEffectBase {
                     dx * FOLLOW + (RANDOM.nextDouble() - 0.5D) * 0.01D,
                     dy * FOLLOW + rise,
                     dz * FOLLOW + (RANDOM.nextDouble() - 0.5D) * 0.01D,
-                    scale, light && i == 0));
+                    scale, false));
         }
 
         if (RANDOM.nextFloat() < SMOKE_CHANCE * fullness) {
