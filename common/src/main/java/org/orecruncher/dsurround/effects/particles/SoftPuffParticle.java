@@ -17,9 +17,18 @@ import org.jetbrains.annotations.NotNull;
  */
 public abstract class SoftPuffParticle extends SingleQuadParticle {
 
+    // How often it reads its light, in ticks, rather than every frame it is drawn: it drifts a fraction of a block in
+    // that time, and a waterfall's mist can be hundreds of puffs. Puffs take turns, by when each started.
+    static final int LIGHT_TICKS = 4;
+    private static final int UNREAD = -1;
+
     private final float fadeIn;
     private final float fadeOut;
     private final float growth;
+    private final int lightPhase;
+    // Read the first time it is drawn, then every LIGHT_TICKS. Never read for a kind that lights itself (it overrides
+    // getLightCoords), so those cost no light lookups at all.
+    private int light = UNREAD;
 
     /**
      * Half its width when new, as quadSize is
@@ -49,6 +58,7 @@ public abstract class SoftPuffParticle extends SingleQuadParticle {
         this.alpha = 0F;
         // Drifts through blocks rather than stopping at them: the soft shader fades it where it meets them
         this.hasPhysics = false;
+        this.lightPhase = level.getRandom().nextInt(LIGHT_TICKS);
     }
 
     @Override
@@ -66,6 +76,18 @@ public abstract class SoftPuffParticle extends SingleQuadParticle {
         super.tick();
         this.oRoll = this.roll;
         this.roll += this.rollSpeed;
+        if (this.light != UNREAD && (this.age + this.lightPhase) % LIGHT_TICKS == 0)
+            this.light = super.getLightCoords(0F);
+    }
+
+    /**
+     * Its light where it is, as of the last few ticks (see {@link #LIGHT_TICKS})
+     */
+    @Override
+    protected int getLightCoords(float partialTick) {
+        if (this.light == UNREAD)
+            this.light = super.getLightCoords(partialTick);
+        return this.light;
     }
 
     /**

@@ -28,6 +28,8 @@
     "core.MixinMusic",
     "core.MixinFogRenderer",
     "core.MixinLevelRenderer",
+    "core.MixinLivingEntity",
+    "core.MixinEntityRenderer",
     "core.MixinParticle",
     "core.MixinParticleEngine",
     "core.MixinWeatherEffectRenderer",

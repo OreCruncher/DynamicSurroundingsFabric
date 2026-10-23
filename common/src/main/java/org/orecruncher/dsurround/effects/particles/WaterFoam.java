@@ -68,23 +68,32 @@ public class WaterFoam extends SingleQuadParticle {
     private float oSlopeZ;
     // The block of water under it, found each tick
     private final BlockPos.MutableBlockPos waterPos = new BlockPos.MutableBlockPos();
-    // Its light, read once a tick rather than every frame: it drifts slowly
+    // Its light, read every LIGHT_TICKS rather than every frame: it drifts slowly
     private int light;
+    private final int lightPhase;
     // Kept to be set again each frame, rather than made anew
     private final Quaternionf rotation = new Quaternionf();
 
     /**
-     * What foam needs to know of a block of water: the current, and the surface's height and slope
+     * What foam needs to know of a block of water: the current, and the surface's height and slope, as of the tick
+     * they were worked out
      */
-    private record Surface(double flowX, double flowZ, double center, double slopeX, double slopeZ) {
+    private record Surface(double flowX, double flowZ, double center, double slopeX, double slopeZ, long tick) {
     }
 
-    // Worked out for a block once a tick and shared: a waterfall keeps dozens of patches on the same few blocks.
-    // Client thread only, as particles are ticked. The level is held weakly, so a world left isn't kept in memory.
+    // Worked out for a block and shared: a waterfall keeps dozens of patches on the same few blocks, for as long as it
+    // runs. Kept for SURFACE_TICKS before being worked out again, so water that starts or stops flowing is followed
+    // within half a second; entries that old are swept out as often. Client thread only, as particles are ticked. The
+    // level is held weakly, so a world left isn't kept in memory.
+    static final int SURFACE_TICKS = 10;
     private static final Long2ObjectOpenHashMap<Surface> SURFACES = new Long2ObjectOpenHashMap<>();
     private static final BlockPos.MutableBlockPos PROBE = new BlockPos.MutableBlockPos();
     private static WeakReference<Level> surfacesLevel = new WeakReference<>(null);
-    private static long surfacesTick = Long.MIN_VALUE;
+    private static long lastSweep = Long.MIN_VALUE;
+
+    // How often a patch reads its light, in ticks: it drifts about a block in that time, and light seldom changes.
+    // Patches take turns, by when each started, so they don't all read on the same tick.
+    static final int LIGHT_TICKS = 8;
 
     /**
      * Adds foam patches around falling water landing at {@code pos} (a waterfall, or a step): each starts on the water
@@ -145,6 +154,7 @@ public class WaterFoam extends SingleQuadParticle {
         this.rollSpeed = (random.nextFloat() - 0.5F) * 0.06F;
 
         this.light = super.getLightCoords(0F);
+        this.lightPhase = random.nextInt(LIGHT_TICKS);
 
         var biomeColor = level.getBiome(BlockPos.containing(x, y, z)).value().getWaterColor();
         var colorRgb = ARGB.srgbLerp(WHITENESS, biomeColor, ColorPalette.MC_WHITE.getValue());
@@ -168,7 +178,8 @@ public class WaterFoam extends SingleQuadParticle {
         this.oSlopeZ = this.slopeZ;
         if (this.removed)
             return;
-        this.light = super.getLightCoords(0F);
+        if ((this.age + this.lightPhase) % LIGHT_TICKS == 0)
+            this.light = super.getLightCoords(0F);
 
         // The water it is floating on: just under it, as it rests a little above the surface
         var pos = this.waterPos.set(this.x, this.y - LIFT - 0.05D, this.z);
@@ -210,25 +221,37 @@ public class WaterFoam extends SingleQuadParticle {
     }
 
     /**
-     * The current and the surface of the water at {@code pos}, worked out the first time any foam asks this tick
+     * The current and the surface of the water at {@code pos}: worked out when foam first asks, then shared for
+     * {@link #SURFACE_TICKS}
      */
     private static Surface surfaceAt(Level level, BlockPos pos, FluidState fluid) {
         long tick = level.getGameTime();
-        if (tick != surfacesTick || surfacesLevel.get() != level) {
+        if (surfacesLevel.get() != level) {
             SURFACES.clear();
-            surfacesTick = tick;
             surfacesLevel = new WeakReference<>(level);
+            lastSweep = tick;
+        } else if (isStale(lastSweep, tick)) {
+            SURFACES.values().removeIf(s -> isStale(s.tick(), tick));
+            lastSweep = tick;
         }
         long key = pos.asLong();
         var surface = SURFACES.get(key);
-        if (surface == null) {
-            surface = surface(level, pos, fluid);
+        if (surface == null || isStale(surface.tick(), tick)) {
+            surface = surface(level, pos, fluid, tick);
             SURFACES.put(key, surface);
         }
         return surface;
     }
 
-    private static Surface surface(Level level, BlockPos pos, FluidState fluid) {
+    /**
+     * Whether something worked out at tick {@code then} is too old to use at {@code now}: {@link #SURFACE_TICKS} or
+     * more ago, or from a later tick (the clock went back, as on joining another world)
+     */
+    static boolean isStale(long then, long now) {
+        return now - then >= SURFACE_TICKS || now < then;
+    }
+
+    private static Surface surface(Level level, BlockPos pos, FluidState fluid, long tick) {
         var flow = fluid.getFlow(level, pos);
 
         // The slope of the surface here, from the surface heights either side, east-west and north-south
@@ -240,7 +263,7 @@ public class WaterFoam extends SingleQuadParticle {
             slopeX *= MAX_SLOPE / steepness;
             slopeZ *= MAX_SLOPE / steepness;
         }
-        return new Surface(flow.x, flow.z, center, slopeX, slopeZ);
+        return new Surface(flow.x, flow.z, center, slopeX, slopeZ, tick);
     }
 
     /**

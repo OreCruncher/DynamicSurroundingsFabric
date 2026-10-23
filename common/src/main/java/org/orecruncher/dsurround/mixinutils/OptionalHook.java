@@ -52,7 +52,11 @@ public enum OptionalHook {
     WIND_BLOWN_PARTICLES("Wind blowing particles",
             site("core.MixinParticleEngine", "dsurround$markWindBlown"),
             site("core.MixinParticle", "dsurround$driftX"),
-            site("core.MixinParticle", "dsurround$driftZ"));
+            site("core.MixinParticle", "dsurround$driftZ")),
+    BURNING_ENTITIES("Flames on burning mobs",
+            site("core.MixinEntityRenderer", "dsurround$vanillaFire")),
+    DEATH_PUFFS("Dark mist when mobs die",
+            site("core.MixinLivingEntity", "dsurround$deathPuffs"));
 
     /**
      * Whether a hook applied
@@ -70,10 +74,20 @@ public enum OptionalHook {
      *
      * @param mixin   the mixin's class name, after the mixins package
      * @param handler the handler method's name
+     * @param or      another handler that does instead, or null: where the loaders' code differs (NeoForge draws
+     *                particles through a method of its own), each has a handler of its own, and either being called
+     *                means the hook applied
      */
-    record Site(String mixin, String handler) {
+    record Site(String mixin, String handler, String or) {
         String mixinClassName() {
             return MIXIN_PACKAGE + this.mixin;
+        }
+
+        /**
+         * Its handler, and the other one if it has one
+         */
+        List<String> handlers() {
+            return this.or == null ? List.of(this.handler) : List.of(this.handler, this.or);
         }
     }
 
@@ -95,8 +109,9 @@ public enum OptionalHook {
     }
 
     private static Site site(String mixin, String handler) {
-        return new Site(mixin, handler);
+        return new Site(mixin, handler, null);
     }
+
 
     /**
      * What is lost when it doesn't apply, for the log and diagnostics
@@ -182,7 +197,7 @@ public enum OptionalHook {
             var target = targets.apply(site.mixinClassName());
             if (target == null)
                 status = Status.UNKNOWN;
-            else if (!calls(target, site.handler()))
+            else if (site.handlers().stream().noneMatch(handler -> calls(target, handler)))
                 return Status.MISSING;
         }
         return status;

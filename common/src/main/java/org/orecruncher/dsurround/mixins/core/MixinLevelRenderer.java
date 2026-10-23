@@ -4,6 +4,8 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import org.orecruncher.dsurround.effects.WeatherDepth;
+import org.orecruncher.dsurround.effects.entity.HealthPopoffs;
+import org.orecruncher.dsurround.effects.footprints.Footprints;
 import org.orecruncher.dsurround.gui.overlay.lightlevel.LightLevelRenderer;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,12 +17,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinLevelRenderer {
 
     /**
-     * The world's entities, block entities and particles have been submitted for drawing this frame; add the light
-     * level numbers. Outside any render pass.
+     * The world's entities, block entities and particles have been submitted for drawing this frame; add the
+     * footprints, the light level numbers and the health pop-offs. Outside any render pass.
      */
     @Inject(method = "submitFeatures(Lnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/client/renderer/SubmitNodeCollector;Z)V", at = @At("TAIL"))
     private void dsurround$submitLightLevels(LevelRenderState levelRenderState, SubmitNodeCollector collector, boolean renderOutline, CallbackInfo ci) {
+        Footprints.submitAll(collector, levelRenderState.cameraRenderState);
         LightLevelRenderer.submit(collector, levelRenderState.cameraRenderState);
+        HealthPopoffs.submit(collector, levelRenderState.cameraRenderState);
     }
 
     /**

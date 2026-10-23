@@ -29,6 +29,15 @@ public interface IColumnSource {
     }
 
     /**
+     * Whether a drop can be at the position: nothing solid and no fluid there. Drops carried in under an overhang
+     * drift on through open air until they reach something that isn't. By default, open above the column's ground
+     * and solid below it, as if every column were solid all the way up.
+     */
+    default boolean isOpen(int x, int y, int z) {
+        return y >= this.groundHeight(x, z);
+    }
+
+    /**
      * Packed sky and block light at the position, as vanilla's renderers use it
      */
     int light(int x, int y, int z);

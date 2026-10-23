@@ -29,8 +29,10 @@ import org.orecruncher.dsurround.lib.Library;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Small point lights, lighting the grass, leaves and ground near them: around fireflies, and the flicker of a flame
@@ -110,6 +112,16 @@ public final class PointLights {
     private static float[] sorted = new float[STRIDE * 64];
     private static int count;
     private static long lastAdded;
+    // Run just before the lights are drawn, to add lights gathered during the frame (see addSource)
+    private static final List<Runnable> SOURCES = new CopyOnWriteArrayList<>();
+
+    /**
+     * Registers something that adds its lights just before they are drawn, rather than as it goes: to pick the ones
+     * worth drawing once all of the frame's are known (burning mobs light only the nearest few). Render thread.
+     */
+    public static void addSource(Runnable source) {
+        SOURCES.add(source);
+    }
 
     // Created on first use, on the render thread
     @Nullable
@@ -200,6 +212,9 @@ public final class PointLights {
      * @param transforms the camera's, as the particles are drawn with them (see MixinQuadParticleFeatureRenderer)
      */
     public static void draw(RenderTarget target, GpuBufferSlice transforms) {
+        // Lights gathered elsewhere during the frame, to be added now that it is known which are wanted
+        for (int i = 0; i < SOURCES.size(); i++)
+            SOURCES.get(i).run();
         int n = count;
         count = 0;
         if (n == 0 || System.nanoTime() - lastAdded > STALE_NANOS || !isAvailable() || !SoftParticles.hasSceneDepth())

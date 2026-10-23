@@ -128,6 +128,21 @@ public class EntityEffectInfo {
         }
     }
 
+    /**
+     * Ticks the effects for {@code entity}, the entity this info was created for, while it is dying (see
+     * {@link IEntityEffect#tickDying}).
+     */
+    public void tickDying(LivingEntity entity) {
+        if (entity.isRemoved())
+            return;
+        this.current = entity;
+        try {
+            this.forEachEffect(e -> e.tickDying(this));
+        } finally {
+            this.current = null;
+        }
+    }
+
     // Use only for diagnostic purposes
     public Collection<IEntityEffect> getEffects() {
         return this.effects;
@@ -156,6 +171,8 @@ public class EntityEffectInfo {
             public void deactivate() {}
             @Override
             public void tick(LivingEntity entity) {}
+            @Override
+            public void tickDying(LivingEntity entity) {}
             @Override
             public boolean isCurrentPlayer(LivingEntity player) {
                 return false;

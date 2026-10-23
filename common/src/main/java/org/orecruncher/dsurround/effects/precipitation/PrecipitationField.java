@@ -13,7 +13,8 @@ import java.util.List;
  * The rain drops, snowflakes and dust falling or blowing around the camera. How many there are follows the rain
  * level: at full strength the field holds {@link #capacity()} of them. They are spread through a cylinder around the
  * camera and dropped when the camera leaves them behind. Rain and snow fall until they reach the ground of their
- * column; dust is blown along it, low down, and settles after a while.
+ * column; dust is blown along it, low down, and settles after a while. Carried in under an overhang or a canopy, any
+ * of them drifts on a little way out of the wind, fading, and lands where it reaches something.
  * <p>
  * New drops appear anywhere in the cylinder rather than only at its top, so the field fills at once when the camera
  * moves, and fade in over their first ticks so they don't pop into view. The drops are kept in flat arrays, not
@@ -92,6 +93,14 @@ public final class PrecipitationField {
     static final int DUST_LIFETIME_RANGE = 80;
     static final int DUST_FADE = 20;
 
+    // Carried in under an overhang, a drop drifts on into the shelter, no longer pushed by the wind: its sideways speed
+    // keeps this share of itself each tick, so it goes a little way in, and it fades out over this many ticks, unless it
+    // reaches something first. Rain is gone in a moment; snow and dust hang in the air.
+    static final float COVER_DRAG = 0.85F;
+    static final int RAIN_COVER_TICKS = 8;
+    static final int SNOW_COVER_TICKS = 40;
+    static final int DUST_COVER_TICKS = 30;
+
     /**
      * The most rain drop and snowflake landings kept from a tick, for splashes and flecks, at the default range. More
      * land at full strength, but more splashes than this would not be seen as more. A field at another range keeps as many for its area, so
@@ -120,6 +129,8 @@ public final class PrecipitationField {
     // off, so the same ones are, frame after frame
     final float[] thinning;
     final int[] age;
+    // Ticks since it was carried in under cover (see COVER_DRAG), or 0 out in the open
+    final int[] covered;
     final int[] light;
     final byte[] kind;
     // Dust only: its colour, 0xRRGGBB, and how many ticks it lasts
@@ -142,6 +153,9 @@ public final class PrecipitationField {
     private final boolean[] landingBlownIn;
     private final float[] landingY, landingMotionX, landingMotionY, landingMotionZ;
     private int landings;
+
+    // The columns' source during a tick, for following drops in under cover
+    private IColumnSource source;
 
     public PrecipitationField(int capacity) {
         this(capacity, DEFAULT_RADIUS);
@@ -184,6 +198,7 @@ public final class PrecipitationField {
         this.spinSin = new float[capacity];
         this.thinning = new float[capacity];
         this.age = new int[capacity];
+        this.covered = new int[capacity];
         this.light = new int[capacity];
         this.kind = new byte[capacity];
         this.color = new int[capacity];
@@ -362,7 +377,12 @@ public final class PrecipitationField {
     public void tick(IColumnSource source, double cameraX, double cameraY, double cameraZ, float rainLevel, float density, Wind wind, RandomSource random) {
         this.columns.refresh(source, Mth.floor(cameraX), Mth.floor(cameraY), Mth.floor(cameraZ));
         this.landings = 0;
-        this.move(cameraX, cameraY, cameraZ, wind);
+        this.source = source;
+        try {
+            this.move(cameraX, cameraY, cameraZ, wind);
+        } finally {
+            this.source = null;
+        }
         this.spawn(cameraX, cameraY, cameraZ, rainLevel, density, wind, random);
     }
 
@@ -379,9 +399,15 @@ public final class PrecipitationField {
                 case DUST -> DUST_WIND_RESPONSE;
                 default -> RAIN_WIND_RESPONSE;
             };
-            float carried = windAt(wind, this.x[i] - cameraX, this.z[i] - cameraZ) * this.drift[i];
-            this.windX[i] += (wind.x() * carried - this.windX[i]) * response;
-            this.windZ[i] += (wind.z() * carried - this.windZ[i]) * response;
+            if (this.covered[i] > 0) {
+                // Out of the wind: it slows to a drift
+                this.windX[i] *= COVER_DRAG;
+                this.windZ[i] *= COVER_DRAG;
+            } else {
+                float carried = windAt(wind, this.x[i] - cameraX, this.z[i] - cameraZ) * this.drift[i];
+                this.windX[i] += (wind.x() * carried - this.windX[i]) * response;
+                this.windZ[i] += (wind.z() * carried - this.windZ[i]) * response;
+            }
             this.x[i] += this.windX[i];
             this.z[i] += this.windZ[i];
             this.age[i]++;
@@ -413,15 +439,19 @@ public final class PrecipitationField {
         int column = this.inCylinder(i, cameraX, cameraZ);
         if (column < 0)
             return false;
+        if (this.covered[i] > 0)
+            return this.driftUnderCover(i, cameraY, coverTicks(this.kind[i]), true);
         var what = this.columns.kind(column);
         if (what != PrecipitationKind.RAIN && what != PrecipitationKind.SNOW)
             return false;
         if (this.y[i] <= this.columns.ground(column)) {
             // Still above the ground on its last tick: it came down on top. Otherwise it was carried into the side of
-            // something taller, a wall or a tree, or in under an overhang or a canopy: it goes on to wherever the world
-            // says it ends up (a snowflake may stick there, a rain drop may run down a window). It doesn't land on the
-            // column's top.
+            // something taller, a wall or a tree, or in under an overhang or a canopy. In open air under cover it drifts
+            // on in (see driftUnderCover); into something solid, it goes on to wherever the world says it ends up (a
+            // snowflake may stick there, a rain drop may run down a window). It doesn't land on the column's top.
             if (this.prevY[i] <= this.columns.ground(column)) {
+                if (this.takesCover(i))
+                    return true;
                 this.blownIn(i, this.columns.ground(column));
             } else if (this.kind[i] == RAIN) {
                 this.landed(this.x[i], this.z[i], this.columns.ground(column), this.rainSize(i), RAIN, 0F, 0);
@@ -451,11 +481,16 @@ public final class PrecipitationField {
         this.y[i] += (Mth.sin(this.phase[i]) - before) * DUST_TURBULENCE_HEIGHT;
 
         int column = this.inCylinder(i, cameraX, cameraZ);
-        if (column < 0 || this.columns.kind(column) != PrecipitationKind.DUST || this.age[i] >= this.lifetime[i])
+        if (column < 0 || this.age[i] >= this.lifetime[i])
+            return false;
+        if (this.covered[i] > 0)
+            return this.driftUnderCover(i, cameraY, coverTicks(DUST), false);
+        if (this.columns.kind(column) != PrecipitationKind.DUST)
             return false;
         float floor = this.columns.ground(column) + DUST_MIN_LIFT;
+        // Far below the column's top: blown in under an overhang, or into a wall
         if (floor - this.y[i] > DUST_CLIMB)
-            return false;
+            return this.takesCover(i);
         float target = Math.max(floor, Math.min(this.groundAhead(i), floor + DUST_LOOKAHEAD_CLIMB));
         if (this.y[i] < target) {
             float along = Mth.sqrt(this.windX[i] * this.windX[i] + this.windZ[i] * this.windZ[i]);
@@ -573,6 +608,7 @@ public final class PrecipitationField {
             this.turned(i);
             this.thinning[i] = random.nextFloat();
             this.age[i] = 0;
+            this.covered[i] = 0;
             this.light[i] = this.columns.light(column);
             toAdd--;
         }
@@ -603,6 +639,14 @@ public final class PrecipitationField {
     private void blownIn(int i, int ground) {
         if (Mth.floor(this.prevX[i]) == Mth.floor(this.x[i]) && Mth.floor(this.prevZ[i]) == Mth.floor(this.z[i]))
             return;
+        this.followedOn(i, ground);
+    }
+
+    /**
+     * Notes a rain drop or snowflake as a landing for the world to follow on from: where it was the tick before, and
+     * how it was moving
+     */
+    private void followedOn(int i, int ground) {
         boolean landed = this.kind[i] == RAIN
                 ? this.landed(this.prevX[i], this.prevZ[i], ground, this.rainSize(i), RAIN, 0F, 0)
                 : this.landed(this.prevX[i], this.prevZ[i], ground, this.snowSize(i), SNOW, (this.drift[i] - MIN_DRIFT) / DRIFT_RANGE, this.light[i]);
@@ -614,6 +658,56 @@ public final class PrecipitationField {
         this.landingMotionX[at] = (float) (this.x[i] - this.prevX[i]);
         this.landingMotionY[at] = this.y[i] - this.prevY[i];
         this.landingMotionZ[at] = (float) (this.z[i] - this.prevZ[i]);
+    }
+
+    /**
+     * Whether a drop carried below the top of the column it moved into is in open air there, in under an overhang or a
+     * canopy, rather than in the side of something: then it is under cover from now on (see {@link #driftUnderCover}).
+     * A drop that didn't move into another column (the ground rose under it) isn't.
+     */
+    private boolean takesCover(int i) {
+        if (Mth.floor(this.prevX[i]) == Mth.floor(this.x[i]) && Mth.floor(this.prevZ[i]) == Mth.floor(this.z[i]))
+            return false;
+        int bx = Mth.floor(this.x[i]), by = Mth.floor(this.y[i]), bz = Mth.floor(this.z[i]);
+        if (!this.source.isOpen(bx, by, bz))
+            return false;
+        this.covered[i] = 1;
+        // Lit where it is, not as the top of the column: under cover it is darker
+        this.light[i] = this.source.light(bx, by, bz);
+        return true;
+    }
+
+    /**
+     * Moves a drop on under cover a tick: through open air, fading, until it reaches something (where a rain drop or
+     * snowflake lands, as the world says) or fades out. The heights the columns know are the cover's, so the world is
+     * asked directly.
+     *
+     * @param ticks how long it lasts under cover
+     * @param lands whether it lands when it reaches something: rain and snow do, dust just stops
+     * @return false if it reached something, faded out or left the cylinder
+     */
+    private boolean driftUnderCover(int i, double cameraY, int ticks, boolean lands) {
+        int bx = Mth.floor(this.x[i]), by = Mth.floor(this.y[i]), bz = Mth.floor(this.z[i]);
+        if (!this.source.isOpen(bx, by, bz)) {
+            if (lands)
+                this.followedOn(i, by);
+            return false;
+        }
+        if (++this.covered[i] > ticks || this.y[i] <= cameraY - BELOW || this.y[i] > cameraY + ABOVE)
+            return false;
+        this.light[i] = this.source.light(bx, by, bz);
+        return true;
+    }
+
+    /**
+     * How long a drop of this kind lasts under cover, in ticks
+     */
+    static int coverTicks(byte kind) {
+        return switch (kind) {
+            case SNOW -> SNOW_COVER_TICKS;
+            case DUST -> DUST_COVER_TICKS;
+            default -> RAIN_COVER_TICKS;
+        };
     }
 
     /**
@@ -668,6 +762,7 @@ public final class PrecipitationField {
         this.spinSin[i] = this.spinSin[last];
         this.thinning[i] = this.thinning[last];
         this.age[i] = this.age[last];
+        this.covered[i] = this.covered[last];
         this.light[i] = this.light[last];
         this.kind[i] = this.kind[last];
         this.color[i] = this.color[last];
@@ -721,10 +816,21 @@ public final class PrecipitationField {
      */
     float fade(int i, float partialTick) {
         var age = this.age[i] + partialTick;
-        return switch (this.kind[i]) {
+        float fade = switch (this.kind[i]) {
             case SNOW -> Math.min(1F, age / SNOW_FADE_IN);
             case DUST -> Mth.clamp(Math.min(age, this.lifetime[i] - age) / DUST_FADE, 0F, 1F);
             default -> Math.min(1F, age / RAIN_FADE_IN);
         };
+        // Under cover it fades out as it drifts in
+        if (this.covered[i] > 0)
+            fade *= coverFade(this.covered[i] - 1 + partialTick, coverTicks(this.kind[i]));
+        return fade;
+    }
+
+    /**
+     * How much of a drop is left, 1 to 0, after this many ticks under cover, out of the ticks it lasts there
+     */
+    static float coverFade(float ticks, int lasts) {
+        return Mth.clamp(1F - ticks / lasts, 0F, 1F);
     }
 }

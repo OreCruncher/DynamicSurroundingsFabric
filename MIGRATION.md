@@ -1,9 +1,46 @@
 # 0.4.6 → 26.2 port
 
 Branch `OreCruncher/26.2`: the 26.2 port of 0.4.5 with `OreCruncher/0.4.6` merged in, and `OreCruncher/0.4.7` merged
-in after it (see "0.4.7 merge" below). Game APIs follow the 26.2
+in after it (see "0.4.7 merge" below), then `OreCruncher/0.4.8` (see "0.4.8 merge"). Game APIs follow the 26.2
 branch; behaviour follows 0.4.6 unless noted. Checked so far: everything compiles on common, Fabric and NeoForge; the
 common tests pass; both clients start with all three shaders compiled and join a world without errors.
+
+## 0.4.8 merge
+
+`OreCruncher/0.4.8` (through `58c551f`) merged in, staged: everything compiles on common, Fabric and NeoForge, the
+common tests pass (2204), and both clients start with every pipeline compiled and no optional hook missing.
+`port-merge.py merge` handled the renames; the rules found this time are in `port-renames.txt` (`ParticleStatus`'s
+package, `getLightColor` → `getLightCoords`, `getMainCamera().getPosition()`, `EntityType.X` → `EntityTypes.X`).
+What needed 26.2's APIs:
+
+- **Footprints and health pop-offs** drew through `MixinDebugRenderer.render` on 1.21.1. On 26.2 they are submitted
+  from `MixinLevelRenderer` at the end of `submitFeatures`, next to the light level labels: `Footprints.submitAll`
+  with `submitCustomGeometry` and `RenderTypes.textPolygonOffset`, `HealthPopoffs.submit` with `submitText` (a
+  non-zero outline colour draws the 8-way outline, as `drawInBatch8xOutline` did). Light from
+  `LightCoordsUtil.getLightCoords`; `Biome.getPrecipitationAt` takes the sea level.
+- **Burning mobs' fire**: 26.2 decides an entity's fire as its render state is extracted, so the hook is
+  `MixinEntityRenderer` (renamed from 1.21.1's `MixinEntityRenderDispatcher`) wrapping `Entity.displayFireAnimation()`
+  in `EntityRenderer.extractRenderState`, which sets `EntityRenderState.displayFireAnimation` (what has vanilla
+  submit its flames). The light is added there, once a frame per mob, as on 1.21.1.
+- **Death mist**: `LivingEntity.makePoofParticles` is public on 26.2; the inject applies unchanged. `DeathMist`
+  takes its sprite in `SoftPuffParticle`'s constructor, as 26.2's other puffs do.
+- **Soft puffs and foam**: the light caching uses `getLightCoords`, which is protected on 26.2.
+- **Pop-off colours**: `ChatFormatting` has no colour accessor on 26.2; they come from `ColorPalette.MC_RED`,
+  `MC_GREEN` and `MC_GOLD`.
+- **The particle batch guard is not on 26.2**, nor its *Guards* config group or the Repair Particle Batches option:
+  26.2 has no particle loop in which a particle can change the drawing state. Particles extract their data, and
+  `QuadParticleFeatureRenderer` draws each layer with that layer's own pipeline and texture, so the 1.21.1 problem
+  (a particle binding its own texture inside `render()`, as the Rainbows mod's does) can't spoil other particles.
+  `ParticleBatchGuard`, `ParticleBatches`, their hooks, test, lang keys and `OptionalHook` entries were removed, and
+  with them the Fabric/NeoForge handler pair support in `OptionalHook.site`. The 1.21.1 release notes this branch
+  carries (`CHANGELOG.md`, `README.md`, `modsite`) still describe the guard, as 0.4.8 on 1.21.1 has it.
+- Merged as is: the sphere scanner (`CuboidScanner` → `SphereScanner`), precipitation under cover and the
+  dynamic-shape rain fix (`LevelColumns`), the burning light gathering in `PointLights.draw`, footprint tags and
+  texture, pop-offs' crit words, the new range defaults, and the nested config groups' fuzz test (already here).
+
+To check in game on both platforms: burning mobs (flames, vanilla fire hidden, one light each), death mist, pop-offs
+(outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
+Mekanism-style block and drifting under eaves.
 
 ## 0.4.7 merge
 

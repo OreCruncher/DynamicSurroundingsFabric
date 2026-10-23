@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.*;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.config.EntityEffectType;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
@@ -202,6 +203,17 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
             effectTypes.add(EntityEffectType.PLAYER_TOOLBAR);
         if (this.tagLibrary.is(EntityEffectTags.BRUSH_STEP, entityType))
             effectTypes.add(EntityEffectType.BRUSH_STEP);
+        // Anything can burn; the tag lists those that keep vanilla's fire
+        if (!this.tagLibrary.is(EntityEffectTags.VANILLA_FIRE, entityType))
+            effectTypes.add(EntityEffectType.BURNING);
+        if (!this.tagLibrary.is(EntityEffectTags.NO_HEALTH_POPOFFS, entityType))
+            effectTypes.add(EntityEffectType.HEALTH_POPOFF);
+        if (entityType == EntityTypes.PLAYER
+                || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_SQUARE, entityType)
+                || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_PAW, entityType)
+                || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_HOOF, entityType)
+                || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_BIRD, entityType))
+            effectTypes.add(EntityEffectType.FOOTPRINTS);
 
         return effectTypes;
     }

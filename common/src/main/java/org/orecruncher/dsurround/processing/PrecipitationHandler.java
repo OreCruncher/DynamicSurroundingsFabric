@@ -5,6 +5,8 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.GpuSampler;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.client.renderer.rendertype.OutputTarget;
@@ -50,6 +52,7 @@ import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WindService;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -289,13 +292,15 @@ public class PrecipitationHandler extends AbstractClientHandler {
     }
 
     /**
-     * The dust first, behind the rain and snow, and soft: it reads a copy of the scene's depth, water included. Then
-     * the rain and snow, drawn hard, the snow flecks, which are cut from the same texture, and the drops on windows.
+     * The rain and snow, drawn hard, the snow flecks, which are cut from the same texture, and the drops on windows;
+     * and the dust, soft: it reads a copy of the scene's depth, water included. Without Fabulous graphics nothing here
+     * writes depth, so the dust goes first, behind the rest. With it, everything writes depth, the dust too, even where
+     * it has faded to almost nothing as it nears the ground, so it goes last: drawn first, it hid the snow flecks
+     * lying under it, and they blinked as it drifted.
      */
     private void drawDrops(RenderPipeline pipeline, RenderTarget target, Camera camera, float partialTick, boolean fabulous) {
         var flakes = this.snowflakes.flakes(GameUtils.getResourceManager());
         var largest = this.snowflakes.largest();
-        var dust = DSurroundParticleSprites.DUST.sprites();
         var options = this.config.weatherOptions;
         var scales = new DropScales(options.rainDropScale / 100F, options.snowflakeScale / 100F);
         var rainColor = RainColor.ofTint(options.rainTint);
@@ -303,22 +308,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
         var lightmap = GameUtils.getMC().gameRenderer.lightmap();
         var lightmapSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR);
 
-        if (this.field.dustCount() > 0) {
-            var atlas = textures.getTexture(TextureAtlas.LOCATION_PARTICLES);
-            // Soft if it can be, reading the scene's depth, water included. With Fabulous graphics the weather's own
-            // target has no depth of its own; the translucent target has the scene's, with the water's drawn over it.
-            var soft = PrecipitationShaders.fabulous(fabulous, PrecipitationShaders.DUST, PrecipitationShaders.DUST_DEPTH);
-            var depthSource = fabulous ? GameUtils.getMC().levelRenderer.translucentTarget() : target;
-            boolean isSoft = soft.isUsable() && depthSource != null && SoftParticles.captureDepth(depthSource);
-            var dustPipeline = isSoft ? soft.pipeline() : pipeline;
-            this.field.draw(this.quads, camera, partialTick, true, flakes, largest, dust, scales, rainColor);
-            this.dustDraw.drawQuads(this.quads.vertices(), this.quads.vertexCount(), dustPipeline, target, pass -> {
-                pass.bindTexture("Sampler0", atlas.getTextureView(), atlas.getSampler());
-                pass.bindTexture("Sampler2", lightmap, lightmapSampler);
-                if (isSoft)
-                    SoftParticles.bindSoftDepth(pass);
-            });
-        }
+        if (!fabulous)
+            this.drawDust(pipeline, target, camera, partialTick, false, flakes, largest, scales, rainColor, lightmap, lightmapSampler);
 
         // The rain is untextured; the snow is cut from the game's snow texture
         var snow = textures.getTexture(Snowflakes.TEXTURE);
@@ -326,10 +317,35 @@ public class PrecipitationHandler extends AbstractClientHandler {
             pass.bindTexture("Sampler0", snow.getTextureView(), snow.getSampler());
             pass.bindTexture("Sampler2", lightmap, lightmapSampler);
         };
-        this.field.draw(this.quads, camera, partialTick, false, flakes, largest, dust, scales, rainColor);
+        this.field.draw(this.quads, camera, partialTick, false, flakes, largest, DSurroundParticleSprites.DUST.sprites(), scales, rainColor);
         this.dropDraw.drawQuads(this.quads.vertices(), this.quads.vertexCount(), pipeline, target, bind);
         this.snowFlecks.draw(this.meshBytes, mesh -> this.fleckDraw.draw(mesh, pipeline, target, bind), camera, partialTick, flakes, largest, scales.snow());
         this.windowStreaks.draw(this.meshBytes, mesh -> this.streakDraw.draw(mesh, pipeline, target, bind), camera, partialTick, rainColor);
+
+        if (fabulous)
+            this.drawDust(pipeline, target, camera, partialTick, true, flakes, largest, scales, rainColor, lightmap, lightmapSampler);
+    }
+
+    private void drawDust(RenderPipeline pipeline, RenderTarget target, Camera camera, float partialTick, boolean fabulous,
+                          List<Snowflakes.Flake> flakes, int largest, DropScales scales, RainColor rainColor,
+                          GpuTextureView lightmap, GpuSampler lightmapSampler) {
+        if (this.field.dustCount() == 0)
+            return;
+        var dust = DSurroundParticleSprites.DUST.sprites();
+        var atlas = GameUtils.getTextureManager().getTexture(TextureAtlas.LOCATION_PARTICLES);
+        // Soft if it can be, reading the scene's depth, water included. With Fabulous graphics the weather's own
+        // target has no depth of its own; the translucent target has the scene's, with the water's drawn over it.
+        var soft = PrecipitationShaders.fabulous(fabulous, PrecipitationShaders.DUST, PrecipitationShaders.DUST_DEPTH);
+        var depthSource = fabulous ? GameUtils.getMC().levelRenderer.translucentTarget() : target;
+        boolean isSoft = soft.isUsable() && depthSource != null && SoftParticles.captureDepth(depthSource);
+        var dustPipeline = isSoft ? soft.pipeline() : pipeline;
+        this.field.draw(this.quads, camera, partialTick, true, flakes, largest, dust, scales, rainColor);
+        this.dustDraw.drawQuads(this.quads.vertices(), this.quads.vertexCount(), dustPipeline, target, pass -> {
+            pass.bindTexture("Sampler0", atlas.getTextureView(), atlas.getSampler());
+            pass.bindTexture("Sampler2", lightmap, lightmapSampler);
+            if (isSoft)
+                SoftParticles.bindSoftDepth(pass);
+        });
     }
 
     private void drawDampSpots(RenderPipeline pipeline, RenderTarget target, Camera camera, float partialTick, boolean darkening) {

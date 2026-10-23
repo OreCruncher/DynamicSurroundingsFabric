@@ -28,8 +28,10 @@ final class WaterfallEffect extends AbstractParticleEmitterEffect {
 
     static final Configuration.WaterfallOptions OPTIONS = ContainerManager.resolve(Configuration.WaterfallOptions.class);
 
-    // Beyond this distance, splashes are halved (and mist and foam). Beyond PARTICLE_RANGE_SQ there are none.
+    // Beyond this distance, splashes are halved (and mist and foam). Beyond particleRangeSq() there are none.
     static final double PARTICLE_FULL_DISTANCE_SQ = 16 * 16;
+    // Beyond vanilla's particle distance (only reached with a longer block effect range), splashes are quartered
+    static final double PARTICLE_HALF_DISTANCE_SQ = VANILLA_PARTICLE_RANGE * VANILLA_PARTICLE_RANGE;
 
     // A still water surface is drawn at 8/9 of the block's height
     private static final double WATER_SURFACE_HEIGHT = 8D / 9D;
@@ -124,9 +126,9 @@ final class WaterfallEffect extends AbstractParticleEmitterEffect {
         if (!OPTIONS.enableParticles)
             return;
 
-        // Nothing is produced past the vanilla particle distance, so skip the work entirely
+        // Nothing is produced past the particle distance, so skip the work entirely
         this.cameraDistanceSq = this.cameraDistanceSq();
-        if (this.cameraDistanceSq > PARTICLE_RANGE_SQ)
+        if (this.cameraDistanceSq > particleRangeSq())
             return;
 
         super.handleParticles();
@@ -144,7 +146,9 @@ final class WaterfallEffect extends AbstractParticleEmitterEffect {
 
         final boolean far = this.cameraDistanceSq > PARTICLE_FULL_DISTANCE_SQ;
         var particleCount = this.getSplashParticleSpawnCount(status);
-        if (far)
+        if (this.cameraDistanceSq > PARTICLE_HALF_DISTANCE_SQ)
+            particleCount /= 4;
+        else if (far)
             particleCount /= 2;
         for (int i = 0; i < particleCount; i++) {
             final double xOffset = RANDOM.nextFloat(-1.0F, 1.0F);

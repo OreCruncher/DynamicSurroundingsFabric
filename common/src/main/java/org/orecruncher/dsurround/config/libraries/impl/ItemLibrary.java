@@ -164,17 +164,6 @@ public class ItemLibrary implements IItemLibrary {
         if (itemEquipSound != null)
             return itemEquipSound;
 
-        if (this.config.entityEffects.enableToolbarBlockSounds) {
-            Item item = stack.getItem();
-            if (item instanceof BlockItem blockItem) {
-                var soundType = blockItem.getBlock().defaultBlockState().getSoundType();
-                itemEquipSound = soundType.getStepSound();
-            }
-        }
-
-        if (itemEquipSound != null)
-            return itemEquipSound;
-
         if (this.tagLibrary.is(ItemTags.LAVA_BUCKETS, stack))
             itemEquipSound = SoundEvents.BUCKET_FILL_LAVA;
         else if (this.tagLibrary.is(ItemTags.WATER_BUCKETS, stack))

@@ -114,7 +114,8 @@ checking in game.
   - The weather target is cleared and gets no copy of the scene's depth from vanilla. It keeps one depth a pixel, the
     nearest drawn, so rain behind a wall drawn with rain in front of it showed through the wall: `effects/WeatherDepth`
     copies the main target's depth into it at the start of the weather pass while any of ours draws there. Write depth
-    (ground fog, damp spots), or the scene is laid over it.
+    (ground fog, damp spots), or the scene is laid over it. Something soft that writes depth where it has all but
+    faded hides what is drawn behind it after: the dust goes after the snow and its flecks there, or they blinked.
   - The particles target's depth is the scene's from before water; the translucent target's has the water's surface.
     On 26.2 particles are drawn before the water, so its depth isn't there yet: with Fabulous a soft layer is drawn
     twice (`MixinQuadParticleFeatureRenderer` wraps `drawIndexed`): its depth first, tested as usual, so the nearest
@@ -147,7 +148,9 @@ checking in game.
   biome tags): `VanillaBiomeAnalyzer` needs an entry for each new biome (and removed ones dropped);
   `BiomeEffectsAnalyzer` each biome's `background_music` and ambient `loop` sound ids (unzip the biome files and grep
   `"sound"`/`"loop"`: 26.2 added `music.overworld.sulfur_caves`); `BiomeNameFallbackAnalyzer` any new naming words;
-  the `dsconfigs/tags` `is_*` files any vanilla tag changes. Also check how the client gets music and climate:
+  the `dsconfigs/tags` `is_*` files any vanilla tag changes, and every vanilla tag a `dsconfigs/tags` file names (26.2
+  emptied `#minecraft:dirt` of grass, podzol, mycelium, mud and moss, into `#grass_blocks`, `#mud`, `#moss_blocks`;
+  `#substrate_overworld` holds them all). Also check how the client gets music and climate:
   `BiomeEvidence.of` reads music from environment attributes on 26.2 (it was `BiomeSpecialEffects` on 1.21.1).
   `everySoundInTheTableIsVanillas` catches only removed ids, not new ones.
 - Weather. `runtime/weather` is what the weather is (nothing there draws); `effects/precipitation` draws it; each has
@@ -167,6 +170,9 @@ checking in game.
   - `processing/PrecipitationHandler` runs particle weather (`PrecipitationField`, `LevelColumns`, `Landings`) and
     stands aside for shader packs, a failed shader, mods that draw weather as particles (`FeatureConflict`, the table of features that stand aside for other mods) and dimensions that draw their
     own weather.
+  - Drops stop at `LevelColumns.groundHeight`: the `MOTION_BLOCKING` heightmap, raised where a block above it is solid as
+    it stands but not marked solid (a mod's dynamic-shape block without `forceSolidOn`, e.g. Mekanism's energy cube, which
+    the heightmap leaves out). Shelter, ground fog and frost still read the plain heightmap.
   - Ground fog (`effects/groundfog`, run by `processing/GroundFogHandler`): mist in biomes with `groundFog` in
     `biomes.json`, drawn by a ray-marched screen pass (`GroundFogVolume`) over a per-column grid (`GroundFogField`),
     scaled by `GroundFogConditions` (time of day, wind, rain, shelter). Ground heights come from the client's
