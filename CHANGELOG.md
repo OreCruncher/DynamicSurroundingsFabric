@@ -46,6 +46,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Block effects (waterfalls, steam, flame jets, and other random block effects) are now found in a sphere around the player rather than a cube
   * Block Effect Range is now a radius, and the scan finds the nearest blocks first, so effects close by show up first after a teleport
   * Setting it past 32 shows effects farther away than Minecraft shows particles, at more cost; waterfalls thin their splashes past 32 blocks
+  * The default is now 40, which scans about as many blocks as the old 32 block cube, and shows block effects a little past Minecraft's particle distance
+* The default Entity Effect Range is now 32, up from 24, as the new entity effects are cheap and still visible that far out
+  * Existing configurations keep the values already saved in them; set the new defaults in the options to use them
 * Removed the option for sound effects when selecting blocks on the hotbar
 
 **Fixes**

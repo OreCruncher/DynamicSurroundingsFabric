@@ -243,7 +243,7 @@ public class Configuration extends ConfigurationData {
         @Property
         @Slider(min = 16, max = 64)
         @Comment("Radius around the player, in blocks, where block effects (waterfalls, steam, random block effects) are found and shown. Past 32, effects show farther than vanilla particles, at more cost.")
-        public int blockEffectRange = 32;
+        public int blockEffectRange = 40;
 
         @Property
         @Comment("Enable/disable steam column effect when liquids are adjacent to hot sources, like lava and magma")
@@ -319,7 +319,7 @@ public class Configuration extends ConfigurationData {
         @Property
         @Slider(min = 16, max = 64)
         @Comment("The maximum range at which entity special effects are applied")
-        public int entityEffectRange = 24;
+        public int entityEffectRange = 32;
 
         @Property
         @Comment("Enable/disable bow pull sound effect")
