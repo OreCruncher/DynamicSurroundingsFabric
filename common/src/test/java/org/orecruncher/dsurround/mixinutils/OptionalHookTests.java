@@ -102,11 +102,13 @@ public class OptionalHookTests {
         for (var hook : OptionalHook.values()) {
             for (var site : hook.sites()) {
                 var mixin = Class.forName(site.mixinClassName(), false, getClass().getClassLoader());
-                var handler = Arrays.stream(mixin.getDeclaredMethods())
-                        .filter(m -> m.getName().equals(site.handler()))
-                        .findFirst();
-                assertTrue(handler.isPresent(), site::toString);
-                assertEquals(0, require(handler.get()), site::toString);
+                for (var name : site.handlers()) {
+                    var handler = Arrays.stream(mixin.getDeclaredMethods())
+                            .filter(m -> m.getName().equals(name))
+                            .findFirst();
+                    assertTrue(handler.isPresent(), () -> site + ": " + name);
+                    assertEquals(0, require(handler.get()), () -> site + ": " + name);
+                }
             }
         }
     }

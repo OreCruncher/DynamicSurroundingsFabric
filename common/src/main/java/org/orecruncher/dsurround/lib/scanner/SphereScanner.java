@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.lib.scanner;
 
 import it.unimi.dsi.fastutil.longs.LongCollection;
-import net.minecraft.core.BlockBox;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.ChunkPos;
@@ -15,21 +14,22 @@ import org.orecruncher.dsurround.lib.random.IRandomizer;
 import java.util.ArrayDeque;
 
 /**
- * Scans the cuboid around the scan center, reporting blocks as they come into range ({@link #blockScan}) and, if
- * {@link #doBlockUnscan()} is true, as they leave it ({@link #blockUnscan}).
+ * Scans the sphere around the scan center, reporting blocks as they come into range ({@link #blockScan}) and, if
+ * {@link #doBlockUnscan()} is true, as they leave it ({@link #blockUnscan}). A sphere rather than a cube: about half
+ * the blocks for the same reach, so a longer range costs less.
  * <p>
  * All work goes through one queue of {@link ScanJob}s processed in order, for up to {@link #TIME_BUDGET_NANOS}
  * each tick:
  * <ul>
- *   <li>a full scan of the volume when scanning starts, the world changes, or the player jumps somewhere new</li>
- *   <li>when the player moves, a scan job for each slab that entered range (and, if {@link #doBlockUnscan()},
- *       an unscan job for each slab that left it)</li>
- *   <li>when a chunk finishes loading, a scan job for the part of the volume it holds</li>
+ *   <li>a full scan of the sphere when scanning starts, the world changes, or the player jumps somewhere new</li>
+ *   <li>when the player moves, a scan job for the shell that entered range (and, if {@link #doBlockUnscan()},
+ *       an unscan job for the shell that left it)</li>
+ *   <li>when a chunk finishes loading, a scan job for the part of the sphere it holds</li>
  * </ul>
  * Fast movement therefore spreads its cost over several ticks instead of landing in one. Jobs walk the world one
- * chunk section at a time and skip sections that are unloaded or contain only air.
+ * chunk section at a time, nearest first, and skip sections that are unloaded or contain only air.
  */
-public abstract class CuboidScanner extends Scanner {
+public abstract class SphereScanner extends Scanner {
 
     private final ArrayDeque<ScanJob> jobs = new ArrayDeque<>();
     private final ScanStats stats = new ScanStats();
@@ -41,43 +41,60 @@ public abstract class CuboidScanner extends Scanner {
     private int blocksRead;
     private int sectionsSkipped;
 
-    // The volume currently in range. Null until the first scan, and while the volume lies entirely outside the
+    private int radius;
+    private long volume;
+
+    // The sphere currently in range. Null until the first scan, and while the sphere lies entirely outside the
     // world (for example flying far above the build limit).
-    protected @Nullable BlockBox activeCuboid;
+    protected @Nullable ScanSphere activeSphere;
     // The client creates a new Level on every dimension change, so comparing the instance detects those (and a
     // reconnect) without relying on the dimension id
     protected @Nullable Level lastWorld = null;
 
-    protected CuboidScanner(final ScanContext locus, final String name, final int range) {
-        super(locus, name, range);
+    protected SphereScanner(final ScanContext locus, final String name, final int radius) {
+        super(locus, name);
+        this.radius = radius;
+        this.volume = ScanSphere.volumeOf(radius);
     }
 
     /**
-     * The volume centered on {@code pos}, trimmed to the world's height so every position in it is a valid block
-     * position and nothing downstream needs to check. Null if none of it is inside the world.
+     * The sphere centered on {@code pos}, or null if none of it is inside the world's height.
      */
     @Nullable
-    protected BlockBox getVolumeFor(final BlockPos pos) {
-        int minY = Math.max(pos.getY() - this.yRange, this.locus.getMinY());
-        int maxY = Math.min(pos.getY() + this.yRange, this.locus.getMaxY());
-        if (minY > maxY)
+    protected ScanSphere getSphereFor(final BlockPos pos) {
+        if (pos.getY() - this.radius > this.locus.getMaxY() || pos.getY() + this.radius < this.locus.getMinY())
             return null;
-        return new BlockBox(
-                new BlockPos(pos.getX() - this.xRange, minY, pos.getZ() - this.zRange),
-                new BlockPos(pos.getX() + this.xRange, maxY, pos.getZ() + this.zRange));
+        return ScanSphere.around(pos, this.radius);
     }
 
-    @Override
-    protected void setRange(int range) {
-        // If there is a range change, we need to trigger a reset of the cuboid
-        if (this.xRange != range || this.yRange != range || this.zRange != range) {
-            super.setRange(range);
+    /**
+     * Changes the radius; a change starts over with a full scan.
+     */
+    protected void setRange(int radius) {
+        if (this.radius != radius) {
+            this.radius = radius;
+            this.volume = ScanSphere.volumeOf(radius);
             this.resetFullScan();
         }
     }
 
     /**
-     * Starts over: drops all queued work and starts a full scan of the volume around the scan center. Subclasses
+     * The number of positions in the sphere.
+     */
+    public long getVolume() {
+        return this.volume;
+    }
+
+    /**
+     * True if {@code pos} is in the sphere currently in range.
+     */
+    public boolean isInRange(final BlockPos pos) {
+        var sphere = this.activeSphere;
+        return sphere != null && sphere.contains(pos);
+    }
+
+    /**
+     * Starts over: drops all queued work and starts a full scan of the sphere around the scan center. Subclasses
      * override this to also discard what they built from earlier scans. Used when the world or the range changes,
      * where earlier results are no longer valid.
      */
@@ -99,10 +116,15 @@ public abstract class CuboidScanner extends Scanner {
 
     private void startFullScan() {
         this.lastWorld = this.locus.getWorld();
-        this.activeCuboid = this.getVolumeFor(this.locus.getScanCenter());
+        this.activeSphere = this.getSphereFor(this.locus.getScanCenter());
         this.jobs.clear();
-        if (this.activeCuboid != null)
-            this.jobs.add(new ScanJob(false, this.activeCuboid));
+        if (this.activeSphere != null)
+            this.queue(ScanJob.full(this.activeSphere, this.locus.getMinY(), this.locus.getMaxY()));
+    }
+
+    private void queue(final ScanJob job) {
+        if (!job.isDone())
+            this.jobs.add(job);
     }
 
     /**
@@ -131,52 +153,49 @@ public abstract class CuboidScanner extends Scanner {
 
     @Override
     public void tick() {
-        final BlockBox newVolume = this.getVolumeFor(this.locus.getScanCenter());
-        if (newVolume == null) {
-            // The whole volume is above or below the world; start over once some of it is back inside
-            this.activeCuboid = null;
+        final ScanSphere newSphere = this.getSphereFor(this.locus.getScanCenter());
+        if (newSphere == null) {
+            // The whole sphere is above or below the world; start over once some of it is back inside
+            this.activeSphere = null;
             this.jobs.clear();
             return;
         }
 
         var world = this.locus.getWorld();
-        if (this.activeCuboid == null || world != this.lastWorld) {
+        var oldSphere = this.activeSphere;
+        if (oldSphere == null || world != this.lastWorld) {
             this.locus.getLogger().debug("[%s] full range reset", this.name);
             this.resetFullScan();
-        } else if (!newVolume.equals(this.activeCuboid)) {
-            this.moveTo(newVolume);
+        } else if (!newSphere.equals(oldSphere)) {
+            this.moveTo(oldSphere, newSphere);
         }
 
         this.processJobs(world);
     }
 
     /**
-     * Queues the work for the volume moving from {@link #activeCuboid} to {@code newVolume}.
+     * Queues the work for the sphere in range moving from {@code oldSphere} to {@code newSphere}.
      */
-    private void moveTo(final BlockBox newVolume) {
-        final BlockBox oldVolume = this.activeCuboid;
-        final BlockBox intersect = Cuboid.intersection(oldVolume, newVolume);
-
+    private void moveTo(final ScanSphere oldSphere, final ScanSphere newSphere) {
         // No overlap means the player jumped somewhere new in the same world (teleport, respawn), so scan the new
-        // volume from scratch. Nothing from the old volume is in range any more.
-        if (intersect == null) {
-            this.locus.getLogger().debug("[%s] no intersection: %s, %s", this.name, oldVolume, newVolume);
+        // sphere from scratch. Nothing from the old one is in range any more.
+        if (!oldSphere.overlaps(newSphere)) {
+            this.locus.getLogger().debug("[%s] no intersection: %s, %s", this.name, oldSphere, newSphere);
             this.rescan();
             return;
         }
 
-        if (this.doBlockUnscan()) {
-            for (var slab : Cuboid.complement(oldVolume, intersect))
-                this.jobs.add(new ScanJob(true, slab));
-        }
-        for (var slab : Cuboid.complement(newVolume, intersect))
-            this.jobs.add(new ScanJob(false, slab));
+        final int minY = this.locus.getMinY();
+        final int maxY = this.locus.getMaxY();
+        if (this.doBlockUnscan())
+            this.queue(ScanJob.difference(true, oldSphere, newSphere, minY, maxY));
+        this.queue(ScanJob.difference(false, newSphere, oldSphere, minY, maxY));
 
-        this.activeCuboid = newVolume;
+        this.activeSphere = newSphere;
 
         // Moving faster than the budget can keep up with (flying, riding) would let the queue grow without limit.
-        // The queue can legitimately hold a full scan (up to one volume) plus movement work. Once it holds more
-        // than two volumes, the movement work alone exceeds a full scan, so starting over is the cheaper way to
+        // The queue can legitimately hold a full scan (up to one sphere) plus movement work. Once it holds more
+        // than two spheres, the movement work alone exceeds a full scan, so starting over is the cheaper way to
         // catch up.
         // What was found so far is still valid, so this is a rescan rather than a reset.
         if (this.getPendingBlocks() > 2L * this.volume) {
@@ -222,21 +241,21 @@ public abstract class CuboidScanner extends Scanner {
      */
     private void runJob(final ScanJob job, final Level world) {
         final var pos = this.workingPos;
+        // Never null here: jobs are dropped whenever the sphere goes
+        final ScanSphere inRange = this.activeSphere;
         while (this.blocksLeft > 0 && !job.isDone()) {
-            final BlockBox box = job.currentBox();
-            final LevelChunkSection section = getSection(world, box.min());
+            final LevelChunkSection section = getSection(world, job.currentSection());
             if (section == null || section.hasOnlyAir()) {
                 // Unloaded, or nothing but air: no block in it can be of interest
-                job.finishBox();
+                job.finishSection();
                 this.spend();
                 this.sectionsSkipped++;
                 continue;
             }
 
-            final CuboidPointIterator points = job.points();
             while (this.blocksLeft > 0) {
-                if (!points.next(pos)) {
-                    job.finishBox();
+                if (!job.next(pos)) {
+                    job.finishSection();
                     break;
                 }
                 this.spend();
@@ -245,7 +264,7 @@ public abstract class CuboidScanner extends Scanner {
                 // A block that has left range since this job was queued is skipped. If unscans are on, the
                 // unscan job for its leaving was queued after this one, so the end result is the same with less
                 // work; if they're off, nothing needs doing for a block out of range.
-                if (!job.isUnscan() && !this.activeCuboid.contains(pos))
+                if (!job.isUnscan() && (inRange == null || !inRange.contains(pos)))
                     continue;
 
                 final BlockState state = section.getBlockState(pos.getX() & 15, pos.getY() & 15, pos.getZ() & 15);
@@ -258,16 +277,15 @@ public abstract class CuboidScanner extends Scanner {
     }
 
     /**
-     * The chunk section containing {@code pos}, or null if its chunk isn't loaded.
+     * The chunk section at {@code sectionPos} (packed with {@link SectionPos#asLong(int, int, int)}), or null if
+     * its chunk isn't loaded.
      */
     @Nullable
-    private static LevelChunkSection getSection(final Level world, final BlockPos pos) {
-        var chunk = world.getChunkSource().getChunkNow(
-                SectionPos.blockToSectionCoord(pos.getX()),
-                SectionPos.blockToSectionCoord(pos.getZ()));
+    private static LevelChunkSection getSection(final Level world, final long sectionPos) {
+        var chunk = world.getChunkSource().getChunkNow(SectionPos.x(sectionPos), SectionPos.z(sectionPos));
         if (chunk == null)
             return null;
-        int index = world.getSectionIndex(pos.getY());
+        int index = world.getSectionIndexFromSectionY(SectionPos.y(sectionPos));
         var sections = chunk.getSections();
         return index >= 0 && index < sections.length ? sections[index] : null;
     }
@@ -302,23 +320,21 @@ public abstract class CuboidScanner extends Scanner {
     }
 
     /**
-     * Queues a scan of the part of the volume in a chunk that has just loaded. Chunks keep arriving after a scan
+     * Queues a scan of the part of the sphere in a chunk that has just loaded. Chunks keep arriving after a scan
      * starts (joining, respawning, a scan range beyond the render distance), and a section that wasn't loaded when
      * the scan reached it was skipped.
      */
     public void onChunkLoaded(final Level world, final ChunkPos chunkPos) {
-        if (this.activeCuboid == null || world != this.lastWorld)
+        var sphere = this.activeSphere;
+        if (sphere == null || world != this.lastWorld)
             return;
 
         // One block wider than the chunk on each side: a block along the border of an already loaded neighbor may
         // depend on blocks in this chunk (steam is found from the heat source next to the water), and that neighbor
         // was scanned while this chunk was missing.
-        var column = new BlockBox(
-                new BlockPos(chunkPos.getMinBlockX() - 1, this.activeCuboid.min().getY(), chunkPos.getMinBlockZ() - 1),
-                new BlockPos(chunkPos.getMaxBlockX() + 1, this.activeCuboid.max().getY(), chunkPos.getMaxBlockZ() + 1));
-        var inRange = Cuboid.intersection(column, this.activeCuboid);
-        if (inRange != null)
-            this.jobs.add(new ScanJob(false, inRange));
+        this.queue(ScanJob.column(sphere, this.locus.getMinY(), this.locus.getMaxY(),
+                chunkPos.getMinBlockX() - 1, chunkPos.getMaxBlockX() + 1,
+                chunkPos.getMinBlockZ() - 1, chunkPos.getMaxBlockZ() + 1));
     }
 
     /**
@@ -328,14 +344,15 @@ public abstract class CuboidScanner extends Scanner {
      * @param positions positions packed with {@link BlockPos#asLong}
      */
     public void onBlockUpdates(LongCollection positions) {
-        if (positions.isEmpty() || this.activeCuboid == null)
+        var sphere = this.activeSphere;
+        if (positions.isEmpty() || sphere == null)
             return;
 
         var world = this.locus.getWorld();
         var pos = new BlockPos.MutableBlockPos();
         for (var it = positions.iterator(); it.hasNext(); ) {
             pos.set(it.nextLong());
-            if (this.activeCuboid.contains(pos))
+            if (sphere.contains(pos))
                 this.updateBlock(world, world.getBlockState(pos), pos);
         }
     }

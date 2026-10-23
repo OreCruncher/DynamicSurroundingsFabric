@@ -30,15 +30,6 @@ public abstract class Scanner {
 
     protected final String name;
 
-    protected int xRange;
-    protected int yRange;
-    protected int zRange;
-
-    protected int xSize;
-    protected int ySize;
-    protected int zSize;
-    protected int volume;
-
     protected final ScanContext locus;
 
     protected final IRandomizer random = Randomizer.current();
@@ -46,38 +37,10 @@ public abstract class Scanner {
 
     private final LogThrottle<Object> blockErrors;
 
-    public Scanner(final ScanContext locus, final String name, final int range) {
-        this(locus, name, range, range, range);
-    }
-
-    public Scanner(final ScanContext locus, final String name, final int xRange, final int yRange, final int zRange) {
+    public Scanner(final ScanContext locus, final String name) {
         this.name = name;
         this.locus = locus;
         this.blockErrors = LogThrottle.firstN(locus.getLogger(), "block errors from " + name, null, MAX_LOGGED_ERRORS);
-
-        this.setRange(xRange, yRange, zRange);
-    }
-
-    protected void setRange(int range) {
-        this.setRange(range, range, range);
-    }
-
-    protected void setRange(int xRange, int yRange, int zRange) {
-        this.xRange = xRange;
-        this.yRange = yRange;
-        this.zRange = zRange;
-
-        this.xSize = xRange * 2 + 1;
-        this.ySize = yRange * 2 + 1;
-        this.zSize = zRange * 2 + 1;
-        this.volume = this.xSize * this.ySize * this.zSize;
-    }
-
-    /**
-     * The volume of the scan area
-     */
-    public int getVolume() {
-        return this.volume;
     }
 
     /**

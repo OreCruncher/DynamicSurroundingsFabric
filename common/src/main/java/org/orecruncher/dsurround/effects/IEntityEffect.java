@@ -33,6 +33,14 @@ public interface IEntityEffect {
     }
 
     /**
+     * Called instead of {@link #tick} while the entity is dying: its health is gone but its body is still there,
+     * tipping over, for about a second. Most effects have nothing to do then.
+     */
+    default void tickDying(EntityEffectInfo manager) {
+
+    }
+
+    /**
      * Helper method to play a sound.
      */
     default void playSound(SoundInstance sound) {

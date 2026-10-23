@@ -2,6 +2,7 @@ package org.orecruncher.dsurround;
 
 import org.orecruncher.dsurround.config.ClockStyle;
 import org.orecruncher.dsurround.config.CompassStyle;
+import org.orecruncher.dsurround.config.FootprintStyle;
 import org.orecruncher.dsurround.config.GroundFogQuality;
 import org.orecruncher.dsurround.config.LightLevelColors;
 import org.orecruncher.dsurround.config.LightLevelMode;
@@ -95,10 +96,6 @@ public class Configuration extends ConfigurationData {
     @TextStyle(color = "#0078D4", italic = true)
     public final Logging logging = new Logging();
 
-    @Property
-    @Comment("Configuration options for other things")
-    public final OtherOptions otherOptions = new OtherOptions();
-
     public static class Flags {
         public static final int AUDIO_PLAYER = 0x1;
         public static final int BASIC_SOUND_PLAY = 0x2;
@@ -132,6 +129,20 @@ public class Configuration extends ConfigurationData {
         @Comment("Play your own Simple Voice Chat voice back to you, with enhanced sound processing, for testing")
         @Experimental
         public boolean voiceChatHearSelf = false;
+
+        @Property
+        @Comment("Fixes for problems other mods cause, each of which can be turned off should it cause a problem of its own")
+        public final Guards guards = new Guards();
+    }
+
+    /**
+     * Fixes for problems other mods cause. Each can be turned off, in case one causes a problem of its own.
+     */
+    public static class Guards {
+
+        @Property
+        @Comment("Put back the drawing state another mod's particle changes while Minecraft's particles are drawn, which draws them as squares, and draw that particle on its own. Turn off if it causes a problem")
+        public boolean repairParticleBatches = true;
     }
 
     public static class SoundSystem {
@@ -241,8 +252,8 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @Slider(min = 16, max = 64)
-        @Comment("Distance that will be scanned when generating block effects")
-        public int blockEffectRange = 32;
+        @Comment("Radius around the player, in blocks, where block effects (waterfalls, steam, random block effects) are found and shown. Past 32, effects show farther than vanilla particles, at more cost.")
+        public int blockEffectRange = 40;
 
         @Property
         @Comment("Enable/disable steam column effect when liquids are adjacent to hot sources, like lava and magma")
@@ -265,7 +276,7 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @MovedFrom("blockEffects.flameJetLight")
-        @Comment("Enable/disable the flicker of flame jets' light on their surroundings")
+        @Comment("Enable/disable the flicker of flame jets' and burning mobs' light on their surroundings")
         public boolean enableLight = true;
     }
 
@@ -318,7 +329,7 @@ public class Configuration extends ConfigurationData {
         @Property
         @Slider(min = 16, max = 64)
         @Comment("The maximum range at which entity special effects are applied")
-        public int entityEffectRange = 24;
+        public int entityEffectRange = 32;
 
         @Property
         @Comment("Enable/disable bow pull sound effect")
@@ -333,16 +344,36 @@ public class Configuration extends ConfigurationData {
         public boolean enablePlayerToolbarEffect = true;
 
         @Property
-        @Comment("Enable/disable sound effects for blocks on the toolbar")
-        public boolean enableToolbarBlockSounds = false;
-
-        @Property
         @Comment("Enable/disable item swing sound effects from players and mobs")
         public boolean enableSwingEffect = true;
 
         @Property
         @Comment("Enable/disable sound effect when walking through dense brush")
         public boolean enableBrushStepEffect = true;
+
+        @Property
+        @Comment("Enable/disable flames like a flame jet's on burning mobs, in place of vanilla's flat fire. Vanilla's fire stays past the entity effect range, with Particles on Minimal and while a shader pack is in use")
+        public boolean enableBurningEffect = true;
+
+        @Property
+        @Comment("Enable/disable dark mist where a mob's body vanishes when it dies, in place of vanilla's white puffs")
+        public boolean enableDeathPuffs = true;
+
+        @Property
+        @Comment("Enable/disable numbers popping off mobs and players when their health changes: red for damage, green for healing")
+        public boolean enableDamagePopoffs = true;
+
+        @Property
+        @Comment("Enable/disable a comic book word over a heavy blow's number")
+        public boolean showCritWords = true;
+
+        @Property
+        @Comment("Enable/disable footprints left by players and mobs walking on soft ground: dirt, sand, gravel, snow, mud")
+        public boolean enableFootprints = true;
+
+        @Property
+        @Comment("The look of players' footprints")
+        public FootprintStyle footprintStyle = FootprintStyle.SQUARE;
     }
 
     public static class FootstepAccents {
@@ -551,11 +582,5 @@ public class Configuration extends ConfigurationData {
         @Slider(min = 0, max = 100)
         @Comment("Reduce the wait time between music plays by a percentage")
         public int reduceWaitTime = 0;
-    }
-
-    public static class OtherOptions {
-        @Property
-        @Comment("Enable/disable playing random sound at the Minecraft finish loading to main screen")
-        public boolean playRandomSoundOnStartup = true;
     }
 }

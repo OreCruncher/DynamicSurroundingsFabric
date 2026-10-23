@@ -210,8 +210,8 @@ public class WaterStepEffectSystem extends AbstractEffectSystem {
 
         @Override
         protected void handleParticles() {
-            // Nothing is produced past the vanilla particle distance, so skip the work entirely
-            if (this.cameraDistanceSq() > PARTICLE_RANGE_SQ)
+            // Nothing is produced past the particle distance, so skip the work entirely
+            if (this.cameraDistanceSq() > particleRangeSq())
                 return;
             super.handleParticles();
         }

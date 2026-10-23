@@ -23,6 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
+import org.orecruncher.dsurround.config.SoundAction;
 import org.orecruncher.dsurround.config.SoundMapping;
 import org.orecruncher.dsurround.config.data.SoundMappingConfigRule;
 import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
@@ -37,7 +38,6 @@ import org.orecruncher.dsurround.lib.compat.BlockCompat;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.logging.ModLog;
-import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.resources.DiscoveredResource;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.platform.IMinecraftDirectories;
@@ -92,7 +92,6 @@ public final class SoundLibrary implements ISoundLibrary {
     private final Map<ResourceLocation, ISoundFactory> soundFactories = new Object2ObjectOpenHashMap<>();
     private final Set<ResourceLocation> blockedSounds = new ObjectOpenHashSet<>();
     private final Set<ResourceLocation> culledSounds = new ObjectOpenHashSet<>();
-    private final List<ResourceLocation> startupSounds = new ArrayList<>();
     private final Map<ResourceLocation, SoundMapping> soundMappings = new Object2ObjectOpenHashMap<>();
     // Metadata for sounds that have none configured, built on first request instead of on every request
     private final Map<ResourceLocation, SoundMetadata> defaultMetadata = new Object2ObjectOpenHashMap<>();
@@ -229,18 +228,6 @@ public final class SoundLibrary implements ISoundLibrary {
 
         // All done!
         return scale;
-    }
-
-    @Override
-    public Optional<SoundEvent> getRandomStartupSound() {
-        if (this.startupSounds.isEmpty())
-            return Optional.empty();
-
-        int idx = 0;
-        if (this.startupSounds.size() > 1) {
-            idx = Randomizer.current().nextInt(this.startupSounds.size());
-        }
-        return Optional.of(SoundEvent.createVariableRangeEvent(this.startupSounds.get(idx)));
     }
 
     @Override
@@ -426,30 +413,24 @@ public final class SoundLibrary implements ISoundLibrary {
     }
 
     private void addSoundConfigDefaults() {
-        this.addSoundConfig("minecraft:entity.sheep.ambient", 100, false, true, false);
-        this.addSoundConfig("minecraft:entity.chicken.ambient", 100, false, true, false);
-        this.addSoundConfig("minecraft:entity.cow.ambient", 100, false, true, false);
-        this.addSoundConfig("minecraft:entity.pig.ambient", 100, false, true, false);
-        this.addSoundConfig("minecraft:entity.llama.ambient", 100, false, true, false);
-        this.addSoundConfig("minecraft:entity.wither.spawn", 10, false, true, false);
-        this.addSoundConfig("minecraft:entity.wither.death", 10, false, true, false);
-        this.addSoundConfig("minecraft:entity.ender_dragon.death", 10, false, true, false);
-
-        this.addSoundConfig("minecraft:entity.experience_orb.pickup", 100, false, false, true);
-        this.addSoundConfig("minecraft:entity.chicken.egg", 100, false, false, true);
-        this.addSoundConfig("minecraft:ambient.underwater.exit", 100, false, false, true);
+        this.addSoundConfig("minecraft:entity.sheep.ambient", 100, SoundAction.CULL);
+        this.addSoundConfig("minecraft:entity.chicken.ambient", 100, SoundAction.CULL);
+        this.addSoundConfig("minecraft:entity.cow.ambient", 100, SoundAction.CULL);
+        this.addSoundConfig("minecraft:entity.pig.ambient", 100, SoundAction.CULL);
+        this.addSoundConfig("minecraft:entity.llama.ambient", 100, SoundAction.CULL);
+        this.addSoundConfig("minecraft:entity.wither.spawn", 10, SoundAction.CULL);
+        this.addSoundConfig("minecraft:entity.wither.death", 10, SoundAction.CULL);
+        this.addSoundConfig("minecraft:entity.ender_dragon.death", 10, SoundAction.CULL);
 
         // Since we have waterfall sounds
-        this.addSoundConfig("minecraft:block.water.ambient", 100, true, false, false);
+        this.addSoundConfig("minecraft:block.water.ambient", 100, SoundAction.BLOCK);
     }
 
-    private void addSoundConfig(final String id, int volumeScale, boolean block, boolean cull, boolean startup) {
+    private void addSoundConfig(final String id, int volumeScale, SoundAction action) {
         var entry = new IndividualSoundConfigEntry(
                 ResourceLocation.parse(id),
                 volumeScale,
-                block,
-                cull,
-                startup);
+                action);
         this.soundConfiguration.add(entry);
     }
 
@@ -457,13 +438,12 @@ public final class SoundLibrary implements ISoundLibrary {
      * Rebuilds the lookup collections from soundConfiguration. Assumes soundConfiguration has been set.
      * <p>
      * The lookups are cleared first: they must reflect exactly the current list, or a sound put back to its
-     * defaults (and so dropped from the list) would keep its old volume, cull or startup setting.
+     * defaults (and so dropped from the list) would keep its old volume or cull setting.
      */
     private void postProcess() {
         this.individualSoundConfiguration.clear();
         this.blockedSounds.clear();
         this.culledSounds.clear();
-        this.startupSounds.clear();
 
         // One entry per sound; if a sound is listed more than once, the last entry wins
         var bySound = new LinkedHashMap<ResourceLocation, IndividualSoundConfigEntry>();
@@ -478,11 +458,9 @@ public final class SoundLibrary implements ISoundLibrary {
         // Insert the entries into our lookup collections
         this.soundConfiguration.forEach(e -> {
             this.individualSoundConfiguration.put(e.soundEventId, e);
-            if (e.startup)
-                this.startupSounds.add(e.soundEventId);
-            if (e.block || e.volumeScale == 0)
+            if (e.action == SoundAction.BLOCK || e.volumeScale == 0)
                 this.blockedSounds.add(e.soundEventId);
-            if (e.cull)
+            if (e.action == SoundAction.CULL)
                 this.culledSounds.add(e.soundEventId);
         });
     }

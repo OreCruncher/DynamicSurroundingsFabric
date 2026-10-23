@@ -25,6 +25,8 @@ public class BlockEffectTags {
     public static final TagKey<Block> DUST_SOURCES = of("dust_sources");
     public static final TagKey<Block> WINDOWS = of("windows");
     public static final TagKey<Block> FROSTED_WINDOWS = of("frosted_windows");
+    // Blocks feet leave prints in, besides those that sound like sand, gravel, snow or mud underfoot
+    public static final TagKey<Block> FOOTPRINTS = of("footprints");
 
     private static TagKey<Block> of(String id) {
         var tagKey = TagKey.create(Registries.BLOCK, Constants.asId("effects/" + id));

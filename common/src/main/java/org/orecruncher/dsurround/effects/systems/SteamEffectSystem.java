@@ -147,8 +147,8 @@ public class SteamEffectSystem extends AbstractEffectSystem implements IEffectSy
 
         @Override
         protected void handleParticles() {
-            // Nothing would be shown past the vanilla particle distance
-            if (this.cameraDistanceSq() > PARTICLE_RANGE_SQ)
+            // Nothing would be shown past the particle distance
+            if (this.cameraDistanceSq() > particleRangeSq())
                 return;
 
             // Follow vanilla's handling of the Particles option: none on Minimal, about a third fewer on Decreased

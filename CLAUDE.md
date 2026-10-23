@@ -14,8 +14,8 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
 
 ## Build and test (Git Bash on Windows; use absolute paths, `cd` can be reset between commands)
 - Compile everything: `./gradlew :common:compileJava :fabric:compileJava :neoforge:compileJava -q`
-- Tests (common only, ~1450): `./gradlew :common:test -q`, then read `common/build/test-results/test/*.xml` for
-  counts and failure messages (the console output is noisy).
+- Tests (common only, ~2100): `./gradlew :common:test -q > /dev/null 2>&1; python scripts/test-summary.py` (counts
+  and each failure's message from `common/build/test-results/test/*.xml`; the console output is noisy).
 - One class: `./gradlew :common:test --tests "*BlockInfoTests" -q`
 - Mapped game jar for `javap` (check real signatures rather than assuming):
   `.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-merged-*/1.21.1-*/minecraft-merged-*.jar`.
@@ -75,7 +75,8 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   `transparency` post shader lays over the scene sorted by each target's depth, taking colours as premultiplied:
   `behind * (1 - alpha) + colour`, and skipping alpha 0. So anything we draw there must leave sensible alpha and depth:
   - The weather target is cleared but gets no copy of the scene's depth: read the main target's, and write depth (ground
-    fog, damp spots), or the scene is laid over it.
+    fog, damp spots), or the scene is laid over it. Something soft that writes depth where it has all but faded hides
+    what is drawn behind it after: the dust goes after the snow and its flecks there, or they blinked.
   - The particles target's depth is the scene's from before water; the translucent target's has the water's surface.
     Soft particles fade against the translucent depth and write it (`soft_particle_scene_depth`, Fabulous only: a
     shader that writes depth loses early depth testing) so water isn't laid over them.
@@ -115,6 +116,9 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   - `processing/PrecipitationHandler` runs particle weather (`PrecipitationField`, `LevelColumns`, `Landings`) and
     stands aside for shader packs, a failed shader, mods that draw weather as particles (`FeatureConflict`, the table of features that stand aside for other mods) and dimensions that draw their
     own weather.
+  - Drops stop at `LevelColumns.groundHeight`: the `MOTION_BLOCKING` heightmap, raised where a block above it is solid as
+    it stands but not marked solid (a mod's dynamic-shape block without `forceSolidOn`, e.g. Mekanism's energy cube, which
+    the heightmap leaves out). Shelter, ground fog and frost still read the plain heightmap.
   - Ground fog (`effects/groundfog`, run by `processing/GroundFogHandler`): mist in biomes with `groundFog` in
     `biomes.json`, drawn by a ray-marched screen pass (`GroundFogVolume`) over a per-column grid (`GroundFogField`),
     scaled by `GroundFogConditions` (time of day, wind, rain, shelter). Ground heights come from the client's
@@ -151,7 +155,9 @@ particles and firefly lights: shaders, `RenderSystem`, particle render types), m
 (`LevelRenderer.renderSky`, `SoundEngine.play`, `ParticleEngine` render order, `FogRenderer`) and the sound engine
 hooks. NeoForge 26.2's client launch class is `net.neoforged.fml.startup.Client`.
 
-1.21.1 work lands on `main` (0.4.6 was squash-merged as `4808dca`); start each 1.21.1 release branch from `main`.
-`main` is merged into 26.2 (as of 0.4.6, `4808dca`), so `git diff $(git merge-base main OreCruncher/26.2) main` lists
-the 1.21.1 changes still to port. Port them in the worktree by merging `main` into `OreCruncher/26.2` and resolving
-against 26.2's APIs (see its `MIGRATION.md`), never by rebasing the 26.2 branch.
+1.21.1 work lands on `main` (0.4.7 was squash-merged as `f3edc2f`); start each 1.21.1 release branch from `main`.
+`main` is merged into 26.2 (as of 0.4.7, `f3edc2f`, recorded with `-s ours`), so
+`git diff $(git merge-base main OreCruncher/26.2) main` lists the 1.21.1 changes still to port. The release branch in
+progress (`OreCruncher/0.4.8`) is merged into `OreCruncher/26.2` directly, in the worktree, resolving against 26.2's
+APIs (see its `MIGRATION.md`; `scripts/port-merge.py` there redoes the renames), never by rebasing the 26.2 branch.
+After its squash to `main`, record `main` in 26.2 with `git merge -s ours main`.

@@ -62,7 +62,12 @@ public enum KnownMod {
     /**
      * Shader packs, which replace the drawing that the mod's own shaders fit into. Oculus is its NeoForge fork.
      */
-    IRIS(true, "iris", "oculus");
+    IRIS(true, "iris", "oculus"),
+    /**
+     * Lights the world around burning entities (and held torches), so burning mobs' flames cast no light of the
+     * mod's. RyoamicLights is its fork.
+     */
+    LAMB_DYNAMIC_LIGHTS(true, "lambdynlights", "ryoamiclights");
 
     private final boolean showInDiagnostics;
     private final List<String> ids;
