@@ -202,12 +202,13 @@ checking in game.
 - The user commits; don't commit unless asked.
 
 ## Branches
-- `main`: the 1.21.1 line (0.4.6 was squash-merged as `4808dca`; each 1.21.1 release branches from `main`).
-- `OreCruncher/0.4.7`: merged into this branch directly, before its squash to `main`; merge it again for its fixes.
-  Once squashed, check `git diff OreCruncher/0.4.7 main` is empty and record `main` with `git merge -s ours main` (a
-  normal merge would reopen every conflict this branch resolved). Port 1.21.1 work by merging, resolving against 26.2's
-  APIs (see `MIGRATION.md`); never rebase this branch.
-  - After `git merge OreCruncher/0.4.7` stops: `python scripts/port-merge.py merge --show` renames 1.21.1's names
+- `main`: the 1.21.1 line (0.4.7 was squash-merged as `f3edc2f` and recorded here with `-s ours`; each 1.21.1
+  release branches from `main`).
+- The current 1.21.1 release branch (`OreCruncher/0.4.8`): merged into this branch directly, before its squash to
+  `main`; merge it again for its fixes. Once squashed, check `git diff OreCruncher/0.4.8 main` is empty and record
+  `main` with `git merge -s ours main` (a normal merge would reopen every conflict this branch resolved). Port 1.21.1
+  work by merging, resolving against 26.2's APIs (see `MIGRATION.md`); never rebase this branch.
+  - After `git merge OreCruncher/0.4.8` stops: `python scripts/port-merge.py merge --show` renames 1.21.1's names
     (`scripts/port-renames.txt`) and merges each conflict again, staging what resolves (and files git merged with old
     names in them), then prints only the conflicts left. Then compile; add any rename the compiler finds to the table
     and run `port-merge.py check-table`. `port-merge.py convert --to 1.21.1 FILE...` renames code copied to 0.4.7.
