@@ -14,7 +14,8 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * NeoForge 21.1.84+
 
 **AI Disclosure**
-* Used to build the burning mob flames, death mist, and footprints
+* Used to build the burning mob flames and death mist from existing logic and assets
+* Ported footprints from older versions, and expanded them to include mobs
 * Ported the damage pop-offs from older versions, drawing them as batched text rather than particles
 * Reworked block effect scanning into a sphere, and let precipitation drift under blocks
 * Reviewed performance profiles for the new features, and cut the work waterfall foam does each tick
