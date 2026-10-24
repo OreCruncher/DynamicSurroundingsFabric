@@ -40,6 +40,10 @@ Others:
 
 * S: [Soft, Chilled Crickets Field Recording](https://www.freesound.org/people/rayjensen/sounds/202749/) by [rayjensen](https://www.freesound.org/people/rayjensen/) | License: Creative Commons 0
 
+*dsurround:lilypad.bullfrog*
+
+* S: [Night Crickets & Bullfrogs.wav](https://freesound.org/people/sunsinger/sounds/80840/) by [sunsinger](https://www.freesound.org/people/sunsinger/) | License: Creative Commons Attribution 3.0
+
 *dsurround:thunder*
 
 * S: [Thunder 1](https://www.freesound.org/people/Yoyodaman234/sounds/253953/) by [Yoyodaman234](https://www.freesound.org/people/Yoyodaman234/) | License: Creative Commons 0

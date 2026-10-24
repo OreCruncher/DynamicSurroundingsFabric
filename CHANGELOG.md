@@ -42,6 +42,8 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Prints fade after 10 seconds, or a minute in snow, and wash away faster in the rain where they are out in the open
   * No prints while sneaking
   * Footprints option in Entity Effects
+* Frog sounds are back from older versions: lily pads croak, with the odd bullfrog call, twice as often at night as by day; not while indoors, or when it's cold enough for water to freeze
+  * Includes the lily pads of Biomes O' Plenty, Twilight Forest, Oh The Biomes We've Gone, and Regions Unexplored; the `dsurround:effects/frog_croaks` block tag sets which blocks croak
 * Rain, snow, and dust blown in under an overhang drift a little way in out of the wind and fade, instead of stopping at the roof's edge; snowflakes that reach the ground under the overhang lie there, and rain splashes on a porch floor
 
 **Changes**
