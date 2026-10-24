@@ -3,7 +3,9 @@ package org.orecruncher.dsurround.commands.handlers;
 import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.runtime.weather.Wind;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.effects.lightning.Strike;
 import org.orecruncher.dsurround.processing.GroundFogHandler;
+import org.orecruncher.dsurround.processing.LightningHandler;
 import org.orecruncher.dsurround.processing.WindowFrostHandler;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WindService;
@@ -74,6 +76,14 @@ public class WeatherCommandHandler {
         var wasSet = handler.forced().isPresent();
         handler.clearForced();
         return Component.translatable(KEY + (wasSet ? "groundfog.clear.success" : "groundfog.clear.notset"));
+    }
+
+    public static Component lightning(Strike.Kind kind) {
+        return lightning(ContainerManager.resolve(LightningHandler.class), kind);
+    }
+
+    static Component lightning(LightningHandler handler, Strike.Kind kind) {
+        return Component.translatable(KEY + (handler.strikeNow(kind) ? "lightning.success" : "lightning.off"));
     }
 
     public static Component frost(int percent) {

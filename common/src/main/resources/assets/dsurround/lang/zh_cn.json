@@ -88,8 +88,6 @@
   "dsurround.config.soundOptions.ambientVolumeScaling.tooltip": "模组播放的环境声音将会以这个因子进行倍增\n单位比例是1/100, 所以设置100将会乘以1\n音量的计算具有几个不同的因素，这种设置就是其中之一\n不管这些因素，最终的音量将被限制在0.0到1.0的范围内",
   "dsurround.config.soundOptions.replaceThunderSounds": "替换原版的雷声音效",
   "dsurround.config.soundOptions.replaceThunderSounds.tooltip": "启用使用 动态环境/动态环绕(Dynamic Surroundings) 版本的声音来替代雷声音效",
-  "dsurround.config.soundOptions.allowScarySounds": "允许播放恐怖声音",
-  "dsurround.config.soundOptions.allowScarySounds.tooltip": "启用播放恐怖声音。恐怖是主观的，因此是否启用取决于模组包作者在配置中的正确实现\n玩家也可以通过游戏内声音配置菜单屏蔽不喜欢的声音",
   "dsurround.config.soundOptions.playBiomeMusicWhileCreative": "在创造模式下播放生物群系音乐",
   "dsurround.config.soundOptions.playBiomeMusicWhileCreative.tooltip": "启用在创造模式下播放配置的生物群系背景音乐\n通常在创造模式下，Minecraft的情境音乐选择器会自动选择创作音乐而不是生物群系背景音乐",
   "dsurround.config.soundOptions.displayToastMessagesForMusic": "显示音乐提示消息",

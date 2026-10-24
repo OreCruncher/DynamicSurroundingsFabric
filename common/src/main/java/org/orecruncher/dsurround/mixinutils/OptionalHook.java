@@ -56,7 +56,11 @@ public enum OptionalHook {
     BURNING_ENTITIES("Flames on burning mobs",
             site("core.MixinEntityRenderer", "dsurround$vanillaFire")),
     DEATH_PUFFS("Dark mist when mobs die",
-            site("core.MixinLivingEntity", "dsurround$deathPuffs"));
+            site("core.MixinLivingEntity", "dsurround$deathPuffs")),
+    LIGHTNING_BOLTS("Branching lightning in place of vanilla's bolts",
+            site("core.MixinClientLevel", "dsurround$lightningBolt"),
+            site("core.MixinLightningBoltRenderer", "dsurround$vanillaBolt"),
+            site("core.MixinLevelRenderer", "dsurround$lightningAfterWeather"));
 
     /**
      * Whether a hook applied

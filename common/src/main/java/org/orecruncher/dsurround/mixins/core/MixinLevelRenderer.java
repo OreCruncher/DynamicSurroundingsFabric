@@ -37,7 +37,8 @@ public class MixinLevelRenderer {
         MixinHelpers.inLevelWeatherPass = true;
         // With Fabulous graphics, the scene's depth for what is drawn to the weather's target to be tested against
         MixinHelpers.WEATHER_DEPTH_GUARD.run(() -> WeatherDepth.prepare(MixinHelpers.precipitation().isActive()
-                || MixinHelpers.windowFrost().isActive() || MixinHelpers.groundFog().isActive()));
+                || MixinHelpers.windowFrost().isActive() || MixinHelpers.groundFog().isActive()
+                || MixinHelpers.lightning().hasStrikes()));
         // Frost on windows with Fabulous graphics, and the ground fog without, before the weather, so the rain and
         // snow are drawn over them
         MixinHelpers.WINDOW_FROST_GUARD.run(() -> MixinHelpers.windowFrost().renderBeforeWeather());
@@ -51,6 +52,15 @@ public class MixinLevelRenderer {
     @Inject(method = "lambda$addWeatherPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/WorldBorderRenderer;render(Lnet/minecraft/client/renderer/state/level/WorldBorderRenderState;Lnet/minecraft/world/phys/Vec3;DD)V"), require = 0)
     private void dsurround$groundFogAfterWeather(CallbackInfo ci) {
         MixinHelpers.GROUND_FOG_GUARD.run(() -> MixinHelpers.groundFog().renderAfterWeather());
+    }
+
+    /**
+     * The lightning, after the ground fog and before the world border: with Fabulous graphics it writes depth, which
+     * would hide weather drawn after it behind its glow (see LightningHandler).
+     */
+    @Inject(method = "lambda$addWeatherPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/WorldBorderRenderer;render(Lnet/minecraft/client/renderer/state/level/WorldBorderRenderState;Lnet/minecraft/world/phys/Vec3;DD)V"), require = 0)
+    private void dsurround$lightningAfterWeather(CallbackInfo ci) {
+        MixinHelpers.LIGHTNING_GUARD.run(() -> MixinHelpers.lightning().render());
     }
 
     /**

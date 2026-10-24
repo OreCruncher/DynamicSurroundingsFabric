@@ -21,6 +21,10 @@ sound and visual effects.
     * Simulated wind affects direction and velocity of precipitation particles
     * Rain, snow, and dust blown in under overhangs drift a little way in and fade (1.21.1-0.4.8+)
     * Rain and snow stop on top of blocks from other mods that Minecraft's own rain falls through, such as Mekanism's energy cube (1.21.1-0.4.8+)
+* Lightning that branches and forks, more the stronger the thunderstorm, flickering with each stroke (1.21.1-0.4.8+)
+    * Replaces Minecraft's bolts, and adds bolts, spider lightning, and flashes in the clouds through a thunderstorm, mostly upwind
+    * Thunder from each strike arrives later the farther away it is
+    * Can be turned off in the Scary Content options
 * Ground fog in swamps and eerie biomes (experimental) (1.21.1-0.4.7+)
     * Hugs the ground, and drifts a bit based on wind
     * Intense rain will diminish the effect, but will come back once rain has finished
@@ -82,5 +86,5 @@ Starting with 1.21.1-0.4.6, AI is being used to help with:
 * GUIs: making the mod's screens consistent with how Minecraft's own screens work
 * Mod compatibility: analyzing how the mod interacts with other mods and making improvements
 * Visual effects: rework existing features, assist with shaders, etc.
-* New features: building effects such as the burning mob flames, death mist, and footprints, and porting damage pop-offs from older versions (1.21.1-0.4.8)
+* New features: building effects such as the burning mob flames, death mist, footprints, and branching lightning, and porting damage pop-offs from older versions (1.21.1-0.4.8)
 * Planning ahead: working out the migration path to subsequent Minecraft versions so it is easier and less error-prone

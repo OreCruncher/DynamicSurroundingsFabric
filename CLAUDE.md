@@ -190,15 +190,14 @@ checking in game.
   - `/dsweather` holds the storm strength, the wind's speed and direction, and a ground fog thickness for testing;
     disconnecting clears them.
   - Weather script variables live in `runtime/variables/WeatherVariables` (`weather.*`).
-  - Window frost (`effects/frost`, run by `processing/WindowFrostHandler`): on the outside of glass, stained and tinted
-    included (`effects/frosted_windows` tag; `effects/windows`, the same glass, for rain streaks). Independent of
-    particle weather. Without Fabulous, in the main pass after the translucent terrain, so water and stained glass
-    behind a window are under its frost, its depth tested in the shader against a copy taken before the translucent
-    features and blocks (`effects/DepthCopy`), so those in front don't hide it; 26.2 draws particles before that, and
-    frost breath is soft (writes no depth), so it doesn't cut the frost out. With Fabulous, on clear glass at the start
-    of the weather pass, to the weather target (`MixinLevelRenderer`); on stained glass as without Fabulous, but into
-    the translucent target, tested against the main target's depth: a target holds one depth a pixel, so frost in the
-    weather target was covered by water behind stained glass, merged into one layer with it.
+  - Lightning (`effects/lightning`, run by `processing/LightningHandler`): branching bolts in place of vanilla's (from
+    `ClientLevel.addEntity`, shaped from the bolt's seed; vanilla's submit skipped for those seeds, both
+    `OptionalHook.LIGHTNING_BOLTS`) and the sky's own strikes through a thunderstorm, mostly upwind
+    (`Strikes.strikeAngle`, from `WindService`), with distance-delayed thunder. Drawn in the weather pass after the
+    ground fog, before the world border; with Fabulous it writes depth (tested against `WeatherDepth`'s copy), bolts
+    before the cloud glow. Gated by `Configuration.ScaryContent` (`allowScaryContent` && `enableLightning`; script
+    `global.allowLightning()`) and vanilla's Hide Lightning Flashes (no sky strikes, no flicker).
+    `/dsweather lightning [ground|spider|sheet]`.
     "Outside" uses the `MOTION_BLOCKING` heightmap, then sky light on either side (`canSeeSky` is only sky light 15,
     which a glass roof doesn't reduce).
 

@@ -88,8 +88,6 @@
   "dsurround.config.soundOptions.ambientVolumeScaling.tooltip": "Dźwięki otoczenia odtwarzane przez moda będą skalowane przez ten współczynnik. Skala jednostek to 1/100, więc wartość 100 będzie mnożyć przez 1. Kalkulacje dźwięku mają kilka różnych czynników i ta opcja jest jednym z nich. Niezależnie od tych czynników, ostateczna głośność będzie ograniczona do zakresu 0.0 - 1.0.",
   "dsurround.config.soundOptions.replaceThunderSounds": "Zamień domyślne dźwięki burzy",
   "dsurround.config.soundOptions.replaceThunderSounds.tooltip": "Włącza zamianę dźwięków burzy na wersję z Dynamic Surroundings",
-  "dsurround.config.soundOptions.allowScarySounds": "Zezwól na odtwarzanie strasznych dźwięków",
-  "dsurround.config.soundOptions.allowScarySounds.tooltip": "Włącz odtwarzanie strasznych dźwięków. 'Straszne' może być subiektywne. Poprawna implementacja w konfiguracji jest zależna od autorów paczek modów. Nielubiane dźwięki mogą być zablokowane, używając domyślnego menu konfiguracji dźwięku.",
   "dsurround.config.soundOptions.playBiomeMusicWhileCreative": "Graj muzykę biomów w trybie kreatywnym",
   "dsurround.config.soundOptions.playBiomeMusicWhileCreative.tooltip": "Włącza skonfigurowaną muzykę biomów w tle w trybie kreatywnym. Normalnie w trybie kreatywnym selektor muzyki sytuacyjnej Minecrafta automatycznie wybierze muzykę kreatywną, niż muzykę biomów w tle.",
   "dsurround.config.soundOptions.displayToastMessagesForMusic": "Pokazuj powiadomienia muzyki",

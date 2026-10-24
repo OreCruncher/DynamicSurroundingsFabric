@@ -9,6 +9,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.eventing.IChunkLoad;
@@ -87,5 +89,15 @@ public class MixinClientLevel {
         level.playLocalSound(pos, calm, source, calmVolume, pitch, distanceDelay);
         if (heavy > 0F)
             original.call(level, pos, sound, source, volume * heavy, pitch, distanceDelay);
+    }
+
+    /**
+     * A lightning bolt arriving from the server: the mod draws it as a strike of its own, if its lightning is on (see
+     * LightningHandler). Optional: without it the game draws its own bolts.
+     */
+    @Inject(method = "addEntity(Lnet/minecraft/world/entity/Entity;)V", at = @At("TAIL"), require = 0)
+    private void dsurround$lightningBolt(Entity entity, CallbackInfo ci) {
+        if (entity instanceof LightningBolt bolt)
+            MixinHelpers.LIGHTNING_GUARD.run(() -> MixinHelpers.lightning().onBolt(bolt));
     }
 }

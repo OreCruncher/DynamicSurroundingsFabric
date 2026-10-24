@@ -28,6 +28,7 @@
     "core.MixinMusic",
     "core.MixinFogRenderer",
     "core.MixinLevelRenderer",
+    "core.MixinLightningBoltRenderer",
     "core.MixinLivingEntity",
     "core.MixinEntityRenderer",
     "core.MixinParticle",

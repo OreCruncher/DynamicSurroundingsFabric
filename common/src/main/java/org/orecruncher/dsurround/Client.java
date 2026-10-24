@@ -4,6 +4,7 @@ import dev.architectury.event.events.client.ClientCommandRegistrationEvent;
 import dev.architectury.platform.Platform;
 import dev.architectury.registry.ReloadListenerRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 
@@ -11,6 +12,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.SkyRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.WeatherEffectRenderer;
+import net.minecraft.client.renderer.entity.LightningBoltRenderer;
 import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.client.renderer.fog.environment.AtmosphericFogEnvironment;
 import net.minecraft.client.sounds.SoundManager;
@@ -240,7 +242,8 @@ public final class Client {
      * loads it.
      */
     private static void checkOptionalHooks() {
-        var hooked = List.of(ClientLevel.class, LevelRenderer.class, WeatherEffectRenderer.class, SkyRenderer.class, FogRenderer.class, AtmosphericFogEnvironment.class, ParticleEngine.class, Particle.class);
+        var hooked = List.of(ClientLevel.class, LevelRenderer.class, WeatherEffectRenderer.class, SkyRenderer.class, FogRenderer.class,
+                AtmosphericFogEnvironment.class, ParticleEngine.class, Particle.class, LightningBoltRenderer.class);
         Library.LOGGER.debug("Checking the optional hooks in %d classes", hooked.size());
         OptionalHook.check(Library.LOGGER, Platform.isDevelopmentEnvironment());
     }

@@ -42,6 +42,35 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Fourth 0.4.8 merge (through `cfed72a`)
+
+Compiles on common, Fabric and NeoForge; the common tests pass (2274); both clients start with the four lightning
+pipelines compiled and no optional hook missing. `port-merge.py merge` left 15 conflicts; no new rename rules.
+
+- **Already here by hand**: the particle counts in recordings (`RenderTimer.count`, the precipitation timers,
+  `cb83ed0a`), the JFR script fix (`f5543196`) and the frog croaks (`d31da6d1`). 26.2's side kept; git had added
+  the frog croak test to `ConfigDataTests` a second time, taken back out.
+- **Lightning** (`effects/lightning`, `LightningHandler`): the bolt shapes, strikes, cloud glow, timing, thunder and
+  upwind bias merged as is. What needed 26.2's APIs:
+  - `LightningRenderer` draws with four pipelines in place of one shader and its `CoreStrength`/`AddOnly` uniforms:
+    channels and cloud glow (`CORE` define), each plain and for Fabulous graphics (`ADD_ONLY` define, depth written),
+    blended `ONE, ONE`, depth tested `GREATER_THAN_OR_EQUAL` (reversed depth). Drawn with `MeshDraw` to
+    `OutputTarget.WEATHER_TARGET`, from `MixinLevelRenderer` in the weather pass after the ground fog and before the
+    world border (`dsurround$lightningAfterWeather`, part of `OptionalHook.LIGHTNING_BOLTS`). With Fabulous graphics,
+    `WeatherDepth.prepare` also runs while there are strikes, so the lightning is tested against the scene there.
+  - The shader's `CORE` constant is `CORE_WIDTH`: a `CORE` define with no value would empty it. The noise sampler is
+    only in the glow's pipeline. `lightning.json` is gone; 26.2 has no shader definitions.
+  - Vanilla's bolt is drawn from `LightningBoltRenderer.submit(LightningBoltRenderState, ...)`, whose state has the
+    bolt's `seed` but not the bolt: `LightningHandler` keeps its bolts by seed (`drawsBolt(long)`).
+  - Cloud height from `EnvironmentAttributes.CLOUD_HEIGHT`/`CLOUD_COLOR` at the camera (as `DimensionInfo` reads
+    them), sky lightning only with the overworld skybox, and the view's reach worked out as `Camera` does
+    (`max(render distance * 4, cloud range)`), which 26.2 doesn't expose.
+- **Scary Content group**, `global.allowLightning()`, `/dsweather lightning` and the release notes merged as is.
+
+To check in game on both platforms: `/dsweather lightning` (each kind) and a thunderstorm, with and without Fabulous
+graphics (lightning hidden behind hills, not behind the sky; rain in front of it), and `/summon lightning_bolt` drawing
+only the branching bolt.
+
 ### Third 0.4.8 merge (through `a388be9`)
 
 Compiles on common, Fabric and NeoForge; the common tests pass (2225). `port-merge.py merge` left three conflicts; no
