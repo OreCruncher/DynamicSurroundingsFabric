@@ -13,12 +13,17 @@ import java.util.Arrays;
  * <p>
  * Looking a column up takes several reads of the world (its height, biome, temperature, light), so each is kept in a
  * slot of its own, found from where it is in the world, and not looked up again while it stays in the area: moving
- * into another column looks up only the row or column that came into the area. A few rows are looked at again each
+ * into another column looks up only the columns that came into the area. A few rows are looked at again each
  * tick, every row once in {@link #REFRESH_TICKS} ticks, to see blocks placed or broken, light changing and the
  * camera's height (which what falls is taken at), spreading the work rather than doing it all at once; and all of
  * them when {@link #invalidate} says what was found is out of date. The shares of the area that rain, snow and dust
  * fall in, and the dust's colour across it, are kept as running totals: a column's part is taken out when it is
  * looked up again or leaves, and the new one's added.
+ * <p>
+ * The drops keep to a cylinder around the camera, so the area is the disc of columns they can reach, not the square
+ * around it: about 15% fewer lookups (a little short of the disc's own share of the square, as the camera can be
+ * anywhere in its column), and the shares of rain and dust are of the area the drops fall in. The slots still cover
+ * the square; those outside the disc are left empty.
  */
 final class PrecipitationColumns {
 
@@ -26,7 +31,11 @@ final class PrecipitationColumns {
 
     private final int radius;
     private final int size;
-    // Each slot's column in the world, or Integer.MIN_VALUE for none yet
+    // Per row of the area, how far the disc reaches either side of the camera's column, in columns
+    private final int[] rowReach;
+    // How many columns the disc has
+    private final int columns;
+    // Each slot's column in the world, or Integer.MIN_VALUE for none
     private final int[] slotX;
     private final int[] slotZ;
     private final int[] ground;
@@ -58,13 +67,47 @@ final class PrecipitationColumns {
         this.dustColor = new int[cells];
         this.snowShare = new float[cells];
         this.kind = new PrecipitationKind[cells];
+        this.rowReach = new int[this.size];
+        int count = 0;
+        for (int dz = 0; dz < this.size; dz++) {
+            int reach = 0;
+            while (reach < radius && inDisc(reach + 1, dz - radius, radius))
+                reach++;
+            this.rowReach[dz] = reach;
+            count += reach * 2 + 1;
+        }
+        this.columns = count;
         this.forget();
     }
 
     /**
+     * Whether a drop within {@code radius} of the camera can be in the column {@code dx}, {@code dz} columns from the
+     * camera's: the camera is anywhere in its own column, so the gap between the two columns is what counts
+     */
+    static boolean inDisc(int dx, int dz, int radius) {
+        int gapX = Math.max(0, Math.abs(dx) - 1);
+        int gapZ = Math.max(0, Math.abs(dz) - 1);
+        return gapX * gapX + gapZ * gapZ < radius * radius;
+    }
+
+    /**
+     * How many columns are looked up
+     */
+    int columnCount() {
+        return this.columns;
+    }
+
+    /**
+     * Whether the column {@code i}, {@code j} from the area's corner is in the disc
+     */
+    private boolean inArea(int i, int j) {
+        return Math.abs(i - this.radius) <= this.rowReach[j];
+    }
+
+    /**
      * Brings the columns up to date for where the camera is: all of them if they were {@link #invalidate invalidated}
-     * (or never looked up); otherwise those that came into the area, and the rows due a fresh look. Called once a
-     * tick.
+     * (or never looked up); otherwise those that came into the area, and the rows due a fresh look. Columns that left
+     * the disc are taken out. Called once a tick.
      *
      * @return true if any were looked up
      */
@@ -80,19 +123,25 @@ final class PrecipitationColumns {
         int refreshFrom = this.refreshRow;
         this.refreshRow = (this.refreshRow + rowsPerTick) % this.size;
         boolean looked = false;
+        boolean dropped = false;
         for (int j = 0; j < this.size; j++) {
             int z = this.originZ + j;
             boolean refresh = Math.floorMod(j - refreshFrom, this.size) < rowsPerTick;
             for (int i = 0; i < this.size; i++) {
                 int x = this.originX + i;
                 int slot = this.slot(x, z);
-                if (refresh || this.slotX[slot] != x || this.slotZ[slot] != z) {
+                if (!this.inArea(i, j)) {
+                    if (this.slotX[slot] != Integer.MIN_VALUE) {
+                        this.empty(slot);
+                        dropped = true;
+                    }
+                } else if (refresh || this.slotX[slot] != x || this.slotZ[slot] != z) {
                     this.look(source, slot, x, z, cameraY);
                     looked = true;
                 }
             }
         }
-        if (looked)
+        if (looked || dropped)
             this.updateRegionalDustColor(source, cameraX, cameraY, cameraZ);
         return looked;
     }
@@ -123,7 +172,8 @@ final class PrecipitationColumns {
         this.originX = cameraX - this.radius;
         this.originZ = cameraZ - this.radius;
         for (int j = 0; j < this.size; j++) {
-            for (int i = 0; i < this.size; i++) {
+            int reach = this.rowReach[j];
+            for (int i = this.radius - reach; i <= this.radius + reach; i++) {
                 int x = this.originX + i, z = this.originZ + j;
                 this.look(source, this.slot(x, z), x, z, cameraY);
             }
@@ -149,6 +199,17 @@ final class PrecipitationColumns {
         // From the top block of the column, if dust is blown from it
         this.dustColor[slot] = what == PrecipitationKind.DUST ? source.dustColor(x, g - 1, z) : IColumnSource.NOT_A_DUST_SOURCE;
         this.count(slot, 1);
+    }
+
+    /**
+     * Takes a slot's column out of the running totals and leaves the slot empty: its column has left the disc
+     */
+    private void empty(int slot) {
+        this.count(slot, -1);
+        this.slotX[slot] = Integer.MIN_VALUE;
+        this.slotZ[slot] = Integer.MIN_VALUE;
+        this.kind[slot] = PrecipitationKind.NONE;
+        this.dustColor[slot] = IColumnSource.NOT_A_DUST_SOURCE;
     }
 
     /**
@@ -208,7 +269,7 @@ final class PrecipitationColumns {
         int bx = Mth.floor(x), bz = Mth.floor(z);
         int dx = bx - this.originX;
         int dz = bz - this.originZ;
-        if (dx < 0 || dz < 0 || dx >= this.size || dz >= this.size)
+        if (dz < 0 || dz >= this.size || Math.abs(dx - this.radius) > this.rowReach[dz])
             return -1;
         return this.slot(bx, bz);
     }
@@ -217,14 +278,14 @@ final class PrecipitationColumns {
      * The share of the columns rain or snow falls in, 0 to 1
      */
     float fallingShare() {
-        return this.falling / (float) (this.size * this.size);
+        return this.falling / (float) this.columns;
     }
 
     /**
      * The share of the columns dust blows in, 0 to 1
      */
     float dustShare() {
-        return this.dusty / (float) (this.size * this.size);
+        return this.dusty / (float) this.columns;
     }
 
     /**

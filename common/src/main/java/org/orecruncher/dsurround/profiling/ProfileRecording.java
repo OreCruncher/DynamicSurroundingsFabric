@@ -132,6 +132,7 @@ final class ProfileRecording {
             event.gpuPeak = timer.getPeakMSecs();
             event.cpuAverage = timer.getCpuMSecs();
             event.cpuPeak = timer.getCpuPeakMSecs();
+            event.count = timer.getCount();
             event.commit();
         }
     }

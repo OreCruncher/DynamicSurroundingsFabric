@@ -17,6 +17,8 @@ checking in game.
 - Tests (common only, ~2100): `./gradlew :common:test -q` ends with `Tests: N run, N failed, N skipped`, after a
   `FAILED <class>.<test>: <message>` line per failure; read `common/build/test-results/test/*.xml` only for a stack trace.
 - One class: `./gradlew :common:test --tests "*BlockInfoTests" -q`
+- Sound loudness survey (needs ffmpeg): `python scripts/sound-survey.py [--csv out.csv]` — level per OGG, events
+  whose variants differ, stereo files, clipping, leading silence, files `sounds.json` doesn't use.
 - Game jar for `javap` (check real signatures rather than assuming; 26.2 is unobfuscated):
   `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/26.2/minecraft-merged-deobf-26.2.jar`.
   NeoForge-patched classes: `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/neoforge-<version>-minecraft-merged-deobf/26.2/*.jar`.
@@ -41,7 +43,8 @@ checking in game.
   The user may have their own client running: check what is running (and when it started) before killing, and stop
   only the one you launched.
 - Profiling: `/dsprofile [scene] [seconds]` records a JFR file, zipped, to `config/dsurround/profiles` with the mod's
-  GPU/CPU render timers in it (`dsurround.RenderTimer` events) and what it was made on (`dsurround.Environment`); unzip
+  GPU/CPU render timers in it (`dsurround.RenderTimer` events; precipitation's carry a `count` of drops/spots a frame,
+  so two recordings can be checked for the same storm) and what it was made on (`dsurround.Environment`); unzip
   it and read it with the JDK's `jfr` (`jfr print --json --events ...`), or summarize it with
   `python scripts/jfr-summary.py <zip or jfr>` (timers, threads, mod packages, our frames, allocation, GC;
   `--callers <method>` for who calls something).

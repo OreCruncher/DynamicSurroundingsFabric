@@ -42,6 +42,21 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Third 0.4.8 merge (through `a388be9`)
+
+Compiles on common, Fabric and NeoForge; the common tests pass (2225). `port-merge.py merge` left three conflicts; no
+new rename rules. The version-check cap and the sound files were already here (`4fcabbec`, `38cfa273`).
+
+- **Round precipitation area** (`PrecipitationColumns`): 1.21.1 looks up the disc of columns the drops can reach
+  instead of the square. 26.2's slots shift with the camera and keep running totals, so here the disc is kept the same
+  way: columns that come into it are looked up, and a slot whose column left it is taken out of the totals and
+  emptied (no world reads). The slots still cover the square. 26.2's tests for the shifting area now count the disc's
+  columns; `theRunningTotalsMatchAFreshLookAfterMoving` covers the emptying (it fails without it).
+- **Diagnostics overlay batching** (`drawManaged`): not taken. 26.2's GUI extraction already batches; 26.2's side kept.
+- **`CLAUDE.md`**: 26.2's jar paths kept, the sound survey line added.
+- The Precipitation Range default (14), the dust sound sampling the disc, and the sound scripts merged as is. The
+  0.4.8 commit carried a `scripts/__pycache__` file; left out here (26.2 already ignores `__pycache__/`).
+
 ### Second 0.4.8 merge (through `76fb3bd`)
 
 Compiles on common, Fabric and NeoForge; the common tests pass (2218). `port-merge.py merge` resolved the sound

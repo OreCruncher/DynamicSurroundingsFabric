@@ -28,7 +28,9 @@ public final class PrecipitationField {
     static final byte DUST = 2;
 
     /**
-     * How far from the camera, horizontally, there are drops, unless a field is given another range
+     * How far from the camera, horizontally, there are drops, unless a field is given another range. The counts tuned
+     * for a range (drops, landings, spots, flecks) are tuned for this one and scaled by area for others
+     * ({@link #forArea}); the option's default can differ.
      */
     public static final int DEFAULT_RADIUS = 12;
     /**

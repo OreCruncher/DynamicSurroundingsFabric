@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.effects;
 import com.mojang.blaze3d.systems.GpuQueryPool;
 import com.mojang.blaze3d.systems.RenderSystem;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.lib.math.EMA;
 import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
 
@@ -27,6 +28,9 @@ public final class RenderTimer implements ITimer {
     private final String name;
     private final TimerEMA cpu;
     private final TimerEMA gpu;
+    // How many of what it draws there were a frame, averaged as the times are; only for timers given a count
+    private final EMA count;
+    private boolean counted;
     // A start and an end timestamp for each frame, in that order
     @Nullable
     private GpuQueryPool timestamps;
@@ -44,6 +48,23 @@ public final class RenderTimer implements ITimer {
         this.name = name;
         this.cpu = new TimerEMA(name);
         this.gpu = new TimerEMA(name);
+        this.count = new EMA(name);
+    }
+
+    /**
+     * Notes how many of what it draws (drops, spots) there were this frame, so recordings show how much there was to
+     * draw beside how long it took: two recordings only compare when the work matches. Once a frame, if at all.
+     */
+    public void count(int items) {
+        this.count.update(items);
+        this.counted = true;
+    }
+
+    /**
+     * How many of what it draws there were a frame, on average; NaN for a timer that doesn't count
+     */
+    public double getCount() {
+        return this.counted ? this.count.get() : Double.NaN;
     }
 
     /**

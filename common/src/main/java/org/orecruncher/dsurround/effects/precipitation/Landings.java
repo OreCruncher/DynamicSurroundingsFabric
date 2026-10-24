@@ -385,10 +385,13 @@ public final class Landings {
         if (!StormSounds.isTimeForSound(random.nextInt(StormSounds.SOUND_CHANCE), this.dustSoundTime++))
             return;
         // A few tries for a spot with dust; at the edge of a desert, most of the area may have none
+        // Over the disc the dust is drawn in, as it is looked up
         int radius = field.radius();
         for (int tries = 0; tries < 4; tries++) {
-            double x = cameraX + random.nextInt(radius * 2 + 1) - radius;
-            double z = cameraZ + random.nextInt(radius * 2 + 1) - radius;
+            float angle = random.nextFloat() * Mth.TWO_PI;
+            float r = radius * Mth.sqrt(random.nextFloat());
+            double x = cameraX + Mth.cos(angle) * r;
+            double z = cameraZ + Mth.sin(angle) * r;
             if (!field.isDustAt(x, z))
                 continue;
             this.dustSoundTime = 0;

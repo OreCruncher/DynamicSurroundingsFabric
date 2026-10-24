@@ -105,6 +105,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private SnowFlecks snowFlecks = new SnowFlecks(MAX_SNOW_FLECKS);
     private WindowStreaks windowStreaks = new WindowStreaks(MAX_WINDOW_STREAKS);
     private final AfterRainDrips drips = new AfterRainDrips();
+    // The drops drawn this frame, for the render timer's count
+    private int dropsDrawn;
     private final Snowflakes snowflakes;
     private final LevelColumns columns;
     // Drawing: made on first use, on the render thread
@@ -272,10 +274,13 @@ public class PrecipitationHandler extends AbstractClientHandler {
             this.meshBytes = new ByteBufferBuilder(this.field.capacity() * 4 * DefaultVertexFormat.PARTICLE.getVertexSize());
 
         PrecipitationShaders.RENDER_TIMER.begin();
+        // For recordings, how much there was to draw: the drops in the area, whatever the storm and range make
+        PrecipitationShaders.RENDER_TIMER.count(this.field.count());
         try {
             var spots = PrecipitationShaders.fabulous(fabulous, PrecipitationShaders.DAMP_SPOTS, PrecipitationShaders.DAMP_SPOTS_DEPTH);
             if (this.dampSpots.count() > 0 && spots.isUsable()) {
                 PrecipitationShaders.DAMP_SPOTS_TIMER.begin();
+                PrecipitationShaders.DAMP_SPOTS_TIMER.count(this.dampSpots.count());
                 spots.run(() -> this.drawDampSpots(spots.pipeline(), target, camera, partialTick, !fabulous), () -> {});
                 PrecipitationShaders.DAMP_SPOTS_TIMER.end();
             }
@@ -283,7 +288,9 @@ public class PrecipitationHandler extends AbstractClientHandler {
             // If the drops fail to draw, vanilla's weather is drawn in their place, this frame and after
             var drops = PrecipitationShaders.fabulous(fabulous, PrecipitationShaders.DROPS, PrecipitationShaders.DROPS_DEPTH);
             PrecipitationShaders.DROPS_TIMER.begin();
+            this.dropsDrawn = 0;
             boolean drawn = drops.run(() -> this.drawDrops(drops.pipeline(), target, camera, partialTick, fabulous), () -> {});
+            PrecipitationShaders.DROPS_TIMER.count(this.dropsDrawn);
             PrecipitationShaders.DROPS_TIMER.end();
             return drawn;
         } finally {
@@ -318,6 +325,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
             pass.bindTexture("Sampler2", lightmap, lightmapSampler);
         };
         this.field.draw(this.quads, camera, partialTick, false, flakes, largest, DSurroundParticleSprites.DUST.sprites(), scales, rainColor);
+        this.dropsDrawn += this.quads.vertexCount() / 4;
         this.dropDraw.drawQuads(this.quads.vertices(), this.quads.vertexCount(), pipeline, target, bind);
         this.snowFlecks.draw(this.meshBytes, mesh -> this.fleckDraw.draw(mesh, pipeline, target, bind), camera, partialTick, flakes, largest, scales.snow());
         this.windowStreaks.draw(this.meshBytes, mesh -> this.streakDraw.draw(mesh, pipeline, target, bind), camera, partialTick, rainColor);
@@ -340,6 +348,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
         boolean isSoft = soft.isUsable() && depthSource != null && SoftParticles.captureDepth(depthSource);
         var dustPipeline = isSoft ? soft.pipeline() : pipeline;
         this.field.draw(this.quads, camera, partialTick, true, flakes, largest, dust, scales, rainColor);
+        this.dropsDrawn += this.quads.vertexCount() / 4;
         this.dustDraw.drawQuads(this.quads.vertices(), this.quads.vertexCount(), dustPipeline, target, pass -> {
             pass.bindTexture("Sampler0", atlas.getTextureView(), atlas.getSampler());
             pass.bindTexture("Sampler2", lightmap, lightmapSampler);
