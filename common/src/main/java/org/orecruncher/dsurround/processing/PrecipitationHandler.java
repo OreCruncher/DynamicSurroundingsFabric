@@ -103,6 +103,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private SnowFlecks snowFlecks = new SnowFlecks(MAX_SNOW_FLECKS);
     private WindowStreaks windowStreaks = new WindowStreaks(MAX_WINDOW_STREAKS);
     private final AfterRainDrips drips = new AfterRainDrips();
+    // The drops drawn this frame, for the render timer's count
+    private int dropsDrawn;
     private final Snowflakes snowflakes;
     private final LevelColumns columns;
 
@@ -259,19 +261,24 @@ public class PrecipitationHandler extends AbstractClientHandler {
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
         PrecipitationShaders.RENDER_TIMER.begin();
+        // For recordings, how much there was to draw: the drops in the area, whatever the storm and range make
+        PrecipitationShaders.RENDER_TIMER.count(this.field.count());
         try {
             if (this.dampSpots.count() > 0 && PrecipitationShaders.DAMP_SPOTS.isUsable()) {
                 PrecipitationShaders.DAMP_SPOTS_TIMER.begin();
+                PrecipitationShaders.DAMP_SPOTS_TIMER.count(this.dampSpots.count());
                 PrecipitationShaders.DAMP_SPOTS.run(() -> this.drawDampSpots(tesselator, camera, partialTick), tesselator::clear);
                 PrecipitationShaders.DAMP_SPOTS_TIMER.end();
             }
 
             // If the drops fail to draw, vanilla's weather is drawn in their place, this frame and after
             PrecipitationShaders.DROPS_TIMER.begin();
+            this.dropsDrawn = 0;
             boolean drawn = PrecipitationShaders.DROPS.run(() -> this.drawDrops(tesselator, camera, partialTick), () -> {
                 tesselator.clear();
                 weatherTarget().bindWrite(false);
             });
+            PrecipitationShaders.DROPS_TIMER.count(this.dropsDrawn);
             PrecipitationShaders.DROPS_TIMER.end();
             return drawn;
         } finally {
@@ -311,7 +318,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
         // The rain is untextured; the snow is cut from the game's snow texture
         RenderSystem.setShaderTexture(0, Snowflakes.TEXTURE);
         shader.safeGetUniform("SoftDistance").set(0F);
-        this.field.draw(tesselator, camera, partialTick, false, flakes, largest, dust, scales, rainColor);
+        this.dropsDrawn += this.field.draw(tesselator, camera, partialTick, false, flakes, largest, dust, scales, rainColor);
         this.snowFlecks.draw(tesselator, camera, partialTick, flakes, largest, scales.snow());
         this.windowStreaks.draw(tesselator, camera, partialTick, rainColor);
 
@@ -328,7 +335,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
         // The scene's depth, water included: the weather's own target has none with Fabulous graphics
         SoftParticles.bindSceneDepth(shader, SoftParticles.sceneDepthTarget(), weatherTarget());
         shader.safeGetUniform("SoftDistance").set(DUST_SOFT_DISTANCE);
-        this.field.draw(tesselator, camera, partialTick, true, flakes, largest, dust, scales, rainColor);
+        this.dropsDrawn += this.field.draw(tesselator, camera, partialTick, true, flakes, largest, dust, scales, rainColor);
     }
 
     /**

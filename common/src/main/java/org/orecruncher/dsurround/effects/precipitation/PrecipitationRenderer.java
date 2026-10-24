@@ -93,11 +93,12 @@ final class PrecipitationRenderer {
      *                   keeps one
      * @param scales     how big rain and snow are drawn
      * @param rainColor  the rain's colour
+     * @return how many were drawn: those in front of the camera and not faded out
      */
-    static void draw(PrecipitationField field, Tesselator tesselator, Camera camera, float partialTick, boolean dustOnly,
-                     List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
+    static int draw(PrecipitationField field, Tesselator tesselator, Camera camera, float partialTick, boolean dustOnly,
+                    List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
         if (field.count == 0 || (dustOnly && field.dustCount() == 0) || (!dustOnly && field.dustCount() == field.count))
-            return;
+            return 0;
 
         var cam = camera.getPosition();
         Vector3f left = camera.getLeftVector();
@@ -188,8 +189,11 @@ final class PrecipitationRenderer {
         }
 
         var mesh = builder.build();
-        if (mesh != null)
-            BufferUploader.drawWithShader(mesh);
+        if (mesh == null)
+            return 0;
+        int drawn = mesh.drawState().vertexCount() / 4;
+        BufferUploader.drawWithShader(mesh);
+        return drawn;
     }
 
     /**

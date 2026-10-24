@@ -188,13 +188,17 @@ def main():
     for _, fields, _ in events(jfr, recording, ["dsurround.RenderTimer"], 1):
         timers[fields.get("effect", "?").strip('"')].append(fields)
     if timers:
-        print("\n== Render timers (ms; mean of the periodic averages, highest peak)")
-        print(f"  {'effect':28} {'gpu avg':>8} {'gpu peak':>9} {'cpu avg':>8} {'cpu peak':>9}")
+        print("\n== Render timers (ms; mean of the periodic averages, highest peak; count: how many there were to draw "
+              "a frame, mean, where the effect counts)")
+        print(f"  {'effect':28} {'gpu avg':>8} {'gpu peak':>9} {'cpu avg':>8} {'cpu peak':>9} {'count':>8}")
         for effect, rows in timers.items():
             mean = lambda key: sum(number(r.get(key)) for r in rows) / len(rows)
             peak = lambda key: max(number(r.get(key)) for r in rows)
+            # Recordings from before the count have none; an effect that doesn't count writes NaN
+            counts = [number(r["count"]) for r in rows if r.get("count") and "NaN" not in r["count"]]
+            count = f"{sum(counts) / len(counts):8.0f}" if counts else f"{'-':>8}"
             print(f"  {effect:28} {mean('gpuAverage'):8.3f} {peak('gpuPeak'):9.3f} "
-                  f"{mean('cpuAverage'):8.3f} {peak('cpuPeak'):9.3f}")
+                  f"{mean('cpuAverage'):8.3f} {peak('cpuPeak'):9.3f} {count}")
 
     by_thread = Counter()
     methods = defaultdict(Counter)

@@ -779,10 +779,11 @@ public final class PrecipitationField {
      * @param largest    the largest of them, in pixels
      * @param dust       the dust sprites to choose from
      * @param scales     how big rain and snow are drawn, from the player's settings
+     * @return how many were drawn
      */
-    public void draw(Tesselator tesselator, Camera camera, float partialTick, boolean dustOnly, List<Snowflakes.Flake> snowflakes,
-                     int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
-        PrecipitationRenderer.draw(this, tesselator, camera, partialTick, dustOnly, snowflakes, largest, dust, scales, rainColor);
+    public int draw(Tesselator tesselator, Camera camera, float partialTick, boolean dustOnly, List<Snowflakes.Flake> snowflakes,
+                    int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
+        return PrecipitationRenderer.draw(this, tesselator, camera, partialTick, dustOnly, snowflakes, largest, dust, scales, rainColor);
     }
 
     /**

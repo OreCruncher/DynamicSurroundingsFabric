@@ -37,7 +37,8 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   The user may have their own client running: check what is running (and when it started) before killing, and stop
   only the one you launched.
 - Profiling: `/dsprofile [scene] [seconds]` records a JFR file, zipped, to `config/dsurround/profiles` with the mod's
-  GPU/CPU render timers in it (`dsurround.RenderTimer` events) and what it was made on (`dsurround.Environment`); unzip
+  GPU/CPU render timers in it (`dsurround.RenderTimer` events; precipitation's carry a `count` of drops/spots a frame,
+  so two recordings can be checked for the same storm) and what it was made on (`dsurround.Environment`); unzip
   it and read it with the JDK's `jfr` (`jfr print --json --events ...`), or summarize it with
   `python scripts/jfr-summary.py <zip or jfr>` (timers, threads, mod packages, our frames, allocation, GC;
   `--callers <method>` for who calls something).
