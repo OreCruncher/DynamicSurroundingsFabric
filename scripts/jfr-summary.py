@@ -194,8 +194,8 @@ def main():
         for effect, rows in timers.items():
             mean = lambda key: sum(number(r.get(key)) for r in rows) / len(rows)
             peak = lambda key: max(number(r.get(key)) for r in rows)
-            # Recordings from before the count have none; an effect that doesn't count writes NaN
-            counts = [number(r["count"]) for r in rows if r.get("count") and "NaN" not in r["count"]]
+            # Recordings from before the count have none; an effect that doesn't count writes NaN, which jfr prints as N/A
+            counts = [number(r["count"]) for r in rows if r.get("count") and r["count"] not in ("N/A", "NaN")]
             count = f"{sum(counts) / len(counts):8.0f}" if counts else f"{'-':>8}"
             print(f"  {effect:28} {mean('gpuAverage'):8.3f} {peak('gpuPeak'):9.3f} "
                   f"{mean('cpuAverage'):8.3f} {peak('cpuPeak'):9.3f} {count}")
