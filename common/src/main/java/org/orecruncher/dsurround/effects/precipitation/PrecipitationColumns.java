@@ -16,6 +16,10 @@ import java.util.Arrays;
  * broken, light changing and the camera's height (which what falls is taken at), or when {@link #invalidate} says the
  * last look is out of date. Moving up or down alone doesn't look again: jumping and climbing stairs would, a block at
  * a time, for little.
+ * <p>
+ * The drops keep to a cylinder around the camera, so only the disc of columns they can reach is looked up, not the
+ * square around it: about 15% fewer lookups (a little short of the disc's own share of the square, as the camera can be
+ * anywhere in its column), and the shares of rain and dust are of the area the drops fall in.
  */
 final class PrecipitationColumns {
 
@@ -23,6 +27,10 @@ final class PrecipitationColumns {
 
     private final int radius;
     private final int size;
+    // Per row of the grid, how far the disc reaches either side of the camera's column, in columns
+    private final int[] rowReach;
+    // How many columns the disc has
+    private final int columns;
     private final int[] ground;
     private final int[] light;
     private final int[] dustColor;
@@ -48,6 +56,33 @@ final class PrecipitationColumns {
         this.snowShare = new float[this.size * this.size];
         this.kind = new PrecipitationKind[this.size * this.size];
         Arrays.fill(this.kind, PrecipitationKind.NONE);
+        this.rowReach = new int[this.size];
+        int count = 0;
+        for (int dz = 0; dz < this.size; dz++) {
+            int reach = 0;
+            while (reach < radius && inDisc(reach + 1, dz - radius, radius))
+                reach++;
+            this.rowReach[dz] = reach;
+            count += reach * 2 + 1;
+        }
+        this.columns = count;
+    }
+
+    /**
+     * Whether a drop within {@code radius} of the camera can be in the column {@code dx}, {@code dz} columns from the
+     * camera's: the camera is anywhere in its own column, so the gap between the two columns is what counts
+     */
+    static boolean inDisc(int dx, int dz, int radius) {
+        int gapX = Math.max(0, Math.abs(dx) - 1);
+        int gapZ = Math.max(0, Math.abs(dz) - 1);
+        return gapX * gapX + gapZ * gapZ < radius * radius;
+    }
+
+    /**
+     * How many columns are looked up
+     */
+    int columnCount() {
+        return this.columns;
     }
 
     /**
@@ -87,7 +122,8 @@ final class PrecipitationColumns {
         int sources = 0;
         long red = 0, green = 0, blue = 0;
         for (int dz = 0; dz < this.size; dz++) {
-            for (int dx = 0; dx < this.size; dx++) {
+            int reach = this.rowReach[dz];
+            for (int dx = this.radius - reach; dx <= this.radius + reach; dx++) {
                 int x = this.originX + dx;
                 int z = this.originZ + dz;
                 int i = dz * this.size + dx;
@@ -115,9 +151,8 @@ final class PrecipitationColumns {
             }
         }
 
-        int columns = this.size * this.size;
-        this.fallingShare = falling / (float) columns;
-        this.dustShare = dusty / (float) columns;
+        this.fallingShare = falling / (float) this.columns;
+        this.dustShare = dusty / (float) this.columns;
 
         if (sources > 0)
             this.regionalDustColor = (int) (red / sources) << 16 | (int) (green / sources) << 8 | (int) (blue / sources);
@@ -131,7 +166,7 @@ final class PrecipitationColumns {
     int index(double x, double z) {
         int dx = Mth.floor(x) - this.originX;
         int dz = Mth.floor(z) - this.originZ;
-        if (dx < 0 || dz < 0 || dx >= this.size || dz >= this.size)
+        if (dz < 0 || dz >= this.size || Math.abs(dx - this.radius) > this.rowReach[dz])
             return -1;
         return dz * this.size + dx;
     }

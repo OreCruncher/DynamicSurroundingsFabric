@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import java.util.function.IntBinaryOperator;
 
@@ -170,12 +171,49 @@ public class PrecipitationColumnsTests {
     @Test
     void theShareOfColumnsWithRainIsCounted() {
         var source = new Changing();
-        // Rain west of x = 0: 12 of the 25 columns across
+        // Rain west of x = 0: the disc's columns but the middle row north to south, halved
         source.rainBelowX = 0;
         var columns = new PrecipitationColumns(RADIUS);
         columns.update(source, 0, 70, 0);
-        assertEquals(12F / 25F, columns.fallingShare(), 1e-5F);
+        int west = (columns.columnCount() - (RADIUS * 2 + 1)) / 2;
+        assertEquals(west / (float) columns.columnCount(), columns.fallingShare(), 1e-5F);
         assertEquals(0F, columns.dustShare());
+    }
+
+    @Test
+    void onlyTheDiscIsLookedUp() {
+        for (int radius : new int[]{8, 12, 16, 32}) {
+            var source = new Changing();
+            var columns = new PrecipitationColumns(radius);
+            columns.update(source, 0, 70, 0);
+            int square = (radius * 2 + 1) * (radius * 2 + 1);
+            assertEquals(columns.columnCount(), source.heightReads, "each column read once");
+            assertTrue(columns.columnCount() < square * 0.9F, "the corners are left out at " + radius);
+            assertTrue(columns.columnCount() > Math.PI * radius * radius, "the whole disc at " + radius);
+            assertEquals(-1, columns.index(radius, radius), "a corner");
+            assertTrue(columns.index(radius, 0) >= 0, "the edge, east");
+            assertTrue(columns.index(0, -radius) >= 0, "the edge, north");
+        }
+    }
+
+    @Test
+    void everyPlaceADropCanBeHasItsColumn() {
+        // The camera anywhere in its column, drops anywhere within the radius of it, as the field keeps them
+        var random = Randomizer.create(7);
+        for (int radius : new int[]{8, 12, 16}) {
+            var columns = new PrecipitationColumns(radius);
+            columns.update(new Changing(), 0, 70, 0);
+            for (int i = 0; i < 20000; i++) {
+                double cameraX = random.nextDouble();
+                double cameraZ = random.nextDouble();
+                double angle = random.nextDouble() * Math.PI * 2;
+                // Mostly at the very edge, where a column could be missed
+                double r = radius * (i % 2 == 0 ? 1 - random.nextDouble() * 1e-3 : Math.sqrt(random.nextDouble()));
+                double x = cameraX + Math.cos(angle) * r;
+                double z = cameraZ + Math.sin(angle) * r;
+                assertTrue(columns.index(x, z) >= 0, "no column at " + x + ", " + z + " for radius " + radius);
+            }
+        }
     }
 
     private static boolean between(int value, int a, int b) {

@@ -490,7 +490,7 @@ public class Configuration extends ConfigurationData {
         @Property
         @Slider(min = 8, max = 32)
         @Comment("How far from the player, in blocks, particle rain, snow and dust are drawn")
-        public int precipitationRange = 12;
+        public int precipitationRange = 14;
 
         @Property
         @Slider(min = 50, max = 250)

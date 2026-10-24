@@ -53,7 +53,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Setting it past 32 shows effects farther away than Minecraft shows particles, at more cost; waterfalls thin their splashes past 32 blocks
   * The default is now 40, which scans about as many blocks as the old 32 block cube, and shows block effects a little past Minecraft's particle distance
 * The default Entity Effect Range is now 32, up from 24, as the new entity effects are cheap and still visible that far out
-  * Existing configurations keep the values already saved in them; set the new defaults in the options to use them
+* The default Precipitation Range is now 14, up from 12, so rain, snow, and dust reach a little farther
+  * The area around the player that precipitation looks at is now round, matching where drops fall, rather than square, which saves work at any range
+* Existing configurations keep the values already saved in them; set the new defaults in the options to use them
 * Removed the option for sound effects when selecting blocks on the hotbar
 * Removed the random sound played when the game finishes loading, and its Play Random Sound On Startup option
 * soundconfig.json now saves each sound's setting as one `action` (default, cull, or block) in place of the separate block and cull flags; older files are converted when loaded
