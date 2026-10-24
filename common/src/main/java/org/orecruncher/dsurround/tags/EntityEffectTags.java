@@ -26,9 +26,11 @@ public class EntityEffectTags {
     public static final TagKey<EntityType<?>> FOOTPRINTS_PAW = of("footprints/paw");
     public static final TagKey<EntityType<?>> FOOTPRINTS_HOOF = of("footprints/hoof");
     public static final TagKey<EntityType<?>> FOOTPRINTS_BIRD = of("footprints/bird");
-    // Whose prints are bigger than their size alone gives (bears), or smaller (skeletons' bony feet)
+    // Whose prints are bigger than their size alone gives (bears), smaller (skeletons' bony feet), or much smaller
+    // (wolves and cats: as wide as a player, but with small paws)
     public static final TagKey<EntityType<?>> FOOTPRINTS_LARGE = of("footprints/large");
     public static final TagKey<EntityType<?>> FOOTPRINTS_SMALL = of("footprints/small");
+    public static final TagKey<EntityType<?>> FOOTPRINTS_TINY = of("footprints/tiny");
 
     private static TagKey<EntityType<?>> of(String id) {
         var tagKey = TagKey.create(Registries.ENTITY_TYPE, Constants.asId("effects/" + id));

@@ -40,9 +40,10 @@ public class FootprintEffect extends EntityEffectBase {
     private static final double SURFACE_TOLERANCE = 0.1D;
     // How far below the drawn top of a block feet may sink into it, in blocks: a layer of snow, soul sand, mud
     private static final double MAX_SINK = 0.25D;
-    // How much bigger the prints of those in the large footprints tag are, and those in the small one
+    // How much bigger the prints of those in the large footprints tag are, and those in the small and tiny ones
     static final float LARGE = 1.25F;
     static final float SMALL = 0.75F;
+    static final float TINY = 0.5F;
 
     private final Configuration.EntityEffects config;
     private final IBlockLibrary blockLibrary;
@@ -67,6 +68,8 @@ public class FootprintEffect extends EntityEffectBase {
         var type = entity.getType();
         if (this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_LARGE, type))
             this.sizeBoost = LARGE;
+        else if (this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_TINY, type))
+            this.sizeBoost = TINY;
         else if (this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_SMALL, type))
             this.sizeBoost = SMALL;
         else
