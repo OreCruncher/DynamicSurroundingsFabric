@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
 import net.minecraft.client.Camera;
 import org.junit.jupiter.api.Test;
 
@@ -56,11 +56,11 @@ public class ParticleOverrideTests {
         // drawn: the puffs through the class they share
         for (var type : new Class<?>[]{SoftPuffParticle.class, WaterFoam.class}) {
             assertOverrides(type, "getQuadSize", float.class);
-            assertOverrides(type, "render", VertexConsumer.class, Camera.class, float.class);
+            assertOverrides(type, "extract", QuadParticleRenderState.class, Camera.class, float.class);
+            assertOverrides(type, "getLayer");
         }
         // Foam reads its light once a tick, not every frame
-        assertOverrides(WaterFoam.class, "getLightColor", float.class);
-        assertOverrides(SoftPuffParticle.class, "getRenderType");
+        assertOverrides(WaterFoam.class, "getLightCoords", float.class);
         assertEquals(SoftPuffParticle.class, WaterfallMist.class.getSuperclass());
         assertEquals(SoftPuffParticle.class, SteamPuff.class.getSuperclass());
         assertEquals(SoftPuffParticle.class, SmokePuff.class.getSuperclass());
@@ -71,30 +71,30 @@ public class ParticleOverrideTests {
     void flameDrawsItsOwnWay() {
         // It flickers, sets its color as it is drawn, lights itself, and is drawn adding its light
         assertOverrides(FlameTongue.class, "getQuadSize", float.class);
-        assertOverrides(FlameTongue.class, "render", VertexConsumer.class, Camera.class, float.class);
-        assertOverrides(FlameTongue.class, "getLightColor", float.class);
-        assertOverrides(FlameTongue.class, "getRenderType");
+        assertOverrides(FlameTongue.class, "extract", QuadParticleRenderState.class, Camera.class, float.class);
+        assertOverrides(FlameTongue.class, "getLightCoords", float.class);
+        assertOverrides(FlameTongue.class, "getLayer");
     }
 
     @Test
     void sparkDrawsItsOwnWay() {
-        // Drawn as a streak along its path, lit by itself, adding its light as the flames do
-        assertOverrides(FlameSpark.class, "render", VertexConsumer.class, Camera.class, float.class);
-        assertOverrides(FlameSpark.class, "getLightColor", float.class);
-        assertOverrides(FlameSpark.class, "getRenderType");
+        // Lit by itself, adding its light as the flames do (as a point for now: a streak needs a particle group of its own)
+        assertOverrides(FlameSpark.class, "extract", QuadParticleRenderState.class, Camera.class, float.class);
+        assertOverrides(FlameSpark.class, "getLightCoords", float.class);
+        assertOverrides(FlameSpark.class, "getLayer");
     }
 
     @Test
     void fireflyDrawsItsOwnWay() {
-        // Its halo and light are added as it's drawn, in its own render type, which draws the lights
-        assertOverrides(FireflyParticle.class, "render", VertexConsumer.class, Camera.class, float.class);
-        assertOverrides(FireflyParticle.class, "getRenderType");
+        // Its halo and light are added as it's drawn, in its own layer
+        assertOverrides(FireflyParticle.class, "extract", QuadParticleRenderState.class, Camera.class, float.class);
+        assertOverrides(FireflyParticle.class, "getLayer");
     }
 
     @Test
     void particleRenderingOverridesVanilla() {
-        assertOverrides(FireflyParticle.class, "getLightColor", float.class);
+        assertOverrides(FireflyParticle.class, "getLightCoords", float.class);
         assertOverrides(FireflyParticle.class, "move", double.class, double.class, double.class);
-        assertOverrides(WaterRippleParticle.class, "getLightColor", float.class);
+        assertOverrides(WaterRippleParticle.class, "getLightCoords", float.class);
     }
 }

@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.resources;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -28,7 +28,7 @@ import static org.orecruncher.dsurround.Configuration.Flags.RESOURCE_LOADING;
  */
 public class ModConfigResourceFinder extends AbstractResourceFinder {
 
-    private record Found(ResourceLocation location, List<Resource> stack) {
+    private record Found(Identifier location, List<Resource> stack) {
     }
 
     // By path within the config folder (e.g. "blocks.json", "tags/block/effects/fireflies.json"), in the order the

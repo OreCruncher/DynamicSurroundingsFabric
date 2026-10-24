@@ -151,8 +151,9 @@ public class ProfilingTests {
 
     // As the render thread captures it in the game, which tests can't: there is no OpenGL here
     static ProfileEnvironment environment() {
-        return new ProfileEnvironment("Dynamic Surroundings 1.21.1-0.4.7 (Fabric)", 42, "Test GPU/PCIe/SSE2", "Test Vendor",
-                "4.6.0 Test Driver 1.2.3", "fabulous", false, 12, ProfileEnvironment.javaRuntime(), ProfileEnvironment.operatingSystem());
+        return new ProfileEnvironment("Dynamic Surroundings 26.2-0.4.7 (Fabric)", 42, "Test GPU/PCIe/SSE2", "Test Vendor",
+                "discrete", "4.6.0 Test Driver 1.2.3", "OpenGL", "fabulous, improved transparency on", false, 12,
+                ProfileEnvironment.javaRuntime(), ProfileEnvironment.operatingSystem());
     }
 
     @Test
@@ -195,9 +196,11 @@ public class ProfilingTests {
         var event = events.getFirst();
         assertEquals(environment.mod(), event.getString("mod"));
         assertEquals(environment.mods(), event.getInt("mods"));
-        assertEquals(environment.glRenderer(), event.getString("glRenderer"));
-        assertEquals(environment.glVendor(), event.getString("glVendor"));
-        assertEquals(environment.glVersion(), event.getString("glVersion"));
+        assertEquals(environment.gpu(), event.getString("gpu"));
+        assertEquals(environment.gpuVendor(), event.getString("gpuVendor"));
+        assertEquals(environment.gpuType(), event.getString("gpuType"));
+        assertEquals(environment.driver(), event.getString("driver"));
+        assertEquals(environment.backend(), event.getString("backend"));
         assertEquals(environment.graphics(), event.getString("graphics"));
         assertEquals(environment.shaderPack(), event.getBoolean("shaderPack"));
         assertEquals(environment.renderDistance(), event.getInt("renderDistance"));

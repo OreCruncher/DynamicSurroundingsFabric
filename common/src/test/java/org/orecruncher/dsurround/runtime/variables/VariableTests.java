@@ -29,7 +29,7 @@ public class VariableTests {
                 .temperature(temperature)
                 .downfall(0.5F)
                 .specialEffects(new BiomeSpecialEffects.Builder()
-                        .fogColor(0).waterColor(0).waterFogColor(0).skyColor(0)
+                        .waterColor(0)
                         .build())
                 .mobSpawnSettings(MobSpawnSettings.EMPTY)
                 .generationSettings(BiomeGenerationSettings.EMPTY)

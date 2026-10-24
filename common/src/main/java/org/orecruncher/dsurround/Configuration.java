@@ -1,7 +1,10 @@
 package org.orecruncher.dsurround;
 
+import org.orecruncher.dsurround.config.AuroraQuality;
+import org.orecruncher.dsurround.config.AuroraStyle;
 import org.orecruncher.dsurround.config.ClockStyle;
 import org.orecruncher.dsurround.config.CompassStyle;
+import org.orecruncher.dsurround.config.FootprintStyle;
 import org.orecruncher.dsurround.config.GroundFogQuality;
 import org.orecruncher.dsurround.config.LightLevelColors;
 import org.orecruncher.dsurround.config.LightLevelMode;
@@ -95,10 +98,6 @@ public class Configuration extends ConfigurationData {
     @TextStyle(color = "#0078D4", italic = true)
     public final Logging logging = new Logging();
 
-    @Property
-    @Comment("Configuration options for other things")
-    public final OtherOptions otherOptions = new OtherOptions();
-
     public static class Flags {
         public static final int AUDIO_PLAYER = 0x1;
         public static final int BASIC_SOUND_PLAY = 0x2;
@@ -133,6 +132,7 @@ public class Configuration extends ConfigurationData {
         @Experimental
         public boolean voiceChatHearSelf = false;
     }
+
 
     public static class SoundSystem {
         @Property
@@ -241,8 +241,8 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @Slider(min = 16, max = 64)
-        @Comment("Distance that will be scanned when generating block effects")
-        public int blockEffectRange = 32;
+        @Comment("Radius around the player, in blocks, where block effects (waterfalls, steam, random block effects) are found and shown. Past 32, effects show farther than vanilla particles, at more cost.")
+        public int blockEffectRange = 40;
 
         @Property
         @Comment("Enable/disable steam column effect when liquids are adjacent to hot sources, like lava and magma")
@@ -265,7 +265,7 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @MovedFrom("blockEffects.flameJetLight")
-        @Comment("Enable/disable the flicker of flame jets' light on their surroundings")
+        @Comment("Enable/disable the flicker of flame jets' and burning mobs' light on their surroundings")
         public boolean enableLight = true;
     }
 
@@ -318,7 +318,7 @@ public class Configuration extends ConfigurationData {
         @Property
         @Slider(min = 16, max = 64)
         @Comment("The maximum range at which entity special effects are applied")
-        public int entityEffectRange = 24;
+        public int entityEffectRange = 32;
 
         @Property
         @Comment("Enable/disable bow pull sound effect")
@@ -333,16 +333,36 @@ public class Configuration extends ConfigurationData {
         public boolean enablePlayerToolbarEffect = true;
 
         @Property
-        @Comment("Enable/disable sound effects for blocks on the toolbar")
-        public boolean enableToolbarBlockSounds = false;
-
-        @Property
         @Comment("Enable/disable item swing sound effects from players and mobs")
         public boolean enableSwingEffect = true;
 
         @Property
         @Comment("Enable/disable sound effect when walking through dense brush")
         public boolean enableBrushStepEffect = true;
+
+        @Property
+        @Comment("Enable/disable flames like a flame jet's on burning mobs, in place of vanilla's flat fire. Vanilla's fire stays past the entity effect range, with Particles on Minimal and while a shader pack is in use")
+        public boolean enableBurningEffect = true;
+
+        @Property
+        @Comment("Enable/disable dark mist where a mob's body vanishes when it dies, in place of vanilla's white puffs")
+        public boolean enableDeathPuffs = true;
+
+        @Property
+        @Comment("Enable/disable numbers popping off mobs and players when their health changes: red for damage, green for healing")
+        public boolean enableDamagePopoffs = true;
+
+        @Property
+        @Comment("Enable/disable a comic book word over a heavy blow's number")
+        public boolean showCritWords = true;
+
+        @Property
+        @Comment("Enable/disable footprints left by players and mobs walking on soft ground: dirt, sand, gravel, snow, mud")
+        public boolean enableFootprints = true;
+
+        @Property
+        @Comment("The look of players' footprints")
+        public FootprintStyle footprintStyle = FootprintStyle.SQUARE;
     }
 
     public static class FootstepAccents {
@@ -536,9 +556,39 @@ public class Configuration extends ConfigurationData {
         public int chance = 33;
 
         @Property
+        @Comment("How auroras look: REALISTIC, modelled on real auroras, or CLASSIC, the original Dynamic Surroundings curtains")
+        public AuroraStyle style = AuroraStyle.REALISTIC;
+
+        @Property
+        @Comment("Settings for the classic aurora")
+        public final ClassicAurora classic = new ClassicAurora();
+
+        @Property
+        @Comment("Settings for the realistic aurora")
+        public final RealisticAurora realistic = new RealisticAurora();
+    }
+
+    public static class ClassicAurora {
+        @Property
         @Slider(min = 1, max = 3)
+        @MovedFrom("auroraOptions.maxBands")
         @Comment("The most curtains of light an aurora can have")
         public int maxBands = 3;
+    }
+
+    public static class RealisticAurora {
+        @Property
+        @Slider(min = 0, max = 100)
+        @Comment("Percent of aurora nights that build into a storm: brighter, redder, and able to reach overhead")
+        public int stormChance = 10;
+
+        @Property
+        @Comment("How finely the realistic aurora is drawn: FANCY at the screen's size, FAST at half (a quarter of the cost, its finest rays a little softer)")
+        public AuroraQuality quality = AuroraQuality.FANCY;
+
+        @Property
+        @Comment("A bright moon washes out faint auroras, as it does the real ones")
+        public boolean moonWashout = true;
     }
 
     public static class MusicManagerOptions {
@@ -551,11 +601,5 @@ public class Configuration extends ConfigurationData {
         @Slider(min = 0, max = 100)
         @Comment("Reduce the wait time between music plays by a percentage")
         public int reduceWaitTime = 0;
-    }
-
-    public static class OtherOptions {
-        @Property
-        @Comment("Enable/disable playing random sound at the Minecraft finish loading to main screen")
-        public boolean playRandomSoundOnStartup = true;
     }
 }

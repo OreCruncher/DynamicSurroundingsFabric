@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.processing.fog;
 
-import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.client.renderer.fog.FogData;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -10,10 +10,10 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class FogRangeValidityTests {
 
-    private static FogRenderer.FogData range(float start, float end) {
-        var data = new FogRenderer.FogData(FogRenderer.FogMode.FOG_TERRAIN);
-        data.start = start;
-        data.end = end;
+    private static FogData range(float start, float end) {
+        var data = new FogData();
+        data.environmentalStart = start;
+        data.environmentalEnd = end;
         return data;
     }
 
@@ -42,7 +42,7 @@ public class FogRangeValidityTests {
     // ---- Fog another mod has turned off (#201)
 
     // Distant Horizons turns vanilla's fog off by starting it at the largest float, past its end
-    private static FogRenderer.FogData turnedOff() {
+    private static FogData turnedOff() {
         return range(Float.MAX_VALUE, 112F);
     }
 

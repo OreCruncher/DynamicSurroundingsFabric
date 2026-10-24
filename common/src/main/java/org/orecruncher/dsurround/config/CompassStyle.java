@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.Constants;
 
 public enum CompassStyle {
@@ -13,7 +13,7 @@ public enum CompassStyle {
     ROSE_2("textures/compass_rose_2.png"),
     ROSE_3("textures/compass_rose_3.png");
 
-    private final ResourceLocation texture;
+    private final Identifier texture;
     private final int spriteNumber;
     private final boolean isRose;
 
@@ -54,7 +54,7 @@ public enum CompassStyle {
     /**
      * The style's texture; null for NONE
      */
-    public ResourceLocation getTexture() {
+    public Identifier getTexture() {
         return this.texture;
     }
 

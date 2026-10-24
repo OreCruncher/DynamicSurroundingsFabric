@@ -15,7 +15,7 @@ import org.orecruncher.dsurround.lib.random.Randomizer;
  *     return texture(NoiseSampler, (cell + f + 0.5) / NOISE_SIZE).r;
  * }
  * </pre>
- * Must be made on the render thread.
+ * Read through a linear, repeating sampler. Must be made on the render thread.
  */
 public final class NoiseTexture {
 
@@ -31,12 +31,11 @@ public final class NoiseTexture {
         for (int j = 0; j < size; j++) {
             for (int i = 0; i < size; i++) {
                 int value = random.nextInt(256);
-                pixels.setPixelRGBA(i, j, 0xFF000000 | value);
+                // In red
+                pixels.setPixelABGR(i, j, 0xFF000000 | value);
             }
         }
         // Uploads the image, which the texture then owns
-        var texture = new DynamicTexture(pixels);
-        texture.setFilter(true, false);
-        return texture;
+        return new DynamicTexture(() -> "Dynamic Surroundings noise", pixels);
     }
 }

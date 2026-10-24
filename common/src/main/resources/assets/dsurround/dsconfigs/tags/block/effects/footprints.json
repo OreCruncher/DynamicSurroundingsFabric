@@ -1,0 +1,15 @@
+{
+  "values": [
+    "#minecraft:substrate_overworld",
+    "#minecraft:sand",
+    "minecraft:farmland",
+    "minecraft:dirt_path",
+    "minecraft:clay",
+    "minecraft:gravel",
+    "minecraft:snow",
+    "minecraft:snow_block",
+    "minecraft:powder_snow",
+    "minecraft:soul_sand",
+    "minecraft:soul_soil"
+  ]
+}

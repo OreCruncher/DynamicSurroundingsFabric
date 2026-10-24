@@ -29,8 +29,8 @@ public final class DimensionVariables extends VariableSet {
                 return;
             this.level = world;
             final DimensionType dim = world.dimensionType();
-            this.id = world.dimension().location().toString();
-            this.name = world.dimension().location().getPath();
+            this.id = world.dimension().identifier().toString();
+            this.name = world.dimension().identifier().getPath();
             this.hasSky = dim.hasSkyLight();
             this.isSuperFlat = LevelCompat.isSuperFlat(world);
         } else {

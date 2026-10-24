@@ -2,8 +2,12 @@ package org.orecruncher.dsurround.config.block;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.AcousticEntry;
@@ -15,6 +19,7 @@ import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.scripting.Script;
+import org.orecruncher.dsurround.tags.BlockEffectTags;
 import org.orecruncher.dsurround.tags.OcclusionTags;
 import org.orecruncher.dsurround.tags.ReflectanceTags;
 
@@ -25,6 +30,8 @@ import org.orecruncher.dsurround.tags.ReflectanceTags;
 public final class BlockInfoBuilder {
 
     public static final Script DEFAULT_SOUND_CHANCE = new Script("0.01");
+
+    private static final TagKey<Block> SAPLINGS = TagKey.create(Registries.BLOCK, Identifier.withDefaultNamespace("saplings"));
 
     private static class Occlusion {
         public static final float NONE = 0;
@@ -54,12 +61,13 @@ public final class BlockInfoBuilder {
     final int version;
     final ConfigServices services;
     @Nullable
-    final ResourceLocation stepSound;
+    final Identifier stepSound;
     final AcousticEntryCollection sounds = new AcousticEntryCollection();
     final ObjectArray<IBlockEffectProducer> blockEffects = new ObjectArray<>();
     Script soundChance = DEFAULT_SOUND_CHANCE;
     final float soundReflectivity;
     final float soundOcclusion;
+    final boolean takesFootprints;
     private boolean built;
 
     /**
@@ -71,6 +79,7 @@ public final class BlockInfoBuilder {
         this.stepSound = null;
         this.soundReflectivity = Reflectance.DEFAULT;
         this.soundOcclusion = Occlusion.DEFAULT;
+        this.takesFootprints = false;
     }
 
     /**
@@ -81,7 +90,8 @@ public final class BlockInfoBuilder {
         this.services = services;
         this.soundOcclusion = getSoundOcclusionSetting(state, services.tagLibrary());
         this.soundReflectivity = getSoundReflectionSetting(state, services.tagLibrary());
-        this.stepSound = state.getSoundType().getStepSound().getLocation();
+        this.stepSound = state.getSoundType().getStepSound().location();
+        this.takesFootprints = takesFootprints(state, services.tagLibrary());
     }
 
     /**
@@ -95,7 +105,8 @@ public final class BlockInfoBuilder {
     public boolean isDefault() {
         return this.sounds.isEmpty() && this.blockEffects.isEmpty()
                 && this.soundReflectivity == Reflectance.DEFAULT
-                && this.soundOcclusion == Occlusion.DEFAULT;
+                && this.soundOcclusion == Occlusion.DEFAULT
+                && !this.takesFootprints;
     }
 
     public void apply(BlockConfigRule config) {
@@ -135,6 +146,19 @@ public final class BlockInfoBuilder {
 
     private void checkNotBuilt() {
         Preconditions.checkState(!this.built, "BlockInfo has already been built");
+    }
+
+    /**
+     * Whether feet leave prints in it: blocks in the footprints tag, and any that sound soft underfoot (sand, gravel,
+     * snow, mud, soul sand and soil), as mod blocks of those kinds usually borrow vanilla's sounds
+     */
+    static boolean takesFootprints(BlockState state, ITagLibrary tags) {
+        if (tags.is(BlockEffectTags.FOOTPRINTS, state))
+            return true;
+        var sound = state.getSoundType();
+        return sound == SoundType.SAND || sound == SoundType.GRAVEL || sound == SoundType.SNOW
+                || sound == SoundType.POWDER_SNOW || sound == SoundType.MUD || sound == SoundType.SOUL_SAND
+                || sound == SoundType.SOUL_SOIL || sound == SoundType.SUSPICIOUS_SAND || sound == SoundType.SUSPICIOUS_GRAVEL;
     }
 
     private static float getSoundReflectionSetting(BlockState state, ITagLibrary tags) {
@@ -194,7 +218,7 @@ public final class BlockInfoBuilder {
             result = Reflectance.NONE;
         else if (tags.is(BlockTags.CAULDRONS, state))
             result = Reflectance.MEDIUM;
-        else if (tags.is(BlockTags.SAPLINGS, state))
+        else if (tags.is(BlockInfoBuilder.SAPLINGS, state))
             result = Reflectance.NONE;
         else if (tags.is(BlockTags.STONE_ORE_REPLACEABLES, state))
             // Assume stone equivalent
@@ -205,7 +229,7 @@ public final class BlockInfoBuilder {
             result = Reflectance.NONE;
 
         if (result == null) {
-            var pathString = state.getBlockHolder().unwrapKey().map(k -> k.location().getPath()).orElse(null);
+            var pathString = state.typeHolder().unwrapKey().map(k -> k.identifier().getPath()).orElse(null);
             if (pathString != null) {
                 if (pathString.contains("panes") || pathString.contains("wall"))
                     result = Reflectance.LOW;
@@ -281,7 +305,7 @@ public final class BlockInfoBuilder {
             result = Occlusion.NONE;
         else if (tags.is(BlockTags.CAULDRONS, state))
             result = Occlusion.MEDIUM;
-        else if (tags.is(BlockTags.SAPLINGS, state))
+        else if (tags.is(BlockInfoBuilder.SAPLINGS, state))
             result = Occlusion.NONE;
         else if (tags.is(BlockTags.STONE_ORE_REPLACEABLES, state))
             // Assume stone equivalent
@@ -292,7 +316,7 @@ public final class BlockInfoBuilder {
             result = Occlusion.NONE;
 
         if (result == null) {
-            var pathString = state.getBlockHolder().unwrapKey().map(k -> k.location().getPath()).orElse(null);
+            var pathString = state.typeHolder().unwrapKey().map(k -> k.identifier().getPath()).orElse(null);
             if (pathString != null) {
                 if (pathString.contains("chest") || pathString.contains("glass"))
                     result = Occlusion.LOW;

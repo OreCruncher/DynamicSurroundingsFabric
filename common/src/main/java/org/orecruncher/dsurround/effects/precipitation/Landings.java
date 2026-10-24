@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
-import net.minecraft.client.ParticleStatus;
+import net.minecraft.util.LightCoordsUtil;
+import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.BlockPos;
@@ -109,13 +110,13 @@ public final class Landings {
         int traces = 0;
 
         for (int i = 0; i < landings; i++) {
-            float x = field.landingX(i);
-            float z = field.landingZ(i);
+            double x = field.landingX(i);
+            double z = field.landingZ(i);
             if (field.landingBlownIn(i)) {
                 if (field.landingIsSnow(i)) {
                     if (traces++ < MAX_TRACES_PER_TICK)
                         this.blownIn(level, field, i, flecks, random);
-                } else if (this.options.enableWindowStreaks && traces++ < MAX_TRACES_PER_TICK) {
+                } else if (traces++ < MAX_TRACES_PER_TICK) {
                     this.rainBlownIn(level, field, i, streaks, random);
                 }
                 continue;
@@ -167,19 +168,31 @@ public final class Landings {
         if (!state.getFluidState().isEmpty() || isHot(state) || state.is(BlockTags.SNOW))
             return;
         // Lit as the spot in front of the face is: in under a canopy, darker than the open air it came from
-        int light = LevelRenderer.getLightColor(level, this.landingPos.setWithOffset(pos, hit.getDirection()));
+        int light = LightCoordsUtil.getLightCoords(level, this.landingPos.setWithOffset(pos, hit.getDirection()));
         var at = hit.getLocation();
         flecks.add(at.x, at.y, at.z, face, field.landingSize(i), field.landingVariant(i), light, random);
     }
 
     /**
      * A rain drop carried into a column below its top, followed on to what it hits: if that is the side of a window,
-     * it runs down the glass. Into anything else, it runs off unseen.
+     * it runs down the glass; if it drifted in under cover down to the ground, it splashes there, or smokes on something
+     * hot. Into anything else, it runs off unseen.
      */
     private void rainBlownIn(ClientLevel level, PrecipitationField field, int i, WindowStreaks streaks, RandomSource random) {
         var hit = trace(level, new Vec3(field.landingX(i), field.landingY(i), field.landingZ(i)),
                 field.landingMotionX(i), field.landingMotionY(i), field.landingMotionZ(i));
-        if (hit == null || !hit.getDirection().getAxis().isHorizontal())
+        if (hit == null)
+            return;
+        if (hit.getDirection() == Direction.UP) {
+            var at = hit.getLocation();
+            var state = level.getBlockState(hit.getBlockPos());
+            if (isHot(state) || state.getFluidState().is(FluidTags.LAVA))
+                level.addParticle(ParticleTypes.SMOKE, at.x, at.y, at.z, 0D, 0D, 0D);
+            else if (!state.getFluidState().isEmpty() || random.nextFloat() < splashChance(field.landingSize(i)))
+                level.addParticle(ParticleTypes.RAIN, at.x, at.y, at.z, 0D, 0D, 0D);
+            return;
+        }
+        if (!this.options.enableWindowStreaks || !hit.getDirection().getAxis().isHorizontal())
             return;
         var state = level.getBlockState(hit.getBlockPos());
         if (!this.tagLibrary.is(BlockEffectTags.WINDOWS, state))
@@ -273,7 +286,7 @@ public final class Landings {
         int bottomY = window.getY() - glassBelow(level, window, side, at, state -> this.tagLibrary.is(BlockEffectTags.WINDOWS, state));
         boolean drips = dripsOff(level, at, side, bottomY);
         double bottom = bottomY + (drips ? WINDOW_DRIP_MARGIN : WINDOW_BOTTOM_MARGIN);
-        int light = LevelRenderer.getLightColor(level, this.landingPos.setWithOffset(window, side));
+        int light = LightCoordsUtil.getLightCoords(level, this.landingPos.setWithOffset(window, side));
         streaks.add(at.x, at.y, at.z, face(side), bottom, drips, size, light, random);
     }
 

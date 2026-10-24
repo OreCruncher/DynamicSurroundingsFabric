@@ -40,7 +40,7 @@ public abstract class MixinSoundEngine {
     @Unique
     private static final AudioDeviceRetry dsurround$deviceRetry = new AudioDeviceRetry(() -> MixinHelpers.soundSystemConfig.throttleDeviceRetries, System::nanoTime);
 
-    @Inject(method = "loadLibrary()V", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/audio/Library;init(Ljava/lang/String;Z)V", shift = At.Shift.AFTER))
+    @Inject(method = "loadLibrary()V", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/audio/Library;init(Ljava/lang/String;Lcom/mojang/blaze3d/audio/DeviceList;Z)V", shift = At.Shift.AFTER))
     public void dsurround$init(CallbackInfo ci) {
         dsurround$deviceRetry.started();
         AudioUtilities.initialize(this.library);
@@ -56,9 +56,10 @@ public abstract class MixinSoundEngine {
     }
 
     /**
-     * "Audio device was lost!", said once rather than at each retry
+     * "Audio device was lost!", said once rather than at each retry. The first of the method's messages; the others
+     * (a device appearing or changing) aren't repeated while the device is lost
      */
-    @WrapOperation(method = "shouldChangeDevice()Z", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;info(Ljava/lang/String;)V", remap = false))
+    @WrapOperation(method = "shouldChangeDevice()Z", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;info(Ljava/lang/String;)V", ordinal = 0, remap = false))
     private void dsurround$deviceLostLog(Logger logger, String message, Operation<Void> original) {
         if (dsurround$deviceRetry.shouldLogRestart())
             original.call(logger, message);
@@ -97,79 +98,72 @@ public abstract class MixinSoundEngine {
      * Only the channel handle is taken from play()'s locals, found by its type (there is one), so a change to play()'s
      * other locals, by a Minecraft update, a NeoForge patch or another mod, doesn't stop this applying.
      */
-    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/ChannelAccess$ChannelHandle;execute(Ljava/util/function/Consumer;)V", shift = At.Shift.AFTER))
-    public void dsurround$onSoundPlay(SoundInstance soundInstance, CallbackInfo ci, @Local ChannelAccess.ChannelHandle channelHandle) {
+    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)Lnet/minecraft/client/sounds/SoundEngine$PlayResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/ChannelAccess$ChannelHandle;execute(Ljava/util/function/Consumer;)V", shift = At.Shift.AFTER))
+    public void dsurround$onSoundPlay(SoundInstance instance, CallbackInfoReturnable<SoundEngine.PlayResult> cir, @Local ChannelAccess.ChannelHandle handle) {
         try {
-            EnhancedSoundProcessor.onSoundPlay(soundInstance, channelHandle);
-            AudioUtilities.onSoundPlay(soundInstance);
+            EnhancedSoundProcessor.onSoundPlay(instance, handle);
+            AudioUtilities.onSoundPlay(instance);
         } catch(final Throwable t) {
             MixinHelpers.SOUND_START_GUARD.failed(t);
         }
     }
 
-    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At("HEAD"), cancellable = true)
-    private void dsurround$play(SoundInstance sound, CallbackInfo ci) {
+    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)Lnet/minecraft/client/sounds/SoundEngine$PlayResult;", at = @At("HEAD"), cancellable = true)
+    private void dsurround$play(SoundInstance instance, CallbackInfoReturnable<SoundEngine.PlayResult> cir) {
         try {
             // Ensure the sound is being played on the client thread. If it isn't cancel
             // the play and emit a message indicating such.
             if (dsurround$compatibleSoundDiscardEnvironment && MixinHelpers.soundOptions.discardNonClientSoundPlays && !GameUtils.getMC().isSameThread()) {
-                MixinHelpers.LOGGER.warn("Attempt to play sound (%s) from non-client thread; discarding".formatted(sound.getLocation()));
+                MixinHelpers.LOGGER.warn("Attempt to play sound (%s) from non-client thread; discarding".formatted(instance.getIdentifier()));
                 if (MixinHelpers.soundOptions.logStacktraceWhenDiscarding) {
                     MixinHelpers.LOGGER.warn(StringUtils.generateStackTrace(Thread.currentThread().getStackTrace()));
                 }
-                ci.cancel();
+                cir.setReturnValue(SoundEngine.PlayResult.NOT_STARTED);
             }
             // Check to see if the sound is blocked or being culled
-            else if (SoundInstanceHandler.shouldBlockSoundPlay(sound))
-                ci.cancel();
+            else if (SoundInstanceHandler.shouldBlockSoundPlay(instance))
+                cir.setReturnValue(SoundEngine.PlayResult.NOT_STARTED);
             // Attempt a remapping if configured to do so
-            else if (SoundInstanceHandler.remapSoundPlay(sound))
-                ci.cancel();
+            else if (SoundInstanceHandler.remapSoundPlay(instance))
+                cir.setReturnValue(SoundEngine.PlayResult.NOT_STARTED);
         } catch (final Throwable t) {
             MixinHelpers.SOUND_FILTER_GUARD.failed(t);
         }
     }
 
     /**
-     * Update the volume based on current settings and environment. The sound is play()'s own parameter, so it is
-     * always the one being played. The volume play() read is used, not read again: reading draws a new random sample,
-     * and play() works out the sound's range from the one it read.
+     * Applies the configured scale to the game's gain for a sound: in play(), as it starts, and in
+     * calculateVolume(SoundInstance), which sets the volume of a sound already playing every tick for a ticking sound
+     * (the mod's own loops are) and for every playing sound when a volume slider moves; without the second they would
+     * drop the scale after their first tick. The game's gain is kept as it works it out (the master and category
+     * sliders, and a category's fade), and the volume it read is used, not read again: reading draws a new random
+     * sample, and play() works out the sound's range from the one it read. The sound is the method's own parameter,
+     * so it is always the one being played.
      */
-    @WrapOperation(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/SoundEngine;calculateVolume(FLnet/minecraft/sounds/SoundSource;)F"), remap = false)
-    private float dsurround$calculateVolume(SoundEngine soundEngine, float f, SoundSource soundsource, Operation<Float> original, @Local(argsOnly = true) SoundInstance sound) {
+    @WrapOperation(method = {
+            "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)Lnet/minecraft/client/sounds/SoundEngine$PlayResult;",
+            "calculateVolume(Lnet/minecraft/client/resources/sounds/SoundInstance;)F"
+    }, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/SoundEngine;calculateVolume(FLnet/minecraft/sounds/SoundSource;)F"))
+    private float dsurround$calculateVolume(SoundEngine soundEngine, float volume, SoundSource soundsource, Operation<Float> original, @Local(argsOnly = true) SoundInstance sound) {
+        float gain = original.call(soundEngine, volume, soundsource);
         try {
-            return SoundVolumeEvaluator.getAdjustedVolume(sound, f, soundsource);
+            return SoundVolumeEvaluator.scaleGain(sound, gain, soundsource);
         } catch (Throwable t) {
             // Something went wrong: the game's own volume is used
             MixinHelpers.SOUND_VOLUME_GUARD.failed(t);
-            return original.call(soundEngine, f, soundsource);
+            return gain;
         }
     }
 
-    /**
-     * The volume of a sound already playing: set every tick for a ticking sound (the mod's own loops are), and for
-     * every playing sound when a volume slider moves. Without this they would drop the configured scale after their
-     * first tick.
-     */
-    @Inject(method = "calculateVolume(Lnet/minecraft/client/resources/sounds/SoundInstance;)F", at = @At("HEAD"), cancellable = true)
-    private void dsurround$calculatePlayingVolume(SoundInstance sound, CallbackInfoReturnable<Float> cir) {
-        try {
-            cir.setReturnValue(SoundVolumeEvaluator.getAdjustedVolume(sound, null));
-        } catch (Throwable t) {
-            // Something went wrong: the game's own volume is used
-            MixinHelpers.SOUND_VOLUME_GUARD.failed(t);
-        }
-    }
-
-    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;<init>(DDD)V"), cancellable = true)
-    private void dsurround$soundRangeCheck(SoundInstance soundInstance, CallbackInfo ci) {
+    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)Lnet/minecraft/client/sounds/SoundEngine$PlayResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;<init>(DDD)V"), cancellable = true)
+    private void dsurround$soundRangeCheck(SoundInstance soundInstance, CallbackInfoReturnable<SoundEngine.PlayResult> cir) {
         try {
             // A sound out of range plays silently in the game, so one that is over before it could be heard is
             // dropped; one that lasts is kept, as the listener or the sound may come closer
             if (MixinHelpers.soundSystemConfig.enableSoundPruning && !SoundRange.lasts(soundInstance)) {
                 if (!SoundInstanceHandler.inRange(AudioUtilities.getSoundListener().getTransform().position(), soundInstance, 4)) {
                     MixinHelpers.LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> "TOO FAR: " + AudioUtilities.debugString(soundInstance));
-                    ci.cancel();
+                    cir.setReturnValue(SoundEngine.PlayResult.NOT_STARTED);
                 }
             }
         } catch (Throwable t) {

@@ -1,10 +1,10 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleRenderType;
+import net.minecraft.client.particle.SingleQuadParticle;
+import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +13,7 @@ import org.orecruncher.dsurround.runtime.weather.Shelter;
 
 /**
  * A tongue of flame in a flame jet. Many small ones overlapping make the fire: each is a soft glowing puff, drawn
- * adding its light to what is behind it (see {@link DSurroundParticleRenderType#PARTICLE_SHEET_FLAME}), so where they
+ * adding its light to what is behind it (see {@link SoftParticles#flameLayer}), so where they
  * bunch the fire burns brighter. It burns white-yellow as it leaves the source, then orange, then red as it cools, and
  * shrinks; hot gas is light, so it speeds up as it rises; it flickers, and leans with the wind out in the open.
  * Lit by itself, not the world: fire is as bright at night as by day.
@@ -64,8 +64,8 @@ public class FlameTongue extends SoftPuffParticle {
 
     protected FlameTongue(ClientLevel level, double x, double y, double z, double xd, double yd, double zd, float scale,
                           boolean carriesLight) {
-        super(level, x, y, z, FADE_IN, FADE_OUT, GROWTH);
-        var random = level.random;
+        super(level, x, y, z, DSurroundParticleSprites.WATERFALL_MIST.get(level.getRandom()), FADE_IN, FADE_OUT, GROWTH);
+        var random = level.getRandom();
         this.xd = xd;
         this.yd = yd;
         this.zd = zd;
@@ -82,7 +82,6 @@ public class FlameTongue extends SoftPuffParticle {
         this.carriesLight = carriesLight;
         this.lightRadius = LIGHT_RADIUS * scale;
         this.setColor(HOT);
-        this.setSprite(DSurroundParticleSprites.WATERFALL_MIST.get(random));
     }
 
     private void setColor(float[] color) {
@@ -92,8 +91,8 @@ public class FlameTongue extends SoftPuffParticle {
     }
 
     @Override
-    public @NotNull ParticleRenderType getRenderType() {
-        return DSurroundParticleRenderType.PARTICLE_SHEET_FLAME;
+    public @NotNull SingleQuadParticle.Layer getLayer() {
+        return SoftParticles.flameLayer();
     }
 
     @Override
@@ -111,17 +110,17 @@ public class FlameTongue extends SoftPuffParticle {
     }
 
     @Override
-    public int getLightColor(float partialTick) {
+    protected int getLightCoords(float partialTick) {
         return FULL_BRIGHT;
     }
 
     @Override
-    public void render(@NotNull VertexConsumer buffer, @NotNull Camera camera, float partialTick) {
+    public void extract(@NotNull QuadParticleRenderState state, @NotNull Camera camera, float partialTick) {
         var color = colorAt(this.lifeFraction(partialTick));
         this.rCol = color[0];
         this.gCol = color[1];
         this.bCol = color[2];
-        super.render(buffer, camera, partialTick);
+        super.extract(state, camera, partialTick);
 
         // Its light, as bright as it is now: fading in and out with it, and flickering with it
         if (this.carriesLight && this.peakAlpha > 0F && PointLights.flameLightsOn()) {

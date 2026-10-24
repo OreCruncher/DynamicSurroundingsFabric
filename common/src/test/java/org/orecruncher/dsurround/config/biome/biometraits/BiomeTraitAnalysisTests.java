@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.config.biome.biometraits;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.level.biome.BiomeSpecialEffects;
 import net.minecraft.world.level.biome.Biomes;
@@ -47,13 +47,13 @@ public class BiomeTraitAnalysisTests {
     private static Set<BiomeTrait> derive(BiomeTrait... traits) {
         var set = EnumSet.noneOf(BiomeTrait.class);
         set.addAll(List.of(traits));
-        var biome = evidence(ResourceLocation.fromNamespaceAndPath("test", "biome"));
+        var biome = evidence(Identifier.fromNamespaceAndPath("test", "biome"));
         new BiomeTraitAnalyzer().analyze(biome, set);
         new BiomeTraitCleanup().analyze(biome, set);
         return set;
     }
 
-    private static BiomeEvidence evidence(ResourceLocation id) {
+    private static BiomeEvidence evidence(Identifier id) {
         return new BiomeEvidence(id, null, true, 0.5F, false, 0.5F, BiomeSpecialEffects.GrassColorModifier.NONE,
                 Optional.empty(), Optional.empty(), Optional.empty());
     }
@@ -62,7 +62,7 @@ public class BiomeTraitAnalysisTests {
         var names = new TreeSet<String>();
         for (var field : Biomes.class.getFields())
             if (Modifier.isStatic(field.getModifiers()) && field.get(null) instanceof ResourceKey<?> key)
-                names.add(key.location().getPath());
+                names.add(key.identifier().getPath());
         return names;
     }
 
@@ -107,7 +107,7 @@ public class BiomeTraitAnalysisTests {
     void vanillaBiomesUseTheTable() {
         var traits = EnumSet.noneOf(BiomeTrait.class);
         // The biome isn't looked at for a vanilla biome in the table
-        new VanillaBiomeAnalyzer().analyze(evidence(ResourceLocation.withDefaultNamespace("snowy_plains")), traits);
+        new VanillaBiomeAnalyzer().analyze(evidence(Identifier.withDefaultNamespace("snowy_plains")), traits);
         assertEquals(VanillaBiomeAnalyzer.VANILLA_TRAITS.get("snowy_plains"), traits);
     }
 

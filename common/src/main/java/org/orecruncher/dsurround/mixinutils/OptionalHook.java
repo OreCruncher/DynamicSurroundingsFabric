@@ -29,22 +29,34 @@ import java.util.function.Function;
 public enum OptionalHook {
 
     SKY_TINT("Dust storm sky colour",
-            site("core.MixinLevelRenderer", "dsurround$tintSkyColor")),
+            site("core.MixinSkyRenderer", "dsurround$tintSkyColor")),
     FOG_TINT("Dust storm fog colour",
             site("core.MixinFogRenderer", "dsurround$tintFogColor")),
-    STORM_RAIN("Storm strength in vanilla's rain and snow",
-            site("core.MixinLevelRenderer", "dsurround$stormRainLevelDrawn"),
-            site("core.MixinLevelRenderer", "dsurround$stormRainLevelTicked")),
-    RAIN_SOUNDS("Storm rain sounds",
-            site("core.MixinLevelRenderer", "dsurround$rainSound")),
-    RAIN_SPLASHES("Hiding vanilla's rain splashes under particle rain",
-            site("core.MixinLevelRenderer", "dsurround$vanillaRainSplash")),
+    PRECIPITATION("Particle rain and snow",
+            site("core.MixinWeatherEffectRenderer", "dsurround$renderPrecipitation"),
+            site("core.MixinLevelRenderer", "dsurround$enterWeatherPass"),
+            site("core.MixinLevelRenderer", "dsurround$leaveWeatherPass")),
+    GROUND_FOG("Ground fog with Fabulous graphics",
+            site("core.MixinLevelRenderer", "dsurround$groundFogAfterWeather")),
     WINDOW_FROST("Window frost without Fabulous graphics",
-            site("core.MixinLevelRenderer", "dsurround$afterSectionLayer")),
+            site("core.MixinLevelRenderer", "dsurround$frostDepthBeforeTranslucent"),
+            site("core.MixinLevelRenderer", "dsurround$frostAfterTranslucentTerrain")),
+    STORM_RAIN("Storm strength in vanilla's rain and snow",
+            site("core.MixinWeatherEffectRenderer", "dsurround$stormRainLevelDrawn"),
+            site("core.MixinClientLevel", "dsurround$stormRainLevelTicked"),
+            site("core.MixinAtmosphericFogEnvironment", "dsurround$stormRainFog")),
+    RAIN_SOUNDS("Storm rain sounds",
+            site("core.MixinClientLevel", "dsurround$rainSound")),
+    RAIN_SPLASHES("Hiding vanilla's rain splashes under particle rain",
+            site("core.MixinClientLevel", "dsurround$vanillaRainSplash")),
     WIND_BLOWN_PARTICLES("Wind blowing particles",
             site("core.MixinParticleEngine", "dsurround$markWindBlown"),
             site("core.MixinParticle", "dsurround$driftX"),
-            site("core.MixinParticle", "dsurround$driftZ"));
+            site("core.MixinParticle", "dsurround$driftZ")),
+    BURNING_ENTITIES("Flames on burning mobs",
+            site("core.MixinEntityRenderer", "dsurround$vanillaFire")),
+    DEATH_PUFFS("Dark mist when mobs die",
+            site("core.MixinLivingEntity", "dsurround$deathPuffs"));
 
     /**
      * Whether a hook applied
@@ -62,10 +74,20 @@ public enum OptionalHook {
      *
      * @param mixin   the mixin's class name, after the mixins package
      * @param handler the handler method's name
+     * @param or      another handler that does instead, or null: where the loaders' code differs (NeoForge draws
+     *                particles through a method of its own), each has a handler of its own, and either being called
+     *                means the hook applied
      */
-    record Site(String mixin, String handler) {
+    record Site(String mixin, String handler, String or) {
         String mixinClassName() {
             return MIXIN_PACKAGE + this.mixin;
+        }
+
+        /**
+         * Its handler, and the other one if it has one
+         */
+        List<String> handlers() {
+            return this.or == null ? List.of(this.handler) : List.of(this.handler, this.or);
         }
     }
 
@@ -87,8 +109,9 @@ public enum OptionalHook {
     }
 
     private static Site site(String mixin, String handler) {
-        return new Site(mixin, handler);
+        return new Site(mixin, handler, null);
     }
+
 
     /**
      * What is lost when it doesn't apply, for the log and diagnostics
@@ -174,7 +197,7 @@ public enum OptionalHook {
             var target = targets.apply(site.mixinClassName());
             if (target == null)
                 status = Status.UNKNOWN;
-            else if (!calls(target, site.handler()))
+            else if (site.handlers().stream().noneMatch(handler -> calls(target, handler)))
                 return Status.MISSING;
         }
         return status;

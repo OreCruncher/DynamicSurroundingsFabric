@@ -1,11 +1,10 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleRenderType;
-import net.minecraft.client.particle.TextureSheetParticle;
+import net.minecraft.client.particle.SingleQuadParticle;
+import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.tags.FluidTags;
@@ -17,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
  * red as it goes. Falling back into lava, it is gone; landing on something solid, it gives a wisp of smoke and goes
  * out. Drawn as a short, thick streak, as a spark is, adding its light.
  */
-public class LavaDroplet extends TextureSheetParticle {
+public class LavaDroplet extends SingleQuadParticle {
 
     // Its colour as it cools: yellow-orange, then orange, then a dull red
     private static final float[] HOT = {1F, 0.75F, 0.3F};
@@ -49,8 +48,8 @@ public class LavaDroplet extends TextureSheetParticle {
 
     protected LavaDroplet(ClientLevel level, double x, double y, double z, double xd, double yd, double zd) {
         // The constructor without velocity: the one with it adds a random velocity of its own
-        super(level, x, y, z);
-        var random = level.random;
+        super(level, x, y, z, DSurroundParticleSprites.WATERFALL_MIST.get(level.getRandom()));
+        var random = level.getRandom();
         this.xd = xd;
         this.yd = yd;
         this.zd = zd;
@@ -60,16 +59,16 @@ public class LavaDroplet extends TextureSheetParticle {
         // Stops on what it lands on
         this.hasPhysics = true;
         this.setSize(0.1F, 0.1F);
-        this.setSprite(DSurroundParticleSprites.WATERFALL_MIST.get(random));
+        this.quadSize = HALF_WIDTH * 1.5F;
     }
 
     @Override
-    public @NotNull ParticleRenderType getRenderType() {
-        return DSurroundParticleRenderType.PARTICLE_SHEET_FLAME;
+    public @NotNull SingleQuadParticle.Layer getLayer() {
+        return SoftParticles.flameLayer();
     }
 
     @Override
-    public int getLightColor(float partialTick) {
+    protected int getLightCoords(float partialTick) {
         return FULL_BRIGHT;
     }
 
@@ -95,13 +94,17 @@ public class LavaDroplet extends TextureSheetParticle {
     }
 
     @Override
-    public void render(@NotNull VertexConsumer buffer, @NotNull Camera camera, float partialTick) {
+    public void extract(@NotNull QuadParticleRenderState state, @NotNull Camera camera, float partialTick) {
         float life = Mth.clamp((this.age + partialTick) / this.lifetime, 0F, 1F);
         float alpha = brightness(life);
         if (alpha <= 0F)
             return;
-        Streaks.draw(buffer, camera, partialTick, this.xo, this.yo, this.zo, this.x, this.y, this.z, STREAK, HALF_WIDTH,
-                colorAt(life), alpha, this.getLightColor(partialTick), this.getU0(), this.getU1(), this.getV0(), this.getV1());
+        Streaks.add(camera, partialTick, this.xo, this.yo, this.zo, this.x, this.y, this.z, STREAK, HALF_WIDTH,
+                colorAt(life), alpha, this.getLightCoords(partialTick), this.getU0(), this.getU1(), this.getV0(), this.getV1());
+        // Its own quad as well, clear: the particle engine draws the flames' group only if something in it has a quad,
+        // and the streaks are drawn as that group is (see Streaks)
+        this.setAlpha(0F);
+        super.extract(state, camera, partialTick);
     }
 
     /**

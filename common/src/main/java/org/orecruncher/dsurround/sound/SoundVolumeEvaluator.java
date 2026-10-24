@@ -15,8 +15,10 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
  * based on configuration information.  This allows tuning of sound volumes on a per-sound
  * basis.
  * <p>
- * It takes the place of the game's volume for a sound everywhere the game works one out: when it starts, every tick
- * for a ticking sound (the mod's own loops among them), and for every playing sound when a volume slider moves.
+ * It scales the game's gain for a sound everywhere the game works one out: when it starts, every tick for a ticking
+ * sound (the mod's own loops among them), and for every playing sound when a volume slider moves. The game's gain
+ * already holds the master and category sliders and a category's fade (the music's), so only the configured scale is
+ * applied here.
  */
 public final class SoundVolumeEvaluator {
 
@@ -29,39 +31,35 @@ public final class SoundVolumeEvaluator {
     }
 
     /**
-     * The sound's gain, its volume read from it. Client thread only: reading the volume draws on the sound's random
-     * source.
+     * The sound's gain, for diagnostics: the game's worked out as SoundEngine.calculateVolume does, without a fade in
+     * progress, then scaled. Client thread only: reading the volume draws on the sound's random source.
      */
     public static float getAdjustedVolume(final SoundInstance sound, @Nullable SoundSource soundSource) {
         Preconditions.checkNotNull(sound);
-        return getAdjustedVolume(sound, sound.getVolume(), soundSource);
+        final SoundSource category = soundSource != null ? soundSource : sound.getSource();
+        float sliders = Mth.clamp(GameUtils.getGameSettings().getFinalSoundSourceVolume(category), 0F, 1F);
+        return scaleGain(sound, Mth.clamp(sound.getVolume(), 0F, 1F) * sliders, soundSource);
     }
 
     /**
-     * The sound's gain for a volume already read from it (the game reads it once in play(), and works out the
-     * sound's range from the same value)
+     * The game's gain for a sound with its configured scale applied
      */
-    public static float getAdjustedVolume(final SoundInstance sound, float volume, @Nullable SoundSource soundSource) {
+    public static float scaleGain(final SoundInstance sound, float gameGain, @Nullable SoundSource soundSource) {
         Preconditions.checkNotNull(sound);
-
-        // Scale the volume based on Minecraft's volume scaling selections.
         final SoundSource category = soundSource != null ? soundSource : sound.getSource();
-        var categoryFactor = category == SoundSource.MASTER ? 1F : GameUtils.getGameSettings().getSoundSourceVolume(category);
-
         // Config sounds are played from the config menu: their volume already carries the slider's scale, so the
         // configured one isn't applied again.
-        var volumeScale = sound instanceof ConfigSoundInstance ? 1F : Holder.SOUND_LIBRARY.getVolumeScale(category, sound.getLocation());
-        return gain(volume, categoryFactor, volumeScale);
+        var volumeScale = sound instanceof ConfigSoundInstance ? 1F : Holder.SOUND_LIBRARY.getVolumeScale(category, sound.getIdentifier());
+        return gain(gameGain, volumeScale);
     }
 
     /**
-     * The gain for a sound's volume, its category's slider and its configured scale. The game's own gain is the
-     * volume times the slider, at most 1: a volume above 1 carries the sound further rather than making it louder
-     * (explosions are 4). The configured scale applies to that gain, so turning a loud sound down quietens it; it
-     * may raise a quiet one, up to 1. A scale of 1 leaves the game's gain as it is.
+     * The gain for the game's gain and a configured scale. The game's gain is at most 1: a volume above 1 carries the
+     * sound further rather than making it louder (explosions are 4). The configured scale applies to that gain, so
+     * turning a loud sound down quietens it; it may raise a quiet one, up to 1. A scale of 1 leaves the game's gain as
+     * it is.
      */
-    static float gain(float volume, float categoryFactor, float volumeScale) {
-        float game = Mth.clamp(volume * categoryFactor, 0F, 1F);
-        return Mth.clamp(game * volumeScale, 0F, 1F);
+    static float gain(float gameGain, float volumeScale) {
+        return Mth.clamp(gameGain * volumeScale, 0F, 1F);
     }
 }

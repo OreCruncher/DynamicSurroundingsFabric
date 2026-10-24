@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.lib.resources;
 
 import com.mojang.serialization.Codec;
 import dev.architectury.platform.Platform;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.function.SingletonSupplier;
@@ -42,7 +42,7 @@ public class ServerResourceFinder extends AbstractResourceFinder {
      */
     @Override
     public <T> Collection<DiscoveredResource<T>> find(Codec<T> codec, String assetPath) {
-        var location = ResourceLocation.tryParse(assetPath);
+        var location = Identifier.tryParse(assetPath);
         if (location == null) {
             this.logger.warn("Not a resource location: %s", assetPath);
             return List.of();
@@ -63,7 +63,7 @@ public class ServerResourceFinder extends AbstractResourceFinder {
         var roots = new ObjectArray<Path>();
         for (var mod : Platform.getMods()) {
             // A mod may be spread over several roots (in development, its classes and resources); the first with a
-            // data folder is the one. A path that is a jar (NeoForge on 26.2) is opened by ModRoots.
+            // data folder is the one. On NeoForge a mod's path is its jar, opened by ModRoots.
             for (var root : ModRoots.of(mod)) {
                 var data = root.resolve(folder);
                 if (Files.exists(data)) {

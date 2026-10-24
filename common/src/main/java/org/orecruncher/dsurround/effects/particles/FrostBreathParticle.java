@@ -2,9 +2,8 @@ package org.orecruncher.dsurround.effects.particles;
 
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.particle.SpriteSet;
-import net.minecraft.client.particle.TextureSheetParticle;
+import net.minecraft.client.particle.SingleQuadParticle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.util.Mth;
@@ -16,7 +15,7 @@ import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.runtime.weather.SceneWind;
 import org.orecruncher.dsurround.runtime.weather.Shelter;
 
-public class FrostBreathParticle extends TextureSheetParticle {
+public class FrostBreathParticle extends SingleQuadParticle {
 
     // The share of its speed it keeps each tick
     private static final float DRAG = 0.96F;
@@ -47,7 +46,7 @@ public class FrostBreathParticle extends TextureSheetParticle {
     }
 
     private FrostBreathParticle(LivingEntity entity, SpriteSet spriteProvider) {
-        super((ClientLevel) entity.level(), 0, 0, 0, 0.0, 0.0, 0.0);
+        super((ClientLevel) entity.level(), 0, 0, 0, 0.0, 0.0, 0.0, spriteProvider.first());
         
         final IRandomizer rand = Randomizer.current();
 
@@ -78,8 +77,10 @@ public class FrostBreathParticle extends TextureSheetParticle {
     }
 
     @Override
-    public @NotNull ParticleRenderType getRenderType() {
-        return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
+    public @NotNull Layer getLayer() {
+        // Soft, as the mist and steam are (see SoftParticles): fading where it meets a wall, and writing no depth, so a
+        // breath in front of a window doesn't cut holes in what is drawn there after it (the frost)
+        return SoftParticles.mistLayer();
     }
 
     @Override

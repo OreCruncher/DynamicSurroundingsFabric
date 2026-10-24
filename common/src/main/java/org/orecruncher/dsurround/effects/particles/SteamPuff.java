@@ -50,8 +50,8 @@ public class SteamPuff extends SoftPuffParticle {
     }
 
     protected SteamPuff(ClientLevel level, double x, double y, double z, boolean small) {
-        super(level, x, y, z, FADE_IN, FADE_OUT, GROWTH);
-        var random = level.random;
+        super(level, x, y, z, DSurroundParticleSprites.WATERFALL_MIST.get(level.getRandom()), FADE_IN, FADE_OUT, GROWTH);
+        var random = level.getRandom();
         var scale = small ? 0.5F : 1F;
 
         this.xd = 0D;
@@ -76,7 +76,6 @@ public class SteamPuff extends SoftPuffParticle {
         this.wobblePhaseX = random.nextFloat() * Mth.TWO_PI;
         this.wobblePhaseZ = random.nextFloat() * Mth.TWO_PI;
 
-        this.setSprite(DSurroundParticleSprites.WATERFALL_MIST.get(random));
     }
 
     @Override

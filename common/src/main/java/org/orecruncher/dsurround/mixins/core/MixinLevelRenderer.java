@@ -1,26 +1,14 @@
 package org.orecruncher.dsurround.mixins.core;
 
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.llamalad7.mixinextras.sugar.Local;
-import net.minecraft.client.Camera;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.phys.Vec3;
-import org.joml.Matrix4f;
-import org.orecruncher.dsurround.runtime.weather.StormSounds;
-import org.orecruncher.dsurround.eventing.ISkyRender;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.state.level.LevelRenderState;
+import org.orecruncher.dsurround.effects.WeatherDepth;
+import org.orecruncher.dsurround.effects.entity.HealthPopoffs;
+import org.orecruncher.dsurround.effects.footprints.Footprints;
+import org.orecruncher.dsurround.gui.overlay.lightlevel.LightLevelRenderer;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -29,144 +17,60 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinLevelRenderer {
 
     /**
-     * What is drawn in the sky after it (the aurora), from where the level calls for the sky rather than from inside
-     * renderSky: a mod that draws a sky of its own may cancel renderSky at its start (Astral Sorcery does, for its
-     * constellations), and nothing at the end of renderSky would run.
+     * The world's entities, block entities and particles have been submitted for drawing this frame; add the
+     * footprints, the light level numbers and the health pop-offs. Outside any render pass.
      */
-    @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSky(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V"))
-    private void dsurround$renderSky(LevelRenderer renderer, Matrix4f frustumMatrix, Matrix4f projectionMatrix, float partialTick, Camera camera, boolean isFoggy, Runnable skyFogSetup, Operation<Void> original) {
-        original.call(renderer, frustumMatrix, projectionMatrix, partialTick, camera, isFoggy, skyFogSetup);
-        ISkyRender.EVENT.invoker().onRenderSky(frustumMatrix, partialTick, camera, isFoggy);
+    @Inject(method = "submitFeatures(Lnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/client/renderer/SubmitNodeCollector;Z)V", at = @At("TAIL"))
+    private void dsurround$submitLightLevels(LevelRenderState levelRenderState, SubmitNodeCollector collector, boolean renderOutline, CallbackInfo ci) {
+        Footprints.submitAll(collector, levelRenderState.cameraRenderState);
+        LightLevelRenderer.submit(collector, levelRenderState.cameraRenderState);
+        HealthPopoffs.submit(collector, levelRenderState.cameraRenderState);
     }
 
     /**
-     * The sky's colour, turned toward the dust's in a dust storm, as the fog is. Only where the sky is drawn: the fog
-     * reads the sky's colour too, from the level, and is tinted on its own.
+     * The frame's weather pass, where the level's weather is drawn: particle weather replaces vanilla's only there,
+     * not where another mod calls the weather renderer itself (as Ars Nouveau did on 1.21.1, into its sky texture).
+     * The pass runs as a lambda; matched by name, as its arguments differ on NeoForge.
      */
-    @ModifyExpressionValue(method = "renderSky(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getSkyColor(Lnet/minecraft/world/phys/Vec3;F)Lnet/minecraft/world/phys/Vec3;"), require = 0)
-    private Vec3 dsurround$tintSkyColor(Vec3 color, @Local(argsOnly = true) float partialTick) {
-        return MixinHelpers.SKY_TINT_GUARD.get(() -> MixinHelpers.fogHandler().tintSkyColor(color, partialTick), color);
+    @Inject(method = "lambda$addWeatherPass$0", at = @At("HEAD"), require = 0)
+    private void dsurround$enterWeatherPass(CallbackInfo ci) {
+        MixinHelpers.inLevelWeatherPass = true;
+        // With Fabulous graphics, the scene's depth for what is drawn to the weather's target to be tested against
+        MixinHelpers.WEATHER_DEPTH_GUARD.run(() -> WeatherDepth.prepare(MixinHelpers.precipitation().isActive()
+                || MixinHelpers.windowFrost().isActive() || MixinHelpers.groundFog().isActive()));
+        // Frost on windows with Fabulous graphics, and the ground fog without, before the weather, so the rain and
+        // snow are drawn over them
+        MixinHelpers.WINDOW_FROST_GUARD.run(() -> MixinHelpers.windowFrost().renderBeforeWeather());
+        MixinHelpers.GROUND_FOG_GUARD.run(() -> MixinHelpers.groundFog().renderBeforeWeather());
     }
 
     /**
-     * Whether the weather being drawn is the level's own, called for by renderLevel (see below). Another mod may call
-     * renderSnowAndRain itself: Ars Nouveau draws the sky and its weather into a texture of its own, for its blocks
-     * that show the sky. That is left to vanilla's weather: ours binds the scene's targets and reads its depth, so it
-     * would be drawn over the screen, at the wrong moment and turned by that mod's view, and the mist with it.
+     * The ground fog with Fabulous graphics, after the weather (see GroundFogHandler.renderAfterWeather) and before the
+     * world border, which would otherwise be hidden behind the depth the mist writes.
      */
-    @Unique
-    private static boolean dsurround$levelWeather;
-
-    /**
-     * Particle rain and snow, when on, are drawn in place of vanilla's weather. This comes before NeoForge's
-     * DimensionSpecialEffects hook, so particle weather is off in a dimension that draws its own (the guess in
-     * DimensionInfo, or a dimension rule), or it would replace it.
-     */
-    @Inject(method = "renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V", at = @At("HEAD"), cancellable = true)
-    private void dsurround$renderPrecipitation(LightTexture lightTexture, float partialTick, double camX, double camY, double camZ, CallbackInfo ci) {
-        if (!dsurround$levelWeather)
-            return;
-        if (MixinHelpers.precipitation().render(lightTexture, partialTick))
-            ci.cancel();
+    @Inject(method = "lambda$addWeatherPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/WorldBorderRenderer;render(Lnet/minecraft/client/renderer/state/level/WorldBorderRenderState;Lnet/minecraft/world/phys/Vec3;DD)V"), require = 0)
+    private void dsurround$groundFogAfterWeather(CallbackInfo ci) {
+        MixinHelpers.GROUND_FOG_GUARD.run(() -> MixinHelpers.groundFog().renderAfterWeather());
     }
 
     /**
-     * Frost on windows, without Fabulous graphics, after the last of the translucent blocks (tripwire) and before the
-     * particles: those write depth, and breath or smoke in front of a window would cut the frost behind it out.
+     * Frost on windows without Fabulous graphics: in the main pass, the scene's depth copied before the translucent
+     * features and blocks, then the frost drawn after the translucent blocks, tested against that copy, so water and
+     * stained glass behind a window are under its frost and those in front of it don't hide it (see
+     * WindowFrostHandler). The pass runs as a lambda; matched by name, as its arguments differ on NeoForge.
      */
-    @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSectionLayer(Lnet/minecraft/client/renderer/RenderType;DDDLorg/joml/Matrix4f;Lorg/joml/Matrix4f;)V"), require = 0)
-    private void dsurround$afterSectionLayer(LevelRenderer renderer, RenderType renderType, double camX, double camY, double camZ, Matrix4f frustumMatrix, Matrix4f projectionMatrix, Operation<Void> original, @Local(argsOnly = true) LightTexture lightTexture) {
-        original.call(renderer, renderType, camX, camY, camZ, frustumMatrix, projectionMatrix);
-        if (renderType == RenderType.tripwire())
-            MixinHelpers.windowFrost().renderBeforeParticles(lightTexture);
+    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeTranslucent()V"), require = 0)
+    private void dsurround$frostDepthBeforeTranslucent(CallbackInfo ci) {
+        MixinHelpers.WINDOW_FROST_GUARD.run(() -> MixinHelpers.windowFrost().copyDepthBeforeTranslucent());
     }
 
-    /**
-     * Frost on windows (with Fabulous graphics; see above for without) and the mist on the ground before the weather, so the rain and snow are drawn over them; with
-     * Fabulous graphics the mist after it instead (see GroundFogHandler.renderAfterWeather). All from where the level
-     * calls for the weather, rather than inside it, so they are drawn however the weather's drawing ends, cancelled by
-     * us or another mod (Simple Weather cancels it) or left early by NeoForge for a dimension's own.
-     */
-    @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V"))
-    private void dsurround$aroundWeather(LevelRenderer renderer, LightTexture lightTexture, float partialTick, double camX, double camY, double camZ, Operation<Void> original) {
-        MixinHelpers.windowFrost().renderBeforeWeather(lightTexture);
-        MixinHelpers.groundFog().renderBeforeWeather(lightTexture, partialTick);
-        dsurround$levelWeather = true;
-        try {
-            original.call(renderer, lightTexture, partialTick, camX, camY, camZ);
-        } finally {
-            dsurround$levelWeather = false;
-        }
-        MixinHelpers.groundFog().renderAfterWeather(lightTexture, partialTick);
+    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeTranslucentAfterTerrain()V"), require = 0)
+    private void dsurround$frostAfterTranslucentTerrain(CallbackInfo ci) {
+        MixinHelpers.WINDOW_FROST_GUARD.run(() -> MixinHelpers.windowFrost().renderAfterTranslucentTerrain());
     }
 
-    /**
-     * While particle rain is drawn, its drops splash where they land, so vanilla's splashes, scattered at random
-     * around the player, are left out. Vanilla's rain sound, played from the same method, is kept.
-     */
-    @WrapWithCondition(method = "tickRain(Lnet/minecraft/client/Camera;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;addParticle(Lnet/minecraft/core/particles/ParticleOptions;DDDDDD)V"), require = 0)
-    private boolean dsurround$vanillaRainSplash(ClientLevel level, ParticleOptions particle, double x, double y, double z, double xd, double yd, double zd) {
-        return MixinHelpers.RAIN_SPLASH_GUARD.get(() -> !MixinHelpers.precipitation().isActive(), true);
-    }
-
-    /**
-     * The rain sound, as 1.12.2 had it: the mod's calm rain, louder as the storm strengthens, with vanilla's heavier
-     * rain blended in from a moderate storm up. Both calls, the rain in the open and on a roof above, come through
-     * here; each keeps vanilla's volume and pitch for where it is, scaled.
-     */
-    @WrapOperation(method = "tickRain(Lnet/minecraft/client/Camera;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;playLocalSound(Lnet/minecraft/core/BlockPos;Lnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FFZ)V"), require = 0)
-    private void dsurround$rainSound(ClientLevel level, BlockPos pos, SoundEvent sound, SoundSource source, float volume, float pitch, boolean distanceDelay, Operation<Void> original) {
-        if (!MixinHelpers.weatherOptions.enableStormSounds) {
-            original.call(level, pos, sound, source, volume, pitch, distanceDelay);
-            return;
-        }
-        // The shares are worked out before anything plays, so a failure leaves vanilla's sound, played once
-        float calmVolume;
-        float heavy;
-        SoundEvent calm;
-        try {
-            var rainLevel = MixinHelpers.weatherSimulation().rainLevel(level.getRainLevel(1F));
-            calm = MixinHelpers.SOUND_LIBRARY.getSound(StormSounds.RAIN);
-            calmVolume = volume * StormSounds.calmShare(rainLevel);
-            heavy = StormSounds.heavyShare(rainLevel);
-        } catch (Throwable t) {
-            MixinHelpers.RAIN_SOUND_GUARD.failed(t);
-            original.call(level, pos, sound, source, volume, pitch, distanceDelay);
-            return;
-        }
-        level.playLocalSound(pos, calm, source, calmVolume, pitch, distanceDelay);
-        if (heavy > 0F)
-            original.call(level, pos, sound, source, volume * heavy, pitch, distanceDelay);
-    }
-
-    /**
-     * The storm's strength in place of the world's rain level where the rain is drawn (how opaque the rain and snow
-     * are) and ticked (how many splashes, and the rain sound). The world's level itself is left alone, so the sky,
-     * isRaining() and everything else reading it are unchanged. NeoForge's DimensionSpecialEffects hooks come first
-     * in both methods; a dimension that draws its own weather is left to it. A handler for each, so OptionalHook can
-     * tell if either is lost.
-     */
-    @ModifyExpressionValue(method = "renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getRainLevel(F)F"), require = 0)
-    private float dsurround$stormRainLevelDrawn(float vanillaLevel) {
-        return dsurround$stormRainLevel(vanillaLevel);
-    }
-
-    @ModifyExpressionValue(method = "tickRain(Lnet/minecraft/client/Camera;)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getRainLevel(F)F"), require = 0)
-    private float dsurround$stormRainLevelTicked(float vanillaLevel) {
-        return dsurround$stormRainLevel(vanillaLevel);
-    }
-
-    @Unique
-    private static float dsurround$stormRainLevel(float vanillaLevel) {
-        // Read a few times a frame and a tick: no lambda
-        try {
-            return MixinHelpers.weatherSimulation().rainLevel(vanillaLevel);
-        } catch (Throwable t) {
-            MixinHelpers.STORM_RAIN_LEVEL_GUARD.failed(t);
-            return vanillaLevel;
-        }
+    @Inject(method = "lambda$addWeatherPass$0", at = @At("RETURN"), require = 0)
+    private void dsurround$leaveWeatherPass(CallbackInfo ci) {
+        MixinHelpers.inLevelWeatherPass = false;
     }
 }

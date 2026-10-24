@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
@@ -55,7 +55,7 @@ public final class BiomeTraits {
      *
      * @param tagLibrary answers which tags the biome has
      */
-    public static BiomeTraits from(ResourceLocation id, Biome biome, ITagLibrary tagLibrary) {
+    public static BiomeTraits from(Identifier id, Biome biome, ITagLibrary tagLibrary) {
         // A vanilla biome's are in the table
         var definition = VanillaBiomeAnalyzer.covers(id) ? Optional.<BiomeDefinition>empty() : DEFINITIONS.read(id);
         var result = from(BiomeEvidence.of(id, biome, definition), new BiomeTagAnalyzer(tagLibrary));

@@ -1,16 +1,28 @@
 package org.orecruncher.dsurround.effects.frost;
 
+import com.mojang.blaze3d.PrimitiveTopology;
+import com.mojang.blaze3d.pipeline.BindGroupLayout;
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.ColorTargetState;
+import com.mojang.blaze3d.pipeline.DepthStencilState;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.MeshData;
 import net.minecraft.client.Camera;
+import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
-import org.orecruncher.dsurround.effects.RenderTimer;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.ModShader;
+import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.lib.Library;
+
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * Draws the frost on windows: each frosted face as a grid of small quads just off the glass, with the frost texture
@@ -18,12 +30,41 @@ import org.orecruncher.dsurround.lib.Library;
  * carries how far the frost has grown there, in its alpha: more near the window's edges, where frost starts, and its
  * bottom, where it gathers, than in its middle. The shader ({@code window_frost}) shows the texels of the
  * {@link FrostTexture} that have frosted by then. Positions are relative to the camera. Render thread only.
+ * <p>
+ * Two pipelines: as vanilla's weather, depth is written only with Fabulous graphics, where the frost is drawn to the
+ * weather's own target, which the transparency pass lays over the scene by depth.
  */
 public final class FrostRenderer {
 
-    public static final ModShader SHADER = new ModShader("window_frost", DefaultVertexFormat.PARTICLE,
+    private static final BindGroupLayout DEPTH_COPY_LAYOUT = BindGroupLayout.builder().withSampler("DepthSampler").build();
+
+    /**
+     * Drawn after the translucent blocks (without Fabulous graphics all frost, with it the frost on stained glass), its
+     * depth tested in the shader against the scene's from before them (DEPTH_COPY, bound as DepthSampler), not by the
+     * depth buffer, which has the water and stained glass in it by then. Writes no depth.
+     */
+    public static final ModShader SHADER = new ModShader(
+            pipeline("pipeline/window_frost")
+                    .withShaderDefine("DEPTH_COPY")
+                    .withBindGroupLayout(DEPTH_COPY_LAYOUT)
+                    .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
+                    .build(),
             "window frost", "windows will not frost", Library.LOGGER);
+    public static final ModShader SHADER_DEPTH = new ModShader(
+            pipeline("pipeline/window_frost_depth_write").withDepthStencilState(DepthStencilState.DEFAULT).build(),
+            "window frost (Fabulous)", "windows will not frost", Library.LOGGER);
+
+    /**
+     * Both, for {@code ModShaders}
+     */
+    public static final List<ModShader> SHADERS = List.of(SHADER, SHADER_DEPTH);
+
     public static final RenderTimer RENDER_TIMER = new RenderTimer("Window Frost");
+
+    /**
+     * The sampler the copy of the scene's depth is bound as, without Fabulous graphics
+     */
+    public static final String DEPTH_SAMPLER = "DepthSampler";
 
     // The size of a cell of the grid a face is drawn as, in blocks
     static final float CELL = 0.25F;
@@ -43,19 +84,43 @@ public final class FrostRenderer {
     }
 
     /**
-     * Builds the frost into a buffer and draws it with whatever shader is current, which should be {@link #SHADER},
-     * with the frost texture bound
+     * Whether the frost can be drawn: both pipelines compiled, drawing hasn't failed, and no shader pack is in use
+     */
+    public static boolean isAvailable() {
+        return SHADER.isUsable() && SHADER_DEPTH.isUsable();
+    }
+
+    // Premultiplied, "over" (see the shader); seen from both sides
+    private static RenderPipeline.Builder pipeline(String location) {
+        return RenderPipeline.builder()
+                .withLocation(Constants.asId(location))
+                .withVertexShader(Constants.asId("core/window_frost"))
+                .withFragmentShader(Constants.asId("core/window_frost"))
+                .withShaderDefine("FADE_DISTANCE", (float) FrostField.RANGE)
+                .withBindGroupLayout(BindGroupLayouts.GLOBALS)
+                .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+                .withBindGroupLayout(BindGroupLayouts.FOG)
+                .withBindGroupLayout(BindGroupLayouts.SAMPLER0_SAMPLER2)
+                .withVertexBinding(0, DefaultVertexFormat.PARTICLE)
+                .withPrimitiveTopology(PrimitiveTopology.QUADS)
+                .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA))
+                .withCull(false);
+    }
+
+    /**
+     * Builds the frost into a buffer and hands it to {@code drawer}, which draws it with the frost's pipeline and
+     * texture
      *
      * @return how many faces were drawn
      */
-    public static int draw(FrostField field, Tesselator tesselator, Camera camera) {
-        var cam = camera.getPosition();
+    public static int draw(FrostField field, ByteBufferBuilder bytes, Consumer<MeshData> drawer, Camera camera, Predicate<FrostFace> which) {
+        var cam = camera.position();
         float range = FrostField.RANGE;
         float rangeSq = range * range;
-        BufferBuilder builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
+        BufferBuilder builder = new BufferBuilder(bytes, PrimitiveTopology.QUADS, DefaultVertexFormat.PARTICLE);
         int[] drawn = {0};
         field.forEachFace(face -> {
-            if (face.shown < MIN_SHOWN)
+            if (face.shown < MIN_SHOWN || !which.test(face))
                 return;
             double dx = face.x + 0.5D - cam.x, dy = face.y + 0.5D - cam.y, dz = face.z + 0.5D - cam.z;
             if (dx * dx + dy * dy + dz * dz > rangeSq)
@@ -65,7 +130,7 @@ public final class FrostRenderer {
         });
         var mesh = builder.build();
         if (mesh != null)
-            BufferUploader.drawWithShader(mesh);
+            drawer.accept(mesh);
         return drawn[0];
     }
 
@@ -73,9 +138,9 @@ public final class FrostRenderer {
         // Fully frosted, the frost is the same all over, so one quad does: a window frosts fully on cold nights, and
         // the grid's quads were most of drawing it
         boolean uniform = isUniform(face);
-        int cellsU = uniform ? 1 : Math.max(1, Mth.ceil((face.u1 - face.u0) / CELL));
+        int cellsU = uniform ? 1 : Math.max(1, Mth.ceil((float) (face.u1 - face.u0) / CELL));
         int cellsV = uniform ? 1 : Math.max(1, Mth.ceil((face.v1 - face.v0) / CELL));
-        float stepU = (face.u1 - face.u0) / cellsU;
+        double stepU = (face.u1 - face.u0) / cellsU;
         float stepV = (face.v1 - face.v0) / cellsV;
         // The texture's origin: on a whole number of its repeats, and moved along by an amount of the window's own, so
         // windows side by side don't show the same frost
@@ -90,7 +155,7 @@ public final class FrostRenderer {
         for (int j = 0; j < cellsV; j++) {
             float va = face.v0 + j * stepV, vb = va + stepV;
             for (int i = 0; i < cellsU; i++) {
-                float ua = face.u0 + i * stepU, ub = ua + stepU;
+                double ua = face.u0 + i * stepU, ub = ua + stepU;
                 corner(builder, face, alongX, ua, va, originU, originV, offsetU, offsetV, camX, camY, camZ);
                 corner(builder, face, alongX, ub, va, originU, originV, offsetU, offsetV, camX, camY, camZ);
                 corner(builder, face, alongX, ub, vb, originU, originV, offsetU, offsetV, camX, camY, camZ);
@@ -99,12 +164,12 @@ public final class FrostRenderer {
         }
     }
 
-    private static void corner(BufferBuilder builder, FrostFace face, boolean alongX, float u, float v, float originU,
+    private static void corner(BufferBuilder builder, FrostFace face, boolean alongX, double u, float v, float originU,
                                float originV, float offsetU, float offsetV, double camX, double camY, double camZ) {
         float x = (float) ((alongX ? u : face.plane) - camX);
         float y = (float) (v - camY);
         float z = (float) ((alongX ? face.plane : u) - camZ);
-        float texU = (u - originU) / TEXTURE_BLOCKS + offsetU;
+        float texU = (float) (u - originU) / TEXTURE_BLOCKS + offsetU;
         float texV = (originV - v) / TEXTURE_BLOCKS + offsetV;
         builder.addVertex(x, y, z).setUv(texU, texV).setColor(RED, GREEN, BLUE, grown(face, u, v)).setLight(face.light);
     }
@@ -120,8 +185,9 @@ public final class FrostRenderer {
      * How far the frost has grown at a point on a face, 0 to 1: the frost the face has, ahead of that at the window's
      * edges and behind it in its middle
      */
-    static float grown(FrostFace face, float u, float v) {
-        float edge = Math.min(Math.min(u - face.edgeU0, face.edgeU1 - u), Math.min((v - face.edgeV0) * BOTTOM_NEARER, face.edgeV1 - v));
+    static float grown(FrostFace face, double u, float v) {
+        float across = (float) Math.min(u - face.edgeU0, face.edgeU1 - u);
+        float edge = Math.min(across, Math.min((v - face.edgeV0) * BOTTOM_NEARER, face.edgeV1 - v));
         float edgeness = 1F - Mth.clamp(edge / FrostFaces.EDGE_REACH, 0F, 1F);
         return Mth.clamp(face.shown * (1F + EDGE_AHEAD * edgeness) - MIDDLE_BEHIND * (1F - edgeness) * (1F - face.shown), 0F, 1F);
     }

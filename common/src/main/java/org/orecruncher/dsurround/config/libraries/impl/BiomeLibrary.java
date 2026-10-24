@@ -6,7 +6,7 @@ import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.locale.Language;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.ConfigServices;
@@ -41,8 +41,8 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
     // In the registry, but never generated, so left out of the biomes to check: TerraBlender's stands in for
     // biomes it places later
-    private static final Set<ResourceLocation> NOT_GENERATED = Set.of(
-            ResourceLocation.fromNamespaceAndPath("terrablender", "deferred_placeholder"));
+    private static final Set<Identifier> NOT_GENERATED = Set.of(
+            Identifier.fromNamespaceAndPath("terrablender", "deferred_placeholder"));
 
     private static final String FILE_NAME = "biomes.json";
     private static final Codec<List<BiomeConfigRule>> CODEC = Codec.list(BiomeConfigRule.CODEC);
@@ -239,13 +239,13 @@ public final class BiomeLibrary implements IBiomeLibrary {
                 .toList();
     }
 
-    private static ResourceLocation getBiomeId(Biome biome) {
+    private static Identifier getBiomeId(Biome biome) {
         return RegistryUtils.getRegistryEntry(Registries.BIOME, biome)
-                .map(holder -> holder.unwrapKey().orElseThrow().location()).orElseThrow();
+                .map(holder -> holder.unwrapKey().orElseThrow().identifier()).orElseThrow();
     }
 
     @Override
-    public String getBiomeName(ResourceLocation id) {
+    public String getBiomeName(Identifier id) {
         final String fmt = String.format("biome.%s.%s", id.getNamespace(), id.getPath());
         return Language.getInstance().getOrDefault(fmt);
     }
@@ -286,7 +286,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
                 .filter(info -> !NOT_GENERATED.contains(info.getBiomeId()))
                 .sorted(Comparator.comparing(info -> info.getBiomeId().toString()))
                 .<String>mapMulti((info, out) -> {
-                    Set<ResourceLocation> generatedIn = null;
+                    Set<Identifier> generatedIn = null;
                     if (generation != null) {
                         generatedIn = generation.biomeDimensions().get(info.getBiomeId());
                         if (generatedIn == null) {
@@ -321,17 +321,17 @@ public final class BiomeLibrary implements IBiomeLibrary {
         var server = GameUtils.getMC().getSingleplayerServer();
         if (server == null)
             return null;
-        var dimensions = new TreeMap<ResourceLocation, List<ResourceLocation>>(Comparator.comparing(ResourceLocation::toString));
-        var biomeDimensions = new HashMap<ResourceLocation, Set<ResourceLocation>>();
-        server.registryAccess().registryOrThrow(Registries.LEVEL_STEM).entrySet().forEach(stem -> {
-            var dimension = stem.getKey().location();
-            var biomes = new ArrayList<ResourceLocation>();
+        var dimensions = new TreeMap<Identifier, List<Identifier>>(Comparator.comparing(Identifier::toString));
+        var biomeDimensions = new HashMap<Identifier, Set<Identifier>>();
+        server.registryAccess().lookupOrThrow(Registries.LEVEL_STEM).entrySet().forEach(stem -> {
+            var dimension = stem.getKey().identifier();
+            var biomes = new ArrayList<Identifier>();
             for (var biome : stem.getValue().generator().getBiomeSource().possibleBiomes())
                 biome.unwrapKey().ifPresent(key -> {
-                    biomes.add(key.location());
-                    biomeDimensions.computeIfAbsent(key.location(), k -> new HashSet<>()).add(dimension);
+                    biomes.add(key.identifier());
+                    biomeDimensions.computeIfAbsent(key.identifier(), k -> new HashSet<>()).add(dimension);
                 });
-            biomes.sort(Comparator.comparing(ResourceLocation::toString));
+            biomes.sort(Comparator.comparing(Identifier::toString));
             dimensions.put(dimension, biomes);
         });
         return new Generation(dimensions, biomeDimensions);
@@ -341,8 +341,8 @@ public final class BiomeLibrary implements IBiomeLibrary {
      * @param dimensions      each dimension's biomes
      * @param biomeDimensions each biome's dimensions
      */
-    private record Generation(Map<ResourceLocation, List<ResourceLocation>> dimensions,
-                              Map<ResourceLocation, Set<ResourceLocation>> biomeDimensions) {
+    private record Generation(Map<Identifier, List<Identifier>> dimensions,
+                              Map<Identifier, Set<Identifier>> biomeDimensions) {
         Stream<String> describe() {
             var lines = new ArrayList<String>();
             lines.add("Biomes each dimension generates (this world)");

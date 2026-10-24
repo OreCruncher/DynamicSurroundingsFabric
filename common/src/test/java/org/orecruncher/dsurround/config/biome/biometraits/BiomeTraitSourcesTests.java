@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.config.biome.biometraits;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.level.biome.BiomeSpecialEffects.GrassColorModifier;
 import org.jetbrains.annotations.NotNull;
@@ -78,9 +78,9 @@ public class BiomeTraitSourcesTests {
         }
 
         BiomeEvidence evidence() {
-            return new BiomeEvidence(ResourceLocation.fromNamespaceAndPath(namespace, path), null,
+            return new BiomeEvidence(Identifier.fromNamespaceAndPath(namespace, path), null,
                     rain, temperature, frozen, downfall, grass,
-                    Optional.ofNullable(music).map(ResourceLocation::parse), Optional.ofNullable(loop).map(ResourceLocation::parse),
+                    Optional.ofNullable(music).map(Identifier::parse), Optional.ofNullable(loop).map(Identifier::parse),
                     Optional.ofNullable(definition));
         }
 

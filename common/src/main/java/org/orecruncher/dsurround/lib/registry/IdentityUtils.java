@@ -3,8 +3,8 @@ package org.orecruncher.dsurround.lib.registry;
 import com.google.common.base.Preconditions;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import net.minecraft.ResourceLocationException;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.IdentifierException;
+import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.Constants;
 
 import java.util.Optional;
@@ -16,16 +16,16 @@ public class IdentityUtils {
      * isn't valid is a decoding error, so it costs only the entry it is in rather than escaping as an exception and
      * losing the whole file.
      */
-    public static final Codec<ResourceLocation> CODEC = Codec.STRING.comapFlatMap(IdentityUtils::read, ResourceLocation::toString).stable();
+    public static final Codec<Identifier> CODEC = Codec.STRING.comapFlatMap(IdentityUtils::read, Identifier::toString).stable();
 
-    static DataResult<ResourceLocation> read(String text) {
+    static DataResult<Identifier> read(String text) {
         try {
             // Empty, or only the prefix: nothing for resolveIdentifier to look at
             var stripped = text.startsWith("#") ? text.substring(1) : text;
             var id = stripped.isEmpty() || stripped.equals("@") ? null : resolveIdentifier(Constants.MOD_ID, text);
             if (id != null)
                 return DataResult.success(id);
-        } catch (ResourceLocationException ignored) {
+        } catch (IdentifierException ignored) {
         }
         return DataResult.error(() -> "Not a valid id: '" + text + "'");
     }
@@ -40,7 +40,7 @@ public class IdentityUtils {
      * @param identifierString The identifier string to be parsed
      * @return The resulting Identifier instance
      */
-    public static ResourceLocation resolveIdentifier(final String defaultDomain, String identifierString) {
+    public static Identifier resolveIdentifier(final String defaultDomain, String identifierString) {
         Preconditions.checkNotNull(defaultDomain);
         Preconditions.checkNotNull(identifierString);
 
@@ -48,17 +48,17 @@ public class IdentityUtils {
         if (identifierString.charAt(0) == '#')
             identifierString = identifierString.substring(1);
 
-        ResourceLocation res;
+        Identifier res;
 
         if (identifierString.charAt(0) == '@') {
             // Sound is in the Minecraft namespace
-            res = ResourceLocation.tryBuild("minecraft", identifierString.substring(1));
+            res = Identifier.tryBuild("minecraft", identifierString.substring(1));
         } else if (!identifierString.contains(":")) {
             // It's just a path so assume the specified namespace
-            res = ResourceLocation.tryBuild(defaultDomain, identifierString);
+            res = Identifier.tryBuild(defaultDomain, identifierString);
         } else {
             // It's a fully qualified location
-            res = ResourceLocation.parse(identifierString);
+            res = Identifier.parse(identifierString);
         }
         return res;
     }
@@ -72,26 +72,26 @@ public class IdentityUtils {
      * @param identifierString The identifier string to be parsed
      * @return The resulting Identifier instance
      */
-    public static ResourceLocation resolveIdentifier(String identifierString) {
+    public static Identifier resolveIdentifier(String identifierString) {
         Preconditions.checkNotNull(identifierString);
 
         // If it looks like a tag need to strip of the prefix character
         if (identifierString.charAt(0) == '#')
             identifierString = identifierString.substring(1);
 
-        ResourceLocation res;
+        Identifier res;
 
         if (identifierString.charAt(0) == '@') {
             // Sound is in the Minecraft namespace
-            res = ResourceLocation.tryBuild("minecraft", identifierString.substring(1));
+            res = Identifier.tryBuild("minecraft", identifierString.substring(1));
         } else {
             // It's a fully qualified location
-            res = ResourceLocation.parse(identifierString);
+            res = Identifier.parse(identifierString);
         }
         return res;
     }
 
-    public static Optional<ResourceLocation> tryParse(String identifierString) {
-        return Optional.ofNullable(ResourceLocation.tryParse(identifierString));
+    public static Optional<Identifier> tryParse(String identifierString) {
+        return Optional.ofNullable(Identifier.tryParse(identifierString));
     }
 }

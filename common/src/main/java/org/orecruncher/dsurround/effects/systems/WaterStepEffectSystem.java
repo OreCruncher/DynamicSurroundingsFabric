@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.effects.systems;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import net.minecraft.client.ParticleStatus;
+import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
@@ -210,8 +210,8 @@ public class WaterStepEffectSystem extends AbstractEffectSystem {
 
         @Override
         protected void handleParticles() {
-            // Nothing is produced past the vanilla particle distance, so skip the work entirely
-            if (this.cameraDistanceSq() > PARTICLE_RANGE_SQ)
+            // Nothing is produced past the particle distance, so skip the work entirely
+            if (this.cameraDistanceSq() > particleRangeSq())
                 return;
             super.handleParticles();
         }

@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.runtime.weather;
 
+import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
@@ -109,7 +110,7 @@ public final class WeatherSimulation implements IWeatherSimulation {
         var level = GameUtils.getWorld();
         if (level.isPresent()) {
             var world = level.get();
-            this.update(world.getRainLevel(1F), world.getDayTime() / Level.TICKS_PER_DAY, world.getGameTime());
+            this.update(world.getRainLevel(1F), world.getDefaultClockTime() / SharedConstants.TICKS_PER_GAME_DAY, world.getGameTime());
         } else {
             this.reset();
         }

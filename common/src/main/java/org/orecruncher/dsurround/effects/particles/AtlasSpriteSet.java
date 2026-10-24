@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.effects.particles;
 
 import net.minecraft.client.particle.SpriteSet;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.data.AtlasIds;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,12 +20,12 @@ import java.util.List;
  */
 public final class AtlasSpriteSet implements SpriteSet {
 
-    private final List<ResourceLocation> ids;
+    private final List<Identifier> ids;
     // The sprites as of the last call to sprites(); a reload of the atlas replaces them all
     @Nullable
     private TextureAtlasSprite[] cached;
 
-    private AtlasSpriteSet(List<ResourceLocation> ids) {
+    private AtlasSpriteSet(List<Identifier> ids) {
         this.ids = ids;
     }
 
@@ -36,7 +36,7 @@ public final class AtlasSpriteSet implements SpriteSet {
         return new AtlasSpriteSet(Arrays.stream(names).map(Constants::asId).toList());
     }
 
-    public List<ResourceLocation> ids() {
+    public List<Identifier> ids() {
         return this.ids;
     }
 
@@ -69,8 +69,12 @@ public final class AtlasSpriteSet implements SpriteSet {
         return sprite(this.ids.get(random.nextInt(this.ids.size())));
     }
 
-    private static TextureAtlasSprite sprite(ResourceLocation id) {
-        var atlas = (TextureAtlas) GameUtils.getTextureManager().getTexture(TextureAtlas.LOCATION_PARTICLES);
-        return atlas.getSprite(id);
+    @Override
+    public @NotNull TextureAtlasSprite first() {
+        return sprite(this.ids.getFirst());
+    }
+
+    private static TextureAtlasSprite sprite(Identifier id) {
+        return GameUtils.getMC().getAtlasManager().getAtlasOrThrow(AtlasIds.PARTICLES).getSprite(id);
     }
 }

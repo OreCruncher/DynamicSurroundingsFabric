@@ -1,10 +1,11 @@
 package org.orecruncher.dsurround.effects.blocks;
 
-import net.minecraft.client.ParticleStatus;
+import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.particles.FlameSpark;
@@ -19,7 +20,7 @@ import java.util.List;
 
 public class FlameJetEffect extends AbstractParticleEmitterEffect {
 
-    private static final ResourceLocation FIRE_AMBIENT = Constants.asId("fire_ambient");
+    private static final Identifier FIRE_AMBIENT = Constants.asId("fire_ambient");
 
     protected final boolean isLava;
     protected final boolean isNonLiquidBlock;

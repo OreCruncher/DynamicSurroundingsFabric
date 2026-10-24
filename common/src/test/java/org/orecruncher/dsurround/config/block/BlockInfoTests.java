@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.config.block;
 
 import net.minecraft.SharedConstants;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
@@ -84,12 +84,12 @@ public class BlockInfoTests {
         }
     }
 
-    private static ISoundFactory soundFactory(ResourceLocation location) {
+    private static ISoundFactory soundFactory(Identifier location) {
         return Fakes.of(ISoundFactory.class, Map.of("getLocation", args -> location));
     }
 
     private static final ISoundLibrary SOUNDS = Fakes.of(ISoundLibrary.class,
-            Map.of("getSoundFactoryOrDefault", args -> soundFactory((ResourceLocation) args[0])));
+            Map.of("getSoundFactoryOrDefault", args -> soundFactory((Identifier) args[0])));
 
     private static ConfigServices services(Tags tags, Conditions conditions, RecordingLog log) {
         return new ConfigServices(log, SOUNDS, tags.library(), conditions.evaluator());
@@ -110,7 +110,7 @@ public class BlockInfoTests {
     private static BlockConfigRule soundRule(Optional<Script> chance, String... sounds) {
         var acoustics = new java.util.ArrayList<AcousticConfig>();
         for (var s : sounds)
-            acoustics.add(new AcousticConfig(ResourceLocation.fromNamespaceAndPath("test", s), Script.TRUE, WeightValue.of(10), SoundEventType.ADDITION));
+            acoustics.add(new AcousticConfig(Identifier.fromNamespaceAndPath("test", s), Script.TRUE, WeightValue.of(10), SoundEventType.ADDITION));
         return new BlockConfigRule(List.of(), false, chance, acoustics, List.of());
     }
 
@@ -151,9 +151,9 @@ public class BlockInfoTests {
 
     @Test
     void anOrdinaryBlockGetsTheDefaults() {
-        var dirt = builder(Blocks.DIRT, new Tags());
-        assertTrue(dirt.isDefault(), "a plain block should be able to share the default info");
-        var info = dirt.build();
+        var planks = builder(Blocks.OAK_PLANKS, new Tags());
+        assertTrue(planks.isDefault(), "a plain block should be able to share the default info");
+        var info = planks.build();
         assertEquals(REFLECTANCE_DEFAULT, info.getSoundReflectivity());
         assertEquals(OCCLUSION_DEFAULT, info.getSoundOcclusion());
     }
@@ -188,7 +188,7 @@ public class BlockInfoTests {
 
         conditions.chance = 1.0;
         var sound = info.getSoundToPlay(Randomizer.create(1));
-        assertEquals(ResourceLocation.fromNamespaceAndPath("test", "a"), sound.orElseThrow().getLocation());
+        assertEquals(Identifier.fromNamespaceAndPath("test", "a"), sound.orElseThrow().getLocation());
 
         conditions.chance = 0.0;
         assertTrue(info.getSoundToPlay(Randomizer.create(1)).isEmpty());
@@ -206,7 +206,7 @@ public class BlockInfoTests {
 
     @Test
     void clearingSoundsRemovesEarlierOnes() {
-        var builder = builder(Blocks.DIRT, new Tags());
+        var builder = builder(Blocks.OAK_PLANKS, new Tags());
         builder.apply(soundRule(Optional.empty(), "a"));
         builder.apply(new BlockConfigRule(List.of(), true, Optional.empty(), List.of(), List.of()));
         assertTrue(builder.isDefault());

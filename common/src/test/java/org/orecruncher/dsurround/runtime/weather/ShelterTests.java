@@ -137,7 +137,7 @@ public class ShelterTests {
         // Lanterns and chains block motion, but are too small to keep the weather off; nor does a fence rail or the
         // top of a wall
         var world = new World();
-        world.put(0, 4, 0, Blocks.CHAIN);
+        world.put(0, 4, 0, Blocks.IRON_CHAIN);
         world.put(0, 3, 0, Blocks.LANTERN);
         assertEquals(1F, Shelter.roofShare(world, new BlockPos(0, 1, 0)), "a lantern on a chain");
         world.put(1, 3, 0, Blocks.OAK_FENCE);

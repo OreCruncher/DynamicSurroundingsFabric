@@ -92,4 +92,21 @@ public class WaterFoamTests {
             assertEquals(0F, edge.dot(normal), 1.0E-5, "edge " + edge + " at spin " + spin);
         }
     }
+
+    @Test
+    void aSurfaceIsSharedForAWhileThenWorkedOutAgain() {
+        long then = 1000L;
+        assertFalse(WaterFoam.isStale(then, then));
+        assertFalse(WaterFoam.isStale(then, then + WaterFoam.SURFACE_TICKS - 1));
+        assertTrue(WaterFoam.isStale(then, then + WaterFoam.SURFACE_TICKS));
+        // The clock went back: nothing from before can be trusted
+        assertTrue(WaterFoam.isStale(then, then - 1));
+    }
+
+    @Test
+    void waterChangesAreFollowedWithinHalfASecond() {
+        assertTrue(WaterFoam.SURFACE_TICKS <= 10);
+        // And a patch's light is read at least every half second too
+        assertTrue(WaterFoam.LIGHT_TICKS <= 10);
+    }
 }

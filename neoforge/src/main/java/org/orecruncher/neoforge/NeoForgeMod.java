@@ -5,24 +5,28 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
-
-import net.minecraft.client.renderer.ShaderInstance;
+import net.neoforged.neoforge.client.CustomEnvironmentEffectsRendererManager;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
-import net.neoforged.neoforge.client.event.RegisterShadersEvent;
-import org.orecruncher.dsurround.effects.ModShaders;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.config.DimensionInfo;
 import org.orecruncher.dsurround.gui.overlay.OverlayManager;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.platform.KnownMod;
+import net.minecraft.world.phys.Vec3;
 
 @Mod(value = Constants.MOD_ID, dist = Dist.CLIENT)
 public final class NeoForgeMod {
 
     public NeoForgeMod(ModContainer container, IEventBus modBus) {
         modBus.addListener(this::onRegisterGuiLayersEvent);
-        modBus.addListener(this::onRegisterShaders);
+
+        // A dimension with a weather renderer of its own keeps its weather (see DimensionInfo); looked up at the origin,
+        // as the dimension's own. NeoForge takes it from an environment attribute, which a biome could set too: custom
+        // weather in some biomes only would be missed, and particle weather drawn over it there (none known; checking
+        // where the player is as the weather is drawn would catch it)
+        DimensionInfo.drawsOwnWeather = level -> CustomEnvironmentEffectsRendererManager.getCustomWeatherEffectRenderer(level, Vec3.ZERO) != null;
 
         Client.initialize();
         Client.initializeClient();
@@ -30,19 +34,6 @@ public final class NeoForgeMod {
         if (KnownMod.CLOTH_CONFIG.isInstalled())
             container.registerExtensionPoint(IConfigScreenFactory.class, new ModConfigMenu());
 
-    }
-
-    @SubscribeEvent
-    public void onRegisterShaders(RegisterShadersEvent event) {
-        // A shader that fails to compile throws here. Caught so the game still loads, without that shader.
-        for (var definition : ModShaders.SHADERS) {
-            try {
-                var shader = new ShaderInstance(event.getResourceProvider(), definition.id(), definition.format());
-                event.registerShader(shader, definition::onLoaded);
-            } catch (Exception e) {
-                definition.onFailed(e);
-            }
-        }
     }
 
     @SubscribeEvent

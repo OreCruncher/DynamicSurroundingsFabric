@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
@@ -9,7 +9,7 @@ import org.orecruncher.dsurround.tags.ItemEffectTags;
 
 public class BowUseEffect extends EntityEffectBase {
 
-    private static final ResourceLocation BOW_PULL_FACTORY = Constants.asId("bow_pull");
+    private static final Identifier BOW_PULL_FACTORY = Constants.asId("bow_pull");
 
     private final ISoundLibrary soundLibrary;
     private final ITagLibrary tagLibrary;

@@ -42,7 +42,11 @@ public enum FeatureConflict {
     /**
      * Quilt runs Fabric mods, but not the client commands the mod registers
      */
-    CLIENT_COMMANDS("Client commands", QUILTED_LOADER);
+    CLIENT_COMMANDS("Client commands", QUILTED_LOADER),
+    /**
+     * LambDynamicLights already lights the world around burning entities
+     */
+    BURNING_MOB_LIGHT("Light from burning mobs' flames", LAMB_DYNAMIC_LIGHTS);
 
     private final String feature;
     private final List<KnownMod> mods;

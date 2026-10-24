@@ -23,7 +23,7 @@ public class FrostRendererTests {
      */
     private static FrostFace middleOfAWindow(float shown) {
         float reach = FrostFaces.EDGE_REACH;
-        var face = new FrostFace(0, 65, 0, Direction.NORTH, 0F, 0F, 1F, 65F, 66F, -reach, 1F + reach, 65F - reach, 66F + reach, 0, 1F, 0F);
+        var face = new FrostFace(0, 65, 0, Direction.NORTH, 0F, 0F, 1F, 65F, 66F, -reach, 1F + reach, 65F - reach, 66F + reach, 0, 1F, 0F, false);
         face.show(shown);
         return face;
     }
@@ -32,7 +32,7 @@ public class FrostRendererTests {
      * A window of a single block
      */
     private static FrostFace smallWindow(float shown) {
-        var face = new FrostFace(0, 65, 0, Direction.NORTH, 0F, 0F, 1F, 65F, 66F, 0F, 1F, 65F, 66F, 0, 1F, 0F);
+        var face = new FrostFace(0, 65, 0, Direction.NORTH, 0F, 0F, 1F, 65F, 66F, 0F, 1F, 65F, 66F, 0, 1F, 0F, false);
         face.show(shown);
         return face;
     }

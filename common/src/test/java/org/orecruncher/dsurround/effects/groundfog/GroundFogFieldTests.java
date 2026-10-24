@@ -75,6 +75,33 @@ public class GroundFogFieldTests {
     }
 
     @Test
+    void aClearedFieldIsIdleUntilUpdatedAndThenWhole() {
+        // The handler clears the field while the mist is too faint to draw, and stops updating it: when the mist
+        // returns, the first update looks at every column again, as if new
+        var ground = new Ground(Integer.MAX_VALUE);
+        var field = new GroundFogField(8);
+        assertTrue(field.isIdle(), "new");
+        field.update(ground, 0.5, 0.5, Float.NaN);
+        assertFalse(field.isIdle());
+        assertFalse(field.isEmpty());
+
+        field.clear();
+        assertTrue(field.isIdle());
+        assertTrue(field.isEmpty());
+
+        ground.looks = 0;
+        field.update(ground, 40.5, 0.5, Float.NaN);
+        assertFalse(field.isIdle());
+        assertEquals(field.size() * field.size(), ground.looks, "every column looked at");
+        var fresh = new GroundFogField(8);
+        fresh.update(new Ground(Integer.MAX_VALUE), 40.5, 0.5, Float.NaN);
+        assertEquals(fresh.foggyCells(), field.foggyCells());
+        for (int j = 0; j < field.size(); j++)
+            for (int i = 0; i < field.size(); i++)
+                assertEquals(fresh.density(i, j), field.density(i, j), 1e-6F);
+    }
+
+    @Test
     void aPostOrTrunkStandsInTheMist() {
         // Regression: a tree trunk raised a spike in the mist. A single tall column, or a 2 by 2 trunk, is well above
         // most of the columns around it, so the mist is at the ground's height there

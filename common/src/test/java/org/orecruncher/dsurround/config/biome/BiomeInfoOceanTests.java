@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.config.biome;
 
 import net.minecraft.SharedConstants;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.config.BiomeTrait;
@@ -32,7 +32,7 @@ public class BiomeInfoOceanTests {
     private static BiomeInfo info(BiomeTrait... traits) {
         var services = new ConfigServices(new RecordingLog(), Fakes.of(ISoundLibrary.class, Map.of()),
                 Fakes.of(ITagLibrary.class, Map.of()), Fakes.of(IConditionEvaluator.class, Map.of()));
-        return new BiomeInfoBuilder(1, ResourceLocation.fromNamespaceAndPath("test", "biome"), "biome",
+        return new BiomeInfoBuilder(1, Identifier.fromNamespaceAndPath("test", "biome"), "biome",
                 BiomeTraits.of(traits), services).build();
     }
 

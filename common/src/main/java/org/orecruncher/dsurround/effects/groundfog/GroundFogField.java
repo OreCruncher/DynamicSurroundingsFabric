@@ -405,6 +405,13 @@ public final class GroundFogField {
     }
 
     /**
+     * Whether it has been cleared and not updated since: holding nothing, with nothing remembered
+     */
+    public boolean isIdle() {
+        return this.originX == Integer.MIN_VALUE && this.foggyCells == 0;
+    }
+
+    /**
      * The thickest the mist is anywhere in the area, 0 to 1
      */
     public float peak() {

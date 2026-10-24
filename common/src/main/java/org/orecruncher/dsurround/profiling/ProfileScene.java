@@ -1,7 +1,11 @@
 package org.orecruncher.dsurround.profiling;
 
 import net.minecraft.network.chat.Component;
+import org.orecruncher.dsurround.effects.aurora.AuroraActivity;
+import org.orecruncher.dsurround.effects.aurora.AuroraColour;
+import org.orecruncher.dsurround.effects.aurora.RealisticAurora;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.processing.AuroraHandler;
 import org.orecruncher.dsurround.processing.GroundFogHandler;
 import org.orecruncher.dsurround.processing.WindowFrostHandler;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
@@ -13,7 +17,7 @@ import java.util.function.Consumer;
 
 /**
  * What /dsprofile sets up before it records: {@link #GENERAL} changes nothing, and the player plays as usual; the others
- * show an effect at its costliest, held there by the same settings the testing command (/dsweather) holds it
+ * show an effect at its costliest, held there by the same settings the testing commands (/dsaurora, /dsweather) hold it
  * with, and put back as they were once it is done. Some also need a time and weather, which they set with server
  * commands, in single player only (on a server those would change the world for everyone); they can't be read back
  * from the client to put back, so the command says what it sent.
@@ -28,14 +32,32 @@ public enum ProfileScene {
             return () -> {};
         }
     },
-    GROUND_FOG(6, List.of("weather clear", "gamerule doWeatherCycle false")) {
+    AURORA(12, List.of("time set midnight", "gamerule advance_time false", "weather clear", "gamerule advance_weather false")) {
+        @Override
+        Runnable setUp() {
+            var handler = ContainerManager.resolve(AuroraHandler.class);
+            var activity = handler.heldActivity();
+            var phase = handler.heldPhase();
+            var colour = handler.heldColour();
+            handler.holdActivity(AuroraActivity.STORM);
+            handler.holdPhase(RealisticAurora.Phase.EXPANSION);
+            handler.holdColour(AuroraColour.NORMAL);
+            return () -> {
+                handler.clearHeld();
+                activity.ifPresent(handler::holdActivity);
+                phase.ifPresent(handler::holdPhase);
+                colour.ifPresent(handler::holdColour);
+            };
+        }
+    },
+    GROUND_FOG(6, List.of("weather clear", "gamerule advance_weather false")) {
         @Override
         Runnable setUp() {
             var handler = ContainerManager.resolve(GroundFogHandler.class);
             return hold(handler.forced(), () -> handler.setForced(1F), handler::setForced, handler::clearForced);
         }
     },
-    WEATHER(6, List.of("weather thunder", "gamerule doWeatherCycle false")) {
+    WEATHER(6, List.of("weather thunder", "gamerule advance_weather false")) {
         @Override
         Runnable setUp() {
             var simulation = ContainerManager.resolve(IWeatherSimulation.class);

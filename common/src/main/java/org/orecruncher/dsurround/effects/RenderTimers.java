@@ -1,9 +1,11 @@
 package org.orecruncher.dsurround.effects;
 
 import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
+import org.orecruncher.dsurround.effects.aurora.RealisticAuroraRenderer;
 import org.orecruncher.dsurround.effects.frost.FrostRenderer;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
 import org.orecruncher.dsurround.effects.particles.PointLights;
+import org.orecruncher.dsurround.effects.particles.Streaks;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
 
 import java.util.List;
@@ -19,6 +21,7 @@ public final class RenderTimers {
      */
     public static final List<RenderTimer> ALL = List.of(
             AuroraRenderer.RENDER_TIMER,
+            RealisticAuroraRenderer.RENDER_TIMER,
             PrecipitationShaders.RENDER_TIMER,
             PrecipitationShaders.DAMP_SPOTS_TIMER,
             PrecipitationShaders.DROPS_TIMER,
@@ -27,7 +30,8 @@ public final class RenderTimers {
             GroundFogVolume.SMOOTH_TIMER,
             GroundFogVolume.COMPOSITE_TIMER,
             FrostRenderer.RENDER_TIMER,
-            PointLights.RENDER_TIMER);
+            PointLights.RENDER_TIMER,
+            Streaks.RENDER_TIMER);
 
     private RenderTimers() {
     }

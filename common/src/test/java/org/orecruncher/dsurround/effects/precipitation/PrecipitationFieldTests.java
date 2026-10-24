@@ -111,6 +111,26 @@ public class PrecipitationFieldTests {
     }
 
     @Test
+    void farFromTheWorldsMiddleTheWindStillCarriesTheDrops() {
+        // At 8,000,000 a float moves in half blocks: a snowflake's drift each tick, a fraction of that, was lost, so
+        // the snow fell straight down and now and then jumped half a block
+        double far = 8_000_000D;
+        var field = new PrecipitationField(500);
+        var snowEverywhere = new Columns(GROUND, Integer.MIN_VALUE, Integer.MIN_VALUE);
+        tick(field, snowEverywhere, far, far, 1F, steadyWind(), 40);
+        assertTrue(field.count() > 100, "enough snow to look at");
+
+        int drifting = 0;
+        for (int i = 0; i < field.count(); i++) {
+            double moved = Math.abs(field.x[i] - field.prevX[i]) + Math.abs(field.z[i] - field.prevZ[i]);
+            assertTrue(moved < 0.5D, "no jumps of half a block");
+            if (moved > 0.001D)
+                drifting++;
+        }
+        assertTrue(drifting > field.count() * 9 / 10, "most drift a little every tick: " + drifting + " of " + field.count());
+    }
+
+    @Test
     void theNumberOfDropsFollowsTheRainLevel() {
         var field = new PrecipitationField(1000);
         tick(field, RAIN_EVERYWHERE, 0, 0, 0.5F, 20);
@@ -213,7 +233,7 @@ public class PrecipitationFieldTests {
         tick(field, RAIN_EVERYWHERE, 100, 100, 1F, 1);
         float radius = PrecipitationField.DEFAULT_RADIUS;
         for (int i = 0; i < field.count(); i++) {
-            float dx = field.x[i] - 100, dz = field.z[i] - 100;
+            double dx = field.x[i] - 100, dz = field.z[i] - 100;
             assertTrue(dx * dx + dz * dz <= radius * radius, "a drop left behind");
         }
     }
@@ -244,7 +264,7 @@ public class PrecipitationFieldTests {
         float radius = PrecipitationField.DEFAULT_RADIUS;
         for (int i = 0; i < field.landings(); i++) {
             assertEquals(GROUND, field.landingGround(i));
-            float x = field.landingX(i), z = field.landingZ(i);
+            double x = field.landingX(i), z = field.landingZ(i);
             assertTrue(x * x + z * z <= radius * radius, "landed outside the cylinder");
         }
     }
@@ -307,7 +327,7 @@ public class PrecipitationFieldTests {
                 }
                 hitSides++;
                 // Followed on from the gap it was in, moving into a pillar's column, below the pillar's top
-                float x = field.landingX(i);
+                double x = field.landingX(i);
                 assertEquals(low, pillars.groundHeight(Mth.floor(x), 0), "should start out in the open");
                 assertEquals(tall, pillars.groundHeight(Mth.floor(x + field.landingMotionX(i)), 0), "should be moving into a pillar");
                 assertTrue(field.landingY(i) <= tall);
@@ -358,7 +378,7 @@ public class PrecipitationFieldTests {
                     continue;
                 blownIn++;
                 assertFalse(field.landingIsSnow(i));
-                float x = field.landingX(i), z = field.landingZ(i);
+                double x = field.landingX(i), z = field.landingZ(i);
                 assertEquals(low, pillars.groundHeight(Mth.floor(x), Mth.floor(z)), "should start out in the open");
                 assertEquals(tall, pillars.groundHeight(Mth.floor(x + field.landingMotionX(i)), Mth.floor(z + field.landingMotionZ(i))),
                         "should be moving into a pillar");

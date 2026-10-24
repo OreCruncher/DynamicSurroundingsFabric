@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround;
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
@@ -31,7 +31,7 @@ public final class Constants {
         BLOCKS_TO_IGNORE.add(Blocks.COMMAND_BLOCK);
     }
 
-    public static ResourceLocation asId(String name) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, name);
+    public static Identifier asId(String name) {
+        return Identifier.fromNamespaceAndPath(MOD_ID, name);
     }
 }

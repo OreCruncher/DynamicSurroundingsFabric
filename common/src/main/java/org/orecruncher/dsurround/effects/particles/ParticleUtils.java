@@ -22,7 +22,7 @@ public final class ParticleUtils {
      */
     public static SpriteSet getSpriteProvider(ParticleType<?> particleType) {
         var id = BuiltInRegistries.PARTICLE_TYPE.getKey(particleType);
-        return GameUtils.getParticleManager().spriteSets.get(id);
+        return GameUtils.getParticleResources().spriteSets.get(id);
     }
 
     public static Vec3 getBreathOrigin(final LivingEntity entity) {

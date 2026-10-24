@@ -1,14 +1,18 @@
 package org.orecruncher.dsurround.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.gui.ActiveTextCollector;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractScrollWidget;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractScrollArea;
+import net.minecraft.client.gui.components.AbstractTextAreaWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -27,7 +31,8 @@ import java.util.List;
  * Links in the text show their hover text and can be clicked.
  * <p>
  * Built from vanilla pieces: {@link HeaderAndFooterLayout} for the title and Done button, and an
- * {@link AbstractScrollWidget} for the scrolling, scrollbar, dragging, focus and narration.
+ * {@link AbstractTextAreaWidget} for the scrolling, scrollbar, dragging, focus and narration. Link hover text comes
+ * from drawing the text through the GUI's hover-aware text renderer.
  */
 public class ComponentDisplayScreen extends Screen {
 
@@ -93,25 +98,16 @@ public class ComponentDisplayScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-
-        // Drawn after everything else so the tooltip is on top
-        Style hoveredStyle = this.textPanel.getStyleAt(mouseX, mouseY);
-        if (hoveredStyle != null) {
-            context.renderComponentHoverEffect(this.font, hoveredStyle, mouseX, mouseY);
-        }
-    }
-
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
-            Style style = this.textPanel.getStyleAt(mouseX, mouseY);
-            if (style != null && this.handleComponentClicked(style)) {
+    public boolean mouseClicked(@NotNull MouseButtonEvent event, boolean doubleClick) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
+            Style style = this.textPanel.getStyleAt(event.x(), event.y());
+            if (style != null && style.getClickEvent() != null) {
+                // Vanilla's handling: a link asks for confirmation before opening
+                defaultHandleClickEvent(style.getClickEvent(), this.minecraft, this);
                 return true;
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
@@ -125,7 +121,7 @@ public class ComponentDisplayScreen extends Screen {
      * The scrolling text area. The text is wrapped to the widget's width and redrawn each frame; only lines that
      * are at least partly visible are drawn.
      */
-    private static final class TextPanel extends AbstractScrollWidget {
+    private static final class TextPanel extends AbstractTextAreaWidget {
 
         private final Font font;
         private final Component body;
@@ -133,7 +129,7 @@ public class ComponentDisplayScreen extends Screen {
         private int wrapWidth = -1;
 
         TextPanel(Font font, Component body) {
-            super(0, 0, 0, 0, body);
+            super(0, 0, 0, 0, body, AbstractScrollArea.defaultSettings(font.lineHeight * 2));
             this.font = font;
             this.body = body;
         }
@@ -143,7 +139,7 @@ public class ComponentDisplayScreen extends Screen {
          * in the document.
          */
         void resize(int width, int height) {
-            int maxScroll = this.getMaxScrollAmount();
+            int maxScroll = this.maxScrollAmount();
             double scrollRatio = maxScroll > 0 ? this.scrollAmount() / maxScroll : 0.0;
 
             this.setSize(Math.max(1, width), Math.max(1, height));
@@ -153,7 +149,7 @@ public class ComponentDisplayScreen extends Screen {
                 this.lines = this.font.split(this.body, newWrapWidth);
             }
 
-            this.setScrollAmount(scrollRatio * this.getMaxScrollAmount());
+            this.setScrollAmount(scrollRatio * this.maxScrollAmount());
         }
 
         @Override
@@ -161,59 +157,60 @@ public class ComponentDisplayScreen extends Screen {
             return this.lines.size() * this.font.lineHeight;
         }
 
-        @Override
-        protected double scrollRate() {
-            return this.font.lineHeight * 2;
-        }
-
         /**
          * Same as the vanilla version except that the text is moved by a whole number of pixels. Dragging the
          * scrollbar produces fractional scroll amounts, and text drawn between pixels can shimmer.
          */
         @Override
-        public void renderWidget(@NotNull GuiGraphics context, int mouseX, int mouseY, float delta) {
+        public void extractWidgetRenderState(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
             if (!this.visible) {
                 return;
             }
-            this.renderBackground(context);
+            this.extractBackground(context);
             context.enableScissor(this.getX() + 1, this.getY() + 1, this.getX() + this.width - 1, this.getY() + this.height - 1);
-            context.pose().pushPose();
-            context.pose().translate(0.0f, -this.renderedScrollAmount(), 0.0f);
-            this.renderContents(context, mouseX, mouseY, delta);
-            context.pose().popPose();
+            context.pose().pushMatrix();
+            context.pose().translate(0.0f, -this.renderedScrollAmount());
+            this.extractContents(context, mouseX, mouseY, delta);
+            context.pose().popMatrix();
             context.disableScissor();
-            this.renderDecorations(context);
+            this.extractScrollbar(context, mouseX, mouseY);
+            this.extractDecorations(context);
         }
 
+        /**
+         * Draws the visible lines. They go through the hover-aware text renderer, which shows a link's hover text
+         * and changes the cursor over it; it is created here so it has the scroll offset and scissor.
+         */
         @Override
-        protected void renderContents(@NotNull GuiGraphics context, int mouseX, int mouseY, float delta) {
+        protected void extractContents(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+            var text = context.textRenderer(GuiGraphicsExtractor.HoveredTextEffects.TOOLTIP_AND_CURSOR);
             int x = this.getX() + this.innerPadding();
             int y = this.getY() + this.innerPadding();
             for (var line : this.lines) {
                 if (this.withinContentAreaTopBottom(y, y + this.font.lineHeight)) {
-                    context.drawString(this.font, line, x, y, 0xFFFFFFFF, true);
+                    text.accept(x, y, line);
                 }
                 y += this.font.lineHeight;
             }
         }
 
         @Override
-        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            if (this.scrollbarVisible()) {
+        public boolean keyPressed(@NotNull KeyEvent event) {
+            if (this.scrollable()) {
                 int page = Math.max(this.font.lineHeight, this.height - this.totalInnerPadding() - this.font.lineHeight);
-                switch (keyCode) {
+                switch (event.key()) {
                     case InputConstants.KEY_PAGEUP -> this.setScrollAmount(this.scrollAmount() - page);
                     case InputConstants.KEY_PAGEDOWN -> this.setScrollAmount(this.scrollAmount() + page);
                     case InputConstants.KEY_HOME -> this.setScrollAmount(0);
-                    case InputConstants.KEY_END -> this.setScrollAmount(this.getMaxScrollAmount());
+                    case InputConstants.KEY_END -> this.setScrollAmount(this.maxScrollAmount());
                     default -> {
                         // Up and down are handled by the vanilla widget
-                        return super.keyPressed(keyCode, scanCode, modifiers);
+                        return super.keyPressed(event);
                     }
                 }
                 return true;
             }
-            return super.keyPressed(keyCode, scanCode, modifiers);
+            return super.keyPressed(event);
         }
 
         @Override
@@ -222,11 +219,11 @@ public class ComponentDisplayScreen extends Screen {
         }
 
         /**
-         * The style of the text under the mouse, or null if the mouse isn't over visible text.
+         * The style of the clickable text under the mouse, or null if the mouse isn't over any.
          */
         @Nullable
         Style getStyleAt(double mouseX, double mouseY) {
-            if (!this.visible || !this.withinContentAreaPoint(mouseX, mouseY)) {
+            if (!this.visible || !this.withinContentArea(mouseX, mouseY)) {
                 return null;
             }
 
@@ -242,7 +239,16 @@ public class ComponentDisplayScreen extends Screen {
             if (row < 0 || row >= this.lines.size()) {
                 return null;
             }
-            return this.font.getSplitter().componentStyleAtWidth(this.lines.get(row), Mth.floor(relativeX));
+            // Where the line is drawn on screen, tested against the mouse the way vanilla tests clickable text
+            int lineX = this.getX() + this.innerPadding();
+            int lineY = this.getY() + this.innerPadding() + row * this.font.lineHeight - this.renderedScrollAmount();
+            var finder = new ActiveTextCollector.ClickableStyleFinder(this.font, Mth.floor(mouseX), Mth.floor(mouseY));
+            finder.accept(lineX, lineY, this.lines.get(row));
+            return finder.result();
+        }
+
+        private boolean withinContentArea(double mouseX, double mouseY) {
+            return mouseX >= this.getX() && mouseX < this.getX() + this.width && mouseY >= this.getY() && mouseY < this.getY() + this.height;
         }
 
         /**

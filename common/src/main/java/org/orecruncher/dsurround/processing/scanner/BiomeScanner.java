@@ -2,12 +2,12 @@ package org.orecruncher.dsurround.processing.scanner;
 
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.config.SyntheticBiome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -28,7 +28,7 @@ public final class BiomeScanner extends AbstractScanner {
     // some blending at the edges, so the shares come out nearly the same.
     static final int SURVEY_STRIDE = 2;
 
-    private ResourceLocation surveyedDimension;
+    private Identifier surveyedDimension;
     private boolean isUnderWater;
     private BiomeInfo logicalBiomeInfo;
 
@@ -39,10 +39,10 @@ public final class BiomeScanner extends AbstractScanner {
     private Biome surveyedBiome = null;
     private BlockPos surveyedPosition = BlockPos.ZERO;
     private final IBiomeLibrary biomeLibrary;
-    private final IDimensionInformation dimensionInformation;
+    private final IDimensionOracle dimensionInformation;
     private final CeilingScanner ceilingScanner;
 
-    public BiomeScanner(IBiomeLibrary biomeLibrary, IDimensionInformation dimensionInformation, CeilingScanner ceilingScanner) {
+    public BiomeScanner(IBiomeLibrary biomeLibrary, IDimensionOracle dimensionInformation, CeilingScanner ceilingScanner) {
         this.biomeLibrary = biomeLibrary;
         this.dimensionInformation = dimensionInformation;
         this.ceilingScanner = ceilingScanner;
@@ -52,7 +52,7 @@ public final class BiomeScanner extends AbstractScanner {
         return this.logicalBiomeInfo;
     }
 
-    public ResourceLocation getDimInfo() {
+    public Identifier getDimInfo() {
         return this.surveyedDimension;
     }
 

@@ -3,6 +3,11 @@ package org.orecruncher.dsurround.mixins.core;
 import me.shedaniel.clothconfig2.gui.entries.SubCategoryListEntry;
 import me.shedaniel.math.Rectangle;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ActiveTextCollector;
+import net.minecraft.client.gui.screens.ConfirmLinkScreen;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -34,16 +39,22 @@ public abstract class MixinClothCategoryLabelWidget {
     SubCategoryListEntry this$0;
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, require = 0)
-    private void dsurround$clickNameText(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
-        if (button != 0 || !this.rectangle.contains(mouseX, mouseY))
+    private void dsurround$clickNameText(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
+        if (event.button() != 0 || !this.rectangle.contains(event.x(), event.y()))
             return;
         var screen = this.this$0.getConfigScreen();
         if (screen == null)
             return;
-        var name = this.this$0.getDisplayedFieldName();
-        var style = Minecraft.getInstance().font.getSplitter()
-                .componentStyleAtWidth(name, (int) mouseX - (this.rectangle.x + NAME_OFFSET));
-        if (style != null && style.getClickEvent() != null && screen.handleComponentClicked(style))
+        // The text under the mouse, tested the way vanilla tests clickable text; on the mouse's own line, so only
+        // across the name does it matter where it is
+        var font = Minecraft.getInstance().font;
+        var finder = new ActiveTextCollector.ClickableStyleFinder(font, Mth.floor(event.x()), Mth.floor(event.y()));
+        finder.accept(this.rectangle.x + NAME_OFFSET, Mth.floor(event.y()), this.this$0.getDisplayedFieldName());
+        var style = finder.result();
+        // The links are the documentation's, opened as vanilla opens links: asking first
+        if (style != null && style.getClickEvent() instanceof ClickEvent.OpenUrl(var uri)) {
+            ConfirmLinkScreen.confirmLinkNow(screen, uri);
             cir.setReturnValue(true);
+        }
     }
 }

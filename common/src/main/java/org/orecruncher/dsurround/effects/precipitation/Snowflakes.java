@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
@@ -22,7 +22,7 @@ public final class Snowflakes {
     /**
      * The game's snow texture
      */
-    public static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("textures/environment/snow.png");
+    public static final Identifier TEXTURE = Identifier.withDefaultNamespace("textures/environment/snow.png");
 
     // Groups of pixels wider or taller than this aren't taken for flakes; nor are more than this many flakes kept
     static final int MAX_FLAKE_SIZE = 16;
@@ -79,8 +79,8 @@ public final class Snowflakes {
             return List.of();
         }
         try (var stream = resource.get().open(); var image = NativeImage.read(stream)) {
-            // ABGR: alpha is the top byte
-            var found = find(image.getWidth(), image.getHeight(), (x, y) -> (image.getPixelRGBA(x, y) >>> 24) & 0xFF);
+            // ARGB: alpha is the top byte
+            var found = find(image.getWidth(), image.getHeight(), (x, y) -> (image.getPixel(x, y) >>> 24) & 0xFF);
             if (found.isEmpty())
                 this.logger.warn("Found no snowflakes in %s; snow will fall as plain flakes", TEXTURE);
             return found;

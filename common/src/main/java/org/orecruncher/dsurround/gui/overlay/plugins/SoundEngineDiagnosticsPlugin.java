@@ -37,12 +37,12 @@ public final class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
         }
 
         var sources = soundManager.soundEngine.instanceToChannel;
-        var str = Component.literal(soundManager.getDebugString());
+        var str = Component.literal(soundManager.getChannelDebugString());
         panelText.add(str);
 
         if (!sources.isEmpty()) {
             sources.keySet().stream()
-                    .map(SoundInstance::getLocation)
+                    .map(SoundInstance::getIdentifier)
                     .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
                     .entrySet().stream()
                     .map(e -> FMT_DBG_SOUND.formatted(e.getKey(), e.getValue()))

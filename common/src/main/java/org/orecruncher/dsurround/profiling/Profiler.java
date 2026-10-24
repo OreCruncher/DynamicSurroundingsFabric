@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.profiling;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.InactivityFpsLimit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -22,12 +23,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * /dsprofile: sets up a scene ({@link ProfileScene}), records the game with Java Flight Recorder while it shows, and
  * puts it back. The recording goes in the mod's profiles folder, zipped (see {@link ProfileFiles}), with the mod's
- * render timers in it and nothing private (see {@link ProfileRecording}); when it is done, the player is told where it
- * is, with the render timers, and the log says so too. While it waits and records, {@link #state} and {@link #secondsLeft} drive the
+ * render timers and what it was made on in it, and nothing private (see {@link ProfileRecording}); when it is done, the
+ * player is told where it is, with the render timers, and the log says so too. While it waits and records, {@link #state} and {@link #secondsLeft} drive the
  * indicator on screen.
  * <p>
  * Java Flight Recorder needs the {@code jdk.jfr} module, which not every Java has: without it, the player is told, and
  * nothing that uses it is loaded.
+ * <p>
+ * The player keeps still while it records, so vanilla's inactivity frame limit ("AFK") would drop the game to 30 frames
+ * a second after a minute, and the GPU's clocks with it: while it records, the limit only applies when minimized, and
+ * is set as it was afterwards.
  */
 public final class Profiler {
 
@@ -120,6 +125,10 @@ public final class Profiler {
             }
         }
 
+        var inactivity = mc.options.inactivityFpsLimit();
+        var wasLimit = inactivity.get();
+        inactivity.set(InactivityFpsLimit.MINIMIZED);
+
         var folder = ContainerManager.resolve(IMinecraftDirectories.class).getModProfileDirectory();
         var file = folder.resolve(ProfileFiles.name(scene, LocalDateTime.now()));
         state = State.WAITING;
@@ -131,6 +140,7 @@ public final class Profiler {
                 state = State.IDLE;
                 mc.execute(() -> {
                     undo.run();
+                    inactivity.set(wasLimit);
                     BUSY.set(false);
                 });
             }
@@ -161,8 +171,8 @@ public final class Profiler {
     private static void report(Path file) {
         var name = Component.literal(file.getFileName().toString()).withStyle(Style.EMPTY
                 .withColor(ChatFormatting.AQUA).withUnderlined(true)
-                .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.toString()))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(file.toString()))));
+                .withClickEvent(new ClickEvent.OpenFile(file))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal(file.toString()))));
         var fps = Minecraft.getInstance().getFps();
         tell(Component.translatable(KEY + "done", name, fps));
         Library.LOGGER.info("Profile recorded to %s (%d FPS)", file, fps);

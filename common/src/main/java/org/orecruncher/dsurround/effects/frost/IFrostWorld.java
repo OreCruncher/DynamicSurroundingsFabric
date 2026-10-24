@@ -17,6 +17,13 @@ public interface IFrostWorld {
     boolean frosts(BlockState state);
 
     /**
+     * Whether a block is drawn with the translucent blocks (stained glass), not cut out as clear glass is
+     */
+    default boolean translucent(BlockState state) {
+        return false;
+    }
+
+    /**
      * Whether nothing above a position stops rain or snow falling to it: no roof, glass included, and no tree
      */
     boolean seesSky(BlockPos pos);

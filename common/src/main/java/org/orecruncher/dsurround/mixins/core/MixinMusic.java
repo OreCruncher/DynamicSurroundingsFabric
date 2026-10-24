@@ -22,14 +22,14 @@ public class MixinMusic {
     @Final
     private int maxDelay;
 
-    @Inject(method = "getMinDelay()I", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "minDelay()I", at = @At("HEAD"), cancellable = true)
     public void dsurround$getMinDelay(CallbackInfoReturnable<Integer> cir) {
         if (MixinHelpers.musicOptions.reduceWaitTime > 0) {
             cir.setReturnValue(dsurround$calculateNewDelayThreshold(this.minDelay));
         }
     }
 
-    @Inject(method = "getMaxDelay()I", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "maxDelay()I", at = @At("HEAD"), cancellable = true)
     public void dsurround$getMaxDelay(CallbackInfoReturnable<Integer> cir) {
         if (MixinHelpers.musicOptions.reduceWaitTime > 0) {
             cir.setReturnValue(dsurround$calculateNewDelayThreshold(this.maxDelay));
