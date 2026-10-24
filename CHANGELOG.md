@@ -18,6 +18,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Ported the damage pop-offs from older versions, drawing them as batched text rather than particles
 * Reworked block effect scanning into a sphere, and let precipitation drift under blocks
 * Reviewed performance profiles for the new features, and cut the work waterfall foam does each tick
+* Analyzed OGG sound files and normalized where necessary
 * Tracked down particles drawing as squares in a large modpack to another mod's particle, and built the guard that repairs it
 
 **What's New**
@@ -44,6 +45,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Rain, snow, and dust blown in under an overhang drift a little way in out of the wind and fade, instead of stopping at the roof's edge; snowflakes that reach the ground under the overhang lie there, and rain splashes on a porch floor
 
 **Changes**
+* Sound file maintenance
+  * Normalized the volume of a bunch of sounds
+  * Removed unused sounds from the JAR to reduce size
 * Block effects (waterfalls, steam, flame jets, and other random block effects) are now found in a sphere around the player rather than a cube
   * Block Effect Range is now a radius, and the scan finds the nearest blocks first, so effects close by show up first after a teleport
   * Setting it past 32 shows effects farther away than Minecraft shows particles, at more cost; waterfalls thin their splashes past 32 blocks
