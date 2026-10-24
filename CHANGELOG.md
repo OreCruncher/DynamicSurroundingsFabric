@@ -51,6 +51,8 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * The default Entity Effect Range is now 32, up from 24, as the new entity effects are cheap and still visible that far out
   * Existing configurations keep the values already saved in them; set the new defaults in the options to use them
 * Removed the option for sound effects when selecting blocks on the hotbar
+* Removed the random sound played when the game finishes loading, and its Play Random Sound On Startup option
+* soundconfig.json now saves each sound's setting as one `action` (default, cull, or block) in place of the separate block and cull flags; older files are converted when loaded
 * Waterfall foam, mist, steam, and smoke do less work: each block's water surface is worked out once every half second and shared by all the foam on it, and foam and the soft puffs read their light every few ticks instead of every frame; noticeable in large modpacks with many waterfalls nearby
 * A new Guards section in Diagnostic Options holds fixes for problems other mods cause, each of which can be turned off should it cause a problem of its own
 * Rain landing on snow soaks in and leaves a damp spot, as on dirt and sand, instead of splashing

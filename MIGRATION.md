@@ -42,6 +42,22 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Second 0.4.8 merge (through `76fb3bd`)
+
+Compiles on common, Fabric and NeoForge; the common tests pass (2218). `port-merge.py merge` resolved the sound
+library files; no new rename rules.
+
+- **Startup sound removed**, with its option and the *Other Options* group; `Handlers` takes only the logger and
+  tick count, as on 1.21.1.
+- **`block`/`cull` → `SoundAction`** in `soundconfig.json` (key `action`) merged as is, except the screen's button:
+  26.2's `CycleButton.builder` takes the initial value (`builder(ACTION_LABELS::get, this.config.action)`), with no
+  `withInitialValue`.
+- **Tiny footprints** (`06f925dd`) were already here by hand (`a597de3a`), and its dust/snow-fleck order and
+  `CLAUDE.md` note from `18ef8368`: `Footprints`, `PrecipitationHandler` and `CLAUDE.md` keep 26.2's side.
+
+To check in game: no sound at the title screen, no *Other Options* category, and the sound configuration screen
+showing each sound's action from an older `soundconfig.json` (and saving `action` only).
+
 ## 0.4.7 merge
 
 `OreCruncher/0.4.7` (through `f7ddfdb`) merged in, staged: everything compiles on common, Fabric and NeoForge, the

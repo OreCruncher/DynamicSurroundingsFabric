@@ -29,7 +29,6 @@ public interface ISoundLibrary extends ILibrary {
     boolean isBlocked(final Identifier id);
     boolean isCulled(final Identifier id);
     float getVolumeScale(SoundSource category, Identifier id);
-    Optional<SoundEvent> getRandomStartupSound();
     Collection<IndividualSoundConfigEntry> getIndividualSoundConfigs();
     void saveIndividualSoundConfigs(Collection<IndividualSoundConfigEntry> configs);
 }

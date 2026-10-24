@@ -8,44 +8,51 @@ import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.registry.Comparers;
 
+import java.util.Optional;
+
 public class IndividualSoundConfigEntry implements Comparable<IndividualSoundConfigEntry> {
 
+    // "block" and "cull" are how older files said what "action" says now. They are read when an entry has no
+    // action, and never written.
     public static final Codec<IndividualSoundConfigEntry> CODEC = RecordCodecBuilder.create((instance) ->
             instance.group(
                     Identifier.CODEC.fieldOf("soundEventId").forGetter(info -> info.soundEventId),
                     Codec.intRange(0, 400).optionalFieldOf("volumeScale", 100).forGetter(info -> info.volumeScale),
-                    Codec.BOOL.optionalFieldOf("block", false).forGetter(info -> info.block),
-                    Codec.BOOL.optionalFieldOf("cull", false).forGetter(info -> info.cull),
-                    Codec.BOOL.optionalFieldOf("startup", false).forGetter(info -> info.startup)
-            ).apply(instance, IndividualSoundConfigEntry::new));
+                    SoundAction.CODEC.optionalFieldOf("action").forGetter(info -> info.action == SoundAction.DEFAULT ? Optional.empty() : Optional.of(info.action)),
+                    Codec.BOOL.optionalFieldOf("block", false).forGetter(info -> false),
+                    Codec.BOOL.optionalFieldOf("cull", false).forGetter(info -> false)
+            ).apply(instance, IndividualSoundConfigEntry::decoded));
 
     public Identifier soundEventId;
     public String soundEventIdProjected;
     public int volumeScale;
-    public boolean block;
-    public boolean cull;
-    public boolean startup;
+    public SoundAction action;
 
-    public IndividualSoundConfigEntry(Identifier id, Integer volumeScale, Boolean block, Boolean cull, Boolean startup) {
+    public IndividualSoundConfigEntry(Identifier id, int volumeScale, SoundAction action) {
         this.soundEventId = id;
         this.soundEventIdProjected = id.toString();
         this.volumeScale = Mth.clamp(volumeScale, 0, 400);
-        this.block = block;
-        this.cull = cull;
-        this.startup = startup;
+        this.action = action;
     }
 
     IndividualSoundConfigEntry(IndividualSoundConfigEntry source) {
         this.soundEventId = source.soundEventId;
         this.soundEventIdProjected = source.soundEventIdProjected;
         this.volumeScale = source.volumeScale;
-        this.block = source.block;
-        this.cull = source.cull;
-        this.startup = source.startup;
+        this.action = source.action;
     }
 
     public IndividualSoundConfigEntry(Identifier id) {
-        this(id, 100, false, false, false);
+        this(id, 100, SoundAction.DEFAULT);
+    }
+
+    /**
+     * An entry as read from a file. Without an action, an older file's flags say what it is; a sound set to both
+     * cull and block is culled, as the configuration screen always showed it.
+     */
+    private static IndividualSoundConfigEntry decoded(Identifier id, int volumeScale, Optional<SoundAction> action, boolean block, boolean cull) {
+        var resolved = action.orElse(cull ? SoundAction.CULL : block ? SoundAction.BLOCK : SoundAction.DEFAULT);
+        return new IndividualSoundConfigEntry(id, volumeScale, resolved);
     }
 
     public static IndividualSoundConfigEntry createDefault(final SoundEvent event) {
@@ -57,19 +64,15 @@ public class IndividualSoundConfigEntry implements Comparable<IndividualSoundCon
     }
 
     public boolean isNotDefault() {
-        return this.volumeScale != 100 || this.block || this.cull || this.startup;
+        return this.volumeScale != 100 || this.action != SoundAction.DEFAULT;
     }
 
     @Override
     public String toString() {
         var builder = new StringBuilder();
         builder.append(this.soundEventId.toString()).append("{");
-        if (this.cull)
-            builder.append("cull ");
-        if (this.block)
-            builder.append("block ");
-        if (this.startup)
-            builder.append("startup");
+        if (this.action != SoundAction.DEFAULT)
+            builder.append(this.action.getSerializedName());
         builder.append("}");
         return builder.toString();
     }
