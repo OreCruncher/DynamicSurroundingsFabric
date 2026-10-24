@@ -280,6 +280,26 @@ public class MovedPropertiesTests {
     }
 
     @Test
+    void theScarySoundsSwitchBecomesTheScaryContentOne() throws IOException {
+        var config = loadModConfig("{\"soundOptions\": {\"allowScarySounds\": false, \"remapSounds\": false}}");
+        assertFalse(config.scaryContent.allowScaryContent);
+        assertFalse(config.scaryContent.lightningAllowed(), "lightning shown with scary content off");
+        assertFalse(config.soundOptions.remapSounds);
+        assertFalse(written("dsurround.json").getAsJsonObject("soundOptions").has("allowScarySounds"));
+    }
+
+    @Test
+    void lightningNeedsScaryContentAndItsOwnSwitch() throws IOException {
+        var config = loadModConfig("{}");
+        assertTrue(config.scaryContent.lightningAllowed());
+        config.scaryContent.enableLightning = false;
+        assertFalse(config.scaryContent.lightningAllowed());
+        config.scaryContent.enableLightning = true;
+        config.scaryContent.allowScaryContent = false;
+        assertFalse(config.scaryContent.lightningAllowed());
+    }
+
+    @Test
     void movedFromPathsAreNoLongerProperties() {
         // An old path that is still a property would mean the move wasn't finished (or the path is mistyped)
         var stale = new ArrayList<String>();

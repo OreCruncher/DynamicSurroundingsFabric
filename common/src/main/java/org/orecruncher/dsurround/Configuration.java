@@ -40,6 +40,10 @@ public class Configuration extends ConfigurationData {
     public final SoundOptions soundOptions = new SoundOptions();
 
     @Property
+    @Comment("Configuration options for content some players find frightening")
+    public final ScaryContent scaryContent = new ScaryContent();
+
+    @Property
     @Comment("Configuration options for block effects")
     public final BlockEffects blockEffects = new BlockEffects();
 
@@ -232,10 +236,6 @@ public class Configuration extends ConfigurationData {
         public boolean replaceThunderSounds = true;
 
         @Property
-        @Comment("Enables playing sounds that are considered scary")
-        public boolean allowScarySounds = true;
-
-        @Property
         @Comment("Enables playing biome background music while in creative")
         public boolean playBiomeMusicWhileCreative = false;
 
@@ -246,6 +246,25 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enables sound remapping when sounds are played")
         public boolean remapSounds = true;
+    }
+
+    public static class ScaryContent {
+
+        @Property
+        @MovedFrom("soundOptions.allowScarySounds")
+        @Comment("Enables content that is considered scary: sounds marked as scary, and lightning")
+        public boolean allowScaryContent = true;
+
+        @Property
+        @Comment("Enable/disable lightning: branching bolts in place of vanilla's, flashes in the sky during thunderstorms, and their thunder. Off while scary content is off")
+        public boolean enableLightning = true;
+
+        /**
+         * Whether the mod's lightning is shown: allowed as scary content, and turned on
+         */
+        public boolean lightningAllowed() {
+            return this.allowScaryContent && this.enableLightning;
+        }
     }
 
     public static class BlockEffects {

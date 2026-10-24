@@ -134,6 +134,13 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   - `/dsweather` holds the storm strength, the wind's speed and direction, and a ground fog thickness for testing;
     disconnecting clears them.
   - Weather script variables live in `runtime/variables/WeatherVariables` (`weather.*`).
+  - Lightning (`effects/lightning`, run by `processing/LightningHandler`): branching bolts in place of vanilla's (from
+    `ClientLevel.addEntity`, shaped from the bolt's seed; vanilla's render cancelled, both `OptionalHook.LIGHTNING_BOLTS`)
+    and the sky's own strikes through a thunderstorm, mostly upwind (`Strikes.strikeAngle`, from `WindService`), with
+    distance-delayed thunder. Drawn last in the
+    `renderSnowAndRain` wrap; with Fabulous it writes depth, bolts before the cloud glow. Gated by
+    `Configuration.ScaryContent` (`allowScaryContent` && `enableLightning`; script `global.allowLightning()`) and
+    vanilla's Hide Lightning Flashes (no sky strikes, no flicker). `/dsweather lightning [ground|spider|sheet]`.
   - Window frost (`effects/frost`, run by `processing/WindowFrostHandler`): on the outside of clear glass
     (`effects/frosted_windows` tag; `effects/windows` is all glass, for rain streaks). Drawn after the translucent blocks,
     independent of particle weather: clear glass is cutout, so frost behind it shows through. Without Fabulous, right

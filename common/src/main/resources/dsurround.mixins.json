@@ -23,6 +23,7 @@
     "core.MixinFogRenderer",
     "core.MixinLevelRenderer",
     "core.MixinLevelRendererAccessor",
+    "core.MixinLightningBoltRenderer",
     "core.MixinLivingEntity",
     "core.MixinMinecraftClient",
     "core.MixinMusic",

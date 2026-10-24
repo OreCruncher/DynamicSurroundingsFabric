@@ -129,7 +129,7 @@ public class ModShaderTests {
                 assertNotNull(getClass().getClassLoader().getResource(vertexPath), "missing " + vertexPath);
             }
         }
-        assertEquals(10, ids.size());
+        assertEquals(11, ids.size());
     }
 
     private String codeOf(String shader) throws Exception {

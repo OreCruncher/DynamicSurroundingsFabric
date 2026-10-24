@@ -84,7 +84,8 @@ public class MixinLevelRenderer {
 
     /**
      * Frost on windows (with Fabulous graphics; see above for without) and the mist on the ground before the weather, so the rain and snow are drawn over them; with
-     * Fabulous graphics the mist after it instead (see GroundFogHandler.renderAfterWeather). All from where the level
+     * Fabulous graphics the mist after it instead (see GroundFogHandler.renderAfterWeather). The lightning last of all:
+     * with Fabulous graphics it writes depth, which would hide the weather drawn after it behind its glow. All from where the level
      * calls for the weather, rather than inside it, so they are drawn however the weather's drawing ends, cancelled by
      * us or another mod (Simple Weather cancels it) or left early by NeoForge for a dimension's own.
      */
@@ -99,6 +100,7 @@ public class MixinLevelRenderer {
             dsurround$levelWeather = false;
         }
         MixinHelpers.groundFog().renderAfterWeather(lightTexture, partialTick);
+        MixinHelpers.LIGHTNING_GUARD.run(() -> MixinHelpers.lightning().render(partialTick));
     }
 
     /**

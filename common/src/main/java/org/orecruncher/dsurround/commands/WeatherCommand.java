@@ -6,12 +6,16 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import dev.architectury.event.events.client.ClientCommandRegistrationEvent;
 import net.minecraft.commands.CommandBuildContext;
 import org.orecruncher.dsurround.commands.handlers.WeatherCommandHandler;
+import org.orecruncher.dsurround.effects.lightning.Strike;
 import org.orecruncher.dsurround.runtime.weather.Wind;
+
+import java.util.Locale;
 
 /**
  * /dsweather shows the storm's strength; /dsweather strength 0-100 sets it, as a percent of full strength, until
  * /dsweather clear. /dsweather wind does the same for the wind; groundfog and frost set the ground fog's thickness and
- * the frost on windows.
+ * the frost on windows. /dsweather lightning strikes ahead of the player: a bolt, or spider lightning or a flash in the
+ * cloud.
  */
 class WeatherCommand extends AbstractClientCommand {
 
@@ -25,6 +29,7 @@ class WeatherCommand extends AbstractClientCommand {
     private static final String DEGREES_PARAMETER = "degrees";
     private static final String GROUND_FOG = "groundfog";
     private static final String FROST = "frost";
+    private static final String LIGHTNING = "lightning";
     // A full storm's wind is 100: thunderstorms and dust storms blow harder
     private static final int MAX_WIND_PERCENT = 300;
 
@@ -39,7 +44,19 @@ class WeatherCommand extends AbstractClientCommand {
                 .then(subCommand(CLEAR, WeatherCommandHandler::clear))
                 .then(this.windCommand())
                 .then(this.groundFogCommand())
-                .then(this.frostCommand()));
+                .then(this.frostCommand())
+                .then(this.lightningCommand()));
+    }
+
+    /**
+     * /dsweather lightning strikes a bolt ahead of the player; lightning ground, spider or sheet picks the kind
+     */
+    private LiteralArgumentBuilder<ClientCommandRegistrationEvent.ClientCommandSourceStack> lightningCommand() {
+        var command = ClientCommandRegistrationEvent.literal(LIGHTNING)
+                .executes(ctx -> this.execute(ctx, () -> WeatherCommandHandler.lightning(Strike.Kind.GROUND)));
+        for (var kind : Strike.Kind.values())
+            command.then(subCommand(kind.name().toLowerCase(Locale.ROOT), () -> WeatherCommandHandler.lightning(kind)));
+        return command;
     }
 
     /**

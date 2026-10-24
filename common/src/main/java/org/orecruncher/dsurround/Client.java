@@ -4,10 +4,12 @@ import dev.architectury.event.events.client.ClientCommandRegistrationEvent;
 import dev.architectury.platform.Platform;
 import dev.architectury.registry.ReloadListenerRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.entity.LightningBoltRenderer;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.PackType;
@@ -227,7 +229,8 @@ public final class Client {
      * loads it.
      */
     private static void checkOptionalHooks() {
-        var hooked = List.of(LevelRenderer.class, FogRenderer.class, ParticleEngine.class, Particle.class);
+        var hooked = List.of(LevelRenderer.class, FogRenderer.class, ParticleEngine.class, Particle.class, ClientLevel.class,
+                LightningBoltRenderer.class);
         Library.LOGGER.debug("Checking the optional hooks in %d classes", hooked.size());
         OptionalHook.check(Library.LOGGER, Platform.isDevelopmentEnvironment());
     }

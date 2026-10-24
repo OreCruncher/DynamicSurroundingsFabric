@@ -21,6 +21,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Reviewed performance profiles for the new features, and cut the work waterfall foam does each tick
 * Analyzed OGG sound files and normalized where necessary
 * Tracked down particles drawing as squares in a large modpack to another mod's particle, and built the guard that repairs it
+* Built the branching lightning, its timing and its thunder, and gathered the scary options into one place
 
 **What's New**
 * Burning mobs are wreathed in flames like a flame jet's (tongues of flame, sparks, and smoke) in place of Minecraft's flat fire sheets
@@ -46,6 +47,17 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Frog sounds are back from older versions: lily pads croak, with the odd bullfrog call, twice as often at night as by day; not while indoors, or when it's cold enough for water to freeze
   * Includes the lily pads of Biomes O' Plenty, Twilight Forest, Oh The Biomes We've Gone, and Regions Unexplored; the `dsurround:effects/frog_croaks` block tag sets which blocks croak
 * Rain, snow, and dust blown in under an overhang drift a little way in out of the wind and fade, instead of stopping at the roof's edge; snowflakes that reach the ground under the overhang lie there, and rain splashes on a porch floor
+* Lightning that branches and forks, in place of Minecraft's bolts
+  * The stronger the thunderstorm, the more branches, the more often they fork again, and the more strokes a flash has
+  * Each flash has a faint leader feeling its way down, then strokes that light the whole channel and flicker as they die away; later strokes barely light the branches, as in real lightning
+  * Minecraft's lightning bolts are drawn this way too, each shaped from the bolt itself, so every player sees the same bolt
+  * Through a thunderstorm the sky has lightning of its own: bolts to the ground, spider lightning crawling under the cloud base, and flashes hidden in the cloud that light it up in patches, moving about inside it from stroke to stroke
+  * Most of it comes from upwind, where the storm is coming from
+  * Each strike in the sky has its thunder, later the farther away it is (about a second for every 343 blocks), and quieter and lower when far off; a close one lights up the sky, as Minecraft's own bolts do
+  * Lightning option in the new Scary Content section; not drawn while a shader pack is in use
+  * With Minecraft's Hide Lightning Flashes accessibility option on, there is no lightning in the sky and bolts don't flicker
+  * `/dsweather lightning` strikes ahead of the player for testing; `ground`, `spider`, or `sheet` picks the kind
+  * Scripts can check whether lightning is shown with `global.allowLightning()`
 
 **Changes**
 * Sound file maintenance
@@ -64,6 +76,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * soundconfig.json now saves each sound's setting as one `action` (default, cull, or block) in place of the separate block and cull flags; older files are converted when loaded
 * Waterfall foam, mist, steam, and smoke do less work: each block's water surface is worked out once every half second and shared by all the foam on it, and foam and the soft puffs read their light every few ticks instead of every frame; noticeable in large modpacks with many waterfalls nearby
 * A new Guards section in Diagnostic Options holds fixes for problems other mods cause, each of which can be turned off should it cause a problem of its own
+* A new Scary Content section gathers the options for content some players find frightening
+  * Allow Scary Sounds in Sound Options is now Allow Scary Content there, and also covers the lightning; a value already set carries over
+  * The Lightning option turns the lightning off on its own
 * Rain landing on snow soaks in and leaves a damp spot, as on dirt and sand, instead of splashing
 
 **Fixes**
