@@ -14,6 +14,9 @@ public class BlockEffectTags {
 
     @SuppressWarnings("unused")
     public static final TagKey<Block> FIREFLIES = of("fireflies");
+    // Lily pads and the like, where frogs croak
+    @SuppressWarnings("unused")
+    public static final TagKey<Block> FROG_CROAKS = of("frog_croaks");
     public static final TagKey<Block> FLOOR_SQUEAKS = of("floor_squeaks");
     public static final TagKey<Block> BRUSH_STEP = of("brush_step");
     public static final TagKey<Block> LEAVES_STEP = of("leaves_step");
