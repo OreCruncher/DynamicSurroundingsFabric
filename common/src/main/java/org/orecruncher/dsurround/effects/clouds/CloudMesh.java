@@ -68,9 +68,25 @@ public final class CloudMesh {
      * @return how many quads, of both
      */
     public static int build(CloudField field, int i0, int j0, int i1, int j1, int baseX, int baseZ, Sink settled, Sink changing) {
-        // One of each, set for each column and piece in turn
-        var look = new Look();
-        var box = new Box();
+        return build(field, i0, j0, i1, j1, baseX, baseZ, settled, changing, new Parts());
+    }
+
+    /**
+     * What building quads works with, set for each column and piece in turn: kept by whoever builds often (a section at
+     * a time, several times a second), so building makes nothing new
+     */
+    public static final class Parts {
+        private final Look look = new Look();
+        private final Box box = new Box();
+    }
+
+    /**
+     * The same, with {@link Parts} of the caller's
+     */
+    public static int build(CloudField field, int i0, int j0, int i1, int j1, int baseX, int baseZ, Sink settled, Sink changing,
+                            Parts parts) {
+        var look = parts.look;
+        var box = parts.box;
         int quads = 0;
         int fromI = Math.max(0, i0), toI = Math.min(field.size(), i1);
         int fromJ = Math.max(0, j0), toJ = Math.min(field.size(), j1);

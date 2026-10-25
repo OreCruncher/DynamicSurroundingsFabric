@@ -33,6 +33,33 @@ public final class CloudSections {
     private static final int REANCHOR_CELLS = 1000;
     private static final long REEPOCH_TICKS = 1_000_000L;
 
+    /**
+     * Writes a section's vertices as the mesh hands them over: one for the settled part and one for the changing part,
+     * kept and pointed at each section in turn, so building one makes nothing new
+     */
+    private static final class Writer implements CloudMesh.Sink {
+        private final boolean settledPart;
+        Section section;
+        // The ticks from the epoch to the field's tick, which a change's start counts back from
+        float start0;
+
+        Writer(boolean settledPart) {
+            this.settledPart = settledPart;
+        }
+
+        @Override
+        public void vertex(float x, float y, float z, float shade, float alpha, float start, float direction) {
+            var s = this.section;
+            if (this.settledPart) {
+                s.settled = put(s.settled, x, y, z, 0F, direction, shade, alpha);
+                s.settledVertices++;
+            } else {
+                s.changing = put(s.changing, x, y, z, start + this.start0, direction, shade, alpha);
+                s.changingVertices++;
+            }
+        }
+    }
+
     private static final class Section {
         ByteBuffer settled = allocate(4096);
         ByteBuffer changing = allocate(256);
@@ -41,6 +68,9 @@ public final class CloudSections {
     }
 
     private final Long2ObjectOpenHashMap<Section> sections = new Long2ObjectOpenHashMap<>();
+    private final Writer settledWriter = new Writer(true);
+    private final Writer changingWriter = new Writer(false);
+    private final CloudMesh.Parts parts = new CloudMesh.Parts();
     private boolean anchored;
     private int anchorX;
     private int anchorZ;
@@ -141,15 +171,11 @@ public final class CloudSections {
         section.changingVertices = 0;
         int i0 = sx * SECTION - this.originX, j0 = sz * SECTION - this.originZ;
         float start0 = (float) (field.tick() - this.epoch);
+        this.settledWriter.section = section;
+        this.changingWriter.section = section;
+        this.changingWriter.start0 = start0;
         CloudMesh.build(field, i0, j0, i0 + SECTION, j0 + SECTION, this.originX - this.anchorX, this.originZ - this.anchorZ,
-                (x, y, z, shade, alpha, start, direction) -> {
-                    section.settled = put(section.settled, x, y, z, start == 0F && direction == 0F ? 0F : start + start0, direction, shade, alpha);
-                    section.settledVertices++;
-                },
-                (x, y, z, shade, alpha, start, direction) -> {
-                    section.changing = put(section.changing, x, y, z, start + start0, direction, shade, alpha);
-                    section.changingVertices++;
-                });
+                this.settledWriter, this.changingWriter, this.parts);
     }
 
     private void layOut() {
@@ -160,14 +186,21 @@ public final class CloudSections {
         }
         this.settled = room(this.settled, settledVertices * VERTEX_BYTES);
         this.changing = room(this.changing, changingVertices * VERTEX_BYTES);
+        // Copied by index, without wrapping each section's buffer in another to read it; to the whole of the buffers,
+        // which an index is checked against the limit of
         this.settled.clear();
         this.changing.clear();
+        int settledAt = 0, changingAt = 0;
         for (var section : this.sections.values()) {
-            this.settled.put(section.settled.duplicate().flip());
-            this.changing.put(section.changing.duplicate().flip());
+            int settledBytes = section.settledVertices * VERTEX_BYTES;
+            int changingBytes = section.changingVertices * VERTEX_BYTES;
+            this.settled.put(settledAt, section.settled, 0, settledBytes);
+            this.changing.put(changingAt, section.changing, 0, changingBytes);
+            settledAt += settledBytes;
+            changingAt += changingBytes;
         }
-        this.settled.flip();
-        this.changing.flip();
+        this.settled.clear().limit(settledAt);
+        this.changing.clear().limit(changingAt);
         this.settledVertices = settledVertices;
         this.changingVertices = changingVertices;
     }

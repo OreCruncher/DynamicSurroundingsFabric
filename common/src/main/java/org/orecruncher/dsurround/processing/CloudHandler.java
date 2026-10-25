@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.processing;
 
+import it.unimi.dsi.fastutil.longs.Long2FloatOpenHashMap;
 import net.minecraft.client.CloudStatus;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -340,6 +341,9 @@ public class CloudHandler extends AbstractClientHandler {
      */
     private static final class LevelCovers implements CloudField.Cover {
 
+        // The most squares' wetness kept before forgetting them: a cloud grid's worth, and some
+        private static final int MAX_WETNESS = 1 << 17;
+
         private final IBiomeLibrary biomeLibrary;
         private final CloudCover[] byWetness = new CloudCover[WETNESS_STEPS + 1];
         private final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
@@ -349,10 +353,15 @@ public class CloudHandler extends AbstractClientHandler {
         private double driftZ;
         private int sampleY;
         private float playerWetness = 0.5F;
+        // The biome's wetness by the 4 by 4 block squares biomes come in, at the sample height: the clouds drift a block
+        // or two between a cell's turns, so most cells read the same square again. Forgotten with the level, or once it
+        // holds a good deal
+        private final Long2FloatOpenHashMap wetness = new Long2FloatOpenHashMap();
 
         LevelCovers(IBiomeLibrary biomeLibrary) {
             this.biomeLibrary = biomeLibrary;
             Arrays.fill(this.byWetness, CloudCover.CLEAR);
+            this.wetness.defaultReturnValue(Float.NaN);
         }
 
         /**
@@ -361,6 +370,8 @@ public class CloudHandler extends AbstractClientHandler {
          */
         void prepare(ClientLevel level, float rainLevel, float thunder, long dayTime, float dayCover, @Nullable Forced held,
                      int sampleY, BlockPos player) {
+            if (level != this.level || sampleY != this.sampleY || this.wetness.size() > MAX_WETNESS)
+                this.wetness.clear();
             this.level = level;
             this.sampleY = sampleY;
             this.playerWetness = this.wetnessAt(player.getX(), player.getZ(), 0.5F);
@@ -414,8 +425,14 @@ public class CloudHandler extends AbstractClientHandler {
             var current = this.level;
             if (current == null || !current.hasChunk(SectionPos.blockToSectionCoord(x), SectionPos.blockToSectionCoord(z)))
                 return otherwise;
+            long square = ((long) (x >> 2) << 32) | ((z >> 2) & 0xFFFFFFFFL);
+            float known = this.wetness.get(square);
+            if (!Float.isNaN(known))
+                return known;
             var biome = current.getBiome(this.pos.set(x, this.sampleY, z)).value();
-            return this.biomeLibrary.getBiomeInfo(biome).getDownfall();
+            float wet = this.biomeLibrary.getBiomeInfo(biome).getDownfall();
+            this.wetness.put(square, wet);
+            return wet;
         }
 
         private static int step(float wetness) {
