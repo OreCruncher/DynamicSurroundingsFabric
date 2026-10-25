@@ -70,6 +70,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * They change a little at a time, fading in and out, rather than all at once
   * Every player in a world sees the same clouds, drifting with the wind up high
   * Far off they fade into the fog, and in rain the deck overhead stays dark rather than turning to haze
+  * Cloud Distance in Weather Options sets how far they reach, 8 to 32 chunks, whatever the render distance
   * Dynamic Clouds option in Weather Options; off with a shader pack, with Minecraft's clouds turned off, and in dimensions that draw their own clouds (`dynamicClouds` in a dimension config sets it)
   * `/dsweather clouds 0-100 [thickness]` holds how much of the sky they cover, and how thick the thickest are, for testing; `/dsweather clouds clear` goes back to the weather's
   * `/dsprofile clouds` records them in a thunderstorm

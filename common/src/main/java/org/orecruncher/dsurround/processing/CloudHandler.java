@@ -14,6 +14,7 @@ import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
 import org.orecruncher.dsurround.effects.clouds.CloudField;
 import org.orecruncher.dsurround.effects.clouds.CloudLights;
 import org.orecruncher.dsurround.effects.clouds.CloudRenderer;
+import org.orecruncher.dsurround.effects.clouds.CloudSections;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -68,6 +69,11 @@ public class CloudHandler extends AbstractClientHandler {
      * the cell's next turn
      */
     static final int UPDATE_TICKS = CloudField.FADE_TICKS;
+    /**
+     * The quads of cells that changed are built at most this often, in ticks: in a storm many cells change each tick,
+     * here and there, and building their sections every few ticks costs a third as much
+     */
+    static final int SECTION_TICKS = 3;
     // The fewest and the most cells out from the camera
     private static final int MIN_RADIUS = 16;
     private static final int MAX_RADIUS = 48;
@@ -77,6 +83,9 @@ public class CloudHandler extends AbstractClientHandler {
     private final CloudField field = new CloudField();
     private final UpperWind upperWind = new UpperWind();
     private final LevelCovers covers;
+    // The quads, in sections built again as their cells change; and the tick they were last built on
+    private final CloudSections sections = new CloudSections();
+    private long sectionsBuilt = -SECTION_TICKS;
     private boolean started;
     // The storm the clouds show, easing toward the weather's
     private float rainLevel;
@@ -165,7 +174,7 @@ public class CloudHandler extends AbstractClientHandler {
         var camera = GameUtils.getMC().gameRenderer.getMainCamera().getPosition();
         int cx = Mth.floor((camera.x - this.drift[0]) / CloudField.CELL);
         int cz = Mth.floor((camera.z - this.drift[1]) / CloudField.CELL);
-        int radius = radius();
+        int radius = this.radius();
         // The cells whose turn it is, and any new to the grid as the camera moves; all of them when starting, or when set
         // by command
         int turns = this.refresh ? 1 : UPDATE_TICKS;
@@ -181,11 +190,18 @@ public class CloudHandler extends AbstractClientHandler {
     }
 
     /**
-     * How many cells out from the camera the clouds go: as far as the fog lets them be seen
+     * How far the clouds reach, in blocks: the Cloud Distance option
      */
-    private static int radius() {
-        int blocks = GameUtils.getMC().options.getEffectiveRenderDistance() * 16;
-        return Mth.clamp(blocks / CloudField.CELL + 2, MIN_RADIUS, MAX_RADIUS);
+    private int cloudBlocks() {
+        return this.config.weatherOptions.cloudDistance * 16;
+    }
+
+    /**
+     * How many cells out from the camera the clouds go: a little past their distance, so they have faded out by the
+     * grid's edge
+     */
+    private int radius() {
+        return Mth.clamp(this.cloudBlocks() / CloudField.CELL + 2, MIN_RADIUS, MAX_RADIUS);
     }
 
     /**
@@ -198,11 +214,18 @@ public class CloudHandler extends AbstractClientHandler {
         if (!this.isActive() || !this.started || this.field.radius() < 0 || !(GameUtils.getWorld().orElse(null) instanceof ClientLevel level))
             return false;
 
+        // The quads of the cells that changed, every few ticks: a change's fade is timed from when it happened, so
+        // one built a tick or two late only shows it a little way in
+        if (this.ticks - this.sectionsBuilt >= SECTION_TICKS || this.sections.sections() == 0) {
+            if (this.sections.update(this.field))
+                this.sectionsBuilt = this.ticks;
+        }
+
         this.upperWind.drift(level.getGameTime() + partialTick, this.drawnDrift);
         double driftX = this.drawnDrift[0];
         double driftZ = this.drawnDrift[1];
-        float offsetX = (float) ((double) this.field.originX() * CloudField.CELL + driftX - camX);
-        float offsetZ = (float) ((double) this.field.originZ() * CloudField.CELL + driftZ - camZ);
+        float offsetX = (float) ((double) this.sections.anchorX() * CloudField.CELL + driftX - camX);
+        float offsetZ = (float) ((double) this.sections.anchorZ() * CloudField.CELL + driftZ - camZ);
         float offsetY = (float) (this.dimensionInformation.getCloudHeight() - camY);
 
         // The light on the clouds: vanilla's for the time of day, grayer and dimmer as the sky closes over
@@ -221,8 +244,9 @@ public class CloudHandler extends AbstractClientHandler {
         var source = this.lightSource;
         if (source != null)
             source.offer(this.lights, partialTick, camX, camY, camZ);
-        return CloudRenderer.render(this.field, modelView, projection, offsetX, offsetY, offsetZ, red, green, blue,
-                this.ticks + partialTick, this.lights);
+        return CloudRenderer.render(this.sections, modelView, projection, offsetX, offsetY, offsetZ, red, green, blue,
+                this.ticks + partialTick - this.sections.epoch(), this.field.radius() * CloudField.CELL, this.cloudBlocks(),
+                this.lights);
     }
 
     /**
@@ -277,6 +301,8 @@ public class CloudHandler extends AbstractClientHandler {
     private void reset() {
         if (this.started) {
             this.field.clear();
+            this.sections.clear();
+            this.sectionsBuilt = -SECTION_TICKS;
             this.started = false;
         }
     }

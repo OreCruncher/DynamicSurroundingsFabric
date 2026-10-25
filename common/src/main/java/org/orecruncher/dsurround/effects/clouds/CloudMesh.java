@@ -58,18 +58,30 @@ public final class CloudMesh {
      * @return how many quads, of both
      */
     public static int build(CloudField field, Sink settled, Sink changing) {
-        // One of each, set for each column and piece in turn: built every few ticks, for every cell
+        return build(field, 0, 0, field.size(), field.size(), 0, 0, settled, changing);
+    }
+
+    /**
+     * The same for some of the cells: from {@code (i0, j0)} up to but not including {@code (i1, j1)}, positions from
+     * the cell {@code (-baseX, -baseZ)} of the grid rather than its corner (see {@link CloudSections})
+     *
+     * @return how many quads, of both
+     */
+    public static int build(CloudField field, int i0, int j0, int i1, int j1, int baseX, int baseZ, Sink settled, Sink changing) {
+        // One of each, set for each column and piece in turn
         var look = new Look();
         var box = new Box();
         int quads = 0;
+        int fromI = Math.max(0, i0), toI = Math.min(field.size(), i1);
+        int fromJ = Math.max(0, j0), toJ = Math.min(field.size(), j1);
         for (var layer : CloudField.Layer.values())
-            for (int j = 0; j < field.size(); j++)
-                for (int i = 0; i < field.size(); i++)
-                    quads += cell(field, layer, i, j, settled, changing, look, box);
+            for (int j = fromJ; j < toJ; j++)
+                for (int i = fromI; i < toI; i++)
+                    quads += cell(field, layer, i, j, baseX, baseZ, settled, changing, look, box);
         return quads;
     }
 
-    private static int cell(CloudField field, CloudField.Layer layer, int i, int j, Sink settled, Sink changing,
+    private static int cell(CloudField field, CloudField.Layer layer, int i, int j, int baseX, int baseZ, Sink settled, Sink changing,
                             Look look, Box box) {
         int base = field.base(layer, i, j);
         int top = field.top(layer, i, j);
@@ -85,8 +97,8 @@ public final class CloudMesh {
         int shadeBase = !now ? prevBase : !before ? base : Math.min(base, prevBase);
         int shadeTop = !now ? prevTop : !before ? top : Math.max(top, prevTop);
         look.set(layer, shadeBase, shadeTop);
-        float x0 = i * CloudField.CELL;
-        float z0 = j * CloudField.CELL;
+        float x0 = (i + baseX) * CloudField.CELL;
+        float z0 = (j + baseZ) * CloudField.CELL;
         int quads = 0;
 
         // What is in it before and after

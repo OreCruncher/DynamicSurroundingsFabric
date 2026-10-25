@@ -560,6 +560,11 @@ public class Configuration extends ConfigurationData {
         @Experimental
         @Comment("Clouds that change with the weather: scattered puffs that build up through fair afternoons, a low dark deck in a storm, towering in a thunderstorm. Drawn in place of vanilla's clouds")
         public boolean enableDynamicClouds = true;
+
+        @Property
+        @Slider(min = 8, max = 32)
+        @Comment("How far dynamic clouds reach, in chunks, whatever the render distance")
+        public int cloudDistance = 24;
     }
 
     public static class FogOptions {

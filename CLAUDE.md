@@ -136,7 +136,10 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
     weather calls for: fair puffs that build up in the afternoon, a storm's lowered, thickened deck, thunder towers,
     high streaks. Lightning strikes start from `CloudHandler.cloudBase()` when ours are drawn. Every player sees the
     same clouds: they drift with `runtime/weather/UpperWind` and change shape by the game time alone (never a session's
-    ticks or the player's wind), and each cell's cover follows the biome under it.
+    ticks or the player's wind), and each cell's cover follows the biome under it. Quads are kept in 4x4-cell
+    `CloudSections`, rebuilt only where cells changed (at most every `SECTION_TICKS`), positions from an anchor cell so
+    they survive the grid moving. The grid follows `weatherOptions.cloudDistance`, not the render distance; the clouds'
+    fog is the terrain's stretched out to it (`CloudRenderer`).
   - Per dimension (`dimensions.json`): `particleWeather`, `simulateWind`, `groundFog` and `dynamicClouds`, guessed when absent
     (`DimensionInfo.hasVanillaWeather`, sky light). The client always reports sea level 63, so a modded dimension
     with another needs a `seaLevel` rule.

@@ -3,16 +3,18 @@
 // Dynamic Surroundings clouds (see CloudRenderer). The vertex's shade times the light on the clouds, which changes
 // with the time of day and the weather without the blocks being built again. Fog is measured across the ground only, not
 // up: the sky's fog lies along the horizon, and rain's, which closes in to about a hundred blocks, would otherwise fog a
-// deck overhead into a pale sheet. Far off they fade out into the fog, rather than only taking on its color: the sky
-// behind them, looking up, isn't the fog's color. And they are gone before the edge of the cloud grid, wherever the fog
-// is. Lightning lights them from inside: up to eight points of light (CloudLights), each brightening the cloud around
+// deck overhead into a pale sheet. The fog is their own (CloudFog): the terrain's, the weather's and biome's in it,
+// stretched out from the render distance to the clouds' (see CloudRenderer). Far off they fade out into it, rather than
+// only taking on its color: the sky behind them, looking up, isn't the fog's color; and toward the clouds' distance
+// (CloudEnd). And they are gone before the edge of the cloud grid, wherever the fog is. Lightning lights them from inside: up to eight points of light (CloudLights), each brightening the cloud around
 // it, most where it is and none past its reach. linear_fog and linear_fog_fade from fog.glsl are copied in rather than
 // imported.
 
 uniform vec4 ColorModulator;
-uniform float FogStart;
-uniform float FogEnd;
 uniform vec4 FogColor;
+// The clouds' fog: where it starts and is thickest, across the ground, in blocks; and how far they reach
+uniform vec2 CloudFog;
+uniform float CloudEnd;
 // The light on the clouds' tops
 uniform vec3 CloudColor;
 // How far from the camera, across the ground, the clouds begin to fade out, and are gone: inside the grid's edge
@@ -72,10 +74,11 @@ void main() {
             + lightFrom(Light3, LightPowerA.w) + lightFrom(Light4, LightPowerB.x) + lightFrom(Light5, LightPowerB.y)
             + lightFrom(Light6, LightPowerB.z) + lightFrom(Light7, LightPowerB.w);
     color.rgb += GLOW * lit;
-    float fade = linear_fog_fade(flatDistance, FogStart, FogEnd) * (1.0 - smoothstep(EdgeFade.x, EdgeFade.y, flatDistance));
+    float fade = linear_fog_fade(flatDistance, CloudFog.x, CloudFog.y) * (1.0 - clamp(flatDistance / CloudEnd, 0.0, 1.0))
+            * (1.0 - smoothstep(EdgeFade.x, EdgeFade.y, flatDistance));
     color.a *= fade;
     if (color.a <= 0.0) {
         discard;
     }
-    fragColor = linear_fog(color, flatDistance, FogStart, FogEnd, FogColor);
+    fragColor = linear_fog(color, flatDistance, CloudFog.x, CloudFog.y, FogColor);
 }

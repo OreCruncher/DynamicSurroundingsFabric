@@ -123,6 +123,11 @@ public final class CloudField {
     private boolean[] known = new boolean[0];
     // Whether a cell was last worked out from an estimate of what the clouds are like over it
     private boolean[] estimated = new boolean[0];
+    // Whether a cell's quads are to be built again: it changed, its fade ended, or it came into the grid (see
+    // CloudSections). Cleared by whoever builds them.
+    private boolean[] dirty = new boolean[0];
+    // Goes up when every cell is to be built again: the grid made anew, or cleared
+    private int generation;
     private int[] turnHash = new int[0];
     // Spares, for moving the grid's columns without making new arrays each time
     private int[] spare = new int[0];
@@ -197,8 +202,10 @@ public final class CloudField {
                     // A change that finishes fading now: drawn settled from here on
                     long since = tick - (long) this.changeTick[index];
                     long sinceLast = this.lastTick - (long) this.changeTick[index];
-                    if (since >= FADE_TICKS && sinceLast < FADE_TICKS)
+                    if (since >= FADE_TICKS && sinceLast < FADE_TICKS) {
                         changed = true;
+                        this.dirty[index] = true;
+                    }
                     // Still fading: left as it is until that is over
                     if (since < FADE_TICKS)
                         continue;
@@ -272,6 +279,8 @@ public final class CloudField {
                     this.changeTick[index] = (int) tick;
                 }
                 changed |= differs;
+                if (differs || !known)
+                    this.dirty[index] = true;
                 this.lowBase[index] = b;
                 this.lowTop[index] = t;
                 this.lowSteps[index] = steps;
@@ -314,6 +323,8 @@ public final class CloudField {
         this.highTop = new int[cells];
         this.known = new boolean[cells];
         this.estimated = new boolean[cells];
+        this.dirty = new boolean[cells];
+        this.generation++;
         this.turnHash = new int[cells];
         this.prevLowBase = new int[cells];
         this.prevLowTop = new int[cells];
@@ -347,6 +358,7 @@ public final class CloudField {
 
         this.known = this.shifted(this.known, dx, dz);
         this.estimated = this.shifted(this.estimated, dx, dz);
+        this.dirty = this.shifted(this.dirty, dx, dz);
     }
 
     /**
@@ -397,7 +409,9 @@ public final class CloudField {
         Arrays.fill(this.prevHighTop, 0);
         Arrays.fill(this.known, false);
         Arrays.fill(this.estimated, false);
+        Arrays.fill(this.dirty, false);
         this.empty = true;
+        this.generation++;
         this.version++;
     }
 
@@ -426,6 +440,30 @@ public final class CloudField {
     /**
      * Goes up each time the clouds change
      */
+    /**
+     * Goes up when every cell is to be built again: the grid made anew, or cleared
+     */
+    public int generation() {
+        return this.generation;
+    }
+
+    /**
+     * Whether a cell's quads are to be built again since {@link #clearDirty}: it changed, its fade ended, or it came into
+     * the grid. False outside the grid.
+     */
+    public boolean isDirty(int i, int j) {
+        if (i < 0 || j < 0 || i >= this.size || j >= this.size)
+            return false;
+        return this.dirty[i + j * this.size];
+    }
+
+    /**
+     * Marks every cell's quads as built
+     */
+    public void clearDirty() {
+        Arrays.fill(this.dirty, false);
+    }
+
     public int version() {
         return this.version;
     }
