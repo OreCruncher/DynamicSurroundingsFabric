@@ -34,6 +34,14 @@ record Compiler(Environment environment) {
 
                 stack.push(this.createCall(token.token(), children, childStarts));
                 starts.push(token.token());
+            } else if (token.token().type().isTernaryOperator()) {
+                Expression whenFalse = stack.pop();
+                Expression whenTrue = stack.pop();
+                Expression condition = stack.pop();
+                starts.pop();
+                starts.pop();
+                // The result starts where the condition starts, which stays on the stack
+                stack.push(Conditional.compile(token.token(), condition, starts.peek(), whenTrue, whenFalse));
             } else if (token.token().type().isBinaryOperator()) {
                 Expression right = stack.pop();
                 Expression left = stack.pop();
@@ -195,6 +203,8 @@ record Compiler(Environment environment) {
             return l.value() instanceof Boolean;
         if (expression instanceof Unary u)
             return u.operator().type() == TokenType.NOT;
+        if (expression instanceof Conditional c)
+            return yieldsBoolean(c.whenTrue()) && yieldsBoolean(c.whenFalse());
         if (expression instanceof Binary b) {
             return switch (b.operator().type()) {
                 case EQUAL_EQUAL, NOT_EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, CONDITIONAL_AND, CONDITIONAL_OR -> true;
@@ -212,6 +222,8 @@ record Compiler(Environment environment) {
             return l.value() instanceof Double;
         if (expression instanceof Unary u)
             return u.operator().type() == TokenType.NEG;
+        if (expression instanceof Conditional c)
+            return yieldsNumber(c.whenTrue()) && yieldsNumber(c.whenFalse());
         if (expression instanceof Binary b) {
             return switch (b.operator().type()) {
                 case MINUS, STAR, SLASH -> true;

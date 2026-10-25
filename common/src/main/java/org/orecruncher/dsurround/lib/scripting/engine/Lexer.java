@@ -50,6 +50,12 @@ class Lexer {
             case ',':
                 this.addToken(COMMA);
                 break;
+            case '?':
+                this.addToken(QUESTION);
+                break;
+            case ':':
+                this.addToken(COLON);
+                break;
             case '.':
                 // Member access on values is not supported. Dots are only valid inside identifiers (namespaces)
                 // and numeric literals, both of which are consumed by their own scanners.

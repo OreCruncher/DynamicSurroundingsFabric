@@ -15,7 +15,8 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
 ## Build and test (Git Bash on Windows; use absolute paths, `cd` can be reset between commands)
 - Compile everything: `./gradlew :common:compileJava :fabric:compileJava :neoforge:compileJava -q`
 - Tests (common only, ~2100): `./gradlew :common:test -q > /dev/null 2>&1; python scripts/test-summary.py` (counts
-  and each failure's message from `common/build/test-results/test/*.xml`; the console output is noisy).
+  and each failure's message from `common/build/test-results/test/*.xml`; the console output is noisy). It warns
+  `STALE` and exits 1 when a source changed after the newest results: that run wrote none, usually a compile error.
 - One class: `./gradlew :common:test --tests "*BlockInfoTests" -q`
 - Sound loudness survey (needs ffmpeg): `python scripts/sound-survey.py [--csv out.csv]` — level per OGG, events
   whose variants differ, stereo files, clipping, leading silence, files `sounds.json` doesn't use.

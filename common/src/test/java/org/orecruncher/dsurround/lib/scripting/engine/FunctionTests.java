@@ -43,6 +43,13 @@ public class FunctionTests {
             Pair.of(
                     "'Diurnal: ' + lib.iif(diurnal.isNight(),'night','day') + '; celestial angle: ' + math.round(diurnal.getCelestialAngle(), 2) + '; degrees: ' + math.round(diurnal.getCelestialAngle()*360, 2)",
                     "Diurnal: day; celestial angle: 45; degrees: 16200"),
+            // The same two with the conditional operator, as the diagnostics overlay has them now
+            Pair.of(
+                    "'Weather: ' + (weather.isRaining() ? 'rain: ' + math.round(weather.getRainIntensity(), 2) : 'not raining') + (weather.isThundering() ? ' thundering' : '') + '; Temp: ' + math.round(weather.getTemperature(), 2) + '; ice: ' + (weather.getTemperature() < 0.15 ? 'true' : 'false') + ' ' + (weather.getTemperature() < 0.2 ? '(breath)' : '')",
+                    "Weather: rain: 0.9 thundering; Temp: 0.1; ice: true (breath)"),
+            Pair.of(
+                    "'Diurnal: ' + (diurnal.isNight() ? 'night' : 'day') + '; celestial angle: ' + math.round(diurnal.getCelestialAngle(), 2) + '; degrees: ' + math.round(diurnal.getCelestialAngle()*360, 2)",
+                    "Diurnal: day; celestial angle: 45; degrees: 16200"),
             Pair.of(
                     "'Player: health ' + player.getHealth() + '/' + player.getMaxHealth() + '; food ' + player.getFoodLevel() + '/' + player.getFoodSaturationLevel() + '; pos (' + math.round(player.getX(), 2) + ', ' + math.round(player.getY(), 2) + ', ' + math.round(player.getZ(), 2) + ')'",
                     "Player: health 15/20; food 20/20; pos (100, 64, -100)"),

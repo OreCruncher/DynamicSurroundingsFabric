@@ -105,6 +105,18 @@ public class FailureTests {
             compile("math.pow(, 2)", 1, 10, ",", "Unexpected ',' (missing argument?)"),
             compile("math.pow(2, , 3)", 1, 13, ",", "Unexpected ',' (missing argument?)"),
             compile("math.pow(2 *, 3)", 1, 13, ",", "Unexpected ',' (missing argument?)"),
+            // the conditional operator
+            compile("? 1 : 2", 1, 1, "?", "Unexpected '?' (missing condition?)"),
+            compile("1 + ? 1 : 2", 1, 5, "?", "Unexpected '?' (missing condition?)"),
+            compile("test.bool ? : 2", 1, 13, ":", "Unexpected ':' (missing value?)"),
+            compile("test.bool ? 1", 1, 11, "?", "Unexpected '?' (missing ':'?)"),
+            compile("math.abs(test.bool ? 1)", 1, 20, "?", "Unexpected '?' (missing ':'?)"),
+            compile("math.pow(test.bool ? 1, 2)", 1, 20, "?", "Unexpected '?' (missing ':'?)"),
+            compile("1 : 2", 1, 3, ":", "Unexpected ':' (no matching '?')"),
+            compile("test.bool ? (1 : 2)", 1, 16, ":", "Unexpected ':' (no matching '?')"),
+            compile("test.bool ? 1 : 2 : 3", 1, 19, ":", "Unexpected ':' (no matching '?')"),
+            compile("test.bool ? 1 :", 1, 11, "?", "Expected 3 operands, but found 2"),
+            compile("test.bool ? 1 2 : 3", 1, 15, "2", "Unexpected '2' (missing operator?)"),
             unlocated("()", "Logic not detected in script"),
             unlocated("", "Empty script"),
             unlocated("  \n  // nothing here", "Empty script"),
@@ -130,7 +142,10 @@ public class FailureTests {
             eval("1 +\n  math.sqrt(test.str)", 2, 13, "test.str", "math.sqrt: argument 1 must be a number"),
             // the innermost location wins when calls are nested
             eval("math.abs(test.toNumber('x'))", 1, 10, "test.toNumber", "Value provided is not a number"),
-            eval("lib.iif(test.obj, 1, 2)", 1, 9, "test.obj", "lib.iif: argument 1 must be a boolean")
+            eval("lib.iif(test.obj, 1, 2)", 1, 9, "test.obj", "lib.iif: argument 1 must be a boolean"),
+            // the conditional operator reports a condition that is not a boolean at the condition
+            eval("1 +\n  (test.obj ? 1 : 2)", 2, 4, "test.obj", "Condition must be a boolean or value that converts to a boolean"),
+            eval("test.bool ? test.str * 2 : 0", 1, 22, "*", NOT_A_NUMBER_LEFT)
     );
 
     private static ScriptEngine createEngine() {

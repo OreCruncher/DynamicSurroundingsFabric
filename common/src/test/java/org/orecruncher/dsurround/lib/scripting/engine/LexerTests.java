@@ -213,6 +213,7 @@ class LexerTests {
                     row("!-1", "NOT NEG NUM(1.0)"),
                     row("(-1)", "LEFT_PAREN NEG NUM(1.0) RIGHT_PAREN"),
                     row("f(1, -1)", "ID(f) LEFT_PAREN NUM(1.0) COMMA NEG NUM(1.0) RIGHT_PAREN"),
+                    row("x ? -1 : -2", "ID(x) QUESTION NEG NUM(1.0) COLON NEG NUM(2.0)"),
                     // after an operand: subtraction
                     row("x-1", "ID(x) MINUS NUM(1.0)"),
                     row("1-1", "NUM(1.0) MINUS NUM(1.0)"),
@@ -361,7 +362,8 @@ class LexerTests {
                     row("lib.oneOf", "ID(lib.oneOf)"),
                     row("a._b", "ID(a._b)"),
                     row("a.b1", "ID(a.b1)"),
-                    row("lib.iif(x, 1, 2)", "ID(lib.iif) LEFT_PAREN ID(x) COMMA NUM(1.0) COMMA NUM(2.0) RIGHT_PAREN")
+                    row("lib.iif(x, 1, 2)", "ID(lib.iif) LEFT_PAREN ID(x) COMMA NUM(1.0) COMMA NUM(2.0) RIGHT_PAREN"),
+                    row("x?1:2", "ID(x) QUESTION NUM(1.0) COLON NUM(2.0)")
             );
         }
 

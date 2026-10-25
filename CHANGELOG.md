@@ -22,6 +22,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Analyzed OGG sound files and normalized where necessary
 * Tracked down particles drawing as squares in a large modpack to another mod's particle, and built the guard that repairs it
 * Built the branching lightning, its timing and its thunder, and gathered the scary options into one place
+* Added the conditional operator to the scripting engine
 
 **What's New**
 * Burning mobs are wreathed in flames like a flame jet's (tongues of flame, sparks, and smoke) in place of Minecraft's flat fire sheets
@@ -59,6 +60,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * With Minecraft's Hide Lightning Flashes accessibility option on, there is no lightning in the sky and bolts don't flicker
   * `/dsweather lightning` strikes ahead of the player for testing; `ground`, `spider`, or `sheet` picks the kind
   * Scripts can check whether lightning is shown with `global.allowLightning()`
+* Scripts have a conditional operator: `diurnal.isNight() ? 0.04 : 0.02`
+  * Only the chosen value is worked out, as with `lib.iif`, which still works the same
+  * It binds more loosely than any other operator, so `'is ' + (weather.isRaining() ? 'wet' : 'dry')` needs the parentheses
 
 **Changes**
 * Sound file maintenance
