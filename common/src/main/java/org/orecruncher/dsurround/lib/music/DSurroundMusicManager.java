@@ -20,7 +20,15 @@ public final class DSurroundMusicManager extends MusicManager {
     private static final IModLog LOGGER = ModLog.createChild(ContainerManager.resolve(IModLog.class), "MusicManager");
     private static final IAudioPlayer AUDIO_PLAYER = ContainerManager.resolve(IAudioPlayer.class);
 
+    /**
+     * Ticks from the sound engine first being ready to the first track. Vanilla waits 100 ticks from the game's
+     * start, but nothing ticks here until the engine has loaded at the end of the loading screen, so that wait would
+     * be spent in silence on the title screen.
+     */
+    private static final int FIRST_TRACK_DELAY = 20;
+
     private boolean pauseTicking;
+    private boolean soundSystemReady;
 
     public DSurroundMusicManager(Minecraft minecraft) {
         super(minecraft);
@@ -29,6 +37,10 @@ public final class DSurroundMusicManager extends MusicManager {
     @Override
     public void tick() {
         if (!this.pauseTicking && AUDIO_PLAYER.isSoundSystemAvailable()) {
+            if (!this.soundSystemReady) {
+                this.soundSystemReady = true;
+                this.nextSongDelay = Math.min(this.nextSongDelay, FIRST_TRACK_DELAY);
+            }
             super.tick();
         }
     }
