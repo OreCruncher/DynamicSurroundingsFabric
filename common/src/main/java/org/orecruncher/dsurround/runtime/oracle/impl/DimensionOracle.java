@@ -74,4 +74,8 @@ public final class DimensionOracle implements IDimensionOracle {
     public boolean groundFog() {
         return this.dimensionInfo.get().groundFog();
     }
+
+    public boolean dynamicClouds() {
+        return this.dimensionInfo.get().dynamicClouds();
+    }
 }

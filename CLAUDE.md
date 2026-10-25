@@ -46,7 +46,8 @@ checking in game.
   GPU/CPU render timers in it (`dsurround.RenderTimer` events; precipitation's carry a `count` of drops/spots a frame,
   so two recordings can be checked for the same storm) and what it was made on (`dsurround.Environment`); unzip
   it and read it with the JDK's `jfr` (`jfr print --json --events ...`), or summarize it with
-  `python scripts/jfr-summary.py <zip or jfr>` (timers, threads, mod packages, our frames, allocation, GC;
+  `python scripts/jfr-summary.py <zip or jfr>` (timers: mean and end of the running averages, and peak; for a
+  timer measured rarely, once a second or less, trust the end, not the mean; threads, mod packages, our frames, allocation, GC;
   `--callers <method>` for who calls something).
   Players can make them too, so nothing private may get in: a new event type or a new `jdk.jfr` user needs a look at
   `ProfileRecording.PRIVATE` and `Redaction`. Record under Run, not IntelliJ's Debug (its async stack trace agent
@@ -184,10 +185,21 @@ checking in game.
     wrap shows as a jump. Three fullscreen passes (march, smooth, composite) share `shaders/include/ground_fog.glsl`;
     their vertex shader inverts the matrices the world was drawn with (26.2 puts view bobbing in the projection). Drawn
     at the start of the weather pass, or with Fabulous after the weather and before the world border.
-  - Per dimension (`dimensions.json`): `particleWeather`, `simulateWind` and `groundFog`, guessed when absent
-    (`DimensionInfo.drawsOwnWeather`: NeoForge's custom weather renderer for the dimension; sky light). The client always reports sea level 63, so a modded dimension
+  - Dynamic clouds (`effects/clouds`, run by `processing/CloudHandler`): blocky columns on vanilla's 12-block cells,
+    each with its own base and top, in place of vanilla's (`MixinCloudRenderer` cancels `CloudRenderer.render` when
+    ours draw; `OptionalHook.DYNAMIC_CLOUDS`). Three pipelines in one pass to the clouds target (main without Fabulous):
+    the settled part's depth, then its color, then the changing part fading, no depth. The grid follows the Cloud
+    Distance option; the light on them is vanilla's cloud color (the environment's). `runtime/weather/CloudCover` is
+    what the weather calls for: fair puffs that build up in the afternoon, a storm's lowered, thickened deck, thunder
+    towers, high streaks. Lightning strikes start from `CloudHandler.cloudBase()` when ours are drawn. Every player sees
+    the same clouds: they drift with `runtime/weather/UpperWind` and change shape by the game time alone (never a
+    session's ticks or the player's wind), and each cell's cover follows the biome under it.
+  - Per dimension (`dimensions.json`): `particleWeather`, `simulateWind`, `groundFog` and `dynamicClouds`, guessed when
+    absent (`DimensionInfo.drawsOwnWeather`/`drawsOwnClouds`: NeoForge's custom weather and clouds renderers for the
+    dimension; sky light). The client always reports sea level 63, so a modded dimension
     with another needs a `seaLevel` rule.
-  - `/dsweather` holds the storm strength, the wind's speed and direction, and a ground fog thickness for testing;
+  - `/dsweather` holds the storm strength, the wind's speed and direction, a ground fog thickness, and the clouds'
+    coverage and thickness (`clouds 0-100 [thickness]`) for testing;
     disconnecting clears them.
   - Weather script variables live in `runtime/variables/WeatherVariables` (`weather.*`).
   - Lightning (`effects/lightning`, run by `processing/LightningHandler`): branching bolts in place of vanilla's (from
@@ -198,6 +210,14 @@ checking in game.
     before the cloud glow. Gated by `Configuration.ScaryContent` (`allowScaryContent` && `enableLightning`; script
     `global.allowLightning()`) and vanilla's Hide Lightning Flashes (no sky strikes, no flicker).
     `/dsweather lightning [ground|spider|sheet]`.
+    With dynamic clouds drawn, a strike's cloud glow lights the clouds from inside (`CloudLights`, up to 8 points a
+    frame, passed by `LightningHandler` to `CloudHandler`) instead of being drawn as patches. Strikes dim with distance
+    against the fog's reach (`Strikes.visibility`, with `FogHandler.viewReach`: the nearer of the weather's fog and the
+    render distance's).
+  - Window frost (`effects/frost`, run by `processing/WindowFrostHandler`): on the outside of clear glass
+    (`effects/frosted_windows` tag; `effects/windows` is all glass, for rain streaks), independent of particle weather.
+    Drawn after the translucent blocks, its depth tested in the shader against a copy of the scene's from before them
+    (`DEPTH_COPY`); with Fabulous to the weather's target, writing depth.
     "Outside" uses the `MOTION_BLOCKING` heightmap, then sky light on either side (`canSeeSky` is only sky light 15,
     which a glass roof doesn't reduce).
 

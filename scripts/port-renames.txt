@@ -11,6 +11,15 @@
 ResourceLocation = Identifier
 GuiGraphics = GuiGraphicsExtractor
 
+# The dimension's settings moved to runtime.oracle; the import first, then the name
+re: \borg\.orecruncher\.dsurround\.config\.libraries\.IDimensionInformation\b => org.orecruncher.dsurround.runtime.oracle.IDimensionOracle
+IDimensionInformation = IDimensionOracle
+
+# A level's time of day, and the clouds option
+re: \b(level|world)\.getDayTime\(\) => \1.getDefaultClockTime()
+re: \.level\(\)\.getDayTime\(\) => .level().getDefaultClockTime()
+re: \.getCloudsType\(\) => .cloudStatus().get()
+
 # ResourceKey.location() -> identifier() (TagKey.location() is unchanged)
 re: \b(registryKey|tResourceKey|resourceKey)\.location\(\) => \1.identifier()
 re: \b(OVERWORLD|NETHER|END)\.location\(\) => \1.identifier()

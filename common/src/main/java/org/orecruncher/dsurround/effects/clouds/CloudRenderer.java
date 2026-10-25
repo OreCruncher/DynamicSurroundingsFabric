@@ -1,0 +1,304 @@
+package org.orecruncher.dsurround.effects.clouds;
+
+import com.mojang.blaze3d.GpuFormat;
+import com.mojang.blaze3d.PrimitiveTopology;
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.Std140Builder;
+import com.mojang.blaze3d.buffers.Std140SizeCalculator;
+import com.mojang.blaze3d.pipeline.BindGroupLayout;
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.ColorTargetState;
+import com.mojang.blaze3d.pipeline.DepthStencilState;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.CompareOp;
+import com.mojang.blaze3d.shaders.UniformType;
+import com.mojang.blaze3d.systems.RenderPass;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BindGroupLayouts;
+import net.minecraft.client.renderer.MappableRingBuffer;
+import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.effects.ModShader;
+import org.orecruncher.dsurround.effects.RenderTimer;
+import org.orecruncher.dsurround.lib.Library;
+
+import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.Optional;
+import java.util.OptionalDouble;
+
+/**
+ * Draws the {@link CloudField}: its quads ({@link CloudMesh}) are built into vertex buffers when the clouds change, and
+ * drawn each frame moved to where the clouds have drifted. The settled part twice: first only its depth
+ * ({@link #DEPTH}), then its color where it is nearest ({@link #SETTLED}), so a cloud's faces behind its front don't
+ * show through it. The changing part after ({@link #CHANGING}), fading in or out in the shader as the game's time goes
+ * on, writing no depth: a part fading out would otherwise hide what is behind it once it is all but gone. With
+ * Fabulous graphics to the clouds' own target, as vanilla's clouds are, which the transparency pass lays over the scene.
+ * Render thread only.
+ */
+public final class CloudRenderer {
+
+    // The shader's uniforms other than vanilla's, all vec4 (Std140Builder.putVec3 takes sixteen bytes all the same):
+    // the offset from the grid's corner to the camera and the ticks since the blocks were built; the light on the
+    // clouds and how long a change fades; where they fade before the grid's edge; the lights' powers; and the lights
+    private static final String CLOUD_INFO = "DSCloudInfo";
+    private static final int CLOUD_INFO_SIZE;
+
+    static {
+        var size = new Std140SizeCalculator().putVec4().putVec4().putVec4().putVec4().putVec4();
+        for (int i = 0; i < CloudLights.MAX; i++)
+            size.putVec4();
+        CLOUD_INFO_SIZE = size.get();
+    }
+
+    private static final BindGroupLayout CLOUD_INFO_LAYOUT = BindGroupLayout.builder()
+            .withUniform(CLOUD_INFO, UniformType.UNIFORM_BUFFER)
+            .build();
+    private static final ColorTargetState NO_COLOR = new ColorTargetState(Optional.empty(), GpuFormat.RGBA8_UNORM, ColorTargetState.WRITE_NONE);
+    // Reversed depth: nearer is greater
+    private static final DepthStencilState WRITE_DEPTH = new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, true);
+    private static final DepthStencilState TEST_DEPTH = new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false);
+
+    /**
+     * The settled part's depth, and no color
+     */
+    public static final ModShader DEPTH = new ModShader(
+            pipeline("pipeline/clouds_depth").withColorTargetState(NO_COLOR).withDepthStencilState(WRITE_DEPTH).build(),
+            "clouds", "vanilla's clouds will be drawn", Library.LOGGER);
+    /**
+     * The settled part's color, where it is nearest
+     */
+    public static final ModShader SETTLED = new ModShader(
+            pipeline("pipeline/clouds").withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+                    .withDepthStencilState(WRITE_DEPTH).build(),
+            "clouds", "vanilla's clouds will be drawn", Library.LOGGER);
+    /**
+     * The changing part, over the settled part, fading
+     */
+    public static final ModShader CHANGING = new ModShader(
+            pipeline("pipeline/clouds_changing").withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+                    .withDepthStencilState(TEST_DEPTH).build(),
+            "clouds", "vanilla's clouds will be drawn", Library.LOGGER);
+
+    /**
+     * All three, for {@code ModShaders}
+     */
+    public static final List<ModShader> SHADERS = List.of(DEPTH, SETTLED, CHANGING);
+
+    public static final RenderTimer RENDER_TIMER = new RenderTimer("Clouds");
+    /**
+     * How long working out the clouds again takes, on the CPU: every tick, a share of the cells at a time, on the tick
+     * rather than while drawing, so it is timed apart (see CloudHandler)
+     */
+    public static final RenderTimer FIELD_TIMER = new RenderTimer("- Field");
+
+    // How many cells before the grid's edge the clouds fade out over, wherever the fog is
+    private static final int EDGE_FADE_CELLS = 3;
+    // Room for the settled part's and the changing part's vertices, to start with: they grow as needed
+    private static final int SETTLED_BYTES = 256 * 1024;
+    private static final int CHANGING_BYTES = 32 * 1024;
+
+    @Nullable
+    private static ByteBufferBuilder settledBytes;
+    @Nullable
+    private static ByteBufferBuilder changingBytes;
+    @Nullable
+    private static GpuBuffer settled;
+    @Nullable
+    private static GpuBuffer changing;
+    @Nullable
+    private static MappableRingBuffer cloudInfo;
+    // The field's version the buffers were built from, the field's tick then, and how many quads each has
+    private static int builtVersion = -1;
+    private static long builtTick;
+    private static int settledQuads;
+    private static int changingQuads;
+
+    private CloudRenderer() {
+    }
+
+    private static RenderPipeline.Builder pipeline(String location) {
+        return RenderPipeline.builder()
+                .withLocation(Constants.asId(location))
+                .withVertexShader(Constants.asId("core/clouds"))
+                .withFragmentShader(Constants.asId("core/clouds"))
+                .withBindGroupLayout(BindGroupLayouts.GLOBALS)
+                .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+                .withBindGroupLayout(BindGroupLayouts.FOG)
+                .withBindGroupLayout(CLOUD_INFO_LAYOUT)
+                .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
+                .withPrimitiveTopology(PrimitiveTopology.QUADS);
+    }
+
+    /**
+     * Whether the clouds can be drawn: their pipelines compiled, drawing hasn't failed, and no shader pack is in use
+     */
+    public static boolean isUsable() {
+        return DEPTH.isUsable() && SETTLED.isUsable() && CHANGING.isUsable();
+    }
+
+    /**
+     * Draws the clouds
+     *
+     * @param offsetX from the grid's corner, at the cloud height, to the camera, in blocks; and {@code offsetY},
+     *                {@code offsetZ}
+     * @param red     the light on the clouds' tops; and {@code green}, {@code blue}
+     * @param now     the tick it is, with the part of a tick, as the field's ticks are counted: for the fading
+     * @param lights  the light inside the clouds this frame, from lightning
+     * @return true if they were drawn; false if they couldn't be, and vanilla's should be
+     */
+    public static boolean render(CloudField field, float offsetX, float offsetY, float offsetZ, float red, float green,
+                                 float blue, double now, CloudLights lights) {
+        if (!isUsable())
+            return false;
+        if (field.isEmpty())
+            return true;
+        RENDER_TIMER.begin();
+        try {
+            return SETTLED.run(() -> draw(field, offsetX, offsetY, offsetZ, red, green, blue, now, lights), () -> {});
+        } finally {
+            RENDER_TIMER.end();
+        }
+    }
+
+    private static void draw(CloudField field, float offsetX, float offsetY, float offsetZ, float red, float green,
+                             float blue, double now, CloudLights lights) {
+        if (settled == null || builtVersion != field.version())
+            rebuild(field);
+        if (settledQuads + changingQuads == 0)
+            return;
+
+        if (cloudInfo == null)
+            cloudInfo = new MappableRingBuffer(() -> "Dynamic Surroundings clouds UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_MAP_WRITE, CLOUD_INFO_SIZE);
+        // The camera is in the grid's middle cell, so its edge is at least the radius in cells away: gone a cell
+        // inside that, fading over the few cells before
+        float edge = (field.radius() - 1) * CloudField.CELL;
+        try (var view = cloudInfo.currentBuffer().map(false, true)) {
+            var builder = Std140Builder.intoBuffer(view.data())
+                    .putVec4(offsetX, offsetY, offsetZ, (float) (now - builtTick))
+                    .putVec4(red, green, blue, (float) CloudField.FADE_TICKS)
+                    .putVec4(edge - EDGE_FADE_CELLS * CloudField.CELL, edge, 0F, 0F)
+                    .putVec4(lights.power(0), lights.power(1), lights.power(2), lights.power(3))
+                    .putVec4(lights.power(4), lights.power(5), lights.power(6), lights.power(7));
+            for (int i = 0; i < CloudLights.MAX; i++) {
+                if (i < lights.count())
+                    builder.putVec4(lights.x(i), lights.y(i), lights.z(i), lights.reach(i));
+                else
+                    builder.putVec4(0F, 0F, 0F, 1F);
+            }
+        }
+
+        var minecraft = Minecraft.getInstance();
+        var cloudsTarget = minecraft.levelRenderer.cloudsTarget();
+        var target = cloudsTarget != null ? cloudsTarget : minecraft.gameRenderer.mainRenderTarget();
+        var transforms = RenderSystem.getDynamicUniforms().writeTransform(RenderSystem.getModelViewMatrixCopy());
+        var indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
+        var indexBuffer = indices.getBuffer(6 * Math.max(settledQuads, changingQuads));
+
+        try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder()
+                .createRenderPass(() -> "Dynamic Surroundings clouds", target.getColorTextureView(), Optional.empty(),
+                        target.getDepthTextureView(), OptionalDouble.empty())) {
+            RenderSystem.bindDefaultUniforms(pass);
+            pass.setUniform("DynamicTransforms", transforms);
+            pass.setUniform(CLOUD_INFO, cloudInfo.currentBuffer());
+            pass.setIndexBuffer(indexBuffer, indices.type());
+            if (settledQuads > 0) {
+                // Their depth, then their color where they are nearest
+                pass.setVertexBuffer(0, settled.slice());
+                pass.setPipeline(DEPTH.pipeline());
+                pass.drawIndexed(6 * settledQuads, 1, 0, 0, 0);
+                pass.setPipeline(SETTLED.pipeline());
+                pass.drawIndexed(6 * settledQuads, 1, 0, 0, 0);
+            }
+            if (changingQuads > 0) {
+                // Over them, fading, writing no depth
+                pass.setVertexBuffer(0, changing.slice());
+                pass.setPipeline(CHANGING.pipeline());
+                pass.drawIndexed(6 * changingQuads, 1, 0, 0, 0);
+            }
+        }
+        cloudInfo.rotate();
+        RENDER_TIMER.count(settledQuads + changingQuads);
+    }
+
+    private static void rebuild(CloudField field) {
+        if (settledBytes == null)
+            settledBytes = new ByteBufferBuilder(SETTLED_BYTES);
+        if (changingBytes == null)
+            changingBytes = new ByteBufferBuilder(CHANGING_BYTES);
+        var settledBuilder = new BufferBuilder(settledBytes, PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        var changingBuilder = new BufferBuilder(changingBytes, PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        int[] counts = new int[2];
+        CloudMesh.build(field,
+                (x, y, z, shade, alpha, start, direction) -> {
+                    settledBuilder.addVertex(x, y, z).setUv(start, direction).setColor(shade, shade, shade, alpha);
+                    counts[0]++;
+                },
+                (x, y, z, shade, alpha, start, direction) -> {
+                    changingBuilder.addVertex(x, y, z).setUv(start, direction).setColor(shade, shade, shade, alpha);
+                    counts[1]++;
+                });
+        builtVersion = field.version();
+        builtTick = field.tick();
+        settledQuads = counts[0] / 4;
+        changingQuads = counts[1] / 4;
+        settled = upload(settled, settledBuilder, "settled");
+        changing = upload(changing, changingBuilder, "changing");
+    }
+
+    /**
+     * Uploads what a builder has to a vertex buffer, made or grown as needed; an empty builder leaves the buffer as it
+     * was, as it isn't drawn
+     */
+    @Nullable
+    private static GpuBuffer upload(@Nullable GpuBuffer buffer, BufferBuilder builder, String part) {
+        try (var mesh = builder.build()) {
+            if (mesh == null)
+                return buffer;
+            ByteBuffer vertices = mesh.vertexBuffer();
+            var device = RenderSystem.getDevice();
+            if (buffer == null || buffer.size() < vertices.remaining()) {
+                if (buffer != null)
+                    buffer.close();
+                // Room to grow, so clouds building up don't make a new buffer every few ticks
+                buffer = device.createBuffer(() -> "Dynamic Surroundings clouds, " + part, GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST,
+                        vertices.remaining() + vertices.remaining() / 2);
+            }
+            device.createCommandEncoder().writeToBuffer(buffer.slice(), vertices);
+            return buffer;
+        }
+    }
+
+    /**
+     * Lets go of the vertex buffers, as when leaving a world
+     */
+    public static void release() {
+        if (settled != null) {
+            settled.close();
+            settled = null;
+        }
+        if (changing != null) {
+            changing.close();
+            changing = null;
+        }
+        if (settledBytes != null) {
+            settledBytes.close();
+            settledBytes = null;
+        }
+        if (changingBytes != null) {
+            changingBytes.close();
+            changingBytes = null;
+        }
+        if (cloudInfo != null) {
+            cloudInfo.close();
+            cloudInfo = null;
+        }
+        builtVersion = -1;
+        settledQuads = 0;
+        changingQuads = 0;
+    }
+}

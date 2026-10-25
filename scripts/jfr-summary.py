@@ -119,6 +119,12 @@ def number(value):
     return float(match.group(0)) if match else 0.0
 
 
+def started(value):
+    # jfr prints a start time as "10:11:14.829 (2026-10-25)": the date first, so a recording past midnight sorts right
+    match = re.match(r"([\d:.]+) \(([\d-]+)\)", value or "")
+    return (match.group(2), match.group(1)) if match else ("", value or "")
+
+
 def duration_ms(value):
     match = re.match(r"([\d.]+) (ns|us|ms|s)", value or "")
     if not match:
@@ -188,17 +194,23 @@ def main():
     for _, fields, _ in events(jfr, recording, ["dsurround.RenderTimer"], 1):
         timers[fields.get("effect", "?").strip('"')].append(fields)
     if timers:
-        print("\n== Render timers (ms; mean of the periodic averages, highest peak; count: how many there were to draw "
-              "a frame, mean, where the effect counts)")
-        print(f"  {'effect':28} {'gpu avg':>8} {'gpu peak':>9} {'cpu avg':>8} {'cpu peak':>9} {'count':>8}")
+        # Each average is a running one, written once a second. Their mean covers the whole recording, but carries a
+        # slow start for a timer that measures rarely (once a second or less), whose average takes minutes to
+        # forget it; the last is the running average at the end, the last few seconds for a timer measured every frame
+        print("\n== Render timers (ms; mean of the periodic averages, the running average at the end, highest peak; "
+              "count: how many there were to draw a frame, mean, where the effect counts)")
+        print(f"  {'effect':28} {'gpu mean':>8} {'gpu end':>8} {'gpu peak':>9} "
+              f"{'cpu mean':>8} {'cpu end':>8} {'cpu peak':>9} {'count':>8}")
         for effect, rows in timers.items():
+            rows.sort(key=lambda r: started(r.get("startTime", "")))
             mean = lambda key: sum(number(r.get(key)) for r in rows) / len(rows)
+            last = lambda key: number(rows[-1].get(key))
             peak = lambda key: max(number(r.get(key)) for r in rows)
             # Recordings from before the count have none; an effect that doesn't count writes NaN, which jfr prints as N/A
             counts = [number(r["count"]) for r in rows if r.get("count") and r["count"] not in ("N/A", "NaN")]
             count = f"{sum(counts) / len(counts):8.0f}" if counts else f"{'-':>8}"
-            print(f"  {effect:28} {mean('gpuAverage'):8.3f} {peak('gpuPeak'):9.3f} "
-                  f"{mean('cpuAverage'):8.3f} {peak('cpuPeak'):9.3f} {count}")
+            print(f"  {effect:28} {mean('gpuAverage'):8.3f} {last('gpuAverage'):8.3f} {peak('gpuPeak'):9.3f} "
+                  f"{mean('cpuAverage'):8.3f} {last('cpuAverage'):8.3f} {peak('cpuPeak'):9.3f} {count}")
 
     by_thread = Counter()
     methods = defaultdict(Counter)
@@ -233,8 +245,19 @@ def main():
         table("== Samples with a Dynamic Surroundings frame, by thread", mine_all, total, args.top)
 
     classes, sites, ours_alloc = Counter(), Counter(), Counter()
-    for _, fields, frames in events(jfr, recording, ["jdk.ObjectAllocationSample"], 32):
+    # A thread's first sample carries the weight of everything it allocated before the recording began (gigabytes, for
+    # the render thread): left out, and how much that was said
+    samples = sorted(events(jfr, recording, ["jdk.ObjectAllocationSample"], 32),
+                     key=lambda e: started(e[1].get("startTime", "")))
+    seen = set()
+    before = 0
+    for _, fields, frames in samples:
         weight = size_bytes(fields.get("weight"))
+        thread = fields.get("eventThread", "?")
+        if thread not in seen:
+            seen.add(thread)
+            before += weight
+            continue
         classes[fields.get("objectClass", "?").split(" ")[0]] += weight
         if frames:
             sites[next((o for o in map(owner, frames) if o), "(game / JDK)")] += weight
@@ -242,7 +265,8 @@ def main():
         if mine:
             ours_alloc[mine] += weight
     allocated = sum(classes.values())
-    print(f"\n== Allocation (sampled weight {allocated / 1024 ** 3:.1f} GB)")
+    print(f"\n== Allocation (sampled weight {allocated / 1024 ** 3:.1f} GB; each thread's first sample, "
+          f"{before / 1024 ** 3:.1f} GB from before the recording, left out)")
     table("  by class", classes, allocated, args.top, "MB")
     table("  by mod package", sites, allocated, args.top, "MB")
     if ours_alloc:

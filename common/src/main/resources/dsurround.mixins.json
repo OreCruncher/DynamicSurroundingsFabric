@@ -14,6 +14,7 @@
     "audio.MixinSource",
     "core.MixinBiome",
     "core.MixinClientChunkCache",
+    "core.MixinCloudRenderer",
     "core.MixinClientLevel",
     "core.MixinClothAbstractConfigEntry",
     "core.MixinClothCategoryLabelWidget",

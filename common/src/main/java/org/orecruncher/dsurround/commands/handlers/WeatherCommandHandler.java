@@ -4,6 +4,7 @@ import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.runtime.weather.Wind;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.effects.lightning.Strike;
+import org.orecruncher.dsurround.processing.CloudHandler;
 import org.orecruncher.dsurround.processing.GroundFogHandler;
 import org.orecruncher.dsurround.processing.LightningHandler;
 import org.orecruncher.dsurround.processing.WindowFrostHandler;
@@ -76,6 +77,44 @@ public class WeatherCommandHandler {
         var wasSet = handler.forced().isPresent();
         handler.clearForced();
         return Component.translatable(KEY + (wasSet ? "groundfog.clear.success" : "groundfog.clear.notset"));
+    }
+
+    public static Component clouds(int percent, float thickness) {
+        return clouds(ContainerManager.resolve(CloudHandler.class), percent, thickness);
+    }
+
+    public static Component cloudsStatus() {
+        return cloudsStatus(ContainerManager.resolve(CloudHandler.class));
+    }
+
+    public static Component cloudsClear() {
+        return cloudsClear(ContainerManager.resolve(CloudHandler.class));
+    }
+
+    static Component cloudsStatus(CloudHandler handler) {
+        if (!handler.isActive())
+            return Component.translatable(KEY + "clouds.off");
+        var cover = handler.cover();
+        return Component.translatable(KEY + (handler.forced().isPresent() ? "clouds.status.set" : "clouds.status"),
+                percent(cover.coverage()), Math.round(cover.minThickness()), Math.round(cover.maxThickness()),
+                Math.round(cover.baseDrop()));
+    }
+
+    /**
+     * @param thickness how thick the thickest are, in blocks, or NaN for the weather's
+     */
+    static Component clouds(CloudHandler handler, int percent, float thickness) {
+        handler.setForced(percent / 100F, thickness);
+        var off = handler.isActive() ? "" : ".off";
+        if (Float.isNaN(thickness))
+            return Component.translatable(KEY + "clouds.success" + off, percent);
+        return Component.translatable(KEY + "clouds.success.thickness" + off, percent, Math.round(thickness));
+    }
+
+    static Component cloudsClear(CloudHandler handler) {
+        var wasSet = handler.forced().isPresent();
+        handler.clearForced();
+        return Component.translatable(KEY + (wasSet ? "clouds.clear.success" : "clouds.clear.notset"));
     }
 
     public static Component lightning(Strike.Kind kind) {

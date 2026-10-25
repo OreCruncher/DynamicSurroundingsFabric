@@ -66,6 +66,7 @@ public class Handlers {
         this.register(PrecipitationHandler.class);
         this.register(LightningHandler.class);
         this.register(GroundFogHandler.class);
+        this.register(CloudHandler.class);
         this.register(WindowFrostHandler.class);
 
         IClientTickEnd.EVENT.register(this::tick);

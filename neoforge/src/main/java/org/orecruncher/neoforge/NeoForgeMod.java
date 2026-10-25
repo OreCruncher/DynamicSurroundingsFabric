@@ -27,6 +27,7 @@ public final class NeoForgeMod {
         // weather in some biomes only would be missed, and particle weather drawn over it there (none known; checking
         // where the player is as the weather is drawn would catch it)
         DimensionInfo.drawsOwnWeather = level -> CustomEnvironmentEffectsRendererManager.getCustomWeatherEffectRenderer(level, Vec3.ZERO) != null;
+        DimensionInfo.drawsOwnClouds = level -> CustomEnvironmentEffectsRendererManager.getCustomCloudsRenderer(level, Vec3.ZERO) != null;
 
         Client.initialize();
         Client.initializeClient();

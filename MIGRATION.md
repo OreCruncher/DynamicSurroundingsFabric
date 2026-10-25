@@ -42,6 +42,44 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Fifth 0.4.8 merge (through `1345f07`)
+
+Compiles on common, Fabric and NeoForge; the common tests pass (2392); both clients start with the three cloud
+pipelines compiled and no optional hook missing. `port-merge.py merge` left 16 conflicts. New rename rules: the
+dimension settings' interface (`IDimensionInformation` → `runtime.oracle.IDimensionOracle`, its import first),
+`getDayTime()` on a level → `getDefaultClockTime()`, and `options.getCloudsType()` → `cloudStatus().get()`. The
+dust storm sunset, script conditional, dust puffs and menu music commits were already here.
+
+- **Dynamic clouds** (`effects/clouds`, `CloudHandler`, `runtime/weather/CloudCover`, `UpperWind`): the field, mesh,
+  noise, sky model, upper wind and per-cell biome cover merged as is. What needed 26.2's APIs:
+  - `MixinCloudRenderer` (new) cancels `CloudRenderer.render` at its head when ours draw, in place of 1.21.1's wrap of
+    `renderLevel`'s `renderClouds` call: on 26.2 that call is a lambda in the frame's clouds pass. Its arguments give
+    the light on the clouds (vanilla's cloud color, from the environment, in place of 1.21.1's own time-of-day
+    curve) and the camera.
+  - `CloudRenderer` draws with three pipelines in one render pass, to the clouds target (the main target without
+    Fabulous): the settled part's depth (no color written), its color, then the changing part (no depth written);
+    reversed depth (`GREATER_THAN_OR_EQUAL`). Its uniforms are one block of vec4s (`DSCloudInfo`, lights as an array);
+    `clouds.json` is gone. Fog from the `Fog` block: the weather's (`FogEnvironmental*`) across the ground, and
+    vanilla's fade to `FogCloudsEnd`.
+  - The grid follows the Cloud Distance option (`options.cloudRange()`), as vanilla's clouds do, in place of the
+    render distance.
+  - `dynamicClouds` (dimension rule) is guessed with `DimensionInfo.drawsOwnClouds`, set by NeoForge from
+    `CustomEnvironmentEffectsRendererManager.getCustomCloudsRenderer`, like `drawsOwnWeather`; 1.21.1's
+    `hasVanillaClouds` (scanning effects for NeoForge's hook) has nothing to scan on 26.2. `DimensionInformation`
+    (deleted here) stays deleted; `DimensionOracle` has `dynamicClouds()`.
+- **Lightning**: the distance dimming (`Strikes.visibility`) and lighting the clouds (`CloudLights`) merged into 26.2's
+  pipeline drawing; the fog's reach is `FogHandler.viewReach()` (the nearer of `FogData.environmentalEnd` and
+  `renderDistanceEnd`), as 26.2 has no `RenderSystem.getShaderFogEnd`. The glow's pipeline isn't run while the clouds
+  are lit by it.
+- **`/dsweather clouds`, the `/dsprofile clouds` scene, the JFR script** and the release notes merged as is.
+- **CLAUDE.md**: the window frost note had lost its first lines in an earlier merge; restored, worded from 26.2's
+  `FrostRenderer`.
+
+To check in game on both platforms: clouds in fair weather and a storm, with and without Fabulous graphics (vanilla's
+clouds gone; the deck dark overhead in rain, fading toward the horizon; no edge at the grid's end), how the light on
+them compares with 1.21.1 (vanilla's cloud color may already gray them in rain, on top of the overcast tint), changes
+fading, lightning lighting the clouds, and far strikes dimmer in rain.
+
 ### Fourth 0.4.8 merge (through `cfed72a`)
 
 Compiles on common, Fabric and NeoForge; the common tests pass (2274); both clients start with the four lightning

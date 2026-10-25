@@ -62,7 +62,9 @@ public enum OptionalHook {
     LIGHTNING_BOLTS("Branching lightning in place of vanilla's bolts",
             site("core.MixinClientLevel", "dsurround$lightningBolt"),
             site("core.MixinLightningBoltRenderer", "dsurround$vanillaBolt"),
-            site("core.MixinLevelRenderer", "dsurround$lightningAfterWeather"));
+            site("core.MixinLevelRenderer", "dsurround$lightningAfterWeather")),
+    DYNAMIC_CLOUDS("Dynamic clouds in place of vanilla's",
+            site("core.MixinCloudRenderer", "dsurround$clouds"));
 
     /**
      * Whether a hook applied

@@ -53,6 +53,14 @@ public class FogHandler extends AbstractClientHandler {
     /**
      * How far the sky's fog reaches this frame, in blocks, with the mod's own thickening
      */
+    /**
+     * How far the view reaches in the fog, in blocks, as of the last frame: the weather's fog or the render distance's,
+     * whichever is nearer
+     */
+    public float viewReach() {
+        return Math.min(this.lastData.environmentalEnd, this.lastData.renderDistanceEnd);
+    }
+
     public float skyFogEnd() {
         return this.lastData.skyEnd;
     }
@@ -91,6 +99,21 @@ public class FogHandler extends AbstractClientHandler {
         rgba[3] = ARGB.alphaFloat(color);
         this.fogCalculator.tintSunsetColor(rgba, partialTick);
         return ARGB.colorFromFloat(rgba[3], rgba[0], rgba[1], rgba[2]);
+    }
+
+    /**
+     * The glow of sunrise and sunset, turned toward the dust's color in a dust storm and dimmed. Called as the sky is
+     * drawn. The game's own array is shared, so a copy is tinted.
+     *
+     * @param color the glow's color, red, green, blue and alpha, or null when there is none
+     */
+    public float[] tintSunsetColor(float[] color, float partialTick) {
+        if (color == null)
+            return null;
+        var rgba = this.sunsetColor;
+        System.arraycopy(color, 0, rgba, 0, 4);
+        this.fogCalculator.tintSunsetColor(rgba, partialTick);
+        return rgba;
     }
 
     @Override

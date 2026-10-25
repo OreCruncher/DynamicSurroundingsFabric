@@ -33,7 +33,9 @@ import java.util.function.Consumer;
 /**
  * Draws lightning: each channel of a bolt as a ribbon turned to face the camera, a white hot core along its middle in
  * a pale violet glow, and the cloud lit up around it as patches of light lying along the cloud base, broken up by
- * noise into the cloud's texture (see {@link CloudGlow}). The light adds to what is behind it.
+ * noise into the cloud's texture (see {@link CloudGlow}): when the mod's clouds aren't drawn, as they are lit by it
+ * from inside instead. The light adds to what is behind it. A far strike shows less, the more so the closer the fog
+ * (see {@link Strikes#visibility}).
  * <p>
  * Drawn in the weather pass, after the ground fog, to the weather's target: with Fabulous graphics a target of its
  * own, given the scene's depth at the start of the pass (see WeatherDepth), into which depth is written so the
@@ -91,7 +93,7 @@ public final class LightningRenderer {
     static final float BRANCH_WIDTH = 0.6F;
     // Light less than this isn't drawn
     static final float MIN_LIGHT = 0.003F;
-    // Colours (the core is white)
+    // Colors (the core is white)
     private static final float CHANNEL_R = 0.62F, CHANNEL_G = 0.66F, CHANNEL_B = 1F;
     private static final float GLOW_R = 0.62F, GLOW_G = 0.64F, GLOW_B = 0.86F;
     /**
@@ -155,19 +157,24 @@ public final class LightningRenderer {
      * @param target   where: the weather's target
      * @param fabulous whether Fabulous graphics are on
      * @param nowTicks the game time, in ticks, with the part of a tick
+     * @param fogEnd   where the fog is thickest, in blocks, for how much of a far strike shows (see
+     *                 {@link Strikes#visibility})
+     * @param glow     whether to draw the cloud's glow: not when the mod's clouds are lit by it instead
      * @return how many strikes were drawn, for the diagnostics
      */
-    public static int draw(List<Strike> strikes, Camera camera, RenderTarget target, boolean fabulous, double nowTicks) {
+    public static int draw(List<Strike> strikes, Camera camera, RenderTarget target, boolean fabulous, double nowTicks,
+                           float fogEnd, boolean glow) {
         if (strikes.isEmpty())
             return 0;
         var channels = fabulous ? CHANNELS_DEPTH : CHANNELS;
-        var glow = fabulous ? GLOW_DEPTH : GLOW;
+        var glowShader = fabulous ? GLOW_DEPTH : GLOW;
         int[] drawn = {0};
         RENDER_TIMER.begin();
         RENDER_TIMER.count(strikes.size());
         // The channels first: with depth written, the cloud's glow drawn first would hide them behind it
-        channels.run(() -> drawn[0] += drawChannels(channels.pipeline(), strikes, camera, target, nowTicks), () -> {});
-        glow.run(() -> drawn[0] += drawGlow(glow.pipeline(), strikes, camera, target, nowTicks), () -> {});
+        channels.run(() -> drawn[0] += drawChannels(channels.pipeline(), strikes, camera, target, nowTicks, fogEnd), () -> {});
+        if (glow)
+            glowShader.run(() -> drawn[0] += drawGlow(glowShader.pipeline(), strikes, camera, target, nowTicks, fogEnd), () -> {});
         RENDER_TIMER.end();
         return drawn[0];
     }
@@ -185,7 +192,8 @@ public final class LightningRenderer {
         return new BufferBuilder(meshBytes, PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
     }
 
-    private static int drawChannels(RenderPipeline pipeline, List<Strike> strikes, Camera camera, RenderTarget target, double nowTicks) {
+    private static int drawChannels(RenderPipeline pipeline, List<Strike> strikes, Camera camera, RenderTarget target,
+                                    double nowTicks, float fogEnd) {
         var position = camera.position();
         var builder = builder();
         int drawn = 0;
@@ -199,8 +207,9 @@ public final class LightningRenderer {
             float ox = (float) (strike.x() - position.x);
             float oy = (float) (strike.y() - position.y);
             float oz = (float) (strike.z() - position.z);
+            float seen = Strikes.visibility(strike.distance(), fogEnd);
             for (var channel : shape.channels())
-                ribbon(builder, strike, channel, ox, oy, oz, age);
+                ribbon(builder, strike, channel, ox, oy, oz, age, seen);
             drawn++;
         }
         var mesh = builder.build();
@@ -209,7 +218,8 @@ public final class LightningRenderer {
         return drawn;
     }
 
-    private static int drawGlow(RenderPipeline pipeline, List<Strike> strikes, Camera camera, RenderTarget target, double nowTicks) {
+    private static int drawGlow(RenderPipeline pipeline, List<Strike> strikes, Camera camera, RenderTarget target,
+                                double nowTicks, float fogEnd) {
         var position = camera.position();
         var builder = builder();
         int drawn = 0;
@@ -222,8 +232,9 @@ public final class LightningRenderer {
             float oy = (float) (strike.y() - position.y);
             float oz = (float) (strike.z() - position.z);
             var glow = strike.glow();
+            float seen = Strikes.visibility(strike.distance(), fogEnd);
             for (int p = 0; p < glow.count(); p++) {
-                float a = alpha(strike.glowBrightness(p, age) * strike.visibility());
+                float a = alpha(strike.glowBrightness(p, age) * seen);
                 if (a <= 0F)
                     continue;
                 any = true;
@@ -256,14 +267,15 @@ public final class LightningRenderer {
      * One channel as a ribbon: at each point, out to either side across the channel and the line of sight, so it
      * faces the camera however the channel turns. Positions are from the camera.
      */
-    private static void ribbon(BufferBuilder builder, Strike strike, BoltShape.Channel channel, float ox, float oy, float oz, float age) {
+    private static void ribbon(BufferBuilder builder, Strike strike, BoltShape.Channel channel, float ox, float oy, float oz,
+                               float age, float seen) {
         int n = channel.size();
         if (n < 2)
             return;
         var arrival = channel.arrival();
         int depth = channel.depth();
         // Nothing of it lit yet
-        if (strike.channelBrightness(depth, arrival[0], age) * strike.visibility() < MIN_LIGHT)
+        if (strike.channelBrightness(depth, arrival[0], age) * seen < MIN_LIGHT)
             return;
         float width = CORE_HALF_WIDTH * (float) Math.pow(BRANCH_WIDTH, depth);
 
@@ -288,7 +300,7 @@ public final class LightningRenderer {
             float taper = depth == 0 ? 1F : 1F - 0.6F * along;
             float fade = depth == 0 ? 1F : 1F - 0.85F * along;
             float half = Math.max(width * taper, distance * MIN_CORE_ANGLE) * HALO;
-            float light = strike.channelBrightness(depth, arrival[i], age) * strike.visibility() * fade;
+            float light = strike.channelBrightness(depth, arrival[i], age) * seen * fade;
 
             float lx = px - sideX * half, ly = py - sideY * half, lz = pz - sideZ * half;
             float rx = px + sideX * half, ry = py + sideY * half, rz = pz + sideZ * half;

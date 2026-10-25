@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * The wind that slants falling rain and snow. It blows steadily, from a direction that wanders slowly, and harder the
  * heavier the storm; every so often a gust passes through. A gust is a front: it reaches the upwind side of the area
- * around the camera first and sweeps across it, so its effect can be seen travelling through the drops.
+ * around the camera first and sweeps across it, so its effect can be seen traveling through the drops.
  * <p>
  * The wind's direction starts from the day, so players in the same world see it blowing the same way; the gusts and
  * the wandering are each player's own. Speeds are in blocks a tick. Client thread only.
@@ -106,6 +106,14 @@ public final class Wind {
         this.z = this.directionZ * this.speed;
     }
 
+    /**
+     * The way the wind blows toward on a day, as an angle in radians from east toward south (+x toward +z): the same
+     * for every player in a world. The wind starts each day from it, and the clouds' upper wind follows it.
+     */
+    public static float dayAngle(long day) {
+        return Mixers.splitMix64(day ^ WIND_SALT) / (float) Long.MAX_VALUE * Mth.PI;
+    }
+
     public float speed() {
         return this.speed;
     }
@@ -152,7 +160,7 @@ public final class Wind {
             if (day != this.day) {
                 // A new day, or the first tick: the day's own direction. Mid storm this swings the wind round, rarely.
                 this.day = day;
-                this.angle = Mixers.splitMix64(day ^ WIND_SALT) / (float) Long.MAX_VALUE * Mth.PI;
+                this.angle = dayAngle(day);
             }
             this.wander = Mth.clamp(this.wander + (random.nextFloat() * 2F - 1F) * WANDER_CHANGE, -MAX_WANDER, MAX_WANDER);
             this.angle += this.wander;

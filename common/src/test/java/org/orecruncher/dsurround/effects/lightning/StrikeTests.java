@@ -13,7 +13,7 @@ public class StrikeTests {
         var glow = new CloudGlow(new float[]{0F, 0F, 0F, 40F}, new float[]{1F, 0.5F, 0.5F}, new int[]{3}, 3, 0.4F);
         return new Strike(Strike.Kind.GROUND, 0D, 200D, 0D, null, 0.1F,
                 new float[]{0.1F, 0.2F, 0.3F}, new float[]{1F, 0.8F, 0.8F},
-                glow, 100F, 1F, 1000D, -1);
+                glow, 100F, 1000D, -1);
     }
 
     @Test
@@ -123,11 +123,11 @@ public class StrikeTests {
         var oneStroke = new CloudGlow(new float[0], new float[0], new int[0], 1, 1F);
         var twoStrokes = new CloudGlow(new float[0], new float[0], new int[0], 2, 1F);
         assertThrows(IllegalArgumentException.class, () -> new Strike(Strike.Kind.SHEET, 0D, 0D, 0D, null, 0F,
-                new float[]{0F, 0.1F}, new float[]{1F}, twoStrokes, 1F, 1F, 0D, -1));
+                new float[]{0F, 0.1F}, new float[]{1F}, twoStrokes, 1F, 0D, -1));
         assertThrows(IllegalArgumentException.class, () -> new Strike(Strike.Kind.SHEET, 0D, 0D, 0D, null, 0F,
-                new float[0], new float[0], oneStroke, 1F, 1F, 0D, -1));
+                new float[0], new float[0], oneStroke, 1F, 0D, -1));
         // And the glow needs a weight for each
         assertThrows(IllegalArgumentException.class, () -> new Strike(Strike.Kind.SHEET, 0D, 0D, 0D, null, 0F,
-                new float[]{0F}, new float[]{1F}, twoStrokes, 1F, 1F, 0D, -1));
+                new float[]{0F}, new float[]{1F}, twoStrokes, 1F, 0D, -1));
     }
 }

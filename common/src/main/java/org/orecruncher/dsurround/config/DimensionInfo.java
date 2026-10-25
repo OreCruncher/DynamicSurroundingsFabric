@@ -33,6 +33,11 @@ public class DimensionInfo {
      * unless a rule says otherwise. Nothing on Fabric replaces a dimension's weather.
      */
     public static Predicate<Level> drawsOwnWeather = level -> false;
+    /**
+     * Whether a level's dimension draws its clouds its own way, as {@link #drawsOwnWeather} for its weather: the mod's
+     * clouds drawn in their place would hide them
+     */
+    public static Predicate<Level> drawsOwnClouds = level -> false;
     private static final int SPACE_HEIGHT_OFFSET = 32;
     // Cloud height for a dimension that has no clouds: never reached
     private static final int NO_CLOUDS = Integer.MAX_VALUE;
@@ -55,6 +60,8 @@ public class DimensionInfo {
     protected boolean simulateWind = true;
     // Whether mist lies on the ground here, in the biomes given it
     protected boolean groundFog = true;
+    // Whether the mod's clouds are drawn here, in place of the dimension's own
+    protected boolean dynamicClouds = true;
 
     // The dimension's own cloud height, used unless a rule sets one
     private final int defaultCloudHeight;
@@ -88,6 +95,8 @@ public class DimensionInfo {
         this.simulateWind = world.dimensionType().hasSkyLight();
         this.groundFog = world.dimensionType().hasSkyLight();
         this.particleWeather = !drawsOwnWeather.test(world);
+        // And one with vanilla's clouds gets the mod's in their place
+        this.dynamicClouds = this.defaultCloudHeight != NO_CLOUDS && !drawsOwnClouds.test(world);
 
         // Valid even if finish() is never called
         this.finish();
@@ -119,6 +128,7 @@ public class DimensionInfo {
             config.particleWeather().ifPresent(v -> this.particleWeather = v);
             config.simulateWind().ifPresent(v -> this.simulateWind = v);
             config.groundFog().ifPresent(v -> this.groundFog = v);
+            config.dynamicClouds().ifPresent(v -> this.dynamicClouds = v);
         }
     }
 
@@ -182,6 +192,10 @@ public class DimensionInfo {
 
     public boolean groundFog() {
         return this.groundFog;
+    }
+
+    public boolean dynamicClouds() {
+        return this.dynamicClouds;
     }
 
 }

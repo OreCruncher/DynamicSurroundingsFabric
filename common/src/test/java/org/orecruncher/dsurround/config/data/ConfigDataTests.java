@@ -182,7 +182,7 @@ public class ConfigDataTests {
 
     @Test
     void dimensionDumpLabelsEachValue() {
-        // Regression: skyHeight was labelled "seaLevel"
+        // Regression: skyHeight was labeled "seaLevel"
         var rule = parse(DimensionConfigRule.CODEC, "{\"dimId\": \"minecraft:overworld\", \"seaLevel\": 63, \"skyHeight\": 256}").getOrThrow();
 
         var text = rule.toString();
@@ -203,16 +203,19 @@ public class ConfigDataTests {
 
     @Test
     void dimensionRulesSetWeatherAndWind() {
-        var rule = parse(DimensionConfigRule.CODEC, "{\"dimId\": \"twilightforest:twilight_forest\", \"particleWeather\": true, \"simulateWind\": false, \"groundFog\": true}").getOrThrow();
+        var rule = parse(DimensionConfigRule.CODEC, "{\"dimId\": \"twilightforest:twilight_forest\", \"particleWeather\": true, \"simulateWind\": false, \"groundFog\": true, \"dynamicClouds\": false}").getOrThrow();
         assertEquals(Optional.of(true), rule.particleWeather());
         assertEquals(Optional.of(false), rule.simulateWind());
         assertEquals(Optional.of(true), rule.groundFog());
+        assertEquals(Optional.of(false), rule.dynamicClouds());
         var text = rule.toString();
-        assertTrue(text.contains("particleWeather: true") && text.contains("simulateWind: false") && text.contains("groundFog: true"), text);
+        assertTrue(text.contains("particleWeather: true") && text.contains("simulateWind: false") && text.contains("groundFog: true")
+                && text.contains("dynamicClouds: false"), text);
 
         // Left out, they are left to the dimension's own guess
         var plain = parse(DimensionConfigRule.CODEC, "{\"dimId\": \"minecraft:overworld\"}").getOrThrow();
-        assertTrue(plain.particleWeather().isEmpty() && plain.simulateWind().isEmpty() && plain.groundFog().isEmpty());
+        assertTrue(plain.particleWeather().isEmpty() && plain.simulateWind().isEmpty() && plain.groundFog().isEmpty()
+                && plain.dynamicClouds().isEmpty());
     }
 
     @Test
