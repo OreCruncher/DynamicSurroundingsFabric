@@ -48,6 +48,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Footprints option in Entity Effects
 * Frog sounds are back from older versions: lily pads croak, with the odd bullfrog call, twice as often at night as by day; not while indoors, or when it's cold enough for water to freeze
   * Includes the lily pads of Biomes O' Plenty, Twilight Forest, Oh The Biomes We've Gone, and Regions Unexplored; the `dsurround:effects/frog_croaks` block tag sets which blocks croak
+* The heartbeat is back from older versions: the player's heart pounds when their health is at 30% or less (not in creative); Allow Scary Content turns it off
 * In a dust storm the glow of sunrise and sunset turns dusty and dims, as the sky and fog already do
 * Rain, snow, and dust blown in under an overhang drift a little way in out of the wind and fade, instead of stopping at the roof's edge; snowflakes that reach the ground under the overhang lie there, and rain splashes on a porch floor
 * Lightning that branches and forks, in place of Minecraft's bolts
@@ -100,6 +101,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * The Lightning option turns the lightning off on its own
 * Rain landing on snow soaks in and leaves a damp spot, as on dirt and sand, instead of splashing
 * Dynamic Surroundings music manager will start music when Minecraft's main menu is shown rather than wait 5 seconds
+* A hungry player's stomach grumbles more often
 
 **Fixes**
 * Particle rain and snow fell through blocks from other mods whose shape depends on the world, such as Mekanism's energy cube (Minecraft's own rain does too: such blocks are left out of the height map it stops at); they now stop on top of them
