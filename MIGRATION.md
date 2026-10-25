@@ -42,6 +42,20 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Sixth 0.4.8 merge (through `8f9f9ca`)
+
+Compiles on common, Fabric and NeoForge; the common tests pass (2396); both clients start with the three cloud
+pipelines compiled. `port-merge.py merge` left four conflicts and `clouds.json` (deleted here); no new rename rules.
+
+- **Cloud sections** (`CloudSections`, merged as is): `CloudRenderer` uploads the sections' vertices as they are
+  (`POSITION_TEX_COLOR`, the same layout here) with `writeToBuffer`, in place of building the mesh itself; positions
+  are from the sections' anchor, and the changing part's start times from their epoch.
+- **Cloud Distance option** (`weatherOptions.cloudDistance`) and its lang keys left out: the grid follows vanilla's
+  Cloud Distance here, as before. 1.21.1's stretched terrain fog for the clouds isn't needed either: `clouds.fsh`
+  keeps the `Fog` block's weather fog and `FogCloudsEnd`.
+- **`/dsprofile clouds`** sends `gamerule advance_weather false`, as the other scenes here do: 1.21.1's
+  `doWeatherCycle` is an unknown rule on 26.2.
+
 ### Fifth 0.4.8 merge (through `1345f07`)
 
 Compiles on common, Fabric and NeoForge; the common tests pass (2392); both clients start with the three cloud

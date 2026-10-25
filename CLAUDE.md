@@ -193,7 +193,10 @@ checking in game.
     what the weather calls for: fair puffs that build up in the afternoon, a storm's lowered, thickened deck, thunder
     towers, high streaks. Lightning strikes start from `CloudHandler.cloudBase()` when ours are drawn. Every player sees
     the same clouds: they drift with `runtime/weather/UpperWind` and change shape by the game time alone (never a
-    session's ticks or the player's wind), and each cell's cover follows the biome under it.
+    session's ticks or the player's wind), and each cell's cover follows the biome under it. Quads are kept in 4x4-cell
+    `CloudSections`, rebuilt only where cells changed (at most every `SECTION_TICKS`), positions from an anchor cell so
+    they survive the grid moving; uploaded as they are (`POSITION_TEX_COLOR`). 1.21.1's Cloud Distance option
+    (`weatherOptions.cloudDistance`) isn't here: vanilla's is.
   - Per dimension (`dimensions.json`): `particleWeather`, `simulateWind`, `groundFog` and `dynamicClouds`, guessed when
     absent (`DimensionInfo.drawsOwnWeather`/`drawsOwnClouds`: NeoForge's custom weather and clouds renderers for the
     dimension; sky light). The client always reports sea level 63, so a modded dimension

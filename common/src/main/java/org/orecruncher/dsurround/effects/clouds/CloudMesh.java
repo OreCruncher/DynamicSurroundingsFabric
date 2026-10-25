@@ -58,18 +58,46 @@ public final class CloudMesh {
      * @return how many quads, of both
      */
     public static int build(CloudField field, Sink settled, Sink changing) {
-        // One of each, set for each column and piece in turn: built every few ticks, for every cell
-        var look = new Look();
-        var box = new Box();
+        return build(field, 0, 0, field.size(), field.size(), 0, 0, settled, changing);
+    }
+
+    /**
+     * The same for some of the cells: from {@code (i0, j0)} up to but not including {@code (i1, j1)}, positions from
+     * the cell {@code (-baseX, -baseZ)} of the grid rather than its corner (see {@link CloudSections})
+     *
+     * @return how many quads, of both
+     */
+    public static int build(CloudField field, int i0, int j0, int i1, int j1, int baseX, int baseZ, Sink settled, Sink changing) {
+        return build(field, i0, j0, i1, j1, baseX, baseZ, settled, changing, new Parts());
+    }
+
+    /**
+     * What building quads works with, set for each column and piece in turn: kept by whoever builds often (a section at
+     * a time, several times a second), so building makes nothing new
+     */
+    public static final class Parts {
+        private final Look look = new Look();
+        private final Box box = new Box();
+    }
+
+    /**
+     * The same, with {@link Parts} of the caller's
+     */
+    public static int build(CloudField field, int i0, int j0, int i1, int j1, int baseX, int baseZ, Sink settled, Sink changing,
+                            Parts parts) {
+        var look = parts.look;
+        var box = parts.box;
         int quads = 0;
+        int fromI = Math.max(0, i0), toI = Math.min(field.size(), i1);
+        int fromJ = Math.max(0, j0), toJ = Math.min(field.size(), j1);
         for (var layer : CloudField.Layer.values())
-            for (int j = 0; j < field.size(); j++)
-                for (int i = 0; i < field.size(); i++)
-                    quads += cell(field, layer, i, j, settled, changing, look, box);
+            for (int j = fromJ; j < toJ; j++)
+                for (int i = fromI; i < toI; i++)
+                    quads += cell(field, layer, i, j, baseX, baseZ, settled, changing, look, box);
         return quads;
     }
 
-    private static int cell(CloudField field, CloudField.Layer layer, int i, int j, Sink settled, Sink changing,
+    private static int cell(CloudField field, CloudField.Layer layer, int i, int j, int baseX, int baseZ, Sink settled, Sink changing,
                             Look look, Box box) {
         int base = field.base(layer, i, j);
         int top = field.top(layer, i, j);
@@ -85,8 +113,8 @@ public final class CloudMesh {
         int shadeBase = !now ? prevBase : !before ? base : Math.min(base, prevBase);
         int shadeTop = !now ? prevTop : !before ? top : Math.max(top, prevTop);
         look.set(layer, shadeBase, shadeTop);
-        float x0 = i * CloudField.CELL;
-        float z0 = j * CloudField.CELL;
+        float x0 = (i + baseX) * CloudField.CELL;
+        float z0 = (j + baseZ) * CloudField.CELL;
         int quads = 0;
 
         // What is in it before and after

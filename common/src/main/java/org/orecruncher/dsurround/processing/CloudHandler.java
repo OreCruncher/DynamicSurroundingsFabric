@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.processing;
 
+import it.unimi.dsi.fastutil.longs.Long2FloatOpenHashMap;
 import net.minecraft.client.CloudStatus;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -15,6 +16,7 @@ import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.effects.clouds.CloudField;
 import org.orecruncher.dsurround.effects.clouds.CloudLights;
 import org.orecruncher.dsurround.effects.clouds.CloudRenderer;
+import org.orecruncher.dsurround.effects.clouds.CloudSections;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -69,6 +71,11 @@ public class CloudHandler extends AbstractClientHandler {
      * the cell's next turn
      */
     static final int UPDATE_TICKS = CloudField.FADE_TICKS;
+    /**
+     * The quads of cells that changed are built at most this often, in ticks: in a storm many cells change each tick,
+     * here and there, and building their sections every few ticks costs a third as much
+     */
+    static final int SECTION_TICKS = 3;
     // The fewest and the most cells out from the camera
     private static final int MIN_RADIUS = 16;
     private static final int MAX_RADIUS = 48;
@@ -78,6 +85,9 @@ public class CloudHandler extends AbstractClientHandler {
     private final CloudField field = new CloudField();
     private final UpperWind upperWind = new UpperWind();
     private final LevelCovers covers;
+    // The quads, in sections built again as their cells change; and the tick they were last built on
+    private final CloudSections sections = new CloudSections();
+    private long sectionsBuilt = -SECTION_TICKS;
     private boolean started;
     // The storm the clouds show, easing toward the weather's
     private float rainLevel;
@@ -166,7 +176,7 @@ public class CloudHandler extends AbstractClientHandler {
         var camera = GameUtils.getMC().gameRenderer.mainCamera().position();
         int cx = Mth.floor((camera.x - this.drift[0]) / CloudField.CELL);
         int cz = Mth.floor((camera.z - this.drift[1]) / CloudField.CELL);
-        int radius = radius();
+        int radius = this.radius();
         // The cells whose turn it is, and any new to the grid as the camera moves; all of them when starting, or when set
         // by command
         int turns = this.refresh ? 1 : UPDATE_TICKS;
@@ -201,11 +211,18 @@ public class CloudHandler extends AbstractClientHandler {
             return false;
         double camX = camera.x, camY = camera.y, camZ = camera.z;
 
+        // The quads of the cells that changed, every few ticks: a change's fade is timed from when it happened, so
+        // one built a tick or two late only shows it a little way in
+        if (this.ticks - this.sectionsBuilt >= SECTION_TICKS || this.sections.sections() == 0) {
+            if (this.sections.update(this.field))
+                this.sectionsBuilt = this.ticks;
+        }
+
         this.upperWind.drift(level.getGameTime() + partialTick, this.drawnDrift);
         double driftX = this.drawnDrift[0];
         double driftZ = this.drawnDrift[1];
-        float offsetX = (float) ((double) this.field.originX() * CloudField.CELL + driftX - camX);
-        float offsetZ = (float) ((double) this.field.originZ() * CloudField.CELL + driftZ - camZ);
+        float offsetX = (float) ((double) this.sections.anchorX() * CloudField.CELL + driftX - camX);
+        float offsetZ = (float) ((double) this.sections.anchorZ() * CloudField.CELL + driftZ - camZ);
         float offsetY = (float) (this.dimensionInformation.getCloudHeight() - camY);
 
         // The light on the clouds: vanilla's for the time of day, grayer and dimmer as the sky closes over
@@ -223,7 +240,8 @@ public class CloudHandler extends AbstractClientHandler {
         var source = this.lightSource;
         if (source != null)
             source.offer(this.lights, partialTick, camX, camY, camZ);
-        return CloudRenderer.render(this.field, offsetX, offsetY, offsetZ, red, green, blue, this.ticks + partialTick, this.lights);
+        return CloudRenderer.render(this.sections, offsetX, offsetY, offsetZ, red, green, blue,
+                this.ticks + partialTick - this.sections.epoch(), this.field.radius() * CloudField.CELL, this.lights);
     }
 
     /**
@@ -278,6 +296,8 @@ public class CloudHandler extends AbstractClientHandler {
     private void reset() {
         if (this.started) {
             this.field.clear();
+            this.sections.clear();
+            this.sectionsBuilt = -SECTION_TICKS;
             this.started = false;
         }
     }
@@ -315,6 +335,9 @@ public class CloudHandler extends AbstractClientHandler {
      */
     private static final class LevelCovers implements CloudField.Cover {
 
+        // The most squares' wetness kept before forgetting them: a cloud grid's worth, and some
+        private static final int MAX_WETNESS = 1 << 17;
+
         private final IBiomeLibrary biomeLibrary;
         private final CloudCover[] byWetness = new CloudCover[WETNESS_STEPS + 1];
         private final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
@@ -324,10 +347,15 @@ public class CloudHandler extends AbstractClientHandler {
         private double driftZ;
         private int sampleY;
         private float playerWetness = 0.5F;
+        // The biome's wetness by the 4 by 4 block squares biomes come in, at the sample height: the clouds drift a block
+        // or two between a cell's turns, so most cells read the same square again. Forgotten with the level, or once it
+        // holds a good deal
+        private final Long2FloatOpenHashMap wetness = new Long2FloatOpenHashMap();
 
         LevelCovers(IBiomeLibrary biomeLibrary) {
             this.biomeLibrary = biomeLibrary;
             Arrays.fill(this.byWetness, CloudCover.CLEAR);
+            this.wetness.defaultReturnValue(Float.NaN);
         }
 
         /**
@@ -336,6 +364,8 @@ public class CloudHandler extends AbstractClientHandler {
          */
         void prepare(ClientLevel level, float rainLevel, float thunder, long dayTime, float dayCover, @Nullable Forced held,
                      int sampleY, BlockPos player) {
+            if (level != this.level || sampleY != this.sampleY || this.wetness.size() > MAX_WETNESS)
+                this.wetness.clear();
             this.level = level;
             this.sampleY = sampleY;
             this.playerWetness = this.wetnessAt(player.getX(), player.getZ(), 0.5F);
@@ -389,8 +419,14 @@ public class CloudHandler extends AbstractClientHandler {
             var current = this.level;
             if (current == null || !current.hasChunk(SectionPos.blockToSectionCoord(x), SectionPos.blockToSectionCoord(z)))
                 return otherwise;
+            long square = ((long) (x >> 2) << 32) | ((z >> 2) & 0xFFFFFFFFL);
+            float known = this.wetness.get(square);
+            if (!Float.isNaN(known))
+                return known;
             var biome = current.getBiome(this.pos.set(x, this.sampleY, z)).value();
-            return this.biomeLibrary.getBiomeInfo(biome).getDownfall();
+            float wet = this.biomeLibrary.getBiomeInfo(biome).getDownfall();
+            this.wetness.put(square, wet);
+            return wet;
         }
 
         private static int step(float wetness) {

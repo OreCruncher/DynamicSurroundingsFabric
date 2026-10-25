@@ -65,7 +65,7 @@ public enum ProfileScene {
             return hold(simulation.strengthSet(), () -> simulation.setStrength(1F), simulation::setStrength, simulation::clearStrength);
         }
     },
-    CLOUDS(8, List.of("weather thunder", "gamerule doWeatherCycle false")) {
+    CLOUDS(8, List.of("weather thunder", "gamerule advance_weather false")) {
         @Override
         Runnable setUp() {
             // A full thunderstorm, for the fastest drift (the most cells passing, each a rebuild) and its towers; and
