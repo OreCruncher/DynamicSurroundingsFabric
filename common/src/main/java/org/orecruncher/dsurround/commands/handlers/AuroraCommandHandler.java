@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * /dsaurora: shows tonight's realistic aurora, and holds how active it is, where in its night it is and its colour
+ * /dsaurora: shows tonight's realistic aurora, and holds how active it is, where in its night it is and its color
  * character, for seeing each.
  */
 public class AuroraCommandHandler {
@@ -37,7 +37,7 @@ public class AuroraCommandHandler {
 
     public static Component colour(AuroraColour colour) {
         handler().holdColour(colour);
-        return Component.translatable(KEY + "colour.success", name(colour));
+        return Component.translatable(KEY + "color.success", name(colour));
     }
 
     public static Component clear() {

@@ -2,7 +2,7 @@
 
 Branch `OreCruncher/26.2`: the 26.2 port of 0.4.5 with `OreCruncher/0.4.6` merged in, and `OreCruncher/0.4.7` merged
 in after it (see "0.4.7 merge" below), then `OreCruncher/0.4.8` (see "0.4.8 merge"). Game APIs follow the 26.2
-branch; behaviour follows 0.4.6 unless noted. Checked so far: everything compiles on common, Fabric and NeoForge; the
+branch; behavior follows 0.4.6 unless noted. Checked so far: everything compiles on common, Fabric and NeoForge; the
 common tests pass; both clients start with all three shaders compiled and join a world without errors.
 
 ## 0.4.8 merge
@@ -16,7 +16,7 @@ What needed 26.2's APIs:
 - **Footprints and health pop-offs** drew through `MixinDebugRenderer.render` on 1.21.1. On 26.2 they are submitted
   from `MixinLevelRenderer` at the end of `submitFeatures`, next to the light level labels: `Footprints.submitAll`
   with `submitCustomGeometry` and `RenderTypes.textPolygonOffset`, `HealthPopoffs.submit` with `submitText` (a
-  non-zero outline colour draws the 8-way outline, as `drawInBatch8xOutline` did). Light from
+  non-zero outline color draws the 8-way outline, as `drawInBatch8xOutline` did). Light from
   `LightCoordsUtil.getLightCoords`; `Biome.getPrecipitationAt` takes the sea level.
 - **Burning mobs' fire**: 26.2 decides an entity's fire as its render state is extracted, so the hook is
   `MixinEntityRenderer` (renamed from 1.21.1's `MixinEntityRenderDispatcher`) wrapping `Entity.displayFireAnimation()`
@@ -25,7 +25,7 @@ What needed 26.2's APIs:
 - **Death mist**: `LivingEntity.makePoofParticles` is public on 26.2; the inject applies unchanged. `DeathMist`
   takes its sprite in `SoftPuffParticle`'s constructor, as 26.2's other puffs do.
 - **Soft puffs and foam**: the light caching uses `getLightCoords`, which is protected on 26.2.
-- **Pop-off colours**: `ChatFormatting` has no colour accessor on 26.2; they come from `ColorPalette.MC_RED`,
+- **Pop-off colors**: `ChatFormatting` has no color accessor on 26.2; they come from `ColorPalette.MC_RED`,
   `MC_GREEN` and `MC_GOLD`.
 - **The particle batch guard is not on 26.2**, nor its *Guards* config group or the Repair Particle Batches option:
   26.2 has no particle loop in which a particle can change the drawing state. Particles extract their data, and
@@ -119,7 +119,7 @@ What changed to fit 26.2:
 - **Hooks** (0.4.7's `MixinLevelRenderer`, `MixinFogRenderer` and `MixinParticleEngine` targets are gone): storm strength
   in drawn rain (`MixinWeatherEffectRenderer`), in ticked rain, rain sounds and vanilla splash hiding
   (`ClientLevel.tickWeatherEffects`, `MixinClientLevel`), in vanilla's rain fog (`MixinAtmosphericFogEnvironment`); dust
-  tint of the sky (`SkyRenderer.extractRenderState`) and fog (`FogRenderer.computeFogColor`, which the clear colour
+  tint of the sky (`SkyRenderer.extractRenderState`) and fog (`FogRenderer.computeFogColor`, which the clear color
   follows); wind-blown marking (`ParticleEngine.makeParticle`). All in `OptionalHook`.
 - **Weather fog**: rain's fog is vanilla's own on 26.2 (given the storm's strength); `WeatherFogRangeCalculator` adds
   only a dust storm's, and is on again (it was left out of the 26.2 port).
@@ -178,15 +178,15 @@ What changed to fit 26.2:
   taken from a point far off (`DIRECTION_DEPTH`): view bobbing shifts the eye in the projection by about as much as the
   near plane is from it, so a near point turned the lines wildly while walking (the mist blinked). The depth copy is `SoftParticles.captureDepth` (translucent target with Fabulous). Drawn at the start
   of the weather pass without Fabulous; with it, after the weather and before the world border (optional hook
-  `GROUND_FOG`). The march also writes each pixel's distance (`distance_at`) to an `R32_FLOAT` target, a second colour
+  `GROUND_FOG`). The march also writes each pixel's distance (`distance_at`) to an `R32_FLOAT` target, a second color
   attachment, for the smooth (no depth reads) and composite (its own pixel only); it writes every pixel, returning
-  clear colour instead of discarding, as pixels without mist still count when blending. 3D noise was dropped (no banding
+  clear color instead of discarding, as pixels without mist still count when blending. 3D noise was dropped (no banding
   found on 26.2). `GroundFogField.prepare` reads the obstacle check's neighbours in area order rather than through the
   ring's slots.
 - **Precipitation columns**: `PrecipitationColumns` keeps each column in a slot keyed by its world position, as
   `GroundFogField` does: moving looks up only the columns that came into the area, a few rows are looked at again each
   tick (all within `REFRESH_TICKS`) instead of the whole area every 10 ticks, and the rain, snow and dust shares and the
-  regional dust colour are running totals.
+  regional dust color are running totals.
 - **Drop vertices**: the falling drops (rain, snow, dust) are written straight into native memory by `ParticleQuads`
   (vanilla's particle layout, packed as BufferBuilder packs it; `ParticleQuadsTests` compares the bytes) and drawn with
   `MeshDraw.drawQuads`, instead of four BufferBuilder calls a corner. Snow flecks, window streaks and damp spots,
@@ -200,9 +200,9 @@ What changed to fit 26.2:
 - **Soft particles with Fabulous graphics**: 0.4.7 wrote the translucent target's depth (the water's surface) from a
   shader of its own; on 26.2 the particles are drawn before the water, so that depth doesn't exist yet. Instead the
   mist and flame layers are drawn twice with Fabulous (`SoftParticles.choosePipeline`, `depthPassFor`, and
-  `MixinQuadParticleFeatureRenderer` wrapping `drawIndexed`): first only their depth (`*_depth`: no colour, the usual
+  `MixinQuadParticleFeatureRenderer` wrapping `drawIndexed`): first only their depth (`*_depth`: no color, the usual
   test and writes, `WRITE_DEPTH` dropping what has faded to nothing), leaving the nearest puff's at each pixel; then
-  their colour (`*_fabulous`: no test, no writes). Writing depth in a single untested pass left whichever puff came
+  their color (`*_fabulous`: no test, no writes). Writing depth in a single untested pass left whichever puff came
   last, as particles aren't drawn in order, and showed as patches over a waterfall. Mist above water then sorts in front
   of it in the transparency pass. `soft_particle_scene_depth` is gone.
 - **Spark and droplet streaks**: a 26.2 particle hands the engine a square facing the camera; a streak is a long quad
@@ -256,8 +256,8 @@ The biome trait rework, the ATM10 profile speedups, the tooltip delay, the Mesa 
   server doesn't send and as `Mod.findResource` does, found nothing in any jar. `lib/resources/ModRoots` opens a jar
   as a zip file system (a folder, or Fabric's jar root, is used as it is); both the tag fallback and the biome
   definition reader go through it.
-- **English**: 26.2's aurora strings now use American spelling too (colors, modeled). The `/dsaurora colour` command
-  and its keys are unchanged.
+- **English**: 26.2's aurora strings now use American spelling too (colors, modeled), and the key `dsurround.command.dsaurora.color.success` (was `colour.success`). The `/dsaurora colour` command
+  itself is unchanged.
 
 To check in game: `/dsdump biomes` (traits, sources and "Biomes to check"; in single player the dimensions' biome
 lists), config and individual sound screen tooltips waiting half a second, water foam (light and tilt), a /dsprofile
@@ -409,12 +409,12 @@ Not a port: a second aurora, modelled on real ones, and the default style (`auro
 ## To check in game (both platforms)
 
 - Mixins that apply only in a world: sky, fog, quad particle renderer, debug renderer, client level, sound engine.
-- Aurora: cold biome at night (`/dsurround` diagnostics shows its status); colours, strength, behind the world.
+- Aurora: cold biome at night (`/dsurround` diagnostics shows its status); colors, strength, behind the world.
 - Realistic aurora on NeoForge (checked on Fabric): `/dsaurora activity storm`, `phase` and `colour` for each look;
   Fast quality; moonlight washout under a full moon.
 - Waterfall mist fading into water and terrain (soft), with and without Fabulous graphics; firefly lights on grass.
 - Fog effects (biome, morning) now actually change the fog.
 - Sound configuration screen: layout, filter, play/stop, tooltips; credits/markdown screen links and hover text.
-- Compass scale, clock colour, diagnostics overlay modes including the in-world effect boxes.
+- Compass scale, clock color, diagnostics overlay modes including the in-world effect boxes.
 - Biome music (`/dsmm whatsplaying`): configured tracks in their biomes, underwater music in oceans, creative music
   with and without `playBiomeMusicWhileCreative`.

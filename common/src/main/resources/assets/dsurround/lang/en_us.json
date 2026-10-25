@@ -87,7 +87,7 @@
   "dsurround.command.dsaurora.status.notheld": "as tonight's",
   "dsurround.command.dsaurora.activity.success": "The aurora is %1$s until /dsaurora clear, and shows tonight whatever the aurora chance (at night, in a cold biome)",
   "dsurround.command.dsaurora.phase.success": "The aurora is held in its %1$s until /dsaurora clear",
-  "dsurround.command.dsaurora.colour.success": "The aurora has %1$s colors until /dsaurora clear",
+  "dsurround.command.dsaurora.color.success": "The aurora has %1$s colors until /dsaurora clear",
   "dsurround.command.dsaurora.clear.success": "The aurora follows its night again",
   "dsurround.command.dsaurora.clear.notset": "Nothing was held: the aurora follows its night",
   "dsurround.command.dsweather.status": "Storm: %1$s, %2$s%% of full strength, rising to %3$s%% (the game's rain: %4$s%%)",
