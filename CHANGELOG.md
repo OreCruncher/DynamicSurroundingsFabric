@@ -85,6 +85,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Allow Scary Sounds in Sound Options is now Allow Scary Content there, and also covers the lightning; a value already set carries over
   * The Lightning option turns the lightning off on its own
 * Rain landing on snow soaks in and leaves a damp spot, as on dirt and sand, instead of splashing
+* Dynamic Surroundings music manager will start music when Minecraft's main menu is shown rather than wait 5 seconds
 
 **Fixes**
 * Particle rain and snow fell through blocks from other mods whose shape depends on the world, such as Mekanism's energy cube (Minecraft's own rain does too: such blocks are left out of the height map it stops at); they now stop on top of them
