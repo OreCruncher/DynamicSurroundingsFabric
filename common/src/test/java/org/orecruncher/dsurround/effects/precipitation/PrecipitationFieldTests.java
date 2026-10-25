@@ -53,9 +53,14 @@ public class PrecipitationFieldTests {
     private static final int SAND = 0xDBD3A0;
 
     /**
-     * Flat ground everywhere: a desert, with dust, for x below {@code dustBelowX}, and rain from there on
+     * Flat ground everywhere: a desert, with dust, for x below {@code dustBelowX}, and rain from there on; or, if
+     * {@code east}, the other way round
      */
-    private record Desert(int ground, int dustBelowX) implements IColumnSource {
+    private record Desert(int ground, int dustBelowX, boolean east) implements IColumnSource {
+        Desert(int ground, int dustBelowX) {
+            this(ground, dustBelowX, false);
+        }
+
         @Override
         public int groundHeight(int x, int z) {
             return this.ground;
@@ -63,7 +68,7 @@ public class PrecipitationFieldTests {
 
         @Override
         public PrecipitationKind precipitation(int x, int y, int z) {
-            return x < this.dustBelowX ? PrecipitationKind.DUST : PrecipitationKind.RAIN;
+            return (x < this.dustBelowX) != this.east ? PrecipitationKind.DUST : PrecipitationKind.RAIN;
         }
 
         @Override
@@ -601,14 +606,25 @@ public class PrecipitationFieldTests {
     }
 
     @Test
-    void dustBlownOutOfTheDesertGoes() {
-        // Desert for x below 0, rain beyond: whichever way the wind blows, no dust is kept outside the desert
+    void dustBlownOutOfTheDesertFadesOut() {
+        // Desert for x from 0, rain to the west, where the wind blows: dust blown out of the desert drifts on a little
+        // way, fading, then goes
         var wind = steadyWind();
         var field = new PrecipitationField(1000);
-        tick(field, new Desert(GROUND, 0), 0, 0, 1F, wind, 30);
-        for (int i = 0; i < field.count(); i++)
-            if (field.kind[i] == PrecipitationField.DUST)
-                assertTrue(field.x[i] < 0F, "dust outside the desert");
+        assertTrue(wind.x() < 0F, "the wind blows out of the desert");
+        var desert = new Desert(GROUND, 0, true);
+        var random = Randomizer.create(42);
+        boolean sawFading = false;
+        for (int t = 0; t < 60; t++) {
+            field.tick(desert, 0, CAMERA_Y, 0, 1F, 1F, wind, random);
+            for (int i = 0; i < field.count(); i++) {
+                if (field.kind[i] != PrecipitationField.DUST || field.x[i] > -1F)
+                    continue;
+                assertTrue(field.lifetime[i] - field.age[i] <= PrecipitationField.DUST_FADE, "dust outside the desert not fading");
+                sawFading |= field.fade(i, 0F) > 0F;
+            }
+        }
+        assertTrue(sawFading, "no dust drifted out of the desert");
     }
 
     /**

@@ -44,7 +44,7 @@ public final class PrecipitationField {
     // From the smallest drizzle drop to the largest drop of a downpour: bigger drops fall faster
     static final float RAIN_SPEED_MIN = 0.45F;
     static final float RAIN_SPEED_RANGE = 0.85F;
-    // A rain drop's size, 0 to 1, centres on this plus the storm's strength times the next, spread either way by the
+    // A rain drop's size, 0 to 1, centers on this plus the storm's strength times the next, spread either way by the
     // last: light rain is mostly small drops, a downpour mostly large, with some of each in between
     static final float RAIN_SIZE_BASE = 0.1F;
     static final float RAIN_SIZE_PER_LEVEL = 0.8F;
@@ -72,7 +72,7 @@ public final class PrecipitationField {
      * the air.
      */
     static final float DUST_SHARE = 0.25F;
-    // A puff's centre is at least this far above the ground, and starts up to this much higher again, most of them low
+    // A puff's center is at least this far above the ground, and starts up to this much higher again, most of them low
     static final float DUST_MIN_LIFT = 0.4F;
     static final float DUST_HEIGHT = 5F;
     // How far below the ground of its column a puff may be before it counts as blown into a wall or cliff, and stops
@@ -134,7 +134,7 @@ public final class PrecipitationField {
     final int[] covered;
     final int[] light;
     final byte[] kind;
-    // Dust only: its colour, 0xRRGGBB, and how many ticks it lasts
+    // Dust only: its color, 0xRRGGBB, and how many ticks it lasts
     final int[] color;
     final int[] lifetime;
     int count;
@@ -269,7 +269,7 @@ public final class PrecipitationField {
     }
 
     /**
-     * The colour of the dust across the area around the camera, 0xRRGGBB, as the puffs take it; or
+     * The color of the dust across the area around the camera, 0xRRGGBB, as the puffs take it; or
      * {@link IColumnSource#NOT_A_DUST_SOURCE} if, as of the last look, none of the area has dust
      */
     public int regionalDustColor() {
@@ -473,7 +473,7 @@ public final class PrecipitationField {
      * there and easing up rather than stepping up a block at a time. Partly in the ground meanwhile, it is drawn soft,
      * so it blends in.
      *
-     * @return false if it settled, was stopped by a wall, or left the cylinder or the dust
+     * @return false if it settled (soon after it leaves the dust), was stopped by a wall, or left the cylinder
      */
     private boolean moveDust(int i, double cameraX, double cameraY, double cameraZ) {
         float before = Mth.sin(this.phase[i]);
@@ -486,8 +486,9 @@ public final class PrecipitationField {
             return false;
         if (this.covered[i] > 0)
             return this.driftUnderCover(i, cameraY, coverTicks(DUST), false);
+        // Blown out of the dust: it drifts on and fades out, as it would settling, rather than vanishing at the edge
         if (this.columns.kind(column) != PrecipitationKind.DUST)
-            return false;
+            this.lifetime[i] = Math.min(this.lifetime[i], this.age[i] + DUST_FADE);
         float floor = this.columns.ground(column) + DUST_MIN_LIFT;
         // Far below the column's top: blown in under an overhang, or into a wall
         if (floor - this.y[i] > DUST_CLIMB)
@@ -544,7 +545,7 @@ public final class PrecipitationField {
         int toAdd = Math.min(Math.min(fallingNeeded + dustNeeded, this.capacity - this.count), this.maxSpawnPerTick);
         // A try can miss (a dry column, or ground above the cylinder), so allow a few more tries than drops
         for (int tries = toAdd * 2; tries > 0 && toAdd > 0; tries--) {
-            // Even over the disc's area, not bunched at its centre
+            // Even over the disc's area, not bunched at its center
             float angle = random.nextFloat() * Mth.TWO_PI;
             float r = this.radius * Mth.sqrt(random.nextFloat());
             double px = cameraX + Mth.cos(angle) * r;
@@ -620,9 +621,9 @@ public final class PrecipitationField {
      * numbers, so sizes near the storm's own are the most likely.
      */
     static float rainDropSize(float rainLevel, RandomSource random) {
-        var centre = RAIN_SIZE_BASE + RAIN_SIZE_PER_LEVEL * Mth.clamp(rainLevel, 0F, 1F);
+        var center = RAIN_SIZE_BASE + RAIN_SIZE_PER_LEVEL * Mth.clamp(rainLevel, 0F, 1F);
         var spread = (random.nextFloat() + random.nextFloat() - 1F) * RAIN_SIZE_SPREAD;
-        return Mth.clamp(centre + spread, 0F, 1F);
+        return Mth.clamp(center + spread, 0F, 1F);
     }
 
     /**

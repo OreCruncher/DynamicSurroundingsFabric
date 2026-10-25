@@ -518,7 +518,7 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @Slider(min = 0, max = 100)
-        @Comment("How blue particle rain is: 0 is a nearly colourless pale grey, 100 a deep blue")
+        @Comment("How blue particle rain is: 0 is a nearly colorless pale gray, 100 a deep blue")
         public int rainTint = 15;
 
         @Property
