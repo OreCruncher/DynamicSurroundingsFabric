@@ -120,8 +120,8 @@ public class FogRangeTests {
     }
 
     @Test
-    void dustTurnsTheFogItsColourAtTheFogsOwnBrightness() {
-        // A daytime blue-grey fog, turned all the way to sand: sand's hue, at the fog's brightness
+    void dustTurnsTheFogItsColorAtTheFogsOwnBrightness() {
+        // A daytime blue-gray fog, turned all the way to sand: sand's hue, at the fog's brightness
         var rgb = new float[]{0.6F, 0.7F, 0.8F};
         WeatherFogRangeCalculator.tint(rgb, 0xF7E9A3, 1F);
         assertEquals(0.8F, Math.max(rgb[0], Math.max(rgb[1], rgb[2])), 1e-4F, "kept the fog's brightness");
@@ -134,8 +134,8 @@ public class FogRangeTests {
     }
 
     @Test
-    void theFogTakesTheColourOfTheDustAroundThePlayer() {
-        // The puffs' colour, from the ground around, when dust is being drawn; the biome's otherwise
+    void theFogTakesTheColorOfTheDustAroundThePlayer() {
+        // The puffs' color, from the ground around, when dust is being drawn; the biome's otherwise
         assertEquals(0xD87F33, WeatherFogRangeCalculator.fogDustColor(0xD87F33, 0xF7E9A3));
         assertEquals(0xF7E9A3, WeatherFogRangeCalculator.fogDustColor(IColumnSource.NOT_A_DUST_SOURCE, 0xF7E9A3));
     }
@@ -152,6 +152,23 @@ public class FogRangeTests {
         WeatherFogRangeCalculator.tint(full, 0xF7E9A3, 1F);
         for (int i = 0; i < 3; i++)
             assertEquals((0.6F + 0.1F * i + full[i]) / 2F, half[i], 1e-4F);
+    }
+
+    @Test
+    void dustTurnsTheSunsetDustyAndDimsIt() {
+        // An orange sunset glow; no dust leaves it as it is
+        var clear = new float[]{1F, 0.6F, 0.3F, 0.8F};
+        WeatherFogRangeCalculator.sunsetTint(clear, 0xF7E9A3, 0F);
+        assertArrayEquals(new float[]{1F, 0.6F, 0.3F, 0.8F}, clear);
+
+        // A full storm turns it as far toward the dust as the fog, and dims it
+        var dusty = new float[]{1F, 0.6F, 0.3F, 0.8F};
+        var fog = new float[]{1F, 0.6F, 0.3F};
+        WeatherFogRangeCalculator.sunsetTint(dusty, 0xF7E9A3, 1F);
+        WeatherFogRangeCalculator.tint(fog, 0xF7E9A3, WeatherFogRangeCalculator.DUST_TINT);
+        for (int i = 0; i < 3; i++)
+            assertEquals(fog[i], dusty[i], 1e-4F);
+        assertEquals(0.8F * (1F - WeatherFogRangeCalculator.DUST_SUNSET_FADE), dusty[3], 1e-4F);
     }
 
     @Test

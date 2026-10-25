@@ -138,6 +138,7 @@
   "dsurround.conflict.client_commands": "Client commands",
   "dsurround.conflict.burning_mob_light": "Light from burning mobs' flames",
   "dsurround.hook.sky_tint": "Dust storm sky color",
+  "dsurround.hook.sunset_tint": "Dust storm sunrise and sunset color",
   "dsurround.hook.fog_tint": "Dust storm fog color",
   "dsurround.hook.storm_rain": "Storm strength in vanilla's rain and snow",
   "dsurround.hook.rain_sounds": "Storm rain sounds",

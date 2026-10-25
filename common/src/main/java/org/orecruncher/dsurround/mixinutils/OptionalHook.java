@@ -28,9 +28,11 @@ import java.util.function.Function;
  */
 public enum OptionalHook {
 
-    SKY_TINT("Dust storm sky colour",
+    SKY_TINT("Dust storm sky color",
             site("core.MixinLevelRenderer", "dsurround$tintSkyColor")),
-    FOG_TINT("Dust storm fog colour",
+    SUNSET_TINT("Dust storm sunrise and sunset color",
+            site("core.MixinLevelRenderer", "dsurround$tintSunsetColor")),
+    FOG_TINT("Dust storm fog color",
             site("core.MixinFogRenderer", "dsurround$tintFogColor")),
     STORM_RAIN("Storm strength in vanilla's rain and snow",
             site("core.MixinLevelRenderer", "dsurround$stormRainLevelDrawn"),

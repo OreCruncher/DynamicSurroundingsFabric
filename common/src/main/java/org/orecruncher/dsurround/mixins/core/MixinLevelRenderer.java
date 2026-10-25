@@ -40,13 +40,22 @@ public class MixinLevelRenderer {
     }
 
     /**
-     * The sky's colour, turned toward the dust's in a dust storm, as the fog is. Only where the sky is drawn: the fog
-     * reads the sky's colour too, from the level, and is tinted on its own.
+     * The sky's color, turned toward the dust's in a dust storm, as the fog is. Only where the sky is drawn: the fog
+     * reads the sky's color too, from the level, and is tinted on its own.
      */
     @ModifyExpressionValue(method = "renderSky(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getSkyColor(Lnet/minecraft/world/phys/Vec3;F)Lnet/minecraft/world/phys/Vec3;"), require = 0)
     private Vec3 dsurround$tintSkyColor(Vec3 color, @Local(argsOnly = true) float partialTick) {
         return MixinHelpers.SKY_TINT_GUARD.get(() -> MixinHelpers.fogHandler().tintSkyColor(color, partialTick), color);
+    }
+
+    /**
+     * The glow of sunrise and sunset, turned toward the dust's color and dimmed in a dust storm, as the sky is
+     */
+    @ModifyExpressionValue(method = "renderSky(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/DimensionSpecialEffects;getSunriseColor(FF)[F"), require = 0)
+    private float[] dsurround$tintSunsetColor(float[] color, @Local(argsOnly = true) float partialTick) {
+        return MixinHelpers.SUNSET_TINT_GUARD.get(() -> MixinHelpers.fogHandler().tintSunsetColor(color, partialTick), color);
     }
 
     /**
