@@ -63,6 +63,10 @@ public class DimensionInformation implements IDimensionInformation {
         return this.getInfo().groundFog();
     }
 
+    public boolean dynamicClouds() {
+        return this.getInfo().dynamicClouds();
+    }
+
     private DimensionInfo getInfo() {
         return this.info.get(this.level(), this.dimensionLibrary.getVersion(), this.dimensionLibrary::getData);
     }

@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.profiling;
 
 import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.processing.CloudHandler;
 import org.orecruncher.dsurround.processing.GroundFogHandler;
 import org.orecruncher.dsurround.processing.WindowFrostHandler;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
@@ -42,6 +43,22 @@ public enum ProfileScene {
             return hold(simulation.strengthSet(), () -> simulation.setStrength(1F), simulation::setStrength, simulation::clearStrength);
         }
     },
+    CLOUDS(8, List.of("weather thunder", "gamerule doWeatherCycle false")) {
+        @Override
+        Runnable setUp() {
+            // A full thunderstorm, for the fastest drift (the most cells passing, each a rebuild) and its towers; and
+            // the sky half covered with tall clouds, broken up, for the most sides to draw
+            var simulation = ContainerManager.resolve(IWeatherSimulation.class);
+            var handler = ContainerManager.resolve(CloudHandler.class);
+            var storm = hold(simulation.strengthSet(), () -> simulation.setStrength(1F), simulation::setStrength, simulation::clearStrength);
+            var was = handler.forced();
+            handler.setForced(CLOUD_COVERAGE, CLOUD_THICKNESS);
+            return () -> {
+                was.ifPresentOrElse(f -> handler.setForced(f.coverage(), f.thickness()), handler::clearForced);
+                storm.run();
+            };
+        }
+    },
     FROST(6, List.of()) {
         @Override
         Runnable setUp() {
@@ -49,6 +66,10 @@ public enum ProfileScene {
             return hold(handler.forced(), () -> handler.setForced(1F), handler::setForced, handler::clearForced);
         }
     };
+
+    // The clouds scene's: the share of the sky covered, and how thick the thickest are, in blocks
+    static final float CLOUD_COVERAGE = 0.55F;
+    static final float CLOUD_THICKNESS = 96F;
 
     private final int settle;
     private final List<String> commands;

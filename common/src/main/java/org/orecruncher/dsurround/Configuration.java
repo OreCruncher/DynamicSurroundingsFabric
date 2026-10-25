@@ -555,6 +555,11 @@ public class Configuration extends ConfigurationData {
         @MovedFrom(value = "weatherOptions.enableGroundFog", values = "false=NONE")
         @Comment("Mist lying low over the ground in swamps and eerie biomes: off, or how finely it is drawn. Fast costs least; Fabulous costs several times Fancy")
         public GroundFogQuality groundFogQuality = GroundFogQuality.FANCY;
+
+        @Property
+        @Experimental
+        @Comment("Clouds that change with the weather: scattered puffs that build up through fair afternoons, a low dark deck in a storm, towering in a thunderstorm. Drawn in place of vanilla's clouds")
+        public boolean enableDynamicClouds = true;
     }
 
     public static class FogOptions {

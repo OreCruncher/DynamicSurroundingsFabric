@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -110,6 +111,17 @@ public class MixinLevelRenderer {
         }
         MixinHelpers.groundFog().renderAfterWeather(lightTexture, partialTick);
         MixinHelpers.LIGHTNING_GUARD.run(() -> MixinHelpers.lightning().render(partialTick));
+    }
+
+    /**
+     * The mod's clouds in place of vanilla's, from where the level calls for them: another mod that draws clouds of its
+     * own (Sodium) replaces renderClouds itself, and is left out with vanilla's. When ours can't be drawn, whoever's
+     * renderClouds is runs as it would have.
+     */
+    @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderClouds(Lcom/mojang/blaze3d/vertex/PoseStack;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FDDD)V"), require = 0)
+    private void dsurround$clouds(LevelRenderer renderer, PoseStack poseStack, Matrix4f frustumMatrix, Matrix4f projectionMatrix, float partialTick, double camX, double camY, double camZ, Operation<Void> original) {
+        if (!MixinHelpers.CLOUDS_GUARD.get(() -> MixinHelpers.clouds().render(frustumMatrix, projectionMatrix, partialTick, camX, camY, camZ), false))
+            original.call(renderer, poseStack, frustumMatrix, projectionMatrix, partialTick, camX, camY, camZ);
     }
 
     /**

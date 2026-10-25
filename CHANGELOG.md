@@ -23,6 +23,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Tracked down particles drawing as squares in a large modpack to another mod's particle, and built the guard that repairs it
 * Built the branching lightning, its timing and its thunder, and gathered the scary options into one place
 * Added the conditional operator to the scripting engine
+* Built the dynamic clouds, their fading and sharing between players, and lightning lighting them; reviewed their performance profiles
 
 **What's New**
 * Burning mobs are wreathed in flames like a flame jet's (tongues of flame, sparks, and smoke) in place of Minecraft's flat fire sheets
@@ -54,12 +55,24 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Each flash has a faint leader feeling its way down, then strokes that light the whole channel and flicker as they die away; later strokes barely light the branches, as in real lightning
   * Minecraft's lightning bolts are drawn this way too, each shaped from the bolt itself, so every player sees the same bolt
   * Through a thunderstorm the sky has lightning of its own: bolts to the ground, spider lightning crawling under the cloud base, and flashes hidden in the cloud that light it up in patches, moving about inside it from stroke to stroke
+  * With the dynamic clouds, the flashes light the clouds themselves from inside: their undersides, the towers they hide in, and not the gaps between
+  * Far strikes are dimmer, the more so the thicker the weather between: rain hides a distant storm's flashes a good deal more than clear air
   * Most of it comes from upwind, where the storm is coming from
   * Each strike in the sky has its thunder, later the farther away it is (about a second for every 343 blocks), and quieter and lower when far off; a close one lights up the sky, as Minecraft's own bolts do
   * Lightning option in the new Scary Content section; not drawn while a shader pack is in use
   * With Minecraft's Hide Lightning Flashes accessibility option on, there is no lightning in the sky and bolts don't flicker
   * `/dsweather lightning` strikes ahead of the player for testing; `ground`, `spider`, or `sheet` picks the kind
   * Scripts can check whether lightning is shown with `global.allowLightning()`
+* **[Experimental]** Dynamic clouds: blocky clouds that change with the weather, in place of Minecraft's
+  * On fair days, scattered clouds build up into stepped towers through the afternoon and flatten out at night, with thin streaks high above; some days are cloudier than others
+  * Cloudier over wet biomes than dry ones: they build over jungles and swamps and thin over deserts as they drift
+  * A storm closes them into a low deck that lowers and thickens with its strength, darker underneath the thicker it is; a thunderstorm's towers rise far above it
+  * They change a little at a time, fading in and out, rather than all at once
+  * Every player in a world sees the same clouds, drifting with the wind up high
+  * Far off they fade into the fog, and in rain the deck overhead stays dark rather than turning to haze
+  * Dynamic Clouds option in Weather Options; off with a shader pack, with Minecraft's clouds turned off, and in dimensions that draw their own clouds (`dynamicClouds` in a dimension config sets it)
+  * `/dsweather clouds 0-100 [thickness]` holds how much of the sky they cover, and how thick the thickest are, for testing; `/dsweather clouds clear` goes back to the weather's
+  * `/dsprofile clouds` records them in a thunderstorm
 * Scripts have a conditional operator: `diurnal.isNight() ? 0.04 : 0.02`
   * Only the chosen value is worked out, as with `lib.iif`, which still works the same
   * It binds more loosely than any other operator, so `'is ' + (weather.isRaining() ? 'wet' : 'dry')` needs the parentheses

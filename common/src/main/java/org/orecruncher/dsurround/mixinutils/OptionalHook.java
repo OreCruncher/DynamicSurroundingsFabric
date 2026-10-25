@@ -54,6 +54,8 @@ public enum OptionalHook {
     LIGHTNING_BOLTS("Branching lightning in place of vanilla's bolts",
             site("core.MixinClientLevel", "dsurround$lightningBolt"),
             site("core.MixinLightningBoltRenderer", "dsurround$vanillaBolt")),
+    DYNAMIC_CLOUDS("Dynamic clouds in place of vanilla's",
+            site("core.MixinLevelRenderer", "dsurround$clouds")),
     PARTICLE_BATCH_REPAIR("Repairing particles another mod's particle draws wrong",
             site("core.MixinParticleEngine", "dsurround$batchBegun", "dsurround$batchBegunNeoForge"),
             site("core.MixinParticleEngine", "dsurround$batchDrawn", "dsurround$batchDrawnNeoForge")),

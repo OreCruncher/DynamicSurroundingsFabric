@@ -77,8 +77,20 @@ public class DimensionWeatherTests {
         }, HOOKS));
     }
 
+    @Test
+    void vanillasCloudsAreReplacedButADimensionsOwnAreLeft() {
+        assertTrue(DimensionInfo.hasVanillaClouds(new DimensionSpecialEffects.OverworldEffects(), CLOUD_HOOKS));
+        assertTrue(DimensionInfo.hasVanillaClouds(new DrawsWeather(), CLOUD_HOOKS), "weather of its own, vanilla's clouds");
+        assertFalse(DimensionInfo.hasVanillaClouds(new DrawsClouds(), CLOUD_HOOKS));
+        // Without the platform's hook to look for, a mod's effects may draw their own
+        assertFalse(DimensionInfo.hasVanillaClouds(new DimensionSpecialEffects.OverworldEffects() {
+        }, Set.of()));
+    }
+
     // NeoForge's weather hooks; the test class path is vanilla's, so the effects here declare them themselves
     private static final Set<String> HOOKS = Set.of("renderSnowAndRain", "tickRain");
+    // And its cloud hook
+    private static final Set<String> CLOUD_HOOKS = Set.of("renderClouds");
 
     private static class DrawsWeather extends DimensionSpecialEffects.OverworldEffects {
         @SuppressWarnings("unused")
@@ -90,6 +102,13 @@ public class DimensionWeatherTests {
     private static class TicksRain extends DimensionSpecialEffects.OverworldEffects {
         @SuppressWarnings("unused")
         public boolean tickRain(ClientLevel level, int ticks, Camera camera) {
+            return true;
+        }
+    }
+
+    private static class DrawsClouds extends DimensionSpecialEffects.OverworldEffects {
+        @SuppressWarnings("unused")
+        public boolean renderClouds(ClientLevel level, int ticks, float partialTick, double camX, double camY, double camZ) {
             return true;
         }
     }

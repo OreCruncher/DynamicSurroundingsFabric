@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.processing;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -16,6 +17,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.effects.clouds.CloudLights;
 import org.orecruncher.dsurround.effects.lightning.LightningRenderer;
 import org.orecruncher.dsurround.effects.lightning.Strike;
 import org.orecruncher.dsurround.effects.lightning.Strikes;
@@ -58,6 +60,13 @@ public class LightningHandler extends AbstractClientHandler {
     private static final float BOLT_INTENSITY = 0.6F;
     // The sky's thunder plays this far from the player toward the strike, so it is heard from that way
     private static final double THUNDER_OFFSET = 8D;
+    /**
+     * The glow lighting the mod's clouds from inside: how far up into the cloud each patch of it is, in blocks; how
+     * much farther its light reaches than the patch would; and how bright it is against the patch
+     */
+    static final float DECK_DEPTH = 4F;
+    static final float DECK_REACH = 1.3F;
+    static final float DECK_LIGHT = 1.2F;
     // A flash in the cloud is heard this often; the rest are too far in the cloud to hear
     private static final float SHEET_THUNDER = 0.6F;
     private static final ResourceLocation THUNDER = Constants.asId("thunder");
@@ -65,6 +74,7 @@ public class LightningHandler extends AbstractClientHandler {
 
     private final IWeatherSimulation weatherSimulation;
     private final WindService windService;
+    private final CloudHandler clouds;
     private final List<Active> strikes = new ArrayList<>();
     // The game's bolts drawn as strikes, by entity id, until they are gone
     private final IntSet bolts = new IntOpenHashSet();
@@ -84,10 +94,13 @@ public class LightningHandler extends AbstractClientHandler {
         }
     }
 
-    public LightningHandler(IWeatherSimulation weatherSimulation, WindService windService, Configuration config, IModLog logger) {
+    public LightningHandler(IWeatherSimulation weatherSimulation, WindService windService, CloudHandler clouds,
+                            Configuration config, IModLog logger) {
         super("Lightning Handler", config, logger);
         this.weatherSimulation = weatherSimulation;
         this.windService = windService;
+        this.clouds = clouds;
+        clouds.setLightSource(this::lightClouds);
     }
 
     /**
@@ -193,7 +206,10 @@ public class LightningHandler extends AbstractClientHandler {
     private void add(ClientLevel level, Strike.Kind kind, double x, double z, float intensity, int boltId, IRandomizer random) {
         var camera = cameraPosition();
         boolean flicker = !hideFlashes();
-        float cloud = level.effects().getCloudHeight();
+        // The base of the mod's clouds, which a storm lowers, or else of vanilla's
+        float cloud = this.clouds.cloudBase();
+        if (Float.isNaN(cloud))
+            cloud = level.effects().getCloudHeight();
         // A dimension without clouds (only a bolt, or /dsweather, strikes there): a cloud base above the player
         if (Float.isNaN(cloud))
             cloud = (float) camera.y + MAX_HEIGHT;
@@ -218,7 +234,7 @@ public class LightningHandler extends AbstractClientHandler {
                 float dx = Mth.cos(heading) * length, dz = Mth.sin(heading) * length;
                 float drop = random.nextFloat(4F, 16F);
                 float distance = (float) camera.distanceTo(new Vec3(x, y, z));
-                // Centred on x, z
+                // Centered on x, z
                 strike = Strikes.spider(x - dx / 2F, y, z - dz / 2F, dx, -drop, dz, intensity, distance, flicker, now, random);
             }
             default -> {
@@ -302,7 +318,36 @@ public class LightningHandler extends AbstractClientHandler {
         for (var active : this.strikes)
             this.toDraw.add(active.strike);
         var camera = GameUtils.getMC().gameRenderer.getMainCamera();
-        this.drawn = LightningRenderer.draw(this.toDraw, camera, level.getGameTime() + partialTick);
+        // The fog drawn with the weather: how far the view reaches in it, which dims far strikes. And the cloud's glow
+        // drawn only when the mod's clouds aren't there to be lit by it (see lightClouds)
+        float fogEnd = RenderSystem.getShaderFogEnd();
+        this.drawn = LightningRenderer.draw(this.toDraw, camera, level.getGameTime() + partialTick, fogEnd, !this.clouds.isLit());
+    }
+
+    /**
+     * The glow of each strike as light inside the mod's clouds, where they are drawn: the cloud around a strike lights
+     * up from inside, its own shape and all, and a nearer cloud hides it. Asked for as the clouds are drawn, each frame.
+     */
+    private void lightClouds(CloudLights lights, float partialTick, double cameraX, double cameraY, double cameraZ) {
+        if (this.strikes.isEmpty() || !this.isActive())
+            return;
+        var level = GameUtils.getWorld().orElse(null);
+        if (level == null)
+            return;
+        double now = level.getGameTime() + partialTick;
+        for (var active : this.strikes) {
+            var strike = active.strike;
+            float age = strike.age(now);
+            if (age < 0F || strike.isDone(age))
+                continue;
+            var glow = strike.glow();
+            for (int p = 0; p < glow.count(); p++) {
+                float power = strike.glowBrightness(p, age) * DECK_LIGHT;
+                lights.add((float) (strike.x() + glow.x(p) - cameraX),
+                        (float) (strike.y() + glow.y(p) + DECK_DEPTH - cameraY),
+                        (float) (strike.z() + glow.z(p) - cameraZ), glow.radius(p) * DECK_REACH, power);
+            }
+        }
     }
 
     /**

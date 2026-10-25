@@ -61,16 +61,15 @@ public final class Strike {
     private final float[] strokeTimes;
     private final float[] strokePeaks;
     private final CloudGlow glow;
-    // How far away it is, in blocks, and how much of it shows from there (0 to 1)
+    // How far away it is, in blocks
     private final float distance;
-    private final float visibility;
     // In game ticks, with the part of a tick
     private final double startTicks;
     // The game's lightning bolt it stands in for, or -1
     private final int boltId;
 
     Strike(Kind kind, double x, double y, double z, @Nullable BoltShape shape, float leaderTime, float[] strokeTimes,
-           float[] strokePeaks, CloudGlow glow, float distance, float visibility, double startTicks, int boltId) {
+           float[] strokePeaks, CloudGlow glow, float distance, double startTicks, int boltId) {
         if (strokeTimes.length == 0 || strokeTimes.length != strokePeaks.length)
             throw new IllegalArgumentException("a strike needs a peak for each of its strokes, and at least one");
         if (glow.strokes() != strokeTimes.length)
@@ -85,7 +84,6 @@ public final class Strike {
         this.strokePeaks = strokePeaks;
         this.glow = glow;
         this.distance = distance;
-        this.visibility = visibility;
         this.startTicks = startTicks;
         this.boltId = boltId;
     }
@@ -146,10 +144,6 @@ public final class Strike {
 
     public float distance() {
         return this.distance;
-    }
-
-    public float visibility() {
-        return this.visibility;
     }
 
     public CloudGlow glow() {

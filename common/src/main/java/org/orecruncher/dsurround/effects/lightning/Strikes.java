@@ -31,6 +31,21 @@ public final class Strikes {
      * A strike in the sky this close or closer lights up the whole sky and the ground, as the game's own do
      */
     public static final float FLASH_RANGE = 160F;
+    /**
+     * Strikes this close show in full, in blocks
+     */
+    static final float CLEAR_NEAR = 32F;
+    /**
+     * How far, against the fog's reach, a strike can be before it shows only a third (1/e) as bright past
+     * {@link #CLEAR_NEAR}: with the view reaching 192 blocks, a strike at 400 shows about a third
+     */
+    static final float HAZE = 1.8F;
+    /**
+     * The least of a strike that shows, however far and thick the weather
+     */
+    static final float FAINTEST = 0.12F;
+    // The nearest the fog's reach is taken to be, in blocks, so a dust storm's doesn't hide every strike
+    private static final float MIN_REACH = 16F;
 
     // Leaders take this long to cross the main channel, in seconds; spider lightning crawls
     static final float GROUND_LEADER = 0.12F;
@@ -143,11 +158,16 @@ public final class Strikes {
     }
 
     /**
-     * How much of a strike shows from a distance, 0 to 1: the rain between hides some of a far one
+     * How much of a strike shows through the air between, 0 to 1: all of one close by, and less the farther it is
+     * against how far the fog lets the view reach, so rain dims a far strike a great deal and clear air a little. Never
+     * less than {@link #FAINTEST}: a far storm still flickers on the horizon.
+     *
+     * @param fogEnd where the fog is thickest, in blocks: the view's reach in this weather
      */
-    static float visibility(float distance) {
-        float far = Mth.clamp((distance - 100F) / (FARTHEST - 100F), 0F, 1F);
-        return 1F - 0.5F * far;
+    public static float visibility(float distance, float fogEnd) {
+        float reach = Math.max(fogEnd, MIN_REACH) * HAZE;
+        float seen = (float) Math.exp(-Math.max(0F, distance - CLEAR_NEAR) / reach);
+        return Math.max(FAINTEST, seen);
     }
 
     /**
@@ -166,7 +186,7 @@ public final class Strikes {
         var glow = CloudGlow.around(new float[]{0F, 0F, 0F, 0F, 0F, 0F}, 20F, 30F + 25F * intensity, strokes, 0.45F, random);
         return new Strike(Strike.Kind.GROUND, x, y, z, shape, leader,
                 Strike.strokeTimes(leader, strokes, random), Strike.strokePeaks(strokes, random),
-                glow, distance, visibility(distance), startTicks, boltId);
+                glow, distance, startTicks, boltId);
     }
 
     /**
@@ -181,11 +201,11 @@ public final class Strikes {
         // The cloud glows along the way: where it starts, midway and at the end
         var main = shape.main();
         int mid = main.size() / 2, end = main.size() - 1;
-        var centres = new float[]{0F, 0F, 0F, main.x(mid), main.y(mid), main.z(mid), main.x(end), main.y(end), main.z(end)};
-        var glow = CloudGlow.around(centres, 20F, 40F, strokes, 0.4F, random);
+        var centers = new float[]{0F, 0F, 0F, main.x(mid), main.y(mid), main.z(mid), main.x(end), main.y(end), main.z(end)};
+        var glow = CloudGlow.around(centers, 20F, 40F, strokes, 0.4F, random);
         return new Strike(Strike.Kind.SPIDER, x, y, z, shape, leader,
                 Strike.strokeTimes(leader, strokes, random), Strike.strokePeaks(strokes, random),
-                glow, distance, visibility(distance), startTicks, -1);
+                glow, distance, startTicks, -1);
     }
 
     /**
@@ -197,6 +217,6 @@ public final class Strikes {
         var glow = CloudGlow.sheet(60F + 60F * intensity, strokes, 0.9F, random);
         return new Strike(Strike.Kind.SHEET, x, y, z, null, 0F,
                 Strike.strokeTimes(0F, strokes, random), Strike.strokePeaks(strokes, random),
-                glow, distance, visibility(distance), startTicks, -1);
+                glow, distance, startTicks, -1);
     }
 }

@@ -71,6 +71,10 @@ https://github.com/OreCruncher/DynamicSurroundingsDocs.
   * Replaces Minecraft's bolts, and adds bolts, spider lightning, and flashes in the clouds through a thunderstorm, mostly upwind
   * Thunder from each strike arrives later the farther away it is
   * Can be turned off in the Scary Content options
+* Dynamic clouds that change with the weather (experimental) (1.21.1-0.4.8+)
+  * Fair-weather clouds build up through the afternoon; a storm closes them into a low, dark deck
+  * Cloudier over wet biomes than dry, and the same for every player in a world
+  * Lit from inside by lightning
 * Ground fog in swamps and eerie biomes (experimental) (1.21.1-0.4.7+)
   * Hugs the ground, and drifts a bit based on wind
   * Intense rain will diminish the effect, but will come back once rain has finished

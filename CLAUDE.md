@@ -41,7 +41,8 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   GPU/CPU render timers in it (`dsurround.RenderTimer` events; precipitation's carry a `count` of drops/spots a frame,
   so two recordings can be checked for the same storm) and what it was made on (`dsurround.Environment`); unzip
   it and read it with the JDK's `jfr` (`jfr print --json --events ...`), or summarize it with
-  `python scripts/jfr-summary.py <zip or jfr>` (timers, threads, mod packages, our frames, allocation, GC;
+  `python scripts/jfr-summary.py <zip or jfr>` (timers: mean and end of the running averages, and peak; for a
+  timer measured rarely, once a second or less, trust the end, not the mean; threads, mod packages, our frames, allocation, GC;
   `--callers <method>` for who calls something).
   Players can make them too, so nothing private may get in: a new event type or a new `jdk.jfr` user needs a look at
   `ProfileRecording.PRIVATE` and `Redaction`. Record under Run, not IntelliJ's Debug (its async stack trace agent
@@ -129,10 +130,18 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
     `MOTION_BLOCKING` heightmap: the server never sends `MOTION_BLOCKING_NO_LEAVES`, so on the client it is empty.
     Noise positions wrap at `GroundFogVolume.NOISE_WRAP`, a whole number of every noise's cells (a test checks), or a
     wrap shows as a jump.
-  - Per dimension (`dimensions.json`): `particleWeather`, `simulateWind` and `groundFog`, guessed when absent
+  - Dynamic clouds (`effects/clouds`, run by `processing/CloudHandler`): blocky columns on vanilla's 12-block cells,
+    each with its own base and top, in place of vanilla's (the `renderClouds` call in `renderLevel` is wrapped, so
+    Sodium's replacement is skipped too; `OptionalHook.DYNAMIC_CLOUDS`). `runtime/weather/CloudCover` is what the
+    weather calls for: fair puffs that build up in the afternoon, a storm's lowered, thickened deck, thunder towers,
+    high streaks. Lightning strikes start from `CloudHandler.cloudBase()` when ours are drawn. Every player sees the
+    same clouds: they drift with `runtime/weather/UpperWind` and change shape by the game time alone (never a session's
+    ticks or the player's wind), and each cell's cover follows the biome under it.
+  - Per dimension (`dimensions.json`): `particleWeather`, `simulateWind`, `groundFog` and `dynamicClouds`, guessed when absent
     (`DimensionInfo.hasVanillaWeather`, sky light). The client always reports sea level 63, so a modded dimension
     with another needs a `seaLevel` rule.
-  - `/dsweather` holds the storm strength, the wind's speed and direction, and a ground fog thickness for testing;
+  - `/dsweather` holds the storm strength, the wind's speed and direction, a ground fog thickness, and the clouds'
+    coverage and thickness (`clouds 0-100 [thickness]`) for testing;
     disconnecting clears them.
   - Weather script variables live in `runtime/variables/WeatherVariables` (`weather.*`).
   - Lightning (`effects/lightning`, run by `processing/LightningHandler`): branching bolts in place of vanilla's (from
@@ -142,6 +151,9 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
     `renderSnowAndRain` wrap; with Fabulous it writes depth, bolts before the cloud glow. Gated by
     `Configuration.ScaryContent` (`allowScaryContent` && `enableLightning`; script `global.allowLightning()`) and
     vanilla's Hide Lightning Flashes (no sky strikes, no flicker). `/dsweather lightning [ground|spider|sheet]`.
+    With dynamic clouds drawn, a strike's cloud glow lights the clouds from inside (`CloudLights`, up to 8 points a
+    frame, passed by `LightningHandler` to `CloudHandler`) instead of being drawn as patches. Strikes dim with distance
+    against the fog's reach (`Strikes.visibility`, from the fog in effect in the weather pass).
   - Window frost (`effects/frost`, run by `processing/WindowFrostHandler`): on the outside of clear glass
     (`effects/frosted_windows` tag; `effects/windows` is all glass, for rain streaks). Drawn after the translucent blocks,
     independent of particle weather: clear glass is cutout, so frost behind it shows through. Without Fabulous, right

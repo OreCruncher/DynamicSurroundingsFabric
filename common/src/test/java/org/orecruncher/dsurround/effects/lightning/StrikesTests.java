@@ -156,8 +156,22 @@ public class StrikesTests {
     }
 
     @Test
-    void farStrikesShowLess() {
-        assertEquals(1F, Strikes.visibility(50F));
-        assertEquals(0.5F, Strikes.visibility(Strikes.FARTHEST), 1e-6F);
+    void farStrikesShowLessThroughTheAirBetween() {
+        // Close by, all of it
+        assertEquals(1F, Strikes.visibility(Strikes.CLEAR_NEAR, 192F), 1e-6F);
+        // Clear air at render distance 12: about a third at the farthest
+        float clear = Strikes.visibility(Strikes.FARTHEST, 192F);
+        assertEquals(0.35F, clear, 0.05F);
+        // Rain closes the fog to about 115 blocks: far less
+        float rain = Strikes.visibility(Strikes.FARTHEST, 115F);
+        assertTrue(rain < clear * 0.6F, "rain " + rain + ", clear " + clear);
+        // Less the farther, never nothing
+        float last = 1F;
+        for (float d = Strikes.NEAREST; d <= Strikes.FARTHEST; d += 16F) {
+            float now = Strikes.visibility(d, 115F);
+            assertTrue(now <= last, "brighter at " + d);
+            last = now;
+        }
+        assertEquals(Strikes.FAINTEST, Strikes.visibility(Strikes.FARTHEST, 2F), 1e-6F, "a dust storm");
     }
 }

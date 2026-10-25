@@ -9,6 +9,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.function.Guard;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.processing.FogHandler;
+import org.orecruncher.dsurround.processing.CloudHandler;
 import org.orecruncher.dsurround.processing.GroundFogHandler;
 import org.orecruncher.dsurround.processing.LightningHandler;
 import org.orecruncher.dsurround.processing.PrecipitationHandler;
@@ -47,6 +48,7 @@ public class MixinHelpers {
     public static final Guard DEATH_PUFF_GUARD = Guard.named("Death mist");
     public static final Guard PARTICLE_BATCH_GUARD = Guard.named("Particle batch repair");
     public static final Guard LIGHTNING_GUARD = Guard.named("Lightning");
+    public static final Guard CLOUDS_GUARD = Guard.named("Dynamic clouds");
     // The sound engine's hooks: each sound as it plays, and each playing sound on every tick of the sound engine
     public static final Guard SOUND_FILTER_GUARD = Guard.named("Blocking, culling and remapping sounds");
     public static final Guard SOUND_RANGE_GUARD = Guard.named("Pruning sounds out of range");
@@ -118,6 +120,15 @@ public class MixinHelpers {
 
     public static LightningHandler lightning() {
         return LightningHolder.INSTANCE;
+    }
+
+    // Asked every frame to draw the clouds
+    private static final class CloudsHolder {
+        static final CloudHandler INSTANCE = ContainerManager.resolve(CloudHandler.class);
+    }
+
+    public static CloudHandler clouds() {
+        return CloudsHolder.INSTANCE;
     }
 
 }
