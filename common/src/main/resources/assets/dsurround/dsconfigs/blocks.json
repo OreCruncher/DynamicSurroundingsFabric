@@ -58,7 +58,7 @@
     "blocks": [
       "#dsurround:effects/frog_croaks"
     ],
-    "soundChance": "lib.iif(diurnal.isNight(), 0.04, 0.02)",
+    "soundChance": "diurnal.isNight() ? 0.04 : 0.02",
     "acoustics": [
       {
         "factory": "dsurround:lilypad.frog",

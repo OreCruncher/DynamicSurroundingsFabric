@@ -24,6 +24,13 @@ public enum TokenType {
     NOT(9, true, true, false),
     NEG(9, true, true, false),
 
+    // Conditional operator (a ? b : c). Lower precedence than every other operator, and right associative so that
+    // a ? b : c ? d : e reads as a ? b : (c ? d : e). The converter swaps a matched QUESTION for a TERNARY, which
+    // the compiler sees as an operator taking three operands.
+    QUESTION(0, true, false, false, true),
+    COLON(0, true, false, false, true),
+    TERNARY(0, true, false, false, true),
+
     // Literals
     IDENTIFIER,
     STRING,
@@ -40,6 +47,7 @@ public enum TokenType {
     private final boolean rightAssociative;
     private final boolean isUnary;
     private final boolean isBinary;
+    private final boolean isTernary;
 
     /**
      * Default CTOR that is not an operator of some sort.
@@ -56,10 +64,23 @@ public enum TokenType {
      * @param isBinary The operator takes two operands.
      */
     TokenType(final int precedence, boolean rightAssociative, boolean isUnary, boolean isBinary) {
+        this(precedence, rightAssociative, isUnary, isBinary, false);
+    }
+
+    /**
+     * CTOR for tokens that are an operator
+     * @param precedence Precedence of the operator as compared to its peers. Lower number mean less precedence.
+     * @param rightAssociative The operator is right associative (operates on the operand to the right)
+     * @param isUnary The operator takes a single operand.
+     * @param isBinary The operator takes two operands.
+     * @param isTernary The operator is part of the conditional operator, which takes three operands.
+     */
+    TokenType(final int precedence, boolean rightAssociative, boolean isUnary, boolean isBinary, boolean isTernary) {
         this.precedence = precedence;
         this.rightAssociative = rightAssociative;
         this.isUnary = isUnary;
         this.isBinary = isBinary;
+        this.isTernary = isTernary;
     }
 
     public int getPrecedence() {
@@ -78,8 +99,12 @@ public enum TokenType {
         return this.isBinary;
     }
 
+    public boolean isTernaryOperator() {
+        return this.isTernary;
+    }
+
     public boolean isOperator() {
-        return this.isUnary || this.isBinary;
+        return this.isUnary || this.isBinary || this.isTernary;
     }
 
     public static final int NO_PRECEDENCE = -1;

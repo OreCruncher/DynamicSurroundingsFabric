@@ -47,7 +47,7 @@ record RpnConverter(Environment environment) {
             // 3. Argument Separator ','
             else if (token.type() == TokenType.COMMA) {
                 while (!operatorStack.isEmpty() && operatorStack.peek().type() != TokenType.LEFT_PAREN) {
-                    output.add(RpnToken.of(operatorStack.pop()));
+                    output.add(RpnToken.of(this.popOperator(operatorStack)));
                 }
                 // The '(' on top of the stack must belong to a function call. A comma inside a plain grouping
                 // parenthesis, such as f((1, 2)), is an error rather than an extra argument to f.
@@ -87,7 +87,7 @@ record RpnConverter(Environment environment) {
                 }
 
                 while (!operatorStack.isEmpty() && operatorStack.peek().type() != TokenType.LEFT_PAREN) {
-                    output.add(RpnToken.of(operatorStack.pop()));
+                    output.add(RpnToken.of(this.popOperator(operatorStack)));
                 }
 
                 if (operatorStack.isEmpty()) {
@@ -124,7 +124,36 @@ record RpnConverter(Environment environment) {
                     output.add(RpnToken.of(fnName, count));
                 }
             }
-            // 6. Operators
+            // 6. Conditional operator: '?'
+            else if (token.type() == TokenType.QUESTION) {
+                if (!this.endsValue(prevToken)) {
+                    ScriptException.throwException(token, "Unexpected '?' (missing condition?)");
+                }
+                // Lowest precedence and right associative: everything of higher precedence before it is the
+                // condition, and an enclosing conditional's ':' stays on the stack.
+                while (!operatorStack.isEmpty() && operatorStack.peek().type().getPrecedence() > token.type().getPrecedence()) {
+                    output.add(RpnToken.of(operatorStack.pop()));
+                }
+                operatorStack.push(token);
+            }
+            // 7. Conditional operator: ':'
+            else if (token.type() == TokenType.COLON) {
+                if (!this.endsValue(prevToken)) {
+                    ScriptException.throwException(token, "Unexpected ':' (missing value?)");
+                }
+                // Completes the value chosen when the condition is true. Its operators, including any conditional
+                // nested inside it, go out up to the nearest '?' in the same parenthesis.
+                while (!operatorStack.isEmpty() && operatorStack.peek().type() != TokenType.QUESTION && operatorStack.peek().type() != TokenType.LEFT_PAREN) {
+                    output.add(RpnToken.of(operatorStack.pop()));
+                }
+                if (operatorStack.isEmpty() || operatorStack.peek().type() != TokenType.QUESTION) {
+                    ScriptException.throwException(token, "Unexpected ':' (no matching '?')");
+                }
+                // The '?' becomes the three operand operator, reported at the '?'
+                var question = operatorStack.pop();
+                operatorStack.push(Token.derive(TokenType.TERNARY, "?:", null, question));
+            }
+            // 8. Operators
             else if (token.type().isOperator()) {
                 if (token.type().isUnaryOperator() && prevToken != null && prevToken.type() != TokenType.LEFT_PAREN && prevToken.type() != TokenType.COMMA && !prevToken.type().isOperator()) {
                     ScriptException.throwException(token, "Unexpected character '%s'".formatted(token.lexeme()));
@@ -155,9 +184,9 @@ record RpnConverter(Environment environment) {
             prevToken = token;
         }
 
-        // 7. Pop remaining operators from stack
+        // 9. Pop remaining operators from stack
         while (!operatorStack.isEmpty()) {
-            Token op = operatorStack.pop();
+            Token op = this.popOperator(operatorStack);
             if (op.type() == TokenType.LEFT_PAREN || op.type() == TokenType.RIGHT_PAREN) {
                 ScriptException.throwException(op, "Mismatched parentheses");
             }
@@ -169,6 +198,18 @@ record RpnConverter(Environment environment) {
         }
 
         return output;
+    }
+
+    /**
+     * Pops an operator that ends with its expression: at a ',' or ')', or at the end of the script. A '?' still on
+     * the stack never found its ':'.
+     */
+    private Token popOperator(Deque<Token> operatorStack) {
+        var op = operatorStack.pop();
+        if (op.type() == TokenType.QUESTION) {
+            ScriptException.throwException(op, "Unexpected '?' (missing ':'?)");
+        }
+        return op;
     }
 
     /**
@@ -202,8 +243,7 @@ record RpnConverter(Environment environment) {
 
     private boolean isOperand(Token token) {
         return !this.environment.isFunction(token) &&
-                !token.type().isBinaryOperator() &&
-                !token.type().isUnaryOperator() &&
+                !token.type().isOperator() &&
                 token.type() != TokenType.LEFT_PAREN &&
                 token.type() != TokenType.RIGHT_PAREN &&
                 token.type() != TokenType.COMMA;
@@ -242,7 +282,16 @@ record RpnConverter(Environment environment) {
                 // The result starts where the left operand starts
                 stack.pop();
             }
-            // Case 4: Operand
+            // Case 4: Conditional operator
+            else if (token.token().type().isTernaryOperator()) {
+                if (stack.size() < 3) {
+                    ScriptException.throwException(token.token(), "Expected 3 operands, but found %d".formatted(stack.size()));
+                }
+                // The result starts where the condition starts
+                stack.pop();
+                stack.pop();
+            }
+            // Case 5: Operand
             else {
                 stack.push(token.token());
             }
