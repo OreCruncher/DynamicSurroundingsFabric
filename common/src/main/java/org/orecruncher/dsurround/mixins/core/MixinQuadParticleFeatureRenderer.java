@@ -64,18 +64,18 @@ public class MixinQuadParticleFeatureRenderer {
 
     /**
      * A soft layer drawn in two passes with Fabulous graphics: its depth first, then (as the layer's own draw) its
-     * colour; see SoftParticles. The colour pipeline was set and bound just before.
+     * color; see SoftParticles. The color pipeline was set and bound just before.
      */
     @WrapOperation(method = "drawLayers", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderPass;drawIndexed(IIIII)V"))
     private static void dsurround$drawLayer(RenderPass pass, int indexCount, int instanceCount, int firstIndex, int baseVertex, int firstInstance, Operation<Void> original) {
-        var colour = SoftParticles.currentPipeline();
-        var depth = colour == null ? null : SoftParticles.depthPassFor(colour);
+        var color = SoftParticles.currentPipeline();
+        var depth = color == null ? null : SoftParticles.depthPassFor(color);
         if (depth != null) {
             pass.setPipeline(depth);
             SoftParticles.bind(pass, depth);
             original.call(pass, indexCount, instanceCount, firstIndex, baseVertex, firstInstance);
-            pass.setPipeline(colour);
-            SoftParticles.bind(pass, colour);
+            pass.setPipeline(color);
+            SoftParticles.bind(pass, color);
         }
         original.call(pass, indexCount, instanceCount, firstIndex, baseVertex, firstInstance);
     }

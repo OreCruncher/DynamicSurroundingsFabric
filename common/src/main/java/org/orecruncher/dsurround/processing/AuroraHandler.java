@@ -13,7 +13,7 @@ import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.effects.aurora.Aurora;
 import org.orecruncher.dsurround.effects.aurora.AuroraActivity;
-import org.orecruncher.dsurround.effects.aurora.AuroraColour;
+import org.orecruncher.dsurround.effects.aurora.AuroraColor;
 import org.orecruncher.dsurround.effects.aurora.AuroraPalette;
 import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
 import org.orecruncher.dsurround.effects.aurora.RealisticAurora;
@@ -77,7 +77,7 @@ public class AuroraHandler extends AbstractClientHandler {
     @Nullable
     private RealisticAurora.Phase heldPhase;
     @Nullable
-    private AuroraColour heldColour;
+    private AuroraColor heldColor;
     private float strength;
     private float prevStrength;
     private String status = "none";
@@ -112,10 +112,10 @@ public class AuroraHandler extends AbstractClientHandler {
         var held = this.heldActivity;
         if (held != null && this.realistic != null && this.realistic.activity() != held)
             this.realistic = this.realistic.withActivity(held);
-        // And its colour character
-        var colour = this.heldColour;
-        if (colour != null && this.realistic != null && this.realistic.colour() != colour)
-            this.realistic = this.realistic.withColour(colour);
+        // And its color character
+        var color = this.heldColor;
+        if (color != null && this.realistic != null && this.realistic.color() != color)
+            this.realistic = this.realistic.withColor(color);
 
         // Last night's aurora, one with more curtains than are now allowed, or one in the style no longer chosen, fades
         // out before the next can begin
@@ -132,8 +132,8 @@ public class AuroraHandler extends AbstractClientHandler {
         var held = this.heldActivity;
         if (held != null)
             aurora = aurora.withActivity(held);
-        var colour = this.heldColour;
-        return colour != null ? aurora.withColour(colour) : aurora;
+        var color = this.heldColor;
+        return color != null ? aurora.withColor(color) : aurora;
     }
 
     @Override
@@ -142,7 +142,7 @@ public class AuroraHandler extends AbstractClientHandler {
         this.realistic = null;
         this.heldActivity = null;
         this.heldPhase = null;
-        this.heldColour = null;
+        this.heldColor = null;
         this.nightProgress = this.prevNightProgress = 0F;
         this.strength = this.prevStrength = 0F;
         this.status = "none";
@@ -269,15 +269,15 @@ public class AuroraHandler extends AbstractClientHandler {
         return Optional.ofNullable(this.heldPhase);
     }
 
-    public Optional<AuroraColour> heldColour() {
-        return Optional.ofNullable(this.heldColour);
+    public Optional<AuroraColor> heldColor() {
+        return Optional.ofNullable(this.heldColor);
     }
 
     /**
-     * Gives the realistic aurora this colour character, until {@link #clearHeld}
+     * Gives the realistic aurora this color character, until {@link #clearHeld}
      */
-    public void holdColour(AuroraColour colour) {
-        this.heldColour = colour;
+    public void holdColor(AuroraColor color) {
+        this.heldColor = color;
     }
 
     /**
@@ -300,11 +300,11 @@ public class AuroraHandler extends AbstractClientHandler {
      * @return whether anything was held
      */
     public boolean clearHeld() {
-        var wasHeld = this.heldActivity != null || this.heldPhase != null || this.heldColour != null;
+        var wasHeld = this.heldActivity != null || this.heldPhase != null || this.heldColor != null;
         this.heldActivity = null;
         this.heldPhase = null;
-        this.heldColour = null;
-        // Back to how active tonight's aurora is, and its colour (which follows from that)
+        this.heldColor = null;
+        // Back to how active tonight's aurora is, and its color (which follows from that)
         var current = this.realistic;
         if (current != null)
             this.realistic = current.withActivity(RealisticAurora.activityOf(current.night(), this.config.auroraOptions.realistic.stormChance));
@@ -339,9 +339,9 @@ public class AuroraHandler extends AbstractClientHandler {
             text += ", realistic (%s), %s, %s, %s, %d arc(s), nearest %.0f km north, declination %.0f, strength %.2f%s".formatted(
                     this.config.auroraOptions.realistic.quality.name().toLowerCase(Locale.ROOT),
                     realistic.activity().name().toLowerCase(Locale.ROOT), moment.phase().name().toLowerCase(Locale.ROOT),
-                    realistic.colour().name().toLowerCase(Locale.ROOT), realistic.arcs().size(), nearest,
+                    realistic.color().name().toLowerCase(Locale.ROOT), realistic.arcs().size(), nearest,
                     Math.toDegrees(realistic.declination()), this.strength,
-                    this.heldActivity != null || this.heldPhase != null || this.heldColour != null ? " (held)" : "");
+                    this.heldActivity != null || this.heldPhase != null || this.heldColor != null ? " (held)" : "");
         }
         event.add(CollectDiagnosticsEvent.Section.Systems, text);
     }

@@ -4,7 +4,7 @@ import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.AuroraStyle;
 import org.orecruncher.dsurround.effects.aurora.AuroraActivity;
-import org.orecruncher.dsurround.effects.aurora.AuroraColour;
+import org.orecruncher.dsurround.effects.aurora.AuroraColor;
 import org.orecruncher.dsurround.effects.aurora.RealisticAurora;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.processing.AuroraHandler;
@@ -35,9 +35,9 @@ public class AuroraCommandHandler {
         return Component.translatable(KEY + "phase.success", name(phase));
     }
 
-    public static Component colour(AuroraColour colour) {
-        handler().holdColour(colour);
-        return Component.translatable(KEY + "color.success", name(colour));
+    public static Component color(AuroraColor color) {
+        handler().holdColor(color);
+        return Component.translatable(KEY + "color.success", name(color));
     }
 
     public static Component clear() {
@@ -56,20 +56,20 @@ public class AuroraCommandHandler {
         if (aurora.isPresent() && moment.isPresent()) {
             var nearest = aurora.get().arcs().getFirst().distance() - moment.get().approach();
             lines.add(Component.translatable(KEY + "status", name(aurora.get().activity()), name(moment.get().phase()),
-                    name(aurora.get().colour()), aurora.get().arcs().size(), Math.round(nearest)));
+                    name(aurora.get().color()), aurora.get().arcs().size(), Math.round(nearest)));
         } else {
             lines.add(Component.translatable(KEY + "status.none", handler.status()));
         }
 
         var activity = handler.heldActivity();
         var phase = handler.heldPhase();
-        var colour = handler.heldColour();
-        if (activity.isPresent() || phase.isPresent() || colour.isPresent()) {
+        var color = handler.heldColor();
+        if (activity.isPresent() || phase.isPresent() || color.isPresent()) {
             var none = Component.translatable(KEY + "status.notheld");
             lines.add(Component.translatable(KEY + "status.held",
                     activity.map(a -> (Component) Component.literal(name(a))).orElse(none),
                     phase.map(p -> (Component) Component.literal(name(p))).orElse(none),
-                    colour.map(c -> (Component) Component.literal(name(c))).orElse(none)));
+                    color.map(c -> (Component) Component.literal(name(c))).orElse(none)));
         }
         return lines;
     }

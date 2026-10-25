@@ -19,7 +19,7 @@ import org.orecruncher.dsurround.effects.precipitation.ParticleQuads;
  * to nothing at its tail, turned to face the camera across its length. For sparks and molten droplets.
  * <p>
  * A particle on 26.2 hands the particle engine a square facing the camera; a streak is a long quad along a path, with
- * its ends coloured differently. So a streak is {@link #add added} here as its particle is extracted for drawing,
+ * its ends colored differently. So a streak is {@link #add added} here as its particle is extracted for drawing,
  * relative to the camera, and all of them are drawn together just before the translucent particles ({@link #draw},
  * from MixinQuadParticleFeatureRenderer, as the point lights are), the way the flames are: soft, adding their light,
  * and with Fabulous graphics their depth first. Render thread only.
@@ -109,8 +109,8 @@ public final class Streaks {
 
         // Drawn as the flames are this frame: soft and adding their light, or the vanilla way without the scene's depth,
         // and with Fabulous graphics their depth first
-        var colour = SoftParticles.choosePipeline(SoftParticles.FLAME.pipeline());
-        var depth = SoftParticles.depthPassFor(colour);
+        var color = SoftParticles.choosePipeline(SoftParticles.FLAME.pipeline());
+        var depth = SoftParticles.depthPassFor(color);
         var minecraft = Minecraft.getInstance();
         var atlas = minecraft.getTextureManager().getTexture(TextureAtlas.LOCATION_PARTICLES);
         var lightmap = minecraft.gameRenderer.lightmap();
@@ -124,10 +124,10 @@ public final class Streaks {
                     SoftParticles.bind(pass, depth);
                 });
             }
-            COLOR_DRAW.drawQuads(QUADS.vertices(), vertices, colour, target, transforms, pass -> {
+            COLOR_DRAW.drawQuads(QUADS.vertices(), vertices, color, target, transforms, pass -> {
                 pass.bindTexture("Sampler0", atlas.getTextureView(), atlas.getSampler());
                 pass.bindTexture("Sampler2", lightmap, lightmapSampler);
-                SoftParticles.bind(pass, colour);
+                SoftParticles.bind(pass, color);
             });
         }, () -> {});
         RENDER_TIMER.end();

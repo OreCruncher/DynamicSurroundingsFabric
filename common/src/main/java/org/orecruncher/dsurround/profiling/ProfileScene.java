@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.profiling;
 
 import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.effects.aurora.AuroraActivity;
-import org.orecruncher.dsurround.effects.aurora.AuroraColour;
+import org.orecruncher.dsurround.effects.aurora.AuroraColor;
 import org.orecruncher.dsurround.effects.aurora.RealisticAurora;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.processing.AuroraHandler;
@@ -38,15 +38,15 @@ public enum ProfileScene {
             var handler = ContainerManager.resolve(AuroraHandler.class);
             var activity = handler.heldActivity();
             var phase = handler.heldPhase();
-            var colour = handler.heldColour();
+            var color = handler.heldColor();
             handler.holdActivity(AuroraActivity.STORM);
             handler.holdPhase(RealisticAurora.Phase.EXPANSION);
-            handler.holdColour(AuroraColour.NORMAL);
+            handler.holdColor(AuroraColor.NORMAL);
             return () -> {
                 handler.clearHeld();
                 activity.ifPresent(handler::holdActivity);
                 phase.ifPresent(handler::holdPhase);
-                colour.ifPresent(handler::holdColour);
+                color.ifPresent(handler::holdColor);
             };
         }
     },

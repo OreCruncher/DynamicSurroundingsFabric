@@ -363,7 +363,7 @@ Not a port: a second aurora, modelled on real ones, and the default style (`auro
 - **Model** (`effects/aurora/RealisticAurora`): one night's arcs, in kilometres around a viewer on a round Earth, from
   the night's number. Arcs run along magnetic east-west (`declination` from true north), bow at their ends, fold three
   ways (large drifting folds, a travelling wave, small curls) and lean south up the magnetic field. A night has an
-  `AuroraActivity` (quiet to storm, storms at `stormChance`) and an `AuroraColour` character. `at(progress)` gives a
+  `AuroraActivity` (quiet to storm, storms at `stormChance`) and an `AuroraColor` character. `at(progress)` gives a
   `Moment` for how far through the night it is (`DayCycle.getNightProgress`): growth, then a breakup (brighter, closer,
   faster; a storm comes overhead), its height, and recovery (pulsing patches). Active nights and storms have a ray field.
 - **Motion** (`RealisticAuroraMotion`): waves, curls, rays and the ray field move frame by frame at the moment's speed,

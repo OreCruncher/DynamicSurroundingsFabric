@@ -6,7 +6,7 @@ import org.orecruncher.dsurround.Configuration;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for the rain's colour as the player tints it.
+ * Tests for the rain's color as the player tints it.
  */
 public class RainColorTests {
 
@@ -17,8 +17,8 @@ public class RainColorTests {
     }
 
     @Test
-    void theDefaultTintIsTheRainsLongStandingColour() {
-        // The colour rain was drawn in before it could be tinted: unchanged unless the player moves the slider
+    void theDefaultTintIsTheRainsLongStandingColor() {
+        // The color rain was drawn in before it could be tinted: unchanged unless the player moves the slider
         var usual = RainColor.ofTint(RainColor.DEFAULT_TINT);
         assertEquals(0.72F, usual.red(), 1e-5F);
         assertEquals(0.78F, usual.green(), 1e-5F);
@@ -28,11 +28,11 @@ public class RainColorTests {
     }
 
     @Test
-    void noTintIsANearlyColourlessGrey() {
+    void noTintIsANearlyColorlessGray() {
         var neutral = RainColor.ofTint(0);
         float most = Math.max(neutral.red(), Math.max(neutral.green(), neutral.blue()));
         float least = Math.min(neutral.red(), Math.min(neutral.green(), neutral.blue()));
-        assertTrue(most - least < 0.06F, () -> "not grey: " + neutral);
+        assertTrue(most - least < 0.06F, () -> "not gray: " + neutral);
         assertTrue(least > 0.75F, () -> "not pale: " + neutral);
     }
 
@@ -44,7 +44,7 @@ public class RainColorTests {
     }
 
     @Test
-    void fromNearlyColourlessToADeepBlue() {
+    void fromNearlyColorlessToADeepBlue() {
         assertSameColor(RainColor.NEUTRAL, RainColor.ofTint(0));
         assertSameColor(RainColor.BLUE, RainColor.ofTint(100));
         var previous = RainColor.ofTint(0);

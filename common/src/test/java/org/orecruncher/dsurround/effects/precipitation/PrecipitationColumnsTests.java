@@ -10,7 +10,7 @@ import java.util.function.IntBinaryOperator;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for the colour dust takes: the region's loose ground, whatever it blows over.
+ * Tests for the color dust takes: the region's loose ground, whatever it blows over.
  */
 public class PrecipitationColumnsTests {
 
@@ -20,7 +20,7 @@ public class PrecipitationColumnsTests {
     private static final int FALLBACK = 0x123456;
 
     /**
-     * A desert on flat ground, dust everywhere, its ground's colour by {@code colorAt(x, z)}
+     * A desert on flat ground, dust everywhere, its ground's color by {@code colorAt(x, z)}
      */
     private record Desert(IntBinaryOperator colorAt) implements IColumnSource {
         @Override
@@ -57,7 +57,7 @@ public class PrecipitationColumnsTests {
 
     @Test
     void dustOverGrassOrWaterIsTheRegionsSand() {
-        // Sand to the north, grass (or water) to the south: no colour of its own
+        // Sand to the north, grass (or water) to the south: no color of its own
         var columns = look((x, z) -> z < 0 ? SAND : IColumnSource.NOT_A_DUST_SOURCE);
         assertEquals(SAND, columns.regionalDustColor());
         assertEquals(SAND, columns.dustColorAt(columns.index(0, 5)), "over the grass");
@@ -73,7 +73,7 @@ public class PrecipitationColumnsTests {
 
     @Test
     void mixedGroundAveragesOut() {
-        // Red sand to the west, sand to the east: the region's colour is between the two
+        // Red sand to the west, sand to the east: the region's color is between the two
         var columns = look((x, z) -> x < 0 ? RED_SAND : SAND);
         int regional = columns.regionalDustColor();
         assertTrue(between((regional >> 16) & 0xFF, (RED_SAND >> 16) & 0xFF, (SAND >> 16) & 0xFF));
@@ -82,7 +82,7 @@ public class PrecipitationColumnsTests {
     }
 
     @Test
-    void overLooseGroundItIsHalfItsOwnColour() {
+    void overLooseGroundItIsHalfItsOwnColor() {
         // One patch of red sand in a sand desert: dust rising from it is half red sand, half the region's sand
         var columns = look((x, z) -> x == 2 && z == 2 ? RED_SAND : SAND);
         int regional = columns.regionalDustColor();

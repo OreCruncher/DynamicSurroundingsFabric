@@ -19,7 +19,7 @@ import java.util.List;
  * of something hundreds away.
  * <p>
  * Through the night ({@link #at}): the arcs drift slowly closer; then, unless the night is quiet, the aurora breaks up
- * at {@link #onset}: it brightens suddenly, comes closer, moves faster and shows more colour, for a while; then it fades,
+ * at {@link #onset}: it brightens suddenly, comes closer, moves faster and shows more color, for a while; then it fades,
  * its rays going diffuse and its patches pulsing. How much it does is its {@link #activity}.
  * <p>
  * North and east here are magnetic: the arcs run along magnetic east-west and lean toward magnetic south. Magnetic north
@@ -27,14 +27,14 @@ import java.util.List;
  *
  * @param night       the night's number (the day, counted from the world's start)
  * @param activity    how active it is
- * @param colour      its colour character
- * @param colourRoll  the night's roll its colour character comes from, 0 to 1, with how active it is
+ * @param color      its color character
+ * @param colorRoll  the night's roll its color character comes from, 0 to 1, with how active it is
  * @param declination how far magnetic north is from true north, in radians, east positive
  * @param onset       when in the night it breaks up, 0 (dusk) to 1 (dawn)
  * @param peakLength  how long it stays at its height after breaking up, as a share of the night
  * @param arcs        its arcs, nearest first
  */
-public record RealisticAurora(long night, AuroraActivity activity, AuroraColour colour, float colourRoll,
+public record RealisticAurora(long night, AuroraActivity activity, AuroraColor color, float colorRoll,
                               float declination, float onset, float peakLength, List<Arc> arcs) {
 
     /**
@@ -59,9 +59,9 @@ public record RealisticAurora(long night, AuroraActivity activity, AuroraColour 
     // how active it is apart from its shapes, so changing the storm chance doesn't change them
     private static final long SHAPE_SALT = 0x7265616CL;
     private static final long ACTIVITY_SALT = 0x61637476L;
-    // And its colour character, its declination and its arcs' bows, each apart from the rest, so a night that had an
+    // And its color character, its declination and its arcs' bows, each apart from the rest, so a night that had an
     // aurora before they were added keeps its arcs
-    private static final long COLOUR_SALT = 0x636F6C72L;
+    private static final long COLOR_SALT = 0x636F6C72L;
     private static final long DECLINATION_SALT = 0x6465636CL;
     private static final long BOW_SALT = 0x626F7773L;
 
@@ -223,7 +223,7 @@ public record RealisticAurora(long night, AuroraActivity activity, AuroraColour 
      * @param red         how strong the red high up is next to the green
      * @param fringe      how strong the pink fringe at the lower edge is
      * @param lowerEdge   how high the lower edge is, in kilometres
-     * @param green       how strong the green is, next to a usual night's (see {@link AuroraColour})
+     * @param green       how strong the green is, next to a usual night's (see {@link AuroraColor})
      * @param rayField    how strong the ray field is, 0 (none) to 1
      * @param fieldNorth  how far north of the viewer the middle of the ray field is, in kilometres (negative: south)
      * @param fieldWidth  how far the ray field reaches north and south of its middle, in kilometres
@@ -241,7 +241,7 @@ public record RealisticAurora(long night, AuroraActivity activity, AuroraColour 
      */
     public static RealisticAurora create(long night, int stormChance) {
         var activity = activityOf(night, stormChance);
-        float colourRoll = Randomizer.create(Mixers.splitMix64(night ^ COLOUR_SALT)).nextFloat();
+        float colorRoll = Randomizer.create(Mixers.splitMix64(night ^ COLOR_SALT)).nextFloat();
         float declination = Randomizer.create(Mixers.splitMix64(night ^ DECLINATION_SALT)).nextFloat(-MAX_DECLINATION, MAX_DECLINATION);
         var bows = Randomizer.create(Mixers.splitMix64(night ^ BOW_SALT));
         var random = Randomizer.create(Mixers.splitMix64(night ^ SHAPE_SALT));
@@ -277,7 +277,7 @@ public record RealisticAurora(long night, AuroraActivity activity, AuroraColour 
             distance += random.nextFloat(40F, 140F);
             brightness *= random.nextFloat(0.55F, 0.85F);
         }
-        return new RealisticAurora(night, activity, AuroraColour.of(colourRoll, activity), colourRoll, declination,
+        return new RealisticAurora(night, activity, AuroraColor.of(colorRoll, activity), colorRoll, declination,
                 onset, peakLength, List.copyOf(arcs));
     }
 
@@ -294,18 +294,18 @@ public record RealisticAurora(long night, AuroraActivity activity, AuroraColour 
     }
 
     /**
-     * The same aurora, as active as given: the same arcs and timeline, and the colour character its roll gives for that
+     * The same aurora, as active as given: the same arcs and timeline, and the color character its roll gives for that
      */
     public RealisticAurora withActivity(AuroraActivity activity) {
-        return new RealisticAurora(this.night, activity, AuroraColour.of(this.colourRoll, activity), this.colourRoll,
+        return new RealisticAurora(this.night, activity, AuroraColor.of(this.colorRoll, activity), this.colorRoll,
                 this.declination, this.onset, this.peakLength, this.arcs);
     }
 
     /**
-     * The same aurora, in the colour character given
+     * The same aurora, in the color character given
      */
-    public RealisticAurora withColour(AuroraColour colour) {
-        return new RealisticAurora(this.night, this.activity, colour, this.colourRoll, this.declination, this.onset,
+    public RealisticAurora withColor(AuroraColor color) {
+        return new RealisticAurora(this.night, this.activity, color, this.colorRoll, this.declination, this.onset,
                 this.peakLength, this.arcs);
     }
 
@@ -372,8 +372,8 @@ public record RealisticAurora(long night, AuroraActivity activity, AuroraColour 
         float speed = 1F + activity.speedBoost() * surge;
         float rayContrast = Mth.lerp(recovered, 0.6F + 0.4F * surge, 0.35F);
         float pulse = activity.pulse() * recovered;
-        float red = (BASE_RED + activity.extraRed() * surge) * this.colour.red();
-        float fringe = (BASE_FRINGE + activity.fringe() * surge) * this.colour.fringe();
+        float red = (BASE_RED + activity.extraRed() * surge) * this.color.red();
+        float fringe = (BASE_FRINGE + activity.fringe() * surge) * this.color.fringe();
         float lowerEdge = LOWER_EDGE - activity.edgeDrop() * surge;
 
         // The ray field, as strong as the surge, mostly beyond the nearest arc: overhead in a storm
@@ -381,7 +381,7 @@ public record RealisticAurora(long night, AuroraActivity activity, AuroraColour 
         float fieldWidth = activity.rayFieldWidth();
         float fieldNorth = this.arcs.isEmpty() ? 0F : this.arcs.getFirst().distance() - approach + fieldWidth * FIELD_BEYOND;
         return new Moment(phase, surge, approach, gain, speed, rayContrast, pulse, red, fringe, lowerEdge,
-                this.colour.green(), rayField, fieldNorth, fieldWidth);
+                this.color.green(), rayField, fieldNorth, fieldWidth);
     }
 
     /**

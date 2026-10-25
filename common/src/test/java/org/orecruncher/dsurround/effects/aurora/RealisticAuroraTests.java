@@ -162,7 +162,7 @@ public class RealisticAuroraTests {
         }
     }
 
-    // ---- Which way magnetic north is, and its colours
+    // ---- Which way magnetic north is, and its colors
 
     @Test
     void magneticNorthIsNearTrueNorth() {
@@ -183,47 +183,47 @@ public class RealisticAuroraTests {
         for (float roll = 0F; roll < 1F; roll += 0.01F) {
             for (var activity : AuroraActivity.values()) {
                 if (activity != AuroraActivity.STORM)
-                    assertNotEquals(AuroraColour.CRIMSON, AuroraColour.of(roll, activity));
+                    assertNotEquals(AuroraColor.CRIMSON, AuroraColor.of(roll, activity));
             }
         }
     }
 
     @Test
-    void stormsHaveEveryColour() {
-        var seen = EnumSet.noneOf(AuroraColour.class);
+    void stormsHaveEveryColor() {
+        var seen = EnumSet.noneOf(AuroraColor.class);
         for (float roll = 0F; roll < 1F; roll += 0.01F)
-            seen.add(AuroraColour.of(roll, AuroraActivity.STORM));
-        assertEquals(EnumSet.allOf(AuroraColour.class), seen);
+            seen.add(AuroraColor.of(roll, AuroraActivity.STORM));
+        assertEquals(EnumSet.allOf(AuroraColor.class), seen);
     }
 
     @Test
-    void mostNightsHaveUsualColours() {
+    void mostNightsHaveUsualColors() {
         int usual = 0;
         for (long night = 0; night < NIGHTS; night++)
-            if (RealisticAurora.create(night, 0).colour() == AuroraColour.NORMAL)
+            if (RealisticAurora.create(night, 0).color() == AuroraColor.NORMAL)
                 usual++;
         assertTrue(usual > NIGHTS * 0.6F && usual < NIGHTS * 0.85F, usual + " of " + NIGHTS);
     }
 
     @Test
-    void theColourFollowsTheActivity() {
+    void theColorFollowsTheActivity() {
         // The same roll, read for how active it now is
         for (long night = 0; night < 200; night++) {
             var aurora = create(night);
             var storm = aurora.withActivity(AuroraActivity.STORM);
-            assertEquals(AuroraColour.of(aurora.colourRoll(), AuroraActivity.STORM), storm.colour());
+            assertEquals(AuroraColor.of(aurora.colorRoll(), AuroraActivity.STORM), storm.color());
         }
     }
 
     @Test
-    void aColourChangesItsLight() {
+    void aColorChangesItsLight() {
         var aurora = create(9).withActivity(AuroraActivity.ACTIVE);
         float p = aurora.progressOf(RealisticAurora.Phase.EXPANSION);
-        var usual = aurora.withColour(AuroraColour.NORMAL).at(p);
-        var crimson = aurora.withColour(AuroraColour.CRIMSON).at(p);
-        assertEquals(usual.red() * AuroraColour.CRIMSON.red(), crimson.red(), 1e-5F);
-        assertEquals(usual.fringe() * AuroraColour.CRIMSON.fringe(), crimson.fringe(), 1e-5F);
-        assertEquals(AuroraColour.CRIMSON.green(), crimson.green());
+        var usual = aurora.withColor(AuroraColor.NORMAL).at(p);
+        var crimson = aurora.withColor(AuroraColor.CRIMSON).at(p);
+        assertEquals(usual.red() * AuroraColor.CRIMSON.red(), crimson.red(), 1e-5F);
+        assertEquals(usual.fringe() * AuroraColor.CRIMSON.fringe(), crimson.fringe(), 1e-5F);
+        assertEquals(AuroraColor.CRIMSON.green(), crimson.green());
         assertEquals(1F, usual.green());
     }
 
