@@ -33,9 +33,10 @@ public class MixinHelpers {
     public static final BiomeMusicSelector BIOME_MUSIC = new BiomeMusicSelector();
 
     // Mixin bodies run every frame, tick or particle inside the game's own code: a failure is logged a few times and
-    // the game's own behaviour used in its place, rather than thrown into the game
-    public static final Guard FOG_TINT_GUARD = Guard.named("Fog colour tint");
-    public static final Guard SKY_TINT_GUARD = Guard.named("Sky colour tint");
+    // the game's own behavior used in its place, rather than thrown into the game
+    public static final Guard FOG_TINT_GUARD = Guard.named("Fog color tint");
+    public static final Guard SKY_TINT_GUARD = Guard.named("Sky color tint");
+    public static final Guard SUNSET_TINT_GUARD = Guard.named("Sunrise and sunset color tint");
     public static final Guard STORM_RAIN_LEVEL_GUARD = Guard.named("Storm rain level");
     public static final Guard RAIN_SOUND_GUARD = Guard.named("Storm rain sound");
     /**
@@ -62,7 +63,7 @@ public class MixinHelpers {
     public static final Guard SOUND_STOP_GUARD = Guard.named("Stopping a sound's enhanced processing");
 
     // Resolved on first use, not when this class loads. A holder class rather than ContainerManager.memoize():
-    // the biome library is used for every biome fog colour lookup (hundreds per frame), and a memoized proxy goes
+    // the biome library is used for every biome fog color lookup (hundreds per frame), and a memoized proxy goes
     // through reflection on every call.
     private static final class BiomeLibraryHolder {
         static final IBiomeLibrary INSTANCE = ContainerManager.resolve(IBiomeLibrary.class);
@@ -94,7 +95,7 @@ public class MixinHelpers {
         }
     }
 
-    // Asked every frame to tint the fog's colour
+    // Asked every frame to tint the fog's color
     private static final class FogHandlerHolder {
         static final FogHandler INSTANCE = ContainerManager.resolve(FogHandler.class);
     }

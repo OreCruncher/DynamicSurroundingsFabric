@@ -14,8 +14,10 @@ public class FogHandler extends AbstractClientHandler {
 
     private final HolisticFogRangeCalculator fogCalculator;
     private FogData lastData;
-    // The sky's colour while it is tinted; the sky is drawn on the render thread only
+    // The sky's color while it is tinted; the sky is drawn on the render thread only
     private final float[] skyColor = new float[3];
+    // The sunrise or sunset glow's color while it is tinted
+    private final float[] sunsetColor = new float[4];
 
     public FogHandler(HolisticFogRangeCalculator fogCalculator, Configuration config, IModLog logger) {
         super("Fog Handler", config, logger);
@@ -56,16 +58,16 @@ public class FogHandler extends AbstractClientHandler {
     }
 
     /**
-     * Turns the fog's colour toward the dust's in a dust storm. Called from the game's fog colour set up.
+     * Turns the fog's color toward the dust's in a dust storm. Called from the game's fog color set up.
      *
-     * @param rgb the fog's colour, red, green and blue from 0 to 1; changed in place
+     * @param rgb the fog's color, red, green and blue from 0 to 1; changed in place
      */
     public void tintFogColor(float[] rgb, float partialTick) {
         this.fogCalculator.tintFogColor(rgb, partialTick);
     }
 
     /**
-     * The sky's colour, 0xAARRGGBB, turned toward the dust's in a dust storm as the fog's is. Called as the sky is
+     * The sky's color, 0xAARRGGBB, turned toward the dust's in a dust storm as the fog's is. Called as the sky is
      * set up for drawing.
      */
     public int tintSkyColor(int color, float partialTick) {
@@ -75,6 +77,20 @@ public class FogHandler extends AbstractClientHandler {
         rgb[2] = ARGB.blueFloat(color);
         this.fogCalculator.tintFogColor(rgb, partialTick);
         return ARGB.colorFromFloat(ARGB.alphaFloat(color), rgb[0], rgb[1], rgb[2]);
+    }
+
+    /**
+     * The glow of sunrise and sunset, 0xAARRGGBB, turned toward the dust's color in a dust storm and dimmed. Called as
+     * the sky is set up for drawing.
+     */
+    public int tintSunsetColor(int color, float partialTick) {
+        var rgba = this.sunsetColor;
+        rgba[0] = ARGB.redFloat(color);
+        rgba[1] = ARGB.greenFloat(color);
+        rgba[2] = ARGB.blueFloat(color);
+        rgba[3] = ARGB.alphaFloat(color);
+        this.fogCalculator.tintSunsetColor(rgba, partialTick);
+        return ARGB.colorFromFloat(rgba[3], rgba[0], rgba[1], rgba[2]);
     }
 
     @Override

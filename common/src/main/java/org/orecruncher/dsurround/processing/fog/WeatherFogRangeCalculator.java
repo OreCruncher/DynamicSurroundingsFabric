@@ -16,7 +16,7 @@ import org.orecruncher.dsurround.runtime.weather.Shelter;
 
 /**
  * Fog from the weather: a dust storm (see {@link DustStorms}) thickens it a great deal, closing in the view to a few
- * dozen blocks at its height and turning the fog the colour of the dust. Rain's fog is the game's own on 26.2, given
+ * dozen blocks at its height and turning the fog the color of the dust. Rain's fog is the game's own on 26.2, given
  * the storm's strength by {@code MixinAtmosphericFogEnvironment}.
  */
 public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
@@ -31,9 +31,13 @@ public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
     // Dust fog comes and goes more slowly than rain's, so walking into or out of a desert in a storm isn't sudden
     static final float DUST_EASE_PER_TICK = 0.05F;
     /**
-     * How much of the way to the dust's colour a dust storm at full strength turns the fog
+     * How much of the way to the dust's color a dust storm at full strength turns the fog
      */
     static final float DUST_TINT = 0.8F;
+    /**
+     * How much a dust storm at full strength dims the glow of sunrise and sunset: the dust hides the low sun
+     */
+    static final float DUST_SUNSET_FADE = 0.5F;
 
     private final IWeatherSimulation weatherSimulation;
     private final ISeasonalInformation seasons;
@@ -42,7 +46,7 @@ public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
     private final PrecipitationHandler precipitation;
     private float previousDust;
     private float currentDust;
-    // The colour of the dust, kept from the last dusty tick so the tint keeps it while it fades
+    // The color of the dust, kept from the last dusty tick so the tint keeps it while it fades
     private int dustColor = DustStorms.SAND_COLOR;
 
     protected WeatherFogRangeCalculator(Configuration.FogOptions fogOptions, IWeatherSimulation weatherSimulation,
@@ -100,20 +104,20 @@ public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
     }
 
     /**
-     * The colour the fog turns in a dust storm: the dust's around the player, as the puffs take it, so fog and dust
+     * The color the fog turns in a dust storm: the dust's around the player, as the puffs take it, so fog and dust
      * match; or, when no dust is being drawn, what the biome is known for
      *
-     * @param regional the dust's colour around the player, or {@link IColumnSource#NOT_A_DUST_SOURCE}
-     * @param biome    the biome's dust colour
+     * @param regional the dust's color around the player, or {@link IColumnSource#NOT_A_DUST_SOURCE}
+     * @param biome    the biome's dust color
      */
     static int fogDustColor(int regional, int biome) {
         return regional == IColumnSource.NOT_A_DUST_SOURCE ? biome : regional;
     }
 
     /**
-     * Turns the fog's colour toward the dust's in a dust storm.
+     * Turns the fog's color toward the dust's in a dust storm.
      *
-     * @param rgb the fog's colour, red, green and blue from 0 to 1; changed in place
+     * @param rgb the fog's color, red, green and blue from 0 to 1; changed in place
      */
     public void tintFogColor(float[] rgb, float partialTick) {
         float dustStr = Mth.lerp(partialTick, this.previousDust, this.currentDust);
@@ -122,11 +126,35 @@ public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
     }
 
     /**
-     * Turns a fog colour {@code amount} of the way toward a dust colour. The dust's colour is first darkened to the
+     * Turns the glow of sunrise and sunset toward the dust's color in a dust storm, as the sky is, and dims it.
+     *
+     * @param rgba the glow's color, red, green, blue and alpha from 0 to 1; changed in place
+     */
+    public void tintSunsetColor(float[] rgba, float partialTick) {
+        float dustStr = Mth.lerp(partialTick, this.previousDust, this.currentDust);
+        if (dustStr > 0F)
+            sunsetTint(rgba, this.dustColor, dustStr);
+    }
+
+    /**
+     * Turns a sunrise or sunset glow toward a dust color as {@link #tint} does the fog, and dims it
+     *
+     * @param rgba  red, green, blue and alpha from 0 to 1; changed in place
+     * @param color the dust's color, 0xRRGGBB
+     * @param dust  how strong the dust storm is where the player is, 0 to 1
+     */
+    static void sunsetTint(float[] rgba, int color, float dust) {
+        var strength = Mth.clamp(dust, 0F, 1F);
+        tint(rgba, color, strength * DUST_TINT);
+        rgba[3] *= 1F - strength * DUST_SUNSET_FADE;
+    }
+
+    /**
+     * Turns a fog color {@code amount} of the way toward a dust color. The dust's color is first darkened to the
      * fog's own brightness, so the haze is tan by day and dark at night, rather than glowing in the dark.
      *
      * @param rgb    red, green and blue from 0 to 1; changed in place
-     * @param color  the dust's colour, 0xRRGGBB
+     * @param color  the dust's color, 0xRRGGBB
      * @param amount 0 for none of the way, 1 for all of it
      */
     static void tint(float[] rgb, int color, float amount) {

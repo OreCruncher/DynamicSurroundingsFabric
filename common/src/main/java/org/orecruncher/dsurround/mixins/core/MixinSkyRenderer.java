@@ -29,11 +29,19 @@ public class MixinSkyRenderer {
     }
 
     /**
-     * The sky's colour, turned toward the dust's in a dust storm, as the fog is. Only the sky's: the fog's colour is
+     * The sky's color, turned toward the dust's in a dust storm, as the fog is. Only the sky's: the fog's color is
      * tinted on its own (MixinFogRenderer).
      */
     @Inject(method = "extractRenderState(Lnet/minecraft/client/multiplayer/ClientLevel;FLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/state/level/SkyRenderState;)V", at = @At("TAIL"), require = 0)
     private void dsurround$tintSkyColor(ClientLevel level, float partialTick, Camera camera, SkyRenderState state, CallbackInfo ci) {
         state.skyColor = MixinHelpers.SKY_TINT_GUARD.get(() -> MixinHelpers.fogHandler().tintSkyColor(state.skyColor, partialTick), state.skyColor);
+    }
+
+    /**
+     * The glow of sunrise and sunset, turned toward the dust's color and dimmed in a dust storm, as the sky is
+     */
+    @Inject(method = "extractRenderState(Lnet/minecraft/client/multiplayer/ClientLevel;FLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/state/level/SkyRenderState;)V", at = @At("TAIL"), require = 0)
+    private void dsurround$tintSunsetColor(ClientLevel level, float partialTick, Camera camera, SkyRenderState state, CallbackInfo ci) {
+        state.sunriseAndSunsetColor = MixinHelpers.SUNSET_TINT_GUARD.get(() -> MixinHelpers.fogHandler().tintSunsetColor(state.sunriseAndSunsetColor, partialTick), state.sunriseAndSunsetColor);
     }
 }
