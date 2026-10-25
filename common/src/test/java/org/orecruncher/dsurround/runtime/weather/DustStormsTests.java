@@ -22,17 +22,29 @@ public class DustStormsTests {
 
     @Test
     void desertsAndBadlandsAreDusty() {
-        assertTrue(DustStorms.isDusty(BiomeTraits.of(BiomeTrait.DESERT, BiomeTrait.HOT)));
-        assertTrue(DustStorms.isDusty(BiomeTraits.of(BiomeTrait.BADLANDS)));
-        assertTrue(DustStorms.isDusty(BiomeTraits.of(BiomeTrait.DRY, BiomeTrait.SANDY)));
+        assertTrue(DustStorms.isDusty(BiomeTraits.of(BiomeTrait.DESERT, BiomeTrait.HOT), 0F));
+        assertTrue(DustStorms.isDusty(BiomeTraits.of(BiomeTrait.BADLANDS), 0F));
+        assertTrue(DustStorms.isDusty(BiomeTraits.of(BiomeTrait.DRY, BiomeTrait.SANDY), 0F));
     }
 
     @Test
     void otherDryOrSandyBiomesAreNot() {
         // A savanna is dry but grassy; a beach sandy but rained on
-        assertFalse(DustStorms.isDusty(BiomeTraits.of(BiomeTrait.DRY, BiomeTrait.SAVANNA)));
-        assertFalse(DustStorms.isDusty(BiomeTraits.of(BiomeTrait.SANDY, BiomeTrait.BEACH)));
-        assertFalse(DustStorms.isDusty(BiomeTraits.of(BiomeTrait.FOREST)));
+        assertFalse(DustStorms.isDusty(BiomeTraits.of(BiomeTrait.DRY, BiomeTrait.SAVANNA), 0F));
+        assertFalse(DustStorms.isDusty(BiomeTraits.of(BiomeTrait.SANDY, BiomeTrait.BEACH), 0F));
+        assertFalse(DustStorms.isDusty(BiomeTraits.of(BiomeTrait.FOREST), 0F));
+    }
+
+    @Test
+    void wastelandsWithNextToNoDownfallAreDusty() {
+        // Biomes O' Plenty's wasteland and wasteland steppe: no downfall, and not sandy
+        var wasteland = BiomeTraits.of(BiomeTrait.DRY, BiomeTrait.HOT, BiomeTrait.OVERWORLD, BiomeTrait.SPARSE_VEGETATION, BiomeTrait.WASTELAND);
+        assertTrue(DustStorms.isDusty(wasteland, 0F));
+        // Its volcanic plains have the same traits, but are ash and basalt, with some downfall
+        assertFalse(DustStorms.isDusty(wasteland, 0.3F));
+        // Cold, snowy or swampy wastelands, and those of the Nether and the End, are not
+        for (var other : new BiomeTrait[]{BiomeTrait.COLD, BiomeTrait.SNOWY, BiomeTrait.SWAMP, BiomeTrait.NETHER, BiomeTrait.END})
+            assertFalse(DustStorms.isDusty(BiomeTraits.of(BiomeTrait.WASTELAND, other), 0F), other.name());
     }
 
     @Test
@@ -41,10 +53,10 @@ public class DustStormsTests {
         // tropical dry season. The rain check went by the season and the dust check by the biome's own setting, so
         // there was neither rain nor dust.
         var lushDesert = BiomeTraits.of(BiomeTrait.DESERT, BiomeTrait.DRY, BiomeTrait.LUSH, BiomeTrait.SANDY);
-        assertTrue(DustStorms.isDusty(Biome.Precipitation.NONE, lushDesert), "the dry season: dust");
-        assertFalse(DustStorms.isDusty(Biome.Precipitation.RAIN, lushDesert), "the wet season: rain, not dust");
-        assertFalse(DustStorms.isDusty(Biome.Precipitation.SNOW, BiomeTraits.of(BiomeTrait.DESERT)), "snow, not dust");
-        assertFalse(DustStorms.isDusty(Biome.Precipitation.NONE, BiomeTraits.of(BiomeTrait.FOREST)), "nothing, not a desert");
+        assertTrue(DustStorms.isDusty(Biome.Precipitation.NONE, lushDesert, 0F), "the dry season: dust");
+        assertFalse(DustStorms.isDusty(Biome.Precipitation.RAIN, lushDesert, 0F), "the wet season: rain, not dust");
+        assertFalse(DustStorms.isDusty(Biome.Precipitation.SNOW, BiomeTraits.of(BiomeTrait.DESERT), 0F), "snow, not dust");
+        assertFalse(DustStorms.isDusty(Biome.Precipitation.NONE, BiomeTraits.of(BiomeTrait.FOREST), 0F), "nothing, not a desert");
     }
 
     @Test

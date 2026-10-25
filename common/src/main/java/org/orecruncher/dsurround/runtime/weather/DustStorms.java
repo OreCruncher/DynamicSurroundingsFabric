@@ -10,9 +10,10 @@ import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 
 /**
- * Where storms bring dust: where nothing falls, in a biome that is a desert, badlands, or dry and sandy. A storm there
- * blows dust along the ground and thickens the fog, in place of the rain other biomes get. Shared by the particles and
- * the fog, so both agree.
+ * Where storms bring dust: where nothing falls, in a biome that is a desert, badlands, dry and sandy, or a wasteland
+ * with next to no downfall (Biomes O' Plenty's wasteland). The wasteland rule matches the desert fog color in
+ * {@code biomes.json}, so dust storms come where the fog is already dusty. A storm there blows dust along the ground
+ * and thickens the fog, in place of the rain other biomes get. Shared by the particles and the fog, so both agree.
  * <p>
  * "Nothing falls" is what falls there now, as the season provider says, not the biome's own setting: with Serene
  * Seasons a tropical biome gets no rain in the dry season even if it otherwise has rain (Biomes O' Plenty's lush
@@ -21,7 +22,7 @@ import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 public final class DustStorms {
 
     /**
-     * The colours of the dust a biome is known for, as sand and red sand show on maps, 0xRRGGBB
+     * The colors of the dust a biome is known for, as sand and red sand show on maps, 0xRRGGBB
      */
     public static final int SAND_COLOR = MapColor.SAND.col;
     public static final int RED_SAND_COLOR = MapColor.COLOR_ORANGE.col;
@@ -49,15 +50,18 @@ public final class DustStorms {
      * @param fallingNow what falls there now, as the season provider says
      */
     public static boolean isDusty(Biome.Precipitation fallingNow, Biome biome, IBiomeLibrary biomeLibrary) {
-        return fallingNow == Biome.Precipitation.NONE && isDusty(biomeLibrary.getBiomeInfo(biome).getTraits());
+        if (fallingNow != Biome.Precipitation.NONE)
+            return false;
+        var info = biomeLibrary.getBiomeInfo(biome);
+        return isDusty(info.getTraits(), info.getDownfall());
     }
 
-    static boolean isDusty(Biome.Precipitation fallingNow, BiomeTraits traits) {
-        return fallingNow == Biome.Precipitation.NONE && isDusty(traits);
+    static boolean isDusty(Biome.Precipitation fallingNow, BiomeTraits traits, float downfall) {
+        return fallingNow == Biome.Precipitation.NONE && isDusty(traits, downfall);
     }
 
     /**
-     * The colour of the dust a biome is known for: red sand's in badlands, sand's elsewhere
+     * The color of the dust a biome is known for: red sand's in badlands, sand's elsewhere
      */
     public static int dustColor(Biome biome, IBiomeLibrary biomeLibrary) {
         return dustColor(biomeLibrary.getBiomeInfo(biome).getTraits());
@@ -67,9 +71,26 @@ public final class DustStorms {
         return traits.contains(BiomeTrait.BADLANDS) ? RED_SAND_COLOR : SAND_COLOR;
     }
 
-    static boolean isDusty(BiomeTraits traits) {
+    /**
+     * The most a wasteland's downfall can be for it to be dusty. Biomes O' Plenty's wasteland has none; its volcanic
+     * plains, with ash and basalt rather than loose dry ground, have 0.3.
+     */
+    static final float WASTELAND_MAX_DOWNFALL = 0.1F;
+
+    static boolean isDusty(BiomeTraits traits, float downfall) {
         return traits.contains(BiomeTrait.DESERT)
                 || traits.contains(BiomeTrait.BADLANDS)
-                || (traits.contains(BiomeTrait.DRY) && traits.contains(BiomeTrait.SANDY));
+                || (traits.contains(BiomeTrait.DRY) && traits.contains(BiomeTrait.SANDY))
+                || isDustyWasteland(traits, downfall);
+    }
+
+    private static boolean isDustyWasteland(BiomeTraits traits, float downfall) {
+        return traits.contains(BiomeTrait.WASTELAND)
+                && downfall < WASTELAND_MAX_DOWNFALL
+                && !traits.contains(BiomeTrait.NETHER)
+                && !traits.contains(BiomeTrait.END)
+                && !traits.contains(BiomeTrait.COLD)
+                && !traits.contains(BiomeTrait.SNOWY)
+                && !traits.contains(BiomeTrait.SWAMP);
     }
 }
