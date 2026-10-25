@@ -519,8 +519,12 @@
   {
     "biomeSelector": "@player",
     "_comment": "Player explicit set",
-    "additionalSoundChance": "0.009",
+    "additionalSoundChance": "0.02",
     "acoustics": [
+      {
+        "factory": "player.heartbeat",
+        "conditions": "!player.isCreative() && global.allowScary() && player.getHealth() <= player.getMaxHealth() * 0.3"
+      },
       {
         "factory": "player.tummy",
         "conditions": "player.getFoodLevel() <= 4 || player.hasEffect('minecraft:hunger')",

@@ -815,6 +815,7 @@
 		]
 	},
 	"player.heartbeat": {
+		"subtitle": "dsurround.sound.caption.heartbeat",
 		"sounds": [
 			"dsurround:ambient/steve/heartbeat"
 		]
