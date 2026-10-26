@@ -7,7 +7,10 @@ import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.effects.RenderTimers;
+import org.orecruncher.dsurround.lib.platform.FeatureConflict;
+import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.threading.RecordingLog;
 
@@ -22,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.zip.ZipInputStream;
 
@@ -153,7 +157,50 @@ public class ProfilingTests {
     static ProfileEnvironment environment() {
         return new ProfileEnvironment("Dynamic Surroundings 26.2-0.4.7 (Fabric)", 42, "Test GPU/PCIe/SSE2", "Test Vendor",
                 "discrete", "4.6.0 Test Driver 1.2.3", "OpenGL", "fabulous, improved transparency on", false, 12,
-                ProfileEnvironment.javaRuntime(), ProfileEnvironment.operatingSystem());
+                ProfileEnvironment.javaRuntime(), ProfileEnvironment.operatingSystem(),
+                List.of(new ProfileFeature(ProfileFeature.HOOK, "DYNAMIC_CLOUDS", "MISSING", false),
+                        new ProfileFeature(ProfileFeature.SETTING, "weatherOptions.enableDustStorms", "true", true)));
+    }
+
+    private static List<ProfileFeature> features(Configuration config) {
+        return ProfileFeature.of(config,
+                hook -> hook == OptionalHook.DYNAMIC_CLOUDS ? OptionalHook.Status.MISSING : OptionalHook.Status.APPLIED,
+                conflict -> conflict == FeatureConflict.PARTICLE_WEATHER ? Optional.of("particlerain") : Optional.empty());
+    }
+
+    private static ProfileFeature named(List<ProfileFeature> features, String name) {
+        return features.stream().filter(f -> f.name().equals(name)).findFirst().orElseThrow(() -> new AssertionError(name));
+    }
+
+    @Test
+    void theFeaturesSayWhatIsOffAndWhatWasChanged() {
+        var config = new Configuration();
+        config.weatherOptions.enableDustStorms = false;
+        config.entityEffects.entityEffectRange = 16;
+        var features = features(config);
+
+        assertEquals(new ProfileFeature(ProfileFeature.HOOK, "DYNAMIC_CLOUDS", "MISSING", false), named(features, "DYNAMIC_CLOUDS"));
+        assertEquals(new ProfileFeature(ProfileFeature.HOOK, "LIGHTNING_BOLTS", "APPLIED", true), named(features, "LIGHTNING_BOLTS"));
+        assertEquals(new ProfileFeature(ProfileFeature.CONFLICT, "PARTICLE_WEATHER", "off (particlerain installed)", false),
+                named(features, "PARTICLE_WEATHER"));
+        assertEquals(new ProfileFeature(ProfileFeature.CONFLICT, "RAIN_RIPPLES", "on", true), named(features, "RAIN_RIPPLES"));
+        assertEquals(new ProfileFeature(ProfileFeature.SETTING, "weatherOptions.enableDustStorms", "false", false),
+                named(features, "weatherOptions.enableDustStorms"));
+        assertEquals(new ProfileFeature(ProfileFeature.SETTING, "entityEffects.entityEffectRange", "16", false),
+                named(features, "entityEffects.entityEffectRange"));
+        assertTrue(named(features, "weatherOptions.enableDynamicClouds").usual());
+        // Every setting is named by its group, and every hook and conflict is there
+        assertTrue(features.stream().filter(f -> f.kind().equals(ProfileFeature.SETTING)).allMatch(f -> f.name().contains(".")));
+        assertEquals(OptionalHook.values().length, features.stream().filter(f -> f.kind().equals(ProfileFeature.HOOK)).count());
+        assertEquals(FeatureConflict.values().length, features.stream().filter(f -> f.kind().equals(ProfileFeature.CONFLICT)).count());
+    }
+
+    @Test
+    void theFeaturesHoldNoText() {
+        // A text setting could hold anything a player typed: only switches, numbers and choices are written
+        for (var feature : features(new Configuration()))
+            if (feature.kind().equals(ProfileFeature.SETTING))
+                assertTrue(feature.state().matches("true|false|-?[\\d.E-]+|[A-Z0-9_]+"), feature.name() + " = " + feature.state());
     }
 
     @Test
@@ -209,6 +256,54 @@ public class ProfilingTests {
     }
 
     @Test
+    void aRecordingHasTheHandlersTicks() throws Exception {
+        var file = this.folder.resolve("test.jfr");
+        var recorder = new Thread(() -> {
+            try {
+                ProfileRecording.record(file, Duration.ofSeconds(1), environment());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        recorder.start();
+        // Ticks as the client thread would, until the recording is done; some fall before it starts, and are dropped
+        long tick = 0;
+        while (recorder.isAlive()) {
+            HandlerTicks.ticked(++tick, "Precipitation Handler", 1_500_000L, true);
+            HandlerTicks.ticked(tick, "Aurora Handler", 2_000L, false);
+            Thread.sleep(50);
+        }
+        recorder.join();
+        long last = tick;
+
+        var events = RecordingFile.readAllEvents(file).stream()
+                .filter(e -> e.getEventType().getName().equals("dsurround.HandlerTick"))
+                .toList();
+        assertFalse(events.isEmpty());
+        for (var event : events) {
+            var handler = event.getString("handler");
+            assertTrue(handler.equals("Precipitation Handler") || handler.equals("Aurora Handler"), handler);
+            var precipitation = handler.equals("Precipitation Handler");
+            assertEquals(precipitation ? 1_500_000L : 2_000L, event.getLong("time"));
+            assertEquals(precipitation, event.getBoolean("ran"));
+            assertTrue(event.getLong("tick") > 0 && event.getLong("tick") <= last);
+        }
+    }
+
+    @Test
+    void aRecordingHasTheFeatures() throws Exception {
+        var file = this.folder.resolve("test.jfr");
+        var environment = environment();
+        ProfileRecording.record(file, Duration.ofSeconds(1), environment);
+
+        var events = RecordingFile.readAllEvents(file).stream()
+                .filter(e -> e.getEventType().getName().equals("dsurround.Feature"))
+                .map(e -> new ProfileFeature(e.getString("kind"), e.getString("name"), e.getString("state"), e.getBoolean("usual")))
+                .toList();
+        assertEquals(environment.features(), events);
+    }
+
+    @Test
     void theEnvironmentNamesNoOne() {
         // Of the system, only Java's and the operating system's versions: nothing of the account, its folders or the
         // machine's name
@@ -237,7 +332,7 @@ public class ProfilingTests {
                     .map(p -> p.getFileName().toString())
                     .sorted()
                     .toList();
-            assertEquals(List.of("EnvironmentEvent.java", "ProfileRecording.java", "RenderTimerEvent.java"), users);
+            assertEquals(List.of("EnvironmentEvent.java", "FeatureEvent.java", "HandlerTickEvent.java", "ProfileRecording.java", "RenderTimerEvent.java"), users);
         }
     }
 }

@@ -1,20 +1,27 @@
 #!/usr/bin/env python3
 """
-Summarizes a `/dsprofile` recording (config/dsurround/profiles/*.zip or the .jfr inside): what it was made on, the
-mod's render timers, where each busy thread spends its time (by method and by mod package), what allocates, and GC.
+Summarizes a `/dsprofile` recording (config/dsurround/profiles/*.zip or the .jfr inside): what it was made on (and
+the optional hooks, conflicts and settings that aren't as they are out of the box), the mod's render timers, the
+client tick's handlers (and what running them in parallel could gain), where each busy thread spends its time (by
+method and by mod package), what allocates, and GC.
 
-  jfr-summary.py RECORDING [--thread NAME] [--top N] [--jfr PATH]
+  jfr-summary.py RECORDING [--thread NAME] [--top N] [--jfr PATH] [--dispatch-us US] [--worth-ms MS]
 
   --thread   only this thread's samples for the method tables (default: the busiest few threads)
   --top      rows per table (default 15)
   --jfr      the JDK's jfr tool (default: newest Adoptium JDK, else `jfr` on the path)
   --callers  METHOD (a substring, e.g. BiomeManager.getBiome): only who calls it, on --thread or every thread;
              the first mod frame above it and the nearest caller outside it
+  --dispatch-us  for the handler ticks: what handing the handlers to other threads and waiting for them would cost a
+             tick, in microseconds (default 50); measure it on the machine to trust the gain
+  --worth-ms the gain a tick must have for running the handlers in parallel to be worth it (default 0.5)
 
 Reads `jfr print` text output, which is far smaller than its JSON. A zip is unpacked next to itself.
 """
 import argparse
+import datetime
 import glob
+import math
 import os
 import re
 import shutil
@@ -146,6 +153,110 @@ def table(title, counter, total, top, unit=""):
         print(f"  {shown} {100 * value / max(total, 1):5.1f}%  {key}")
 
 
+# How the client tick's handlers could run in parallel: these first, as now, then everything else at once; a chain
+# stays in order on one thread (lightning hands the cloud handler its strikes). Names are AbstractClientHandler's
+FIRST_HANDLERS = ("Scanners",)
+HANDLER_CHAINS = (("Lightning Handler", "Cloud Handler"),)
+
+
+def percentile(values, share):
+    # Nearest rank, of values already sorted
+    if not values:
+        return 0.0
+    return values[min(len(values) - 1, max(0, math.ceil(share * len(values)) - 1))]
+
+
+def spread(values):
+    values = sorted(values)
+    return (f"{percentile(values, 0.5):7.3f} {percentile(values, 0.95):7.3f} {percentile(values, 0.99):7.3f} "
+            f"{(values[-1] if values else 0.0):7.3f}")
+
+
+def clock_ms(value):
+    # A start time as milliseconds since the epoch's day: enough to compare times within a recording
+    date, time = started(value)
+    parts = time.split(":")
+    if len(parts) != 3:
+        return 0.0
+    hours, minutes, seconds = parts
+    day = datetime.date.fromisoformat(date).toordinal() if date else 0
+    return ((day * 24 + int(hours)) * 60 + int(minutes)) * 60_000 + float(seconds) * 1000
+
+
+def handler_ticks(jfr, recording, args):
+    ticks = defaultdict(dict)
+    ran = defaultdict(dict)
+    spans = []
+    for _, fields, _ in events(jfr, recording, ["dsurround.HandlerTick"], 1):
+        tick = int(number(fields.get("tick")))
+        handler = fields.get("handler", "?").strip('"')
+        time = duration_ms(fields.get("time"))
+        ticks[tick][handler] = time
+        ran[tick][handler] = fields.get("ran") == "true"
+        # Written once the handler is done: it ran for its time up to then
+        end = clock_ms(fields.get("startTime"))
+        spans.append((end - time, end, tick))
+    if not ticks:
+        return
+
+    # A GC pause stops the handler it lands in, which then looks slow: those ticks are left out
+    pauses = sorted((clock_ms(f.get("startTime")), duration_ms(f.get("duration")))
+                    for _, f, _ in events(jfr, recording, ["jdk.GCPhasePause"], 1))
+    paused = {tick for begin, end, tick in spans
+              if any(start < end and start + length > begin for start, length in pauses)}
+    worst = max((sum(ticks[t].values()) for t in paused), default=0.0)
+    for tick in paused:
+        del ticks[tick]
+        del ran[tick]
+
+    handlers = sorted({h for t in ticks.values() for h in t})
+    totals = {tick: sum(times.values()) for tick, times in ticks.items()}
+    whole = sum(totals.values())
+    print(f"\n== Client tick handlers ({len(ticks)} ticks; ms; p50 p95 p99 max of the ticks it ran in; "
+          f"share of all handler time)")
+    if paused:
+        print(f"  {len(paused)} tick{'s' if len(paused) > 1 else ''} with a GC pause in {'them' if len(paused) > 1 else 'it'}"
+              f" left out (the longest {worst:.3f} ms)")
+    print(f"  {'handler':24} {'ran':>5} {'p50':>7} {'p95':>7} {'p99':>7} {'max':>7} {'mean/tick':>9} {'share':>6}")
+    rows = []
+    for handler in handlers:
+        times = [t[handler] for tick, t in ticks.items() if handler in t and ran[tick].get(handler)]
+        spent = sum(t.get(handler, 0.0) for t in ticks.values())
+        rows.append((spent, handler, times))
+    for spent, handler, times in sorted(rows, reverse=True):
+        print(f"  {handler:24} {100 * len(times) / len(ticks):4.0f}% {spread(times)} {spent / len(ticks):9.3f} "
+              f"{100 * spent / max(whole, 1e-9):5.1f}%")
+    print(f"  {'whole tick':24} {'':5} {spread(totals.values())} {whole / len(ticks):9.3f}")
+    p95 = percentile(sorted(totals.values()), 0.95)
+    print(f"  p95 tick against a frame: {100 * p95 / 16.7:.0f}% of 60 fps (16.7 ms), {100 * p95 / 6.94:.0f}% of 144 fps "
+          f"(6.94 ms); the tick runs on the render thread, inside a frame")
+
+    # The ideal parallel tick: what can't move, then the longest of the rest, plus what handing them out costs
+    chained = {h for chain in HANDLER_CHAINS for h in chain}
+    dispatch = args.dispatch_us / 1000.0
+    gains, paths, critical = [], [], Counter()
+    for times in ticks.values():
+        first = sum(times.get(h, 0.0) for h in FIRST_HANDLERS)
+        units = {h: v for h, v in times.items() if h not in FIRST_HANDLERS and h not in chained}
+        for chain in HANDLER_CHAINS:
+            units[" > ".join(chain)] = sum(times.get(h, 0.0) for h in chain)
+        longest = max(units, key=units.get) if units else "-"
+        path = first + (units[longest] if units else 0.0) + dispatch
+        critical[longest] += 1
+        paths.append(path)
+        gains.append(sum(times.values()) - path)
+    worth = sum(1 for g in gains if g >= args.worth_ms)
+    print(f"\n== Handlers in parallel, ideally ({', '.join(FIRST_HANDLERS)} first; "
+          f"{'; '.join(' > '.join(c) for c in HANDLER_CHAINS)} in order; {args.dispatch_us:g} us to hand out and wait)")
+    print(f"  {'':24} {'':5} {'p50':>7} {'p95':>7} {'p99':>7} {'max':>7}")
+    print(f"  {'parallel tick':24} {'':5} {spread(paths)}")
+    print(f"  {'gain (negative: slower)':24} {'':5} {spread(gains)}")
+    print(f"  ticks gaining {args.worth_ms:g} ms or more: {worth} of {len(ticks)} ({100 * worth / len(ticks):.1f}%)")
+    print("  longest after the first, the tick's floor:")
+    for unit, count in critical.most_common(args.top):
+        print(f"    {100 * count / len(ticks):5.1f}%  {unit}")
+
+
 def callers(jfr, recording, args):
     mods, nearest, ours, total = Counter(), Counter(), Counter(), 0
     for _, fields, frames in events(jfr, recording, ["jdk.ExecutionSample"]):
@@ -177,6 +288,8 @@ def main():
     parser.add_argument("--top", type=int, default=15)
     parser.add_argument("--jfr")
     parser.add_argument("--callers")
+    parser.add_argument("--dispatch-us", type=float, default=50.0)
+    parser.add_argument("--worth-ms", type=float, default=0.5)
     args = parser.parse_args()
     jfr = find_jfr(args.jfr)
     recording = unpack(args.recording)
@@ -189,6 +302,18 @@ def main():
         for key, value in fields.items():
             if key not in ("startTime", "eventThread"):
                 print(f"  {key}: {value}")
+    features = defaultdict(list)
+    for _, fields, _ in events(jfr, recording, ["dsurround.Feature"], 1):
+        features[fields.get("kind", "?").strip('"')].append(fields)
+    if features:
+        # Only what isn't as it is out of the box: a hook that didn't apply, a feature standing aside, a changed setting
+        for kind, title in (("hook", "optional hooks not applied"), ("conflict", "features standing aside for a mod"),
+                            ("setting", "settings changed from the default")):
+            rows = features.get(kind, [])
+            unusual = [r for r in rows if r.get("usual") != "true"]
+            print(f"  {title}: {len(unusual)} of {len(rows)}")
+            for row in unusual:
+                print(f"    {row.get('name', '?').strip(chr(34))}: {row.get('state', '?').strip(chr(34))}")
 
     timers = defaultdict(list)
     for _, fields, _ in events(jfr, recording, ["dsurround.RenderTimer"], 1):
@@ -211,6 +336,8 @@ def main():
             count = f"{sum(counts) / len(counts):8.0f}" if counts else f"{'-':>8}"
             print(f"  {effect:28} {mean('gpuAverage'):8.3f} {last('gpuAverage'):8.3f} {peak('gpuPeak'):9.3f} "
                   f"{mean('cpuAverage'):8.3f} {last('cpuAverage'):8.3f} {peak('cpuPeak'):9.3f} {count}")
+
+    handler_ticks(jfr, recording, args)
 
     by_thread = Counter()
     methods = defaultdict(Counter)

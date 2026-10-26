@@ -8,6 +8,9 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.Executor;
 
 /**
  * The rain drops, snowflakes and dust falling or blowing around the camera. How many there are follows the rain
@@ -18,8 +21,13 @@ import java.util.List;
  * <p>
  * New drops appear anywhere in the cylinder rather than only at its top, so the field fills at once when the camera
  * moves, and fade in over their first ticks so they don't pop into view. The drops are kept in flat arrays, not
- * objects, so thousands of them cost little to tick. Ticked on the client thread and read on the render thread,
- * which in Minecraft is the same thread.
+ * objects, so thousands of them cost little to tick.
+ * <p>
+ * A tick of the drops can run on another thread, while frames are drawn ({@link #start}, then {@link #finish} the
+ * next tick): there are two sets of the drops, one drawn while the step fills the other. The step reads only the
+ * columns, looked up as it starts, and the wind as it was then; what needs the world (whether a drop carried in under
+ * something is in open air there) it leaves for {@link #finish}, on the client thread. Everything else is the client
+ * thread's, which in Minecraft is also the render thread.
  */
 public final class PrecipitationField {
 
@@ -110,36 +118,21 @@ public final class PrecipitationField {
      */
     public static final int MAX_LANDINGS = 128;
 
+    // What a step leaves for the world to settle, on the thread that may read it (see finish): a rain drop, snowflake
+    // or puff carried below the top of the column it moved into, to take cover if it is in open air there; or one
+    // already under cover, to drift on if it still is
+    private static final byte TAKE_COVER = 0;
+    private static final byte DRIFT = 1;
+
     private final int capacity;
     private final int radius;
+    private final float radiusSquared;
     private final int maxSpawnPerTick;
     private final PrecipitationColumns columns;
 
-    // Where each drop is now and was last tick, for drawing between ticks. East-west and north-south as doubles: far
-    // from the world's middle a float moves in steps as large as half a block, which a drop's drift each tick is lost in
-    final double[] x, z, prevX, prevZ;
-    final float[] y, prevY;
-    // How fast a rain drop or snowflake falls; not used for dust
-    final float[] speed;
-    // The drop's horizontal speed, carried by the wind, and how strongly the wind carries it
-    final float[] windX, windZ, drift;
-    final float[] phase;
-    // The cos and sin of how far a snowflake or puff of dust has turned (see PrecipitationRenderer), as of its last
-    // tick: worked out as its phase changes, a tick at a time, rather than for each drop in each frame drawn
-    final float[] spinCos, spinSin;
-    // A random number for each drop, 0 to 1, that doesn't change: which drops are left out when thinning those far
-    // off, so the same ones are, frame after frame
-    final float[] thinning;
-    final int[] age;
-    // Ticks since it was carried in under cover (see COVER_DRAG), or 0 out in the open
-    final int[] covered;
-    final int[] light;
-    final byte[] kind;
-    // Dust only: its color, 0xRRGGBB, and how many ticks it lasts
-    final int[] color;
-    final int[] lifetime;
-    int count;
-    private int dustCount;
+    // The drops as of the last step, drawn and read; and those the step under way fills, meanwhile
+    private Drops drops;
+    private Drops next;
 
     // Where rain drops and snowflakes landed this tick: x and z, the height of the ground they landed on, how big they
     // were, and what they were. A snowflake also keeps which flake it was drawn as, and its light; and either, when it
@@ -156,8 +149,16 @@ public final class PrecipitationField {
     private final float[] landingY, landingMotionX, landingMotionY, landingMotionZ;
     private int landings;
 
-    // The columns' source during a tick, for following drops in under cover
-    private IColumnSource source;
+    // The questions the step left for the world: which drop in the next buffer, which question, and the ground of the
+    // column it was carried into (for a landing where it isn't open air)
+    private final int[] questionDrop;
+    private final byte[] questionKind;
+    private final int[] questionGround;
+    private int questions;
+    // The camera's height the step was made for, for the questions' answers
+    private double stepCameraY;
+    // The step under way, or null
+    private CompletableFuture<Void> step;
 
     public PrecipitationField(int capacity) {
         this(capacity, DEFAULT_RADIUS);
@@ -169,6 +170,7 @@ public final class PrecipitationField {
     public PrecipitationField(int capacity, int radius) {
         this.capacity = capacity;
         this.radius = radius;
+        this.radiusSquared = radius * radius;
         this.columns = new PrecipitationColumns(radius);
         this.maxLandings = forArea(MAX_LANDINGS, radius);
         this.landingX = new double[this.maxLandings];
@@ -185,35 +187,17 @@ public final class PrecipitationField {
         this.landingMotionZ = new float[this.maxLandings];
         // Fills from empty in a few ticks; the rain level itself builds up more slowly than that
         this.maxSpawnPerTick = Math.max(1, capacity / 4);
-        this.x = new double[capacity];
-        this.y = new float[capacity];
-        this.z = new double[capacity];
-        this.prevX = new double[capacity];
-        this.prevY = new float[capacity];
-        this.prevZ = new double[capacity];
-        this.speed = new float[capacity];
-        this.windX = new float[capacity];
-        this.windZ = new float[capacity];
-        this.drift = new float[capacity];
-        this.phase = new float[capacity];
-        this.spinCos = new float[capacity];
-        this.spinSin = new float[capacity];
-        this.thinning = new float[capacity];
-        this.age = new int[capacity];
-        this.covered = new int[capacity];
-        this.light = new int[capacity];
-        this.kind = new byte[capacity];
-        this.color = new int[capacity];
-        this.lifetime = new int[capacity];
+        this.drops = new Drops(capacity);
+        this.next = new Drops(capacity);
+        this.questionDrop = new int[capacity];
+        this.questionKind = new byte[capacity];
+        this.questionGround = new int[capacity];
     }
 
     public int capacity() {
         return this.capacity;
     }
 
-    /**
-     * How far from the camera, horizontally, there are drops, in blocks
-     */
     /**
      * The most landings it keeps from a tick: {@link #MAX_LANDINGS} at the default range, as many for the
      * area at another
@@ -231,24 +215,35 @@ public final class PrecipitationField {
         return Math.max(1, Math.round(atDefaultRange * scale * scale));
     }
 
+    /**
+     * How far from the camera, horizontally, there are drops, in blocks
+     */
     public int radius() {
         return this.radius;
     }
 
+    /**
+     * The drops as of the last finished step: what is drawn
+     */
+    Drops drops() {
+        return this.drops;
+    }
+
     public int count() {
-        return this.count;
+        return this.drops.count;
     }
 
     /**
      * How many of the drops are dust
      */
     public int dustCount() {
-        return this.dustCount;
+        return this.drops.dustCount;
     }
 
     public void clear() {
-        this.count = 0;
-        this.dustCount = 0;
+        this.abandon();
+        this.drops.clear();
+        this.next.clear();
         this.landings = 0;
         this.columns.invalidate();
     }
@@ -258,13 +253,15 @@ public final class PrecipitationField {
      * sparing the columns being looked up; {@link #idle} says so.
      */
     public boolean isIdle(float rainLevel) {
-        return rainLevel <= 0F && this.count == 0;
+        return rainLevel <= 0F && this.drops.count == 0;
     }
 
     /**
-     * Says a tick went by without {@link #tick}, so the columns looked up before may be out of date by the next
+     * Says a tick went by without {@link #tick}, so the columns looked up before may be out of date by the next. A
+     * step under way is dropped: with nothing falling, there was nothing for it to move.
      */
     public void idle() {
+        this.abandon();
         this.landings = 0;
         this.columns.invalidate();
     }
@@ -370,57 +367,140 @@ public final class PrecipitationField {
 
     /**
      * Moves the drops a tick, drops those that landed, settled or were left behind, and adds drops up to the number
-     * the rain level calls for. With the rain stopped, the drops already falling finish their fall.
+     * the rain level calls for. With the rain stopped, the drops already falling finish their fall. A step started and
+     * finished at once (see {@link #start} and {@link #finish}).
      *
      * @param rainLevel 0 to 1
      * @param density   the share of the drops the storm calls for that there are, 0 to 1: fewer, for slower machines
      * @param wind      carries the drops sideways; ticked before this
      */
     public void tick(IColumnSource source, double cameraX, double cameraY, double cameraZ, float rainLevel, float density, Wind wind, RandomSource random) {
-        this.columns.refresh(source, Mth.floor(cameraX), Mth.floor(cameraY), Mth.floor(cameraZ));
-        this.landings = 0;
-        this.source = source;
-        try {
-            this.move(cameraX, cameraY, cameraZ, wind);
-        } finally {
-            this.source = null;
-        }
-        this.spawn(cameraX, cameraY, cameraZ, rainLevel, density, wind, random);
+        this.start(source, cameraX, cameraY, cameraZ, rainLevel, density, wind, random, Runnable::run);
+        this.finish(source);
     }
 
-    private void move(double cameraX, double cameraY, double cameraZ, Wind wind) {
-        int i = 0;
-        while (i < this.count) {
-            this.prevX[i] = this.x[i];
-            this.prevY[i] = this.y[i];
-            this.prevZ[i] = this.z[i];
+    /**
+     * Starts the drops' next tick on {@code executor} (see {@link #tick}), from the drops as they are. Until
+     * {@link #finish}, the drops drawn and counted stay as they are, and the landings are the step's to write. The
+     * columns are looked up here, from {@code source}, on the thread that may read the world; the step itself reads
+     * only them and the wind as it is now, and leaves what needs the world to {@link #finish}.
+     *
+     * @param random only the step uses it, until it finishes
+     * @throws IllegalStateException if a step is under way
+     */
+    public void start(IColumnSource source, double cameraX, double cameraY, double cameraZ, float rainLevel, float density, Wind wind,
+                      RandomSource random, Executor executor) {
+        if (this.step != null)
+            throw new IllegalStateException("A step is under way");
+        this.columns.refresh(source, Mth.floor(cameraX), Mth.floor(cameraY), Mth.floor(cameraZ));
+        var now = wind.snapshot();
+        this.step = CompletableFuture.runAsync(() -> this.step(cameraX, cameraY, cameraZ, rainLevel, density, now, random), executor);
+    }
+
+    /**
+     * Waits for the step under way, if there is one, answers what it left for the world from {@code source}, on the
+     * thread that may read it, and makes its drops the ones drawn. Its landings are then the tick's.
+     *
+     * @return false if no step was under way
+     * @throws RuntimeException what the step threw, if it failed: the drops stay as they were, with no landings
+     */
+    public boolean finish(IColumnSource source) {
+        var running = this.step;
+        if (running == null)
+            return false;
+        this.step = null;
+        try {
+            running.join();
+        } catch (CompletionException e) {
+            this.questions = 0;
+            this.landings = 0;
+            if (e.getCause() instanceof RuntimeException failure)
+                throw failure;
+            if (e.getCause() instanceof Error error)
+                throw error;
+            throw e;
+        }
+        // From the last back: a drop that goes leaves the last in its place, which has been answered already
+        var to = this.next;
+        for (int q = this.questions - 1; q >= 0; q--)
+            this.answer(source, to, this.questionDrop[q], this.questionKind[q], this.questionGround[q]);
+        this.questions = 0;
+        this.next = this.drops;
+        this.drops = to;
+        return true;
+    }
+
+    /**
+     * Whether a step is under way: started and not yet finished
+     */
+    public boolean isStepping() {
+        return this.step != null;
+    }
+
+    // Waits out a step under way and drops what it made
+    private void abandon() {
+        var running = this.step;
+        if (running == null)
+            return;
+        this.step = null;
+        try {
+            running.join();
+        } catch (CompletionException ignored) {
+            // Dropped anyway
+        }
+        this.questions = 0;
+    }
+
+    // The step itself: on the executor's thread, reading the drops drawn, the columns and the wind as it was, writing
+    // only the next drops, the landings and the questions
+    private void step(double cameraX, double cameraY, double cameraZ, float rainLevel, float density, Wind.Snapshot wind, RandomSource random) {
+        this.landings = 0;
+        this.questions = 0;
+        this.stepCameraY = cameraY;
+        this.move(this.drops, this.next, cameraX, cameraY, cameraZ, wind);
+        this.spawn(this.next, cameraX, cameraY, cameraZ, rainLevel, density, wind, random);
+    }
+
+    /**
+     * Moves each drop of {@code from} a tick into {@code to}, packed at its front: those that go are left behind
+     */
+    private void move(Drops from, Drops to, double cameraX, double cameraY, double cameraZ, Wind.Snapshot wind) {
+        to.count = 0;
+        to.dustCount = 0;
+        for (int i = 0; i < from.count; i++) {
+            int j = to.count;
+            from.copyTo(i, to, j);
+            to.prevX[j] = to.x[j];
+            to.prevY[j] = to.y[j];
+            to.prevZ[j] = to.z[j];
 
             // Eased toward the wind where the drop is, so a passing gust shows as a ripple through the drops
-            float response = switch (this.kind[i]) {
+            float response = switch (to.kind[j]) {
                 case SNOW -> SNOW_WIND_RESPONSE;
                 case DUST -> DUST_WIND_RESPONSE;
                 default -> RAIN_WIND_RESPONSE;
             };
-            if (this.covered[i] > 0) {
+            if (to.covered[j] > 0) {
                 // Out of the wind: it slows to a drift
-                this.windX[i] *= COVER_DRAG;
-                this.windZ[i] *= COVER_DRAG;
+                to.windX[j] *= COVER_DRAG;
+                to.windZ[j] *= COVER_DRAG;
             } else {
-                float carried = windAt(wind, this.x[i] - cameraX, this.z[i] - cameraZ) * this.drift[i];
-                this.windX[i] += (wind.x() * carried - this.windX[i]) * response;
-                this.windZ[i] += (wind.z() * carried - this.windZ[i]) * response;
+                float carried = windAt(wind, (float) (to.x[j] - cameraX), (float) (to.z[j] - cameraZ)) * to.drift[j];
+                to.windX[j] += (wind.x() * carried - to.windX[j]) * response;
+                to.windZ[j] += (wind.z() * carried - to.windZ[j]) * response;
             }
-            this.x[i] += this.windX[i];
-            this.z[i] += this.windZ[i];
-            this.age[i]++;
+            to.x[j] += to.windX[j];
+            to.z[j] += to.windZ[j];
+            to.age[j]++;
 
-            boolean keep = this.kind[i] == DUST
-                    ? this.moveDust(i, cameraX, cameraY, cameraZ)
-                    : this.fall(i, cameraX, cameraY, cameraZ);
-            if (keep)
-                i++;
-            else
-                this.remove(i);
+            boolean keep = to.kind[j] == DUST
+                    ? this.moveDust(to, j, cameraX, cameraY, cameraZ)
+                    : this.fall(to, j, cameraX, cameraY, cameraZ);
+            if (keep) {
+                to.count++;
+                if (to.kind[j] == DUST)
+                    to.dustCount++;
+            }
         }
     }
 
@@ -429,43 +509,42 @@ public final class PrecipitationField {
      *
      * @return false if it landed or left the cylinder
      */
-    private boolean fall(int i, double cameraX, double cameraY, double cameraZ) {
-        this.y[i] -= this.speed[i];
-        if (this.kind[i] == SNOW) {
-            this.phase[i] += SNOW_SWAY_RATE;
-            this.turned(i);
-            this.x[i] += Mth.sin(this.phase[i]) * SNOW_SWAY;
-            this.z[i] += Mth.cos(this.phase[i] * 0.7F) * SNOW_SWAY;
+    private boolean fall(Drops d, int i, double cameraX, double cameraY, double cameraZ) {
+        d.y[i] -= d.speed[i];
+        if (d.kind[i] == SNOW) {
+            d.phase[i] += SNOW_SWAY_RATE;
+            turned(d, i);
+            d.x[i] += Mth.sin(d.phase[i]) * SNOW_SWAY;
+            d.z[i] += Mth.cos(d.phase[i] * 0.7F) * SNOW_SWAY;
         }
 
-        int column = this.inCylinder(i, cameraX, cameraZ);
+        int column = this.inCylinder(d, i, cameraX, cameraZ);
         if (column < 0)
             return false;
-        if (this.covered[i] > 0)
-            return this.driftUnderCover(i, cameraY, coverTicks(this.kind[i]), true);
+        if (d.covered[i] > 0)
+            return this.ask(i, DRIFT, 0);
         var what = this.columns.kind(column);
         if (what != PrecipitationKind.RAIN && what != PrecipitationKind.SNOW)
             return false;
-        if (this.y[i] <= this.columns.ground(column)) {
+        int ground = this.columns.ground(column);
+        if (d.y[i] <= ground) {
             // Still above the ground on its last tick: it came down on top. Otherwise it was carried into the side of
             // something taller, a wall or a tree, or in under an overhang or a canopy. In open air under cover it drifts
             // on in (see driftUnderCover); into something solid, it goes on to wherever the world says it ends up (a
-            // snowflake may stick there, a rain drop may run down a window). It doesn't land on the column's top.
-            if (this.prevY[i] <= this.columns.ground(column)) {
-                if (this.takesCover(i))
-                    return true;
-                this.blownIn(i, this.columns.ground(column));
-            } else if (this.kind[i] == RAIN) {
-                this.landed(this.x[i], this.z[i], this.columns.ground(column), this.rainSize(i), RAIN, 0F, 0);
-            } else {
-                this.landed(this.x[i], this.z[i], this.columns.ground(column), this.snowSize(i), SNOW,
-                        (this.drift[i] - MIN_DRIFT) / DRIFT_RANGE, this.light[i]);
-            }
+            // snowflake may stick there, a rain drop may run down a window). It doesn't land on the column's top. Which
+            // it is, is the world's to say, once the step is done; one that didn't move into another column (the
+            // ground rose under it) wasn't carried in at all.
+            if (d.prevY[i] <= ground)
+                return movedColumn(d, i) && this.ask(i, TAKE_COVER, ground);
+            if (d.kind[i] == RAIN)
+                this.landed(d.x[i], d.z[i], ground, rainSize(d, i), RAIN, 0F, 0);
+            else
+                this.landed(d.x[i], d.z[i], ground, snowSize(d, i), SNOW, (d.drift[i] - MIN_DRIFT) / DRIFT_RANGE, d.light[i]);
             return false;
         }
-        if (this.y[i] <= cameraY - BELOW)
+        if (d.y[i] <= cameraY - BELOW)
             return false;
-        this.light[i] = this.columns.light(column);
+        d.light[i] = this.columns.light(column);
         return true;
     }
 
@@ -476,32 +555,32 @@ public final class PrecipitationField {
      *
      * @return false if it settled (soon after it leaves the dust), was stopped by a wall, or left the cylinder
      */
-    private boolean moveDust(int i, double cameraX, double cameraY, double cameraZ) {
-        float before = Mth.sin(this.phase[i]);
-        this.phase[i] += DUST_TURBULENCE_RATE;
-        this.turned(i);
-        this.y[i] += (Mth.sin(this.phase[i]) - before) * DUST_TURBULENCE_HEIGHT;
+    private boolean moveDust(Drops d, int i, double cameraX, double cameraY, double cameraZ) {
+        float before = Mth.sin(d.phase[i]);
+        d.phase[i] += DUST_TURBULENCE_RATE;
+        turned(d, i);
+        d.y[i] += (Mth.sin(d.phase[i]) - before) * DUST_TURBULENCE_HEIGHT;
 
-        int column = this.inCylinder(i, cameraX, cameraZ);
-        if (column < 0 || this.age[i] >= this.lifetime[i])
+        int column = this.inCylinder(d, i, cameraX, cameraZ);
+        if (column < 0 || d.age[i] >= d.lifetime[i])
             return false;
-        if (this.covered[i] > 0)
-            return this.driftUnderCover(i, cameraY, coverTicks(DUST), false);
+        if (d.covered[i] > 0)
+            return this.ask(i, DRIFT, 0);
         // Blown out of the dust: it drifts on and fades out, as it would settling, rather than vanishing at the edge
         if (this.columns.kind(column) != PrecipitationKind.DUST)
-            this.lifetime[i] = Math.min(this.lifetime[i], this.age[i] + DUST_FADE);
+            d.lifetime[i] = Math.min(d.lifetime[i], d.age[i] + DUST_FADE);
         float floor = this.columns.ground(column) + DUST_MIN_LIFT;
         // Far below the column's top: blown in under an overhang, or into a wall
-        if (floor - this.y[i] > DUST_CLIMB)
-            return this.takesCover(i);
-        float target = Math.max(floor, Math.min(this.groundAhead(i), floor + DUST_LOOKAHEAD_CLIMB));
-        if (this.y[i] < target) {
-            float along = Mth.sqrt(this.windX[i] * this.windX[i] + this.windZ[i] * this.windZ[i]);
-            this.y[i] += Math.min((target - this.y[i]) * DUST_RISE_RATE, Math.max(along * DUST_MAX_CLIMB, DUST_MIN_RISE));
+        if (floor - d.y[i] > DUST_CLIMB)
+            return movedColumn(d, i) && this.ask(i, TAKE_COVER, 0);
+        float target = Math.max(floor, Math.min(this.groundAhead(d, i), floor + DUST_LOOKAHEAD_CLIMB));
+        if (d.y[i] < target) {
+            float along = Mth.sqrt(d.windX[i] * d.windX[i] + d.windZ[i] * d.windZ[i]);
+            d.y[i] += Math.min((target - d.y[i]) * DUST_RISE_RATE, Math.max(along * DUST_MAX_CLIMB, DUST_MIN_RISE));
         }
-        if (this.y[i] <= cameraY - BELOW || this.y[i] > cameraY + ABOVE)
+        if (d.y[i] <= cameraY - BELOW || d.y[i] > cameraY + ABOVE)
             return false;
-        this.light[i] = this.columns.light(column);
+        d.light[i] = this.columns.light(column);
         return true;
     }
 
@@ -509,8 +588,8 @@ public final class PrecipitationField {
      * Where a puff should be over the ground it is blowing toward, a few ticks downwind: the ground there plus the
      * puff's lift, or negative infinity if that is beyond the area looked up, or not dust
      */
-    private float groundAhead(int i) {
-        int ahead = this.columns.index(this.x[i] + this.windX[i] * DUST_LOOKAHEAD_TICKS, this.z[i] + this.windZ[i] * DUST_LOOKAHEAD_TICKS);
+    private float groundAhead(Drops d, int i) {
+        int ahead = this.columns.index(d.x[i] + d.windX[i] * DUST_LOOKAHEAD_TICKS, d.z[i] + d.windZ[i] * DUST_LOOKAHEAD_TICKS);
         if (ahead < 0 || this.columns.kind(ahead) != PrecipitationKind.DUST)
             return Float.NEGATIVE_INFINITY;
         return this.columns.ground(ahead) + DUST_MIN_LIFT;
@@ -519,31 +598,88 @@ public final class PrecipitationField {
     /**
      * The column a drop is in, or -1 if it has left the cylinder around the camera
      */
-    private int inCylinder(int i, double cameraX, double cameraZ) {
-        float dx = (float) (this.x[i] - cameraX);
-        float dz = (float) (this.z[i] - cameraZ);
-        if (dx * dx + dz * dz > this.radius * this.radius)
+    private int inCylinder(Drops d, int i, double cameraX, double cameraZ) {
+        float dx = (float) (d.x[i] - cameraX);
+        float dz = (float) (d.z[i] - cameraZ);
+        if (dx * dx + dz * dz > this.radiusSquared)
             return -1;
-        return this.columns.index(this.x[i], this.z[i]);
+        return this.columns.index(d.x[i], d.z[i]);
+    }
+
+    /**
+     * Whether a drop moved into another column this tick, rather than the ground rising under it
+     */
+    private static boolean movedColumn(Drops d, int i) {
+        return Mth.floor(d.prevX[i]) != Mth.floor(d.x[i]) || Mth.floor(d.prevZ[i]) != Mth.floor(d.z[i]);
     }
 
     /**
      * How much of the steady wind blows at a point, relative to the camera: more where a gust is passing
      */
-    private static float windAt(Wind wind, double dx, double dz) {
-        var along = (float) (dx * wind.directionX() + dz * wind.directionZ());
-        return wind.gustFactor(along, 0F);
+    private static float windAt(Wind.Snapshot wind, float dx, float dz) {
+        return wind.gustFactor(dx * wind.directionX() + dz * wind.directionZ());
     }
 
-    private void spawn(double cameraX, double cameraY, double cameraZ, float rainLevel, float density, Wind wind, RandomSource random) {
+    /**
+     * Leaves a question about a drop for the world (see {@link #finish}); it is kept until answered
+     *
+     * @return true: the drop stays for now
+     */
+    private boolean ask(int drop, byte question, int ground) {
+        this.questionDrop[this.questions] = drop;
+        this.questionKind[this.questions] = question;
+        this.questionGround[this.questions] = ground;
+        this.questions++;
+        return true;
+    }
+
+    /**
+     * Answers a step's question about a drop from the world: whether it is in open air, and how it is lit there. One
+     * that isn't goes, landing where it reached something if it is rain or snow.
+     */
+    private void answer(IColumnSource source, Drops d, int i, byte question, int ground) {
+        int bx = Mth.floor(d.x[i]), by = Mth.floor(d.y[i]), bz = Mth.floor(d.z[i]);
+        boolean lands = d.kind[i] != DUST;
+        boolean open = source.isOpen(bx, by, bz);
+        if (question == TAKE_COVER) {
+            // Carried below the top of the column it moved into: in open air there, in under an overhang or a canopy,
+            // it is under cover from now on (see driftUnderCover); in the side of something, it lands
+            if (open) {
+                d.covered[i] = 1;
+                // Lit where it is, not as the top of the column: under cover it is darker
+                d.light[i] = source.light(bx, by, bz);
+                return;
+            }
+            if (lands)
+                this.followedOn(d, i, ground);
+            this.remove(d, i);
+            return;
+        }
+        // Drifting on under cover: through open air, fading, until it reaches something (where a rain drop or
+        // snowflake lands, as the world says) or fades out. The heights the columns know are the cover's, so the world
+        // is asked directly.
+        if (!open) {
+            if (lands)
+                this.followedOn(d, i, by);
+            this.remove(d, i);
+            return;
+        }
+        if (++d.covered[i] > coverTicks(d.kind[i]) || d.y[i] <= this.stepCameraY - BELOW || d.y[i] > this.stepCameraY + ABOVE) {
+            this.remove(d, i);
+            return;
+        }
+        d.light[i] = source.light(bx, by, bz);
+    }
+
+    private void spawn(Drops d, double cameraX, double cameraY, double cameraZ, float rainLevel, float density, Wind.Snapshot wind, RandomSource random) {
         // As many as the storm calls for over the part of the area each falls in, so the drops are as dense at the
         // edge of the rain as in the middle of it, and no tries are spent where nothing falls
         var level = Mth.clamp(rainLevel, 0F, 1F) * Mth.clamp(density, 0F, 1F);
         int fallingWanted = (int) (this.capacity * level * this.columns.fallingShare());
         int dustWanted = (int) (this.capacity * DUST_SHARE * level * this.columns.dustShare());
-        int fallingNeeded = Math.max(0, fallingWanted - (this.count - this.dustCount));
-        int dustNeeded = Math.max(0, dustWanted - this.dustCount);
-        int toAdd = Math.min(Math.min(fallingNeeded + dustNeeded, this.capacity - this.count), this.maxSpawnPerTick);
+        int fallingNeeded = Math.max(0, fallingWanted - (d.count - d.dustCount));
+        int dustNeeded = Math.max(0, dustWanted - d.dustCount);
+        int toAdd = Math.min(Math.min(fallingNeeded + dustNeeded, this.capacity - d.count), this.maxSpawnPerTick);
         // A try can miss (a dry column, or ground above the cylinder), so allow a few more tries than drops
         for (int tries = toAdd * 2; tries > 0 && toAdd > 0; tries--) {
             // Even over the disc's area, not bunched at its center
@@ -560,7 +696,7 @@ public final class PrecipitationField {
 
             double py;
             if (what == PrecipitationKind.DUST) {
-                if (this.dustCount >= dustWanted)
+                if (d.dustCount >= dustWanted)
                     continue;
                 // Most low down, thinning with height
                 float h = random.nextFloat();
@@ -568,7 +704,7 @@ public final class PrecipitationField {
                 if (py <= cameraY - BELOW || py > cameraY + ABOVE)
                     continue;
             } else {
-                if (this.count - this.dustCount >= fallingWanted)
+                if (d.count - d.dustCount >= fallingWanted)
                     continue;
                 double top = cameraY + ABOVE;
                 double bottom = Math.max(this.columns.ground(column), cameraY - BELOW);
@@ -581,38 +717,38 @@ public final class PrecipitationField {
             if (what == PrecipitationKind.RAIN && random.nextFloat() < this.columns.snowShare(column))
                 what = PrecipitationKind.SNOW;
 
-            int i = this.count++;
-            this.x[i] = this.prevX[i] = px;
-            this.y[i] = this.prevY[i] = (float) py;
-            this.z[i] = this.prevZ[i] = pz;
+            int i = d.count++;
+            d.x[i] = d.prevX[i] = px;
+            d.y[i] = d.prevY[i] = (float) py;
+            d.z[i] = d.prevZ[i] = pz;
             switch (what) {
                 case SNOW -> {
-                    this.kind[i] = SNOW;
-                    this.speed[i] = SNOW_SPEED_MIN + random.nextFloat() * SNOW_SPEED_RANGE;
+                    d.kind[i] = SNOW;
+                    d.speed[i] = SNOW_SPEED_MIN + random.nextFloat() * SNOW_SPEED_RANGE;
                 }
                 case DUST -> {
-                    this.kind[i] = DUST;
-                    this.speed[i] = 0F;
-                    this.lifetime[i] = DUST_MIN_LIFETIME + random.nextInt(DUST_LIFETIME_RANGE);
-                    this.color[i] = this.columns.dustColorAt(column);
-                    this.dustCount++;
+                    d.kind[i] = DUST;
+                    d.speed[i] = 0F;
+                    d.lifetime[i] = DUST_MIN_LIFETIME + random.nextInt(DUST_LIFETIME_RANGE);
+                    d.color[i] = this.columns.dustColorAt(column);
+                    d.dustCount++;
                 }
                 default -> {
-                    this.kind[i] = RAIN;
-                    this.speed[i] = RAIN_SPEED_MIN + rainDropSize(rainLevel, random) * RAIN_SPEED_RANGE;
+                    d.kind[i] = RAIN;
+                    d.speed[i] = RAIN_SPEED_MIN + rainDropSize(rainLevel, random) * RAIN_SPEED_RANGE;
                 }
             }
             // Already moving with the wind, rather than starting from still and visibly catching up
-            this.drift[i] = MIN_DRIFT + random.nextFloat() * DRIFT_RANGE;
-            float carried = windAt(wind, px - cameraX, pz - cameraZ) * this.drift[i];
-            this.windX[i] = wind.x() * carried;
-            this.windZ[i] = wind.z() * carried;
-            this.phase[i] = random.nextFloat() * Mth.TWO_PI;
-            this.turned(i);
-            this.thinning[i] = random.nextFloat();
-            this.age[i] = 0;
-            this.covered[i] = 0;
-            this.light[i] = this.columns.light(column);
+            d.drift[i] = MIN_DRIFT + random.nextFloat() * DRIFT_RANGE;
+            float carried = windAt(wind, (float) (px - cameraX), (float) (pz - cameraZ)) * d.drift[i];
+            d.windX[i] = wind.x() * carried;
+            d.windZ[i] = wind.z() * carried;
+            d.phase[i] = random.nextFloat() * Mth.TWO_PI;
+            turned(d, i);
+            d.thinning[i] = random.nextFloat();
+            d.age[i] = 0;
+            d.covered[i] = 0;
+            d.light[i] = this.columns.light(column);
             toAdd--;
         }
     }
@@ -631,75 +767,29 @@ public final class PrecipitationField {
      * How big a rain drop is, 0 to 1. Taken from how fast it falls, which follows from its size and doesn't change.
      */
     float rainSize(int i) {
-        return Mth.clamp((this.speed[i] - RAIN_SPEED_MIN) / RAIN_SPEED_RANGE, 0F, 1F);
+        return rainSize(this.drops, i);
     }
 
-    /**
-     * Notes a rain drop or snowflake carried from one column into the next below its top: where it was the tick before, out in the
-     * open, and how it was moving, for the world to follow it from. A flake that didn't move into another column (the
-     * ground rose under it) wasn't blown in.
-     */
-    private void blownIn(int i, int ground) {
-        if (Mth.floor(this.prevX[i]) == Mth.floor(this.x[i]) && Mth.floor(this.prevZ[i]) == Mth.floor(this.z[i]))
-            return;
-        this.followedOn(i, ground);
+    private static float rainSize(Drops d, int i) {
+        return Mth.clamp((d.speed[i] - RAIN_SPEED_MIN) / RAIN_SPEED_RANGE, 0F, 1F);
     }
 
     /**
      * Notes a rain drop or snowflake as a landing for the world to follow on from: where it was the tick before, and
      * how it was moving
      */
-    private void followedOn(int i, int ground) {
-        boolean landed = this.kind[i] == RAIN
-                ? this.landed(this.prevX[i], this.prevZ[i], ground, this.rainSize(i), RAIN, 0F, 0)
-                : this.landed(this.prevX[i], this.prevZ[i], ground, this.snowSize(i), SNOW, (this.drift[i] - MIN_DRIFT) / DRIFT_RANGE, this.light[i]);
+    private void followedOn(Drops d, int i, int ground) {
+        boolean landed = d.kind[i] == RAIN
+                ? this.landed(d.prevX[i], d.prevZ[i], ground, rainSize(d, i), RAIN, 0F, 0)
+                : this.landed(d.prevX[i], d.prevZ[i], ground, snowSize(d, i), SNOW, (d.drift[i] - MIN_DRIFT) / DRIFT_RANGE, d.light[i]);
         if (!landed)
             return;
         int at = this.landings - 1;
         this.landingBlownIn[at] = true;
-        this.landingY[at] = this.prevY[i];
-        this.landingMotionX[at] = (float) (this.x[i] - this.prevX[i]);
-        this.landingMotionY[at] = this.y[i] - this.prevY[i];
-        this.landingMotionZ[at] = (float) (this.z[i] - this.prevZ[i]);
-    }
-
-    /**
-     * Whether a drop carried below the top of the column it moved into is in open air there, in under an overhang or a
-     * canopy, rather than in the side of something: then it is under cover from now on (see {@link #driftUnderCover}).
-     * A drop that didn't move into another column (the ground rose under it) isn't.
-     */
-    private boolean takesCover(int i) {
-        if (Mth.floor(this.prevX[i]) == Mth.floor(this.x[i]) && Mth.floor(this.prevZ[i]) == Mth.floor(this.z[i]))
-            return false;
-        int bx = Mth.floor(this.x[i]), by = Mth.floor(this.y[i]), bz = Mth.floor(this.z[i]);
-        if (!this.source.isOpen(bx, by, bz))
-            return false;
-        this.covered[i] = 1;
-        // Lit where it is, not as the top of the column: under cover it is darker
-        this.light[i] = this.source.light(bx, by, bz);
-        return true;
-    }
-
-    /**
-     * Moves a drop on under cover a tick: through open air, fading, until it reaches something (where a rain drop or
-     * snowflake lands, as the world says) or fades out. The heights the columns know are the cover's, so the world is
-     * asked directly.
-     *
-     * @param ticks how long it lasts under cover
-     * @param lands whether it lands when it reaches something: rain and snow do, dust just stops
-     * @return false if it reached something, faded out or left the cylinder
-     */
-    private boolean driftUnderCover(int i, double cameraY, int ticks, boolean lands) {
-        int bx = Mth.floor(this.x[i]), by = Mth.floor(this.y[i]), bz = Mth.floor(this.z[i]);
-        if (!this.source.isOpen(bx, by, bz)) {
-            if (lands)
-                this.followedOn(i, by);
-            return false;
-        }
-        if (++this.covered[i] > ticks || this.y[i] <= cameraY - BELOW || this.y[i] > cameraY + ABOVE)
-            return false;
-        this.light[i] = this.source.light(bx, by, bz);
-        return true;
+        this.landingY[at] = d.prevY[i];
+        this.landingMotionX[at] = (float) (d.x[i] - d.prevX[i]);
+        this.landingMotionY[at] = d.y[i] - d.prevY[i];
+        this.landingMotionZ[at] = (float) (d.z[i] - d.prevZ[i]);
     }
 
     /**
@@ -737,39 +827,19 @@ public final class PrecipitationField {
     /**
      * Works out a drop's turn from its phase: snowflakes turn as they sway, puffs of dust as they rise and fall
      */
-    private void turned(int i) {
-        float spin = this.phase[i] * (this.kind[i] == DUST ? PrecipitationRenderer.DUST_SPIN : PrecipitationRenderer.SNOW_SPIN);
-        this.spinCos[i] = Mth.cos(spin);
-        this.spinSin[i] = Mth.sin(spin);
+    private static void turned(Drops d, int i) {
+        float spin = d.phase[i] * (d.kind[i] == DUST ? PrecipitationRenderer.DUST_SPIN : PrecipitationRenderer.SNOW_SPIN);
+        d.spinCos[i] = Mth.cos(spin);
+        d.spinSin[i] = Mth.sin(spin);
     }
 
     // Moves the last drop into the gap, so the drops stay packed at the front of the arrays
-    private void remove(int i) {
-        if (this.kind[i] == DUST)
-            this.dustCount--;
-        int last = --this.count;
-        if (i == last)
-            return;
-        this.x[i] = this.x[last];
-        this.y[i] = this.y[last];
-        this.z[i] = this.z[last];
-        this.prevX[i] = this.prevX[last];
-        this.prevY[i] = this.prevY[last];
-        this.prevZ[i] = this.prevZ[last];
-        this.speed[i] = this.speed[last];
-        this.windX[i] = this.windX[last];
-        this.windZ[i] = this.windZ[last];
-        this.drift[i] = this.drift[last];
-        this.phase[i] = this.phase[last];
-        this.spinCos[i] = this.spinCos[last];
-        this.spinSin[i] = this.spinSin[last];
-        this.thinning[i] = this.thinning[last];
-        this.age[i] = this.age[last];
-        this.covered[i] = this.covered[last];
-        this.light[i] = this.light[last];
-        this.kind[i] = this.kind[last];
-        this.color[i] = this.color[last];
-        this.lifetime[i] = this.lifetime[last];
+    private void remove(Drops d, int i) {
+        if (d.kind[i] == DUST)
+            d.dustCount--;
+        int last = --d.count;
+        if (i != last)
+            d.copyTo(last, d, i);
     }
 
     /**
@@ -793,7 +863,11 @@ public final class PrecipitationField {
      * small and a few are large.
      */
     float snowSize(int i) {
-        var fraction = Mth.clamp((this.speed[i] - SNOW_SPEED_MIN) / SNOW_SPEED_RANGE, 0F, 1F);
+        return snowSize(this.drops, i);
+    }
+
+    private static float snowSize(Drops d, int i) {
+        var fraction = Mth.clamp((d.speed[i] - SNOW_SPEED_MIN) / SNOW_SPEED_RANGE, 0F, 1F);
         return fraction * fraction;
     }
 
@@ -802,7 +876,7 @@ public final class PrecipitationField {
      * are carried a little further by the wind.
      */
     float dustSize(int i) {
-        return Mth.clamp((this.drift[i] - MIN_DRIFT) / DRIFT_RANGE, 0F, 1F);
+        return Mth.clamp((this.drops.drift[i] - MIN_DRIFT) / DRIFT_RANGE, 0F, 1F);
     }
 
     /**
@@ -810,7 +884,7 @@ public final class PrecipitationField {
      * snowflake keeps its look for its whole fall even as drops are moved about in the arrays
      */
     int variant(int i, int variants) {
-        var picked = (int) ((this.drift[i] - MIN_DRIFT) / DRIFT_RANGE * variants);
+        var picked = (int) ((this.drops.drift[i] - MIN_DRIFT) / DRIFT_RANGE * variants);
         return Mth.clamp(picked, 0, variants - 1);
     }
 
@@ -818,15 +892,16 @@ public final class PrecipitationField {
      * How faded in a drop is, 0 to 1. Every drop fades in when new; dust also fades out as it settles.
      */
     float fade(int i, float partialTick) {
-        var age = this.age[i] + partialTick;
-        float fade = switch (this.kind[i]) {
+        var d = this.drops;
+        var age = d.age[i] + partialTick;
+        float fade = switch (d.kind[i]) {
             case SNOW -> Math.min(1F, age / SNOW_FADE_IN);
-            case DUST -> Mth.clamp(Math.min(age, this.lifetime[i] - age) / DUST_FADE, 0F, 1F);
+            case DUST -> Mth.clamp(Math.min(age, d.lifetime[i] - age) / DUST_FADE, 0F, 1F);
             default -> Math.min(1F, age / RAIN_FADE_IN);
         };
         // Under cover it fades out as it drifts in
-        if (this.covered[i] > 0)
-            fade *= coverFade(this.covered[i] - 1 + partialTick, coverTicks(this.kind[i]));
+        if (d.covered[i] > 0)
+            fade *= coverFade(d.covered[i] - 1 + partialTick, coverTicks(d.kind[i]));
         return fade;
     }
 
@@ -835,5 +910,93 @@ public final class PrecipitationField {
      */
     static float coverFade(float ticks, int lasts) {
         return Mth.clamp(1F - ticks / lasts, 0F, 1F);
+    }
+
+    /**
+     * One set of the drops, in flat arrays, packed at the front: the field keeps two, one drawn while the next step
+     * fills the other
+     */
+    static final class Drops {
+
+        // Where each drop is now and was last tick, for drawing between ticks. East-west and north-south as doubles:
+        // far from the world's middle a float moves in steps as large as half a block, which a drop's drift each tick
+        // is lost in
+        final double[] x, z, prevX, prevZ;
+        final float[] y, prevY;
+        // How fast a rain drop or snowflake falls; not used for dust
+        final float[] speed;
+        // The drop's horizontal speed, carried by the wind, and how strongly the wind carries it
+        final float[] windX, windZ, drift;
+        final float[] phase;
+        // The cos and sin of how far a snowflake or puff of dust has turned (see PrecipitationRenderer), as of its last
+        // tick: worked out as its phase changes, a tick at a time, rather than for each drop in each frame drawn
+        final float[] spinCos, spinSin;
+        // A random number for each drop, 0 to 1, that doesn't change: which drops are left out when thinning those far
+        // off, so the same ones are, frame after frame
+        final float[] thinning;
+        final int[] age;
+        // Ticks since it was carried in under cover (see COVER_DRAG), or 0 out in the open
+        final int[] covered;
+        final int[] light;
+        final byte[] kind;
+        // Dust only: its color, 0xRRGGBB, and how many ticks it lasts
+        final int[] color;
+        final int[] lifetime;
+        int count;
+        int dustCount;
+
+        Drops(int capacity) {
+            this.x = new double[capacity];
+            this.y = new float[capacity];
+            this.z = new double[capacity];
+            this.prevX = new double[capacity];
+            this.prevY = new float[capacity];
+            this.prevZ = new double[capacity];
+            this.speed = new float[capacity];
+            this.windX = new float[capacity];
+            this.windZ = new float[capacity];
+            this.drift = new float[capacity];
+            this.phase = new float[capacity];
+            this.spinCos = new float[capacity];
+            this.spinSin = new float[capacity];
+            this.thinning = new float[capacity];
+            this.age = new int[capacity];
+            this.covered = new int[capacity];
+            this.light = new int[capacity];
+            this.kind = new byte[capacity];
+            this.color = new int[capacity];
+            this.lifetime = new int[capacity];
+        }
+
+        void clear() {
+            this.count = 0;
+            this.dustCount = 0;
+        }
+
+        /**
+         * Copies drop {@code i} to {@code at} in {@code to}, which may be this set
+         */
+        void copyTo(int i, Drops to, int at) {
+            to.prevX[at] = this.prevX[i];
+            to.prevY[at] = this.prevY[i];
+            to.prevZ[at] = this.prevZ[i];
+            to.x[at] = this.x[i];
+            to.y[at] = this.y[i];
+            to.z[at] = this.z[i];
+            to.speed[at] = this.speed[i];
+            to.windX[at] = this.windX[i];
+            to.windZ[at] = this.windZ[i];
+            to.drift[at] = this.drift[i];
+            to.phase[at] = this.phase[i];
+            to.spinCos[at] = this.spinCos[i];
+            to.spinSin[at] = this.spinSin[i];
+            to.thinning[at] = this.thinning[i];
+            to.age[at] = this.age[i];
+            to.covered[at] = this.covered[i];
+            to.light[at] = this.light[i];
+            to.kind[at] = this.kind[i];
+            to.color[at] = this.color[i];
+            to.lifetime[at] = this.lifetime[i];
+        }
     }
 }

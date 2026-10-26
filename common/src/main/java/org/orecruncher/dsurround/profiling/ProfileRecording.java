@@ -17,8 +17,10 @@ import java.util.Set;
 /**
  * A Java Flight Recorder recording of the running game, made in the game itself: the JDK's "profile" settings, without
  * anything that could tell who or where the player is ({@link #PRIVATE}), with what it was made on written into it once
- * ({@link EnvironmentEvent}) and the mod's render timers once a second ({@link RenderTimerEvent}). The only class besides
- * those events to use {@code jdk.jfr}, so nothing loads it until a recording is made.
+ * ({@link EnvironmentEvent}, and a {@link FeatureEvent} for each optional hook, conflict and setting), the mod's render
+ * timers once a second ({@link RenderTimerEvent}) and each client tick handler's time every tick
+ * ({@link HandlerTickEvent}). The only class besides those events to use {@code jdk.jfr}, so nothing loads it until a
+ * recording is made.
  * <p>
  * Players may send recordings to the mod's authors, so what is private is kept out three times over: those events are
  * turned off for the recording, the file is written again without them, in case anything recorded them anyway, and the
@@ -100,9 +102,14 @@ final class ProfileRecording {
                 recording.setToDisk(true);
                 recording.enable(RenderTimerEvent.class).withPeriod(Duration.ofSeconds(1));
                 recording.enable(EnvironmentEvent.class);
+                recording.enable(FeatureEvent.class);
+                recording.enable(HandlerTickEvent.class);
                 recording.start();
+                HandlerTicks.start(ProfileRecording::writeHandlerTick);
                 EnvironmentEvent.write(environment);
+                FeatureEvent.write(environment.features());
                 Thread.sleep(length.toMillis());
+                HandlerTicks.stop();
                 recording.stop();
                 recording.dump(unfinished);
             }
@@ -113,6 +120,7 @@ final class ProfileRecording {
             // And the home folder's path redacted: shared between events, out of their reach
             Redaction.redact(file, System.getProperty("user.home"));
         } finally {
+            HandlerTicks.stop();
             FlightRecorder.removePeriodicEvent(timers);
             Files.deleteIfExists(unfinished);
         }
@@ -135,5 +143,17 @@ final class ProfileRecording {
             event.count = timer.getCount();
             event.commit();
         }
+    }
+
+    /**
+     * An event for one handler's time in one tick, from the client thread
+     */
+    private static void writeHandlerTick(long tick, String handler, long nanos, boolean ran) {
+        var event = new HandlerTickEvent();
+        event.tick = tick;
+        event.handler = handler;
+        event.time = nanos;
+        event.ran = ran;
+        event.commit();
     }
 }

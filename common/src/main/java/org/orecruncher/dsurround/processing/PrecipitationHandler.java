@@ -47,7 +47,9 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.mixinutils.OptionalHook;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
+import org.orecruncher.dsurround.lib.threading.Worker;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WindService;
@@ -55,6 +57,8 @@ import org.orecruncher.dsurround.runtime.weather.WindService;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * Rain and snow drawn as individual drops in place of vanilla's sheets of falling texture (see
@@ -117,6 +121,10 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private final MeshDraw dropDraw = new MeshDraw("rain and snow");
     private final MeshDraw fleckDraw = new MeshDraw("snow flecks");
     private final MeshDraw streakDraw = new MeshDraw("window streaks");
+    // The drops' ticks run here, while frames are drawn: started each tick and finished at the next (see
+    // PrecipitationField.start); one thread, so a step never overlaps the next, and only it uses its random numbers
+    private final Executor stepper = Executors.newSingleThreadExecutor(Worker.threadFactory("Precipitation"));
+    private final IRandomizer stepRandom = Randomizer.create(System.nanoTime());
 
     public PrecipitationHandler(IWeatherSimulation weatherSimulation, WindService windService, ISoundLibrary soundLibrary, IDimensionOracle dimensionInformation, ISeasonalInformation seasonalInformation,
                                 ITagLibrary tagLibrary, IBiomeLibrary biomeLibrary, Configuration config, IModLog logger) {
@@ -190,13 +198,17 @@ public class PrecipitationHandler extends AbstractClientHandler {
         }
         var particles = GameUtils.getGameSettings().particles().get();
         this.fitRange(this.config.weatherOptions.precipitationRange);
-        // Thousands of numbers a tick: this thread's generator, rather than looking it up for each
+        // The drops' last tick, made while the frames since were drawn: its drops are drawn from now on, and its
+        // landings splash. The drops run a tick behind the world, which nobody sees.
+        this.field.finish(this.columns);
         var random = Randomizer.forThisThread();
-        this.field.tick(this.columns, pos.x, pos.y, pos.z, rainLevel, density(this.config.weatherOptions.precipitationDensity, particles), this.windService.wind(), random);
         this.landings.splash(level, this.field, this.dampSpots, this.snowFlecks, this.windowStreaks, particles, random);
         if (particles != ParticleStatus.MINIMAL)
             this.landings.seedWindows(level, this.columns, pos.x, pos.y, pos.z, rainLevel, this.windService.wind(), this.windowStreaks, random);
         this.landings.dustSound(level, this.field, this.columns, pos.x, pos.z, rainLevel, random);
+        // Last: once started, the drops being stepped are the step's until the next tick
+        this.field.start(this.columns, pos.x, pos.y, pos.z, rainLevel, density(this.config.weatherOptions.precipitationDensity, particles),
+                this.windService.wind(), this.stepRandom, this.stepper);
     }
 
     /**
@@ -223,6 +235,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
      */
     private void fitRange(int range) {
         if (this.field.radius() != range) {
+            // Its step under way is waited out and dropped
+            this.field.clear();
             this.field = new PrecipitationField(capacityFor(range), range);
             this.dampSpots = new DampSpots(PrecipitationField.forArea(MAX_DAMP_SPOTS, range));
             this.snowFlecks = new SnowFlecks(PrecipitationField.forArea(MAX_SNOW_FLECKS, range));

@@ -44,10 +44,14 @@ checking in game.
   only the one you launched.
 - Profiling: `/dsprofile [scene] [seconds]` records a JFR file, zipped, to `config/dsurround/profiles` with the mod's
   GPU/CPU render timers in it (`dsurround.RenderTimer` events; precipitation's carry a `count` of drops/spots a frame,
-  so two recordings can be checked for the same storm) and what it was made on (`dsurround.Environment`); unzip
+  so two recordings can be checked for the same storm), each client tick handler's time every tick
+  (`dsurround.HandlerTick`, through `profiling/HandlerTicks`), what it was made on (`dsurround.Environment`) and each
+  optional hook's status, conflict and non-text setting (`dsurround.Feature`, from `ProfileFeature`); unzip
   it and read it with the JDK's `jfr` (`jfr print --json --events ...`), or summarize it with
   `python scripts/jfr-summary.py <zip or jfr>` (timers: mean and end of the running averages, and peak; for a
-  timer measured rarely, once a second or less, trust the end, not the mean; threads, mod packages, our frames, allocation, GC;
+  timer measured rarely, once a second or less, trust the end, not the mean; handler percentiles per tick (ticks a GC pause landed in left out) and what
+  running them in parallel would gain at best, `--dispatch-us`/`--worth-ms` for its cost and threshold, dependencies
+  in `FIRST_HANDLERS`/`HANDLER_CHAINS`; threads, mod packages, our frames, allocation, GC;
   `--callers <method>` for who calls something).
   Players can make them too, so nothing private may get in: a new event type or a new `jdk.jfr` user needs a look at
   `ProfileRecording.PRIVATE` and `Redaction`. Record under Run, not IntelliJ's Debug (its async stack trace agent
@@ -173,7 +177,10 @@ checking in game.
     `WeatherEffectRenderer.render` only inside the level renderer's weather pass (`MixinLevelRenderer`).
   - `processing/PrecipitationHandler` runs particle weather (`PrecipitationField`, `LevelColumns`, `Landings`) and
     stands aside for shader packs, a failed shader, mods that draw weather as particles (`FeatureConflict`, the table of features that stand aside for other mods) and dimensions that draw their
-    own weather.
+    own weather. The drops' tick runs on the `dsurround-Precipitation` thread, a tick behind: `PrecipitationField.finish`
+    at the start of the handler's tick, `start` at its end, with two sets of the drops (`Drops`). The step may read only
+    the columns and `Wind.Snapshot`; what needs the world it leaves as questions that `finish` answers. Tests use
+    `tick`, which is both at once.
   - Drops stop at `LevelColumns.groundHeight`: the `MOTION_BLOCKING` heightmap, raised where a block above it is solid as
     it stands but not marked solid (a mod's dynamic-shape block without `forceSolidOn`, e.g. Mekanism's energy cube, which
     the heightmap leaves out). Shelter, ground fog and frost still read the plain heightmap.

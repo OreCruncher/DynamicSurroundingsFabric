@@ -98,8 +98,9 @@ final class PrecipitationRenderer {
      */
     static void draw(PrecipitationField field, ParticleQuads quads, Camera camera, float partialTick, boolean dustOnly,
                      List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
-        quads.begin(dustOnly ? field.dustCount() : field.count - field.dustCount());
-        if (field.count == 0 || (dustOnly && field.dustCount() == 0) || (!dustOnly && field.dustCount() == field.count))
+        var d = field.drops();
+        quads.begin(dustOnly ? d.dustCount : d.count - d.dustCount);
+        if (d.count == 0 || (dustOnly && d.dustCount == 0) || (!dustOnly && d.dustCount == d.count))
             return;
 
         var cam = camera.position();
@@ -118,37 +119,37 @@ final class PrecipitationRenderer {
         // A streak's tail is clear
         int rainTail = ParticleQuads.color(rainRed, rainGreen, rainBlue, 0F);
 
-        for (int i = 0; i < field.count; i++) {
-            if ((field.kind[i] == PrecipitationField.DUST) != dustOnly)
+        for (int i = 0; i < d.count; i++) {
+            if ((d.kind[i] == PrecipitationField.DUST) != dustOnly)
                 continue;
-            float x = (float) (Mth.lerp(partialTick, field.prevX[i], field.x[i]) - cam.x);
-            float y = (float) (Mth.lerp(partialTick, field.prevY[i], field.y[i]) - cam.y);
-            float z = (float) (Mth.lerp(partialTick, field.prevZ[i], field.z[i]) - cam.z);
+            float x = (float) (Mth.lerp(partialTick, d.prevX[i], d.x[i]) - cam.x);
+            float y = (float) (Mth.lerp(partialTick, d.prevY[i], d.y[i]) - cam.y);
+            float z = (float) (Mth.lerp(partialTick, d.prevZ[i], d.z[i]) - cam.z);
             if (isBehind(x, y, z, look, margin))
                 continue;
             float distance = Mth.sqrt(x * x + z * z);
             float fade = field.fade(i, partialTick) * Mth.clamp((radius - distance) / EDGE_FADE, 0F, 1F);
             if (!dustOnly)
-                fade *= thinned(field.thinning[i], distance, radius);
+                fade *= thinned(d.thinning[i], distance, radius);
             if (fade <= 0F)
                 continue;
-            int light = field.light[i];
+            int light = d.light[i];
 
-            if (field.kind[i] == PrecipitationField.DUST) {
+            if (d.kind[i] == PrecipitationField.DUST) {
                 var sprite = dust[field.variant(i, dust.length)];
                 float size = DUST_MIN_HALF_SIZE + DUST_HALF_SIZE_RANGE * field.dustSize(i);
-                float cos = field.spinCos[i] * dustCos - field.spinSin[i] * dustSin;
-                float sin = field.spinSin[i] * dustCos + field.spinCos[i] * dustSin;
-                int c = field.color[i];
+                float cos = d.spinCos[i] * dustCos - d.spinSin[i] * dustSin;
+                float sin = d.spinSin[i] * dustCos + d.spinCos[i] * dustSin;
+                int c = d.color[i];
                 float r = Mth.lerp(DUST_PALENESS, ((c >> 16) & 0xFF) / 255F, 1F);
                 float g = Mth.lerp(DUST_PALENESS, ((c >> 8) & 0xFF) / 255F, 1F);
                 float b = Mth.lerp(DUST_PALENESS, (c & 0xFF) / 255F, 1F);
                 billboard(quads, x, y, z, left, up, cos, sin, size, sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(),
                         ParticleQuads.color(r, g, b, DUST_ALPHA * fade), light);
-            } else if (field.kind[i] == PrecipitationField.SNOW) {
+            } else if (d.kind[i] == PrecipitationField.SNOW) {
                 float a = SNOW_ALPHA * fade;
-                float cos = field.spinCos[i] * snowCos - field.spinSin[i] * snowSin;
-                float sin = field.spinSin[i] * snowCos + field.spinCos[i] * snowSin;
+                float cos = d.spinCos[i] * snowCos - d.spinSin[i] * snowSin;
+                float sin = d.spinSin[i] * snowCos + d.spinCos[i] * snowSin;
                 float size = (SNOW_MIN_HALF_SIZE + SNOW_HALF_SIZE_RANGE * field.snowSize(i)) * scales.snow();
                 if (snowflakes.isEmpty()) {
                     billboard(quads, x, y, z, left, up, cos, sin, size, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, ParticleQuads.color(1F, 1F, 1F, a), light);
@@ -164,7 +165,7 @@ final class PrecipitationRenderer {
                 float halfWidth = rainHalfWidth(dropSize, scales.rain());
                 // Along the way the drop is moving, its tail trailing up and upwind, turned about its own length to
                 // face the camera
-                float vx = field.windX[i], vy = -field.speed[i], vz = field.windZ[i];
+                float vx = d.windX[i], vy = -d.speed[i], vz = d.windZ[i];
                 float inverse = Mth.invSqrt(vx * vx + vy * vy + vz * vz);
                 vx *= inverse;
                 vy *= inverse;

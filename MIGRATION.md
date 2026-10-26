@@ -42,6 +42,28 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Thirteenth 0.4.8 merge (through `9b75fb4`)
+
+Compiles on common, Fabric and NeoForge; 2410 tests pass. Nine conflicts, no new rename rules. Two commits:
+`d60f61c` (per-tick `dsurround.HandlerTick` and `dsurround.Feature` JFR events, `jfr-summary.py`'s handler and
+parallel-gain sections) and `9b75fb4` (the precipitation drops ticked on a worker thread).
+
+- `ProfileEnvironment` keeps 26.2's device fields (`gpu`, `gpuVendor`, `gpuType`, `driver`, `backend`) and adds 0.4.8's
+  `features`. `theFeaturesSayWhatIsOffAndWhatWasChanged` checked a nested setting, `diagnostics.guards`, which 26.2
+  lacks (no particle batch guard): it now checks that every setting is named by its group.
+- `PrecipitationColumns` and its tests are 26.2's (ring of slots with a rolling refresh, which already does what
+  0.4.8's row bands do, and shifts as the camera moves). 0.4.8's float `index(float, float)` isn't needed here.
+- `PrecipitationField` is 0.4.8's (two `Drops` sets, `start`/`finish`, cover questions) with 26.2's changes put back:
+  x and z, their previous values and the landings' positions as doubles, the camera kept as a double (0.4.8 narrowed
+  it to a float in the loop, which 26.2's far-coordinates work would undo), and `draw` into `ParticleQuads`.
+- `PrecipitationRenderer` is 26.2's, reading the drawn set through `field.drops()`; the tests read it the same way.
+- `PrecipitationHandler`: 26.2's drawing fields and 0.4.8's worker fields side by side; the tick's finish/start order
+  merged cleanly.
+
+To check in game on both platforms: rain and snow look as before; rain carried in under overhangs and canopies, and
+snow flecks on walls (both now answered in `finish`); a `/dsprofile weather` shows the `dsurround-Precipitation`
+thread and a lower Precipitation Handler time.
+
 ### Twelfth 0.4.8 merge (through `472d387`)
 
 Nothing but the changelog line. `472d387` generalizes the weather target check into `TargetCheck` (also before the
