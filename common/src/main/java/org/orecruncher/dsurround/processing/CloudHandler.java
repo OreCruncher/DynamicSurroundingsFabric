@@ -89,6 +89,9 @@ public class CloudHandler extends AbstractClientHandler {
     private final CloudSections sections = new CloudSections();
     private long sectionsBuilt = -SECTION_TICKS;
     private boolean started;
+    // The level they were worked out for: another (a new dimension) starts them over
+    @Nullable
+    private ClientLevel level;
     // The storm the clouds show, easing toward the weather's
     private float rainLevel;
     private float thunder;
@@ -132,6 +135,10 @@ public class CloudHandler extends AbstractClientHandler {
         if (!this.isActive() || !(player.level() instanceof ClientLevel level)) {
             this.reset();
             return;
+        }
+        if (level != this.level) {
+            this.reset();
+            this.level = level;
         }
         // Not until the player's own chunk is there, as on arriving: the clouds anywhere not yet loaded are estimated
         // from the player's biome
@@ -300,6 +307,7 @@ public class CloudHandler extends AbstractClientHandler {
             this.sectionsBuilt = -SECTION_TICKS;
             this.started = false;
         }
+        this.level = null;
     }
 
     @Override

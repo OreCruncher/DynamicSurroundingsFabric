@@ -42,6 +42,17 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Eighth 0.4.8 merge (through `a6db0da`)
+
+Compiles on common, Fabric and NeoForge; the common tests pass (2398). `port-merge.py merge` left three conflicts; no
+new rename rules.
+
+- **Clouds, footprints and lightning start over in a new dimension**, and `UpperWind` takes a small step back off its
+  running sum: merged as is. `LightningHandler` keeps 26.2's bolts by seed (`Long2IntMap`) beside the new level field.
+- **American spelling**: 26.2's own `PointLights` drawing (its pipeline code) and `PrecipitationRenderer.draw` (no
+  return value here) kept, with their spelling converted, and the 26.2-only comments in `PointLights` and
+  `PrecipitationColumns` too.
+
 ### Seventh 0.4.8 merge (through `c34896a`)
 
 Compiles on common, Fabric and NeoForge; the common tests pass (2397). `port-merge.py merge` left two conflicts; no

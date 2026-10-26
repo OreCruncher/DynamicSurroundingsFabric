@@ -21,7 +21,7 @@ import java.util.function.IntPredicate;
 /**
  * The columns of the player's level, for the drop field. Rain or snow by the biome and the season's temperature at the
  * position, so high mountains get snow, as vanilla decides it, with sleet just above the snow line; dust where the
- * biome gets neither and is dry and sandy, coloured by the loose ground it is blown from (the dust sources tag).
+ * biome gets neither and is dry and sandy, colored by the loose ground it is blown from (the dust sources tag).
  */
 public final class LevelColumns implements IColumnSource {
 

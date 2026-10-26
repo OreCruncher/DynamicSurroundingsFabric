@@ -31,6 +31,7 @@ import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WindService;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,6 +83,8 @@ public class LightningHandler extends AbstractClientHandler {
     // The game's bolts drawn as strikes: each one's entity id, by its seed, until it is gone. Vanilla draws a bolt from
     // its render state, which carries the seed but not the entity.
     private final Long2IntMap bolts = new Long2IntOpenHashMap();
+    // The level the strikes are in, held weakly so a world left isn't kept in memory
+    private WeakReference<ClientLevel> level = new WeakReference<>(null);
     private float intensity;
     private String status = "none";
     private int drawn;
@@ -123,6 +126,7 @@ public class LightningHandler extends AbstractClientHandler {
     public void process(final Player player) {
         if (!(player.level() instanceof ClientLevel level))
             return;
+        this.inLevel(level);
         if (!this.isActive()) {
             this.clear();
             this.intensity = 0F;
@@ -318,6 +322,7 @@ public class LightningHandler extends AbstractClientHandler {
     public void onBolt(LightningBolt bolt) {
         if (!this.isActive() || !(bolt.level() instanceof ClientLevel level))
             return;
+        this.inLevel(level);
         this.add(level, Strike.Kind.GROUND, bolt.getX(), bolt.getZ(), Math.max(BOLT_INTENSITY, this.intensity), bolt.getId(),
                 Randomizer.create(bolt.seed));
         this.bolts.put(bolt.seed, bolt.getId());
@@ -420,6 +425,17 @@ public class LightningHandler extends AbstractClientHandler {
     @Override
     public void onDisconnect() {
         this.clear();
+    }
+
+    /**
+     * Drops the strikes of another level than this one (a new dimension): they were in its sky, and its bolts' ids are
+     * its own
+     */
+    private void inLevel(ClientLevel level) {
+        if (this.level.get() != level) {
+            this.clear();
+            this.level = new WeakReference<>(level);
+        }
     }
 
     private void clear() {

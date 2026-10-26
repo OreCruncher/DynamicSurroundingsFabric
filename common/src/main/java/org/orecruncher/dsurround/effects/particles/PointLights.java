@@ -58,7 +58,7 @@ public final class PointLights {
     // The shader finds what each light reaches itself, so nothing is tested against depth; and its squares may face
     // either way. The shader gives its light already scaled by its strength, with next to no alpha, and both are
     // simply added: with Fabulous graphics the particles' target is laid over the scene as behind * (1 - alpha) +
-    // colour, and an alpha that piled up would replace the lit ground with the light's colour, a flat white. Not no
+    // color, and an alpha that piled up would replace the lit ground with the light's color, a flat white. Not no
     // alpha at all, or that pass skips the pixel.
     private static final RenderPipeline PIPELINE = RenderPipeline.builder()
             .withLocation(Constants.asId("pipeline/point_light"))
@@ -97,7 +97,7 @@ public final class PointLights {
      * fades in or out rather than switching.
      */
     static final int FADE_FROM = 48;
-    // A light this faint changes no pixel: under half a step of an 8 bit colour, at its brightest
+    // A light this faint changes no pixel: under half a step of an 8 bit color, at its brightest
     static final float MIN_STRENGTH = 0.5F / 255F;
 
     // Lights recorded longer ago than this weren't from this frame (nothing lit was drawn), so are dropped
@@ -240,7 +240,7 @@ public final class PointLights {
                 continue;
             float x = lights[i], y = lights[i + 1], z = lights[i + 2];
             float r = lights[i + 3], g = lights[i + 4], b = lights[i + 5];
-            // All four at the centre; the vertex shader spreads them out. Each corner is given at the light's
+            // All four at the center; the vertex shader spreads them out. Each corner is given at the light's
             // radius, which is how the shader knows it.
             float radius = lights[i + 7];
             builder.addVertex(x, y, z).setUv(-radius, -radius).setColor(r, g, b, a);

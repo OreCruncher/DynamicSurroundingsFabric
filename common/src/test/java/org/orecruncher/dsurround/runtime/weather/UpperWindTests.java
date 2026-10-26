@@ -56,6 +56,21 @@ public class UpperWindTests {
     }
 
     @Test
+    void aTickBackAcrossAMinuteIsTakenOffNotSummedAgain() {
+        // The server's time sets the client's back a tick, across a minute's turn, in an old world
+        long minute = 1_000_000L;
+        double turn = minute * UpperWind.KNOT_TICKS;
+        var wind = new UpperWind();
+        drift(wind, turn + 0.5);
+        int starts = wind.starts();
+        var back = drift(wind, turn - 1);
+        var fresh = drift(new UpperWind(), turn - 1);
+        assertEquals(fresh[0], back[0], 1e-6 * Math.max(1D, Math.abs(fresh[0])));
+        assertEquals(fresh[1], back[1], 1e-6 * Math.max(1D, Math.abs(fresh[1])));
+        assertEquals(starts, wind.starts(), "summed again from the start");
+    }
+
+    @Test
     void followsTheDaysWindRoughly() {
         // Over a day, the clouds go about the way the day's wind blows
         long day = 12;
