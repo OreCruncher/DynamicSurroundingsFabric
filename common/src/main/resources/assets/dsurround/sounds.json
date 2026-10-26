@@ -842,6 +842,7 @@
 		]
 	},
 	"player.jump": {
+		"subtitle": "dsurround.sound.caption.player.jump",
 		"sounds": [
 			{
 				"name": "dsurround:ambient/steve/jump",

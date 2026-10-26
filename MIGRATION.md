@@ -42,6 +42,13 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Fourteenth 0.4.8 merge (through `f661f21`)
+
+The jump sound, back from 1.12.2 (`PlayerJumpEffect`, Jump Sound in Entity Effects, off by default). Merged without
+conflicts; two names fixed by the existing rename rules (`ResourceLocation` → `Identifier`, `EntityType.PLAYER` →
+`EntityTypes.PLAYER`). Compiles on common, Fabric and NeoForge; 2414 tests pass. To check in game: with Jump Sound on,
+a breath on a jump, standing or running; none while sneaking, climbing stairs or walking off an edge.
+
 ### Thirteenth 0.4.8 merge (through `9b75fb4`)
 
 Compiles on common, Fabric and NeoForge; 2410 tests pass. Nine conflicts, no new rename rules. Two commits:
