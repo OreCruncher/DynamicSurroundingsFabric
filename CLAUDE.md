@@ -127,7 +127,10 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
     `MixinLevelRenderer` wrap). Other mods call it themselves (Ars Nouveau, into its sky texture); those get vanilla's.
   - `processing/PrecipitationHandler` runs particle weather (`PrecipitationField`, `LevelColumns`, `Landings`) and
     stands aside for shader packs, a failed shader, mods that draw weather as particles (`FeatureConflict`, the table of features that stand aside for other mods) and dimensions that draw their
-    own weather.
+    own weather. The drops' tick runs on the `dsurround-Precipitation` thread, a tick behind: `PrecipitationField.finish`
+    at the start of the handler's tick, `start` at its end, with two sets of the drops (`Drops`). The step may read only
+    the columns and `Wind.Snapshot`; what needs the world it leaves as questions that `finish` answers. Tests use
+    `tick`, which is both at once.
   - Drops stop at `LevelColumns.groundHeight`: the `MOTION_BLOCKING` heightmap, raised where a block above it is solid as
     it stands but not marked solid (a mod's dynamic-shape block without `forceSolidOn`, e.g. Mekanism's energy cube, which
     the heightmap leaves out). Shelter, ground fog and frost still read the plain heightmap.

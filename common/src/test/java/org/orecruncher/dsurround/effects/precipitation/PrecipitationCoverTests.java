@@ -88,17 +88,17 @@ public class PrecipitationCoverTests {
         for (int t = 0; t < ticks; t++) {
             field.tick(roof, 0, CAMERA_Y, 0, 1F, 1F, wind, random);
             for (int i = 0; i < field.count(); i++) {
-                if (field.covered[i] == 0)
+                if (field.drops().covered[i] == 0)
                     continue;
                 coveredTicks++;
-                int x = Mth.floor(field.x[i]), z = Mth.floor(field.z[i]);
+                int x = Mth.floor(field.drops().x[i]), z = Mth.floor(field.drops().z[i]);
                 assertTrue(roof.roofed(x, z), "under cover but not under the roof");
-                assertTrue(field.y[i] < ROOF_BOTTOM, "under cover but above the roof's underside");
-                assertTrue(field.covered[i] <= lasts, "lasted too long under cover");
+                assertTrue(field.drops().y[i] < ROOF_BOTTOM, "under cover but above the roof's underside");
+                assertTrue(field.drops().covered[i] <= lasts, "lasted too long under cover");
                 // Out of the wind it drifts only a little way in from the edge
-                float in = field.x[i] * roof.windX() + field.z[i] * roof.windZ();
+                float in = field.drops().x[i] * roof.windX() + field.drops().z[i] * roof.windZ();
                 assertTrue(in < 6F, "drifted too far in under the roof: " + in);
-                assertEquals(0x700070, field.light[i], "lit as the roof's top, not where it is");
+                assertEquals(0x700070, field.drops().light[i], "lit as the roof's top, not where it is");
             }
         }
         return coveredTicks;
@@ -137,7 +137,7 @@ public class PrecipitationCoverTests {
         for (int t = 0; t < 100; t++) {
             field.tick(roof, 0, CAMERA_Y, 0, 1F, 1F, new Wind(), random);
             for (int i = 0; i < field.count(); i++)
-                assertEquals(0, field.covered[i]);
+                assertEquals(0, field.drops().covered[i]);
         }
     }
 

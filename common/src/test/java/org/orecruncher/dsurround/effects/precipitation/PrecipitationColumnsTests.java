@@ -128,17 +128,30 @@ public class PrecipitationColumnsTests {
     }
 
     @Test
-    void theColumnsAreLookedUpAgainOnlyWhenNeeded() {
+    void standingStillAFewRowsAreLookedUpAgainEachTick() {
         var source = new Changing();
         var columns = new PrecipitationColumns(RADIUS);
         assertTrue(columns.refresh(source, 0, 70, 0), "the first look");
-        int reads = source.heightReads;
+        int whole = source.heightReads;
 
-        // Standing still, nothing is read until the refresh interval is up
-        for (int t = 1; t < PrecipitationColumns.REFRESH_TICKS; t++)
+        // Standing still, no tick reads the whole area again, nor more than its share of the rows
+        int size = RADIUS * 2 + 1;
+        int mostATick = PrecipitationColumns.rowsPerTick(size) * size;
+        source.ground = 66;
+        for (int t = 0; t < PrecipitationColumns.REFRESH_TICKS; t++) {
+            int before = source.heightReads;
             assertFalse(columns.refresh(source, 0, 70, 0));
-        assertEquals(reads, source.heightReads);
-        assertTrue(columns.refresh(source, 0, 70, 0), "the interval is up");
+            int read = source.heightReads - before;
+            assertTrue(read > 0 && read <= mostATick && read < whole, read + " columns read in a tick");
+        }
+
+        // And within the interval every column has seen the change
+        for (int dz = -RADIUS; dz <= RADIUS; dz++)
+            for (int dx = -RADIUS; dx <= RADIUS; dx++) {
+                int column = columns.index(dx, dz);
+                if (column >= 0)
+                    assertEquals(66, columns.ground(column), dx + ", " + dz);
+            }
     }
 
     @Test

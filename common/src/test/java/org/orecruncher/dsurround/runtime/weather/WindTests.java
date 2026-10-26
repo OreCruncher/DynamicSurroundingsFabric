@@ -130,6 +130,27 @@ public class WindTests {
     }
 
     @Test
+    void aSnapshotIsTheWindOfItsTick() {
+        var wind = new Wind();
+        wind.set(0.6F, 0.2F, 1);
+        wind.gust(20, 1F);
+        var random = Randomizer.create(3);
+        // Through a whole gust, and the calm after it
+        int ticks = (int) Math.ceil(20 + 2F * Wind.DEFAULT_REACH / Wind.GUST_TRAVEL) + 5;
+        for (int t = 0; t < ticks; t++) {
+            var snapshot = wind.snapshot();
+            assertEquals(wind.x(), snapshot.x());
+            assertEquals(wind.z(), snapshot.z());
+            assertEquals(wind.directionX(), snapshot.directionX());
+            assertEquals(wind.directionZ(), snapshot.directionZ());
+            for (float along = -Wind.DEFAULT_REACH; along <= Wind.DEFAULT_REACH; along += 0.25F)
+                assertEquals(wind.gustFactor(along, 0F), snapshot.gustFactor(along), 1e-3F, "tick " + t + ", " + along + " along");
+            wind.tick(1F, false, false, 1, random);
+        }
+        assertFalse(wind.isGusting());
+    }
+
+    @Test
     void bearingsAreClockwiseFromNorth() {
         // North is toward negative z, east toward positive x
         assertEquals(0F, Wind.bearing(0F, -1F), 1e-3F);

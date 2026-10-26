@@ -214,6 +214,44 @@ public final class Wind {
     }
 
     /**
+     * The wind as it is this tick, for working out at many points at once: its steady vector and direction, and the
+     * parts of the gust that don't depend on the point. It doesn't change as the wind does, so another thread can read it.
+     */
+    public Snapshot snapshot() {
+        return new Snapshot(this.x, this.z, this.directionX, this.directionZ,
+                this.gustTicks == 0 ? 0F : this.gustAge - this.reach / GUST_TRAVEL, this.gustTicks,
+                this.gustTicks == 0 ? 0F : Mth.PI / this.gustTicks, this.gustPower);
+    }
+
+    /**
+     * The wind of one tick (see {@link #snapshot})
+     *
+     * @param gustStart when the gust's front reached the camera, in ticks from now (negative before it has)
+     * @param gustTicks how long the gust takes to pass a point; 0 for no gust
+     * @param gustScale pi over its length, to turn ticks into its envelope's angle
+     */
+    public record Snapshot(float x, float z, float directionX, float directionZ, float gustStart, int gustTicks,
+                           float gustScale, float gustPower) {
+
+        private static final float INVERSE_TRAVEL = 1F / GUST_TRAVEL;
+
+        /**
+         * As {@link Wind#gustFactor}, at the tick itself
+         *
+         * @param along how far downwind of the camera the point is, in blocks; negative is upwind
+         */
+        public float gustFactor(float along) {
+            if (this.gustTicks == 0)
+                return 1F;
+            var passing = this.gustStart - along * INVERSE_TRAVEL;
+            if (passing <= 0F || passing >= this.gustTicks)
+                return 1F;
+            var envelope = Mth.sin(passing * this.gustScale);
+            return 1F + this.gustPower * envelope * envelope;
+        }
+    }
+
+    /**
      * Sets the steady wind and stops it changing by day, for tests
      */
     void set(float angle, float speed, long day) {
