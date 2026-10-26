@@ -42,6 +42,12 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Ninth 0.4.8 merge (through `99272c0`)
+
+Compiles on common, Fabric and NeoForge; the common tests pass (2401). Merged cleanly, no new rename rules: healing
+pop-offs add up fractions to whole points (`HealthPopoffEffect.Tally`), and `CloudField.update` split into column
+helpers, with no change in behavior.
+
 ### Eighth 0.4.8 merge (through `a6db0da`)
 
 Compiles on common, Fabric and NeoForge; the common tests pass (2398). `port-merge.py merge` left three conflicts; no

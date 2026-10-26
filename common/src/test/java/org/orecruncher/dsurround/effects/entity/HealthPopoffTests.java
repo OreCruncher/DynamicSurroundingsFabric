@@ -61,6 +61,39 @@ public class HealthPopoffTests {
         assertFalse(Change.of(20F, 20F).critical());
     }
 
+    @Test
+    void healingInFractionsShowsOnceItComesToAPoint() {
+        // A full stomach heals a sixth of a point at a time, twice a second
+        var tally = new HealthPopoffEffect.Tally();
+        for (int i = 0; i < 5; i++)
+            assertNull(tally.add(1F / 6F, 20F), "shown at sip " + i);
+        var shown = tally.add(1F / 6F, 20F);
+        assertNotNull(shown);
+        assertEquals(1, shown.amount());
+        assertTrue(shown.heal());
+        // Started afresh
+        assertNull(tally.add(1F / 6F, 20F));
+    }
+
+    @Test
+    void healingShowsItsWholePointsAndKeepsTheRest() {
+        var tally = new HealthPopoffEffect.Tally();
+        assertEquals(3, Objects.requireNonNull(tally.add(3.5F, 20F)).amount());
+        // The half left over makes the next half a point
+        assertEquals(1, Objects.requireNonNull(tally.add(0.5F, 20F)).amount());
+    }
+
+    @Test
+    void aBlowShowsAtOnceAndForgetsHealingSoFar() {
+        var tally = new HealthPopoffEffect.Tally();
+        assertNull(tally.add(0.75F, 20F));
+        var blow = tally.add(-0.5F, 20F);
+        assertNotNull(blow);
+        assertEquals(1, blow.amount());
+        assertFalse(blow.heal());
+        assertNull(tally.add(0.5F, 20F));
+    }
+
     // ---- Motion ----------------------------------------------------------------------------------------------
 
     @Test
