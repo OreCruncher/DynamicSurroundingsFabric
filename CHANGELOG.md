@@ -24,6 +24,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Built the branching lightning, its timing and its thunder, and gathered the scary options into one place
 * Added the conditional operator to the scripting engine
 * Built the dynamic clouds, their fading and sharing between players, and lightning lighting them; reviewed their performance profiles
+* Measured the tick handlers in recordings, moved the precipitation's work to its own thread, and ported the jump sound from 1.12.2
 
 **What's New**
 * Burning mobs are wreathed in flames like a flame jet's (tongues of flame, sparks, and smoke) in place of Minecraft's flat fire sheets
@@ -105,6 +106,8 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Rain landing on snow soaks in and leaves a damp spot, as on dirt and sand, instead of splashing
 * Dynamic Surroundings music manager will start music when Minecraft's main menu is shown rather than wait 5 seconds
 * A hungry player's stomach grumbles more often
+* Particle rain, snow, and dust move on a thread of their own while frames are drawn, taking most of their work off the game's main thread; standing still, the area they fall in is looked over a few rows a tick rather than all at once
+* `/dsprofile` recordings also hold how long each of Dynamic Surroundings' tick handlers took every tick, and which optional hooks applied, which features stand aside for another mod, and the settings (text settings left out)
 
 **Fixes**
 * Particle rain and snow fell through blocks from other mods whose shape depends on the world, such as Mekanism's energy cube (Minecraft's own rain does too: such blocks are left out of the height map it stops at); they now stop on top of them
