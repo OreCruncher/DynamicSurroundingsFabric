@@ -77,9 +77,15 @@ public class FrostBreathParticle extends TextureSheetParticle {
         this.setSpriteFromAge(this.spriteProvider);
     }
 
+    /**
+     * Soft, as mist is, and writing no depth of its own. Vanilla's translucent sheet writes each particle's depth, and
+     * a breath is a large faint puff right in front of the face: anything drawn over the scene after the particles,
+     * tested against depth, took the puff for something close by and left out what lay behind it. With Astral
+     * Sorcery's pitch black night sky, each breath showed the blocks through the dark.
+     */
     @Override
     public @NotNull ParticleRenderType getRenderType() {
-        return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
+        return DSurroundParticleRenderType.PARTICLE_SHEET_MIST;
     }
 
     @Override
