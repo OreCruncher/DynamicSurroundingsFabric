@@ -42,6 +42,13 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Tenth 0.4.8 merge (through `c47383f`)
+
+Compiles on common, Fabric and NeoForge. One conflict, no new rename rules: frost breath drawn soft, so it writes no
+depth (on 1.21.1 it showed the blocks through Astral Sorcery's black night sky). 26.2 already drew it on the mist
+layer (`SoftParticles.mistLayer()`, for the window frost); kept, with the two reasons in one comment. The changelog
+line merged as is.
+
 ### Ninth 0.4.8 merge (through `99272c0`)
 
 Compiles on common, Fabric and NeoForge; the common tests pass (2401). Merged cleanly, no new rename rules: healing

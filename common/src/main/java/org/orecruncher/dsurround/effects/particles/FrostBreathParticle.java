@@ -76,10 +76,14 @@ public class FrostBreathParticle extends SingleQuadParticle {
         this.setSpriteFromAge(this.spriteProvider);
     }
 
+    /**
+     * Soft, as the mist and steam are (see SoftParticles): fading where it meets a wall, and writing no depth of its
+     * own. A breath is a large faint puff right in front of the face, and with its depth written, whatever is drawn after
+     * the particles and tested against depth took it for something close by and left out what lay behind it: the frost
+     * on a window, or on 1.21.1, with Astral Sorcery's pitch black night sky, the dark itself.
+     */
     @Override
     public @NotNull Layer getLayer() {
-        // Soft, as the mist and steam are (see SoftParticles): fading where it meets a wall, and writing no depth, so a
-        // breath in front of a window doesn't cut holes in what is drawn there after it (the frost)
         return SoftParticles.mistLayer();
     }
 
