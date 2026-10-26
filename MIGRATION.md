@@ -42,6 +42,13 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Twelfth 0.4.8 merge (through `472d387`)
+
+Nothing but the changelog line. `472d387` generalizes the weather target check into `TargetCheck` (also before the
+lightning, soft particles and point lights) and adds the bound frame buffer to the particle batch guard: none of it
+is on 26.2, which binds no frame buffer for another mod to leave behind and has no particle batch guard (see the
+eleventh merge and "0.4.8 merge"). Every file it touched was kept as 26.2 has it, its CLAUDE.md note included.
+
 ### Eleventh 0.4.8 merge (through `0bff3d9`)
 
 Compiles on common, Fabric and NeoForge. Two conflicts, no new rename rules. **The weather target check is not on
