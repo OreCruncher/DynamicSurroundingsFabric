@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -66,6 +67,15 @@ public class HandlerIsolationTests {
 
         assertEquals(List.of("a", "c"), this.processed);
         assertEquals(List.of("bad"), this.failed);
+    }
+
+    @Test
+    void aTickSaysWhetherTheHandlerHadWork() {
+        // For the recording's handler ticks: a failed handler still ran
+        BiConsumer<AbstractClientHandler, Throwable> ignore = (h, t) -> { };
+        assertTrue(Handlers.tickHandler(new FakeHandler("a", null, true), 0, null, ignore));
+        assertFalse(Handlers.tickHandler(new FakeHandler("b", null, false), 0, null, ignore));
+        assertTrue(Handlers.tickHandler(new FakeHandler("bad", new IllegalStateException("boom"), true), 0, null, ignore));
     }
 
     @Test

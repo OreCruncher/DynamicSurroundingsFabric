@@ -22,6 +22,7 @@ import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.processing.accents.FootstepAccents;
 import org.orecruncher.dsurround.processing.fog.HolisticFogRangeCalculator;
+import org.orecruncher.dsurround.profiling.HandlerTicks;
 import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
 import org.orecruncher.dsurround.processing.scanner.VillageScanner;
@@ -125,8 +126,10 @@ public class Handlers {
 
         for (final AbstractClientHandler handler : this.effectHandlers) {
             final long mark = System.nanoTime();
-            tickHandler(handler, tick, player, this::handlerFailed);
-            handler.updateTimer(System.nanoTime() - mark);
+            final boolean ran = tickHandler(handler, tick, player, this::handlerFailed);
+            final long elapsed = System.nanoTime() - mark;
+            handler.updateTimer(elapsed);
+            HandlerTicks.ticked(tick, handler.getHandlerName(), elapsed, ran);
         }
         this.handlerTimer.end();
     }
@@ -134,16 +137,22 @@ public class Handlers {
     /**
      * Ticks one handler. If it throws, {@code onFailure} is told and the caller goes on to the next handler, so one
      * broken handler doesn't stop the rest. Errors the JVM can't recover from are rethrown.
+     *
+     * @return whether the handler had work this tick, failed or not
      */
-    static void tickHandler(AbstractClientHandler handler, long tick, Player player, BiConsumer<AbstractClientHandler, Throwable> onFailure) {
+    static boolean tickHandler(AbstractClientHandler handler, long tick, Player player, BiConsumer<AbstractClientHandler, Throwable> onFailure) {
+        boolean ran = false;
         try {
-            if (handler.doTick(tick))
+            if (handler.doTick(tick)) {
+                ran = true;
                 handler.process(player);
+            }
         } catch (VirtualMachineError fatal) {
             throw fatal;
         } catch (Throwable t) {
             onFailure.accept(handler, t);
         }
+        return ran;
     }
 
     private void handlerFailed(AbstractClientHandler handler, Throwable t) {

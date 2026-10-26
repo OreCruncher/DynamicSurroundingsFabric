@@ -39,10 +39,14 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   only the one you launched.
 - Profiling: `/dsprofile [scene] [seconds]` records a JFR file, zipped, to `config/dsurround/profiles` with the mod's
   GPU/CPU render timers in it (`dsurround.RenderTimer` events; precipitation's carry a `count` of drops/spots a frame,
-  so two recordings can be checked for the same storm) and what it was made on (`dsurround.Environment`); unzip
+  so two recordings can be checked for the same storm), each client tick handler's time every tick
+  (`dsurround.HandlerTick`, through `profiling/HandlerTicks`), what it was made on (`dsurround.Environment`) and each
+  optional hook's status, conflict and non-text setting (`dsurround.Feature`, from `ProfileFeature`); unzip
   it and read it with the JDK's `jfr` (`jfr print --json --events ...`), or summarize it with
   `python scripts/jfr-summary.py <zip or jfr>` (timers: mean and end of the running averages, and peak; for a
-  timer measured rarely, once a second or less, trust the end, not the mean; threads, mod packages, our frames, allocation, GC;
+  timer measured rarely, once a second or less, trust the end, not the mean; handler percentiles per tick (ticks a GC pause landed in left out) and what
+  running them in parallel would gain at best, `--dispatch-us`/`--worth-ms` for its cost and threshold, dependencies
+  in `FIRST_HANDLERS`/`HANDLER_CHAINS`; threads, mod packages, our frames, allocation, GC;
   `--callers <method>` for who calls something).
   Players can make them too, so nothing private may get in: a new event type or a new `jdk.jfr` user needs a look at
   `ProfileRecording.PRIVATE` and `Redaction`. Record under Run, not IntelliJ's Debug (its async stack trace agent

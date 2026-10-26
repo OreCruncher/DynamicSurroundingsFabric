@@ -3,10 +3,12 @@ package org.orecruncher.dsurround.profiling;
 import com.mojang.blaze3d.platform.GlUtil;
 import dev.architectury.platform.Platform;
 import net.minecraft.client.Minecraft;
+import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.compat.IrisCompat;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.platform.ModInformation;
 
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -27,9 +29,10 @@ import java.util.Locale;
  * @param renderDistance the render distance in chunks, as the game uses it
  * @param java           Java's version and vendor
  * @param os             the operating system's name, version and architecture
+ * @param features       the optional hooks, the features that stand aside for other mods, and the settings
  */
 record ProfileEnvironment(String mod, int mods, String glRenderer, String glVendor, String glVersion, String graphics,
-                          boolean shaderPack, int renderDistance, String java, String os) {
+                          boolean shaderPack, int renderDistance, String java, String os, List<ProfileFeature> features) {
 
     /**
      * The environment now. On the render thread: the graphics card is asked through OpenGL
@@ -47,7 +50,8 @@ record ProfileEnvironment(String mod, int mods, String glRenderer, String glVend
                 IrisCompat.isShaderPackInUse(),
                 options.getEffectiveRenderDistance(),
                 javaRuntime(),
-                operatingSystem());
+                operatingSystem(),
+                ProfileFeature.capture(ContainerManager.resolve(Configuration.class)));
     }
 
     /**
