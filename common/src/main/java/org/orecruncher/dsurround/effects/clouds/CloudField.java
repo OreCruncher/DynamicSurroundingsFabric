@@ -135,6 +135,12 @@ public final class CloudField {
     private boolean[] spareKnown = new boolean[0];
     private int version;
     private boolean empty = true;
+    // The column just worked out for a cell, by lowColumn and highColumn, for keep
+    private int nextSteps;
+    private int nextLowBase;
+    private int nextLowTop;
+    private int nextHighBase;
+    private int nextHighTop;
 
     /**
      * Works out every cell again, as one call to
@@ -196,98 +202,19 @@ public final class CloudField {
                 boolean known = this.known[index];
                 // Worked out from an estimate, and now known: again at once, and nothing held from the estimate
                 boolean nowKnown = known && this.estimated[index] && covers.isKnown(cx, cz);
-                boolean hold = known && !this.estimated[index];
                 if (!known) {
                     this.turnHash[index] = turnHash(cx, cz);
                 } else if (!nowKnown) {
-                    // A change that finishes fading now: drawn settled from here on
-                    long since = tick - (long) this.changeTick[index];
-                    long sinceLast = this.lastTick - (long) this.changeTick[index];
-                    if (since >= FADE_TICKS && sinceLast < FADE_TICKS) {
-                        changed = true;
-                        this.dirty[index] = true;
-                    }
-                    // Still fading: left as it is until that is over
-                    if (since < FADE_TICKS)
-                        continue;
-                    if (turns > 1 && Integer.remainderUnsigned(this.turnHash[index], turns) != turn)
+                    changed |= this.fadeEnds(index, tick);
+                    if (!this.isDue(index, tick, turn, turns))
                         continue;
                 }
 
-                // What the clouds are like over it
                 var cover = covers.at(cx, cz);
-                float lowFrom = 1F - cover.coverage();
-                float highFrom = 1F - cover.cirrus();
-                int base = -Math.round(cover.baseDrop() / STEP) * STEP;
-                boolean ragged = cover.baseDrop() >= RAGGED_FROM;
-                float span = cover.maxThickness() - cover.minThickness();
-
-                // The low layer
-                int steps = 0;
-                int b = 0;
-                int t = 0;
-                if (cover.coverage() > 0F) {
-                    boolean was = hold && this.lowSteps[index] > 0;
-                    float rank = CloudNoise.rank(CloudNoise.layered(cx * LOW_SCALE, cz * LOW_SCALE, time, LOW_SEED));
-                    if (rank >= (was ? lowFrom - HOLD : lowFrom)) {
-                        // How far inside the cloud the cell is: its middle builds up the most
-                        float core = cover.coverage() >= 1F ? 1F : Mth.clamp((rank - lowFrom) / cover.coverage(), 0F, 1F);
-                        float detail = CloudNoise.value(cx * 0.6D, cz * 0.6D, time * 2D, DETAIL_SEED);
-                        float thickness = cover.minThickness() + span * (float) Math.pow(core, 1.3D) * (0.7F + 0.6F * detail);
-                        thickness = Mth.clamp(thickness, cover.minThickness(), cover.maxThickness());
-                        float wanted = thickness / STEP;
-                        int held = this.lowSteps[index];
-                        steps = was && Math.abs(wanted - held) < 0.5F + HOLD_STEPS ? held : Math.max(1, Math.round(wanted));
-                        b = base;
-                        if (ragged) {
-                            boolean wasLower = was && this.lowBase[index] < this.lowTop[index] - held * STEP;
-                            float lowerFrom = 1F - RAGGED_SHARE - (wasLower ? HOLD : 0F);
-                            if (CloudNoise.value(cx * 0.8D, cz * 0.8D, time * 3D, RAGGED_SEED) > lowerFrom)
-                                b -= STEP;
-                        }
-                        t = base + steps * STEP;
-                    }
-                }
-
-                // The high streaks, drawn out one way: noise stretched along it
-                int hb = 0;
-                int ht = 0;
-                if (cover.cirrus() > 0F) {
-                    boolean was = hold && this.highTop[index] > this.highBase[index];
-                    double along = cx * alongX + cz * alongZ;
-                    double across = -cx * alongZ + cz * alongX;
-                    float rank = CloudNoise.rank(CloudNoise.layered(along * STREAK_LENGTH, across * STREAK_WIDTH, time * 0.5D, HIGH_SEED));
-                    // Not where a tower reaches up into them
-                    if (rank >= (was ? highFrom - HOLD : highFrom) && t < HIGH) {
-                        hb = HIGH;
-                        ht = HIGH + HIGH_THICKNESS;
-                    }
-                }
-                boolean differs = this.lowBase[index] != b || this.lowTop[index] != t
-                        || this.highBase[index] != hb || this.highTop[index] != ht;
-                if (!known) {
-                    // New to the grid, at its edge or as the clouds start: there at once
-                    this.prevLowBase[index] = b;
-                    this.prevLowTop[index] = t;
-                    this.prevHighBase[index] = hb;
-                    this.prevHighTop[index] = ht;
-                    this.changeTick[index] = LONG_AGO;
-                } else if (differs) {
-                    this.prevLowBase[index] = this.lowBase[index];
-                    this.prevLowTop[index] = this.lowTop[index];
-                    this.prevHighBase[index] = this.highBase[index];
-                    this.prevHighTop[index] = this.highTop[index];
-                    this.changeTick[index] = (int) tick;
-                }
-                changed |= differs;
-                if (differs || !known)
-                    this.dirty[index] = true;
-                this.lowBase[index] = b;
-                this.lowTop[index] = t;
-                this.lowSteps[index] = steps;
-                this.highBase[index] = hb;
-                this.highTop[index] = ht;
-                this.known[index] = true;
+                boolean hold = known && !this.estimated[index];
+                this.lowColumn(index, cx, cz, cover, hold, time);
+                this.highColumn(index, cx, cz, cover, hold, time, alongX, alongZ);
+                changed |= this.keep(index, known, tick);
                 this.estimated[index] = !covers.isKnown(cx, cz);
             }
         }
@@ -296,6 +223,126 @@ public final class CloudField {
             this.empty = this.noneLeft();
         }
         return changed;
+    }
+
+    /**
+     * Whether a cell's last change finishes fading on this tick, so it is drawn settled from here on; marks it to be
+     * built again if so
+     */
+    private boolean fadeEnds(int index, long tick) {
+        long since = tick - (long) this.changeTick[index];
+        long sinceLast = this.lastTick - (long) this.changeTick[index];
+        if (since >= FADE_TICKS && sinceLast < FADE_TICKS) {
+            this.dirty[index] = true;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Whether a cell already worked out is to be worked out again now: not while a change is still fading (it is left
+     * as it is until that is over), and only on its own turn
+     */
+    private boolean isDue(int index, long tick, int turn, int turns) {
+        if (tick - (long) this.changeTick[index] < FADE_TICKS)
+            return false;
+        return turns <= 1 || Integer.remainderUnsigned(this.turnHash[index], turns) == turn;
+    }
+
+    /**
+     * Works out a cell's low column (into {@link #nextSteps}, {@link #nextLowBase} and {@link #nextLowTop}): a flat base
+     * where the cover puts it, a step lower here and there under a ragged deck, and a top as high as the noise builds it
+     *
+     * @param hold whether the cell's column from before counts, for holding it near an edge
+     */
+    private void lowColumn(int index, int cx, int cz, CloudCover cover, boolean hold, double time) {
+        this.nextSteps = 0;
+        this.nextLowBase = 0;
+        this.nextLowTop = 0;
+        if (cover.coverage() <= 0F)
+            return;
+        float lowFrom = 1F - cover.coverage();
+        boolean was = hold && this.lowSteps[index] > 0;
+        float rank = CloudNoise.rank(CloudNoise.layered(cx * LOW_SCALE, cz * LOW_SCALE, time, LOW_SEED));
+        if (rank < (was ? lowFrom - HOLD : lowFrom))
+            return;
+        // How far inside the cloud the cell is: its middle builds up the most
+        float core = cover.coverage() >= 1F ? 1F : Mth.clamp((rank - lowFrom) / cover.coverage(), 0F, 1F);
+        float detail = CloudNoise.value(cx * 0.6D, cz * 0.6D, time * 2D, DETAIL_SEED);
+        float span = cover.maxThickness() - cover.minThickness();
+        float thickness = cover.minThickness() + span * (float) Math.pow(core, 1.3D) * (0.7F + 0.6F * detail);
+        thickness = Mth.clamp(thickness, cover.minThickness(), cover.maxThickness());
+        float wanted = thickness / STEP;
+        int held = this.lowSteps[index];
+        int steps = was && Math.abs(wanted - held) < 0.5F + HOLD_STEPS ? held : Math.max(1, Math.round(wanted));
+        int base = -Math.round(cover.baseDrop() / STEP) * STEP;
+        int b = base;
+        if (cover.baseDrop() >= RAGGED_FROM) {
+            boolean wasLower = was && this.lowBase[index] < this.lowTop[index] - held * STEP;
+            float lowerFrom = 1F - RAGGED_SHARE - (wasLower ? HOLD : 0F);
+            if (CloudNoise.value(cx * 0.8D, cz * 0.8D, time * 3D, RAGGED_SEED) > lowerFrom)
+                b -= STEP;
+        }
+        this.nextSteps = steps;
+        this.nextLowBase = b;
+        this.nextLowTop = base + steps * STEP;
+    }
+
+    /**
+     * Works out a cell's high streak (into {@link #nextHighBase} and {@link #nextHighTop}), drawn out one way: noise
+     * stretched along it. None where the low column, worked out first, towers up into it.
+     *
+     * @param alongX the way the streaks run, of length 1; and {@code alongZ}
+     */
+    private void highColumn(int index, int cx, int cz, CloudCover cover, boolean hold, double time, float alongX, float alongZ) {
+        this.nextHighBase = 0;
+        this.nextHighTop = 0;
+        if (cover.cirrus() <= 0F)
+            return;
+        float highFrom = 1F - cover.cirrus();
+        boolean was = hold && this.highTop[index] > this.highBase[index];
+        double along = cx * alongX + cz * alongZ;
+        double across = -cx * alongZ + cz * alongX;
+        float rank = CloudNoise.rank(CloudNoise.layered(along * STREAK_LENGTH, across * STREAK_WIDTH, time * 0.5D, HIGH_SEED));
+        if (rank >= (was ? highFrom - HOLD : highFrom) && this.nextLowTop < HIGH) {
+            this.nextHighBase = HIGH;
+            this.nextHighTop = HIGH + HIGH_THICKNESS;
+        }
+    }
+
+    /**
+     * Keeps the column just worked out for a cell. One new to the grid is there at once; one that differs from before
+     * keeps what it was, to fade from.
+     *
+     * @return whether it differs from before
+     */
+    private boolean keep(int index, boolean known, long tick) {
+        int b = this.nextLowBase, t = this.nextLowTop, hb = this.nextHighBase, ht = this.nextHighTop;
+        boolean differs = this.lowBase[index] != b || this.lowTop[index] != t
+                || this.highBase[index] != hb || this.highTop[index] != ht;
+        if (!known) {
+            // New to the grid, at its edge or as the clouds start: there at once
+            this.prevLowBase[index] = b;
+            this.prevLowTop[index] = t;
+            this.prevHighBase[index] = hb;
+            this.prevHighTop[index] = ht;
+            this.changeTick[index] = LONG_AGO;
+        } else if (differs) {
+            this.prevLowBase[index] = this.lowBase[index];
+            this.prevLowTop[index] = this.lowTop[index];
+            this.prevHighBase[index] = this.highBase[index];
+            this.prevHighTop[index] = this.highTop[index];
+            this.changeTick[index] = (int) tick;
+        }
+        if (differs || !known)
+            this.dirty[index] = true;
+        this.lowBase[index] = b;
+        this.lowTop[index] = t;
+        this.lowSteps[index] = this.nextSteps;
+        this.highBase[index] = hb;
+        this.highTop[index] = ht;
+        this.known[index] = true;
+        return differs;
     }
 
     /**
