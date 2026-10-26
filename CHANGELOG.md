@@ -95,6 +95,8 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Removed the random sound played when the game finishes loading, and its Play Random Sound On Startup option
 * soundconfig.json now saves each sound's setting as one `action` (default, cull, or block) in place of the separate block and cull flags; older files are converted when loaded
 * Waterfall foam, mist, steam, and smoke do less work: each block's water surface is worked out once every half second and shared by all the foam on it, and foam and the soft puffs read their light every few ticks instead of every frame; noticeable in large modpacks with many waterfalls nearby
+* A new General Options section, first in the list, holds Mod Update Chat Messages and Register Client Side Commands, moved out of Diagnostic Options; values already set carry over
+  * Diagnostic Options is saved under `diagnostics` in dsurround.json, in place of `logging`; values already set carry over
 * A new Guards section in Diagnostic Options holds fixes for problems other mods cause, each of which can be turned off should it cause a problem of its own
 * A new Scary Content section gathers the options for content some players find frightening
   * Allow Scary Sounds in Sound Options is now Allow Scary Content there, and also covers the lightning; a value already set carries over

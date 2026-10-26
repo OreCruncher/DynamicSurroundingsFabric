@@ -27,7 +27,7 @@ public class MixinHelpers {
     public static final Configuration.SoundSystem soundSystemConfig = ContainerManager.resolve(Configuration.SoundSystem.class);
     public static final Configuration.FootstepAccents footstepAccentsConfig = ContainerManager.resolve(Configuration.FootstepAccents.class);
     public static final Configuration.ParticleTweaks particleTweaksConfig = ContainerManager.resolve(Configuration.ParticleTweaks.class);
-    public static final Configuration.Guards guardsConfig = ContainerManager.resolve(Configuration.Logging.class).guards;
+    public static final Configuration.Guards guardsConfig = ContainerManager.resolve(Configuration.Diagnostics.class).guards;
     public static final Configuration.SoundOptions soundOptions = ContainerManager.resolve(Configuration.SoundOptions.class);
     public static final Configuration.FogOptions fogOptions = ContainerManager.resolve(Configuration.FogOptions.class);
     public static final Configuration.WeatherOptions weatherOptions = ContainerManager.resolve(Configuration.WeatherOptions.class);
