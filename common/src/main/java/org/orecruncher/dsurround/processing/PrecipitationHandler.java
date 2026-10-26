@@ -21,6 +21,7 @@ import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
+import org.orecruncher.dsurround.effects.WeatherTargetCheck;
 import org.orecruncher.dsurround.effects.particles.DSurroundParticleSprites;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
 import org.orecruncher.dsurround.effects.precipitation.AfterRainDrips;
@@ -253,6 +254,9 @@ public class PrecipitationHandler extends AbstractClientHandler {
         if (!this.isActive())
             return false;
 
+        // The frost and the mist drawn before should leave it bound, but check: drawn to the main target, the drops would
+        // hide the water behind them
+        WeatherTargetCheck.ensureBound("the rain and snow");
         var tesselator = Tesselator.getInstance();
         var camera = GameUtils.getMC().gameRenderer.getMainCamera();
         lightTexture.turnOnLightLayer();

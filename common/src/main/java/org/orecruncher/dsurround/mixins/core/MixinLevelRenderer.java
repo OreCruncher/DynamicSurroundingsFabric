@@ -19,6 +19,7 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.orecruncher.dsurround.runtime.weather.StormSounds;
 import org.orecruncher.dsurround.eventing.ISkyRender;
+import org.orecruncher.dsurround.effects.WeatherTargetCheck;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -101,6 +102,7 @@ public class MixinLevelRenderer {
      */
     @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V"))
     private void dsurround$aroundWeather(LevelRenderer renderer, LightTexture lightTexture, float partialTick, double camX, double camY, double camZ, Operation<Void> original) {
+        WeatherTargetCheck.ensureBound("the weather");
         MixinHelpers.windowFrost().renderBeforeWeather(lightTexture);
         MixinHelpers.groundFog().renderBeforeWeather(lightTexture, partialTick);
         dsurround$levelWeather = true;
