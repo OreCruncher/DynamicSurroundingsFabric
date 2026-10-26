@@ -3,15 +3,16 @@ package org.orecruncher.dsurround.effects.entity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
 /**
- * Pops a number off an entity when its health changes: red for damage, green for healing, and for a heavy blow (at
- * least {@link #CRITICAL_SHARE} of its health at most) a comic book word in gold above it. Not for the player's own
- * body in first person. Drawn by {@link HealthPopoffs}.
+ * Pops a number off an entity when its health changes: red for damage, green for healing (once it adds up to a whole
+ * point, see {@link Tally}), and for a heavy blow (at least {@link #CRITICAL_SHARE} of its health at most) a comic book
+ * word in gold above it. Not for the player's own body in first person. Drawn by {@link HealthPopoffs}.
  * <p>
  * Health is synced to the client for every living entity, so this works for mobs and other players alike. It keeps
  * watching while the entity dies, so the killing blow shows too.
@@ -35,6 +36,7 @@ public class HealthPopoffEffect extends EntityEffectBase {
 
     private final Configuration.EntityEffects config;
     private float lastHealth;
+    private final Tally tally = new Tally();
 
     public HealthPopoffEffect(Configuration.EntityEffects config) {
         this.config = config;
@@ -69,10 +71,10 @@ public class HealthPopoffEffect extends EntityEffectBase {
         float change = health - this.lastHealth;
         this.lastHealth = health;
 
-        if (info.isCurrentPlayer(entity) && GameUtils.isFirstPersonView())
+        var popoff = this.tally.add(change, entity.getMaxHealth());
+        if (popoff == null || info.isCurrentPlayer(entity) && GameUtils.isFirstPersonView())
             return;
 
-        var popoff = Change.of(change, entity.getMaxHealth());
         var box = entity.getBoundingBox();
         double y = box.maxY + ABOVE;
         float driftX = RANDOM.nextFloat() * 2F - 1F;
@@ -85,6 +87,34 @@ public class HealthPopoffEffect extends EntityEffectBase {
 
     private static String critWord() {
         return I18n.get(CRIT_WORD_PREFIX + RANDOM.nextInt(CRIT_WORDS)) + "!";
+    }
+
+    /**
+     * Adds up changes of health into what pops off: a blow at once, whatever its size; healing once it comes to a whole
+     * point. Healing from a full stomach comes a fraction of a point at a time, twice a second, and showing a 1 for each
+     * would add up to more than it heals.
+     */
+    static final class Tally {
+        // Healing a whole point in sixths can add up to a hair under 1
+        private static final float SLACK = 1.0E-4F;
+        private float healed;
+
+        /**
+         * @return what pops off for this change, or null for none yet
+         */
+        @Nullable
+        Change add(float change, float maxHealth) {
+            if (change < 0F) {
+                this.healed = 0F;
+                return Change.of(change, maxHealth);
+            }
+            this.healed += change;
+            int whole = (int) (this.healed + SLACK);
+            if (whole < 1)
+                return null;
+            this.healed = Math.max(0F, this.healed - whole);
+            return Change.of(whole, maxHealth);
+        }
     }
 
     /**
