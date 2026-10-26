@@ -42,6 +42,16 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Seventh 0.4.8 merge (through `c34896a`)
+
+Compiles on common, Fabric and NeoForge; the common tests pass (2397). `port-merge.py merge` left two conflicts; no
+new rename rules. `4b4e84f` and `ce424f1` were already here by hand and merged with no change.
+
+- **`logging` → `diagnostics`, and a new `generalOptions` group** holding Mod Update Chat Messages and Register
+  Client Side Commands: merged as is, apart from the guards, which 26.2 doesn't have. `MixinHelpers` keeps no guards
+  config, `en_us` gets no `diagnostics.guards` keys, and `MovedPropertiesTests` checks that a 1.21.1 file's
+  `logging.guards` is dropped rather than carried into `diagnostics`.
+
 ### Sixth 0.4.8 merge (through `8f9f9ca`)
 
 Compiles on common, Fabric and NeoForge; the common tests pass (2396); both clients start with the three cloud

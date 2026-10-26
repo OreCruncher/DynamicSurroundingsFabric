@@ -47,12 +47,12 @@ public final class ViewerPlugin implements IDiagnosticPlugin {
         TAG_STYLES.put("c", Style.EMPTY.withColor(ColorPalette.CORNSILK));
     }
 
-    private final Configuration.Logging config;
+    private final Configuration.Diagnostics config;
     private final IBlockLibrary blockLibrary;
     private final ITagLibrary tagLibrary;
     private final IEntityEffectLibrary entityEffectLibrary;
 
-    public ViewerPlugin(Configuration.Logging config, IBlockLibrary blockLibrary, ITagLibrary tagLibrary, IEntityEffectLibrary entityEffectLibrary) {
+    public ViewerPlugin(Configuration.Diagnostics config, IBlockLibrary blockLibrary, ITagLibrary tagLibrary, IEntityEffectLibrary entityEffectLibrary) {
         this.config = config;
         this.blockLibrary = blockLibrary;
         this.tagLibrary = tagLibrary;

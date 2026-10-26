@@ -316,6 +316,38 @@ public class MovedPropertiesTests {
     }
 
     @Test
+    void theLoggingGroupBecomesDiagnosticsAndGeneralOptions() throws IOException {
+        // The whole group moved, apart from two switches that went to the general options. A 1.21.1 file also has the
+        // guards, which 26.2 has no use for
+        var config = loadModConfig("""
+                {
+                  "logging": {
+                    "enableDebugLogging": true,
+                    "traceMask": 5,
+                    "enableModUpdateChatMessage": false,
+                    "filteredTagView": false,
+                    "registerCommands": false,
+                    "voiceChatHearSelf": true,
+                    "guards": { "repairParticleBatches": false }
+                  }
+                }
+                """);
+        assertTrue(config.diagnostics.enableDebugLogging);
+        assertEquals(5, config.diagnostics.traceMask);
+        assertFalse(config.diagnostics.filteredTagView);
+        assertTrue(config.diagnostics.voiceChatHearSelf);
+        assertFalse(config.generalOptions.enableModUpdateChatMessage);
+        assertFalse(config.generalOptions.registerCommands);
+
+        var json = written("dsurround.json");
+        assertFalse(json.has("logging"), "the old group is still written");
+        var diagnostics = json.getAsJsonObject("diagnostics");
+        assertFalse(diagnostics.has("guards"), "1.21.1's guards are still written");
+        assertFalse(diagnostics.has("enableModUpdateChatMessage") || diagnostics.has("registerCommands"),
+                "the general options are still written in the diagnostics");
+    }
+
+    @Test
     void lightningNeedsScaryContentAndItsOwnSwitch() throws IOException {
         var config = loadModConfig("{}");
         assertTrue(config.scaryContent.lightningAllowed());
@@ -333,6 +365,11 @@ public class MovedPropertiesTests {
         for (var group : Configuration.class.getFields()) {
             if (Modifier.isStatic(group.getModifiers()))
                 continue;
+            var groupMoved = group.getAnnotation(MovedFrom.class);
+            if (groupMoved != null)
+                for (var path : groupMoved.value())
+                    if (isProperty(path))
+                        stale.add(path);
             for (var field : group.getType().getFields()) {
                 var moved = field.getAnnotation(MovedFrom.class);
                 if (moved == null)

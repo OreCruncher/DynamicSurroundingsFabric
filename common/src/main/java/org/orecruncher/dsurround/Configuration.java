@@ -30,6 +30,10 @@ import org.orecruncher.dsurround.lib.config.TranslationRoot;
 public class Configuration extends ConfigurationData {
 
     @Property
+    @Comment("General configuration options for the mod")
+    public final GeneralOptions generalOptions = new GeneralOptions();
+
+    @Property
     @Comment("Configuration options for modifying Minecraft's Sound System behavior")
     public final SoundSystem soundSystem = new SoundSystem();
 
@@ -100,7 +104,8 @@ public class Configuration extends ConfigurationData {
     @Property
     @Comment("Configuration options for modifying diagnostic behavior")
     @TextStyle(color = "#0078D4", italic = true)
-    public final Logging logging = new Logging();
+    @MovedFrom("logging")
+    public final Diagnostics diagnostics = new Diagnostics();
 
     public static class Flags {
         public static final int AUDIO_PLAYER = 0x1;
@@ -108,7 +113,21 @@ public class Configuration extends ConfigurationData {
         public static final int RESOURCE_LOADING = 0x4;
     }
 
-    public static class Logging {
+    public static class GeneralOptions {
+
+        @Property
+        @MovedFrom("logging.enableModUpdateChatMessage")
+        @Comment("Enable/disable chat window notification of newer updates available")
+        public boolean enableModUpdateChatMessage = true;
+
+        @Property
+        @RestartRequired
+        @MovedFrom("logging.registerCommands")
+        @Comment("Enable/disable registration of client side commands")
+        public boolean registerCommands = true;
+    }
+
+    public static class Diagnostics {
 
         @Property
         @Comment("Enables/disables debug logging of the mod")
@@ -119,17 +138,8 @@ public class Configuration extends ConfigurationData {
         public int traceMask = 0;
 
         @Property
-        @Comment("Enable/disable chat window notification of newer updates available")
-        public boolean enableModUpdateChatMessage = true;
-
-        @Property
         @Comment("Enable/disable filtering display of tags in the diagnostics overlay")
         public boolean filteredTagView = true;
-
-        @Property
-        @RestartRequired
-        @Comment("Enable/disable registration of client side commands")
-        public boolean registerCommands = true;
 
         @Property
         @Comment("Play your own Simple Voice Chat voice back to you, with enhanced sound processing, for testing")
