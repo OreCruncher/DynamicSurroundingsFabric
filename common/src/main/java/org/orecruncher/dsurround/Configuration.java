@@ -377,6 +377,10 @@ public class Configuration extends ConfigurationData {
         public boolean enableSwingEffect = true;
 
         @Property
+        @Comment("Enable/disable a breath when you jump, heard by you only")
+        public boolean enableJumpSound = false;
+
+        @Property
         @Comment("Enable/disable sound effect when walking through dense brush")
         public boolean enableBrushStepEffect = true;
 

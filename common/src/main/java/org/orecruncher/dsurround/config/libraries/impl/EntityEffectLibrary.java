@@ -200,6 +200,9 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
             effectTypes.add(EntityEffectType.ITEM_SWING);
         if (this.tagLibrary.is(EntityEffectTags.TOOLBAR, entityType))
             effectTypes.add(EntityEffectType.PLAYER_TOOLBAR);
+        // Heard by the player only, so it goes with the player's own kind
+        if (entityType == EntityType.PLAYER)
+            effectTypes.add(EntityEffectType.PLAYER_JUMP);
         if (this.tagLibrary.is(EntityEffectTags.BRUSH_STEP, entityType))
             effectTypes.add(EntityEffectType.BRUSH_STEP);
         // Anything can burn; the tag lists those that keep vanilla's fire

@@ -49,6 +49,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Frog sounds are back from older versions: lily pads croak, with the odd bullfrog call, twice as often at night as by day; not while indoors, or when it's cold enough for water to freeze
   * Includes the lily pads of Biomes O' Plenty, Twilight Forest, Oh The Biomes We've Gone, and Regions Unexplored; the `dsurround:effects/frog_croaks` block tag sets which blocks croak
 * The heartbeat is back from older versions: the player's heart pounds when their health is at 30% or less (not in creative); Allow Scary Content turns it off
+* The jump sound is back from older versions: a breath when you jump, heard by you only; off by default, turned on with Jump Sound in Entity Effects
 * In a dust storm the glow of sunrise and sunset turns dusty and dims, as the sky and fog already do
 * Rain, snow, and dust blown in under an overhang drift a little way in out of the wind and fade, instead of stopping at the roof's edge; snowflakes that reach the ground under the overhang lie there, and rain splashes on a porch floor
 * Lightning that branches and forks, in place of Minecraft's bolts
