@@ -16,7 +16,7 @@ public final class CloudGlow {
      * The fewest a patch is lit by a stroke, against the hottest, in a flash hidden in the cloud
      */
     static final float LEAST_LIT = 0.15F;
-    // Noise cells for each patch's texture are picked from this many, so neighbouring patches look different
+    // Noise cells for each patch's texture are picked from this many, so neighboring patches look different
     private static final int NOISE_CELLS = 64;
 
     private final float[] patches;
@@ -73,15 +73,15 @@ public final class CloudGlow {
      * Patches around given points: where a bolt leaves the cloud, along spider lightning. Every stroke lights them
      * much the same: the channel lights its own stretch of cloud.
      *
-     * @param centres x, y, z of each, from where the strike starts
+     * @param centers x, y, z of each, from where the strike starts
      */
-    static CloudGlow around(float[] centres, float minRadius, float maxRadius, int strokes, float strength, IRandomizer random) {
-        int count = centres.length / 3;
+    static CloudGlow around(float[] centers, float minRadius, float maxRadius, int strokes, float strength, IRandomizer random) {
+        int count = centers.length / 3;
         var patches = new float[count * STRIDE];
         for (int p = 0; p < count; p++) {
-            patches[p * STRIDE] = centres[p * 3] + random.nextFloat(-8F, 8F);
-            patches[p * STRIDE + 1] = centres[p * 3 + 1];
-            patches[p * STRIDE + 2] = centres[p * 3 + 2] + random.nextFloat(-8F, 8F);
+            patches[p * STRIDE] = centers[p * 3] + random.nextFloat(-8F, 8F);
+            patches[p * STRIDE + 1] = centers[p * 3 + 1];
+            patches[p * STRIDE + 2] = centers[p * 3 + 2] + random.nextFloat(-8F, 8F);
             patches[p * STRIDE + 3] = random.nextFloat(minRadius, maxRadius);
         }
         var weights = new float[count * strokes];

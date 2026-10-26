@@ -8,7 +8,7 @@ import java.util.Arrays;
  * The columns around the camera, looked up once a tick: where precipitation stops, what falls, and how it is lit.
  * Drops read their column here, so the cost of the lookups follows the area covered rather than the number of drops.
  * <p>
- * Dust is the region's: the colour of the loose ground (sand, red sand) across the area, averaged, whatever the dust
+ * Dust is the region's: the color of the loose ground (sand, red sand) across the area, averaged, whatever the dust
  * is blowing over. Dust over grass or water is still the desert's sand.
  * <p>
  * Looking the columns up takes thousands of reads of the world (heights, biomes, temperatures, light), so it is done
@@ -201,14 +201,14 @@ final class PrecipitationColumns {
     }
 
     /**
-     * The colour of dust blown from a column's own ground, or {@link IColumnSource#NOT_A_DUST_SOURCE}
+     * The color of dust blown from a column's own ground, or {@link IColumnSource#NOT_A_DUST_SOURCE}
      */
     int dustColor(int index) {
         return this.dustColor[index];
     }
 
     /**
-     * The colour of the dust across the area, 0xRRGGBB, as of the last look; only meaningful when some of the area
+     * The color of the dust across the area, 0xRRGGBB, as of the last look; only meaningful when some of the area
      * has dust ({@link #dustShare()} above 0)
      */
     int regionalDustColor() {
@@ -216,7 +216,7 @@ final class PrecipitationColumns {
     }
 
     /**
-     * The colour a puff of dust takes where it rises: the region's, or, over a block dust is blown from, half the
+     * The color a puff of dust takes where it rises: the region's, or, over a block dust is blown from, half the
      * region's and half the block's own, so patches of red sand read a little redder close to without the dust looking
      * spotty
      */

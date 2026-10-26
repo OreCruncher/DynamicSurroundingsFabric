@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * Draws a {@link PrecipitationField}: rain as thin streaks along the way each drop falls, slanted by the wind and
  * turned toward the camera, snow as flakes facing it, turning slowly as they fall, and dust as large faint puffs the
- * colour of the ground it was blown from. The streaks are a plain colour that fades out toward their tail; the flakes
+ * color of the ground it was blown from. The streaks are a plain color that fades out toward their tail; the flakes
  * are cut from the game's own snow texture ({@link Snowflakes}), and the puffs are sprites from the particle atlas.
  * All are lit by the lightmap, like vanilla's weather. Also draws {@link DampSpots} and {@link SnowFlecks}, flat on
  * the ground. Positions are
@@ -74,7 +74,7 @@ final class PrecipitationRenderer {
     static final float STREAK_BEAD_ALPHA = 0.6F;
     static final float STREAK_TRAIL_WIDTH = 0.45F;
     static final float STREAK_TRAIL_ALPHA = 0.5F;
-    // A damp spot's colour where the ground can't be darkened, so it is laid over it instead
+    // A damp spot's color where the ground can't be darkened, so it is laid over it instead
     static final float DAMP_RED = 0.08F, DAMP_GREEN = 0.08F, DAMP_BLUE = 0.1F;
 
     private PrecipitationRenderer() {
@@ -92,7 +92,7 @@ final class PrecipitationRenderer {
      * @param dust       the dust sprites, from the particle atlas, which must be bound when drawing dust; each puff
      *                   keeps one
      * @param scales     how big rain and snow are drawn
-     * @param rainColor  the rain's colour
+     * @param rainColor  the rain's color
      * @return how many were drawn: those in front of the camera and not faded out
      */
     static int draw(PrecipitationField field, Tesselator tesselator, Camera camera, float partialTick, boolean dustOnly,
@@ -327,7 +327,7 @@ final class PrecipitationRenderer {
 
     /**
      * Builds the drops running down windows into a buffer and draws it with whatever shader is current, which should
-     * take {@link DefaultVertexFormat#PARTICLE}. Untextured, in the rain's colour: a bead, and above it the wet trail
+     * take {@link DefaultVertexFormat#PARTICLE}. Untextured, in the rain's color: a bead, and above it the wet trail
      * it has left, fading toward its top.
      */
     static void draw(WindowStreaks streaks, Tesselator tesselator, Camera camera, float partialTick, RainColor rainColor) {
@@ -375,7 +375,7 @@ final class PrecipitationRenderer {
     }
 
     /**
-     * Adds a corner of something lying on a face, a snow fleck or a drop on a window, offset from its centre by (u, v)
+     * Adds a corner of something lying on a face, a snow fleck or a drop on a window, offset from its center by (u, v)
      * in the plane of the face: x and z on the top of a block, z and y on a west or east side, x and y on a north or
      * south side
      */
@@ -391,8 +391,8 @@ final class PrecipitationRenderer {
      * Builds the damp spots into a buffer and draws it with whatever shader is current, which should take
      * {@link DefaultVertexFormat#POSITION_TEX_COLOR}.
      *
-     * @param darkening true when the blend darkens the ground by the spot's alpha, so its colour doesn't matter;
-     *                  false to lay a dark colour over the ground with an ordinary blend
+     * @param darkening true when the blend darkens the ground by the spot's alpha, so its color doesn't matter;
+     *                  false to lay a dark color over the ground with an ordinary blend
      */
     static void draw(DampSpots spots, Tesselator tesselator, Camera camera, float partialTick, TextureAtlasSprite sprite, boolean darkening) {
         if (spots.count == 0)

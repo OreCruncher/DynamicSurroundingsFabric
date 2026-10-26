@@ -43,13 +43,13 @@ public interface IColumnSource {
     int light(int x, int y, int z);
 
     /**
-     * The colour of the dust blown up from the block at the position, as 0xRRGGBB, or {@link #NOT_A_DUST_SOURCE} if
-     * dust isn't blown from it (grass, water, stone): only loose ground like sand gives the dust its colour
+     * The color of the dust blown up from the block at the position, as 0xRRGGBB, or {@link #NOT_A_DUST_SOURCE} if
+     * dust isn't blown from it (grass, water, stone): only loose ground like sand gives the dust its color
      */
     int dustColor(int x, int y, int z);
 
     /**
-     * The colour of the dust where none of the ground around gives it one, as 0xRRGGBB: what the biome at the
+     * The color of the dust where none of the ground around gives it one, as 0xRRGGBB: what the biome at the
      * position is known for, such as sand in a desert and red sand in badlands
      */
     int fallbackDustColor(int x, int y, int z);

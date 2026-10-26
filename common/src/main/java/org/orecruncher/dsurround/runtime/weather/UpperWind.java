@@ -34,6 +34,8 @@ public final class UpperWind {
      * How much faster or slower than the day's speed a minute's can be, as a share of it
      */
     static final float GUSTINESS = 0.25F;
+    // Going back at most this many minutes, the adding up is undone a minute at a time; further, it starts over
+    static final int MAX_STEP_BACK = 2;
     private static final long TICKS_PER_DAY = 24000L;
     private static final long HEADING_SALT = 0x75707065726A6964L;
     private static final long SPEED_SALT = 0x77696E6479646179L;
@@ -46,6 +48,8 @@ public final class UpperWind {
     // The wind at either end of a minute, kept to save making them each call (every frame)
     private final float[] from = new float[2];
     private final float[] to = new float[2];
+    // How many times the adding up has started from the beginning, for tests
+    private int starts;
 
     /**
      * How far the clouds have been carried by a time, in blocks east-west and north-south, as {x, z}
@@ -56,14 +60,25 @@ public final class UpperWind {
     public void drift(double gameTime, double[] out) {
         double time = Math.max(0D, gameTime);
         long at = (long) Math.floor(time / KNOT_TICKS);
-        if (this.knot < 0 || at < this.knot) {
-            // The first time, or time has gone back (another world): from the start
+        var from = this.from;
+        var to = this.to;
+        if (this.knot >= 0 && at < this.knot && this.knot - at <= MAX_STEP_BACK) {
+            // A step back, as the server's time sets the client's back a tick: the minutes since taken off again,
+            // rather than adding up from the start
+            while (this.knot > at) {
+                velocity(this.knot - 1, from);
+                velocity(this.knot, to);
+                this.sumX -= KNOT_TICKS * (from[0] + to[0]) * 0.5D;
+                this.sumZ -= KNOT_TICKS * (from[1] + to[1]) * 0.5D;
+                this.knot--;
+            }
+        } else if (this.knot < 0 || at < this.knot) {
+            // The first time, or time has gone well back (another world): from the start
             this.knot = 0;
             this.sumX = 0D;
             this.sumZ = 0D;
+            this.starts++;
         }
-        var from = this.from;
-        var to = this.to;
         if (this.knot < at) {
             velocity(this.knot, from);
             while (this.knot < at) {
@@ -82,6 +97,13 @@ public final class UpperWind {
         double share = along * along / (2D * KNOT_TICKS);
         out[0] = this.sumX + from[0] * along + (to[0] - from[0]) * share;
         out[1] = this.sumZ + from[1] * along + (to[1] - from[1]) * share;
+    }
+
+    /**
+     * How many times the adding up has started from the beginning
+     */
+    int starts() {
+        return this.starts;
     }
 
     /**

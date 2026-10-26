@@ -103,7 +103,7 @@ public final class BurningLight {
      * proportion to the size of their flames
      */
     static float radiusFor(float width) {
-        return ZOMBIE_RADIUS * BurningEffect.scaleFor(width) / BurningEffect.scaleFor(0.6F);
+        return ZOMBIE_RADIUS * BurningEffect.scaleFor(width) / BurningEffect.ZOMBIE_SCALE;
     }
 
     /**

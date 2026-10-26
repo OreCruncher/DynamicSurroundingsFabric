@@ -60,7 +60,7 @@ public final class PointLights {
      * fades in or out rather than switching.
      */
     static final int FADE_FROM = 48;
-    // A light this faint changes no pixel: under half a step of an 8 bit colour, at its brightest
+    // A light this faint changes no pixel: under half a step of an 8 bit color, at its brightest
     static final float MIN_STRENGTH = 0.5F / 255F;
 
     // Lights recorded longer ago than this weren't from the last frame (nothing lit was drawn since), so are dropped
@@ -171,8 +171,8 @@ public final class PointLights {
         RenderSystem.enableBlend();
         if (fabulous) {
             // Light is added to the particles' own target, which the transparency pass lays over the scene as
-            // behind * (1 - alpha) + colour: with the usual adding, the alpha piles up too and the lit ground is
-            // replaced by the light's colour, a flat white. The shader gives its light already scaled by its strength,
+            // behind * (1 - alpha) + color: with the usual adding, the alpha piles up too and the lit ground is
+            // replaced by the light's color, a flat white. The shader gives its light already scaled by its strength,
             // and next to no alpha (not none, or the pass skips the pixel), and both are simply added.
             RenderSystem.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE);
         } else {
@@ -197,7 +197,7 @@ public final class PointLights {
                 float y = (float) (lights[i + 1] - camera.y);
                 float z = (float) (lights[i + 2] - camera.z);
                 float r = lights[i + 3], g = lights[i + 4], b = lights[i + 5];
-                // All four at the centre; the vertex shader spreads them out. Each corner is given at the light's
+                // All four at the center; the vertex shader spreads them out. Each corner is given at the light's
                 // radius, which is how the shader knows it.
                 float radius = lights[i + 7];
                 builder.addVertex(x, y, z).setUv(-radius, -radius).setColor(r, g, b, a);

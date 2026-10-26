@@ -9,7 +9,7 @@ import org.orecruncher.dsurround.runtime.weather.Shelter;
 
 /**
  * A puff of dark mist where a mob's body vanishes, in place of vanilla's white poof. A {@link SoftPuffParticle}, as
- * steam is, with the mist's sprites, but dark grey and lit by the world: it drifts out from the body, slows, billows
+ * steam is, with the mist's sprites, but dark gray and lit by the world: it drifts out from the body, slows, billows
  * as it spreads, barely rises, and drifts with the wind out in the open.
  */
 public class DeathMist extends SoftPuffParticle {
@@ -18,7 +18,7 @@ public class DeathMist extends SoftPuffParticle {
     private static final float FADE_OUT = 0.6F;
     // Billows out: two and a half times its starting size by the end
     private static final float GROWTH = 1.5F;
-    // Dark grey, a little varied
+    // Dark gray, a little varied
     private static final float MIN_SHADE = 0.18F;
     private static final float SHADE_RANGE = 0.12F;
     private static final float MIN_ALPHA = 0.35F;

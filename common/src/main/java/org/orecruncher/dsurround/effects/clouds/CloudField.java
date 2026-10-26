@@ -119,7 +119,7 @@ public final class CloudField {
     // The tick of the last update, and of the one before
     private long tick;
     private long lastTick = Long.MIN_VALUE;
-    // Whether a cell has been worked out since it came into the grid; and its turn's hash, worked out as it came in
+    // Whether a cell has been worked out since it came into the grid
     private boolean[] known = new boolean[0];
     // Whether a cell was last worked out from an estimate of what the clouds are like over it
     private boolean[] estimated = new boolean[0];
@@ -128,6 +128,7 @@ public final class CloudField {
     private boolean[] dirty = new boolean[0];
     // Goes up when every cell is to be built again: the grid made anew, or cleared
     private int generation;
+    // Each cell's turn's hash (see turnOf), worked out as it came into the grid
     private int[] turnHash = new int[0];
     // Spares, for moving the grid's columns without making new arrays each time
     private int[] spare = new int[0];
@@ -438,9 +439,6 @@ public final class CloudField {
     }
 
     /**
-     * Goes up each time the clouds change
-     */
-    /**
      * Goes up when every cell is to be built again: the grid made anew, or cleared
      */
     public int generation() {
@@ -464,6 +462,9 @@ public final class CloudField {
         Arrays.fill(this.dirty, false);
     }
 
+    /**
+     * Goes up each time the clouds change
+     */
     public int version() {
         return this.version;
     }

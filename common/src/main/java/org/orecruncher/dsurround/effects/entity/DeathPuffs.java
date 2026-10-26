@@ -5,6 +5,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.effects.blocks.AbstractBlockEffect;
 import org.orecruncher.dsurround.effects.particles.DeathMist;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -32,7 +33,7 @@ public final class DeathPuffs {
     // Puff size for a body of this width: a zombie's (0.6) gets 1
     private static final float NORMAL_WIDTH = 0.6F;
     // How far from the camera vanilla shows particles; past it there is nothing to replace
-    private static final double PARTICLE_RANGE_SQ = 32D * 32D;
+    private static final double PARTICLE_RANGE_SQ = (double) AbstractBlockEffect.VANILLA_PARTICLE_RANGE * AbstractBlockEffect.VANILLA_PARTICLE_RANGE;
     // How fast puffs leave the body, in blocks a tick, and how much they rise
     private static final double BURST = 0.05D;
     private static final double RISE = 0.015D;

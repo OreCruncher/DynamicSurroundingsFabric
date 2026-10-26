@@ -19,6 +19,7 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.runtime.weather.Shelter;
 import org.orecruncher.dsurround.runtime.weather.WeatherSimulation;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
 
 /**
@@ -55,6 +56,9 @@ public final class Footprints {
     private final WeatherSimulation weather;
     private final ArrayDeque<Print> prints = new ArrayDeque<>();
     private int untilCheck = CHECK_INTERVAL;
+    // The level the prints are in: in another (a new dimension) they are dropped. Held weakly, so a world left isn't
+    // kept in memory.
+    private WeakReference<Level> level = new WeakReference<>(null);
 
     public Footprints(WeatherSimulation weather) {
         this.weather = weather;
@@ -123,6 +127,7 @@ public final class Footprints {
      */
     void add(Level level, double x, double y, double z, float yawDegrees, float scale, FootprintStyle style,
              boolean rightFoot, BlockPos ground, BlockState state) {
+        this.inLevel(level);
         if (this.prints.size() >= MAX)
             this.prints.pollFirst();
         // Where the print is: above a full block, in a snow layer
@@ -138,6 +143,7 @@ public final class Footprints {
      * Ages them a tick, dropping those worn away or whose ground has changed.
      */
     public void tick(Level level) {
+        this.inLevel(level);
         if (this.prints.isEmpty())
             return;
         float rain = this.weather.rainLevel(level.getRainLevel(1F));
@@ -150,6 +156,16 @@ public final class Footprints {
             print.age += agingRate(rain, print.washing);
             if (print.age >= print.life || check && !groundHolds(level, print))
                 it.remove();
+        }
+    }
+
+    /**
+     * Drops the prints left in another level than this one
+     */
+    private void inLevel(Level level) {
+        if (this.level.get() != level) {
+            this.prints.clear();
+            this.level = new WeakReference<>(level);
         }
     }
 
