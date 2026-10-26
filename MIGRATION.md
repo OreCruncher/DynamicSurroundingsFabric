@@ -42,6 +42,10 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Fifteenth 0.4.8 merge (through `26ca52c`)
+
+Changelog lines only (the precipitation thread, what recordings now hold, the AI disclosure), merged as is.
+
 ### Fourteenth 0.4.8 merge (through `f661f21`)
 
 The jump sound, back from 1.12.2 (`PlayerJumpEffect`, Jump Sound in Entity Effects, off by default). Merged without
