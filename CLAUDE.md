@@ -85,6 +85,9 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   - The particles target's depth is the scene's from before water; the translucent target's has the water's surface.
     Soft particles fade against the translucent depth and write it (`soft_particle_scene_depth`, Fabulous only: a
     shader that writes depth loses early depth testing) so water isn't laid over them.
+  - Check the target before drawing on one vanilla bound: another mod can leave the main target bound (seen for the
+    weather in a large pack; rain then cut the water out). `effects/TargetCheck` (`ensureWeather`, `ensureParticles`)
+    rebinds it and logs once per place; `ParticleBatchGuard` covers the frame buffer within vanilla's particle sheets.
   - Blend alpha as "over" (`ONE, ONE_MINUS_SRC_ALPHA`), not the default's `ONE, ZERO`, or piled-up colour outgrows its
     alpha; additive light needs colour already scaled and a tiny non-zero alpha (`PointLights`).
 - Enhanced sounds: a `SourceContext` per playing source, built from an `ISoundEmitter` (a game sound's

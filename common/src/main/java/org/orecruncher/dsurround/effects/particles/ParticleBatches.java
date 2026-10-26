@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.effects.particles;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -12,6 +13,7 @@ import net.minecraft.client.renderer.ShaderInstance;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
+import org.lwjgl.opengl.GL30;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 
 import java.util.Set;
@@ -93,10 +95,10 @@ public final class ParticleBatches {
     private static final class OpenGl implements ParticleBatchGuard.Gl {
 
         @Override
-        public ParticleBatchGuard.State read(boolean withBlend) {
+        public ParticleBatchGuard.State read(boolean full) {
             var shader = RenderSystem.getShader();
             int texture = RenderSystem.getShaderTexture(0);
-            if (!withBlend)
+            if (!full)
                 return new ParticleBatchGuard.State(shader, texture, false, 0, 0, 0, 0);
             // The GL's own state, not what Minecraft's state cache believes: a mod may set it straight through the GL
             return new ParticleBatchGuard.State(shader, texture,
@@ -104,7 +106,8 @@ public final class ParticleBatches {
                     GL11.glGetInteger(GL14.GL_BLEND_SRC_RGB),
                     GL11.glGetInteger(GL14.GL_BLEND_DST_RGB),
                     GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA),
-                    GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA));
+                    GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA),
+                    GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING));
         }
 
         @Override
@@ -124,6 +127,8 @@ public final class ParticleBatches {
             else
                 GL11.glDisable(GL11.GL_BLEND);
             GL14.glBlendFuncSeparate(state.srcRgb(), state.dstRgb(), state.srcAlpha(), state.dstAlpha());
+            // The batch's target: the particles' with Fabulous graphics. Minecraft keeps no cache of it to agree with.
+            GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, state.framebuffer());
         }
     }
 }

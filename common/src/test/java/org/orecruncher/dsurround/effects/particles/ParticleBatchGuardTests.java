@@ -30,9 +30,9 @@ public class ParticleBatchGuardTests {
         int restores;
 
         @Override
-        public State read(boolean withBlend) {
+        public State read(boolean full) {
             this.reads++;
-            if (withBlend) {
+            if (full) {
                 this.blendReads++;
                 return this.state;
             }
@@ -97,6 +97,23 @@ public class ParticleBatchGuardTests {
         var otherShader = new State(OTHER_SHADER, 7, true, SRC_ALPHA, ONE_MINUS_SRC_ALPHA, ONE, ONE_MINUS_SRC_ALPHA);
         assertEquals(SHEET, this.batch(true, new Object[]{new Rogue()}, otherShader));
         assertEquals(2, this.guard.repairs());
+    }
+
+    @Test
+    void anotherFrameBufferIsPutBackAndItsParticleNamed() {
+        // A particle that binds a frame buffer of its own: the rest of the batch would be drawn there
+        var otherTarget = new State(PARTICLE_SHADER, 7, true, SRC_ALPHA, ONE_MINUS_SRC_ALPHA, ONE, ONE_MINUS_SRC_ALPHA, 5);
+        assertEquals(SHEET, this.batch(true, new Object[]{new Smoke(), new Rogue()}, otherTarget));
+        assertEquals(1, this.guard.repairs());
+        assertTrue(this.warnings.getFirst().contains("frame buffer"), this.warnings.getFirst());
+        // Then caught as it binds it, and named
+        assertEquals(SHEET, this.batch(true, new Object[]{new Rogue(), new Smoke()}, otherTarget));
+        assertTrue(this.warnings.stream().anyMatch(w -> w.contains(Rogue.class.getName()) && w.contains("frame buffer")),
+                String.join("\n", this.warnings));
+        // From then on drawn on its own
+        this.guard.begun("PARTICLE_SHEET_TRANSLUCENT", true);
+        assertTrue(this.guard.isolates(new Rogue()));
+        assertFalse(this.guard.isolates(new Smoke()));
     }
 
     @Test
@@ -174,5 +191,7 @@ public class ParticleBatchGuardTests {
         assertEquals("texture", ParticleBatchGuard.describe(ParticleBatchGuard.TEXTURE));
         assertEquals("shader and texture and blend", ParticleBatchGuard.describe(
                 ParticleBatchGuard.SHADER | ParticleBatchGuard.TEXTURE | ParticleBatchGuard.BLEND));
+        assertEquals("blend and frame buffer", ParticleBatchGuard.describe(
+                ParticleBatchGuard.BLEND | ParticleBatchGuard.FRAMEBUFFER));
     }
 }

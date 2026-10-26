@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ShaderInstance;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.effects.ModShader;
+import org.orecruncher.dsurround.effects.TargetCheck;
 import org.orecruncher.dsurround.lib.Library;
 
 import java.lang.reflect.Method;
@@ -62,7 +63,7 @@ public final class SoftParticles {
 
         // On a failure the vanilla particle shader is still current, so the particles are drawn the vanilla way
         return shader.run(() -> {
-            bindSceneDepth(current);
+            bindSceneDepth(current, "soft particles");
             // The shader is shared by every soft render type, so each sets its own fade distance
             current.safeGetUniform("SoftDistance").set(softDistance);
             RenderSystem.setShader(shader.supplier());
@@ -71,9 +72,14 @@ public final class SoftParticles {
 
     /**
      * Copies the scene's depth as it is now, and gives the copy to {@code target} as its DepthSampler, for a shader
-     * drawing particles that needs to know what is behind them.
+     * drawing particles that needs to know what is behind them. Copying leaves no target bound, so the particles' is
+     * bound again after; it is checked before, so another mod's leaving the wrong one bound is reported, not hidden
+     * (see {@link TargetCheck}).
+     *
+     * @param where what is about to be drawn, for the log
      */
-    public static void bindSceneDepth(ShaderInstance target) {
+    public static void bindSceneDepth(ShaderInstance target, String where) {
+        TargetCheck.ensureParticles(where);
         bindSceneDepth(target, sceneDepthTarget(), particleTarget());
     }
 

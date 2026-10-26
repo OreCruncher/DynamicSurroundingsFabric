@@ -9,7 +9,9 @@ import java.util.function.Consumer;
  * Keeps a batch of particles drawing with the state its render type set up. Particles of one render type are added to
  * one batch, each in its own {@code render()}, and drawn together at the end with whatever state is current then. A
  * particle that changes the shader, the texture or the blend in its {@code render()} (some mods' do) gets every
- * particle in the batch drawn that way: Minecraft's campfire smoke and the mod's foam come out as white squares.
+ * particle in the batch drawn that way: Minecraft's campfire smoke and the mod's foam come out as white squares. One
+ * that binds another frame buffer gets them drawn there, with Fabulous graphics outside the particles' target, where
+ * they hide the water behind them.
  * <p>
  * So the state is noted once the batch has begun, and checked before it is drawn: if it changed, it is put back, and
  * the log says so once. From then on, for a while, it is checked after each particle too, to name the particle (and so
@@ -21,6 +23,7 @@ public final class ParticleBatchGuard {
     static final int SHADER = 1;
     static final int TEXTURE = 2;
     static final int BLEND = 4;
+    static final int FRAMEBUFFER = 8;
 
     /**
      * How many batches, after the first that was found changed, each particle is checked for: a few seconds' worth.
@@ -34,12 +37,23 @@ public final class ParticleBatchGuard {
      *
      * @param shader  the shader, compared by identity
      * @param texture the texture the shader samples
-     * @param blend   whether blending is on, and its factors
+     * @param blend       whether blending is on, and its factors
+     * @param framebuffer the frame buffer bound for drawing: the particles' target with Fabulous graphics, else the
+     *                    main target's
      */
-    record State(Object shader, int texture, boolean blend, int srcRgb, int dstRgb, int srcAlpha, int dstAlpha) {
+    record State(Object shader, int texture, boolean blend, int srcRgb, int dstRgb, int srcAlpha, int dstAlpha,
+                 int framebuffer) {
 
         /**
-         * What differs from {@code other}, as {@link #SHADER}, {@link #TEXTURE} and {@link #BLEND} bits
+         * A state with no frame buffer read, as when only the shader and texture are
+         */
+        State(Object shader, int texture, boolean blend, int srcRgb, int dstRgb, int srcAlpha, int dstAlpha) {
+            this(shader, texture, blend, srcRgb, dstRgb, srcAlpha, dstAlpha, 0);
+        }
+
+        /**
+         * What differs from {@code other}, as {@link #SHADER}, {@link #TEXTURE}, {@link #BLEND} and
+         * {@link #FRAMEBUFFER} bits
          */
         int differences(State other) {
             int changed = 0;
@@ -50,6 +64,8 @@ public final class ParticleBatchGuard {
             if (this.blend != other.blend || this.srcRgb != other.srcRgb || this.dstRgb != other.dstRgb
                     || this.srcAlpha != other.srcAlpha || this.dstAlpha != other.dstAlpha)
                 changed |= BLEND;
+            if (this.framebuffer != other.framebuffer)
+                changed |= FRAMEBUFFER;
             return changed;
         }
     }
@@ -61,9 +77,10 @@ public final class ParticleBatchGuard {
         /**
          * The current state
          *
-         * @param withBlend whether to read the blend, which costs more than the rest; if not, it reads as off
+         * @param full whether to read the blend and the frame buffer, which cost more than the rest; if not, they read
+         *             as off and 0
          */
-        State read(boolean withBlend);
+        State read(boolean full);
 
         void restore(State state);
     }
@@ -110,7 +127,7 @@ public final class ParticleBatchGuard {
     void rendered(Object particle) {
         if (!this.guarding || this.lookFor == 0)
             return;
-        int changed = this.expected.differences(this.gl.read((this.lookFor & BLEND) != 0)) & this.lookFor;
+        int changed = this.expected.differences(this.gl.read((this.lookFor & (BLEND | FRAMEBUFFER)) != 0)) & this.lookFor;
         if (changed == 0)
             return;
         if (this.culprits.add(particle.getClass()))
@@ -154,7 +171,7 @@ public final class ParticleBatchGuard {
         this.gl.restore(this.expected);
         if (!this.warned) {
             this.warned = true;
-            this.warn.accept("Minecraft's %s particles were about to be drawn with the %s another mod's particle changed, which draws them as squares; Dynamic Surroundings put it back, and is looking for the particle responsible"
+            this.warn.accept("Minecraft's %s particles were about to be drawn with the %s another mod's particle changed, which draws them wrong (as squares, or to the wrong target); Dynamic Surroundings put it back, and is looking for the particle responsible"
                     .formatted(this.batch, describe(changed)));
         }
         // Look for whoever is responsible, once, for a while
@@ -181,13 +198,15 @@ public final class ParticleBatchGuard {
     }
 
     static String describe(int changed) {
-        var parts = new ArrayList<String>(3);
+        var parts = new ArrayList<String>(4);
         if ((changed & SHADER) != 0)
             parts.add("shader");
         if ((changed & TEXTURE) != 0)
             parts.add("texture");
         if ((changed & BLEND) != 0)
             parts.add("blend");
+        if ((changed & FRAMEBUFFER) != 0)
+            parts.add("frame buffer");
         return String.join(" and ", parts);
     }
 }

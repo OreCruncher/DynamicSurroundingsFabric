@@ -160,7 +160,7 @@ public final class PointLights {
     }
 
     private static void drawLights(Tesselator tesselator, ShaderInstance current, int n) {
-        SoftParticles.bindSceneDepth(current);
+        SoftParticles.bindSceneDepth(current, "point lights");
         current.safeGetUniform("InverseProjMat").set(RenderSystem.getProjectionMatrix().invert(new Matrix4f()));
         boolean fabulous = Minecraft.useShaderTransparency();
         current.safeGetUniform("AddOnly").set(fabulous ? 1F : 0F);

@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.NoiseTexture;
 import org.orecruncher.dsurround.effects.RenderTimer;
+import org.orecruncher.dsurround.effects.TargetCheck;
 import org.orecruncher.dsurround.lib.Library;
 
 import java.util.List;
@@ -103,6 +104,8 @@ public final class LightningRenderer {
     private static int drawStrikes(ShaderInstance shader, Tesselator tesselator, List<Strike> strikes, Camera camera,
                                    double nowTicks, float fogEnd, boolean drawGlow) {
         boolean fabulous = Minecraft.useShaderTransparency();
+        // Drawn on what is bound after the weather (and the mist), which another mod may have changed
+        TargetCheck.ensureWeather("the lightning");
         shader.safeGetUniform("AddOnly").set(fabulous ? 1F : 0F);
         if (noise == null)
             noise = NoiseTexture.create(NOISE_SIZE, 0x6C69676EL);
