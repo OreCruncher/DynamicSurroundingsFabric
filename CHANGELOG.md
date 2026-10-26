@@ -108,6 +108,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 **Fixes**
 * Particle rain and snow fell through blocks from other mods whose shape depends on the world, such as Mekanism's energy cube (Minecraft's own rain does too: such blocks are left out of the height map it stops at); they now stop on top of them
 * Minecraft's particles (such as campfire smoke) and the mod's waterfall foam could draw as white squares when another mod's particle changed the drawing state while particles were being drawn; the state is now put back before they are drawn, the log names the particle responsible once, and that particle is drawn on its own from then on so it looks right too (seen with the Rainbows mod); Repair Particle Batches, in a new Guards section of Diagnostic Options, turns this off
+* With Fabulous graphics in some modpacks, rain drops cut the water out where they crossed it, showing the bottom through each drop; another mod left the wrong render target in place for the weather. The weather's target is now put back when it is found replaced, and the log says once what was there instead
 * Frost breath on a dark night with Astral Sorcery showed the blocks behind it through the dark; breath is now drawn soft, as mist is, and fades where it meets blocks
 
 > ### DynamicSurroundings-1.21.1-0.4.7

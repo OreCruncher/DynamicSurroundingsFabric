@@ -42,6 +42,15 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Eleventh 0.4.8 merge (through `0bff3d9`)
+
+Compiles on common, Fabric and NeoForge. Two conflicts, no new rename rules. **The weather target check is not on
+26.2**: on 1.21.1 another mod in a large pack (Veil, Sable, Flywheel among its renderers) left the main target bound
+for the weather pass under Fabulous, so rain hid the water behind each drop, and `WeatherTargetCheck` binds the
+weather's target back and logs what was there. 26.2 draws the weather through `OutputTarget.WEATHER_TARGET`, with no
+bound frame buffer for another mod to leave behind, so `WeatherTargetCheck`, its test and its two calls
+(`MixinLevelRenderer`, `PrecipitationHandler`) were left out. The changelog line merged as is.
+
 ### Tenth 0.4.8 merge (through `c47383f`)
 
 Compiles on common, Fabric and NeoForge. One conflict, no new rename rules: frost breath drawn soft, so it writes no
