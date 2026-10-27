@@ -31,8 +31,11 @@ public final class ParticleUtils {
         return eyePosition.add(look.scale(entity.isBaby() ? 0.25D : 0.5D));
     }
 
+    /**
+     * The way the entity's head faces, give or take. The head's, not the body's: a mob's body yaw lags its head.
+     */
     public static Vec3 getLookTrajectory(final LivingEntity entity) {
-        return entity.getLookAngle()
+        return entity.getViewVector(1F)
                 .zRot(RANDOM.nextFloat() * 2F)   // yaw
                 .yRot(RANDOM.nextFloat() * 2F)   // pitch
                 .normalize();

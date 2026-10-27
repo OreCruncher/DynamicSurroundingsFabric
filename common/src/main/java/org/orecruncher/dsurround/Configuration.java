@@ -369,6 +369,10 @@ public class Configuration extends ConfigurationData {
         public boolean enableBreathEffect = true;
 
         @Property
+        @Comment("Enable/disable breath from animals (cows, sheep, horses, wolves...) near you, along with the breath effect")
+        public boolean enableAnimalBreath = true;
+
+        @Property
         @Comment("Enable/disable player toolbar sound effects")
         public boolean enablePlayerToolbarEffect = true;
 

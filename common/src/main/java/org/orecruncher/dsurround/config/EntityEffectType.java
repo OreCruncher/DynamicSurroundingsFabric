@@ -22,6 +22,7 @@ public enum EntityEffectType {
     UNKNOWN("unknown", entity -> null),
     BOW_PULL("bow_pull", entity -> getInstance(BowUseEffect.class)),
     FROST_BREATH("frost_breath", entity -> getInstance(BreathEffect.class)),
+    ANIMAL_BREATH("animal_breath", entity -> getInstance(AnimalBreathEffect.class)),
     PLAYER_TOOLBAR("player_toolbar", entity -> getInstance(ToolbarEffect.class)),
     PLAYER_JUMP("player_jump", entity -> getInstance(PlayerJumpEffect.class)),
     ITEM_SWING("item_swing", entity -> getInstance(ItemSwingEffect.class)),
@@ -74,6 +75,7 @@ public enum EntityEffectType {
         UNKNOWN.setConfigProvider(() -> false);
         BOW_PULL.setConfigProvider(() -> config.enableBowPull);
         FROST_BREATH.setConfigProvider(() -> config.enableBreathEffect);
+        ANIMAL_BREATH.setConfigProvider(() -> config.enableBreathEffect && config.enableAnimalBreath);
         PLAYER_TOOLBAR.setConfigProvider(() -> config.enablePlayerToolbarEffect);
         PLAYER_JUMP.setConfigProvider(() -> config.enableJumpSound);
         ITEM_SWING.setConfigProvider(() -> config.enableSwingEffect);

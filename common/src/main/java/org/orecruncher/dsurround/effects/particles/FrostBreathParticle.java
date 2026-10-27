@@ -26,51 +26,53 @@ public class FrostBreathParticle extends TextureSheetParticle {
 
     private final SpriteSet spriteProvider;
 
-    public static Particle create(LivingEntity entity) {
+    /**
+     * A puff breathed out at the origin, along the trajectory.
+     *
+     * @param size  the puff's size: a quarter of a cloud for a grown player
+     * @param speed how fast it leaves the mouth, in blocks a tick; drag stops it about 25 times that far out
+     */
+    public static Particle create(LivingEntity entity, Vec3 origin, Vec3 trajectory, float size, double speed) {
         SpriteSet spriteProvider = ParticleUtils.getSpriteProvider(ParticleTypes.CLOUD);
         if (spriteProvider != null) {
-            return new FrostBreathParticle(entity, spriteProvider);
+            return new FrostBreathParticle(entity, origin, trajectory, size, speed, spriteProvider);
         }
 
         // Fallback to a vanilla cloud if the custom particle constructor cannot safely obtain sprites.
-        final Vec3 origin = ParticleUtils.getBreathOrigin(entity);
-        final Vec3 trajectory = ParticleUtils.getLookTrajectory(entity);
         return ParticleUtils.createParticle(
                 ParticleTypes.CLOUD,
                 origin.x,
                 origin.y,
                 origin.z,
-                trajectory.x * 0.01D,
-                trajectory.y * 0.01D,
-                trajectory.z * 0.01D
+                trajectory.x * speed,
+                trajectory.y * speed,
+                trajectory.z * speed
         );
     }
 
-    private FrostBreathParticle(LivingEntity entity, SpriteSet spriteProvider) {
+    private FrostBreathParticle(LivingEntity entity, Vec3 origin, Vec3 trajectory, float size, double speed, SpriteSet spriteProvider) {
         super((ClientLevel) entity.level(), 0, 0, 0, 0.0, 0.0, 0.0);
         
         final IRandomizer rand = Randomizer.current();
 
         // Reuse the cloud sheet
         this.spriteProvider = spriteProvider;
-        final Vec3 origin = ParticleUtils.getBreathOrigin(entity);
-        final Vec3 trajectory = ParticleUtils.getLookTrajectory(entity);
 
         this.setPos(origin.x, origin.y, origin.z);
         this.xo = origin.x;
         this.yo = origin.y;
         this.zo = origin.z;
 
-        this.xd = trajectory.x * 0.01D;
-        this.yd = trajectory.y * 0.01D;
-        this.zd = trajectory.z * 0.01D;
+        this.xd = trajectory.x * speed;
+        this.yd = trajectory.y * speed;
+        this.zd = trajectory.z * speed;
 
         this.setAlpha(0.2F);
         float f1 = 1.0F - (float) (rand.nextDouble() * (double) 0.3F);
         this.rCol = f1;
         this.gCol = f1;
         this.bCol = f1;
-        this.quadSize *= 1.875F * (entity.isBaby() ? 0.125F : 0.25F);
+        this.quadSize *= 1.875F * size;
         int i = (int) (8.0D / (rand.nextDouble() * 0.8D + 0.3D));
         this.lifetime = (int) Math.max((float) i * 2.5F, 1.0F);
         this.hasPhysics = false;
