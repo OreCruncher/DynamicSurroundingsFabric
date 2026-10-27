@@ -58,6 +58,7 @@ public abstract class MixinParticleEngine {
                 listBuilder.add(DSurroundParticleRenderType.PARTICLE_SHEET_MIST);
                 listBuilder.add(DSurroundParticleRenderType.PARTICLE_SHEET_FIREFLY);
                 listBuilder.add(DSurroundParticleRenderType.PARTICLE_SHEET_FLAME);
+                listBuilder.add(DSurroundParticleRenderType.PARTICLE_SHEET_EYE_FLAME);
             }
             listBuilder.add(entry);
         }

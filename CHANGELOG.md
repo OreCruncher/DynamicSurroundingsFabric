@@ -26,6 +26,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Built the dynamic clouds, their fading and sharing between players, and lightning lighting them; reviewed their performance profiles
 * Measured the tick handlers in recordings, moved the precipitation's work to its own thread, and ported the jump sound from 1.12.2
 * Placed animals' breath at their mouths from Minecraft's mob models
+* Placed the flames in skulls' eyes from Minecraft's skull model and textures
 
 **What's New**
 * Burning mobs are wreathed in flames like a flame jet's (tongues of flame, sparks, and smoke) in place of Minecraft's flat fire sheets
@@ -58,6 +59,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Bigger animals breathe bigger puffs; a sheep eating grass, a goat about to ram, a rearing horse, or a sleeping fox holds its breath until it's done
   * Within 16 blocks of you; Animal Breath option in Entity Effects, along with Breath Particle Effect; mobs tagged `dsurround:effects/animal_breath` breathe this way
   * Villagers', illagers', and players' breath now follows where their head faces
+* Skeleton skulls placed in the world burn with little flickering flames in their eyes, and wither skeleton skulls with blue soul fire
+  * The flames light the floor and wall around the skull (Flame jet light in Flame Jet Options turns it off)
+  * Skull Flames option in Block Effect Options; the block tags `dsurround:effects/skull_flames` and `dsurround:effects/soul_skull_flames` set which skulls burn
 * In a dust storm the glow of sunrise and sunset turns dusty and dims, as the sky and fog already do
 * Rain, snow, and dust blown in under an overhang drift a little way in out of the wind and fade, instead of stopping at the roof's edge; snowflakes that reach the ground under the overhang lie there, and rain splashes on a porch floor
 * Lightning that branches and forks, in place of Minecraft's bolts
