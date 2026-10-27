@@ -1,8 +1,10 @@
 package org.orecruncher.dsurround.profiling;
 
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -31,6 +33,8 @@ public final class ProfileFiles {
     private static final String PREFIX = "dsurround-";
     private static final String EXTENSION = ".jfr";
     private static final String ZIPPED = ".zip";
+    // A recording's summary, in its zip
+    private static final String SUMMARY = ".txt";
     // A recording as it is first written, before what is private is taken out of it (see ProfileRecording), and a zip
     // as it is written
     static final String UNFINISHED = ".part";
@@ -47,12 +51,15 @@ public final class ProfileFiles {
     }
 
     /**
-     * Zips a finished recording into a zip of the same name beside it, and deletes the recording. The zip is written
-     * under another name first, so a game stopped while writing it leaves no zip that looks finished.
+     * Zips a finished recording into a zip of the same name beside it, with its summary if there is one, and deletes
+     * the recording. The zip is written under another name first, so a game stopped while writing it leaves no zip that
+     * looks finished.
      *
+     * @param summary the recording's summary (see ProfileSummary), written in the zip as a text file of the same name;
+     *                null for none
      * @return the zip
      */
-    public static Path zip(Path recording) throws IOException {
+    public static Path zip(Path recording, @Nullable String summary) throws IOException {
         var name = recording.getFileName().toString();
         var stem = name.endsWith(EXTENSION) ? name.substring(0, name.length() - EXTENSION.length()) : name;
         var zip = recording.resolveSibling(stem + ZIPPED);
@@ -64,6 +71,13 @@ public final class ProfileFiles {
                 out.putNextEntry(entry);
                 Files.copy(recording, out);
                 out.closeEntry();
+                if (summary != null) {
+                    var text = new ZipEntry(stem + SUMMARY);
+                    text.setLastModifiedTime(Files.getLastModifiedTime(recording));
+                    out.putNextEntry(text);
+                    out.write(summary.getBytes(StandardCharsets.UTF_8));
+                    out.closeEntry();
+                }
             }
             Files.move(unfinished, zip, StandardCopyOption.REPLACE_EXISTING);
         } finally {

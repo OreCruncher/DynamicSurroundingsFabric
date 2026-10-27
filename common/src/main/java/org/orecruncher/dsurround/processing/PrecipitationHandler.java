@@ -26,6 +26,7 @@ import org.orecruncher.dsurround.effects.particles.DSurroundParticleSprites;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
 import org.orecruncher.dsurround.effects.precipitation.AfterRainDrips;
 import org.orecruncher.dsurround.effects.precipitation.DampSpots;
+import org.orecruncher.dsurround.effects.precipitation.DropMeshes;
 import org.orecruncher.dsurround.effects.precipitation.DropScales;
 import org.orecruncher.dsurround.effects.precipitation.IColumnSource;
 import org.orecruncher.dsurround.effects.precipitation.Landings;
@@ -115,6 +116,9 @@ public class PrecipitationHandler extends AbstractClientHandler {
     // The drops' ticks run here, while frames are drawn: started each tick and finished at the next (see
     // PrecipitationField.start); one thread, so a step never overlaps the next, and only it uses its random numbers
     private final Executor stepper = Executors.newSingleThreadExecutor(Worker.threadFactory("Precipitation"));
+    // The frame's rain, snow and dust, built on the same thread as the level starts to be drawn: after the tick's step,
+    // which is short, and never at once with it
+    private final DropMeshes meshes = new DropMeshes();
     private final IRandomizer stepRandom = Randomizer.create(System.nanoTime());
 
     public PrecipitationHandler(IWeatherSimulation weatherSimulation, WindService windService, ISoundLibrary soundLibrary, IDimensionInformation dimensionInformation, ISeasonalInformation seasonalInformation,
@@ -154,6 +158,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
 
     @Override
     public void process(final Player player) {
+        // The drops drawn change below: nothing may still be building from them
+        this.meshes.discard();
         var active = this.isActive();
         if (!active) {
             this.field.clear();
@@ -211,6 +217,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
 
     @Override
     public void onDisconnect() {
+        this.meshes.discard();
         this.field.clear();
         this.dampSpots.clear();
         this.snowFlecks.clear();
@@ -255,6 +262,25 @@ public class PrecipitationHandler extends AbstractClientHandler {
             case DECREASED -> density / 2F;
             case MINIMAL -> density / 4F;
         };
+    }
+
+    /**
+     * Starts building the frame's drops on the drops' thread, as the level starts to be drawn: the camera is set for
+     * the frame by then, and the terrain is drawn while they are built (see {@link DropMeshes})
+     */
+    public void beginFrame(Camera camera, float partialTick) {
+        if (!this.isActive() || this.field.count() == 0) {
+            this.meshes.discard();
+            return;
+        }
+        var options = this.config.weatherOptions;
+        this.meshes.begin(this.field, camera, partialTick, this.snowflakes.flakes(GameUtils.getResourceManager()),
+                this.snowflakes.largest(), DSurroundParticleSprites.DUST.sprites(), scales(options), RainColor.ofTint(options.rainTint),
+                this.stepper);
+    }
+
+    private static DropScales scales(Configuration.WeatherOptions options) {
+        return new DropScales(options.rainDropScale / 100F, options.snowflakeScale / 100F);
     }
 
     /**
@@ -323,7 +349,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
         var largest = this.snowflakes.largest();
         var dust = DSurroundParticleSprites.DUST.sprites();
         var options = this.config.weatherOptions;
-        var scales = new DropScales(options.rainDropScale / 100F, options.snowflakeScale / 100F);
+        var scales = scales(options);
         var rainColor = RainColor.ofTint(options.rainTint);
         // As vanilla's weather: depth is written only with Fabulous graphics, which draws weather to its own target
         boolean fabulous = Minecraft.useShaderTransparency();
@@ -336,7 +362,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
         // The rain is untextured; the snow is cut from the game's snow texture
         RenderSystem.setShaderTexture(0, Snowflakes.TEXTURE);
         shader.safeGetUniform("SoftDistance").set(0F);
-        this.dropsDrawn += this.field.draw(tesselator, camera, partialTick, false, flakes, largest, dust, scales, rainColor);
+        this.dropsDrawn += this.meshes.draw(this.field, tesselator, camera, partialTick, false, flakes, largest, dust, scales, rainColor);
         this.snowFlecks.draw(tesselator, camera, partialTick, flakes, largest, scales.snow());
         this.windowStreaks.draw(tesselator, camera, partialTick, rainColor);
 
@@ -353,7 +379,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
         // The scene's depth, water included: the weather's own target has none with Fabulous graphics
         SoftParticles.bindSceneDepth(shader, SoftParticles.sceneDepthTarget(), weatherTarget());
         shader.safeGetUniform("SoftDistance").set(DUST_SOFT_DISTANCE);
-        this.dropsDrawn += this.field.draw(tesselator, camera, partialTick, true, flakes, largest, dust, scales, rainColor);
+        this.dropsDrawn += this.meshes.draw(this.field, tesselator, camera, partialTick, true, flakes, largest, dust, scales, rainColor);
     }
 
     /**
@@ -406,6 +432,10 @@ public class PrecipitationHandler extends AbstractClientHandler {
             text = "Precipitation: %d/%d drops (%d dust), %d damp spots, %d snow flecks, %d window streaks, range %d".formatted(this.field.count(),
                     this.field.capacity(), this.field.dustCount(), this.dampSpots.count(), this.snowFlecks.count(), this.windowStreaks.count(),
                     this.field.radius());
+        // How much of the drawing used drops built ahead, since the diagnostics last asked
+        float ahead = this.meshes.aheadShare();
+        if (!Float.isNaN(ahead))
+            text += String.format(Locale.ROOT, ", built ahead %.0f%%", ahead * 100F);
         if (this.config.weatherOptions.enableAfterRainDrips && this.drips.strength() > 0F)
             text += String.format(Locale.ROOT, ", drips %.2f", this.drips.strength());
         event.add(CollectDiagnosticsEvent.Section.Systems, text);

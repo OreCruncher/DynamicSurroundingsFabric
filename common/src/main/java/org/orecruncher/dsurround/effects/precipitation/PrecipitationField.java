@@ -2,13 +2,9 @@ package org.orecruncher.dsurround.effects.precipitation;
 
 import org.orecruncher.dsurround.runtime.weather.Wind;
 
-import com.mojang.blaze3d.vertex.Tesselator;
-import net.minecraft.client.Camera;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
@@ -843,22 +839,6 @@ public final class PrecipitationField {
         int last = --d.count;
         if (i != last)
             d.copyTo(last, d, i);
-    }
-
-    /**
-     * Draws the drops with the current shader, which should be {@link PrecipitationShaders#DROPS}, and the particle
-     * atlas bound. Render thread only.
-     *
-     * @param dustOnly   true to draw just the dust, false to draw just the rain and snow
-     * @param snowflakes the flakes of the snow texture to choose from, or none to draw plain flakes
-     * @param largest    the largest of them, in pixels
-     * @param dust       the dust sprites to choose from
-     * @param scales     how big rain and snow are drawn, from the player's settings
-     * @return how many were drawn
-     */
-    public int draw(Tesselator tesselator, Camera camera, float partialTick, boolean dustOnly, List<Snowflakes.Flake> snowflakes,
-                    int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
-        return PrecipitationRenderer.draw(this, tesselator, camera, partialTick, dustOnly, snowflakes, largest, dust, scales, rainColor);
     }
 
     /**

@@ -60,7 +60,11 @@ public enum OptionalHook {
             site("core.MixinParticleEngine", "dsurround$batchBegun", "dsurround$batchBegunNeoForge"),
             site("core.MixinParticleEngine", "dsurround$batchDrawn", "dsurround$batchDrawnNeoForge")),
     PARTICLE_BATCH_CULPRIT("Naming the particle that draws others wrong",
-            site("core.MixinParticleEngine", "dsurround$particleRendered", "dsurround$particleRenderedNeoForge"));
+            site("core.MixinParticleEngine", "dsurround$particleRendered", "dsurround$particleRenderedNeoForge")),
+    PRECIPITATION_AHEAD("Building rain and snow while the world is drawn",
+            site("core.MixinLevelRenderer", "dsurround$beginLevel")),
+    FRAME_TIMES("Frame times in profile recordings",
+            site("core.MixinMinecraftClient", "dsurround$timeFrame"));
 
     /**
      * Whether a hook applied

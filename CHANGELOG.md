@@ -27,6 +27,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Measured the tick handlers in recordings, moved the precipitation's work to its own thread, and ported the jump sound from 1.12.2
 * Placed animals' breath at their mouths from Minecraft's mob models
 * Placed the flames in skulls' eyes from Minecraft's skull model and textures
+* Measured the mod's cost on a stand-in for a low-end PC, moved the building of rain and snow for each frame off the render thread, and wrote the profile summary
 
 **What's New**
 * Burning mobs are wreathed in flames like a flame jet's (tongues of flame, sparks, and smoke) in place of Minecraft's flat fire sheets
@@ -119,7 +120,10 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Dynamic Surroundings music manager will start music when Minecraft's main menu is shown rather than wait 5 seconds
 * A hungry player's stomach grumbles more often
 * Particle rain, snow, and dust move on a thread of their own while frames are drawn, taking most of their work off the game's main thread; standing still, the area they fall in is looked over a few rows a tick rather than all at once
+  * Each frame's drops are also readied for drawing on that thread while the world is drawn, rather than when the weather is drawn: in a storm, about four fifths less of the frame's time on the main thread
 * `/dsprofile` recordings also hold how long each of Dynamic Surroundings' tick handlers took every tick, how often random block effects looked, started effects and played sounds at each distance, and which optional hooks applied, which features stand aside for another mod, and the settings (text settings left out)
+  * And how long each frame took and how long drawing it took, the window's size, the frame rate limit and VSync, so each effect's time can be read as a share of the frame
+* When `/dsprofile` is done, chat names the effect that took the largest share of the frame, and a [Copy summary] button copies a short summary of the recording to paste into an issue or a Discord message (it fits in one); the summary is also saved in the recording's zip
 
 **Fixes**
 * A block within 16 blocks of the player could run two random block effects at once, one over the other; it now runs one at a time

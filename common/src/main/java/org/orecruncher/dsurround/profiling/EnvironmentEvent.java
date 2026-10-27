@@ -41,6 +41,26 @@ public final class EnvironmentEvent extends Event {
     @Label("Render distance")
     int renderDistance;
 
+    @Label("Width")
+    @Description("The frame's width in pixels, as drawn")
+    int width;
+
+    @Label("Height")
+    @Description("The frame's height in pixels, as drawn")
+    int height;
+
+    @Label("Frame rate limit")
+    @Description("The frame rate limit setting; 260 is unlimited")
+    int frameRateLimit;
+
+    @Label("VSync")
+    boolean vsync;
+
+    @Label("Development run")
+    @Description("The development environment's run config the game was started with (the potato ones stand in for a "
+            + "low-end PC); empty for a player's game")
+    String devRun;
+
     @Label("Java")
     String java;
 
@@ -57,6 +77,11 @@ public final class EnvironmentEvent extends Event {
         event.graphics = environment.graphics();
         event.shaderPack = environment.shaderPack();
         event.renderDistance = environment.renderDistance();
+        event.width = environment.width();
+        event.height = environment.height();
+        event.frameRateLimit = environment.frameRateLimit();
+        event.vsync = environment.vsync();
+        event.devRun = environment.devRun();
         event.java = environment.java();
         event.os = environment.os();
         event.commit();

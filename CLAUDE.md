@@ -38,22 +38,28 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   The user may have their own client running: check what is running (and when it started) before killing, and stop
   only the one you launched.
 - Profiling: `/dsprofile [scene] [seconds]` records a JFR file, zipped, to `config/dsurround/profiles` with the mod's
-  GPU/CPU render timers in it (`dsurround.RenderTimer` events; precipitation's carry a `count` of drops/spots a frame,
+  GPU/CPU render timers in it (`dsurround.RenderTimer` events, set against the whole frame's drawing and the frames'
+  lengths in `dsurround.Frames`, once a second; precipitation's carry a `count` of drops/spots a frame,
   so two recordings can be checked for the same storm), each client tick handler's time every tick
   (`dsurround.HandlerTick`, through `profiling/HandlerTicks`), what random block effects sampled, found, started,
   spawned and played by 1-block distance shell once a second (`dsurround.RandomBlockSamples`, through `profiling/RandomBlockSamples`),
-  what it was made on (`dsurround.Environment`) and each
+  what it was made on (`dsurround.Environment`: graphics card, settings, frame size, frame rate limit, the potato run used) and each
   optional hook's status, conflict and non-text setting (`dsurround.Feature`, from `ProfileFeature`); unzip
   it and read it with the JDK's `jfr` (`jfr print --json --events ...`), or summarize it with
-  `python scripts/jfr-summary.py <zip or jfr>` (timers: mean and end of the running averages, and peak; for a
+  `python scripts/jfr-summary.py <zip or jfr>` (frames; timers: mean and end of the running averages, share of the frame, and peak (CPU peaks a JVM pause could explain left out: a GC pause inside a timed draw reads as its spike); for a
   timer measured rarely, once a second or less, trust the end, not the mean; handler percentiles per tick (ticks a GC pause or other JVM stop landed in left out) and what
   running them in parallel would gain at best, `--dispatch-us`/`--worth-ms` for its cost and threshold, dependencies
   in `FIRST_HANDLERS`/`HANDLER_CHAINS`; random block effects' rate a block by distance against what
   `RandomBlockSampler` means (its constants are copied into the script: keep them in step), `--shell-width` rows; threads, mod packages, our frames, allocation, GC;
   `--callers <method>` for who calls something).
+  Each zip also holds a short summary (`ProfileSummary`, made from the finished recording, under 1900 characters to
+  fit a Discord message), which chat offers as a [Copy summary] button with a headline (fps, costliest effect's share).
   Players can make them too, so nothing private may get in: a new event type or a new `jdk.jfr` user needs a look at
   `ProfileRecording.PRIVATE` and `Redaction`. Record under Run, not IntelliJ's Debug (its async stack trace agent
   throws thousands of Throwables a second).
+- Low-end stand-ins (both platforms, IDE configs too): `runClientPotatoCpu` (4 logical CPUs, 2 GB heap),
+  `runClientPotatoFill` (3840x2160 window, a slower GPU's load per pixel), `runClientPotato` (both). The Gradle tasks
+  pin the CPUs with `scripts/run-affinity.ps1`; after an IDE launch run it by hand (see the script).
 - The dev config is `fabric/run/config/dsurround/dsurround.json`. Don't edit the user's dev settings to force a case;
   cover it with a test.
 - `defaultRequire: 1` in `dsurround.mixins.json`: a mixin that doesn't match crashes at startup, so a clean launch
@@ -136,7 +142,11 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   - `processing/PrecipitationHandler` runs particle weather (`PrecipitationField`, `LevelColumns`, `Landings`) and
     stands aside for shader packs, a failed shader, mods that draw weather as particles (`FeatureConflict`, the table of features that stand aside for other mods) and dimensions that draw their
     own weather. The drops' tick runs on the `dsurround-Precipitation` thread, a tick behind: `PrecipitationField.finish`
-    at the start of the handler's tick, `start` at its end, with two sets of the drops (`Drops`). The step may read only
+    at the start of the handler's tick, `start` at its end, with two sets of the drops (`Drops`). Each frame's quads are
+    built on the same thread as the level starts to be drawn (`DropMeshes`, from a `renderLevel` HEAD hook,
+    `OptionalHook.PRECIPITATION_AHEAD`), for that camera and partial tick; the weather pass draws them, or builds on the
+    render thread when the camera differs (a mod drawing the level again). The tick discards a build before the drops
+    change. The step may read only
     the columns and `Wind.Snapshot`; what needs the world it leaves as questions that `finish` answers. Tests use
     `tick`, which is both at once.
   - Drops stop at `LevelColumns.groundHeight`: the `MOTION_BLOCKING` heightmap, raised where a block above it is solid as

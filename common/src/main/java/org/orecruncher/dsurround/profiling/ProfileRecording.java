@@ -19,7 +19,8 @@ import java.util.Set;
  * A Java Flight Recorder recording of the running game, made in the game itself: the JDK's "profile" settings, without
  * anything that could tell who or where the player is ({@link #PRIVATE}), with what it was made on written into it once
  * ({@link EnvironmentEvent}, and a {@link FeatureEvent} for each optional hook, conflict and setting), the mod's render
- * timers once a second ({@link RenderTimerEvent}), each client tick handler's time every tick
+ * timers once a second ({@link RenderTimerEvent}), the frames' lengths and the whole frame's drawing time once a second
+ * ({@link FramesEvent}), each client tick handler's time every tick
  * ({@link HandlerTickEvent}) and what random block effects did by distance once a second
  * ({@link RandomBlockSamplesEvent}). The only class besides those events to use {@code jdk.jfr}, so nothing loads it until a
  * recording is made.
@@ -105,6 +106,8 @@ final class ProfileRecording {
         var unfinished = file.resolveSibling(file.getFileName() + ProfileFiles.UNFINISHED);
         Runnable timers = ProfileRecording::writeTimers;
         FlightRecorder.addPeriodicEvent(RenderTimerEvent.class, timers);
+        Runnable frames = ProfileRecording::writeFrames;
+        FlightRecorder.addPeriodicEvent(FramesEvent.class, frames);
         var samples = new SampleTotals();
         Runnable sampleWriter = samples::write;
         FlightRecorder.addPeriodicEvent(RandomBlockSamplesEvent.class, sampleWriter);
@@ -113,17 +116,20 @@ final class ProfileRecording {
                 recording.setName("Dynamic Surroundings");
                 recording.setToDisk(true);
                 recording.enable(RenderTimerEvent.class).withPeriod(Duration.ofSeconds(1));
+                recording.enable(FramesEvent.class).withPeriod(Duration.ofSeconds(1));
                 recording.enable(EnvironmentEvent.class);
                 recording.enable(FeatureEvent.class);
                 recording.enable(HandlerTickEvent.class);
                 recording.enable(RandomBlockSamplesEvent.class).withPeriod(Duration.ofSeconds(1));
                 recording.start();
                 HandlerTicks.start(ProfileRecording::writeHandlerTick);
+                FrameTimes.start();
                 RandomBlockSamples.start(samples::add);
                 EnvironmentEvent.write(environment);
                 FeatureEvent.write(environment.features());
                 Thread.sleep(length.toMillis());
                 HandlerTicks.stop();
+                FrameTimes.stop();
                 RandomBlockSamples.stop();
                 // What has been counted since the last second's write
                 samples.write();
@@ -138,8 +144,10 @@ final class ProfileRecording {
             Redaction.redact(file, System.getProperty("user.home"));
         } finally {
             HandlerTicks.stop();
+            FrameTimes.stop();
             RandomBlockSamples.stop();
             FlightRecorder.removePeriodicEvent(timers);
+            FlightRecorder.removePeriodicEvent(frames);
             FlightRecorder.removePeriodicEvent(sampleWriter);
             Files.deleteIfExists(unfinished);
         }
@@ -162,6 +170,15 @@ final class ProfileRecording {
             event.count = timer.getCount();
             event.commit();
         }
+    }
+
+    /**
+     * An event for the frames since the last, if there were any
+     */
+    private static void writeFrames() {
+        var second = FrameTimes.take();
+        if (second != null)
+            FramesEvent.write(second);
     }
 
     /**

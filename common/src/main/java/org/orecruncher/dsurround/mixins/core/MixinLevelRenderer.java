@@ -7,7 +7,9 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderType;
@@ -58,6 +60,17 @@ public class MixinLevelRenderer {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/DimensionSpecialEffects;getSunriseColor(FF)[F"), require = 0)
     private float[] dsurround$tintSunsetColor(float[] color, @Local(argsOnly = true) float partialTick) {
         return MixinHelpers.SUNSET_TINT_GUARD.get(() -> MixinHelpers.fogHandler().tintSunsetColor(color, partialTick), color);
+    }
+
+    /**
+     * Starts building the frame's rain and snow on another thread as the level starts to be drawn, the camera set for
+     * the frame, so it is ready by the weather's pass (see DropMeshes). Optional: without it they are built in that
+     * pass, as they were.
+     */
+    @Inject(method = "renderLevel", at = @At("HEAD"), require = 0)
+    private void dsurround$beginLevel(DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
+                                      LightTexture lightTexture, Matrix4f frustumMatrix, Matrix4f projectionMatrix, CallbackInfo ci) {
+        MixinHelpers.PRECIPITATION_AHEAD_GUARD.run(() -> MixinHelpers.precipitation().beginFrame(camera, deltaTracker.getGameTimeDeltaPartialTick(false)));
     }
 
     /**

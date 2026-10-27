@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Summarizes a `/dsprofile` recording (config/dsurround/profiles/*.zip or the .jfr inside): what it was made on (and
-the optional hooks, conflicts and settings that aren't as they are out of the box), the mod's render timers, the
+the optional hooks, conflicts and settings that aren't as they are out of the box), the frames (how long they took, and
+drawing one on the GPU and CPU), the mod's render timers (each as a share of drawing a frame), the
 client tick's handlers (and what running them in parallel could gain), what random block effects did by distance (each
 rate against what the sampler means it to be), where each busy thread spends its time (by
 method and by mod package), what allocates, and GC.
@@ -201,14 +202,8 @@ def handler_ticks(jfr, recording, args):
     if not ticks:
         return
 
-    # A GC pause stops the handler it lands in, which then looks slow: those ticks are left out. So does any other
-    # stop of every thread a millisecond or more (JFR instrumenting an event class, say, at its first event)
-    pauses = [(clock_ms(f.get("startTime")), duration_ms(f.get("duration")))
-              for _, f, _ in events(jfr, recording, ["jdk.GCPhasePause"], 1)]
-    pauses += [(clock_ms(f.get("startTime")), duration_ms(f.get("duration")))
-               for _, f, _ in events(jfr, recording, ["jdk.ExecuteVMOperation"], 1)
-               if f.get("safepoint") == "true" and duration_ms(f.get("duration")) >= 1.0]
-    pauses.sort()
+    # A GC pause stops the handler it lands in, which then looks slow: those ticks are left out
+    pauses = jvm_pauses(jfr, recording)
     paused = {tick for begin, end, tick in spans
               if any(start < end and start + length > begin for start, length in pauses)}
     worst = max((sum(ticks[t].values()) for t in paused), default=0.0)
@@ -372,6 +367,52 @@ def callers(jfr, recording, args):
         table("  Dynamic Surroundings frames above it", ours, total, args.top)
 
 
+def jvm_pauses(jfr, recording):
+    """
+    When every thread was stopped, as (start, length) in ms, sorted: GC pauses, and any other stop of a millisecond or
+    more (JFR instrumenting an event class, say, at its first event). Whatever was being timed then looks slow.
+    """
+    pauses = [(clock_ms(f.get("startTime")), duration_ms(f.get("duration")))
+              for _, f, _ in events(jfr, recording, ["jdk.GCPhasePause"], 1)]
+    pauses += [(clock_ms(f.get("startTime")), duration_ms(f.get("duration")))
+               for _, f, _ in events(jfr, recording, ["jdk.ExecuteVMOperation"], 1)
+               if f.get("safepoint") == "true" and duration_ms(f.get("duration")) >= 1.0]
+    pauses.sort()
+    return pauses
+
+
+def paused_in(pauses, at, peak, window_ms=2000.0):
+    """
+    The longest JVM pause, in ms, that could be in a render timer's peak written at {at}: in the window the peak covers
+    (the longest of the last second or two, TimerEMA), and no longer than the peak, with a little for rounding
+    """
+    return max((length for start, length in pauses
+                if start < at and start + length > at - window_ms and length <= peak * 1.05 + 0.05), default=0.0)
+
+
+def frame_times(jfr, recording):
+    """
+    Prints the frames (dsurround.Frames, a second's each), and gives the mean time drawing a frame took on the GPU and
+    CPU, for the render timers' shares; zeros for a recording from before frames were recorded
+    """
+    seconds = [f for _, f, _ in events(jfr, recording, ["dsurround.Frames"], 1)]
+    if not seconds:
+        return 0.0, 0.0
+    count = sum(int(number(f.get("frames"))) for f in seconds)
+    # Each second's mean weighed by its frames: the recording's mean frame
+    mean = sum(number(f.get("mean")) * int(number(f.get("frames"))) for f in seconds) / count
+    medians = sorted(number(f.get("p50")) for f in seconds)
+    p95s = sorted(number(f.get("p95")) for f in seconds)
+    gpu = sum(number(f.get("gpu")) for f in seconds) / len(seconds)
+    cpu = sum(number(f.get("cpu")) for f in seconds) / len(seconds)
+    print(f"\n== Frames ({len(seconds)} seconds, {count} frames; ms)")
+    print(f"  {1000 / mean:.0f} fps; frame mean {mean:.2f}, median second's median {percentile(medians, 0.5):.2f}")
+    print(f"  a second's 95th percentile: median {percentile(p95s, 0.5):.2f}, worst {p95s[-1]:.2f}; "
+          f"longest frame {max(number(f.get('max')) for f in seconds):.2f}")
+    print(f"  drawing a frame (the world and the screen over it), mean: GPU {gpu:.3f}, CPU {cpu:.3f}")
+    return gpu, cpu
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("recording")
@@ -407,6 +448,8 @@ def main():
             for row in unusual:
                 print(f"    {row.get('name', '?').strip(chr(34))}: {row.get('state', '?').strip(chr(34))}")
 
+    frame_gpu, frame_cpu = frame_times(jfr, recording)
+
     timers = defaultdict(list)
     for _, fields, _ in events(jfr, recording, ["dsurround.RenderTimer"], 1):
         timers[fields.get("effect", "?").strip('"')].append(fields)
@@ -414,20 +457,32 @@ def main():
         # Each average is a running one, written once a second. Their mean covers the whole recording, but carries a
         # slow start for a timer that measures rarely (once a second or less), whose average takes minutes to
         # forget it; the last is the running average at the end, the last few seconds for a timer measured every frame
+        # A CPU peak is the longest of the last second or two, as the clock on the wall has it: a JVM pause landing
+        # while it was timed is in it. A peak a pause in its window could make half of or more is left out; one shorter
+        # than the pause can't have had it land in it. The GPU's aren't stopped by the JVM
+        pauses = jvm_pauses(jfr, recording)
         print("\n== Render timers (ms; mean of the periodic averages, the running average at the end, highest peak; "
-              "count: how many there were to draw a frame, mean, where the effect counts)")
+              "cpu peak leaves out those a JVM pause could make half of, and paused says how many; "
+              "count: how many there were to draw a frame, mean, where the effect counts; gpu %, cpu %: the means' share "
+              "of drawing a frame, where the recording has the frames)")
         print(f"  {'effect':28} {'gpu mean':>8} {'gpu end':>8} {'gpu peak':>9} "
-              f"{'cpu mean':>8} {'cpu end':>8} {'cpu peak':>9} {'count':>8}")
+              f"{'cpu mean':>8} {'cpu end':>8} {'cpu peak':>9} {'paused':>6} {'count':>8} {'gpu %':>6} {'cpu %':>6}")
+        share = lambda part, whole: f"{100 * part / whole:6.1f}" if whole else f"{'-':>6}"
         for effect, rows in timers.items():
             rows.sort(key=lambda r: started(r.get("startTime", "")))
             mean = lambda key: sum(number(r.get(key)) for r in rows) / len(rows)
             last = lambda key: number(rows[-1].get(key))
             peak = lambda key: max(number(r.get(key)) for r in rows)
+            cpu_peaks = [(number(r.get("cpuPeak")), paused_in(pauses, clock_ms(r.get("startTime")), number(r.get("cpuPeak"))))
+                         for r in rows]
+            kept = [p for p, pause in cpu_peaks if pause < p / 2]
+            paused = len(cpu_peaks) - len(kept)
             # Recordings from before the count have none; an effect that doesn't count writes NaN, which jfr prints as N/A
             counts = [number(r["count"]) for r in rows if r.get("count") and r["count"] not in ("N/A", "NaN")]
             count = f"{sum(counts) / len(counts):8.0f}" if counts else f"{'-':>8}"
             print(f"  {effect:28} {mean('gpuAverage'):8.3f} {last('gpuAverage'):8.3f} {peak('gpuPeak'):9.3f} "
-                  f"{mean('cpuAverage'):8.3f} {last('cpuAverage'):8.3f} {peak('cpuPeak'):9.3f} {count}")
+                  f"{mean('cpuAverage'):8.3f} {last('cpuAverage'):8.3f} {max(kept, default=0.0):9.3f} {paused:6} {count} "
+                  f"{share(mean('gpuAverage'), frame_gpu)} {share(mean('cpuAverage'), frame_cpu)}")
 
     handler_ticks(jfr, recording, args)
     random_block_samples(jfr, recording, args)

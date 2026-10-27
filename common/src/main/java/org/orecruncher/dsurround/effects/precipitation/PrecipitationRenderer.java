@@ -9,6 +9,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 
 import java.util.List;
@@ -20,7 +21,8 @@ import java.util.List;
  * are cut from the game's own snow texture ({@link Snowflakes}), and the puffs are sprites from the particle atlas.
  * All are lit by the lightmap, like vanilla's weather. Also draws {@link DampSpots} and {@link SnowFlecks}, flat on
  * the ground. Positions are
- * relative to the camera, as for particles and vanilla's weather. Render thread only.
+ * relative to the camera, as for particles and vanilla's weather. Render thread only, but for {@link #build}, which
+ * {@link DropMeshes} runs on the drops' worker thread.
  */
 final class PrecipitationRenderer {
 
@@ -81,6 +83,36 @@ final class PrecipitationRenderer {
     }
 
     /**
+     * Where the camera is and which way it faces, for building the drops: a copy, as the camera's own vectors change
+     * with it, so a frame's drops can be built away from the render thread
+     */
+    record View(Vec3 position, Vector3f left, Vector3f up, Vector3f look) {
+
+        static View of(Camera camera) {
+            return new View(camera.getPosition(), new Vector3f(camera.getLeftVector()), new Vector3f(camera.getUpVector()),
+                    new Vector3f(camera.getLookVector()));
+        }
+
+        /**
+         * Whether the camera is where this was taken, facing the same way
+         */
+        boolean isOf(Camera camera) {
+            return this.position.equals(camera.getPosition()) && this.left.equals(camera.getLeftVector())
+                    && this.up.equals(camera.getUpVector()) && this.look.equals(camera.getLookVector());
+        }
+    }
+
+    /**
+     * Whether there is anything of the kind to draw
+     *
+     * @param dustOnly true for the dust, false for the rain and snow
+     */
+    static boolean hasAny(PrecipitationField field, boolean dustOnly) {
+        var d = field.drops();
+        return d.count > 0 && (dustOnly ? d.dustCount > 0 : d.dustCount < d.count);
+    }
+
+    /**
      * Builds the drops into a buffer and draws it with whatever shader is current, which should take
      * {@link DefaultVertexFormat#PARTICLE}, with the particle atlas bound. The dust and the falling rain and snow are
      * drawn apart, as the dust is drawn soft and they are not.
@@ -97,14 +129,30 @@ final class PrecipitationRenderer {
      */
     static int draw(PrecipitationField field, Tesselator tesselator, Camera camera, float partialTick, boolean dustOnly,
                     List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
-        var d = field.drops();
-        if (d.count == 0 || (dustOnly && d.dustCount == 0) || (!dustOnly && d.dustCount == d.count))
+        if (!hasAny(field, dustOnly))
             return 0;
+        BufferBuilder builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
+        build(field, builder, View.of(camera), partialTick, dustOnly, snowflakes, largest, dust, scales, rainColor);
+        var mesh = builder.build();
+        if (mesh == null)
+            return 0;
+        int drawn = mesh.drawState().vertexCount() / 4;
+        BufferUploader.drawWithShader(mesh);
+        return drawn;
+    }
 
-        var cam = camera.getPosition();
-        Vector3f left = camera.getLeftVector();
-        Vector3f up = camera.getUpVector();
-        Vector3f look = camera.getLookVector();
+    /**
+     * Builds the drops of a kind into a buffer as {@link DefaultVertexFormat#PARTICLE} quads (see {@link #draw}).
+     * Reads only the drops drawn, so it may run on another thread while the drops' next tick is stepped, but not while
+     * the step is finished and its drops made the ones drawn.
+     */
+    static void build(PrecipitationField field, BufferBuilder builder, View view, float partialTick, boolean dustOnly,
+                      List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
+        var d = field.drops();
+        var cam = view.position();
+        Vector3f left = view.left();
+        Vector3f up = view.up();
+        Vector3f look = view.look();
         float radius = field.radius();
         float margin = behindMargin(scales);
         // How much further each snowflake and puff has turned since its last tick: the same for all of a kind, so
@@ -113,7 +161,6 @@ final class PrecipitationRenderer {
         float snowCos = Mth.cos(snowTurn), snowSin = Mth.sin(snowTurn);
         float dustTurn = partialTick * PrecipitationField.DUST_TURBULENCE_RATE * DUST_SPIN;
         float dustCos = Mth.cos(dustTurn), dustSin = Mth.sin(dustTurn);
-        BufferBuilder builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
 
         for (int i = 0; i < d.count; i++) {
             if ((d.kind[i] == PrecipitationField.DUST) != dustOnly)
@@ -188,13 +235,6 @@ final class PrecipitationRenderer {
                 builder.addVertex(x + sx, y + sy, z + sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), a).setLight(light);
             }
         }
-
-        var mesh = builder.build();
-        if (mesh == null)
-            return 0;
-        int drawn = mesh.drawState().vertexCount() / 4;
-        BufferUploader.drawWithShader(mesh);
-        return drawn;
     }
 
     /**
