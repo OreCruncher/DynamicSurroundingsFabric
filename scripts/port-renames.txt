@@ -52,3 +52,7 @@ re: \bnet\.minecraft\.world\.entity\.animal\.Fox\b => net.minecraft.world.entity
 re: \bnet\.minecraft\.world\.entity\.animal\.Panda\b => net.minecraft.world.entity.animal.panda.Panda
 re: \bnet\.minecraft\.world\.entity\.animal\.PolarBear\b => net.minecraft.world.entity.animal.polarbear.PolarBear
 re: \bnet\.minecraft\.world\.entity\.animal\.horse\. => net.minecraft.world.entity.animal.equine.
+
+# Chat click and hover events are records of their own
+re: new ClickEvent\(ClickEvent\.Action\.COPY_TO_CLIPBOARD, => new ClickEvent.CopyToClipboard(
+re: new HoverEvent\(HoverEvent\.Action\.SHOW_TEXT, => new HoverEvent.ShowText(

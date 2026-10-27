@@ -118,7 +118,7 @@ public class ProfilingTests {
             content[i] = (byte) random.nextInt(256);
         Files.write(recording, content);
 
-        var zip = ProfileFiles.zip(recording);
+        var zip = ProfileFiles.zip(recording, null);
 
         assertEquals("dsurround-frost-20261017-111831.zip", zip.getFileName().toString());
         assertFalse(Files.exists(recording), "the recording is left beside its zip");
@@ -131,6 +131,22 @@ public class ProfilingTests {
             assertEquals("dsurround-frost-20261017-111831.jfr", entry.getName());
             assertArrayEquals(content, in.readAllBytes());
             assertNull(in.getNextEntry(), "one file in it");
+        }
+    }
+
+    @Test
+    void aRecordingIsZippedWithItsSummary() throws IOException {
+        var recording = this.folder.resolve(ProfileFiles.name(ProfileScene.WEATHER, LocalDateTime.of(2026, 10, 27, 9, 16, 8)));
+        Files.write(recording, new byte[]{1, 2, 3});
+
+        var zip = ProfileFiles.zip(recording, "Dynamic Surroundings profile: storm");
+
+        try (var in = new ZipInputStream(Files.newInputStream(zip))) {
+            assertEquals("dsurround-weather-20261027-091608.jfr", Objects.requireNonNull(in.getNextEntry()).getName());
+            assertArrayEquals(new byte[]{1, 2, 3}, in.readAllBytes());
+            assertEquals("dsurround-weather-20261027-091608.txt", Objects.requireNonNull(in.getNextEntry()).getName());
+            assertEquals("Dynamic Surroundings profile: storm", new String(in.readAllBytes(), StandardCharsets.UTF_8));
+            assertNull(in.getNextEntry());
         }
     }
 
@@ -158,7 +174,7 @@ public class ProfilingTests {
     static ProfileEnvironment environment() {
         return new ProfileEnvironment("Dynamic Surroundings 26.2-0.4.7 (Fabric)", 42, "Test GPU/PCIe/SSE2", "Test Vendor",
                 "discrete", "4.6.0 Test Driver 1.2.3", "OpenGL", "fabulous, improved transparency on", false, 12,
-                ProfileEnvironment.javaRuntime(), ProfileEnvironment.operatingSystem(),
+                3840, 2160, 260, false, "clientPotato", ProfileEnvironment.javaRuntime(), ProfileEnvironment.operatingSystem(),
                 List.of(new ProfileFeature(ProfileFeature.HOOK, "DYNAMIC_CLOUDS", "MISSING", false),
                         new ProfileFeature(ProfileFeature.SETTING, "weatherOptions.enableDustStorms", "true", true)));
     }
@@ -252,6 +268,11 @@ public class ProfilingTests {
         assertEquals(environment.graphics(), event.getString("graphics"));
         assertEquals(environment.shaderPack(), event.getBoolean("shaderPack"));
         assertEquals(environment.renderDistance(), event.getInt("renderDistance"));
+        assertEquals(environment.width(), event.getInt("width"));
+        assertEquals(environment.height(), event.getInt("height"));
+        assertEquals(environment.frameRateLimit(), event.getInt("frameRateLimit"));
+        assertEquals(environment.vsync(), event.getBoolean("vsync"));
+        assertEquals(environment.devRun(), event.getString("devRun"));
         assertEquals(environment.java(), event.getString("java"));
         assertEquals(environment.os(), event.getString("os"));
     }
@@ -289,6 +310,138 @@ public class ProfilingTests {
             assertEquals(precipitation, event.getBoolean("ran"));
             assertTrue(event.getLong("tick") > 0 && event.getLong("tick") <= last);
         }
+    }
+
+    @Test
+    void framesAreSummedUpBySecond() {
+        FrameTimes.start();
+        try {
+            for (int i = 100; i >= 1; i--)
+                FrameTimes.add(i);
+            var second = FrameTimes.take();
+            assertNotNull(second);
+            assertEquals(100, second.frames());
+            assertEquals(50.5, second.mean(), 1e-6);
+            assertEquals(51, second.p50());
+            assertEquals(96, second.p95());
+            assertEquals(100, second.max());
+            // Taken: the next second starts empty
+            assertNull(FrameTimes.take());
+        } finally {
+            FrameTimes.stop();
+        }
+    }
+
+    @Test
+    void aRecordingHasTheFrames() throws Exception {
+        var file = this.folder.resolve("test.jfr");
+        var recorder = new Thread(() -> {
+            try {
+                ProfileRecording.record(file, Duration.ofSeconds(2), environment());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        recorder.start();
+        // Frames as the render thread would, until the recording is done; some fall before it starts, and are dropped
+        while (recorder.isAlive()) {
+            FrameTimes.add(16F);
+            Thread.sleep(16);
+        }
+        recorder.join();
+
+        var events = RecordingFile.readAllEvents(file).stream()
+                .filter(e -> e.getEventType().getName().equals("dsurround.Frames"))
+                .toList();
+        assertFalse(events.isEmpty());
+        for (var event : events) {
+            assertTrue(event.getInt("frames") > 0);
+            assertEquals(16, event.getDouble("mean"), 1e-6);
+            assertEquals(16, event.getDouble("p95"), 1e-6);
+        }
+    }
+
+    @Test
+    void aRecordingIsSummedUpInAFewLines() throws Exception {
+        var file = this.folder.resolve("test.jfr");
+        var recorder = new Thread(() -> {
+            try {
+                ProfileRecording.record(file, Duration.ofSeconds(2), environment());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        recorder.start();
+        // Frames and ticks as the game would make them, until the recording is done
+        long tick = 0;
+        while (recorder.isAlive()) {
+            FrameTimes.add(8F);
+            HandlerTicks.ticked(++tick, "Cloud Handler", 200_000L, true);
+            Thread.sleep(16);
+        }
+        recorder.join();
+
+        var text = ProfileSummary.of(file).text("storm");
+        assertTrue(text.length() <= ProfileSummary.LIMIT, text.length() + " characters");
+        assertTrue(text.startsWith("Dynamic Surroundings profile: storm, "), text);
+        assertTrue(text.contains("GPU: Test GPU/PCIe/SSE2 (discrete; OpenGL, driver 4.6.0 Test Driver 1.2.3)"), text);
+        assertTrue(text.contains("Display: 3840x2160, fabulous, improved transparency on, render distance 12, vsync off, frame limit none, dev run clientPotato"), text);
+        assertTrue(text.contains("Frames: 125 fps, mean 8.0 ms"), text);
+        assertTrue(text.contains("most: Cloud Handler 0.20"), text);
+        assertTrue(text.contains("Hooks not applied: DYNAMIC_CLOUDS"), text);
+        assertFalse(text.contains("enableDustStorms"), "settings as they come are left out");
+        // Nothing of the player's: it is made from the recording, which has none
+        for (var personal : Stream.of(System.getProperty("user.name"), System.getProperty("user.home"))
+                .filter(Objects::nonNull).filter(s -> s.length() >= 3).toList())
+            assertFalse(text.contains(personal), "the summary holds \"" + personal + "\"");
+    }
+
+    @Test
+    void aSummaryFitsInADiscordMessage() {
+        var summary = new ProfileSummary();
+        summary.environment("glRenderer", "A graphics card with a very long name ".repeat(3));
+        for (int s = 0; s < 120; s++)
+            summary.frame(new ProfileSummary.FrameSecond(60, 16.6, 20, 30, 4, 2));
+        for (int i = 0; i < 60; i++)
+            summary.timer("Effect number " + i, i / 100D, i / 200D);
+        for (int i = 0; i < 200; i++)
+            summary.feature(ProfileFeature.SETTING, "someOptions.aSettingWithALongName" + i, "1234", false);
+
+        var text = summary.text("storm");
+        assertTrue(text.length() <= ProfileSummary.LIMIT, text.length() + " characters");
+        // The costliest effects kept, the rest counted; the settings likewise
+        assertTrue(text.contains("Effects (ms GPU/CPU, share of drawing): Effect number 59 "), text);
+        assertTrue(text.matches("(?s).*Effects .*\\+\\d+ more.*"), text);
+        assertTrue(text.matches("(?s).*Changed: .*\\+\\d+ more"), text);
+    }
+
+    @Test
+    void theHeadlineIsTheEffectWithTheLargestShare() {
+        var summary = new ProfileSummary();
+        assertTrue(summary.headline().isEmpty(), "no frames, no headline");
+        summary.frame(new ProfileSummary.FrameSecond(100, 10, 12, 14, 4, 2));
+        // Half the GPU's drawing, against three quarters of the CPU's
+        summary.timer("Ground Fog", 2, 0.1);
+        summary.timer("Clouds", 0.1, 1.5);
+        summary.timer("- Upload", 0.05, 1.2);
+
+        var headline = summary.headline().orElseThrow();
+        assertEquals(100, headline.fps());
+        assertEquals("Clouds", headline.effect(), "a part (\"- \") in its effect's time is not an effect of its own");
+        assertEquals(0.025, headline.gpuShare(), 1e-9);
+        assertEquals(0.75, headline.cpuShare(), 1e-9);
+    }
+
+    @Test
+    void aPartLongerThanItsEffectIsTimedApart() {
+        // The clouds' field is worked out on the tick, not while they are drawn, so it is no part of their drawing time
+        var summary = new ProfileSummary();
+        summary.frame(new ProfileSummary.FrameSecond(100, 10, 12, 14, 4, 2));
+        summary.timer("Clouds", 0.36, 0.03);
+        summary.timer("- Field", 0.001, 0.18);
+
+        var text = summary.text("weather");
+        assertTrue(text.contains("Clouds 0.36/0.03 (9%/2%), Clouds field 0.00/0.18 (0%/9%)"), text);
     }
 
     @Test
@@ -394,7 +547,7 @@ public class ProfilingTests {
                     .map(p -> p.getFileName().toString())
                     .sorted()
                     .toList();
-            assertEquals(List.of("EnvironmentEvent.java", "FeatureEvent.java", "HandlerTickEvent.java", "ProfileRecording.java", "RandomBlockSamplesEvent.java", "RenderTimerEvent.java"), users);
+            assertEquals(List.of("EnvironmentEvent.java", "FeatureEvent.java", "FramesEvent.java", "HandlerTickEvent.java", "ProfileRecording.java", "ProfileSummary.java", "RandomBlockSamplesEvent.java", "RenderTimerEvent.java"), users);
         }
     }
 }

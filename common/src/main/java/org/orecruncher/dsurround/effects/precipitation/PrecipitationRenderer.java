@@ -9,6 +9,8 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
 import java.util.List;
@@ -21,7 +23,8 @@ import java.util.function.Consumer;
  * are cut from the game's own snow texture ({@link Snowflakes}), and the puffs are sprites from the particle atlas.
  * All are lit by the lightmap, like vanilla's weather. Also draws {@link DampSpots} and {@link SnowFlecks}, flat on
  * the ground. Positions are
- * relative to the camera, as for particles and vanilla's weather. Render thread only.
+ * relative to the camera, as for particles and vanilla's weather. Render thread only, but for {@link #build}, which
+ * {@link DropMeshes} runs on the drops' worker thread.
  */
 final class PrecipitationRenderer {
 
@@ -82,10 +85,46 @@ final class PrecipitationRenderer {
     }
 
     /**
+     * Where the camera is and which way it faces, for building the drops: a copy, as the camera's own vectors change
+     * with it, so a frame's drops can be built away from the render thread
+     */
+    record View(Vec3 position, Vector3f left, Vector3f up, Vector3f look) {
+
+        static View of(Camera camera) {
+            return new View(camera.position(), new Vector3f(camera.leftVector()), new Vector3f(camera.upVector()),
+                    new Vector3f(camera.forwardVector()));
+        }
+
+        /**
+         * Whether the camera is where this was taken, facing the same way
+         */
+        boolean isOf(Camera camera) {
+            return this.position.equals(camera.position()) && same(this.left, camera.leftVector())
+                    && same(this.up, camera.upVector()) && same(this.look, camera.forwardVector());
+        }
+
+        private static boolean same(Vector3f a, Vector3fc b) {
+            return a.x() == b.x() && a.y() == b.y() && a.z() == b.z();
+        }
+    }
+
+    /**
+     * Whether there is anything of the kind to draw
+     *
+     * @param dustOnly true for the dust, false for the rain and snow
+     */
+    static boolean hasAny(PrecipitationField field, boolean dustOnly) {
+        var d = field.drops();
+        return d.count > 0 && (dustOnly ? d.dustCount > 0 : d.dustCount < d.count);
+    }
+
+    /**
      * Writes the drops into {@code quads}, for drawing with a pipeline that takes {@link DefaultVertexFormat#PARTICLE}:
      * with the particle atlas bound for the dust, and the snow texture for rain and snow. The dust and the falling rain
      * and snow are drawn apart, as the dust is drawn soft and they are not. Written straight into memory rather than
-     * through a BufferBuilder: there are thousands (see {@link ParticleQuads}).
+     * through a BufferBuilder: there are thousands (see {@link ParticleQuads}). Reads only the drops drawn, so it may
+     * run on another thread while the drops' next tick is stepped, but not while the step is finished and its drops
+     * made the ones drawn (see {@link DropMeshes}).
      *
      * @param dustOnly   true to draw just the dust; false to draw just the rain and snow
      * @param snowflakes the flakes of the snow texture, which must be bound when drawing rain and snow; each falling
@@ -96,17 +135,17 @@ final class PrecipitationRenderer {
      * @param scales     how big rain and snow are drawn
      * @param rainColor  the rain's color
      */
-    static void draw(PrecipitationField field, ParticleQuads quads, Camera camera, float partialTick, boolean dustOnly,
-                     List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
+    static void build(PrecipitationField field, ParticleQuads quads, View view, float partialTick, boolean dustOnly,
+                      List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
         var d = field.drops();
         quads.begin(dustOnly ? d.dustCount : d.count - d.dustCount);
-        if (d.count == 0 || (dustOnly && d.dustCount == 0) || (!dustOnly && d.dustCount == d.count))
+        if (!hasAny(field, dustOnly))
             return;
 
-        var cam = camera.position();
-        Vector3fc left = camera.leftVector();
-        Vector3fc up = camera.upVector();
-        Vector3fc look = camera.forwardVector();
+        var cam = view.position();
+        Vector3fc left = view.left();
+        Vector3fc up = view.up();
+        Vector3fc look = view.look();
         float radius = field.radius();
         float margin = behindMargin(scales);
         // How much further each snowflake and puff has turned since its last tick: the same for all of a kind, so

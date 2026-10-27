@@ -56,6 +56,7 @@ public class MixinHelpers {
     public static final Guard DEATH_PUFF_GUARD = Guard.named("Death mist");
     public static final Guard LIGHTNING_GUARD = Guard.named("Lightning");
     public static final Guard CLOUDS_GUARD = Guard.named("Dynamic clouds");
+    public static final Guard PRECIPITATION_AHEAD_GUARD = Guard.named("Building rain and snow ahead");
     // The sound engine's hooks: each sound as it plays, and each playing sound on every tick of the sound engine
     public static final Guard SOUND_FILTER_GUARD = Guard.named("Blocking, culling and remapping sounds");
     public static final Guard SOUND_RANGE_GUARD = Guard.named("Pruning sounds out of range");

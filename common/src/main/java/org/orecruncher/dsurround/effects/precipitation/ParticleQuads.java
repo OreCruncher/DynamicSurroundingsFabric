@@ -12,7 +12,8 @@ import java.nio.ByteOrder;
  * colour, light), written straight into memory, kept from frame to frame and grown as needed. Thousands of drops are
  * drawn a frame, four corners each; through a BufferBuilder that is four calls a corner, each finding where its part
  * of the vertex goes. Here a corner is written in one call, at offsets known in advance, and a quad's colour is packed
- * once rather than for each corner. The bytes are laid out as BufferBuilder lays them. Render thread only.
+ * once rather than for each corner. The bytes are laid out as BufferBuilder lays them. One thread at a time: the falling
+ * drops' are written on the drops' thread and drawn on the render thread (see {@link DropMeshes}).
  */
 public final class ParticleQuads implements AutoCloseable {
 

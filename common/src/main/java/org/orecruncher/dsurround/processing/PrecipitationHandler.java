@@ -30,11 +30,11 @@ import org.orecruncher.dsurround.effects.particles.DSurroundParticleSprites;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
 import org.orecruncher.dsurround.effects.precipitation.AfterRainDrips;
 import org.orecruncher.dsurround.effects.precipitation.DampSpots;
+import org.orecruncher.dsurround.effects.precipitation.DropMeshes;
 import org.orecruncher.dsurround.effects.precipitation.DropScales;
 import org.orecruncher.dsurround.effects.precipitation.IColumnSource;
 import org.orecruncher.dsurround.effects.precipitation.Landings;
 import org.orecruncher.dsurround.effects.precipitation.LevelColumns;
-import org.orecruncher.dsurround.effects.precipitation.ParticleQuads;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationField;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
 import org.orecruncher.dsurround.effects.precipitation.RainColor;
@@ -115,7 +115,6 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private final LevelColumns columns;
     // Drawing: made on first use, on the render thread
     private ByteBufferBuilder meshBytes;
-    private final ParticleQuads quads = new ParticleQuads();
     private final MeshDraw dampSpotDraw = new MeshDraw("damp spots");
     private final MeshDraw dustDraw = new MeshDraw("dust");
     private final MeshDraw dropDraw = new MeshDraw("rain and snow");
@@ -124,6 +123,9 @@ public class PrecipitationHandler extends AbstractClientHandler {
     // The drops' ticks run here, while frames are drawn: started each tick and finished at the next (see
     // PrecipitationField.start); one thread, so a step never overlaps the next, and only it uses its random numbers
     private final Executor stepper = Executors.newSingleThreadExecutor(Worker.threadFactory("Precipitation"));
+    // The frame's rain, snow and dust, built on the same thread as the level starts to be drawn: after the tick's step,
+    // which is short, and never at once with it
+    private final DropMeshes meshes = new DropMeshes();
     private final IRandomizer stepRandom = Randomizer.create(System.nanoTime());
 
     public PrecipitationHandler(IWeatherSimulation weatherSimulation, WindService windService, ISoundLibrary soundLibrary, IDimensionOracle dimensionInformation, ISeasonalInformation seasonalInformation,
@@ -164,6 +166,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
 
     @Override
     public void process(final Player player) {
+        // The drops drawn change below: nothing may still be building from them
+        this.meshes.discard();
         var active = this.isActive();
         if (!active) {
             this.field.clear();
@@ -221,6 +225,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
 
     @Override
     public void onDisconnect() {
+        this.meshes.discard();
         this.field.clear();
         this.dampSpots.clear();
         this.snowFlecks.clear();
@@ -267,6 +272,25 @@ public class PrecipitationHandler extends AbstractClientHandler {
         };
     }
 
+
+    /**
+     * Starts building the frame's drops on the drops' thread, as the level starts to be drawn: the camera is set for
+     * the frame by then, and the terrain is drawn while they are built (see {@link DropMeshes})
+     */
+    public void beginFrame(Camera camera, float partialTick) {
+        if (!this.isActive() || this.field.count() == 0) {
+            this.meshes.discard();
+            return;
+        }
+        var options = this.config.weatherOptions;
+        this.meshes.begin(this.field, camera, partialTick, this.snowflakes.flakes(GameUtils.getResourceManager()),
+                this.snowflakes.largest(), DSurroundParticleSprites.DUST.sprites(), scales(options), RainColor.ofTint(options.rainTint),
+                this.stepper);
+    }
+
+    private static DropScales scales(Configuration.WeatherOptions options) {
+        return new DropScales(options.rainDropScale / 100F, options.snowflakeScale / 100F);
+    }
 
     /**
      * Draws the damp spots and the drops where vanilla draws its weather (see MixinWeatherEffectRenderer), outside any
@@ -323,7 +347,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
         var flakes = this.snowflakes.flakes(GameUtils.getResourceManager());
         var largest = this.snowflakes.largest();
         var options = this.config.weatherOptions;
-        var scales = new DropScales(options.rainDropScale / 100F, options.snowflakeScale / 100F);
+        var scales = scales(options);
         var rainColor = RainColor.ofTint(options.rainTint);
         var textures = GameUtils.getTextureManager();
         var lightmap = GameUtils.getMC().gameRenderer.lightmap();
@@ -338,9 +362,9 @@ public class PrecipitationHandler extends AbstractClientHandler {
             pass.bindTexture("Sampler0", snow.getTextureView(), snow.getSampler());
             pass.bindTexture("Sampler2", lightmap, lightmapSampler);
         };
-        this.field.draw(this.quads, camera, partialTick, false, flakes, largest, DSurroundParticleSprites.DUST.sprites(), scales, rainColor);
-        this.dropsDrawn += this.quads.vertexCount() / 4;
-        this.dropDraw.drawQuads(this.quads.vertices(), this.quads.vertexCount(), pipeline, target, bind);
+        var quads = this.meshes.quads(this.field, camera, partialTick, false, flakes, largest, DSurroundParticleSprites.DUST.sprites(), scales, rainColor);
+        this.dropsDrawn += quads.vertexCount() / 4;
+        this.dropDraw.drawQuads(quads.vertices(), quads.vertexCount(), pipeline, target, bind);
         this.snowFlecks.draw(this.meshBytes, mesh -> this.fleckDraw.draw(mesh, pipeline, target, bind), camera, partialTick, flakes, largest, scales.snow());
         this.windowStreaks.draw(this.meshBytes, mesh -> this.streakDraw.draw(mesh, pipeline, target, bind), camera, partialTick, rainColor);
 
@@ -361,9 +385,9 @@ public class PrecipitationHandler extends AbstractClientHandler {
         var depthSource = fabulous ? GameUtils.getMC().levelRenderer.translucentTarget() : target;
         boolean isSoft = soft.isUsable() && depthSource != null && SoftParticles.captureDepth(depthSource);
         var dustPipeline = isSoft ? soft.pipeline() : pipeline;
-        this.field.draw(this.quads, camera, partialTick, true, flakes, largest, dust, scales, rainColor);
-        this.dropsDrawn += this.quads.vertexCount() / 4;
-        this.dustDraw.drawQuads(this.quads.vertices(), this.quads.vertexCount(), dustPipeline, target, pass -> {
+        var quads = this.meshes.quads(this.field, camera, partialTick, true, flakes, largest, dust, scales, rainColor);
+        this.dropsDrawn += quads.vertexCount() / 4;
+        this.dustDraw.drawQuads(quads.vertices(), quads.vertexCount(), dustPipeline, target, pass -> {
             pass.bindTexture("Sampler0", atlas.getTextureView(), atlas.getSampler());
             pass.bindTexture("Sampler2", lightmap, lightmapSampler);
             if (isSoft)
@@ -391,6 +415,10 @@ public class PrecipitationHandler extends AbstractClientHandler {
             text = "Precipitation: %d/%d drops (%d dust), %d damp spots, %d snow flecks, %d window streaks, range %d".formatted(this.field.count(),
                     this.field.capacity(), this.field.dustCount(), this.dampSpots.count(), this.snowFlecks.count(), this.windowStreaks.count(),
                     this.field.radius());
+        // How much of the drawing used drops built ahead, since the diagnostics last asked
+        float ahead = this.meshes.aheadShare();
+        if (!Float.isNaN(ahead))
+            text += String.format(Locale.ROOT, ", built ahead %.0f%%", ahead * 100F);
         if (this.config.weatherOptions.enableAfterRainDrips && this.drips.strength() > 0F)
             text += String.format(Locale.ROOT, ", drips %.2f", this.drips.strength());
         event.add(CollectDiagnosticsEvent.Section.Systems, text);

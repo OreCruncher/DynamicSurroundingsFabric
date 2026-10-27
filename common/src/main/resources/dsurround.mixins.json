@@ -21,6 +21,7 @@
     "core.MixinDebugRenderer",
     "core.MixinEntity",
     "core.MixinEntityArrow",
+    "core.MixinGameRenderer",
     "core.MixinAtmosphericFogEnvironment",
     "core.MixinSkyRenderer",
     "core.MixinShaderManager",

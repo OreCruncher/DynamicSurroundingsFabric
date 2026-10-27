@@ -7,17 +7,20 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.effects.RenderTimers;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.platform.IMinecraftDirectories;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -156,8 +159,20 @@ public final class Profiler {
             state = State.RECORDING;
             until = System.nanoTime() + seconds * 1_000_000_000L;
             ProfileRecording.record(file, Duration.ofSeconds(seconds), environment);
-            var zip = ProfileFiles.zip(file);
-            Minecraft.getInstance().execute(() -> report(zip));
+            // A summary to paste where a player asks for help; the recording is still sent without one
+            String text = null;
+            ProfileHeadline headline = null;
+            try {
+                var summary = ProfileSummary.of(file);
+                text = summary.text(scene.commandName());
+                headline = summary.headline().orElse(null);
+            } catch (IOException | RuntimeException e) {
+                Library.LOGGER.warn("Unable to summarize the profile %s: %s", file.getFileName(), e);
+            }
+            var zip = ProfileFiles.zip(file, text);
+            var summaryText = text;
+            var summaryHeadline = headline;
+            Minecraft.getInstance().execute(() -> report(zip, summaryText, summaryHeadline));
         } catch (Throwable t) {
             Library.LOGGER.error(t, "Unable to record a profile");
             tell(Component.translatable(KEY + "failed", t.toString()));
@@ -165,10 +180,11 @@ public final class Profiler {
     }
 
     /**
-     * Says where the recording is, the name opening it when clicked, with the render timers that measured lately and the
-     * frame rate, on the render thread; and logs it
+     * Says where the recording is, the name opening it when clicked, with the frame rate, the costliest effect and a
+     * button copying the summary, on the render thread; and logs it, with the summary and the render timers that
+     * measured lately
      */
-    private static void report(Path file) {
+    private static void report(Path file, @Nullable String summary, @Nullable ProfileHeadline headline) {
         var name = Component.literal(file.getFileName().toString()).withStyle(Style.EMPTY
                 .withColor(ChatFormatting.AQUA).withUnderlined(true)
                 .withClickEvent(new ClickEvent.OpenFile(file))
@@ -179,12 +195,22 @@ public final class Profiler {
         for (var timer : RenderTimers.ALL) {
             if (timer.isStale())
                 continue;
-            var gpu = "%.3f".formatted(timer.getMSecs());
-            var peak = "%.3f".formatted(timer.getPeakMSecs());
-            var cpu = "%.3f".formatted(timer.getCpuMSecs());
-            tell(Component.translatable(KEY + "timer", timer.name(), gpu, peak, cpu));
-            Library.LOGGER.info("  %s: GPU %s ms (peak %s), CPU %s ms", timer.name(), gpu, peak, cpu);
+            Library.LOGGER.info("  %s: GPU %.3f ms (peak %.3f), CPU %.3f ms", timer.name(), timer.getMSecs(), timer.getPeakMSecs(), timer.getCpuMSecs());
         }
+        if (headline != null)
+            tell(Component.translatable(KEY + "headline", headline.fps(), headline.effect(), percent(headline.gpuShare()),
+                    percent(headline.cpuShare())));
+        if (summary != null) {
+            Library.LOGGER.info("Profile summary:%n%s", summary);
+            tell(Component.translatable(KEY + "copy").withStyle(Style.EMPTY
+                    .withColor(ChatFormatting.GREEN)
+                    .withClickEvent(new ClickEvent.CopyToClipboard(summary))
+                    .withHoverEvent(new HoverEvent.ShowText(Component.translatable(KEY + "copy.tooltip")))));
+        }
+    }
+
+    private static String percent(double share) {
+        return String.format(Locale.ROOT, "%.0f%%", share * 100D);
     }
 
     private static void tell(Component message) {

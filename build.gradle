@@ -92,6 +92,7 @@ configure(subprojects.findAll { it.name != 'processor' }) {
 
     if (project.name != "common" && project.name != "stubs") {
         tasks.named('build') { finalizedBy 'copyJarToMain' }
+        potatoRuns(project)
     }
 
     // Configure Maven publishing.
@@ -109,6 +110,58 @@ configure(subprojects.findAll { it.name != 'processor' }) {
             // Notice: This block does NOT have the same function as the block in the top level.
             // The repositories here will be used for publishing your artifact, not for
             // retrieving dependencies.
+        }
+    }
+}
+
+// Dev clients that stand in for a low-end PC, to see what the mod's effects cost there (each also has an IDE run config):
+//  - runClientPotatoCpu: a dual core with hyperthreading (4 logical CPUs, pinned on Windows by scripts/run-affinity.ps1)
+//    and the launcher's default 2 GB heap
+//  - runClientPotatoFill: a 3840x2160 window, about the load per pixel a GPU four times slower has at 1080p (screen
+//    passes such as the ground fog cost by the pixel); F3 shows whether the window really got that size
+//  - runClientPotato: both
+// The IDE's run configs get the same arguments, but not the pinning: run scripts/run-affinity.ps1 by hand (see there).
+// GPU clocks and the integrated GPU are set outside the build (nvidia-smi -lgc, Windows' graphics settings).
+def potatoRuns(Project p) {
+    def cpus = 4
+    // Logical CPUs 0-3: two cores and their hyperthreads, as Windows numbers them
+    def cpuMask = 0xF
+    def cpuArgs = ["-XX:ActiveProcessorCount=$cpus", '-Xmx2G']
+    def fillArgs = ['--width', '3840', '--height', '2160']
+    def platform = p.name.capitalize()
+    def variants = [
+            clientPotatoCpu : [label: 'potato CPU', vm: cpuArgs, program: [], pin: true],
+            clientPotatoFill: [label: 'potato fill', vm: [], program: fillArgs, pin: false],
+            clientPotato    : [label: 'potato', vm: cpuArgs, program: fillArgs, pin: true]]
+
+    p.loom.runs {
+        variants.each { runName, v ->
+            create(runName) {
+                inherit p.loom.runs.client
+                configName = "$platform Client ($v.label)"
+                ideConfigGenerated true
+                // Finds the game's JVM for run-affinity.ps1
+                vmArg "-Ddsurround.devRun=$runName"
+                vmArgs v.vm
+                programArgs v.program
+            }
+        }
+    }
+
+    def isWindows = System.getProperty('os.name').toLowerCase().contains('windows')
+    variants.each { runName, v ->
+        if (!v.pin || !isWindows)
+            return
+        p.tasks.matching { it.name == "run${runName.capitalize()}" }.configureEach {
+            doFirst {
+                def script = rootProject.file('scripts/run-affinity.ps1').absolutePath
+                new ProcessBuilder('powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', script,
+                        '-Marker', "dsurround.devRun=$runName", '-Mask', "$cpuMask",
+                        '-Since', "${System.currentTimeMillis()}")
+                        .redirectErrorStream(true)
+                        .redirectOutput(p.layout.buildDirectory.file("run-affinity-${runName}.log").get().asFile)
+                        .start()
+            }
         }
     }
 }

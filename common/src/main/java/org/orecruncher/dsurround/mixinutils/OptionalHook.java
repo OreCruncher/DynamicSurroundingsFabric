@@ -64,7 +64,11 @@ public enum OptionalHook {
             site("core.MixinLightningBoltRenderer", "dsurround$vanillaBolt"),
             site("core.MixinLevelRenderer", "dsurround$lightningAfterWeather")),
     DYNAMIC_CLOUDS("Dynamic clouds in place of vanilla's",
-            site("core.MixinCloudRenderer", "dsurround$clouds"));
+            site("core.MixinCloudRenderer", "dsurround$clouds")),
+    PRECIPITATION_AHEAD("Building rain and snow while the world is drawn",
+            site("core.MixinGameRenderer", "dsurround$beginLevel")),
+    FRAME_TIMES("Frame times in profile recordings",
+            site("core.MixinMinecraftClient", "dsurround$timeFrame"));
 
     /**
      * Whether a hook applied

@@ -2,8 +2,10 @@ package org.orecruncher.dsurround.mixins.core;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.main.GameConfig;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.sounds.Music;
 import net.minecraft.world.attribute.BackgroundMusic;
@@ -11,6 +13,7 @@ import net.minecraft.world.attribute.EnvironmentAttributes;
 import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
+import org.orecruncher.dsurround.profiling.FrameTimes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -72,5 +75,20 @@ public class MixinMinecraftClient {
         var chooseAgain = !(minecraft.getMusicManager() instanceof DSurroundMusicManager mm) || mm.isTrackStarting();
         var chosen = MixinHelpers.BIOME_MUSIC.select(info, biomeTrack, Randomizer.current(), chooseAgain);
         return chosen.isPresent() ? chosen : vanilla;
+    }
+
+    /**
+     * Times each frame's drawing, the world and the screen over it, for the recording /dsprofile makes (see
+     * {@link FrameTimes}); does nothing while nothing records. Optional: only profiling is lost if another mod changed
+     * the frame.
+     */
+    @WrapOperation(method = "renderFrame(Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;render(Lnet/minecraft/client/DeltaTracker;Z)V"), require = 0)
+    private void dsurround$timeFrame(GameRenderer renderer, DeltaTracker deltaTracker, boolean renderLevel, Operation<Void> original) {
+        FrameTimes.begin();
+        try {
+            original.call(renderer, deltaTracker, renderLevel);
+        } finally {
+            FrameTimes.end();
+        }
     }
 }
