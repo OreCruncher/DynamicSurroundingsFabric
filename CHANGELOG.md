@@ -22,7 +22,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Analyzed OGG sound files and normalized where necessary
 * Tracked down particles drawing as squares in a large modpack to another mod's particle, and built the guard that repairs it
 * Built the branching lightning, its timing and its thunder, and gathered the scary options into one place
-* Added the conditional operator to the scripting engine
+* Added the conditional operator "? :" to the scripting engine
 * Built the dynamic clouds, their fading and sharing between players, and lightning lighting them; reviewed their performance profiles
 * Measured the tick handlers in recordings, moved the precipitation's work to its own thread, and ported the jump sound from 1.12.2
 * Placed animals' breath at their mouths from Minecraft's mob models
