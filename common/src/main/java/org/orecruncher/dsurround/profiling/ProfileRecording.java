@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -18,8 +19,9 @@ import java.util.Set;
  * A Java Flight Recorder recording of the running game, made in the game itself: the JDK's "profile" settings, without
  * anything that could tell who or where the player is ({@link #PRIVATE}), with what it was made on written into it once
  * ({@link EnvironmentEvent}, and a {@link FeatureEvent} for each optional hook, conflict and setting), the mod's render
- * timers once a second ({@link RenderTimerEvent}) and each client tick handler's time every tick
- * ({@link HandlerTickEvent}). The only class besides those events to use {@code jdk.jfr}, so nothing loads it until a
+ * timers once a second ({@link RenderTimerEvent}), each client tick handler's time every tick
+ * ({@link HandlerTickEvent}) and what random block effects did by distance once a second
+ * ({@link RandomBlockSamplesEvent}). The only class besides those events to use {@code jdk.jfr}, so nothing loads it until a
  * recording is made.
  * <p>
  * Players may send recordings to the mod's authors, so what is private is kept out three times over: those events are
@@ -93,9 +95,19 @@ final class ProfileRecording {
         for (var type : PRIVATE)
             settings.put(type + "#enabled", "false");
 
+        // Registered now, so starting the recording instruments them with the JDK's, in one pause. Left to their first
+        // event, each paused every thread for its own, there and then: in a game, 100 ms, inside a tick being timed.
+        // The periodic ones are registered with their hooks below.
+        FlightRecorder.register(EnvironmentEvent.class);
+        FlightRecorder.register(FeatureEvent.class);
+        FlightRecorder.register(HandlerTickEvent.class);
+
         var unfinished = file.resolveSibling(file.getFileName() + ProfileFiles.UNFINISHED);
         Runnable timers = ProfileRecording::writeTimers;
         FlightRecorder.addPeriodicEvent(RenderTimerEvent.class, timers);
+        var samples = new SampleTotals();
+        Runnable sampleWriter = samples::write;
+        FlightRecorder.addPeriodicEvent(RandomBlockSamplesEvent.class, sampleWriter);
         try {
             try (var recording = new Recording(settings)) {
                 recording.setName("Dynamic Surroundings");
@@ -104,12 +116,17 @@ final class ProfileRecording {
                 recording.enable(EnvironmentEvent.class);
                 recording.enable(FeatureEvent.class);
                 recording.enable(HandlerTickEvent.class);
+                recording.enable(RandomBlockSamplesEvent.class).withPeriod(Duration.ofSeconds(1));
                 recording.start();
                 HandlerTicks.start(ProfileRecording::writeHandlerTick);
+                RandomBlockSamples.start(samples::add);
                 EnvironmentEvent.write(environment);
                 FeatureEvent.write(environment.features());
                 Thread.sleep(length.toMillis());
                 HandlerTicks.stop();
+                RandomBlockSamples.stop();
+                // What has been counted since the last second's write
+                samples.write();
                 recording.stop();
                 recording.dump(unfinished);
             }
@@ -121,7 +138,9 @@ final class ProfileRecording {
             Redaction.redact(file, System.getProperty("user.home"));
         } finally {
             HandlerTicks.stop();
+            RandomBlockSamples.stop();
             FlightRecorder.removePeriodicEvent(timers);
+            FlightRecorder.removePeriodicEvent(sampleWriter);
             Files.deleteIfExists(unfinished);
         }
     }
@@ -155,5 +174,50 @@ final class ProfileRecording {
         event.time = nanos;
         event.ran = ran;
         event.commit();
+    }
+
+    /**
+     * Random block samples added up between the client thread's ticks and the recorder's writes, once a second
+     */
+    private static final class SampleTotals {
+        private final long[] totals = new long[RandomBlockSamples.SHELLS * RandomBlockSamples.KINDS];
+        private int ticks;
+        private int range;
+
+        synchronized void add(int range, int[] counts) {
+            for (int i = 0; i < this.totals.length; i++)
+                this.totals[i] += counts[i];
+            this.ticks++;
+            this.range = range;
+        }
+
+        /**
+         * An event for each shell with anything in it since the last write
+         */
+        synchronized void write() {
+            if (this.ticks == 0)
+                return;
+            for (int shell = 0; shell < RandomBlockSamples.SHELLS; shell++) {
+                int base = shell * RandomBlockSamples.KINDS;
+                boolean any = false;
+                for (int kind = 0; kind < RandomBlockSamples.KINDS; kind++)
+                    any |= this.totals[base + kind] != 0;
+                if (!any)
+                    continue;
+                var event = new RandomBlockSamplesEvent();
+                event.shell = shell;
+                event.ticks = this.ticks;
+                event.range = this.range;
+                event.samples = this.totals[base + RandomBlockSamples.SAMPLES];
+                event.tailSamples = this.totals[base + RandomBlockSamples.TAIL];
+                event.effectBlocks = this.totals[base + RandomBlockSamples.EFFECT_BLOCKS];
+                event.starts = this.totals[base + RandomBlockSamples.STARTS];
+                event.sounds = this.totals[base + RandomBlockSamples.SOUNDS];
+                event.particles = this.totals[base + RandomBlockSamples.PARTICLES];
+                event.commit();
+            }
+            Arrays.fill(this.totals, 0);
+            this.ticks = 0;
+        }
     }
 }

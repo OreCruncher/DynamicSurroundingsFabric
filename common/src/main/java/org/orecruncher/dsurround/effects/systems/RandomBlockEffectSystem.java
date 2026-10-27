@@ -4,17 +4,21 @@ import net.minecraft.client.ParticleStatus;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.blocks.AbstractBlockEffect;
+import org.orecruncher.dsurround.effects.blocks.producers.BlockParticleEffectProducer;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
+import org.orecruncher.dsurround.profiling.RandomBlockSamples;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
+import java.util.Arrays;
 import java.util.function.Predicate;
 
 /**
@@ -22,46 +26,38 @@ import java.util.function.Predicate;
  * starts the effects configured for them. Vanilla's own random display ticks still run; this adds the mod's
  * configured sounds and effects on top.
  * <p>
- * Two instances run, one sampling within {@link #NEAR_RANGE} and one within {@link #FAR_RANGE}, like vanilla.
- * Sounds can come from anywhere sampled. Effects only start within the configured block effect range and within
- * the particle distance of the camera, and follow the Particles option.
+ * Where it looks is {@link RandomBlockSampler}'s: vanilla's near and far spreads, which can play sounds and start
+ * effects, and past them a tail out to the block effect range, which only starts effects (sounds from that far would
+ * barely be heard). Effects only start within the configured block effect range and within the particle distance
+ * of the camera, and follow the Particles option. One map holds them all, so a block starts one effect at a time.
  * <p>
- * A third ({@link #beyondFar}) covers a block effect range set past {@link #FAR_RANGE}: it samples out to that range
- * and keeps only what lies beyond the far sampler's reach, so nearer effects don't get denser. It starts effects
- * only; sounds from that far would barely be heard.
+ * While /dsprofile records, what it did is counted by distance ({@link RandomBlockSamples}).
  */
 public class RandomBlockEffectSystem extends AbstractEffectSystem {
 
-    public static final int NEAR_RANGE = 16;
-    public static final int FAR_RANGE = 32;
-    private static final int ITERATION_COUNT = 667;
-
     private final IBlockLibrary blockLibrary;
     private final IAudioPlayer audioPlayer;
-    // Fixed, or 0 for the beyond-far sampler, whose range is the block effect range
-    private final int range;
 
     // Reused for every sample
     private final BlockPos.MutableBlockPos samplePos = new BlockPos.MutableBlockPos();
 
-    public RandomBlockEffectSystem(IModLog logger, Configuration config, IBlockLibrary blockLibrary, IAudioPlayer audioPlayer, int range) {
-        this(logger, config, blockLibrary, audioPlayer, range, "Random(%d block range)".formatted(range));
-    }
+    // Set at the start of each tick for sample()
+    private Level world;
+    private BlockPos center;
+    private Vec3 camera;
+    private int effectRange;
+    private double particleRangeSq;
+    private ParticleStatus particles;
+    private IRandomizer random;
+    // Counts for the recording, by distance; null while nothing records
+    private int[] counts;
+    private final int[] countsWhileRecording = new int[RandomBlockSamples.SHELLS * RandomBlockSamples.KINDS];
 
-    private RandomBlockEffectSystem(IModLog logger, Configuration config, IBlockLibrary blockLibrary, IAudioPlayer audioPlayer, int range, String name) {
-        super(logger, config, name);
+    public RandomBlockEffectSystem(IModLog logger, Configuration config, IBlockLibrary blockLibrary, IAudioPlayer audioPlayer) {
+        super(logger, config, "Random");
 
         this.blockLibrary = blockLibrary;
         this.audioPlayer = audioPlayer;
-        this.range = range;
-    }
-
-    /**
-     * The sampler for a block effect range past {@link #FAR_RANGE}: effects only, beyond the far sampler's reach.
-     * Idle at the default range.
-     */
-    public static RandomBlockEffectSystem beyondFar(IModLog logger, Configuration config, IBlockLibrary blockLibrary, IAudioPlayer audioPlayer) {
-        return new RandomBlockEffectSystem(logger, config, blockLibrary, audioPlayer, 0, "Random(beyond %d blocks)".formatted(FAR_RANGE));
     }
 
     @Override
@@ -74,72 +70,103 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
         super.tick(processingPredicate);
 
         var player = GameUtils.getPlayer().orElseThrow();
-        var world = player.level();
-        var center = player.blockPosition();
+        this.world = player.level();
+        this.center = player.blockPosition();
 
         // Effects are limited to the configured block effect range, the same sphere SystemsScanner keeps them in,
         // so they aren't started only to be dropped the next time the player moves
-        final int effectRange = this.config.blockEffects.blockEffectRange;
-        final boolean beyondFar = this.range == 0;
-        if (beyondFar && effectRange <= FAR_RANGE)
-            return;
-        final int sampleRange = beyondFar ? effectRange : this.range;
-        final double particleRangeSq = AbstractBlockEffect.particleRangeSq();
+        this.effectRange = this.config.blockEffects.blockEffectRange;
+        this.particleRangeSq = AbstractBlockEffect.particleRangeSq();
         // Effects emit particles straight into the particle engine, which skips vanilla's Particles option and
         // distance checks, so apply them here. Minimal starts no effects; Decreased skips about one in three below.
-        final ParticleStatus particles = GameUtils.getGameSettings().particles().get();
-        final boolean effectsAllowed = particles != ParticleStatus.MINIMAL;
-        // Starting effects is all it does
-        if (beyondFar && !effectsAllowed)
-            return;
-        final var camera = GameUtils.getMC().gameRenderer.getMainCamera().getPosition();
+        this.particles = GameUtils.getGameSettings().particles().get();
+        this.camera = GameUtils.getMC().gameRenderer.getMainCamera().getPosition();
+        // Thousands of samples, each several random numbers: look up the thread's generator once, not on every call
+        this.random = Randomizer.forThisThread();
+        this.counts = null;
+        if (RandomBlockSamples.isRecording()) {
+            this.counts = this.countsWhileRecording;
+            Arrays.fill(this.counts, 0);
+        }
 
-        // 667 samples, each several random numbers: look up the thread's generator once, not on every call
-        final IRandomizer random = Randomizer.forThisThread();
         final var pos = this.samplePos;
-        for (int i = 0; i < ITERATION_COUNT; i++) {
-            pos.set(
-                    random.triangle(center.getX(), sampleRange),
-                    random.triangle(center.getY(), sampleRange),
-                    random.triangle(center.getZ(), sampleRange));
+        for (int i = 0; i < RandomBlockSampler.PAIRS; i++) {
+            RandomBlockSampler.near(this.random, this.center, pos);
+            this.sample(pos, true, RandomBlockSamples.SAMPLES);
+            RandomBlockSampler.far(this.random, this.center, pos);
+            this.sample(pos, true, RandomBlockSamples.SAMPLES);
+        }
 
-            // The far sampler covers this cube; sampling it again would crowd nearer effects
-            if (beyondFar && isWithinCube(pos, center, FAR_RANGE))
-                continue;
+        // The tail only starts effects
+        if (this.particles != ParticleStatus.MINIMAL) {
+            int draws = RandomBlockSampler.tailDraws(this.random, this.effectRange);
+            for (int i = 0; i < draws; i++)
+                if (RandomBlockSampler.tail(this.random, this.center, this.effectRange, pos))
+                    this.sample(pos, false, RandomBlockSamples.TAIL);
+        }
 
-            if (this.hasSystemAtPosition(pos))
-                continue;
+        if (this.counts != null)
+            RandomBlockSamples.ticked(this.effectRange, this.counts);
 
-            var state = world.getBlockState(pos);
-            if (Constants.BLOCKS_TO_IGNORE.contains(state.getBlock()))
-                continue;
+        // Nothing to hold on to between ticks
+        this.world = null;
+    }
 
-            var info = this.blockLibrary.getBlockInfo(state);
-            if (!info.hasSoundsOrEffects())
-                continue;
+    /**
+     * @param kind which count the sample goes in while recording: {@link RandomBlockSamples#SAMPLES} or
+     *             {@link RandomBlockSamples#TAIL}
+     */
+    private void sample(BlockPos pos, boolean withSounds, int kind) {
+        this.count(pos, kind);
+        if (this.hasSystemAtPosition(pos))
+            return;
 
-            var producers = info.getEffectProducers();
-            if (!producers.isEmpty()
-                    && effectsAllowed
-                    && isWithin(pos, center, effectRange)
-                    && camera.distanceToSqr(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D) <= particleRangeSq
-                    && !(particles == ParticleStatus.DECREASED && random.nextInt(3) == 0)) {
-                for (var producer : producers) {
-                    var effect = producer.produce(world, state, pos, random);
-                    if (effect.isPresent()) {
-                        // Keyed by the sampled block, which is what hasSystemAtPosition() checks above. The effect's
-                        // own position can differ (a flame jet on a solid block sits in the block above), and keying
-                        // by that let a block start a second effect over the first.
-                        this.systems.put(pos.asLong(), effect.get());
-                        // Only one effect per block position
-                        break;
-                    }
+        var state = this.world.getBlockState(pos);
+        if (Constants.BLOCKS_TO_IGNORE.contains(state.getBlock()))
+            return;
+
+        var info = this.blockLibrary.getBlockInfo(state);
+        if (!info.hasSoundsOrEffects())
+            return;
+
+        var producers = info.getEffectProducers();
+        if (!producers.isEmpty())
+            this.count(pos, RandomBlockSamples.EFFECT_BLOCKS);
+        if (!producers.isEmpty()
+                && this.particles != ParticleStatus.MINIMAL
+                && isWithin(pos, this.center, this.effectRange)
+                && this.camera.distanceToSqr(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D) <= this.particleRangeSq
+                && !(this.particles == ParticleStatus.DECREASED && this.random.nextInt(3) == 0)) {
+            for (var producer : producers) {
+                int particles = BlockParticleEffectProducer.spawned();
+                var effect = producer.produce(this.world, state, pos, this.random);
+                this.count(pos, RandomBlockSamples.PARTICLES, BlockParticleEffectProducer.spawned() - particles);
+                if (effect.isPresent()) {
+                    // Keyed by the sampled block, which is what hasSystemAtPosition() checks above. The effect's
+                    // own position can differ (a flame jet on a solid block sits in the block above), and keying
+                    // by that let a block start a second effect over the first.
+                    this.systems.put(pos.asLong(), effect.get());
+                    this.count(pos, RandomBlockSamples.STARTS);
+                    // Only one effect per block position
+                    break;
                 }
             }
-
-            if (!beyondFar)
-                info.getSoundToPlay(random).ifPresent(s -> this.audioPlayer.play(s.createAtLocation(pos)));
         }
+
+        if (withSounds)
+            info.getSoundToPlay(this.random).ifPresent(s -> {
+                this.audioPlayer.play(s.createAtLocation(pos));
+                this.count(pos, RandomBlockSamples.SOUNDS);
+            });
+    }
+
+    private void count(BlockPos pos, int kind) {
+        this.count(pos, kind, 1);
+    }
+
+    private void count(BlockPos pos, int kind, int amount) {
+        if (this.counts != null && amount != 0)
+            this.counts[RandomBlockSamples.index(pos, this.center, kind)] += amount;
     }
 
     /**
@@ -147,15 +174,6 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
      */
     private static boolean isWithin(BlockPos pos, BlockPos center, int range) {
         return pos.distSqr(center) <= (double) range * range;
-    }
-
-    /**
-     * True if {@code pos} is within {@code range} blocks of {@code center} on every axis.
-     */
-    private static boolean isWithinCube(BlockPos pos, BlockPos center, int range) {
-        return Math.abs(pos.getX() - center.getX()) <= range
-                && Math.abs(pos.getY() - center.getY()) <= range
-                && Math.abs(pos.getZ() - center.getZ()) <= range;
     }
 
     @Override

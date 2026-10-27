@@ -90,6 +90,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Block Effect Range is now a radius, and the scan finds the nearest blocks first, so effects close by show up first after a teleport
   * Setting it past 32 shows effects farther away than Minecraft shows particles, at more cost; waterfalls thin their splashes past 32 blocks
   * The default is now 40, which scans about as many blocks as the old 32 block cube, and shows block effects a little past Minecraft's particle distance
+  * Past 32 blocks, random block effects thin out evenly toward the edge of the range
 * The default Entity Effect Range is now 32, up from 24, as the new entity effects are cheap and still visible that far out
 * The default Precipitation Range is now 14, up from 12, so rain, snow, and dust reach a little farther
   * The area around the player that precipitation looks at is now round, matching where drops fall, rather than square, which saves work at any range
@@ -108,9 +109,10 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Dynamic Surroundings music manager will start music when Minecraft's main menu is shown rather than wait 5 seconds
 * A hungry player's stomach grumbles more often
 * Particle rain, snow, and dust move on a thread of their own while frames are drawn, taking most of their work off the game's main thread; standing still, the area they fall in is looked over a few rows a tick rather than all at once
-* `/dsprofile` recordings also hold how long each of Dynamic Surroundings' tick handlers took every tick, and which optional hooks applied, which features stand aside for another mod, and the settings (text settings left out)
+* `/dsprofile` recordings also hold how long each of Dynamic Surroundings' tick handlers took every tick, how often random block effects looked, started effects and played sounds at each distance, and which optional hooks applied, which features stand aside for another mod, and the settings (text settings left out)
 
 **Fixes**
+* A block within 16 blocks of the player could run two random block effects at once, one over the other; it now runs one at a time
 * Particle rain and snow fell through blocks from other mods whose shape depends on the world, such as Mekanism's energy cube (Minecraft's own rain does too: such blocks are left out of the height map it stops at); they now stop on top of them
 * Minecraft's particles (such as campfire smoke) and the mod's waterfall foam could draw as white squares when another mod's particle changed the drawing state while particles were being drawn; the state is now put back before they are drawn, the log names the particle responsible once, and that particle is drawn on its own from then on so it looks right too (seen with the Rainbows mod); Repair Particle Batches, in a new Guards section of Diagnostic Options, turns this off
 * With Fabulous graphics in some modpacks, rain drops cut the water out where they crossed it, showing the bottom through each drop; another mod left the wrong render target in place for the weather. The mod now checks the target before drawing the weather, lightning, soft particles and particle lights, puts the right one back when it is found replaced, and says once in the log what was there instead; the particle batch guard also catches another mod's particle switching targets

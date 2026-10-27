@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import jdk.jfr.consumer.RecordingFile;
 import net.minecraft.SharedConstants;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -288,6 +289,67 @@ public class ProfilingTests {
     }
 
     @Test
+    void aRecordingHasTheRandomBlockSamples() throws Exception {
+        var file = this.folder.resolve("test.jfr");
+        var recorder = new Thread(() -> {
+            try {
+                ProfileRecording.record(file, Duration.ofSeconds(2), environment());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        recorder.start();
+        // Ticks as the random block effects would: 3 samples, a start and 4 particles 5 blocks out, 2 tail samples 40 out
+        var counts = new int[RandomBlockSamples.SHELLS * RandomBlockSamples.KINDS];
+        counts[5 * RandomBlockSamples.KINDS + RandomBlockSamples.SAMPLES] = 3;
+        counts[5 * RandomBlockSamples.KINDS + RandomBlockSamples.STARTS] = 1;
+        counts[5 * RandomBlockSamples.KINDS + RandomBlockSamples.PARTICLES] = 4;
+        counts[40 * RandomBlockSamples.KINDS + RandomBlockSamples.TAIL] = 2;
+        long sent = 0;
+        while (recorder.isAlive()) {
+            RandomBlockSamples.ticked(48, counts);
+            sent++;
+            Thread.sleep(50);
+        }
+        recorder.join();
+
+        var events = RecordingFile.readAllEvents(file).stream()
+                .filter(e -> e.getEventType().getName().equals("dsurround.RandomBlockSamples"))
+                .toList();
+        assertFalse(events.isEmpty());
+        long ticks = 0;
+        for (var event : events) {
+            int shell = event.getInt("shell");
+            assertTrue(shell == 5 || shell == 40, "shell " + shell);
+            int eventTicks = event.getInt("ticks");
+            assertEquals(48, event.getInt("range"));
+            assertEquals(shell == 5 ? 3L * eventTicks : 0, event.getLong("samples"));
+            assertEquals(shell == 5 ? eventTicks : 0, event.getLong("starts"));
+            assertEquals(shell == 5 ? 4L * eventTicks : 0, event.getLong("particles"));
+            assertEquals(shell == 40 ? 2L * eventTicks : 0, event.getLong("tailSamples"));
+            assertEquals(0, event.getLong("effectBlocks"));
+            assertEquals(0, event.getLong("sounds"));
+            if (shell == 5)
+                ticks += eventTicks;
+        }
+        // Some ticks fall before the recording starts, and are dropped; none after it are lost
+        assertTrue(ticks > 0 && ticks <= sent, ticks + " of " + sent);
+    }
+
+    @Test
+    void randomBlockSamplesGoInTheirShell() {
+        var center = new BlockPos(100, 64, -200);
+        assertEquals(RandomBlockSamples.STARTS, RandomBlockSamples.index(center, center, RandomBlockSamples.STARTS));
+        // 3, 4, 0 is 5 blocks out; 3, 4, 1 is a little more, still in shell 5
+        assertEquals(5 * RandomBlockSamples.KINDS + RandomBlockSamples.SOUNDS,
+                RandomBlockSamples.index(center.offset(3, 4, 0), center, RandomBlockSamples.SOUNDS));
+        assertEquals(5 * RandomBlockSamples.KINDS, RandomBlockSamples.index(center.offset(-3, 4, 1), center, 0));
+        // Past the last shell counts in the last
+        assertEquals((RandomBlockSamples.SHELLS - 1) * RandomBlockSamples.KINDS + RandomBlockSamples.TAIL,
+                RandomBlockSamples.index(center.offset(200, 0, 0), center, RandomBlockSamples.TAIL));
+    }
+
+    @Test
     void aRecordingHasTheFeatures() throws Exception {
         var file = this.folder.resolve("test.jfr");
         var environment = environment();
@@ -329,7 +391,7 @@ public class ProfilingTests {
                     .map(p -> p.getFileName().toString())
                     .sorted()
                     .toList();
-            assertEquals(List.of("EnvironmentEvent.java", "FeatureEvent.java", "HandlerTickEvent.java", "ProfileRecording.java", "RenderTimerEvent.java"), users);
+            assertEquals(List.of("EnvironmentEvent.java", "FeatureEvent.java", "HandlerTickEvent.java", "ProfileRecording.java", "RandomBlockSamplesEvent.java", "RenderTimerEvent.java"), users);
         }
     }
 }

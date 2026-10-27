@@ -2,10 +2,11 @@
 """
 Summarizes a `/dsprofile` recording (config/dsurround/profiles/*.zip or the .jfr inside): what it was made on (and
 the optional hooks, conflicts and settings that aren't as they are out of the box), the mod's render timers, the
-client tick's handlers (and what running them in parallel could gain), where each busy thread spends its time (by
+client tick's handlers (and what running them in parallel could gain), what random block effects did by distance (each
+rate against what the sampler means it to be), where each busy thread spends its time (by
 method and by mod package), what allocates, and GC.
 
-  jfr-summary.py RECORDING [--thread NAME] [--top N] [--jfr PATH] [--dispatch-us US] [--worth-ms MS]
+  jfr-summary.py RECORDING [--thread NAME] [--top N] [--jfr PATH] [--dispatch-us US] [--worth-ms MS] [--shell-width N]
 
   --thread   only this thread's samples for the method tables (default: the busiest few threads)
   --top      rows per table (default 15)
@@ -15,6 +16,7 @@ method and by mod package), what allocates, and GC.
   --dispatch-us  for the handler ticks: what handing the handlers to other threads and waiting for them would cost a
              tick, in microseconds (default 50); measure it on the machine to trust the gain
   --worth-ms the gain a tick must have for running the handlers in parallel to be worth it (default 0.5)
+  --shell-width  blocks of distance to a row for random block effects (default 2)
 
 Reads `jfr print` text output, which is far smaller than its JSON. A zip is unpacked next to itself.
 """
@@ -199,9 +201,14 @@ def handler_ticks(jfr, recording, args):
     if not ticks:
         return
 
-    # A GC pause stops the handler it lands in, which then looks slow: those ticks are left out
-    pauses = sorted((clock_ms(f.get("startTime")), duration_ms(f.get("duration")))
-                    for _, f, _ in events(jfr, recording, ["jdk.GCPhasePause"], 1))
+    # A GC pause stops the handler it lands in, which then looks slow: those ticks are left out. So does any other
+    # stop of every thread a millisecond or more (JFR instrumenting an event class, say, at its first event)
+    pauses = [(clock_ms(f.get("startTime")), duration_ms(f.get("duration")))
+              for _, f, _ in events(jfr, recording, ["jdk.GCPhasePause"], 1)]
+    pauses += [(clock_ms(f.get("startTime")), duration_ms(f.get("duration")))
+               for _, f, _ in events(jfr, recording, ["jdk.ExecuteVMOperation"], 1)
+               if f.get("safepoint") == "true" and duration_ms(f.get("duration")) >= 1.0]
+    pauses.sort()
     paused = {tick for begin, end, tick in spans
               if any(start < end and start + length > begin for start, length in pauses)}
     worst = max((sum(ticks[t].values()) for t in paused), default=0.0)
@@ -215,8 +222,8 @@ def handler_ticks(jfr, recording, args):
     print(f"\n== Client tick handlers ({len(ticks)} ticks; ms; p50 p95 p99 max of the ticks it ran in; "
           f"share of all handler time)")
     if paused:
-        print(f"  {len(paused)} tick{'s' if len(paused) > 1 else ''} with a GC pause in {'them' if len(paused) > 1 else 'it'}"
-              f" left out (the longest {worst:.3f} ms)")
+        print(f"  {len(paused)} tick{'s' if len(paused) > 1 else ''} with a GC pause or other JVM stop in "
+              f"{'them' if len(paused) > 1 else 'it'} left out (the longest {worst:.3f} ms)")
     print(f"  {'handler':24} {'ran':>5} {'p50':>7} {'p95':>7} {'p99':>7} {'max':>7} {'mean/tick':>9} {'share':>6}")
     rows = []
     for handler in handlers:
@@ -257,6 +264,90 @@ def handler_ticks(jfr, recording, args):
         print(f"    {100 * count / len(ticks):5.1f}%  {unit}")
 
 
+# What RandomBlockSampler means each block to get, to set the measured rates against; keep in step with it
+NEAR_RANGE, FAR_RANGE, PAIRS, TAIL_RATE = 16, 32, 667, 1.2e-3
+
+
+def sampler_spread(offset, reach):
+    weight = reach + 1 - abs(offset)
+    return weight / (reach + 1) ** 2 if weight > 0 else 0.0
+
+
+def sampler_rates(effect_range, shells):
+    """Per 1-block shell: the blocks in it, and the mean rate (samples a tick) RandomBlockSampler means them to get"""
+    blocks, rates = [0] * shells, [0.0] * shells
+    reach = shells - 1
+    for x in range(reach + 1):
+        for y in range(reach + 1):
+            for z in range(reach + 1):
+                shell = int(math.sqrt(x * x + y * y + z * z))
+                if shell >= shells:
+                    continue
+                # One octant, counted for each sign it stands for
+                copies = (1 if x == 0 else 2) * (1 if y == 0 else 2) * (1 if z == 0 else 2)
+                inner = PAIRS * (sampler_spread(x, NEAR_RANGE) * sampler_spread(y, NEAR_RANGE) * sampler_spread(z, NEAR_RANGE)
+                                 + sampler_spread(x, FAR_RANGE) * sampler_spread(y, FAR_RANGE) * sampler_spread(z, FAR_RANGE))
+                distance = math.sqrt(x * x + y * y + z * z)
+                tail = 0.0
+                if FAR_RANGE < effect_range and distance < effect_range:
+                    tail = TAIL_RATE if distance <= FAR_RANGE else TAIL_RATE * (effect_range - distance) / (effect_range - FAR_RANGE)
+                blocks[shell] += copies
+                rates[shell] += copies * max(inner, tail)
+    return blocks, [r / b if b else 0.0 for r, b in zip(rates, blocks)]
+
+
+def random_block_samples(jfr, recording, args):
+    shells = defaultdict(lambda: Counter())
+    ranges = Counter()
+    for _, fields, _ in events(jfr, recording, ["dsurround.RandomBlockSamples"], 1):
+        shell = int(number(fields.get("shell")))
+        row = shells[shell]
+        for key in ("ticks", "samples", "tailSamples", "effectBlocks", "starts", "particles", "sounds"):
+            row[key] += int(number(fields.get(key)))
+        ranges[int(number(fields.get("range")))] += 1
+    if not shells:
+        return
+    # Each second's events carry that second's ticks; a shell sampled every second has them all
+    ticks = max(row["ticks"] for row in shells.values())
+    effect_range = ranges.most_common(1)[0][0]
+    last = max(max(shells), effect_range)
+    blocks, expected = sampler_rates(effect_range, last + 1)
+    width = args.shell_width
+    print(f"\n== Random block effects by distance ({ticks} ticks; block effect range {effect_range}"
+          f"{', changed while recording: ' + ', '.join(map(str, sorted(ranges))) if len(ranges) > 1 else ''}; "
+          f"rates a block a tick x 1000, effect blocks a tick; starts (effects kept running), particles (spawned outright) and "
+          f"sounds over the whole recording, being rare)")
+    print(f"  {'blocks out':>10} {'blocks':>7} {'rate':>7} {'meant':>7} {'tail':>6} {'effect blocks':>13} "
+          f"{'starts':>7} {'particles':>9} {'sounds':>7}")
+    previous = None
+    for begin in range(0, last + 1, width):
+        group = range(begin, min(begin + width, last + 1))
+        count = sum(blocks[s] for s in group)
+        if not count:
+            continue
+        rows = [shells.get(s, Counter()) for s in group]
+        taken = sum(r["samples"] + r["tailSamples"] for r in rows)
+        tail = sum(r["tailSamples"] for r in rows)
+        rate = taken / (ticks * count)
+        meant = sum(expected[s] * blocks[s] for s in group) / count
+        found = sum(r["effectBlocks"] for r in rows) / ticks
+        starts = sum(r["starts"] for r in rows)
+        particles = sum(r["particles"] for r in rows)
+        sounds = sum(r["sounds"] for r in rows)
+        # Denser than nearer in is the band the sampler is meant not to have; off from what is meant, a sampler change
+        # this script hasn't caught up with, or too short a recording
+        notes = []
+        if previous and rate > previous * 1.1:
+            notes.append("denser than nearer")
+        if meant and abs(rate - meant) > 0.1 * meant and taken >= 1000:
+            notes.append("off from meant")
+        previous = rate
+        label = f"{group[0]}-{group[-1] + 1}"
+        print(f"  {label:>10} {count:7d} {1000 * rate:7.3f} {1000 * meant:7.3f} "
+              f"{(100 * tail / taken if taken else 0):5.0f}% {found:13.2f} {starts:7d} {particles:9d} {sounds:7d}"
+              f"{'  ' + '; '.join(notes) if notes else ''}")
+
+
 def callers(jfr, recording, args):
     mods, nearest, ours, total = Counter(), Counter(), Counter(), 0
     for _, fields, frames in events(jfr, recording, ["jdk.ExecutionSample"]):
@@ -290,6 +381,7 @@ def main():
     parser.add_argument("--callers")
     parser.add_argument("--dispatch-us", type=float, default=50.0)
     parser.add_argument("--worth-ms", type=float, default=0.5)
+    parser.add_argument("--shell-width", type=int, default=2)
     args = parser.parse_args()
     jfr = find_jfr(args.jfr)
     recording = unpack(args.recording)
@@ -338,6 +430,7 @@ def main():
                   f"{mean('cpuAverage'):8.3f} {last('cpuAverage'):8.3f} {peak('cpuPeak'):9.3f} {count}")
 
     handler_ticks(jfr, recording, args)
+    random_block_samples(jfr, recording, args)
 
     by_thread = Counter()
     methods = defaultdict(Counter)
