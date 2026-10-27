@@ -42,6 +42,34 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Twentieth 0.4.8 merge (through `2ba736f`)
+
+Potato run configs, frame times and frame size in recordings, `jfr-summary.py` shares and pause filtering, rain and
+snow built off the render thread (`DropMeshes`), and the profile summary (`ProfileSummary`, [Copy summary]). Nine
+conflicts; one new rename rule pair (`ClickEvent`/`HoverEvent` constructors to 26.2's records).
+
+- **Frame times**: the wrap around `GameRenderer.render(DeltaTracker, boolean)` is in `Minecraft.renderFrame(Z)` here
+  (1.21.1 calls it from `runTick`); 26.2's `renderFrame` runs `update`, `extract`, then `render`.
+- **Drops built ahead**: 1.21.1 starts the build at the head of `LevelRenderer.renderLevel`; here `MixinGameRenderer`
+  (new) at the head of `GameRenderer.renderLevel(DeltaTracker)`, the camera from `mainCamera()`, set by `update` and
+  `extract` before `render`. `DropMeshes` writes into `ParticleQuads` (one for the drops, one for the dust, one for
+  writing on the render thread when the camera differs) instead of `BufferBuilder` meshes, and hands them back for
+  the handler's `drawQuads`; `PrecipitationRenderer.build(field, quads, view, ...)` replaces `draw`, from a copied
+  `View` (26.2's `position()`, `leftVector()`, `upVector()`, `forwardVector()`, compared by component as they are
+  `Vector3fc`). `PrecipitationField.draw` is gone, as on 0.4.8. `DropMeshesTests` builds into `ParticleQuads`.
+- **Environment**: 26.2's device fields kept (`gpu`, `gpuVendor`, `gpuType`, `driver`, `backend`) with 0.4.8's
+  `width`, `height`, `frameRateLimit`, `vsync`, `devRun`; `ProfileSummary`'s GPU line reads 26.2's fields
+  (`GPU: <gpu> (<type>; <backend>, driver <driver>)`) and its display line carries 26.2's graphics text (the preset
+  and improved transparency). The unlimited frame rate is still 260 (`Options.UNLIMITED_FRAMERATE_CUTOFF`).
+- No particle batch guard here, so its two `OptionalHook` entries and lang keys stay out.
+
+Compiles on common, Fabric and NeoForge; 2451 tests pass; both clients start (in dev a missing optional hook stops
+the launch, so `FRAME_TIMES` and `PRECIPITATION_AHEAD` applied). The first NeoForge start crashed once in vanilla's
+atlas animation (`Missing uniform Globals`, from `TextureManager.tick` before the first frame), right after the
+Fabric client was stopped; the next start was clean. To check in game on both platforms: rain, snow and dust as
+before (Fabulous too), the diagnostics' "built ahead N%" near 100 in rain, and a `/dsprofile weather`: the Frames
+section in `jfr-summary.py`, the chat headline and [Copy summary] (paste it: GPU line with the device's fields).
+
 ### Nineteenth 0.4.8 merge (through `1380ff2`)
 
 Skull flames: little flames in the eyes of placed skeleton skulls, blue soul fire in wither skeleton skulls
