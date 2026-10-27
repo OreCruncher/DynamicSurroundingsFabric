@@ -42,6 +42,17 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Seventeenth 0.4.8 merge (through `b68f3f9`)
+
+The three random block samplers merged into one `RandomBlockEffectSystem` sampling where `RandomBlockSampler` says
+(vanilla's near and far spreads, then an effects-only tail out to the block effect range), and their counts by
+distance in `/dsprofile` recordings (`dsurround.RandomBlockSamples`, `jfr-summary.py`'s new section); our JFR event
+classes are registered before the recording starts. One conflict in `RandomBlockEffectSystem`, resolved by
+`port-merge.py` with the existing rules (`ParticleStatus`'s package, `mainCamera().position()`). Compiles on common,
+Fabric and NeoForge; 2424 tests pass. To check in game on both platforms: fireflies and flame jets past 32 blocks
+with the range at 48, thinning toward the edge with no band; a `/dsprofile` whose summary's random block rates match
+the meant column and whose first seconds show no 100 ms handler tick.
+
 ### Sixteenth 0.4.8 merge (through `739c199`)
 
 The bowstring's release, back from 1.12.2: data only (two sound events using vanilla's subtitle keys, two factories,
