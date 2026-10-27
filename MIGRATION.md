@@ -42,6 +42,18 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Eighteenth 0.4.8 merge (through `515fe37`)
+
+Animal breath: `AnimalBreathEffect`, mouths placed by `Muzzle` from the mob models, the Animal Breath option and the
+`dsurround:effects/animal_breath` tag; breath shows when the mouth is above the block's collision shape (snow layers).
+One conflict in `FrostBreathParticle`'s constructor (26.2's `super` takes the first sprite; the new origin, trajectory,
+size and speed parameters added to it). The animals moved packages on 26.2 (`sheep`, `feline`, `fox`, `panda`,
+`polarbear`, `equine`): new rules in `port-renames.txt`, and `EntityTypes` imported where the existing rule renamed the
+constants. The adult head geometry was checked against 26.2's models and matches 1.21.1's, except the cow: 26.2's has a
+snout one pixel further out, so its profile is `(-8, 4, -7, 2.5)` here (the tests follow). 2437 tests pass. To check in
+game: breath from each animal's mouth, the cow's at its snout; **babies** have models of their own on 26.2
+(`BabyWolfModel`, `BabyCatModel`...), so their mouths may sit off where 1.21.1's scaled-down placement is right.
+
 ### Seventeenth 0.4.8 merge (through `b68f3f9`)
 
 The three random block samplers merged into one `RandomBlockEffectSystem` sampling where `RandomBlockSampler` says
