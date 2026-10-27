@@ -51,6 +51,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Includes the lily pads of Biomes O' Plenty, Twilight Forest, Oh The Biomes We've Gone, and Regions Unexplored; the `dsurround:effects/frog_croaks` block tag sets which blocks croak
 * The heartbeat is back from older versions: the player's heart pounds when their health is at 30% or less (not in creative); Allow Scary Content turns it off
 * The jump sound is back from older versions: a breath when you jump, heard by you only; off by default, turned on with Jump Sound in Entity Effects
+* The bowstring's release is back from older versions: arrows fired from a bow, by players and skeletons, are heard with it in place of Minecraft's sound; Remap Sounds in Sound Options turns it off
 * In a dust storm the glow of sunrise and sunset turns dusty and dims, as the sky and fog already do
 * Rain, snow, and dust blown in under an overhang drift a little way in out of the wind and fade, instead of stopping at the roof's edge; snowflakes that reach the ground under the overhang lie there, and rain splashes on a porch floor
 * Lightning that branches and forks, in place of Minecraft's bolts
