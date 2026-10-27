@@ -45,13 +45,16 @@ checking in game.
 - Profiling: `/dsprofile [scene] [seconds]` records a JFR file, zipped, to `config/dsurround/profiles` with the mod's
   GPU/CPU render timers in it (`dsurround.RenderTimer` events; precipitation's carry a `count` of drops/spots a frame,
   so two recordings can be checked for the same storm), each client tick handler's time every tick
-  (`dsurround.HandlerTick`, through `profiling/HandlerTicks`), what it was made on (`dsurround.Environment`) and each
+  (`dsurround.HandlerTick`, through `profiling/HandlerTicks`), what random block effects sampled, found, started,
+  spawned and played by 1-block distance shell once a second (`dsurround.RandomBlockSamples`, through `profiling/RandomBlockSamples`),
+  what it was made on (`dsurround.Environment`) and each
   optional hook's status, conflict and non-text setting (`dsurround.Feature`, from `ProfileFeature`); unzip
   it and read it with the JDK's `jfr` (`jfr print --json --events ...`), or summarize it with
   `python scripts/jfr-summary.py <zip or jfr>` (timers: mean and end of the running averages, and peak; for a
-  timer measured rarely, once a second or less, trust the end, not the mean; handler percentiles per tick (ticks a GC pause landed in left out) and what
+  timer measured rarely, once a second or less, trust the end, not the mean; handler percentiles per tick (ticks a GC pause or other JVM stop landed in left out) and what
   running them in parallel would gain at best, `--dispatch-us`/`--worth-ms` for its cost and threshold, dependencies
-  in `FIRST_HANDLERS`/`HANDLER_CHAINS`; threads, mod packages, our frames, allocation, GC;
+  in `FIRST_HANDLERS`/`HANDLER_CHAINS`; random block effects' rate a block by distance against what
+  `RandomBlockSampler` means (its constants are copied into the script: keep them in step), `--shell-width` rows; threads, mod packages, our frames, allocation, GC;
   `--callers <method>` for who calls something).
   Players can make them too, so nothing private may get in: a new event type or a new `jdk.jfr` user needs a look at
   `ProfileRecording.PRIVATE` and `Redaction`. Record under Run, not IntelliJ's Debug (its async stack trace agent
@@ -144,6 +147,11 @@ checking in game.
   (made in its `CreateOpenALContextEvent`). `VoiceSounds` keeps the channels (tested with a fake `Backend`);
   `OpenALBackend` does the OpenAL side. `VoiceChatPlugin` is the only class using its API (compile-only; loaded by the
   `voicechat` entrypoint / NeoForge annotation), so nothing else may reference it.
+- Random block effects: one `effects/systems/RandomBlockEffectSystem` (one effect per block), sampling where
+  `RandomBlockSampler` says: vanilla's near (16) and far (32) triangular spreads, 667 each a tick, which also play the
+  blocks' sounds; past 32, an effects-only tail out to `blockEffectRange`, kept only where the inner spreads fall short
+  of it, so the rate a block falls smoothly with distance (`RandomBlockSamplerTests`). `/dsprofile` recordings carry
+  the rate by distance for `jfr-summary.py` to compare.
 - Mixin plugin (`mixinutils/DSurroundMixinPlugin`) skips mixins whose target belongs to a mod that isn't installed
   (currently Cloth Config).
 - Features that turn themselves off for another mod are listed in `lib/platform/FeatureConflict` (checked with
