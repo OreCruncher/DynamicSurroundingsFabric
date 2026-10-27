@@ -8,6 +8,22 @@
     ]
   },
   {
+    "soundEvent": "minecraft:entity.arrow.shoot",
+    "rules": [
+      {
+        "factory": "dsurround:bow_loose"
+      }
+    ]
+  },
+  {
+    "soundEvent": "minecraft:entity.skeleton.shoot",
+    "rules": [
+      {
+        "factory": "dsurround:bow_loose.skeleton"
+      }
+    ]
+  },
+  {
     "soundEvent": "minecraft:block.grass.step",
     "rules": [
       {

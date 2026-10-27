@@ -1128,6 +1128,16 @@
 		]
 	},
 	"item.bow.loose": {
+		"subtitle": "subtitles.entity.arrow.shoot",
+		"sounds": [
+			"dsurround:items/bow_loose1",
+			"dsurround:items/bow_loose2",
+			"dsurround:items/bow_loose3",
+			"dsurround:items/bow_loose4"
+		]
+	},
+	"item.bow.loose.skeleton": {
+		"subtitle": "subtitles.entity.skeleton.shoot",
 		"sounds": [
 			"dsurround:items/bow_loose1",
 			"dsurround:items/bow_loose2",

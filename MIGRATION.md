@@ -42,6 +42,14 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Sixteenth 0.4.8 merge (through `739c199`)
+
+The bowstring's release, back from 1.12.2: data only (two sound events using vanilla's subtitle keys, two factories,
+`entity.arrow.shoot` and `entity.skeleton.shoot` remapped). 26.2 has the same sound IDs and subtitle keys, and
+`AbstractSkeleton` still shoots with `SKELETON_SHOOT`. Merged without conflicts; 2414 tests pass. To check in game:
+firing a bow, and a skeleton firing, sound like a bowstring, with the "Arrow fired" and "Skeleton shoots" subtitles;
+with Remap Sounds off, Minecraft's sounds.
+
 ### Fifteenth 0.4.8 merge (through `26ca52c`)
 
 Changelog lines only (the precipitation thread, what recordings now hold, the AI disclosure), merged as is.
