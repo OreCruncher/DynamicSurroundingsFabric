@@ -25,6 +25,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Added the conditional operator to the scripting engine
 * Built the dynamic clouds, their fading and sharing between players, and lightning lighting them; reviewed their performance profiles
 * Measured the tick handlers in recordings, moved the precipitation's work to its own thread, and ported the jump sound from 1.12.2
+* Placed animals' breath at their mouths from Minecraft's mob models
 
 **What's New**
 * Burning mobs are wreathed in flames like a flame jet's (tongues of flame, sparks, and smoke) in place of Minecraft's flat fire sheets
@@ -52,6 +53,11 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * The heartbeat is back from older versions: the player's heart pounds when their health is at 30% or less (not in creative); Allow Scary Content turns it off
 * The jump sound is back from older versions: a breath when you jump, heard by you only; off by default, turned on with Jump Sound in Entity Effects
 * The bowstring's release is back from older versions: arrows fired from a bow, by players and skeletons, are heard with it in place of Minecraft's sound; Remap Sounds in Sound Options turns it off
+* Animals breathe in the cold too: cows, mooshrooms, sheep, goats, pigs, horses, donkeys, mules, llamas, camels, wolves, foxes, cats, ocelots, polar bears, pandas, sniffers, armadillos, hoglins, and ravagers
+  * The breath comes from the mouth, out in front of the body, and follows the head as it turns and nods; under water they breathe bubbles
+  * Bigger animals breathe bigger puffs; a sheep eating grass, a goat about to ram, a rearing horse, or a sleeping fox holds its breath until it's done
+  * Within 16 blocks of you; Animal Breath option in Entity Effects, along with Breath Particle Effect; mobs tagged `dsurround:effects/animal_breath` breathe this way
+  * Villagers', illagers', and players' breath now follows where their head faces
 * In a dust storm the glow of sunrise and sunset turns dusty and dims, as the sky and fog already do
 * Rain, snow, and dust blown in under an overhang drift a little way in out of the wind and fade, instead of stopping at the roof's edge; snowflakes that reach the ground under the overhang lie there, and rain splashes on a porch floor
 * Lightning that branches and forks, in place of Minecraft's bolts

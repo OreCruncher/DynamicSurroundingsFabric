@@ -361,6 +361,8 @@
   "dsurround.config.entityEffects.enableBowPull.tooltip": "Enable/disable bow pull sound effect",
   "dsurround.config.entityEffects.enableBreathEffect": "Breath Particle Effect",
   "dsurround.config.entityEffects.enableBreathEffect.tooltip": "Enable/disable breath effect in cold biomes",
+  "dsurround.config.entityEffects.enableAnimalBreath": "Animal Breath",
+  "dsurround.config.entityEffects.enableAnimalBreath.tooltip": "Enable/disable breath from animals (cows, sheep, horses, wolves...) near you, along with the breath effect",
   "dsurround.config.entityEffects.enablePlayerToolbarEffect": "Player Toolbar Effects",
   "dsurround.config.entityEffects.enablePlayerToolbarEffect.tooltip": "Enable/disable player toolbar sound effects",
   "dsurround.config.entityEffects.enableJumpSound": "Jump Sound",

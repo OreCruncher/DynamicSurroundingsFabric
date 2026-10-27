@@ -44,3 +44,11 @@ re: \.getMainCamera\(\)\.getPosition\(\) => .mainCamera().position()
 
 # The entity type constants moved from EntityType to EntityTypes
 re: \bEntityType\.([A-Z][A-Z0-9_]*)\b => EntityTypes.\1
+
+# Animals moved into packages of their own
+re: \bnet\.minecraft\.world\.entity\.animal\.Sheep\b => net.minecraft.world.entity.animal.sheep.Sheep
+re: \bnet\.minecraft\.world\.entity\.animal\.Cat\b => net.minecraft.world.entity.animal.feline.Cat
+re: \bnet\.minecraft\.world\.entity\.animal\.Fox\b => net.minecraft.world.entity.animal.fox.Fox
+re: \bnet\.minecraft\.world\.entity\.animal\.Panda\b => net.minecraft.world.entity.animal.panda.Panda
+re: \bnet\.minecraft\.world\.entity\.animal\.PolarBear\b => net.minecraft.world.entity.animal.polarbear.PolarBear
+re: \bnet\.minecraft\.world\.entity\.animal\.horse\. => net.minecraft.world.entity.animal.equine.

@@ -14,6 +14,8 @@ public class EntityEffectTags {
 
     public static final TagKey<EntityType<?>> BOW_PULL = of("bow_pull");
     public static final TagKey<EntityType<?>> FROST_BREATH = of("frost_breath");
+    // Breath from a mouth out in front of the body; takes the place of frost_breath for those in both
+    public static final TagKey<EntityType<?>> ANIMAL_BREATH = of("animal_breath");
     public static final TagKey<EntityType<?>> ITEM_SWING = of("item_swing");
     public static final TagKey<EntityType<?>> TOOLBAR = of("toolbar");
     public static final TagKey<EntityType<?>> BRUSH_STEP = of ("brush_step");

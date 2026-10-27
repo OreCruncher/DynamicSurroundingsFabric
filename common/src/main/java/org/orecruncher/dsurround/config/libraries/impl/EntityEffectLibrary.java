@@ -195,7 +195,10 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
 
         if (this.tagLibrary.is(EntityEffectTags.BOW_PULL, entityType))
             effectTypes.add(EntityEffectType.BOW_PULL);
-        if (this.tagLibrary.is(EntityEffectTags.FROST_BREATH, entityType))
+        // A ravager is a raider, but breathes like an animal
+        if (this.tagLibrary.is(EntityEffectTags.ANIMAL_BREATH, entityType))
+            effectTypes.add(EntityEffectType.ANIMAL_BREATH);
+        else if (this.tagLibrary.is(EntityEffectTags.FROST_BREATH, entityType))
             effectTypes.add(EntityEffectType.FROST_BREATH);
         if (this.tagLibrary.is(EntityEffectTags.ITEM_SWING, entityType))
             effectTypes.add(EntityEffectType.ITEM_SWING);
