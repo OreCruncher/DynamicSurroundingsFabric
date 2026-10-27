@@ -42,6 +42,20 @@ To check in game on both platforms: burning mobs (flames, vanilla fire hidden, o
 (outline, size, facing the camera), footprints (lie flat, lit, fade, square for players), rain stopping on a
 Mekanism-style block and drifting under eaves.
 
+### Nineteenth 0.4.8 merge (through `1380ff2`)
+
+Skull flames: little flames in the eyes of placed skeleton skulls, blue soul fire in wither skeleton skulls
+(`SkullEyes`, `SkullFlameEffectSystem`, `EyeFlame`, the Skull Flames option and the `dsurround:effects/skull_flames`
+and `soul_skull_flames` tags). 1.21.1 drew the eye flames on a render type of their own (`PARTICLE_SHEET_EYE_FLAME`,
+soft over 0.02 blocks, so they show in front of the face). 26.2 sets the fade per pipeline, so `SoftParticles` has
+three more (`eye_flame`, `eye_flame_depth`, `eye_flame_fabulous`, in `ModShaders`) and `eyeFlameLayer()`, with the
+flames' fallback; `MixinParticleEngine` keeps 26.2's side. `FlameTongue` was rebuilt by hand on `extract()` with the
+`FIRE`/`SOUL` palettes and `castLight`. 26.2's skull renderer places the head with the same transform (now a
+`Transformation` in the pose rather than the model's `yRot`) and the eye pixels are unchanged, so `SkullEyes` is too.
+Compiles on common, Fabric and NeoForge; 2443 tests pass; the Fabric client starts with the eye flame pipelines
+compiled. To check in game: a skeleton and a wither skeleton skull, on the floor and on a wall, from the front (flames
+distinct, the face not washed out) and the side, with Fabulous too.
+
 ### Eighteenth 0.4.8 merge (through `515fe37`)
 
 Animal breath: `AnimalBreathEffect`, mouths placed by `Muzzle` from the mob models, the Animal Breath option and the
