@@ -278,6 +278,10 @@ public class Configuration extends ConfigurationData {
         public boolean steamColumnEnabled = true;
 
         @Property
+        @Comment("Enable/disable little flames burning in the eyes of skeleton skulls placed in the world (blue soul fire for wither skeleton skulls)")
+        public boolean skullFlamesEnabled = true;
+
+        @Property
         @Comment("Enable/disable bubble columns generated underwater")
         public boolean bubbleColumnEnabled = true;
 

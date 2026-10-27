@@ -9,6 +9,7 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.effects.IEffectSystem;
 import org.orecruncher.dsurround.effects.systems.RandomBlockEffectSystem;
+import org.orecruncher.dsurround.effects.systems.SkullFlameEffectSystem;
 import org.orecruncher.dsurround.effects.systems.SteamEffectSystem;
 import org.orecruncher.dsurround.effects.systems.WaterStepEffectSystem;
 import org.orecruncher.dsurround.effects.systems.WaterfallEffectSystem;
@@ -80,6 +81,7 @@ public class AreaBlockEffects extends AbstractClientHandler {
 
         this.effectSystems = new SystemsScanner(this.config, this.locus);
         this.effectSystems.addEffectSystem(new SteamEffectSystem(this.logger, this.config));
+        this.effectSystems.addEffectSystem(new SkullFlameEffectSystem(this.logger, this.config));
         this.effectSystems.addEffectSystem(new WaterfallEffectSystem(this.logger, this.config, this.audioPlayer));
         this.effectSystems.addEffectSystem(new WaterStepEffectSystem(this.logger, this.config, this.audioPlayer));
         this.effectSystems.addEffectSystem(new RandomBlockEffectSystem(this.logger, this.config, this.blockLibrary, this.audioPlayer));

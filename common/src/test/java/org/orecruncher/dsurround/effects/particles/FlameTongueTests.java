@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for how a tongue of flame's colour changes as it burns.
+ * Tests for how a tongue of flame's color changes as it burns.
  */
 public class FlameTongueTests {
 
@@ -25,13 +25,25 @@ public class FlameTongueTests {
     }
 
     @Test
+    void soulFireBurnsWhiteCyanThenDeepBlue() {
+        var hot = FlameTongue.colorAt(0F, FlameTongue.SOUL).clone();
+        var cool = FlameTongue.colorAt(1F, FlameTongue.SOUL).clone();
+        for (var color : new float[][]{hot, cool})
+            assertTrue(color[2] > color[0], "bluer than red");
+        assertTrue(hot[0] > cool[0] && hot[1] > cool[1], "darker as it cools");
+        assertTrue(cool[2] > cool[1] * 2F, "deep blue at the end");
+    }
+
+    @Test
     void changesSmoothly() {
-        var previous = at(0F);
-        for (float life = 0.01F; life <= 1F; life += 0.01F) {
-            var color = at(life);
-            for (int i = 0; i < 3; i++)
-                assertTrue(Math.abs(color[i] - previous[i]) < 0.05F, "jumped at " + life);
-            previous = color;
+        for (var palette : new FlameTongue.Palette[]{FlameTongue.FIRE, FlameTongue.SOUL}) {
+            var previous = FlameTongue.colorAt(0F, palette).clone();
+            for (float life = 0.01F; life <= 1F; life += 0.01F) {
+                var color = FlameTongue.colorAt(life, palette).clone();
+                for (int i = 0; i < 3; i++)
+                    assertTrue(Math.abs(color[i] - previous[i]) < 0.05F, "jumped at " + life);
+                previous = color;
+            }
         }
     }
 }

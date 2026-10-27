@@ -91,6 +91,7 @@ https://github.com/OreCruncher/DynamicSurroundingsDocs.
   * A faint glow lights up a small area around the particle
 * Hot block effects such as flame jets over lava, and steam where water hits a hot block
   * Hot blocks are things Lava, Magma, campfires, and a cauldron containing lava
+* Skeleton skulls placed in the world burn with little flames in their eyes, blue soul fire for wither skeleton skulls (1.21.1-0.4.8+)
 * Block effects are found in a sphere around the player, nearest first; the range can reach past Minecraft's particle distance, up to 64 blocks (1.21.1-0.4.8+)
 * Burning mobs are wreathed in flame jet style flames, sparks, and smoke instead of flat fire sheets (1.21.1-0.4.8+)
   * Sized to the mob, keeps up when it runs, and lights the area around it

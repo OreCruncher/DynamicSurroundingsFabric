@@ -67,13 +67,13 @@ public final class SoftParticles {
      * of mist over it, and dims it there and nowhere else. So a soft layer is drawn twice there (see
      * MixinQuadParticleFeatureRenderer): first only its depth, tested as usual, which leaves the nearest puff's at each
      * pixel (the particles aren't drawn in any order, so writing depth as they are drawn would leave whichever came
-     * last, in patches); then its colour, with no test and no writes, as it would be drawn otherwise: the fade against
+     * last, in patches); then its color, with no test and no writes, as it would be drawn otherwise: the fade against
      * the scene's depth already hides what is behind the scene, and a test against the depth just written would cut one
      * puff off behind another.
      */
-    // The depth pass: nearest wins, and no colour
+    // The depth pass: nearest wins, and no color
     private static final ColorTargetState NO_COLOR = new ColorTargetState(Optional.empty(), GpuFormat.RGBA8_UNORM, ColorTargetState.WRITE_NONE);
-    // The colour pass after it
+    // The color pass after it
     private static final DepthStencilState UNTESTED = new DepthStencilState(CompareOp.ALWAYS_PASS, false);
 
     /**
@@ -84,7 +84,7 @@ public final class SoftParticles {
             .withShaderDefine("SOFT_DISTANCE", 0.4F)
             .withBindGroupLayout(SOFT_DEPTH_LAYOUT)
             .build();
-    // The same, for Fabulous graphics: its depth, then its colour
+    // The same, for Fabulous graphics: its depth, then its color
     private static final RenderPipeline MIST_DEPTH_PIPELINE = particlePipeline("pipeline/waterfall_mist_depth", Constants.asId("core/soft_particle"))
             .withShaderDefine("SOFT_DISTANCE", 0.4F)
             .withShaderDefine("WRITE_DEPTH")
@@ -109,7 +109,7 @@ public final class SoftParticles {
             .withBindGroupLayout(SOFT_DEPTH_LAYOUT)
             .withColorTargetState(new ColorTargetState(ADDITIVE))
             .build();
-    // The same, for Fabulous graphics: its depth, then its colour
+    // The same, for Fabulous graphics: its depth, then its color
     private static final RenderPipeline FLAME_DEPTH_PIPELINE = particlePipeline("pipeline/flame_depth", Constants.asId("core/soft_particle"))
             .withShaderDefine("SOFT_DISTANCE", 0.3F)
             .withShaderDefine("WRITE_DEPTH")
@@ -128,17 +128,46 @@ public final class SoftParticles {
             .withColorTargetState(new ColorTargetState(ADDITIVE))
             .build();
 
+    /**
+     * Flames in a skull's eyes: drawn as the other flames are, but they burn a few hundredths of a block in front of
+     * the face, which the flames' fade would all but hide when the skull is seen from the front. Drawn the vanilla way,
+     * they use the flames' fallback.
+     */
+    private static final RenderPipeline EYE_FLAME_PIPELINE = particlePipeline("pipeline/eye_flame", Constants.asId("core/soft_particle"))
+            .withShaderDefine("SOFT_DISTANCE", 0.02F)
+            .withBindGroupLayout(SOFT_DEPTH_LAYOUT)
+            .withColorTargetState(new ColorTargetState(ADDITIVE))
+            .build();
+    // The same, for Fabulous graphics: its depth, then its color
+    private static final RenderPipeline EYE_FLAME_DEPTH_PIPELINE = particlePipeline("pipeline/eye_flame_depth", Constants.asId("core/soft_particle"))
+            .withShaderDefine("SOFT_DISTANCE", 0.02F)
+            .withShaderDefine("WRITE_DEPTH")
+            .withBindGroupLayout(SOFT_DEPTH_LAYOUT)
+            .withColorTargetState(NO_COLOR)
+            .withDepthStencilState(DepthStencilState.DEFAULT)
+            .build();
+    private static final RenderPipeline EYE_FLAME_FABULOUS_PIPELINE = particlePipeline("pipeline/eye_flame_fabulous", Constants.asId("core/soft_particle"))
+            .withShaderDefine("SOFT_DISTANCE", 0.02F)
+            .withBindGroupLayout(SOFT_DEPTH_LAYOUT)
+            .withColorTargetState(new ColorTargetState(ADDITIVE))
+            .withDepthStencilState(UNTESTED)
+            .build();
+
     public static final ModShader SHADER = new ModShader(MIST_PIPELINE, "soft particles", "particles will be drawn without it", Library.LOGGER);
     public static final ModShader FLAME_SHADER = new ModShader(FLAME_PIPELINE, "soft flames", "flames will be drawn without it", Library.LOGGER);
     public static final ModShader DEPTH_SHADER = new ModShader(MIST_DEPTH_PIPELINE, "the depth of soft particles (Fabulous)", "water will be laid over mist above it", Library.LOGGER);
     public static final ModShader FABULOUS_SHADER = new ModShader(MIST_FABULOUS_PIPELINE, "soft particles (Fabulous)", "water will be laid over mist above it", Library.LOGGER);
     public static final ModShader FLAME_DEPTH_SHADER = new ModShader(FLAME_DEPTH_PIPELINE, "the depth of soft flames (Fabulous)", "water will be laid over flames above it", Library.LOGGER);
     public static final ModShader FLAME_FABULOUS_SHADER = new ModShader(FLAME_FABULOUS_PIPELINE, "soft flames (Fabulous)", "water will be laid over flames above it", Library.LOGGER);
+    public static final ModShader EYE_FLAME_SHADER = new ModShader(EYE_FLAME_PIPELINE, "soft skull flames", "skull flames will be drawn without it", Library.LOGGER);
+    public static final ModShader EYE_FLAME_DEPTH_SHADER = new ModShader(EYE_FLAME_DEPTH_PIPELINE, "the depth of soft skull flames (Fabulous)", "water will be laid over skull flames above it", Library.LOGGER);
+    public static final ModShader EYE_FLAME_FABULOUS_SHADER = new ModShader(EYE_FLAME_FABULOUS_PIPELINE, "soft skull flames (Fabulous)", "water will be laid over skull flames above it", Library.LOGGER);
 
     public static final SingleQuadParticle.Layer WATERFALL_MIST = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, MIST_PIPELINE);
     public static final SingleQuadParticle.Layer WATERFALL_MIST_FALLBACK = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, MIST_FALLBACK_PIPELINE);
     public static final SingleQuadParticle.Layer FLAME = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, FLAME_PIPELINE);
     public static final SingleQuadParticle.Layer FLAME_FALLBACK = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, FLAME_FALLBACK_PIPELINE);
+    public static final SingleQuadParticle.Layer EYE_FLAME = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, EYE_FLAME_PIPELINE);
 
     // The copy of the scene's depth the shaders read; can't be the depth buffer being drawn to
     private static final DepthCopy DEPTH_COPY = new DepthCopy("Dynamic Surroundings scene depth");
@@ -189,6 +218,13 @@ public final class SoftParticles {
      */
     public static SingleQuadParticle.Layer flameLayer() {
         return FLAME_SHADER.isUsable() ? FLAME : FLAME_FALLBACK;
+    }
+
+    /**
+     * The layer for flames in a skull's eyes: as {@link #flameLayer}, with a short fade
+     */
+    public static SingleQuadParticle.Layer eyeFlameLayer() {
+        return EYE_FLAME_SHADER.isUsable() ? EYE_FLAME : FLAME_FALLBACK;
     }
 
     /**
@@ -265,6 +301,8 @@ public final class SoftParticles {
             return choose(pipeline, MIST_FALLBACK_PIPELINE, DEPTH_SHADER, FABULOUS_SHADER);
         if (pipeline == FLAME_PIPELINE)
             return choose(pipeline, FLAME_FALLBACK_PIPELINE, FLAME_DEPTH_SHADER, FLAME_FABULOUS_SHADER);
+        if (pipeline == EYE_FLAME_PIPELINE)
+            return choose(pipeline, FLAME_FALLBACK_PIPELINE, EYE_FLAME_DEPTH_SHADER, EYE_FLAME_FABULOUS_SHADER);
         return pipeline;
     }
 
@@ -298,6 +336,8 @@ public final class SoftParticles {
             return MIST_DEPTH_PIPELINE;
         if (pipeline == FLAME_FABULOUS_PIPELINE)
             return FLAME_DEPTH_PIPELINE;
+        if (pipeline == EYE_FLAME_FABULOUS_PIPELINE)
+            return EYE_FLAME_DEPTH_PIPELINE;
         return null;
     }
 
@@ -306,7 +346,8 @@ public final class SoftParticles {
      */
     public static void bind(RenderPass pass, RenderPipeline pipeline) {
         if (pipeline == MIST_PIPELINE || pipeline == FLAME_PIPELINE || pipeline == MIST_DEPTH_PIPELINE || pipeline == FLAME_DEPTH_PIPELINE
-                || pipeline == MIST_FABULOUS_PIPELINE || pipeline == FLAME_FABULOUS_PIPELINE)
+                || pipeline == MIST_FABULOUS_PIPELINE || pipeline == FLAME_FABULOUS_PIPELINE
+                || pipeline == EYE_FLAME_PIPELINE || pipeline == EYE_FLAME_DEPTH_PIPELINE || pipeline == EYE_FLAME_FABULOUS_PIPELINE)
             bindSoftDepth(pass);
     }
 

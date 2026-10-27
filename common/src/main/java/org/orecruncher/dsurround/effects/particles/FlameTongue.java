@@ -25,14 +25,10 @@ public class FlameTongue extends SoftPuffParticle {
     private static final float FADE_OUT = 0.5F;
     // It shrinks as it burns: to 40% of its starting size by the end
     private static final float GROWTH = -0.6F;
-    // Its colour as it burns: hottest when new, orange through the middle of its life, red as it dies
-    private static final float[] HOT = {1F, 0.95F, 0.7F};
-    private static final float[] WARM = {1F, 0.55F, 0.12F};
-    private static final float[] COOL = {0.75F, 0.15F, 0.04F};
-    // How far through its life it is when orange
+    // How far through its life it is when at its palette's warm color
     private static final float WARM_AT = 0.4F;
     // Buoyancy: the lift a tick, as a particle's gravity (negative rises), and the drag
-    private static final float BUOYANCY = -0.4F;
+    static final float BUOYANCY = -0.4F;
     private static final float DRAG = 0.96F;
     // How much it flickers, in size, and how fast, in radians a tick
     private static final float FLICKER = 0.18F;
@@ -44,10 +40,33 @@ public class FlameTongue extends SoftPuffParticle {
     static final float LIGHT_STRENGTH = 0.2F;
     static final float LIGHT_RADIUS = 3.5F;
 
+    /**
+     * The colors a flame burns through: hottest when new, {@code warm} through the middle of its life, {@code cool}
+     * as it dies.
+     */
+    public record Palette(float[] hot, float[] warm, float[] cool) {
+    }
+
+    /**
+     * Fire: white-yellow, then orange, then red
+     */
+    public static final Palette FIRE = new Palette(
+            new float[]{1F, 0.95F, 0.7F},
+            new float[]{1F, 0.55F, 0.12F},
+            new float[]{0.75F, 0.15F, 0.04F});
+    /**
+     * Soul fire: white-cyan, then cyan, then deep blue
+     */
+    public static final Palette SOUL = new Palette(
+            new float[]{0.8F, 1F, 1F},
+            new float[]{0.25F, 0.85F, 1F},
+            new float[]{0.08F, 0.3F, 0.85F});
+
     private final float flickerPhase;
     private final float windExposure;
+    private final Palette palette;
     // Whether it lights its surroundings, and how far
-    private final boolean carriesLight;
+    protected final boolean carriesLight;
     private final float lightRadius;
 
     /**
@@ -59,11 +78,11 @@ public class FlameTongue extends SoftPuffParticle {
      */
     public static Particle create(ClientLevel level, double x, double y, double z, double xd, double yd, double zd,
                                   float scale, boolean carriesLight) {
-        return new FlameTongue(level, x, y, z, xd, yd, zd, scale, carriesLight);
+        return new FlameTongue(level, x, y, z, xd, yd, zd, scale, carriesLight, FIRE);
     }
 
     protected FlameTongue(ClientLevel level, double x, double y, double z, double xd, double yd, double zd, float scale,
-                          boolean carriesLight) {
+                          boolean carriesLight, Palette palette) {
         super(level, x, y, z, DSurroundParticleSprites.WATERFALL_MIST.get(level.getRandom()), FADE_IN, FADE_OUT, GROWTH);
         var random = level.getRandom();
         this.xd = xd;
@@ -81,7 +100,8 @@ public class FlameTongue extends SoftPuffParticle {
         this.windExposure = Shelter.exposure(level, BlockPos.containing(x, y, z));
         this.carriesLight = carriesLight;
         this.lightRadius = LIGHT_RADIUS * scale;
-        this.setColor(HOT);
+        this.palette = palette;
+        this.setColor(palette.hot());
     }
 
     private void setColor(float[] color) {
@@ -116,40 +136,55 @@ public class FlameTongue extends SoftPuffParticle {
 
     @Override
     public void extract(@NotNull QuadParticleRenderState state, @NotNull Camera camera, float partialTick) {
-        var color = colorAt(this.lifeFraction(partialTick));
-        this.rCol = color[0];
-        this.gCol = color[1];
-        this.bCol = color[2];
+        this.setColor(colorAt(this.lifeFraction(partialTick), this.palette));
         super.extract(state, camera, partialTick);
 
-        // Its light, as bright as it is now: fading in and out with it, and flickering with it
-        if (this.carriesLight && this.peakAlpha > 0F && PointLights.flameLightsOn()) {
-            var size = this.getQuadSize(partialTick) / Math.max(super.getQuadSize(partialTick), 1.0E-4F);
-            var strength = LIGHT_STRENGTH * (this.alpha / this.peakAlpha) * size;
-            PointLights.add(
-                    Mth.lerp(partialTick, this.xo, this.x),
-                    Mth.lerp(partialTick, this.yo, this.y),
-                    Mth.lerp(partialTick, this.zo, this.z),
-                    this.rCol, this.gCol, this.bCol, strength, this.lightRadius);
-        }
+        if (this.carriesLight && this.peakAlpha > 0F && PointLights.flameLightsOn())
+            this.castLight(partialTick);
     }
 
-    // Reused for the colour as it is drawn: particles are drawn on the render thread only
+    /**
+     * How bright it is now next to its brightest, for its light: fading in and out with it, and flickering with it
+     */
+    protected float brightness(float partialTick) {
+        var size = this.getQuadSize(partialTick) / Math.max(super.getQuadSize(partialTick), 1.0E-4F);
+        return (this.alpha / this.peakAlpha) * size;
+    }
+
+    /**
+     * Adds its light where it is, as bright as it is now
+     */
+    protected void castLight(float partialTick) {
+        PointLights.add(
+                Mth.lerp(partialTick, this.xo, this.x),
+                Mth.lerp(partialTick, this.yo, this.y),
+                Mth.lerp(partialTick, this.zo, this.z),
+                this.rCol, this.gCol, this.bCol, LIGHT_STRENGTH * this.brightness(partialTick), this.lightRadius);
+    }
+
+    // Reused for the color as it is drawn: particles are drawn on the render thread only
     private static final float[] COLOR = new float[3];
 
     /**
-     * Its colour at a point in its life, 0 to 1: from white-yellow through orange to red. The array is reused.
+     * Its color at a point in its life, 0 to 1: from white-yellow through orange to red. The array is reused.
      */
     static float[] colorAt(float life) {
+        return colorAt(life, FIRE);
+    }
+
+    /**
+     * Its color at a point in its life, 0 to 1, burning through a palette's colors. The array is reused.
+     */
+    static float[] colorAt(float life, Palette palette) {
         float[] from, to;
         float t;
         if (life < WARM_AT) {
-            from = HOT;
-            to = WARM;
+            from = palette.hot();
+            to = palette.warm();
             t = life / WARM_AT;
         } else {
-            from = WARM;
-            to = COOL;
+            from = palette.warm();
+            to = palette.cool();
             t = (life - WARM_AT) / (1F - WARM_AT);
         }
         t = Mth.clamp(t, 0F, 1F);
