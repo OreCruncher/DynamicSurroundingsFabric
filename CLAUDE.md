@@ -1,7 +1,7 @@
 # Dynamic Surroundings — working notes
 
 Client-side Minecraft mod (MIT). Minecraft 26.2, Fabric and NeoForge through Architectury. Versions are in
-`gradle.properties`. This branch is the 26.2 port, carrying 0.4.7; `MIGRATION.md` records what changed and what still needs
+`gradle.properties`. This branch is the 26.2 port, carrying 0.4.8; `MIGRATION.md` records what changed and what still needs
 checking in game.
 
 ## Layout
@@ -259,17 +259,17 @@ checking in game.
 - The user commits; don't commit unless asked.
 
 ## Branches
-- `main`: the 1.21.1 line (0.4.7 was squash-merged as `f3edc2f` and recorded here with `-s ours`; each 1.21.1
+- `main`: the 1.21.1 line (0.4.8 was squash-merged as `21b8f91d` and recorded here with `-s ours`; each 1.21.1
   release branches from `main`).
-- The current 1.21.1 release branch (`OreCruncher/0.4.8`): merged into this branch directly, before its squash to
-  `main`; merge it again for its fixes. Once squashed, check `git diff OreCruncher/0.4.8 main` is empty and record
+- The current 1.21.1 release branch (none open since 0.4.8's squash; next `OreCruncher/0.4.9`): merged into this branch directly, before its squash to
+  `main`; merge it again for its fixes. Once squashed, check `git diff OreCruncher/<release> main` is empty and record
   `main` with `git merge -s ours main` (a normal merge would reopen every conflict this branch resolved). Port 1.21.1
   work by merging, resolving against 26.2's APIs (see `MIGRATION.md`); never rebase this branch.
-  - After `git merge OreCruncher/0.4.8` stops: `python scripts/port-merge.py merge --show` renames 1.21.1's names
+  - After `git merge OreCruncher/<release>` stops: `python scripts/port-merge.py merge --show` renames 1.21.1's names
     (`scripts/port-renames.txt`) and merges each conflict again, staging what resolves (and files git merged with old
     names in them), then prints only the conflicts left. Then compile; add any rename the compiler finds to the table
     and run `port-merge.py check-table`. `port-merge.py convert --to 1.21.1 FILE...` renames code copied to 0.4.7.
 - Biome dumps: `python scripts/dump-diff.py OLD NEW [--sounds]` lists only what changed (traits, their sources, the
   "Biomes to check" list); `--keep DUMP` saves a copy to `build/dumps` before the next dump overwrites it.
-- `OreCruncher/26.2`: the 26.2 port, started from 0.4.5 and carrying 0.4.6 and 0.4.7 (NeoForge 26.2.0.82, Architectury
+- `OreCruncher/26.2`: the 26.2 port, started from 0.4.5 and carrying 0.4.6, 0.4.7 and 0.4.8 (NeoForge 26.2.0.82, Architectury
   21.1.10, Cloth Config 26.2.155). NeoForge 26.2's client launch class is `net.neoforged.fml.startup.Client`.
