@@ -212,6 +212,8 @@ hooks. NeoForge 26.2's client launch class is `net.neoforged.fml.startup.Client`
 1.21.1 work lands on `main` (0.4.8 was squash-merged as `21b8f91d`); start each 1.21.1 release branch from `main`.
 `main` is merged into 26.2 (as of 0.4.8, `21b8f91d`, recorded with `-s ours`), so
 `git diff $(git merge-base main OreCruncher/26.2) main` lists the 1.21.1 changes still to port. The release branch in
-progress (none open: the next release, `OreCruncher/5.0.0`, is for 1.21.11) is merged into `OreCruncher/26.2` directly, in the worktree, resolving against 26.2's
+progress (none open) is merged into `OreCruncher/26.2` directly, in the worktree, resolving against 26.2's
 APIs (see its `MIGRATION.md`; `scripts/port-merge.py` there redoes the renames), never by rebasing the 26.2 branch.
 After its squash to `main`, record `main` in 26.2 with `git merge -s ours main`.
+
+Next release: `OreCruncher/5.0.0`, a 1.21.11 build backported from 26.2 (branched from `OreCruncher/26.2`, not `main`).
