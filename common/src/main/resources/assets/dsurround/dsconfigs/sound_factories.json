@@ -273,6 +273,32 @@
     }
   },
   {
+    "location": "dsurround:bow_loose",
+    "soundEvent": "dsurround:item.bow.loose",
+    "category": "PLAYER",
+    "pitch": {
+      "min": 0.9,
+      "max": 1.1
+    }
+  },
+  {
+    "location": "dsurround:bow_loose.skeleton",
+    "soundEvent": "dsurround:item.bow.loose.skeleton",
+    "category": "HOSTILE",
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:player_jump",
+    "soundEvent": "dsurround:player.jump",
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
     "location": "dsurround:waterfalls/0",
     "soundEvent": "dsurround:waterfall.0",
     "pitch": {
@@ -315,6 +341,18 @@
   {
     "location": "dsurround:waterfalls/5",
     "soundEvent": "dsurround:waterfall.5",
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:lilypad.frog",
+    "soundEvent": "dsurround:lilypad.frog",
+    "volume": {
+      "min": 0.6,
+      "max": 1.0
+    },
     "pitch": {
       "min": 0.8,
       "max": 1.2

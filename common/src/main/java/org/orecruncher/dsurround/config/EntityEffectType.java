@@ -7,6 +7,7 @@ import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.effects.entity.*;
+import org.orecruncher.dsurround.effects.footprints.FootprintEffect;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 
@@ -21,9 +22,14 @@ public enum EntityEffectType {
     UNKNOWN("unknown", entity -> null),
     BOW_PULL("bow_pull", entity -> getInstance(BowUseEffect.class)),
     FROST_BREATH("frost_breath", entity -> getInstance(BreathEffect.class)),
+    ANIMAL_BREATH("animal_breath", entity -> getInstance(AnimalBreathEffect.class)),
     PLAYER_TOOLBAR("player_toolbar", entity -> getInstance(ToolbarEffect.class)),
+    PLAYER_JUMP("player_jump", entity -> getInstance(PlayerJumpEffect.class)),
     ITEM_SWING("item_swing", entity -> getInstance(ItemSwingEffect.class)),
-    BRUSH_STEP("brush_step", entity -> getInstance(StepThroughBrushEffect.class));
+    BRUSH_STEP("brush_step", entity -> getInstance(StepThroughBrushEffect.class)),
+    BURNING("burning", entity -> getInstance(BurningEffect.class)),
+    HEALTH_POPOFF("health_popoff", entity -> getInstance(HealthPopoffEffect.class)),
+    FOOTPRINTS("footprints", entity -> getInstance(FootprintEffect.class));
 
     private static IEntityEffect getInstance(Class<? extends IEntityEffect> clazz) {
         return ContainerManager.resolve(clazz);
@@ -69,8 +75,13 @@ public enum EntityEffectType {
         UNKNOWN.setConfigProvider(() -> false);
         BOW_PULL.setConfigProvider(() -> config.enableBowPull);
         FROST_BREATH.setConfigProvider(() -> config.enableBreathEffect);
+        ANIMAL_BREATH.setConfigProvider(() -> config.enableBreathEffect && config.enableAnimalBreath);
         PLAYER_TOOLBAR.setConfigProvider(() -> config.enablePlayerToolbarEffect);
+        PLAYER_JUMP.setConfigProvider(() -> config.enableJumpSound);
         ITEM_SWING.setConfigProvider(() -> config.enableSwingEffect);
+        BURNING.setConfigProvider(() -> config.enableBurningEffect);
+        HEALTH_POPOFF.setConfigProvider(() -> config.enableDamagePopoffs);
+        FOOTPRINTS.setConfigProvider(() -> config.enableFootprints);
 
         if (FeatureConflict.FOOTSTEP_EFFECTS.isBlocked())
             BRUSH_STEP.setConfigProvider(() -> false);

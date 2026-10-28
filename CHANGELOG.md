@@ -1,3 +1,137 @@
+> ### DynamicSurroundings-1.21.1-0.4.8
+
+Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
+
+**All Loaders**
+* JAVA 21+
+* Architectury 13.0.8+
+
+**Fabric**
+* Fabric Loader >= 0.16.9
+* Fabric API >= 0.110.0+1.21.
+
+**NeoForge**
+* NeoForge 21.1.84+
+
+**AI Disclosure**
+* Used to build the burning mob flames and death mist from existing logic and assets
+* Ported footprints from older versions, and expanded them to include mobs
+* Ported the damage pop-offs from older versions, drawing them as batched text rather than particles
+* Reworked block effect scanning into a sphere, and let precipitation drift under blocks
+* Reviewed performance profiles for the new features, and cut the work waterfall foam does each tick
+* Analyzed OGG sound files and normalized where necessary
+* Tracked down particles drawing as squares in a large modpack to another mod's particle, and built the guard that repairs it
+* Built the branching lightning, its timing and its thunder, and gathered the scary options into one place
+* Added the conditional operator "? :" to the scripting engine
+* Built the dynamic clouds, their fading and sharing between players, and lightning lighting them; reviewed their performance profiles
+* Measured the tick handlers in recordings, moved the precipitation's work to its own thread, and ported the jump sound from 1.12.2
+* Placed animals' breath at their mouths from Minecraft's mob models
+* Placed the flames in skulls' eyes from Minecraft's skull model and textures
+* Measured the mod's cost on a stand-in for a low-end PC, moved the building of rain and snow for each frame off the render thread, and wrote the profile summary
+
+**What's New**
+* Burning mobs are wreathed in flames like a flame jet's (tongues of flame, sparks, and smoke) in place of Minecraft's flat fire sheets
+  * The fire fits the mob: more flames for a bigger body, larger ones for a broader body
+  * Flames keep up with a running mob, and burn on through its death until the body is gone
+  * In lava, flames only rise from the part above the surface
+  * Fewer flames farther away, and burning mobs share a budget, so a crowd of undead burning at dawn thins out evenly
+  * One flickering light per mob lights up the surrounding area (one light for the whole fire, so a crowd stays affordable to draw), unless LambDynamicLights or RyoamicLights is installed, which already does
+  * Minecraft's fire is kept beyond the entity effect range, with Particles on Minimal, while a shader pack is in use, and for your own body in first person
+  * Burning Mob Flames option in Entity Effects; mobs tagged `dsurround:effects/vanilla_fire` keep Minecraft's fire
+* A mob's body vanishes into dark mist when it dies, in place of Minecraft's white puffs
+  * Death Mist option in Entity Effects
+* Damage pop-offs are back from older versions: numbers pop off mobs and players when their health changes, red for damage and green for healing
+  * A heavy blow (40% or more of the mob's health) gets a comic book word over the number, such as KAPOW!
+  * Drawn as text rather than particles, so a busy fight costs little
+  * Damage Pop-offs and Crit Words options in Entity Effects
+* Footprints: players and mobs leave prints in soft ground (dirt, grass, sand, gravel, snow, mud, soul sand)
+  * Players' prints are square by default; Footprint Style in Entity Effects picks another
+  * Mobs leave prints that fit their feet: square for humanoids, paws for wolves, cats, foxes and bears, hooves for horses, cows, sheep, pigs and goats, and bird tracks for chickens; tags set which, and modpacks can add their own mobs
+  * Prints fade after 10 seconds, or a minute in snow, and wash away faster in the rain where they are out in the open
+  * No prints while sneaking
+  * Footprints option in Entity Effects
+* Frog sounds are back from older versions: lily pads croak, with the odd bullfrog call, twice as often at night as by day; not while indoors, or when it's cold enough for water to freeze
+  * Includes the lily pads of Biomes O' Plenty, Twilight Forest, Oh The Biomes We've Gone, and Regions Unexplored; the `dsurround:effects/frog_croaks` block tag sets which blocks croak
+* The heartbeat is back from older versions: the player's heart pounds when their health is at 30% or less (not in creative); Allow Scary Content turns it off
+* The jump sound is back from older versions: a breath when you jump, heard by you only; off by default, turned on with Jump Sound in Entity Effects
+* The bowstring's release is back from older versions: arrows fired from a bow, by players and skeletons, are heard with it in place of Minecraft's sound; Remap Sounds in Sound Options turns it off
+* Animals breathe in the cold too: cows, mooshrooms, sheep, goats, pigs, horses, donkeys, mules, llamas, camels, wolves, foxes, cats, ocelots, polar bears, pandas, sniffers, armadillos, hoglins, and ravagers
+  * The breath comes from the mouth, out in front of the body, and follows the head as it turns and nods; under water they breathe bubbles
+  * Bigger animals breathe bigger puffs; a sheep eating grass, a goat about to ram, a rearing horse, or a sleeping fox holds its breath until it's done
+  * Within 16 blocks of you; Animal Breath option in Entity Effects, along with Breath Particle Effect; mobs tagged `dsurround:effects/animal_breath` breathe this way
+  * Villagers', illagers', and players' breath now follows where their head faces
+* Skeleton skulls placed in the world burn with little flickering flames in their eyes, and wither skeleton skulls with blue soul fire
+  * The flames light the floor and wall around the skull (Flame jet light in Flame Jet Options turns it off)
+  * Skull Flames option in Block Effect Options; the block tags `dsurround:effects/skull_flames` and `dsurround:effects/soul_skull_flames` set which skulls burn
+* In a dust storm the glow of sunrise and sunset turns dusty and dims, as the sky and fog already do
+* Rain, snow, and dust blown in under an overhang drift a little way in out of the wind and fade, instead of stopping at the roof's edge; snowflakes that reach the ground under the overhang lie there, and rain splashes on a porch floor
+* Lightning that branches and forks, in place of Minecraft's bolts
+  * The stronger the thunderstorm, the more branches, the more often they fork again, and the more strokes a flash has
+  * Each flash has a faint leader feeling its way down, then strokes that light the whole channel and flicker as they die away; later strokes barely light the branches, as in real lightning
+  * Minecraft's lightning bolts are drawn this way too, each shaped from the bolt itself, so every player sees the same bolt
+  * Through a thunderstorm the sky has lightning of its own: bolts to the ground, spider lightning crawling under the cloud base, and flashes hidden in the cloud that light it up in patches, moving about inside it from stroke to stroke
+  * With the dynamic clouds, the flashes light the clouds themselves from inside: their undersides, the towers they hide in, and not the gaps between
+  * Far strikes are dimmer, the more so the thicker the weather between: rain hides a distant storm's flashes a good deal more than clear air
+  * Most of it comes from upwind, where the storm is coming from
+  * Each strike in the sky has its thunder, later the farther away it is (about a second for every 343 blocks), and quieter and lower when far off; a close one lights up the sky, as Minecraft's own bolts do
+  * Lightning option in the new Scary Content section; not drawn while a shader pack is in use
+  * With Minecraft's Hide Lightning Flashes accessibility option on, there is no lightning in the sky and bolts don't flicker
+  * `/dsweather lightning` strikes ahead of the player for testing; `ground`, `spider`, or `sheet` picks the kind
+  * Scripts can check whether lightning is shown with `global.allowLightning()`
+* **[Experimental]** Dynamic clouds: blocky clouds that change with the weather, in place of Minecraft's
+  * On fair days, scattered clouds build up into stepped towers through the afternoon and flatten out at night, with thin streaks high above; some days are cloudier than others
+  * Cloudier over wet biomes than dry ones: they build over jungles and swamps and thin over deserts as they drift
+  * A storm closes them into a low deck that lowers and thickens with its strength, darker underneath the thicker it is; a thunderstorm's towers rise far above it
+  * They change a little at a time, fading in and out, rather than all at once
+  * Every player in a world sees the same clouds, drifting with the wind up high
+  * Far off they fade into the fog, and in rain the deck overhead stays dark rather than turning to haze
+  * Cloud Distance in Weather Options sets how far they reach, 8 to 32 chunks, whatever the render distance
+  * Dynamic Clouds option in Weather Options; off with a shader pack, with Minecraft's clouds turned off, and in dimensions that draw their own clouds (`dynamicClouds` in a dimension config sets it)
+  * `/dsweather clouds 0-100 [thickness]` holds how much of the sky they cover, and how thick the thickest are, for testing; `/dsweather clouds clear` goes back to the weather's
+  * `/dsprofile clouds` records them in a thunderstorm
+* Scripts have a conditional operator: `diurnal.isNight() ? 0.04 : 0.02`
+  * Only the chosen value is worked out, as with `lib.iif`, which still works the same
+  * It binds more loosely than any other operator, so `'is ' + (weather.isRaining() ? 'wet' : 'dry')` needs the parentheses
+
+**Changes**
+* Sound file maintenance
+  * Normalized the volume of a bunch of sounds
+  * Removed unused sounds from the JAR to reduce size
+* Block effects (waterfalls, steam, flame jets, and other random block effects) are now found in a sphere around the player rather than a cube
+  * Block Effect Range is now a radius, and the scan finds the nearest blocks first, so effects close by show up first after a teleport
+  * Setting it past 32 shows effects farther away than Minecraft shows particles, at more cost; waterfalls thin their splashes past 32 blocks
+  * The default is now 40, which scans about as many blocks as the old 32 block cube, and shows block effects a little past Minecraft's particle distance
+  * Past 32 blocks, random block effects thin out evenly toward the edge of the range
+* The default Entity Effect Range is now 32, up from 24, as the new entity effects are cheap and still visible that far out
+* The default Precipitation Range is now 14, up from 12, so rain, snow, and dust reach a little farther
+  * The area around the player that precipitation looks at is now round, matching where drops fall, rather than square, which saves work at any range
+* Existing configurations keep the values already saved in them; set the new defaults in the options to use them
+* Removed the option for sound effects when selecting blocks on the hotbar
+* Removed the random sound played when the game finishes loading, and its Play Random Sound On Startup option
+* soundconfig.json now saves each sound's setting as one `action` (default, cull, or block) in place of the separate block and cull flags; older files are converted when loaded
+* Waterfall foam, mist, steam, and smoke do less work: each block's water surface is worked out once every half second and shared by all the foam on it, and foam and the soft puffs read their light every few ticks instead of every frame; noticeable in large modpacks with many waterfalls nearby
+* A new General Options section, first in the list, holds Mod Update Chat Messages and Register Client Side Commands, moved out of Diagnostic Options; values already set carry over
+  * Diagnostic Options is saved under `diagnostics` in dsurround.json, in place of `logging`; values already set carry over
+* A new Guards section in Diagnostic Options holds fixes for problems other mods cause, each of which can be turned off should it cause a problem of its own
+* A new Scary Content section gathers the options for content some players find frightening
+  * Allow Scary Sounds in Sound Options is now Allow Scary Content there, and also covers the lightning; a value already set carries over
+  * The Lightning option turns the lightning off on its own
+* Rain landing on snow soaks in and leaves a damp spot, as on dirt and sand, instead of splashing
+* Dynamic Surroundings music manager will start music when Minecraft's main menu is shown rather than wait 5 seconds
+* A hungry player's stomach grumbles more often
+* Particle rain, snow, and dust move on a thread of their own while frames are drawn, taking most of their work off the game's main thread; standing still, the area they fall in is looked over a few rows a tick rather than all at once
+  * Each frame's drops are also readied for drawing on that thread while the world is drawn, rather than when the weather is drawn: in a storm, about four fifths less of the frame's time on the main thread
+* `/dsprofile` recordings also hold how long each of Dynamic Surroundings' tick handlers took every tick, how often random block effects looked, started effects and played sounds at each distance, and which optional hooks applied, which features stand aside for another mod, and the settings (text settings left out)
+  * And how long each frame took and how long drawing it took, the window's size, the frame rate limit and VSync, so each effect's time can be read as a share of the frame
+* When `/dsprofile` is done, chat names the effect that took the largest share of the frame, and a [Copy summary] button copies a short summary of the recording to paste into an issue or a Discord message (it fits in one); the summary is also saved in the recording's zip
+
+**Fixes**
+* A block within 16 blocks of the player could run two random block effects at once, one over the other; it now runs one at a time
+* Particle rain and snow fell through blocks from other mods whose shape depends on the world, such as Mekanism's energy cube (Minecraft's own rain does too: such blocks are left out of the height map it stops at); they now stop on top of them
+* Minecraft's particles (such as campfire smoke) and the mod's waterfall foam could draw as white squares when another mod's particle changed the drawing state while particles were being drawn; the state is now put back before they are drawn, the log names the particle responsible once, and that particle is drawn on its own from then on so it looks right too (seen with the Rainbows mod); Repair Particle Batches, in a new Guards section of Diagnostic Options, turns this off
+* With Fabulous graphics in some modpacks, rain drops cut the water out where they crossed it, showing the bottom through each drop; another mod left the wrong render target in place for the weather. The mod now checks the target before drawing the weather, lightning, soft particles and particle lights, puts the right one back when it is found replaced, and says once in the log what was there instead; the particle batch guard also catches another mod's particle switching targets
+* Frost breath on a dark night with Astral Sorcery showed the blocks behind it through the dark; breath is now drawn soft, as mist is, and fades where it meets blocks
+
 > ### DynamicSurroundings-1.21.1-0.4.7
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.

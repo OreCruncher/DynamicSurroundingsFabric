@@ -1,8 +1,10 @@
 package org.orecruncher.dsurround.effects;
 
 import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
+import org.orecruncher.dsurround.effects.clouds.CloudRenderer;
 import org.orecruncher.dsurround.effects.frost.FrostRenderer;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
+import org.orecruncher.dsurround.effects.lightning.LightningRenderer;
 import org.orecruncher.dsurround.effects.particles.PointLights;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
 
@@ -27,6 +29,9 @@ public final class RenderTimers {
             GroundFogVolume.SMOOTH_TIMER,
             GroundFogVolume.COMPOSITE_TIMER,
             FrostRenderer.RENDER_TIMER,
+            LightningRenderer.RENDER_TIMER,
+            CloudRenderer.RENDER_TIMER,
+            CloudRenderer.FIELD_TIMER,
             PointLights.RENDER_TIMER);
 
     private RenderTimers() {

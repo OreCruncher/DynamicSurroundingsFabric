@@ -9,7 +9,9 @@ import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.function.Guard;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.processing.FogHandler;
+import org.orecruncher.dsurround.processing.CloudHandler;
 import org.orecruncher.dsurround.processing.GroundFogHandler;
+import org.orecruncher.dsurround.processing.LightningHandler;
 import org.orecruncher.dsurround.processing.PrecipitationHandler;
 import org.orecruncher.dsurround.processing.WindowFrostHandler;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
@@ -25,6 +27,7 @@ public class MixinHelpers {
     public static final Configuration.SoundSystem soundSystemConfig = ContainerManager.resolve(Configuration.SoundSystem.class);
     public static final Configuration.FootstepAccents footstepAccentsConfig = ContainerManager.resolve(Configuration.FootstepAccents.class);
     public static final Configuration.ParticleTweaks particleTweaksConfig = ContainerManager.resolve(Configuration.ParticleTweaks.class);
+    public static final Configuration.Guards guardsConfig = ContainerManager.resolve(Configuration.Diagnostics.class).guards;
     public static final Configuration.SoundOptions soundOptions = ContainerManager.resolve(Configuration.SoundOptions.class);
     public static final Configuration.FogOptions fogOptions = ContainerManager.resolve(Configuration.FogOptions.class);
     public static final Configuration.WeatherOptions weatherOptions = ContainerManager.resolve(Configuration.WeatherOptions.class);
@@ -32,14 +35,21 @@ public class MixinHelpers {
     public static final BiomeMusicSelector BIOME_MUSIC = new BiomeMusicSelector();
 
     // Mixin bodies run every frame, tick or particle inside the game's own code: a failure is logged a few times and
-    // the game's own behaviour used in its place, rather than thrown into the game
-    public static final Guard FOG_TINT_GUARD = Guard.named("Fog colour tint");
-    public static final Guard SKY_TINT_GUARD = Guard.named("Sky colour tint");
+    // the game's own behavior used in its place, rather than thrown into the game
+    public static final Guard FOG_TINT_GUARD = Guard.named("Fog color tint");
+    public static final Guard SKY_TINT_GUARD = Guard.named("Sky color tint");
+    public static final Guard SUNSET_TINT_GUARD = Guard.named("Sunrise and sunset color tint");
     public static final Guard STORM_RAIN_LEVEL_GUARD = Guard.named("Storm rain level");
     public static final Guard RAIN_SOUND_GUARD = Guard.named("Storm rain sound");
     public static final Guard RAIN_SPLASH_GUARD = Guard.named("Vanilla rain splash suppression");
     public static final Guard WIND_BLOWN_GUARD = Guard.named("Marking wind blown particles");
     public static final Guard WIND_DRIFT_GUARD = Guard.named("Wind drift");
+    public static final Guard VANILLA_FIRE_GUARD = Guard.named("Vanilla fire suppression on burning mobs");
+    public static final Guard DEATH_PUFF_GUARD = Guard.named("Death mist");
+    public static final Guard PARTICLE_BATCH_GUARD = Guard.named("Particle batch repair");
+    public static final Guard LIGHTNING_GUARD = Guard.named("Lightning");
+    public static final Guard CLOUDS_GUARD = Guard.named("Dynamic clouds");
+    public static final Guard PRECIPITATION_AHEAD_GUARD = Guard.named("Building rain and snow ahead");
     // The sound engine's hooks: each sound as it plays, and each playing sound on every tick of the sound engine
     public static final Guard SOUND_FILTER_GUARD = Guard.named("Blocking, culling and remapping sounds");
     public static final Guard SOUND_RANGE_GUARD = Guard.named("Pruning sounds out of range");
@@ -49,7 +59,7 @@ public class MixinHelpers {
     public static final Guard SOUND_STOP_GUARD = Guard.named("Stopping a sound's enhanced processing");
 
     // Resolved on first use, not when this class loads. A holder class rather than ContainerManager.memoize():
-    // the biome library is used for every biome fog colour lookup (hundreds per frame), and a memoized proxy goes
+    // the biome library is used for every biome fog color lookup (hundreds per frame), and a memoized proxy goes
     // through reflection on every call.
     private static final class BiomeLibraryHolder {
         static final IBiomeLibrary INSTANCE = ContainerManager.resolve(IBiomeLibrary.class);
@@ -68,7 +78,7 @@ public class MixinHelpers {
         return WeatherSimulationHolder.INSTANCE;
     }
 
-    // Asked every frame to tint the fog's colour
+    // Asked every frame to tint the fog's color
     private static final class FogHandlerHolder {
         static final FogHandler INSTANCE = ContainerManager.resolve(FogHandler.class);
     }
@@ -102,6 +112,24 @@ public class MixinHelpers {
 
     public static WindowFrostHandler windowFrost() {
         return WindowFrostHolder.INSTANCE;
+    }
+
+    // Asked every frame to draw the lightning, and as each lightning bolt arrives and is drawn
+    private static final class LightningHolder {
+        static final LightningHandler INSTANCE = ContainerManager.resolve(LightningHandler.class);
+    }
+
+    public static LightningHandler lightning() {
+        return LightningHolder.INSTANCE;
+    }
+
+    // Asked every frame to draw the clouds
+    private static final class CloudsHolder {
+        static final CloudHandler INSTANCE = ContainerManager.resolve(CloudHandler.class);
+    }
+
+    public static CloudHandler clouds() {
+        return CloudsHolder.INSTANCE;
     }
 
 }

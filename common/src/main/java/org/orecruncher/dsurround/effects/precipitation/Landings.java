@@ -115,7 +115,7 @@ public final class Landings {
                 if (field.landingIsSnow(i)) {
                     if (traces++ < MAX_TRACES_PER_TICK)
                         this.blownIn(level, field, i, flecks, random);
-                } else if (this.options.enableWindowStreaks && traces++ < MAX_TRACES_PER_TICK) {
+                } else if (traces++ < MAX_TRACES_PER_TICK) {
                     this.rainBlownIn(level, field, i, streaks, random);
                 }
                 continue;
@@ -174,12 +174,24 @@ public final class Landings {
 
     /**
      * A rain drop carried into a column below its top, followed on to what it hits: if that is the side of a window,
-     * it runs down the glass. Into anything else, it runs off unseen.
+     * it runs down the glass; if it drifted in under cover down to the ground, it splashes there, or smokes on something
+     * hot. Into anything else, it runs off unseen.
      */
     private void rainBlownIn(ClientLevel level, PrecipitationField field, int i, WindowStreaks streaks, RandomSource random) {
         var hit = trace(level, new Vec3(field.landingX(i), field.landingY(i), field.landingZ(i)),
                 field.landingMotionX(i), field.landingMotionY(i), field.landingMotionZ(i));
-        if (hit == null || !hit.getDirection().getAxis().isHorizontal())
+        if (hit == null)
+            return;
+        if (hit.getDirection() == Direction.UP) {
+            var at = hit.getLocation();
+            var state = level.getBlockState(hit.getBlockPos());
+            if (isHot(state) || state.getFluidState().is(FluidTags.LAVA))
+                level.addParticle(ParticleTypes.SMOKE, at.x, at.y, at.z, 0D, 0D, 0D);
+            else if (!state.getFluidState().isEmpty() || random.nextFloat() < splashChance(field.landingSize(i)))
+                level.addParticle(ParticleTypes.RAIN, at.x, at.y, at.z, 0D, 0D, 0D);
+            return;
+        }
+        if (!this.options.enableWindowStreaks || !hit.getDirection().getAxis().isHorizontal())
             return;
         var state = level.getBlockState(hit.getBlockPos());
         if (!this.tagLibrary.is(BlockEffectTags.WINDOWS, state))
@@ -372,10 +384,13 @@ public final class Landings {
         if (!StormSounds.isTimeForSound(random.nextInt(StormSounds.SOUND_CHANCE), this.dustSoundTime++))
             return;
         // A few tries for a spot with dust; at the edge of a desert, most of the area may have none
+        // Over the disc the dust is drawn in, as it is looked up
         int radius = field.radius();
         for (int tries = 0; tries < 4; tries++) {
-            double x = cameraX + random.nextInt(radius * 2 + 1) - radius;
-            double z = cameraZ + random.nextInt(radius * 2 + 1) - radius;
+            float angle = random.nextFloat() * Mth.TWO_PI;
+            float r = radius * Mth.sqrt(random.nextFloat());
+            double x = cameraX + Mth.cos(angle) * r;
+            double z = cameraZ + Mth.sin(angle) * r;
             if (!field.isDustAt(x, z))
                 continue;
             this.dustSoundTime = 0;

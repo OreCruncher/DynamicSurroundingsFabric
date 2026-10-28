@@ -139,12 +139,23 @@ public class HolisticFogRangeCalculator implements IFogRangeCalculator {
     }
 
     /**
-     * Turns the fog's colour toward the dust's in a dust storm, if fog effects and the weather's fog are on
+     * Turns the fog's color toward the dust's in a dust storm, if fog effects and the weather's fog are on
      *
-     * @param rgb the fog's colour, red, green and blue from 0 to 1; changed in place
+     * @param rgb the fog's color, red, green and blue from 0 to 1; changed in place
      */
     public void tintFogColor(float[] rgb, float partialTick) {
         if (this.enabled() && !this.fogTurnedOff && this.weather.enabled())
             this.weather.tintFogColor(rgb, partialTick);
+    }
+
+    /**
+     * Turns the glow of sunrise and sunset toward the dust's color in a dust storm, and dims it, if fog effects and
+     * the weather's fog are on
+     *
+     * @param rgba the glow's color, red, green, blue and alpha from 0 to 1; changed in place
+     */
+    public void tintSunsetColor(float[] rgba, float partialTick) {
+        if (this.enabled() && !this.fogTurnedOff && this.weather.enabled())
+            this.weather.tintSunsetColor(rgba, partialTick);
     }
 }

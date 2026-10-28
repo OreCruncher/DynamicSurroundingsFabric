@@ -59,6 +59,13 @@ public final class Call implements Expression {
     }
 
     /**
+     * @return Where the argument at the index starts in the script
+     */
+    public Token argumentToken(int index) {
+        return this.argumentTokens[index];
+    }
+
+    /**
      * @return True if the argument is a constant, already converted when the script was compiled
      */
     public boolean isConstant(int index) {
@@ -70,13 +77,6 @@ public final class Call implements Expression {
      */
     public Object constant(int index) {
         return this.constants[index];
-    }
-
-    /**
-     * Converts a value for the argument at the index, reporting a problem at the argument's location.
-     */
-    public Object convert(int index, Object value) {
-        return convertArgument(this.function, index, value, this.argumentTokens[index]);
     }
 
     @Override

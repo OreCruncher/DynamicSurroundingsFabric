@@ -65,6 +65,16 @@ https://github.com/OreCruncher/DynamicSurroundingsDocs.
   * Rain, snow, and dust particle like effects in applicable biomes
   * Varying storm intensity which drives the number of particles
   * Simulated wind affects direction and velocity of precipitation particles
+  * Rain, snow, and dust blown in under overhangs drift a little way in and fade (1.21.1-0.4.8+)
+  * Rain and snow stop on top of blocks from other mods that Minecraft's own rain falls through, such as Mekanism's energy cube (1.21.1-0.4.8+)
+* Lightning that branches and forks, more the stronger the thunderstorm, flickering with each stroke (1.21.1-0.4.8+)
+  * Replaces Minecraft's bolts, and adds bolts, spider lightning, and flashes in the clouds through a thunderstorm, mostly upwind
+  * Thunder from each strike arrives later the farther away it is
+  * Can be turned off in the Scary Content options
+* Dynamic clouds that change with the weather (experimental) (1.21.1-0.4.8+)
+  * Fair-weather clouds build up through the afternoon; a storm closes them into a low, dark deck
+  * Cloudier over wet biomes than dry, and the same for every player in a world
+  * Lit from inside by lightning
 * Ground fog in swamps and eerie biomes (experimental) (1.21.1-0.4.7+)
   * Hugs the ground, and drifts a bit based on wind
   * Intense rain will diminish the effect, but will come back once rain has finished
@@ -81,6 +91,15 @@ https://github.com/OreCruncher/DynamicSurroundingsDocs.
   * A faint glow lights up a small area around the particle
 * Hot block effects such as flame jets over lava, and steam where water hits a hot block
   * Hot blocks are things Lava, Magma, campfires, and a cauldron containing lava
+* Skeleton skulls placed in the world burn with little flames in their eyes, blue soul fire for wither skeleton skulls (1.21.1-0.4.8+)
+* Block effects are found in a sphere around the player, nearest first; the range can reach past Minecraft's particle distance, up to 64 blocks (1.21.1-0.4.8+)
+* Burning mobs are wreathed in flame jet style flames, sparks, and smoke instead of flat fire sheets (1.21.1-0.4.8+)
+  * Sized to the mob, keeps up when it runs, and lights the area around it
+* Dark mist where a mob's body vanishes when it dies, in place of the white puffs (1.21.1-0.4.8+)
+* Damage pop-offs: numbers pop off mobs and players when their health changes, with comic book words for heavy blows (1.21.1-0.4.8+)
+* Footprints left by players and mobs in soft ground such as dirt, sand, gravel, snow, and mud (1.21.1-0.4.8+)
+  * Square, paw, hoof, and bird prints depending on the feet; players can pick their style
+  * Prints fade over time, last longer in snow, and wash away in the rain
 * Enhanced Sound processing - sounds playing in 3d space will have a reverb effect based on the surrounding materials
   * Simple Voice Chat support (experimental) (1.21.1-0.4.7+) - nearby players' voices get the same reverb and occlusion
 * Individual Sound Control - Set a key bind and activate in-game
@@ -96,6 +115,7 @@ https://github.com/OreCruncher/DynamicSurroundingsDocs.
   * Optionally shown in a side or corner of the screen while a compass or clock is in the hot bar (1.21.1-0.4.7+)
   * Either can be turned off, and their textures replaced by resource packs (1.21.1-0.4.7+)
 * Light level overlay, turned on and off by key bind, showing the light on the blocks around the player colored by whether monsters can spawn there, with an on screen legend (1.21.1-0.4.7+)
+* Guards that repair problems other mods cause, such as particles drawn as squares, naming the mod responsible in the log; each can be turned off (1.21.1-0.4.8+)
 * Custom debug HUD that can be accessed by key bind. Moves the Dynamic Surroundings clutter out of the traditional F3 display.
 * Dynamic Surroundings is compatible when connecting to a Vanilla servers (a feature of both Fabric and NeoForge loaders).
 
@@ -105,6 +125,10 @@ https://github.com/OreCruncher/DynamicSurroundingsDocs.
 ## FAQ 
 * Do you use AI for features in the mod?
   * AI is used for a variety of tasks, including code creation, review, bug fixing, performance analysis, and mod conflict analysis.
+
+## Contributing
+Pull requests are welcome. See [CONTRIB.md](CONTRIB.md) for the ground rules, including what to say when AI was used,
+and where textures and sounds may come from.
 
 > # License
 The MIT License (MIT)

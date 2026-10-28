@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "biomeswevegone:tiny_lily_pads",
+      "required": false
+    },
+    {
+      "id": "biomeswevegone:flowering_tiny_lily_pads",
+      "required": false
+    }
+  ]
+}

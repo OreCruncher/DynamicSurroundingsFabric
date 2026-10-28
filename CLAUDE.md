@@ -14,9 +14,12 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
 
 ## Build and test (Git Bash on Windows; use absolute paths, `cd` can be reset between commands)
 - Compile everything: `./gradlew :common:compileJava :fabric:compileJava :neoforge:compileJava -q`
-- Tests (common only, ~1450): `./gradlew :common:test -q`, then read `common/build/test-results/test/*.xml` for
-  counts and failure messages (the console output is noisy).
+- Tests (common only, ~2100): `./gradlew :common:test -q > /dev/null 2>&1; python scripts/test-summary.py` (counts
+  and each failure's message from `common/build/test-results/test/*.xml`; the console output is noisy). It warns
+  `STALE` and exits 1 when a source changed after the newest results: that run wrote none, usually a compile error.
 - One class: `./gradlew :common:test --tests "*BlockInfoTests" -q`
+- Sound loudness survey (needs ffmpeg): `python scripts/sound-survey.py [--csv out.csv]` — level per OGG, events
+  whose variants differ, stereo files, clipping, leading silence, files `sounds.json` doesn't use.
 - Mapped game jar for `javap` (check real signatures rather than assuming):
   `.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-merged-*/1.21.1-*/minecraft-merged-*.jar`.
   NeoForge-patched classes: `~/.gradle/caches/fabric-loom/1.21.1/neoforge/<version>/minecraft-merged-*.jar`.
@@ -35,13 +38,28 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   The user may have their own client running: check what is running (and when it started) before killing, and stop
   only the one you launched.
 - Profiling: `/dsprofile [scene] [seconds]` records a JFR file, zipped, to `config/dsurround/profiles` with the mod's
-  GPU/CPU render timers in it (`dsurround.RenderTimer` events) and what it was made on (`dsurround.Environment`); unzip
+  GPU/CPU render timers in it (`dsurround.RenderTimer` events, set against the whole frame's drawing and the frames'
+  lengths in `dsurround.Frames`, once a second; precipitation's carry a `count` of drops/spots a frame,
+  so two recordings can be checked for the same storm), each client tick handler's time every tick
+  (`dsurround.HandlerTick`, through `profiling/HandlerTicks`), what random block effects sampled, found, started,
+  spawned and played by 1-block distance shell once a second (`dsurround.RandomBlockSamples`, through `profiling/RandomBlockSamples`),
+  what it was made on (`dsurround.Environment`: graphics card, settings, frame size, frame rate limit, the potato run used) and each
+  optional hook's status, conflict and non-text setting (`dsurround.Feature`, from `ProfileFeature`); unzip
   it and read it with the JDK's `jfr` (`jfr print --json --events ...`), or summarize it with
-  `python scripts/jfr-summary.py <zip or jfr>` (timers, threads, mod packages, our frames, allocation, GC;
+  `python scripts/jfr-summary.py <zip or jfr>` (frames; timers: mean and end of the running averages, share of the frame, and peak (CPU peaks a JVM pause could explain left out: a GC pause inside a timed draw reads as its spike); for a
+  timer measured rarely, once a second or less, trust the end, not the mean; handler percentiles per tick (ticks a GC pause or other JVM stop landed in left out) and what
+  running them in parallel would gain at best, `--dispatch-us`/`--worth-ms` for its cost and threshold, dependencies
+  in `FIRST_HANDLERS`/`HANDLER_CHAINS`; random block effects' rate a block by distance against what
+  `RandomBlockSampler` means (its constants are copied into the script: keep them in step), `--shell-width` rows; threads, mod packages, our frames, allocation, GC;
   `--callers <method>` for who calls something).
+  Each zip also holds a short summary (`ProfileSummary`, made from the finished recording, under 1900 characters to
+  fit a Discord message), which chat offers as a [Copy summary] button with a headline (fps, costliest effect's share).
   Players can make them too, so nothing private may get in: a new event type or a new `jdk.jfr` user needs a look at
   `ProfileRecording.PRIVATE` and `Redaction`. Record under Run, not IntelliJ's Debug (its async stack trace agent
   throws thousands of Throwables a second).
+- Low-end stand-ins (both platforms, IDE configs too): `runClientPotatoCpu` (4 logical CPUs, 2 GB heap),
+  `runClientPotatoFill` (3840x2160 window, a slower GPU's load per pixel), `runClientPotato` (both). The Gradle tasks
+  pin the CPUs with `scripts/run-affinity.ps1`; after an IDE launch run it by hand (see the script).
 - The dev config is `fabric/run/config/dsurround/dsurround.json`. Don't edit the user's dev settings to force a case;
   cover it with a test.
 - `defaultRequire: 1` in `dsurround.mixins.json`: a mixin that doesn't match crashes at startup, so a clean launch
@@ -75,10 +93,14 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   `transparency` post shader lays over the scene sorted by each target's depth, taking colours as premultiplied:
   `behind * (1 - alpha) + colour`, and skipping alpha 0. So anything we draw there must leave sensible alpha and depth:
   - The weather target is cleared but gets no copy of the scene's depth: read the main target's, and write depth (ground
-    fog, damp spots), or the scene is laid over it.
+    fog, damp spots), or the scene is laid over it. Something soft that writes depth where it has all but faded hides
+    what is drawn behind it after: the dust goes after the snow and its flecks there, or they blinked.
   - The particles target's depth is the scene's from before water; the translucent target's has the water's surface.
     Soft particles fade against the translucent depth and write it (`soft_particle_scene_depth`, Fabulous only: a
     shader that writes depth loses early depth testing) so water isn't laid over them.
+  - Check the target before drawing on one vanilla bound: another mod can leave the main target bound (seen for the
+    weather in a large pack; rain then cut the water out). `effects/TargetCheck` (`ensureWeather`, `ensureParticles`)
+    rebinds it and logs once per place; `ParticleBatchGuard` covers the frame buffer within vanilla's particle sheets.
   - Blend alpha as "over" (`ONE, ONE_MINUS_SRC_ALPHA`), not the default's `ONE, ZERO`, or piled-up colour outgrows its
     alpha; additive light needs colour already scaled and a tiny non-zero alpha (`PointLights`).
 - Enhanced sounds: a `SourceContext` per playing source, built from an `ISoundEmitter` (a game sound's
@@ -94,6 +116,11 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   (made in its `CreateOpenALContextEvent`). `VoiceSounds` keeps the channels (tested with a fake `Backend`);
   `OpenALBackend` does the OpenAL side. `VoiceChatPlugin` is the only class using its API (compile-only; loaded by the
   `voicechat` entrypoint / NeoForge annotation), so nothing else may reference it.
+- Random block effects: one `effects/systems/RandomBlockEffectSystem` (one effect per block), sampling where
+  `RandomBlockSampler` says: vanilla's near (16) and far (32) triangular spreads, 667 each a tick, which also play the
+  blocks' sounds; past 32, an effects-only tail out to `blockEffectRange`, kept only where the inner spreads fall short
+  of it, so the rate a block falls smoothly with distance (`RandomBlockSamplerTests`). `/dsprofile` recordings carry
+  the rate by distance for `jfr-summary.py` to compare.
 - Mixin plugin (`mixinutils/DSurroundMixinPlugin`) skips mixins whose target belongs to a mod that isn't installed
   (currently Cloth Config).
 - Features that turn themselves off for another mod are listed in `lib/platform/FeatureConflict` (checked with
@@ -114,19 +141,50 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
     `MixinLevelRenderer` wrap). Other mods call it themselves (Ars Nouveau, into its sky texture); those get vanilla's.
   - `processing/PrecipitationHandler` runs particle weather (`PrecipitationField`, `LevelColumns`, `Landings`) and
     stands aside for shader packs, a failed shader, mods that draw weather as particles (`FeatureConflict`, the table of features that stand aside for other mods) and dimensions that draw their
-    own weather.
+    own weather. The drops' tick runs on the `dsurround-Precipitation` thread, a tick behind: `PrecipitationField.finish`
+    at the start of the handler's tick, `start` at its end, with two sets of the drops (`Drops`). Each frame's quads are
+    built on the same thread as the level starts to be drawn (`DropMeshes`, from a `renderLevel` HEAD hook,
+    `OptionalHook.PRECIPITATION_AHEAD`), for that camera and partial tick; the weather pass draws them, or builds on the
+    render thread when the camera differs (a mod drawing the level again). The tick discards a build before the drops
+    change. The step may read only
+    the columns and `Wind.Snapshot`; what needs the world it leaves as questions that `finish` answers. Tests use
+    `tick`, which is both at once.
+  - Drops stop at `LevelColumns.groundHeight`: the `MOTION_BLOCKING` heightmap, raised where a block above it is solid as
+    it stands but not marked solid (a mod's dynamic-shape block without `forceSolidOn`, e.g. Mekanism's energy cube, which
+    the heightmap leaves out). Shelter, ground fog and frost still read the plain heightmap.
   - Ground fog (`effects/groundfog`, run by `processing/GroundFogHandler`): mist in biomes with `groundFog` in
     `biomes.json`, drawn by a ray-marched screen pass (`GroundFogVolume`) over a per-column grid (`GroundFogField`),
     scaled by `GroundFogConditions` (time of day, wind, rain, shelter). Ground heights come from the client's
     `MOTION_BLOCKING` heightmap: the server never sends `MOTION_BLOCKING_NO_LEAVES`, so on the client it is empty.
     Noise positions wrap at `GroundFogVolume.NOISE_WRAP`, a whole number of every noise's cells (a test checks), or a
     wrap shows as a jump.
-  - Per dimension (`dimensions.json`): `particleWeather`, `simulateWind` and `groundFog`, guessed when absent
+  - Dynamic clouds (`effects/clouds`, run by `processing/CloudHandler`): blocky columns on vanilla's 12-block cells,
+    each with its own base and top, in place of vanilla's (the `renderClouds` call in `renderLevel` is wrapped, so
+    Sodium's replacement is skipped too; `OptionalHook.DYNAMIC_CLOUDS`). `runtime/weather/CloudCover` is what the
+    weather calls for: fair puffs that build up in the afternoon, a storm's lowered, thickened deck, thunder towers,
+    high streaks. Lightning strikes start from `CloudHandler.cloudBase()` when ours are drawn. Every player sees the
+    same clouds: they drift with `runtime/weather/UpperWind` and change shape by the game time alone (never a session's
+    ticks or the player's wind), and each cell's cover follows the biome under it. Quads are kept in 4x4-cell
+    `CloudSections`, rebuilt only where cells changed (at most every `SECTION_TICKS`), positions from an anchor cell so
+    they survive the grid moving. The grid follows `weatherOptions.cloudDistance`, not the render distance; the clouds'
+    fog is the terrain's stretched out to it (`CloudRenderer`).
+  - Per dimension (`dimensions.json`): `particleWeather`, `simulateWind`, `groundFog` and `dynamicClouds`, guessed when absent
     (`DimensionInfo.hasVanillaWeather`, sky light). The client always reports sea level 63, so a modded dimension
     with another needs a `seaLevel` rule.
-  - `/dsweather` holds the storm strength, the wind's speed and direction, and a ground fog thickness for testing;
+  - `/dsweather` holds the storm strength, the wind's speed and direction, a ground fog thickness, and the clouds'
+    coverage and thickness (`clouds 0-100 [thickness]`) for testing;
     disconnecting clears them.
   - Weather script variables live in `runtime/variables/WeatherVariables` (`weather.*`).
+  - Lightning (`effects/lightning`, run by `processing/LightningHandler`): branching bolts in place of vanilla's (from
+    `ClientLevel.addEntity`, shaped from the bolt's seed; vanilla's render cancelled, both `OptionalHook.LIGHTNING_BOLTS`)
+    and the sky's own strikes through a thunderstorm, mostly upwind (`Strikes.strikeAngle`, from `WindService`), with
+    distance-delayed thunder. Drawn last in the
+    `renderSnowAndRain` wrap; with Fabulous it writes depth, bolts before the cloud glow. Gated by
+    `Configuration.ScaryContent` (`allowScaryContent` && `enableLightning`; script `global.allowLightning()`) and
+    vanilla's Hide Lightning Flashes (no sky strikes, no flicker). `/dsweather lightning [ground|spider|sheet]`.
+    With dynamic clouds drawn, a strike's cloud glow lights the clouds from inside (`CloudLights`, up to 8 points a
+    frame, passed by `LightningHandler` to `CloudHandler`) instead of being drawn as patches. Strikes dim with distance
+    against the fog's reach (`Strikes.visibility`, from the fog in effect in the weather pass).
   - Window frost (`effects/frost`, run by `processing/WindowFrostHandler`): on the outside of clear glass
     (`effects/frosted_windows` tag; `effects/windows` is all glass, for rain streaks). Drawn after the translucent blocks,
     independent of particle weather: clear glass is cutout, so frost behind it shows through. Without Fabulous, right
@@ -151,7 +209,9 @@ particles and firefly lights: shaders, `RenderSystem`, particle render types), m
 (`LevelRenderer.renderSky`, `SoundEngine.play`, `ParticleEngine` render order, `FogRenderer`) and the sound engine
 hooks. NeoForge 26.2's client launch class is `net.neoforged.fml.startup.Client`.
 
-1.21.1 work lands on `main` (0.4.6 was squash-merged as `4808dca`); start each 1.21.1 release branch from `main`.
-`main` is merged into 26.2 (as of 0.4.6, `4808dca`), so `git diff $(git merge-base main OreCruncher/26.2) main` lists
-the 1.21.1 changes still to port. Port them in the worktree by merging `main` into `OreCruncher/26.2` and resolving
-against 26.2's APIs (see its `MIGRATION.md`), never by rebasing the 26.2 branch.
+1.21.1 work lands on `main` (0.4.7 was squash-merged as `f3edc2f`); start each 1.21.1 release branch from `main`.
+`main` is merged into 26.2 (as of 0.4.7, `f3edc2f`, recorded with `-s ours`), so
+`git diff $(git merge-base main OreCruncher/26.2) main` lists the 1.21.1 changes still to port. The release branch in
+progress (`OreCruncher/0.4.8`) is merged into `OreCruncher/26.2` directly, in the worktree, resolving against 26.2's
+APIs (see its `MIGRATION.md`; `scripts/port-merge.py` there redoes the renames), never by rebasing the 26.2 branch.
+After its squash to `main`, record `main` in 26.2 with `git merge -s ours main`.

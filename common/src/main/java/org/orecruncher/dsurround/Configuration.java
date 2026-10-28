@@ -2,6 +2,7 @@ package org.orecruncher.dsurround;
 
 import org.orecruncher.dsurround.config.ClockStyle;
 import org.orecruncher.dsurround.config.CompassStyle;
+import org.orecruncher.dsurround.config.FootprintStyle;
 import org.orecruncher.dsurround.config.GroundFogQuality;
 import org.orecruncher.dsurround.config.LightLevelColors;
 import org.orecruncher.dsurround.config.LightLevelMode;
@@ -27,6 +28,10 @@ import org.orecruncher.dsurround.lib.config.TranslationRoot;
 public class Configuration extends ConfigurationData {
 
     @Property
+    @Comment("General configuration options for the mod")
+    public final GeneralOptions generalOptions = new GeneralOptions();
+
+    @Property
     @Comment("Configuration options for modifying Minecraft's Sound System behavior")
     public final SoundSystem soundSystem = new SoundSystem();
 
@@ -37,6 +42,10 @@ public class Configuration extends ConfigurationData {
     @Property
     @Comment("Configuration options for sounds in general")
     public final SoundOptions soundOptions = new SoundOptions();
+
+    @Property
+    @Comment("Configuration options for content some players find frightening")
+    public final ScaryContent scaryContent = new ScaryContent();
 
     @Property
     @Comment("Configuration options for block effects")
@@ -93,11 +102,8 @@ public class Configuration extends ConfigurationData {
     @Property
     @Comment("Configuration options for modifying diagnostic behavior")
     @TextStyle(color = "#0078D4", italic = true)
-    public final Logging logging = new Logging();
-
-    @Property
-    @Comment("Configuration options for other things")
-    public final OtherOptions otherOptions = new OtherOptions();
+    @MovedFrom("logging")
+    public final Diagnostics diagnostics = new Diagnostics();
 
     public static class Flags {
         public static final int AUDIO_PLAYER = 0x1;
@@ -105,7 +111,21 @@ public class Configuration extends ConfigurationData {
         public static final int RESOURCE_LOADING = 0x4;
     }
 
-    public static class Logging {
+    public static class GeneralOptions {
+
+        @Property
+        @MovedFrom("logging.enableModUpdateChatMessage")
+        @Comment("Enable/disable chat window notification of newer updates available")
+        public boolean enableModUpdateChatMessage = true;
+
+        @Property
+        @RestartRequired
+        @MovedFrom("logging.registerCommands")
+        @Comment("Enable/disable registration of client side commands")
+        public boolean registerCommands = true;
+    }
+
+    public static class Diagnostics {
 
         @Property
         @Comment("Enables/disables debug logging of the mod")
@@ -116,22 +136,27 @@ public class Configuration extends ConfigurationData {
         public int traceMask = 0;
 
         @Property
-        @Comment("Enable/disable chat window notification of newer updates available")
-        public boolean enableModUpdateChatMessage = true;
-
-        @Property
         @Comment("Enable/disable filtering display of tags in the diagnostics overlay")
         public boolean filteredTagView = true;
-
-        @Property
-        @RestartRequired
-        @Comment("Enable/disable registration of client side commands")
-        public boolean registerCommands = true;
 
         @Property
         @Comment("Play your own Simple Voice Chat voice back to you, with enhanced sound processing, for testing")
         @Experimental
         public boolean voiceChatHearSelf = false;
+
+        @Property
+        @Comment("Fixes for problems other mods cause, each of which can be turned off should it cause a problem of its own")
+        public final Guards guards = new Guards();
+    }
+
+    /**
+     * Fixes for problems other mods cause. Each can be turned off, in case one causes a problem of its own.
+     */
+    public static class Guards {
+
+        @Property
+        @Comment("Put back the drawing state another mod's particle changes while Minecraft's particles are drawn, which draws them as squares, and draw that particle on its own. Turn off if it causes a problem")
+        public boolean repairParticleBatches = true;
     }
 
     public static class SoundSystem {
@@ -221,10 +246,6 @@ public class Configuration extends ConfigurationData {
         public boolean replaceThunderSounds = true;
 
         @Property
-        @Comment("Enables playing sounds that are considered scary")
-        public boolean allowScarySounds = true;
-
-        @Property
         @Comment("Enables playing biome background music while in creative")
         public boolean playBiomeMusicWhileCreative = false;
 
@@ -237,16 +258,39 @@ public class Configuration extends ConfigurationData {
         public boolean remapSounds = true;
     }
 
+    public static class ScaryContent {
+
+        @Property
+        @MovedFrom("soundOptions.allowScarySounds")
+        @Comment("Enables content that is considered scary: sounds marked as scary, and lightning")
+        public boolean allowScaryContent = true;
+
+        @Property
+        @Comment("Enable/disable lightning: branching bolts in place of vanilla's, flashes in the sky during thunderstorms, and their thunder. Off while scary content is off")
+        public boolean enableLightning = true;
+
+        /**
+         * Whether the mod's lightning is shown: allowed as scary content, and turned on
+         */
+        public boolean lightningAllowed() {
+            return this.allowScaryContent && this.enableLightning;
+        }
+    }
+
     public static class BlockEffects {
 
         @Property
         @Slider(min = 16, max = 64)
-        @Comment("Distance that will be scanned when generating block effects")
-        public int blockEffectRange = 32;
+        @Comment("Radius around the player, in blocks, where block effects (waterfalls, steam, random block effects) are found and shown. Past 32, effects show farther than vanilla particles, at more cost.")
+        public int blockEffectRange = 40;
 
         @Property
         @Comment("Enable/disable steam column effect when liquids are adjacent to hot sources, like lava and magma")
         public boolean steamColumnEnabled = true;
+
+        @Property
+        @Comment("Enable/disable little flames burning in the eyes of skeleton skulls placed in the world (blue soul fire for wither skeleton skulls)")
+        public boolean skullFlamesEnabled = true;
 
         @Property
         @Comment("Enable/disable bubble columns generated underwater")
@@ -265,7 +309,7 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @MovedFrom("blockEffects.flameJetLight")
-        @Comment("Enable/disable the flicker of flame jets' light on their surroundings")
+        @Comment("Enable/disable the flicker of flame jets' and burning mobs' light on their surroundings")
         public boolean enableLight = true;
     }
 
@@ -318,7 +362,7 @@ public class Configuration extends ConfigurationData {
         @Property
         @Slider(min = 16, max = 64)
         @Comment("The maximum range at which entity special effects are applied")
-        public int entityEffectRange = 24;
+        public int entityEffectRange = 32;
 
         @Property
         @Comment("Enable/disable bow pull sound effect")
@@ -329,20 +373,48 @@ public class Configuration extends ConfigurationData {
         public boolean enableBreathEffect = true;
 
         @Property
-        @Comment("Enable/disable player toolbar sound effects")
-        public boolean enablePlayerToolbarEffect = true;
+        @Comment("Enable/disable breath from animals (cows, sheep, horses, wolves...) near you, along with the breath effect")
+        public boolean enableAnimalBreath = true;
 
         @Property
-        @Comment("Enable/disable sound effects for blocks on the toolbar")
-        public boolean enableToolbarBlockSounds = false;
+        @Comment("Enable/disable player toolbar sound effects")
+        public boolean enablePlayerToolbarEffect = true;
 
         @Property
         @Comment("Enable/disable item swing sound effects from players and mobs")
         public boolean enableSwingEffect = true;
 
         @Property
+        @Comment("Enable/disable a breath when you jump, heard by you only")
+        public boolean enableJumpSound = false;
+
+        @Property
         @Comment("Enable/disable sound effect when walking through dense brush")
         public boolean enableBrushStepEffect = true;
+
+        @Property
+        @Comment("Enable/disable flames like a flame jet's on burning mobs, in place of vanilla's flat fire. Vanilla's fire stays past the entity effect range, with Particles on Minimal and while a shader pack is in use")
+        public boolean enableBurningEffect = true;
+
+        @Property
+        @Comment("Enable/disable dark mist where a mob's body vanishes when it dies, in place of vanilla's white puffs")
+        public boolean enableDeathPuffs = true;
+
+        @Property
+        @Comment("Enable/disable numbers popping off mobs and players when their health changes: red for damage, green for healing")
+        public boolean enableDamagePopoffs = true;
+
+        @Property
+        @Comment("Enable/disable a comic book word over a heavy blow's number")
+        public boolean showCritWords = true;
+
+        @Property
+        @Comment("Enable/disable footprints left by players and mobs walking on soft ground: dirt, sand, gravel, snow, mud")
+        public boolean enableFootprints = true;
+
+        @Property
+        @Comment("The look of players' footprints")
+        public FootprintStyle footprintStyle = FootprintStyle.SQUARE;
     }
 
     public static class FootstepAccents {
@@ -459,7 +531,7 @@ public class Configuration extends ConfigurationData {
         @Property
         @Slider(min = 8, max = 32)
         @Comment("How far from the player, in blocks, particle rain, snow and dust are drawn")
-        public int precipitationRange = 12;
+        public int precipitationRange = 14;
 
         @Property
         @Slider(min = 50, max = 250)
@@ -468,7 +540,7 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @Slider(min = 0, max = 100)
-        @Comment("How blue particle rain is: 0 is a nearly colourless pale grey, 100 a deep blue")
+        @Comment("How blue particle rain is: 0 is a nearly colorless pale gray, 100 a deep blue")
         public int rainTint = 15;
 
         @Property
@@ -505,6 +577,16 @@ public class Configuration extends ConfigurationData {
         @MovedFrom(value = "weatherOptions.enableGroundFog", values = "false=NONE")
         @Comment("Mist lying low over the ground in swamps and eerie biomes: off, or how finely it is drawn. Fast costs least; Fabulous costs several times Fancy")
         public GroundFogQuality groundFogQuality = GroundFogQuality.FANCY;
+
+        @Property
+        @Experimental
+        @Comment("Clouds that change with the weather: scattered puffs that build up through fair afternoons, a low dark deck in a storm, towering in a thunderstorm. Drawn in place of vanilla's clouds")
+        public boolean enableDynamicClouds = true;
+
+        @Property
+        @Slider(min = 8, max = 32)
+        @Comment("How far dynamic clouds reach, in chunks, whatever the render distance")
+        public int cloudDistance = 24;
     }
 
     public static class FogOptions {
@@ -551,11 +633,5 @@ public class Configuration extends ConfigurationData {
         @Slider(min = 0, max = 100)
         @Comment("Reduce the wait time between music plays by a percentage")
         public int reduceWaitTime = 0;
-    }
-
-    public static class OtherOptions {
-        @Property
-        @Comment("Enable/disable playing random sound at the Minecraft finish loading to main screen")
-        public boolean playRandomSoundOnStartup = true;
     }
 }

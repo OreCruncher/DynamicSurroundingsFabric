@@ -35,7 +35,7 @@ public final class VoiceChatPlugin implements VoicechatPlugin {
 
     private static final IModLog LOGGER = ContainerManager.memoize(IModLog.class);
     // Resolved on first use: voice chat may load its plugins before the mod's container is ready
-    private static final SingletonSupplier<Configuration.Logging> CONFIG = SingletonSupplier.from(() -> ContainerManager.resolve(Configuration.Logging.class));
+    private static final SingletonSupplier<Configuration.Diagnostics> CONFIG = SingletonSupplier.from(() -> ContainerManager.resolve(Configuration.Diagnostics.class));
     private static final UUID OWN_VOICE = UUID.randomUUID();
 
     private final VoiceSounds voices = VoiceSounds.create(LOGGER);

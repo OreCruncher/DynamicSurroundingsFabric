@@ -305,20 +305,29 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
     }
 
     /**
-     * Draws the lines down the left or right edge, each on its own background. A null line is a blank gap.
+     * Draws the lines down the left or right edge, each on its own background. A null line is a blank gap. Batched
+     * like vanilla's F3 screen, backgrounds then text: unbatched, each fill and string is its own upload and draw.
      */
     private void drawText(GuiGraphics context, ObjectArray<FormattedCharSequence> text, boolean left) {
         var textRenderer = GameUtils.getTextRenderer();
         int lineHeight = textRenderer.lineHeight;
-        for (int line = 0; line < text.size(); ++line) {
-            var component = text.get(line);
-            if (component == null)
-                continue;
-            int width = textRenderer.width(component);
-            int x = left ? 2 : context.guiWidth() - 2 - width;
-            int y = 2 + lineHeight * line;
-            context.fill(x - 1, y - 1, x + width + 1, y + lineHeight - 1, BACKGROUND_COLOR);
-            context.drawString(textRenderer, component, x, y, FOREGROUND_COLOR, false);
-        }
+        context.drawManaged(() -> {
+            for (int line = 0; line < text.size(); ++line) {
+                var component = text.get(line);
+                if (component == null)
+                    continue;
+                int width = textRenderer.width(component);
+                int x = left ? 2 : context.guiWidth() - 2 - width;
+                int y = 2 + lineHeight * line;
+                context.fill(x - 1, y - 1, x + width + 1, y + lineHeight - 1, BACKGROUND_COLOR);
+            }
+            for (int line = 0; line < text.size(); ++line) {
+                var component = text.get(line);
+                if (component == null)
+                    continue;
+                int x = left ? 2 : context.guiWidth() - 2 - textRenderer.width(component);
+                context.drawString(textRenderer, component, x, 2 + lineHeight * line, FOREGROUND_COLOR, false);
+            }
+        });
     }
 }

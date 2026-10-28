@@ -5,8 +5,11 @@ import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderType;
@@ -18,6 +21,7 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.orecruncher.dsurround.runtime.weather.StormSounds;
 import org.orecruncher.dsurround.eventing.ISkyRender;
+import org.orecruncher.dsurround.effects.TargetCheck;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -40,13 +44,33 @@ public class MixinLevelRenderer {
     }
 
     /**
-     * The sky's colour, turned toward the dust's in a dust storm, as the fog is. Only where the sky is drawn: the fog
-     * reads the sky's colour too, from the level, and is tinted on its own.
+     * The sky's color, turned toward the dust's in a dust storm, as the fog is. Only where the sky is drawn: the fog
+     * reads the sky's color too, from the level, and is tinted on its own.
      */
     @ModifyExpressionValue(method = "renderSky(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getSkyColor(Lnet/minecraft/world/phys/Vec3;F)Lnet/minecraft/world/phys/Vec3;"), require = 0)
     private Vec3 dsurround$tintSkyColor(Vec3 color, @Local(argsOnly = true) float partialTick) {
         return MixinHelpers.SKY_TINT_GUARD.get(() -> MixinHelpers.fogHandler().tintSkyColor(color, partialTick), color);
+    }
+
+    /**
+     * The glow of sunrise and sunset, turned toward the dust's color and dimmed in a dust storm, as the sky is
+     */
+    @ModifyExpressionValue(method = "renderSky(Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FLnet/minecraft/client/Camera;ZLjava/lang/Runnable;)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/DimensionSpecialEffects;getSunriseColor(FF)[F"), require = 0)
+    private float[] dsurround$tintSunsetColor(float[] color, @Local(argsOnly = true) float partialTick) {
+        return MixinHelpers.SUNSET_TINT_GUARD.get(() -> MixinHelpers.fogHandler().tintSunsetColor(color, partialTick), color);
+    }
+
+    /**
+     * Starts building the frame's rain and snow on another thread as the level starts to be drawn, the camera set for
+     * the frame, so it is ready by the weather's pass (see DropMeshes). Optional: without it they are built in that
+     * pass, as they were.
+     */
+    @Inject(method = "renderLevel", at = @At("HEAD"), require = 0)
+    private void dsurround$beginLevel(DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
+                                      LightTexture lightTexture, Matrix4f frustumMatrix, Matrix4f projectionMatrix, CallbackInfo ci) {
+        MixinHelpers.PRECIPITATION_AHEAD_GUARD.run(() -> MixinHelpers.precipitation().beginFrame(camera, deltaTracker.getGameTimeDeltaPartialTick(false)));
     }
 
     /**
@@ -84,12 +108,14 @@ public class MixinLevelRenderer {
 
     /**
      * Frost on windows (with Fabulous graphics; see above for without) and the mist on the ground before the weather, so the rain and snow are drawn over them; with
-     * Fabulous graphics the mist after it instead (see GroundFogHandler.renderAfterWeather). All from where the level
+     * Fabulous graphics the mist after it instead (see GroundFogHandler.renderAfterWeather). The lightning last of all:
+     * with Fabulous graphics it writes depth, which would hide the weather drawn after it behind its glow. All from where the level
      * calls for the weather, rather than inside it, so they are drawn however the weather's drawing ends, cancelled by
      * us or another mod (Simple Weather cancels it) or left early by NeoForge for a dimension's own.
      */
     @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V"))
     private void dsurround$aroundWeather(LevelRenderer renderer, LightTexture lightTexture, float partialTick, double camX, double camY, double camZ, Operation<Void> original) {
+        TargetCheck.ensureWeather("the weather");
         MixinHelpers.windowFrost().renderBeforeWeather(lightTexture);
         MixinHelpers.groundFog().renderBeforeWeather(lightTexture, partialTick);
         dsurround$levelWeather = true;
@@ -99,6 +125,18 @@ public class MixinLevelRenderer {
             dsurround$levelWeather = false;
         }
         MixinHelpers.groundFog().renderAfterWeather(lightTexture, partialTick);
+        MixinHelpers.LIGHTNING_GUARD.run(() -> MixinHelpers.lightning().render(partialTick));
+    }
+
+    /**
+     * The mod's clouds in place of vanilla's, from where the level calls for them: another mod that draws clouds of its
+     * own (Sodium) replaces renderClouds itself, and is left out with vanilla's. When ours can't be drawn, whoever's
+     * renderClouds is runs as it would have.
+     */
+    @WrapOperation(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;renderClouds(Lcom/mojang/blaze3d/vertex/PoseStack;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;FDDD)V"), require = 0)
+    private void dsurround$clouds(LevelRenderer renderer, PoseStack poseStack, Matrix4f frustumMatrix, Matrix4f projectionMatrix, float partialTick, double camX, double camY, double camZ, Operation<Void> original) {
+        if (!MixinHelpers.CLOUDS_GUARD.get(() -> MixinHelpers.clouds().render(frustumMatrix, projectionMatrix, partialTick, camX, camY, camZ), false))
+            original.call(renderer, poseStack, frustumMatrix, projectionMatrix, partialTick, camX, camY, camZ);
     }
 
     /**

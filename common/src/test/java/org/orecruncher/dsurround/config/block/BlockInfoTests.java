@@ -151,9 +151,9 @@ public class BlockInfoTests {
 
     @Test
     void anOrdinaryBlockGetsTheDefaults() {
-        var dirt = builder(Blocks.DIRT, new Tags());
-        assertTrue(dirt.isDefault(), "a plain block should be able to share the default info");
-        var info = dirt.build();
+        var planks = builder(Blocks.OAK_PLANKS, new Tags());
+        assertTrue(planks.isDefault(), "a plain block should be able to share the default info");
+        var info = planks.build();
         assertEquals(REFLECTANCE_DEFAULT, info.getSoundReflectivity());
         assertEquals(OCCLUSION_DEFAULT, info.getSoundOcclusion());
     }
@@ -206,7 +206,7 @@ public class BlockInfoTests {
 
     @Test
     void clearingSoundsRemovesEarlierOnes() {
-        var builder = builder(Blocks.DIRT, new Tags());
+        var builder = builder(Blocks.OAK_PLANKS, new Tags());
         builder.apply(soundRule(Optional.empty(), "a"));
         builder.apply(new BlockConfigRule(List.of(), true, Optional.empty(), List.of(), List.of()));
         assertTrue(builder.isDefault());

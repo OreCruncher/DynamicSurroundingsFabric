@@ -1,13 +1,14 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import java.util.function.IntBinaryOperator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for the colour dust takes: the region's loose ground, whatever it blows over.
+ * Tests for the color dust takes: the region's loose ground, whatever it blows over.
  */
 public class PrecipitationColumnsTests {
 
@@ -17,7 +18,7 @@ public class PrecipitationColumnsTests {
     private static final int FALLBACK = 0x123456;
 
     /**
-     * A desert on flat ground, dust everywhere, its ground's colour by {@code colorAt(x, z)}
+     * A desert on flat ground, dust everywhere, its ground's color by {@code colorAt(x, z)}
      */
     private record Desert(IntBinaryOperator colorAt) implements IColumnSource {
         @Override
@@ -54,7 +55,7 @@ public class PrecipitationColumnsTests {
 
     @Test
     void dustOverGrassOrWaterIsTheRegionsSand() {
-        // Sand to the north, grass (or water) to the south: no colour of its own
+        // Sand to the north, grass (or water) to the south: no color of its own
         var columns = look((x, z) -> z < 0 ? SAND : IColumnSource.NOT_A_DUST_SOURCE);
         assertEquals(SAND, columns.regionalDustColor());
         assertEquals(SAND, columns.dustColorAt(columns.index(0, 5)), "over the grass");
@@ -70,7 +71,7 @@ public class PrecipitationColumnsTests {
 
     @Test
     void mixedGroundAveragesOut() {
-        // Red sand to the west, sand to the east: the region's colour is between the two
+        // Red sand to the west, sand to the east: the region's color is between the two
         var columns = look((x, z) -> x < 0 ? RED_SAND : SAND);
         int regional = columns.regionalDustColor();
         assertTrue(between((regional >> 16) & 0xFF, (RED_SAND >> 16) & 0xFF, (SAND >> 16) & 0xFF));
@@ -79,7 +80,7 @@ public class PrecipitationColumnsTests {
     }
 
     @Test
-    void overLooseGroundItIsHalfItsOwnColour() {
+    void overLooseGroundItIsHalfItsOwnColor() {
         // One patch of red sand in a sand desert: dust rising from it is half red sand, half the region's sand
         var columns = look((x, z) -> x == 2 && z == 2 ? RED_SAND : SAND);
         int regional = columns.regionalDustColor();
@@ -127,17 +128,30 @@ public class PrecipitationColumnsTests {
     }
 
     @Test
-    void theColumnsAreLookedUpAgainOnlyWhenNeeded() {
+    void standingStillAFewRowsAreLookedUpAgainEachTick() {
         var source = new Changing();
         var columns = new PrecipitationColumns(RADIUS);
         assertTrue(columns.refresh(source, 0, 70, 0), "the first look");
-        int reads = source.heightReads;
+        int whole = source.heightReads;
 
-        // Standing still, nothing is read until the refresh interval is up
-        for (int t = 1; t < PrecipitationColumns.REFRESH_TICKS; t++)
+        // Standing still, no tick reads the whole area again, nor more than its share of the rows
+        int size = RADIUS * 2 + 1;
+        int mostATick = PrecipitationColumns.rowsPerTick(size) * size;
+        source.ground = 66;
+        for (int t = 0; t < PrecipitationColumns.REFRESH_TICKS; t++) {
+            int before = source.heightReads;
             assertFalse(columns.refresh(source, 0, 70, 0));
-        assertEquals(reads, source.heightReads);
-        assertTrue(columns.refresh(source, 0, 70, 0), "the interval is up");
+            int read = source.heightReads - before;
+            assertTrue(read > 0 && read <= mostATick && read < whole, read + " columns read in a tick");
+        }
+
+        // And within the interval every column has seen the change
+        for (int dz = -RADIUS; dz <= RADIUS; dz++)
+            for (int dx = -RADIUS; dx <= RADIUS; dx++) {
+                int column = columns.index(dx, dz);
+                if (column >= 0)
+                    assertEquals(66, columns.ground(column), dx + ", " + dz);
+            }
     }
 
     @Test
@@ -170,12 +184,49 @@ public class PrecipitationColumnsTests {
     @Test
     void theShareOfColumnsWithRainIsCounted() {
         var source = new Changing();
-        // Rain west of x = 0: 12 of the 25 columns across
+        // Rain west of x = 0: the disc's columns but the middle row north to south, halved
         source.rainBelowX = 0;
         var columns = new PrecipitationColumns(RADIUS);
         columns.update(source, 0, 70, 0);
-        assertEquals(12F / 25F, columns.fallingShare(), 1e-5F);
+        int west = (columns.columnCount() - (RADIUS * 2 + 1)) / 2;
+        assertEquals(west / (float) columns.columnCount(), columns.fallingShare(), 1e-5F);
         assertEquals(0F, columns.dustShare());
+    }
+
+    @Test
+    void onlyTheDiscIsLookedUp() {
+        for (int radius : new int[]{8, 12, 16, 32}) {
+            var source = new Changing();
+            var columns = new PrecipitationColumns(radius);
+            columns.update(source, 0, 70, 0);
+            int square = (radius * 2 + 1) * (radius * 2 + 1);
+            assertEquals(columns.columnCount(), source.heightReads, "each column read once");
+            assertTrue(columns.columnCount() < square * 0.9F, "the corners are left out at " + radius);
+            assertTrue(columns.columnCount() > Math.PI * radius * radius, "the whole disc at " + radius);
+            assertEquals(-1, columns.index(radius, radius), "a corner");
+            assertTrue(columns.index(radius, 0) >= 0, "the edge, east");
+            assertTrue(columns.index(0, -radius) >= 0, "the edge, north");
+        }
+    }
+
+    @Test
+    void everyPlaceADropCanBeHasItsColumn() {
+        // The camera anywhere in its column, drops anywhere within the radius of it, as the field keeps them
+        var random = Randomizer.create(7);
+        for (int radius : new int[]{8, 12, 16}) {
+            var columns = new PrecipitationColumns(radius);
+            columns.update(new Changing(), 0, 70, 0);
+            for (int i = 0; i < 20000; i++) {
+                double cameraX = random.nextDouble();
+                double cameraZ = random.nextDouble();
+                double angle = random.nextDouble() * Math.PI * 2;
+                // Mostly at the very edge, where a column could be missed
+                double r = radius * (i % 2 == 0 ? 1 - random.nextDouble() * 1e-3 : Math.sqrt(random.nextDouble()));
+                double x = cameraX + Math.cos(angle) * r;
+                double z = cameraZ + Math.sin(angle) * r;
+                assertTrue(columns.index(x, z) >= 0, "no column at " + x + ", " + z + " for radius " + radius);
+            }
+        }
     }
 
     private static boolean between(int value, int a, int b) {

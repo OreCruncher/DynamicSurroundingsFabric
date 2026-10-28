@@ -194,14 +194,31 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
 
         if (this.tagLibrary.is(EntityEffectTags.BOW_PULL, entityType))
             effectTypes.add(EntityEffectType.BOW_PULL);
-        if (this.tagLibrary.is(EntityEffectTags.FROST_BREATH, entityType))
+        // A ravager is a raider, but breathes like an animal
+        if (this.tagLibrary.is(EntityEffectTags.ANIMAL_BREATH, entityType))
+            effectTypes.add(EntityEffectType.ANIMAL_BREATH);
+        else if (this.tagLibrary.is(EntityEffectTags.FROST_BREATH, entityType))
             effectTypes.add(EntityEffectType.FROST_BREATH);
         if (this.tagLibrary.is(EntityEffectTags.ITEM_SWING, entityType))
             effectTypes.add(EntityEffectType.ITEM_SWING);
         if (this.tagLibrary.is(EntityEffectTags.TOOLBAR, entityType))
             effectTypes.add(EntityEffectType.PLAYER_TOOLBAR);
+        // Heard by the player only, so it goes with the player's own kind
+        if (entityType == EntityType.PLAYER)
+            effectTypes.add(EntityEffectType.PLAYER_JUMP);
         if (this.tagLibrary.is(EntityEffectTags.BRUSH_STEP, entityType))
             effectTypes.add(EntityEffectType.BRUSH_STEP);
+        // Anything can burn; the tag lists those that keep vanilla's fire
+        if (!this.tagLibrary.is(EntityEffectTags.VANILLA_FIRE, entityType))
+            effectTypes.add(EntityEffectType.BURNING);
+        if (!this.tagLibrary.is(EntityEffectTags.NO_HEALTH_POPOFFS, entityType))
+            effectTypes.add(EntityEffectType.HEALTH_POPOFF);
+        if (entityType == EntityType.PLAYER
+                || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_SQUARE, entityType)
+                || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_PAW, entityType)
+                || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_HOOF, entityType)
+                || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_BIRD, entityType))
+            effectTypes.add(EntityEffectType.FOOTPRINTS);
 
         return effectTypes;
     }

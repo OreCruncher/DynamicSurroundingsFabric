@@ -25,7 +25,8 @@ public final class LibraryFunctions {
     public static final ArgType<Pattern> REGEX = ArgType.of("regular expression", LibraryFunctions::toPattern);
 
     public static void configure(IConfigureDefinition config) {
-        // Only the selected branch is evaluated. Compiled to a dedicated node so that it does not allocate; a
+        // The function form of the conditional operator (c ? a : b), kept for configs written before it. Only the
+        // selected branch is evaluated. Compiled to the same node as the operator so that it does not allocate; a
         // constant condition selects the branch at compile time.
         config.function("lib.iif")
                 .param(ArgType.BOOLEAN).param(ArgType.ANY).param(ArgType.ANY)

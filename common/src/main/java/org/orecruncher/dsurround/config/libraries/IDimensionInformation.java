@@ -48,4 +48,9 @@ public interface IDimensionInformation {
      * Whether mist lies on the ground here, in the biomes given it
      */
     boolean groundFog();
+
+    /**
+     * Whether the mod's clouds are drawn here, in place of vanilla's
+     */
+    boolean dynamicClouds();
 }

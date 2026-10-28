@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * The wind that slants falling rain and snow. It blows steadily, from a direction that wanders slowly, and harder the
  * heavier the storm; every so often a gust passes through. A gust is a front: it reaches the upwind side of the area
- * around the camera first and sweeps across it, so its effect can be seen travelling through the drops.
+ * around the camera first and sweeps across it, so its effect can be seen traveling through the drops.
  * <p>
  * The wind's direction starts from the day, so players in the same world see it blowing the same way; the gusts and
  * the wandering are each player's own. Speeds are in blocks a tick. Client thread only.
@@ -106,6 +106,14 @@ public final class Wind {
         this.z = this.directionZ * this.speed;
     }
 
+    /**
+     * The way the wind blows toward on a day, as an angle in radians from east toward south (+x toward +z): the same
+     * for every player in a world. The wind starts each day from it, and the clouds' upper wind follows it.
+     */
+    public static float dayAngle(long day) {
+        return Mixers.splitMix64(day ^ WIND_SALT) / (float) Long.MAX_VALUE * Mth.PI;
+    }
+
     public float speed() {
         return this.speed;
     }
@@ -152,7 +160,7 @@ public final class Wind {
             if (day != this.day) {
                 // A new day, or the first tick: the day's own direction. Mid storm this swings the wind round, rarely.
                 this.day = day;
-                this.angle = Mixers.splitMix64(day ^ WIND_SALT) / (float) Long.MAX_VALUE * Mth.PI;
+                this.angle = dayAngle(day);
             }
             this.wander = Mth.clamp(this.wander + (random.nextFloat() * 2F - 1F) * WANDER_CHANGE, -MAX_WANDER, MAX_WANDER);
             this.angle += this.wander;
@@ -203,6 +211,44 @@ public final class Wind {
             return 1F;
         var envelope = Mth.sin(Mth.PI * passing / this.gustTicks);
         return 1F + this.gustPower * envelope * envelope;
+    }
+
+    /**
+     * The wind as it is this tick, for working out at many points at once: its steady vector and direction, and the
+     * parts of the gust that don't depend on the point. It doesn't change as the wind does, so another thread can read it.
+     */
+    public Snapshot snapshot() {
+        return new Snapshot(this.x, this.z, this.directionX, this.directionZ,
+                this.gustTicks == 0 ? 0F : this.gustAge - this.reach / GUST_TRAVEL, this.gustTicks,
+                this.gustTicks == 0 ? 0F : Mth.PI / this.gustTicks, this.gustPower);
+    }
+
+    /**
+     * The wind of one tick (see {@link #snapshot})
+     *
+     * @param gustStart when the gust's front reached the camera, in ticks from now (negative before it has)
+     * @param gustTicks how long the gust takes to pass a point; 0 for no gust
+     * @param gustScale pi over its length, to turn ticks into its envelope's angle
+     */
+    public record Snapshot(float x, float z, float directionX, float directionZ, float gustStart, int gustTicks,
+                           float gustScale, float gustPower) {
+
+        private static final float INVERSE_TRAVEL = 1F / GUST_TRAVEL;
+
+        /**
+         * As {@link Wind#gustFactor}, at the tick itself
+         *
+         * @param along how far downwind of the camera the point is, in blocks; negative is upwind
+         */
+        public float gustFactor(float along) {
+            if (this.gustTicks == 0)
+                return 1F;
+            var passing = this.gustStart - along * INVERSE_TRAVEL;
+            if (passing <= 0F || passing >= this.gustTicks)
+                return 1F;
+            var envelope = Mth.sin(passing * this.gustScale);
+            return 1F + this.gustPower * envelope * envelope;
+        }
     }
 
     /**

@@ -3,9 +3,19 @@ package org.orecruncher.dsurround.effects.precipitation;
 import net.minecraft.util.Mth;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
+import net.minecraft.util.RandomSource;
 import org.orecruncher.dsurround.lib.random.Randomizer;
+import org.orecruncher.dsurround.testing.Fakes;
 import org.orecruncher.dsurround.runtime.weather.Wind;
 import org.orecruncher.dsurround.runtime.weather.WindAccess;
+
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -53,9 +63,14 @@ public class PrecipitationFieldTests {
     private static final int SAND = 0xDBD3A0;
 
     /**
-     * Flat ground everywhere: a desert, with dust, for x below {@code dustBelowX}, and rain from there on
+     * Flat ground everywhere: a desert, with dust, for x below {@code dustBelowX}, and rain from there on; or, if
+     * {@code east}, the other way round
      */
-    private record Desert(int ground, int dustBelowX) implements IColumnSource {
+    private record Desert(int ground, int dustBelowX, boolean east) implements IColumnSource {
+        Desert(int ground, int dustBelowX) {
+            this(ground, dustBelowX, false);
+        }
+
         @Override
         public int groundHeight(int x, int z) {
             return this.ground;
@@ -63,7 +78,7 @@ public class PrecipitationFieldTests {
 
         @Override
         public PrecipitationKind precipitation(int x, int y, int z) {
-            return x < this.dustBelowX ? PrecipitationKind.DUST : PrecipitationKind.RAIN;
+            return (x < this.dustBelowX) != this.east ? PrecipitationKind.DUST : PrecipitationKind.RAIN;
         }
 
         @Override
@@ -139,9 +154,9 @@ public class PrecipitationFieldTests {
         tick(field, RAIN_EVERYWHERE, 0, 0, 1F, 30);
         float radius = PrecipitationField.DEFAULT_RADIUS;
         for (int i = 0; i < field.count(); i++) {
-            assertTrue(field.y[i] > GROUND, "below the ground");
-            assertTrue(field.y[i] <= CAMERA_Y + PrecipitationField.ABOVE, "above the cylinder");
-            assertTrue(field.x[i] * field.x[i] + field.z[i] * field.z[i] <= radius * radius, "outside the cylinder");
+            assertTrue(field.drops().y[i] > GROUND, "below the ground");
+            assertTrue(field.drops().y[i] <= CAMERA_Y + PrecipitationField.ABOVE, "above the cylinder");
+            assertTrue(field.drops().x[i] * field.drops().x[i] + field.drops().z[i] * field.drops().z[i] <= radius * radius, "outside the cylinder");
         }
     }
 
@@ -152,7 +167,7 @@ public class PrecipitationFieldTests {
         tick(field, new Columns(GROUND, Integer.MAX_VALUE, 0), 0, 0, 1F, 20);
         assertTrue(field.count() > 0);
         for (int i = 0; i < field.count(); i++)
-            assertTrue(field.z[i] >= 0, "a drop in a dry column");
+            assertTrue(field.drops().z[i] >= 0, "a drop in a dry column");
     }
 
     @Test
@@ -174,12 +189,12 @@ public class PrecipitationFieldTests {
         int checked = 0;
         for (var field : new PrecipitationField[]{snow, dust}) {
             for (int i = 0; i < field.count(); i++) {
-                if (field.kind[i] == PrecipitationField.RAIN)
+                if (field.drops().kind[i] == PrecipitationField.RAIN)
                     continue;
-                float spin = field.phase[i] * (field.kind[i] == PrecipitationField.DUST
+                float spin = field.drops().phase[i] * (field.drops().kind[i] == PrecipitationField.DUST
                         ? PrecipitationRenderer.DUST_SPIN : PrecipitationRenderer.SNOW_SPIN);
-                assertEquals(Mth.cos(spin), field.spinCos[i], 1e-6F, "drop " + i);
-                assertEquals(Mth.sin(spin), field.spinSin[i], 1e-6F, "drop " + i);
+                assertEquals(Mth.cos(spin), field.drops().spinCos[i], 1e-6F, "drop " + i);
+                assertEquals(Mth.sin(spin), field.drops().spinSin[i], 1e-6F, "drop " + i);
                 checked++;
             }
         }
@@ -194,9 +209,9 @@ public class PrecipitationFieldTests {
         tick(field, new Columns(GROUND, 0, Integer.MIN_VALUE), 0, 0, 1F, 10);
         boolean sawRain = false, sawSnow = false;
         for (int i = 0; i < field.count(); i++) {
-            if (field.kind[i] == PrecipitationField.SNOW) {
+            if (field.drops().kind[i] == PrecipitationField.SNOW) {
                 sawSnow = true;
-                assertTrue(field.speed[i] < PrecipitationField.RAIN_SPEED_MIN);
+                assertTrue(field.drops().speed[i] < PrecipitationField.RAIN_SPEED_MIN);
             } else {
                 sawRain = true;
             }
@@ -213,7 +228,7 @@ public class PrecipitationFieldTests {
         tick(field, RAIN_EVERYWHERE, 100, 100, 1F, 1);
         float radius = PrecipitationField.DEFAULT_RADIUS;
         for (int i = 0; i < field.count(); i++) {
-            float dx = field.x[i] - 100, dz = field.z[i] - 100;
+            float dx = field.drops().x[i] - 100, dz = field.drops().z[i] - 100;
             assertTrue(dx * dx + dz * dz <= radius * radius, "a drop left behind");
         }
     }
@@ -398,8 +413,8 @@ public class PrecipitationFieldTests {
         var field = new PrecipitationField(1000);
         tick(field, RAIN_EVERYWHERE, 0, 0, 1F, 10);
         for (int i = 0; i < field.count(); i++) {
-            assertEquals(0F, field.windX[i]);
-            assertEquals(0F, field.windZ[i]);
+            assertEquals(0F, field.drops().windX[i]);
+            assertEquals(0F, field.drops().windZ[i]);
         }
     }
 
@@ -413,7 +428,7 @@ public class PrecipitationFieldTests {
         assertTrue(field.count() > 0);
         for (int i = 0; i < field.count(); i++) {
             // Each drop moves the way the wind blows, by about as much, give or take its own drift
-            float along = field.windX[i] * wind.x() + field.windZ[i] * wind.z();
+            float along = field.drops().windX[i] * wind.x() + field.drops().windZ[i] * wind.z();
             float speedSq = wind.speed() * wind.speed();
             assertTrue(along > 0.8F * speedSq && along < 1.2F * speedSq, "a drop not carried with the wind");
         }
@@ -441,14 +456,14 @@ public class PrecipitationFieldTests {
     private static float meanSpeed(PrecipitationField field) {
         float total = 0F;
         for (int i = 0; i < field.count(); i++)
-            total += Math.hypot(field.windX[i], field.windZ[i]);
+            total += Math.hypot(field.drops().windX[i], field.drops().windZ[i]);
         return total / field.count();
     }
 
     private static float averageDrift(PrecipitationField field) {
         float total = 0F;
         for (int i = 0; i < field.count(); i++)
-            total += field.drift[i];
+            total += field.drops().drift[i];
         return total / field.count();
     }
 
@@ -488,7 +503,7 @@ public class PrecipitationFieldTests {
         tick(field, new Columns(GROUND, Integer.MIN_VALUE, Integer.MIN_VALUE), 0, 0, 1F, 5);
         for (int i = 0; i < field.count(); i++)
             for (int j = 0; j < field.count(); j++)
-                if (field.speed[i] > field.speed[j])
+                if (field.drops().speed[i] > field.drops().speed[j])
                     assertTrue(field.snowSize(i) >= field.snowSize(j));
     }
 
@@ -514,13 +529,13 @@ public class PrecipitationFieldTests {
         tick(heavy, RAIN_EVERYWHERE, 0, 0, 1F, 3);
         assertTrue(meanFallSpeed(light) < meanFallSpeed(heavy));
         for (int i = 0; i < heavy.count(); i++)
-            assertEquals((heavy.speed[i] - PrecipitationField.RAIN_SPEED_MIN) / PrecipitationField.RAIN_SPEED_RANGE, heavy.rainSize(i), 1e-5F);
+            assertEquals((heavy.drops().speed[i] - PrecipitationField.RAIN_SPEED_MIN) / PrecipitationField.RAIN_SPEED_RANGE, heavy.rainSize(i), 1e-5F);
     }
 
     private static float meanFallSpeed(PrecipitationField field) {
         float total = 0F;
         for (int i = 0; i < field.count(); i++)
-            total += field.speed[i];
+            total += field.drops().speed[i];
         return total / field.count();
     }
 
@@ -540,8 +555,8 @@ public class PrecipitationFieldTests {
         assertTrue(field.count() > 0);
         assertEquals(field.count(), field.dustCount(), "everything in a desert is dust");
         for (int i = 0; i < field.count(); i++) {
-            assertEquals(PrecipitationField.DUST, field.kind[i]);
-            assertEquals(SAND, field.color[i]);
+            assertEquals(PrecipitationField.DUST, field.drops().kind[i]);
+            assertEquals(SAND, field.drops().color[i]);
         }
         assertTrue(field.isDustAt(0, 0));
     }
@@ -566,8 +581,8 @@ public class PrecipitationFieldTests {
         for (int i = 0; i < field.count(); i++) {
             // The turbulence can dip a puff a little below its usual lift, from which it eases back up; never into
             // the ground
-            assertTrue(field.y[i] > GROUND, "dust below the ground");
-            if (field.y[i] < GROUND + PrecipitationField.DUST_MIN_LIFT + PrecipitationField.DUST_HEIGHT / 2F)
+            assertTrue(field.drops().y[i] > GROUND, "dust below the ground");
+            if (field.drops().y[i] < GROUND + PrecipitationField.DUST_MIN_LIFT + PrecipitationField.DUST_HEIGHT / 2F)
                 low++;
         }
         // Squaring the height puts about seven in ten in the lower half
@@ -594,21 +609,32 @@ public class PrecipitationFieldTests {
         assertTrue(field.count() > 0);
         assertEquals(0F, field.fade(0, 0F));
         // Half way through its life it is at full strength; at the end, gone
-        field.age[0] = field.lifetime[0] / 2;
+        field.drops().age[0] = field.drops().lifetime[0] / 2;
         assertEquals(1F, field.fade(0, 0F));
-        field.age[0] = field.lifetime[0];
+        field.drops().age[0] = field.drops().lifetime[0];
         assertEquals(0F, field.fade(0, 0F));
     }
 
     @Test
-    void dustBlownOutOfTheDesertGoes() {
-        // Desert for x below 0, rain beyond: whichever way the wind blows, no dust is kept outside the desert
+    void dustBlownOutOfTheDesertFadesOut() {
+        // Desert for x from 0, rain to the west, where the wind blows: dust blown out of the desert drifts on a little
+        // way, fading, then goes
         var wind = steadyWind();
         var field = new PrecipitationField(1000);
-        tick(field, new Desert(GROUND, 0), 0, 0, 1F, wind, 30);
-        for (int i = 0; i < field.count(); i++)
-            if (field.kind[i] == PrecipitationField.DUST)
-                assertTrue(field.x[i] < 0F, "dust outside the desert");
+        assertTrue(wind.x() < 0F, "the wind blows out of the desert");
+        var desert = new Desert(GROUND, 0, true);
+        var random = Randomizer.create(42);
+        boolean sawFading = false;
+        for (int t = 0; t < 60; t++) {
+            field.tick(desert, 0, CAMERA_Y, 0, 1F, 1F, wind, random);
+            for (int i = 0; i < field.count(); i++) {
+                if (field.drops().kind[i] != PrecipitationField.DUST || field.drops().x[i] > -1F)
+                    continue;
+                assertTrue(field.drops().lifetime[i] - field.drops().age[i] <= PrecipitationField.DUST_FADE, "dust outside the desert not fading");
+                sawFading |= field.fade(i, 0F) > 0F;
+            }
+        }
+        assertTrue(sawFading, "no dust drifted out of the desert");
     }
 
     /**
@@ -663,10 +689,10 @@ public class PrecipitationFieldTests {
         for (int t = 0; t < 60; t++) {
             field.tick(columns, 0, CAMERA_Y, 0, 1F, 1F, wind, random);
             for (int i = 0; i < field.count(); i++) {
-                if (field.age[i] == 0)
+                if (field.drops().age[i] == 0)
                     continue;
-                float along = (float) Math.hypot(field.windX[i], field.windZ[i]);
-                float rise = field.y[i] - field.prevY[i];
+                float along = (float) Math.hypot(field.drops().windX[i], field.drops().windZ[i]);
+                float rise = field.drops().y[i] - field.drops().prevY[i];
                 worst = Math.max(worst, rise - Math.max(along * PrecipitationField.DUST_MAX_CLIMB, PrecipitationField.DUST_MIN_RISE));
             }
         }
@@ -681,19 +707,23 @@ public class PrecipitationFieldTests {
         // left behind in it and taken for blown into a wall
         var columns = new Slope(-12, 1);
         var wind = eastWind(WindAccess.strongest());
-        var field = new PrecipitationField(1000);
-        var random = Randomizer.create(37);
-        // Long enough that every puff now has climbed from where it spawned
-        for (int t = 0; t < 30; t++)
-            field.tick(columns, 0, CAMERA_Y, 0, 1F, 1F, wind, random);
+        // Over many storms: about one in twelve is in the slope at any one time, so a single storm can have more than one
+        // in ten by chance
         int climbing = 0, buried = 0;
-        for (int i = 0; i < field.count(); i++) {
-            if (field.age[i] < 10)
-                continue;
-            climbing++;
-            float ground = columns.groundHeight((int) Math.floor(field.x[i]), 0);
-            if (field.y[i] < ground)
-                buried++;
+        for (int seed = 1; seed <= 20; seed++) {
+            var field = new PrecipitationField(1000);
+            var random = Randomizer.create(seed);
+            // Long enough that every puff now has climbed from where it spawned
+            for (int t = 0; t < 30; t++)
+                field.tick(columns, 0, CAMERA_Y, 0, 1F, 1F, wind, random);
+            for (int i = 0; i < field.count(); i++) {
+                if (field.drops().age[i] < 10)
+                    continue;
+                climbing++;
+                float ground = columns.groundHeight((int) Math.floor(field.drops().x[i]), 0);
+                if (field.drops().y[i] < ground)
+                    buried++;
+            }
         }
         assertTrue(climbing > 0);
         int finalBuried = buried, finalClimbing = climbing;
@@ -711,6 +741,125 @@ public class PrecipitationFieldTests {
         tick(half, new Columns(GROUND, Integer.MAX_VALUE, 0), 0, 0, 1F, 20);
         float expected = whole.count() * 13F / 25F;
         assertEquals(expected, half.count(), expected * 0.1F);
+    }
+
+    /**
+     * An awning over x 2 to 5: the ground is its top there, with open air beneath it down to the real ground. Says which
+     * threads asked it anything.
+     */
+    private static final class Awning implements IColumnSource {
+        final Set<Thread> askedFrom = ConcurrentHashMap.newKeySet();
+        final AtomicInteger openAsked = new AtomicInteger();
+
+        private static boolean under(int x) {
+            return x >= 2 && x < 6;
+        }
+
+        @Override
+        public int groundHeight(int x, int z) {
+            this.askedFrom.add(Thread.currentThread());
+            return under(x) ? GROUND + 6 : GROUND;
+        }
+
+        @Override
+        public PrecipitationKind precipitation(int x, int y, int z) {
+            this.askedFrom.add(Thread.currentThread());
+            return PrecipitationKind.RAIN;
+        }
+
+        @Override
+        public boolean isOpen(int x, int y, int z) {
+            this.askedFrom.add(Thread.currentThread());
+            this.openAsked.incrementAndGet();
+            return y >= GROUND && (!under(x) || y < GROUND + 5);
+        }
+
+        @Override
+        public int light(int x, int y, int z) {
+            this.askedFrom.add(Thread.currentThread());
+            return 0xF000F0;
+        }
+
+        @Override
+        public int dustColor(int x, int y, int z) {
+            this.askedFrom.add(Thread.currentThread());
+            return SAND;
+        }
+
+        @Override
+        public int fallbackDustColor(int x, int y, int z) {
+            this.askedFrom.add(Thread.currentThread());
+            return SAND;
+        }
+    }
+
+    @Test
+    void aStepOnAnotherThreadAsksTheWorldNothing() throws Exception {
+        // Only the thread that starts and finishes a step may read the world: the step leaves it the drops carried in
+        // under the awning to answer
+        var awning = new Awning();
+        var field = new PrecipitationField(1000);
+        var wind = eastWind(WindAccess.strongest());
+        var random = Randomizer.create(5);
+        var stepper = Executors.newSingleThreadExecutor();
+        try {
+            for (int t = 0; t < 40; t++) {
+                field.finish(awning);
+                field.start(awning, 0, CAMERA_Y, 0, 1F, 1F, wind, random, stepper);
+            }
+            field.finish(awning);
+        } finally {
+            stepper.shutdown();
+        }
+        assertEquals(Set.of(Thread.currentThread()), awning.askedFrom);
+        assertTrue(awning.openAsked.get() > 0, "some drops were carried in under the awning");
+        assertTrue(IntStream.range(0, field.count()).anyMatch(i -> field.drops().covered[i] > 0), "and drift on under it");
+    }
+
+    @Test
+    void theDropsDrawnStayAsTheyAreUntilTheStepFinishes() {
+        var field = new PrecipitationField(1000);
+        tick(field, RAIN_EVERYWHERE, 0, 0, 1F, 10);
+        int count = field.count();
+        float y = field.drops().y[0];
+
+        // A step held back until let go: until it is finished, it is the other set of drops it moves
+        var held = new ArrayList<Runnable>();
+        field.start(RAIN_EVERYWHERE, 0, CAMERA_Y, 0, 1F, 1F, new Wind(), Randomizer.create(1), held::add);
+        assertTrue(field.isStepping());
+        assertThrows(IllegalStateException.class,
+                () -> field.start(RAIN_EVERYWHERE, 0, CAMERA_Y, 0, 1F, 1F, new Wind(), Randomizer.create(1), Runnable::run),
+                "one step at a time");
+        held.forEach(Runnable::run);
+        assertEquals(count, field.count());
+        assertEquals(y, field.drops().y[0]);
+
+        assertTrue(field.finish(RAIN_EVERYWHERE));
+        assertFalse(field.isStepping());
+        assertNotEquals(y, field.drops().y[0], "moved once finished");
+        assertFalse(field.finish(RAIN_EVERYWHERE), "nothing left to finish");
+    }
+
+    @Test
+    void aFailedStepLeavesTheDropsAsTheyWere() {
+        var field = new PrecipitationField(1000);
+        tick(field, RAIN_EVERYWHERE, 0, 0, 1F, 10);
+        int count = field.count();
+        float y = field.drops().y[0];
+
+        var broken = Fakes.of(RandomSource.class, Map.of("nextFloat", args -> {
+            throw new IllegalStateException("broken");
+        }));
+        field.start(RAIN_EVERYWHERE, 0, CAMERA_Y, 0, 1F, 1F, new Wind(), broken, Runnable::run);
+        var thrown = assertThrows(IllegalStateException.class, () -> field.finish(RAIN_EVERYWHERE));
+        assertEquals("broken", thrown.getMessage());
+        assertEquals(count, field.count());
+        assertEquals(y, field.drops().y[0]);
+        assertEquals(0, field.landings());
+
+        // And the next step goes ahead
+        tick(field, RAIN_EVERYWHERE, 0, 0, 1F, 1);
+        assertNotEquals(y, field.drops().y[0]);
     }
 
     @Test
@@ -842,7 +991,7 @@ public class PrecipitationFieldTests {
     private static float snowShareOf(PrecipitationField field) {
         int snow = 0;
         for (int i = 0; i < field.count(); i++)
-            if (field.kind[i] == PrecipitationField.SNOW)
+            if (field.drops().kind[i] == PrecipitationField.SNOW)
                 snow++;
         return snow / (float) field.count();
     }
@@ -876,7 +1025,7 @@ public class PrecipitationFieldTests {
         tick(wide, RAIN_EVERYWHERE, 0, 0, 1F, 10);
         float furthest = 0F;
         for (int i = 0; i < wide.count(); i++) {
-            float distance = (float) Math.hypot(wide.x[i], wide.z[i]);
+            float distance = (float) Math.hypot(wide.drops().x[i], wide.drops().z[i]);
             assertTrue(distance <= 20F + 1e-4F, "beyond the range");
             furthest = Math.max(furthest, distance);
         }

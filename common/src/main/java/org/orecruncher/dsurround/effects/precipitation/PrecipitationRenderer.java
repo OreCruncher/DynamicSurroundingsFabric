@@ -9,6 +9,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 
 import java.util.List;
@@ -16,11 +17,12 @@ import java.util.List;
 /**
  * Draws a {@link PrecipitationField}: rain as thin streaks along the way each drop falls, slanted by the wind and
  * turned toward the camera, snow as flakes facing it, turning slowly as they fall, and dust as large faint puffs the
- * colour of the ground it was blown from. The streaks are a plain colour that fades out toward their tail; the flakes
+ * color of the ground it was blown from. The streaks are a plain color that fades out toward their tail; the flakes
  * are cut from the game's own snow texture ({@link Snowflakes}), and the puffs are sprites from the particle atlas.
  * All are lit by the lightmap, like vanilla's weather. Also draws {@link DampSpots} and {@link SnowFlecks}, flat on
  * the ground. Positions are
- * relative to the camera, as for particles and vanilla's weather. Render thread only.
+ * relative to the camera, as for particles and vanilla's weather. Render thread only, but for {@link #build}, which
+ * {@link DropMeshes} runs on the drops' worker thread.
  */
 final class PrecipitationRenderer {
 
@@ -74,10 +76,40 @@ final class PrecipitationRenderer {
     static final float STREAK_BEAD_ALPHA = 0.6F;
     static final float STREAK_TRAIL_WIDTH = 0.45F;
     static final float STREAK_TRAIL_ALPHA = 0.5F;
-    // A damp spot's colour where the ground can't be darkened, so it is laid over it instead
+    // A damp spot's color where the ground can't be darkened, so it is laid over it instead
     static final float DAMP_RED = 0.08F, DAMP_GREEN = 0.08F, DAMP_BLUE = 0.1F;
 
     private PrecipitationRenderer() {
+    }
+
+    /**
+     * Where the camera is and which way it faces, for building the drops: a copy, as the camera's own vectors change
+     * with it, so a frame's drops can be built away from the render thread
+     */
+    record View(Vec3 position, Vector3f left, Vector3f up, Vector3f look) {
+
+        static View of(Camera camera) {
+            return new View(camera.getPosition(), new Vector3f(camera.getLeftVector()), new Vector3f(camera.getUpVector()),
+                    new Vector3f(camera.getLookVector()));
+        }
+
+        /**
+         * Whether the camera is where this was taken, facing the same way
+         */
+        boolean isOf(Camera camera) {
+            return this.position.equals(camera.getPosition()) && this.left.equals(camera.getLeftVector())
+                    && this.up.equals(camera.getUpVector()) && this.look.equals(camera.getLookVector());
+        }
+    }
+
+    /**
+     * Whether there is anything of the kind to draw
+     *
+     * @param dustOnly true for the dust, false for the rain and snow
+     */
+    static boolean hasAny(PrecipitationField field, boolean dustOnly) {
+        var d = field.drops();
+        return d.count > 0 && (dustOnly ? d.dustCount > 0 : d.dustCount < d.count);
     }
 
     /**
@@ -92,17 +124,35 @@ final class PrecipitationRenderer {
      * @param dust       the dust sprites, from the particle atlas, which must be bound when drawing dust; each puff
      *                   keeps one
      * @param scales     how big rain and snow are drawn
-     * @param rainColor  the rain's colour
+     * @param rainColor  the rain's color
+     * @return how many were drawn: those in front of the camera and not faded out
      */
-    static void draw(PrecipitationField field, Tesselator tesselator, Camera camera, float partialTick, boolean dustOnly,
-                     List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
-        if (field.count == 0 || (dustOnly && field.dustCount() == 0) || (!dustOnly && field.dustCount() == field.count))
-            return;
+    static int draw(PrecipitationField field, Tesselator tesselator, Camera camera, float partialTick, boolean dustOnly,
+                    List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
+        if (!hasAny(field, dustOnly))
+            return 0;
+        BufferBuilder builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
+        build(field, builder, View.of(camera), partialTick, dustOnly, snowflakes, largest, dust, scales, rainColor);
+        var mesh = builder.build();
+        if (mesh == null)
+            return 0;
+        int drawn = mesh.drawState().vertexCount() / 4;
+        BufferUploader.drawWithShader(mesh);
+        return drawn;
+    }
 
-        var cam = camera.getPosition();
-        Vector3f left = camera.getLeftVector();
-        Vector3f up = camera.getUpVector();
-        Vector3f look = camera.getLookVector();
+    /**
+     * Builds the drops of a kind into a buffer as {@link DefaultVertexFormat#PARTICLE} quads (see {@link #draw}).
+     * Reads only the drops drawn, so it may run on another thread while the drops' next tick is stepped, but not while
+     * the step is finished and its drops made the ones drawn.
+     */
+    static void build(PrecipitationField field, BufferBuilder builder, View view, float partialTick, boolean dustOnly,
+                      List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
+        var d = field.drops();
+        var cam = view.position();
+        Vector3f left = view.left();
+        Vector3f up = view.up();
+        Vector3f look = view.look();
         float radius = field.radius();
         float margin = behindMargin(scales);
         // How much further each snowflake and puff has turned since its last tick: the same for all of a kind, so
@@ -111,39 +161,38 @@ final class PrecipitationRenderer {
         float snowCos = Mth.cos(snowTurn), snowSin = Mth.sin(snowTurn);
         float dustTurn = partialTick * PrecipitationField.DUST_TURBULENCE_RATE * DUST_SPIN;
         float dustCos = Mth.cos(dustTurn), dustSin = Mth.sin(dustTurn);
-        BufferBuilder builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
 
-        for (int i = 0; i < field.count; i++) {
-            if ((field.kind[i] == PrecipitationField.DUST) != dustOnly)
+        for (int i = 0; i < d.count; i++) {
+            if ((d.kind[i] == PrecipitationField.DUST) != dustOnly)
                 continue;
-            float x = (float) (Mth.lerp(partialTick, field.prevX[i], field.x[i]) - cam.x);
-            float y = (float) (Mth.lerp(partialTick, field.prevY[i], field.y[i]) - cam.y);
-            float z = (float) (Mth.lerp(partialTick, field.prevZ[i], field.z[i]) - cam.z);
+            float x = (float) (Mth.lerp(partialTick, d.prevX[i], d.x[i]) - cam.x);
+            float y = (float) (Mth.lerp(partialTick, d.prevY[i], d.y[i]) - cam.y);
+            float z = (float) (Mth.lerp(partialTick, d.prevZ[i], d.z[i]) - cam.z);
             if (isBehind(x, y, z, look, margin))
                 continue;
             float distance = Mth.sqrt(x * x + z * z);
             float fade = field.fade(i, partialTick) * Mth.clamp((radius - distance) / EDGE_FADE, 0F, 1F);
             if (!dustOnly)
-                fade *= thinned(field.thinning[i], distance, radius);
+                fade *= thinned(d.thinning[i], distance, radius);
             if (fade <= 0F)
                 continue;
-            int light = field.light[i];
+            int light = d.light[i];
 
-            if (field.kind[i] == PrecipitationField.DUST) {
+            if (d.kind[i] == PrecipitationField.DUST) {
                 var sprite = dust[field.variant(i, dust.length)];
                 float size = DUST_MIN_HALF_SIZE + DUST_HALF_SIZE_RANGE * field.dustSize(i);
-                float cos = field.spinCos[i] * dustCos - field.spinSin[i] * dustSin;
-                float sin = field.spinSin[i] * dustCos + field.spinCos[i] * dustSin;
-                int c = field.color[i];
+                float cos = d.spinCos[i] * dustCos - d.spinSin[i] * dustSin;
+                float sin = d.spinSin[i] * dustCos + d.spinCos[i] * dustSin;
+                int c = d.color[i];
                 float r = Mth.lerp(DUST_PALENESS, ((c >> 16) & 0xFF) / 255F, 1F);
                 float g = Mth.lerp(DUST_PALENESS, ((c >> 8) & 0xFF) / 255F, 1F);
                 float b = Mth.lerp(DUST_PALENESS, (c & 0xFF) / 255F, 1F);
                 billboard(builder, x, y, z, left, up, cos, sin, size, sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(),
                         r, g, b, DUST_ALPHA * fade, light);
-            } else if (field.kind[i] == PrecipitationField.SNOW) {
+            } else if (d.kind[i] == PrecipitationField.SNOW) {
                 float a = SNOW_ALPHA * fade;
-                float cos = field.spinCos[i] * snowCos - field.spinSin[i] * snowSin;
-                float sin = field.spinSin[i] * snowCos + field.spinCos[i] * snowSin;
+                float cos = d.spinCos[i] * snowCos - d.spinSin[i] * snowSin;
+                float sin = d.spinSin[i] * snowCos + d.spinCos[i] * snowSin;
                 float size = (SNOW_MIN_HALF_SIZE + SNOW_HALF_SIZE_RANGE * field.snowSize(i)) * scales.snow();
                 if (snowflakes.isEmpty()) {
                     billboard(builder, x, y, z, left, up, cos, sin, size, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, 1F, 1F, 1F, a, light);
@@ -159,7 +208,7 @@ final class PrecipitationRenderer {
                 float halfWidth = rainHalfWidth(dropSize, scales.rain());
                 // Along the way the drop is moving, its tail trailing up and upwind, turned about its own length to
                 // face the camera
-                float vx = field.windX[i], vy = -field.speed[i], vz = field.windZ[i];
+                float vx = d.windX[i], vy = -d.speed[i], vz = d.windZ[i];
                 float inverse = Mth.invSqrt(vx * vx + vy * vy + vz * vz);
                 vx *= inverse;
                 vy *= inverse;
@@ -186,10 +235,6 @@ final class PrecipitationRenderer {
                 builder.addVertex(x + sx, y + sy, z + sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), a).setLight(light);
             }
         }
-
-        var mesh = builder.build();
-        if (mesh != null)
-            BufferUploader.drawWithShader(mesh);
     }
 
     /**
@@ -323,7 +368,7 @@ final class PrecipitationRenderer {
 
     /**
      * Builds the drops running down windows into a buffer and draws it with whatever shader is current, which should
-     * take {@link DefaultVertexFormat#PARTICLE}. Untextured, in the rain's colour: a bead, and above it the wet trail
+     * take {@link DefaultVertexFormat#PARTICLE}. Untextured, in the rain's color: a bead, and above it the wet trail
      * it has left, fading toward its top.
      */
     static void draw(WindowStreaks streaks, Tesselator tesselator, Camera camera, float partialTick, RainColor rainColor) {
@@ -371,7 +416,7 @@ final class PrecipitationRenderer {
     }
 
     /**
-     * Adds a corner of something lying on a face, a snow fleck or a drop on a window, offset from its centre by (u, v)
+     * Adds a corner of something lying on a face, a snow fleck or a drop on a window, offset from its center by (u, v)
      * in the plane of the face: x and z on the top of a block, z and y on a west or east side, x and y on a north or
      * south side
      */
@@ -387,8 +432,8 @@ final class PrecipitationRenderer {
      * Builds the damp spots into a buffer and draws it with whatever shader is current, which should take
      * {@link DefaultVertexFormat#POSITION_TEX_COLOR}.
      *
-     * @param darkening true when the blend darkens the ground by the spot's alpha, so its colour doesn't matter;
-     *                  false to lay a dark colour over the ground with an ordinary blend
+     * @param darkening true when the blend darkens the ground by the spot's alpha, so its color doesn't matter;
+     *                  false to lay a dark color over the ground with an ordinary blend
      */
     static void draw(DampSpots spots, Tesselator tesselator, Camera camera, float partialTick, TextureAtlasSprite sprite, boolean darkening) {
         if (spots.count == 0)

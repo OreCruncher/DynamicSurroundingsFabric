@@ -77,6 +77,48 @@
 			}
 		]
 	},
+	"lilypad.frog": {
+		"subtitle": "dsurround.sound.caption.frog",
+		"sounds": [
+			{
+				"name": "dsurround:ambient/frog/croak1",
+				"volume": 0.2
+			},
+			{
+				"name": "dsurround:ambient/frog/croak2",
+				"volume": 0.2
+			},
+			{
+				"name": "dsurround:ambient/frog/croak3",
+				"volume": 0.2
+			}
+		]
+	},
+	"lilypad.bullfrog": {
+		"subtitle": "dsurround.sound.caption.frog",
+		"ds_credits": [
+			{
+				"name": "Night Crickets & Bullfrogs.wav",
+				"author": "sunsinger",
+				"website": "https://freesound.org/people/sunsinger",
+				"license": "Creative Commons Attribution 3.0"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround:ambient/frog/bullfrog1"
+			},
+			{
+				"name": "dsurround:ambient/frog/bullfrog2"
+			},
+			{
+				"name": "dsurround:ambient/frog/bullfrog3"
+			},
+			{
+				"name": "dsurround:ambient/frog/bullfrog4"
+			}
+		]
+	},
 	"biome.wind": {
 		"subtitle": "dsurround.sound.caption.wind",
 		"ds_credits": [
@@ -773,6 +815,7 @@
 		]
 	},
 	"player.heartbeat": {
+		"subtitle": "dsurround.sound.caption.heartbeat",
 		"sounds": [
 			"dsurround:ambient/steve/heartbeat"
 		]
@@ -799,6 +842,7 @@
 		]
 	},
 	"player.jump": {
+		"subtitle": "dsurround.sound.caption.player.jump",
 		"sounds": [
 			{
 				"name": "dsurround:ambient/steve/jump",
@@ -1084,6 +1128,16 @@
 		]
 	},
 	"item.bow.loose": {
+		"subtitle": "subtitles.entity.arrow.shoot",
+		"sounds": [
+			"dsurround:items/bow_loose1",
+			"dsurround:items/bow_loose2",
+			"dsurround:items/bow_loose3",
+			"dsurround:items/bow_loose4"
+		]
+	},
+	"item.bow.loose.skeleton": {
+		"subtitle": "subtitles.entity.skeleton.shoot",
 		"sounds": [
 			"dsurround:items/bow_loose1",
 			"dsurround:items/bow_loose2",

@@ -46,6 +46,8 @@ public class DimensionInfo {
     protected boolean simulateWind = true;
     // Whether mist lies on the ground here, in the biomes given it
     protected boolean groundFog = true;
+    // Whether the mod's clouds are drawn here, in place of the dimension's own
+    protected boolean dynamicClouds = true;
 
     // The dimension's own cloud height, used unless a rule sets one
     private final int defaultCloudHeight;
@@ -78,6 +80,9 @@ public class DimensionInfo {
         this.simulateWind = world.dimensionType().hasSkyLight();
         this.groundFog = world.dimensionType().hasSkyLight();
         this.particleWeather = !(world instanceof ClientLevel clientLevel) || hasVanillaWeather(clientLevel.effects());
+        // And one with vanilla's clouds gets the mod's in their place
+        this.dynamicClouds = this.defaultCloudHeight != NO_CLOUDS
+                && world instanceof ClientLevel clientLevel && hasVanillaClouds(clientLevel.effects());
 
         // Valid even if finish() is never called
         this.finish();
@@ -116,16 +121,44 @@ public class DimensionInfo {
     }
 
     static boolean hasVanillaWeather(DimensionSpecialEffects effects, Set<String> weatherHooks) {
+        return overridesNone(effects, weatherHooks);
+    }
+
+    /**
+     * The method a dimension's effects override to draw their own clouds: NeoForge's renderClouds
+     * (IDimensionSpecialEffectsExtension). None on Fabric.
+     */
+    private static final Set<String> CLOUD_HOOKS = Arrays.stream(DimensionSpecialEffects.class.getMethods())
+            .map(Method::getName)
+            .filter(name -> name.equals("renderClouds"))
+            .collect(Collectors.toUnmodifiableSet());
+
+    /**
+     * Whether a dimension draws its clouds as vanilla does: as {@link #hasVanillaWeather}, for the platform's cloud
+     * hook. The mod's clouds drawn in place of a dimension's own would hide them.
+     */
+    public static boolean hasVanillaClouds(DimensionSpecialEffects effects) {
+        return hasVanillaClouds(effects, CLOUD_HOOKS);
+    }
+
+    static boolean hasVanillaClouds(DimensionSpecialEffects effects, Set<String> cloudHooks) {
+        return overridesNone(effects, cloudHooks);
+    }
+
+    /**
+     * Whether a dimension's effects are vanilla's, or a mod's that override none of the hooks
+     */
+    private static boolean overridesNone(DimensionSpecialEffects effects, Set<String> hooks) {
         var type = effects.getClass();
         if (type == DimensionSpecialEffects.OverworldEffects.class
                 || type == DimensionSpecialEffects.NetherEffects.class
                 || type == DimensionSpecialEffects.EndEffects.class)
             return true;
-        if (weatherHooks.isEmpty())
+        if (hooks.isEmpty())
             return false;
         for (Class<?> c = type; c != null && c != DimensionSpecialEffects.class; c = c.getSuperclass())
             for (var method : c.getDeclaredMethods())
-                if (weatherHooks.contains(method.getName()))
+                if (hooks.contains(method.getName()))
                     return false;
         return true;
     }
@@ -144,6 +177,7 @@ public class DimensionInfo {
             config.particleWeather().ifPresent(v -> this.particleWeather = v);
             config.simulateWind().ifPresent(v -> this.simulateWind = v);
             config.groundFog().ifPresent(v -> this.groundFog = v);
+            config.dynamicClouds().ifPresent(v -> this.dynamicClouds = v);
         }
     }
 
@@ -203,6 +237,10 @@ public class DimensionInfo {
 
     public boolean groundFog() {
         return this.groundFog;
+    }
+
+    public boolean dynamicClouds() {
+        return this.dynamicClouds;
     }
 
 }

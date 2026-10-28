@@ -4,10 +4,12 @@ import dev.architectury.event.events.client.ClientCommandRegistrationEvent;
 import dev.architectury.platform.Platform;
 import dev.architectury.registry.ReloadListenerRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.entity.LightningBoltRenderer;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.PackType;
@@ -82,15 +84,15 @@ public final class Client {
         // on the event hook.  (ModMenu can trigger this when it looks for
         // the hook in our mod before we had a chance to initialize.)
         Config = ConfigurationData.getConfig(Configuration.class);
-        ModLog.setDebug(Config.logging.enableDebugLogging);
-        ModLog.setTraceMask(Config.logging.traceMask);
+        ModLog.setDebug(Config.diagnostics.enableDebugLogging);
+        ModLog.setTraceMask(Config.diagnostics.traceMask);
 
         // Hook the config load event so set we can set the debug flags when
         // the config changes.
         IConfigChangedEvent.EVENT.register(cfg -> {
             if (cfg instanceof Configuration config) {
-                ModLog.setDebug(config.logging.enableDebugLogging);
-                ModLog.setTraceMask(config.logging.traceMask);
+                ModLog.setDebug(config.diagnostics.enableDebugLogging);
+                ModLog.setTraceMask(config.diagnostics.traceMask);
             }
         });
 
@@ -115,7 +117,7 @@ public final class Client {
 
         FeatureConflict.logBlocked(Library.LOGGER);
 
-        if (Client.Config.logging.registerCommands && !FeatureConflict.CLIENT_COMMANDS.isBlocked())
+        if (Client.Config.generalOptions.registerCommands && !FeatureConflict.CLIENT_COMMANDS.isBlocked())
             ClientCommandRegistrationEvent.EVENT.register(Commands::register);
 
         // Register the resource listener
@@ -152,7 +154,7 @@ public final class Client {
             ContainerManager.getRootContainer().registerSingleton(IAudioPlayer.class, AudioPlayer.class);
 
         // Kick off version checking if configured.  This should run in parallel with initialization.
-        if (Config.logging.enableModUpdateChatMessage) {
+        if (Config.generalOptions.enableModUpdateChatMessage) {
             // A failure or timeout completes the future exceptionally, so it isn't mistaken for "no recommendation"
             versionInfo = CompletableFuture
                     .supplyAsync(ContainerManager.resolve(IVersionChecker.class)::getVersionResult)
@@ -170,7 +172,7 @@ public final class Client {
      * Last to run on a library reload: when debug logging is on, tells the player the reload happened.
      */
     private static void afterReload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
-        if (Config.logging.enableDebugLogging) {
+        if (Config.diagnostics.enableDebugLogging) {
             var msg = Component.translatable("dsurround.text.reloadassets", Component.translatable("dsurround.modname"));
             GameUtils.getPlayer().ifPresent(p -> p.sendSystemMessage(msg));
         }
@@ -227,7 +229,8 @@ public final class Client {
      * loads it.
      */
     private static void checkOptionalHooks() {
-        var hooked = List.of(LevelRenderer.class, FogRenderer.class, ParticleEngine.class, Particle.class);
+        var hooked = List.of(LevelRenderer.class, FogRenderer.class, ParticleEngine.class, Particle.class, ClientLevel.class,
+                LightningBoltRenderer.class);
         Library.LOGGER.debug("Checking the optional hooks in %d classes", hooked.size());
         OptionalHook.check(Library.LOGGER, Platform.isDevelopmentEnvironment());
     }
@@ -257,7 +260,7 @@ public final class Client {
                 } else {
                     Library.LOGGER.info("%s is current", result.displayName());
                 }
-            } else if (Config.logging.enableModUpdateChatMessage) {
+            } else if (Config.generalOptions.enableModUpdateChatMessage) {
                 Library.LOGGER.info("No recommended version is published for this version of Minecraft");
             }
         } catch (Throwable t) {

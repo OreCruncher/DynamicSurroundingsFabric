@@ -29,18 +29,27 @@ public interface IColumnSource {
     }
 
     /**
+     * Whether a drop can be at the position: nothing solid and no fluid there. Drops carried in under an overhang
+     * drift on through open air until they reach something that isn't. By default, open above the column's ground
+     * and solid below it, as if every column were solid all the way up.
+     */
+    default boolean isOpen(int x, int y, int z) {
+        return y >= this.groundHeight(x, z);
+    }
+
+    /**
      * Packed sky and block light at the position, as vanilla's renderers use it
      */
     int light(int x, int y, int z);
 
     /**
-     * The colour of the dust blown up from the block at the position, as 0xRRGGBB, or {@link #NOT_A_DUST_SOURCE} if
-     * dust isn't blown from it (grass, water, stone): only loose ground like sand gives the dust its colour
+     * The color of the dust blown up from the block at the position, as 0xRRGGBB, or {@link #NOT_A_DUST_SOURCE} if
+     * dust isn't blown from it (grass, water, stone): only loose ground like sand gives the dust its color
      */
     int dustColor(int x, int y, int z);
 
     /**
-     * The colour of the dust where none of the ground around gives it one, as 0xRRGGBB: what the biome at the
+     * The color of the dust where none of the ground around gives it one, as 0xRRGGBB: what the biome at the
      * position is known for, such as sand in a desert and red sand in badlands
      */
     int fallbackDustColor(int x, int y, int z);

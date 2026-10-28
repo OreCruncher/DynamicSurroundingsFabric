@@ -1,0 +1,133 @@
+package org.orecruncher.dsurround.effects.entity;
+
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.util.Mth;
+import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.random.IRandomizer;
+import org.orecruncher.dsurround.lib.random.Randomizer;
+
+/**
+ * Pops a number off an entity when its health changes: red for damage, green for healing (once it adds up to a whole
+ * point, see {@link Tally}), and for a heavy blow (at least {@link #CRITICAL_SHARE} of its health at most) a comic book
+ * word in gold above it. Not for the player's own body in first person. Drawn by {@link HealthPopoffs}.
+ * <p>
+ * Health is synced to the client for every living entity, so this works for mobs and other players alike. It keeps
+ * watching while the entity dies, so the killing blow shows too.
+ */
+public class HealthPopoffEffect extends EntityEffectBase {
+
+    private static final IRandomizer RANDOM = Randomizer.current();
+
+    // A blow of at least this share of the entity's maximum health gets a crit word
+    static final float CRITICAL_SHARE = 0.4F;
+    // The crit words: dsurround.critword.0 to one less than this
+    static final int CRIT_WORDS = 84;
+    static final String CRIT_WORD_PREFIX = "dsurround.critword.";
+    // Where the number starts: this far above the top of the entity, and the word this far above the number, in blocks
+    private static final double ABOVE = 0.5D;
+    private static final double WORD_ABOVE = 0.5D;
+
+    private static final int DAMAGE_COLOR = color(ChatFormatting.RED);
+    private static final int HEAL_COLOR = color(ChatFormatting.GREEN);
+    private static final int CRITICAL_COLOR = color(ChatFormatting.GOLD);
+
+    private final Configuration.EntityEffects config;
+    private float lastHealth;
+    private final Tally tally = new Tally();
+
+    public HealthPopoffEffect(Configuration.EntityEffects config) {
+        this.config = config;
+    }
+
+    private static int color(ChatFormatting formatting) {
+        var value = formatting.getColor();
+        return value == null ? 0xFFFFFF : value;
+    }
+
+    @Override
+    public void activate(final EntityEffectInfo info) {
+        this.lastHealth = info.getEntity().getHealth();
+    }
+
+    @Override
+    public void tick(final EntityEffectInfo info) {
+        this.update(info);
+    }
+
+    @Override
+    public void tickDying(final EntityEffectInfo info) {
+        // The killing blow lands on the tick the entity starts dying
+        this.update(info);
+    }
+
+    private void update(final EntityEffectInfo info) {
+        var entity = info.getEntity();
+        float health = entity.getHealth();
+        if (health == this.lastHealth)
+            return;
+        float change = health - this.lastHealth;
+        this.lastHealth = health;
+
+        var popoff = this.tally.add(change, entity.getMaxHealth());
+        if (popoff == null || info.isCurrentPlayer(entity) && GameUtils.isFirstPersonView())
+            return;
+
+        var box = entity.getBoundingBox();
+        double y = box.maxY + ABOVE;
+        float driftX = RANDOM.nextFloat() * 2F - 1F;
+        float driftZ = RANDOM.nextFloat() * 2F - 1F;
+        HealthPopoffs.add(String.valueOf(popoff.amount()), popoff.heal() ? HEAL_COLOR : DAMAGE_COLOR,
+                entity.getX(), y, entity.getZ(), driftX, driftZ);
+        if (popoff.critical() && this.config.showCritWords)
+            HealthPopoffs.add(critWord(), CRITICAL_COLOR, entity.getX(), y + WORD_ABOVE, entity.getZ(), driftX, driftZ);
+    }
+
+    private static String critWord() {
+        return I18n.get(CRIT_WORD_PREFIX + RANDOM.nextInt(CRIT_WORDS)) + "!";
+    }
+
+    /**
+     * Adds up changes of health into what pops off: a blow at once, whatever its size; healing once it comes to a whole
+     * point. Healing from a full stomach comes a fraction of a point at a time, twice a second, and showing a 1 for each
+     * would add up to more than it heals.
+     */
+    static final class Tally {
+        // Healing a whole point in sixths can add up to a hair under 1
+        private static final float SLACK = 1.0E-4F;
+        private float healed;
+
+        /**
+         * @return what pops off for this change, or null for none yet
+         */
+        @Nullable
+        Change add(float change, float maxHealth) {
+            if (change < 0F) {
+                this.healed = 0F;
+                return Change.of(change, maxHealth);
+            }
+            this.healed += change;
+            int whole = (int) (this.healed + SLACK);
+            if (whole < 1)
+                return null;
+            this.healed = Math.max(0F, this.healed - whole);
+            return Change.of(whole, maxHealth);
+        }
+    }
+
+    /**
+     * What a change of health shows: a whole number of at least 1, whether it is healing, and whether it is a heavy
+     * enough blow for a crit word.
+     */
+    record Change(int amount, boolean heal, boolean critical) {
+
+        static Change of(float change, float maxHealth) {
+            int rounded = Mth.ceil(change);
+            int amount = Math.max(1, Math.abs(rounded));
+            boolean heal = rounded > 0;
+            return new Change(amount, heal, !heal && amount >= maxHealth * CRITICAL_SHARE);
+        }
+    }
+}

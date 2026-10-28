@@ -11,7 +11,7 @@ public class AuroraTests {
 
     @Test
     void hasTheOriginalPalettes() {
-        // 12 colour sets, then warmer and cooler versions of 6 of them; 4 of the warmer ones are already as bright as
+        // 12 color sets, then warmer and cooler versions of 6 of them; 4 of the warmer ones are already as bright as
         // they can be, so are the same as their originals and left out
         assertEquals(20, AuroraPalette.PALETTES.size());
         assertEquals(AuroraPalette.PALETTES.size(), new java.util.HashSet<>(AuroraPalette.PALETTES).size());
@@ -25,7 +25,7 @@ public class AuroraTests {
     }
 
     @Test
-    void colourFromRgb() {
+    void colorFromRgb() {
         var indigo = AuroraPalette.Rgb.of(0x4B0082);
         assertEquals(75 / 255F, indigo.red(), 1e-6);
         assertEquals(0F, indigo.green(), 1e-6);

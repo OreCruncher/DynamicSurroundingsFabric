@@ -29,6 +29,12 @@ public class DSurroundParticleRenderType {
     public static final ParticleRenderType PARTICLE_SHEET_FLAME = softSheet("PARTICLE_SHEET_FLAME", 0.3F, true, true);
 
     /**
+     * Flames in a skull's eyes (see {@link EyeFlame}): drawn as the flame jets' are, but they burn a few hundredths of a
+     * block in front of the face, which the jets' fade would all but hide when the skull is seen from the front.
+     */
+    public static final ParticleRenderType PARTICLE_SHEET_EYE_FLAME = softSheet("PARTICLE_SHEET_EYE_FLAME", 0.02F, true, true);
+
+    /**
      * Fireflies, with their halos. Vanilla's translucent sheet with depth writes off; before the fireflies, it draws
      * the lights they cast (see {@link PointLights}).
      */

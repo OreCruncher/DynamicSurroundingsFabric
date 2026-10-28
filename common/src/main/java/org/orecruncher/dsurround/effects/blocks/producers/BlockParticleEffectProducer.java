@@ -19,6 +19,9 @@ import java.util.Optional;
  */
 public class BlockParticleEffectProducer extends BlockEffectProducer {
 
+    // Particles spawned by all of these, for /dsprofile's counts; the client thread's alone
+    private static int spawned;
+
     private final IParticleSupplier supplier;
 
     public BlockParticleEffectProducer(Script chance, Script conditions, IParticleSupplier particleSupplier) {
@@ -35,9 +38,19 @@ public class BlockParticleEffectProducer extends BlockEffectProducer {
     final protected Optional<IBlockEffect> produceImpl(Level world, BlockState state, BlockPos pos, IRandomizer rand) {
         var particle = this.supplier.create(world, state, pos, rand);
         // A supplier's vanilla fallback can come back empty; the particle engine doesn't take null
-        if (particle != null)
+        if (particle != null) {
             this.addParticle(particle);
+            spawned++;
+        }
         return Optional.empty();
+    }
+
+    /**
+     * How many particles these producers have spawned so far: the difference across a call to {@link #produce} is
+     * what that call spawned
+     */
+    public static int spawned() {
+        return spawned;
     }
 
     protected void addParticle(final Particle particle) {

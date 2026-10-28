@@ -4,8 +4,7 @@ import java.util.function.BiConsumer;
 import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
-import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
+import org.orecruncher.dsurround.effects.footprints.Footprints;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IClientConnect;
 import org.orecruncher.dsurround.eventing.IClientDisconnect;
@@ -23,32 +22,24 @@ import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.processing.accents.FootstepAccents;
 import org.orecruncher.dsurround.processing.fog.HolisticFogRangeCalculator;
+import org.orecruncher.dsurround.profiling.HandlerTicks;
 import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
 import org.orecruncher.dsurround.processing.scanner.VillageScanner;
-import org.orecruncher.dsurround.sound.IAudioPlayer;
-import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
 
 @Cacheable
 public class Handlers {
 
-    private final Configuration config;
     private final IModLog logger;
     private final ITickCount tickCount;
-    private final ISoundLibrary soundLibrary;
-    private final IAudioPlayer audioPlayer;
     private final ObjectArray<AbstractClientHandler> effectHandlers = new ObjectArray<>();
     private final LoggingTimerEMA handlerTimer = new LoggingTimerEMA("Handlers");
     private final LogThrottle<String> handlerFailures;
     private boolean isConnected = false;
-    private boolean startupSoundPlayed = false;
 
-    public Handlers(Configuration config, IModLog logger, ITickCount tickCount, ISoundLibrary soundLibrary, IAudioPlayer audioPlayer) {
-        this.config = config;
+    public Handlers(IModLog logger, ITickCount tickCount) {
         this.logger = logger;
         this.tickCount = tickCount;
-        this.soundLibrary = soundLibrary;
-        this.audioPlayer = audioPlayer;
         this.handlerFailures = LogThrottle.oncePerKey(logger, "handler errors", "the next connect");
         init();
     }
@@ -65,19 +56,18 @@ public class Handlers {
 
     private void init() {
 
-        // If the user disabled the startup sound flag it as having
-        // been performed.
-        this.startupSoundPlayed = !this.config.otherOptions.playRandomSoundOnStartup;
-
         this.register(Scanners.class);           // Must be first
         this.register(EntityEffectHandler.class);
         this.register(BiomeSoundHandler.class);
         this.register(AreaBlockEffects.class);
         this.register(StepAccentGenerator.class);
+        this.register(FootprintHandler.class);
         this.register(FogHandler.class);
         this.register(AuroraHandler.class);
         this.register(PrecipitationHandler.class);
+        this.register(LightningHandler.class);
         this.register(GroundFogHandler.class);
+        this.register(CloudHandler.class);
         this.register(WindowFrostHandler.class);
 
         IClientTickEnd.EVENT.register(this::tick);
@@ -127,9 +117,6 @@ public class Handlers {
     }
 
     public void tick(Minecraft client) {
-        if (!this.startupSoundPlayed)
-            handleStartupSound();
-
         if (!doTick())
             return;
 
@@ -139,8 +126,10 @@ public class Handlers {
 
         for (final AbstractClientHandler handler : this.effectHandlers) {
             final long mark = System.nanoTime();
-            tickHandler(handler, tick, player, this::handlerFailed);
-            handler.updateTimer(System.nanoTime() - mark);
+            final boolean ran = tickHandler(handler, tick, player, this::handlerFailed);
+            final long elapsed = System.nanoTime() - mark;
+            handler.updateTimer(elapsed);
+            HandlerTicks.ticked(tick, handler.getHandlerName(), elapsed, ran);
         }
         this.handlerTimer.end();
     }
@@ -148,38 +137,26 @@ public class Handlers {
     /**
      * Ticks one handler. If it throws, {@code onFailure} is told and the caller goes on to the next handler, so one
      * broken handler doesn't stop the rest. Errors the JVM can't recover from are rethrown.
+     *
+     * @return whether the handler had work this tick, failed or not
      */
-    static void tickHandler(AbstractClientHandler handler, long tick, Player player, BiConsumer<AbstractClientHandler, Throwable> onFailure) {
+    static boolean tickHandler(AbstractClientHandler handler, long tick, Player player, BiConsumer<AbstractClientHandler, Throwable> onFailure) {
+        boolean ran = false;
         try {
-            if (handler.doTick(tick))
+            if (handler.doTick(tick)) {
+                ran = true;
                 handler.process(player);
+            }
         } catch (VirtualMachineError fatal) {
             throw fatal;
         } catch (Throwable t) {
             onFailure.accept(handler, t);
         }
+        return ran;
     }
 
     private void handlerFailed(AbstractClientHandler handler, Throwable t) {
         this.handlerFailures.error(handler.getHandlerName(), t, "Handler [%s] failed", handler.getHandlerName());
-    }
-
-    private void handleStartupSound() {
-        var client = GameUtils.getMC();
-        if (client.getOverlay() != null)
-            return;
-
-        this.startupSoundPlayed = true;
-
-        this.soundLibrary
-            .getRandomStartupSound()
-            .ifPresent(id -> {
-                var sound = SoundFactoryBuilder
-                        .create(id)
-                        .build()
-                        .createAsAdditional();
-                this.audioPlayer.play(sound);
-            });
     }
 
     public void gatherDiagnostics(CollectDiagnosticsEvent event) {
@@ -203,6 +180,8 @@ public class Handlers {
             .registerSingleton(AreaBlockEffects.class)
             .registerSingleton(FootstepAccents.class)
             .registerSingleton(StepAccentGenerator.class)
+            .registerSingleton(Footprints.class)
+            .registerSingleton(FootprintHandler.class)
             .registerSingleton(HolisticFogRangeCalculator.class)
             .registerSingleton(FogHandler.class)
             .registerSingleton(AuroraHandler.class)
