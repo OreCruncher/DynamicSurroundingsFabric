@@ -1,28 +1,28 @@
 package org.orecruncher.dsurround.gui.overlay;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.decoration.ItemFrame;
-import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.ClockStyle;
-import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.time.DayCycle;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.gui.ColorGradient;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
+import org.orecruncher.dsurround.lib.time.DayCycle;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.runtime.oracle.IMinecraftClock;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
 
@@ -207,7 +207,7 @@ public final class ClockOverlay extends AbstractOverlay {
         this.texture = this.config.compassAndClockOptions.watchStyle.getTexture();
 
         // The hands follow the day time between ticks; a jump (the time being set) moves them straight there
-        var time = player.level().getDefaultClockTime();
+        var time = player.level().getDayTime();
         this.lastDayTime = justShown || Math.abs(time - this.dayTime) > 100 ? time : this.dayTime;
         this.dayTime = time;
 
@@ -338,7 +338,7 @@ public final class ClockOverlay extends AbstractOverlay {
     }
 
     @Override
-    public void render(GuiGraphicsExtractor context, float partialTick) {
+    public void render(GuiGraphics context, float partialTick) {
         if (this.watchShown) {
             if (this.inMargin) {
                 // The placement is the watch's center; the dial is below it
@@ -362,7 +362,7 @@ public final class ClockOverlay extends AbstractOverlay {
     /**
      * Draws the watch with its dial's center at x, y
      */
-    private void renderWatch(GuiGraphicsExtractor context, float partialTick, float x, float y, float size) {
+    private void renderWatch(GuiGraphics context, float partialTick, float x, float y, float size) {
         var time = Mth.lerp(partialTick, (double) this.lastDayTime, (double) this.dayTime);
         float disc = Mth.rotLerp(partialTick, this.lastDiscAngle, this.discAngle);
         // The hands tick; the overshoot only while time runs, or a stopped clock would hold it
@@ -403,7 +403,7 @@ public final class ClockOverlay extends AbstractOverlay {
      * Draws part of the atlas turned clockwise on screen about its pivot, the pivot placed a height above (less
      * than 0) or below the dial's center
      */
-    private void drawTurned(GuiGraphicsExtractor context, float degrees, int y, int u, int v, int width, int height, int pivotX, int pivotY) {
+    private void drawTurned(GuiGraphics context, float degrees, int y, int u, int v, int width, int height, int pivotX, int pivotY) {
         var pose = context.pose();
         pose.pushMatrix();
         try {
@@ -415,7 +415,7 @@ public final class ClockOverlay extends AbstractOverlay {
         }
     }
 
-    private void renderText(GuiGraphicsExtractor context) {
+    private void renderText(GuiGraphics context) {
         var textRender = GameUtils.getTextRenderer();
         var x = context.guiWidth() / 2;
         var y = context.guiHeight() - BOTTOM_OFFSET;
@@ -425,9 +425,9 @@ public final class ClockOverlay extends AbstractOverlay {
 
         // Don't use renderTooltip. It uses a Z which pushes the rendering to the top of the Z stack and can
         // and can interfere with renders.
-        TooltipRenderUtil.extractTooltipBackground(context, x - this.renderWidth / 2, y, this.renderWidth, this.renderHeight, null);
-        context.centeredText(textRender, this.clockDisplay.get(0), x, y, this.color);
+        TooltipRenderUtil.renderTooltipBackground(context, x - this.renderWidth / 2, y, this.renderWidth, this.renderHeight, null);
+        context.drawCenteredString(textRender, this.clockDisplay.get(0), x, y, this.color);
         if (this.clockDisplay.size() == 2)
-            context.centeredText(textRender, this.clockDisplay.get(1), x, y + textRender.lineHeight, this.color);
+            context.drawCenteredString(textRender, this.clockDisplay.get(1), x, y + textRender.lineHeight, this.color);
     }
 }

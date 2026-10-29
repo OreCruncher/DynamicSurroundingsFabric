@@ -1,10 +1,11 @@
 package org.orecruncher.dsurround.gui.overlay;
 
+import org.orecruncher.dsurround.gui.overlay.plugins.*;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import dev.architectury.platform.Platform;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
@@ -13,15 +14,14 @@ import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
-import org.orecruncher.dsurround.gui.overlay.plugins.*;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
-import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.math.LoggingTimerEMA;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.lib.platform.KnownMod;
+import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.processing.AreaBlockEffects;
 
@@ -285,7 +285,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
     }
 
     @Override
-    public void render(GuiGraphicsExtractor context, float partialTick) {
+    public void render(GuiGraphics context, float partialTick) {
         this.rendering.begin();
         if (this.renderHud) {
             context.nextStratum();
@@ -310,7 +310,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
     /**
      * Draws the lines down the left or right edge, each on its own background. A null line is a blank gap.
      */
-    private void drawText(GuiGraphicsExtractor context, ObjectArray<FormattedCharSequence> text, boolean left) {
+    private void drawText(GuiGraphics context, ObjectArray<FormattedCharSequence> text, boolean left) {
         var textRenderer = GameUtils.getTextRenderer();
         int lineHeight = textRenderer.lineHeight;
         for (int line = 0; line < text.size(); ++line) {
@@ -321,7 +321,7 @@ public final class DiagnosticsOverlay extends AbstractOverlay {
             int x = left ? 2 : context.guiWidth() - 2 - width;
             int y = 2 + lineHeight * line;
             context.fill(x - 1, y - 1, x + width + 1, y + lineHeight - 1, BACKGROUND_COLOR);
-            context.text(textRenderer, component, x, y, FOREGROUND_COLOR, false);
+            context.drawString(textRenderer, component, x, y, FOREGROUND_COLOR, false);
         }
     }
 }

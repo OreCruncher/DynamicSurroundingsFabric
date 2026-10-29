@@ -17,8 +17,8 @@ public class MixinCloudRenderer {
      * left out. When ours can't be drawn, vanilla's are, as they would have been. On the renderer itself rather than
      * where the level calls it, which is a lambda in the frame's clouds pass.
      */
-    @Inject(method = "render(ILnet/minecraft/client/CloudStatus;FILnet/minecraft/world/phys/Vec3;JF)V", at = @At("HEAD"), cancellable = true, require = 0)
-    private void dsurround$clouds(int color, CloudStatus cloudStatus, float bottomY, int range, Vec3 cameraPosition, long gameTime,
+    @Inject(method = "render(ILnet/minecraft/client/CloudStatus;FLnet/minecraft/world/phys/Vec3;JF)V", at = @At("HEAD"), cancellable = true, require = 0)
+    private void dsurround$clouds(int color, CloudStatus cloudStatus, float bottomY, Vec3 cameraPosition, long gameTime,
                                   float partialTicks, CallbackInfo ci) {
         if (MixinHelpers.CLOUDS_GUARD.get(() -> MixinHelpers.clouds().render(color, cameraPosition, partialTicks), false))
             ci.cancel();

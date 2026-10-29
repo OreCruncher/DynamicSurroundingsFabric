@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
@@ -133,7 +133,7 @@ public class BurningEffect extends EntityEffectBase {
             return;
 
         final float share = GameUtils.getGameSettings().particles().get() == ParticleStatus.ALL ? 1F : 0.5F;
-        final var camera = GameUtils.getMC().gameRenderer.mainCamera().position();
+        final var camera = GameUtils.getMC().gameRenderer.getMainCamera().position();
         final double distanceSq = camera.distanceToSqr(entity.getX(), entity.getY() + height * 0.5D, entity.getZ());
         final float near = distanceShare(distanceSq, this.config.entityEffectRange);
 

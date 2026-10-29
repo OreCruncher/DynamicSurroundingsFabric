@@ -29,7 +29,7 @@ public class VersionCommandHandler {
                 .orTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .handle(VersionCommandHandler::describe)
                 .thenAccept(message -> GameUtils.getMC().execute(
-                        () -> GameUtils.getPlayer().ifPresent(p -> p.sendSystemMessage(message))));
+                        () -> GameUtils.getPlayer().ifPresent(p -> p.displayClientMessage(message, false))));
         return Component.translatable("dsurround.command.dsversion.checking");
     }
 

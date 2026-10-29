@@ -30,11 +30,11 @@ abstract class AbstractClientCommand {
         try {
             var player = ctx.getSource().arch$getPlayer();
             for (var message : commandHandler.get())
-                player.sendSystemMessage(message);
+                player.displayClientMessage(message, false);
             return 0;
         } catch(Exception ex) {
             Library.LOGGER.error(ex, "Unable to execute command %s", ctx.getCommand().toString());
-            ctx.getSource().arch$getPlayer().sendSystemMessage(Component.literal(ex.getMessage()));
+            ctx.getSource().arch$getPlayer().displayClientMessage(Component.literal(ex.getMessage()), false);
             return 1;
         }
     }

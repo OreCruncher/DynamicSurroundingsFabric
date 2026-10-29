@@ -1,12 +1,11 @@
 package org.orecruncher.dsurround.processing.fog;
 
-import com.mojang.serialization.JsonOps;
 import com.google.gson.JsonPrimitive;
+import com.mojang.serialization.JsonOps;
 import net.minecraft.client.renderer.fog.FogData;
-import org.joml.Vector4f;
 import org.junit.jupiter.api.Test;
-import org.orecruncher.dsurround.lib.compat.FogCompat;
 import org.orecruncher.dsurround.effects.precipitation.IColumnSource;
+import org.orecruncher.dsurround.lib.compat.FogCompat;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,7 +25,6 @@ public class FogRangeTests {
         data.renderDistanceEnd = 400F;
         data.skyEnd = 500F;
         data.cloudEnd = 600F;
-        data.color = new Vector4f(0.1F, 0.2F, 0.3F, 1F);
 
         var result = VanillaFogRangeCalculator.withRange(data, 10F, 20F);
 
@@ -37,8 +35,6 @@ public class FogRangeTests {
         assertEquals(400F, result.renderDistanceEnd);
         assertEquals(500F, result.skyEnd);
         assertEquals(600F, result.cloudEnd);
-        assertEquals(data.color, result.color);
-        assertNotSame(data.color, result.color, "the color is copied, not shared");
         assertEquals(100F, data.environmentalStart, "the input is left alone");
     }
 

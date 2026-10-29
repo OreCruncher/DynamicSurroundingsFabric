@@ -32,11 +32,7 @@ flat in mat4 invViewProj;
 flat in vec4 depthRowZ;
 flat in vec4 depthRowW;
 
-layout(location = 0) out vec4 fragColor;
-// How far along the view this pixel's line of sight goes (distance_at), for the smoothing and the composite, so they
-// needn't work it out again from the depth for each of the pixels around theirs. Written for every pixel, mist or
-// none: those without count too when the mist is blended
-layout(location = 1) out float sceneDistance;
+out vec4 fragColor;
 
 // The most steps along a line of sight, and the fewest: a short stretch through the mist (looking down into it close
 // by) needs fewer, about STEPS_PER_BLOCK for each block of it
@@ -49,9 +45,9 @@ const float STEPS_PER_BLOCK = 2.0;
 // of sight can't change the pixel
 const float OPAQUE = 4.6;
 const float MAX_DISTANCE = 48.0;
-// A depth far enough off, hundreds of blocks, that view bobbing's shift of the eye doesn't change the way a line of
-// sight to it goes
-const float DIRECTION_DEPTH = 1.0e-5;
+// A depth far enough off, hundreds of blocks (the far plane), that view bobbing's shift of the eye doesn't change the
+// way a line of sight to it goes
+const float DIRECTION_DEPTH = 1.0;
 const vec3 MIST_COLOR = vec3(0.92, 0.93, 0.95);
 // How far below the smoothed ground mist is still found: it may be a block above the ground itself (see
 // GroundFogField.SMOOTH_ABOVE), so this much below it is still over the ground
@@ -187,10 +183,10 @@ float mist(vec3 p, float fromCamera, float stepLength) {
 }
 
 // The mist seen along the line of sight from the camera, the way dir goes for length_ blocks, and where it begins as
-// a depth (as far as can be, 0, where there is none). Returned rather than written where there is none: Veil's
-// parser fails on a return without a value, and every pixel must still write the scene's distance
+// a depth (as far as can be, 1, where there is none). Returned rather than written where there is none: Veil's
+// parser fails on a return without a value
 vec4 mist_along(vec3 dir, float length_, out float mistDepth) {
-    mistDepth = 0.0;
+    mistDepth = 1.0;
     if (length_ <= 0.0) {
         return vec4(0.0);
     }
@@ -286,19 +282,18 @@ void main() {
     // same)
     ivec2 pixel = min(ivec2(gl_FragCoord.xy) * int(Scale), ivec2(FullSize) - 1);
     float depth = texelFetch(DepthSampler, pixel, 0).r;
-    sceneDistance = distance_at(DepthSampler, pixel, depthRowZ, depthRowW);
     vec2 screenNdc = (vec2(pixel) + 0.5) / FullSize * 2.0 - 1.0;
-    // The way the line of sight goes, from a point on it far off (the depth is reversed: near is 1, the sky 0), and how
-    // far it goes: as far as can be through the sky. Not from a point near the camera: view bobbing moves the eye a few
+    // The way the line of sight goes, from a point on it far off (the far plane; the sky's depth is 1), and how far it
+    // goes: as far as can be through the sky. Not from a point near the camera: view bobbing moves the eye a few
     // hundredths of a block in the projection, as much as the near plane is from it, which would turn the line wildly
     vec4 farPoint = invViewProj * vec4(screenNdc, depth_to_ndc(DIRECTION_DEPTH), 1.0);
     vec3 dir = normalize(farPoint.xyz / farPoint.w);
     float length_ = FAR_AWAY;
-    if (depth > 0.0) {
+    if (depth < 1.0) {
         vec4 viewed = invViewProj * vec4(screenNdc, depth_to_ndc(depth), 1.0);
         length_ = length(viewed.xyz / viewed.w);
     }
-    // Where the mist would begin is as far as can be where there is none (the depth is reversed)
+    // Where the mist would begin is as far as can be where there is none
     float mistDepth;
     fragColor = mist_along(dir, length_, mistDepth);
     gl_FragDepth = mistDepth;

@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.effects;
 
-import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.textures.GpuTextureView;
@@ -75,7 +74,7 @@ public final class DepthCopy {
         @Nullable
         private static Constructor<TextureTarget> findConstructor() {
             try {
-                return TextureTarget.class.getConstructor(String.class, int.class, int.class, boolean.class, boolean.class, GpuFormat.class);
+                return TextureTarget.class.getConstructor(String.class, int.class, int.class, boolean.class, boolean.class);
             } catch (NoSuchMethodException e) {
                 return null;
             }
@@ -94,13 +93,13 @@ public final class DepthCopy {
         static TextureTarget create(String label, int width, int height, boolean stencil) {
             if (stencil && WITH_STENCIL != null) {
                 try {
-                    return WITH_STENCIL.newInstance(label, width, height, true, true, GpuFormat.RGBA8_UNORM);
+                    return WITH_STENCIL.newInstance(label, width, height, true, true);
                 } catch (ReflectiveOperationException | RuntimeException e) {
                     // Without a stencil buffer the formats differ and the depth copy fails, which turns the effects
                     // off; but this only happens if reflection breaks
                 }
             }
-            return new TextureTarget(label, width, height, true, GpuFormat.RGBA8_UNORM);
+            return new TextureTarget(label, width, height, true);
         }
     }
 }

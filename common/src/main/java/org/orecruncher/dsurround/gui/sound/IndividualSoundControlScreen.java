@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.gui.sound;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.StringWidget;
@@ -149,8 +149,8 @@ public class IndividualSoundControlScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTicks) {
-        super.extractRenderState(context, mouseX, mouseY, partialTicks);
+    public void render(@NonNull GuiGraphics context, int mouseX, int mouseY, float partialTicks) {
+        super.render(context, mouseX, mouseY, partialTicks);
 
         // Shown once the mouse rests on a row, not while it passes over the list or drags a slider. A row scrolled
         // under a still mouse waits afresh. Offset downward so the tooltip doesn't cover the row's controls.
@@ -161,7 +161,7 @@ public class IndividualSoundControlScreen extends Screen {
         }
         if (entry != null && this.tooltipDelay.ready()) {
             var toolTip = entry.getToolTip(mouseX, mouseY).stream().map(ClientTooltipComponent::create).toList();
-            context.tooltip(this.font, toolTip, mouseX, mouseY + TOOLTIP_Y_OFFSET, DefaultTooltipPositioner.INSTANCE, null);
+            context.renderTooltip(this.font, toolTip, mouseX, mouseY + TOOLTIP_Y_OFFSET, DefaultTooltipPositioner.INSTANCE, null);
         }
     }
 
@@ -213,13 +213,13 @@ public class IndividualSoundControlScreen extends Screen {
         }
 
         @Override
-        public void extractWidgetRenderState(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTicks) {
-            super.extractWidgetRenderState(context, mouseX, mouseY, partialTicks);
+        public void renderWidget(@NotNull GuiGraphics context, int mouseX, int mouseY, float partialTicks) {
+            super.renderWidget(context, mouseX, mouseY, partialTicks);
             // Where vanilla draws the text, and its hint when unfocused
             if (this.isVisible() && this.isFocused() && this.getValue().isEmpty()) {
                 int x = this.isBordered() ? this.getX() + 4 : this.getX();
                 int y = this.isBordered() ? this.getY() + (this.height - 8) / 2 : this.getY();
-                context.text(this.font, SEARCH_HINT, x, y, -1);
+                context.drawString(this.font, SEARCH_HINT, x, y, -1);
             }
         }
     }

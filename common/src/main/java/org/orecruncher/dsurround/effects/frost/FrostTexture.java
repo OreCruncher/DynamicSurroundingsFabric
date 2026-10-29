@@ -1,10 +1,10 @@
 package org.orecruncher.dsurround.effects.frost;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.GpuFormat;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.TextureFormat;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
@@ -221,7 +221,7 @@ public final class FrostTexture {
     private static GpuTexture upload(Pattern pattern) {
         var device = RenderSystem.getDevice();
         var result = device.createTexture(() -> "Dynamic Surroundings window frost", GpuTexture.USAGE_TEXTURE_BINDING | GpuTexture.USAGE_COPY_DST,
-                GpuFormat.RGBA8_UNORM, pattern.size, pattern.size, 1, LEVELS);
+                TextureFormat.RGBA8, pattern.size, pattern.size, 1, LEVELS);
         var encoder = device.createCommandEncoder();
         var level = pattern;
         for (int i = 0; i < LEVELS; i++) {
@@ -233,7 +233,7 @@ public final class FrostTexture {
                         int alpha = Mth.clamp(Math.round(level.growth[index] * 255F), 0, 255);
                         image.setPixel(x, y, alpha << 24 | grey << 16 | grey << 8 | grey);
                     }
-                encoder.writeToTexture(result, image, i, 0, 0, 0);
+                encoder.writeToTexture(result, image, i, 0, 0, 0, level.size, level.size, 0, 0);
             }
             level = half(level);
         }

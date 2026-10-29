@@ -6,16 +6,14 @@
 // counted: the others saw something else (a tree in front, the sky beside a hill), so blending them in would smear the
 // mist across the edge.
 //
-// How far each of the mist's pixels' lines of sight went, the march wrote alongside the mist (DistanceSampler); this
-// pixel's own is read from the scene's depth.
+// The mist's pixel at (i, j) followed the line of sight to the screen's pixel at (Scale i, Scale j), so how far that
+// went is read from the scene's depth there, as this pixel's own is.
 
 #moj_import <dsurround:ground_fog.glsl>
 
 uniform sampler2D MistSampler;
 uniform sampler2D MistDepthSampler;
 uniform sampler2D DepthSampler;
-// How far along the view each of the mist's pixels' line of sight went, from the march
-uniform sampler2D DistanceSampler;
 
 // Two rows of the projection's inverse (ground_fog_screen): for a pixel at (x, y, depth) on the screen, how far along
 // the view it is
@@ -57,7 +55,7 @@ void main() {
     float differences[4];
     float least = 1e30;
     for (int k = 0; k < 4; k++) {
-        distances[k] = texelFetch(DistanceSampler, taps[k], 0).r;
+        distances[k] = distanceAt(taps[k] * int(Scale));
         differences[k] = abs(distances[k] - here);
         least = min(least, differences[k]);
     }

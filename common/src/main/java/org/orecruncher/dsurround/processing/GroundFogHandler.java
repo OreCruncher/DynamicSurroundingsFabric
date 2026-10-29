@@ -1,20 +1,20 @@
 package org.orecruncher.dsurround.processing;
 
-import net.minecraft.util.LightCoordsUtil;
 import it.unimi.dsi.fastutil.longs.LongCollection;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.rendertype.OutputTarget;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogConditions;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogField;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
@@ -25,6 +25,7 @@ import org.orecruncher.dsurround.eventing.IChunkLoad;
 import org.orecruncher.dsurround.eventing.ILightUpdate;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.Shelter;
 import org.orecruncher.dsurround.runtime.weather.Wind;
@@ -97,7 +98,7 @@ public class GroundFogHandler extends AbstractClientHandler {
     }
 
     private void chunkLoaded(ClientLevel level, ChunkPos chunkPos) {
-        this.field.chunkChanged(chunkPos.x(), chunkPos.z());
+        this.field.chunkChanged(chunkPos.x, chunkPos.z);
     }
 
     private void lightUpdated(LightLayer layer, SectionPos section) {
@@ -119,7 +120,7 @@ public class GroundFogHandler extends AbstractClientHandler {
                 this.field.clear();
             return;
         }
-        var camera = GameUtils.getMC().gameRenderer.mainCamera();
+        var camera = GameUtils.getMC().gameRenderer.getMainCamera();
         if (!camera.isInitialized() || !(player.level() instanceof ClientLevel level))
             return;
 
@@ -146,7 +147,7 @@ public class GroundFogHandler extends AbstractClientHandler {
             var exposure = Shelter.exposure(level, BlockPos.containing(player.getEyePosition()));
             var rainLevel = this.weatherSimulation.rainLevel(level.getRainLevel(1F));
             var windPercent = Wind.percentOfFullStorm(this.windService.steadySpeed());
-            this.target = GroundFogConditions.strength(level.getDefaultClockTime(), windPercent, rainLevel, exposure);
+            this.target = GroundFogConditions.strength(level.getDayTime(), windPercent, rainLevel, exposure);
         } else {
             this.target = 1F;
         }
@@ -186,14 +187,14 @@ public class GroundFogHandler extends AbstractClientHandler {
     }
 
     private static boolean fabulous() {
-        return GameUtils.getMC().gameRenderer.gameRenderState().useShaderTransparency();
+        return Minecraft.useShaderTransparency();
     }
 
     private void render(boolean fabulous) {
         if (!this.isActive() || this.field.isEmpty() || this.strength < MIN_STRENGTH)
             return;
         var minecraft = GameUtils.getMC();
-        var camera = minecraft.gameRenderer.mainCamera();
+        var camera = minecraft.gameRenderer.getMainCamera();
         var partialTick = minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false);
         float seconds = ((this.ticks % 72000) + partialTick) / 20F;
         GroundFogVolume.render(this.field, camera, OutputTarget.WEATHER_TARGET.getRenderTarget(), fabulous,
@@ -300,7 +301,7 @@ public class GroundFogHandler extends AbstractClientHandler {
         @Override
         public int light(int x, int y, int z) {
             assert this.level != null;
-            return LightCoordsUtil.getLightCoords(this.level, this.pos.set(x, y, z));
+            return LevelRenderer.getLightColor(this.level, this.pos.set(x, y, z));
         }
     }
 }

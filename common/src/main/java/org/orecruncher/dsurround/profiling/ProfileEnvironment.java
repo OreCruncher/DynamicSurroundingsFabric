@@ -57,16 +57,17 @@ record ProfileEnvironment(String mod, int mods, String gpu, String gpuVendor, St
         var mc = Minecraft.getInstance();
         var options = mc.options;
         var window = mc.getWindow();
-        var device = RenderSystem.getDevice().getDeviceInfo();
+        var device = RenderSystem.getDevice();
         var platform = Platform.isFabric() ? "Fabric" : "NeoForge";
         return new ProfileEnvironment(
                 "%s (%s)".formatted(ContainerManager.resolve(ModInformation.class).getBranding(), platform),
                 Platform.getMods().size(),
-                device.name(),
-                device.vendorName(),
-                device.type().name().toLowerCase(Locale.ROOT),
-                device.driverInfo(),
-                device.backendName(),
+                device.getRenderer(),
+                device.getVendor(),
+                // Not known on this version: whether it is integrated or a card of its own
+                "",
+                device.getVersion(),
+                device.getBackendName(),
                 "%s, improved transparency %s".formatted(options.graphicsPreset().get().getSerializedName(),
                         options.improvedTransparency().get() ? "on" : "off"),
                 IrisCompat.isShaderPackInUse(),

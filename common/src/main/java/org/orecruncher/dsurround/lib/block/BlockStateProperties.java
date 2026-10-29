@@ -36,7 +36,7 @@ final class BlockStateProperties {
      */
     private static Map<Property<?>, Comparable<?>> valuesOf(final BlockState state) {
         final Map<Property<?>, Comparable<?>> values = new LinkedHashMap<>();
-        state.getValues().forEach(v -> values.put(v.property(), v.value()));
+        values.putAll(state.getValues());
         return values;
     }
 

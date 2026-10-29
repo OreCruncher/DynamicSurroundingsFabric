@@ -2,11 +2,11 @@ package org.orecruncher.dsurround.effects.particles;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.client.Camera;
-import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.client.particle.SingleQuadParticle;
+import net.minecraft.client.particle.SpriteSet;
+import net.minecraft.client.renderer.state.QuadParticleRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.ARGB;
@@ -153,7 +153,7 @@ public class WaterFoam extends SingleQuadParticle {
         this.roll = this.oRoll = random.nextFloat() * Mth.TWO_PI;
         this.rollSpeed = (random.nextFloat() - 0.5F) * 0.06F;
 
-        this.light = super.getLightCoords(0F);
+        this.light = super.getLightColor(0F);
         this.lightPhase = random.nextInt(LIGHT_TICKS);
 
         var biomeColor = level.getBiome(BlockPos.containing(x, y, z)).value().getWaterColor();
@@ -179,7 +179,7 @@ public class WaterFoam extends SingleQuadParticle {
         if (this.removed)
             return;
         if ((this.age + this.lightPhase) % LIGHT_TICKS == 0)
-            this.light = super.getLightCoords(0F);
+            this.light = super.getLightColor(0F);
 
         // The water it is floating on: just under it, as it rests a little above the surface
         var pos = this.waterPos.set(this.x, this.y - LIFT - 0.05D, this.z);
@@ -325,7 +325,7 @@ public class WaterFoam extends SingleQuadParticle {
     }
 
     @Override
-    public int getLightCoords(float partialTick) {
+    public int getLightColor(float partialTick) {
         return this.light;
     }
 

@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.gui.overlay.plugins;
 
+import net.minecraft.client.Minecraft;
 import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.effects.RenderTimers;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -24,7 +25,7 @@ public final class RenderTimersPlugin implements IDiagnosticPlugin {
         // The graphics mode: Fabulous's improved transparency draws translucent things, particles and weather to targets
         // of their own, laid over the scene by depth, which the mod's effects draw differently for
         var options = GameUtils.getGameSettings();
-        boolean layered = GameUtils.getMC().gameRenderer.gameRenderState().useShaderTransparency();
+        boolean layered = Minecraft.useShaderTransparency();
         event.add(CollectDiagnosticsEvent.Section.Render, "Graphics: %s, improved transparency %s%s".formatted(
                 options.graphicsPreset().get(), options.improvedTransparency().get() ? "on" : "off",
                 layered ? " (layered by depth)" : ""));

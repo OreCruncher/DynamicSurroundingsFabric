@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(FogRenderer.class)
 public class MixinFogRenderer {
@@ -23,9 +23,10 @@ public class MixinFogRenderer {
      * Tints the fog's colour, after the game and (on NeoForge) any mod has set it. The screen is cleared with the fog's
      * colour, so that follows. Only in the open air: under water or in lava the fog is the fluid's.
      */
-    @Inject(method = "computeFogColor(Lnet/minecraft/client/Camera;FLnet/minecraft/client/multiplayer/ClientLevel;IFLorg/joml/Vector4f;)V", at = @At("TAIL"), require = 0)
-    private void dsurround$tintFogColor(Camera camera, float partialTick, ClientLevel level, int renderDistance, float darkenWorldAmount, Vector4f color, CallbackInfo ci) {
-        if (camera.getFluidInCamera() != FogType.NONE)
+    @Inject(method = "computeFogColor(Lnet/minecraft/client/Camera;FLnet/minecraft/client/multiplayer/ClientLevel;IF)Lorg/joml/Vector4f;", at = @At("RETURN"), require = 0)
+    private void dsurround$tintFogColor(Camera camera, float partialTick, ClientLevel level, int renderDistance, float darkenWorldAmount, CallbackInfoReturnable<Vector4f> cir) {
+        var color = cir.getReturnValue();
+        if (color == null || camera.getFluidInCamera() != FogType.NONE)
             return;
         var rgb = dsurround$fogColor;
         rgb[0] = color.x;

@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.gui.overlay.lightlevel;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
@@ -10,25 +8,26 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
+import com.mojang.blaze3d.textures.TextureFormat;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.font.TextRenderable;
-import net.minecraft.client.renderer.Projection;
-import net.minecraft.client.renderer.ProjectionMatrixBuffer;
+import net.minecraft.client.renderer.CachedOrthoProjectionMatrixBuffer;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.Identifier;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.effects.Transforms;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.OptionalInt;
 
 /**
  * The numbers 0 to 15, drawn once with the game's font into a texture, a 4 by 4 grid of cells: each a white number
@@ -51,11 +50,10 @@ final class LightLevelAtlas {
     private static final int CELL_PADDING = 4;
     private static final int BLACK = 0xFF000000;
     private static final int WHITE = 0xFFFFFFFF;
-    private static final Vector4f CLEAR = new Vector4f(0F, 0F, 0F, 0F);
+    private static final int CLEAR = 0;
 
     private AtlasTexture texture;
-    private Projection projection;
-    private ProjectionMatrixBuffer projectionBuffer;
+    private CachedOrthoProjectionMatrixBuffer projection;
     private boolean drawn;
     private boolean stale = true;
     private boolean failed;
@@ -94,9 +92,7 @@ final class LightLevelAtlas {
             if (this.texture == null) {
                 this.texture = new AtlasTexture();
                 GameUtils.getTextureManager().register(ID, this.texture);
-                this.projection = new Projection();
-                this.projection.setupOrtho(-1000F, 1000F, SIZE, SIZE, true);
-                this.projectionBuffer = new ProjectionMatrixBuffer("Dynamic Surroundings light levels");
+                this.projection = new CachedOrthoProjectionMatrixBuffer("Dynamic Surroundings light levels", -1000F, 1000F, true);
             }
             this.draw(GameUtils.getTextRenderer());
             this.drawn = true;
@@ -163,8 +159,8 @@ final class LightLevelAtlas {
 
         var encoder = RenderSystem.getDevice().createCommandEncoder();
         encoder.clearColorTexture(this.texture.getTexture(), CLEAR);
-        var projection = this.projectionBuffer.getBuffer(this.projection);
-        var transforms = RenderSystem.getDynamicUniforms().writeTransform(new Matrix4f());
+        var projection = this.projection.getBuffer(SIZE, SIZE);
+        var transforms = Transforms.of(new Matrix4f());
         try (var bytes = new ByteBufferBuilder(4096)) {
             // The outlines first, so the numbers are drawn over them
             this.drawGlyphs(outlines, bytes, projection, transforms);
@@ -193,8 +189,8 @@ final class LightLevelAtlas {
         var device = RenderSystem.getDevice();
         for (var batch : batches.entrySet()) {
             var pipeline = batch.getKey().pipeline();
-            VertexFormat format = pipeline.getVertexFormatBinding(0);
-            var builder = new BufferBuilder(bytes, PrimitiveTopology.QUADS, format);
+            VertexFormat format = pipeline.getVertexFormat();
+            var builder = new BufferBuilder(bytes, VertexFormat.Mode.QUADS, format);
             for (var glyph : batch.getValue())
                 glyph.renderable.render(glyph.matrix, builder, 0xF000F0, true);
             try (var mesh = builder.build()) {
@@ -204,18 +200,18 @@ final class LightLevelAtlas {
                 var vertices = mesh.vertexBuffer();
                 try (GpuBuffer vertexBuffer = device.createBuffer(() -> "Dynamic Surroundings light level glyphs", GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST, vertices.remaining())) {
                     device.createCommandEncoder().writeToBuffer(vertexBuffer.slice(), vertices);
-                    var indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
+                    var indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
                     var indexBuffer = indices.getBuffer(indexCount);
                     try (RenderPass pass = device.createCommandEncoder()
-                            .createRenderPass(() -> "Dynamic Surroundings light level numbers", this.texture.getTextureView(), Optional.empty())) {
+                            .createRenderPass(() -> "Dynamic Surroundings light level numbers", this.texture.getTextureView(), OptionalInt.empty())) {
                         pass.setPipeline(pipeline);
                         RenderSystem.bindDefaultUniforms(pass);
                         pass.setUniform("Projection", projection);
                         pass.setUniform("DynamicTransforms", transforms);
                         pass.bindTexture("Sampler0", batch.getKey().texture(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
-                        pass.setVertexBuffer(0, vertexBuffer.slice());
+                        pass.setVertexBuffer(0, vertexBuffer);
                         pass.setIndexBuffer(indexBuffer, indices.type());
-                        pass.drawIndexed(indexCount, 1, 0, 0, 0);
+                        pass.drawIndexed(0, 0, indexCount, 1);
                     }
                 }
             }
@@ -255,7 +251,7 @@ final class LightLevelAtlas {
             var device = RenderSystem.getDevice();
             this.texture = device.createTexture(() -> "Dynamic Surroundings light level numbers",
                     GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_TEXTURE_BINDING | GpuTexture.USAGE_RENDER_ATTACHMENT,
-                    GpuFormat.RGBA8_UNORM, SIZE, SIZE, 1, 1);
+                    TextureFormat.RGBA8, SIZE, SIZE, 1, 1);
             this.textureView = device.createTextureView(this.texture);
             this.sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST);
         }

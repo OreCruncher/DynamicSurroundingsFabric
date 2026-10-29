@@ -66,12 +66,12 @@ public class FrostFacesTests {
 
         @Override
         public boolean frosts(BlockState state) {
-            return state.is(Blocks.GLASS) || state.is(Blocks.GLASS_PANE) || state.is(Blocks.STAINED_GLASS.red());
+            return state.is(Blocks.GLASS) || state.is(Blocks.GLASS_PANE) || state.is(Blocks.RED_STAINED_GLASS);
         }
 
         @Override
         public boolean translucent(BlockState state) {
-            return state.is(Blocks.STAINED_GLASS.red());
+            return state.is(Blocks.RED_STAINED_GLASS);
         }
 
         @Override
@@ -153,7 +153,7 @@ public class FrostFacesTests {
     void facesKnowWhetherTheirGlassIsTranslucent() {
         // Stained glass is drawn with the translucent blocks: with Fabulous graphics its frost is drawn with them too
         assertFalse(houseWall().faces(0, 65, 0).getFirst().translucent());
-        var stained = houseWall().set(0, 65, 0, Blocks.STAINED_GLASS.red().defaultBlockState()).faces(0, 65, 0);
+        var stained = houseWall().set(0, 65, 0, Blocks.RED_STAINED_GLASS.defaultBlockState()).faces(0, 65, 0);
         assertEquals(1, stained.size());
         assertTrue(stained.getFirst().translucent());
     }

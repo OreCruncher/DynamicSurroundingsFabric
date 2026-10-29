@@ -1,12 +1,12 @@
 package org.orecruncher.dsurround.effects.systems;
 
-import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.blocks.AbstractBlockEffect;
@@ -80,7 +80,7 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
         // Effects emit particles straight into the particle engine, which skips vanilla's Particles option and
         // distance checks, so apply them here. Minimal starts no effects; Decreased skips about one in three below.
         this.particles = GameUtils.getGameSettings().particles().get();
-        this.camera = GameUtils.getMC().gameRenderer.mainCamera().position();
+        this.camera = GameUtils.getMC().gameRenderer.getMainCamera().position();
         // Thousands of samples, each several random numbers: look up the thread's generator once, not on every call
         this.random = Randomizer.forThisThread();
         this.counts = null;

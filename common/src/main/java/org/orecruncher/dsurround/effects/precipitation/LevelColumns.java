@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
-import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.BlockPos;
@@ -154,7 +153,7 @@ public final class LevelColumns implements IColumnSource {
 
     @Override
     public int light(int x, int y, int z) {
-        return LightCoordsUtil.getLightCoords(this.level(), this.pos.set(x, y, z));
+        return LevelRenderer.getLightColor(this.level(), this.pos.set(x, y, z));
     }
 
     @Override

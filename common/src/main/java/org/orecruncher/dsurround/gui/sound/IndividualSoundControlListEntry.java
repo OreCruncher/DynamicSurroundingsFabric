@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.gui.sound;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.CycleButton;
@@ -30,6 +30,7 @@ import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.SoundMetadata;
 
+import java.util.Optional;
 import java.util.*;
 
 /**
@@ -158,11 +159,11 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     }
 
     @Override
-    public void extractContent(final @NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
+    public void renderContent(final @NonNull GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
         // Moving the layout moves its widgets; they were arranged when the width was set
         this.row.setPosition(this.getContentX(), this.getContentY());
         for (final AbstractWidget w : this.children)
-            w.extractRenderState(graphics, mouseX, mouseY, partialTick);
+            w.render(graphics, mouseX, mouseY, partialTick);
     }
 
     /**

@@ -1,8 +1,8 @@
 package org.orecruncher.dsurround.effects;
 
-import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.SharedConstants;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
@@ -36,8 +36,7 @@ public class ModShaderTests {
                 .withLocation(Constants.asId("pipeline/test_shader"))
                 .withVertexShader(Constants.asId("core/test_shader"))
                 .withFragmentShader(Constants.asId("core/test_shader"))
-                .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
-                .withPrimitiveTopology(PrimitiveTopology.QUADS)
+                .withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
                 .build();
         return new ModShader(pipeline, "the test effect", "nothing will be drawn", log);
     }
@@ -126,19 +125,33 @@ public class ModShaderTests {
     @Test
     void thoseForFabulousGraphicsWriteDepth() {
         // With Fabulous graphics a target is laid over the scene by its depth; a pipeline that is meant to write it
-        // there and doesn't (a builder's default is no depth test and no writes) leaves its target as far as can be,
-        // and the scene is laid over everything it drew: rain only against the sky, damp spots not at all
+        // there and doesn't leaves its target as far as can be, and the scene is laid over everything it drew: rain
+        // only against the sky, damp spots not at all
         int checked = 0;
         for (var shader : ModShaders.SHADERS) {
             var path = shader.id().getPath();
             if (!path.endsWith("_depth_write") && !path.endsWith("_depth"))
                 continue;
-            var depth = shader.pipeline().getDepthStencilState();
-            assertNotNull(depth, path + " has no depth state");
-            assertTrue(depth.writeDepth(), path + " doesn't write depth");
+            assertTrue(shader.pipeline().isWriteDepth(), path + " doesn't write depth");
             checked++;
         }
         assertTrue(checked >= 7, "found only " + checked);
+    }
+
+    @Test
+    void theOthersWriteNoDepth() {
+        // A builder's default here is to test and write depth; the one of a pair drawn without Fabulous graphics, or a
+        // soft layer's color pass after its depth (_fabulous), that wrote it would hide what is drawn behind it after
+        int checked = 0;
+        var paths = ModShaders.SHADERS.stream().map(shader -> shader.id().getPath()).toList();
+        for (var shader : ModShaders.SHADERS) {
+            var path = shader.id().getPath();
+            if (!path.endsWith("_fabulous") && !paths.contains(path + "_depth_write"))
+                continue;
+            assertFalse(shader.pipeline().isWriteDepth(), path + " writes depth");
+            checked++;
+        }
+        assertTrue(checked >= 9, "found only " + checked);
     }
 
     @Test

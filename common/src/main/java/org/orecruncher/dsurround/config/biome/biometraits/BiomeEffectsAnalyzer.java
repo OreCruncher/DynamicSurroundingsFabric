@@ -49,7 +49,6 @@ public final class BiomeEffectsAnalyzer implements IBiomeTraitAnalyzer {
             music("overworld.snowy_slopes", OVERWORLD),
             music("overworld.sparse_jungle", OVERWORLD, JUNGLE, FOREST, SPARSE_VEGETATION),
             music("overworld.stony_peaks", OVERWORLD),
-            music("overworld.sulfur_caves", OVERWORLD, UNDERGROUND, CAVE),
             music("overworld.swamp", OVERWORLD, SWAMP, DENSE_VEGETATION),
             music("nether.basalt_deltas", WASTELAND),
             music("nether.crimson_forest", NETHER_FOREST),

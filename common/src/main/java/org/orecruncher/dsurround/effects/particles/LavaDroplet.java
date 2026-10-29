@@ -4,7 +4,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.SingleQuadParticle;
-import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
+import net.minecraft.client.renderer.state.QuadParticleRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.tags.FluidTags;
@@ -68,7 +68,7 @@ public class LavaDroplet extends SingleQuadParticle {
     }
 
     @Override
-    protected int getLightCoords(float partialTick) {
+    protected int getLightColor(float partialTick) {
         return FULL_BRIGHT;
     }
 
@@ -100,7 +100,7 @@ public class LavaDroplet extends SingleQuadParticle {
         if (alpha <= 0F)
             return;
         Streaks.add(camera, partialTick, this.xo, this.yo, this.zo, this.x, this.y, this.z, STREAK, HALF_WIDTH,
-                colorAt(life), alpha, this.getLightCoords(partialTick), this.getU0(), this.getU1(), this.getV0(), this.getV1());
+                colorAt(life), alpha, this.getLightColor(partialTick), this.getU0(), this.getU1(), this.getV0(), this.getV1());
         // Its own quad as well, clear: the particle engine draws the flames' group only if something in it has a quad,
         // and the streaks are drawn as that group is (see Streaks)
         this.setAlpha(0F);

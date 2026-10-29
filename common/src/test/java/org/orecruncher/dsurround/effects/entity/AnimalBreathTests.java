@@ -5,7 +5,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +29,7 @@ public class AnimalBreathTests {
     }
 
     private static final double EPSILON = 1e-6;
-    private static final Muzzle.Profile COW = Muzzle.PROFILES.get(EntityTypes.COW);
+    private static final Muzzle.Profile COW = Muzzle.PROFILES.get(EntityType.COW);
 
     private static void assertNear(Vec3 expected, Vec3 actual) {
         assertEquals(expected.x, actual.x, EPSILON, "x of " + actual);
@@ -69,7 +69,7 @@ public class AnimalBreathTests {
 
     @Test
     void aHoglinsHeadIgnoresItsPitch() {
-        var hoglin = Muzzle.PROFILES.get(EntityTypes.HOGLIN);
+        var hoglin = Muzzle.PROFILES.get(EntityType.HOGLIN);
         assertNear(Muzzle.position(0, 0, 0, 30F, 30F, 0F, hoglin, 1D),
                 Muzzle.position(0, 0, 0, 30F, 30F, 40F, hoglin, 1D));
     }
@@ -105,7 +105,7 @@ public class AnimalBreathTests {
     @Test
     void aWolfBreathesOverTheSnowItStandsIn() {
         // Its mouth is half a block up, in the block a snow layer (2 pixels) fills the bottom of
-        var wolf = Muzzle.position(0, 0, 0, 0F, 0F, 0F, Muzzle.PROFILES.get(EntityTypes.WOLF), 1D);
+        var wolf = Muzzle.position(0, 0, 0, 0F, 0F, 0F, Muzzle.PROFILES.get(EntityType.WOLF), 1D);
         assertTrue(BreathEffect.breathesFreely(2 / 16D, wolf.y), "mouth at " + wolf.y);
         // Nor does grass, which has no collision shape, stop it
         assertTrue(BreathEffect.breathesFreely(Double.NEGATIVE_INFINITY, wolf.y));

@@ -214,6 +214,6 @@ public final class Profiler {
     }
 
     private static void tell(Component message) {
-        Minecraft.getInstance().execute(() -> GameUtils.getPlayer().ifPresent(p -> p.sendSystemMessage(message)));
+        Minecraft.getInstance().execute(() -> GameUtils.getPlayer().ifPresent(p -> p.displayClientMessage(message, false)));
     }
 }

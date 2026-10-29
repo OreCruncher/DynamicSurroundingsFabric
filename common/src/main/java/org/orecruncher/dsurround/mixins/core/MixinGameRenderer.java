@@ -18,7 +18,7 @@ public class MixinGameRenderer {
      */
     @Inject(method = "renderLevel(Lnet/minecraft/client/DeltaTracker;)V", at = @At("HEAD"), require = 0)
     private void dsurround$beginLevel(DeltaTracker deltaTracker, CallbackInfo ci) {
-        var camera = ((GameRenderer) (Object) this).mainCamera();
+        var camera = ((GameRenderer) (Object) this).getMainCamera();
         MixinHelpers.PRECIPITATION_AHEAD_GUARD.run(() -> MixinHelpers.precipitation().beginFrame(camera, deltaTracker.getGameTimeDeltaPartialTick(false)));
     }
 }

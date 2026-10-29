@@ -66,7 +66,7 @@ public class MixinMinecraftClient {
         var minecraft = (Minecraft) (Object) this;
         if (minecraft.level == null)
             return vanilla;
-        var biome = minecraft.level.getBiome(minecraft.gameRenderer.mainCamera().blockPosition()).value();
+        var biome = minecraft.level.getBiome(minecraft.gameRenderer.getMainCamera().blockPosition()).value();
         var info = MixinHelpers.biomeLibrary().findBiomeInfo(biome);
         if (info == null)
             return vanilla;
@@ -82,7 +82,7 @@ public class MixinMinecraftClient {
      * {@link FrameTimes}); does nothing while nothing records. Optional: only profiling is lost if another mod changed
      * the frame.
      */
-    @WrapOperation(method = "renderFrame(Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;render(Lnet/minecraft/client/DeltaTracker;Z)V"), require = 0)
+    @WrapOperation(method = "runTick(Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;render(Lnet/minecraft/client/DeltaTracker;Z)V"), require = 0)
     private void dsurround$timeFrame(GameRenderer renderer, DeltaTracker deltaTracker, boolean renderLevel, Operation<Void> original) {
         FrameTimes.begin();
         try {

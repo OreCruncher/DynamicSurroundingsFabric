@@ -5,33 +5,33 @@ import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.pipeline.BlendFunction;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.platform.BlendFactor;
+import com.mojang.blaze3d.platform.DepthTestFunction;
+import com.mojang.blaze3d.platform.DestFactor;
+import com.mojang.blaze3d.platform.SourceFactor;
 import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.MappableRingBuffer;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.RenderTimer;
+import org.orecruncher.dsurround.effects.Transforms;
 import org.orecruncher.dsurround.lib.Library;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.OptionalDouble;
+import java.util.OptionalInt;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -41,7 +41,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * doesn't change Minecraft's lighting, and it can't cast shadows.
  * <p>
  * Particles {@link #add} their light as they are extracted for drawing, and the lights are all drawn together just
- * before the translucent particles ({@link #draw}), in a pass of their own (see MixinQuadParticleFeatureRenderer).
+ * before the translucent particles ({@link #draw}), in a pass of their own (see MixinParticleFeatureRenderer).
  * <p>
  * Without the shader ({@link #SHADER}), or while an Iris shader pack is in use, there are no lights. Everything here
  * runs on the render thread.
@@ -50,10 +50,6 @@ public final class PointLights {
 
     private static final String POINT_LIGHT_INFO = "PointLightInfo";
     private static final int POINT_LIGHT_INFO_SIZE = new Std140SizeCalculator().putFloat().get();
-    private static final BindGroupLayout POINT_LIGHT_LAYOUT = BindGroupLayout.builder()
-            .withUniform(POINT_LIGHT_INFO, UniformType.UNIFORM_BUFFER)
-            .withSampler(SoftParticles.DEPTH_SAMPLER)
-            .build();
 
     // The shader finds what each light reaches itself, so nothing is tested against depth; and its squares may face
     // either way. The shader gives its light already scaled by its strength, with next to no alpha, and both are
@@ -64,13 +60,16 @@ public final class PointLights {
             .withLocation(Constants.asId("pipeline/point_light"))
             .withVertexShader(Constants.asId("core/point_light"))
             .withFragmentShader(Constants.asId("core/point_light"))
-            .withBindGroupLayout(BindGroupLayouts.GLOBALS)
-            .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
-            .withBindGroupLayout(POINT_LIGHT_LAYOUT)
-            .withColorTargetState(new ColorTargetState(new BlendFunction(BlendFactor.ONE, BlendFactor.ONE)))
+            .withUniform("Globals", UniformType.UNIFORM_BUFFER)
+            .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
+            .withUniform("Projection", UniformType.UNIFORM_BUFFER)
+            .withUniform(POINT_LIGHT_INFO, UniformType.UNIFORM_BUFFER)
+            .withSampler(SoftParticles.DEPTH_SAMPLER)
+            .withBlend(new BlendFunction(SourceFactor.ONE, DestFactor.ONE))
+            .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+            .withDepthWrite(false)
             .withCull(false)
-            .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
-            .withPrimitiveTopology(PrimitiveTopology.QUADS)
+            .withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
             .build();
 
     public static final ModShader SHADER = new ModShader(PIPELINE, "point lights", "fireflies and flame jets will not light their surroundings", Library.LOGGER);
@@ -192,7 +191,7 @@ public final class PointLights {
         if ((count + 1) * STRIDE > lights.length)
             lights = Arrays.copyOf(lights, lights.length * 2);
         int i = count * STRIDE;
-        var camera = Minecraft.getInstance().gameRenderer.mainCamera().position();
+        var camera = Minecraft.getInstance().gameRenderer.getMainCamera().position();
         lights[i] = (float) (x - camera.x);
         lights[i + 1] = (float) (y - camera.y);
         lights[i + 2] = (float) (z - camera.z);
@@ -209,7 +208,7 @@ public final class PointLights {
      * Draws the lights recorded since the last call into {@code target}, then forgets them. Called outside any render
      * pass, after the scene's depth has been captured.
      *
-     * @param transforms the camera's, as the particles are drawn with them (see MixinQuadParticleFeatureRenderer)
+     * @param transforms the camera's, as the particles are drawn with them (see MixinParticleFeatureRenderer)
      */
     public static void draw(RenderTarget target, GpuBufferSlice transforms) {
         // Lights gathered elsewhere during the frame, to be added now that it is known which are wanted
@@ -232,7 +231,7 @@ public final class PointLights {
             sortNearest(lights, n, 0D, 0D, 0D);
         if (meshBytes == null)
             meshBytes = new ByteBufferBuilder(64 * 4 * DefaultVertexFormat.POSITION_TEX_COLOR.getVertexSize());
-        var builder = new BufferBuilder(meshBytes, PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        var builder = new BufferBuilder(meshBytes, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
         for (int l = 0; l < Math.min(n, MAX_DRAWN); l++) {
             int i = l * STRIDE;
             float a = lights[i + 6] * rankFade(l);
@@ -259,24 +258,24 @@ public final class PointLights {
 
         if (lightInfo == null)
             lightInfo = new MappableRingBuffer(() -> "Dynamic Surroundings point light UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_MAP_WRITE, POINT_LIGHT_INFO_SIZE);
-        var zeroToOne = device.getDeviceInfo().isZZeroToOne();
-        try (var view = lightInfo.currentBuffer().map(false, true)) {
+        var zeroToOne = Transforms.DEPTH_ZERO_TO_ONE;
+        try (var view = RenderSystem.getDevice().createCommandEncoder().mapBuffer(lightInfo.currentBuffer(), false, true)) {
             Std140Builder.intoBuffer(view.data()).putFloat(zeroToOne ? 1F : 0F);
         }
 
-        var indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
+        var indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
         var indexBuffer = indices.getBuffer(indexCount);
 
         try (RenderPass pass = device.createCommandEncoder()
-                .createRenderPass(() -> "Dynamic Surroundings point lights", target.getColorTextureView(), Optional.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
+                .createRenderPass(() -> "Dynamic Surroundings point lights", target.getColorTextureView(), OptionalInt.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
             pass.setPipeline(PIPELINE);
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", transforms);
             SoftParticles.bindSceneDepth(pass);
             pass.setUniform(POINT_LIGHT_INFO, lightInfo.currentBuffer());
-            pass.setVertexBuffer(0, vertexBuffer.slice());
+            pass.setVertexBuffer(0, vertexBuffer);
             pass.setIndexBuffer(indexBuffer, indices.type());
-            pass.drawIndexed(indexCount, 1, 0, 0, 0);
+            pass.drawIndexed(0, 0, indexCount, 1);
         }
         lightInfo.rotate();
     }

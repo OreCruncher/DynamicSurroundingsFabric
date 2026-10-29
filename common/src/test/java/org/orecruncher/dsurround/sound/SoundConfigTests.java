@@ -44,23 +44,23 @@ public class SoundConfigTests {
     @Test
     void numberIsAFixedValue() {
         var provider = assertInstanceOf(ConstantFloat.class, range("0.5"));
-        assertEquals(0.5F, provider.value());
+        assertEquals(0.5F, provider.getValue());
     }
 
     @Test
     void rangeIsUniform() {
         var provider = assertInstanceOf(UniformFloat.class, range("{\"min\": 0.8, \"max\": 1.2}"));
-        assertEquals(0.8F, provider.min());
-        assertEquals(1.2F, provider.max());
+        assertEquals(0.8F, provider.getMinValue());
+        assertEquals(1.2F, provider.getMaxValue());
     }
 
     @Test
     void rangeWithEqualEndsIsAFixedValue() {
         // Regression: these all threw IllegalArgumentException from UniformFloat while loading
-        assertEquals(1F, assertInstanceOf(ConstantFloat.class, range("{}")).value());
-        assertEquals(1F, assertInstanceOf(ConstantFloat.class, range("{\"min\": 1.0}")).value());
-        assertEquals(1F, assertInstanceOf(ConstantFloat.class, range("{\"max\": 1.0}")).value());
-        assertEquals(0.8F, assertInstanceOf(ConstantFloat.class, range("{\"min\": 0.8, \"max\": 0.8}")).value());
+        assertEquals(1F, assertInstanceOf(ConstantFloat.class, range("{}")).getValue());
+        assertEquals(1F, assertInstanceOf(ConstantFloat.class, range("{\"min\": 1.0}")).getValue());
+        assertEquals(1F, assertInstanceOf(ConstantFloat.class, range("{\"max\": 1.0}")).getValue());
+        assertEquals(0.8F, assertInstanceOf(ConstantFloat.class, range("{\"min\": 0.8, \"max\": 0.8}")).getValue());
     }
 
     @Test
@@ -83,8 +83,8 @@ public class SoundConfigTests {
         assertEquals(1.2F, written.getAsJsonObject().get("max").getAsFloat());
 
         var reread = assertInstanceOf(UniformFloat.class, SoundCodecHelpers.SOUND_PROPERTY_RANGE.parse(JsonOps.INSTANCE, written).getOrThrow());
-        assertEquals(0.8F, reread.min());
-        assertEquals(1.2F, reread.max());
+        assertEquals(0.8F, reread.getMinValue());
+        assertEquals(1.2F, reread.getMaxValue());
     }
 
     // ---- Category and attenuation ----------------------------------------------------------------------------

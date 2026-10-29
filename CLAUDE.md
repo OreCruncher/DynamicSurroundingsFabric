@@ -1,8 +1,8 @@
 # Dynamic Surroundings — working notes
 
-Client-side Minecraft mod (MIT). Minecraft 26.2, Fabric and NeoForge through Architectury. Versions are in
-`gradle.properties`. This branch is the 26.2 port, carrying 0.4.8; `MIGRATION.md` records what changed and what still needs
-checking in game.
+Client-side Minecraft mod (MIT). Minecraft 1.21.11, Fabric and NeoForge through Architectury, Java 21. Versions are in
+`gradle.properties`. This branch is the 1.21.11 line (5.x), backported from `OreCruncher/26.2` without the realistic
+aurora; `MIGRATION.md` is 26.2's record of its port from 1.21.1, and "1.21.11 backport" below what differs from 26.2.
 
 ## Layout
 - `common/` — almost all code, resources and tests (`org.orecruncher.dsurround`).
@@ -19,15 +19,17 @@ checking in game.
 - One class: `./gradlew :common:test --tests "*BlockInfoTests" -q`
 - Sound loudness survey (needs ffmpeg): `python scripts/sound-survey.py [--csv out.csv]` — level per OGG, events
   whose variants differ, stereo files, clipping, leading silence, files `sounds.json` doesn't use.
-- Game jar for `javap` (check real signatures rather than assuming; 26.2 is unobfuscated):
-  `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/26.2/minecraft-merged-deobf-26.2.jar`.
-  NeoForge-patched classes: `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/neoforge-<version>-minecraft-merged-deobf/26.2/*.jar`.
+- Game jar for `javap` (check real signatures rather than assuming; 1.21.11 is obfuscated, mapped with Mojang's names,
+  lambdas keep intermediary names such as `method_62216`):
+  `.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-merged-*/1.21.11-*/minecraft-merged-*.jar`.
+  NeoForge-patched classes: `.gradle/loom-cache/minecraftMaven/net/minecraft/neoforge-<version>-minecraft-merged-*/`.
 - Does the built mod link against another Minecraft version? `python scripts/version-compat.py BASE.jar OTHER.jar`
   (Mojang client jars; compile first) lists every class, member, override and mixin target/`@At` call site that
   resolves in BASE and not in OTHER. Behaviour changes and game data aren't covered. (26.2 → 26.3: no; 26.3 moved the
   render API from `com.mojang.blaze3d` to `com.mojang.renderpearl`.)
-- Decompiled sources (to see how vanilla draws something): `./gradlew :common:genSources`, then the `-sources.jar`
-  under `.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-merged-*/26.2/`.
+- Decompiled sources (to see how vanilla draws something): `./gradlew :fabric:genSourcesWithVineflower`, then the
+  `-sources.jar` under `.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-merged-*/1.21.11-*/` (its path is too
+  long for Python's zipfile on Windows: copy it somewhere shorter first).
 
 ## Checking in the dev client
 - Launch in the background, logging to a file:
@@ -94,37 +96,43 @@ checking in game.
 - `ConfigServices` is handed by `BlockLibrary`/`BiomeLibrary` to the `BlockInfo`/`BiomeInfo` they build.
   `BiomeLibrary` resolves the condition evaluator lazily: evaluator → `BiomeVariables` → biome library is a cycle.
 - Shaders: one `effects/ModShader` per `RenderPipeline` (`SoftParticles.SHADER` and `FLAME_SHADER`,
-  `AuroraRenderer.SHADER`, `RealisticAuroraRenderer.SHADER`, `PointLights.SHADER`, `PrecipitationShaders.SHADERS`, `FrostRenderer.SHADERS`,
+  `AuroraRenderer.SHADER`, `PointLights.SHADER`, `PrecipitationShaders.SHADERS`, `FrostRenderer.SHADERS`,
   `GroundFogVolume.SHADERS`), listed in `ModShaders.SHADERS`. Not added to vanilla's `RenderPipelines` (a failure there
   rejects the reload); `MixinShaderManager` compiles them after each shader reload. Drawing goes through
   `ModShader.run` / `RenderFailSafe`: a failure is logged once and the effect turned off until resources reload.
 - Uniform blocks: `Std140Builder.putVec3` always takes 16 bytes, but std140 puts a following `float` in a `vec3`'s
   fourth slot. Write a `vec3` and the `float` after it as one `putVec4` (and `putVec4()` in the size), or every value
   after it is read 4 bytes off (ground fog drew nothing until this was found).
-- Realistic aurora (`effects/aurora/RealisticAurora*`, `shaders/core/aurora_realistic.*`; MIGRATION.md has the
-  whole): the Java model mirrors the shader (`Arc.northAt` is `arc_north`, constants such as `FIELD_CELL`), and tests
-  check the shader's text and constants against it, so change both. Its uniform block is in
-  `shaders/include/aurora_realistic.glsl`, as both stages declare it and a block must match across them. Anything that
-  moves at a speed that changes goes through `RealisticAuroraMotion`, never `time × speed`. `/dsaurora activity|phase|
-  colour` holds a look to check it; a GLSL error (a redeclared name, say) turns the whole effect off, so check the log
-  for `Loaded the dsurround:pipeline/aurora_realistic shader` after any shader change.
-- View bobbing is in 26.2's projection matrix, and moves the camera a little as well as turning it. A screen pass that
-  turns pixels back into directions (the realistic aurora) takes each one between two unprojected points along the
-  pixel's line, not from the camera to one point near it, or every direction swings as the player walks.
-- `RenderPipeline.Builder` defaults to no depth state: no test and no writes. Set one on every pipeline that should
-  test or write depth; a Fabulous variant that writes none leaves its target "infinitely far", and the transparency
-  pass lays the scene over it (`ModShaderTests` checks the `*_depth`/`*_depth_write` pipelines).
-- Drawing our own geometry while particles draw (`MixinQuadParticleFeatureRenderer`): use the particle renderer's
-  `dynamicTransforms` (written in `finishPrepare`), not `RenderSystem.getModelViewMatrixCopy()`, which no longer holds
-  the camera's rotation then. Particle pipelines cull back faces: wind quads counter-clockwise as the camera sees them.
-- Rendering is 26.2's: pipelines, `RenderPass`, GPU buffers, uniform blocks (std140, `MappableRingBuffer`), particle
-  layers and extraction. Depth is reverse-Z (cleared to 0). See `MIGRATION.md` for how the aurora, soft particles and
-  point lights hook in. GPU timings (`RenderTimer`) go through the device's timestamp queries: no raw OpenGL, as 26.2
-  can run on Vulkan.
+- View bobbing is in the projection matrix, and moves the camera a little as well as turning it. A screen pass that
+  turns pixels back into directions (the ground fog) takes them from a point far along the pixel's line (the far
+  plane), not from one near the camera, or every direction swings as the player walks.
+- `RenderPipeline.Builder` defaults here to a `LEQUAL` depth test with depth writes, and back-face culling (26.2's
+  default is no depth state at all). Say `withDepthWrite(false)` (and `NO_DEPTH_TEST` where nothing should be tested)
+  on every pipeline that shouldn't write; `ModShaderTests` checks the `*_depth`/`*_depth_write` pipelines write depth
+  and their plain and `*_fabulous` siblings don't.
+- Drawing our own geometry while particles draw (`MixinParticleFeatureRenderer`): use the prepared buffers'
+  `dynamicTransforms`, not `RenderSystem.getModelViewMatrix()`, which no longer holds the camera's rotation then.
+  Particle pipelines cull back faces: wind quads counter-clockwise as the camera sees them.
+- Rendering is 1.21.11's: pipelines built with `withUniform`/`withSampler`/`withBlend`/`withVertexFormat`, `RenderPass`
+  (`drawIndexed(baseVertex, firstIndex, indexCount, instanceCount)`, `draw(firstVertex, vertexCount)`), GPU buffers,
+  uniform blocks (std140, `MappableRingBuffer`, mapped through `CommandEncoder.mapBuffer`), samplers from
+  `RenderSystem.getSamplerCache()`, `effects/Transforms` for the `DynamicTransforms` block. OpenGL only: depth is
+  -1 to 1 in clip space (`Transforms.DEPTH_ZERO_TO_ONE`) and cleared to 1, the sky's depth; GPU timings (`RenderTimer`)
+  use OpenGL timestamp queries. One color attachment a pass, and no float formats (`TextureFormat` is RGBA8, RED8,
+  RED8I, DEPTH32): the ground fog's smoothing and composite work each mist pixel's distance out from the scene's depth.
+- 1.21.11 backport (from 26.2): what changed is mostly names (`GuiGraphics` and its `drawString`/`render*`,
+  `VertexFormat.Mode`, `getMainRenderTarget()`, `LevelRenderer.getLightColor`, `getDayTime`, `getBlockHolder`,
+  `displayClientMessage`), 26.2's bind groups and color/depth target states turned into the builder's calls, and
+  reverse-Z undone in the shaders (sky tests, the frost's depth comparison). Mixins: the level's passes are lambdas whose
+  names differ between Fabric (intermediary) and NeoForge, so none is targeted; `MixinLevelRenderer` wraps the weather
+  pass's `FramePass.executes` (`addWeatherPass*`: NeoForge has two overloads, and a bare name matches only the first),
+  `MixinWorldBorderRenderer` is after the weather, `MixinChunkSectionsToRender` around the translucent and tripwire
+  layers, and the rain is ticked in `WeatherEffectRenderer.tickRainParticles`. Check mixin targets against both jars
+  before launching: a target that doesn't match fails at startup, one at a time.
 - World and dimension queries go through `runtime/oracle` (`ILevelOracle`, `IDimensionOracle`, `IMinecraftClock`).
 - Config: moving a property between groups → annotate the new field `@MovedFrom({"newest.old.path", "older.path"})`;
   old values carry over on load. Translation keys follow `dsurround.config.<group>.<field>[.tooltip]`.
-- Fabulous graphics (as found on 1.21.1; recheck on 26.2 as the staged systems are rebuilt) draws translucent things,
+- Fabulous graphics draws translucent things,
   particles and weather to targets of their own, which vanilla's
   `transparency` post shader lays over the scene sorted by each target's depth, taking colours as premultiplied:
   `behind * (1 - alpha) + colour`, and skipping alpha 0. So anything we draw there must leave sensible alpha and depth:
@@ -134,8 +142,8 @@ checking in game.
     (ground fog, damp spots), or the scene is laid over it. Something soft that writes depth where it has all but
     faded hides what is drawn behind it after: the dust goes after the snow and its flecks there, or they blinked.
   - The particles target's depth is the scene's from before water; the translucent target's has the water's surface.
-    On 26.2 particles are drawn before the water, so its depth isn't there yet: with Fabulous a soft layer is drawn
-    twice (`MixinQuadParticleFeatureRenderer` wraps `drawIndexed`): its depth first, tested as usual, so the nearest
+    With Fabulous a soft layer is drawn twice (`MixinQuadParticleRenderState` wraps `drawIndexed`): its depth first,
+    tested as usual, so the nearest
     puff's is left (particles aren't drawn in order; writing depth as they come leaves patches), then its colour with no
     test and no writes. Water then isn't laid over mist above it.
   - Blend alpha as "over" (`ONE, ONE_MINUS_SRC_ALPHA`), not the default's `ONE, ZERO`, or piled-up colour outgrows its
@@ -259,25 +267,16 @@ checking in game.
 - The user commits; don't commit unless asked.
 
 ## Branches
-- `main`: the 1.21.1 line (0.4.8 was squash-merged as `21b8f91d` and recorded here with `-s ours`; each 1.21.1
-  release branches from `main`).
-- `OreCruncher/1.21.11` (next; first release 5.0.0): a long-lived 1.21.11 line backported from this branch, branched
-  from it rather than from `main`. Merge this branch into it for features and fixes; never merge it back here (that
-  would bring the backport's downgrades with it): cherry-pick a fix made there.
-- 1.21.1 is frozen at 0.4.8 (tag `1.21.1-0.4.8`); a hotfix there would be 0.4.9, the old numbering.
-- The current 1.21.1 release branch (none open since 0.4.8's squash): merged into this branch directly, before its squash to
-  `main`; merge it again for its fixes. Once squashed, check `git diff OreCruncher/<release> main` is empty and record
-  `main` with `git merge -s ours main` (a normal merge would reopen every conflict this branch resolved). Port 1.21.1
-  work by merging, resolving against 26.2's APIs (see `MIGRATION.md`); never rebase this branch.
-  - After `git merge OreCruncher/<release>` stops: `python scripts/port-merge.py merge --show` renames 1.21.1's names
-    (`scripts/port-renames.txt`) and merges each conflict again, staging what resolves (and files git merged with old
-    names in them), then prints only the conflicts left. Then compile; add any rename the compiler finds to the table
-    and run `port-merge.py check-table`. `port-merge.py convert --to 1.21.1 FILE...` renames code copied to 0.4.7.
+- `OreCruncher/1.21.11` (this branch, worktree `C:\repos\DynamicSurroundingsFabric-1.21.11`): the 1.21.11 line,
+  branched from `OreCruncher/26.2` (0a280a8d) and kept. Its first release is 5.0.0.
+- `OreCruncher/26.2` (worktree `C:\repos\DynamicSurroundingsFabric-26.2`): where features land first. Merge it into this
+  branch for its features and fixes, resolving against 1.21.11's APIs (the backport note above); never merge this
+  branch back into it (that would bring the downgrades with it): cherry-pick a fix made here. The realistic aurora
+  (`effects/aurora/RealisticAurora*`, `/dsaurora`, `auroraOptions.style` and its groups) stays out of this branch:
+  on a merge, drop what it brings of that.
+- `main`: the 1.21.1 line, frozen at 0.4.8 (tag `1.21.1-0.4.8`); a hotfix there would be 0.4.9, the old numbering.
 - Biome dumps: `python scripts/dump-diff.py OLD NEW [--sounds]` lists only what changed (traits, their sources, the
   "Biomes to check" list); `--keep DUMP` saves a copy to `build/dumps` before the next dump overwrites it.
-- `OreCruncher/26.2`: the 26.2 port, started from 0.4.5 and carrying 0.4.6, 0.4.7 and 0.4.8 (NeoForge 26.2.0.82, Architectury
-  21.1.10, Cloth Config 26.2.155). NeoForge 26.2's client launch class is `net.neoforged.fml.startup.Client`.
-  `mod_version` is still 0.5.0 from before the 5.x numbering; set it to the 5.x release it ships as (see Versions).
 
 ## Versions
 - `MAJOR.MINOR.PATCH` from 5.0.0, the first 1.21.11 release. The 0.x releases used the third number for every release,

@@ -40,7 +40,7 @@ public abstract class MixinSoundEngine {
     @Unique
     private static final AudioDeviceRetry dsurround$deviceRetry = new AudioDeviceRetry(() -> MixinHelpers.soundSystemConfig.throttleDeviceRetries, System::nanoTime);
 
-    @Inject(method = "loadLibrary()V", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/audio/Library;init(Ljava/lang/String;Lcom/mojang/blaze3d/audio/DeviceList;Z)V", shift = At.Shift.AFTER))
+    @Inject(method = "loadLibrary()V", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/audio/Library;init(Ljava/lang/String;Z)V", shift = At.Shift.AFTER))
     public void dsurround$init(CallbackInfo ci) {
         dsurround$deviceRetry.started();
         AudioUtilities.initialize(this.library);

@@ -39,11 +39,11 @@ public final class GameUtils {
     }
 
     public static Optional<Screen> getCurrentScreen() {
-        return Optional.ofNullable(getMC().gui.screen());
+        return Optional.ofNullable(getMC().screen);
     }
 
     public static void setScreen(Screen screen) {
-        getMC().gui.setScreen(screen);
+        getMC().setScreen(screen);
     }
 
     public static ParticleEngine getParticleManager() {
@@ -55,7 +55,7 @@ public final class GameUtils {
     }
 
     public static ToastManager getToastManager() {
-        return getMC().gui.toastManager();
+        return getMC().getToastManager();
     }
 
     public static Options getGameSettings() {

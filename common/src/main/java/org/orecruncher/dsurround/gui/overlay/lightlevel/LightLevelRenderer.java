@@ -3,10 +3,12 @@ package org.orecruncher.dsurround.gui.overlay.lightlevel;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.core.Direction;
 import org.joml.Matrix4f;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 /**
@@ -42,10 +44,10 @@ public final class LightLevelRenderer {
     }
 
     /**
-     * Submits the numbers if the overlay is on. Called outside any render pass, so the atlas can be drawn first if
-     * the font has changed.
+     * Submits the numbers if the overlay is on, those in sections inside {@code frustum}, the one the level is culled
+     * by. Called outside any render pass, so the atlas can be drawn first if the font has changed.
      */
-    public static void submit(SubmitNodeCollector collector, CameraRenderState camera) {
+    public static void submit(SubmitNodeCollector collector, CameraRenderState camera, Frustum frustum) {
         var overlay = Services.OVERLAY;
         if (!overlay.isOn())
             return;
@@ -53,7 +55,7 @@ public final class LightLevelRenderer {
         if (!overlay.isDrawing())
             return;
 
-        var heading = Direction.fromYRot(camera.yRot);
+        var heading = Direction.fromYRot(GameUtils.getMC().gameRenderer.getMainCamera().yRot());
         int turns = LightLevels.quarterTurns(heading.get2DDataValue());
         for (int corner = 0; corner < 4; corner++) {
             int cell = LightLevels.cellCorner(DRAW_ORDER[corner], turns);
@@ -61,7 +63,6 @@ public final class LightLevelRenderer {
             CORNER_V[corner] = cell >= 2 ? CELL : 0F;
         }
 
-        var frustum = camera.cullFrustum;
         double camX = camera.pos.x, camY = camera.pos.y, camZ = camera.pos.z;
         collector.submitCustomGeometry(new PoseStack(), RenderTypes.textPolygonOffset(LightLevelAtlas.ID), (pose, consumer) -> {
             var matrix = pose.pose();

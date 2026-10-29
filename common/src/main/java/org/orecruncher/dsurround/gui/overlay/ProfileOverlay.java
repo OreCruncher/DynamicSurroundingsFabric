@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.gui.overlay;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.Nullable;
@@ -31,7 +31,7 @@ public class ProfileOverlay extends AbstractOverlay {
     private int shownWidth;
 
     @Override
-    public void render(GuiGraphicsExtractor context, float partialTick) {
+    public void render(GuiGraphics context, float partialTick) {
         var state = Profiler.state();
         if (state == Profiler.State.IDLE)
             return;
@@ -48,6 +48,6 @@ public class ProfileOverlay extends AbstractOverlay {
             this.shownSeconds = left;
         }
         var color = state == Profiler.State.WAITING ? WAITING_COLOR : RECORDING_COLOR;
-        context.text(font, this.shown, (context.guiWidth() - this.shownWidth) / 2, TOP, color);
+        context.drawString(font, this.shown, (context.guiWidth() - this.shownWidth) / 2, TOP, color);
     }
 }

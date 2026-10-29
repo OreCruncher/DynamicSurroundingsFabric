@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.Configuration;
@@ -54,7 +54,7 @@ public final class DeathPuffs {
             return false;
 
         // Particles go straight to the particle engine, which skips vanilla's distance check, so apply it here
-        var camera = GameUtils.getMC().gameRenderer.mainCamera().position();
+        var camera = GameUtils.getMC().gameRenderer.getMainCamera().position();
         if (camera.distanceToSqr(entity.getX(), entity.getY(), entity.getZ()) > PARTICLE_RANGE_SQ)
             return true;
 

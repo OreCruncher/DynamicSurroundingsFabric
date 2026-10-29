@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.gui.overlay.lightlevel;
 
 import it.unimi.dsi.fastutil.longs.LongCollection;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -187,7 +187,7 @@ public final class LightLevelOverlay extends AbstractOverlay {
         int skyDarken = current.isThundering() ? LightLevels.THUNDER_SKY : current.getSkyDarken();
         var dimension = current.dimensionType();
         LightLevels.fillTables(this.colors, this.values, options.mode, options.colors, options.hideSafe, skyDarken,
-                dimension.monsterSpawnBlockLightLimit(), dimension.monsterSpawnLightTest().maxInclusive());
+                dimension.monsterSpawnBlockLightLimit(), dimension.monsterSpawnLightTest().getMaxValue());
 
         // Out of the way of the F3 screen, as the diagnostics are
         this.legendShown = options.showLegend && this.atlas.isReady() && !client.getDebugOverlay().showDebugScreen();
@@ -220,13 +220,13 @@ public final class LightLevelOverlay extends AbstractOverlay {
     }
 
     @Override
-    public void render(GuiGraphicsExtractor context, float partialTick) {
+    public void render(GuiGraphics context, float partialTick) {
         // The numbers themselves are drawn in the world
         if (this.legendShown && this.enabled)
             this.renderLegend(context);
     }
 
-    private void renderLegend(GuiGraphicsExtractor context) {
+    private void renderLegend(GuiGraphics context) {
         var font = GameUtils.getTextRenderer();
         int lineHeight = font.lineHeight;
         int width = this.legendWidth + 2 * LEGEND_PADDING;
@@ -246,14 +246,14 @@ public final class LightLevelOverlay extends AbstractOverlay {
         context.fill(left, top, right, bottom, LEGEND_BACKGROUND);
         int x = left + LEGEND_PADDING;
         int y = top + LEGEND_PADDING;
-        context.text(font, this.legendText.get(0), x, y, LEGEND_TEXT, false);
+        context.drawString(font, this.legendText.get(0), x, y, LEGEND_TEXT, false);
         for (int i = 1; i < this.legendText.size(); i++) {
             y += lineHeight;
             // A swatch with a dark edge, as the numbers have; as tall as a capital letter, so level with the text
             int swatchTop = y;
             context.fill(x, swatchTop, x + SWATCH_SIZE, swatchTop + SWATCH_SIZE, 0xFF000000);
             context.fill(x + 1, swatchTop + 1, x + SWATCH_SIZE - 1, swatchTop + SWATCH_SIZE - 1, this.legendColors[i - 1]);
-            context.text(font, this.legendText.get(i), x + SWATCH_SIZE + SWATCH_GAP, y, LEGEND_TEXT, false);
+            context.drawString(font, this.legendText.get(i), x + SWATCH_SIZE + SWATCH_GAP, y, LEGEND_TEXT, false);
         }
     }
 
@@ -274,7 +274,7 @@ public final class LightLevelOverlay extends AbstractOverlay {
 
     private void chunkLoaded(ClientLevel level, ChunkPos chunkPos) {
         if (this.enabled)
-            this.field.chunkChanged(chunkPos.x(), chunkPos.z());
+            this.field.chunkChanged(chunkPos.x, chunkPos.z);
     }
 
     private void onCollect(CollectDiagnosticsEvent event) {

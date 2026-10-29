@@ -1,16 +1,16 @@
 package org.orecruncher.dsurround.gui.overlay;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.CompassStyle;
-import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.Randomizer;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
 
 /**
@@ -144,7 +144,7 @@ public final class CompassOverlay extends AbstractOverlay {
     }
 
     @Override
-    public void render(GuiGraphicsExtractor context, float partialTick) {
+    public void render(GuiGraphics context, float partialTick) {
         if (!this.showCompass)
             return;
 
@@ -172,7 +172,7 @@ public final class CompassOverlay extends AbstractOverlay {
         }
     }
 
-    private void renderBand(GuiGraphicsExtractor context, float rotation, float x, float y) {
+    private void renderBand(GuiGraphics context, float rotation, float x, float y) {
         // Which part of the band to show: the heading, as a position across the texture
         int u = Mth.floor(((rotation * TEXTURE_SIZE) / 360F) + 0.5D) & (TEXTURE_SIZE - 1);
         float v = this.style.getSpriteNumber() * (BAND_HEIGHT * 2);
@@ -192,7 +192,7 @@ public final class CompassOverlay extends AbstractOverlay {
         }
     }
 
-    private void renderRose(GuiGraphicsExtractor context, float rotation, float x, float y, float size, float tilt) {
+    private void renderRose(GuiGraphics context, float rotation, float x, float y, float size, float tilt) {
         var pose = context.pose();
         pose.pushMatrix();
         try {

@@ -1,22 +1,19 @@
 package org.orecruncher.dsurround.effects.lightning;
 
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
 import com.mojang.blaze3d.pipeline.BlendFunction;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
-import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.platform.BlendFactor;
-import com.mojang.blaze3d.platform.CompareOp;
+import com.mojang.blaze3d.platform.DestFactor;
+import com.mojang.blaze3d.platform.SourceFactor;
+import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Camera;
-import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
@@ -49,10 +46,8 @@ import java.util.function.Consumer;
 public final class LightningRenderer {
 
     private static final String NOISE_SAMPLER = "NoiseSampler";
-    private static final BindGroupLayout NOISE_LAYOUT = BindGroupLayout.builder().withSampler(NOISE_SAMPLER).build();
     // Light, added to what is there
-    private static final BlendFunction ADD = new BlendFunction(BlendFactor.ONE, BlendFactor.ONE);
-    private static final DepthStencilState TEST_ONLY = new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false);
+    private static final BlendFunction ADD = new BlendFunction(SourceFactor.ONE, DestFactor.ONE);
 
     // Channels, with their white core, and the cloud's glow, without; each as is, and for Fabulous graphics, where the
     // light comes with next to no alpha (not none, or the transparency pass skips the pixel) and depth is written so
@@ -124,18 +119,18 @@ public final class LightningRenderer {
                 .withLocation(Constants.asId(location))
                 .withVertexShader(Constants.asId("core/lightning"))
                 .withFragmentShader(Constants.asId("core/lightning"))
-                .withBindGroupLayout(BindGroupLayouts.GLOBALS)
-                .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
-                .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
-                .withPrimitiveTopology(PrimitiveTopology.QUADS)
-                .withColorTargetState(new ColorTargetState(ADD))
-                .withDepthStencilState(fabulous ? DepthStencilState.DEFAULT : TEST_ONLY)
+                .withUniform("Globals", UniformType.UNIFORM_BUFFER)
+                .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
+                .withUniform("Projection", UniformType.UNIFORM_BUFFER)
+                .withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
+                .withBlend(ADD)
+                .withDepthWrite(fabulous)
                 .withCull(false);
         // The cloud's glow reads noise for its texture; the channels need nothing more
         if (channels)
             builder.withShaderDefine("CORE");
         else
-            builder.withBindGroupLayout(NOISE_LAYOUT);
+            builder.withSampler(NOISE_SAMPLER);
         if (fabulous)
             builder.withShaderDefine("ADD_ONLY");
         return builder.build();
@@ -189,7 +184,7 @@ public final class LightningRenderer {
     private static BufferBuilder builder() {
         if (meshBytes == null)
             meshBytes = new ByteBufferBuilder(INITIAL_BYTES);
-        return new BufferBuilder(meshBytes, PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        return new BufferBuilder(meshBytes, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
     }
 
     private static int drawChannels(RenderPipeline pipeline, List<Strike> strikes, Camera camera, RenderTarget target,

@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
-import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -27,7 +27,7 @@ public class ParticleQuadsTests {
     void theBytesAreThoseABufferBuilderWrites() {
         byte[] expected;
         try (var bytes = new ByteBufferBuilder(1024)) {
-            var builder = new BufferBuilder(bytes, PrimitiveTopology.QUADS, DefaultVertexFormat.PARTICLE);
+            var builder = new BufferBuilder(bytes, VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
             for (int k = 0; k < CORNERS.length; k++) {
                 var c = CORNERS[k];
                 builder.addVertex(c[0], c[1], c[2]).setUv(c[3], c[4]).setColor(c[5], c[6], c[7], c[8]).setLight(LIGHTS[k]);

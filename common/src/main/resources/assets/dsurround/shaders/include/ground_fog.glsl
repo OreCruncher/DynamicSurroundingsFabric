@@ -34,7 +34,7 @@ layout(std140) uniform GroundFogInfo {
     float WriteDepth;
 };
 
-// How far nothing is: the sky, whose depth is 0 (the depth is reversed: near is 1), can't be turned into a distance
+// How far nothing is: the sky, whose depth is 1 (the far plane), can't be turned into a distance
 const float FAR_AWAY = 1.0e6;
 
 // A depth buffer value as normalized device coordinates' z
@@ -52,7 +52,7 @@ float ndc_to_depth(float ndc) {
 float distance_at(sampler2D depthSampler, ivec2 pixel, vec4 depthRowZ, vec4 depthRowW) {
     pixel = clamp(pixel, ivec2(0), ivec2(FullSize) - 1);
     float depth = texelFetch(depthSampler, pixel, 0).r;
-    if (depth <= 0.0) {
+    if (depth >= 1.0) {
         return FAR_AWAY;
     }
     vec2 uv = (vec2(pixel) + 0.5) / FullSize;

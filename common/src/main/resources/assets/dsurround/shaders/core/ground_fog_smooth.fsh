@@ -7,20 +7,25 @@
 // the edge.
 // The composite (ground_fog_composite) then lays it over the scene at full size.
 //
-// How far each of its pixels' lines of sight went, the march wrote alongside the mist (DistanceSampler).
+// Its pixel at (i, j) followed the line of sight to the screen's pixel at (Scale i, Scale j), so how far that went is
+// read from the scene's depth there.
 
 #moj_import <dsurround:ground_fog.glsl>
 
 uniform sampler2D MistSampler;
 uniform sampler2D MistDepthSampler;
-// How far along the view each of the mist's pixels' line of sight went, from the march
-uniform sampler2D DistanceSampler;
+uniform sampler2D DepthSampler;
+
+// Two rows of the projection's inverse (ground_fog_screen): for a pixel at (x, y, depth) on the screen, how far along
+// the view it is
+flat in vec4 depthRowZ;
+flat in vec4 depthRowW;
 
 out vec4 fragColor;
 
 // How far along the view the line of sight through one of the mist's pixels went, in blocks
 float distanceAt(ivec2 at) {
-    return texelFetch(DistanceSampler, at, 0).r;
+    return distance_at(DepthSampler, at * int(Scale), depthRowZ, depthRowW);
 }
 
 void main() {

@@ -2,13 +2,13 @@ package org.orecruncher.dsurround.effects.footprints;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
@@ -132,7 +132,7 @@ public final class Footprints {
             this.prints.pollFirst();
         // Where the print is: above a full block, in a snow layer
         var above = BlockPos.containing(x, y, z);
-        int light = LightCoordsUtil.getLightCoords(level, above);
+        int light = LevelRenderer.getLightColor(level, above);
         boolean rains = level.getBiome(above).value().getPrecipitationAt(above, level.getSeaLevel()) == Biome.Precipitation.RAIN;
         float washing = rains ? Shelter.exposure(level, above) : 0F;
         this.prints.addLast(new Print(x, y + LIFT, z, yawDegrees, scale, style, rightFoot, light, ground.immutable(),

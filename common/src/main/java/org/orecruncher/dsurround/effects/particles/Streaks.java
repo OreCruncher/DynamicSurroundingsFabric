@@ -21,7 +21,7 @@ import org.orecruncher.dsurround.effects.precipitation.ParticleQuads;
  * A particle on 26.2 hands the particle engine a square facing the camera; a streak is a long quad along a path, with
  * its ends colored differently. So a streak is {@link #add added} here as its particle is extracted for drawing,
  * relative to the camera, and all of them are drawn together just before the translucent particles ({@link #draw},
- * from MixinQuadParticleFeatureRenderer, as the point lights are), the way the flames are: soft, adding their light,
+ * from MixinParticleFeatureRenderer, as the point lights are), the way the flames are: soft, adding their light,
  * and with Fabulous graphics their depth first. Render thread only.
  */
 public final class Streaks {
@@ -97,7 +97,7 @@ public final class Streaks {
      * Draws the streaks recorded this frame into {@code target}, then forgets them. Called outside any render pass,
      * after the scene's depth has been captured.
      *
-     * @param transforms the camera's, as the particles are drawn with them (see MixinQuadParticleFeatureRenderer)
+     * @param transforms the camera's, as the particles are drawn with them (see MixinParticleFeatureRenderer)
      */
     public static void draw(RenderTarget target, GpuBufferSlice transforms) {
         if (!begun)
@@ -113,7 +113,7 @@ public final class Streaks {
         var depth = SoftParticles.depthPassFor(color);
         var minecraft = Minecraft.getInstance();
         var atlas = minecraft.getTextureManager().getTexture(TextureAtlas.LOCATION_PARTICLES);
-        var lightmap = minecraft.gameRenderer.lightmap();
+        var lightmap = minecraft.gameRenderer.lightTexture().getTextureView();
         var lightmapSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR);
         RENDER_TIMER.begin();
         FAIL_SAFE.run(() -> {

@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.lib.gui;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastManager;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -92,7 +92,7 @@ public final class WarmToast implements Toast {
         this.width = Math.max(titleSize, lineSize) + MARGIN * 3;
     }
 
-    public void extractRenderState(final @NonNull GuiGraphicsExtractor guiGraphics, final @NonNull Font font, final long fullyVisibleForMs) {
+    public void render(final @NonNull GuiGraphics guiGraphics, final @NonNull Font font, final long fullyVisibleForMs) {
         int i = this.width();
         if (i == 160 && this.messageLines.size() <= 1) {
             guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, this.profile.sprite, 0, 0, i, this.height());
@@ -116,7 +116,7 @@ public final class WarmToast implements Toast {
         }
     }
 
-    private void renderBackgroundRow(GuiGraphicsExtractor guiGraphics, int i, int j, int k, int l) {
+    private void renderBackgroundRow(GuiGraphics guiGraphics, int i, int j, int k, int l) {
         int m = j == 0 ? 20 : 5;
         int n = Math.min(60, i - m);
         guiGraphics.blit(this.profile.sprite, 160, 32, 0, j, 0, k, m, l);
@@ -128,9 +128,9 @@ public final class WarmToast implements Toast {
         guiGraphics.blit(this.profile.sprite, 160, 32, 160 - n, j, i - n, k, n, l);
     }
 
-    private void extractTextLines(final GuiGraphicsExtractor graphics, final Font font, final List<FormattedCharSequence> textLines, final int yStart, final int textColor) {
+    private void extractTextLines(final GuiGraphics graphics, final Font font, final List<FormattedCharSequence> textLines, final int yStart, final int textColor) {
         for(int i = 0; i < textLines.size(); ++i) {
-            graphics.text(font, (FormattedCharSequence)textLines.get(i), 18, yStart + i * 12, textColor, false);
+            graphics.drawString(font, (FormattedCharSequence)textLines.get(i), 18, yStart + i * 12, textColor, false);
         }
     }
 

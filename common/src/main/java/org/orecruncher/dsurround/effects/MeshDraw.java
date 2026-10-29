@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.effects;
 
-import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
@@ -8,11 +7,12 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.MeshData;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
-import java.util.Optional;
 import java.util.OptionalDouble;
+import java.util.OptionalInt;
 import java.util.function.Consumer;
 
 /**
@@ -42,7 +42,7 @@ public final class MeshDraw implements AutoCloseable {
      */
     public void draw(MeshData mesh, RenderPipeline pipeline, RenderTarget target, Consumer<RenderPass> bind) {
         try (mesh) {
-            this.draw(mesh.vertexBuffer(), mesh.drawState().indexCount(), mesh.drawState().primitiveTopology(), pipeline, target, cameraTransforms(), bind);
+            this.draw(mesh.vertexBuffer(), mesh.drawState().indexCount(), mesh.drawState().mode(), pipeline, target, cameraTransforms(), bind);
         }
     }
 
@@ -53,7 +53,7 @@ public final class MeshDraw implements AutoCloseable {
      */
     public void drawQuads(ByteBuffer vertices, int vertexCount, RenderPipeline pipeline, RenderTarget target, Consumer<RenderPass> bind) {
         if (vertexCount > 0)
-            this.draw(vertices, vertexCount / 4 * 6, PrimitiveTopology.QUADS, pipeline, target, cameraTransforms(), bind);
+            this.draw(vertices, vertexCount / 4 * 6, VertexFormat.Mode.QUADS, pipeline, target, cameraTransforms(), bind);
     }
 
     /**
@@ -62,28 +62,28 @@ public final class MeshDraw implements AutoCloseable {
      */
     public void drawQuads(ByteBuffer vertices, int vertexCount, RenderPipeline pipeline, RenderTarget target, GpuBufferSlice transforms, Consumer<RenderPass> bind) {
         if (vertexCount > 0)
-            this.draw(vertices, vertexCount / 4 * 6, PrimitiveTopology.QUADS, pipeline, target, transforms, bind);
+            this.draw(vertices, vertexCount / 4 * 6, VertexFormat.Mode.QUADS, pipeline, target, transforms, bind);
     }
 
     private static GpuBufferSlice cameraTransforms() {
-        return RenderSystem.getDynamicUniforms().writeTransform(RenderSystem.getModelViewMatrixCopy());
+        return Transforms.camera();
     }
 
-    private void draw(ByteBuffer vertices, int indexCount, PrimitiveTopology topology, RenderPipeline pipeline, RenderTarget target,
+    private void draw(ByteBuffer vertices, int indexCount, VertexFormat.Mode topology, RenderPipeline pipeline, RenderTarget target,
                       GpuBufferSlice transforms, Consumer<RenderPass> bind) {
         var buffer = this.upload(vertices);
         var indices = RenderSystem.getSequentialBuffer(topology);
         var indexBuffer = indices.getBuffer(indexCount);
 
         try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder()
-                .createRenderPass(() -> "Dynamic Surroundings " + this.name, target.getColorTextureView(), Optional.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
+                .createRenderPass(() -> "Dynamic Surroundings " + this.name, target.getColorTextureView(), OptionalInt.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
             pass.setPipeline(pipeline);
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", transforms);
             bind.accept(pass);
-            pass.setVertexBuffer(0, buffer.slice());
+            pass.setVertexBuffer(0, buffer);
             pass.setIndexBuffer(indexBuffer, indices.type());
-            pass.drawIndexed(indexCount, 1, 0, 0, 0);
+            pass.drawIndexed(0, 0, indexCount, 1);
         }
     }
 

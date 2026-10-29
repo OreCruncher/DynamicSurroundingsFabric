@@ -9,23 +9,20 @@ import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import net.minecraft.client.renderer.rendertype.OutputTarget;
-import org.orecruncher.dsurround.effects.MeshDraw;
-import java.util.function.Consumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.rendertype.OutputTarget;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
+import org.orecruncher.dsurround.effects.MeshDraw;
 import org.orecruncher.dsurround.effects.particles.DSurroundParticleSprites;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
 import org.orecruncher.dsurround.effects.precipitation.AfterRainDrips;
@@ -46,19 +43,20 @@ import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
-import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
-import org.orecruncher.dsurround.lib.threading.Worker;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
+import org.orecruncher.dsurround.lib.threading.Worker;
+import org.orecruncher.dsurround.mixinutils.OptionalHook;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WindService;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 /**
  * Rain and snow drawn as individual drops in place of vanilla's sheets of falling texture (see
@@ -176,7 +174,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
             this.windowStreaks.clear();
         }
 
-        var camera = GameUtils.getMC().gameRenderer.mainCamera();
+        var camera = GameUtils.getMC().gameRenderer.getMainCamera();
         if (!camera.isInitialized() || !(player.level() instanceof ClientLevel level))
             return;
 
@@ -304,9 +302,9 @@ public class PrecipitationHandler extends AbstractClientHandler {
             return false;
 
         var minecraft = GameUtils.getMC();
-        var camera = minecraft.gameRenderer.mainCamera();
+        var camera = minecraft.gameRenderer.getMainCamera();
         var partialTick = minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false);
-        var fabulous = minecraft.gameRenderer.gameRenderState().useShaderTransparency();
+        var fabulous = Minecraft.useShaderTransparency();
         var target = OutputTarget.WEATHER_TARGET.getRenderTarget();
         if (this.meshBytes == null)
             this.meshBytes = new ByteBufferBuilder(this.field.capacity() * 4 * DefaultVertexFormat.PARTICLE.getVertexSize());
@@ -350,7 +348,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
         var scales = scales(options);
         var rainColor = RainColor.ofTint(options.rainTint);
         var textures = GameUtils.getTextureManager();
-        var lightmap = GameUtils.getMC().gameRenderer.lightmap();
+        var lightmap = GameUtils.getMC().gameRenderer.lightTexture().getTextureView();
         var lightmapSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR);
 
         if (!fabulous)
@@ -382,7 +380,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
         // Soft if it can be, reading the scene's depth, water included. With Fabulous graphics the weather's own
         // target has no depth of its own; the translucent target has the scene's, with the water's drawn over it.
         var soft = PrecipitationShaders.fabulous(fabulous, PrecipitationShaders.DUST, PrecipitationShaders.DUST_DEPTH);
-        var depthSource = fabulous ? GameUtils.getMC().levelRenderer.translucentTarget() : target;
+        var depthSource = fabulous ? GameUtils.getMC().levelRenderer.getTranslucentTarget() : target;
         boolean isSoft = soft.isUsable() && depthSource != null && SoftParticles.captureDepth(depthSource);
         var dustPipeline = isSoft ? soft.pipeline() : pipeline;
         var quads = this.meshes.quads(this.field, camera, partialTick, true, flakes, largest, dust, scales, rainColor);

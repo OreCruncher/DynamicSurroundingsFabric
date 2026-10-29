@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.effects.particles;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.SingleQuadParticle;
-import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
+import net.minecraft.client.renderer.state.QuadParticleRenderState;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
@@ -77,16 +77,16 @@ public abstract class SoftPuffParticle extends SingleQuadParticle {
         this.oRoll = this.roll;
         this.roll += this.rollSpeed;
         if (this.light != UNREAD && (this.age + this.lightPhase) % LIGHT_TICKS == 0)
-            this.light = super.getLightCoords(0F);
+            this.light = super.getLightColor(0F);
     }
 
     /**
      * Its light where it is, as of the last few ticks (see {@link #LIGHT_TICKS})
      */
     @Override
-    protected int getLightCoords(float partialTick) {
+    protected int getLightColor(float partialTick) {
         if (this.light == UNREAD)
-            this.light = super.getLightCoords(partialTick);
+            this.light = super.getLightColor(partialTick);
         return this.light;
     }
 

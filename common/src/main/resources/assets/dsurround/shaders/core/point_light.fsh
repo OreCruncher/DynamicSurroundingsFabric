@@ -21,8 +21,8 @@ out vec4 fragColor;
 
 void main() {
     float depth = texelFetch(DepthSampler, ivec2(gl_FragCoord.xy), 0).r;
-    // Nothing there but sky: the depth buffer is cleared to 0, the far end of its range
-    if (depth <= 0.0) {
+    // Nothing there but sky: the depth buffer is cleared to 1, the far end of its range
+    if (depth >= 1.0) {
         discard;
     }
 

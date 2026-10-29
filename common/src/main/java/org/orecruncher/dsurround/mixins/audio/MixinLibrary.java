@@ -32,7 +32,7 @@ public class MixinLibrary {
      * @param v Existing value for the number of streaming sounds (should be 8)
      * @return The quantity of streaming sounds (should be at least 8)
      */
-    @ModifyConstant(method = "init(Ljava/lang/String;Lcom/mojang/blaze3d/audio/DeviceList;Z)V", constant = @Constant(intValue = 8))
+    @ModifyConstant(method = "init(Ljava/lang/String;Z)V", constant = @Constant(intValue = 8))
     public int dsurround$initialize(int v) {
         var config = ContainerManager.resolve(Configuration.SoundSystem.class);
         return config.streamingChannels;

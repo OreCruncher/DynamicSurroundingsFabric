@@ -9,13 +9,13 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.eventing.IClientLevelLoad;
-import org.orecruncher.dsurround.lib.function.CachingSupplier;
-import org.orecruncher.dsurround.lib.time.DayCycle;
+import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
+import org.orecruncher.dsurround.lib.function.CachingSupplier;
+import org.orecruncher.dsurround.lib.time.DayCycle;
 import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 
@@ -32,8 +32,8 @@ public final class LevelOracle implements ILevelOracle {
         this.level = CachingSupplier.from(() -> GameUtils.getMC().level);
 
         // Hook the level load event so that we can clear cached information
-        IClientLevelLoad.EVENT.register(_ -> this.level.clear(), HandlerPriority.HIGH);
-        IReloadEvent.EVENT.register((_, _) -> this.level.clear(), HandlerPriority.HIGH);
+        IClientLevelLoad.EVENT.register(ignored -> this.level.clear(), HandlerPriority.HIGH);
+        IReloadEvent.EVENT.register((resources, scope) -> this.level.clear(), HandlerPriority.HIGH);
     }
 
     @Override
@@ -44,7 +44,7 @@ public final class LevelOracle implements ILevelOracle {
     @Override
     public long worldTime() {
         // The day clock, as Level.getDayTime() was: follows /time set and sleeping through the night
-        return this.level.get().getDefaultClockTime();
+        return this.level.get().getDayTime();
     }
 
     @Override

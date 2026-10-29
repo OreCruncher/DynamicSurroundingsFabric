@@ -1,7 +1,6 @@
 package org.orecruncher.dsurround.effects.entity;
 
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
@@ -53,36 +52,36 @@ public final class Muzzle {
         // Cow: head pivot (0, 4, -8), its snout 7 out, the mouth 2.5 below the pivot (1.21.1's cow has no snout:
         // its face is 6 out)
         var cow = Profile.model(-8, 4, -7, 2.5);
-        PROFILES.put(EntityTypes.COW, cow);
-        PROFILES.put(EntityTypes.MOOSHROOM, cow);
-        PROFILES.put(EntityTypes.SHEEP, Profile.model(-8, 6, -6, 1));
+        PROFILES.put(EntityType.COW, cow);
+        PROFILES.put(EntityType.MOOSHROOM, cow);
+        PROFILES.put(EntityType.SHEEP, Profile.model(-8, 6, -6, 1));
         // The snout sticks out past the face
-        PROFILES.put(EntityTypes.PIG, Profile.model(-6, 12, -9, 1.5));
+        PROFILES.put(EntityType.PIG, Profile.model(-6, 12, -9, 1.5));
         // The nose is its own part, hung off the head and tipped 55 degrees down
-        PROFILES.put(EntityTypes.GOAT, Profile.model(0, 14, -12.6, -1.45));
+        PROFILES.put(EntityType.GOAT, Profile.model(0, 14, -12.6, -1.45));
         // The head and neck are tipped 30 degrees forward on top of the pitch; renderers scale the horse up and the
         // donkey and mule down
-        PROFILES.put(EntityTypes.HORSE, Profile.model(-12, 4, -9.56, -2.56, 1.1D));
-        PROFILES.put(EntityTypes.DONKEY, Profile.model(-12, 4, -9.56, -2.56, 0.87D));
-        PROFILES.put(EntityTypes.MULE, Profile.model(-12, 4, -9.56, -2.56, 0.92D));
+        PROFILES.put(EntityType.HORSE, Profile.model(-12, 4, -9.56, -2.56, 1.1D));
+        PROFILES.put(EntityType.DONKEY, Profile.model(-12, 4, -9.56, -2.56, 0.87D));
+        PROFILES.put(EntityType.MULE, Profile.model(-12, 4, -9.56, -2.56, 0.92D));
         // Long necks: the head is up at the top
         var llama = Profile.model(-6, 7, -10, -11);
-        PROFILES.put(EntityTypes.LLAMA, llama);
-        PROFILES.put(EntityTypes.TRADER_LLAMA, llama);
-        PROFILES.put(EntityTypes.CAMEL, Profile.model(-10, 1, -21, -17));
-        PROFILES.put(EntityTypes.WOLF, Profile.model(-7, 13.5, -5, 2));
-        PROFILES.put(EntityTypes.FOX, Profile.model(-3, 16.5, -8, 3));
-        PROFILES.put(EntityTypes.CAT, Profile.model(-9, 15, -4, 1, 0.8D));
-        PROFILES.put(EntityTypes.OCELOT, Profile.model(-9, 15, -4, 1));
-        PROFILES.put(EntityTypes.POLAR_BEAR, Profile.model(-16, 10, -6, 2.5, 1.2D));
-        PROFILES.put(EntityTypes.PANDA, Profile.model(-17, 11.5, -6, 3));
+        PROFILES.put(EntityType.LLAMA, llama);
+        PROFILES.put(EntityType.TRADER_LLAMA, llama);
+        PROFILES.put(EntityType.CAMEL, Profile.model(-10, 1, -21, -17));
+        PROFILES.put(EntityType.WOLF, Profile.model(-7, 13.5, -5, 2));
+        PROFILES.put(EntityType.FOX, Profile.model(-3, 16.5, -8, 3));
+        PROFILES.put(EntityType.CAT, Profile.model(-9, 15, -4, 1, 0.8D));
+        PROFILES.put(EntityType.OCELOT, Profile.model(-9, 15, -4, 1));
+        PROFILES.put(EntityType.POLAR_BEAR, Profile.model(-16, 10, -6, 2.5, 1.2D));
+        PROFILES.put(EntityType.PANDA, Profile.model(-17, 11.5, -6, 3));
         // The nose is a plate out in front of the head, at the top
-        PROFILES.put(EntityTypes.SNIFFER, Profile.model(-19.48, 11.5, -20.5, -5.5));
+        PROFILES.put(EntityType.SNIFFER, Profile.model(-19.48, 11.5, -20.5, -5.5));
         // The snout hangs down, tipped back a little
-        PROFILES.put(EntityTypes.ARMADILLO, Profile.model(-7, 19, -1.53, 3.7));
+        PROFILES.put(EntityType.ARMADILLO, Profile.model(-7, 19, -1.53, 3.7));
         // Held 50 degrees down whatever it looks at
-        PROFILES.put(EntityTypes.HOGLIN, Profile.model(-12, 2, -12.2, 14.55, 1D, false));
-        PROFILES.put(EntityTypes.RAVAGER, Profile.model(-11.5, 9, -14, -0.5));
+        PROFILES.put(EntityType.HOGLIN, Profile.model(-12, 2, -12.2, 14.55, 1D, false));
+        PROFILES.put(EntityType.RAVAGER, Profile.model(-11.5, 9, -14, -0.5));
     }
 
     private Muzzle() {

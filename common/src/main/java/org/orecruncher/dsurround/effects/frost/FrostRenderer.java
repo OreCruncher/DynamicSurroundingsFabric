@@ -1,18 +1,15 @@
 package org.orecruncher.dsurround.effects.frost;
 
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
 import com.mojang.blaze3d.pipeline.BlendFunction;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
-import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.platform.CompareOp;
+import com.mojang.blaze3d.platform.DepthTestFunction;
+import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Camera;
-import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.Constants;
@@ -36,8 +33,6 @@ import java.util.function.Predicate;
  */
 public final class FrostRenderer {
 
-    private static final BindGroupLayout DEPTH_COPY_LAYOUT = BindGroupLayout.builder().withSampler("DepthSampler").build();
-
     /**
      * Drawn after the translucent blocks (without Fabulous graphics all frost, with it the frost on stained glass), its
      * depth tested in the shader against the scene's from before them (DEPTH_COPY, bound as DepthSampler), not by the
@@ -46,12 +41,12 @@ public final class FrostRenderer {
     public static final ModShader SHADER = new ModShader(
             pipeline("pipeline/window_frost")
                     .withShaderDefine("DEPTH_COPY")
-                    .withBindGroupLayout(DEPTH_COPY_LAYOUT)
-                    .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
+                    .withSampler("DepthSampler")
+                    .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST).withDepthWrite(false)
                     .build(),
             "window frost", "windows will not frost", Library.LOGGER);
     public static final ModShader SHADER_DEPTH = new ModShader(
-            pipeline("pipeline/window_frost_depth_write").withDepthStencilState(DepthStencilState.DEFAULT).build(),
+            pipeline("pipeline/window_frost_depth_write").withDepthWrite(true).build(),
             "window frost (Fabulous)", "windows will not frost", Library.LOGGER);
 
     /**
@@ -97,13 +92,14 @@ public final class FrostRenderer {
                 .withVertexShader(Constants.asId("core/window_frost"))
                 .withFragmentShader(Constants.asId("core/window_frost"))
                 .withShaderDefine("FADE_DISTANCE", (float) FrostField.RANGE)
-                .withBindGroupLayout(BindGroupLayouts.GLOBALS)
-                .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
-                .withBindGroupLayout(BindGroupLayouts.FOG)
-                .withBindGroupLayout(BindGroupLayouts.SAMPLER0_SAMPLER2)
-                .withVertexBinding(0, DefaultVertexFormat.PARTICLE)
-                .withPrimitiveTopology(PrimitiveTopology.QUADS)
-                .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA))
+                .withUniform("Globals", UniformType.UNIFORM_BUFFER)
+                .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
+                .withUniform("Projection", UniformType.UNIFORM_BUFFER)
+                .withUniform("Fog", UniformType.UNIFORM_BUFFER)
+                .withSampler("Sampler0")
+                .withSampler("Sampler2")
+                .withVertexFormat(DefaultVertexFormat.PARTICLE, VertexFormat.Mode.QUADS)
+                .withBlend(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA)
                 .withCull(false);
     }
 
@@ -117,7 +113,7 @@ public final class FrostRenderer {
         var cam = camera.position();
         float range = FrostField.RANGE;
         float rangeSq = range * range;
-        BufferBuilder builder = new BufferBuilder(bytes, PrimitiveTopology.QUADS, DefaultVertexFormat.PARTICLE);
+        BufferBuilder builder = new BufferBuilder(bytes, VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
         int[] drawn = {0};
         field.forEachFace(face -> {
             if (face.shown < MIN_SHOWN || !which.test(face))

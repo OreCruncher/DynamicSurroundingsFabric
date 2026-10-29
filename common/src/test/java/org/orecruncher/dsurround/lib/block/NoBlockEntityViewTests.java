@@ -6,7 +6,7 @@ import net.minecraft.server.Bootstrap;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.entity.BlockEntityTypes;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.material.Fluids;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.testing.Fakes;
@@ -38,7 +38,7 @@ public class NoBlockEntityViewTests {
     void neverAsksTheLevelForABlockEntity() {
         var view = new NoBlockEntityView(LEVEL);
         assertNull(view.getBlockEntity(POS));
-        assertTrue(view.getBlockEntity(POS, BlockEntityTypes.BELL).isEmpty());
+        assertTrue(view.getBlockEntity(POS, BlockEntityType.BELL).isEmpty());
     }
 
     @Test

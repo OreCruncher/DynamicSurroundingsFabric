@@ -10,7 +10,7 @@
 // With DEPTH_COPY (without Fabulous graphics), drawn after the translucent blocks with no depth test of its own: tested
 // here against a copy of the scene's depth from before them, so water or stained glass in front of the frost doesn't
 // hide it, while what is solid still does. Both depths come from the same projection, so they are compared as they are
-// (the depth is reversed: nearer is larger).
+// (nearer is smaller).
 
 #moj_import <minecraft:fog.glsl>
 #moj_import <minecraft:dynamictransforms.glsl>
@@ -33,7 +33,7 @@ const float CRYSTAL_ALPHA = 0.85;
 
 void main() {
 #ifdef DEPTH_COPY
-    if (gl_FragCoord.z < texelFetch(DepthSampler, ivec2(gl_FragCoord.xy), 0).r) {
+    if (gl_FragCoord.z > texelFetch(DepthSampler, ivec2(gl_FragCoord.xy), 0).r) {
         discard;
     }
 #endif

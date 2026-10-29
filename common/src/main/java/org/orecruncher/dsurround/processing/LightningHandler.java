@@ -2,6 +2,7 @@ package org.orecruncher.dsurround.processing;
 
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.rendertype.OutputTarget;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -11,8 +12,8 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.attribute.EnvironmentAttributes;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -312,7 +313,7 @@ public class LightningHandler extends AbstractClientHandler {
     }
 
     private static Vec3 cameraPosition() {
-        return GameUtils.getMC().gameRenderer.mainCamera().position();
+        return GameUtils.getMC().gameRenderer.getMainCamera().position();
     }
 
     /**
@@ -359,10 +360,10 @@ public class LightningHandler extends AbstractClientHandler {
             this.toDraw.add(active.strike);
         var minecraft = GameUtils.getMC();
         var partialTick = minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false);
-        var fabulous = minecraft.gameRenderer.gameRenderState().useShaderTransparency();
+        var fabulous = Minecraft.useShaderTransparency();
         // How far the view reaches in this frame's fog, which dims far strikes. And the cloud's glow drawn only when the
         // mod's clouds aren't there to be lit by it (see lightClouds)
-        this.drawn = LightningRenderer.draw(this.toDraw, minecraft.gameRenderer.mainCamera(), OutputTarget.WEATHER_TARGET.getRenderTarget(),
+        this.drawn = LightningRenderer.draw(this.toDraw, minecraft.gameRenderer.getMainCamera(), OutputTarget.WEATHER_TARGET.getRenderTarget(),
                 fabulous, level.getGameTime() + partialTick, this.fogHandler.viewReach(), !this.clouds.isLit());
     }
 
@@ -401,7 +402,7 @@ public class LightningHandler extends AbstractClientHandler {
         var level = GameUtils.getWorld().orElse(null);
         if (level == null || !this.isActive())
             return false;
-        var camera = GameUtils.getMC().gameRenderer.mainCamera();
+        var camera = GameUtils.getMC().gameRenderer.getMainCamera();
         var look = camera.forwardVector();
         double lx = look.x(), lz = look.z();
         double length = Math.sqrt(lx * lx + lz * lz);

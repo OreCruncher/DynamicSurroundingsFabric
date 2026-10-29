@@ -1,9 +1,9 @@
 package org.orecruncher.dsurround.effects.particles;
 
+import net.minecraft.client.particle.*;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.particle.*;
-import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
+import net.minecraft.client.renderer.state.QuadParticleRenderState;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.particles.ParticleTypes;
@@ -134,8 +134,8 @@ public class FireflyParticle extends SimpleAnimatedParticle {
 
     // Lit by its own light while it flashes, however dark it is around it (as GlowParticle)
     @Override
-    public int getLightCoords(float f) {
-        int i = super.getLightCoords(f);
+    public int getLightColor(float f) {
+        int i = super.getLightColor(f);
         int block = i & 0xFF;
         int sky = i >> 16 & 0xFF;
         block = Math.max(block, (int) (this.flash.brightness(this.age + f) * 240F));

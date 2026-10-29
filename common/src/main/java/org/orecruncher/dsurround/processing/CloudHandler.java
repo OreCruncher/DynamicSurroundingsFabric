@@ -12,7 +12,6 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.effects.clouds.CloudField;
 import org.orecruncher.dsurround.effects.clouds.CloudLights;
 import org.orecruncher.dsurround.effects.clouds.CloudRenderer;
@@ -20,6 +19,7 @@ import org.orecruncher.dsurround.effects.clouds.CloudSections;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.runtime.weather.CloudCover;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.UpperWind;
@@ -163,7 +163,7 @@ public class CloudHandler extends AbstractClientHandler {
         }
 
         // What the clouds are like for each step of a biome's wetness, and over the player
-        long dayTime = level.getDefaultClockTime();
+        long dayTime = level.getDayTime();
         float dayCover = CloudCover.dayCover(dayTime);
         this.covers.prepare(level, this.rainLevel, this.thunder, dayTime, dayCover, held, this.dimensionInformation.seaLevel(),
                 player.blockPosition());
@@ -180,7 +180,7 @@ public class CloudHandler extends AbstractClientHandler {
         this.ticks++;
 
         // The cell the camera is under, in cloud space
-        var camera = GameUtils.getMC().gameRenderer.mainCamera().position();
+        var camera = GameUtils.getMC().gameRenderer.getMainCamera().position();
         int cx = Mth.floor((camera.x - this.drift[0]) / CloudField.CELL);
         int cz = Mth.floor((camera.z - this.drift[1]) / CloudField.CELL);
         int radius = this.radius();

@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.gui;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.ActiveTextCollector;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractScrollArea;
 import net.minecraft.client.gui.components.AbstractTextAreaWidget;
 import net.minecraft.client.gui.components.Button;
@@ -82,14 +82,14 @@ public class ComponentDisplayScreen extends Screen {
      */
     @Override
     protected void repositionElements() {
-        int panelWidth = this.width - PANEL_MARGIN_X * 2 - this.textPanel.scrollbarWidth();
+        int panelWidth = this.width - PANEL_MARGIN_X * 2 - AbstractScrollArea.SCROLLBAR_WIDTH;
         int panelHeight = this.layout.getContentHeight() - PANEL_MARGIN_Y * 2;
         this.textPanel.resize(panelWidth, panelHeight);
         this.layout.arrangeElements();
 
         // The scrollbar is drawn outside the widget on the right. Shift left by half its width so the widget and
         // scrollbar together are centered.
-        this.textPanel.setX(this.textPanel.getX() - this.textPanel.scrollbarWidth() / 2);
+        this.textPanel.setX(this.textPanel.getX() - AbstractScrollArea.SCROLLBAR_WIDTH / 2);
     }
 
     @Override
@@ -129,7 +129,7 @@ public class ComponentDisplayScreen extends Screen {
         private int wrapWidth = -1;
 
         TextPanel(Font font, Component body) {
-            super(0, 0, 0, 0, body, AbstractScrollArea.defaultSettings(font.lineHeight * 2));
+            super(0, 0, 0, 0, body);
             this.font = font;
             this.body = body;
         }
@@ -157,24 +157,29 @@ public class ComponentDisplayScreen extends Screen {
             return this.lines.size() * this.font.lineHeight;
         }
 
+        @Override
+        protected double scrollRate() {
+            return this.font.lineHeight * 2;
+        }
+
         /**
          * Same as the vanilla version except that the text is moved by a whole number of pixels. Dragging the
          * scrollbar produces fractional scroll amounts, and text drawn between pixels can shimmer.
          */
         @Override
-        public void extractWidgetRenderState(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        public void renderWidget(@NotNull GuiGraphics context, int mouseX, int mouseY, float delta) {
             if (!this.visible) {
                 return;
             }
-            this.extractBackground(context);
+            this.renderBackground(context);
             context.enableScissor(this.getX() + 1, this.getY() + 1, this.getX() + this.width - 1, this.getY() + this.height - 1);
             context.pose().pushMatrix();
             context.pose().translate(0.0f, -this.renderedScrollAmount());
-            this.extractContents(context, mouseX, mouseY, delta);
+            this.renderContents(context, mouseX, mouseY, delta);
             context.pose().popMatrix();
             context.disableScissor();
-            this.extractScrollbar(context, mouseX, mouseY);
-            this.extractDecorations(context);
+            this.renderScrollbar(context, mouseX, mouseY);
+            this.renderDecorations(context);
         }
 
         /**
@@ -182,8 +187,8 @@ public class ComponentDisplayScreen extends Screen {
          * and changes the cursor over it; it is created here so it has the scroll offset and scissor.
          */
         @Override
-        protected void extractContents(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
-            var text = context.textRenderer(GuiGraphicsExtractor.HoveredTextEffects.TOOLTIP_AND_CURSOR);
+        protected void renderContents(@NotNull GuiGraphics context, int mouseX, int mouseY, float delta) {
+            var text = context.textRenderer(GuiGraphics.HoveredTextEffects.TOOLTIP_AND_CURSOR);
             int x = this.getX() + this.innerPadding();
             int y = this.getY() + this.innerPadding();
             for (var line : this.lines) {
@@ -196,7 +201,7 @@ public class ComponentDisplayScreen extends Screen {
 
         @Override
         public boolean keyPressed(@NotNull KeyEvent event) {
-            if (this.scrollable()) {
+            if (this.scrollbarVisible()) {
                 int page = Math.max(this.font.lineHeight, this.height - this.totalInnerPadding() - this.font.lineHeight);
                 switch (event.key()) {
                     case InputConstants.KEY_PAGEUP -> this.setScrollAmount(this.scrollAmount() - page);

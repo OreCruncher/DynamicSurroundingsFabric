@@ -88,7 +88,7 @@ public class BlockLibrary implements IBlockLibrary {
             BlockTags.BASE_STONE_NETHER,
             BlockTags.STONE_ORE_REPLACEABLES,
             BlockTags.DEEPSLATE_ORE_REPLACEABLES,
-            BlockTags.SUBSTRATE_OVERWORLD,
+            BlockTags.DIRT,
             BlockTags.SAND,
             BlockTags.LOGS,
             BlockTags.LEAVES,

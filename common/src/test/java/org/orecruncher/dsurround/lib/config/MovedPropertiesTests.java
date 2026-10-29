@@ -280,14 +280,6 @@ public class MovedPropertiesTests {
     }
 
     @Test
-    void theAuroraBandsMoveToTheClassicAurora() throws IOException {
-        assertEquals(1, loadModConfig("{\"auroraOptions\": {\"maxBands\": 1}}").auroraOptions.classic.maxBands);
-        var aurora = written("dsurround.json").getAsJsonObject("auroraOptions");
-        assertFalse(aurora.has("maxBands"));
-        assertEquals(1, aurora.getAsJsonObject("classic").get("maxBands").getAsInt());
-    }
-
-    @Test
     void theCompassSwitchBecomesItsStyle() throws IOException {
         // Off wins over the style that was set beside it; on keeps that style
         assertEquals(CompassStyle.NONE, loadModConfig(

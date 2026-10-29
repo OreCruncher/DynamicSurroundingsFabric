@@ -37,7 +37,7 @@ public final class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
         }
 
         var sources = soundManager.soundEngine.instanceToChannel;
-        var str = Component.literal(soundManager.getChannelDebugString());
+        var str = Component.literal(soundManager.getDebugString());
         panelText.add(str);
 
         if (!sources.isEmpty()) {

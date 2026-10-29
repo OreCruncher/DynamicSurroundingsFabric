@@ -2,9 +2,9 @@ package org.orecruncher.dsurround.runtime.oracle.impl;
 
 import net.minecraft.network.chat.Component;
 import org.orecruncher.dsurround.eventing.IClientTickStart;
-import org.orecruncher.dsurround.lib.time.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.function.ITickable;
+import org.orecruncher.dsurround.lib.time.DayCycle;
 import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 import org.orecruncher.dsurround.runtime.oracle.IMinecraftClock;
 
@@ -27,7 +27,7 @@ public final class MinecraftClock implements IMinecraftClock, ITickable {
 
     public MinecraftClock(ILevelOracle levelOracle) {
         this.levelOracle = levelOracle;
-        IClientTickStart.EVENT.register(_ -> this.tick());
+        IClientTickStart.EVENT.register(client -> this.tick());
     }
 
     public void tick() {

@@ -32,10 +32,10 @@ public final class WeatherDepth {
         if (!needed)
             return;
         var minecraft = Minecraft.getInstance();
-        var weather = minecraft.levelRenderer.weatherTarget();
+        var weather = minecraft.levelRenderer.getWeatherTarget();
         if (weather == null)
             return;
-        var main = minecraft.gameRenderer.mainRenderTarget();
+        var main = minecraft.getMainRenderTarget();
         FAIL_SAFE.run(() -> weather.copyDepthFrom(main), () -> {});
     }
 }

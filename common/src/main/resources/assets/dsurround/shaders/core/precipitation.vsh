@@ -6,7 +6,6 @@
 #moj_import <minecraft:fog.glsl>
 #moj_import <minecraft:dynamictransforms.glsl>
 #moj_import <minecraft:projection.glsl>
-#moj_import <minecraft:sample_lightmap.glsl>
 
 in vec3 Position;
 in vec2 UV0;
@@ -26,5 +25,5 @@ void main() {
     sphericalVertexDistance = fog_spherical_distance(Position);
     cylindricalVertexDistance = fog_cylindrical_distance(Position);
     texCoord0 = UV0;
-    vertexColor = Color * sample_lightmap(Sampler2, UV2);
+    vertexColor = Color * texelFetch(Sampler2, UV2 / 16, 0);
 }

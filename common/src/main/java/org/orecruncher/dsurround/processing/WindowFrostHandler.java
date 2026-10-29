@@ -1,31 +1,33 @@
 package org.orecruncher.dsurround.processing;
 
-import net.minecraft.util.LightCoordsUtil;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import it.unimi.dsi.fastutil.longs.LongCollection;
-import net.minecraft.client.renderer.rendertype.OutputTarget;
-import com.mojang.blaze3d.textures.GpuTextureView;
-import net.minecraft.client.resources.model.geometry.BakedQuad;
-import org.jetbrains.annotations.Nullable;
-import org.orecruncher.dsurround.effects.DepthCopy;
-import org.orecruncher.dsurround.effects.ModShader;
-import org.orecruncher.dsurround.effects.frost.FrostFace;
-import org.orecruncher.dsurround.effects.MeshDraw;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+import net.minecraft.client.renderer.rendertype.OutputTarget;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.entity.player.Player;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
+import org.orecruncher.dsurround.effects.DepthCopy;
+import org.orecruncher.dsurround.effects.MeshDraw;
+import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.frost.FrostConditions;
+import org.orecruncher.dsurround.effects.frost.FrostFace;
 import org.orecruncher.dsurround.effects.frost.FrostField;
 import org.orecruncher.dsurround.effects.frost.FrostRenderer;
 import org.orecruncher.dsurround.effects.frost.FrostTexture;
@@ -150,13 +152,13 @@ public class WindowFrostHandler extends AbstractClientHandler {
      */
     public void renderAfterTranslucentTerrain() {
         if (fabulous()) {
-            var translucent = GameUtils.getMC().levelRenderer.translucentTarget();
-            var main = GameUtils.getMC().gameRenderer.mainRenderTarget();
+            var translucent = GameUtils.getMC().levelRenderer.getTranslucentTarget();
+            var main = GameUtils.getMC().getMainRenderTarget();
             this.drawn = translucent == null ? 0
                     : this.render(translucent, FrostRenderer.SHADER, this.translucentFrostDraw, main.getDepthTextureView(), FrostFace::translucent);
         } else {
             this.drawn = this.depthCopied
-                    ? this.render(GameUtils.getMC().gameRenderer.mainRenderTarget(), FrostRenderer.SHADER, this.frostDraw, this.sceneDepth.view(), face -> true)
+                    ? this.render(GameUtils.getMC().getMainRenderTarget(), FrostRenderer.SHADER, this.frostDraw, this.sceneDepth.view(), face -> true)
                     : 0;
         }
         this.depthCopied = false;
@@ -172,7 +174,7 @@ public class WindowFrostHandler extends AbstractClientHandler {
         if (fabulous() || !this.isActive() || this.field.faceCount() == 0)
             return;
         FrostRenderer.SHADER.run(() -> {
-            this.sceneDepth.copyFrom(GameUtils.getMC().gameRenderer.mainRenderTarget());
+            this.sceneDepth.copyFrom(GameUtils.getMC().getMainRenderTarget());
             this.depthCopied = true;
         }, () -> this.depthCopied = false);
     }
@@ -188,7 +190,7 @@ public class WindowFrostHandler extends AbstractClientHandler {
     }
 
     private static boolean fabulous() {
-        return GameUtils.getMC().gameRenderer.gameRenderState().useShaderTransparency();
+        return Minecraft.useShaderTransparency();
     }
 
     /**
@@ -208,8 +210,8 @@ public class WindowFrostHandler extends AbstractClientHandler {
             return 0;
 
         int[] drawn = {0};
-        var camera = GameUtils.getMC().gameRenderer.mainCamera();
-        var lightmap = GameUtils.getMC().gameRenderer.lightmap();
+        var camera = GameUtils.getMC().gameRenderer.getMainCamera();
+        var lightmap = GameUtils.getMC().gameRenderer.lightTexture().getTextureView();
         if (this.meshBytes == null)
             this.meshBytes = new ByteBufferBuilder(4096);
         FrostRenderer.RENDER_TIMER.begin();
@@ -270,7 +272,7 @@ public class WindowFrostHandler extends AbstractClientHandler {
 
     private void chunkLoaded(ClientLevel level, ChunkPos chunkPos) {
         if (level == this.level)
-            this.field.chunkChanged(chunkPos.x(), chunkPos.z());
+            this.field.chunkChanged(chunkPos.x, chunkPos.z);
     }
 
     @Override
@@ -304,7 +306,7 @@ public class WindowFrostHandler extends AbstractClientHandler {
 
         @Override
         public boolean translucent(BlockState state) {
-            return GameUtils.getMC().getModelManager().getBlockStateModelSet().get(state).hasMaterialFlag(BakedQuad.FLAG_TRANSLUCENT);
+            return ItemBlockRenderTypes.getChunkRenderType(state) == ChunkSectionLayer.TRANSLUCENT;
         }
 
         @Override
@@ -320,7 +322,7 @@ public class WindowFrostHandler extends AbstractClientHandler {
 
         @Override
         public int packedLight(BlockPos pos) {
-            return LightCoordsUtil.getLightCoords(this.level, pos);
+            return LevelRenderer.getLightColor(this.level, pos);
         }
 
         @Override

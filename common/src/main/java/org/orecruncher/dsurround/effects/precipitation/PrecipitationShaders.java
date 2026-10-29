@@ -1,14 +1,12 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
-import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.pipeline.BlendFunction;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
-import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.platform.BlendFactor;
-import com.mojang.blaze3d.platform.CompareOp;
+import com.mojang.blaze3d.platform.DestFactor;
+import com.mojang.blaze3d.platform.SourceFactor;
+import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import net.minecraft.client.renderer.BindGroupLayouts;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.RenderTimer;
@@ -32,25 +30,24 @@ public final class PrecipitationShaders {
      */
     static final float DUST_SOFT_DISTANCE = 1.5F;
 
-    private static final DepthStencilState TEST_ONLY = new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false);
     // What is drawn there is scaled by one less the spot's alpha
-    private static final BlendFunction DARKEN = new BlendFunction(BlendFactor.ZERO, BlendFactor.ONE_MINUS_SRC_ALPHA);
+    private static final BlendFunction DARKEN = new BlendFunction(SourceFactor.ZERO, DestFactor.ONE_MINUS_SRC_ALPHA);
 
     // The rain, snow, snow flecks and window streaks: lit by the lightmap, the snow textured, seen from both sides
-    private static final RenderPipeline DROPS_PIPELINE = drops("pipeline/precipitation").withDepthStencilState(TEST_ONLY).build();
-    private static final RenderPipeline DROPS_DEPTH_PIPELINE = drops("pipeline/precipitation_depth_write").withDepthStencilState(DepthStencilState.DEFAULT).build();
+    private static final RenderPipeline DROPS_PIPELINE = drops("pipeline/precipitation").withDepthWrite(false).build();
+    private static final RenderPipeline DROPS_DEPTH_PIPELINE = drops("pipeline/precipitation_depth_write").withDepthWrite(true).build();
     // The dust: as the drops, but soft, reading a copy of the scene's depth
-    private static final RenderPipeline DUST_PIPELINE = dust("pipeline/precipitation_dust").withDepthStencilState(TEST_ONLY).build();
-    private static final RenderPipeline DUST_DEPTH_PIPELINE = dust("pipeline/precipitation_dust_depth_write").withDepthStencilState(DepthStencilState.DEFAULT).build();
+    private static final RenderPipeline DUST_PIPELINE = dust("pipeline/precipitation_dust").withDepthWrite(false).build();
+    private static final RenderPipeline DUST_DEPTH_PIPELINE = dust("pipeline/precipitation_dust_depth_write").withDepthWrite(true).build();
     // Damp spots: darkening the ground drawn under them; with Fabulous graphics, laid over it as a dark colour, as the
     // weather's own target starts out empty with nothing to darken. Their depth is written then: the transparency pass
     // sorts by it, and without it the scene is laid over them. They lie on the ground, so it hides nothing that the
     // ground wouldn't.
     private static final RenderPipeline DAMP_SPOTS_PIPELINE = dampSpots("pipeline/damp_spot")
-            .withColorTargetState(new ColorTargetState(DARKEN))
-            .withDepthStencilState(TEST_ONLY)
+            .withBlend(DARKEN)
+            .withDepthWrite(false)
             .build();
-    private static final RenderPipeline DAMP_SPOTS_DEPTH_PIPELINE = dampSpots("pipeline/damp_spot_depth_write").withDepthStencilState(DepthStencilState.DEFAULT).build();
+    private static final RenderPipeline DAMP_SPOTS_DEPTH_PIPELINE = dampSpots("pipeline/damp_spot_depth_write").withDepthWrite(true).build();
 
     public static final ModShader DROPS = new ModShader(DROPS_PIPELINE, "particle rain and snow", "vanilla's rain and snow will be drawn instead", Library.LOGGER);
     public static final ModShader DROPS_DEPTH = new ModShader(DROPS_DEPTH_PIPELINE, "particle rain and snow (Fabulous)", "vanilla's rain and snow will be drawn instead", Library.LOGGER);
@@ -93,20 +90,20 @@ public final class PrecipitationShaders {
                 .withLocation(Constants.asId(location))
                 .withVertexShader(Constants.asId("core/precipitation"))
                 .withFragmentShader(Constants.asId("core/precipitation"))
-                .withBindGroupLayout(BindGroupLayouts.GLOBALS)
-                .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
-                .withBindGroupLayout(BindGroupLayouts.FOG)
-                .withBindGroupLayout(BindGroupLayouts.SAMPLER0_SAMPLER2)
-                .withVertexBinding(0, DefaultVertexFormat.PARTICLE)
-                .withPrimitiveTopology(PrimitiveTopology.QUADS)
-                .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+                .withUniform("Globals", UniformType.UNIFORM_BUFFER)
+                .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
+                .withUniform("Projection", UniformType.UNIFORM_BUFFER)
+                .withUniform("Fog", UniformType.UNIFORM_BUFFER)
+                .withSampler("Sampler0")
+                .withSampler("Sampler2")
+                .withVertexFormat(DefaultVertexFormat.PARTICLE, VertexFormat.Mode.QUADS)
+                .withBlend(BlendFunction.TRANSLUCENT)
                 .withCull(false);
     }
 
     private static RenderPipeline.Builder dust(String location) {
-        return drops(location)
-                .withShaderDefine("SOFT_DISTANCE", DUST_SOFT_DISTANCE)
-                .withBindGroupLayout(SoftParticles.SOFT_DEPTH_LAYOUT);
+        return SoftParticles.withSoftDepth(drops(location)
+                .withShaderDefine("SOFT_DISTANCE", DUST_SOFT_DISTANCE));
     }
 
     private static RenderPipeline.Builder dampSpots(String location) {
@@ -114,13 +111,13 @@ public final class PrecipitationShaders {
                 .withLocation(Constants.asId(location))
                 .withVertexShader(Constants.asId("core/damp_spot"))
                 .withFragmentShader(Constants.asId("core/damp_spot"))
-                .withBindGroupLayout(BindGroupLayouts.GLOBALS)
-                .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
-                .withBindGroupLayout(BindGroupLayouts.FOG)
-                .withBindGroupLayout(BindGroupLayouts.SAMPLER0)
-                .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
-                .withPrimitiveTopology(PrimitiveTopology.QUADS)
-                .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+                .withUniform("Globals", UniformType.UNIFORM_BUFFER)
+                .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
+                .withUniform("Projection", UniformType.UNIFORM_BUFFER)
+                .withUniform("Fog", UniformType.UNIFORM_BUFFER)
+                .withSampler("Sampler0")
+                .withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
+                .withBlend(BlendFunction.TRANSLUCENT)
                 .withCull(false);
     }
 }

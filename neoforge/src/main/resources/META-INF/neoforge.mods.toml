@@ -12,27 +12,26 @@ authors = "${mod_author}"
 description = '''
 ${mod_description}
 '''
-iconFile = "assets/dsurround/icon.png"
-bannerFile = "assets/dsurround/icon.png"
+logoFile = "assets/dsurround/icon.png"
 
 [[dependencies.${mod_id}]]
 modId = "neoforge"
 type = "required"
-versionRange = "[26.2.0,)"
+versionRange = "[21.11,)"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.${mod_id}]]
 modId = "minecraft"
 type = "required"
-versionRange = "[26.2,)"
+versionRange = "[1.21.11,1.22)"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.${mod_id}]]
 modId = "architectury"
 type = "required"
-versionRange = "[21.1.10,)"
+versionRange = "[19.0.1,)"
 ordering = "AFTER"
 side = "CLIENT"
 

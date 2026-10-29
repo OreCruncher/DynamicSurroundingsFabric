@@ -1,33 +1,28 @@
 package org.orecruncher.dsurround.effects.clouds;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
 import com.mojang.blaze3d.pipeline.BlendFunction;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
-import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.MappableRingBuffer;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.RenderTimer;
+import org.orecruncher.dsurround.effects.Transforms;
 import org.orecruncher.dsurround.lib.Library;
 
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Optional;
 import java.util.OptionalDouble;
+import java.util.OptionalInt;
 
 /**
  * Draws the clouds from their {@link CloudSections}: the sections' vertices are uploaded to vertex buffers when they
@@ -53,33 +48,25 @@ public final class CloudRenderer {
         CLOUD_INFO_SIZE = size.get();
     }
 
-    private static final BindGroupLayout CLOUD_INFO_LAYOUT = BindGroupLayout.builder()
-            .withUniform(CLOUD_INFO, UniformType.UNIFORM_BUFFER)
-            .build();
-    private static final ColorTargetState NO_COLOR = new ColorTargetState(Optional.empty(), GpuFormat.RGBA8_UNORM, ColorTargetState.WRITE_NONE);
-    // Reversed depth: nearer is greater
-    private static final DepthStencilState WRITE_DEPTH = new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, true);
-    private static final DepthStencilState TEST_DEPTH = new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false);
-
     /**
      * The settled part's depth, and no color
      */
     public static final ModShader DEPTH = new ModShader(
-            pipeline("pipeline/clouds_depth").withColorTargetState(NO_COLOR).withDepthStencilState(WRITE_DEPTH).build(),
+            pipeline("pipeline/clouds_depth").withColorWrite(false).withDepthWrite(true).build(),
             "clouds", "vanilla's clouds will be drawn", Library.LOGGER);
     /**
      * The settled part's color, where it is nearest
      */
     public static final ModShader SETTLED = new ModShader(
-            pipeline("pipeline/clouds").withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
-                    .withDepthStencilState(WRITE_DEPTH).build(),
+            pipeline("pipeline/clouds").withBlend(BlendFunction.TRANSLUCENT)
+                    .withDepthWrite(true).build(),
             "clouds", "vanilla's clouds will be drawn", Library.LOGGER);
     /**
      * The changing part, over the settled part, fading
      */
     public static final ModShader CHANGING = new ModShader(
-            pipeline("pipeline/clouds_changing").withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
-                    .withDepthStencilState(TEST_DEPTH).build(),
+            pipeline("pipeline/clouds_changing").withBlend(BlendFunction.TRANSLUCENT)
+                    .withDepthWrite(false).build(),
             "clouds", "vanilla's clouds will be drawn", Library.LOGGER);
 
     /**
@@ -114,12 +101,12 @@ public final class CloudRenderer {
                 .withLocation(Constants.asId(location))
                 .withVertexShader(Constants.asId("core/clouds"))
                 .withFragmentShader(Constants.asId("core/clouds"))
-                .withBindGroupLayout(BindGroupLayouts.GLOBALS)
-                .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
-                .withBindGroupLayout(BindGroupLayouts.FOG)
-                .withBindGroupLayout(CLOUD_INFO_LAYOUT)
-                .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
-                .withPrimitiveTopology(PrimitiveTopology.QUADS);
+                .withUniform("Globals", UniformType.UNIFORM_BUFFER)
+                .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
+                .withUniform("Projection", UniformType.UNIFORM_BUFFER)
+                .withUniform("Fog", UniformType.UNIFORM_BUFFER)
+                .withUniform(CLOUD_INFO, UniformType.UNIFORM_BUFFER)
+                .withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS);
     }
 
     /**
@@ -168,7 +155,7 @@ public final class CloudRenderer {
             cloudInfo = new MappableRingBuffer(() -> "Dynamic Surroundings clouds UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_MAP_WRITE, CLOUD_INFO_SIZE);
         // Gone a cell inside the grid's edge, fading over the few cells before
         float gone = edge - CloudField.CELL;
-        try (var view = cloudInfo.currentBuffer().map(false, true)) {
+        try (var view = RenderSystem.getDevice().createCommandEncoder().mapBuffer(cloudInfo.currentBuffer(), false, true)) {
             var builder = Std140Builder.intoBuffer(view.data())
                     .putVec4(offsetX, offsetY, offsetZ, (float) now)
                     .putVec4(red, green, blue, (float) CloudField.FADE_TICKS)
@@ -184,14 +171,14 @@ public final class CloudRenderer {
         }
 
         var minecraft = Minecraft.getInstance();
-        var cloudsTarget = minecraft.levelRenderer.cloudsTarget();
-        var target = cloudsTarget != null ? cloudsTarget : minecraft.gameRenderer.mainRenderTarget();
-        var transforms = RenderSystem.getDynamicUniforms().writeTransform(RenderSystem.getModelViewMatrixCopy());
-        var indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
+        var cloudsTarget = minecraft.levelRenderer.getCloudsTarget();
+        var target = cloudsTarget != null ? cloudsTarget : minecraft.getMainRenderTarget();
+        var transforms = Transforms.camera();
+        var indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
         var indexBuffer = indices.getBuffer(6 * Math.max(settledQuads, changingQuads));
 
         try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder()
-                .createRenderPass(() -> "Dynamic Surroundings clouds", target.getColorTextureView(), Optional.empty(),
+                .createRenderPass(() -> "Dynamic Surroundings clouds", target.getColorTextureView(), OptionalInt.empty(),
                         target.getDepthTextureView(), OptionalDouble.empty())) {
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", transforms);
@@ -199,17 +186,17 @@ public final class CloudRenderer {
             pass.setIndexBuffer(indexBuffer, indices.type());
             if (settledQuads > 0 && settled != null) {
                 // Their depth, then their color where they are nearest
-                pass.setVertexBuffer(0, settled.slice());
+                pass.setVertexBuffer(0, settled);
                 pass.setPipeline(DEPTH.pipeline());
-                pass.drawIndexed(6 * settledQuads, 1, 0, 0, 0);
+                pass.drawIndexed(0, 0, 6 * settledQuads, 1);
                 pass.setPipeline(SETTLED.pipeline());
-                pass.drawIndexed(6 * settledQuads, 1, 0, 0, 0);
+                pass.drawIndexed(0, 0, 6 * settledQuads, 1);
             }
             if (changingQuads > 0 && changing != null) {
                 // Over them, fading, writing no depth
-                pass.setVertexBuffer(0, changing.slice());
+                pass.setVertexBuffer(0, changing);
                 pass.setPipeline(CHANGING.pipeline());
-                pass.drawIndexed(6 * changingQuads, 1, 0, 0, 0);
+                pass.drawIndexed(0, 0, 6 * changingQuads, 1);
             }
         }
         cloudInfo.rotate();

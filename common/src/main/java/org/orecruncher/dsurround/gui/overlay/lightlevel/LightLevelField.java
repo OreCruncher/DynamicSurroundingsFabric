@@ -1,6 +1,5 @@
 package org.orecruncher.dsurround.gui.overlay.lightlevel;
 
-import net.minecraft.world.entity.EntityTypes;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -261,7 +260,7 @@ final class LightLevelField {
                     float height = labelHeight(level, state, belowState);
                     if (Float.isNaN(height))
                         continue;
-                    boolean spawnable = SpawnPlacements.isSpawnPositionOk(EntityTypes.ZOMBIE, level, this.pos);
+                    boolean spawnable = SpawnPlacements.isSpawnPositionOk(EntityType.ZOMBIE, level, this.pos);
                     section.add(LightLevels.pack(lx, ly, lz, blockLight.getLightValue(this.pos), skyLight.getLightValue(this.pos), spawnable, height));
                 }
         }

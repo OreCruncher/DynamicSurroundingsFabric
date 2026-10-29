@@ -1,22 +1,20 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
+import it.unimi.dsi.fastutil.objects.*;
 import it.unimi.dsi.fastutil.ints.AbstractIntSet;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.objects.*;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.config.EntityEffectType;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
+import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.eventing.IConfigChangedEvent;
 import org.orecruncher.dsurround.eventing.IReloadEvent;
-import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.effects.IEntityEffect;
 import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
@@ -205,7 +203,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
         if (this.tagLibrary.is(EntityEffectTags.TOOLBAR, entityType))
             effectTypes.add(EntityEffectType.PLAYER_TOOLBAR);
         // Heard by the player only, so it goes with the player's own kind
-        if (entityType == EntityTypes.PLAYER)
+        if (entityType == EntityType.PLAYER)
             effectTypes.add(EntityEffectType.PLAYER_JUMP);
         if (this.tagLibrary.is(EntityEffectTags.BRUSH_STEP, entityType))
             effectTypes.add(EntityEffectType.BRUSH_STEP);
@@ -214,7 +212,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
             effectTypes.add(EntityEffectType.BURNING);
         if (!this.tagLibrary.is(EntityEffectTags.NO_HEALTH_POPOFFS, entityType))
             effectTypes.add(EntityEffectType.HEALTH_POPOFF);
-        if (entityType == EntityTypes.PLAYER
+        if (entityType == EntityType.PLAYER
                 || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_SQUARE, entityType)
                 || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_PAW, entityType)
                 || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_HOOF, entityType)

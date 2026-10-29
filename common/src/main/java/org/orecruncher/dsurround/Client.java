@@ -7,11 +7,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
-
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.SkyRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.WeatherEffectRenderer;
+import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
 import net.minecraft.client.renderer.entity.LightningBoltRenderer;
 import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.client.renderer.fog.environment.AtmosphericFogEnvironment;
@@ -187,7 +186,7 @@ public final class Client {
     private static void afterReload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
         if (Config.diagnostics.enableDebugLogging) {
             var msg = Component.translatable("dsurround.text.reloadassets", Component.translatable("dsurround.modname"));
-            GameUtils.getPlayer().ifPresent(p -> p.sendSystemMessage(msg));
+            GameUtils.getPlayer().ifPresent(p -> p.displayClientMessage(msg, false));
         }
     }
 
@@ -243,7 +242,8 @@ public final class Client {
      */
     private static void checkOptionalHooks() {
         var hooked = List.of(ClientLevel.class, LevelRenderer.class, WeatherEffectRenderer.class, SkyRenderer.class, FogRenderer.class,
-                AtmosphericFogEnvironment.class, ParticleEngine.class, Particle.class, LightningBoltRenderer.class);
+                AtmosphericFogEnvironment.class, ParticleEngine.class, Particle.class, LightningBoltRenderer.class,
+                ChunkSectionsToRender.class);
         Library.LOGGER.debug("Checking the optional hooks in %d classes", hooked.size());
         OptionalHook.check(Library.LOGGER, Platform.isDevelopmentEnvironment());
     }
@@ -269,7 +269,7 @@ public final class Client {
                 if (result.updateAvailable()) {
                     Library.LOGGER.info("Update to %s version %s is available", result.displayName(), result.version());
                     var player = GameUtils.getPlayer();
-                    player.ifPresent(p -> p.sendSystemMessage(result.getChatText()));
+                    player.ifPresent(p -> p.displayClientMessage(result.getChatText(), false));
                 } else {
                     Library.LOGGER.info("%s is current", result.displayName());
                 }
