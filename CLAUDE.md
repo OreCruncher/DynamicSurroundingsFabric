@@ -261,7 +261,8 @@ checking in game.
 ## Branches
 - `main`: the 1.21.1 line (0.4.8 was squash-merged as `21b8f91d` and recorded here with `-s ours`; each 1.21.1
   release branches from `main`).
-- The current 1.21.1 release branch (none open since 0.4.8's squash; next `OreCruncher/0.4.9`): merged into this branch directly, before its squash to
+- `OreCruncher/5.0.0` (next): a 1.21.11 build backported from this branch, branched from it rather than from `main`.
+- The current 1.21.1 release branch (none open since 0.4.8's squash): merged into this branch directly, before its squash to
   `main`; merge it again for its fixes. Once squashed, check `git diff OreCruncher/<release> main` is empty and record
   `main` with `git merge -s ours main` (a normal merge would reopen every conflict this branch resolved). Port 1.21.1
   work by merging, resolving against 26.2's APIs (see `MIGRATION.md`); never rebase this branch.
