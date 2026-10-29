@@ -261,7 +261,10 @@ checking in game.
 ## Branches
 - `main`: the 1.21.1 line (0.4.8 was squash-merged as `21b8f91d` and recorded here with `-s ours`; each 1.21.1
   release branches from `main`).
-- `OreCruncher/5.0.0` (next): a 1.21.11 build backported from this branch, branched from it rather than from `main`.
+- `OreCruncher/1.21.11` (next; first release 5.0.0): a long-lived 1.21.11 line backported from this branch, branched
+  from it rather than from `main`. Merge this branch into it for features and fixes; never merge it back here (that
+  would bring the backport's downgrades with it): cherry-pick a fix made there.
+- 1.21.1 is frozen at 0.4.8 (tag `1.21.1-0.4.8`); a hotfix there would be 0.4.9, the old numbering.
 - The current 1.21.1 release branch (none open since 0.4.8's squash): merged into this branch directly, before its squash to
   `main`; merge it again for its fixes. Once squashed, check `git diff OreCruncher/<release> main` is empty and record
   `main` with `git merge -s ours main` (a normal merge would reopen every conflict this branch resolved). Port 1.21.1
@@ -274,3 +277,20 @@ checking in game.
   "Biomes to check" list); `--keep DUMP` saves a copy to `build/dumps` before the next dump overwrites it.
 - `OreCruncher/26.2`: the 26.2 port, started from 0.4.5 and carrying 0.4.6, 0.4.7 and 0.4.8 (NeoForge 26.2.0.82, Architectury
   21.1.10, Cloth Config 26.2.155). NeoForge 26.2's client launch class is `net.neoforged.fml.startup.Client`.
+  `mod_version` is still 0.5.0 from before the 5.x numbering; set it to the 5.x release it ships as (see Versions).
+
+## Versions
+- `MAJOR.MINOR.PATCH` from 5.0.0, the first 1.21.11 release. The 0.x releases used the third number for every release,
+  leaving no room for hotfixes.
+- Patch: bug fixes only. No new config options or lang keys (they would sit untranslated until Crowdin catches up), no
+  change to the `dsconfigs` or script formats.
+- Minor: feature releases. A config property that moves keeps players' values through `@MovedFrom`.
+- Major: only when something packs or players rely on breaks: a config that can't migrate, a `dsconfigs` or script
+  format change, a loader dropped.
+- One number means one set of features across Minecraft versions: 1.21.11 and 26.x release the same minor when they
+  carry the same features, and a line skips a minor it gets nothing from. Pre-releases are `5.0.0-beta.1` (sorted
+  before `5.0.0`, so the update check tells testers about the final).
+- A release sets `mod_version` in `gradle.properties`, adds a changelog heading `DynamicSurroundings-<mc>-<version>`
+  and a `versions.json` entry, and `recommend`, under its Minecraft version (the update check compares only within a
+  Minecraft version, so 0.4.8 and 5.0.0 never meet), and is tagged `<mc>-<version>` (`1.21.11-5.0.1`). The jar's name
+  already carries the Minecraft version.

@@ -23,6 +23,20 @@ honest about where it came from, and keeping its code tested.
 * The mod is client side and supports both Fabric and NeoForge. Check that your change builds for both:
   `./gradlew :common:compileJava :fabric:compileJava :neoforge:compileJava`
 
+> ### Versions
+
+Releases from 5.0.0 on (the first for Minecraft 1.21.11) are numbered `MAJOR.MINOR.PATCH`. Earlier releases (0.x) used
+the third number for every release; Minecraft 1.21.1 stays on 0.4.x.
+
+* **Patch** (`5.0.1`): bug fixes only. No new config options or language keys, and no changes to the `dsconfigs` or
+  script formats. Fixes for a released version can be proposed against its branch.
+* **Minor** (`5.1.0`): new features. A config option that moves or is renamed must keep players' settings
+  (`@MovedFrom`).
+* **Major** (`6.0.0`): only when something modpacks or players rely on breaks, such as a config that can't carry over or
+  a change to the `dsconfigs` or script formats.
+* The same version number means the same features on every Minecraft version it is released for. Each Minecraft
+  version has its own branch; releases are tagged `<minecraft>-<version>`, such as `1.21.11-5.0.1`.
+
 > ### Textures
 
 * Significant textures must be created by a human.
