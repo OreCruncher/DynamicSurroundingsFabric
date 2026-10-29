@@ -2,7 +2,7 @@ package org.orecruncher.dsurround.effects.particles;
 
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleRenderType;
+import net.minecraft.client.particle.SingleQuadParticle;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -42,7 +42,7 @@ public class EyeFlame extends FlameTongue {
     protected EyeFlame(ClientLevel level, double x, double y, double z, double xd, double yd, double zd,
                        Palette palette, boolean carriesLight, double lightX, double lightY, double lightZ) {
         super(level, x, y, z, xd, yd, zd, SCALE, carriesLight, palette);
-        this.lifetime = LIFE + level.random.nextInt(EXTRA_LIFE);
+        this.lifetime = LIFE + level.getRandom().nextInt(EXTRA_LIFE);
         this.gravity = BUOYANCY * LIFT;
         this.lightX = lightX;
         this.lightY = lightY;
@@ -50,8 +50,8 @@ public class EyeFlame extends FlameTongue {
     }
 
     @Override
-    public @NotNull ParticleRenderType getRenderType() {
-        return DSurroundParticleRenderType.PARTICLE_SHEET_EYE_FLAME;
+    public @NotNull SingleQuadParticle.Layer getLayer() {
+        return SoftParticles.eyeFlameLayer();
     }
 
     @Override

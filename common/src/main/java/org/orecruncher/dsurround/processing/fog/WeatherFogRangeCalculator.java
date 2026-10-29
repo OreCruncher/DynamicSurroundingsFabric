@@ -1,9 +1,8 @@
 package org.orecruncher.dsurround.processing.fog;
 
-import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.client.renderer.fog.FogData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
@@ -16,18 +15,11 @@ import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.Shelter;
 
 /**
- * Fog from the weather: rain thickens it a little, and a dust storm (see {@link DustStorms}) a great deal, closing in
- * the view to a few dozen blocks at its height and turning the fog the color of the dust.
+ * Fog from the weather: a dust storm (see {@link DustStorms}) thickens it a great deal, closing in the view to a few
+ * dozen blocks at its height and turning the fog the color of the dust. Rain's fog is the game's own on 26.2, given
+ * the storm's strength by {@code MixinAtmosphericFogEnvironment}.
  */
 public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
-
-    protected static final float START_IMPACT = 0.9F;
-    protected static final float END_IMPACT = 0.4F;
-
-    // Rain fog where nothing falls on the player (a dry biome, or a dry season), though rain falls nearby
-    static final float DRY_BIOME_FACTOR = 0.5F;
-    // Fraction of the way to the target covered each tick
-    static final float EASE_PER_TICK = 0.2F;
 
     /**
      * How far a dust storm at full strength thickens the fog, for {@link #thicken}: the fog ends at this much less of
@@ -52,8 +44,6 @@ public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
     private final IBiomeLibrary biomeLibrary;
     private final Configuration.WeatherOptions weatherOptions;
     private final PrecipitationHandler precipitation;
-    private float previous;
-    private float current;
     private float previousDust;
     private float currentDust;
     // The color of the dust, kept from the last dusty tick so the tint keeps it while it fades
@@ -77,20 +67,12 @@ public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
 
     @Override
     @NotNull
-    public FogRenderer.FogData render(@NotNull final FogRenderer.FogData data, float renderDistance, float partialTick) {
-        var result = data;
-        float rainStr = Mth.lerp(partialTick, this.previous, this.current);
-        if (rainStr > 0) {
-            final float startScale = 1F - (START_IMPACT * rainStr);
-            final float endScale = 1F - (END_IMPACT * rainStr);
-            result = withRange(data, data.start * startScale, data.end * endScale);
-        }
-
+    public FogData render(@NotNull final FogData data, float renderDistance, float partialTick) {
+        // The rain's own fog is the game's (see MixinAtmosphericFogEnvironment, which gives it the storm's strength)
         float dustStr = Mth.lerp(partialTick, this.previousDust, this.currentDust);
         if (dustStr > 0)
-            result = thicken(result, dustStr * DUST_FOG_INTENSITY, DUST_MIN_START);
-
-        return result;
+            return thicken(data, renderDistance, dustStr * DUST_FOG_INTENSITY, DUST_MIN_START);
+        return data;
     }
 
     @Override
@@ -106,23 +88,18 @@ public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
         // biome's season decides whether it rains, not the biome's own setting
         var fallingNow = this.seasons.getPrecipitationAt(pos);
 
-        // In a dust storm the dust takes the place of the rain fog a dry biome would otherwise get
         var dusty = this.precipitation.isActive() && DustStorms.enabled(this.weatherOptions)
                 && DustStorms.isDusty(fallingNow, biome, this.biomeLibrary);
-        var target = dusty ? 0F : rainFogStrength(rainLevel, exposure, fallingNow != Biome.Precipitation.NONE);
         var dustTarget = dusty ? dustFogStrength(rainLevel, exposure) : 0F;
         if (dusty)
             this.dustColor = fogDustColor(this.precipitation.regionalDustColor(), DustStorms.dustColor(biome, this.biomeLibrary));
 
-        this.previous = this.current;
-        this.current += (target - this.current) * EASE_PER_TICK;
         this.previousDust = this.currentDust;
         this.currentDust += (dustTarget - this.currentDust) * DUST_EASE_PER_TICK;
     }
 
     @Override
     public void disconnect() {
-        this.previous = this.current = 0F;
         this.previousDust = this.currentDust = 0F;
     }
 
@@ -189,17 +166,6 @@ public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
         rgb[0] = Mth.lerp(t, rgb[0], red * scale);
         rgb[1] = Mth.lerp(t, rgb[1], green * scale);
         rgb[2] = Mth.lerp(t, rgb[2], blue * scale);
-    }
-
-    /**
-     * How strongly rain thickens the fog where the player is: only out under the sky, as the game's own rain fog does
-     * in later versions, so caves and buildings stay clear, and less where it isn't raining on the player.
-     *
-     * @param exposure    how open to the weather the player is, 0 to 1 (see {@link Shelter#exposure})
-     * @param fallingHere whether rain or snow falls where the player is now, by the biome and its season
-     */
-    static float rainFogStrength(float rainLevel, float exposure, boolean fallingHere) {
-        return rainLevel * Mth.clamp(exposure, 0F, 1F) * (fallingHere ? 1F : DRY_BIOME_FACTOR);
     }
 
     /**

@@ -4,7 +4,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.FastColor;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.runtime.weather.SceneWind;
@@ -85,7 +85,7 @@ public class WaterfallMist extends SoftPuffParticle {
 
     protected WaterfallMist(ClientLevel level, double x, double y, double z, double xd, double yd, double zd,
                             double centerX, double surfaceY, double centerZ, SpriteSet sprites, int strength) {
-        super(level, x, y, z, FADE_IN, FADE_OUT, GROWTH);
+        super(level, x, y, z, sprites.get(level.getRandom()), FADE_IN, FADE_OUT, GROWTH);
         this.xd = xd;
         this.yd = yd;
         this.zd = zd;
@@ -97,7 +97,7 @@ public class WaterfallMist extends SoftPuffParticle {
         this.ringHeight = RING_HEIGHT + strength * RING_HEIGHT_PER_STRENGTH;
         this.churn = CHURN * (1D + strength * 0.05D);
 
-        var random = level.random;
+        var random = level.getRandom();
         this.lifetime = 20 + random.nextInt(40);
         // Half the puff's width, as quadSize is; 0.2 to 0.4 blocks, 15% more for each block of drop. Every waterfall
         // makes the same number of puffs, so a bigger one fills its bigger cloud with bigger puffs: its ring (see
@@ -123,11 +123,9 @@ public class WaterfallMist extends SoftPuffParticle {
         this.wobblePhaseY = random.nextFloat() * Mth.TWO_PI;
         this.wobblePhaseZ = random.nextFloat() * Mth.TWO_PI;
 
-        this.setSprite(sprites.get(random));
-
         // The biome's water color, shifted toward white
         var biomeColor = level.getBiome(BlockPos.containing(x, y, z)).value().getWaterColor();
-        var colorRgb = FastColor.ARGB32.lerp(WHITENESS, biomeColor, ColorPalette.MC_WHITE.getValue());
+        var colorRgb = ARGB.srgbLerp(WHITENESS, biomeColor, ColorPalette.MC_WHITE.getValue());
         this.rCol = ColorPalette.getRed(colorRgb) / 255F;
         this.gCol = ColorPalette.getGreen(colorRgb) / 255F;
         this.bCol = ColorPalette.getBlue(colorRgb) / 255F;

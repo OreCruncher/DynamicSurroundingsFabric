@@ -1,11 +1,10 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleRenderType;
-import net.minecraft.client.particle.TextureSheetParticle;
+import net.minecraft.client.particle.SingleQuadParticle;
+import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
@@ -15,10 +14,10 @@ import org.orecruncher.dsurround.runtime.weather.Shelter;
 /**
  * A spark thrown up from a fire. Shot up fast, it slows and arcs over as its weight tells, carries on the wind out in
  * the open, and twinkles as it cools from white-yellow to a dull red and goes out. Drawn as a short streak along the
- * way it is going, adding its light as the flames do (see {@link DSurroundParticleRenderType#PARTICLE_SHEET_FLAME}),
+ * way it is going, adding its light as the flames do (see {@link SoftParticles#flameLayer}),
  * and lit by itself.
  */
-public class FlameSpark extends TextureSheetParticle {
+public class FlameSpark extends SingleQuadParticle {
 
     // Its colour as it cools: white-yellow, then orange, then a dull red
     private static final float[] HOT = {1F, 0.9F, 0.55F};
@@ -52,8 +51,8 @@ public class FlameSpark extends TextureSheetParticle {
 
     protected FlameSpark(ClientLevel level, double x, double y, double z, double xd, double yd, double zd) {
         // The constructor without velocity: the one with it adds a random velocity of its own
-        super(level, x, y, z);
-        var random = level.random;
+        super(level, x, y, z, DSurroundParticleSprites.WATERFALL_MIST.get(level.getRandom()));
+        var random = level.getRandom();
         this.xd = xd;
         this.yd = yd;
         this.zd = zd;
@@ -64,16 +63,16 @@ public class FlameSpark extends TextureSheetParticle {
         this.hasPhysics = false;
         this.twinklePhase = random.nextFloat() * Mth.TWO_PI;
         this.windExposure = Shelter.exposure(level, BlockPos.containing(x, y, z));
-        this.setSprite(DSurroundParticleSprites.WATERFALL_MIST.get(random));
+        this.quadSize = HALF_WIDTH * 1.5F;
     }
 
     @Override
-    public @NotNull ParticleRenderType getRenderType() {
-        return DSurroundParticleRenderType.PARTICLE_SHEET_FLAME;
+    public @NotNull SingleQuadParticle.Layer getLayer() {
+        return SoftParticles.flameLayer();
     }
 
     @Override
-    public int getLightColor(float partialTick) {
+    protected int getLightCoords(float partialTick) {
         return FULL_BRIGHT;
     }
 
@@ -86,14 +85,18 @@ public class FlameSpark extends TextureSheetParticle {
     }
 
     @Override
-    public void render(@NotNull VertexConsumer buffer, @NotNull Camera camera, float partialTick) {
+    public void extract(@NotNull QuadParticleRenderState state, @NotNull Camera camera, float partialTick) {
         float life = Mth.clamp((this.age + partialTick) / this.lifetime, 0F, 1F);
         float twinkle = 1F - TWINKLE * (0.5F + 0.5F * Mth.sin((this.age + partialTick) * TWINKLE_RATE + this.twinklePhase));
         float alpha = brightness(life) * twinkle;
         if (alpha <= 0F)
             return;
-        Streaks.draw(buffer, camera, partialTick, this.xo, this.yo, this.zo, this.x, this.y, this.z, STREAK, HALF_WIDTH,
-                colorAt(life), alpha, this.getLightColor(partialTick), this.getU0(), this.getU1(), this.getV0(), this.getV1());
+        Streaks.add(camera, partialTick, this.xo, this.yo, this.zo, this.x, this.y, this.z, STREAK, HALF_WIDTH,
+                colorAt(life), alpha, this.getLightCoords(partialTick), this.getU0(), this.getU1(), this.getV0(), this.getV1());
+        // Its own quad as well, clear: the particle engine draws the flames' group only if something in it has a quad,
+        // and the streaks are drawn as that group is (see Streaks)
+        this.setAlpha(0F);
+        super.extract(state, camera, partialTick);
     }
 
     /**

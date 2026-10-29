@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.resources;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -39,7 +39,7 @@ public class ResourceFinderTests {
      * that has it). Lists the files under a folder as the real one does, and counts how often it is asked.
      */
     private static final class Packs {
-        final Map<ResourceLocation, List<Resource>> files = new LinkedHashMap<>();
+        final Map<Identifier, List<Resource>> files = new LinkedHashMap<>();
         int listings;
 
         Packs add(String location, String... contents) {
@@ -51,7 +51,7 @@ public class ResourceFinderTests {
          */
         Packs addFrom(String packId, String location, String... contents) {
             var pack = packId == null ? null : Fakes.of(PackResources.class, Map.of("packId", args -> packId));
-            var stack = this.files.computeIfAbsent(ResourceLocation.parse(location), l -> new ArrayList<>());
+            var stack = this.files.computeIfAbsent(Identifier.parse(location), l -> new ArrayList<>());
             for (var content : contents)
                 stack.add(new Resource(pack, () -> new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8))));
             return this;
@@ -64,15 +64,15 @@ public class ResourceFinderTests {
                         // Lists the files in a folder, as the real one does; a file's own path lists nothing, as
                         // with NeoForge's mod packs
                         var folder = (String) args[0];
-                        var result = new LinkedHashMap<ResourceLocation, List<Resource>>();
+                        var result = new LinkedHashMap<Identifier, List<Resource>>();
                         this.files.forEach((location, stack) -> {
                             if (location.getPath().startsWith(folder + "/"))
                                 result.put(location, stack);
                         });
                         return result;
                     },
-                    "getNamespaces", args -> this.files.keySet().stream().map(ResourceLocation::getNamespace).collect(Collectors.toSet()),
-                    "getResourceStack", args -> this.files.getOrDefault((ResourceLocation) args[0], List.of())));
+                    "getNamespaces", args -> this.files.keySet().stream().map(Identifier::getNamespace).collect(Collectors.toSet()),
+                    "getResourceStack", args -> this.files.getOrDefault((Identifier) args[0], List.of())));
         }
     }
 
@@ -230,8 +230,8 @@ public class ResourceFinderTests {
 
     @Test
     void findsDataInAModsJar() throws IOException {
-        // A mod's path may be its jar file (NeoForge on 26.2), where its data folder would be looked for beside it, so no
-        // tags would be filled in from jars. ModRoots opens the jar.
+        // Regression: on NeoForge a mod's path is its jar file, and its data folder was looked for beside it, so no
+        // tags were filled in from jars there. ModRoots opens the jar.
         var jar = this.folder.resolve("modjar.jar");
         try (var out = new ZipOutputStream(Files.newOutputStream(jar))) {
             out.putNextEntry(new ZipEntry("data/c/tags/block/glass_blocks.json"));

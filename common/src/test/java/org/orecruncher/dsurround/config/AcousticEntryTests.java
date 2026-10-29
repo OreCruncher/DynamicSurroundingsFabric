@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.lib.scripting.Script;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AcousticEntryTests {
 
     private static final ISoundFactory SOUND = Fakes.of(ISoundFactory.class,
-            Map.of("getLocation", args -> ResourceLocation.fromNamespaceAndPath("test", "sound")));
+            Map.of("getLocation", args -> Identifier.fromNamespaceAndPath("test", "sound")));
 
     private static IConditionEvaluator answering(boolean result, int[] calls) {
         return Fakes.of(IConditionEvaluator.class, Map.of("check", args -> {

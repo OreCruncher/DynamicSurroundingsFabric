@@ -21,7 +21,7 @@ public class LightningRendererTests {
 
     @Test
     void theShadersConstantsMatch() throws IOException {
-        assertEquals(1F / LightningRenderer.HALO, shaderConstant("CORE"), 1e-6F);
+        assertEquals(1F / LightningRenderer.HALO, shaderConstant("CORE_WIDTH"), 1e-6F);
         // A patch's UV x runs a whole step either side of its cell, so the step must be over 2 to round back to it
         assertEquals(LightningRenderer.NOISE_CELL_STEP, shaderConstant("CELL_STEP"));
         assertTrue(LightningRenderer.NOISE_CELL_STEP > 2F);

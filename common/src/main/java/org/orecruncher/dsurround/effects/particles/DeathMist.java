@@ -46,8 +46,8 @@ public class DeathMist extends SoftPuffParticle {
     }
 
     protected DeathMist(ClientLevel level, double x, double y, double z, double xd, double yd, double zd, float scale) {
-        super(level, x, y, z, FADE_IN, FADE_OUT, GROWTH);
-        var random = level.random;
+        super(level, x, y, z, DSurroundParticleSprites.WATERFALL_MIST.get(level.getRandom()), FADE_IN, FADE_OUT, GROWTH);
+        var random = level.getRandom();
         this.xd = xd;
         this.yd = yd;
         this.zd = zd;
@@ -67,7 +67,6 @@ public class DeathMist extends SoftPuffParticle {
         this.wobbleRateZ = 0.08F + random.nextFloat() * 0.13F;
         this.wobblePhaseX = random.nextFloat() * Mth.TWO_PI;
         this.wobblePhaseZ = random.nextFloat() * Mth.TWO_PI;
-        this.setSprite(DSurroundParticleSprites.WATERFALL_MIST.get(random));
     }
 
     @Override

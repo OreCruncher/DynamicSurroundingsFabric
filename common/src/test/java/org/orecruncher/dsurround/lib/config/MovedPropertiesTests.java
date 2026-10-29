@@ -47,6 +47,16 @@ public class MovedPropertiesTests {
             @Property
             @MovedFrom(value = "oldGroup.shown", values = "false=OFF", replaces = true)
             public Mode style = Mode.HIGH;
+
+            @Property
+            public final InnerGroup inner = new InnerGroup();
+        }
+
+        // A group within a group, which a setting can move into
+        public static class InnerGroup {
+            @Property
+            @MovedFrom("newGroup.bands")
+            public int bands = 3;
         }
 
         public enum Mode {
@@ -109,6 +119,15 @@ public class MovedPropertiesTests {
     @Test
     void aTopLevelPropertyCanMove() throws IOException {
         assertEquals(11, load("{\"legacyTop\": 11}").top);
+    }
+
+    @Test
+    void aPropertyCanMoveIntoAGroupWithinAGroup() throws IOException {
+        var config = load("{\"newGroup\": {\"bands\": 1}}");
+        assertEquals(1, config.newGroup.inner.bands);
+        var json = written("moved.json").getAsJsonObject("newGroup");
+        assertFalse(json.has("bands"), "the old place is still written");
+        assertEquals(1, json.getAsJsonObject("inner").get("bands").getAsInt());
     }
 
     @Test
@@ -261,6 +280,14 @@ public class MovedPropertiesTests {
     }
 
     @Test
+    void theAuroraBandsMoveToTheClassicAurora() throws IOException {
+        assertEquals(1, loadModConfig("{\"auroraOptions\": {\"maxBands\": 1}}").auroraOptions.classic.maxBands);
+        var aurora = written("dsurround.json").getAsJsonObject("auroraOptions");
+        assertFalse(aurora.has("maxBands"));
+        assertEquals(1, aurora.getAsJsonObject("classic").get("maxBands").getAsInt());
+    }
+
+    @Test
     void theCompassSwitchBecomesItsStyle() throws IOException {
         // Off wins over the style that was set beside it; on keeps that style
         assertEquals(CompassStyle.NONE, loadModConfig(
@@ -290,7 +317,8 @@ public class MovedPropertiesTests {
 
     @Test
     void theLoggingGroupBecomesDiagnosticsAndGeneralOptions() throws IOException {
-        // The whole group moved, nested guards and all, apart from two switches that went to the general options
+        // The whole group moved, apart from two switches that went to the general options. A 1.21.1 file also has the
+        // guards, which 26.2 has no use for
         var config = loadModConfig("""
                 {
                   "logging": {
@@ -308,13 +336,13 @@ public class MovedPropertiesTests {
         assertEquals(5, config.diagnostics.traceMask);
         assertFalse(config.diagnostics.filteredTagView);
         assertTrue(config.diagnostics.voiceChatHearSelf);
-        assertFalse(config.diagnostics.guards.repairParticleBatches);
         assertFalse(config.generalOptions.enableModUpdateChatMessage);
         assertFalse(config.generalOptions.registerCommands);
 
         var json = written("dsurround.json");
         assertFalse(json.has("logging"), "the old group is still written");
         var diagnostics = json.getAsJsonObject("diagnostics");
+        assertFalse(diagnostics.has("guards"), "1.21.1's guards are still written");
         assertFalse(diagnostics.has("enableModUpdateChatMessage") || diagnostics.has("registerCommands"),
                 "the general options are still written in the diagnostics");
     }

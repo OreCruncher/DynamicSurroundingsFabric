@@ -2,13 +2,13 @@ package org.orecruncher.dsurround.runtime.variables;
 
 import org.orecruncher.dsurround.lib.math.Motion;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 import org.orecruncher.dsurround.lib.scripting.ArgType;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
-import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
+import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 
 public final class PlayerVariables extends VariableSet {
 
@@ -16,7 +16,9 @@ public final class PlayerVariables extends VariableSet {
      * A registry id such as "minecraft:night_vision". Constant ids are parsed when the script is compiled, so a
      * malformed id is reported as an error instead of failing (and being ignored) on every evaluation.
      */
-    private static final ArgType<ResourceLocation> RESOURCE_ID = ArgType.of("resource id", PlayerVariables::toResourceId);
+    private static final ArgType<Identifier> RESOURCE_ID = ArgType.of("resource id", PlayerVariables::toResourceId);
+
+    private final ILevelOracle levelOracle;
 
     private boolean isSuffocating;
     private boolean canSeeSky;
@@ -41,8 +43,9 @@ public final class PlayerVariables extends VariableSet {
     private Double y = 0D;
     private Double z = 0D;
 
-    public PlayerVariables() {
+    public PlayerVariables(ILevelOracle levelOracle) {
         super("player");
+        this.levelOracle = levelOracle;
     }
 
     @Override
@@ -52,7 +55,6 @@ public final class PlayerVariables extends VariableSet {
             final var player = GameUtils.getPlayer().orElseThrow();
 
             var hm = player.getFoodData();
-            var world = player.level();
 
             this.isCreative = player.isCreative();
             this.isBurning = player.isOnFire();
@@ -75,8 +77,8 @@ public final class PlayerVariables extends VariableSet {
             this.z = player.getZ();
 
             this.isSuffocating = isSuffocating(player.isCreative(), player.getAirSupply());
-            this.canRainOn = world.canSeeSky(player.blockPosition().offset(0, 2, 0));
-            this.canSeeSky = this.canRainOn && LevelCompat.getTopSolidOrLiquidBlock(world, player.blockPosition()).getY() <= player.blockPosition().getY();
+            this.canRainOn = this.levelOracle.canSeeSky(player.blockPosition().offset(0, 2, 0));
+            this.canSeeSky = this.canRainOn && this.levelOracle.getTopSolidOrLiquidBlock(player.blockPosition()).getY() <= player.blockPosition().getY();
 
         } else {
 
@@ -142,16 +144,16 @@ public final class PlayerVariables extends VariableSet {
         return !isCreative && airSupply <= 0;
     }
 
-    private static ResourceLocation toResourceId(Object value) {
-        if (value instanceof ResourceLocation id)
+    private static Identifier toResourceId(Object value) {
+        if (value instanceof Identifier id)
             return id;
         if (!(value instanceof String text))
             return null;
-        var id = ResourceLocation.tryParse(text);
+        var id = Identifier.tryParse(text);
         return id != null ? id : ArgType.reject("invalid resource id '%s'".formatted(text));
     }
 
-    private boolean hasEffect(ResourceLocation effect) {
+    private boolean hasEffect(Identifier effect) {
         // An id that is well-formed but not registered (such as an effect from a mod that is not installed) is
         // not an error: the player simply does not have it.
         var player = GameUtils.getPlayer();

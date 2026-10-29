@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.runtime.weather;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.Constants;
 
@@ -14,8 +14,8 @@ import org.orecruncher.dsurround.Constants;
  */
 public final class StormSounds {
 
-    public static final ResourceLocation RAIN = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "weather.rain");
-    public static final ResourceLocation DUST = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "weather.dust");
+    public static final Identifier RAIN = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "weather.rain");
+    public static final Identifier DUST = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "weather.dust");
 
     /**
      * The calm rain's volume in the lightest drizzle, as a share of vanilla's; it rises to all of it at full strength

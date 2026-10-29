@@ -1,9 +1,5 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
@@ -60,17 +56,14 @@ public class DropMeshesTests {
     }
 
     private static byte[] build(PrecipitationField field) {
-        try (var bytes = new ByteBufferBuilder(4096)) {
-            var builder = new BufferBuilder(bytes, VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
-            PrecipitationRenderer.build(field, builder, VIEW, 0.5F, false, List.of(), 1, new TextureAtlasSprite[0],
+        try (var quads = new ParticleQuads()) {
+            PrecipitationRenderer.build(field, quads, VIEW, 0.5F, false, List.of(), 1, new TextureAtlasSprite[0],
                     DropScales.USUAL, RainColor.ofTint(15));
-            try (var mesh = builder.build()) {
-                assertNotNull(mesh, "drops to draw");
-                ByteBuffer vertices = mesh.vertexBuffer();
-                var copy = new byte[vertices.remaining()];
-                vertices.get(copy);
-                return copy;
-            }
+            assertTrue(quads.vertexCount() > 0, "drops to draw");
+            ByteBuffer vertices = quads.vertices();
+            var copy = new byte[vertices.remaining()];
+            vertices.get(copy);
+            return copy;
         }
     }
 

@@ -208,7 +208,9 @@ final class ProfileSummary {
         lines.add(f("Dynamic Surroundings profile: %s, %d s", scene, seconds));
         lines.add(f("%s, %s mods; Java %s; %s", e.getOrDefault("mod", "?"), e.getOrDefault("mods", "?"),
                 e.getOrDefault("java", "?"), e.getOrDefault("os", "?")));
-        lines.add(f("GPU: %s (%s)", e.getOrDefault("glRenderer", "?"), e.getOrDefault("glVersion", "?")));
+        // As the graphics device reports itself (see ProfileEnvironment)
+        lines.add(f("GPU: %s (%s; %s, driver %s)", e.getOrDefault("gpu", "?"), e.getOrDefault("gpuType", "?"),
+                e.getOrDefault("backend", "?"), e.getOrDefault("driver", "?")));
         var display = f("Display: %sx%s, %s, render distance %s, vsync %s, frame limit %s", e.getOrDefault("width", "?"),
                 e.getOrDefault("height", "?"), e.getOrDefault("graphics", "?"), e.getOrDefault("renderDistance", "?"),
                 Boolean.TRUE.equals(e.get("vsync")) ? "on" : "off", limit(e.get("frameRateLimit")));

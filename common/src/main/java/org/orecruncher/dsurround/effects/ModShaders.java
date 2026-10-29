@@ -1,35 +1,38 @@
 package org.orecruncher.dsurround.effects;
 
 import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
+import org.orecruncher.dsurround.effects.aurora.RealisticAuroraRenderer;
 import org.orecruncher.dsurround.effects.clouds.CloudRenderer;
 import org.orecruncher.dsurround.effects.frost.FrostRenderer;
+import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
 import org.orecruncher.dsurround.effects.lightning.LightningRenderer;
 import org.orecruncher.dsurround.effects.particles.PointLights;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
-import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
- * The mod's core shaders. Each platform has its own API for registering shaders, and registers each of these with
- * it; each is held by the effect drawn with it.
+ * The mod's render pipelines. MixinShaderManager compiles each of these once the game's shaders have reloaded; each
+ * is held by the effect drawn with it.
  */
 public final class ModShaders {
 
-    public static final List<ModShader> SHADERS = List.of(
-            SoftParticles.SHADER,
-            SoftParticles.SCENE_DEPTH_SHADER,
-            AuroraRenderer.SHADER,
-            PointLights.SHADER,
-            PrecipitationShaders.DROPS,
-            PrecipitationShaders.DAMP_SPOTS,
-            GroundFogVolume.SHADER,
-            GroundFogVolume.SMOOTH,
-            GroundFogVolume.COMPOSITE,
-            FrostRenderer.SHADER,
-            LightningRenderer.SHADER,
-            CloudRenderer.SHADER);
+    public static final List<ModShader> SHADERS = Stream.concat(Stream.of(
+                    SoftParticles.SHADER,
+                    SoftParticles.FLAME_SHADER,
+                    SoftParticles.DEPTH_SHADER,
+                    SoftParticles.FABULOUS_SHADER,
+                    SoftParticles.FLAME_DEPTH_SHADER,
+                    SoftParticles.FLAME_FABULOUS_SHADER,
+                    SoftParticles.EYE_FLAME_SHADER,
+                    SoftParticles.EYE_FLAME_DEPTH_SHADER,
+                    SoftParticles.EYE_FLAME_FABULOUS_SHADER,
+                    AuroraRenderer.SHADER,
+                    PointLights.SHADER),
+            Stream.of(PrecipitationShaders.SHADERS, FrostRenderer.SHADERS, GroundFogVolume.SHADERS, RealisticAuroraRenderer.SHADERS,
+                    LightningRenderer.SHADERS, CloudRenderer.SHADERS).flatMap(List::stream)).toList();
 
     private ModShaders() {
     }

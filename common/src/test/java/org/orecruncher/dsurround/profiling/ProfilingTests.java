@@ -172,8 +172,9 @@ public class ProfilingTests {
 
     // As the render thread captures it in the game, which tests can't: there is no OpenGL here
     static ProfileEnvironment environment() {
-        return new ProfileEnvironment("Dynamic Surroundings 1.21.1-0.4.7 (Fabric)", 42, "Test GPU/PCIe/SSE2", "Test Vendor",
-                "4.6.0 Test Driver 1.2.3", "fabulous", false, 12, 3840, 2160, 260, false, "clientPotato", ProfileEnvironment.javaRuntime(), ProfileEnvironment.operatingSystem(),
+        return new ProfileEnvironment("Dynamic Surroundings 26.2-0.4.7 (Fabric)", 42, "Test GPU/PCIe/SSE2", "Test Vendor",
+                "discrete", "4.6.0 Test Driver 1.2.3", "OpenGL", "fabulous, improved transparency on", false, 12,
+                3840, 2160, 260, false, "clientPotato", ProfileEnvironment.javaRuntime(), ProfileEnvironment.operatingSystem(),
                 List.of(new ProfileFeature(ProfileFeature.HOOK, "DYNAMIC_CLOUDS", "MISSING", false),
                         new ProfileFeature(ProfileFeature.SETTING, "weatherOptions.enableDustStorms", "true", true)));
     }
@@ -205,8 +206,8 @@ public class ProfilingTests {
         assertEquals(new ProfileFeature(ProfileFeature.SETTING, "entityEffects.entityEffectRange", "16", false),
                 named(features, "entityEffects.entityEffectRange"));
         assertTrue(named(features, "weatherOptions.enableDynamicClouds").usual());
-        // Nested groups are walked, and every hook and conflict is there
-        assertTrue(named(features, "diagnostics.guards.repairParticleBatches").usual());
+        // Every setting is named by its group, and every hook and conflict is there
+        assertTrue(features.stream().filter(f -> f.kind().equals(ProfileFeature.SETTING)).allMatch(f -> f.name().contains(".")));
         assertEquals(OptionalHook.values().length, features.stream().filter(f -> f.kind().equals(ProfileFeature.HOOK)).count());
         assertEquals(FeatureConflict.values().length, features.stream().filter(f -> f.kind().equals(ProfileFeature.CONFLICT)).count());
     }
@@ -259,9 +260,11 @@ public class ProfilingTests {
         var event = events.getFirst();
         assertEquals(environment.mod(), event.getString("mod"));
         assertEquals(environment.mods(), event.getInt("mods"));
-        assertEquals(environment.glRenderer(), event.getString("glRenderer"));
-        assertEquals(environment.glVendor(), event.getString("glVendor"));
-        assertEquals(environment.glVersion(), event.getString("glVersion"));
+        assertEquals(environment.gpu(), event.getString("gpu"));
+        assertEquals(environment.gpuVendor(), event.getString("gpuVendor"));
+        assertEquals(environment.gpuType(), event.getString("gpuType"));
+        assertEquals(environment.driver(), event.getString("driver"));
+        assertEquals(environment.backend(), event.getString("backend"));
         assertEquals(environment.graphics(), event.getString("graphics"));
         assertEquals(environment.shaderPack(), event.getBoolean("shaderPack"));
         assertEquals(environment.renderDistance(), event.getInt("renderDistance"));
@@ -381,8 +384,8 @@ public class ProfilingTests {
         var text = ProfileSummary.of(file).text("storm");
         assertTrue(text.length() <= ProfileSummary.LIMIT, text.length() + " characters");
         assertTrue(text.startsWith("Dynamic Surroundings profile: storm, "), text);
-        assertTrue(text.contains("Test GPU/PCIe/SSE2 (4.6.0 Test Driver 1.2.3)"), text);
-        assertTrue(text.contains("Display: 3840x2160, fabulous, render distance 12, vsync off, frame limit none, dev run clientPotato"), text);
+        assertTrue(text.contains("GPU: Test GPU/PCIe/SSE2 (discrete; OpenGL, driver 4.6.0 Test Driver 1.2.3)"), text);
+        assertTrue(text.contains("Display: 3840x2160, fabulous, improved transparency on, render distance 12, vsync off, frame limit none, dev run clientPotato"), text);
         assertTrue(text.contains("Frames: 125 fps, mean 8.0 ms"), text);
         assertTrue(text.contains("most: Cloud Handler 0.20"), text);
         assertTrue(text.contains("Hooks not applied: DYNAMIC_CLOUDS"), text);

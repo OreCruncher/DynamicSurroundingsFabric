@@ -1,19 +1,19 @@
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.DimensionSpecialEffects;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
+import net.minecraft.world.attribute.EnvironmentAttributes;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.resources.Identifier;
+
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.data.DimensionConfigRule;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
 
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.function.Predicate;
 
 /**
  * Settings for one dimension, built from the world itself and then adjusted by the matching dimension config rules.
@@ -26,13 +26,25 @@ import java.util.stream.Collectors;
 public class DimensionInfo {
 
     public static final DimensionInfo NONE = new DimensionInfo();
+
+    /**
+     * Whether a level's dimension draws its weather its own way: NeoForge lets a dimension register a renderer for it
+     * (set by the NeoForge platform). Particle weather drawn in its place would hide it, so it is left to the dimension
+     * unless a rule says otherwise. Nothing on Fabric replaces a dimension's weather.
+     */
+    public static Predicate<Level> drawsOwnWeather = level -> false;
+    /**
+     * Whether a level's dimension draws its clouds its own way, as {@link #drawsOwnWeather} for its weather: the mod's
+     * clouds drawn in their place would hide them
+     */
+    public static Predicate<Level> drawsOwnClouds = level -> false;
     private static final int SPACE_HEIGHT_OFFSET = 32;
     // Cloud height for a dimension that has no clouds: never reached
     private static final int NO_CLOUDS = Integer.MAX_VALUE;
 
     protected final boolean isFlatWorld;
     // Attributes about the dimension. This information is loaded from local configs.
-    protected ResourceLocation name;
+    protected Identifier name;
     protected int seaLevel;
     protected int skyHeight;
     protected int cloudHeight;
@@ -40,6 +52,8 @@ public class DimensionInfo {
     protected boolean alwaysOutside = false;
     protected boolean playBiomeSounds = true;
     protected boolean compassWobble = false;
+    // TODO: Expose in configs
+    protected boolean natural = true;
     // Whether the mod's particle rain, snow and dust storms take the place of the dimension's weather
     protected boolean particleWeather = true;
     // Whether the wind blows here: it drifts the weather, mist, steam, smoke and flames
@@ -63,7 +77,7 @@ public class DimensionInfo {
 
     public DimensionInfo(final Level world) {
         // Attributes that come from the world object itself. Set now because the config may override.
-        this.name = world.dimension().location();
+        this.name = world.dimension().identifier();
         this.seaLevel = world.getSeaLevel();
         this.skyHeight = world.getHeight();
         this.isFlatWorld = LevelCompat.isSuperFlat(world);
@@ -73,16 +87,16 @@ public class DimensionInfo {
         if (this.isFlatWorld)
             this.seaLevel = -60;
 
-        this.compassWobble = !world.dimensionType().natural();
+        this.natural = world.dimensionType().skybox() == DimensionType.Skybox.OVERWORLD;
+        this.compassWobble = !this.natural;
 
         // Guesses, which a rule can overrule: a dimension with a sky has wind and ground fog, and one that draws its
         // weather as vanilla does gets particle weather in its place
         this.simulateWind = world.dimensionType().hasSkyLight();
         this.groundFog = world.dimensionType().hasSkyLight();
-        this.particleWeather = !(world instanceof ClientLevel clientLevel) || hasVanillaWeather(clientLevel.effects());
+        this.particleWeather = !drawsOwnWeather.test(world);
         // And one with vanilla's clouds gets the mod's in their place
-        this.dynamicClouds = this.defaultCloudHeight != NO_CLOUDS
-                && world instanceof ClientLevel clientLevel && hasVanillaClouds(clientLevel.effects());
+        this.dynamicClouds = this.defaultCloudHeight != NO_CLOUDS && !drawsOwnClouds.test(world);
 
         // Valid even if finish() is never called
         this.finish();
@@ -90,77 +104,14 @@ public class DimensionInfo {
 
     /**
      * The height vanilla draws this dimension's clouds at (192 for the overworld), or NO_CLOUDS for a dimension
-     * without clouds (the nether and the end).
+     * without clouds (the nether and the end). Both are environment attributes; vanilla draws no clouds when their
+     * color is fully transparent. Read at the world's origin, as the dimension's own values.
      */
     private static int vanillaCloudHeight(final Level world) {
-        if (world instanceof ClientLevel clientLevel) {
-            float height = clientLevel.effects().getCloudHeight();
-            if (!Float.isNaN(height))
-                return Mth.floor(height);
-        }
-        return NO_CLOUDS;
-    }
-
-    /**
-     * The methods a dimension's effects override to draw or tick their own weather: NeoForge's renderSnowAndRain and
-     * tickRain (IDimensionSpecialEffectsExtension). None on Fabric, where effects can't.
-     */
-    private static final Set<String> WEATHER_HOOKS = Arrays.stream(DimensionSpecialEffects.class.getMethods())
-            .map(Method::getName)
-            .filter(name -> name.equals("renderSnowAndRain") || name.equals("tickRain"))
-            .collect(Collectors.toUnmodifiableSet());
-
-    /**
-     * Whether a dimension draws its weather as vanilla does. Vanilla's own effects (the overworld's, the nether's and
-     * the end's) do. A mod's effects (Stellar View replaces vanilla's, for its sky) do unless they override one of
-     * the platform's weather hooks; without hooks to look for, any mod's effects may draw their own. Particle weather
-     * drawn first would hide a dimension's own, so that is left to the dimension unless a rule says otherwise.
-     */
-    public static boolean hasVanillaWeather(DimensionSpecialEffects effects) {
-        return hasVanillaWeather(effects, WEATHER_HOOKS);
-    }
-
-    static boolean hasVanillaWeather(DimensionSpecialEffects effects, Set<String> weatherHooks) {
-        return overridesNone(effects, weatherHooks);
-    }
-
-    /**
-     * The method a dimension's effects override to draw their own clouds: NeoForge's renderClouds
-     * (IDimensionSpecialEffectsExtension). None on Fabric.
-     */
-    private static final Set<String> CLOUD_HOOKS = Arrays.stream(DimensionSpecialEffects.class.getMethods())
-            .map(Method::getName)
-            .filter(name -> name.equals("renderClouds"))
-            .collect(Collectors.toUnmodifiableSet());
-
-    /**
-     * Whether a dimension draws its clouds as vanilla does: as {@link #hasVanillaWeather}, for the platform's cloud
-     * hook. The mod's clouds drawn in place of a dimension's own would hide them.
-     */
-    public static boolean hasVanillaClouds(DimensionSpecialEffects effects) {
-        return hasVanillaClouds(effects, CLOUD_HOOKS);
-    }
-
-    static boolean hasVanillaClouds(DimensionSpecialEffects effects, Set<String> cloudHooks) {
-        return overridesNone(effects, cloudHooks);
-    }
-
-    /**
-     * Whether a dimension's effects are vanilla's, or a mod's that override none of the hooks
-     */
-    private static boolean overridesNone(DimensionSpecialEffects effects, Set<String> hooks) {
-        var type = effects.getClass();
-        if (type == DimensionSpecialEffects.OverworldEffects.class
-                || type == DimensionSpecialEffects.NetherEffects.class
-                || type == DimensionSpecialEffects.EndEffects.class)
-            return true;
-        if (hooks.isEmpty())
-            return false;
-        for (Class<?> c = type; c != null && c != DimensionSpecialEffects.class; c = c.getSuperclass())
-            for (var method : c.getDeclaredMethods())
-                if (hooks.contains(method.getName()))
-                    return false;
-        return true;
+        var attributes = world.environmentAttributes();
+        if (ARGB.alpha(attributes.getValue(EnvironmentAttributes.CLOUD_COLOR, Vec3.ZERO)) == 0)
+            return NO_CLOUDS;
+        return Mth.floor(attributes.getValue(EnvironmentAttributes.CLOUD_HEIGHT, Vec3.ZERO));
     }
 
     /**
@@ -191,7 +142,7 @@ public class DimensionInfo {
         return this;
     }
 
-    public ResourceLocation getName() {
+    public Identifier getName() {
         return this.name;
     }
 
@@ -225,6 +176,10 @@ public class DimensionInfo {
 
     public boolean getCompassWobble() {
         return this.compassWobble;
+    }
+
+    public boolean natural() {
+        return this.natural;
     }
 
     public boolean particleWeather() {

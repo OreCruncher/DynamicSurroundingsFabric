@@ -96,8 +96,8 @@ public class PrecipitationCoverTests {
                 assertTrue(field.drops().y[i] < ROOF_BOTTOM, "under cover but above the roof's underside");
                 assertTrue(field.drops().covered[i] <= lasts, "lasted too long under cover");
                 // Out of the wind it drifts only a little way in from the edge
-                float in = field.drops().x[i] * roof.windX() + field.drops().z[i] * roof.windZ();
-                assertTrue(in < 6F, "drifted too far in under the roof: " + in);
+                double in = field.drops().x[i] * roof.windX() + field.drops().z[i] * roof.windZ();
+                assertTrue(in < 6D, "drifted too far in under the roof: " + in);
                 assertEquals(0x700070, field.drops().light[i], "lit as the roof's top, not where it is");
             }
         }

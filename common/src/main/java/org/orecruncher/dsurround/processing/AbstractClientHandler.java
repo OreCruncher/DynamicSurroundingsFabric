@@ -81,11 +81,9 @@ abstract class AbstractClientHandler {
 
     }
 
-    //////////////////////////////
-    //
-    // DO NOT HOOK THESE EVENTS!
-    //
-    //////////////////////////////
+    /*
+        DO NOT HOOK THESE EVENTS!
+     */
     final void updateTimer(final long nanos) {
         this.timer.update(nanos);
     }

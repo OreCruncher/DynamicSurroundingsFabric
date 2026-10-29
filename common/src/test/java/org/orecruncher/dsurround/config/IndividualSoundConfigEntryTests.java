@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.config;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class IndividualSoundConfigEntryTests {
 
-    private static final ResourceLocation SOUND = ResourceLocation.parse("minecraft:entity.cow.ambient");
+    private static final Identifier SOUND = Identifier.parse("minecraft:entity.cow.ambient");
 
     private static IndividualSoundConfigEntry decode(String text) {
         return IndividualSoundConfigEntry.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString(text)).getOrThrow();

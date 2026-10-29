@@ -1,25 +1,34 @@
 package org.orecruncher.dsurround.effects.lightning;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.PrimitiveTopology;
+import com.mojang.blaze3d.pipeline.BindGroupLayout;
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.ColorTargetState;
+import com.mojang.blaze3d.pipeline.DepthStencilState;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.platform.BlendFactor;
+import com.mojang.blaze3d.platform.CompareOp;
+import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.effects.MeshDraw;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.NoiseTexture;
 import org.orecruncher.dsurround.effects.RenderTimer;
-import org.orecruncher.dsurround.effects.TargetCheck;
 import org.orecruncher.dsurround.lib.Library;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Draws lightning: each channel of a bolt as a ribbon turned to face the camera, a white hot core along its middle in
@@ -27,17 +36,41 @@ import java.util.List;
  * noise into the cloud's texture (see {@link CloudGlow}): when the mod's clouds aren't drawn, as they are lit by it
  * from inside instead. The light adds to what is behind it. A far strike shows less, the more so the closer the fog
  * (see {@link Strikes#visibility}).
- * Drawn where vanilla draws its weather, after it: with Fabulous graphics to the weather's target, writing depth so
- * the transparency pass lays it over the scene where it is in front (that target is cleared, without the scene's
- * depth); otherwise to the scene, tested against its depth, which hides it behind hills, and cut off by the clouds'.
  * <p>
- * Ribbons are as wide as a channel looks close by, and never thinner than about a pixel far away. The shader
- * ({@link #SHADER}) is registered by each platform. Everything here runs on the render thread.
+ * Drawn in the weather pass, after the ground fog, to the weather's target: with Fabulous graphics a target of its
+ * own, given the scene's depth at the start of the pass (see WeatherDepth), into which depth is written so the
+ * transparency pass lays the lightning over the scene where it is in front; otherwise the main target, tested against
+ * its depth, which hides it behind hills, and cut off by the clouds'.
+ * <p>
+ * Ribbons are as wide as a channel looks close by, and never thinner than about a pixel far away. Without its
+ * pipelines ({@link #SHADERS}) there is no lightning of the mod's, and the game's bolts are drawn. Everything here runs
+ * on the render thread.
  */
 public final class LightningRenderer {
 
-    public static final ModShader SHADER = new ModShader("lightning", DefaultVertexFormat.POSITION_TEX_COLOR,
-            "lightning", "lightning will be vanilla's", Library.LOGGER);
+    private static final String NOISE_SAMPLER = "NoiseSampler";
+    private static final BindGroupLayout NOISE_LAYOUT = BindGroupLayout.builder().withSampler(NOISE_SAMPLER).build();
+    // Light, added to what is there
+    private static final BlendFunction ADD = new BlendFunction(BlendFactor.ONE, BlendFactor.ONE);
+    private static final DepthStencilState TEST_ONLY = new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false);
+
+    // Channels, with their white core, and the cloud's glow, without; each as is, and for Fabulous graphics, where the
+    // light comes with next to no alpha (not none, or the transparency pass skips the pixel) and depth is written so
+    // that pass can sort it
+    private static final RenderPipeline CHANNELS_PIPELINE = pipeline("pipeline/lightning_channels", true, false);
+    private static final RenderPipeline CHANNELS_DEPTH_PIPELINE = pipeline("pipeline/lightning_channels_depth_write", true, true);
+    private static final RenderPipeline GLOW_PIPELINE = pipeline("pipeline/lightning_glow", false, false);
+    private static final RenderPipeline GLOW_DEPTH_PIPELINE = pipeline("pipeline/lightning_glow_depth_write", false, true);
+
+    public static final ModShader CHANNELS = new ModShader(CHANNELS_PIPELINE, "lightning", "lightning will be vanilla's", Library.LOGGER);
+    public static final ModShader CHANNELS_DEPTH = new ModShader(CHANNELS_DEPTH_PIPELINE, "lightning (Fabulous)", "lightning will be vanilla's", Library.LOGGER);
+    public static final ModShader GLOW = new ModShader(GLOW_PIPELINE, "lightning's cloud glow", "lightning will be vanilla's", Library.LOGGER);
+    public static final ModShader GLOW_DEPTH = new ModShader(GLOW_DEPTH_PIPELINE, "lightning's cloud glow (Fabulous)", "lightning will be vanilla's", Library.LOGGER);
+
+    /**
+     * All of them, for {@code ModShaders}
+     */
+    public static final List<ModShader> SHADERS = List.of(CHANNELS, CHANNELS_DEPTH, GLOW, GLOW_DEPTH);
 
     public static final RenderTimer RENDER_TIMER = new RenderTimer("Lightning");
 
@@ -51,7 +84,7 @@ public final class LightningRenderer {
      */
     static final float MIN_CORE_ANGLE = 0.0011F;
     /**
-     * How much wider a ribbon is than its core: the glow around it. The shader's CORE is one over this.
+     * How much wider a ribbon is than its core: the glow around it. The shader's CORE_WIDTH is one over this.
      */
     static final float HALO = 8F;
     /**
@@ -72,108 +105,148 @@ public final class LightningRenderer {
      * The noise texture's size, in cells, which it repeats at (see {@link NoiseTexture})
      */
     static final int NOISE_SIZE = 128;
+    // Room for a few strikes' vertices to start with; grown as needed
+    private static final int INITIAL_BYTES = 4096 * DefaultVertexFormat.POSITION_TEX_COLOR.getVertexSize();
 
+    // Made on first use, on the render thread
     @Nullable
     private static DynamicTexture noise;
+    @Nullable
+    private static ByteBufferBuilder meshBytes;
+    private static final MeshDraw CHANNEL_DRAW = new MeshDraw("lightning");
+    private static final MeshDraw GLOW_DRAW = new MeshDraw("lightning cloud glow");
 
     private LightningRenderer() {
     }
 
+    private static RenderPipeline pipeline(String location, boolean channels, boolean fabulous) {
+        var builder = RenderPipeline.builder()
+                .withLocation(Constants.asId(location))
+                .withVertexShader(Constants.asId("core/lightning"))
+                .withFragmentShader(Constants.asId("core/lightning"))
+                .withBindGroupLayout(BindGroupLayouts.GLOBALS)
+                .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+                .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
+                .withPrimitiveTopology(PrimitiveTopology.QUADS)
+                .withColorTargetState(new ColorTargetState(ADD))
+                .withDepthStencilState(fabulous ? DepthStencilState.DEFAULT : TEST_ONLY)
+                .withCull(false);
+        // The cloud's glow reads noise for its texture; the channels need nothing more
+        if (channels)
+            builder.withShaderDefine("CORE");
+        else
+            builder.withBindGroupLayout(NOISE_LAYOUT);
+        if (fabulous)
+            builder.withShaderDefine("ADD_ONLY");
+        return builder.build();
+    }
+
     /**
-     * Draws the strikes, each as it is at {@code nowTicks}. Sets up the drawing state it needs and puts it back.
+     * Whether lightning can be drawn: its pipelines compiled, drawing hasn't failed since, and no shader pack is in use
+     */
+    public static boolean isUsable() {
+        for (var shader : SHADERS)
+            if (!shader.isUsable())
+                return false;
+        return true;
+    }
+
+    /**
+     * Draws the strikes, each as it is at {@code nowTicks}, outside any render pass
      *
+     * @param target   where: the weather's target
+     * @param fabulous whether Fabulous graphics are on
      * @param nowTicks the game time, in ticks, with the part of a tick
      * @param fogEnd   where the fog is thickest, in blocks, for how much of a far strike shows (see
      *                 {@link Strikes#visibility})
      * @param glow     whether to draw the cloud's glow: not when the mod's clouds are lit by it instead
      * @return how many strikes were drawn, for the diagnostics
      */
-    public static int draw(List<Strike> strikes, Camera camera, double nowTicks, float fogEnd, boolean glow) {
-        var current = SHADER.get();
-        if (strikes.isEmpty() || current == null)
+    public static int draw(List<Strike> strikes, Camera camera, RenderTarget target, boolean fabulous, double nowTicks,
+                           float fogEnd, boolean glow) {
+        if (strikes.isEmpty())
             return 0;
-        var tesselator = Tesselator.getInstance();
+        var channels = fabulous ? CHANNELS_DEPTH : CHANNELS;
+        var glowShader = fabulous ? GLOW_DEPTH : GLOW;
         int[] drawn = {0};
         RENDER_TIMER.begin();
         RENDER_TIMER.count(strikes.size());
-        SHADER.run(() -> drawn[0] = drawStrikes(current, tesselator, strikes, camera, nowTicks, fogEnd, glow), tesselator::clear);
+        // The channels first: with depth written, the cloud's glow drawn first would hide them behind it
+        channels.run(() -> drawn[0] += drawChannels(channels.pipeline(), strikes, camera, target, nowTicks, fogEnd), () -> {});
+        if (glow)
+            glowShader.run(() -> drawn[0] += drawGlow(glowShader.pipeline(), strikes, camera, target, nowTicks, fogEnd), () -> {});
         RENDER_TIMER.end();
         return drawn[0];
     }
 
-    private static int drawStrikes(ShaderInstance shader, Tesselator tesselator, List<Strike> strikes, Camera camera,
-                                   double nowTicks, float fogEnd, boolean drawGlow) {
-        boolean fabulous = Minecraft.useShaderTransparency();
-        // Drawn on what is bound after the weather (and the mist), which another mod may have changed
-        TargetCheck.ensureWeather("the lightning");
-        shader.safeGetUniform("AddOnly").set(fabulous ? 1F : 0F);
+    private static Consumer<RenderPass> bindNoise() {
         if (noise == null)
             noise = NoiseTexture.create(NOISE_SIZE, 0x6C69676EL);
-        shader.setSampler("NoiseSampler", noise.getId());
-        RenderSystem.setShader(SHADER.supplier());
+        var view = noise.getTextureView();
+        return pass -> pass.bindTexture(NOISE_SAMPLER, view, RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
+    }
 
-        // Light, added to what is there. With Fabulous graphics it goes to the weather's target, which the
-        // transparency pass lays over the scene as behind * (1 - alpha) + color: the shader gives its light with next
-        // to no alpha (not none, or the pass skips the pixel), and depth is written so the pass can sort it.
-        RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE);
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(fabulous);
-        RenderSystem.disableCull();
+    private static BufferBuilder builder() {
+        if (meshBytes == null)
+            meshBytes = new ByteBufferBuilder(INITIAL_BYTES);
+        return new BufferBuilder(meshBytes, PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+    }
+
+    private static int drawChannels(RenderPipeline pipeline, List<Strike> strikes, Camera camera, RenderTarget target,
+                                    double nowTicks, float fogEnd) {
+        var position = camera.position();
+        var builder = builder();
         int drawn = 0;
-        try {
-            var position = camera.getPosition();
-            // The channels first: with depth written, the cloud's glow drawn first would hide them behind it
-            shader.safeGetUniform("CoreStrength").set(1F);
-            var builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-            for (var strike : strikes) {
-                var shape = strike.shape();
-                if (shape == null)
-                    continue;
-                float age = strike.age(nowTicks);
-                if (age < 0F || strike.isDone(age))
-                    continue;
-                float ox = (float) (strike.x() - position.x);
-                float oy = (float) (strike.y() - position.y);
-                float oz = (float) (strike.z() - position.z);
-                float seen = Strikes.visibility(strike.distance(), fogEnd);
-                for (var channel : shape.channels())
-                    ribbon(builder, strike, channel, ox, oy, oz, age, seen);
-                drawn++;
-            }
-            upload(builder);
-
-            if (!drawGlow)
-                return drawn;
-            shader.safeGetUniform("CoreStrength").set(0F);
-            builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-            for (var strike : strikes) {
-                float age = strike.age(nowTicks);
-                if (age < 0F || strike.isDone(age))
-                    continue;
-                boolean any = false;
-                float ox = (float) (strike.x() - position.x);
-                float oy = (float) (strike.y() - position.y);
-                float oz = (float) (strike.z() - position.z);
-                var glow = strike.glow();
-                float seen = Strikes.visibility(strike.distance(), fogEnd);
-                for (int p = 0; p < glow.count(); p++) {
-                    float a = alpha(strike.glowBrightness(p, age) * seen);
-                    if (a <= 0F)
-                        continue;
-                    any = true;
-                    cloudPatch(builder, ox + glow.x(p), oy + glow.y(p), oz + glow.z(p), glow.radius(p), glow.noiseCell(p), a);
-                }
-                if (any && strike.shape() == null)
-                    drawn++;
-            }
-            upload(builder);
-        } finally {
-            RenderSystem.enableCull();
-            RenderSystem.depthMask(true);
-            RenderSystem.defaultBlendFunc();
-            RenderSystem.disableBlend();
+        for (var strike : strikes) {
+            var shape = strike.shape();
+            if (shape == null)
+                continue;
+            float age = strike.age(nowTicks);
+            if (age < 0F || strike.isDone(age))
+                continue;
+            float ox = (float) (strike.x() - position.x);
+            float oy = (float) (strike.y() - position.y);
+            float oz = (float) (strike.z() - position.z);
+            float seen = Strikes.visibility(strike.distance(), fogEnd);
+            for (var channel : shape.channels())
+                ribbon(builder, strike, channel, ox, oy, oz, age, seen);
+            drawn++;
         }
+        var mesh = builder.build();
+        if (mesh != null)
+            CHANNEL_DRAW.draw(mesh, pipeline, target, pass -> {});
+        return drawn;
+    }
+
+    private static int drawGlow(RenderPipeline pipeline, List<Strike> strikes, Camera camera, RenderTarget target,
+                                double nowTicks, float fogEnd) {
+        var position = camera.position();
+        var builder = builder();
+        int drawn = 0;
+        for (var strike : strikes) {
+            float age = strike.age(nowTicks);
+            if (age < 0F || strike.isDone(age))
+                continue;
+            boolean any = false;
+            float ox = (float) (strike.x() - position.x);
+            float oy = (float) (strike.y() - position.y);
+            float oz = (float) (strike.z() - position.z);
+            var glow = strike.glow();
+            float seen = Strikes.visibility(strike.distance(), fogEnd);
+            for (int p = 0; p < glow.count(); p++) {
+                float a = alpha(strike.glowBrightness(p, age) * seen);
+                if (a <= 0F)
+                    continue;
+                any = true;
+                cloudPatch(builder, ox + glow.x(p), oy + glow.y(p), oz + glow.z(p), glow.radius(p), glow.noiseCell(p), a);
+            }
+            // Flashes in the cloud are only glow; the rest were counted with their channels
+            if (any && strike.shape() == null)
+                drawn++;
+        }
+        var mesh = builder.build();
+        if (mesh != null)
+            GLOW_DRAW.draw(mesh, pipeline, target, bindNoise());
         return drawn;
     }
 
@@ -188,12 +261,6 @@ public final class LightningRenderer {
         builder.addVertex(cx + r, cy, cz - r).setUv(cell + 1F, -1F).setColor(GLOW_R, GLOW_G, GLOW_B, alpha);
         builder.addVertex(cx + r, cy, cz + r).setUv(cell + 1F, 1F).setColor(GLOW_R, GLOW_G, GLOW_B, alpha);
         builder.addVertex(cx - r, cy, cz + r).setUv(cell - 1F, 1F).setColor(GLOW_R, GLOW_G, GLOW_B, alpha);
-    }
-
-    private static void upload(BufferBuilder builder) {
-        var mesh = builder.build();
-        if (mesh != null)
-            BufferUploader.drawWithShader(mesh);
     }
 
     /**
@@ -260,12 +327,5 @@ public final class LightningRenderer {
      */
     static float alpha(float light) {
         return light < MIN_LIGHT ? 0F : Math.min(light * 0.5F, 1F);
-    }
-
-    /**
-     * Whether lightning can be drawn: the shader loaded, drawing hasn't failed since, and no shader pack is in use
-     */
-    public static boolean isUsable() {
-        return SHADER.isUsable();
     }
 }

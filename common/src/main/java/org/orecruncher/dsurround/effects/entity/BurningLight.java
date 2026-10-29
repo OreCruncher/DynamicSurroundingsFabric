@@ -15,8 +15,8 @@ import java.util.Arrays;
  * jet has: each light is drawn over the part of the screen it may reach (all of it, when the camera is within its
  * reach, as it is with mobs chasing the player), so a crowd with several lights each costs a great deal.
  * <p>
- * Gathered as each mob is drawn (from {@code MixinEntityRenderDispatcher}), once a frame however often a mob is drawn,
- * then added just before the lights are drawn. A very large crowd is held in check by {@link PointLights}' own limit,
+ * Gathered as each mob's render state is extracted (from {@code MixinEntityRenderer}), once a frame however often a
+ * mob is extracted, then added just before the lights are drawn. A very large crowd is held in check by {@link PointLights}' own limit,
  * which fades out the farthest lights rather than cutting them off. Render thread only.
  */
 public final class BurningLight {

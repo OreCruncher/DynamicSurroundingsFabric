@@ -1,12 +1,5 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.MeshData;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import org.jetbrains.annotations.Nullable;
@@ -18,24 +11,21 @@ import java.util.concurrent.Executor;
 
 /**
  * The falling drops' quads, built ahead on another thread: as the level starts to be drawn ({@link #begin}), once the
- * camera is set for the frame, so they are built while the render thread draws the terrain, and the weather's pass only
- * draws them ({@link #draw}). Building them, every drop facing the camera and placed between its ticks, was the largest
- * part of the weather's time on the render thread.
+ * camera is set for the frame, so they are written while the render thread draws the terrain, and the weather's pass
+ * only uploads and draws them ({@link #quads}). Writing them, every drop facing the camera and placed between its
+ * ticks, was the largest part of the weather's time on the render thread.
  * <p>
  * Built for the camera and partial tick as the level began; if the weather is drawn for another (a mod drawing the level
- * again from elsewhere: a portal, a mirror), or drawn twice, they are built there and then, on the render thread, as
- * before. Each kind, the rain and snow and the dust, is built into a buffer of its own and drawn at most once.
+ * again from elsewhere: a portal, a mirror), or drawn twice, they are written there and then, on the render thread, as
+ * before. Each kind, the rain and snow and the dust, is written into quads of its own and used at most once.
  * <p>
  * The build reads the drops drawn, which only the client tick changes, when it finishes the drops' step; the tick waits
  * for a build under way, and drops it, first ({@link #discard}). Render thread only, but for the build itself.
  */
-public final class DropMeshes {
-
-    // Room to start with, in bytes, for each kind: a few thousand drops, before the buffer grows
-    private static final int INITIAL_BYTES = 256 * 1024;
+public final class DropMeshes implements AutoCloseable {
 
     /**
-     * What a frame's drops were built for: drawn only for the same
+     * What a frame's drops were built for: used only for the same
      */
     private record Request(PrecipitationField field, PrecipitationRenderer.View view, float partialTick,
                            List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales,
@@ -49,17 +39,14 @@ public final class DropMeshes {
         }
     }
 
-    private final ByteBufferBuilder dropBytes = new ByteBufferBuilder(INITIAL_BYTES);
-    private final ByteBufferBuilder dustBytes = new ByteBufferBuilder(INITIAL_BYTES);
+    private final ParticleQuads drops = new ParticleQuads();
+    private final ParticleQuads dust = new ParticleQuads();
+    // Written on the render thread when what was built ahead can't be used
+    private final ParticleQuads now = new ParticleQuads();
     @Nullable
     private Request request;
     @Nullable
     private CompletableFuture<Void> pending;
-    // Set by the build, read once it is joined; null once drawn, or if there were none
-    @Nullable
-    private MeshData drops;
-    @Nullable
-    private MeshData dust;
     private boolean dropsTaken;
     private boolean dustTaken;
     // Kinds drawn from what was built ahead, and built on the render thread instead, since the diagnostics last asked
@@ -83,54 +70,42 @@ public final class DropMeshes {
 
     // On the executor's thread
     private void build(Request request) {
-        this.drops = build(this.dropBytes, request, false);
-        this.dust = build(this.dustBytes, request, true);
+        build(this.drops, request, false);
+        build(this.dust, request, true);
     }
 
-    @Nullable
-    private static MeshData build(ByteBufferBuilder bytes, Request request, boolean dustOnly) {
-        if (!PrecipitationRenderer.hasAny(request.field(), dustOnly))
-            return null;
-        var builder = new BufferBuilder(bytes, VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
-        PrecipitationRenderer.build(request.field(), builder, request.view(), request.partialTick(), dustOnly,
+    private static void build(ParticleQuads quads, Request request, boolean dustOnly) {
+        PrecipitationRenderer.build(request.field(), quads, request.view(), request.partialTick(), dustOnly,
                 request.snowflakes(), request.largest(), request.dust(), request.scales(), request.rainColor());
-        return builder.build();
     }
 
     /**
-     * Draws the drops of a kind, as {@link PrecipitationRenderer#draw}: those built ahead, if they were built for this
-     * camera, partial tick and settings and not drawn yet; otherwise built now
+     * The drops of a kind, written as {@link PrecipitationRenderer#build} writes them, to upload and draw: those built
+     * ahead, if they were built for this camera, partial tick and settings and not used yet; otherwise written now.
+     * Good until the next call.
      *
-     * @return how many were drawn
      * @throws RuntimeException what the build threw, if it failed
      */
-    public int draw(PrecipitationField field, Tesselator tesselator, Camera camera, float partialTick, boolean dustOnly,
-                    List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales,
-                    RainColor rainColor) {
+    public ParticleQuads quads(PrecipitationField field, Camera camera, float partialTick, boolean dustOnly,
+                               List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales,
+                               RainColor rainColor) {
         var request = this.request;
         boolean taken = dustOnly ? this.dustTaken : this.dropsTaken;
         if (request == null || taken || !request.isFor(field, camera, partialTick, snowflakes, largest, dust, scales, rainColor)) {
             this.behind++;
-            return PrecipitationRenderer.draw(field, tesselator, camera, partialTick, dustOnly, snowflakes, largest, dust, scales, rainColor);
+            PrecipitationRenderer.build(field, this.now, PrecipitationRenderer.View.of(camera), partialTick, dustOnly,
+                    snowflakes, largest, dust, scales, rainColor);
+            return this.now;
         }
 
         this.join();
         this.ahead++;
-        MeshData mesh;
         if (dustOnly) {
-            mesh = this.dust;
-            this.dust = null;
             this.dustTaken = true;
-        } else {
-            mesh = this.drops;
-            this.drops = null;
-            this.dropsTaken = true;
+            return this.dust;
         }
-        if (mesh == null)
-            return 0;
-        int drawn = mesh.drawState().vertexCount() / 4;
-        BufferUploader.drawWithShader(mesh);
-        return drawn;
+        this.dropsTaken = true;
+        return this.drops;
     }
 
     // Waits for the build under way, if there is one
@@ -165,14 +140,6 @@ public final class DropMeshes {
                 // Dropped anyway
             }
         }
-        if (this.drops != null) {
-            this.drops.close();
-            this.drops = null;
-        }
-        if (this.dust != null) {
-            this.dust.close();
-            this.dust = null;
-        }
         this.request = null;
         this.dropsTaken = false;
         this.dustTaken = false;
@@ -187,5 +154,13 @@ public final class DropMeshes {
         this.ahead = 0;
         this.behind = 0;
         return share;
+    }
+
+    @Override
+    public void close() {
+        this.discard();
+        this.drops.close();
+        this.dust.close();
+        this.now.close();
     }
 }

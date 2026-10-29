@@ -1,10 +1,10 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.particle.ParticleRenderType;
-import net.minecraft.client.particle.TextureSheetParticle;
+import net.minecraft.client.particle.SingleQuadParticle;
+import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
  * <p>
  * A subclass sets {@link #startSize}, {@link #peakAlpha} and {@link #rollSpeed} as it is made.
  */
-public abstract class SoftPuffParticle extends TextureSheetParticle {
+public abstract class SoftPuffParticle extends SingleQuadParticle {
 
     // How often it reads its light, in ticks, rather than every frame it is drawn: it drifts a fraction of a block in
     // that time, and a waterfall's mist can be hundreds of puffs. Puffs take turns, by when each started.
@@ -27,7 +27,7 @@ public abstract class SoftPuffParticle extends TextureSheetParticle {
     private final float growth;
     private final int lightPhase;
     // Read the first time it is drawn, then every LIGHT_TICKS. Never read for a kind that lights itself (it overrides
-    // getLightColor), so those cost no light lookups at all.
+    // getLightCoords), so those cost no light lookups at all.
     private int light = UNREAD;
 
     /**
@@ -44,25 +44,27 @@ public abstract class SoftPuffParticle extends TextureSheetParticle {
     protected float rollSpeed;
 
     /**
+     * @param sprite  its sprite, kept for its life
      * @param fadeIn  the fraction of its life spent fading in at the start
      * @param fadeOut the fraction of its life spent fading out at the end
      * @param growth  how much it grows over its life: 1.5 makes it 2.5 times its starting size by the end
      */
-    protected SoftPuffParticle(ClientLevel level, double x, double y, double z, float fadeIn, float fadeOut, float growth) {
+    protected SoftPuffParticle(ClientLevel level, double x, double y, double z, TextureAtlasSprite sprite, float fadeIn, float fadeOut, float growth) {
         // The constructor without velocity: the one with it adds a random velocity of its own
-        super(level, x, y, z);
+        super(level, x, y, z, sprite);
         this.fadeIn = fadeIn;
         this.fadeOut = fadeOut;
         this.growth = growth;
         this.alpha = 0F;
         // Drifts through blocks rather than stopping at them: the soft shader fades it where it meets them
         this.hasPhysics = false;
-        this.lightPhase = level.random.nextInt(LIGHT_TICKS);
+        this.lightPhase = level.getRandom().nextInt(LIGHT_TICKS);
     }
 
     @Override
-    public @NotNull ParticleRenderType getRenderType() {
-        return DSurroundParticleRenderType.PARTICLE_SHEET_MIST;
+    public @NotNull SingleQuadParticle.Layer getLayer() {
+        // Drawn soft (see SoftParticles) if it can be
+        return SoftParticles.mistLayer();
     }
 
     /**
@@ -75,16 +77,16 @@ public abstract class SoftPuffParticle extends TextureSheetParticle {
         this.oRoll = this.roll;
         this.roll += this.rollSpeed;
         if (this.light != UNREAD && (this.age + this.lightPhase) % LIGHT_TICKS == 0)
-            this.light = super.getLightColor(0F);
+            this.light = super.getLightCoords(0F);
     }
 
     /**
      * Its light where it is, as of the last few ticks (see {@link #LIGHT_TICKS})
      */
     @Override
-    public int getLightColor(float partialTick) {
+    protected int getLightCoords(float partialTick) {
         if (this.light == UNREAD)
-            this.light = super.getLightColor(partialTick);
+            this.light = super.getLightCoords(partialTick);
         return this.light;
     }
 
@@ -101,10 +103,10 @@ public abstract class SoftPuffParticle extends TextureSheetParticle {
     }
 
     @Override
-    public void render(@NotNull VertexConsumer buffer, @NotNull Camera camera, float partialTick) {
+    public void extract(@NotNull QuadParticleRenderState state, @NotNull Camera camera, float partialTick) {
         // Set each frame, so the fades are smooth rather than stepping once a tick
         this.alpha = this.peakAlpha * fade(this.lifeFraction(partialTick), this.fadeIn, this.fadeOut);
-        super.render(buffer, camera, partialTick);
+        super.extract(state, camera, partialTick);
     }
 
     /**

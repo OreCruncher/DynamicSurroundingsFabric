@@ -1,9 +1,12 @@
 package org.orecruncher.dsurround.effects.frost;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.platform.TextureUtil;
+import com.mojang.blaze3d.GpuFormat;
+import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
@@ -55,26 +58,32 @@ public final class FrostTexture {
     static final float CRYSTAL_LATEST = 0.9F;
     private static final long SEED = 0x66726F7374L;
 
-    private static int id = -1;
+    @Nullable
+    private static GpuTexture texture;
+    @Nullable
+    private static GpuTextureView view;
+    @Nullable
     private static CompletableFuture<Pattern> making;
 
     private FrostTexture() {
     }
 
     /**
-     * The texture's GL id, or -1 while it is still being made: the first call starts making it
+     * The texture, or null while it is still being made: the first call starts making it. Sampled smoothly between
+     * texels and mipmaps, repeating.
      */
-    public static int id() {
+    public static @Nullable GpuTextureView view() {
         RenderSystem.assertOnRenderThread();
-        if (id >= 0)
-            return id;
+        if (view != null)
+            return view;
         if (making == null)
             making = CompletableFuture.supplyAsync(() -> generate(SIZE, SEED));
         if (making.isDone()) {
-            id = upload(making.join());
+            texture = upload(making.join());
+            view = RenderSystem.getDevice().createTextureView(texture);
             making = null;
         }
-        return id;
+        return view;
     }
 
     /**
@@ -209,9 +218,11 @@ public final class FrostTexture {
         return half;
     }
 
-    private static int upload(Pattern pattern) {
-        int id = TextureUtil.generateTextureId();
-        TextureUtil.prepareImage(id, LEVELS - 1, pattern.size, pattern.size);
+    private static GpuTexture upload(Pattern pattern) {
+        var device = RenderSystem.getDevice();
+        var result = device.createTexture(() -> "Dynamic Surroundings window frost", GpuTexture.USAGE_TEXTURE_BINDING | GpuTexture.USAGE_COPY_DST,
+                GpuFormat.RGBA8_UNORM, pattern.size, pattern.size, 1, LEVELS);
+        var encoder = device.createCommandEncoder();
         var level = pattern;
         for (int i = 0; i < LEVELS; i++) {
             try (var image = new NativeImage(level.size, level.size, false)) {
@@ -220,13 +231,12 @@ public final class FrostTexture {
                         int index = level.index(x, y);
                         int grey = Mth.clamp(Math.round(level.brightness[index] * 255F), 0, 255);
                         int alpha = Mth.clamp(Math.round(level.growth[index] * 255F), 0, 255);
-                        image.setPixelRGBA(x, y, alpha << 24 | grey << 16 | grey << 8 | grey);
+                        image.setPixel(x, y, alpha << 24 | grey << 16 | grey << 8 | grey);
                     }
-                // Smooth between texels and mipmaps, repeating
-                image.upload(i, 0, 0, 0, 0, level.size, level.size, true, false, true, false);
+                encoder.writeToTexture(result, image, i, 0, 0, 0);
             }
             level = half(level);
         }
-        return id;
+        return result;
     }
 }

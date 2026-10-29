@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.profiling;
 
-import com.mojang.blaze3d.platform.GlUtil;
+import com.mojang.blaze3d.systems.RenderSystem;
 import dev.architectury.platform.Platform;
 import net.minecraft.client.Minecraft;
 import org.orecruncher.dsurround.Configuration;
@@ -22,10 +22,12 @@ import java.util.Objects;
  *
  * @param mod            the mod's version, with Minecraft's and the platform
  * @param mods           how many mods are installed
- * @param glRenderer     the graphics card, as the driver names it
- * @param glVendor       the driver's vendor
- * @param glVersion      the OpenGL version, which on most drivers includes the driver's version
- * @param graphics       the graphics setting: fast, fancy or fabulous
+ * @param gpu            the graphics card, as the driver names it
+ * @param gpuVendor      the graphics card's vendor
+ * @param gpuType        the kind of graphics card: discrete, integrated, virtual, cpu or other
+ * @param driver         the driver's version, as the backend reports it
+ * @param backend        the graphics backend the game runs on: OpenGL or Vulkan
+ * @param graphics       the graphics preset, and whether improved transparency (Fabulous's layering) is on
  * @param shaderPack     whether a shader pack is in use
  * @param renderDistance the render distance in chunks, as the game uses it
  * @param width          the frame's width in pixels, as drawn (the window's, not scaled for the screen's settings)
@@ -39,8 +41,8 @@ import java.util.Objects;
  * @param os             the operating system's name, version and architecture
  * @param features       the optional hooks, the features that stand aside for other mods, and the settings
  */
-record ProfileEnvironment(String mod, int mods, String glRenderer, String glVendor, String glVersion, String graphics,
-                          boolean shaderPack, int renderDistance, int width, int height, int frameRateLimit,
+record ProfileEnvironment(String mod, int mods, String gpu, String gpuVendor, String gpuType, String driver, String backend,
+                          String graphics, boolean shaderPack, int renderDistance, int width, int height, int frameRateLimit,
                           boolean vsync, String devRun, String java, String os, List<ProfileFeature> features) {
 
     /**
@@ -49,20 +51,24 @@ record ProfileEnvironment(String mod, int mods, String glRenderer, String glVend
     static final String DEV_RUN_PROPERTY = "dsurround.devRun";
 
     /**
-     * The environment now. On the render thread: the graphics card is asked through OpenGL
+     * The environment now. On the render thread, where the graphics device is asked
      */
     static ProfileEnvironment capture() {
         var mc = Minecraft.getInstance();
         var options = mc.options;
         var window = mc.getWindow();
+        var device = RenderSystem.getDevice().getDeviceInfo();
         var platform = Platform.isFabric() ? "Fabric" : "NeoForge";
         return new ProfileEnvironment(
                 "%s (%s)".formatted(ContainerManager.resolve(ModInformation.class).getBranding(), platform),
                 Platform.getMods().size(),
-                GlUtil.getRenderer(),
-                GlUtil.getVendor(),
-                GlUtil.getOpenGLVersion(),
-                options.graphicsMode().get().name().toLowerCase(Locale.ROOT),
+                device.name(),
+                device.vendorName(),
+                device.type().name().toLowerCase(Locale.ROOT),
+                device.driverInfo(),
+                device.backendName(),
+                "%s, improved transparency %s".formatted(options.graphicsPreset().get().getSerializedName(),
+                        options.improvedTransparency().get() ? "on" : "off"),
                 IrisCompat.isShaderPackInUse(),
                 options.getEffectiveRenderDistance(),
                 window.getWidth(),

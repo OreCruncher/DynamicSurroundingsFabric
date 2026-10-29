@@ -1,28 +1,29 @@
 package org.orecruncher.dsurround.gui.overlay;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.ClockStyle;
-import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.time.MinecraftClock;
+import org.orecruncher.dsurround.lib.time.DayCycle;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.gui.ColorGradient;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
+import org.orecruncher.dsurround.runtime.oracle.IMinecraftClock;
 import org.orecruncher.dsurround.tags.ItemEffectTags;
 
 /**
@@ -93,12 +94,12 @@ public final class ClockOverlay extends AbstractOverlay {
     static final double TICK_SETTLE = 0.15D;
 
     private final ITagLibrary tagLibrary;
-    private final IDimensionInformation dimensionInformation;
+    private final IDimensionOracle dimensionInformation;
     private final ISeasonalInformation seasonalInformation;
     private final Configuration config;
     private final CompassOverlay compass;
     private final MarginLayout marginLayout;
-    private final MinecraftClock clock;
+    private final IMinecraftClock clock;
     private final CompassOverlay.CompassWobble wobbler = new CompassOverlay.CompassWobble();
     private boolean spinRandomly;
     private final ColorGradient gradient;
@@ -110,7 +111,7 @@ public final class ClockOverlay extends AbstractOverlay {
     private int color;
 
     private boolean watchShown;
-    private ResourceLocation texture;
+    private Identifier texture;
     private boolean inMargin;
     private float scale;
     private int side;
@@ -120,14 +121,14 @@ public final class ClockOverlay extends AbstractOverlay {
     private float lastDiscAngle;
     private float discAngle;
 
-    public ClockOverlay(Configuration config, ITagLibrary tagLibrary, IDimensionInformation dimensionInformation, ISeasonalInformation seasonalInformation, CompassOverlay compass, MarginLayout marginLayout) {
+    public ClockOverlay(Configuration config, ITagLibrary tagLibrary, IDimensionOracle dimensionInformation, ISeasonalInformation seasonalInformation, IMinecraftClock clock, CompassOverlay compass, MarginLayout marginLayout) {
         this.tagLibrary = tagLibrary;
         this.dimensionInformation = dimensionInformation;
         this.seasonalInformation = seasonalInformation;
         this.config = config;
         this.compass = compass;
         this.marginLayout = marginLayout;
-        this.clock = new MinecraftClock();
+        this.clock = clock;
         this.gradient = new ColorGradient(ColorPalette.DARK_VIOLET, ColorPalette.SUN_GLOW, 180F);
         this.style = this.config.compassAndClockOptions.clockStyle;
         this.texture = this.config.compassAndClockOptions.watchStyle.getTexture();
@@ -181,8 +182,6 @@ public final class ClockOverlay extends AbstractOverlay {
      * Works out the text, if there is any: none for a spinning clock with no season to show
      */
     private boolean tickText(Player player) {
-        this.clock.update(player.level());
-
         this.clockDisplay.clear();
         if (!this.spinRandomly)
             this.clockDisplay.add(this.clock.getFormattedTime());
@@ -198,7 +197,8 @@ public final class ClockOverlay extends AbstractOverlay {
         this.renderHeight = this.clockDisplay.size() == 1 ? textRender.lineHeight - 2 : textRender.lineHeight * 2;
 
         // Calculate the color this tick
-        this.color = textColor(this.gradient, player.level().getTimeOfDay(1F));
+        // The sun angle is in degrees, 0 at noon
+        this.color = textColor(this.gradient, DayCycle.getCelestialAngle(player.level(), player.position()) / 360F);
         return true;
     }
 
@@ -207,15 +207,22 @@ public final class ClockOverlay extends AbstractOverlay {
         this.texture = this.config.compassAndClockOptions.watchStyle.getTexture();
 
         // The hands follow the day time between ticks; a jump (the time being set) moves them straight there
-        var time = player.level().getDayTime();
+        var time = player.level().getDefaultClockTime();
         this.lastDayTime = justShown || Math.abs(time - this.dayTime) > 100 ? time : this.dayTime;
         this.dayTime = time;
 
         // The day disc follows the time as the hands do; the lower disc eases to the season or the moon's phase
         this.seasonDisc = this.seasonalInformation.hasSeasons();
-        var target = this.seasonDisc ? seasonDiscAngle(this.season(), this.subSeason()) : moonDiscAngle(player.level().getMoonPhase());
+        var target = this.seasonDisc ? seasonDiscAngle(this.season(), this.subSeason()) : moonDiscAngle(moonPhase(player));
         this.lastDiscAngle = justShown ? target : this.discAngle;
         this.discAngle = justShown ? target : turnToward(this.discAngle, target, DISC_TURN_PER_TICK);
+    }
+
+    /**
+     * The moon's phase where the player is, numbered as Level.getMoonPhase did: 0 full, 4 new
+     */
+    private static int moonPhase(Player player) {
+        return player.level().environmentAttributes().getValue(EnvironmentAttributes.MOON_PHASE, player.position()).ordinal();
     }
 
     private int season() {
@@ -237,7 +244,7 @@ public final class ClockOverlay extends AbstractOverlay {
     }
 
     /**
-     * The clock text's color for the time of day (0 to 1, from Level.getTimeOfDay): along the gradient from
+     * The clock text's color for the time of day (0 to 1, from the sun's angle; 0 is noon): along the gradient from
      * midnight (0 degrees) to noon (180), and back. Fully opaque: newer versions draw text with zero alpha
      * invisibly, where this one makes it opaque.
      */
@@ -301,7 +308,7 @@ public final class ClockOverlay extends AbstractOverlay {
     }
 
     /**
-     * How far to turn the moon disc, in degrees clockwise, to bring a phase (Level.getMoonPhase: 0 full, 4 new) to
+     * How far to turn the moon disc, in degrees clockwise, to bring a phase (0 full, 4 new; see moonPhase) to
      * the window
      */
     static float moonDiscAngle(int phase) {
@@ -331,7 +338,7 @@ public final class ClockOverlay extends AbstractOverlay {
     }
 
     @Override
-    public void render(GuiGraphics context, float partialTick) {
+    public void render(GuiGraphicsExtractor context, float partialTick) {
         if (this.watchShown) {
             if (this.inMargin) {
                 // The placement is the watch's center; the dial is below it
@@ -355,7 +362,7 @@ public final class ClockOverlay extends AbstractOverlay {
     /**
      * Draws the watch with its dial's center at x, y
      */
-    private void renderWatch(GuiGraphics context, float partialTick, float x, float y, float size) {
+    private void renderWatch(GuiGraphicsExtractor context, float partialTick, float x, float y, float size) {
         var time = Mth.lerp(partialTick, (double) this.lastDayTime, (double) this.dayTime);
         float disc = Mth.rotLerp(partialTick, this.lastDiscAngle, this.discAngle);
         // The hands tick; the overshoot only while time runs, or a stopped clock would hold it
@@ -372,26 +379,23 @@ public final class ClockOverlay extends AbstractOverlay {
             dayDisc = spin / 2F;
         }
 
-        // The atlas has soft edges; this version's blit doesn't set up blending itself
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        // The textured GUI pipeline blends, so the atlas's soft edges need nothing more
         var pose = context.pose();
-        pose.pushPose();
+        pose.pushMatrix();
         try {
             // From here on, in atlas pixels with the dial's center at the origin
-            pose.translate(x, y, 0F);
-            pose.scale(size, size * WATCH_TILT, 1F);
+            pose.translate(x, y);
+            pose.scale(size, size * WATCH_TILT);
 
             // The discs show through the windows in the dial, so they go first; the glass goes over the hands
             this.drawTurned(context, disc, 0, this.seasonDisc ? SEASON_DISC_U : MOON_DISC_U, 0, DISC_SIZE, DISC_SIZE, DISC_SIZE / 2, DISC_SIZE / 2);
             this.drawTurned(context, dayDisc, DAY_DISC_Y, DAY_DISC_U, DAY_DISC_V, DAY_DISC_SIZE, DAY_DISC_SIZE, DAY_DISC_SIZE / 2, DAY_DISC_SIZE / 2);
-            context.blit(this.texture, -DIAL_X, -DIAL_Y, 0, 0, WATCH_SIZE, WATCH_SIZE, ATLAS_SIZE, ATLAS_SIZE);
+            context.blit(RenderPipelines.GUI_TEXTURED, this.texture, -DIAL_X, -DIAL_Y, 0, 0, WATCH_SIZE, WATCH_SIZE, ATLAS_SIZE, ATLAS_SIZE);
             this.drawTurned(context, hourHand, 0, HOUR_HAND_U, HANDS_V, HAND_WIDTH, HAND_HEIGHT, HAND_PIVOT_X, HAND_PIVOT_Y);
             this.drawTurned(context, minuteHand, 0, MINUTE_HAND_U, HANDS_V, HAND_WIDTH, HAND_HEIGHT, HAND_PIVOT_X, HAND_PIVOT_Y);
-            context.blit(this.texture, -DIAL_X, -DIAL_Y, 0, GLASS_V, WATCH_SIZE, WATCH_SIZE, ATLAS_SIZE, ATLAS_SIZE);
+            context.blit(RenderPipelines.GUI_TEXTURED, this.texture, -DIAL_X, -DIAL_Y, 0, GLASS_V, WATCH_SIZE, WATCH_SIZE, ATLAS_SIZE, ATLAS_SIZE);
         } finally {
-            pose.popPose();
-            RenderSystem.disableBlend();
+            pose.popMatrix();
         }
     }
 
@@ -399,19 +403,19 @@ public final class ClockOverlay extends AbstractOverlay {
      * Draws part of the atlas turned clockwise on screen about its pivot, the pivot placed a height above (less
      * than 0) or below the dial's center
      */
-    private void drawTurned(GuiGraphics context, float degrees, int y, int u, int v, int width, int height, int pivotX, int pivotY) {
+    private void drawTurned(GuiGraphicsExtractor context, float degrees, int y, int u, int v, int width, int height, int pivotX, int pivotY) {
         var pose = context.pose();
-        pose.pushPose();
+        pose.pushMatrix();
         try {
-            pose.translate(0F, y, 0F);
-            pose.mulPose(Axis.ZP.rotationDegrees(degrees));
-            context.blit(this.texture, -pivotX, -pivotY, u, v, width, height, ATLAS_SIZE, ATLAS_SIZE);
+            pose.translate(0F, y);
+            pose.rotate(degrees * Mth.DEG_TO_RAD);
+            context.blit(RenderPipelines.GUI_TEXTURED, this.texture, -pivotX, -pivotY, u, v, width, height, ATLAS_SIZE, ATLAS_SIZE);
         } finally {
-            pose.popPose();
+            pose.popMatrix();
         }
     }
 
-    private void renderText(GuiGraphics context) {
+    private void renderText(GuiGraphicsExtractor context) {
         var textRender = GameUtils.getTextRenderer();
         var x = context.guiWidth() / 2;
         var y = context.guiHeight() - BOTTOM_OFFSET;
@@ -421,9 +425,9 @@ public final class ClockOverlay extends AbstractOverlay {
 
         // Don't use renderTooltip. It uses a Z which pushes the rendering to the top of the Z stack and can
         // and can interfere with renders.
-        TooltipRenderUtil.renderTooltipBackground(context, x - this.renderWidth / 2, y, this.renderWidth, this.renderHeight, 0);
-        context.drawCenteredString(textRender, this.clockDisplay.get(0), x, y, this.color);
+        TooltipRenderUtil.extractTooltipBackground(context, x - this.renderWidth / 2, y, this.renderWidth, this.renderHeight, null);
+        context.centeredText(textRender, this.clockDisplay.get(0), x, y, this.color);
         if (this.clockDisplay.size() == 2)
-            context.drawCenteredString(textRender, this.clockDisplay.get(1), x, y + textRender.lineHeight, this.color);
+            context.centeredText(textRender, this.clockDisplay.get(1), x, y + textRender.lineHeight, this.color);
     }
 }

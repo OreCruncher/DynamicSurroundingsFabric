@@ -6,11 +6,13 @@ import org.orecruncher.dsurround.lib.math.Hysteresis;
 import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
+import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WindService;
 
 public final class WeatherVariables extends VariableSet {
 
+    private final ILevelOracle levelOracle;
     private final ISeasonalInformation seasonalInformation;
     private final IWeatherSimulation weatherSimulation;
 
@@ -39,8 +41,9 @@ public final class WeatherVariables extends VariableSet {
     private boolean isGusting;
     private final Hysteresis stormWind = new Hysteresis(STORM_WIND_FROM, STORM_WIND_UNTIL);
 
-    public WeatherVariables(ISeasonalInformation seasonalInformation, IWeatherSimulation weatherSimulation, WindService windService) {
+    public WeatherVariables(ILevelOracle levelOracle, ISeasonalInformation seasonalInformation, IWeatherSimulation weatherSimulation, WindService windService) {
         super("weather");
+        this.levelOracle = levelOracle;
         this.windService = windService;
         this.seasonalInformation = seasonalInformation;
         this.weatherSimulation = weatherSimulation;
@@ -50,13 +53,12 @@ public final class WeatherVariables extends VariableSet {
     public void tick() {
         if (GameUtils.isInGame()) {
             final var player = GameUtils.getPlayer().orElseThrow();
-            final var world = player.level();
             // The storm's strength. Whether it is raining at all is the world's: a light storm is still rain.
-            this.rainIntensity = this.weatherSimulation.rainLevel(world.getRainLevel(1F));
-            this.thunderIntensity = world.getThunderLevel(1F);
-            this.isRaining = world.isRaining();
-            this.isThundering = world.isThundering();
-            this.temperature = this.seasonalInformation.getTemperature(player.blockPosition());
+            this.rainIntensity = this.weatherSimulation.rainLevel(this.levelOracle.getRainLevel());
+            this.thunderIntensity = this.levelOracle.getThunderLevel();
+            this.isRaining = this.levelOracle.isRaining();
+            this.isThundering = this.levelOracle.isThundering();
+            this.temperature = this.seasonalInformation.getTemperatureAt(player.blockPosition());
             this.isFrosty = this.seasonalInformation.isColdTemperature(player.blockPosition());
             this.canWaterFreeze = this.seasonalInformation.isSnowTemperature(player.blockPosition());
             // The steady wind, as a percent of a full storm's, as /dsweather wind shows it. Without gusts: they come and

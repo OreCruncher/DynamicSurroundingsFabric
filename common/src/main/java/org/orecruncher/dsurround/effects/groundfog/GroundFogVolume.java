@@ -1,27 +1,46 @@
 package org.orecruncher.dsurround.effects.groundfog;
 
+import com.mojang.blaze3d.GpuFormat;
+import com.mojang.blaze3d.PrimitiveTopology;
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.buffers.Std140Builder;
+import com.mojang.blaze3d.buffers.Std140SizeCalculator;
+import com.mojang.blaze3d.pipeline.BindGroupLayout;
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.ColorTargetState;
+import com.mojang.blaze3d.pipeline.DepthStencilState;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.shaders.UniformType;
+import com.mojang.blaze3d.systems.RenderPass;
+import com.mojang.blaze3d.systems.RenderPassDescriptor;
+import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.textures.FilterMode;
 import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BindGroupLayouts;
+import net.minecraft.client.renderer.MappableRingBuffer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
-import org.lwjgl.opengl.GL11;
+import org.joml.Vector4f;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.GroundFogQuality;
-import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.NoiseTexture;
+import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.OptionalDouble;
 
 /**
  * Draws the ground fog as a volume: a pass over the screen that follows each pixel's line of sight from the camera
@@ -30,12 +49,13 @@ import org.orecruncher.dsurround.lib.Library;
  * breaks it into patches. So it thickens the more of it is looked through, fills hollows and pools at the foot of
  * cliffs, and has no edges to show.
  * <p>
- * That pass is drawn at a share of the screen's size (half, for {@link GroundFogQuality#FANCY}), to a target of its
- * own: at half, a quarter of the pixels to follow. A second
- * ({@link #SMOOTH}), at that size, blends each pixel's neighbours, which smooths away the stipple of their steps being
- * offset a little differently, but only those that looked about as far, so the mist doesn't smear across the edges of
- * what is in front of it. A third ({@link #COMPOSITE}) lays it over the scene at full size, the same way between the
- * two by two around each pixel.
+ * That pass ({@link #SHADER}) is drawn at a share of the screen's size (half, for {@link GroundFogQuality#FANCY}), to
+ * a target of its own: at half, a quarter of the pixels to follow. A second ({@link #SMOOTH}), at that size, blends
+ * each pixel's neighbours, which smooths away the stipple of their steps being offset a little differently, but only
+ * those that looked about as far, so the mist doesn't smear across the edges of what is in front of it. A third
+ * ({@link #COMPOSITE}) lays it over the scene at full size, the same way between the two by two around each pixel.
+ * Each is a triangle over the whole of what it draws to, with no vertex buffer; the passes share their values in one
+ * uniform block ({@code GroundFogInfo}, shaders/include/ground_fog.glsl).
  * <p>
  * The grid ({@link GroundFogField}) is handed to the shader as a small texture, a texel a column: the ground's height
  * above a base just below the grid's lowest (smoothed, see {@link GroundFogField#smoothHeight}), the mist's thickness,
@@ -43,21 +63,96 @@ import org.orecruncher.dsurround.lib.Library;
  */
 public final class GroundFogVolume {
 
+    private static final String INFO = "GroundFogInfo";
+    // Each vec3 of the block and the float after it are written as one vec4: in std140 the float takes the vec3's
+    // fourth slot, but Std140Builder.putVec3 always takes sixteen bytes, which would put everything after it out by four
+    private static final int INFO_SIZE = new Std140SizeCalculator()
+            .putVec2().putFloat().putFloat()
+            .putVec4()
+            .putVec2().putFloat().putFloat()
+            .putVec4()
+            .putVec2().putFloat().putFloat()
+            .putFloat()
+            .get();
+    private static final String DEPTH_SAMPLER = "DepthSampler";
+    private static final String FOG_GRID = "FogGrid";
+    private static final String NOISE_SAMPLER = "NoiseSampler";
+    private static final String MIST_SAMPLER = "MistSampler";
+    private static final String MIST_DEPTH_SAMPLER = "MistDepthSampler";
+    private static final String DISTANCE_SAMPLER = "DistanceSampler";
+    private static final BindGroupLayout MARCH_LAYOUT = BindGroupLayout.builder()
+            .withUniform(INFO, UniformType.UNIFORM_BUFFER)
+            .withSampler(DEPTH_SAMPLER)
+            .withSampler(FOG_GRID)
+            .withSampler(NOISE_SAMPLER)
+            .build();
+    private static final BindGroupLayout SMOOTH_LAYOUT = BindGroupLayout.builder()
+            .withUniform(INFO, UniformType.UNIFORM_BUFFER)
+            .withSampler(MIST_SAMPLER)
+            .withSampler(MIST_DEPTH_SAMPLER)
+            .withSampler(DISTANCE_SAMPLER)
+            .build();
+    private static final BindGroupLayout COMPOSITE_LAYOUT = BindGroupLayout.builder()
+            .withUniform(INFO, UniformType.UNIFORM_BUFFER)
+            .withSampler(MIST_SAMPLER)
+            .withSampler(MIST_DEPTH_SAMPLER)
+            .withSampler(DEPTH_SAMPLER)
+            .withSampler(DISTANCE_SAMPLER)
+            .build();
+    // Far off, where nothing was drawn (no pixel is left so: the march writes every one)
+    private static final Vector4f CLEAR_DISTANCE = new Vector4f(1.0e6F, 0F, 0F, 0F);
+    private static final Vector4f CLEAR = new Vector4f(0F, 0F, 0F, 0F);
+    // Each pass writes every pixel's depth itself, where the mist begins along its line of sight
+    private static final DepthStencilState WRITE_DEPTH = new DepthStencilState(CompareOp.ALWAYS_PASS, true);
+
     /**
-     * Draws the mist, at a share of the screen's size. Without it, there is none.
+     * Draws the mist, at a share of the screen's size, replacing what was there: its colour, already multiplied by its
+     * alpha, and the depth where it begins; and, to a target of its own, how far each pixel's line of sight goes, which
+     * the smoothing and the composite read rather than work it out from the depth for each pixel around theirs.
+     * Without it, there is none.
      */
-    public static final ModShader SHADER = new ModShader("ground_fog_volume", DefaultVertexFormat.POSITION,
+    public static final ModShader SHADER = new ModShader(
+            screenPass("pipeline/ground_fog_volume", "core/ground_fog_volume")
+                    .withBindGroupLayout(BindGroupLayouts.FOG)
+                    .withBindGroupLayout(BindGroupLayouts.SAMPLER2)
+                    .withBindGroupLayout(MARCH_LAYOUT)
+                    .withColorTargetState(ColorTargetState.DEFAULT)
+                    .withColorTargetState(1, new ColorTargetState(Optional.empty(), GpuFormat.R32_FLOAT, ColorTargetState.WRITE_RED))
+                    .withDepthStencilState(WRITE_DEPTH)
+                    .build(),
             "ground fog", "there will be no ground fog", Library.LOGGER);
     /**
-     * Smooths the mist, at the size it was drawn. Without it, there is no ground fog either.
+     * Smooths the mist, at the size it was drawn, replacing what was there. Without it, there is no ground fog either.
      */
-    public static final ModShader SMOOTH = new ModShader("ground_fog_smooth", DefaultVertexFormat.POSITION,
+    public static final ModShader SMOOTH = new ModShader(
+            screenPass("pipeline/ground_fog_smooth", "core/ground_fog_smooth")
+                    .withBindGroupLayout(SMOOTH_LAYOUT)
+                    .withColorTargetState(ColorTargetState.DEFAULT)
+                    .withDepthStencilState(WRITE_DEPTH)
+                    .build(),
             "ground fog", "there will be no ground fog", Library.LOGGER);
     /**
-     * Lays the smoothed mist over the scene. Without it, there is no ground fog either.
+     * Lays the smoothed mist over the scene. Its colour is already multiplied by its alpha, so "over": with Fabulous
+     * graphics the weather's target keeps an alpha the transparency pass can use, as it takes the target's colours as
+     * already multiplied. Without it, there is no ground fog either.
      */
-    public static final ModShader COMPOSITE = new ModShader("ground_fog_composite", DefaultVertexFormat.POSITION,
+    public static final ModShader COMPOSITE = new ModShader(
+            composite("pipeline/ground_fog_composite").withDepthStencilState(Optional.empty()).build(),
             "ground fog", "there will be no ground fog", Library.LOGGER);
+    /**
+     * The same, with Fabulous graphics, writing the depth where the mist begins along each line of sight, which the
+     * transparency pass sorts the layers by: with none, the weather's target is as far as can be, and the scene is laid
+     * over it. Tested against the rain and snow already there, so drops in front of the mist stay in front.
+     */
+    public static final ModShader COMPOSITE_DEPTH = new ModShader(
+            composite("pipeline/ground_fog_composite_depth_write").withDepthStencilState(DepthStencilState.DEFAULT).build(),
+            "ground fog (Fabulous)", "there will be no ground fog", Library.LOGGER);
+
+    /**
+     * All of them, for {@code ModShaders}
+     */
+    public static final List<ModShader> SHADERS = List.of(SHADER, SMOOTH, COMPOSITE, COMPOSITE_DEPTH);
+
     /**
      * How long the GPU takes over all the passes, for the diagnostics overlay, and over each: the march (with the depth
      * copy it reads), the smoothing and the composite
@@ -114,20 +209,27 @@ public final class GroundFogVolume {
     // The same, smoothed
     @Nullable
     private static TextureTarget smoothed;
+    // How far each of the mist's pixels' line of sight goes, at the same size
+    @Nullable
+    private static GpuTexture distances;
+    @Nullable
+    private static GpuTextureView distancesView;
+    @Nullable
+    private static MappableRingBuffer info;
 
     private GroundFogVolume() {
     }
 
     /**
-     * Whether the ground fog can be drawn: its shaders loaded, drawing hasn't failed, and no shader pack is in use
+     * Whether the ground fog can be drawn: its pipelines compiled, drawing hasn't failed, and no shader pack is in use
      */
     public static boolean isUsable() {
-        return SHADER.isUsable() && SMOOTH.isUsable() && COMPOSITE.isUsable();
+        return SHADER.isUsable() && SMOOTH.isUsable() && COMPOSITE.isUsable() && COMPOSITE_DEPTH.isUsable();
     }
 
     /**
-     * Draws the mist where the weather is drawn, reading a copy of that target's depth to know how far each pixel's
-     * line of sight goes
+     * Draws the mist where the weather is drawn, reading a copy of the scene's depth to know how far each pixel's line
+     * of sight goes. Outside any render pass.
      *
      * @param target   where the weather is being drawn
      * @param quality  how finely: the share of the screen's size the mist is drawn at, and the most steps (not
@@ -135,158 +237,154 @@ public final class GroundFogVolume {
      * @param fabulous whether Fabulous graphics are on: the weather's target is then laid over the scene by vanilla's
      *                 transparency pass, by its depth, and the mist is drawn after the rain (see the handler)
      * @param strength how strong the mist is for the conditions, 0 to 1
-     * @param driftX  how far the mist has drifted east-west, in blocks, and {@code driftZ} north-south
-     * @param seconds a running time, for the mist to churn
+     * @param driftX   how far the mist has drifted east-west, in blocks, and {@code driftZ} north-south
+     * @param seconds  a running time, for the mist to churn
      * @return true if it was drawn, or there was nothing to draw
      */
     public static boolean render(GroundFogField field, Camera camera, RenderTarget target, boolean fabulous,
                                  GroundFogQuality quality, float strength,
                                  float driftX, float driftZ, float seconds) {
-        var shader = SHADER.get();
-        var smooth = SMOOTH.get();
-        var composite = COMPOSITE.get();
-        if (!quality.isEnabled() || field.isEmpty() || shader == null || smooth == null || composite == null || !isUsable())
+        if (!quality.isEnabled() || field.isEmpty() || !isUsable())
             return true;
 
-        var cam = camera.getPosition();
+        RENDER_TIMER.begin();
+        try {
+            return SHADER.run(() -> draw(field, camera, target, fabulous, quality, strength, driftX, driftZ, seconds), () -> {});
+        } finally {
+            RENDER_TIMER.end();
+        }
+    }
+
+    private static void draw(GroundFogField field, Camera camera, RenderTarget target, boolean fabulous,
+                             GroundFogQuality quality, float strength, float driftX, float driftZ, float seconds) {
         if (grid == null || gridSize != field.size() || gridVersion != field.version()) {
             gridBaseY = Mth.floor(lowestGround(field)) - HEIGHT_BASE_MARGIN;
             gridHighest = upload(field, gridBaseY);
             gridVersion = field.version();
         }
-        int baseY = gridBaseY;
-        float top = gridHighest + MIST_DEPTH;
 
-        // From where things are, relative to the camera, to the screen, and back
-        var forward = new Matrix4f(RenderSystem.getProjectionMatrix()).mul(RenderSystem.getModelViewMatrix());
-        var inverse = new Matrix4f(forward).invert();
+        // How far each pixel's line of sight goes: the scene's depth, water's surface included, which with Fabulous
+        // graphics isn't in the weather's target; the translucent target has it. All the passes read it
+        var depthSource = fabulous ? GameUtils.getMC().levelRenderer.translucentTarget() : target;
+        if (depthSource == null || !SoftParticles.captureDepth(depthSource))
+            return;
+
         int scale = quality.scale();
-        marched = reducedFor(marched, target, scale);
-        smoothed = reducedFor(smoothed, target, scale);
-        var reduced = marched;
-        var smoothedHalf = smoothed;
-        // How far along the view each pixel's line of sight goes, from its depth: two rows of the projection's inverse,
-        // for a pixel at (x, y, depth) on the screen
-        var unproject = new Matrix4f(RenderSystem.getProjectionMatrix()).invert();
+        var reduced = marched = reducedFor(marched, "Dynamic Surroundings ground fog", target, scale);
+        var smoothedReduced = smoothed = reducedFor(smoothed, "Dynamic Surroundings ground fog, smoothed", target, scale);
+        var distance = distancesFor(reduced);
+        writeInfo(field, camera, target, fabulous, quality, strength, driftX, driftZ, seconds);
+        var transforms = RenderSystem.getDynamicUniforms().writeTransform(RenderSystem.getModelViewMatrixCopy());
+        var encoder = RenderSystem.getDevice().createCommandEncoder();
+        var linear = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR);
+        var nearest = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST);
 
-        var tesselator = Tesselator.getInstance();
-        RenderSystem.disableCull();
-        try {
-            return SHADER.run(() -> {
-                // How far each pixel's line of sight goes: the scene's depth, water's surface included, which with
-                // Fabulous graphics isn't in the weather's target. Both passes read it
-                RENDER_TIMER.begin();
-                MARCH_TIMER.begin();
-                int sceneDepth = SoftParticles.copySceneDepth(SoftParticles.sceneDepthTarget(), target);
-
-                // The mist at a share of the screen's size, replacing what was there: its colour and where it begins
-                reduced.clear(Minecraft.ON_OSX);
-                reduced.bindWrite(true);
-                RenderSystem.disableBlend();
-                RenderSystem.enableDepthTest();
-                RenderSystem.depthFunc(GL11.GL_ALWAYS);
-                RenderSystem.depthMask(true);
-                shader.setSampler("DepthSampler", sceneDepth);
-                shader.safeGetUniform("FullSize").set((float) target.width, (float) target.height);
-                shader.safeGetUniform("Scale").set((float) scale);
-                shader.safeGetUniform("MaxSteps").set((float) quality.maxSteps());
-                shader.safeGetUniform("ViewProj").set(forward);
-                shader.setSampler("FogGrid", grid.getId());
-                shader.setSampler("NoiseSampler", noiseTexture().getId());
-                shader.safeGetUniform("InvViewProj").set(inverse);
-                // The camera, in the grid's terms: a block to a texel, heights from the base
-                shader.safeGetUniform("CameraLocal").set((float) (cam.x - field.cellX(0)), (float) (cam.y - baseY),
-                        (float) (cam.z - field.cellZ(0)));
-                shader.safeGetUniform("NoiseOrigin").set((float) Math.floorMod(field.cellX(0), NOISE_WRAP),
-                        (float) Math.floorMod(field.cellZ(0), NOISE_WRAP));
-                shader.safeGetUniform("Drift").set(driftX, driftZ, seconds);
-                // Where the base is in the world, so the noise stays put as the camera goes up and down. Not wrapped:
-                // heights are small, and a wrap would shift the noise
-                shader.safeGetUniform("BaseY").set((float) baseY);
-                shader.safeGetUniform("GridSize").set((float) gridSize);
-                // The mist thins to nothing a block inside the area's edge, from where the camera is: beyond that, the
-                // field has no cells (see GroundFogField.prepare)
-                float fadeWidth = field.radius() * GroundFogField.EDGE_FADE;
-                shader.safeGetUniform("EdgeFade").set(field.radius() - 1F, fadeWidth);
-                shader.safeGetUniform("MistTop").set(top - baseY);
-                shader.safeGetUniform("MistDepth").set(MIST_DEPTH);
-                shader.safeGetUniform("Thickness").set(THICKNESS * strength);
-                RenderSystem.setShader(SHADER.supplier());
-                drawScreenQuad(tesselator);
-                MARCH_TIMER.end();
-
-                // Smoothed at that size, replacing what was there: its colour and where it begins, as before
-                SMOOTH_TIMER.begin();
-                smoothedHalf.clear(Minecraft.ON_OSX);
-                smoothedHalf.bindWrite(true);
-                smooth.setSampler("MistSampler", reduced.getColorTextureId());
-                smooth.setSampler("MistDepthSampler", reduced.getDepthTextureId());
-                smooth.setSampler("DepthSampler", sceneDepth);
-                smooth.safeGetUniform("DepthRowZ").set(unproject.m02(), unproject.m12(), unproject.m22(), unproject.m32());
-                smooth.safeGetUniform("DepthRowW").set(unproject.m03(), unproject.m13(), unproject.m23(), unproject.m33());
-                smooth.safeGetUniform("FullSize").set((float) target.width, (float) target.height);
-                smooth.safeGetUniform("Scale").set((float) scale);
-                RenderSystem.setShader(SMOOTH.supplier());
-                drawScreenQuad(tesselator);
-                SMOOTH_TIMER.end();
-
-                // Laid over the scene at full size. Its colour is already multiplied by its alpha, so "over": with
-                // Fabulous graphics the weather's target keeps an alpha the transparency pass can use, as it takes
-                // the target's colours as already multiplied. And there, the depth where the mist begins along each
-                // line of sight, which the pass sorts the layers by: with none, the target is as far as can be, and
-                // the scene is laid over it
-                target.bindWrite(true);
-                RenderSystem.enableBlend();
-                RenderSystem.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-                if (fabulous) {
-                    RenderSystem.enableDepthTest();
-                    RenderSystem.depthFunc(GL11.GL_LEQUAL);
-                    RenderSystem.depthMask(true);
-                } else {
-                    RenderSystem.disableDepthTest();
-                    RenderSystem.depthMask(false);
-                }
-                COMPOSITE_TIMER.begin();
-                composite.setSampler("MistSampler", smoothedHalf.getColorTextureId());
-                composite.setSampler("MistDepthSampler", smoothedHalf.getDepthTextureId());
-                composite.setSampler("DepthSampler", sceneDepth);
-                composite.safeGetUniform("DepthRowZ").set(unproject.m02(), unproject.m12(), unproject.m22(), unproject.m32());
-                composite.safeGetUniform("DepthRowW").set(unproject.m03(), unproject.m13(), unproject.m23(), unproject.m33());
-                composite.safeGetUniform("FullSize").set((float) target.width, (float) target.height);
-                composite.safeGetUniform("Scale").set((float) scale);
-                composite.safeGetUniform("WriteDepth").set(fabulous ? 1F : 0F);
-                RenderSystem.setShader(COMPOSITE.supplier());
-                drawScreenQuad(tesselator);
-                COMPOSITE_TIMER.end();
-                RENDER_TIMER.end();
-            }, () -> {
-                MARCH_TIMER.end();
-                SMOOTH_TIMER.end();
-                COMPOSITE_TIMER.end();
-                RENDER_TIMER.end();
-                tesselator.clear();
-                target.bindWrite(true);
-            });
+        // The mist at a share of the screen's size, replacing what was there: its colour and where it begins
+        MARCH_TIMER.begin();
+        try (RenderPass pass = encoder.createRenderPass(RenderPassDescriptor.create(() -> "Dynamic Surroundings ground fog march")
+                .withColorAttachment(reduced.getColorTextureView(), Optional.of(CLEAR))
+                .withColorAttachment(distance, Optional.of(CLEAR_DISTANCE))
+                .withDepthAttachment(reduced.getDepthTextureView(), OptionalDouble.of(0D))
+                .withRenderArea(new RenderPass.RenderArea(0, 0, reduced.width, reduced.height)))) {
+            begin(pass, SHADER.pipeline(), transforms);
+            SoftParticles.bindSceneDepth(pass);
+            // Read smoothly between columns, ground heights and thickness both: the mist rounds off over ledges
+            pass.bindTexture(FOG_GRID, grid.getTextureView(), linear);
+            pass.bindTexture(NOISE_SAMPLER, noiseTexture().getTextureView(), RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
+            pass.bindTexture("Sampler2", GameUtils.getMC().gameRenderer.lightmap(), linear);
+            pass.draw(3, 1, 0, 0);
         } finally {
-            RenderSystem.enableCull();
-            RenderSystem.enableDepthTest();
-            RenderSystem.depthFunc(GL11.GL_LEQUAL);
-            RenderSystem.defaultBlendFunc();
-            RenderSystem.disableBlend();
-            RenderSystem.depthMask(true);
+            MARCH_TIMER.end();
         }
+
+        // Smoothed at that size, replacing what was there: its colour and where it begins, as before
+        SMOOTH_TIMER.begin();
+        try (RenderPass pass = encoder.createRenderPass(() -> "Dynamic Surroundings ground fog smoothing", smoothedReduced.getColorTextureView(),
+                Optional.of(CLEAR), smoothedReduced.getDepthTextureView(), OptionalDouble.of(0D))) {
+            begin(pass, SMOOTH.pipeline(), transforms);
+            pass.bindTexture(MIST_SAMPLER, reduced.getColorTextureView(), nearest);
+            pass.bindTexture(MIST_DEPTH_SAMPLER, reduced.getDepthTextureView(), nearest);
+            pass.bindTexture(DISTANCE_SAMPLER, distance, nearest);
+            pass.draw(3, 1, 0, 0);
+        } finally {
+            SMOOTH_TIMER.end();
+        }
+
+        // Laid over the scene at full size; with Fabulous graphics, writing where the mist begins
+        COMPOSITE_TIMER.begin();
+        try (RenderPass pass = encoder.createRenderPass(() -> "Dynamic Surroundings ground fog composite", target.getColorTextureView(),
+                Optional.empty(), fabulous ? target.getDepthTextureView() : null, OptionalDouble.empty())) {
+            begin(pass, (fabulous ? COMPOSITE_DEPTH : COMPOSITE).pipeline(), transforms);
+            pass.bindTexture(MIST_SAMPLER, smoothedReduced.getColorTextureView(), nearest);
+            pass.bindTexture(MIST_DEPTH_SAMPLER, smoothedReduced.getDepthTextureView(), nearest);
+            SoftParticles.bindSceneDepth(pass);
+            pass.bindTexture(DISTANCE_SAMPLER, distance, nearest);
+            pass.draw(3, 1, 0, 0);
+        } finally {
+            COMPOSITE_TIMER.end();
+        }
+        info.rotate();
     }
 
     /**
-     * A quad over the whole of what is being drawn to
+     * Sets a pass's pipeline and binds what all of them read
      */
-    private static void drawScreenQuad(Tesselator tesselator) {
-        var builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-        builder.addVertex(-1F, -1F, 0F);
-        builder.addVertex(1F, -1F, 0F);
-        builder.addVertex(1F, 1F, 0F);
-        builder.addVertex(-1F, 1F, 0F);
-        BufferUploader.drawWithShader(builder.buildOrThrow());
+    private static void begin(RenderPass pass, RenderPipeline pipeline, GpuBufferSlice transforms) {
+        pass.setPipeline(pipeline);
+        RenderSystem.bindDefaultUniforms(pass);
+        pass.setUniform("DynamicTransforms", transforms);
+        pass.setUniform(INFO, info.currentBuffer());
+    }
+
+    /**
+     * The values the passes share, this frame (see shaders/include/ground_fog.glsl)
+     */
+    private static void writeInfo(GroundFogField field, Camera camera, RenderTarget target, boolean fabulous,
+                                  GroundFogQuality quality, float strength, float driftX, float driftZ, float seconds) {
+        if (info == null)
+            info = new MappableRingBuffer(() -> "Dynamic Surroundings ground fog UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_MAP_WRITE, INFO_SIZE);
+        var cam = camera.position();
+        int baseY = gridBaseY;
+        float top = gridHighest + MIST_DEPTH;
+        // The mist thins to nothing a block inside the area's edge, from where the camera is: beyond that, the field has
+        // no cells (see GroundFogField.prepare)
+        float fadeWidth = field.radius() * GroundFogField.EDGE_FADE;
+        var zeroToOne = RenderSystem.getDevice().getDeviceInfo().isZZeroToOne();
+        try (var view = info.currentBuffer().map(false, true)) {
+            Std140Builder.intoBuffer(view.data())
+                    .putVec2(target.width, target.height)
+                    .putFloat(quality.scale())
+                    .putFloat(quality.maxSteps())
+                    // The camera, in the grid's terms: a block to a texel, heights from the base; and where the base is
+                    // in the world, so the noise stays put as the camera goes up and down. Not wrapped: heights are
+                    // small, and a wrap would shift the noise
+                    .putVec4((float) (cam.x - field.cellX(0)), (float) (cam.y - baseY), (float) (cam.z - field.cellZ(0)), baseY)
+                    .putVec2(Math.floorMod(field.cellX(0), NOISE_WRAP), Math.floorMod(field.cellZ(0), NOISE_WRAP))
+                    .putFloat(gridSize)
+                    .putFloat(top - baseY)
+                    .putVec4(driftX, driftZ, seconds, MIST_DEPTH)
+                    .putVec2(field.radius() - 1F, fadeWidth)
+                    .putFloat(THICKNESS * strength)
+                    .putFloat(zeroToOne ? 1F : 0F)
+                    .putFloat(fabulous ? 1F : 0F);
+        }
+    }
+
+    // A pass over the whole of what it draws to: a triangle made from the vertex's index, no vertex buffer
+    private static RenderPipeline.Builder screenPass(String location, String fragmentShader) {
+        return RenderPipeline.builder()
+                .withLocation(Constants.asId(location))
+                .withVertexShader(Constants.asId("core/ground_fog_screen"))
+                .withFragmentShader(Constants.asId(fragmentShader))
+                .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+                .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
+                .withCull(false);
+    }
+
+    private static RenderPipeline.Builder composite(String location) {
+        return screenPass(location, "core/ground_fog_composite")
+                .withBindGroupLayout(COMPOSITE_LAYOUT)
+                .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA));
     }
 
     /**
@@ -295,16 +393,33 @@ public final class GroundFogVolume {
      *
      * @param existing the one there is, if any
      */
-    private static TextureTarget reducedFor(@Nullable TextureTarget existing, RenderTarget target, int scale) {
+    private static TextureTarget reducedFor(@Nullable TextureTarget existing, String label, RenderTarget target, int scale) {
         int width = (target.width + scale - 1) / scale;
         int height = (target.height + scale - 1) / scale;
-        if (existing == null) {
-            existing = new TextureTarget(width, height, true, Minecraft.ON_OSX);
-            existing.setClearColor(0F, 0F, 0F, 0F);
-        } else if (existing.width != width || existing.height != height) {
-            existing.resize(width, height, Minecraft.ON_OSX);
-        }
+        if (existing == null)
+            existing = new TextureTarget(label, width, height, true, GpuFormat.RGBA8_UNORM);
+        else if (existing.width != width || existing.height != height)
+            existing.resize(width, height);
         return existing;
+    }
+
+    /**
+     * The texture the march writes each pixel's distance to, created or made again to match {@code reduced}'s size
+     */
+    private static GpuTextureView distancesFor(TextureTarget reduced) {
+        if (distances != null && (distances.getWidth(0) != reduced.width || distances.getHeight(0) != reduced.height)) {
+            distancesView.close();
+            distances.close();
+            distances = null;
+        }
+        if (distances == null) {
+            var device = RenderSystem.getDevice();
+            distances = device.createTexture(() -> "Dynamic Surroundings ground fog distances",
+                    GpuTexture.USAGE_RENDER_ATTACHMENT | GpuTexture.USAGE_TEXTURE_BINDING, GpuFormat.R32_FLOAT,
+                    reduced.width, reduced.height, 1, 1);
+            distancesView = device.createTextureView(distances);
+        }
+        return distancesView;
     }
 
     /**
@@ -332,7 +447,7 @@ public final class GroundFogVolume {
             if (grid != null)
                 grid.close();
             pixels = new NativeImage(size, size, true);
-            grid = new DynamicTexture(pixels);
+            grid = new DynamicTexture(() -> "Dynamic Surroundings ground fog grid", pixels);
             gridPixels = pixels;
             gridSize = size;
         }
@@ -351,14 +466,10 @@ public final class GroundFogVolume {
                 int light = field.light(i, j);
                 // Block light and sky light, 0 to 15 each, together in a byte
                 int b = ((light >> 4) & 0xF) << 4 | ((light >> 20) & 0xF);
-                // Packed as ABGR
-                pixels.setPixelRGBA(i, j, (a << 24) | (b << 16) | (g << 8) | r);
+                pixels.setPixelABGR(i, j, (a << 24) | (b << 16) | (g << 8) | r);
             }
         }
         grid.upload();
-        // Read smoothly between columns, ground heights and thickness both: the mist rounds off over ledges. After
-        // uploading, which sets it to be read a texel at a time
-        grid.setFilter(true, false);
         return highest;
     }
 

@@ -7,7 +7,7 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.TagEntry;
@@ -286,9 +286,9 @@ public class ConfigDataTests {
 
     @Test
     void idsStillReadTheirShortForms() {
-        assertEquals(ResourceLocation.fromNamespaceAndPath("dsurround", "a"), parse(AcousticConfig.CODEC, "{\"factory\": \"a\"}").getOrThrow().factory());
-        assertEquals(ResourceLocation.withDefaultNamespace("a"), parse(AcousticConfig.CODEC, "{\"factory\": \"@a\"}").getOrThrow().factory());
-        assertEquals(ResourceLocation.fromNamespaceAndPath("c", "a"), parse(AcousticConfig.CODEC, "{\"factory\": \"#c:a\"}").getOrThrow().factory());
+        assertEquals(Identifier.fromNamespaceAndPath("dsurround", "a"), parse(AcousticConfig.CODEC, "{\"factory\": \"a\"}").getOrThrow().factory());
+        assertEquals(Identifier.withDefaultNamespace("a"), parse(AcousticConfig.CODEC, "{\"factory\": \"@a\"}").getOrThrow().factory());
+        assertEquals(Identifier.fromNamespaceAndPath("c", "a"), parse(AcousticConfig.CODEC, "{\"factory\": \"#c:a\"}").getOrThrow().factory());
     }
 
     @Test
@@ -354,13 +354,13 @@ public class ConfigDataTests {
 
         assertEquals(List.of("minecraft:villager", "minecraft:wandering_trader"), entries);
         for (var entry : entries)
-            assertTrue(BuiltInRegistries.ENTITY_TYPE.containsKey(ResourceLocation.parse(entry)), entry + " isn't an entity type");
+            assertTrue(BuiltInRegistries.ENTITY_TYPE.containsKey(Identifier.parse(entry)), entry + " isn't an entity type");
     }
 
     private static Object lilyPadSoundChance(boolean night) throws IOException {
         var rules = Codec.list(BlockConfigRule.CODEC).parse(JsonOps.INSTANCE, json(resource("/assets/dsurround/dsconfigs/blocks.json"))).getOrThrow();
         // Found by its sound: matching blocks would need the tag library for the tag rules
-        var frog = ResourceLocation.parse("dsurround:lilypad.frog");
+        var frog = Identifier.parse("dsurround:lilypad.frog");
         var script = rules.stream()
                 .filter(r -> r.acoustics().stream().anyMatch(a -> a.factory().equals(frog)))
                 .flatMap(r -> r.soundChance().stream())

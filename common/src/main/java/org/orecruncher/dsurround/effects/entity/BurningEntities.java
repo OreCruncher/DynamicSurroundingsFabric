@@ -4,7 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 /**
  * The entities whose fire {@link BurningEffect} draws, by id, so vanilla's fire sheets are left off for them and only
- * them (the render hook in {@code MixinEntityRenderDispatcher} asks). Everyone else, past the effect range for
+ * them (the render hook in {@code MixinEntityRenderer} asks). Everyone else, past the effect range for
  * instance, keeps vanilla's. Client thread only: effects tick and entities render there.
  */
 public final class BurningEntities {

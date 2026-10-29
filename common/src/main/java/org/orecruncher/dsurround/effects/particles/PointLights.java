@@ -1,22 +1,37 @@
 package org.orecruncher.dsurround.effects.particles;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.buffers.Std140Builder;
+import com.mojang.blaze3d.buffers.Std140SizeCalculator;
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.ColorTargetState;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.platform.BlendFactor;
+import com.mojang.blaze3d.shaders.UniformType;
+import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.PrimitiveTopology;
+import com.mojang.blaze3d.pipeline.BindGroupLayout;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.ShaderInstance;
-import org.joml.Matrix4f;
+import net.minecraft.client.renderer.BindGroupLayouts;
+import net.minecraft.client.renderer.MappableRingBuffer;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Client;
-import org.orecruncher.dsurround.effects.RenderTimer;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.ModShader;
+import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.lib.Library;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -25,18 +40,40 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * light is, and adds light by how close it is and whether it faces the light. Being added on top of the scene, it
  * doesn't change Minecraft's lighting, and it can't cast shadows.
  * <p>
- * Particles {@link #add} their light as they are drawn, and the lights are all drawn together just before the next
- * frame's fireflies or flames ({@link #draw}), from the begin() of their render types, whichever comes first. That is
- * one frame late: a firefly moves about a hundredth of a block in that time. Drawing them there lets them set up and
- * put back the drawing state they need, which a render type of their own couldn't (render types have no end()).
+ * Particles {@link #add} their light as they are extracted for drawing, and the lights are all drawn together just
+ * before the translucent particles ({@link #draw}), in a pass of their own (see MixinQuadParticleFeatureRenderer).
  * <p>
- * The shader ({@link #SHADER}) is registered by each platform. Without it, or while an Iris shader pack is in use,
- * there are no lights. Everything here runs on the render thread.
+ * Without the shader ({@link #SHADER}), or while an Iris shader pack is in use, there are no lights. Everything here
+ * runs on the render thread.
  */
 public final class PointLights {
 
-    public static final ModShader SHADER = new ModShader("point_light", DefaultVertexFormat.POSITION_TEX_COLOR,
-            "point lights", "fireflies and flame jets will not light their surroundings", Library.LOGGER);
+    private static final String POINT_LIGHT_INFO = "PointLightInfo";
+    private static final int POINT_LIGHT_INFO_SIZE = new Std140SizeCalculator().putFloat().get();
+    private static final BindGroupLayout POINT_LIGHT_LAYOUT = BindGroupLayout.builder()
+            .withUniform(POINT_LIGHT_INFO, UniformType.UNIFORM_BUFFER)
+            .withSampler(SoftParticles.DEPTH_SAMPLER)
+            .build();
+
+    // The shader finds what each light reaches itself, so nothing is tested against depth; and its squares may face
+    // either way. The shader gives its light already scaled by its strength, with next to no alpha, and both are
+    // simply added: with Fabulous graphics the particles' target is laid over the scene as behind * (1 - alpha) +
+    // color, and an alpha that piled up would replace the lit ground with the light's color, a flat white. Not no
+    // alpha at all, or that pass skips the pixel.
+    private static final RenderPipeline PIPELINE = RenderPipeline.builder()
+            .withLocation(Constants.asId("pipeline/point_light"))
+            .withVertexShader(Constants.asId("core/point_light"))
+            .withFragmentShader(Constants.asId("core/point_light"))
+            .withBindGroupLayout(BindGroupLayouts.GLOBALS)
+            .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+            .withBindGroupLayout(POINT_LIGHT_LAYOUT)
+            .withColorTargetState(new ColorTargetState(new BlendFunction(BlendFactor.ONE, BlendFactor.ONE)))
+            .withCull(false)
+            .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
+            .withPrimitiveTopology(PrimitiveTopology.QUADS)
+            .build();
+
+    public static final ModShader SHADER = new ModShader(PIPELINE, "point lights", "fireflies and flame jets will not light their surroundings", Library.LOGGER);
 
     public static final RenderTimer RENDER_TIMER = new RenderTimer("Point Lights");
 
@@ -63,9 +100,10 @@ public final class PointLights {
     // A light this faint changes no pixel: under half a step of an 8 bit color, at its brightest
     static final float MIN_STRENGTH = 0.5F / 255F;
 
-    // Lights recorded longer ago than this weren't from the last frame (nothing lit was drawn since), so are dropped
+    // Lights recorded longer ago than this weren't from this frame (nothing lit was drawn), so are dropped
     private static final long STALE_NANOS = 250_000_000L;
-    // x, y, z, red, green, blue, strength, radius
+    // x, y, z (relative to the camera: small enough for a float wherever the world is), red, green, blue, strength,
+    // radius
     static final int STRIDE = 8;
 
     private static float[] lights = new float[STRIDE * 64];
@@ -85,12 +123,20 @@ public final class PointLights {
         SOURCES.add(source);
     }
 
+    // Created on first use, on the render thread
+    @Nullable
+    private static ByteBufferBuilder meshBytes;
+    @Nullable
+    private static GpuBuffer vertexBuffer;
+    @Nullable
+    private static MappableRingBuffer lightInfo;
+
     private PointLights() {
     }
 
     /**
-     * Whether lights can be drawn: the shader loaded, drawing hasn't failed, and no shader pack is in use. Each kind of
-     * light also has its own option.
+     * Whether lights can be drawn: the shader compiled, drawing hasn't failed, and no shader pack is in use. Each kind
+     * of light also has its own option.
      */
     public static boolean isAvailable() {
         return SHADER.isUsable();
@@ -111,7 +157,30 @@ public final class PointLights {
     }
 
     /**
-     * Records a light to draw.
+     * Whether any kind of light is being drawn
+     */
+    public static boolean isActive() {
+        return fireflyLightsOn() || flameLightsOn();
+    }
+
+    /**
+     * The frame is done: any lights not drawn (no translucent particles were) are dropped, not carried into the next,
+     * where they would be placed from where the camera was
+     */
+    public static void endFrame() {
+        count = 0;
+    }
+
+    /**
+     * Whether there are lights waiting to be drawn.
+     */
+    public static boolean hasLights() {
+        return count > 0;
+    }
+
+    /**
+     * Records a light to draw. Kept relative to the camera, which is where it is drawn from this frame: far from the
+     * world's middle, a float can't hold a position in the world finely enough, and the lights would jitter.
      *
      * @param x        where, in the world
      * @param strength 0 to 1
@@ -123,9 +192,10 @@ public final class PointLights {
         if ((count + 1) * STRIDE > lights.length)
             lights = Arrays.copyOf(lights, lights.length * 2);
         int i = count * STRIDE;
-        lights[i] = (float) x;
-        lights[i + 1] = (float) y;
-        lights[i + 2] = (float) z;
+        var camera = Minecraft.getInstance().gameRenderer.mainCamera().position();
+        lights[i] = (float) (x - camera.x);
+        lights[i + 1] = (float) (y - camera.y);
+        lights[i + 2] = (float) (z - camera.z);
         lights[i + 3] = red;
         lights[i + 4] = green;
         lights[i + 5] = blue;
@@ -136,84 +206,89 @@ public final class PointLights {
     }
 
     /**
-     * Draws the lights recorded since the last call, then forgets them. Leaves the drawing state as it found it,
-     * apart from the shader, which is set back to the vanilla particle shader.
+     * Draws the lights recorded since the last call into {@code target}, then forgets them. Called outside any render
+     * pass, after the scene's depth has been captured.
+     *
+     * @param transforms the camera's, as the particles are drawn with them (see MixinQuadParticleFeatureRenderer)
      */
-    public static void draw(Tesselator tesselator) {
+    public static void draw(RenderTarget target, GpuBufferSlice transforms) {
         // Lights gathered elsewhere during the frame, to be added now that it is known which are wanted
         for (int i = 0; i < SOURCES.size(); i++)
             SOURCES.get(i).run();
         int n = count;
         count = 0;
-        var current = SHADER.get();
-        if (n == 0 || current == null || System.nanoTime() - lastAdded > STALE_NANOS || !isAvailable())
+        if (n == 0 || System.nanoTime() - lastAdded > STALE_NANOS || !isAvailable() || !SoftParticles.hasSceneDepth())
             return;
-
         RENDER_TIMER.begin();
-        SHADER.run(() -> drawLights(tesselator, current, n), () -> {
-            // Leave things as the particles drawn next expect them
-            tesselator.clear();
-            SoftParticles.bindParticleTarget();
-            RenderSystem.setShader(GameRenderer::getParticleShader);
-        });
+        SHADER.run(() -> drawLights(target, n, transforms), () -> {});
         RENDER_TIMER.end();
     }
 
-    private static void drawLights(Tesselator tesselator, ShaderInstance current, int n) {
-        SoftParticles.bindSceneDepth(current, "point lights");
-        current.safeGetUniform("InverseProjMat").set(RenderSystem.getProjectionMatrix().invert(new Matrix4f()));
-        boolean fabulous = Minecraft.useShaderTransparency();
-        current.safeGetUniform("AddOnly").set(fabulous ? 1F : 0F);
-        RenderSystem.setShader(SHADER.supplier());
+    private static void drawLights(RenderTarget target, int n, GpuBufferSlice transforms) {
+        var device = RenderSystem.getDevice();
 
-        // The shader finds what each light reaches itself, so nothing is tested against depth; and its squares
-        // may face either way
-        RenderSystem.enableBlend();
-        if (fabulous) {
-            // Light is added to the particles' own target, which the transparency pass lays over the scene as
-            // behind * (1 - alpha) + color: with the usual adding, the alpha piles up too and the lit ground is
-            // replaced by the light's color, a flat white. The shader gives its light already scaled by its strength,
-            // and next to no alpha (not none, or the pass skips the pixel), and both are simply added.
-            RenderSystem.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE);
-        } else {
-            RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
+        // Enough that some fade or are left out: the nearest first. Their positions are already relative to the camera
+        if (n > FADE_FROM)
+            sortNearest(lights, n, 0D, 0D, 0D);
+        if (meshBytes == null)
+            meshBytes = new ByteBufferBuilder(64 * 4 * DefaultVertexFormat.POSITION_TEX_COLOR.getVertexSize());
+        var builder = new BufferBuilder(meshBytes, PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        for (int l = 0; l < Math.min(n, MAX_DRAWN); l++) {
+            int i = l * STRIDE;
+            float a = lights[i + 6] * rankFade(l);
+            if (a < MIN_STRENGTH)
+                continue;
+            float x = lights[i], y = lights[i + 1], z = lights[i + 2];
+            float r = lights[i + 3], g = lights[i + 4], b = lights[i + 5];
+            // All four at the center; the vertex shader spreads them out. Each corner is given at the light's
+            // radius, which is how the shader knows it.
+            float radius = lights[i + 7];
+            builder.addVertex(x, y, z).setUv(-radius, -radius).setColor(r, g, b, a);
+            builder.addVertex(x, y, z).setUv(radius, -radius).setColor(r, g, b, a);
+            builder.addVertex(x, y, z).setUv(radius, radius).setColor(r, g, b, a);
+            builder.addVertex(x, y, z).setUv(-radius, radius).setColor(r, g, b, a);
         }
-        RenderSystem.depthMask(false);
-        RenderSystem.disableDepthTest();
-        RenderSystem.disableCull();
-        try {
-            // Positions relative to the camera, as for all particles
-            var camera = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
-            // Enough that some fade or are left out: the nearest first
-            if (n > FADE_FROM)
-                sortNearest(lights, n, camera.x, camera.y, camera.z);
-            var builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-            for (int l = 0; l < Math.min(n, MAX_DRAWN); l++) {
-                int i = l * STRIDE;
-                float a = lights[i + 6] * rankFade(l);
-                if (a < MIN_STRENGTH)
-                    continue;
-                float x = (float) (lights[i] - camera.x);
-                float y = (float) (lights[i + 1] - camera.y);
-                float z = (float) (lights[i + 2] - camera.z);
-                float r = lights[i + 3], g = lights[i + 4], b = lights[i + 5];
-                // All four at the center; the vertex shader spreads them out. Each corner is given at the light's
-                // radius, which is how the shader knows it.
-                float radius = lights[i + 7];
-                builder.addVertex(x, y, z).setUv(-radius, -radius).setColor(r, g, b, a);
-                builder.addVertex(x, y, z).setUv(radius, -radius).setColor(r, g, b, a);
-                builder.addVertex(x, y, z).setUv(radius, radius).setColor(r, g, b, a);
-                builder.addVertex(x, y, z).setUv(-radius, radius).setColor(r, g, b, a);
-            }
-            var mesh = builder.build();
-            if (mesh != null)
-                BufferUploader.drawWithShader(mesh);
-        } finally {
-            RenderSystem.enableCull();
-            RenderSystem.enableDepthTest();
-            RenderSystem.defaultBlendFunc();
-            RenderSystem.setShader(GameRenderer::getParticleShader);
+
+        int indexCount;
+        try (var mesh = builder.build()) {
+            if (mesh == null)
+                return;
+            indexCount = mesh.drawState().indexCount();
+            uploadVertices(mesh.vertexBuffer());
         }
+
+        if (lightInfo == null)
+            lightInfo = new MappableRingBuffer(() -> "Dynamic Surroundings point light UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_MAP_WRITE, POINT_LIGHT_INFO_SIZE);
+        var zeroToOne = device.getDeviceInfo().isZZeroToOne();
+        try (var view = lightInfo.currentBuffer().map(false, true)) {
+            Std140Builder.intoBuffer(view.data()).putFloat(zeroToOne ? 1F : 0F);
+        }
+
+        var indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
+        var indexBuffer = indices.getBuffer(indexCount);
+
+        try (RenderPass pass = device.createCommandEncoder()
+                .createRenderPass(() -> "Dynamic Surroundings point lights", target.getColorTextureView(), Optional.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
+            pass.setPipeline(PIPELINE);
+            RenderSystem.bindDefaultUniforms(pass);
+            pass.setUniform("DynamicTransforms", transforms);
+            SoftParticles.bindSceneDepth(pass);
+            pass.setUniform(POINT_LIGHT_INFO, lightInfo.currentBuffer());
+            pass.setVertexBuffer(0, vertexBuffer.slice());
+            pass.setIndexBuffer(indexBuffer, indices.type());
+            pass.drawIndexed(indexCount, 1, 0, 0, 0);
+        }
+        lightInfo.rotate();
+    }
+
+    private static void uploadVertices(ByteBuffer vertices) {
+        var device = RenderSystem.getDevice();
+        if (vertexBuffer == null || vertexBuffer.size() < vertices.remaining()) {
+            if (vertexBuffer != null)
+                vertexBuffer.close();
+            vertexBuffer = device.createBuffer(() -> "Dynamic Surroundings point light vertices", GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST, vertices.remaining());
+        }
+        device.createCommandEncoder().writeToBuffer(vertexBuffer.slice(), vertices);
     }
 
     /**

@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
-import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
+import com.mojang.blaze3d.vertex.MeshData;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Mth;
@@ -12,6 +13,8 @@ import net.minecraft.util.RandomSource;
  * flat arrays like the drops, and drawn with them; spots added when the field is full are left out. Client thread
  * only, which in Minecraft is also the render thread.
  */
+import java.util.function.Consumer;
+
 public final class DampSpots {
 
     /**
@@ -35,7 +38,8 @@ public final class DampSpots {
     static final float LIFT_RANGE = 0.004F;
 
     private final int capacity;
-    final float[] x, y, z;
+    final double[] x, z;
+    final float[] y;
     // Half the side of the square, turned by the spot's angle: the corners are the centre plus and minus these
     final float[] cornerX, cornerZ;
     final int[] age, lifetime;
@@ -45,9 +49,9 @@ public final class DampSpots {
 
     public DampSpots(int capacity) {
         this.capacity = capacity;
-        this.x = new float[capacity];
+        this.x = new double[capacity];
         this.y = new float[capacity];
-        this.z = new float[capacity];
+        this.z = new double[capacity];
         this.cornerX = new float[capacity];
         this.peak = new float[capacity];
         this.cornerZ = new float[capacity];
@@ -77,9 +81,9 @@ public final class DampSpots {
         float variation = 1F + (random.nextFloat() * 2F - 1F) * HALF_SIZE_VARIATION;
         float half = (MIN_HALF_SIZE + HALF_SIZE_PER_SIZE * dropSize) * variation;
         float angle = random.nextFloat() * Mth.HALF_PI;
-        this.x[i] = (float) x;
+        this.x[i] = x;
         this.y[i] = (float) surfaceY + LIFT + random.nextFloat() * LIFT_RANGE;
-        this.z[i] = (float) z;
+        this.z[i] = z;
         this.cornerX[i] = Mth.cos(angle) * half;
         this.cornerZ[i] = Mth.sin(angle) * half;
         this.age[i] = 0;
@@ -116,8 +120,8 @@ public final class DampSpots {
      * @param darkening true when the blend darkens the ground by each spot's alpha; false to lay a dark colour over
      *                  it with an ordinary blend
      */
-    public void draw(Tesselator tesselator, Camera camera, float partialTick, TextureAtlasSprite sprite, boolean darkening) {
-        PrecipitationRenderer.draw(this, tesselator, camera, partialTick, sprite, darkening);
+    public void draw(ByteBufferBuilder bytes, Consumer<MeshData> drawer, Camera camera, float partialTick, TextureAtlasSprite sprite, boolean darkening) {
+        PrecipitationRenderer.draw(this, bytes, drawer, camera, partialTick, sprite, darkening);
     }
 
     /**

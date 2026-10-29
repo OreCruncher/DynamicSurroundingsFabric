@@ -74,9 +74,12 @@ public final class FrostField {
     }
 
     public void forEachFace(Consumer<FrostFace> action) {
-        for (var section : this.sections.values())
-            for (var face : section.faces)
-                action.accept(face);
+        // Called every frame: by index, as an iterator for each section's list was most of the mod's garbage
+        for (var section : this.sections.values()) {
+            var faces = section.faces;
+            for (int i = 0, n = faces.size(); i < n; i++)
+                action.accept(faces.get(i));
+        }
     }
 
     /**
@@ -118,7 +121,7 @@ public final class FrostField {
      * @param target how much frost a face should have, worked out for it
      */
     public void update(ClientLevel level, IFrostWorld world, int px, int py, int pz, FrostTarget target) {
-        this.setRange(level.getMinSection(), level.getMaxSection() - 1, px, py, pz);
+        this.setRange(level.getMinSectionY(), level.getMaxSectionY(), px, py, pz);
 
         // One section in turn looks again, for the temperature
         if (!this.inTurn.isEmpty()) {

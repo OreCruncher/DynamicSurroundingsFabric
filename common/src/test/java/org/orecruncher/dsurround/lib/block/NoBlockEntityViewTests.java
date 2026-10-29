@@ -6,6 +6,7 @@ import net.minecraft.server.Bootstrap;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.BlockEntityTypes;
 import net.minecraft.world.level.material.Fluids;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.testing.Fakes;
@@ -31,13 +32,13 @@ public class NoBlockEntityViewTests {
             "getBlockState", args -> args[0].equals(POS) ? Blocks.STONE.defaultBlockState() : Blocks.AIR.defaultBlockState(),
             "getFluidState", args -> Fluids.WATER.defaultFluidState(),
             "getHeight", args -> 384,
-            "getMinBuildHeight", args -> -64));
+            "getMinY", args -> -64));
 
     @Test
     void neverAsksTheLevelForABlockEntity() {
         var view = new NoBlockEntityView(LEVEL);
         assertNull(view.getBlockEntity(POS));
-        assertTrue(view.getBlockEntity(POS, BlockEntityType.BELL).isEmpty());
+        assertTrue(view.getBlockEntity(POS, BlockEntityTypes.BELL).isEmpty());
     }
 
     @Test
@@ -47,7 +48,7 @@ public class NoBlockEntityViewTests {
         assertSame(Blocks.AIR.defaultBlockState(), view.getBlockState(POS.above()));
         assertSame(Fluids.WATER.defaultFluidState(), view.getFluidState(POS));
         assertEquals(384, view.getHeight());
-        assertEquals(-64, view.getMinBuildHeight());
+        assertEquals(-64, view.getMinY());
     }
 
     @Test

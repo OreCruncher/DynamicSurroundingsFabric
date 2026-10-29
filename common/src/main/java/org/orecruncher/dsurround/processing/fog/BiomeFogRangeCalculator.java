@@ -1,10 +1,12 @@
 package org.orecruncher.dsurround.processing.fog;
 
-import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.client.renderer.fog.FogData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.QuartPos;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeManager;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
@@ -34,8 +36,8 @@ public class BiomeFogRangeCalculator extends VanillaFogRangeCalculator {
 
     @Override
     @NotNull
-    public FogRenderer.FogData render(@NotNull final FogRenderer.FogData data, float renderDistance, float partialTick) {
-        return thicken(data, this.scale.get(partialTick), 0F);
+    public FogData render(@NotNull final FogData data, float renderDistance, float partialTick) {
+        return thicken(data, renderDistance, this.scale.get(partialTick), 0F);
     }
 
     @Override

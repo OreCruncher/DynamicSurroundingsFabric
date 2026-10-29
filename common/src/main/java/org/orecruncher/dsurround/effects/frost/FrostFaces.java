@@ -53,13 +53,14 @@ public final class FrostFaces {
             int light = world.packedLight(front);
             float skyShare = world.skyLight(front) / 15F;
             float temperature = world.temperature(front);
+            boolean translucent = world.translucent(state);
             for (var box : boxes) {
                 if (extentAcross(box, side) < MIN_EXTENT || box.maxY - box.minY < MIN_EXTENT)
                     continue;
                 double plane = plane(box, side);
                 if (isCovered(boxes, box, side, plane))
                     continue;
-                out.accept(face(world, pos, side, box, plane, light, skyShare, temperature));
+                out.accept(face(world, pos, side, box, plane, light, skyShare, temperature, translucent));
             }
         }
     }
@@ -87,23 +88,23 @@ public final class FrostFaces {
         return state.getFluidState().isEmpty() && state.getCollisionShape(blocks, pos).isEmpty();
     }
 
-    private static FrostFace face(IFrostWorld world, BlockPos pos, Direction side, AABB box, double plane, int light, float skyShare, float temperature) {
+    private static FrostFace face(IFrostWorld world, BlockPos pos, Direction side, AABB box, double plane, int light, float skyShare, float temperature, boolean translucent) {
         var across = acrossAxis(side);
         var lower = Direction.fromAxisAndDirection(across, Direction.AxisDirection.NEGATIVE);
         var upper = lower.getOpposite();
         int base = across == Direction.Axis.X ? pos.getX() : pos.getZ();
-        float u0 = (float) (base + box.min(across));
-        float u1 = (float) (base + box.max(across));
+        double u0 = base + box.min(across);
+        double u1 = base + box.max(across);
         float v0 = (float) (pos.getY() + box.minY);
         float v1 = (float) (pos.getY() + box.maxY);
         int planeBase = side.getAxis() == Direction.Axis.X ? pos.getX() : pos.getZ();
-        float lifted = (float) (planeBase + plane) + (side.getAxisDirection() == Direction.AxisDirection.POSITIVE ? LIFT : -LIFT);
+        double lifted = planeBase + plane + (side.getAxisDirection() == Direction.AxisDirection.POSITIVE ? LIFT : -LIFT);
         return new FrostFace(pos.getX(), pos.getY(), pos.getZ(), side, lifted, u0, u1, v0, v1,
                 u0 - reach(world, pos, side, box, plane, lower),
                 u1 + reach(world, pos, side, box, plane, upper),
                 v0 - reach(world, pos, side, box, plane, Direction.DOWN),
                 v1 + reach(world, pos, side, box, plane, Direction.UP),
-                light, skyShare, temperature);
+                light, skyShare, temperature, translucent);
     }
 
     /**

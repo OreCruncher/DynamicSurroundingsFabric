@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.BiomeTrait;
 
@@ -90,7 +90,7 @@ public final class VanillaBiomeAnalyzer implements IBiomeTraitAnalyzer {
     /**
      * Whether the table has the biome
      */
-    static boolean covers(ResourceLocation id) {
+    static boolean covers(Identifier id) {
         return "minecraft".equals(id.getNamespace()) && VANILLA_TRAITS.containsKey(id.getPath());
     }
 

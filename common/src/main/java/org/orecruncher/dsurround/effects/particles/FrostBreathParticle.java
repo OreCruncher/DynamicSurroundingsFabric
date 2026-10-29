@@ -2,9 +2,8 @@ package org.orecruncher.dsurround.effects.particles;
 
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.particle.SpriteSet;
-import net.minecraft.client.particle.TextureSheetParticle;
+import net.minecraft.client.particle.SingleQuadParticle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.util.Mth;
@@ -16,7 +15,7 @@ import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.runtime.weather.SceneWind;
 import org.orecruncher.dsurround.runtime.weather.Shelter;
 
-public class FrostBreathParticle extends TextureSheetParticle {
+public class FrostBreathParticle extends SingleQuadParticle {
 
     // The share of its speed it keeps each tick
     private static final float DRAG = 0.96F;
@@ -51,7 +50,7 @@ public class FrostBreathParticle extends TextureSheetParticle {
     }
 
     private FrostBreathParticle(LivingEntity entity, Vec3 origin, Vec3 trajectory, float size, double speed, SpriteSet spriteProvider) {
-        super((ClientLevel) entity.level(), 0, 0, 0, 0.0, 0.0, 0.0);
+        super((ClientLevel) entity.level(), 0, 0, 0, 0.0, 0.0, 0.0, spriteProvider.first());
         
         final IRandomizer rand = Randomizer.current();
 
@@ -80,14 +79,14 @@ public class FrostBreathParticle extends TextureSheetParticle {
     }
 
     /**
-     * Soft, as mist is, and writing no depth of its own. Vanilla's translucent sheet writes each particle's depth, and
-     * a breath is a large faint puff right in front of the face: anything drawn over the scene after the particles,
-     * tested against depth, took the puff for something close by and left out what lay behind it. With Astral
-     * Sorcery's pitch black night sky, each breath showed the blocks through the dark.
+     * Soft, as the mist and steam are (see SoftParticles): fading where it meets a wall, and writing no depth of its
+     * own. A breath is a large faint puff right in front of the face, and with its depth written, whatever is drawn after
+     * the particles and tested against depth took it for something close by and left out what lay behind it: the frost
+     * on a window, or on 1.21.1, with Astral Sorcery's pitch black night sky, the dark itself.
      */
     @Override
-    public @NotNull ParticleRenderType getRenderType() {
-        return DSurroundParticleRenderType.PARTICLE_SHEET_MIST;
+    public @NotNull Layer getLayer() {
+        return SoftParticles.mistLayer();
     }
 
     @Override

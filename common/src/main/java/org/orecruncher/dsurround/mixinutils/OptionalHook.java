@@ -29,40 +29,44 @@ import java.util.function.Function;
 public enum OptionalHook {
 
     SKY_TINT("Dust storm sky color",
-            site("core.MixinLevelRenderer", "dsurround$tintSkyColor")),
+            site("core.MixinSkyRenderer", "dsurround$tintSkyColor")),
     SUNSET_TINT("Dust storm sunrise and sunset color",
-            site("core.MixinLevelRenderer", "dsurround$tintSunsetColor")),
+            site("core.MixinSkyRenderer", "dsurround$tintSunsetColor")),
     FOG_TINT("Dust storm fog color",
             site("core.MixinFogRenderer", "dsurround$tintFogColor")),
-    STORM_RAIN("Storm strength in vanilla's rain and snow",
-            site("core.MixinLevelRenderer", "dsurround$stormRainLevelDrawn"),
-            site("core.MixinLevelRenderer", "dsurround$stormRainLevelTicked")),
-    RAIN_SOUNDS("Storm rain sounds",
-            site("core.MixinLevelRenderer", "dsurround$rainSound")),
-    RAIN_SPLASHES("Hiding vanilla's rain splashes under particle rain",
-            site("core.MixinLevelRenderer", "dsurround$vanillaRainSplash")),
+    PRECIPITATION("Particle rain and snow",
+            site("core.MixinWeatherEffectRenderer", "dsurround$renderPrecipitation"),
+            site("core.MixinLevelRenderer", "dsurround$enterWeatherPass"),
+            site("core.MixinLevelRenderer", "dsurround$leaveWeatherPass")),
+    GROUND_FOG("Ground fog with Fabulous graphics",
+            site("core.MixinLevelRenderer", "dsurround$groundFogAfterWeather")),
     WINDOW_FROST("Window frost without Fabulous graphics",
-            site("core.MixinLevelRenderer", "dsurround$afterSectionLayer")),
+            site("core.MixinLevelRenderer", "dsurround$frostDepthBeforeTranslucent"),
+            site("core.MixinLevelRenderer", "dsurround$frostAfterTranslucentTerrain")),
+    STORM_RAIN("Storm strength in vanilla's rain and snow",
+            site("core.MixinWeatherEffectRenderer", "dsurround$stormRainLevelDrawn"),
+            site("core.MixinClientLevel", "dsurround$stormRainLevelTicked"),
+            site("core.MixinAtmosphericFogEnvironment", "dsurround$stormRainFog")),
+    RAIN_SOUNDS("Storm rain sounds",
+            site("core.MixinClientLevel", "dsurround$rainSound")),
+    RAIN_SPLASHES("Hiding vanilla's rain splashes under particle rain",
+            site("core.MixinClientLevel", "dsurround$vanillaRainSplash")),
     WIND_BLOWN_PARTICLES("Wind blowing particles",
             site("core.MixinParticleEngine", "dsurround$markWindBlown"),
             site("core.MixinParticle", "dsurround$driftX"),
             site("core.MixinParticle", "dsurround$driftZ")),
     BURNING_ENTITIES("Flames on burning mobs",
-            site("core.MixinEntityRenderDispatcher", "dsurround$vanillaFire")),
+            site("core.MixinEntityRenderer", "dsurround$vanillaFire")),
     DEATH_PUFFS("Dark mist when mobs die",
             site("core.MixinLivingEntity", "dsurround$deathPuffs")),
     LIGHTNING_BOLTS("Branching lightning in place of vanilla's bolts",
             site("core.MixinClientLevel", "dsurround$lightningBolt"),
-            site("core.MixinLightningBoltRenderer", "dsurround$vanillaBolt")),
+            site("core.MixinLightningBoltRenderer", "dsurround$vanillaBolt"),
+            site("core.MixinLevelRenderer", "dsurround$lightningAfterWeather")),
     DYNAMIC_CLOUDS("Dynamic clouds in place of vanilla's",
-            site("core.MixinLevelRenderer", "dsurround$clouds")),
-    PARTICLE_BATCH_REPAIR("Repairing particles another mod's particle draws wrong",
-            site("core.MixinParticleEngine", "dsurround$batchBegun", "dsurround$batchBegunNeoForge"),
-            site("core.MixinParticleEngine", "dsurround$batchDrawn", "dsurround$batchDrawnNeoForge")),
-    PARTICLE_BATCH_CULPRIT("Naming the particle that draws others wrong",
-            site("core.MixinParticleEngine", "dsurround$particleRendered", "dsurround$particleRenderedNeoForge")),
+            site("core.MixinCloudRenderer", "dsurround$clouds")),
     PRECIPITATION_AHEAD("Building rain and snow while the world is drawn",
-            site("core.MixinLevelRenderer", "dsurround$beginLevel")),
+            site("core.MixinGameRenderer", "dsurround$beginLevel")),
     FRAME_TIMES("Frame times in profile recordings",
             site("core.MixinMinecraftClient", "dsurround$timeFrame"));
 
@@ -120,12 +124,6 @@ public enum OptionalHook {
         return new Site(mixin, handler, null);
     }
 
-    /**
-     * A site with a handler for Fabric and another for NeoForge, of which one applies
-     */
-    private static Site site(String mixin, String fabricHandler, String neoForgeHandler) {
-        return new Site(mixin, fabricHandler, neoForgeHandler);
-    }
 
     /**
      * What is lost when it doesn't apply, for the log and diagnostics

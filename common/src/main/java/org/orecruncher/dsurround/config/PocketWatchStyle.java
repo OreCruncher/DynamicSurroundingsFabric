@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.Constants;
 
 /**
@@ -11,13 +11,13 @@ public enum PocketWatchStyle {
     CLASSIC("textures/pocket_watch.png"),
     SQUARE("textures/pocket_watch_square.png");
 
-    private final ResourceLocation texture;
+    private final Identifier texture;
 
     PocketWatchStyle(String texture) {
         this.texture = Constants.asId(texture);
     }
 
-    public ResourceLocation getTexture() {
+    public Identifier getTexture() {
         return this.texture;
     }
 }

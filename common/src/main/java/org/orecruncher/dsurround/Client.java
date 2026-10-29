@@ -7,9 +7,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
-import net.minecraft.client.renderer.FogRenderer;
+
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.SkyRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.WeatherEffectRenderer;
 import net.minecraft.client.renderer.entity.LightningBoltRenderer;
+import net.minecraft.client.renderer.fog.FogRenderer;
+import net.minecraft.client.renderer.fog.environment.AtmosphericFogEnvironment;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.PackType;
@@ -48,6 +53,12 @@ import org.orecruncher.dsurround.processing.Handlers;
 import org.orecruncher.dsurround.profiling.ProfileFiles;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
+import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
+import org.orecruncher.dsurround.runtime.oracle.IMinecraftClock;
+import org.orecruncher.dsurround.runtime.oracle.impl.DimensionOracle;
+import org.orecruncher.dsurround.runtime.oracle.impl.LevelOracle;
+import org.orecruncher.dsurround.runtime.oracle.impl.MinecraftClock;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WindService;
@@ -137,7 +148,9 @@ public final class Client {
                 .registerSingleton(ISoundLibrary.class, SoundLibrary.class)
                 .registerSingleton(IBiomeLibrary.class, BiomeLibrary.class)
                 .registerSingleton(IDimensionLibrary.class, DimensionLibrary.class)
-                .registerSingleton(IDimensionInformation.class, DimensionInformation.class)
+                .registerSingleton(IDimensionOracle.class, DimensionOracle.class)
+                .registerSingleton(ILevelOracle.class, LevelOracle.class)
+                .registerSingleton(IMinecraftClock.class, MinecraftClock.class)
                 // SeasonManager deferred as HANDLER is not initialized at this time
                 .registerFactory(ISeasonalInformation.class, () -> SeasonManager.HANDLER)
                 .registerSingleton(IBlockLibrary.class, BlockLibrary.class)
@@ -229,8 +242,8 @@ public final class Client {
      * loads it.
      */
     private static void checkOptionalHooks() {
-        var hooked = List.of(LevelRenderer.class, FogRenderer.class, ParticleEngine.class, Particle.class, ClientLevel.class,
-                LightningBoltRenderer.class);
+        var hooked = List.of(ClientLevel.class, LevelRenderer.class, WeatherEffectRenderer.class, SkyRenderer.class, FogRenderer.class,
+                AtmosphericFogEnvironment.class, ParticleEngine.class, Particle.class, LightningBoltRenderer.class);
         Library.LOGGER.debug("Checking the optional hooks in %d classes", hooked.size());
         OptionalHook.check(Library.LOGGER, Platform.isDevelopmentEnvironment());
     }

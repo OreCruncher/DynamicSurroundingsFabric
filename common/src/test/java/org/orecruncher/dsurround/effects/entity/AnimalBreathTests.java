@@ -3,9 +3,9 @@ package org.orecruncher.dsurround.effects.entity;
 import com.google.gson.JsonParser;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +29,7 @@ public class AnimalBreathTests {
     }
 
     private static final double EPSILON = 1e-6;
-    private static final Muzzle.Profile COW = Muzzle.PROFILES.get(EntityType.COW);
+    private static final Muzzle.Profile COW = Muzzle.PROFILES.get(EntityTypes.COW);
 
     private static void assertNear(Vec3 expected, Vec3 actual) {
         assertEquals(expected.x, actual.x, EPSILON, "x of " + actual);
@@ -41,16 +41,16 @@ public class AnimalBreathTests {
 
     @Test
     void aCowsMouthIsOutInFront() {
-        // Yaw 0 faces south, +z. The head's pivot is 8 pixels in front and 20 up; the mouth 6 further, 2 below it
+        // Yaw 0 faces south, +z. The head's pivot is 8 pixels in front and 20 up; the mouth 7 further, 2.5 below it
         var mouth = Muzzle.position(10, 64, 20, 0F, 0F, 0F, COW, 1D);
-        assertNear(new Vec3(10, 64 + 18 / 16D, 20 + 14 / 16D), mouth);
+        assertNear(new Vec3(10, 64 + 17.5 / 16D, 20 + 15 / 16D), mouth);
     }
 
     @Test
     void theMouthFollowsTheBodyThenTheHead() {
         // Body facing south, head turned to the east (yaw -90 faces +x): the neck stays in front of the body
         var mouth = Muzzle.position(0, 0, 0, 0F, -90F, 0F, COW, 1D);
-        assertNear(new Vec3(6 / 16D, 18 / 16D, 8 / 16D), mouth);
+        assertNear(new Vec3(7 / 16D, 17.5 / 16D, 8 / 16D), mouth);
     }
 
     @Test
@@ -69,7 +69,7 @@ public class AnimalBreathTests {
 
     @Test
     void aHoglinsHeadIgnoresItsPitch() {
-        var hoglin = Muzzle.PROFILES.get(EntityType.HOGLIN);
+        var hoglin = Muzzle.PROFILES.get(EntityTypes.HOGLIN);
         assertNear(Muzzle.position(0, 0, 0, 30F, 30F, 0F, hoglin, 1D),
                 Muzzle.position(0, 0, 0, 30F, 30F, 40F, hoglin, 1D));
     }
@@ -105,7 +105,7 @@ public class AnimalBreathTests {
     @Test
     void aWolfBreathesOverTheSnowItStandsIn() {
         // Its mouth is half a block up, in the block a snow layer (2 pixels) fills the bottom of
-        var wolf = Muzzle.position(0, 0, 0, 0F, 0F, 0F, Muzzle.PROFILES.get(EntityType.WOLF), 1D);
+        var wolf = Muzzle.position(0, 0, 0, 0F, 0F, 0F, Muzzle.PROFILES.get(EntityTypes.WOLF), 1D);
         assertTrue(BreathEffect.breathesFreely(2 / 16D, wolf.y), "mouth at " + wolf.y);
         // Nor does grass, which has no collision shape, stop it
         assertTrue(BreathEffect.breathesFreely(Double.NEGATIVE_INFINITY, wolf.y));
@@ -149,7 +149,7 @@ public class AnimalBreathTests {
     @Test
     void everyAnimalThatBreathesIsMeasured() throws IOException {
         for (var id : tagValues("animal_breath")) {
-            var type = BuiltInRegistries.ENTITY_TYPE.getOptional(ResourceLocation.parse(id));
+            var type = BuiltInRegistries.ENTITY_TYPE.getOptional(Identifier.parse(id));
             assertTrue(type.isPresent(), id + " is an entity");
             assertTrue(Muzzle.PROFILES.containsKey(type.get()), id + " has a muzzle profile");
         }

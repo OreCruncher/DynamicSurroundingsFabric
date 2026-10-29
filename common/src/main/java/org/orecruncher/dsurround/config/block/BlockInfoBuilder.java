@@ -2,8 +2,11 @@ package org.orecruncher.dsurround.config.block;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
@@ -27,6 +30,8 @@ import org.orecruncher.dsurround.tags.ReflectanceTags;
 public final class BlockInfoBuilder {
 
     public static final Script DEFAULT_SOUND_CHANCE = new Script("0.01");
+
+    private static final TagKey<Block> SAPLINGS = TagKey.create(Registries.BLOCK, Identifier.withDefaultNamespace("saplings"));
 
     private static class Occlusion {
         public static final float NONE = 0;
@@ -56,7 +61,7 @@ public final class BlockInfoBuilder {
     final int version;
     final ConfigServices services;
     @Nullable
-    final ResourceLocation stepSound;
+    final Identifier stepSound;
     final AcousticEntryCollection sounds = new AcousticEntryCollection();
     final ObjectArray<IBlockEffectProducer> blockEffects = new ObjectArray<>();
     Script soundChance = DEFAULT_SOUND_CHANCE;
@@ -85,7 +90,7 @@ public final class BlockInfoBuilder {
         this.services = services;
         this.soundOcclusion = getSoundOcclusionSetting(state, services.tagLibrary());
         this.soundReflectivity = getSoundReflectionSetting(state, services.tagLibrary());
-        this.stepSound = state.getSoundType().getStepSound().getLocation();
+        this.stepSound = state.getSoundType().getStepSound().location();
         this.takesFootprints = takesFootprints(state, services.tagLibrary());
     }
 
@@ -213,7 +218,7 @@ public final class BlockInfoBuilder {
             result = Reflectance.NONE;
         else if (tags.is(BlockTags.CAULDRONS, state))
             result = Reflectance.MEDIUM;
-        else if (tags.is(BlockTags.SAPLINGS, state))
+        else if (tags.is(BlockInfoBuilder.SAPLINGS, state))
             result = Reflectance.NONE;
         else if (tags.is(BlockTags.STONE_ORE_REPLACEABLES, state))
             // Assume stone equivalent
@@ -224,7 +229,7 @@ public final class BlockInfoBuilder {
             result = Reflectance.NONE;
 
         if (result == null) {
-            var pathString = state.getBlockHolder().unwrapKey().map(k -> k.location().getPath()).orElse(null);
+            var pathString = state.typeHolder().unwrapKey().map(k -> k.identifier().getPath()).orElse(null);
             if (pathString != null) {
                 if (pathString.contains("panes") || pathString.contains("wall"))
                     result = Reflectance.LOW;
@@ -300,7 +305,7 @@ public final class BlockInfoBuilder {
             result = Occlusion.NONE;
         else if (tags.is(BlockTags.CAULDRONS, state))
             result = Occlusion.MEDIUM;
-        else if (tags.is(BlockTags.SAPLINGS, state))
+        else if (tags.is(BlockInfoBuilder.SAPLINGS, state))
             result = Occlusion.NONE;
         else if (tags.is(BlockTags.STONE_ORE_REPLACEABLES, state))
             // Assume stone equivalent
@@ -311,7 +316,7 @@ public final class BlockInfoBuilder {
             result = Occlusion.NONE;
 
         if (result == null) {
-            var pathString = state.getBlockHolder().unwrapKey().map(k -> k.location().getPath()).orElse(null);
+            var pathString = state.typeHolder().unwrapKey().map(k -> k.identifier().getPath()).orElse(null);
             if (pathString != null) {
                 if (pathString.contains("chest") || pathString.contains("glass"))
                     result = Occlusion.LOW;

@@ -1,11 +1,12 @@
 package org.orecruncher.dsurround.runtime.weather;
 
+import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IClientDisconnect;
 import org.orecruncher.dsurround.eventing.IClientTickEnd;
@@ -30,11 +31,11 @@ public final class WindService {
     private final ISeasonalInformation seasons;
     private final IBiomeLibrary biomeLibrary;
     private final Configuration.WeatherOptions options;
-    private final IDimensionInformation dimensionInformation;
+    private final IDimensionOracle dimensionInformation;
     private final Wind wind = new Wind();
 
     public WindService(IWeatherSimulation weatherSimulation, ISeasonalInformation seasons, IBiomeLibrary biomeLibrary,
-                       Configuration.WeatherOptions options, IDimensionInformation dimensionInformation) {
+                       Configuration.WeatherOptions options, IDimensionOracle dimensionInformation) {
         this.dimensionInformation = dimensionInformation;
         this.weatherSimulation = weatherSimulation;
         this.seasons = seasons;
@@ -110,8 +111,8 @@ public final class WindService {
             return;
         }
         var level = GameUtils.getWorld().orElseThrow();
-        var camera = client.gameRenderer.getMainCamera();
-        var pos = camera.isInitialized() ? camera.getPosition() : GameUtils.getPlayer().orElseThrow().position();
+        var camera = client.gameRenderer.mainCamera();
+        var pos = camera.isInitialized() ? camera.position() : GameUtils.getPlayer().orElseThrow().position();
 
         var rainLevel = this.weatherSimulation.rainLevel(level.getRainLevel(1F));
         var at = BlockPos.containing(pos);
@@ -120,7 +121,7 @@ public final class WindService {
                 && DustStorms.enabled(this.options)
                 && DustStorms.isDusty(this.seasons.getPrecipitationAt(at), level.getBiome(at).value(), this.biomeLibrary);
         this.wind.setReach(this.options.precipitationRange);
-        this.wind.tick(rainLevel, level.isThundering(), dusty, level.getDayTime() / Level.TICKS_PER_DAY, RANDOM);
+        this.wind.tick(rainLevel, level.isThundering(), dusty, level.getDefaultClockTime() / SharedConstants.TICKS_PER_GAME_DAY, RANDOM);
         SceneWind.update(this.wind, pos.x, pos.z);
     }
 }

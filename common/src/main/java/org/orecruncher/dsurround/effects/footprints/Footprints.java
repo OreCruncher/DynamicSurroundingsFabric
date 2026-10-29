@@ -2,12 +2,13 @@ package org.orecruncher.dsurround.effects.footprints;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
@@ -28,12 +29,11 @@ import java.util.ArrayDeque;
  * the ground under them changes (dug up, melted, covered). At most {@link #MAX}; past that the oldest go.
  * <p>
  * Not particles: they don't move, last long and can be many, so they are kept here and drawn together as decals
- * (nudged toward the camera by a polygon offset, as sign text is, so they don't flicker into the ground), through the
- * buffers vanilla's debug renderers use ({@code MixinDebugRenderer}). Client thread only.
+ * (nudged toward the camera by a polygon offset, as sign text is, so they don't flicker into the ground), submitted with the level's features ({@code MixinLevelRenderer}). Client thread only.
  */
 public final class Footprints {
 
-    public static final ResourceLocation TEXTURE = Constants.asId("textures/footprints.png");
+    public static final Identifier TEXTURE = Constants.asId("textures/footprints.png");
 
     // Their life, in ticks: 10 seconds, or a minute in snow
     static final float LIFE = 200F;
@@ -132,8 +132,8 @@ public final class Footprints {
             this.prints.pollFirst();
         // Where the print is: above a full block, in a snow layer
         var above = BlockPos.containing(x, y, z);
-        int light = LevelRenderer.getLightColor(level, above);
-        boolean rains = level.getBiome(above).value().getPrecipitationAt(above) == Biome.Precipitation.RAIN;
+        int light = LightCoordsUtil.getLightCoords(level, above);
+        boolean rains = level.getBiome(above).value().getPrecipitationAt(above, level.getSeaLevel()) == Biome.Precipitation.RAIN;
         float washing = rains ? Shelter.exposure(level, above) : 0F;
         this.prints.addLast(new Print(x, y + LIFT, z, yawDegrees, scale, style, rightFoot, light, ground.immutable(),
                 state, washing, state.is(BlockTags.SNOW) ? SNOW_LIFE : LIFE));
@@ -200,32 +200,32 @@ public final class Footprints {
     }
 
     /**
-     * Draws them.
-     *
-     * @param camX the camera's position; the pose stack is relative to it
+     * Submits them for drawing this frame: the camera's position is taken away, as the geometry is drawn relative to it.
      */
-    public void draw(PoseStack poseStack, MultiBufferSource buffers, double camX, double camY, double camZ) {
+    public void submit(SubmitNodeCollector collector, CameraRenderState camera) {
         // A shader pack draws the world its own way; whether these fit in is untested, so they stay off
         if (this.prints.isEmpty() || IrisCompat.isShaderPackInUse())
             return;
 
-        VertexConsumer consumer = buffers.getBuffer(RenderType.textPolygonOffset(TEXTURE));
-        Matrix4f pose = poseStack.last().pose();
-        for (var print : this.prints) {
-            double dx = print.x - camX, dz = print.z - camZ;
-            if (dx * dx + dz * dz > DRAW_RANGE_SQ)
-                continue;
-            int alpha = (int) (alphaAt(print.age / print.life) * 255F);
-            if (alpha <= 0)
-                continue;
-            int color = (alpha << 24) | 0xFFFFFF;
-            float x = (float) dx, y = (float) (print.y - camY), z = (float) dz;
-            float[] c = print.corners;
-            vertex(consumer, pose, x + c[0], y, z + c[1], color, print.u0, 0F, print.light);
-            vertex(consumer, pose, x + c[2], y, z + c[3], color, print.u0, 1F, print.light);
-            vertex(consumer, pose, x + c[4], y, z + c[5], color, print.u1, 1F, print.light);
-            vertex(consumer, pose, x + c[6], y, z + c[7], color, print.u1, 0F, print.light);
-        }
+        double camX = camera.pos.x, camY = camera.pos.y, camZ = camera.pos.z;
+        collector.submitCustomGeometry(new PoseStack(), RenderTypes.textPolygonOffset(TEXTURE), (pose, consumer) -> {
+            Matrix4f matrix = pose.pose();
+            for (var print : this.prints) {
+                double dx = print.x - camX, dz = print.z - camZ;
+                if (dx * dx + dz * dz > DRAW_RANGE_SQ)
+                    continue;
+                int alpha = (int) (alphaAt(print.age / print.life) * 255F);
+                if (alpha <= 0)
+                    continue;
+                int color = (alpha << 24) | 0xFFFFFF;
+                float x = (float) dx, y = (float) (print.y - camY), z = (float) dz;
+                float[] c = print.corners;
+                vertex(consumer, matrix, x + c[0], y, z + c[1], color, print.u0, 0F, print.light);
+                vertex(consumer, matrix, x + c[2], y, z + c[3], color, print.u0, 1F, print.light);
+                vertex(consumer, matrix, x + c[4], y, z + c[5], color, print.u1, 1F, print.light);
+                vertex(consumer, matrix, x + c[6], y, z + c[7], color, print.u1, 0F, print.light);
+            }
+        });
     }
 
     private static void vertex(VertexConsumer consumer, Matrix4f pose, float x, float y, float z, int color, float u, float v, int light) {
@@ -238,9 +238,9 @@ public final class Footprints {
     }
 
     /**
-     * Draws the prints; called from world rendering (see {@code MixinDebugRenderer})
+     * Submits the prints for drawing; called as the level's features are submitted (see {@code MixinLevelRenderer})
      */
-    public static void render(PoseStack poseStack, MultiBufferSource buffers, double camX, double camY, double camZ) {
-        Holder.INSTANCE.draw(poseStack, buffers, camX, camY, camZ);
+    public static void submitAll(SubmitNodeCollector collector, CameraRenderState camera) {
+        Holder.INSTANCE.submit(collector, camera);
     }
 }

@@ -78,9 +78,9 @@ public class WindowStreaksTests {
         var streaks = new WindowStreaks(10);
         streaks.add(10, 68.2, 4.5, SnowFlecks.FACE_WEST, 68.01, true, 1F, 0xF000F0, Randomizer.create(3));
         var random = Randomizer.create(9);
-        var drips = new java.util.ArrayList<float[]>();
+        var drips = new java.util.ArrayList<double[]>();
         for (int t = 0; t < WindowStreaks.MAX_LIFETIME && streaks.count() > 0; t++) {
-            streaks.tick(random, (x, y, z) -> drips.add(new float[]{x, y, z}));
+            streaks.tick(random, (x, y, z) -> drips.add(new double[]{x, y, z}));
             if (streaks.count() > 0)
                 assertTrue(streaks.y[0] >= 68.01F - 1e-5F, "ran past the edge");
         }

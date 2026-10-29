@@ -1,27 +1,31 @@
 package org.orecruncher.dsurround.processing;
 
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.GpuSampler;
+import com.mojang.blaze3d.textures.GpuTextureView;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import net.minecraft.client.renderer.rendertype.OutputTarget;
+import org.orecruncher.dsurround.effects.MeshDraw;
+import java.util.function.Consumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.ParticleStatus;
+import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
-import org.orecruncher.dsurround.effects.TargetCheck;
 import org.orecruncher.dsurround.effects.particles.DSurroundParticleSprites;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
 import org.orecruncher.dsurround.effects.precipitation.AfterRainDrips;
@@ -42,6 +46,7 @@ import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
+import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.threading.Worker;
@@ -94,15 +99,10 @@ public class PrecipitationHandler extends AbstractClientHandler {
     static final int MAX_WINDOW_STREAKS = 384;
     // How far under a window's bottom edge a drop that runs off it hangs, as a drip
     static final double DRIP_BELOW_EDGE = 0.05D;
-    /**
-     * How far in front of the ground, in blocks, a puff of dust is at full strength: closer, it fades, so a puff
-     * partly in the ground blends into it rather than showing a hard edge
-     */
-    static final float DUST_SOFT_DISTANCE = 1.5F;
 
     private final IWeatherSimulation weatherSimulation;
     private final WindService windService;
-    private final IDimensionInformation dimensionInformation;
+    private final IDimensionOracle dimensionInformation;
     private final Landings landings;
     private PrecipitationField field = new PrecipitationField(MAX_DROPS);
     private DampSpots dampSpots = new DampSpots(MAX_DAMP_SPOTS);
@@ -113,6 +113,13 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private int dropsDrawn;
     private final Snowflakes snowflakes;
     private final LevelColumns columns;
+    // Drawing: made on first use, on the render thread
+    private ByteBufferBuilder meshBytes;
+    private final MeshDraw dampSpotDraw = new MeshDraw("damp spots");
+    private final MeshDraw dustDraw = new MeshDraw("dust");
+    private final MeshDraw dropDraw = new MeshDraw("rain and snow");
+    private final MeshDraw fleckDraw = new MeshDraw("snow flecks");
+    private final MeshDraw streakDraw = new MeshDraw("window streaks");
     // The drops' ticks run here, while frames are drawn: started each tick and finished at the next (see
     // PrecipitationField.start); one thread, so a step never overlaps the next, and only it uses its random numbers
     private final Executor stepper = Executors.newSingleThreadExecutor(Worker.threadFactory("Precipitation"));
@@ -121,7 +128,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private final DropMeshes meshes = new DropMeshes();
     private final IRandomizer stepRandom = Randomizer.create(System.nanoTime());
 
-    public PrecipitationHandler(IWeatherSimulation weatherSimulation, WindService windService, ISoundLibrary soundLibrary, IDimensionInformation dimensionInformation, ISeasonalInformation seasonalInformation,
+    public PrecipitationHandler(IWeatherSimulation weatherSimulation, WindService windService, ISoundLibrary soundLibrary, IDimensionOracle dimensionInformation, ISeasonalInformation seasonalInformation,
                                 ITagLibrary tagLibrary, IBiomeLibrary biomeLibrary, Configuration config, IModLog logger) {
         super("Precipitation Handler", config, logger);
         this.weatherSimulation = weatherSimulation;
@@ -144,7 +151,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
      */
     public boolean isActive() {
         return isEnabled(this.config.weatherOptions.enableParticlePrecipitation, FeatureConflict.PARTICLE_WEATHER.isBlocked())
-                && PrecipitationShaders.DROPS.isUsable()
+                && PrecipitationShaders.isAvailable()
+                && OptionalHook.PRECIPITATION.status() != OptionalHook.Status.MISSING
                 && GameUtils.isInGame() && this.dimensionInformation.particleWeather();
     }
 
@@ -168,11 +176,11 @@ public class PrecipitationHandler extends AbstractClientHandler {
             this.windowStreaks.clear();
         }
 
-        var camera = GameUtils.getMC().gameRenderer.getMainCamera();
+        var camera = GameUtils.getMC().gameRenderer.mainCamera();
         if (!camera.isInitialized() || !(player.level() instanceof ClientLevel level))
             return;
 
-        var pos = camera.getPosition();
+        var pos = camera.position();
         var rainLevel = this.weatherSimulation.rainLevel(level.getRainLevel(1F));
         this.columns.setLevel(level);
         // Vanilla's own particles: they need no drops drawn, so drip even when the drops are off
@@ -264,6 +272,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
         };
     }
 
+
     /**
      * Starts building the frame's drops on the drops' thread, as the level starts to be drawn: the camera is set for
      * the frame by then, and the terrain is drawn while they are built (see {@link DropMeshes})
@@ -284,139 +293,113 @@ public class PrecipitationHandler extends AbstractClientHandler {
     }
 
     /**
-     * Draws the damp spots and the drops where vanilla draws its weather, in the same drawing state. The spots darken
-     * the ground by scaling what is already drawn there; with Fabulous graphics, weather is drawn to a target of its
-     * own that starts out empty, with nothing to darken, so they are laid over the ground as a dark colour instead.
+     * Draws the damp spots and the drops where vanilla draws its weather (see MixinWeatherEffectRenderer), outside any
+     * render pass, to the weather's target: with Fabulous graphics a target of its own, otherwise the main one. The
+     * fog and the camera's matrices are those vanilla set for its weather.
      *
      * @return true if they were drawn, and vanilla's weather should not be
      */
-    public boolean render(LightTexture lightTexture, float partialTick) {
+    public boolean render() {
         if (!this.isActive())
             return false;
 
-        // The frost and the mist drawn before should leave it bound, but check: drawn to the main target, the drops would
-        // hide the water behind them
-        TargetCheck.ensureWeather("the rain and snow");
-        var tesselator = Tesselator.getInstance();
-        var camera = GameUtils.getMC().gameRenderer.getMainCamera();
-        lightTexture.turnOnLightLayer();
-        RenderSystem.disableCull();
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.enableDepthTest();
+        var minecraft = GameUtils.getMC();
+        var camera = minecraft.gameRenderer.mainCamera();
+        var partialTick = minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false);
+        var fabulous = minecraft.gameRenderer.gameRenderState().useShaderTransparency();
+        var target = OutputTarget.WEATHER_TARGET.getRenderTarget();
+        if (this.meshBytes == null)
+            this.meshBytes = new ByteBufferBuilder(this.field.capacity() * 4 * DefaultVertexFormat.PARTICLE.getVertexSize());
+
         PrecipitationShaders.RENDER_TIMER.begin();
         // For recordings, how much there was to draw: the drops in the area, whatever the storm and range make
         PrecipitationShaders.RENDER_TIMER.count(this.field.count());
         try {
-            if (this.dampSpots.count() > 0 && PrecipitationShaders.DAMP_SPOTS.isUsable()) {
+            var spots = PrecipitationShaders.fabulous(fabulous, PrecipitationShaders.DAMP_SPOTS, PrecipitationShaders.DAMP_SPOTS_DEPTH);
+            if (this.dampSpots.count() > 0 && spots.isUsable()) {
                 PrecipitationShaders.DAMP_SPOTS_TIMER.begin();
                 PrecipitationShaders.DAMP_SPOTS_TIMER.count(this.dampSpots.count());
-                PrecipitationShaders.DAMP_SPOTS.run(() -> this.drawDampSpots(tesselator, camera, partialTick), tesselator::clear);
+                spots.run(() -> this.drawDampSpots(spots.pipeline(), target, camera, partialTick, !fabulous), () -> {});
                 PrecipitationShaders.DAMP_SPOTS_TIMER.end();
             }
 
             // If the drops fail to draw, vanilla's weather is drawn in their place, this frame and after
+            var drops = PrecipitationShaders.fabulous(fabulous, PrecipitationShaders.DROPS, PrecipitationShaders.DROPS_DEPTH);
             PrecipitationShaders.DROPS_TIMER.begin();
             this.dropsDrawn = 0;
-            boolean drawn = PrecipitationShaders.DROPS.run(() -> this.drawDrops(tesselator, camera, partialTick), () -> {
-                tesselator.clear();
-                weatherTarget().bindWrite(false);
-            });
+            boolean drawn = drops.run(() -> this.drawDrops(drops.pipeline(), target, camera, partialTick, fabulous), () -> {});
             PrecipitationShaders.DROPS_TIMER.count(this.dropsDrawn);
             PrecipitationShaders.DROPS_TIMER.end();
             return drawn;
         } finally {
             PrecipitationShaders.RENDER_TIMER.end();
-            RenderSystem.enableCull();
-            RenderSystem.defaultBlendFunc();
-            RenderSystem.disableBlend();
-            RenderSystem.depthMask(true);
-            lightTexture.turnOffLightLayer();
         }
     }
 
     /**
-     * The rain and snow, drawn hard, the snow flecks on the ground, which are cut from the same texture, and the drops
-     * on windows; and the dust, soft: it reads a copy of the scene's depth, water included (see
-     * SoftParticles.sceneDepthTarget). Without Fabulous graphics nothing here writes depth, so the dust goes first,
-     * behind the rest. With it, everything writes depth, the dust too, even where it has faded to almost nothing as it
-     * nears the ground, so it goes last: drawn first, it hid the snow flecks lying under it, and they blinked as it
-     * drifted.
+     * The rain and snow, drawn hard, the snow flecks, which are cut from the same texture, and the drops on windows;
+     * and the dust, soft: it reads a copy of the scene's depth, water included. Without Fabulous graphics nothing here
+     * writes depth, so the dust goes first, behind the rest. With it, everything writes depth, the dust too, even where
+     * it has faded to almost nothing as it nears the ground, so it goes last: drawn first, it hid the snow flecks
+     * lying under it, and they blinked as it drifted.
      */
-    private void drawDrops(Tesselator tesselator, Camera camera, float partialTick) {
-        var shader = Objects.requireNonNull(PrecipitationShaders.DROPS.get());
+    private void drawDrops(RenderPipeline pipeline, RenderTarget target, Camera camera, float partialTick, boolean fabulous) {
         var flakes = this.snowflakes.flakes(GameUtils.getResourceManager());
         var largest = this.snowflakes.largest();
-        var dust = DSurroundParticleSprites.DUST.sprites();
         var options = this.config.weatherOptions;
         var scales = scales(options);
         var rainColor = RainColor.ofTint(options.rainTint);
-        // As vanilla's weather: depth is written only with Fabulous graphics, which draws weather to its own target
-        boolean fabulous = Minecraft.useShaderTransparency();
-        RenderSystem.depthMask(fabulous);
-        RenderSystem.setShader(PrecipitationShaders.DROPS.supplier());
+        var textures = GameUtils.getTextureManager();
+        var lightmap = GameUtils.getMC().gameRenderer.lightmap();
+        var lightmapSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR);
 
         if (!fabulous)
-            this.drawDust(tesselator, camera, partialTick, shader, flakes, largest, dust, scales, rainColor);
+            this.drawDust(pipeline, target, camera, partialTick, false, flakes, largest, scales, rainColor, lightmap, lightmapSampler);
 
         // The rain is untextured; the snow is cut from the game's snow texture
-        RenderSystem.setShaderTexture(0, Snowflakes.TEXTURE);
-        shader.safeGetUniform("SoftDistance").set(0F);
-        this.dropsDrawn += this.meshes.draw(this.field, tesselator, camera, partialTick, false, flakes, largest, dust, scales, rainColor);
-        this.snowFlecks.draw(tesselator, camera, partialTick, flakes, largest, scales.snow());
-        this.windowStreaks.draw(tesselator, camera, partialTick, rainColor);
+        var snow = textures.getTexture(Snowflakes.TEXTURE);
+        Consumer<RenderPass> bind = pass -> {
+            pass.bindTexture("Sampler0", snow.getTextureView(), snow.getSampler());
+            pass.bindTexture("Sampler2", lightmap, lightmapSampler);
+        };
+        var quads = this.meshes.quads(this.field, camera, partialTick, false, flakes, largest, DSurroundParticleSprites.DUST.sprites(), scales, rainColor);
+        this.dropsDrawn += quads.vertexCount() / 4;
+        this.dropDraw.drawQuads(quads.vertices(), quads.vertexCount(), pipeline, target, bind);
+        this.snowFlecks.draw(this.meshBytes, mesh -> this.fleckDraw.draw(mesh, pipeline, target, bind), camera, partialTick, flakes, largest, scales.snow());
+        this.windowStreaks.draw(this.meshBytes, mesh -> this.streakDraw.draw(mesh, pipeline, target, bind), camera, partialTick, rainColor);
 
         if (fabulous)
-            this.drawDust(tesselator, camera, partialTick, shader, flakes, largest, dust, scales, rainColor);
+            this.drawDust(pipeline, target, camera, partialTick, true, flakes, largest, scales, rainColor, lightmap, lightmapSampler);
     }
 
-    private void drawDust(Tesselator tesselator, Camera camera, float partialTick, ShaderInstance shader,
-                          List<Snowflakes.Flake> flakes, int largest, TextureAtlasSprite[] dust, DropScales scales,
-                          RainColor rainColor) {
+    private void drawDust(RenderPipeline pipeline, RenderTarget target, Camera camera, float partialTick, boolean fabulous,
+                          List<Snowflakes.Flake> flakes, int largest, DropScales scales, RainColor rainColor,
+                          GpuTextureView lightmap, GpuSampler lightmapSampler) {
         if (this.field.dustCount() == 0)
             return;
-        RenderSystem.setShaderTexture(0, particleAtlas());
-        // The scene's depth, water included: the weather's own target has none with Fabulous graphics
-        SoftParticles.bindSceneDepth(shader, SoftParticles.sceneDepthTarget(), weatherTarget());
-        shader.safeGetUniform("SoftDistance").set(DUST_SOFT_DISTANCE);
-        this.dropsDrawn += this.meshes.draw(this.field, tesselator, camera, partialTick, true, flakes, largest, dust, scales, rainColor);
+        var dust = DSurroundParticleSprites.DUST.sprites();
+        var atlas = GameUtils.getTextureManager().getTexture(TextureAtlas.LOCATION_PARTICLES);
+        // Soft if it can be, reading the scene's depth, water included. With Fabulous graphics the weather's own
+        // target has no depth of its own; the translucent target has the scene's, with the water's drawn over it.
+        var soft = PrecipitationShaders.fabulous(fabulous, PrecipitationShaders.DUST, PrecipitationShaders.DUST_DEPTH);
+        var depthSource = fabulous ? GameUtils.getMC().levelRenderer.translucentTarget() : target;
+        boolean isSoft = soft.isUsable() && depthSource != null && SoftParticles.captureDepth(depthSource);
+        var dustPipeline = isSoft ? soft.pipeline() : pipeline;
+        var quads = this.meshes.quads(this.field, camera, partialTick, true, flakes, largest, dust, scales, rainColor);
+        this.dropsDrawn += quads.vertexCount() / 4;
+        this.dustDraw.drawQuads(quads.vertices(), quads.vertexCount(), dustPipeline, target, pass -> {
+            pass.bindTexture("Sampler0", atlas.getTextureView(), atlas.getSampler());
+            pass.bindTexture("Sampler2", lightmap, lightmapSampler);
+            if (isSoft)
+                SoftParticles.bindSoftDepth(pass);
+        });
     }
 
-    /**
-     * Where the weather is drawn: with Fabulous graphics, a target of its own, which vanilla clears but gives no copy of
-     * the scene's depth (read the main target's for that); otherwise the main target
-     */
-    private static RenderTarget weatherTarget() {
-        var minecraft = GameUtils.getMC();
-        RenderTarget target = minecraft.levelRenderer.getWeatherTarget();
-        return target != null ? target : minecraft.getMainRenderTarget();
-    }
-
-    private void drawDampSpots(Tesselator tesselator, Camera camera, float partialTick) {
-        var darkening = !Minecraft.useShaderTransparency();
-        // With Fabulous graphics their depth is written: the weather's target has none of its own, and the transparency
-        // pass sorts it by depth, so without it the scene is laid over them. They lie on the ground, so it hides
-        // nothing that the ground wouldn't.
-        RenderSystem.depthMask(!darkening);
-        RenderSystem.setShader(PrecipitationShaders.DAMP_SPOTS.supplier());
-        RenderSystem.setShaderTexture(0, particleAtlas());
-        // What is drawn there is scaled by one less the spot's alpha
-        if (darkening)
-            RenderSystem.blendFunc(GlStateManager.SourceFactor.ZERO, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-        try {
-            this.dampSpots.draw(tesselator, camera, partialTick, DSurroundParticleSprites.DAMP_SPOT.get(0, 1), darkening);
-        } finally {
-            RenderSystem.defaultBlendFunc();
-        }
-    }
-
-    /**
-     * Deprecated in 1.21.1, but vanilla's own particle sheets use it and there is no replacement (see
-     * DSurroundParticleRenderType)
-     */
-    @SuppressWarnings("deprecation")
-    private static ResourceLocation particleAtlas() {
-        return TextureAtlas.LOCATION_PARTICLES;
+    private void drawDampSpots(RenderPipeline pipeline, RenderTarget target, Camera camera, float partialTick, boolean darkening) {
+        var atlas = GameUtils.getTextureManager().getTexture(TextureAtlas.LOCATION_PARTICLES);
+        this.dampSpots.draw(this.meshBytes, mesh -> this.dampSpotDraw.draw(mesh, pipeline, target,
+                        pass -> pass.bindTexture("Sampler0", atlas.getTextureView(), atlas.getSampler())),
+                camera, partialTick, DSurroundParticleSprites.DAMP_SPOT.get(0, 1), darkening);
     }
 
     @Override
@@ -426,7 +409,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
             text = "Precipitation: vanilla";
         else if (FeatureConflict.PARTICLE_WEATHER.isBlocked())
             text = "Precipitation: off (%s installed)".formatted(FeatureConflict.PARTICLE_WEATHER.blockingMod().orElseThrow().installedId().orElseThrow());
-        else if (!PrecipitationShaders.DROPS.isUsable())
+        else if (!PrecipitationShaders.isAvailable())
             text = "Precipitation: vanilla (shader unavailable, failed, or a shader pack in use)";
         else
             text = "Precipitation: %d/%d drops (%d dust), %d damp spots, %d snow flecks, %d window streaks, range %d".formatted(this.field.count(),

@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.effects.systems;
 
-import net.minecraft.client.ParticleStatus;
+import net.minecraft.server.level.ParticleStatus;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

@@ -1,8 +1,9 @@
 package org.orecruncher.dsurround.effects.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
@@ -15,8 +16,8 @@ import java.util.ArrayDeque;
  * then shrinks and falls away over a little over half a second.
  * <p>
  * Not particles: each is a line of text drawn as a name tag is, facing the camera, outlined in black as glowing sign
- * text is, through the buffers vanilla's debug renderers use (called from {@code MixinDebugRenderer}). All of them
- * together are a handful of quads in the font's batch. Where one is and how big are worked out from its age rather
+ * text is, submitted with the level's features (from {@code MixinLevelRenderer}). All of them together are a handful
+ * of quads in the font's batch. Where one is and how big are worked out from its age rather
  * than ticked, so they move smoothly at any frame rate. Client thread only.
  */
 public final class HealthPopoffs {
@@ -38,6 +39,8 @@ public final class HealthPopoffs {
     static final float FADE = 0.25F;
     private static final float FADED = 0.15F;
     private static final int OUTLINE = 0xFF000000;
+    // Full brightness, block and sky: they are labels, not lit by the world
+    private static final int FULL_BRIGHT = 0xF000F0;
     // At most this many at once; past it the oldest go
     private static final int MAX = 64;
     private static final float NANOS_PER_TICK = 50_000_000F;
@@ -80,11 +83,9 @@ public final class HealthPopoffs {
     }
 
     /**
-     * Draws them, dropping those whose time is up.
-     *
-     * @param camX the camera's position; the pose stack is relative to it
+     * Submits them for drawing this frame, dropping those whose time is up
      */
-    public static void render(PoseStack poseStack, MultiBufferSource buffers, double camX, double camY, double camZ) {
+    public static void submit(SubmitNodeCollector collector, CameraRenderState camera) {
         if (POPOFFS.isEmpty())
             return;
 
@@ -92,10 +93,10 @@ public final class HealthPopoffs {
         while (!POPOFFS.isEmpty() && ageOf(POPOFFS.peekFirst(), now) >= LIFE)
             POPOFFS.pollFirst();
 
-        var mc = GameUtils.getMC();
-        var font = mc.font;
-        var rotation = mc.gameRenderer.getMainCamera().rotation();
+        var font = GameUtils.getMC().font;
         final float lineMiddle = font.lineHeight / 2F;
+        double camX = camera.pos.x, camY = camera.pos.y, camZ = camera.pos.z;
+        var poseStack = new PoseStack();
         for (var popoff : POPOFFS) {
             float age = ageOf(popoff, now);
             float scale = SIZE * sizeAt(age);
@@ -106,10 +107,10 @@ public final class HealthPopoffs {
                     popoff.x + popoff.driftX * age - camX,
                     popoff.y + heightAt(age) - camY,
                     popoff.z + popoff.driftZ * age - camZ);
-            poseStack.mulPose(rotation);
+            poseStack.mulPose(camera.orientation);
             poseStack.scale(scale, -scale, scale);
-            font.drawInBatch8xOutline(popoff.text, -popoff.halfWidth, -lineMiddle, (alpha << 24) | popoff.color,
-                    (alpha << 24) | (OUTLINE & 0xFFFFFF), poseStack.last().pose(), buffers, LightTexture.FULL_BRIGHT);
+            collector.submitText(poseStack, -popoff.halfWidth, -lineMiddle, popoff.text, false, Font.DisplayMode.NORMAL,
+                    FULL_BRIGHT, (alpha << 24) | popoff.color, 0, (alpha << 24) | (OUTLINE & 0xFFFFFF));
             poseStack.popPose();
         }
     }

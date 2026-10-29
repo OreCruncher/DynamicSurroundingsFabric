@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.tags;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -109,6 +109,33 @@ public class ModTagFilesTests {
     }
 
     @Test
+    void everyVanillaTagReferenceInTheConfigurationExists() throws IOException {
+        // Vanilla's tags change between versions (26.2 took grass blocks out of minecraft:dirt and dropped
+        // minecraft:tall_flowers), and a reference to one that is gone quietly matches nothing
+        var vanillaReference = Pattern.compile("\"#minecraft:([a-z0-9_/]+)\"");
+        var missing = new ArrayList<String>();
+        var checked = 0;
+        try (var files = Files.walk(assets)) {
+            for (var path : files.filter(p -> p.toString().endsWith(".json")).toList()) {
+                var relative = assets.relativize(path).toString().replace('\\', '/');
+                var registryFolder = registryFolderFor(relative);
+                if (registryFolder == null)
+                    continue;
+                var matcher = vanillaReference.matcher(Files.readString(path));
+                while (matcher.find()) {
+                    var resource = "/data/minecraft/" + registryFolder + "/" + matcher.group(1) + ".json";
+                    if (ModTagFilesTests.class.getResource(resource) == null)
+                        missing.add(relative + " -> #minecraft:" + matcher.group(1));
+                    checked++;
+                }
+            }
+        }
+        assertTrue(checked > 0, "found no vanilla tag references");
+        assertTrue(missing.isEmpty(), "references to vanilla tags that don't exist: " + missing);
+    }
+
+
+    @Test
     void everyTagFileIsForADeclaredTag() throws IOException {
         // A tag's files are found by their path, whichever mod's folder they are in, so one named for no tag the
         // mod reads is never read (Nature's Spirit's "windswept", for the tag "is_windswept")
@@ -189,7 +216,7 @@ public class ModTagFilesTests {
                 var matcher = entry.matcher(Files.readString(path));
                 while (matcher.find()) {
                     var namespace = matcher.group(1);
-                    var id = ResourceLocation.fromNamespaceAndPath(namespace, matcher.group(2));
+                    var id = Identifier.fromNamespaceAndPath(namespace, matcher.group(2));
                     if (namespace.equals(Constants.MOD_ID))
                         wrong.add(relative + " -> " + id + " (the mod's own)");
                     else if (namespace.equals("minecraft") && !BuiltInRegistries.PARTICLE_TYPE.containsKey(id))

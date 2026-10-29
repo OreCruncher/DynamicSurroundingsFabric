@@ -3,7 +3,7 @@ package org.orecruncher.dsurround.config.biome.biometraits;
 import com.google.gson.JsonParser;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.level.biome.Biome;
@@ -44,7 +44,7 @@ public class BiomeDefinitionsTests {
     private final BiomeDefinitions definitions = new BiomeDefinitions(IDefinitionFiles.classPath(BiomeDefinitionsTests.class.getClassLoader()));
 
     private BiomeDefinition read(String namespace, String path) {
-        var result = this.definitions.read(ResourceLocation.fromNamespaceAndPath(namespace, path));
+        var result = this.definitions.read(Identifier.fromNamespaceAndPath(namespace, path));
         assertTrue(result.isPresent(), namespace + ":" + path + " has a definition");
         return result.get();
     }
@@ -145,7 +145,7 @@ public class BiomeDefinitionsTests {
 
     @Test
     void aBiomeWithNoFileHasNoDefinition() {
-        assertTrue(this.definitions.read(ResourceLocation.fromNamespaceAndPath("dsurroundtest", "nowhere")).isEmpty());
+        assertTrue(this.definitions.read(Identifier.fromNamespaceAndPath("dsurroundtest", "nowhere")).isEmpty());
     }
 
     @Test
@@ -195,7 +195,7 @@ public class BiomeDefinitionsTests {
         var vanilla = new VanillaBiomeAnalyzer();
         var checked = new ArrayList<String>();
         for (var key : vanillaBiomes()) {
-            var id = key.location();
+            var id = key.identifier();
             var definition = this.definitions.read(id);
             assertTrue(definition.isPresent(), id + " has a definition in the game's jar");
             assertTrue(definition.get().treesKnown(), id + "'s trees are counted");
@@ -225,7 +225,7 @@ public class BiomeDefinitionsTests {
         return result;
     }
 
-    private static BiomeEvidence evidence(ResourceLocation id) {
+    private static BiomeEvidence evidence(Identifier id) {
         return new BiomeEvidence(id, null, true, 0.5F, false, 0.5F, BiomeSpecialEffects.GrassColorModifier.NONE,
                 Optional.empty(), Optional.empty(), Optional.empty());
     }

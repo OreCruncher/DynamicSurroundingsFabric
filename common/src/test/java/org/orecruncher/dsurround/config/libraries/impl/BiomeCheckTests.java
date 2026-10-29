@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import net.minecraft.SharedConstants;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
@@ -23,9 +23,9 @@ public class BiomeCheckTests {
         Bootstrap.bootStrap();
     }
 
-    private static final ResourceLocation OVERWORLD_DIM = ResourceLocation.withDefaultNamespace("overworld");
-    private static final ResourceLocation NETHER_DIM = ResourceLocation.withDefaultNamespace("the_nether");
-    private static final ResourceLocation TWILIGHT = ResourceLocation.fromNamespaceAndPath("twilightforest", "twilight_forest");
+    private static final Identifier OVERWORLD_DIM = Identifier.withDefaultNamespace("overworld");
+    private static final Identifier NETHER_DIM = Identifier.withDefaultNamespace("the_nether");
+    private static final Identifier TWILIGHT = Identifier.fromNamespaceAndPath("twilightforest", "twilight_forest");
 
     // ---- With the world's generation (single player)
 
@@ -73,7 +73,7 @@ public class BiomeCheckTests {
     @Test
     void aVoidIsntChecked() {
         // Vanilla's void, used by Iron's Spellbooks for its pocket dimension
-        var pocket = ResourceLocation.fromNamespaceAndPath("irons_spellbooks", "pocket_dimension");
+        var pocket = Identifier.fromNamespaceAndPath("irons_spellbooks", "pocket_dimension");
         assertEquals(List.of(), BiomeCheck.notes(BiomeTraits.of(VOID, WASTELAND), Set.of(pocket), false));
     }
 

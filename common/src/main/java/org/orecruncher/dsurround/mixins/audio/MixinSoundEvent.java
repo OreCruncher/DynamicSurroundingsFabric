@@ -1,10 +1,12 @@
 package org.orecruncher.dsurround.mixins.audio;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+
+import java.util.Optional;
 
 /**
  * Can't believe there isn't a toString() override
@@ -14,15 +16,13 @@ public class MixinSoundEvent {
 
     @Shadow
     @Final
-    private ResourceLocation location;
+    private Identifier location;
     @Shadow
     @Final
-    private float range;
-    @Shadow
-    @Final
-    private boolean newSystem;
+    private Optional<Float> fixedRange;
 
     public String toString() {
-        return "%s{newSystem %s, range %f}".formatted(this.location.toString(), Boolean.toString(this.newSystem), this.range);
+        // TODO: Revisit
+        return "%s{range %f}".formatted(this.location.toString(), this.fixedRange.orElse(16F));
     }
 }

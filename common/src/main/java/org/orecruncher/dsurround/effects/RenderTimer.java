@@ -1,8 +1,8 @@
 package org.orecruncher.dsurround.effects;
 
-import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL15;
-import org.lwjgl.opengl.GL33;
+import com.mojang.blaze3d.systems.GpuQueryPool;
+import com.mojang.blaze3d.systems.RenderSystem;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.math.EMA;
 import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
@@ -14,8 +14,9 @@ import org.orecruncher.dsurround.lib.math.TimerEMA;
  * <p>
  * Timestamps rather than an elapsed time query: only one of those can run at a time, and vanilla runs one around
  * the whole frame for its GPU figure. The results come a frame or more later; waiting for them would hold the CPU up
- * until the GPU caught up, so a few frames' are kept, and read once ready. Render thread only. Does nothing where timer
- * queries aren't supported.
+ * until the GPU caught up, so a few frames' are kept, and read once ready. The timestamps go through the device's query
+ * pool, so they work whichever graphics backend is in use. Render thread only. Does nothing where timestamp queries
+ * aren't supported.
  */
 public final class RenderTimer implements ITimer {
 
@@ -30,8 +31,9 @@ public final class RenderTimer implements ITimer {
     // How many of what it draws there were a frame, averaged as the times are; only for timers given a count
     private final EMA count;
     private boolean counted;
-    private final int[] starts = new int[FRAMES];
-    private final int[] ends = new int[FRAMES];
+    // A start and an end timestamp for each frame, in that order
+    @Nullable
+    private GpuQueryPool timestamps;
     private final boolean[] pending = new boolean[FRAMES];
     private int frame;
     private boolean measuring;
@@ -39,7 +41,7 @@ public final class RenderTimer implements ITimer {
     private long cpuStart;
     // When it last measured, by System.nanoTime; 0 if it never has
     private long lastMeasured;
-    // Not yet known until there is a GL context: null, then whether queries could be made
+    // Not yet known until there is a device: null, then whether queries could be made
     private Boolean supported;
 
     public RenderTimer(String name) {
@@ -76,7 +78,7 @@ public final class RenderTimer implements ITimer {
         // Still waiting on this frame's from a few frames ago: the GPU is behind, so this one isn't measured
         if (this.pending[this.frame])
             return;
-        GL33.glQueryCounter(this.starts[this.frame], GL33.GL_TIMESTAMP);
+        RenderSystem.getDevice().createCommandEncoder().writeTimestamp(this.timestamps, this.frame * 2);
         this.measuring = true;
     }
 
@@ -92,7 +94,7 @@ public final class RenderTimer implements ITimer {
         }
         if (!this.measuring)
             return;
-        GL33.glQueryCounter(this.ends[this.frame], GL33.GL_TIMESTAMP);
+        RenderSystem.getDevice().createCommandEncoder().writeTimestamp(this.timestamps, this.frame * 2 + 1);
         this.measuring = false;
         this.pending[this.frame] = true;
         this.frame = (this.frame + 1) % FRAMES;
@@ -111,24 +113,28 @@ public final class RenderTimer implements ITimer {
      */
     private void collect() {
         for (int i = 0; i < FRAMES; i++) {
-            if (!this.pending[i] || GL15.glGetQueryObjecti(this.ends[i], GL15.GL_QUERY_RESULT_AVAILABLE) == 0)
+            if (!this.pending[i])
                 continue;
-            long start = GL33.glGetQueryObjecti64(this.starts[i], GL15.GL_QUERY_RESULT);
-            long end = GL33.glGetQueryObjecti64(this.ends[i], GL15.GL_QUERY_RESULT);
+            var end = this.timestamps.getValue(i * 2 + 1);
+            if (end.isEmpty())
+                continue;
+            var start = this.timestamps.getValue(i * 2);
+            if (start.isEmpty())
+                continue;
             this.pending[i] = false;
-            if (end >= start)
-                this.gpu.update(end - start);
+            if (end.getAsLong() >= start.getAsLong())
+                this.gpu.update(end.getAsLong() - start.getAsLong());
         }
     }
 
     private boolean isSupported() {
         if (this.supported == null) {
-            var caps = GL.getCapabilities();
-            this.supported = caps.OpenGL33 || caps.GL_ARB_timer_query;
-            if (this.supported) {
-                GL15.glGenQueries(this.starts);
-                GL15.glGenQueries(this.ends);
+            try {
+                this.timestamps = RenderSystem.getDevice().createTimestampQueryPool(FRAMES * 2);
+            } catch (RuntimeException e) {
+                this.timestamps = null;
             }
+            this.supported = this.timestamps != null;
         }
         return this.supported;
     }

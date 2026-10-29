@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.markdown;
 
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * The formatting of one run of text. Immutable, so two styles with the same values are equal and can be compared
@@ -15,7 +15,7 @@ import net.minecraft.resources.ResourceLocation;
  */
 record Style(
         TextColor color,
-        ResourceLocation font,
+        Identifier font,
         Boolean bold,
         Boolean italic,
         Boolean underline,
@@ -30,7 +30,7 @@ record Style(
                 this.clickEventUrl, this.linkTitle);
     }
 
-    Style withFont(ResourceLocation font) {
+    Style withFont(Identifier font) {
         return new Style(this.color, font, this.bold, this.italic, this.underline, this.strikethrough,
                 this.clickEventUrl, this.linkTitle);
     }

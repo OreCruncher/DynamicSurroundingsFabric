@@ -1,5 +1,6 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
+import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.BlockPos;
@@ -128,7 +129,7 @@ public final class LevelColumns implements IColumnSource {
         if (!this.seasons.hasPrecipitationAt(this.pos)) {
             precipitation = Biome.Precipitation.NONE;
         } else {
-            var temperature = this.seasons.getTemperature(this.pos);
+            var temperature = this.seasons.getTemperatureAt(this.pos);
             precipitation = temperature < ISeasonalInformation.SNOW_TEMPERATURE ? Biome.Precipitation.SNOW : Biome.Precipitation.RAIN;
             this.snowShare = sleetShare(temperature);
         }
@@ -153,7 +154,7 @@ public final class LevelColumns implements IColumnSource {
 
     @Override
     public int light(int x, int y, int z) {
-        return LevelRenderer.getLightColor(this.level(), this.pos.set(x, y, z));
+        return LightCoordsUtil.getLightCoords(this.level(), this.pos.set(x, y, z));
     }
 
     @Override

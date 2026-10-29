@@ -1,7 +1,7 @@
 package org.orecruncher.dsurround.lib.block;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
@@ -49,15 +49,15 @@ final class BlockStateParser {
             throw new BlockStateParseException(String.format("']' without '[' in '%s'", specification));
         }
 
-        final ResourceLocation resource = ResourceLocation.tryParse(blockPart);
+        final Identifier resource = Identifier.tryParse(blockPart);
         if (resource == null)
             throw new BlockStateParseException(String.format("Invalid block name '%s' in '%s'", blockPart, specification));
 
-        // containsKey rather than comparing against air: get() returns air for unknown ids, and "air" itself is valid
+        // containsKey rather than comparing against air: getValue() returns air for unknown ids, and "air" itself is valid
         if (!BuiltInRegistries.BLOCK.containsKey(resource))
             throw new BlockStateParseException(String.format("Unknown block '%s' in '%s'", resource, specification));
 
-        return new ParseResult(resource.toString(), BuiltInRegistries.BLOCK.get(resource), properties);
+        return new ParseResult(resource.toString(), BuiltInRegistries.BLOCK.getValue(resource), properties);
     }
 
     /**

@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.config.biome.biometraits;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.biome.BiomeSpecialEffects;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.config.BiomeTrait;
@@ -30,7 +30,7 @@ public final class BiomeEffectsAnalyzer implements IBiomeTraitAnalyzer {
     // Unexplored plays the forest's in its grasslands and fields, and the grove's and the peaks' in cold forests and
     // tundra, so those give only the Overworld. The Nether's music and loops give its kinds but not the Nether
     // itself: Allthemodium plays them in its own dimensions, and Bumblezone in its hive
-    static final Map<ResourceLocation, Set<BiomeTrait>> SOUNDS = Map.<ResourceLocation, Set<BiomeTrait>>ofEntries(
+    static final Map<Identifier, Set<BiomeTrait>> SOUNDS = Map.<Identifier, Set<BiomeTrait>>ofEntries(
             music("overworld.badlands", OVERWORLD, BADLANDS, WASTELAND, SANDY, SPARSE_VEGETATION),
             music("overworld.bamboo_jungle", OVERWORLD, JUNGLE, FOREST, DENSE_VEGETATION),
             music("overworld.cherry_grove", OVERWORLD),
@@ -49,6 +49,7 @@ public final class BiomeEffectsAnalyzer implements IBiomeTraitAnalyzer {
             music("overworld.snowy_slopes", OVERWORLD),
             music("overworld.sparse_jungle", OVERWORLD, JUNGLE, FOREST, SPARSE_VEGETATION),
             music("overworld.stony_peaks", OVERWORLD),
+            music("overworld.sulfur_caves", OVERWORLD, UNDERGROUND, CAVE),
             music("overworld.swamp", OVERWORLD, SWAMP, DENSE_VEGETATION),
             music("nether.basalt_deltas", WASTELAND),
             music("nether.crimson_forest", NETHER_FOREST),
@@ -85,12 +86,12 @@ public final class BiomeEffectsAnalyzer implements IBiomeTraitAnalyzer {
         }
     }
 
-    private static Map.Entry<ResourceLocation, Set<BiomeTrait>> music(String name, BiomeTrait... traits) {
-        return entry(ResourceLocation.withDefaultNamespace("music." + name), traits(traits));
+    private static Map.Entry<Identifier, Set<BiomeTrait>> music(String name, BiomeTrait... traits) {
+        return entry(Identifier.withDefaultNamespace("music." + name), traits(traits));
     }
 
-    private static Map.Entry<ResourceLocation, Set<BiomeTrait>> loop(String name, BiomeTrait... traits) {
-        return entry(ResourceLocation.withDefaultNamespace("ambient." + name + ".loop"), traits(traits));
+    private static Map.Entry<Identifier, Set<BiomeTrait>> loop(String name, BiomeTrait... traits) {
+        return entry(Identifier.withDefaultNamespace("ambient." + name + ".loop"), traits(traits));
     }
 
     private static Set<BiomeTrait> traits(BiomeTrait... traits) {

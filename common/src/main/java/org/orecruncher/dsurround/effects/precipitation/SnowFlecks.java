@@ -1,11 +1,13 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
-import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
+import com.mojang.blaze3d.vertex.MeshData;
 import net.minecraft.client.Camera;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Where snowflakes landed: each lies flat where it came down, as the flake it fell as, for a moment, then shrinks and
@@ -36,7 +38,8 @@ public final class SnowFlecks {
     static final float LIFT_RANGE = 0.004F;
 
     private final int capacity;
-    final float[] x, y, z;
+    final double[] x, z;
+    final float[] y;
     // The cos and sin of the angle it lies at
     final float[] turnCos, turnSin;
     // How big the flake was, 0 to 1, and which flake it was drawn as, 0 to 1 (see PrecipitationField.variant)
@@ -48,9 +51,9 @@ public final class SnowFlecks {
 
     public SnowFlecks(int capacity) {
         this.capacity = capacity;
-        this.x = new float[capacity];
+        this.x = new double[capacity];
         this.y = new float[capacity];
-        this.z = new float[capacity];
+        this.z = new double[capacity];
         this.turnCos = new float[capacity];
         this.turnSin = new float[capacity];
         this.size = new float[capacity];
@@ -94,9 +97,9 @@ public final class SnowFlecks {
         int i = this.count++;
         float angle = random.nextFloat() * Mth.TWO_PI;
         float lift = LIFT + random.nextFloat() * LIFT_RANGE;
-        this.x[i] = (float) x + normalX(face) * lift;
+        this.x[i] = x + normalX(face) * lift;
         this.y[i] = (float) y + (face == FACE_TOP ? lift : 0F);
-        this.z[i] = (float) z + normalZ(face) * lift;
+        this.z[i] = z + normalZ(face) * lift;
         this.face[i] = face;
         this.turnCos[i] = Mth.cos(angle);
         this.turnSin[i] = Mth.sin(angle);
@@ -140,8 +143,8 @@ public final class SnowFlecks {
      * @param largest    the largest of them, in pixels: the others are drawn in proportion
      * @param scale      how big snowflakes are drawn
      */
-    public void draw(Tesselator tesselator, Camera camera, float partialTick, List<Snowflakes.Flake> snowflakes, int largest, float scale) {
-        PrecipitationRenderer.draw(this, tesselator, camera, partialTick, snowflakes, largest, scale);
+    public void draw(ByteBufferBuilder bytes, Consumer<MeshData> drawer, Camera camera, float partialTick, List<Snowflakes.Flake> snowflakes, int largest, float scale) {
+        PrecipitationRenderer.draw(this, bytes, drawer, camera, partialTick, snowflakes, largest, scale);
     }
 
     /**

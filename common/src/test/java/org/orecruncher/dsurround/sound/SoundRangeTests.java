@@ -4,7 +4,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.resources.sounds.TickableSoundInstance;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.util.valueproviders.ConstantFloat;
 import org.junit.jupiter.api.Test;
@@ -58,7 +58,7 @@ public class SoundRangeTests {
     }
 
     private static <T extends SoundInstance> T sound(boolean looping, boolean streamed, Class<T> type) {
-        var sound = new Sound(ResourceLocation.withDefaultNamespace("test"), ConstantFloat.of(1F), ConstantFloat.of(1F), 1, Sound.Type.FILE, streamed, false, 16);
+        var sound = new Sound(Identifier.withDefaultNamespace("test"), ConstantFloat.of(1F), ConstantFloat.of(1F), 1, Sound.Type.FILE, streamed, false, 16);
         Map<String, Function<Object[], Object>> answers = new HashMap<>();
         answers.put("isLooping", args -> looping);
         answers.put("getSound", args -> sound);

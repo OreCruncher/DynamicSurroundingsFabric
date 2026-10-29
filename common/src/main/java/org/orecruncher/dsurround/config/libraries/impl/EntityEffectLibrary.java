@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.*;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import org.orecruncher.dsurround.config.EntityEffectType;
 import org.orecruncher.dsurround.config.libraries.IEntityEffectLibrary;
@@ -204,7 +205,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
         if (this.tagLibrary.is(EntityEffectTags.TOOLBAR, entityType))
             effectTypes.add(EntityEffectType.PLAYER_TOOLBAR);
         // Heard by the player only, so it goes with the player's own kind
-        if (entityType == EntityType.PLAYER)
+        if (entityType == EntityTypes.PLAYER)
             effectTypes.add(EntityEffectType.PLAYER_JUMP);
         if (this.tagLibrary.is(EntityEffectTags.BRUSH_STEP, entityType))
             effectTypes.add(EntityEffectType.BRUSH_STEP);
@@ -213,7 +214,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
             effectTypes.add(EntityEffectType.BURNING);
         if (!this.tagLibrary.is(EntityEffectTags.NO_HEALTH_POPOFFS, entityType))
             effectTypes.add(EntityEffectType.HEALTH_POPOFF);
-        if (entityType == EntityType.PLAYER
+        if (entityType == EntityTypes.PLAYER
                 || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_SQUARE, entityType)
                 || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_PAW, entityType)
                 || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_HOOF, entityType)

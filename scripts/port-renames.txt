@@ -11,6 +11,15 @@
 ResourceLocation = Identifier
 GuiGraphics = GuiGraphicsExtractor
 
+# The dimension's settings moved to runtime.oracle; the import first, then the name
+re: \borg\.orecruncher\.dsurround\.config\.libraries\.IDimensionInformation\b => org.orecruncher.dsurround.runtime.oracle.IDimensionOracle
+IDimensionInformation = IDimensionOracle
+
+# A level's time of day, and the clouds option
+re: \b(level|world)\.getDayTime\(\) => \1.getDefaultClockTime()
+re: \.level\(\)\.getDayTime\(\) => .level().getDefaultClockTime()
+re: \.getCloudsType\(\) => .cloudStatus().get()
+
 # ResourceKey.location() -> identifier() (TagKey.location() is unchanged)
 re: \b(registryKey|tResourceKey|resourceKey)\.location\(\) => \1.identifier()
 re: \b(OVERWORLD|NETHER|END)\.location\(\) => \1.identifier()
@@ -22,3 +31,28 @@ re: \.getKey\(\)\.location\(\) => .getKey().identifier()
 re: \b(soundEvent|se)\.getLocation\(\) => \1.location()
 re: \.value\(\)\.getLocation\(\) => .value().location()
 re: \b(soundInstance|currentMusic|theSound)\.getLocation\(\) => \1.getIdentifier()
+
+# ParticleStatus moved from net.minecraft.client to net.minecraft.server.level
+re: import net\.minecraft\.client\.ParticleStatus; => import net.minecraft.server.level.ParticleStatus;
+
+# A particle's light: Particle.getLightColor(float) -> getLightCoords(float), now protected
+re: \bsuper\.getLightColor\( => super.getLightCoords(
+re: public int getLightColor\(float => protected int getLightCoords(float
+
+# Camera position from the game renderer
+re: \.getMainCamera\(\)\.getPosition\(\) => .mainCamera().position()
+
+# The entity type constants moved from EntityType to EntityTypes
+re: \bEntityType\.([A-Z][A-Z0-9_]*)\b => EntityTypes.\1
+
+# Animals moved into packages of their own
+re: \bnet\.minecraft\.world\.entity\.animal\.Sheep\b => net.minecraft.world.entity.animal.sheep.Sheep
+re: \bnet\.minecraft\.world\.entity\.animal\.Cat\b => net.minecraft.world.entity.animal.feline.Cat
+re: \bnet\.minecraft\.world\.entity\.animal\.Fox\b => net.minecraft.world.entity.animal.fox.Fox
+re: \bnet\.minecraft\.world\.entity\.animal\.Panda\b => net.minecraft.world.entity.animal.panda.Panda
+re: \bnet\.minecraft\.world\.entity\.animal\.PolarBear\b => net.minecraft.world.entity.animal.polarbear.PolarBear
+re: \bnet\.minecraft\.world\.entity\.animal\.horse\. => net.minecraft.world.entity.animal.equine.
+
+# Chat click and hover events are records of their own
+re: new ClickEvent\(ClickEvent\.Action\.COPY_TO_CLIPBOARD, => new ClickEvent.CopyToClipboard(
+re: new HoverEvent\(HoverEvent\.Action\.SHOW_TEXT, => new HoverEvent.ShowText(

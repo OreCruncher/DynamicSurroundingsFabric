@@ -27,7 +27,6 @@ public class MixinHelpers {
     public static final Configuration.SoundSystem soundSystemConfig = ContainerManager.resolve(Configuration.SoundSystem.class);
     public static final Configuration.FootstepAccents footstepAccentsConfig = ContainerManager.resolve(Configuration.FootstepAccents.class);
     public static final Configuration.ParticleTweaks particleTweaksConfig = ContainerManager.resolve(Configuration.ParticleTweaks.class);
-    public static final Configuration.Guards guardsConfig = ContainerManager.resolve(Configuration.Diagnostics.class).guards;
     public static final Configuration.SoundOptions soundOptions = ContainerManager.resolve(Configuration.SoundOptions.class);
     public static final Configuration.FogOptions fogOptions = ContainerManager.resolve(Configuration.FogOptions.class);
     public static final Configuration.WeatherOptions weatherOptions = ContainerManager.resolve(Configuration.WeatherOptions.class);
@@ -41,12 +40,20 @@ public class MixinHelpers {
     public static final Guard SUNSET_TINT_GUARD = Guard.named("Sunrise and sunset color tint");
     public static final Guard STORM_RAIN_LEVEL_GUARD = Guard.named("Storm rain level");
     public static final Guard RAIN_SOUND_GUARD = Guard.named("Storm rain sound");
+    /**
+     * Whether the level renderer's weather pass is running: particle weather is drawn in place of vanilla's only then
+     * (see MixinLevelRenderer). Render thread only.
+     */
+    public static boolean inLevelWeatherPass;
+    public static final Guard GROUND_FOG_GUARD = Guard.named("Drawing ground fog");
+    public static final Guard WINDOW_FROST_GUARD = Guard.named("Drawing window frost");
+    public static final Guard WEATHER_DEPTH_GUARD = Guard.named("Giving the weather the scene's depth");
+    public static final Guard PRECIPITATION_GUARD = Guard.named("Drawing particle rain and snow");
     public static final Guard RAIN_SPLASH_GUARD = Guard.named("Vanilla rain splash suppression");
     public static final Guard WIND_BLOWN_GUARD = Guard.named("Marking wind blown particles");
     public static final Guard WIND_DRIFT_GUARD = Guard.named("Wind drift");
     public static final Guard VANILLA_FIRE_GUARD = Guard.named("Vanilla fire suppression on burning mobs");
     public static final Guard DEATH_PUFF_GUARD = Guard.named("Death mist");
-    public static final Guard PARTICLE_BATCH_GUARD = Guard.named("Particle batch repair");
     public static final Guard LIGHTNING_GUARD = Guard.named("Lightning");
     public static final Guard CLOUDS_GUARD = Guard.named("Dynamic clouds");
     public static final Guard PRECIPITATION_AHEAD_GUARD = Guard.named("Building rain and snow ahead");
@@ -76,6 +83,19 @@ public class MixinHelpers {
 
     public static IWeatherSimulation weatherSimulation() {
         return WeatherSimulationHolder.INSTANCE;
+    }
+
+    /**
+     * The storm's strength in place of the world's rain level, where vanilla draws and ticks its rain and snow. The
+     * game's level, if working it out fails. Read a few times a frame and a tick: no lambda.
+     */
+    public static float stormRainLevel(float vanillaLevel) {
+        try {
+            return weatherSimulation().rainLevel(vanillaLevel);
+        } catch (Throwable t) {
+            STORM_RAIN_LEVEL_GUARD.failed(t);
+            return vanillaLevel;
+        }
     }
 
     // Asked every frame to tint the fog's color

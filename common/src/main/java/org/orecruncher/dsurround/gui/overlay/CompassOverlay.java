@@ -1,14 +1,13 @@
 package org.orecruncher.dsurround.gui.overlay;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.CompassStyle;
-import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.Randomizer;
@@ -44,7 +43,7 @@ public final class CompassOverlay extends AbstractOverlay {
     private static final float MARGIN_BAND_DRAW_SCALE = 0.5F;
 
     private final ITagLibrary tagLibrary;
-    private final IDimensionInformation dimensionInformation;
+    private final IDimensionOracle dimensionInformation;
     private final Configuration config;
     private final MarginLayout marginLayout;
     private final CompassWobble wobbler;
@@ -54,7 +53,7 @@ public final class CompassOverlay extends AbstractOverlay {
     private float scale;
     private CompassStyle style;
 
-    public CompassOverlay(Configuration config, ITagLibrary tagLibrary, IDimensionInformation dimensionInformation, MarginLayout marginLayout) {
+    public CompassOverlay(Configuration config, ITagLibrary tagLibrary, IDimensionOracle dimensionInformation, MarginLayout marginLayout) {
         this.tagLibrary = tagLibrary;
         this.marginLayout = marginLayout;
         this.dimensionInformation = dimensionInformation;
@@ -145,7 +144,7 @@ public final class CompassOverlay extends AbstractOverlay {
     }
 
     @Override
-    public void render(GuiGraphics context, float partialTick) {
+    public void render(GuiGraphicsExtractor context, float partialTick) {
         if (!this.showCompass)
             return;
 
@@ -157,9 +156,7 @@ public final class CompassOverlay extends AbstractOverlay {
             rotation = player.getViewYRot(partialTick);
         }
 
-        // The transparent styles and the roses need blending; this version's blit doesn't set it up itself
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
+        // The textured GUI pipeline blends, so the transparent styles and the roses need nothing more
         if (this.inMargin) {
             var placement = this.marginLayout.place(this.config.compassAndClockOptions.marginPosition, context.guiWidth(), context.guiHeight());
             if (this.style.isRose())
@@ -173,10 +170,9 @@ public final class CompassOverlay extends AbstractOverlay {
             // Centered horizontally, above the crosshair
             this.renderBand(context, rotation, (context.guiWidth() - this.width()) / 2F, (context.guiHeight() - CROSSHAIR_OFFSET - this.height()) / 2F);
         }
-        RenderSystem.disableBlend();
     }
 
-    private void renderBand(GuiGraphics context, float rotation, float x, float y) {
+    private void renderBand(GuiGraphicsExtractor context, float rotation, float x, float y) {
         // Which part of the band to show: the heading, as a position across the texture
         int u = Mth.floor(((rotation * TEXTURE_SIZE) / 360F) + 0.5D) & (TEXTURE_SIZE - 1);
         float v = this.style.getSpriteNumber() * (BAND_HEIGHT * 2);
@@ -186,26 +182,26 @@ public final class CompassOverlay extends AbstractOverlay {
         }
 
         var pose = context.pose();
-        pose.pushPose();
+        pose.pushMatrix();
         try {
-            pose.translate(x, y, 0F);
-            pose.scale(this.bandScale(), this.bandScale(), 1F);
-            context.blit(this.style.getTexture(), 0, 0, BAND_WIDTH, BAND_HEIGHT, u, v + 0.5F, BAND_WIDTH, BAND_HEIGHT - 1, TEXTURE_SIZE, TEXTURE_SIZE);
+            pose.translate(x, y);
+            pose.scale(this.bandScale(), this.bandScale());
+            context.blit(RenderPipelines.GUI_TEXTURED, this.style.getTexture(), 0, 0, u, v + 0.5F, BAND_WIDTH, BAND_HEIGHT, BAND_WIDTH, BAND_HEIGHT - 1, TEXTURE_SIZE, TEXTURE_SIZE);
         } finally {
-            pose.popPose();
+            pose.popMatrix();
         }
     }
 
-    private void renderRose(GuiGraphics context, float rotation, float x, float y, float size, float tilt) {
+    private void renderRose(GuiGraphicsExtractor context, float rotation, float x, float y, float size, float tilt) {
         var pose = context.pose();
-        pose.pushPose();
+        pose.pushMatrix();
         try {
-            pose.translate(x, y, 0F);
-            pose.scale(size, size * tilt, 1F);
-            pose.mulPose(Axis.ZP.rotationDegrees(roseAngle(rotation)));
-            context.blit(this.style.getTexture(), -ROSE_SIZE / 2, -ROSE_SIZE / 2, 0, 0, ROSE_SIZE, ROSE_SIZE, ROSE_SIZE, ROSE_SIZE);
+            pose.translate(x, y);
+            pose.scale(size, size * tilt);
+            pose.rotate(roseAngle(rotation) * Mth.DEG_TO_RAD);
+            context.blit(RenderPipelines.GUI_TEXTURED, this.style.getTexture(), -ROSE_SIZE / 2, -ROSE_SIZE / 2, 0, 0, ROSE_SIZE, ROSE_SIZE, ROSE_SIZE, ROSE_SIZE);
         } finally {
-            pose.popPose();
+            pose.popMatrix();
         }
     }
 

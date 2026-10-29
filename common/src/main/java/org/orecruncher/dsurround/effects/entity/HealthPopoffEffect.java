@@ -1,11 +1,11 @@
 package org.orecruncher.dsurround.effects.entity;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
@@ -30,9 +30,9 @@ public class HealthPopoffEffect extends EntityEffectBase {
     private static final double ABOVE = 0.5D;
     private static final double WORD_ABOVE = 0.5D;
 
-    private static final int DAMAGE_COLOR = color(ChatFormatting.RED);
-    private static final int HEAL_COLOR = color(ChatFormatting.GREEN);
-    private static final int CRITICAL_COLOR = color(ChatFormatting.GOLD);
+    private static final int DAMAGE_COLOR = ColorPalette.MC_RED.getValue();
+    private static final int HEAL_COLOR = ColorPalette.MC_GREEN.getValue();
+    private static final int CRITICAL_COLOR = ColorPalette.MC_GOLD.getValue();
 
     private final Configuration.EntityEffects config;
     private float lastHealth;
@@ -40,11 +40,6 @@ public class HealthPopoffEffect extends EntityEffectBase {
 
     public HealthPopoffEffect(Configuration.EntityEffects config) {
         this.config = config;
-    }
-
-    private static int color(ChatFormatting formatting) {
-        var value = formatting.getColor();
-        return value == null ? 0xFFFFFF : value;
     }
 
     @Override

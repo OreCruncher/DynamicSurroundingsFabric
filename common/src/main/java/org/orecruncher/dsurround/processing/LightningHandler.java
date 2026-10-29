@@ -1,18 +1,20 @@
 package org.orecruncher.dsurround.processing;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.DimensionSpecialEffects;
+import net.minecraft.client.renderer.rendertype.OutputTarget;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.SectionPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LightningBolt;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.Configuration;
@@ -70,15 +72,17 @@ public class LightningHandler extends AbstractClientHandler {
     static final float DECK_LIGHT = 1.2F;
     // A flash in the cloud is heard this often; the rest are too far in the cloud to hear
     private static final float SHEET_THUNDER = 0.6F;
-    private static final ResourceLocation THUNDER = Constants.asId("thunder");
+    private static final Identifier THUNDER = Constants.asId("thunder");
     private static final String SKY_LIGHTNING = "sky lightning";
 
     private final IWeatherSimulation weatherSimulation;
     private final WindService windService;
     private final CloudHandler clouds;
+    private final FogHandler fogHandler;
     private final List<Active> strikes = new ArrayList<>();
-    // The game's bolts drawn as strikes, by entity id, until they are gone
-    private final IntSet bolts = new IntOpenHashSet();
+    // The game's bolts drawn as strikes: each one's entity id, by its seed, until it is gone. Vanilla draws a bolt from
+    // its render state, which carries the seed but not the entity.
+    private final Long2IntMap bolts = new Long2IntOpenHashMap();
     // The level the strikes are in, held weakly so a world left isn't kept in memory
     private WeakReference<ClientLevel> level = new WeakReference<>(null);
     private float intensity;
@@ -98,11 +102,12 @@ public class LightningHandler extends AbstractClientHandler {
     }
 
     public LightningHandler(IWeatherSimulation weatherSimulation, WindService windService, CloudHandler clouds,
-                            Configuration config, IModLog logger) {
+                            FogHandler fogHandler, Configuration config, IModLog logger) {
         super("Lightning Handler", config, logger);
         this.weatherSimulation = weatherSimulation;
         this.windService = windService;
         this.clouds = clouds;
+        this.fogHandler = fogHandler;
         clouds.setLightSource(this::lightClouds);
     }
 
@@ -132,7 +137,7 @@ public class LightningHandler extends AbstractClientHandler {
         long now = level.getGameTime();
         this.tickStrikes(level, now);
         if (now % 20 == 0)
-            this.bolts.removeIf((int id) -> level.getEntity(id) == null);
+            this.bolts.values().removeIf((int id) -> level.getEntity(id) == null);
 
         float thunder = level.getThunderLevel(1F);
         this.intensity = Strikes.intensity(thunder, this.weatherSimulation.rainLevel(level.getRainLevel(1F)));
@@ -151,7 +156,7 @@ public class LightningHandler extends AbstractClientHandler {
             return "no thunderstorm";
         if (hideFlashes())
             return "no sky lightning (Hide Lightning Flashes)";
-        if (level.effects().skyType() != DimensionSpecialEffects.SkyType.NORMAL || Float.isNaN(level.effects().getCloudHeight()))
+        if (level.dimensionType().skybox() != DimensionType.Skybox.OVERWORLD || Float.isNaN(cloudHeight(level)))
             return "no sky lightning in this dimension";
         return null;
     }
@@ -184,7 +189,7 @@ public class LightningHandler extends AbstractClientHandler {
      */
     private void strikeInSky(ClientLevel level, Strike.Kind kind, float intensity) {
         var camera = cameraPosition();
-        float far = Strikes.farthest(GameUtils.getMC().gameRenderer.getDepthFar());
+        float far = Strikes.farthest(depthFar());
         if (far <= Strikes.NEAREST)
             return;
         // Mostly from upwind, where the storm comes from; from anywhere where the air is still
@@ -213,7 +218,7 @@ public class LightningHandler extends AbstractClientHandler {
         // The base of the mod's clouds, which a storm lowers, or else of vanilla's
         float cloud = this.clouds.cloudBase();
         if (Float.isNaN(cloud))
-            cloud = level.effects().getCloudHeight();
+            cloud = cloudHeight(level);
         // A dimension without clouds (only a bolt, or /dsweather, strikes there): a cloud base above the player
         if (Float.isNaN(cloud))
             cloud = (float) camera.y + MAX_HEIGHT;
@@ -285,8 +290,29 @@ public class LightningHandler extends AbstractClientHandler {
         return level.getSeaLevel();
     }
 
+    /**
+     * The height of the cloud base, or NaN where there are no clouds: as vanilla draws them, from the environment
+     * attributes at the camera (no clouds where their colour is fully transparent, as in the nether and the end)
+     */
+    private static float cloudHeight(ClientLevel level) {
+        var attributes = level.environmentAttributes();
+        var at = cameraPosition();
+        if (ARGB.alpha(attributes.getValue(EnvironmentAttributes.CLOUD_COLOR, at)) == 0)
+            return Float.NaN;
+        return attributes.getValue(EnvironmentAttributes.CLOUD_HEIGHT, at);
+    }
+
+    /**
+     * How far the view reaches, in blocks: as the camera works it out for its projection (four times the render
+     * distance, or the cloud range if that is farther)
+     */
+    private static float depthFar() {
+        var options = GameUtils.getGameSettings();
+        return Math.max(options.getEffectiveRenderDistance() * 16 * 4F, options.cloudRange().get() * 16);
+    }
+
     private static Vec3 cameraPosition() {
-        return GameUtils.getMC().gameRenderer.getMainCamera().getPosition();
+        return GameUtils.getMC().gameRenderer.mainCamera().position();
     }
 
     /**
@@ -299,22 +325,31 @@ public class LightningHandler extends AbstractClientHandler {
         this.inLevel(level);
         this.add(level, Strike.Kind.GROUND, bolt.getX(), bolt.getZ(), Math.max(BOLT_INTENSITY, this.intensity), bolt.getId(),
                 Randomizer.create(bolt.seed));
-        this.bolts.add(bolt.getId());
+        this.bolts.put(bolt.seed, bolt.getId());
     }
 
     /**
      * Whether the mod draws this bolt, in place of the game drawing it
      */
-    public boolean drawsBolt(LightningBolt bolt) {
-        return this.bolts.contains(bolt.getId()) && this.isActive();
+    public boolean drawsBolt(long seed) {
+        return this.bolts.containsKey(seed) && this.isActive();
     }
 
     /**
-     * Draws the strikes, where vanilla draws its weather, after it
+     * Whether there is lightning to draw this frame: the weather's target is given the scene's depth for it, with
+     * Fabulous graphics (see WeatherDepth)
      */
-    public void render(float partialTick) {
+    public boolean hasStrikes() {
+        return !this.strikes.isEmpty() && this.isActive();
+    }
+
+    /**
+     * Draws the strikes in the weather pass, after the weather and the ground fog, outside any render pass, to the
+     * weather's target: with Fabulous graphics a target of its own, otherwise the main one
+     */
+    public void render() {
         this.drawn = 0;
-        if (this.strikes.isEmpty() || !this.isActive())
+        if (!this.hasStrikes())
             return;
         var level = GameUtils.getWorld().orElse(null);
         if (level == null)
@@ -322,11 +357,13 @@ public class LightningHandler extends AbstractClientHandler {
         this.toDraw.clear();
         for (var active : this.strikes)
             this.toDraw.add(active.strike);
-        var camera = GameUtils.getMC().gameRenderer.getMainCamera();
-        // The fog drawn with the weather: how far the view reaches in it, which dims far strikes. And the cloud's glow
-        // drawn only when the mod's clouds aren't there to be lit by it (see lightClouds)
-        float fogEnd = RenderSystem.getShaderFogEnd();
-        this.drawn = LightningRenderer.draw(this.toDraw, camera, level.getGameTime() + partialTick, fogEnd, !this.clouds.isLit());
+        var minecraft = GameUtils.getMC();
+        var partialTick = minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false);
+        var fabulous = minecraft.gameRenderer.gameRenderState().useShaderTransparency();
+        // How far the view reaches in this frame's fog, which dims far strikes. And the cloud's glow drawn only when the
+        // mod's clouds aren't there to be lit by it (see lightClouds)
+        this.drawn = LightningRenderer.draw(this.toDraw, minecraft.gameRenderer.mainCamera(), OutputTarget.WEATHER_TARGET.getRenderTarget(),
+                fabulous, level.getGameTime() + partialTick, this.fogHandler.viewReach(), !this.clouds.isLit());
     }
 
     /**
@@ -364,8 +401,8 @@ public class LightningHandler extends AbstractClientHandler {
         var level = GameUtils.getWorld().orElse(null);
         if (level == null || !this.isActive())
             return false;
-        var camera = GameUtils.getMC().gameRenderer.getMainCamera();
-        var look = camera.getLookVector();
+        var camera = GameUtils.getMC().gameRenderer.mainCamera();
+        var look = camera.forwardVector();
         double lx = look.x(), lz = look.z();
         double length = Math.sqrt(lx * lx + lz * lz);
         if (length < 1.0E-3D) {
@@ -380,7 +417,7 @@ public class LightningHandler extends AbstractClientHandler {
             case SPIDER -> 80D;
             case SHEET -> 150D;
         };
-        var position = camera.getPosition();
+        var position = camera.position();
         this.add(level, kind, position.x + lx * ahead, position.z + lz * ahead, Math.max(this.intensity, 0.8F), -1, RANDOM);
         return true;
     }

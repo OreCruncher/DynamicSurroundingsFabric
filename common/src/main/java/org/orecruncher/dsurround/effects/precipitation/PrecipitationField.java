@@ -135,8 +135,8 @@ public final class PrecipitationField {
     // were, and what they were. A snowflake also keeps which flake it was drawn as, and its light; and either, when it
     // was carried into the side of something, where it was the tick before (x, y, z) and how it was moving.
     private final int maxLandings;
-    private final float[] landingX;
-    private final float[] landingZ;
+    private final double[] landingX;
+    private final double[] landingZ;
     private final int[] landingGround;
     private final float[] landingSize;
     private final byte[] landingKind;
@@ -170,8 +170,8 @@ public final class PrecipitationField {
         this.radiusSquared = radius * radius;
         this.columns = new PrecipitationColumns(radius);
         this.maxLandings = forArea(MAX_LANDINGS, radius);
-        this.landingX = new float[this.maxLandings];
-        this.landingZ = new float[this.maxLandings];
+        this.landingX = new double[this.maxLandings];
+        this.landingZ = new double[this.maxLandings];
         this.landingGround = new int[this.maxLandings];
         this.landingSize = new float[this.maxLandings];
         this.landingKind = new byte[this.maxLandings];
@@ -287,11 +287,11 @@ public final class PrecipitationField {
         return this.landings;
     }
 
-    public float landingX(int i) {
+    public double landingX(int i) {
         return this.landingX[i];
     }
 
-    public float landingZ(int i) {
+    public double landingZ(int i) {
         return this.landingZ[i];
     }
 
@@ -462,8 +462,6 @@ public final class PrecipitationField {
      * Moves each drop of {@code from} a tick into {@code to}, packed at its front: those that go are left behind
      */
     private void move(Drops from, Drops to, double cameraX, double cameraY, double cameraZ, Wind.Snapshot wind) {
-        // The drops' positions are floats: the camera's, as floats, is as near as they can tell
-        float cx = (float) cameraX, cz = (float) cameraZ;
         to.count = 0;
         to.dustCount = 0;
         for (int i = 0; i < from.count; i++) {
@@ -484,7 +482,7 @@ public final class PrecipitationField {
                 to.windX[j] *= COVER_DRAG;
                 to.windZ[j] *= COVER_DRAG;
             } else {
-                float carried = windAt(wind, to.x[j] - cx, to.z[j] - cz) * to.drift[j];
+                float carried = windAt(wind, (float) (to.x[j] - cameraX), (float) (to.z[j] - cameraZ)) * to.drift[j];
                 to.windX[j] += (wind.x() * carried - to.windX[j]) * response;
                 to.windZ[j] += (wind.z() * carried - to.windZ[j]) * response;
             }
@@ -493,8 +491,8 @@ public final class PrecipitationField {
             to.age[j]++;
 
             boolean keep = to.kind[j] == DUST
-                    ? this.moveDust(to, j, cx, cameraY, cz)
-                    : this.fall(to, j, cx, cameraY, cz);
+                    ? this.moveDust(to, j, cameraX, cameraY, cameraZ)
+                    : this.fall(to, j, cameraX, cameraY, cameraZ);
             if (keep) {
                 to.count++;
                 if (to.kind[j] == DUST)
@@ -508,7 +506,7 @@ public final class PrecipitationField {
      *
      * @return false if it landed or left the cylinder
      */
-    private boolean fall(Drops d, int i, float cameraX, double cameraY, float cameraZ) {
+    private boolean fall(Drops d, int i, double cameraX, double cameraY, double cameraZ) {
         d.y[i] -= d.speed[i];
         if (d.kind[i] == SNOW) {
             d.phase[i] += SNOW_SWAY_RATE;
@@ -554,7 +552,7 @@ public final class PrecipitationField {
      *
      * @return false if it settled (soon after it leaves the dust), was stopped by a wall, or left the cylinder
      */
-    private boolean moveDust(Drops d, int i, float cameraX, double cameraY, float cameraZ) {
+    private boolean moveDust(Drops d, int i, double cameraX, double cameraY, double cameraZ) {
         float before = Mth.sin(d.phase[i]);
         d.phase[i] += DUST_TURBULENCE_RATE;
         turned(d, i);
@@ -597,9 +595,9 @@ public final class PrecipitationField {
     /**
      * The column a drop is in, or -1 if it has left the cylinder around the camera
      */
-    private int inCylinder(Drops d, int i, float cameraX, float cameraZ) {
-        float dx = d.x[i] - cameraX;
-        float dz = d.z[i] - cameraZ;
+    private int inCylinder(Drops d, int i, double cameraX, double cameraZ) {
+        float dx = (float) (d.x[i] - cameraX);
+        float dz = (float) (d.z[i] - cameraZ);
         if (dx * dx + dz * dz > this.radiusSquared)
             return -1;
         return this.columns.index(d.x[i], d.z[i]);
@@ -717,9 +715,9 @@ public final class PrecipitationField {
                 what = PrecipitationKind.SNOW;
 
             int i = d.count++;
-            d.x[i] = d.prevX[i] = (float) px;
+            d.x[i] = d.prevX[i] = px;
             d.y[i] = d.prevY[i] = (float) py;
-            d.z[i] = d.prevZ[i] = (float) pz;
+            d.z[i] = d.prevZ[i] = pz;
             switch (what) {
                 case SNOW -> {
                     d.kind[i] = SNOW;
@@ -786,9 +784,9 @@ public final class PrecipitationField {
         int at = this.landings - 1;
         this.landingBlownIn[at] = true;
         this.landingY[at] = d.prevY[i];
-        this.landingMotionX[at] = d.x[i] - d.prevX[i];
+        this.landingMotionX[at] = (float) (d.x[i] - d.prevX[i]);
         this.landingMotionY[at] = d.y[i] - d.prevY[i];
-        this.landingMotionZ[at] = d.z[i] - d.prevZ[i];
+        this.landingMotionZ[at] = (float) (d.z[i] - d.prevZ[i]);
     }
 
     /**
@@ -808,7 +806,7 @@ public final class PrecipitationField {
      * @param variant a snowflake's choice of flake, 0 to 1 (see {@link #variant})
      * @return false if there was no room to
      */
-    private boolean landed(float x, float z, int ground, float size, byte kind, float variant, int light) {
+    private boolean landed(double x, double z, int ground, float size, byte kind, float variant, int light) {
         if (this.landings == this.maxLandings)
             return false;
         this.landingX[this.landings] = x;
@@ -902,8 +900,11 @@ public final class PrecipitationField {
      */
     static final class Drops {
 
-        // Where each drop is now and was last tick, for drawing between ticks
-        final float[] x, y, z, prevX, prevY, prevZ;
+        // Where each drop is now and was last tick, for drawing between ticks. East-west and north-south as doubles:
+        // far from the world's middle a float moves in steps as large as half a block, which a drop's drift each tick
+        // is lost in
+        final double[] x, z, prevX, prevZ;
+        final float[] y, prevY;
         // How fast a rain drop or snowflake falls; not used for dust
         final float[] speed;
         // The drop's horizontal speed, carried by the wind, and how strongly the wind carries it
@@ -927,12 +928,12 @@ public final class PrecipitationField {
         int dustCount;
 
         Drops(int capacity) {
-            this.x = new float[capacity];
+            this.x = new double[capacity];
             this.y = new float[capacity];
-            this.z = new float[capacity];
-            this.prevX = new float[capacity];
+            this.z = new double[capacity];
+            this.prevX = new double[capacity];
             this.prevY = new float[capacity];
-            this.prevZ = new float[capacity];
+            this.prevZ = new double[capacity];
             this.speed = new float[capacity];
             this.windX = new float[capacity];
             this.windZ = new float[capacity];

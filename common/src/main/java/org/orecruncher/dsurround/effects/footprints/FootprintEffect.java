@@ -1,6 +1,6 @@
 package org.orecruncher.dsurround.effects.footprints;
 
-import net.minecraft.client.ParticleStatus;
+import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;

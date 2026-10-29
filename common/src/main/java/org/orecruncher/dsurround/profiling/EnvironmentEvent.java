@@ -23,14 +23,20 @@ public final class EnvironmentEvent extends Event {
     @Label("Mods installed")
     int mods;
 
-    @Label("GL renderer")
-    String glRenderer;
+    @Label("GPU")
+    String gpu;
 
-    @Label("GL vendor")
-    String glVendor;
+    @Label("GPU vendor")
+    String gpuVendor;
 
-    @Label("GL version")
-    String glVersion;
+    @Label("GPU type")
+    String gpuType;
+
+    @Label("Driver")
+    String driver;
+
+    @Label("Backend")
+    String backend;
 
     @Label("Graphics")
     String graphics;
@@ -71,9 +77,11 @@ public final class EnvironmentEvent extends Event {
         var event = new EnvironmentEvent();
         event.mod = environment.mod();
         event.mods = environment.mods();
-        event.glRenderer = environment.glRenderer();
-        event.glVendor = environment.glVendor();
-        event.glVersion = environment.glVersion();
+        event.gpu = environment.gpu();
+        event.gpuVendor = environment.gpuVendor();
+        event.gpuType = environment.gpuType();
+        event.driver = environment.driver();
+        event.backend = environment.backend();
         event.graphics = environment.graphics();
         event.shaderPack = environment.shaderPack();
         event.renderDistance = environment.renderDistance();

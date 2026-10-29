@@ -37,7 +37,7 @@ public final class DustStorms {
      * fog, its tint on the fog and sky, and the harder wind go with the dust, rather than staying without it.
      */
     public static boolean enabled(Configuration.WeatherOptions options) {
-        return enabled(options, FeatureConflict.PARTICLE_WEATHER.isBlocked()) && PrecipitationShaders.DROPS.isUsable();
+        return enabled(options, FeatureConflict.PARTICLE_WEATHER.isBlocked()) && PrecipitationShaders.isAvailable();
     }
 
     static boolean enabled(Configuration.WeatherOptions options, boolean weatherModInstalled) {
