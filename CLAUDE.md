@@ -216,4 +216,23 @@ progress (none open) is merged into `OreCruncher/26.2` directly, in the worktree
 APIs (see its `MIGRATION.md`; `scripts/port-merge.py` there redoes the renames), never by rebasing the 26.2 branch.
 After its squash to `main`, record `main` in 26.2 with `git merge -s ours main`.
 
-Next release: `OreCruncher/5.0.0`, a 1.21.11 build backported from 26.2 (branched from `OreCruncher/26.2`, not `main`).
+1.21.1 is frozen at 0.4.8 (tag `1.21.1-0.4.8`); a hotfix there would be 0.4.9, the old numbering. Next release: 5.0.0
+for 1.21.11, on the long-lived branch `OreCruncher/1.21.11`, backported from 26.2 (branched from `OreCruncher/26.2`,
+not `main`). 26.x work merges into it; never merge it back into 26.x (that would bring the backport's downgrades
+with it): cherry-pick a fix made there.
+
+## Versions
+- `MAJOR.MINOR.PATCH` from 5.0.0, the first 1.21.11 release. The 0.x releases used the third number for every release,
+  leaving no room for hotfixes.
+- Patch: bug fixes only. No new config options or lang keys (they would sit untranslated until Crowdin catches up), no
+  change to the `dsconfigs` or script formats.
+- Minor: feature releases. A config property that moves keeps players' values through `@MovedFrom`.
+- Major: only when something packs or players rely on breaks: a config that can't migrate, a `dsconfigs` or script
+  format change, a loader dropped.
+- One number means one set of features across Minecraft versions: 1.21.11 and 26.x release the same minor when they
+  carry the same features, and a line skips a minor it gets nothing from. Pre-releases are `5.0.0-beta.1` (sorted
+  before `5.0.0`, so the update check tells testers about the final).
+- A release sets `mod_version` in `gradle.properties`, adds a changelog heading `DynamicSurroundings-<mc>-<version>`
+  and a `versions.json` entry, and `recommend`, under its Minecraft version (the update check compares only within a
+  Minecraft version, so 0.4.8 and 5.0.0 never meet), and is tagged `<mc>-<version>` (`1.21.11-5.0.1`). The jar's name
+  already carries the Minecraft version.
