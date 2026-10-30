@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * /dsprofile: sets up a scene ({@link ProfileScene}), records the game with Java Flight Recorder while it shows, and
@@ -98,6 +99,15 @@ public final class Profiler {
      * @return what to tell the player
      */
     public static List<Component> start(ProfileScene scene, int seconds) {
+        return start(scene, seconds, path -> {});
+    }
+
+    /**
+     * As {@link #start(ProfileScene, int)}, telling {@code done} on the render thread where the zipped recording is
+     * once it is finished and the scene put back, or null if it couldn't be made. Not told if it didn't start (the
+     * result says why).
+     */
+    public static List<Component> start(ProfileScene scene, int seconds, Consumer<@Nullable Path> done) {
         if (!isAvailable())
             return List.of(Component.translatable(KEY + "unavailable"));
         if (!BUSY.compareAndSet(false, true))
@@ -137,14 +147,17 @@ public final class Profiler {
         state = State.WAITING;
         until = System.nanoTime() + scene.settle() * 1_000_000_000L;
         var thread = new Thread(() -> {
+            Path zip = null;
             try {
-                record(scene, file, seconds, environment);
+                zip = record(scene, file, seconds, environment);
             } finally {
                 state = State.IDLE;
+                var result = zip;
                 mc.execute(() -> {
                     undo.run();
                     inactivity.set(wasLimit);
                     BUSY.set(false);
+                    done.accept(result);
                 });
             }
         }, "Dynamic Surroundings profile");
@@ -153,7 +166,10 @@ public final class Profiler {
         return lines;
     }
 
-    private static void record(ProfileScene scene, Path file, int seconds, ProfileEnvironment environment) {
+    /**
+     * @return the zipped recording, or null if it couldn't be made
+     */
+    private static @Nullable Path record(ProfileScene scene, Path file, int seconds, ProfileEnvironment environment) {
         try {
             Thread.sleep(scene.settle() * 1000L);
             state = State.RECORDING;
@@ -173,9 +189,11 @@ public final class Profiler {
             var summaryText = text;
             var summaryHeadline = headline;
             Minecraft.getInstance().execute(() -> report(zip, summaryText, summaryHeadline));
+            return zip;
         } catch (Throwable t) {
             Library.LOGGER.error(t, "Unable to record a profile");
             tell(Component.translatable(KEY + "failed", t.toString()));
+            return null;
         }
     }
 

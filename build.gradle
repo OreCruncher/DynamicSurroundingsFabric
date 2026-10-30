@@ -93,6 +93,7 @@ configure(subprojects.findAll { it.name != 'processor' }) {
     if (project.name != "common" && project.name != "stubs") {
         tasks.named('build') { finalizedBy 'copyJarToMain' }
         potatoRuns(project)
+        benchJarExclusion(project)
     }
 
     // Configure Maven publishing.
@@ -129,21 +130,31 @@ def potatoRuns(Project p) {
     def cpuArgs = ["-XX:ActiveProcessorCount=$cpus", '-Xmx2G']
     def fillArgs = ['--width', '3840', '--height', '2160']
     def platform = p.name.capitalize()
+    // The bench runs (scripts/bench/README.md) run a scenario, -Pscenario=<file>, in a run folder of their own
+    def scenario = p.rootProject.findProperty('scenario')
+    def scenarioPath = scenario ? p.rootProject.file(scenario).absolutePath : ''
     def variants = [
-            clientPotatoCpu : [label: 'potato CPU', vm: cpuArgs, program: [], pin: true],
-            clientPotatoFill: [label: 'potato fill', vm: [], program: fillArgs, pin: false],
-            clientPotato    : [label: 'potato', vm: cpuArgs, program: fillArgs, pin: true]]
+            clientPotatoCpu     : [label: 'potato CPU', vm: cpuArgs, program: [], pin: true],
+            clientPotatoFill    : [label: 'potato fill', vm: [], program: fillArgs, pin: false],
+            clientPotato        : [label: 'potato', vm: cpuArgs, program: fillArgs, pin: true],
+            clientBench         : [label: 'bench', vm: [], program: [], pin: false, bench: true],
+            clientBenchPotatoCpu: [label: 'bench, potato CPU', vm: cpuArgs, program: [], pin: true, bench: true]]
 
     p.loom.runs {
         variants.each { runName, v ->
             create(runName) {
                 inherit p.loom.runs.client
                 configName = "$platform Client ($v.label)"
-                ideConfigGenerated true
+                // A bench run needs its scenario from the command line
+                ideConfigGenerated !v.bench
                 // Finds the game's JVM for run-affinity.ps1
                 vmArg "-Ddsurround.devRun=$runName"
                 vmArgs v.vm
                 programArgs v.program
+                if (v.bench) {
+                    runDir 'run-bench'
+                    vmArg "-Ddsurround.scenario=$scenarioPath"
+                }
             }
         }
     }
@@ -161,6 +172,24 @@ def potatoRuns(Project p) {
                         .redirectErrorStream(true)
                         .redirectOutput(p.layout.buildDirectory.file("run-affinity-${runName}.log").get().asFile)
                         .start()
+            }
+        }
+    }
+}
+
+// The development bench (common's org.orecruncher.dsurround.bench: scenario runs, /dsbench) is never published: left
+// out of the jar, and the build fails if it gets in anyway
+def benchJarExclusion(Project p) {
+    def bench = 'org/orecruncher/dsurround/bench/'
+    // Matched lazily: the platform's own build script makes these after this runs
+    p.tasks.matching { it.name == 'shadowJar' }.configureEach { exclude "${bench}**" }
+    p.tasks.matching { it.name == 'remapJar' }.configureEach {
+        doLast {
+            def jar = archiveFile.get().asFile
+            new java.util.zip.ZipFile(jar).withCloseable { zip ->
+                def found = zip.entries().find { it.name.startsWith(bench) }
+                if (found)
+                    throw new GradleException("$jar.name holds the development bench ($found.name)")
             }
         }
     }

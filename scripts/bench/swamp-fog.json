@@ -1,0 +1,30 @@
+// Ground fog in a swamp: off, and each quality (see README.md for the format)
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  // What the GPU draws scales with the pixels: the same size for every run to compare
+  "video": {"width": 1920, "height": 1080},
+  "warmup": 10,
+  "record": 45,
+  "repeats": 2,
+  "scenes": {
+    "swamp": {
+      "biome": "minecraft:swamp",
+      // Early morning, when the mist would lie; the profile scene holds it at full thickness and clears the weather
+      "commands": ["time set 23500"],
+      "profile": "ground_fog"
+    }
+  },
+  "runs": [
+    {"label": "off", "scene": "swamp", "settings": {"weatherOptions.enableGroundFog": false}},
+    {"label": "fast", "scene": "swamp", "settings": {"weatherOptions.enableGroundFog": true, "weatherOptions.groundFogQuality": "FAST"}},
+    {"label": "fancy", "scene": "swamp", "settings": {"weatherOptions.enableGroundFog": true, "weatherOptions.groundFogQuality": "FANCY"}},
+    {"label": "fabulous", "scene": "swamp", "settings": {"weatherOptions.enableGroundFog": true, "weatherOptions.groundFogQuality": "FABULOUS"}}
+  ]
+}

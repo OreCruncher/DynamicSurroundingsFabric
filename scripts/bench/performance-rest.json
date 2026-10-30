@@ -1,0 +1,154 @@
+// The rest of the Performance row: waterfalls and flame jets (lights, mist, block effect range), a crowd (entity
+// effect range), and the dust storm at High's precipitation range (see README.md for the format). The waterfall and
+// crowd scenes were marked by hand with /dsbench mark.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  "video": {
+    "width": 1920,
+    "height": 1080
+  },
+  "warmup": 10,
+  "record": 45,
+  "repeats": 2,
+  "scenes": {
+    "waterfall": {
+      "commands": [
+        "time set 6000",
+        "weather clear"
+      ],
+      "profile": "general"
+    },
+    "crowd": {
+      "commands": [
+        "time set 6000",
+        "weather clear",
+        "kill @e[type=!player]",
+        "kill @e[type=item]",
+        "execute positioned ~8 ~ ~0 positioned over motion_blocking run summon cow ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~6 ~ ~6 positioned over motion_blocking run summon sheep ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~0 ~ ~8 positioned over motion_blocking run summon pig ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~-6 ~ ~6 positioned over motion_blocking run summon villager ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~-8 ~ ~0 positioned over motion_blocking run summon cow ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~-6 ~ ~-6 positioned over motion_blocking run summon sheep ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~0 ~ ~-8 positioned over motion_blocking run summon pig ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~6 ~ ~-6 positioned over motion_blocking run summon villager ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~15 ~ ~6 positioned over motion_blocking run summon sheep ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~6 ~ ~15 positioned over motion_blocking run summon pig ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~-6 ~ ~15 positioned over motion_blocking run summon villager ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~-15 ~ ~6 positioned over motion_blocking run summon cow ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~-15 ~ ~-6 positioned over motion_blocking run summon sheep ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~-6 ~ ~-15 positioned over motion_blocking run summon pig ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~6 ~ ~-15 positioned over motion_blocking run summon villager ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~15 ~ ~-6 positioned over motion_blocking run summon cow ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~17 ~ ~17 positioned over motion_blocking run summon pig ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~0 ~ ~24 positioned over motion_blocking run summon villager ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~-17 ~ ~17 positioned over motion_blocking run summon cow ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~-24 ~ ~0 positioned over motion_blocking run summon sheep ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~-17 ~ ~-17 positioned over motion_blocking run summon pig ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~0 ~ ~-24 positioned over motion_blocking run summon villager ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~17 ~ ~-17 positioned over motion_blocking run summon cow ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~24 ~ ~0 positioned over motion_blocking run summon sheep ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~12 ~ ~30 positioned over motion_blocking run summon villager ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~-12 ~ ~30 positioned over motion_blocking run summon cow ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~-30 ~ ~12 positioned over motion_blocking run summon sheep ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~-30 ~ ~-12 positioned over motion_blocking run summon pig ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~-12 ~ ~-30 positioned over motion_blocking run summon villager ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~12 ~ ~-30 positioned over motion_blocking run summon cow ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~30 ~ ~-12 positioned over motion_blocking run summon sheep ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~30 ~ ~12 positioned over motion_blocking run summon pig ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~0 ~ ~40 positioned over motion_blocking run summon cow ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~-28 ~ ~28 positioned over motion_blocking run summon sheep ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~-40 ~ ~0 positioned over motion_blocking run summon pig ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~-28 ~ ~-28 positioned over motion_blocking run summon villager ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~0 ~ ~-40 positioned over motion_blocking run summon cow ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~28 ~ ~-28 positioned over motion_blocking run summon sheep ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~40 ~ ~0 positioned over motion_blocking run summon pig ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}",
+        "execute positioned ~28 ~ ~28 positioned over motion_blocking run summon villager ~ ~ ~ {NoAI:1b,PersistenceRequired:1b}"
+      ],
+      "profile": "general"
+    },
+    "dust": {
+      "biome": "minecraft:desert",
+      "commands": [
+        "time set 6000",
+        "season set mid_summer"
+      ],
+      "profile": "weather"
+    }
+  },
+  "runs": [
+    {
+      "label": "waterfall-default",
+      "scene": "waterfall"
+    },
+    {
+      "label": "waterfall-range32",
+      "scene": "waterfall",
+      "settings": {
+        "blockEffects.blockEffectRange": 32
+      }
+    },
+    {
+      "label": "waterfall-range64",
+      "scene": "waterfall",
+      "settings": {
+        "blockEffects.blockEffectRange": 64
+      }
+    },
+    {
+      "label": "waterfall-nolights",
+      "scene": "waterfall",
+      "settings": {
+        "flameJetOptions.enableLight": false,
+        "fireflyOptions.enableLight": false
+      }
+    },
+    {
+      "label": "waterfall-nomist",
+      "scene": "waterfall",
+      "settings": {
+        "waterfallOptions.enableMist": false,
+        "waterfallOptions.enableFroth": false
+      }
+    },
+    {
+      "label": "crowd-range16",
+      "scene": "crowd",
+      "settings": {
+        "entityEffects.entityEffectRange": 16
+      }
+    },
+    {
+      "label": "crowd-range32",
+      "scene": "crowd",
+      "settings": {
+        "entityEffects.entityEffectRange": 32
+      }
+    },
+    {
+      "label": "crowd-range48",
+      "scene": "crowd",
+      "settings": {
+        "entityEffects.entityEffectRange": 48
+      }
+    },
+    {
+      "label": "dust-default",
+      "scene": "dust"
+    },
+    {
+      "label": "dust-range20",
+      "scene": "dust",
+      "settings": {
+        "weatherOptions.precipitationRange": 20
+      }
+    }
+  ]
+}
