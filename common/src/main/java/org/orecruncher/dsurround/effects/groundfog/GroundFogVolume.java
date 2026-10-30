@@ -234,8 +234,7 @@ public final class GroundFogVolume {
      * of sight goes. Outside any render pass.
      *
      * @param target   where the weather is being drawn
-     * @param quality  how finely: the share of the screen's size the mist is drawn at, and the most steps (not
-     *                 {@link GroundFogQuality#NONE}, which isn't drawn)
+     * @param quality  how finely: the share of the screen's size the mist is drawn at, and the most steps
      * @param fabulous whether Fabulous graphics are on: the weather's target is then laid over the scene by vanilla's
      *                 transparency pass, by its depth, and the mist is drawn after the rain (see the handler)
      * @param strength how strong the mist is for the conditions, 0 to 1
@@ -246,7 +245,7 @@ public final class GroundFogVolume {
     public static boolean render(GroundFogField field, Camera camera, RenderTarget target, boolean fabulous,
                                  GroundFogQuality quality, float strength,
                                  float driftX, float driftZ, float seconds) {
-        if (!quality.isEnabled() || field.isEmpty() || !isUsable())
+        if (field.isEmpty() || !isUsable())
             return true;
 
         RENDER_TIMER.begin();
