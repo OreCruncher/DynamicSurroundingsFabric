@@ -918,6 +918,23 @@ public class PrecipitationFieldTests {
     }
 
     @Test
+    void dustNearTheCameraFadesOut() {
+        float hidden = PrecipitationRenderer.DUST_NEAR_HIDDEN;
+        float full = hidden + PrecipitationRenderer.DUST_NEAR_FADE;
+        assertEquals(0F, PrecipitationRenderer.dustNearFade(0F, 0F, 0F), "at the camera");
+        assertEquals(0F, PrecipitationRenderer.dustNearFade(0F, -hidden + 0.1F, 0F), "inside, below");
+        float part = PrecipitationRenderer.dustNearFade(0F, 0F, -(hidden + full) / 2F);
+        assertTrue(part > 0F && part < 1F, () -> "part way: " + part);
+        assertEquals(1F, PrecipitationRenderer.dustNearFade(full, 0F, 0F), 1e-6F, "beyond the fade");
+        float previous = 0F;
+        for (float d = 0F; d <= full + 1F; d += 0.1F) {
+            float fade = PrecipitationRenderer.dustNearFade(d * 0.6F, d * 0.8F, 0F);
+            assertTrue(fade >= previous, "grows with distance");
+            previous = fade;
+        }
+    }
+
+    @Test
     void smallerRainIsShorterButNoThinner() {
         assertEquals(PrecipitationRenderer.rainLength(0.5F, 1F) * 0.5F, PrecipitationRenderer.rainLength(0.5F, 0.5F), 1.0E-6F);
         assertEquals(PrecipitationRenderer.rainHalfWidth(0.5F, 1F), PrecipitationRenderer.rainHalfWidth(0.5F, 0.5F), 1.0E-6F,
