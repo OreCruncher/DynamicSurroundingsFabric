@@ -1,3 +1,34 @@
+> ### DynamicSurroundings-1.21.1-0.4.9
+
+Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
+
+**All Loaders**
+* JAVA 21+
+* Architectury 13.0.8+
+
+**Fabric**
+* Fabric Loader >= 0.16.9
+* Fabric API >= 0.110.0+1.21.
+
+**NeoForge**
+* NeoForge 21.1.84+
+
+**AI Disclosure**
+* Built the configuration presets, measured the performance presets' values with benchmark runs, and backported them from 1.21.11
+
+**What's New**
+* Configuration presets: rows of buttons at the top of the config screen set groups of options in one go
+  * Features: Vanilla+, Atmosphere, World, RPG, and Defaults. Each changes only the options it covers, so presets add up: Vanilla+ then RPG gives combat feedback in an otherwise plain world
+  * Performance: Low for slower computers, Medium as the mod comes, High for fast ones
+  * Before applying, a confirmation screen lists every setting that would change
+  * `/dsconfig preset` lists the presets, and `/dsconfig preset <name>` applies one
+  * Modpacks can add, replace, or hide presets with a `dsconfigs/presets.json` of their own, in a resource pack or `config/dsurround/configs/<namespace>/`
+
+**Changes**
+* Ground fog has its own on/off option, Ground Fog, separate from Ground Fog Quality, which no longer has an Off choice; a configuration with the fog turned off keeps it off
+* Fast ground fog takes fewer steps and costs less to draw, with no visible difference
+* In `/dsprofile` recordings and their summaries, the dynamic clouds' work done once a tick is shown as its time per frame, so it can be compared with the other effects
+
 > ### DynamicSurroundings-1.21.1-0.4.8
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
