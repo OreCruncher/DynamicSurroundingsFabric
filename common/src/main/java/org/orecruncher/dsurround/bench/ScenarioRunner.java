@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.architectury.event.events.client.ClientTickEvent;
+import net.minecraft.client.InactivityFpsLimit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -171,9 +172,11 @@ public final class ScenarioRunner {
      */
     private boolean openWorld() {
         var mc = Minecraft.getInstance();
-        // The first launch's accessibility screen, and pausing when the window loses focus, would hold a run up
+        // The first launch's accessibility screen, and pausing when the window loses focus, would hold a run up; and
+        // with no keyboard or mouse input since launch, the AFK frame limit holds the game to 10 fps from the start
         mc.options.onboardAccessibility = false;
         mc.options.pauseOnLostFocus = false;
+        mc.options.inactivityFpsLimit().set(InactivityFpsLimit.MINIMIZED);
         if (mc.gui.overlay() != null || mc.level != null || mc.gui.screen() == null)
             return false;
         if (!(mc.gui.screen() instanceof TitleScreen) && !mc.gui.screen().getClass().getSimpleName().contains("Onboarding"))
