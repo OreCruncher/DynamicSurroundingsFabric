@@ -26,6 +26,7 @@ public final class RenderTimer implements ITimer {
     private static final long STALE_AFTER_NANOS = 1_000_000_000L;
 
     private final String name;
+    private final boolean perTick;
     private final TimerEMA cpu;
     private final TimerEMA gpu;
     // How many of what it draws there were a frame, averaged as the times are; only for timers given a count
@@ -45,7 +46,16 @@ public final class RenderTimer implements ITimer {
     private Boolean supported;
 
     public RenderTimer(String name) {
+        this(name, false);
+    }
+
+    /**
+     * @param perTick whether what it times runs once a client tick rather than once a frame (the clouds' field): its
+     *                averages are then a tick's, which recordings note so as not to set them against a frame's
+     */
+    public RenderTimer(String name, boolean perTick) {
         this.name = name;
+        this.perTick = perTick;
         this.cpu = new TimerEMA(name);
         this.gpu = new TimerEMA(name);
         this.count = new EMA(name);
@@ -137,6 +147,13 @@ public final class RenderTimer implements ITimer {
             this.supported = this.timestamps != null;
         }
         return this.supported;
+    }
+
+    /**
+     * Whether it times something run once a client tick rather than once a frame
+     */
+    public boolean isPerTick() {
+        return this.perTick;
     }
 
     /**

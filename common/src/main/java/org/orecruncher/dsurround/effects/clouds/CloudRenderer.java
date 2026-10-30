@@ -92,7 +92,7 @@ public final class CloudRenderer {
      * How long working out the clouds again takes, on the CPU: every tick, a share of the cells at a time, on the tick
      * rather than while drawing, so it is timed apart (see CloudHandler)
      */
-    public static final RenderTimer FIELD_TIMER = new RenderTimer("- Field");
+    public static final RenderTimer FIELD_TIMER = new RenderTimer("- Field", true);
 
     // How many cells before the grid's edge the clouds fade out over, wherever the fog is
     private static final int EDGE_FADE_CELLS = 3;

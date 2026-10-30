@@ -33,6 +33,10 @@ public final class RenderTimerEvent extends Event {
     @Label("CPU peak (ms)")
     double cpuPeak;
 
+    @Label("Per tick")
+    @Description("Measured once a client tick rather than once a frame (the clouds' field): its averages are a tick's")
+    boolean perTick;
+
     @Label("Count")
     @Description("How many of what the effect draws there were a frame, on average (Precipitation: drops in the area; "
             + "Drops: drops drawn; Damp Spots: spots); NaN for an effect that doesn't count")
