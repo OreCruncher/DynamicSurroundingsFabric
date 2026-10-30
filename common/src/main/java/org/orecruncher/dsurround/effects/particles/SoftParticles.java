@@ -182,12 +182,13 @@ public final class SoftParticles {
     }
 
     /**
-     * A translucent particle pipeline: vanilla's particle shader unless {@code shader} names another.
+     * A translucent particle pipeline: vanilla's particle shader unless {@code shader} names another. Only the uniforms
+     * vanilla's particle pass binds (no Globals): with render pass validation on (NeoForge's dev client), a declared
+     * uniform that isn't bound fails the draw.
      */
     static RenderPipeline.Builder particlePipeline(String location, @Nullable net.minecraft.resources.Identifier shader) {
         var builder = RenderPipeline.builder()
                 .withLocation(Constants.asId(location))
-                .withUniform("Globals", UniformType.UNIFORM_BUFFER)
                 .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
                 .withUniform("Projection", UniformType.UNIFORM_BUFFER)
                 .withUniform("Fog", UniformType.UNIFORM_BUFFER)

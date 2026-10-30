@@ -53,6 +53,14 @@ final class PrecipitationRenderer {
     // How fast a puff turns, as a fraction of how fast it rises and falls
     static final float DUST_SPIN = 0.1F;
     /**
+     * Puffs nearer the camera than this, in blocks, are not drawn, and fade in over {@link #DUST_NEAR_FADE} beyond it.
+     * A puff close by covers much of the screen: in a storm those within 2 blocks were about a quarter of the dust's
+     * drawing, for a haze the dust storm's fog already gives. Fading them also keeps big blobs from sliding across the
+     * view.
+     */
+    static final float DUST_NEAR_HIDDEN = 2F;
+    static final float DUST_NEAR_FADE = 1.5F;
+    /**
      * How far behind the camera a drop can be and still reach into view, beyond the largest puff's half size, the
      * length of the longest streak or the largest flake's half size: room to spare. See {@link #behindMargin}.
      */
@@ -170,6 +178,8 @@ final class PrecipitationRenderer {
             float fade = field.fade(i, partialTick) * Mth.clamp((radius - distance) / EDGE_FADE, 0F, 1F);
             if (!dustOnly)
                 fade *= thinned(d.thinning[i], distance, radius);
+            else
+                fade *= dustNearFade(x, y, z);
             if (fade <= 0F)
                 continue;
             int light = d.light[i];
@@ -256,6 +266,14 @@ final class PrecipitationRenderer {
      */
     static float thinned(float thinning, float distance, float radius) {
         return Mth.clamp((shareDrawn(distance, radius) - thinning) / THIN_FADE + 1F, 0F, 1F);
+    }
+
+    /**
+     * How much of a puff of dust is drawn for being near the camera, relative to which it is: none inside
+     * {@link #DUST_NEAR_HIDDEN}, all of it {@link #DUST_NEAR_FADE} further out
+     */
+    static float dustNearFade(float x, float y, float z) {
+        return Mth.clamp((Mth.sqrt(x * x + y * y + z * z) - DUST_NEAR_HIDDEN) / DUST_NEAR_FADE, 0F, 1F);
     }
 
     /**
