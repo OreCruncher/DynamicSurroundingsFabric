@@ -9,7 +9,9 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.state.LevelRenderState;
+import org.joml.Matrix4f;
 import org.orecruncher.dsurround.effects.WeatherDepth;
+import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
 import org.orecruncher.dsurround.effects.entity.HealthPopoffs;
 import org.orecruncher.dsurround.effects.footprints.Footprints;
 import org.orecruncher.dsurround.gui.overlay.lightlevel.LightLevelRenderer;
@@ -31,6 +33,14 @@ public class MixinLevelRenderer {
     // The frustum the level is culled by this frame, for the light level numbers
     @Unique
     private Frustum dsurround$cullFrustum;
+
+    /**
+     * The projection the level is drawn with this frame, for the aurora's coverage while /dsprofile records
+     */
+    @Inject(method = "renderLevel(Lcom/mojang/blaze3d/resource/GraphicsResourceAllocator;Lnet/minecraft/client/DeltaTracker;ZLnet/minecraft/client/Camera;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lorg/joml/Vector4f;Z)V", at = @At("HEAD"))
+    private void dsurround$captureProjection(CallbackInfo ci, @Local(argsOnly = true, ordinal = 1) Matrix4f projection) {
+        AuroraRenderer.levelProjection(projection);
+    }
 
     @Inject(method = "addMainPass", at = @At("HEAD"))
     private void dsurround$captureFrustum(CallbackInfo ci, @Local(argsOnly = true) Frustum frustum) {

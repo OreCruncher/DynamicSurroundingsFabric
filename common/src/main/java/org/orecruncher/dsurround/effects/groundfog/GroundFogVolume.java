@@ -17,10 +17,10 @@ import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Camera;
-import net.minecraft.client.renderer.MappableRingBuffer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.system.MemoryStack;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.GroundFogQuality;
 import org.orecruncher.dsurround.effects.ModShader;
@@ -182,8 +182,10 @@ public final class GroundFogVolume {
     // The same, smoothed
     @Nullable
     private static TextureTarget smoothed;
+    // One buffer rewritten each frame, not a MappableRingBuffer: rotating that one sets a fence, which held the GPU idle
+    // for 2 ms a frame after the aurora on 1.21.11 (AMD)
     @Nullable
-    private static MappableRingBuffer info;
+    private static GpuBuffer info;
 
     private GroundFogVolume() {
     }
@@ -288,7 +290,6 @@ public final class GroundFogVolume {
         } finally {
             COMPOSITE_TIMER.end();
         }
-        info.rotate();
     }
 
     /**
@@ -298,7 +299,7 @@ public final class GroundFogVolume {
         pass.setPipeline(pipeline);
         RenderSystem.bindDefaultUniforms(pass);
         pass.setUniform("DynamicTransforms", transforms);
-        pass.setUniform(INFO, info.currentBuffer());
+        pass.setUniform(INFO, info);
     }
 
     /**
@@ -307,7 +308,7 @@ public final class GroundFogVolume {
     private static void writeInfo(GroundFogField field, Camera camera, RenderTarget target, boolean fabulous,
                                   GroundFogQuality quality, float strength, float driftX, float driftZ, float seconds) {
         if (info == null)
-            info = new MappableRingBuffer(() -> "Dynamic Surroundings ground fog UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_MAP_WRITE, INFO_SIZE);
+            info = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings ground fog UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, INFO_SIZE);
         var cam = camera.position();
         int baseY = gridBaseY;
         float top = gridHighest + MIST_DEPTH;
@@ -315,8 +316,8 @@ public final class GroundFogVolume {
         // no cells (see GroundFogField.prepare)
         float fadeWidth = field.radius() * GroundFogField.EDGE_FADE;
         var zeroToOne = Transforms.DEPTH_ZERO_TO_ONE;
-        try (var view = RenderSystem.getDevice().createCommandEncoder().mapBuffer(info.currentBuffer(), false, true)) {
-            Std140Builder.intoBuffer(view.data())
+        try (var stack = MemoryStack.stackPush()) {
+            var data = Std140Builder.onStack(stack, INFO_SIZE)
                     .putVec2(target.width, target.height)
                     .putFloat(quality.scale())
                     .putFloat(quality.maxSteps())
@@ -331,7 +332,9 @@ public final class GroundFogVolume {
                     .putVec2(field.radius() - 1F, fadeWidth)
                     .putFloat(THICKNESS * strength)
                     .putFloat(zeroToOne ? 1F : 0F)
-                    .putFloat(fabulous ? 1F : 0F);
+                    .putFloat(fabulous ? 1F : 0F)
+                    .get();
+            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(info.slice(), data);
         }
     }
 

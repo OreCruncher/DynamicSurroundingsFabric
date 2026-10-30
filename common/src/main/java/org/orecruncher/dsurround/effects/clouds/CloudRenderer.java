@@ -11,8 +11,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MappableRingBuffer;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.system.MemoryStack;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.RenderTimer;
@@ -88,8 +88,10 @@ public final class CloudRenderer {
     private static GpuBuffer settled;
     @Nullable
     private static GpuBuffer changing;
+    // One buffer rewritten each frame, not a MappableRingBuffer: rotating that one sets a fence, which held the GPU idle
+    // for 2 ms a frame after the aurora on 1.21.11 (AMD)
     @Nullable
-    private static MappableRingBuffer cloudInfo;
+    private static GpuBuffer cloudInfo;
     // The sections' version the buffers were uploaded from
     private static int uploadedVersion = -1;
 
@@ -152,11 +154,11 @@ public final class CloudRenderer {
         int changingQuads = sections.changingVertices() / 4;
 
         if (cloudInfo == null)
-            cloudInfo = new MappableRingBuffer(() -> "Dynamic Surroundings clouds UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_MAP_WRITE, CLOUD_INFO_SIZE);
+            cloudInfo = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings clouds UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, CLOUD_INFO_SIZE);
         // Gone a cell inside the grid's edge, fading over the few cells before
         float gone = edge - CloudField.CELL;
-        try (var view = RenderSystem.getDevice().createCommandEncoder().mapBuffer(cloudInfo.currentBuffer(), false, true)) {
-            var builder = Std140Builder.intoBuffer(view.data())
+        try (var stack = MemoryStack.stackPush()) {
+            var builder = Std140Builder.onStack(stack, CLOUD_INFO_SIZE)
                     .putVec4(offsetX, offsetY, offsetZ, (float) now)
                     .putVec4(red, green, blue, (float) CloudField.FADE_TICKS)
                     .putVec4(gone - EDGE_FADE_CELLS * CloudField.CELL, gone, 0F, 0F)
@@ -168,6 +170,7 @@ public final class CloudRenderer {
                 else
                     builder.putVec4(0F, 0F, 0F, 1F);
             }
+            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(cloudInfo.slice(), builder.get());
         }
 
         var minecraft = Minecraft.getInstance();
@@ -182,7 +185,7 @@ public final class CloudRenderer {
                         target.getDepthTextureView(), OptionalDouble.empty())) {
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", transforms);
-            pass.setUniform(CLOUD_INFO, cloudInfo.currentBuffer());
+            pass.setUniform(CLOUD_INFO, cloudInfo);
             pass.setIndexBuffer(indexBuffer, indices.type());
             if (settledQuads > 0 && settled != null) {
                 // Their depth, then their color where they are nearest
@@ -199,7 +202,6 @@ public final class CloudRenderer {
                 pass.drawIndexed(0, 0, 6 * changingQuads, 1);
             }
         }
-        cloudInfo.rotate();
         RENDER_TIMER.count(settledQuads + changingQuads);
     }
 

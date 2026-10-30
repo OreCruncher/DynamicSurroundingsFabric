@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.effects.RenderTimers;
+import org.orecruncher.dsurround.effects.aurora.Aurora;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.lib.random.Randomizer;
@@ -493,6 +494,43 @@ public class ProfilingTests {
     }
 
     @Test
+    void aRecordingHasTheAurora() throws Exception {
+        var file = this.folder.resolve("test.jfr");
+        var recorder = new Thread(() -> {
+            try {
+                ProfileRecording.record(file, Duration.ofSeconds(2), environment());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        recorder.start();
+        // Drawn as the renderer would each frame: half strength, over a quarter of a 100x100 screen
+        var aurora = Aurora.create(7, 3);
+        while (recorder.isAlive()) {
+            AuroraSamples.drawn(aurora, 0.5F, 2500.0, 10000);
+            Thread.sleep(20);
+        }
+        recorder.join();
+
+        var events = RecordingFile.readAllEvents(file).stream()
+                .filter(e -> e.getEventType().getName().equals("dsurround.Aurora"))
+                .toList();
+        assertFalse(events.isEmpty());
+        for (var event : events) {
+            assertTrue(event.getInt("frames") > 0);
+            assertEquals(aurora.bands(), event.getInt("bands"));
+            assertEquals(aurora.distance(), event.getFloat("distance"), 1e-6);
+            assertEquals(aurora.height(), event.getFloat("height"), 1e-6);
+            assertEquals(Math.toDegrees(aurora.heading()), event.getFloat("heading"), 1e-3);
+            assertEquals(0.5F, event.getFloat("strength"), 1e-6);
+            assertEquals(2500.0, event.getDouble("pixels"), 1e-6);
+            assertEquals(0.25, event.getDouble("screenShare"), 1e-6);
+        }
+        // Not recording any more: nothing is kept for the next
+        assertFalse(AuroraSamples.isRecording());
+    }
+
+    @Test
     void randomBlockSamplesGoInTheirShell() {
         var center = new BlockPos(100, 64, -200);
         assertEquals(RandomBlockSamples.STARTS, RandomBlockSamples.index(center, center, RandomBlockSamples.STARTS));
@@ -547,7 +585,7 @@ public class ProfilingTests {
                     .map(p -> p.getFileName().toString())
                     .sorted()
                     .toList();
-            assertEquals(List.of("EnvironmentEvent.java", "FeatureEvent.java", "FramesEvent.java", "HandlerTickEvent.java", "ProfileRecording.java", "ProfileSummary.java", "RandomBlockSamplesEvent.java", "RenderTimerEvent.java"), users);
+            assertEquals(List.of("AuroraEvent.java", "EnvironmentEvent.java", "FeatureEvent.java", "FramesEvent.java", "HandlerTickEvent.java", "ProfileRecording.java", "ProfileSummary.java", "RandomBlockSamplesEvent.java", "RenderTimerEvent.java"), users);
         }
     }
 }
