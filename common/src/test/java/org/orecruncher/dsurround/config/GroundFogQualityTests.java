@@ -27,15 +27,9 @@ public class GroundFogQualityTests {
     }
 
     @Test
-    void onlyNoneIsOff() {
-        for (var quality : GroundFogQuality.values())
-            assertEquals(quality != GroundFogQuality.NONE, quality.isEnabled(), quality.name());
-    }
-
-    @Test
     void eachDrawsMoreFinelyThanTheOneBelow() {
         // A smaller scale is more of the screen's pixels; the steps never fall
-        var drawn = new GroundFogQuality[]{GroundFogQuality.FAST, GroundFogQuality.FANCY, GroundFogQuality.FABULOUS};
+        var drawn = GroundFogQuality.values();
         for (int i = 1; i < drawn.length; i++) {
             assertTrue(drawn[i].scale() < drawn[i - 1].scale(), drawn[i] + " scale");
             assertTrue(drawn[i].maxSteps() >= drawn[i - 1].maxSteps(), drawn[i] + " steps");
