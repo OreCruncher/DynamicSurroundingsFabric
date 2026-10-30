@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Base class for a configuration persisted as JSON. Fields marked {@link Property} make up the specification, which
@@ -42,6 +43,9 @@ public abstract class ConfigurationData {
 
     // Where the configuration is saved. Set when it is loaded.
     transient Path configFilePath;
+    // Offered by the config screen and commands; set from outside (see setPresets). Read on the client thread, and
+    // set on reload, which may be another.
+    private transient volatile List<ConfigPreset> presets = List.of();
 
     protected ConfigurationData() {
     }
@@ -154,6 +158,42 @@ public abstract class ConfigurationData {
 
     public Collection<ConfigElement<?>> getSpecification() {
         return getSpecification(this.getClass());
+    }
+
+    /**
+     * The configuration's presets, in the order the config screen and commands offer them; none until some are set.
+     */
+    public List<ConfigPreset> getPresets() {
+        return this.presets;
+    }
+
+    /**
+     * Sets the presets on offer: the mod reads them from its configuration files, and sets them again when they
+     * reload.
+     */
+    public void setPresets(List<ConfigPreset> presets) {
+        this.presets = List.copyOf(presets);
+    }
+
+    /**
+     * The preset with this id, if the configuration has one.
+     */
+    public Optional<ConfigPreset> getPreset(String id) {
+        return this.getPresets().stream().filter(p -> p.id().equals(id)).findFirst();
+    }
+
+    /**
+     * Applies a preset (see {@link ConfigPreset#apply}) and saves the configuration. A value the preset couldn't
+     * apply as listed is logged.
+     *
+     * @return how many values the preset couldn't apply as listed
+     */
+    public int applyPreset(ConfigPreset preset) {
+        var problems = preset.apply(this);
+        for (var problem : problems)
+            Library.LOGGER.warn("Preset '%s': %s", preset.id(), problem);
+        this.save();
+        return problems.size();
     }
 
     /**

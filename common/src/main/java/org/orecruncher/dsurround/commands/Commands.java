@@ -11,6 +11,7 @@ public final class Commands {
             return;
 
         new BiomeCommand().register(dispatcher, registryAccess);
+        new ConfigCommand().register(dispatcher, registryAccess);
         new ConflictsCommand().register(dispatcher, registryAccess);
         new DumpCommand().register(dispatcher, registryAccess);
         new ReloadCommand().register(dispatcher, registryAccess);

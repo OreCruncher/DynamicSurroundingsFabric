@@ -1,0 +1,243 @@
+// Presets, offered as rows of buttons at the top of the config screen and by /dsconfig preset, in this order (see
+// lib/config/ConfigPreset and config/PresetLoader): each "group" is a row, "features" (the default) and "performance".
+// Modpacks add their own in config/dsurround/configs/<namespace>/presets.json or a resource pack's
+// assets/<namespace>/dsconfigs/presets.json: a new id is added after these, the same id replaces one of these, and
+// {"id": "rpg", "hidden": true} removes one. Optional "name" and "description" show instead of the translations; a
+// new group needs a "dsurround.config.presets.group.<group>" translation, or shows its name.
+// Presets add up: each sets only the properties it lists, so Vanilla+ then RPG gives RPG feedback in an otherwise
+// plain world. The properties fall into four themes, a preset to turn each on:
+//   Combat & RPG (RPG): pop-offs, crit words, swing/bow/jump/toolbar sounds, burning flames, death mist, footprints,
+//     skull flames
+//   Weather & sky (Atmosphere): storms, particle precipitation, dust, drips, window streaks and frost, ground fog,
+//     clouds, fog, auroras, wind on particles, rain ripples, storm and thunder sounds
+//   World details (World): steam, bubble columns, flame jets, waterfalls, fireflies, breath
+//   Sound polish: ambience, remapped steps, footstep accents, brush steps, waterfall sounds
+// Left out on purpose: the HUD (compass, clock, light levels: personal layout), Scary Content (a comfort choice no
+// preset turns back on), ranges and quality (the performance presets'), technical settings, and anything that needs
+// a restart (the music manager).
+// The performance presets (Low, Medium, High) set quality and ranges, and the costliest details measured with the
+// bench (scripts/bench): waterfall mist and froth, dynamic clouds, and the light from flames and fireflies. Those
+// three are also features, so a feature preset applied after Low turns them back on: accepted.
+// A test checks every path names a property and every value fits it.
+[
+  {
+    // Sound polish only: the world sounds richer but looks like vanilla
+    "id": "vanillaPlus",
+    "values": {
+      "entityEffects.enableDamagePopoffs": false,
+      "entityEffects.showCritWords": false,
+      "entityEffects.enableSwingEffect": false,
+      "entityEffects.enableBowPull": false,
+      "entityEffects.enableJumpSound": false,
+      "entityEffects.enablePlayerToolbarEffect": false,
+      "entityEffects.enableBurningEffect": false,
+      "entityEffects.enableDeathPuffs": false,
+      "entityEffects.enableFootprints": false,
+
+      "weatherOptions.enableStormSimulation": false,
+      "weatherOptions.enableParticlePrecipitation": false,
+      "weatherOptions.enableDustStorms": false,
+      "weatherOptions.enableAfterRainDrips": false,
+      "weatherOptions.enableSnowOnSides": false,
+      "weatherOptions.enableWindowStreaks": false,
+      "weatherOptions.enableWindowFrost": false,
+      "weatherOptions.enableGroundFog": false,
+      "weatherOptions.enableDynamicClouds": false,
+      "weatherOptions.enableStormSounds": false,
+      "soundOptions.replaceThunderSounds": false,
+      "fogOptions.enableFogEffects": false,
+      "auroraOptions.enableAuroras": false,
+      "particleTweaks.windBlowsParticles": false,
+
+      "blockEffects.steamColumnEnabled": false,
+      "blockEffects.skullFlamesEnabled": false,
+      "blockEffects.bubbleColumnEnabled": false,
+      "blockEffects.waterRippleStyle": "NONE",
+      "flameJetOptions.enableFlameJets": false,
+      "waterfallOptions.enableWaterfalls": false,
+      "fireflyOptions.enableFireflies": false,
+      "entityEffects.enableBreathEffect": false,
+      "entityEffects.enableAnimalBreath": false,
+
+      "soundOptions.ambientVolumeScaling": 100,
+      "soundOptions.remapSounds": true,
+      "footstepAccents.enableAccents": true,
+      "footstepAccents.enableArmorAccents": true,
+      "footstepAccents.enableWetSurfaceAccents": true,
+      "footstepAccents.enableFloorSqueaks": true,
+      "entityEffects.enableBrushStepEffect": true,
+      "waterfallOptions.enableSounds": true
+    }
+  },
+  {
+    // Weather & sky: storms, rain and snow, dust, fog, clouds, auroras
+    "id": "atmosphere",
+    "values": {
+      "weatherOptions.enableStormSimulation": true,
+      "weatherOptions.enableParticlePrecipitation": true,
+      "weatherOptions.enableDustStorms": true,
+      "weatherOptions.enableAfterRainDrips": true,
+      "weatherOptions.enableSnowOnSides": true,
+      "weatherOptions.enableWindowStreaks": true,
+      "weatherOptions.enableWindowFrost": true,
+      "weatherOptions.enableGroundFog": true,
+      "weatherOptions.enableDynamicClouds": true,
+      "weatherOptions.enableStormSounds": true,
+      "soundOptions.replaceThunderSounds": true,
+      "fogOptions.enableFogEffects": true,
+      "fogOptions.enableMorningFog": true,
+      "fogOptions.enableBiomeFog": true,
+      "fogOptions.enableWeatherFog": true,
+      "auroraOptions.enableAuroras": true,
+      "particleTweaks.windBlowsParticles": true,
+      "blockEffects.waterRippleStyle": "PIXELATED_CIRCLE"
+    }
+  },
+  {
+    // World details: waterfalls, flame jets, fireflies, steam, bubble columns, breath
+    "id": "world",
+    "values": {
+      "blockEffects.steamColumnEnabled": true,
+      "blockEffects.bubbleColumnEnabled": true,
+      "flameJetOptions.enableFlameJets": true,
+      "flameJetOptions.enableLight": true,
+      "waterfallOptions.enableWaterfalls": true,
+      "waterfallOptions.enableParticles": true,
+      "waterfallOptions.enableMist": true,
+      "waterfallOptions.enableFroth": true,
+      "fireflyOptions.enableFireflies": true,
+      "fireflyOptions.enableGlow": true,
+      "fireflyOptions.enableLight": true,
+      "entityEffects.enableBreathEffect": true,
+      "entityEffects.enableAnimalBreath": true
+    }
+  },
+  {
+    // Combat & RPG feedback, the jump sound included
+    "id": "rpg",
+    "values": {
+      "entityEffects.enableDamagePopoffs": true,
+      "entityEffects.showCritWords": true,
+      "entityEffects.enableSwingEffect": true,
+      "entityEffects.enableBowPull": true,
+      "entityEffects.enableJumpSound": true,
+      "entityEffects.enablePlayerToolbarEffect": true,
+      "entityEffects.enableBurningEffect": true,
+      "entityEffects.enableDeathPuffs": true,
+      "entityEffects.enableFootprints": true,
+      "blockEffects.skullFlamesEnabled": true,
+      "particleTweaks.suppressProjectileParticleTrails": false
+    }
+  },
+  {
+    // Every feature a preset covers as the mod comes, the jump sound off: puts back whatever feature presets did.
+    // Performance settings are Medium's
+    "id": "defaults",
+    "values": {
+      "entityEffects.enableDamagePopoffs": true,
+      "entityEffects.showCritWords": true,
+      "entityEffects.enableSwingEffect": true,
+      "entityEffects.enableBowPull": true,
+      "entityEffects.enableJumpSound": false,
+      "entityEffects.enablePlayerToolbarEffect": true,
+      "entityEffects.enableBurningEffect": true,
+      "entityEffects.enableDeathPuffs": true,
+      "entityEffects.enableFootprints": true,
+      "particleTweaks.suppressProjectileParticleTrails": false,
+
+      "weatherOptions.enableStormSimulation": true,
+      "weatherOptions.enableParticlePrecipitation": true,
+      "weatherOptions.enableDustStorms": true,
+      "weatherOptions.enableAfterRainDrips": true,
+      "weatherOptions.enableSnowOnSides": true,
+      "weatherOptions.enableWindowStreaks": true,
+      "weatherOptions.enableWindowFrost": true,
+      "weatherOptions.enableGroundFog": true,
+      "weatherOptions.enableDynamicClouds": true,
+      "weatherOptions.enableStormSounds": true,
+      "soundOptions.replaceThunderSounds": true,
+      "fogOptions.enableFogEffects": true,
+      "fogOptions.enableMorningFog": true,
+      "fogOptions.enableBiomeFog": true,
+      "fogOptions.enableWeatherFog": true,
+      "auroraOptions.enableAuroras": true,
+      "particleTweaks.windBlowsParticles": true,
+
+      "blockEffects.steamColumnEnabled": true,
+      "blockEffects.skullFlamesEnabled": true,
+      "blockEffects.bubbleColumnEnabled": true,
+      "blockEffects.waterRippleStyle": "PIXELATED_CIRCLE",
+      "flameJetOptions.enableFlameJets": true,
+      "flameJetOptions.enableLight": true,
+      "waterfallOptions.enableWaterfalls": true,
+      "waterfallOptions.enableParticles": true,
+      "waterfallOptions.enableMist": true,
+      "waterfallOptions.enableFroth": true,
+      "fireflyOptions.enableFireflies": true,
+      "fireflyOptions.enableGlow": true,
+      "fireflyOptions.enableLight": true,
+      "entityEffects.enableBreathEffect": true,
+      "entityEffects.enableAnimalBreath": true,
+
+      "soundOptions.ambientVolumeScaling": 100,
+      "soundOptions.remapSounds": true,
+      "footstepAccents.enableAccents": true,
+      "footstepAccents.enableArmorAccents": true,
+      "footstepAccents.enableWetSurfaceAccents": true,
+      "footstepAccents.enableFloorSqueaks": true,
+      "entityEffects.enableBrushStepEffect": true,
+      "waterfallOptions.enableSounds": true
+    }
+  },
+  {
+    // For slower computers. Ground fog's switch is a feature: Low only lowers its quality
+    "id": "low",
+    "group": "performance",
+    "values": {
+      "weatherOptions.groundFogQuality": "FAST",
+      "weatherOptions.precipitationDensity": 50,
+      "weatherOptions.precipitationRange": 10,
+      "blockEffects.blockEffectRange": 32,
+      "entityEffects.entityEffectRange": 32,
+      "waterfallOptions.enableMist": false,
+      "waterfallOptions.enableFroth": false,
+      "weatherOptions.enableDynamicClouds": false,
+      "flameJetOptions.enableLight": false,
+      "fireflyOptions.enableLight": false
+    }
+  },
+  {
+    // The defaults
+    "id": "medium",
+    "group": "performance",
+    "values": {
+      "weatherOptions.groundFogQuality": "FANCY",
+      "weatherOptions.precipitationDensity": 100,
+      "weatherOptions.precipitationRange": 14,
+      "blockEffects.blockEffectRange": 40,
+      "entityEffects.entityEffectRange": 32,
+      "waterfallOptions.enableMist": true,
+      "waterfallOptions.enableFroth": true,
+      "weatherOptions.enableDynamicClouds": true,
+      "flameJetOptions.enableLight": true,
+      "fireflyOptions.enableLight": true
+    }
+  },
+  {
+    // For fast computers
+    "id": "high",
+    "group": "performance",
+    "values": {
+      "weatherOptions.groundFogQuality": "FABULOUS",
+      "weatherOptions.precipitationDensity": 100,
+      "weatherOptions.precipitationRange": 20,
+      "blockEffects.blockEffectRange": 64,
+      "entityEffects.entityEffectRange": 48,
+      "waterfallOptions.enableMist": true,
+      "waterfallOptions.enableFroth": true,
+      "weatherOptions.enableDynamicClouds": true,
+      "flameJetOptions.enableLight": true,
+      "fireflyOptions.enableLight": true
+    }
+  }
+]

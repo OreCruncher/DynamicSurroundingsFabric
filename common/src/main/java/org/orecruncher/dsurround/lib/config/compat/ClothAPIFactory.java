@@ -5,7 +5,9 @@ import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.impl.builders.FieldBuilder;
+import me.shedaniel.clothconfig2.gui.AbstractConfigScreen;
 import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -17,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.text.Localization;
 import org.orecruncher.dsurround.lib.config.ConfigElement;
+import org.orecruncher.dsurround.lib.config.ConfigPreset;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
 import org.orecruncher.dsurround.lib.config.IScreenFactory;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
@@ -25,6 +28,7 @@ import org.orecruncher.dsurround.lib.gui.TooltipDelay;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -96,6 +100,13 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
         ConfigCategory root = builder.getOrCreateCategory(title);
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
         root.addEntry(docsLink(entryBuilder, "dsurround.config.docs.page", DOCS_URL));
+        // A row of buttons for each group of presets (features, performance), in the order the presets first name them
+        var presets = this.configData.getPresets();
+        var groups = ConfigPreset.groups(presets);
+        var font = Minecraft.getInstance().font;
+        int nameWidth = groups.stream().mapToInt(g -> font.width(ConfigPreset.displayGroup(this.configData, g))).max().orElse(0);
+        for (var group : groups)
+            root.addEntry(this.presetButtons(group, presets.stream().filter(p -> p.group().equals(group)).toList(), nameWidth, parent));
         for (var prop : this.configData.getSpecification()) {
             if (prop instanceof ConfigElement.PropertyGroup group) {
                 root.addEntry(this.generate(entryBuilder, group, this.configData, docsUrl(group)).build());
@@ -217,6 +228,86 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
         }
 
         return fieldBuilder;
+    }
+
+    /**
+     * A row with a button for each of a group's presets, named for the group.
+     */
+    private AbstractConfigListEntry<?> presetButtons(String group, List<ConfigPreset> presets, int nameWidth, Screen parent) {
+        var choices = new ArrayList<PresetButtonsEntry.Choice>();
+        for (var preset : presets) {
+            var label = Component.literal(preset.displayName(this.configData));
+            var description = Component.literal(preset.displayDescription(this.configData)).withStyle(TOOLTIP_STYLE);
+            var tooltip = wrap(description).toArray(new Component[0]);
+            choices.add(new PresetButtonsEntry.Choice(label, tooltip, () -> this.confirmPreset(preset, parent)));
+        }
+        var key = ConfigPreset.groupLanguageKey(this.configData, group);
+        var description = Localization.loadIfPresent(key + ".tooltip").orElse("");
+        var tooltip = wrap(Component.literal(description).withStyle(TOOLTIP_STYLE)).toArray(new Component[0]);
+        var name = Component.literal(ConfigPreset.displayGroup(this.configData, group)).withStyle(GROUP_STYLE);
+        return new PresetButtonsEntry(name, tooltip, choices, nameWidth);
+    }
+
+    /**
+     * Asks whether to apply a preset, listing what it would change. Cloth's entries each keep their own copy of a
+     * value, and save every one, so the preset is applied to the configuration, saved, and the screen built again to
+     * show it; changes not yet saved on the screen are lost, which the question says when there are any.
+     */
+    private void confirmPreset(ConfigPreset preset, Screen parent) {
+        var minecraft = Minecraft.getInstance();
+        var current = minecraft.screen;
+        var root = this.configData.getTranslationRoot();
+        var name = preset.displayName(this.configData);
+        var title = Component.literal(Localization.load(root + ".presets.confirm").formatted(name));
+        var changes = preset.changes(this.configData);
+        var message = Component.literal(Localization.load(root + (changes.isEmpty() ? ".presets.confirm.none" : ".presets.confirm.message")));
+        if (current instanceof AbstractConfigScreen screen && screen.isEdited())
+            message.append("\n\n").append(Component.literal(Localization.load(root + ".presets.confirm.unsaved")).withStyle(RESTART_STYLE));
+
+        minecraft.setScreen(new PresetConfirmScreen(title, message, changes.isEmpty() ? null : changeList(changes), apply -> {
+            if (!apply) {
+                minecraft.setScreen(current);
+                return;
+            }
+            try {
+                this.configData.applyPreset(preset);
+            } catch (Throwable t) {
+                Library.LOGGER.error(t, "Unable to save configuration");
+            }
+            minecraft.setScreen(this.create(parent));
+        }));
+    }
+
+    /**
+     * A preset's changes, a line each ("Name: old -> new"), under the name of the group they are in. Groups are in
+     * the order the preset first lists one of their settings.
+     */
+    @SuppressWarnings("unchecked")
+    private static Component changeList(List<ConfigPreset.Change> changes) {
+        var groups = new LinkedHashMap<Optional<ConfigElement.PropertyGroup>, List<ConfigPreset.Change>>();
+        for (var change : changes)
+            groups.computeIfAbsent(Optional.ofNullable(change.group()), g -> new ArrayList<>()).add(change);
+
+        // A value with a color of its own (Yes and No) keeps it; the rest take the tooltip's
+        var text = Component.empty().withStyle(TOOLTIP_STYLE);
+        var lines = new ArrayList<Component>();
+        for (var entry : groups.entrySet()) {
+            if (!lines.isEmpty())
+                lines.add(Component.empty());
+            entry.getKey().ifPresent(group -> lines.add(text(group.getLanguageKey(), GROUP_STYLE)));
+            for (var change : entry.getValue()) {
+                var property = (ConfigElement.PropertyValue<Object>) change.property();
+                lines.add(Component.literal("  ")
+                        .append(text(property.getLanguageKey(), PROPERTY_STYLE))
+                        .append(": ")
+                        .append(property.displayValue(change.from()))
+                        .append(" → ")
+                        .append(property.displayValue(change.to())));
+            }
+        }
+        for (int i = 0; i < lines.size(); i++)
+            text.append(i == 0 ? Component.empty() : Component.literal("\n")).append(lines.get(i));
+        return text;
     }
 
     /**

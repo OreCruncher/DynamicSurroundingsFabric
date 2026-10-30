@@ -411,6 +411,9 @@ class DsConfigFuzzTests {
                     var parts = relative.split("/");
                     if (parts.length < 3 || !parts[1].equals("dsconfigs"))
                         continue;
+                    // Not read with a codec: PresetLoaderTests covers it
+                    if (parts[2].equals("presets.json"))
+                        continue;
                     var kind = parts[2].equals("tags") ? TAGS : switch (parts[2]) {
                         case "biomes.json" -> BIOMES;
                         case "blocks.json" -> BLOCKS;

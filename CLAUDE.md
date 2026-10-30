@@ -88,7 +88,20 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   `ModShader.run` / `RenderFailSafe`: a failure is logged once, state restored, and the effect turned off until
   resources reload.
 - Config: moving a property between groups → annotate the new field `@MovedFrom({"newest.old.path", "older.path"})`;
-  old values carry over on load. Translation keys follow `dsurround.config.<group>.<field>[.tooltip]`.
+  old values carry over on load (also rename the path in `dsconfigs/presets.json`). Translation keys follow
+  `dsurround.config.<group>.<field>[.tooltip]`.
+- Presets (`dsconfigs/presets.json`, `lib/config/ConfigPreset`, loaded on reload by `config/PresetLoader` into
+  `ConfigurationData.setPresets`; a row of buttons from `compat/PresetButtonsEntry` per `group`, 5 a row: features (the
+  default) and performance (Low/Medium/High, values measured with 1.21.11's bench); `/dsconfig preset [name]`): one-shot
+  partial sets of property values; they add up, and nothing remembers which was applied. Cloth's entries keep their own
+  copies of values, so applying one saves and rebuilds the screen. Its confirmation (`compat/PresetConfirmScreen`) lists
+  what would change (`ConfigPreset.changes`), by group, scrolling. Modpacks add presets in any namespace's
+  `dsconfigs/presets.json` (resource pack or `config/dsurround/configs/<ns>/`): ours are read first, a same id replaces,
+  `"hidden": true` removes, inline `name`/`description` beat the lang keys. Bad values, Scary Content and
+  restart-needing settings are dropped and logged at load. Feature presets never touch the HUD, quality or ranges;
+  performance presets also set waterfall mist/froth, dynamic clouds and flame/firefly lights, features too, so a feature
+  preset after Low turns them back on (accepted) (`PresetLoaderTests`; `DsConfigFuzzTests` skips the file, which has no
+  codec).
 - Fabulous graphics draws translucent things, particles and weather to targets of their own, which vanilla's
   `transparency` post shader lays over the scene sorted by each target's depth, taking colours as premultiplied:
   `behind * (1 - alpha) + colour`, and skipping alpha 0. So anything we draw there must leave sensible alpha and depth:
