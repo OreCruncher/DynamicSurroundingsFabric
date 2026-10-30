@@ -158,6 +158,9 @@ def table(title, counter, total, top, unit=""):
 
 # How the client tick's handlers could run in parallel: these first, as now, then everything else at once; a chain
 # stays in order on one thread (lightning hands the cloud handler its strikes). Names are AbstractClientHandler's
+# Render timers measured once a tick rather than once a frame, in recordings from before the events said so (perTick)
+TICK_TIMERS = ("- Field",)
+
 FIRST_HANDLERS = ("Scanners",)
 HANDLER_CHAINS = (("Lightning Handler", "Cloud Handler"),)
 
@@ -393,11 +396,12 @@ def paused_in(pauses, at, peak, window_ms=2000.0):
 def frame_times(jfr, recording):
     """
     Prints the frames (dsurround.Frames, a second's each), and gives the mean time drawing a frame took on the GPU and
-    CPU, for the render timers' shares; zeros for a recording from before frames were recorded
+    CPU, for the render timers' shares, and the mean frame's length; zeros for a recording from before frames were
+    recorded
     """
     seconds = [f for _, f, _ in events(jfr, recording, ["dsurround.Frames"], 1)]
     if not seconds:
-        return 0.0, 0.0
+        return 0.0, 0.0, 0.0
     count = sum(int(number(f.get("frames"))) for f in seconds)
     # Each second's mean weighed by its frames: the recording's mean frame
     mean = sum(number(f.get("mean")) * int(number(f.get("frames"))) for f in seconds) / count
@@ -410,7 +414,7 @@ def frame_times(jfr, recording):
     print(f"  a second's 95th percentile: median {percentile(p95s, 0.5):.2f}, worst {p95s[-1]:.2f}; "
           f"longest frame {max(number(f.get('max')) for f in seconds):.2f}")
     print(f"  drawing a frame (the world and the screen over it), mean: GPU {gpu:.3f}, CPU {cpu:.3f}")
-    return gpu, cpu
+    return gpu, cpu, mean
 
 
 def main():
@@ -448,7 +452,7 @@ def main():
             for row in unusual:
                 print(f"    {row.get('name', '?').strip(chr(34))}: {row.get('state', '?').strip(chr(34))}")
 
-    frame_gpu, frame_cpu = frame_times(jfr, recording)
+    frame_gpu, frame_cpu, frame_ms = frame_times(jfr, recording)
 
     timers = defaultdict(list)
     for _, fields, _ in events(jfr, recording, ["dsurround.RenderTimer"], 1):
@@ -464,12 +468,17 @@ def main():
         print("\n== Render timers (ms; mean of the periodic averages, the running average at the end, highest peak; "
               "cpu peak leaves out those a JVM pause could make half of, and paused says how many; "
               "count: how many there were to draw a frame, mean, where the effect counts; gpu %, cpu %: the means' share "
-              "of drawing a frame, where the recording has the frames)")
+              "of drawing a frame, where the recording has the frames; * timed once a tick, not a frame: its ms are a tick's, "
+              "its shares those of its time a frame, 20 ticks a second spread over the frames)")
         print(f"  {'effect':28} {'gpu mean':>8} {'gpu end':>8} {'gpu peak':>9} "
               f"{'cpu mean':>8} {'cpu end':>8} {'cpu peak':>9} {'paused':>6} {'count':>8} {'gpu %':>6} {'cpu %':>6}")
         share = lambda part, whole: f"{100 * part / whole:6.1f}" if whole else f"{'-':>6}"
         for effect, rows in timers.items():
             rows.sort(key=lambda r: started(r.get("startTime", "")))
+            # Recordings from before the flag have the clouds' field as the only timer measured on the tick
+            per_tick = rows[-1].get("perTick") == "true" if "perTick" in rows[-1] else effect in TICK_TIMERS
+            # A tick's time as a frame's: a tick is 50 ms, so ticks a frame is the frame's length over 50
+            frame_share = (lambda part, whole: share(part * frame_ms / 50, whole)) if per_tick else share
             mean = lambda key: sum(number(r.get(key)) for r in rows) / len(rows)
             last = lambda key: number(rows[-1].get(key))
             peak = lambda key: max(number(r.get(key)) for r in rows)
@@ -480,9 +489,10 @@ def main():
             # Recordings from before the count have none; an effect that doesn't count writes NaN, which jfr prints as N/A
             counts = [number(r["count"]) for r in rows if r.get("count") and r["count"] not in ("N/A", "NaN")]
             count = f"{sum(counts) / len(counts):8.0f}" if counts else f"{'-':>8}"
-            print(f"  {effect:28} {mean('gpuAverage'):8.3f} {last('gpuAverage'):8.3f} {peak('gpuPeak'):9.3f} "
+            label = effect + " *" if per_tick else effect
+            print(f"  {label:28} {mean('gpuAverage'):8.3f} {last('gpuAverage'):8.3f} {peak('gpuPeak'):9.3f} "
                   f"{mean('cpuAverage'):8.3f} {last('cpuAverage'):8.3f} {max(kept, default=0.0):9.3f} {paused:6} {count} "
-                  f"{share(mean('gpuAverage'), frame_gpu)} {share(mean('cpuAverage'), frame_cpu)}")
+                  f"{frame_share(mean('gpuAverage'), frame_gpu)} {frame_share(mean('cpuAverage'), frame_cpu)}")
 
     handler_ticks(jfr, recording, args)
     random_block_samples(jfr, recording, args)

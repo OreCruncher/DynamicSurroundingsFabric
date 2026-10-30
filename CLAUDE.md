@@ -39,8 +39,10 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   only the one you launched.
 - Profiling: `/dsprofile [scene] [seconds]` records a JFR file, zipped, to `config/dsurround/profiles` with the mod's
   GPU/CPU render timers in it (`dsurround.RenderTimer` events, set against the whole frame's drawing and the frames'
-  lengths in `dsurround.Frames`, once a second; precipitation's carry a `count` of drops/spots a frame,
-  so two recordings can be checked for the same storm), each client tick handler's time every tick
+  lengths in `dsurround.Frames`, once a second; a timer of something run on the tick (the clouds' field) is made with
+  `perTick`, and recordings set its time a frame (20 a second over the frames) against the frame's; precipitation's
+  carry a `count` of drops/spots a frame, so two recordings can be checked for the same storm), each client tick
+  handler's time every tick
   (`dsurround.HandlerTick`, through `profiling/HandlerTicks`), what random block effects sampled, found, started,
   spawned and played by 1-block distance shell once a second (`dsurround.RandomBlockSamples`, through `profiling/RandomBlockSamples`),
   what it was made on (`dsurround.Environment`: graphics card, settings, frame size, frame rate limit, the potato run used) and each

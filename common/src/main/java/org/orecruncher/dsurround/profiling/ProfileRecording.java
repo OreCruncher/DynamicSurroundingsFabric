@@ -168,6 +168,7 @@ final class ProfileRecording {
             event.cpuAverage = timer.getCpuMSecs();
             event.cpuPeak = timer.getCpuPeakMSecs();
             event.count = timer.getCount();
+            event.perTick = timer.isPerTick();
             event.commit();
         }
     }
