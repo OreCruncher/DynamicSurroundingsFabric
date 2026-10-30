@@ -21,9 +21,9 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.SingleQuadParticle;
 import net.minecraft.client.renderer.BindGroupLayouts;
-import net.minecraft.client.renderer.MappableRingBuffer;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.system.MemoryStack;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.DepthCopy;
 import org.orecruncher.dsurround.effects.ModShader;
@@ -176,10 +176,10 @@ public final class SoftParticles {
     // The pipeline the particle layer being drawn was set to (see MixinQuadParticleFeatureRenderer)
     @Nullable
     private static RenderPipeline currentPipeline;
+    // What it holds doesn't change while the device lives: made once, with no MappableRingBuffer (rotating one sets a
+    // fence, which held the GPU idle for 2 ms a frame after the aurora on 1.21.11, AMD)
     @Nullable
-    private static MappableRingBuffer depthInfo;
-    // Whether the depth information has been written this frame
-    private static boolean depthInfoWritten;
+    private static GpuBuffer depthInfo;
 
     private SoftParticles() {
     }
@@ -238,10 +238,7 @@ public final class SoftParticles {
             return;
         SHADER.run(() -> {
             DEPTH_COPY.copyFrom(target);
-            if (!depthInfoWritten) {
-                writeDepthInfo();
-                depthInfoWritten = true;
-            }
+            makeDepthInfo();
             depthCaptured = true;
         }, () -> depthCaptured = false);
     }
@@ -256,10 +253,7 @@ public final class SoftParticles {
         depthCaptured = false;
         try {
             DEPTH_COPY.copyFrom(source);
-            if (!depthInfoWritten) {
-                writeDepthInfo();
-                depthInfoWritten = true;
-            }
+            makeDepthInfo();
             depthCaptured = true;
         } catch (VirtualMachineError fatal) {
             throw fatal;
@@ -274,7 +268,7 @@ public final class SoftParticles {
      */
     public static void bindSoftDepth(RenderPass pass) {
         bindSceneDepth(pass);
-        pass.setUniform(SOFT_PARTICLE_INFO, depthInfo.currentBuffer());
+        pass.setUniform(SOFT_PARTICLE_INFO, depthInfo);
     }
 
     /**
@@ -355,19 +349,18 @@ public final class SoftParticles {
      * Called after the particles are drawn: the next frame gets a new copy.
      */
     public static void endFrame() {
-        if (depthInfoWritten && depthInfo != null)
-            depthInfo.rotate();
-        depthInfoWritten = false;
         depthCaptured = false;
         currentPipeline = null;
     }
 
-    private static void writeDepthInfo() {
-        if (depthInfo == null)
-            depthInfo = new MappableRingBuffer(() -> "Dynamic Surroundings depth info UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_MAP_WRITE, DEPTH_INFO_SIZE);
-        var zeroToOne = RenderSystem.getDevice().getDeviceInfo().isZZeroToOne();
-        try (var view = depthInfo.currentBuffer().map(false, true)) {
-            Std140Builder.intoBuffer(view.data()).putFloat(zeroToOne ? 1F : 0F);
+    private static void makeDepthInfo() {
+        if (depthInfo != null)
+            return;
+        var device = RenderSystem.getDevice();
+        var zeroToOne = device.getDeviceInfo().isZZeroToOne();
+        try (var stack = MemoryStack.stackPush()) {
+            var data = Std140Builder.onStack(stack, DEPTH_INFO_SIZE).putFloat(zeroToOne ? 1F : 0F).get();
+            depthInfo = device.createBuffer(() -> "Dynamic Surroundings depth info UBO", GpuBuffer.USAGE_UNIFORM, data);
         }
     }
 }

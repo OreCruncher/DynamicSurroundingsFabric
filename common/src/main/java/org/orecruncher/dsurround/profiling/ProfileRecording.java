@@ -4,7 +4,9 @@ import jdk.jfr.Configuration;
 import jdk.jfr.FlightRecorder;
 import jdk.jfr.Recording;
 import jdk.jfr.consumer.RecordingFile;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.effects.RenderTimers;
+import org.orecruncher.dsurround.effects.aurora.Aurora;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,8 +23,8 @@ import java.util.Set;
  * ({@link EnvironmentEvent}, and a {@link FeatureEvent} for each optional hook, conflict and setting), the mod's render
  * timers once a second ({@link RenderTimerEvent}), the frames' lengths and the whole frame's drawing time once a second
  * ({@link FramesEvent}), each client tick handler's time every tick
- * ({@link HandlerTickEvent}) and what random block effects did by distance once a second
- * ({@link RandomBlockSamplesEvent}). The only class besides those events to use {@code jdk.jfr}, so nothing loads it until a
+ * ({@link HandlerTickEvent}), what random block effects did by distance once a second
+ * ({@link RandomBlockSamplesEvent}) and the classic aurora's shape and screen coverage once a second ({@link AuroraEvent}). The only class besides those events to use {@code jdk.jfr}, so nothing loads it until a
  * recording is made.
  * <p>
  * Players may send recordings to the mod's authors, so what is private is kept out three times over: those events are
@@ -111,6 +113,9 @@ final class ProfileRecording {
         var samples = new SampleTotals();
         Runnable sampleWriter = samples::write;
         FlightRecorder.addPeriodicEvent(RandomBlockSamplesEvent.class, sampleWriter);
+        var auroras = new AuroraTotals();
+        Runnable auroraWriter = auroras::write;
+        FlightRecorder.addPeriodicEvent(AuroraEvent.class, auroraWriter);
         try {
             try (var recording = new Recording(settings)) {
                 recording.setName("Dynamic Surroundings");
@@ -121,18 +126,22 @@ final class ProfileRecording {
                 recording.enable(FeatureEvent.class);
                 recording.enable(HandlerTickEvent.class);
                 recording.enable(RandomBlockSamplesEvent.class).withPeriod(Duration.ofSeconds(1));
+                recording.enable(AuroraEvent.class).withPeriod(Duration.ofSeconds(1));
                 recording.start();
                 HandlerTicks.start(ProfileRecording::writeHandlerTick);
                 FrameTimes.start();
                 RandomBlockSamples.start(samples::add);
+                AuroraSamples.start(auroras::add);
                 EnvironmentEvent.write(environment);
                 FeatureEvent.write(environment.features());
                 Thread.sleep(length.toMillis());
                 HandlerTicks.stop();
                 FrameTimes.stop();
                 RandomBlockSamples.stop();
+                AuroraSamples.stop();
                 // What has been counted since the last second's write
                 samples.write();
+                auroras.write();
                 recording.stop();
                 recording.dump(unfinished);
             }
@@ -146,9 +155,11 @@ final class ProfileRecording {
             HandlerTicks.stop();
             FrameTimes.stop();
             RandomBlockSamples.stop();
+            AuroraSamples.stop();
             FlightRecorder.removePeriodicEvent(timers);
             FlightRecorder.removePeriodicEvent(frames);
             FlightRecorder.removePeriodicEvent(sampleWriter);
+            FlightRecorder.removePeriodicEvent(auroraWriter);
             Files.deleteIfExists(unfinished);
         }
     }
@@ -235,6 +246,51 @@ final class ProfileRecording {
             }
             Arrays.fill(this.totals, 0);
             this.ticks = 0;
+        }
+    }
+
+    /**
+     * The classic aurora's frames added up between the render thread's draws and the recorder's writes, once a second
+     */
+    private static final class AuroraTotals {
+        private @Nullable Aurora aurora;
+        private int frames;
+        private double strength;
+        private double pixels;
+        private double share;
+
+        synchronized void add(Aurora aurora, float strength, double pixels, int screenPixels) {
+            this.aurora = aurora;
+            this.frames++;
+            this.strength += strength;
+            this.pixels += pixels;
+            this.share += screenPixels > 0 ? pixels / screenPixels : 0;
+        }
+
+        /**
+         * An event for the aurora drawn since the last write, if it was
+         */
+        synchronized void write() {
+            var drawn = this.aurora;
+            if (drawn == null || this.frames == 0)
+                return;
+            var event = new AuroraEvent();
+            event.frames = this.frames;
+            event.bands = drawn.bands();
+            event.distance = drawn.distance();
+            event.length = drawn.length();
+            event.altitude = drawn.altitude();
+            event.height = drawn.height();
+            event.heading = (float) Math.toDegrees(drawn.heading());
+            event.strength = (float) (this.strength / this.frames);
+            event.pixels = this.pixels / this.frames;
+            event.screenShare = this.share / this.frames;
+            event.commit();
+            this.aurora = null;
+            this.frames = 0;
+            this.strength = 0;
+            this.pixels = 0;
+            this.share = 0;
         }
     }
 }

@@ -3,7 +3,8 @@
 Summarizes a `/dsprofile` recording (config/dsurround/profiles/*.zip or the .jfr inside): what it was made on (and
 the optional hooks, conflicts and settings that aren't as they are out of the box), the frames (how long they took, and
 drawing one on the GPU and CPU), the mod's render timers (each as a share of drawing a frame), the
-client tick's handlers (and what running them in parallel could gain), what random block effects did by distance (each
+client tick's handlers (and what running them in parallel could gain), the classic aurora's shape and how much of the
+screen it covered (against its GPU time), what random block effects did by distance (each
 rate against what the sampler means it to be), where each busy thread spends its time (by
 method and by mod package), what allocates, and GC.
 
@@ -343,6 +344,30 @@ def random_block_samples(jfr, recording, args):
               f"{'  ' + '; '.join(notes) if notes else ''}")
 
 
+def aurora_coverage(jfr, recording, timer_rows):
+    seconds = [fields for _, fields, _ in events(jfr, recording, ["dsurround.Aurora"], 1)]
+    if not seconds:
+        return
+    frames = sum(int(number(f.get("frames"))) for f in seconds)
+    # Means over the frames drawn, each second weighted by its frames
+    mean = lambda key: sum(number(f.get(key)) * int(number(f.get("frames"))) for f in seconds) / frames
+    shapes = Counter((int(number(f.get("bands"))), round(number(f.get("distance")), 2), round(number(f.get("length")), 2),
+                      round(number(f.get("altitude")), 2), round(number(f.get("height")), 2),
+                      round(number(f.get("heading")), 1)) for f in seconds)
+    shares = sorted(number(f.get("screenShare")) for f in seconds)
+    print(f"\n== Classic aurora ({len(seconds)} seconds drawn, {frames} frames; sky units; coverage counts a pixel as often "
+          f"as bands overlap it)")
+    for (bands, distance, length, altitude, height, heading), count in shapes.most_common():
+        print(f"  {bands} band{'s' if bands != 1 else ''}, distance {distance}, length {length}, altitude {altitude}, "
+              f"height {height}, heading {heading} deg ({count} s)")
+    pixels = mean("pixels")
+    print(f"  strength {mean('strength'):.2f}; covered a frame: mean {pixels / 1e6:.2f} Mpx, "
+          f"{100 * mean('screenShare'):.0f}% of the screen (seconds from {100 * shares[0]:.0f}% to {100 * shares[-1]:.0f}%)")
+    if timer_rows and pixels > 0:
+        gpu = sum(number(r.get("gpuAverage")) for r in timer_rows) / len(timer_rows)
+        print(f"  GPU {gpu:.3f} ms a frame: {1e6 * gpu / pixels:.2f} ns a covered pixel")
+
+
 def callers(jfr, recording, args):
     mods, nearest, ours, total = Counter(), Counter(), Counter(), 0
     for _, fields, frames in events(jfr, recording, ["jdk.ExecutionSample"]):
@@ -484,6 +509,7 @@ def main():
                   f"{mean('cpuAverage'):8.3f} {last('cpuAverage'):8.3f} {max(kept, default=0.0):9.3f} {paused:6} {count} "
                   f"{share(mean('gpuAverage'), frame_gpu)} {share(mean('cpuAverage'), frame_cpu)}")
 
+    aurora_coverage(jfr, recording, timers.get("Aurora"))
     handler_ticks(jfr, recording, args)
     random_block_samples(jfr, recording, args)
 

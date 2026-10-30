@@ -18,11 +18,11 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BindGroupLayouts;
-import net.minecraft.client.renderer.MappableRingBuffer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
+import org.lwjgl.system.MemoryStack;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.AuroraQuality;
 import org.orecruncher.dsurround.effects.ModShader;
@@ -142,8 +142,10 @@ public final class RealisticAuroraRenderer {
 
     @Nullable
     private static DynamicTexture noise;
+    // One buffer rewritten each frame, not a MappableRingBuffer: rotating that one sets a fence, which held the GPU idle
+    // for 2 ms a frame after the classic aurora on 1.21.11 (AMD)
     @Nullable
-    private static MappableRingBuffer info;
+    private static GpuBuffer info;
     // Where it is drawn at FAST, at a share of the screen's size
     @Nullable
     private static TextureTarget reduced;
@@ -198,11 +200,10 @@ public final class RealisticAuroraRenderer {
             pass.setPipeline(PIPELINE);
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", transforms);
-            pass.setUniform(INFO, info.currentBuffer());
+            pass.setUniform(INFO, info);
             pass.bindTexture(NOISE_SAMPLER, noiseTexture().getTextureView(), RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
             pass.draw(3, 1, 0, 0);
         }
-        info.rotate();
 
         if (fast) {
             COMPOSITE.run(() -> {
@@ -235,11 +236,11 @@ public final class RealisticAuroraRenderer {
     private static void writeInfo(RealisticAurora aurora, RealisticAurora.Moment moment, RealisticAuroraMotion motion,
                                   float shadow, float washout, float alpha, float time, int height) {
         if (info == null)
-            info = new MappableRingBuffer(() -> "Dynamic Surroundings aurora (realistic) UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_MAP_WRITE, INFO_SIZE);
+            info = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings aurora (realistic) UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, INFO_SIZE);
         var arcs = aurora.arcs();
         int count = Math.min(arcs.size(), RealisticAurora.MAX_ARCS);
-        try (var view = info.currentBuffer().map(false, true)) {
-            var builder = Std140Builder.intoBuffer(view.data())
+        try (var stack = MemoryStack.stackPush()) {
+            var builder = Std140Builder.onStack(stack, INFO_SIZE)
                     .putVec4(GREEN[0] * moment.green(), GREEN[1] * moment.green(), GREEN[2] * moment.green(), washout)
                     .putVec4(RED[0], RED[1], RED[2], 0F)
                     .putVec4(FRINGE[0], FRINGE[1], FRINGE[2], 0F)
@@ -275,6 +276,7 @@ public final class RealisticAuroraRenderer {
             }
             for (int i = 0; i < RealisticAurora.MAX_ARCS; i++)
                 builder.putVec4(i < count ? arcs.get(i).bow() : 0F, 0F, 0F, 0F);
+            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(info.slice(), builder.get());
         }
     }
 

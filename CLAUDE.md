@@ -48,6 +48,8 @@ checking in game.
   so two recordings can be checked for the same storm), each client tick handler's time every tick
   (`dsurround.HandlerTick`, through `profiling/HandlerTicks`), what random block effects sampled, found, started,
   spawned and played by 1-block distance shell once a second (`dsurround.RandomBlockSamples`, through `profiling/RandomBlockSamples`),
+  the classic aurora's shape (bands, distance, height...) and the pixels its quads covered a frame, overdraw counted,
+  once a second while drawn (`dsurround.Aurora`, through `profiling/AuroraSamples`; `AuroraCoverage` clips the quads),
   what it was made on (`dsurround.Environment`: graphics card, settings, frame size, frame rate limit, the potato run used) and each
   optional hook's status, conflict and non-text setting (`dsurround.Feature`, from `ProfileFeature`); unzip
   it and read it with the JDK's `jfr` (`jfr print --json --events ...`), or summarize it with
@@ -55,7 +57,8 @@ checking in game.
   timer measured rarely, once a second or less, trust the end, not the mean; handler percentiles per tick (ticks a GC pause or other JVM stop landed in left out) and what
   running them in parallel would gain at best, `--dispatch-us`/`--worth-ms` for its cost and threshold, dependencies
   in `FIRST_HANDLERS`/`HANDLER_CHAINS`; random block effects' rate a block by distance against what
-  `RandomBlockSampler` means (its constants are copied into the script: keep them in step), `--shell-width` rows; threads, mod packages, our frames, allocation, GC;
+  `RandomBlockSampler` means (its constants are copied into the script: keep them in step), `--shell-width` rows; the
+  classic aurora's shape and coverage against its GPU time (ns a covered pixel); threads, mod packages, our frames, allocation, GC;
   `--callers <method>` for who calls something).
   Each zip also holds a short summary (`ProfileSummary`, made from the finished recording, under 1900 characters to
   fit a Discord message), which chat offers as a [Copy summary] button with a headline (fps, costliest effect's share).
@@ -101,6 +104,10 @@ checking in game.
 - Uniform blocks: `Std140Builder.putVec3` always takes 16 bytes, but std140 puts a following `float` in a `vec3`'s
   fourth slot. Write a `vec3` and the `float` after it as one `putVec4` (and `putVec4()` in the size), or every value
   after it is read 4 bytes off (ground fog drew nothing until this was found).
+  Our uniform blocks are plain `GpuBuffer`s (`USAGE_UNIFORM | USAGE_COPY_DST`, written each frame with `writeToBuffer`
+  from `Std140Builder.onStack`; made once with their data where it doesn't change while the device lives), not
+  `MappableRingBuffer`s: its `rotate()` sets a fence, and the one after the aurora held the GPU idle 2.2 ms a frame on
+  1.21.11 (AMD). 26.2's recordings didn't show it, but other drivers might.
 - Realistic aurora (`effects/aurora/RealisticAurora*`, `shaders/core/aurora_realistic.*`; MIGRATION.md has the
   whole): the Java model mirrors the shader (`Arc.northAt` is `arc_north`, constants such as `FIELD_CELL`), and tests
   check the shader's text and constants against it, so change both. Its uniform block is in

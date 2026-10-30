@@ -18,16 +18,17 @@ import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BindGroupLayouts;
-import net.minecraft.client.renderer.MappableRingBuffer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.lwjgl.system.MemoryStack;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.NoiseTexture;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.profiling.AuroraSamples;
 
 import java.nio.ByteBuffer;
 import java.util.Optional;
@@ -92,8 +93,14 @@ public final class AuroraRenderer {
     private static ByteBufferBuilder meshBytes;
     @Nullable
     private static GpuBuffer vertexBuffer;
+    // One buffer rewritten each frame, not a MappableRingBuffer: rotating that one sets a fence, which held the GPU idle
+    // for 2 ms a frame after the aurora on 1.21.11 (AMD)
     @Nullable
-    private static MappableRingBuffer auroraInfo;
+    private static GpuBuffer auroraInfo;
+
+    // How much of the screen the quads cover, worked out only while /dsprofile records
+    private static final AuroraCoverage COVERAGE = new AuroraCoverage();
+    private static final Matrix4f CLIP = new Matrix4f();
 
     private AuroraRenderer() {
     }
@@ -127,7 +134,14 @@ public final class AuroraRenderer {
         if (meshBytes == null)
             meshBytes = new ByteBufferBuilder(aurora.bands() * SEGMENTS * 4 * DefaultVertexFormat.POSITION_TEX_COLOR.getVertexSize());
         var builder = new BufferBuilder(meshBytes, PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-        buildCurtains(builder, aurora, time);
+        var target = Minecraft.getInstance().gameRenderer.mainRenderTarget();
+        var coverage = AuroraSamples.isRecording() ? COVERAGE : null;
+        if (coverage != null) {
+            // The sky is drawn with the camera's rotation and projection, the quads scaled from sky units to blocks
+            Minecraft.getInstance().gameRenderer.mainCamera().getViewRotationProjectionMatrix(CLIP).scale(Aurora.SCALE);
+            coverage.start(CLIP);
+        }
+        buildCurtains(builder, aurora, time, coverage);
 
         int indexCount;
         try (var mesh = builder.build()) {
@@ -138,18 +152,22 @@ public final class AuroraRenderer {
         }
 
         if (auroraInfo == null)
-            auroraInfo = new MappableRingBuffer(() -> "Dynamic Surroundings aurora UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_MAP_WRITE, AURORA_INFO_SIZE);
+            auroraInfo = device.createBuffer(() -> "Dynamic Surroundings aurora UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, AURORA_INFO_SIZE);
         var palette = aurora.palette();
-        try (var view = auroraInfo.currentBuffer().map(false, true)) {
-            Std140Builder.intoBuffer(view.data())
+        try (var stack = MemoryStack.stackPush()) {
+            var data = Std140Builder.onStack(stack, AURORA_INFO_SIZE)
                     .putVec4(palette.bottom().red(), palette.bottom().green(), palette.bottom().blue(), 1F)
                     .putVec4(palette.middle().red(), palette.middle().green(), palette.middle().blue(), 1F)
                     .putVec4(palette.top().red(), palette.top().green(), palette.top().blue(), 1F)
                     .putFloat(time)
-                    .putFloat(Math.clamp(alpha * aurora.brightness(), 0F, 1F));
+                    .putFloat(Math.clamp(alpha * aurora.brightness(), 0F, 1F))
+                    .get();
+            device.createCommandEncoder().writeToBuffer(auroraInfo.slice(), data);
         }
+        if (coverage != null)
+            AuroraSamples.drawn(aurora, Math.clamp(alpha * aurora.brightness(), 0F, 1F),
+                    coverage.pixels(target.width, target.height), target.width * target.height);
 
-        var target = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         var transforms = RenderSystem.getDynamicUniforms().writeTransform(viewMatrix);
         var indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
         var indexBuffer = indices.getBuffer(indexCount);
@@ -159,13 +177,12 @@ public final class AuroraRenderer {
             pass.setPipeline(PIPELINE);
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", transforms);
-            pass.setUniform(AURORA_INFO, auroraInfo.currentBuffer());
+            pass.setUniform(AURORA_INFO, auroraInfo);
             pass.bindTexture(NOISE_SAMPLER, noise().getTextureView(), RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
             pass.setVertexBuffer(0, vertexBuffer.slice());
             pass.setIndexBuffer(indexBuffer, indices.type());
             pass.drawIndexed(indexCount, 1, 0, 0, 0);
         }
-        auroraInfo.rotate();
     }
 
     private static void uploadVertices(ByteBuffer vertices) {
@@ -178,7 +195,7 @@ public final class AuroraRenderer {
         device.createCommandEncoder().writeToBuffer(vertexBuffer.slice(), vertices);
     }
 
-    private static void buildCurtains(BufferBuilder builder, Aurora aurora, float time) {
+    private static void buildCurtains(BufferBuilder builder, Aurora aurora, float time, @Nullable AuroraCoverage coverage) {
         // Farthest curtain first; with additive blending the order doesn't change the result, but it's tidy
         for (int band = aurora.bands() - 1; band >= 0; band--) {
             var bandAlpha = aurora.bandBrightness(band);
@@ -201,6 +218,8 @@ public final class AuroraRenderer {
                 vertex(builder, BOTTOM.x, BOTTOM.y, BOTTOM.z, u, 0F, a);
                 vertex(builder, TOP.x, TOP.y, TOP.z, u, 1F, a);
                 vertex(builder, ptx, pty, ptz, prevU, 1F, prevA);
+                if (coverage != null)
+                    coverage.quad(pbx, pby, pbz, BOTTOM.x, BOTTOM.y, BOTTOM.z, TOP.x, TOP.y, TOP.z, ptx, pty, ptz);
 
                 pbx = BOTTOM.x; pby = BOTTOM.y; pbz = BOTTOM.z;
                 ptx = TOP.x; pty = TOP.y; ptz = TOP.z;

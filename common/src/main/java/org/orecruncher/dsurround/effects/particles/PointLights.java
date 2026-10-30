@@ -19,8 +19,8 @@ import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.pipeline.BindGroupLayout;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BindGroupLayouts;
-import net.minecraft.client.renderer.MappableRingBuffer;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.system.MemoryStack;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.ModShader;
@@ -128,8 +128,10 @@ public final class PointLights {
     private static ByteBufferBuilder meshBytes;
     @Nullable
     private static GpuBuffer vertexBuffer;
+    // What it holds doesn't change while the device lives: made once, with no MappableRingBuffer (rotating one sets a
+    // fence, which held the GPU idle for 2 ms a frame after the aurora on 1.21.11, AMD)
     @Nullable
-    private static MappableRingBuffer lightInfo;
+    private static GpuBuffer lightInfo;
 
     private PointLights() {
     }
@@ -257,11 +259,12 @@ public final class PointLights {
             uploadVertices(mesh.vertexBuffer());
         }
 
-        if (lightInfo == null)
-            lightInfo = new MappableRingBuffer(() -> "Dynamic Surroundings point light UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_MAP_WRITE, POINT_LIGHT_INFO_SIZE);
-        var zeroToOne = device.getDeviceInfo().isZZeroToOne();
-        try (var view = lightInfo.currentBuffer().map(false, true)) {
-            Std140Builder.intoBuffer(view.data()).putFloat(zeroToOne ? 1F : 0F);
+        if (lightInfo == null) {
+            var zeroToOne = device.getDeviceInfo().isZZeroToOne();
+            try (var stack = MemoryStack.stackPush()) {
+                var data = Std140Builder.onStack(stack, POINT_LIGHT_INFO_SIZE).putFloat(zeroToOne ? 1F : 0F).get();
+                lightInfo = device.createBuffer(() -> "Dynamic Surroundings point light UBO", GpuBuffer.USAGE_UNIFORM, data);
+            }
         }
 
         var indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
@@ -273,12 +276,11 @@ public final class PointLights {
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", transforms);
             SoftParticles.bindSceneDepth(pass);
-            pass.setUniform(POINT_LIGHT_INFO, lightInfo.currentBuffer());
+            pass.setUniform(POINT_LIGHT_INFO, lightInfo);
             pass.setVertexBuffer(0, vertexBuffer.slice());
             pass.setIndexBuffer(indexBuffer, indices.type());
             pass.drawIndexed(indexCount, 1, 0, 0, 0);
         }
-        lightInfo.rotate();
     }
 
     private static void uploadVertices(ByteBuffer vertices) {
