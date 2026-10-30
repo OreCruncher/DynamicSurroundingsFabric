@@ -1,0 +1,81 @@
+// Burning mobs and their light: zombies on fire for the whole recording (a long fire timer, fire resistance so they
+// never die, no AI so they stay put), at night for the light, at the crowd scene marked with /dsbench mark. Burning
+// mobs light their surroundings with the flame jets' light (flameJetOptions.enableLight). See README.md for the format.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  "video": {
+    "width": 1920,
+    "height": 1080
+  },
+  "warmup": 10,
+  "record": 45,
+  "repeats": 2,
+  "scenes": {
+    "crowd": {
+      "commands": [
+        "time set 18000",
+        "weather clear",
+        "kill @e[type=!player]",
+        "kill @e[type=item]",
+        "execute positioned ~6 ~ ~0 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~0 ~ ~6 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~-6 ~ ~0 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~0 ~ ~-6 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~10 ~ ~7 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~-4 ~ ~11 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~-12 ~ ~0 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~-4 ~ ~-11 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~10 ~ ~-7 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~9 ~ ~16 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~-9 ~ ~16 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~-18 ~ ~0 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~-9 ~ ~-16 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~9 ~ ~-16 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~18 ~ ~0 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~5 ~ ~23 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~-15 ~ ~19 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~-24 ~ ~0 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~-15 ~ ~-19 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~5 ~ ~-23 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~22 ~ ~-10 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~22 ~ ~10 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~0 ~ ~30 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~-21 ~ ~21 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~-30 ~ ~0 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~-21 ~ ~-21 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~0 ~ ~-30 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~21 ~ ~-21 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~30 ~ ~0 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~21 ~ ~21 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}"
+      ],
+      "profile": "general"
+    }
+  },
+  "runs": [
+    {
+      "label": "burning-default",
+      "scene": "crowd"
+    },
+    {
+      "label": "burning-nolights",
+      "scene": "crowd",
+      "settings": {
+        "flameJetOptions.enableLight": false
+      }
+    },
+    {
+      "label": "burning-noflames",
+      "scene": "crowd",
+      "settings": {
+        "entityEffects.enableBurningEffect": false
+      }
+    }
+  ]
+}

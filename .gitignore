@@ -119,6 +119,7 @@ gradle-app.setting
 
 # Common working directory
 run/
+run-bench/
 
 # Logs written when the common tests run (common/ is their working directory)
 common/logs/

@@ -1,0 +1,34 @@
+// A dust storm at the defaults against the draft Low preset's values (see README.md for the format)
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  // What the GPU draws scales with the pixels: the same size for every run to compare
+  "video": {"width": 1920, "height": 1080},
+  "warmup": 15,
+  "record": 60,
+  "repeats": 2,
+  "scenes": {
+    "dust": {
+      "biome": "minecraft:desert",
+      // Serene Seasons (in the dev run) gives hot biomes wet and dry seasons: a new world starts in the wet, when the
+      // desert rains instead of raising dust. Its summer is the dry season.
+      "commands": ["time set 6000", "season set mid_summer"],
+      // Holds a full storm (and sends "weather thunder")
+      "profile": "weather"
+    }
+  },
+  "runs": [
+    {"label": "default", "scene": "dust"},
+    {"label": "low", "scene": "dust", "settings": {
+      "weatherOptions.precipitationDensity": 50,
+      "weatherOptions.precipitationRange": 10,
+      "weatherOptions.enableDynamicClouds": false
+    }}
+  ]
+}

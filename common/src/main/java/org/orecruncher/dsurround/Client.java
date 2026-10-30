@@ -51,6 +51,7 @@ import org.orecruncher.dsurround.lib.version.VersionChecker;
 import org.orecruncher.dsurround.lib.version.VersionResult;
 import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.processing.Handlers;
+import org.orecruncher.dsurround.profiling.BenchHook;
 import org.orecruncher.dsurround.profiling.ProfileFiles;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
@@ -131,6 +132,9 @@ public final class Client {
 
         if (Client.Config.generalOptions.registerCommands && !FeatureConflict.CLIENT_COMMANDS.isBlocked())
             ClientCommandRegistrationEvent.EVENT.register(Commands::register);
+
+        // Scenario runs and /dsbench, in development runs only
+        BenchHook.start();
 
         // Register the resource listener
         ReloadListenerRegistry.register(PackType.CLIENT_RESOURCES, new ReloadListener(), Constants.asId("reload_listener"));

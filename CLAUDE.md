@@ -67,6 +67,14 @@ checking in game.
   Players can make them too, so nothing private may get in: a new event type or a new `jdk.jfr` user needs a look at
   `ProfileRecording.PRIVATE` and `Redaction`. Record under Run, not IntelliJ's Debug (its async stack trace agent
   throws thousands of Throwables a second).
+- Bench scenarios (`scripts/bench/README.md`): `./gradlew :fabric:runClientBench -Pscenario=<file>` (or
+  `runClientBenchPotatoCpu`) opens or makes a world in `<platform>/run-bench`, records each run's settings in its scene
+  (biomes found and remembered in the world's `dsurround-bench.json`; others marked with `/dsbench mark <name>`) with
+  a screenshot, writes `bench-results/<scenario>-<time>/manifest.json` (`latest.txt` names it) and closes the game.
+  Use it for comparing settings instead of asking for recordings; `python scripts/bench-summary.py [folder]` tables
+  each label's frame, render timers and tick handlers, averaged over the repeats. The code (`bench/`, started by
+  reflection from `profiling/BenchHook` in development only) is left out of the published jars; `shadowJar` fails if it
+  gets in.
 - Low-end stand-ins (both platforms, IDE configs too): `runClientPotatoCpu` (4 logical CPUs, 2 GB heap),
   `runClientPotatoFill` (3840x2160 window, a slower GPU's load per pixel), `runClientPotato` (both). The Gradle tasks
   pin the CPUs with `scripts/run-affinity.ps1`; after an IDE launch run it by hand (see the script).
