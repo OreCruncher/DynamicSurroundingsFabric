@@ -138,7 +138,20 @@ aurora; `MIGRATION.md` is 26.2's record of its port from 1.21.1, and "1.21.11 ba
   before launching: a target that doesn't match fails at startup, one at a time.
 - World and dimension queries go through `runtime/oracle` (`ILevelOracle`, `IDimensionOracle`, `IMinecraftClock`).
 - Config: moving a property between groups → annotate the new field `@MovedFrom({"newest.old.path", "older.path"})`;
-  old values carry over on load. Translation keys follow `dsurround.config.<group>.<field>[.tooltip]`.
+  old values carry over on load (also rename the path in `dsconfigs/presets.json`). Translation keys follow
+  `dsurround.config.<group>.<field>[.tooltip]`.
+- Presets (`dsconfigs/presets.json`, `lib/config/ConfigPreset`, loaded on reload by `config/PresetLoader` into
+  `ConfigurationData.setPresets`; a row of buttons from `compat/PresetButtonsEntry` per `group`, 5 a row: features (the
+  default) and performance (Low/Medium/High, values measured with the bench); `/dsconfig preset [name]`): one-shot
+  partial sets of property values; they add up, and nothing remembers which was applied. Cloth's entries keep their own
+  copies of values, so applying one saves and rebuilds the screen. Its confirmation (`compat/PresetConfirmScreen`) lists
+  what would change (`ConfigPreset.changes`), by group, scrolling. Modpacks add presets in any namespace's
+  `dsconfigs/presets.json` (resource pack or `config/dsurround/configs/<ns>/`): ours are read first, a same id replaces,
+  `"hidden": true` removes, inline `name`/`description` beat the lang keys. Bad values, Scary Content and
+  restart-needing settings are dropped and logged at load. Feature presets never touch the HUD, quality or ranges;
+  performance presets also set waterfall mist/froth, dynamic clouds and flame/firefly lights, features too, so a feature
+  preset after Low turns them back on (accepted) (`PresetLoaderTests`; `DsConfigFuzzTests` skips the file, which has no
+  codec).
 - Fabulous graphics draws translucent things,
   particles and weather to targets of their own, which vanilla's
   `transparency` post shader lays over the scene sorted by each target's depth, taking colours as premultiplied:

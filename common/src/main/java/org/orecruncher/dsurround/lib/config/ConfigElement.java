@@ -235,6 +235,13 @@ public abstract class ConfigElement<T> {
         public Component getDefaultValueTooltip() {
             return Component.translatable("dsurround.config.tooltip.defaultValue", this.defaultValue.toString()).withStyle(STYLE_DEFAULT);
         }
+
+        /**
+         * How a value of the property is shown to the player.
+         */
+        public Component displayValue(T value) {
+            return Component.literal(value instanceof Double d ? CommentedJson.formatNumber(d) : value.toString());
+        }
     }
 
     public static class BooleanValue extends PropertyValue<Boolean> {
@@ -250,6 +257,11 @@ public abstract class ConfigElement<T> {
         public Component getDefaultValueTooltip() {
             var text = this.defaultValue() ? YES : NO;
             return Component.translatable("dsurround.config.tooltip.defaultValue", text).withStyle(STYLE_DEFAULT);
+        }
+
+        @Override
+        public Component displayValue(Boolean value) {
+            return value ? YES : NO;
         }
     }
 
@@ -399,6 +411,11 @@ public abstract class ConfigElement<T> {
         @Override
         public Component getDefaultValueTooltip() {
             return Component.translatable("dsurround.config.tooltip.defaultValue", displayName(this.defaultValue())).withStyle(STYLE_DEFAULT);
+        }
+
+        @Override
+        public Component displayValue(Enum<?> value) {
+            return displayName(value);
         }
 
         /**
