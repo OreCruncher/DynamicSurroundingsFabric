@@ -73,7 +73,6 @@ public final class VanillaBiomeAnalyzer implements IBiomeTraitAnalyzer {
             entry("lush_caves", traits(OVERWORLD, UNDERGROUND, CAVE, LUSH, TEMPERATE, WET, DENSE_VEGETATION)),
             entry("deep_dark", traits(OVERWORLD, UNDERGROUND, CAVE, SPOOKY, RARE, TEMPERATE)),
             entry("pale_garden", traits(OVERWORLD, FOREST, DARK_FOREST, SPOOKY, RARE, TEMPERATE, DECIDUOUS, DENSE_VEGETATION)),
-            entry("sulfur_caves", traits(OVERWORLD, UNDERGROUND, CAVE, HOT, DRY, WASTELAND, RARE)),
             entry("nether_wastes", traits(NETHER, HOT, DRY, WASTELAND)),
             entry("crimson_forest", traits(NETHER, NETHER_FOREST, HOT, DRY)),
             entry("warped_forest", traits(NETHER, NETHER_FOREST, HOT, DRY)),

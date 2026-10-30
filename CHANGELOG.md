@@ -1,3 +1,30 @@
+> ### DynamicSurroundings-1.21.11-5.0.0
+
+Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
+
+The first release for Minecraft 1.21.11. Version numbers now follow MAJOR.MINOR.PATCH, starting at 5.0.0: the third number is kept for bug fix releases. It carries every feature of 0.4.8 for 1.21.1 (see below).
+
+**All Loaders**
+* JAVA 21+
+* Architectury 19.0.1+
+
+**Fabric**
+* Fabric Loader >= 0.19.5
+* Fabric API >= 0.141.6+1.21.11
+
+**NeoForge**
+* NeoForge 21.11.48+
+
+**AI Disclosure**
+* Ported the mod to Minecraft 1.21.11's rendering, from the work done for later Minecraft versions
+* Measured the effects' drawing costs in recordings, and found and removed a GPU stall behind the aurora
+
+**Changes from 0.4.8 for 1.21.1**
+* Dynamic clouds reach as far as Minecraft's Cloud Distance option, in place of the mod's own Cloud Distance option
+* When Minecraft's Music Toast option shows toasts, its toast is used for music credits in place of the mod's
+* Key bindings are listed under their own Dynamic Surroundings category
+* The particle repair guard (Guards in Diagnostics) isn't needed on 1.21.11 and isn't included
+
 > ### DynamicSurroundings-1.21.1-0.4.8
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
