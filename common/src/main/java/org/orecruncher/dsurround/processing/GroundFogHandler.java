@@ -109,7 +109,7 @@ public class GroundFogHandler extends AbstractClientHandler {
      * Whether the mist is drawn
      */
     public boolean isActive() {
-        return this.config.weatherOptions.groundFogQuality.isEnabled() && this.shaderUsable()
+        return this.config.weatherOptions.enableGroundFog && this.shaderUsable()
                 && GameUtils.isInGame() && this.dimensionInformation.groundFog();
     }
 
@@ -229,7 +229,7 @@ public class GroundFogHandler extends AbstractClientHandler {
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
         String text;
         var quality = this.config.weatherOptions.groundFogQuality;
-        if (!quality.isEnabled())
+        if (!this.config.weatherOptions.enableGroundFog)
             text = "Ground fog: off";
         else if (!this.shaderUsable())
             text = "Ground fog: off (shader unavailable, failed, or a shader pack in use)";
