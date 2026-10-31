@@ -130,8 +130,7 @@ public final class GroundFogVolume {
      * line of sight goes
      *
      * @param target   where the weather is being drawn
-     * @param quality  how finely: the share of the screen's size the mist is drawn at, and the most steps (not
-     *                 {@link GroundFogQuality#NONE}, which isn't drawn)
+     * @param quality  how finely: the share of the screen's size the mist is drawn at, and the most steps
      * @param fabulous whether Fabulous graphics are on: the weather's target is then laid over the scene by vanilla's
      *                 transparency pass, by its depth, and the mist is drawn after the rain (see the handler)
      * @param strength how strong the mist is for the conditions, 0 to 1
@@ -145,7 +144,7 @@ public final class GroundFogVolume {
         var shader = SHADER.get();
         var smooth = SMOOTH.get();
         var composite = COMPOSITE.get();
-        if (!quality.isEnabled() || field.isEmpty() || shader == null || smooth == null || composite == null || !isUsable())
+        if (field.isEmpty() || shader == null || smooth == null || composite == null || !isUsable())
             return true;
 
         var cam = camera.getPosition();

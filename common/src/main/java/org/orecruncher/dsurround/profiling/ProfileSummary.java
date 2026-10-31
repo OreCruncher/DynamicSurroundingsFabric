@@ -9,11 +9,13 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -32,6 +34,7 @@ final class ProfileSummary {
     static final int LIMIT = 1900;
     // An effect that cost less than this, GPU and CPU together, in ms a frame, drew nothing to speak of
     private static final double TRIVIAL_MS = 0.01;
+    private static final double TICKS_PER_SECOND = 20D;
     // Handlers named in the ticks' line
     private static final int TOP_HANDLERS = 3;
 
@@ -41,6 +44,8 @@ final class ProfileSummary {
     private final List<FrameSecond> frames = new ArrayList<>();
     // Each effect's averages, as written once a second
     private final Map<String, List<double[]>> timers = new LinkedHashMap<>();
+    // The effects timed once a tick rather than once a frame
+    private final Set<String> perTick = new HashSet<>();
     // Each tick's handlers' time, ns
     private final Map<Long, Long> ticks = new TreeMap<>();
     private final Map<String, Long> handlerTotals = new HashMap<>();
@@ -75,7 +80,7 @@ final class ProfileSummary {
             case "dsurround.Frames" -> this.frame(new FrameSecond(event.getInt("frames"), event.getDouble("mean"),
                     event.getDouble("p95"), event.getDouble("max"), event.getDouble("gpu"), event.getDouble("cpu")));
             case "dsurround.RenderTimer" -> this.timer(event.getString("effect"), event.getDouble("gpuAverage"),
-                    event.getDouble("cpuAverage"));
+                    event.getDouble("cpuAverage"), event.getBoolean("perTick"));
             case "dsurround.HandlerTick" -> this.handlerTick(event.getLong("tick"), event.getString("handler"), event.getLong("time"));
             case "jdk.GCPhasePause" -> this.pause(event.getDuration("duration").toNanos() / 1_000_000D);
             case "dsurround.Feature" -> this.feature(event.getString("kind"), event.getString("name"), event.getString("state"),
@@ -94,7 +99,17 @@ final class ProfileSummary {
     }
 
     void timer(String effect, double gpu, double cpu) {
+        this.timer(effect, gpu, cpu, false);
+    }
+
+    /**
+     * @param perTick whether the effect is timed once a client tick rather than once a frame (see
+     *                {@link org.orecruncher.dsurround.effects.RenderTimer#isPerTick})
+     */
+    void timer(String effect, double gpu, double cpu, boolean perTick) {
         this.timers.computeIfAbsent(effect, k -> new ArrayList<>()).add(new double[]{gpu, cpu});
+        if (perTick)
+            this.perTick.add(effect);
     }
 
     void handlerTick(long tick, String handler, long nanos) {
@@ -145,12 +160,15 @@ final class ProfileSummary {
     /**
      * The effects that drew something, the costliest first: name, GPU and CPU ms. A part ("- " name, following its
      * effect) is in its effect's time and left out, unless it took longer than the effect, which it then can't be part
-     * of (the clouds' field, worked out on the tick, not while they are drawn): that is named for its effect.
+     * of, or is timed once a tick (the clouds' field, worked out on the tick, not while they are drawn): that is named
+     * for its effect. One timed once a tick is given as its time a frame (20 ticks a second spread over the frames), to
+     * compare with the rest.
      */
     private List<Map.Entry<String, double[]>> effects() {
         var effects = new ArrayList<Map.Entry<String, double[]>>();
         String effect = "";
         double[] effectMeans = {0D, 0D};
+        int fps = this.fps();
         for (var entry : this.timers.entrySet()) {
             double gpu = 0D, cpu = 0D;
             for (var row : entry.getValue()) {
@@ -160,8 +178,12 @@ final class ProfileSummary {
             int n = entry.getValue().size();
             var means = new double[]{gpu / n, cpu / n};
             String name = entry.getKey();
+            if (this.perTick.contains(name) && fps > 0) {
+                means[0] *= TICKS_PER_SECOND / fps;
+                means[1] *= TICKS_PER_SECOND / fps;
+            }
             if (name.startsWith("- ")) {
-                if (means[0] <= effectMeans[0] && means[1] <= effectMeans[1])
+                if (!this.perTick.contains(entry.getKey()) && means[0] <= effectMeans[0] && means[1] <= effectMeans[1])
                     continue;
                 name = effect + " " + name.substring(2).toLowerCase(Locale.ROOT);
             } else {

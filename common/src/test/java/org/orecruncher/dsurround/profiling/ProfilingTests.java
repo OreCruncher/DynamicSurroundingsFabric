@@ -431,14 +431,26 @@ public class ProfilingTests {
 
     @Test
     void aPartLongerThanItsEffectIsTimedApart() {
-        // The clouds' field is worked out on the tick, not while they are drawn, so it is no part of their drawing time
         var summary = new ProfileSummary();
         summary.frame(new ProfileSummary.FrameSecond(100, 10, 12, 14, 4, 2));
         summary.timer("Clouds", 0.36, 0.03);
-        summary.timer("- Field", 0.001, 0.18);
+        summary.timer("- Build", 0.001, 0.18);
 
         var text = summary.text("weather");
-        assertTrue(text.contains("Clouds 0.36/0.03 (9%/2%), Clouds field 0.00/0.18 (0%/9%)"), text);
+        assertTrue(text.contains("Clouds 0.36/0.03 (9%/2%), Clouds build 0.00/0.18 (0%/9%)"), text);
+    }
+
+    @Test
+    void aPartTimedOnceATickIsGivenAsItsTimeAFrame() {
+        // The clouds' field is worked out on the tick, not while they are drawn: no part of their drawing time, and
+        // 0.18 ms a tick at 100 fps is 0.036 ms a frame (20 ticks spread over 100 frames)
+        var summary = new ProfileSummary();
+        summary.frame(new ProfileSummary.FrameSecond(100, 10, 12, 14, 4, 2));
+        summary.timer("Clouds", 0.36, 0.06);
+        summary.timer("- Field", 0.001, 0.18, true);
+
+        var text = summary.text("weather");
+        assertTrue(text.contains("Clouds 0.36/0.06 (9%/3%), Clouds field 0.00/0.04 (0%/2%)"), text);
     }
 
     @Test

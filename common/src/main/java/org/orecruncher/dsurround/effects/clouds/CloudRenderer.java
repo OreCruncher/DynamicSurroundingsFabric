@@ -46,7 +46,7 @@ public final class CloudRenderer {
      * How long working out the clouds again takes, on the CPU: every tick, a share of the cells at a time, on the tick
      * rather than while drawing, so it is timed apart (see CloudHandler)
      */
-    public static final RenderTimer FIELD_TIMER = new RenderTimer("- Field");
+    public static final RenderTimer FIELD_TIMER = new RenderTimer("- Field", true);
 
     // The light uniforms' names, made once
     private static final String[] LIGHTS = {"Light0", "Light1", "Light2", "Light3", "Light4", "Light5", "Light6", "Light7"};

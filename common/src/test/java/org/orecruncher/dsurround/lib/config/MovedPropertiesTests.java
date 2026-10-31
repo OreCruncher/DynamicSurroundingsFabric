@@ -3,6 +3,8 @@ package org.orecruncher.dsurround.lib.config;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import net.minecraft.SharedConstants;
+import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.orecruncher.dsurround.Configuration;
@@ -20,6 +22,12 @@ import java.util.ArrayList;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class MovedPropertiesTests {
+
+    // Configuration's enums use game classes
+    static {
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+    }
 
     @ConfigPlacement(folderName = "test", fileName = "moved")
     public static class MovedConfig extends ConfigurationData {
@@ -252,12 +260,27 @@ public class MovedPropertiesTests {
     }
 
     @Test
-    void theGroundFogSwitchBecomesItsQuality() throws IOException {
-        assertEquals(GroundFogQuality.NONE,
-                loadModConfig("{\"weatherOptions\": {\"enableGroundFog\": false}}").weatherOptions.groundFogQuality);
-        assertEquals(GroundFogQuality.FANCY,
-                loadModConfig("{\"weatherOptions\": {\"enableGroundFog\": true}}").weatherOptions.groundFogQuality);
-        assertFalse(written("dsurround.json").getAsJsonObject("weatherOptions").has("enableGroundFog"));
+    void theGroundFogQualitysNoneBecomesItsSwitch() throws IOException {
+        // 0.4.8 kept the switch as the quality's NONE: off, at the default quality
+        var off = loadModConfig("{\"weatherOptions\": {\"groundFogQuality\": \"NONE\"}}");
+        assertFalse(off.weatherOptions.enableGroundFog);
+        assertEquals(GroundFogQuality.FANCY, off.weatherOptions.groundFogQuality);
+        var weather = written("dsurround.json").getAsJsonObject("weatherOptions");
+        assertFalse(weather.get("enableGroundFog").getAsBoolean());
+        assertEquals("FANCY", weather.get("groundFogQuality").getAsString());
+
+        // Any other quality is on, at that quality
+        var fast = loadModConfig("{\"weatherOptions\": {\"groundFogQuality\": \"FAST\"}}");
+        assertTrue(fast.weatherOptions.enableGroundFog);
+        assertEquals(GroundFogQuality.FAST, fast.weatherOptions.groundFogQuality);
+    }
+
+    @Test
+    void theGroundFogSwitchFromBefore048IsReadAsItIs() throws IOException {
+        // Before 0.4.8 the switch had this name: it reads straight into it again
+        var config = loadModConfig("{\"weatherOptions\": {\"enableGroundFog\": false}}");
+        assertFalse(config.weatherOptions.enableGroundFog);
+        assertEquals(GroundFogQuality.FANCY, config.weatherOptions.groundFogQuality);
     }
 
     @Test
@@ -347,11 +370,35 @@ public class MovedPropertiesTests {
                 if (moved == null)
                     continue;
                 for (var path : moved.value())
-                    if (isProperty(path))
+                    if (isProperty(path) && !takesOnlyRetiredValues(path, moved))
                         stale.add(path);
             }
         }
         assertTrue(stale.isEmpty(), "still properties: " + stale);
+    }
+
+    /**
+     * Whether a move reads from a property that is still there only values it can no longer have (the ground fog
+     * quality's NONE, now its switch).
+     */
+    private static boolean takesOnlyRetiredValues(String path, MovedFrom moved) {
+        if (moved.values().length == 0)
+            return false;
+        var parts = path.split("\\.");
+        try {
+            var type = Configuration.class.getField(parts[0]).getType().getField(parts[1]).getType();
+            if (!type.isEnum())
+                return false;
+            for (var pair : moved.values()) {
+                var old = pair.substring(0, pair.indexOf('='));
+                for (var constant : type.getEnumConstants())
+                    if (((Enum<?>) constant).name().equals(old))
+                        return false;
+            }
+            return true;
+        } catch (NoSuchFieldException e) {
+            return false;
+        }
     }
 
     private static boolean isProperty(String path) {

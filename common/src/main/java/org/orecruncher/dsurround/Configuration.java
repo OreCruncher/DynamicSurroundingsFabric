@@ -572,10 +572,16 @@ public class Configuration extends ConfigurationData {
         @Comment("Frost forms on the outside of clear glass windows when it is cold")
         public boolean enableWindowFrost = true;
 
+        // 0.4.8 kept the switch as the quality's NONE: declared before the quality, and its NONE (no longer one of
+        // the quality's) is put back to the default on load
         @Property
         @Experimental
-        @MovedFrom(value = "weatherOptions.enableGroundFog", values = "false=NONE")
-        @Comment("Mist lying low over the ground in swamps and eerie biomes: off, or how finely it is drawn. Fast costs least; Fabulous costs several times Fancy")
+        @MovedFrom(value = "weatherOptions.groundFogQuality", values = "NONE=false")
+        @Comment("Mist lying low over the ground in swamps and eerie biomes, drifting with the wind")
+        public boolean enableGroundFog = true;
+
+        @Property
+        @Comment("How finely the ground fog is drawn. Fast costs least; Fabulous costs several times Fancy")
         public GroundFogQuality groundFogQuality = GroundFogQuality.FANCY;
 
         @Property
