@@ -1,19 +1,15 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
-import com.mojang.blaze3d.vertex.MeshData;
-import net.minecraft.client.Camera;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 
 /**
  * Where rain drops soaked into soft ground (grass, dirt, sand, wool): spots lying flat on it that darken at once and
  * fade as they dry. Overlapping spots darken the ground further, so heavier rain leaves it looking wetter. Kept in
- * flat arrays like the drops, and drawn with them; spots added when the field is full are left out. Client thread
- * only, which in Minecraft is also the render thread.
+ * flat arrays like the drops, and drawn with them, their quads built ahead with theirs (see {@link DropMeshes}); spots
+ * added when the field is full are left out. Changed on the client thread only, which in Minecraft is also the render
+ * thread.
  */
-import java.util.function.Consumer;
 
 public final class DampSpots {
 
@@ -111,17 +107,6 @@ public final class DampSpots {
                 i++;
             }
         }
-    }
-
-    /**
-     * Draws the spots with the current shader, which should be {@link PrecipitationShaders#DAMP_SPOTS}, and the
-     * particle atlas bound. Render thread only.
-     *
-     * @param darkening true when the blend darkens the ground by each spot's alpha; false to lay a dark colour over
-     *                  it with an ordinary blend
-     */
-    public void draw(ByteBufferBuilder bytes, Consumer<MeshData> drawer, Camera camera, float partialTick, TextureAtlasSprite sprite, boolean darkening) {
-        PrecipitationRenderer.draw(this, bytes, drawer, camera, partialTick, sprite, darkening);
     }
 
     /**
