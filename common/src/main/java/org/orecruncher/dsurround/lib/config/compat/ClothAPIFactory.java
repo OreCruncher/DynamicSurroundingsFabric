@@ -52,6 +52,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
 
     private static final Style TITLE_STYLE = Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE);
     private static final Style GROUP_STYLE = Style.EMPTY.withColor(ColorPalette.GOLDENROD);
+    private static final Style PRESET_STYLE = Style.EMPTY.withColor(ColorPalette.ELECTRIC_GREEN);
     private static final Style PROPERTY_STYLE = Style.EMPTY.withColor(ColorPalette.WHEAT);
     private static final Style TOOLTIP_STYLE = Style.EMPTY.withColor(ColorPalette.SEASHELL);
     private static final Style RESTART_STYLE = Style.EMPTY.withColor(ColorPalette.RED);
@@ -244,7 +245,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
         var key = ConfigPreset.groupLanguageKey(this.configData, group);
         var description = Localization.loadIfPresent(key + ".tooltip").orElse("");
         var tooltip = wrap(Component.literal(description).withStyle(TOOLTIP_STYLE)).toArray(new Component[0]);
-        var name = Component.literal(ConfigPreset.displayGroup(this.configData, group)).withStyle(GROUP_STYLE);
+        var name = Component.literal(ConfigPreset.displayGroup(this.configData, group)).withStyle(PRESET_STYLE);
         return new PresetButtonsEntry(name, tooltip, choices, nameWidth);
     }
 
