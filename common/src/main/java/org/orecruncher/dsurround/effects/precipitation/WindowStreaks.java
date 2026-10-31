@@ -1,7 +1,5 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
-import com.mojang.blaze3d.vertex.Tesselator;
-import net.minecraft.client.Camera;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 
@@ -9,8 +7,9 @@ import net.minecraft.util.RandomSource;
  * Rain drops running down windows: each a bead on the outside of the glass that clings for a moment, then runs down in
  * a short rush, then clings again, as real drops do, leaving a wet trail that dries from the top down. Where the glass
  * ends it goes: over open air it drips off the edge, and onto a frame, a sill or the wall below it runs off and fades.
- * Kept in flat arrays like {@link SnowFlecks}, and drawn with the falling rain; drops added when it is full are left
- * out. Client thread only, which in Minecraft is also the render thread.
+ * Kept in flat arrays like {@link SnowFlecks}, and drawn with the falling rain, their quads built ahead with its (see
+ * {@link DropMeshes}); drops added when it is full are left out. Changed on the client thread only, which in
+ * Minecraft is also the render thread.
  */
 public final class WindowStreaks {
 
@@ -177,14 +176,6 @@ public final class WindowStreaks {
         this.light[i] = this.light[last];
         this.face[i] = this.face[last];
         this.dripsOff[i] = this.dripsOff[last];
-    }
-
-    /**
-     * Draws the drops with the current shader, which should be {@link PrecipitationShaders#DROPS}. Untextured, like the
-     * falling rain. Render thread only.
-     */
-    public void draw(Tesselator tesselator, Camera camera, float partialTick, RainColor rainColor) {
-        PrecipitationRenderer.draw(this, tesselator, camera, partialTick, rainColor);
     }
 
     /**

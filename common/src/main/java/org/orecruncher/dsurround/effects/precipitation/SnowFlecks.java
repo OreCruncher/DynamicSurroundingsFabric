@@ -1,17 +1,13 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
-import com.mojang.blaze3d.vertex.Tesselator;
-import net.minecraft.client.Camera;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-
-import java.util.List;
 
 /**
  * Where snowflakes landed: each lies flat where it came down, as the flake it fell as, for a moment, then shrinks and
  * fades as it melts into the ground. One blown into the side of something sticks to it, flat on the face it hit. The snow's counterpart of {@link DampSpots}, kept in flat arrays the same way and
- * drawn with the falling snow; flecks added when it is full are left out. Client thread only, which in Minecraft is
- * also the render thread.
+ * drawn with the falling snow, their quads built ahead with its (see {@link DropMeshes}); flecks added when it is full
+ * are left out. Changed on the client thread only, which in Minecraft is also the render thread.
  */
 public final class SnowFlecks {
 
@@ -130,18 +126,6 @@ public final class SnowFlecks {
                 i++;
             }
         }
-    }
-
-    /**
-     * Draws the flecks with the current shader, which should be {@link PrecipitationShaders#DROPS}, and the snow
-     * texture bound, as for the falling snow. Render thread only.
-     *
-     * @param snowflakes the flakes of the snow texture; empty to draw plain flecks
-     * @param largest    the largest of them, in pixels: the others are drawn in proportion
-     * @param scale      how big snowflakes are drawn
-     */
-    public void draw(Tesselator tesselator, Camera camera, float partialTick, List<Snowflakes.Flake> snowflakes, int largest, float scale) {
-        PrecipitationRenderer.draw(this, tesselator, camera, partialTick, snowflakes, largest, scale);
     }
 
     /**
