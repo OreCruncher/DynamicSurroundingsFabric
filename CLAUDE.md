@@ -230,12 +230,12 @@ aurora; `MIGRATION.md` is 26.2's record of its port from 1.21.1, and "1.21.11 ba
   - `processing/PrecipitationHandler` runs particle weather (`PrecipitationField`, `LevelColumns`, `Landings`) and
     stands aside for shader packs, a failed shader, mods that draw weather as particles (`FeatureConflict`, the table of features that stand aside for other mods) and dimensions that draw their
     own weather. The drops' tick runs on the `dsurround-Precipitation` thread, a tick behind: `PrecipitationField.finish`
-    at the start of the handler's tick, `start` at its end, with two sets of the drops (`Drops`). Each frame's quads are
+    at the start of the handler's tick, `start` at its end, with two sets of the drops (`Drops`). Each frame's quads (`DropMeshes.Kind`: drops, dust, snow flecks, window streaks, damp spots) are
     written into `ParticleQuads` on the same thread as the level starts to be drawn (`DropMeshes`, from
     `MixinGameRenderer` at the head of `GameRenderer.renderLevel`, `OptionalHook.PRECIPITATION_AHEAD`), for that camera
     and partial tick; the weather pass uploads and draws them, or writes them on the
-    render thread when the camera differs (a mod drawing the level again). The tick discards a build before the drops
-    change. The step may read only
+    render thread when the camera differs (a mod drawing the level again). The tick discards a build before the drops,
+    or what they left, change. The step may read only
     the columns and `Wind.Snapshot`; what needs the world it leaves as questions that `finish` answers. Tests use
     `tick`, which is both at once.
   - Drops stop at `LevelColumns.groundHeight`: the `MOTION_BLOCKING` heightmap, raised where a block above it is solid as

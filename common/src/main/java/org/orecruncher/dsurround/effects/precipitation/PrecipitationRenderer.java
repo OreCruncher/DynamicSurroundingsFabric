@@ -1,9 +1,7 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Camera;
@@ -21,10 +19,10 @@ import java.util.function.Consumer;
  * turned toward the camera, snow as flakes facing it, turning slowly as they fall, and dust as large faint puffs the
  * color of the ground it was blown from. The streaks are a plain color that fades out toward their tail; the flakes
  * are cut from the game's own snow texture ({@link Snowflakes}), and the puffs are sprites from the particle atlas.
- * All are lit by the lightmap, like vanilla's weather. Also draws {@link DampSpots} and {@link SnowFlecks}, flat on
- * the ground. Positions are
- * relative to the camera, as for particles and vanilla's weather. Render thread only, but for {@link #build}, which
- * {@link DropMeshes} runs on the drops' worker thread.
+ * All are lit by the lightmap, like vanilla's weather. Also writes what they leave where they land: {@link DampSpots}
+ * and {@link SnowFlecks}, flat on the ground, and {@link WindowStreaks}, running down glass. Positions are relative to
+ * the camera, as for particles and vanilla's weather. Only writes the quads ({@link #build}), which {@link DropMeshes}
+ * does on the drops' worker thread and draws.
  */
 final class PrecipitationRenderer {
 
@@ -98,21 +96,21 @@ final class PrecipitationRenderer {
      */
     record View(Vec3 position, Vector3f left, Vector3f up, Vector3f look) {
 
-        static View of(Camera camera) {
-            return new View(camera.position(), new Vector3f(camera.leftVector()), new Vector3f(camera.upVector()),
-                    new Vector3f(camera.forwardVector()));
-        }
+        // The camera's directions before it is turned, as Camera has them
+        private static final Vector3fc FORWARDS = new Vector3f(0F, 0F, -1F);
+        private static final Vector3fc UP = new Vector3f(0F, 1F, 0F);
+        private static final Vector3fc LEFT = new Vector3f(-1F, 0F, 0F);
 
         /**
-         * Whether the camera is where this was taken, facing the same way
+         * The directions are worked out from the camera's rotation as Camera.setRotation does, to the same values, not
+         * copied from its vectors: a mod may change those in place while the frame is drawn (on 1.21.1, Rainbows
+         * doubles the look vector as its particle is drawn, before the weather), and then drops built ahead never
+         * matched, and those built in the weather's pass were culled with the wrong look
          */
-        boolean isOf(Camera camera) {
-            return this.position.equals(camera.position()) && same(this.left, camera.leftVector())
-                    && same(this.up, camera.upVector()) && same(this.look, camera.forwardVector());
-        }
-
-        private static boolean same(Vector3f a, Vector3fc b) {
-            return a.x() == b.x() && a.y() == b.y() && a.z() == b.z();
+        static View of(Camera camera) {
+            var rotation = camera.rotation();
+            return new View(camera.position(), LEFT.rotate(rotation, new Vector3f()), UP.rotate(rotation, new Vector3f()),
+                    FORWARDS.rotate(rotation, new Vector3f()));
         }
     }
 
@@ -328,23 +326,17 @@ final class PrecipitationRenderer {
     }
 
     /**
-     * Builds the snow flecks into a buffer and draws it with whatever shader is current, which should take
-     * {@link DefaultVertexFormat#PARTICLE}, with the snow texture bound. Each lies flat on the face it landed on, the
-     * top of a block or a side it was blown into, as the flake it fell as, at the flake's size, fading and shrinking as
-     * it melts.
+     * Writes the snow flecks as {@link DefaultVertexFormat#PARTICLE} quads, around the camera at {@code cam}, to be
+     * drawn as the falling snow is ({@link PrecipitationShaders#DROPS}, the snow texture bound). Each lies flat on the
+     * face it landed on, the top of a block or a side it was blown into, as the flake it fell as, at the flake's size,
+     * fading and shrinking as it melts. Any thread, while nothing changes the flecks.
      *
      * @param snowflakes the flakes of the snow texture; empty to draw plain flecks
      * @param largest    the largest of them, in pixels: the others are drawn in proportion
      * @param scale      how big snowflakes are drawn
      */
-    static void draw(SnowFlecks flecks, ByteBufferBuilder bytes, Consumer<MeshData> drawer, Camera camera, float partialTick, List<Snowflakes.Flake> snowflakes,
-                     int largest, float scale) {
-        if (flecks.count == 0)
-            return;
-
-        var cam = camera.position();
-        BufferBuilder builder = new BufferBuilder(bytes, VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
-
+    static void build(SnowFlecks flecks, BufferBuilder builder, Vec3 cam, float partialTick, List<Snowflakes.Flake> snowflakes,
+                      int largest, float scale) {
         for (int i = 0; i < flecks.count; i++) {
             float remaining = flecks.remaining(i, partialTick);
             if (remaining <= 0F)
@@ -375,24 +367,15 @@ final class PrecipitationRenderer {
             fleckCorner(builder, face, x, y, z, -cu, -cv).setUv(u1, v1).setColor(1F, 1F, 1F, a).setLight(light);
             fleckCorner(builder, face, x, y, z, cv, -cu).setUv(u1, v0).setColor(1F, 1F, 1F, a).setLight(light);
         }
-
-        var mesh = builder.build();
-        if (mesh != null)
-            drawer.accept(mesh);
     }
 
     /**
-     * Builds the drops running down windows into a buffer and draws it with whatever shader is current, which should
-     * take {@link DefaultVertexFormat#PARTICLE}. Untextured, in the rain's color: a bead, and above it the wet trail
-     * it has left, fading toward its top.
+     * Writes the drops running down windows as {@link DefaultVertexFormat#PARTICLE} quads, around the camera at
+     * {@code cam}, to be drawn as the falling rain is ({@link PrecipitationShaders#DROPS}). Untextured, in the rain's
+     * color: a bead, and above it the wet trail it has left, fading toward its top. Any thread, while nothing changes
+     * the streaks.
      */
-    static void draw(WindowStreaks streaks, ByteBufferBuilder bytes, Consumer<MeshData> drawer, Camera camera, float partialTick, RainColor rainColor) {
-        if (streaks.count == 0)
-            return;
-
-        var cam = camera.position();
-        BufferBuilder builder = new BufferBuilder(bytes, VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
-
+    static void build(WindowStreaks streaks, BufferBuilder builder, Vec3 cam, float partialTick, RainColor rainColor) {
         for (int i = 0; i < streaks.count; i++) {
             float fade = streaks.fade(i, partialTick);
             if (fade <= 0F)
@@ -424,10 +407,6 @@ final class PrecipitationRenderer {
                 fleckCorner(builder, face, x, y, z, -width, half + trail).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), 0F).setLight(light);
             }
         }
-
-        var mesh = builder.build();
-        if (mesh != null)
-            drawer.accept(mesh);
     }
 
     /**
@@ -444,20 +423,16 @@ final class PrecipitationRenderer {
     }
 
     /**
-     * Builds the damp spots into a buffer and draws it with whatever shader is current, which should take
-     * {@link DefaultVertexFormat#POSITION_TEX_COLOR}.
+     * Writes the damp spots as {@link DefaultVertexFormat#POSITION_TEX_COLOR} quads, around the camera at {@code cam},
+     * to be drawn with {@link PrecipitationShaders#DAMP_SPOTS} and the particle atlas bound. Any thread, while nothing
+     * changes the spots.
      *
      * @param darkening true when the blend darkens the ground by the spot's alpha, so its color doesn't matter;
      *                  false to lay a dark color over the ground with an ordinary blend
      */
-    static void draw(DampSpots spots, ByteBufferBuilder bytes, Consumer<MeshData> drawer, Camera camera, float partialTick, TextureAtlasSprite sprite, boolean darkening) {
-        if (spots.count == 0)
-            return;
-
-        var cam = camera.position();
+    static void build(DampSpots spots, BufferBuilder builder, Vec3 cam, float partialTick, TextureAtlasSprite sprite, boolean darkening) {
         float r = darkening ? 1F : DAMP_RED, g = darkening ? 1F : DAMP_GREEN, b = darkening ? 1F : DAMP_BLUE;
         float u0 = sprite.getU0(), u1 = sprite.getU1(), v0 = sprite.getV0(), v1 = sprite.getV1();
-        BufferBuilder builder = new BufferBuilder(bytes, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
         for (int i = 0; i < spots.count; i++) {
             float a = spots.darkness(i, partialTick);
@@ -473,9 +448,5 @@ final class PrecipitationRenderer {
             builder.addVertex(x - cx, y, z - cz).setUv(u1, v1).setColor(r, g, b, a);
             builder.addVertex(x + cz, y, z - cx).setUv(u1, v0).setColor(r, g, b, a);
         }
-
-        var mesh = builder.build();
-        if (mesh != null)
-            drawer.accept(mesh);
     }
 }

@@ -1,111 +1,355 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.MeshData;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3f;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 
 /**
- * The falling drops' quads, built ahead on another thread: as the level starts to be drawn ({@link #begin}), once the
- * camera is set for the frame, so they are written while the render thread draws the terrain, and the weather's pass
- * only uploads and draws them ({@link #quads}). Writing them, every drop facing the camera and placed between its
- * ticks, was the largest part of the weather's time on the render thread.
+ * The weather's quads, built ahead on another thread: as the level starts to be drawn ({@link #begin}), once the camera
+ * is set for the frame, so they are written while the render thread draws the terrain, and the weather's pass only
+ * uploads and draws them ({@link #draw}). Writing them, every drop facing the camera and placed between its ticks, was
+ * the largest part of the weather's time on the render thread.
  * <p>
  * Built for the camera and partial tick as the level began; if the weather is drawn for another (a mod drawing the level
  * again from elsewhere: a portal, a mirror), or drawn twice, they are written there and then, on the render thread, as
- * before. Each kind, the rain and snow and the dust, is written into quads of its own and used at most once.
+ * before. Each {@link Kind} is written into memory of its own and used at most once: the falling drops and the dust
+ * straight into {@link ParticleQuads}, there being thousands, the rest through a BufferBuilder.
  * <p>
- * The build reads the drops drawn, which only the client tick changes, when it finishes the drops' step; the tick waits
- * for a build under way, and drops it, first ({@link #discard}). Render thread only, but for the build itself.
+ * The build reads the drops, and what they left where they landed, which only the client tick changes, when it
+ * finishes the drops' step and lands them; the tick waits for a build under way, and drops it, first
+ * ({@link #discard}). Render thread only, but for the build itself.
  */
 public final class DropMeshes implements AutoCloseable {
 
-    /**
-     * What a frame's drops were built for: used only for the same
-     */
-    private record Request(PrecipitationField field, PrecipitationRenderer.View view, float partialTick,
-                           List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales,
-                           RainColor rainColor) {
+    // Room to start with, in bytes, for each kind written through a BufferBuilder, before the buffer grows
+    private static final int INITIAL_BYTES = 64 * 1024;
 
-        boolean isFor(PrecipitationField field, Camera camera, float partialTick, List<Snowflakes.Flake> snowflakes,
-                      int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
-            return this.field == field && this.partialTick == partialTick && this.snowflakes == snowflakes
-                    && this.largest == largest && this.dust == dust && this.scales.equals(scales)
-                    && this.rainColor.equals(rainColor) && this.view.isOf(camera);
+    /**
+     * What is drawn, each in a pass of its own
+     */
+    public enum Kind {
+        DROPS("the rain and snow", DefaultVertexFormat.PARTICLE),
+        DUST("the dust", DefaultVertexFormat.PARTICLE),
+        FLECKS("the snow flecks", DefaultVertexFormat.PARTICLE),
+        STREAKS("the window streaks", DefaultVertexFormat.PARTICLE),
+        SPOTS("the damp spots", DefaultVertexFormat.POSITION_TEX_COLOR);
+
+        final String description;
+        final VertexFormat format;
+
+        Kind(String description, VertexFormat format) {
+            this.description = description;
+            this.format = format;
+        }
+
+        // Written straight into ParticleQuads, rather than through a BufferBuilder
+        boolean isDirect() {
+            return this == DROPS || this == DUST;
         }
     }
 
+    /**
+     * What the quads are built from: the drops, and what they left where they landed
+     */
+    public record Sources(PrecipitationField field, SnowFlecks flecks, WindowStreaks streaks, DampSpots spots) {
+
+        boolean hasAny(Kind kind) {
+            return switch (kind) {
+                case DROPS -> PrecipitationRenderer.hasAny(this.field, false);
+                case DUST -> PrecipitationRenderer.hasAny(this.field, true);
+                case FLECKS -> this.flecks.count() > 0;
+                case STREAKS -> this.streaks.count() > 0;
+                case SPOTS -> this.spots.count() > 0;
+            };
+        }
+
+        /**
+         * Whether there is nothing of any kind to draw
+         */
+        public boolean isEmpty() {
+            return this.field.count() == 0 && this.flecks.count() == 0 && this.streaks.count() == 0 && this.spots.count() == 0;
+        }
+    }
+
+    /**
+     * How the quads are drawn
+     *
+     * @param snowflakes the flakes of the snow texture; empty to draw plain flakes
+     * @param largest    the largest of them, in pixels: the others are drawn in proportion
+     * @param dust       the dust sprites, from the particle atlas
+     * @param scales     how big rain and snow are drawn
+     * @param rainColor  the rain's color, the drops on windows' too
+     * @param spot       the damp spots' sprite, from the particle atlas
+     * @param darkening  true when the damp spots darken the ground by their alpha; false to lay a dark color over it
+     */
+    public record Style(List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales,
+                        RainColor rainColor, TextureAtlasSprite spot, boolean darkening) {
+
+        List<String> differences(Style other) {
+            var changed = new ArrayList<String>();
+            if (this.snowflakes != other.snowflakes)
+                changed.add("snowflakes");
+            if (this.largest != other.largest)
+                changed.add("largest flake %d to %d".formatted(this.largest, other.largest));
+            if (this.dust != other.dust)
+                changed.add("dust sprites");
+            if (!this.scales.equals(other.scales))
+                changed.add("scales %s to %s".formatted(this.scales, other.scales));
+            if (!this.rainColor.equals(other.rainColor))
+                changed.add("rain color %s to %s".formatted(this.rainColor, other.rainColor));
+            if (this.spot != other.spot)
+                changed.add("damp spot sprite");
+            if (this.darkening != other.darkening)
+                changed.add("damp spots darkening %s to %s".formatted(this.darkening, other.darkening));
+            return changed;
+        }
+    }
+
+    /**
+     * Uploads and draws quads laid out in memory as their kind's vertex format has them
+     */
+    @FunctionalInterface
+    public interface Drawer {
+        /**
+         * @param vertexCount how many corners there are: four a quad
+         */
+        void draw(ByteBuffer vertices, int vertexCount);
+    }
+
+    /**
+     * Why quads built ahead weren't drawn, and they were written on the render thread instead
+     */
+    enum Behind {
+        NOT_BUILT("nothing was built ahead for this frame"),
+        DRAWN_TWICE("the weather was drawn a second time this frame"),
+        OTHER_SOURCES("they were built from other drops, or other things they left"),
+        CAMERA_MOVED("the camera moved after the level began to be drawn"),
+        CAMERA_TURNED("the camera turned after the level began to be drawn"),
+        PARTIAL_TICK("the partial tick changed after the level began to be drawn"),
+        SETTINGS("the drawing settings changed");
+
+        final String reason;
+
+        Behind(String reason) {
+            this.reason = reason;
+        }
+    }
+
+    /**
+     * Why quads built ahead weren't drawn, with what differed
+     */
+    record Mismatch(Behind kind, String detail) {
+    }
+
+    /**
+     * What a frame's quads were built for: drawn only for the same
+     */
+    record Request(Sources sources, PrecipitationRenderer.View view, float partialTick, Style style) {
+
+        /**
+         * What differs in {@code now} from what these were built for, the first difference found; null if they are for
+         * it
+         */
+        @Nullable
+        Mismatch mismatch(Request now) {
+            if (!this.sources.equals(now.sources))
+                return new Mismatch(Behind.OTHER_SOURCES, replaced(this.sources, now.sources));
+            if (!this.view.position().equals(now.view.position()))
+                return new Mismatch(Behind.CAMERA_MOVED, "from %s to %s".formatted(this.view.position(), now.view.position()));
+            if (!this.view.left().equals(now.view.left()) || !this.view.up().equals(now.view.up()) || !this.view.look().equals(now.view.look()))
+                return new Mismatch(Behind.CAMERA_TURNED, "look %s to %s, up %s to %s, left %s to %s".formatted(
+                        text(this.view.look()), text(now.view.look()), text(this.view.up()), text(now.view.up()),
+                        text(this.view.left()), text(now.view.left())));
+            if (this.partialTick != now.partialTick)
+                return new Mismatch(Behind.PARTIAL_TICK, "%s to %s".formatted(this.partialTick, now.partialTick));
+            var changed = this.style.differences(now.style);
+            return changed.isEmpty() ? null : new Mismatch(Behind.SETTINGS, String.join(", ", changed));
+        }
+
+        private static String replaced(Sources was, Sources now) {
+            var replaced = new ArrayList<String>();
+            if (was.field() != now.field())
+                replaced.add("the field");
+            if (was.flecks() != now.flecks())
+                replaced.add("the snow flecks");
+            if (was.streaks() != now.streaks())
+                replaced.add("the window streaks");
+            if (was.spots() != now.spots())
+                replaced.add("the damp spots");
+            return String.join(", ", replaced) + " replaced";
+        }
+
+        // Every digit, so a difference of rounding shows
+        private static String text(Vector3f v) {
+            return "(" + v.x + ", " + v.y + ", " + v.z + ")";
+        }
+    }
+
+    private static final Kind[] KINDS = Kind.values();
+
+    private final IModLog logger;
+    // What has been logged, once each, for a session
+    private final EnumSet<Behind> reported = EnumSet.noneOf(Behind.class);
+    // The drops and the dust, built ahead
     private final ParticleQuads drops = new ParticleQuads();
     private final ParticleQuads dust = new ParticleQuads();
+    // The kinds written through a BufferBuilder: where each is written, and what was, once the build is joined; null
+    // once drawn, or if there were none
+    private final ByteBufferBuilder[] bytes = new ByteBufferBuilder[KINDS.length];
+    private final MeshData[] meshes = new MeshData[KINDS.length];
     // Written on the render thread when what was built ahead can't be used
     private final ParticleQuads now = new ParticleQuads();
+    private final ByteBufferBuilder nowBytes = new ByteBufferBuilder(INITIAL_BYTES);
+    private final boolean[] taken = new boolean[KINDS.length];
     @Nullable
     private Request request;
     @Nullable
     private CompletableFuture<Void> pending;
-    private boolean dropsTaken;
-    private boolean dustTaken;
     // Kinds drawn from what was built ahead, and built on the render thread instead, since the diagnostics last asked
     private int ahead;
     private int behind;
 
+    public DropMeshes(IModLog logger) {
+        this.logger = logger;
+        for (var kind : KINDS)
+            if (!kind.isDirect())
+                this.bytes[kind.ordinal()] = new ByteBufferBuilder(INITIAL_BYTES);
+    }
+
     /**
-     * Starts building the frame's drops on {@code executor}, for the camera as it is now. What was built for the frame
+     * Starts building the frame's quads on {@code executor}, for the camera as it is now. What was built for the frame
      * before and not drawn is dropped.
      */
-    public void begin(PrecipitationField field, Camera camera, float partialTick, List<Snowflakes.Flake> snowflakes,
-                      int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor, Executor executor) {
+    public void begin(Sources sources, Camera camera, float partialTick, Style style, Executor executor) {
         this.discard();
-        if (field.count() == 0)
+        if (sources.isEmpty())
             return;
-        var request = new Request(field, PrecipitationRenderer.View.of(camera), partialTick, snowflakes, largest, dust,
-                scales, rainColor);
+        var request = new Request(sources, PrecipitationRenderer.View.of(camera), partialTick, style);
         this.request = request;
         this.pending = CompletableFuture.runAsync(() -> this.build(request), executor);
     }
 
     // On the executor's thread
     private void build(Request request) {
-        build(this.drops, request, false);
-        build(this.dust, request, true);
-    }
-
-    private static void build(ParticleQuads quads, Request request, boolean dustOnly) {
-        PrecipitationRenderer.build(request.field(), quads, request.view(), request.partialTick(), dustOnly,
-                request.snowflakes(), request.largest(), request.dust(), request.scales(), request.rainColor());
+        build(Kind.DROPS, this.drops, request);
+        build(Kind.DUST, this.dust, request);
+        for (var kind : KINDS)
+            if (!kind.isDirect() && request.sources().hasAny(kind))
+                this.meshes[kind.ordinal()] = build(kind, this.bytes[kind.ordinal()], request);
     }
 
     /**
-     * The drops of a kind, written as {@link PrecipitationRenderer#build} writes them, to upload and draw: those built
-     * ahead, if they were built for this camera, partial tick and settings and not used yet; otherwise written now.
-     * Good until the next call.
+     * Writes the drops or the dust for a request, as {@link PrecipitationRenderer#build} does
+     */
+    static void build(Kind kind, ParticleQuads quads, Request request) {
+        var style = request.style();
+        PrecipitationRenderer.build(request.sources().field(), quads, request.view(), request.partialTick(),
+                kind == Kind.DUST, style.snowflakes(), style.largest(), style.dust(), style.scales(), style.rainColor());
+    }
+
+    /**
+     * Writes the quads of a kind other than the drops and the dust for a request, as {@link PrecipitationRenderer#build}
+     * does
      *
+     * @return what was written; null if nothing was
+     */
+    @Nullable
+    static MeshData build(Kind kind, ByteBufferBuilder bytes, Request request) {
+        var sources = request.sources();
+        var style = request.style();
+        var cam = request.view().position();
+        float partialTick = request.partialTick();
+        var builder = new BufferBuilder(bytes, VertexFormat.Mode.QUADS, kind.format);
+        switch (kind) {
+            case FLECKS -> PrecipitationRenderer.build(sources.flecks(), builder, cam, partialTick, style.snowflakes(),
+                    style.largest(), style.scales().snow());
+            case STREAKS -> PrecipitationRenderer.build(sources.streaks(), builder, cam, partialTick, style.rainColor());
+            case SPOTS -> PrecipitationRenderer.build(sources.spots(), builder, cam, partialTick, style.spot(), style.darkening());
+            default -> throw new IllegalArgumentException(kind + " is written straight into ParticleQuads");
+        }
+        return builder.build();
+    }
+
+    /**
+     * Draws the quads of a kind with {@code drawer}: those built ahead, if they were built for this camera, partial
+     * tick and settings and not drawn yet; otherwise written now
+     *
+     * @return how many quads were drawn
      * @throws RuntimeException what the build threw, if it failed
      */
-    public ParticleQuads quads(PrecipitationField field, Camera camera, float partialTick, boolean dustOnly,
-                               List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales,
-                               RainColor rainColor) {
+    public int draw(Kind kind, Sources sources, Camera camera, float partialTick, Style style, Drawer drawer) {
+        if (!sources.hasAny(kind))
+            return 0;
+        var now = new Request(sources, PrecipitationRenderer.View.of(camera), partialTick, style);
         var request = this.request;
-        boolean taken = dustOnly ? this.dustTaken : this.dropsTaken;
-        if (request == null || taken || !request.isFor(field, camera, partialTick, snowflakes, largest, dust, scales, rainColor)) {
+        Mismatch mismatch;
+        if (request == null)
+            mismatch = new Mismatch(Behind.NOT_BUILT, kind.description);
+        else if (this.taken[kind.ordinal()])
+            mismatch = new Mismatch(Behind.DRAWN_TWICE, kind.description);
+        else
+            mismatch = request.mismatch(now);
+        if (mismatch != null) {
             this.behind++;
-            PrecipitationRenderer.build(field, this.now, PrecipitationRenderer.View.of(camera), partialTick, dustOnly,
-                    snowflakes, largest, dust, scales, rainColor);
-            return this.now;
+            this.report(mismatch);
+            if (kind.isDirect()) {
+                build(kind, this.now, now);
+                return draw(this.now, drawer);
+            }
+            return draw(build(kind, this.nowBytes, now), drawer);
         }
 
         this.join();
         this.ahead++;
-        if (dustOnly) {
-            this.dustTaken = true;
-            return this.dust;
+        this.taken[kind.ordinal()] = true;
+        if (kind.isDirect())
+            return draw(kind == Kind.DUST ? this.dust : this.drops, drawer);
+        var mesh = this.meshes[kind.ordinal()];
+        this.meshes[kind.ordinal()] = null;
+        return draw(mesh, drawer);
+    }
+
+    private static int draw(ParticleQuads quads, Drawer drawer) {
+        int count = quads.vertexCount();
+        if (count > 0)
+            drawer.draw(quads.vertices(), count);
+        return count / 4;
+    }
+
+    private static int draw(@Nullable MeshData mesh, Drawer drawer) {
+        if (mesh == null)
+            return 0;
+        try (mesh) {
+            int count = mesh.drawState().vertexCount();
+            drawer.draw(mesh.vertexBuffer(), count);
+            return count / 4;
         }
-        this.dropsTaken = true;
-        return this.drops;
+    }
+
+    /**
+     * Logs why quads built ahead weren't drawn, once for each reason a session. A mod drawing the level again (a
+     * portal, a mirror) does this now and then; every frame, the render thread writes them all, as if never built
+     * ahead. The diagnostics' Precipitation line says how often ("built ahead").
+     */
+    void report(Mismatch mismatch) {
+        if (this.reported.add(mismatch.kind()))
+            this.logger.info("Rain and snow built ahead were built again on the render thread: %s (%s). If the diagnostics show them seldom built ahead, please report this along with your mod list.",
+                    mismatch.kind().reason, mismatch.detail());
     }
 
     // Waits for the build under way, if there is one
@@ -127,8 +371,8 @@ public final class DropMeshes implements AutoCloseable {
     }
 
     /**
-     * Waits for a build under way and drops what was built and not drawn: before the drops drawn change, and before
-     * the next frame's
+     * Waits for a build under way and drops what was built and not drawn: before what it was built from changes, and
+     * before the next frame's
      */
     public void discard() {
         var running = this.pending;
@@ -140,9 +384,14 @@ public final class DropMeshes implements AutoCloseable {
                 // Dropped anyway
             }
         }
+        for (int i = 0; i < KINDS.length; i++) {
+            if (this.meshes[i] != null) {
+                this.meshes[i].close();
+                this.meshes[i] = null;
+            }
+            this.taken[i] = false;
+        }
         this.request = null;
-        this.dropsTaken = false;
-        this.dustTaken = false;
     }
 
     /**
@@ -162,5 +411,9 @@ public final class DropMeshes implements AutoCloseable {
         this.drops.close();
         this.dust.close();
         this.now.close();
+        for (var bytes : this.bytes)
+            if (bytes != null)
+                bytes.close();
+        this.nowBytes.close();
     }
 }
