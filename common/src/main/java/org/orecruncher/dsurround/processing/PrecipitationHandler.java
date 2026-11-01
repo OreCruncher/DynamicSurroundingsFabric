@@ -117,8 +117,10 @@ public class PrecipitationHandler extends AbstractClientHandler {
     // The drops' ticks run here, while frames are drawn: started each tick and finished at the next (see
     // PrecipitationField.start); one thread, so a step never overlaps the next, and only it uses its random numbers
     private final Executor stepper = Executors.newSingleThreadExecutor(Worker.threadFactory("Precipitation"));
-    // The frame's rain, snow and dust, built on the same thread as the level starts to be drawn: after the tick's step,
-    // which is short, and never at once with it
+    // The frame's weather quads, built as the level starts to be drawn, on a thread of their own: on the step's, a frame
+    // that began while a tick's step still ran (at High's range, a step outlasted the terrain about one frame in ten)
+    // waited for the step, then the build, before the weather could be drawn
+    private final Executor builder = Executors.newSingleThreadExecutor(Worker.threadFactory("PrecipitationQuads"));
     private final DropMeshes meshes;
     private final IRandomizer stepRandom = Randomizer.create(System.nanoTime());
 
@@ -269,7 +271,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
 
 
     /**
-     * Starts building the frame's weather quads on the drops' thread, as the level starts to be drawn: the camera is
+     * Starts building the frame's weather quads on their own thread, as the level starts to be drawn: the camera is
      * set for the frame by then, and the terrain is drawn while they are built (see {@link DropMeshes})
      */
     public void beginFrame(Camera camera, float partialTick) {
@@ -279,7 +281,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
             return;
         }
         this.meshes.begin(sources, camera, partialTick, this.style(Minecraft.useShaderTransparency()),
-                this.stepper);
+                this.builder);
     }
 
     private DropMeshes.Sources sources() {

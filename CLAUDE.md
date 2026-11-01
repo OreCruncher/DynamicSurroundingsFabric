@@ -231,7 +231,8 @@ aurora; `MIGRATION.md` is 26.2's record of its port from 1.21.1, and "1.21.11 ba
     stands aside for shader packs, a failed shader, mods that draw weather as particles (`FeatureConflict`, the table of features that stand aside for other mods) and dimensions that draw their
     own weather. The drops' tick runs on the `dsurround-Precipitation` thread, a tick behind: `PrecipitationField.finish`
     at the start of the handler's tick, `start` at its end, with two sets of the drops (`Drops`). Each frame's quads (`DropMeshes.Kind`: drops, dust, snow flecks, window streaks, damp spots) are
-    written into `ParticleQuads` on the same thread as the level starts to be drawn (`DropMeshes`, from
+    written into `ParticleQuads` on a thread of their own (`dsurround-PrecipitationQuads`, apart from the step's, which a frame's build waited behind
+    at High's range) as the level starts to be drawn (`DropMeshes`, from
     `MixinGameRenderer` at the head of `GameRenderer.renderLevel`, `OptionalHook.PRECIPITATION_AHEAD`), for that camera
     and partial tick; the weather pass uploads and draws them, or writes them on the
     render thread when the camera differs (a mod drawing the level again). The tick discards a build before the drops,

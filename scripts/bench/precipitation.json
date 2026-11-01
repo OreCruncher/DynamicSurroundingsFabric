@@ -1,0 +1,51 @@
+// Rain and snow at the Performance row's precipitation settings: Low (density 50, range 10), Medium (the defaults:
+// 100, 14) and High (100, 20). Rain on grass leaves damp spots; snow leaves flecks. The dust storm is in
+// performance-rest.json. See README.md for the format.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  // What the GPU draws scales with the pixels: the same size for every run to compare
+  "video": {"width": 1920, "height": 1080},
+  // Long enough for damp spots and flecks to build up to a steady number
+  "warmup": 20,
+  "record": 45,
+  "repeats": 2,
+  "scenes": {
+    "rain": {
+      "biome": "minecraft:plains",
+      // Serene Seasons (in the dev run): spring rains in temperate biomes
+      "commands": ["time set 6000", "season set mid_spring"],
+      // Holds a full storm (and sends "weather thunder")
+      "profile": "weather"
+    },
+    "snow": {
+      "biome": "minecraft:snowy_plains",
+      "commands": ["time set 6000", "season set mid_spring"],
+      "profile": "weather"
+    }
+  },
+  "runs": [
+    {"label": "rain-low", "scene": "rain", "settings": {
+      "weatherOptions.precipitationDensity": 50,
+      "weatherOptions.precipitationRange": 10
+    }},
+    {"label": "rain-medium", "scene": "rain"},
+    {"label": "rain-high", "scene": "rain", "settings": {
+      "weatherOptions.precipitationRange": 20
+    }},
+    {"label": "snow-low", "scene": "snow", "settings": {
+      "weatherOptions.precipitationDensity": 50,
+      "weatherOptions.precipitationRange": 10
+    }},
+    {"label": "snow-medium", "scene": "snow"},
+    {"label": "snow-high", "scene": "snow", "settings": {
+      "weatherOptions.precipitationRange": 20
+    }}
+  ]
+}

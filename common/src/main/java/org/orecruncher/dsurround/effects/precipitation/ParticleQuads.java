@@ -13,7 +13,7 @@ import java.nio.ByteOrder;
  * drawn a frame, four corners each; through a BufferBuilder that is four calls a corner, each finding where its part
  * of the vertex goes. Here a corner is written in one call, at offsets known in advance, and a quad's colour is packed
  * once rather than for each corner. The bytes are laid out as BufferBuilder lays them. One thread at a time: the falling
- * drops' are written on the drops' thread and drawn on the render thread (see {@link DropMeshes}).
+ * drops' are written on a thread of their own and drawn on the render thread (see {@link DropMeshes}).
  */
 public final class ParticleQuads implements AutoCloseable {
 
