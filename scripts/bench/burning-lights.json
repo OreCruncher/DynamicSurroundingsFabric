@@ -1,5 +1,5 @@
 // Burning mobs and their light: zombies on fire for the whole recording (a long fire timer, fire resistance so they
-// never die, no AI so they stay put), at night for the light, at the crowd scene marked with /dsbench mark. Burning
+// never die, no AI so they stay put), at night for the light, in plains (the crowd scene). Burning
 // mobs light their surroundings with the flame jets' light (flameJetOptions.enableLight). See README.md for the format.
 {
   "world": "bench",
@@ -19,6 +19,7 @@
   "repeats": 2,
   "scenes": {
     "crowd": {
+      "biome": "minecraft:plains",
       "commands": [
         "time set 18000",
         "weather clear",
