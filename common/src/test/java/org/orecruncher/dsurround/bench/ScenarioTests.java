@@ -30,6 +30,22 @@ public class ScenarioTests {
     }
 
     @Test
+    void runsUseSettingSetsThenTheirOwn() {
+        var scenario = parse("""
+                {"settingSets": {"off": {"a.x": false, "a.y": false}, "far": {"b.range": 64}},
+                 "scenes": {"s": {}},
+                 "runs": [{"label": "one", "scene": "s", "use": "off", "settings": {"a.y": true}},
+                          {"label": "two", "scene": "s", "use": ["off", "far"]}]}""");
+        var one = scenario.runs().get(0).settings();
+        assertFalse(one.get("a.x").getAsBoolean());
+        assertTrue(one.get("a.y").getAsBoolean());
+        assertEquals(64, scenario.runs().get(1).settings().get("b.range").getAsInt());
+        assertEquals(3, scenario.runs().get(1).settings().size());
+        assertThrows(IllegalArgumentException.class, () -> parse(
+                "{\"scenes\": {\"s\": {}}, \"runs\": [{\"scene\": \"s\", \"use\": \"missing\"}]}"));
+    }
+
+    @Test
     void repeatsAlternateTheOrder() {
         var scenario = parse("""
                 {"repeats": 3, "scenes": {"s": {}},

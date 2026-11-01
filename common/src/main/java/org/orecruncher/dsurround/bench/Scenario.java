@@ -57,7 +57,8 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
      *
      * @param label    its name in the results
      * @param scene    the scene's name
-     * @param settings config values for it (dotted paths, as presets have); every other run's are put back first
+     * @param settings config values for it (dotted paths, as presets have): the setting sets it uses, in order, then its
+     *                 own; every other run's are put back first
      */
     public record Run(String label, String scene, Map<String, JsonElement> settings) {
     }
@@ -82,6 +83,12 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
                     s.has("profile") ? s.get("profile").getAsString() : "general"));
         }
 
+        // Named groups of settings, for runs to share ("use"): such as every effect turned off
+        var sets = new LinkedHashMap<String, JsonObject>();
+        if (json.has("settingSets"))
+            for (var entry : json.getAsJsonObject("settingSets").entrySet())
+                sets.put(entry.getKey(), entry.getValue().getAsJsonObject());
+
         var runs = new ArrayList<Run>();
         if (json.has("runs")) {
             for (var element : json.getAsJsonArray("runs")) {
@@ -90,6 +97,21 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
                 if (!scenes.containsKey(scene))
                     throw new IllegalArgumentException("run names scene '" + scene + "', which isn't in scenes");
                 var settings = new LinkedHashMap<String, JsonElement>();
+                if (r.has("use")) {
+                    var use = r.get("use");
+                    var names = new ArrayList<String>();
+                    if (use.isJsonArray())
+                        use.getAsJsonArray().forEach(n -> names.add(n.getAsString()));
+                    else
+                        names.add(use.getAsString());
+                    for (var setName : names) {
+                        var set = sets.get(setName);
+                        if (set == null)
+                            throw new IllegalArgumentException("run uses setting set '" + setName + "', which isn't in settingSets");
+                        for (var setting : set.entrySet())
+                            settings.put(setting.getKey(), setting.getValue());
+                    }
+                }
                 if (r.has("settings"))
                     for (var setting : r.getAsJsonObject("settings").entrySet())
                         settings.put(setting.getKey(), setting.getValue());

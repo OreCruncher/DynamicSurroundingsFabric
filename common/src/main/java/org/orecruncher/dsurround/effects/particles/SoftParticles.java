@@ -28,6 +28,7 @@ import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.DepthCopy;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.compat.IrisCompat;
 
 import java.util.Optional;
 
@@ -168,6 +169,12 @@ public final class SoftParticles {
     public static final SingleQuadParticle.Layer FLAME = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, FLAME_PIPELINE);
     public static final SingleQuadParticle.Layer FLAME_FALLBACK = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, FLAME_FALLBACK_PIPELINE);
     public static final SingleQuadParticle.Layer EYE_FLAME = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, EYE_FLAME_PIPELINE);
+
+    static {
+        // The fallbacks draw while a shader pack is in use, with the pack's program for translucent particles
+        IrisCompat.assignPipeline(MIST_FALLBACK_PIPELINE, IrisCompat.Program.PARTICLES_TRANSLUCENT);
+        IrisCompat.assignPipeline(FLAME_FALLBACK_PIPELINE, IrisCompat.Program.PARTICLES_TRANSLUCENT);
+    }
 
     // The copy of the scene's depth the shaders read; can't be the depth buffer being drawn to
     private static final DepthCopy DEPTH_COPY = new DepthCopy("Dynamic Surroundings scene depth");

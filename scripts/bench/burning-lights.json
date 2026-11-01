@@ -12,7 +12,9 @@
   ],
   "video": {
     "width": 1920,
-    "height": 1080
+    "height": 1080,
+    "vsync": false,
+    "maxFps": 260
   },
   "warmup": 10,
   "record": 45,

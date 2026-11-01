@@ -40,20 +40,24 @@ dependencies {
     common(project(path: ':common')) { transitive = false }
     shadowBundle project(path: ':common', configuration: 'transformProductionFabric')
 
-    implementation "com.github.glitchfiend:TerraBlender-fabric:${minecraft_version}-${rootProject.terrablender_version}"
-    implementation "com.github.glitchfiend:GlitchCore-fabric:${minecraft_version}-${rootProject.glitchcore_version}"
-    implementation "com.github.glitchfiend:SereneSeasons-fabric:${minecraft_version}-${rootProject.serene_seasons_version}"
-    implementation "com.github.glitchfiend:BiomesOPlenty-fabric:${minecraft_version}-${rootProject.bop_version}"
+    // Mods the development client plays with; a modpack run (-Ppack, scripts/modpack-fetch.py) leaves them to the pack,
+    // which brings its own copy or none, so they are only compiled against there
+    def devMod = rootProject.hasProperty('pack') ? 'compileOnly' : 'implementation'
+    "$devMod" "com.github.glitchfiend:TerraBlender-fabric:${minecraft_version}-${rootProject.terrablender_version}"
+    "$devMod" "com.github.glitchfiend:GlitchCore-fabric:${minecraft_version}-${rootProject.glitchcore_version}"
+    "$devMod" "com.github.glitchfiend:SereneSeasons-fabric:${minecraft_version}-${rootProject.serene_seasons_version}"
+    "$devMod" "com.github.glitchfiend:BiomesOPlenty-fabric:${minecraft_version}-${rootProject.bop_version}"
 
     api("me.shedaniel.cloth:cloth-config-fabric:${rootProject.clothapi_version}") {
         exclude(group: "net.fabricmc.fabric-api")
     }
 
-    implementation "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+    "$devMod" "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
 
     // Simple Voice Chat: its plugin API to compile the common classes against; the mod itself in the dev client only
     compileOnly "de.maxhenkel.voicechat:voicechat-api:$rootProject.voicechat_api_version"
-    localRuntime "maven.modrinth:simple-voice-chat:${rootProject.voicechat_fabric_version}"
+    if (!rootProject.hasProperty('pack'))
+        localRuntime "maven.modrinth:simple-voice-chat:${rootProject.voicechat_fabric_version}"
 }
 
 processResources {

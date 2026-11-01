@@ -29,6 +29,10 @@ public final class OverlayManager {
     }
 
     public void render(GuiGraphicsExtractor context, DeltaTracker deltaTracker) {
+        // Hidden with the HUD (F1, a bench screenshot). Fabric's HUD layers already are; NeoForge draws a layer
+        // registered above all of them even then
+        if (Minecraft.getInstance().gui.hud.isHidden())
+            return;
         var partialTick = deltaTracker.getGameTimeDeltaTicks();
         this.overlays.forEach(overlay -> overlay.render(context, partialTick));
     }

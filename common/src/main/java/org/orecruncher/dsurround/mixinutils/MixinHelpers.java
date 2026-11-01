@@ -45,6 +45,13 @@ public class MixinHelpers {
      * (see MixinLevelRenderer). Render thread only.
      */
     public static boolean inLevelWeatherPass;
+    /**
+     * The thread ticking vanilla's rain (ClientLevel.tickWeatherEffects, wrapped where ClientLevel.tick calls it, see
+     * MixinClientLevel) while it does, otherwise null. The rain's hooks (its level in MixinLevel, its splashes and sound
+     * in MixinClientLevel) act only then, and only on that thread: other threads read the rain level too. Hooked inside
+     * the method itself, they would be lost to a mod that wraps it (Iris on 1.21.11 wraps the method there).
+     */
+    public static volatile Thread rainTickThread;
     public static final Guard GROUND_FOG_GUARD = Guard.named("Drawing ground fog");
     public static final Guard WINDOW_FROST_GUARD = Guard.named("Drawing window frost");
     public static final Guard WEATHER_DEPTH_GUARD = Guard.named("Giving the weather the scene's depth");
@@ -89,6 +96,14 @@ public class MixinHelpers {
      * The storm's strength in place of the world's rain level, where vanilla draws and ticks its rain and snow. The
      * game's level, if working it out fails. Read a few times a frame and a tick: no lambda.
      */
+    /**
+     * Whether vanilla's rain is being ticked, on this thread (see {@link #rainTickThread})
+     */
+    public static boolean inRainTick() {
+        var thread = rainTickThread;
+        return thread != null && thread == Thread.currentThread();
+    }
+
     public static float stormRainLevel(float vanillaLevel) {
         try {
             return weatherSimulation().rainLevel(vanillaLevel);

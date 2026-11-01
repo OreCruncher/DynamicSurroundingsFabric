@@ -46,7 +46,7 @@ checking in game.
   GPU/CPU render timers in it (`dsurround.RenderTimer` events, set against the whole frame's drawing and the frames'
   lengths in `dsurround.Frames`, once a second; a timer of something run on the tick (the clouds' field) is made with
   `perTick`, and recordings set its time a frame (20 a second over the frames) against the frame's; precipitation's
-  carry a `count` of drops/spots a frame, so two recordings can be checked for the same storm), each client tick
+  carry a `count` of drops/spots/window streaks a frame, so two recordings can be checked for the same storm), each client tick
   handler's time every tick
   (`dsurround.HandlerTick`, through `profiling/HandlerTicks`), what random block effects sampled, found, started,
   spawned and played by 1-block distance shell once a second (`dsurround.RandomBlockSamples`, through `profiling/RandomBlockSamples`),
@@ -75,6 +75,12 @@ checking in game.
   each label's frame, render timers and tick handlers, averaged over the repeats. The code (`bench/`, started by
   reflection from `profiling/BenchHook` in development only) is left out of the published jars; `shadowJar` fails if it
   gets in.
+- Modpacks (`scripts/bench/README.md`, "Modpacks"): `python scripts/modpack-fetch.py <modrinth slug>` fetches one into
+  `<platform>/run-pack/<slug>`; `./gradlew :neoforge:runClientPack -Ppack=<slug> [-Pneoforge_version=<the pack's>]
+  -Pscenario=scripts/bench/compat.json` runs it without the dev client's own extra mods (BoP, Serene Seasons...);
+  `python scripts/pack-triage.py <slug>` reports what needs a look. Compare with `compat.json` run plainly
+  (`runClientBench`): what looks wrong only in the pack is the pack's doing. A render timer missing from an "on" run
+  means that effect never drew. CurseForge packs: the user installs them and copies the instance's mods and config in.
 - Low-end stand-ins (both platforms, IDE configs too): `runClientPotatoCpu` (4 logical CPUs, 2 GB heap),
   `runClientPotatoFill` (3840x2160 window, a slower GPU's load per pixel), `runClientPotato` (both). The Gradle tasks
   pin the CPUs with `scripts/run-affinity.ps1`; after an IDE launch run it by hand (see the script).
@@ -111,6 +117,9 @@ checking in game.
   `GroundFogVolume.SHADERS`), listed in `ModShaders.SHADERS`. Not added to vanilla's `RenderPipelines` (a failure there
   rejects the reload); `MixinShaderManager` compiles them after each shader reload. Drawing goes through
   `ModShader.run` / `RenderFailSafe`: a failure is logged once and the effect turned off until resources reload.
+  With an Iris shader pack every `ModShader` is unusable; a pipeline of ours that still draws then (the soft particles'
+  vanilla-shader fallbacks, fireflies) must be given one of the pack's programs with `IrisCompat.assignPipeline`, or
+  Iris draws it with none and it vanishes ("Missing program ... in override list" in the log).
 - Uniform blocks: `Std140Builder.putVec3` always takes 16 bytes, but std140 puts a following `float` in a `vec3`'s
   fourth slot. Write a `vec3` and the `float` after it as one `putVec4` (and `putVec4()` in the size), or every value
   after it is read 4 bytes off (ground fog drew nothing until this was found).
@@ -212,7 +221,10 @@ checking in game.
   - `WeatherSimulation.rainLevel(vanilla)` is the storm's strength: use it, not the world's rain level, for anything
     that should follow the storm (fog, sounds, scripts, particles, aurora). Mixins feed it into vanilla's weather:
     drawn (`MixinWeatherEffectRenderer`), ticked with its splashes and sounds (`ClientLevel.tickWeatherEffects`), and
-    its rain fog (`MixinAtmosphericFogEnvironment`). The mod's weather fog adds only a dust storm's.
+    its rain fog (`MixinAtmosphericFogEnvironment`). The mod's weather fog adds only a dust storm's. The tick is hooked
+    where `ClientLevel.tick` calls it (`MixinHelpers.rainTickThread`) and on what it calls (`Level.getRainLevel`,
+    `ClientLevel.addParticle` and `playLocalSound`), not inside it: a mod wrapping the method (`@WrapMethod`, as Iris
+    1.10 does to 1.21.11's `tickRainParticles`) leaves hooks inside it nothing to attach to.
   - `WindService` ticks `Wind` and publishes it via static `SceneWind` for particles to drift; `WindSounds` scales
     sound factories marked `followsWind`. `DustStorms` decides where storms raise dust.
   - `Shelter.exposure` is how open to the weather a place is (sky light, and a roof from the `MOTION_BLOCKING`
@@ -246,7 +258,8 @@ checking in game.
     at the start of the weather pass, or with Fabulous after the weather and before the world border.
   - Dynamic clouds (`effects/clouds`, run by `processing/CloudHandler`): blocky columns on vanilla's 12-block cells,
     each with its own base and top, in place of vanilla's (`MixinCloudRenderer` cancels `CloudRenderer.render` when
-    ours draw; `OptionalHook.DYNAMIC_CLOUDS`). Three pipelines in one pass to the clouds target (main without Fabulous):
+    ours draw; `OptionalHook.DYNAMIC_CLOUDS`; off for Distant Horizons, which turns vanilla's clouds off and draws its
+    own: `FeatureConflict.DYNAMIC_CLOUDS`). Three pipelines in one pass to the clouds target (main without Fabulous):
     the settled part's depth, then its color, then the changing part fading, no depth. The grid follows the Cloud
     Distance option; the light on them is vanilla's cloud color (the environment's). `runtime/weather/CloudCover` is
     what the weather calls for: fair puffs that build up in the afternoon, a storm's lowered, thickened deck, thunder

@@ -27,6 +27,7 @@ public final class RenderTimers {
             PrecipitationShaders.RENDER_TIMER,
             PrecipitationShaders.DAMP_SPOTS_TIMER,
             PrecipitationShaders.DROPS_TIMER,
+            PrecipitationShaders.STREAKS_TIMER,
             GroundFogVolume.RENDER_TIMER,
             GroundFogVolume.MARCH_TIMER,
             GroundFogVolume.SMOOTH_TIMER,

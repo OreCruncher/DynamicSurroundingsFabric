@@ -133,12 +133,16 @@ def potatoRuns(Project p) {
     // The bench runs (scripts/bench/README.md) run a scenario, -Pscenario=<file>, in a run folder of their own
     def scenario = p.rootProject.findProperty('scenario')
     def scenarioPath = scenario ? p.rootProject.file(scenario).absolutePath : ''
+    // A modpack run (scripts/modpack-fetch.py fetches one) uses the pack's folder, -Ppack=<slug>, with or without a
+    // scenario, and the heap a pack of a hundred mods or more wants
+    def pack = p.rootProject.findProperty('pack') ?: 'none'
     def variants = [
             clientPotatoCpu     : [label: 'potato CPU', vm: cpuArgs, program: [], pin: true],
             clientPotatoFill    : [label: 'potato fill', vm: [], program: fillArgs, pin: false],
             clientPotato        : [label: 'potato', vm: cpuArgs, program: fillArgs, pin: true],
             clientBench         : [label: 'bench', vm: [], program: [], pin: false, bench: true],
-            clientBenchPotatoCpu: [label: 'bench, potato CPU', vm: cpuArgs, program: [], pin: true, bench: true]]
+            clientBenchPotatoCpu: [label: 'bench, potato CPU', vm: cpuArgs, program: [], pin: true, bench: true],
+            clientPack          : [label: 'modpack', vm: ['-Xmx8G'], program: [], pin: false, bench: true, pack: true]]
 
     p.loom.runs {
         variants.each { runName, v ->
@@ -152,7 +156,7 @@ def potatoRuns(Project p) {
                 vmArgs v.vm
                 programArgs v.program
                 if (v.bench) {
-                    runDir 'run-bench'
+                    runDir v.pack ? "run-pack/$pack" : 'run-bench'
                     vmArg "-Ddsurround.scenario=$scenarioPath"
                 }
             }

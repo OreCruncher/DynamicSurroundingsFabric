@@ -39,6 +39,6 @@ public final class RenderTimerEvent extends Event {
 
     @Label("Count")
     @Description("How many of what the effect draws there were a frame, on average (Precipitation: drops in the area; "
-            + "Drops: drops drawn; Damp Spots: spots); NaN for an effect that doesn't count")
+            + "Drops: drops drawn; Damp Spots: spots; Window Streaks: drops on windows); NaN for an effect that doesn't count")
     double count;
 }
