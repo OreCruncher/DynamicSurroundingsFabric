@@ -183,6 +183,8 @@ checking in game.
   (made in its `CreateOpenALContextEvent`). `VoiceSounds` keeps the channels (tested with a fake `Backend`);
   `OpenALBackend` does the OpenAL side. `VoiceChatPlugin` is the only class using its API (compile-only; loaded by the
   `voicechat` entrypoint / NeoForge annotation), so nothing else may reference it.
+- Our particles (`effects/particles`) stay the game's own particles, not a system like the weather's drops: the
+  package's `package-info.java` says why, and what to measure before converting one (waterfall mist the likely one).
 - Random block effects: one `effects/systems/RandomBlockEffectSystem` (one effect per block), sampling where
   `RandomBlockSampler` says: vanilla's near (16) and far (32) triangular spreads, 667 each a tick, which also play the
   blocks' sounds; past 32, an effects-only tail out to `blockEffectRange`, kept only where the inner spreads fall short
